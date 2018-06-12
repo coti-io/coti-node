@@ -27,16 +27,16 @@ public class RocksDBTests {
 
     @Test
     public void saveAndRetrieveSingleTransaction(){
-        Transaction transaction1 = new Transaction("Transaction 0");
+        Transaction transaction1 = new Transaction("Transaction 0".getBytes());
         provider.put(transaction1);
-        Transaction transaction2 = provider.getTransaction("Transaction 0".getBytes());
+        Transaction transaction2 = provider.getTransaction(transaction1.getKey());
         Assert.assertEquals(transaction1, transaction2);
     }
 
     @Test
     public void saveAndRetrieveWithManyTransactions(){
-        Transaction transaction1 = new Transaction("Transaction 0");
-        Transaction transaction2 = new Transaction("Transaction 2");
+        Transaction transaction1 = new Transaction("Transaction 0".getBytes());
+        Transaction transaction2 = new Transaction("Transaction 2".getBytes());
         provider.put(transaction1);
         provider.put(transaction2);
         Transaction transaction3 = provider.getTransaction("Transaction 0".getBytes());
@@ -45,8 +45,8 @@ public class RocksDBTests {
 
     @Test
     public void saveManyAndRetrieveManyTransactions(){
-        Transaction transaction1 = new Transaction("Transaction 0");
-        Transaction transaction2 = new Transaction("Transaction 1");
+        Transaction transaction1 = new Transaction("Transaction 0".getBytes());
+        Transaction transaction2 = new Transaction("Transaction 1".getBytes());
         provider.put(transaction1);
         provider.put(transaction2);
         Transaction transaction3 = provider.getTransaction("Transaction 0".getBytes());
@@ -58,8 +58,8 @@ public class RocksDBTests {
 
     @Test
     public void saveManyAndGetAll(){
-        Transaction transaction1 = new Transaction("First A");
-        Transaction transaction2 = new Transaction("Second B");
+        Transaction transaction1 = new Transaction("First A".getBytes());
+        Transaction transaction2 = new Transaction("Second B".getBytes());
         provider.put(transaction1);
         provider.put(transaction2);
         List<Transaction> transactions = provider.getAllTransactions();
@@ -71,7 +71,7 @@ public class RocksDBTests {
 
     @Test
     public void saveAndDelete(){
-        Transaction transaction1 = new Transaction("Transaction 0");
+        Transaction transaction1 = new Transaction("Transaction 0".getBytes());
         provider.put(transaction1);
         Transaction transaction2 = provider.getTransaction("Transaction 0".getBytes());
         Assert.assertEquals(transaction1, transaction2);

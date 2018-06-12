@@ -2,38 +2,29 @@ package io.coti.cotinode.model;
 
 import io.coti.cotinode.model.Interfaces.IEntity;
 
+import java.util.Arrays;
 import java.util.Date;
 
 public class Transaction implements IEntity {
     private byte[] hash;
-    private Transaction source1;
-    private Transaction source2;
+    private Transaction sourceTransaction1;
+    private Transaction sourceTransaction2;
     // TCC - Transaction Consensus
     //DSPC - DSP Consensus
     Date transactionConsensusTimestamp;
 
-    private String name;
-    public Transaction(String name){
-        this.name = name;
-    }
-
-    public Transaction(byte[] nameBytes){
-        this.name = new String(nameBytes);
+    public Transaction(byte[] hash){
+        this.hash = hash;
     }
 
     @Override
     public byte[] getKey() {
-        return name.getBytes();
-    }
-
-    @Override
-    public byte[] getBytes() {
-        return name.getBytes();
+        return hash;
     }
 
     @Override
     public String toString(){
-        return name;
+        return String.valueOf(hash);
     }
 
     @Override
@@ -45,7 +36,6 @@ public class Transaction implements IEntity {
         if(!(other instanceof Transaction)){
             return false;
         }
-
-        return name.equals(((Transaction) other).name);
+        return Arrays.equals(hash, ((Transaction) other).getKey());
     }
 }

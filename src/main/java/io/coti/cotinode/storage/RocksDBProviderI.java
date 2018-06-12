@@ -83,7 +83,6 @@ public class RocksDBProviderI implements IPersistenceProvider {
 
 
     @Override
-
     public Transaction getTransaction(byte[] key) {
         try {
             byte[] transactionBytes = db.get(
