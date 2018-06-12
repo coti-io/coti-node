@@ -4,11 +4,16 @@ import io.coti.cotinode.model.Interfaces.IEntity;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 public class Transaction implements IEntity {
     private byte[] hash;
     private Transaction sourceTransaction1;
     private Transaction sourceTransaction2;
+    private List<Transaction> trustChain;
+    private boolean transactionConcensus;
+    private boolean dspConcensus;
+
     // TCC - Transaction Consensus
     //DSPC - DSP Consensus
     Date transactionConsensusTimestamp;
