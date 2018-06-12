@@ -1,4 +1,4 @@
-package io.coti.cotinode.interfaces;
+package io.coti.cotinode.services.interfaces;
 
 import io.coti.cotinode.model.Interfaces.ITransaction;
 
@@ -9,10 +9,9 @@ import java.util.Map;
 
 public interface ISourceSelector {
     public List<ITransaction> selectSourcesForAttachment(
-            Map<Integer, List<ITransaction>> trustScoreToTransactionMapping,
+            Map<Integer,? extends List<? extends ITransaction>> trustScoreToTransactionMapping,
             int transactionTrustScore,
             Date transactionCreationTime,
             int minSourcePercentage,
-            int totalSourceNum,
             int maxNeighbourhoodRadius);
 }

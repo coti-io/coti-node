@@ -1,9 +1,7 @@
 package io.coti.cotinode.model;
 
-import io.coti.cotinode.model.Interfaces.IEntity;
 import io.coti.cotinode.model.Interfaces.ITransaction;
 
-import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;

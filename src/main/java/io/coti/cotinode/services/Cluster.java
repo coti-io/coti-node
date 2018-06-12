@@ -1,5 +1,6 @@
 package io.coti.cotinode.services;
 
+import io.coti.cotinode.services.interfaces.ISourceSelector;
 import io.coti.cotinode.model.Interfaces.ITransaction;
 import io.coti.cotinode.model.Transaction;
 import io.coti.cotinode.services.interfaces.ICluster;
@@ -15,21 +16,33 @@ import java.util.stream.Collectors;
 public class Cluster implements ICluster {
     private IPersistenceProvider persistenceProvider;
     private ConcurrentHashMap<byte[], ITransaction> hashToUnconfirmedTransactionsMapping;
-    private ConcurrentHashMap<Integer, List<Transaction>> trustScoreToSourceListMapping;
+    private ConcurrentHashMap<Integer, List<ITransaction>> trustScoreToSourceListMapping;
 
     @Override
     public void initCluster(List<ITransaction> unconfirmedTransactions){
         hashToUnconfirmedTransactionsMapping = new ConcurrentHashMap<>();
         trustScoreToSourceListMapping = new ConcurrentHashMap<>();
         setUnconfirmedTransactions(unconfirmedTransactions);
+        setTrustScoreToSourceListMapping(unconfirmedTransactions);
     }
 
-    private void setUnconfirmedTransactions(List<ITransaction> uncofirmedTransactinos) {
+
+    private void setUnconfirmedTransactions(List<ITransaction> unconfirmedTransactions) {
         this.hashToUnconfirmedTransactionsMapping.
-                putAll(uncofirmedTransactinos.stream().
+                putAll(unconfirmedTransactions.stream().
                         collect(Collectors.
                                 toMap(ITransaction::getHash, Function.identity())));
     }
+
+    private void setTrustScoreToSourceListMapping(List<ITransaction> unconfirmedTransactions) {
+        trustScoreToSourceListMapping = new ConcurrentHashMap<Integer, List<ITransaction>>();
+        for (ITransaction transaction: unconfirmedTransactions) {
+            if (transaction.isSource()){
+
+            }
+        }
+    }
+
 
     @Override
     public ConcurrentHashMap<byte[], ITransaction> getUnconfirmedTransactions() {
@@ -71,8 +84,12 @@ public class Cluster implements ICluster {
 
         // Selection of sources
         List<ITransaction> randomWeightedSources = null;
-        // TODO : add do the attachment
-
+        ISourceSelector sourceSelector = new SourceSelector();
+        sourceSelector.selectSourcesForAttachment( trustScoreToSourceListMapping,
+                transaction.getSenderTrustScore(),
+                transaction.getCreateDateTime(),
+                5, // TODO: from config file and/or dynamic
+                10); // TODO: from config file and/or dynamic
         // Update the total trust score of the parents
         updateParentsTotalSumScore(transaction, 0);
 
