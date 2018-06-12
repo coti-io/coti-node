@@ -1,5 +1,7 @@
 package io.coti.cotinode;
+import io.coti.cotinode.model.Address;
 import io.coti.cotinode.model.BaseTransaction;
+import io.coti.cotinode.model.Interfaces.IAddress;
 import io.coti.cotinode.model.Interfaces.IBaseTransaction;
 import io.coti.cotinode.model.Interfaces.ITransaction;
 import io.coti.cotinode.model.Transaction;
@@ -88,5 +90,23 @@ public class RocksDBTests {
         provider.put(baseTransaction1);
         IBaseTransaction baseTransaction2 = provider.getBaseTransaction("ITransaction 0".getBytes());
         Assert.assertEquals(baseTransaction1, baseTransaction2);
+    }
+
+    @Test
+    public void saveAndGetAddress(){
+        IAddress address1 = new Address("Address 0".getBytes());
+        provider.put(address1);
+        IAddress address2 = provider.getAddress("Address 0".getBytes());
+        Assert.assertEquals(address1, address2);
+    }
+
+    @Test
+    public void saveAndDeleteBaseTransactions(){
+        IBaseTransaction transaction1 = new BaseTransaction("ITransaction 0".getBytes());
+        provider.put(transaction1);
+        IBaseTransaction transaction2 = provider.getBaseTransaction("ITransaction 0".getBytes());
+        Assert.assertEquals(transaction1, transaction2);
+        provider.deleteBaseTransaction(transaction1.getKey());
+        Assert.assertEquals(provider.getAllTransactions(), new ArrayList<IBaseTransaction>());
     }
 }

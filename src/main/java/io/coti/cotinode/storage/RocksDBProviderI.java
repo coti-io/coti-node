@@ -1,5 +1,7 @@
 package io.coti.cotinode.storage;
+import io.coti.cotinode.model.Address;
 import io.coti.cotinode.model.BaseTransaction;
+import io.coti.cotinode.model.Interfaces.IAddress;
 import io.coti.cotinode.model.Interfaces.IBaseTransaction;
 import io.coti.cotinode.model.Interfaces.IEntity;
 import io.coti.cotinode.model.Interfaces.ITransaction;
@@ -23,7 +25,8 @@ public class RocksDBProviderI implements IPersistenceProvider {
     private final List<String> columnFamilyClassNames = Arrays.asList(
             "DefaultColumnClassName",
             Transaction.class.getName(),
-            BaseTransaction.class.getName()
+            BaseTransaction.class.getName(),
+            Address.class.getName()
     );
 
     private Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
@@ -72,51 +75,33 @@ public class RocksDBProviderI implements IPersistenceProvider {
     }
 
     @Override
-    public List<ITransaction> getAllTransactions() {
-        RocksIterator iterator =
-                db.newIterator(classNameToColumnFamilyHandleMapping.get(Transaction.class.getName()));
-        iterator.seekToFirst();
-        List<ITransaction> transactions = new ArrayList<>();
-
-        while(iterator.isValid()){
-            transactions.add((ITransaction)SerializationUtils.deserialize(iterator.value()));
-            iterator.next();
-        }
-
-        return transactions;
-    }
-
-
-    @Override
     public ITransaction getTransaction(byte[] key) {
-        try {
-            byte[] transactionBytes = db.get(
-                    classNameToColumnFamilyHandleMapping.get(Transaction.class.getName()), key);
-            return (ITransaction)SerializationUtils.deserialize(transactionBytes);
-        } catch (RocksDBException e) {
-            e.printStackTrace();
-            return null;
-        }
+        return (ITransaction)get(Transaction.class, key);
     }
 
     @Override
     public IBaseTransaction getBaseTransaction(byte[] key) {
-        try {
-            byte[] baseTransactionBytes = db.get(
-                    classNameToColumnFamilyHandleMapping.get(BaseTransaction.class.getName()), key);
-            return (IBaseTransaction)SerializationUtils.deserialize(baseTransactionBytes);
-        } catch (RocksDBException e) {
-            e.printStackTrace();
-            return null;
-        }    }
+        return (IBaseTransaction)get(BaseTransaction.class, key);
+    }
+
+    @Override
+    public IAddress getAddress(byte[] key){
+        return (IAddress) get(Address.class, key);
+    }
+
+    @Override
+    public List<ITransaction> getAllTransactions() {
+        return (List<ITransaction>)(List<?>)getAllEntities(Transaction.class);
+    }
 
     @Override
     public void deleteTransaction(byte[] key) {
-        try {
-            db.delete(classNameToColumnFamilyHandleMapping.get(Transaction.class.getName()), key);
-        } catch (RocksDBException e) {
-            e.printStackTrace();
-        }
+        delete(Transaction.class, key);
+    }
+
+    @Override
+    public void deleteBaseTransaction(byte[] key) {
+        delete(BaseTransaction.class, key);
     }
 
     @Override
@@ -126,6 +111,31 @@ public class RocksDBProviderI implements IPersistenceProvider {
             columnFamilyHandle.close();
         }
         db.close();
+    }
+
+    private List<IEntity> getAllEntities(Class<?> entityClass) {
+        RocksIterator iterator =
+                db.newIterator(classNameToColumnFamilyHandleMapping.get(entityClass.getName()));
+        iterator.seekToFirst();
+        List<IEntity> entities = new ArrayList<>();
+
+        while(iterator.isValid()){
+            entities.add((ITransaction)SerializationUtils.deserialize(iterator.value()));
+            iterator.next();
+        }
+
+        return entities;
+    }
+
+    private IEntity get(Class<?> entityClass, byte[] key) {
+        try {
+            byte[] entityBytes = db.get(
+                    classNameToColumnFamilyHandleMapping.get(entityClass.getName()), key);
+            return (IEntity) SerializationUtils.deserialize(entityBytes);
+        } catch (RocksDBException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
@@ -154,6 +164,14 @@ public class RocksDBProviderI implements IPersistenceProvider {
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
+        }
+}
+
+    public void delete(Class<?> entityClass, byte[] key) {
+        try {
+            db.delete(classNameToColumnFamilyHandleMapping.get(entityClass.getName()), key);
+        } catch (RocksDBException e) {
+            e.printStackTrace();
         }
     }
 }

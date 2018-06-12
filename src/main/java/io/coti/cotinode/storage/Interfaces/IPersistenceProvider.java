@@ -1,4 +1,5 @@
 package io.coti.cotinode.storage.Interfaces;
+import io.coti.cotinode.model.Interfaces.IAddress;
 import io.coti.cotinode.model.Interfaces.IBaseTransaction;
 import io.coti.cotinode.model.Interfaces.IEntity;
 import io.coti.cotinode.model.Interfaces.ITransaction;
@@ -12,7 +13,9 @@ public interface IPersistenceProvider {
     List<ITransaction> getAllTransactions();
     ITransaction getTransaction(byte[] key);
     IBaseTransaction getBaseTransaction(byte[] key);
+    IAddress getAddress(byte[] key);
     void deleteTransaction(byte[] key);
-    void shutdown();
+    void deleteBaseTransaction(byte[] key);
     void deleteDatabaseFolder();
+    void shutdown();
 }

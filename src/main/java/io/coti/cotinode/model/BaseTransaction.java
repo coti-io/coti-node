@@ -32,4 +32,5 @@ public class BaseTransaction implements IBaseTransaction {
             return false;
         }
         return Arrays.equals(hash, ((BaseTransaction) other).getKey());
-    }}
+    }
+}
