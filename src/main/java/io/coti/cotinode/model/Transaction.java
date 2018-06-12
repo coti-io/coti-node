@@ -12,7 +12,6 @@ public class Transaction implements IEntity {
     //DSPC - DSP Consensus
     Date transactionConsensusTimestamp;
 
-
     private String name;
     public Transaction(String name){
         this.name = name;

@@ -5,6 +5,8 @@ import io.coti.cotinode.storage.Interfaces.IPersistenceProvider;
 import org.rocksdb.*;
 import org.springframework.stereotype.Service;
 import org.apache.commons.io.FileUtils;
+import org.springframework.util.SerializationUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -49,12 +51,12 @@ public class RocksDBProviderI implements IPersistenceProvider {
     }
 
     @Override
-    public boolean put(IEntity IEntity) {
+    public boolean put(IEntity entity) {
         try {
             db.put(
-                    classNameToColumnFamilyHandleMapping.get(IEntity.getClass().getName()),
-                    IEntity.getKey(),
-                    IEntity.getBytes()
+                    classNameToColumnFamilyHandleMapping.get(entity.getClass().getName()),
+                    entity.getKey(),
+                    SerializationUtils.serialize(entity)
             );
             return true;
         }
@@ -72,7 +74,7 @@ public class RocksDBProviderI implements IPersistenceProvider {
         List<Transaction> transactions = new ArrayList<>();
 
         while(iterator.isValid()){
-            transactions.add(new Transaction(iterator.value()));
+            transactions.add((Transaction)SerializationUtils.deserialize(iterator.value()));
             iterator.next();
         }
 
@@ -82,14 +84,23 @@ public class RocksDBProviderI implements IPersistenceProvider {
 
     @Override
 
-    public Transaction getTransaction(byte[] bytes) {
+    public Transaction getTransaction(byte[] key) {
         try {
             byte[] transactionBytes = db.get(
-                    classNameToColumnFamilyHandleMapping.get(Transaction.class.getName()), bytes);
-            return new Transaction(transactionBytes);
+                    classNameToColumnFamilyHandleMapping.get(Transaction.class.getName()), key);
+            return (Transaction)SerializationUtils.deserialize(transactionBytes);
         } catch (RocksDBException e) {
             e.printStackTrace();
             return null;
+        }
+    }
+
+    @Override
+    public void deleteTransaction(byte[] key) {
+        try {
+            db.delete(classNameToColumnFamilyHandleMapping.get(Transaction.class.getName()), key);
+        } catch (RocksDBException e) {
+            e.printStackTrace();
         }
     }
 

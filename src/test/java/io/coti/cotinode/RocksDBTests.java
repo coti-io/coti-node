@@ -7,6 +7,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class RocksDBTests {
@@ -66,5 +67,15 @@ public class RocksDBTests {
         Assert.assertEquals(transaction1, transactions.get(0));
         Assert.assertEquals(transaction2, transactions.get(1));
         Assert.assertEquals(2, transactions.size());
+    }
+
+    @Test
+    public void saveAndDelete(){
+        Transaction transaction1 = new Transaction("Transaction 0");
+        provider.put(transaction1);
+        Transaction transaction2 = provider.getTransaction("Transaction 0".getBytes());
+        Assert.assertEquals(transaction1, transaction2);
+        provider.deleteTransaction(transaction1.getKey());
+        Assert.assertEquals(provider.getAllTransactions(), new ArrayList<Transaction>());
     }
 }

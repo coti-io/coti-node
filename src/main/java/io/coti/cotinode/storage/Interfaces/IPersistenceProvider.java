@@ -8,7 +8,8 @@ public interface IPersistenceProvider {
     void init();
     boolean put(IEntity IEntity);
     List<Transaction> getAllTransactions();
-    Transaction getTransaction(byte[] bytes);
+    Transaction getTransaction(byte[] key);
+    void deleteTransaction(byte[] key);
 
     void shutdown();
     void deleteDatabaseFolder();
