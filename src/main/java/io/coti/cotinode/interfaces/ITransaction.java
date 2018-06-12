@@ -13,8 +13,6 @@ public interface ITransaction {
     public void setMyWeight(int myWeight);
     public int getTotalWeight();
     public void setTotalWeight(int myWeight);
-    public boolean getIsApproved();
-    public void setApprovalsNumber(boolean isApproved);
     public boolean getIsTreshHoledAchieved();
     public void setIsTreshHoledAchieved(boolean isthreshold);
 

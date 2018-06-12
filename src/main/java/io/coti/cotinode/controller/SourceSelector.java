@@ -22,7 +22,7 @@ public class SourceSelector implements ISourceSelector {
     private ConcurrentHashMap<String, List<ITransaction>> sourceMap;
 
     @Override
-    public void SetSourceMap(ISourceList sourceList) {
+    public void setSourceMap(ISourceList sourceList) {
         sourceMap = new ConcurrentHashMap<>();
         for (ITransaction t : sourceList.getSources()) {
             if (sourceMap.containsKey(t.getMyWeight())) {
@@ -30,6 +30,11 @@ public class SourceSelector implements ISourceSelector {
             }
             sourceMap.get(t.getMyWeight()).add(t);
         }
+    }
+
+    @Override
+    public void delete(ITransaction transaction) {
+        sourceMap.get(transaction.getMyWeight()).remove(transaction);
     }
 
     @Override

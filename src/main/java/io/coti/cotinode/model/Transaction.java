@@ -3,41 +3,52 @@ package io.coti.cotinode.model;
 import io.coti.cotinode.interfaces.ITransaction;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 
 
 public class Transaction implements ITransaction {
 
-    private String TransactionHash;
-    private ITransaction LeftParent;
+    private String hash;
+    private ITransaction leftParent;
     private ITransaction rightParent;
+    private boolean tcc;
+    
+    public List<String> getTrustChain() {
+        return trustChain;
+    }
+
+    public void setTrustChain(List<String> trustChain) {
+        this.trustChain = trustChain;
+    }
+    
+    private List<String> trustChain;
     private int myTrustScore;
     private int totalTrustScore;
-    private boolean isApproved;
-    private boolean isTreshHoledAchieved;
-    private ZonedDateTime CreateDateTime;
-    private ZonedDateTime UpdateDateTime;
-    private ZonedDateTime AttachmentDateTime;
-    private ZonedDateTime PowStartDateTime;
-    private ZonedDateTime EndDateTime;
+    
+    private ZonedDateTime createDateTime;
+    private ZonedDateTime updateDateTime;
+    private ZonedDateTime attachmentDateTime;
+    private ZonedDateTime powStartDateTime;
+    private ZonedDateTime endDateTime;
 
     @Override
     public String getTransactionHash() {
-        return TransactionHash;
+        return hash;
     }
 
     @Override
     public void setTransactionHash(String transactionHash) {
-        TransactionHash = transactionHash;
+        this.hash = transactionHash;
     }
 
     @Override
     public ITransaction getLeftParent() {
-        return LeftParent;
+        return leftParent;
     }
 
     @Override
     public void setLeftParent(ITransaction leftParent) {
-        LeftParent = leftParent;
+        this.leftParent = leftParent;
     }
 
     @Override
@@ -56,84 +67,75 @@ public class Transaction implements ITransaction {
     }
 
     @Override
-    public void setTotalWeight(int myWeight) {
-        this.myTrustScore = myWeight;
-    }
-
-    @Override
-    public int getTotalWeight() {
-        return myTrustScore;
-    }
-
-    @Override
     public void setMyWeight(int myWeight) {
         this.myTrustScore = myWeight;
     }
 
     @Override
-    public boolean getIsApproved() {
-        return isApproved;
+    public void setTotalWeight(int myWeight) {
+        this.totalTrustScore = myWeight;
     }
 
     @Override
-    public void setApprovalsNumber(boolean isApproved) {
-        this.isApproved = isApproved;
+    public int getTotalWeight() {
+        return totalTrustScore;
     }
+
 
     @Override
     public boolean getIsTreshHoledAchieved() {
-        return isTreshHoledAchieved;
+        return tcc;
     }
 
     @Override
     public void setIsTreshHoledAchieved(boolean isthreshold) {
-        this.isTreshHoledAchieved = isthreshold;
+        this.tcc = isthreshold;
     }
 
     @Override
-    public ZonedDateTime getCreateDateTime() { return CreateDateTime; }
+    public ZonedDateTime getCreateDateTime() { return createDateTime; }
 
     @Override
-    public void setCreateDateTime(ZonedDateTime createDateTime) { CreateDateTime = createDateTime; }
+    public void setCreateDateTime(ZonedDateTime createDateTime) { this.createDateTime = createDateTime; }
 
     @Override
     public ZonedDateTime getUpdateDateTime() {
-        return UpdateDateTime;
+        return updateDateTime;
     }
 
     @Override
     public void setUpdateDateTime(ZonedDateTime updateDateTime) {
-        UpdateDateTime = updateDateTime;
+        this.updateDateTime = updateDateTime;
     }
 
     @Override
     public ZonedDateTime getAttachmentDateTime() {
-        return AttachmentDateTime;
+        return attachmentDateTime;
     }
 
     @Override
     public void setAttachmentDateTime(ZonedDateTime attachmentDateTime) {
-        AttachmentDateTime = attachmentDateTime;
+        this.attachmentDateTime = attachmentDateTime;
     }
 
     @Override
     public ZonedDateTime getPowStartDateTime() {
-        return PowStartDateTime;
+        return powStartDateTime;
     }
 
     @Override
     public void setPowStartDateTime(ZonedDateTime powStartDateTime) {
-        PowStartDateTime = powStartDateTime;
+        this.powStartDateTime = powStartDateTime;
     }
 
     @Override
     public ZonedDateTime getEndDateTime() {
-        return EndDateTime;
+        return endDateTime;
     }
 
     @Override
     public void setEndDateTime(ZonedDateTime endDateTime) {
-        EndDateTime = endDateTime;
+        this.endDateTime = endDateTime;
     }
 
 }
