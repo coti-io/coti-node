@@ -1,4 +1,6 @@
 package io.coti.cotinode;
+import io.coti.cotinode.model.BaseTransaction;
+import io.coti.cotinode.model.Interfaces.IBaseTransaction;
 import io.coti.cotinode.model.Interfaces.ITransaction;
 import io.coti.cotinode.model.Transaction;
 import io.coti.cotinode.storage.Interfaces.IPersistenceProvider;
@@ -71,12 +73,20 @@ public class RocksDBTests {
     }
 
     @Test
-    public void saveAndDelete(){
+    public void saveAndDeleteTransactions(){
         ITransaction transaction1 = new Transaction("ITransaction 0".getBytes());
         provider.put(transaction1);
         ITransaction transaction2 = provider.getTransaction("ITransaction 0".getBytes());
         Assert.assertEquals(transaction1, transaction2);
         provider.deleteTransaction(transaction1.getKey());
         Assert.assertEquals(provider.getAllTransactions(), new ArrayList<ITransaction>());
+    }
+
+    @Test
+    public void saveAndGetBaseTransaction(){
+        IBaseTransaction baseTransaction1 = new BaseTransaction("ITransaction 0".getBytes());
+        provider.put(baseTransaction1);
+        IBaseTransaction baseTransaction2 = provider.getBaseTransaction("ITransaction 0".getBytes());
+        Assert.assertEquals(baseTransaction1, baseTransaction2);
     }
 }

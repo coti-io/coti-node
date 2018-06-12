@@ -1,4 +1,6 @@
 package io.coti.cotinode.storage;
+import io.coti.cotinode.model.BaseTransaction;
+import io.coti.cotinode.model.Interfaces.IBaseTransaction;
 import io.coti.cotinode.model.Interfaces.IEntity;
 import io.coti.cotinode.model.Interfaces.ITransaction;
 import io.coti.cotinode.model.Transaction;
@@ -20,8 +22,10 @@ public class RocksDBProviderI implements IPersistenceProvider {
     private final String dbPath = ".\\rocksDB";
     private final List<String> columnFamilyClassNames = Arrays.asList(
             "DefaultColumnClassName",
-            Transaction.class.getName()
+            Transaction.class.getName(),
+            BaseTransaction.class.getName()
     );
+
     private Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
     private List<ColumnFamilyHandle> columnFamilyHandles = new ArrayList<>();
 
@@ -94,6 +98,17 @@ public class RocksDBProviderI implements IPersistenceProvider {
             return null;
         }
     }
+
+    @Override
+    public IBaseTransaction getBaseTransaction(byte[] key) {
+        try {
+            byte[] baseTransactionBytes = db.get(
+                    classNameToColumnFamilyHandleMapping.get(BaseTransaction.class.getName()), key);
+            return (IBaseTransaction)SerializationUtils.deserialize(baseTransactionBytes);
+        } catch (RocksDBException e) {
+            e.printStackTrace();
+            return null;
+        }    }
 
     @Override
     public void deleteTransaction(byte[] key) {
