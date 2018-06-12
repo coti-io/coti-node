@@ -61,6 +61,9 @@ public class Transaction implements ITransaction {
         this.rightParent = rightParent;
     }
 
+
+
+    
     @Override
     public int getMyWeight() {
         return myTrustScore;
