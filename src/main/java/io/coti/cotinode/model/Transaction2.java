@@ -6,7 +6,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 
-public class Transaction implements ITransaction {
+public class Transaction2 implements ITransaction {
 
     private String hash;
     private ITransaction leftParent;
