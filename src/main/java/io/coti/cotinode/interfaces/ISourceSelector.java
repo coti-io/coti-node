@@ -1,12 +1,18 @@
 package io.coti.cotinode.interfaces;
 
+import io.coti.cotinode.model.Interfaces.ITransaction;
+
 import java.time.ZonedDateTime;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 public interface ISourceSelector {
-    public void setSourceMap(ISourceList sourceList);
-    public ISourceList selectSources(int trustScore, ZonedDateTime timestamp, int minSourcePercentage, int totalSourceNum, int maxNeighbourhoodRadius);
-    public ISourceList  chooseWeightedByTimestamp(ISourceList sourceList, ZonedDateTime timestamp);
-    public void attachToSource(ITransaction newTransaction, ITransaction source);
-    public void delete(ITransaction transaction);
+    public List<ITransaction> selectSourcesForAttachment(
+            Map<Integer, List<ITransaction>> trustScoreToTransactionMapping,
+            int transactionTrustScore,
+            Date transactionCreationTime,
+            int minSourcePercentage,
+            int totalSourceNum,
+            int maxNeighbourhoodRadius);
 }

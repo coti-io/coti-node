@@ -1,5 +1,6 @@
 package io.coti.cotinode.storage;
 import io.coti.cotinode.model.Interfaces.IEntity;
+import io.coti.cotinode.model.Interfaces.ITransaction;
 import io.coti.cotinode.model.Transaction;
 import io.coti.cotinode.storage.Interfaces.IPersistenceProvider;
 import org.rocksdb.*;
@@ -67,14 +68,14 @@ public class RocksDBProviderI implements IPersistenceProvider {
     }
 
     @Override
-    public List<Transaction> getAllTransactions() {
+    public List<ITransaction> getAllTransactions() {
         RocksIterator iterator =
                 db.newIterator(classNameToColumnFamilyHandleMapping.get(Transaction.class.getName()));
         iterator.seekToFirst();
-        List<Transaction> transactions = new ArrayList<>();
+        List<ITransaction> transactions = new ArrayList<>();
 
         while(iterator.isValid()){
-            transactions.add((Transaction)SerializationUtils.deserialize(iterator.value()));
+            transactions.add((ITransaction)SerializationUtils.deserialize(iterator.value()));
             iterator.next();
         }
 
@@ -83,11 +84,11 @@ public class RocksDBProviderI implements IPersistenceProvider {
 
 
     @Override
-    public Transaction getTransaction(byte[] key) {
+    public ITransaction getTransaction(byte[] key) {
         try {
             byte[] transactionBytes = db.get(
                     classNameToColumnFamilyHandleMapping.get(Transaction.class.getName()), key);
-            return (Transaction)SerializationUtils.deserialize(transactionBytes);
+            return (ITransaction)SerializationUtils.deserialize(transactionBytes);
         } catch (RocksDBException e) {
             e.printStackTrace();
             return null;
