@@ -8,6 +8,7 @@ import io.coti.cotinode.storage.Interfaces.IPersistenceProvider;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -35,14 +36,16 @@ public class Cluster implements ICluster {
     }
 
     private void setTrustScoreToSourceListMapping(List<ITransaction> unconfirmedTransactions) {
-        trustScoreToSourceListMapping = new ConcurrentHashMap<Integer, List<ITransaction>>();
+        this.trustScoreToSourceListMapping = new ConcurrentHashMap<Integer, List<ITransaction>>();
         for (ITransaction transaction: unconfirmedTransactions) {
             if (transaction.isSource()){
-
+                if (!this.trustScoreToSourceListMapping.containsKey(transaction.getSenderTrustScore())) {
+                    this.trustScoreToSourceListMapping.put(transaction.getSenderTrustScore(), new Vector<ITransaction>());
+                }
+                this.trustScoreToSourceListMapping.get(transaction.getSenderTrustScore()).add(transaction);
             }
         }
     }
-
 
     @Override
     public ConcurrentHashMap<byte[], ITransaction> getUnconfirmedTransactions() {
@@ -85,15 +88,23 @@ public class Cluster implements ICluster {
         // Selection of sources
         List<ITransaction> randomWeightedSources = null;
         ISourceSelector sourceSelector = new SourceSelector();
-        sourceSelector.selectSourcesForAttachment( trustScoreToSourceListMapping,
+        List<ITransaction> selectedSourcesForAttachment = sourceSelector.selectSourcesForAttachment( trustScoreToSourceListMapping,
                 transaction.getSenderTrustScore(),
                 transaction.getCreateDateTime(),
                 5, // TODO: from config file and/or dynamic
                 10); // TODO: from config file and/or dynamic
         // Update the total trust score of the parents
+        for (ITransaction sourceTransaction : selectedSourcesForAttachment) {
+            attachToSource(transaction, sourceTransaction);
+        }
         updateParentsTotalSumScore(transaction, 0);
 
         // TODO : POW
+
+        for (ITransaction sourceTransaction : selectedSourcesForAttachment) {
+
+        }
+
     }
 
     @Override
