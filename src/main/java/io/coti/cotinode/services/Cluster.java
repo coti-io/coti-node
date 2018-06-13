@@ -1,7 +1,7 @@
 package io.coti.cotinode.services;
 
+import io.coti.cotinode.model.PreBalance;
 import io.coti.cotinode.services.interfaces.ISourceSelector;
-import io.coti.cotinode.model.Interfaces.ITransaction;
 import io.coti.cotinode.model.Transaction;
 import io.coti.cotinode.services.interfaces.ICluster;
 import io.coti.cotinode.storage.Interfaces.IPersistenceProvider;
@@ -17,11 +17,12 @@ import java.util.stream.Collectors;
 @Component
 public class Cluster implements ICluster {
     private IPersistenceProvider persistenceProvider;
-    private ConcurrentHashMap<byte[], ITransaction> hashToUnconfirmedTransactionsMapping;
-    private ConcurrentHashMap<Integer, List<ITransaction>> trustScoreToSourceListMapping;
+    private ConcurrentHashMap<byte[], Transaction> hashToUnconfirmedTransactionsMapping;
+    private ConcurrentHashMap<Integer, List<Transaction>> trustScoreToSourceListMapping;
+    private ConcurrentHashMap<byte[], PreBalance> hashToPreBalanceMapping;
 
     @Override
-    public void initCluster(List<ITransaction> unconfirmedTransactions){
+    public void initCluster(List<Transaction> unconfirmedTransactions){
         hashToUnconfirmedTransactionsMapping = new ConcurrentHashMap<>();
         trustScoreToSourceListMapping = new ConcurrentHashMap<>();
         setUnconfirmedTransactions(unconfirmedTransactions);
@@ -29,19 +30,19 @@ public class Cluster implements ICluster {
     }
 
 
-    private void setUnconfirmedTransactions(List<ITransaction> unconfirmedTransactions) {
+    private void setUnconfirmedTransactions(List<Transaction> unconfirmedTransactions) {
         this.hashToUnconfirmedTransactionsMapping.
                 putAll(unconfirmedTransactions.stream().
                         collect(Collectors.
-                                toMap(ITransaction::getHash, Function.identity())));
+                                toMap(Transaction::getHash, Function.identity())));
     }
 
-    private void setTrustScoreToSourceListMapping(List<ITransaction> unconfirmedTransactions) {
-        this.trustScoreToSourceListMapping = new ConcurrentHashMap<Integer, List<ITransaction>>();
-        for (ITransaction transaction: unconfirmedTransactions) {
+    private void setTrustScoreToSourceListMapping(List<Transaction> unconfirmedTransactions) {
+        this.trustScoreToSourceListMapping = new ConcurrentHashMap<>();
+        for (Transaction transaction: unconfirmedTransactions) {
             if (transaction.isSource()){
                 if (!this.trustScoreToSourceListMapping.containsKey(transaction.getSenderTrustScore())) {
-                    this.trustScoreToSourceListMapping.put(transaction.getSenderTrustScore(), new Vector<ITransaction>());
+                    this.trustScoreToSourceListMapping.put(transaction.getSenderTrustScore(), new Vector<Transaction>());
                 }
                 this.trustScoreToSourceListMapping.get(transaction.getSenderTrustScore()).add(transaction);
             }
@@ -49,17 +50,17 @@ public class Cluster implements ICluster {
     }
 
     @Override
-    public ConcurrentHashMap<byte[], ITransaction> getUnconfirmedTransactions() {
+    public ConcurrentHashMap<byte[], Transaction> getUnconfirmedTransactions() {
         return hashToUnconfirmedTransactionsMapping;
     }
 
     @Override
-    public void addUnconfirmedTransaction(ITransaction transaction, byte[] hash) {
+    public void addUnconfirmedTransaction(Transaction transaction, byte[] hash) {
         hashToUnconfirmedTransactionsMapping.put(hash, transaction);
     }
 
     @Override
-    public ITransaction getTransaction(byte[] hash) {
+    public Transaction getTransaction(byte[] hash) {
         if(hashToUnconfirmedTransactionsMapping.containsKey(hash)){
             return hashToUnconfirmedTransactionsMapping.get(hash);
         }
@@ -78,64 +79,79 @@ public class Cluster implements ICluster {
         }
     }
 
-    public List<ITransaction> getAllSourceTransactions() {
+    public List<Transaction> getAllSourceTransactions() {
         return hashToUnconfirmedTransactionsMapping.values().stream().
-                filter(ITransaction::isSource).collect(Collectors.toList());
+                filter(Transaction::isSource).collect(Collectors.toList());
     }
 
     @Override
-    public void addNewTransaction(ITransaction transaction) {
+    public void addNewTransaction(Transaction transaction) {
         transaction.setProcessStartTime(new Date());
 
-        // TODO Validation
+        // TODO: Validate the transaction, including balance && preBalance
+
+        // TODO: Get The transaction trust score from trust score node.
 
         // Selection of sources
         ISourceSelector sourceSelector = new SourceSelector();
-        List<ITransaction> selectedSourcesForAttachment = sourceSelector.selectSourcesForAttachment( trustScoreToSourceListMapping,
+        List<Transaction> selectedSourcesForAttachment = sourceSelector.selectSourcesForAttachment( trustScoreToSourceListMapping,
                 transaction.getSenderTrustScore(),
-                transaction.getCreateDateTime(),
-                5, // TODO: from config file and/or dynamic
-                10); // TODO: from config file and/or dynamic
+                transaction.getCreateTime(),
+                5, // TODO: get value from config file and/or dynamic
+                10); // TODO:  get value from config file and/or dynamic
 
-        // Update sources
-        for (ITransaction sourceTransaction : selectedSourcesForAttachment) {
-            attachToSource(transaction, sourceTransaction);
-        }
-
-        // Update the total trust score of the parents
-        transaction.setChildrenTransactions(new Vector<byte[]>());
-        updateParentsTotalSumScore(transaction, 0);
+        // TODO: Validate the sources.
 
         // POW
         transaction.setPowStartTime(new Date());
         // TODO : POW
         transaction.setPowEndTime(new Date());
 
+        // Attache sources
+        if (trustScoreToSourceListMapping.size() > 1) {
+            if (selectedSourcesForAttachment.size() == 0) {
+                // TODO: wait
+            }
 
-        for (ITransaction sourceTransaction : selectedSourcesForAttachment) {
-
+            for (Transaction sourceTransaction : selectedSourcesForAttachment) {
+                attachToSource(transaction, sourceTransaction);
+            }
         }
+
+        // Update the total trust score of the parents
+        //transaction.setChildrenTransactions(new Vector<byte[]>());
+        updateParentsTotalSumScore(transaction, 0, transaction.getTrustChainTransactionHashes());
 
         transaction.setProcessEndTime(new Date());
     }
 
     @Override
-    public void updateParentsTotalSumScore(ITransaction transaction, int sonsTotalTrustScore) {
-        if (transaction != null && !transaction.isThresholdAchieved()) {
+    public void updateParentsTotalSumScore(Transaction transaction, int sonsTotalTrustScore, List<byte[]> trustChainTransactionHashes) {
+        if (transaction != null && !transaction.isTransactionConsensus()) {
             if (transaction.getTotalTrustScore() <  sonsTotalTrustScore + transaction.getSenderTrustScore()) {
                 transaction.setTotalTrustScore(sonsTotalTrustScore + transaction.getSenderTrustScore());
+                transaction.setTrustChainTransactionHashes(trustChainTransactionHashes);
                 if (transaction.getTotalTrustScore() >= 300 ) {// TODO : set the number as consant
-                    transaction.setThresholdAchieved(true);
-                    hashToUnconfirmedTransactionsMapping.remove(transaction.getKey());
+                    if (transaction.isDspConsensus()) {
+                        transaction.setTransactionConsensus(true);
+                        hashToUnconfirmedTransactionsMapping.remove(transaction.getKey());
+                    }
                 }
             }
-            updateParentsTotalSumScore(transaction.getLeftParent(), transaction.getTotalTrustScore());
-            updateParentsTotalSumScore(transaction.getRightParent(), transaction.getTotalTrustScore());
+            List<byte[]> parentTrustChainTransactionHashes = (Vector<byte[]>)transaction.getTrustChainTransactionHashes();
+            parentTrustChainTransactionHashes.add(transaction.getHash());
+            updateParentsTotalSumScore(transaction.getLeftParent(),
+                    transaction.getTotalTrustScore(),
+                    parentTrustChainTransactionHashes);
+
+            updateParentsTotalSumScore(transaction.getRightParent(),
+                    transaction.getTotalTrustScore(),
+                    parentTrustChainTransactionHashes);
         }
     }
 
     @Override
-    public void attachToSource(ITransaction newTransaction, ITransaction source) {
+    public void attachToSource(Transaction newTransaction, Transaction source) {
         if(hashToUnconfirmedTransactionsMapping.get(source.getKey()) == null) {
             System.out.println("Cannot find source:" + source);
             throw new RuntimeException("Cannot find source:" + source);

@@ -8,6 +8,7 @@ import lombok.Setter;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Vector;
 
 @Data
 public class Transaction implements IEntity {
@@ -15,6 +16,7 @@ public class Transaction implements IEntity {
     private Transaction leftParent;
     private Transaction rightParent;
     private List<byte[]> trustChainTransactionHashes;
+    private byte[] userTrustScoreTokenHashes;
     private boolean transactionConsensus;
     private boolean dspConsensus;
     private int totalTrustScore;
@@ -40,6 +42,8 @@ public class Transaction implements IEntity {
 
     public Transaction(byte[] hash){
         this.hash = hash;
+        this.trustChainTransactionHashes = new Vector<>();
+        this.childrenTransactions = new Vector<>();
     }
 
     @Override
@@ -67,9 +71,11 @@ public class Transaction implements IEntity {
     public void attachToSource(Transaction source){
         if (leftParent == null){
             leftParent = source;
+            source.childrenTransactions.add(hash);
         }
         else if(rightParent == null){
             rightParent = source;
+            source.childrenTransactions.add(hash);
         }
         else{
             System.out.println("Unable to attach to source, both parents are full");

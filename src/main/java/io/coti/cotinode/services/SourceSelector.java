@@ -1,7 +1,8 @@
 package io.coti.cotinode.services;
 
+import io.coti.cotinode.model.Transaction;
 import io.coti.cotinode.services.interfaces.ISourceSelector;
-import io.coti.cotinode.model.Interfaces.ITransaction;
+
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -16,14 +17,14 @@ import static java.util.stream.Collectors.toList;
 public class SourceSelector implements ISourceSelector {
 
     @Override
-    public List<ITransaction> selectSourcesForAttachment(
-            Map<Integer,? extends List<? extends ITransaction>> trustScoreToTransactionMapping,
+    public List<Transaction> selectSourcesForAttachment(
+            Map<Integer,? extends List<Transaction>> trustScoreToTransactionMapping,
             int transactionTrustScore,
             Date transactionCreationTime,
             int minSourcePercentage,
             int maxNeighbourhoodRadius) {
 
-        List<ITransaction> neighbourSources = getNeighbourSources(
+        List<Transaction> neighbourSources = getNeighbourSources(
                 trustScoreToTransactionMapping,
                 transactionTrustScore,
                 maxNeighbourhoodRadius,
@@ -32,13 +33,13 @@ public class SourceSelector implements ISourceSelector {
         return selectTwoOptimalSources(neighbourSources, transactionCreationTime);
     }
 
-    private List<ITransaction> getNeighbourSources(
-            Map<Integer,? extends List<? extends ITransaction>> trustScoreToSourceListMapping,
+    private List<Transaction> getNeighbourSources(
+            Map<Integer,? extends List<Transaction>> trustScoreToSourceListMapping,
             int transactionTrustScore,
             int maxTrustScoreRadius,
             int minSourcePercentage){
 
-        List<ITransaction> neighbourSources = new Vector<>();
+        List<Transaction> neighbourSources = new Vector<>();
 
         AtomicInteger numberOfSources = new AtomicInteger();
         trustScoreToSourceListMapping.forEach((score, transactions) -> {
@@ -62,12 +63,12 @@ public class SourceSelector implements ISourceSelector {
         return neighbourSources;
     }
 
-    private List<ITransaction> selectTwoOptimalSources(
-            List<ITransaction> transactions,
+    private List<Transaction> selectTwoOptimalSources(
+            List<Transaction> transactions,
             Date transactionCreationTime) {
-        List<ITransaction> olderSources =
+        List<Transaction> olderSources =
                 transactions.stream().
-                        filter(s -> s.getCreateDateTime().before(transactionCreationTime)).collect(toList());
+                        filter(s -> s.getCreateTime().before(transactionCreationTime)).collect(toList());
 
         if(olderSources.size() <= 2) {
             return olderSources;
@@ -76,23 +77,23 @@ public class SourceSelector implements ISourceSelector {
         // Calculate total timestamp differences from the transaction's timestamp
         long totalWeight =
                 olderSources.stream().
-                        map(s -> transactionCreationTime.getTime() - s.getCreateDateTime().getTime()).mapToLong(Long::longValue).sum();
+                        map(s -> transactionCreationTime.getTime() - s.getCreateTime().getTime()).mapToLong(Long::longValue).sum();
 
         // Now choose sources, randomly weighted by timestamp difference ("older" transactions have a bigger chance to be selected)
-        List<ITransaction> randomWeightedSources = new Vector<ITransaction>();
+        List<Transaction> randomWeightedSources = new Vector<>();
         while(randomWeightedSources.size() < 2) {
 
             int randomIndex = -1;
             double random = Math.random() * totalWeight;
             for (int i = 0; i < olderSources.size(); ++i) {
-                random -=  transactionCreationTime.getTime()- olderSources.get(i).getCreateDateTime().getTime();
+                random -=  transactionCreationTime.getTime()- olderSources.get(i).getCreateTime().getTime();
                 if (random < 0.0d) {
                     randomIndex = i;
                     break;
                 }
             }
 
-            ITransaction randomSource = olderSources.get(randomIndex);
+            Transaction randomSource = olderSources.get(randomIndex);
 
             if(randomWeightedSources.size() == 0)
                 randomWeightedSources.add(randomSource);
