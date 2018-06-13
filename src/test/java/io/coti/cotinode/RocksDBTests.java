@@ -1,6 +1,6 @@
 package io.coti.cotinode;
+
 import io.coti.cotinode.model.*;
-import io.coti.cotinode.model.Interfaces.*;
 import io.coti.cotinode.storage.Interfaces.IPersistenceProvider;
 import io.coti.cotinode.storage.RocksDBProvider;
 import org.junit.After;
@@ -27,31 +27,31 @@ public class RocksDBTests {
     }
 
     @Test
-    public void saveAndRetrieveSingleITransaction(){
-        ITransaction transaction1 = new Transaction("ITransaction 0".getBytes());
+    public void saveAndRetrieveSingleTransaction(){
+        Transaction transaction1 = new Transaction("Transaction 0".getBytes());
         provider.put(transaction1);
-        ITransaction transaction2 = provider.getTransaction(transaction1.getKey());
+        Transaction transaction2 = provider.getTransaction(transaction1.getKey());
         Assert.assertEquals(transaction1, transaction2);
     }
 
     @Test
-    public void saveAndRetrieveWithManyITransactions(){
-        ITransaction transaction1 = new Transaction("ITransaction 0".getBytes());
-        ITransaction transaction2 = new Transaction("ITransaction 2".getBytes());
+    public void saveAndRetrieveWithManyTransactions(){
+        Transaction transaction1 = new Transaction("Transaction 0".getBytes());
+        Transaction transaction2 = new Transaction("Transaction 2".getBytes());
         provider.put(transaction1);
         provider.put(transaction2);
-        ITransaction transaction3 = provider.getTransaction("ITransaction 0".getBytes());
+        Transaction transaction3 = provider.getTransaction("Transaction 0".getBytes());
         Assert.assertEquals(transaction1, transaction3);
     }
 
     @Test
-    public void saveManyAndRetrieveManyITransactions(){
-        ITransaction transaction1 = new Transaction("ITransaction 0".getBytes());
-        ITransaction transaction2 = new Transaction("ITransaction 1".getBytes());
+    public void saveManyAndRetrieveManyTransactions(){
+        Transaction transaction1 = new Transaction("Transaction 0".getBytes());
+        Transaction transaction2 = new Transaction("Transaction 1".getBytes());
         provider.put(transaction1);
         provider.put(transaction2);
-        ITransaction transaction3 = provider.getTransaction("ITransaction 0".getBytes());
-        ITransaction transaction4 = provider.getTransaction("ITransaction 1".getBytes());
+        Transaction transaction3 = provider.getTransaction("Transaction 0".getBytes());
+        Transaction transaction4 = provider.getTransaction("Transaction 1".getBytes());
 
         Assert.assertEquals(transaction1, transaction3);
         Assert.assertEquals(transaction2, transaction4);
@@ -59,11 +59,11 @@ public class RocksDBTests {
 
     @Test
     public void saveManyAndGetAll(){
-        ITransaction transaction1 = new Transaction("First A".getBytes());
-        ITransaction transaction2 = new Transaction("Second B".getBytes());
+        Transaction transaction1 = new Transaction("First A".getBytes());
+        Transaction transaction2 = new Transaction("Second B".getBytes());
         provider.put(transaction1);
         provider.put(transaction2);
-        List<ITransaction> transactions = provider.getAllTransactions();
+        List<Transaction> transactions = provider.getAllTransactions();
 
         Assert.assertEquals(transaction1, transactions.get(0));
         Assert.assertEquals(transaction2, transactions.get(1));
@@ -72,53 +72,53 @@ public class RocksDBTests {
 
     @Test
     public void saveAndDeleteTransactions(){
-        ITransaction transaction1 = new Transaction("ITransaction 0".getBytes());
+        Transaction transaction1 = new Transaction("Transaction 0".getBytes());
         provider.put(transaction1);
-        ITransaction transaction2 = provider.getTransaction("ITransaction 0".getBytes());
+        Transaction transaction2 = provider.getTransaction("Transaction 0".getBytes());
         Assert.assertEquals(transaction1, transaction2);
         provider.deleteTransaction(transaction1.getKey());
-        Assert.assertEquals(provider.getAllTransactions(), new ArrayList<ITransaction>());
+        Assert.assertEquals(provider.getAllTransactions(), new ArrayList<Transaction>());
     }
 
     @Test
     public void saveAndGetBaseTransaction(){
-        IBaseTransaction baseTransaction1 = new BaseTransaction("ITransaction 0".getBytes());
+        BaseTransaction baseTransaction1 = new BaseTransaction("Transaction 0".getBytes());
         provider.put(baseTransaction1);
-        IBaseTransaction baseTransaction2 = provider.getBaseTransaction("ITransaction 0".getBytes());
+        BaseTransaction baseTransaction2 = provider.getBaseTransaction("Transaction 0".getBytes());
         Assert.assertEquals(baseTransaction1, baseTransaction2);
     }
 
     @Test
     public void saveAndGetAddress(){
-        IAddress address1 = new Address("Address 0".getBytes());
+        Address address1 = new Address("Address 0".getBytes());
         provider.put(address1);
-        IAddress address2 = provider.getAddress("Address 0".getBytes());
+        Address address2 = provider.getAddress("Address 0".getBytes());
         Assert.assertEquals(address1, address2);
     }
 
     @Test
     public void saveAndDeleteBaseTransactions(){
-        IBaseTransaction transaction1 = new BaseTransaction("ITransaction 0".getBytes());
+        BaseTransaction transaction1 = new BaseTransaction("Transaction 0".getBytes());
         provider.put(transaction1);
-        IBaseTransaction transaction2 = provider.getBaseTransaction("ITransaction 0".getBytes());
+        BaseTransaction transaction2 = provider.getBaseTransaction("Transaction 0".getBytes());
         Assert.assertEquals(transaction1, transaction2);
         provider.deleteBaseTransaction(transaction1.getKey());
-        Assert.assertEquals(provider.getAllTransactions(), new ArrayList<IBaseTransaction>());
+        Assert.assertEquals(provider.getAllTransactions(), new ArrayList<BaseTransaction>());
     }
 
     @Test
     public void saveAndGetBalance(){
-        IBalance balance1 = new Balance("Balance 0".getBytes());
+        Balance balance1 = new Balance("Balance 0".getBytes());
         provider.put(balance1);
-        IBalance balance2 = provider.getBalance("Balance 0".getBytes());
+        Balance balance2 = provider.getBalance("Balance 0".getBytes());
         Assert.assertEquals(balance1, balance2);
     }
 
     @Test
     public void saveAndGetPreBalance(){
-        IPreBalance preBalance1 = new PreBalance("Balance 0".getBytes());
+        PreBalance preBalance1 = new PreBalance("Balance 0".getBytes());
         provider.put(preBalance1);
-        IPreBalance preBalance2 = provider.getPreBalance("Balance 0".getBytes());
+        PreBalance preBalance2 = provider.getPreBalance("Balance 0".getBytes());
         Assert.assertEquals(preBalance1, preBalance2);
     }
 }

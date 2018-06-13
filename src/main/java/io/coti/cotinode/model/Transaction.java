@@ -1,17 +1,20 @@
 package io.coti.cotinode.model;
 
-import ch.qos.logback.core.html.IThrowableRenderer;
-import io.coti.cotinode.model.Interfaces.ITransaction;
+import io.coti.cotinode.model.Interfaces.IEntity;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.Setter;
 
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-public class Transaction implements ITransaction {
-    private byte[] hash;
-    private ITransaction leftParent;
-    private ITransaction rightParent;
-    private List<byte[]> trustChain;
+@Data
+public class Transaction implements IEntity {
+    @Setter(AccessLevel.NONE) private byte[] hash;
+    private Transaction leftParent;
+    private Transaction rightParent;
+    private List<byte[]> trustChainTransactionHashes;
     private boolean transactionConsensus;
     private boolean dspConsensus;
     private int totalTrustScore;
@@ -24,16 +27,12 @@ public class Transaction implements ITransaction {
     private Date powEndTime;
     private int baseTransactionsCount;
     private int senderTrustScore;
-    private List<ITransaction> baseTransactions;
+    private List<byte[]> baseTransactions;
     private byte[] senderNodeHash;
     private String senderNodeIpAddress;
     private byte[] userHash;
     private List<byte[]> childrenTransactions;
-
-    @Override
-    public void setAttachmentTime(Date attachmentTime) {
-        this.attachmentTime = attachmentTime;
-    }
+    private boolean isValid;
 
     public boolean isSource(){
         return childrenTransactions == null || childrenTransactions.size() == 0;
@@ -65,8 +64,7 @@ public class Transaction implements ITransaction {
         return Arrays.equals(hash, ((Transaction) other).getKey());
     }
 
-    @Override
-    public void attachToSource(ITransaction source){
+    public void attachToSource(Transaction source){
         if (leftParent == null){
             leftParent = source;
         }
@@ -78,76 +76,4 @@ public class Transaction implements ITransaction {
             throw new RuntimeException("Unable to attach to source.");
         }
     }
-
-    @Override
-    public Date getCreateDateTime() {
-        return createTime;
-    }
-
-    @Override
-    public boolean isThresholdAchieved() {
-        return transactionConsensus;
-    }
-
-    @Override
-    public int getTotalTrustScore() {
-        return totalTrustScore;
-    }
-
-    @Override
-    public int getSenderTrustScore() {
-        return senderTrustScore;
-    }
-
-    @Override
-    public void setTotalTrustScore(int totalTrustScore) {
-        this.totalTrustScore = totalTrustScore;
-    }
-
-    @Override
-    public void setThresholdAchieved(boolean isAchieved) {
-        transactionConsensus = isAchieved;
-    }
-
-    @Override
-    public void setChildrenTransactions(List<byte[]> childrenTransactions) {
-        this.childrenTransactions = childrenTransactions;
-    }
-
-    @Override
-    public byte[] getHash() {
-        return new byte[0];
-    }
-
-    @Override
-    public ITransaction getLeftParent() {
-        return leftParent;
-    }
-
-    @Override
-    public ITransaction getRightParent() {
-        return rightParent;
-    }
-
-    @Override
-    public void setPowStartTime(Date powStartTime) {
-        this.powStartTime = powStartTime;
-    }
-
-    @Override
-    public void setPowEndTime(Date powEndTime) {
-        this.powEndTime = powEndTime;
-    }
-
-    @Override
-    public void setProcessStartTime(Date processStartTime) {
-        this.processStartTime = processStartTime;
-    }
-
-    @Override
-    public void setProcessEndTime(Date processEndTime) {
-        this.processEndTime = processEndTime;
-    }
-
-
 }

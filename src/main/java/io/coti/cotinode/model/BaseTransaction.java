@@ -1,11 +1,12 @@
 package io.coti.cotinode.model;
 
-import io.coti.cotinode.model.Interfaces.IAddress;
-import io.coti.cotinode.model.Interfaces.IBaseTransaction;
+import io.coti.cotinode.model.Interfaces.IEntity;
+import lombok.Data;
 
 import java.util.Arrays;
 
-public class BaseTransaction implements IBaseTransaction {
+@Data
+public class BaseTransaction implements IEntity {
     private byte[] hash;
     private Address address;
     private long value;
