@@ -1,5 +1,6 @@
 package io.coti.cotinode.model;
 
+import ch.qos.logback.core.html.IThrowableRenderer;
 import io.coti.cotinode.model.Interfaces.ITransaction;
 
 import java.util.Arrays;
@@ -10,24 +11,28 @@ public class Transaction implements ITransaction {
     private byte[] hash;
     private ITransaction leftParent;
     private ITransaction rightParent;
-    private List<Transaction> trustChain;
+    private List<ITransaction> trustChain;
     private boolean transactionConsensus;
     private boolean dspConsensus;
-    private boolean senderTrustScore;
     private boolean totalTrustScore;
-    private Date createDateTime;
-    private Date updateDateTime;
-    private Date attachmentDateTime;
-    private Date powStartDateTime;
-    private Date endDateTime;
+    private Date createTime;
+    private Date updateTime;
+    private Date attachmentTime;
+    private Date processStartTime;
+    private Date processEndTime;
+    private Date powStartTime;
+    private Date powEndTime;
+    private int baseTransactionsCount;
+    private boolean senderTrustScore;
+    private List<ITransaction> baseTransactions;
+    private byte[] senderNodeHash;
+    private String senderNodeIpAddress;
+    private byte[] userHash;
+    private List<ITransaction> childrenTransactions;
 
     public boolean isSource(){
-        return leftParent == null && rightParent == null;
+        return childrenTransactions == null || childrenTransactions.size() == 0;
     }
-
-    // TCC - Transaction Consensus
-    //DSPC - DSP Consensus
-    Date transactionConsensusTimestamp;
 
     public Transaction(byte[] hash){
         this.hash = hash;
@@ -91,12 +96,15 @@ public class Transaction implements ITransaction {
 
     @Override
     public void setTotalTrustScore(int totalTrustScore) {
-
     }
 
     @Override
     public void setThresholdAchieved(boolean isAchieved) {
+    }
 
+    @Override
+    public void setChildrenTransactions(List<ITransaction> childrenTransactions) {
+        this.childrenTransactions = childrenTransactions;
     }
 
     @Override
