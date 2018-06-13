@@ -11,7 +11,7 @@ public class Transaction implements ITransaction {
     private byte[] hash;
     private ITransaction leftParent;
     private ITransaction rightParent;
-    private List<Transaction> trustChain;
+    private List<ITransaction> trustChain;
     private boolean transactionConsensus;
     private boolean dspConsensus;
     private boolean totalTrustScore;
@@ -28,9 +28,10 @@ public class Transaction implements ITransaction {
     private byte[] senderNodeHash;
     private String senderNodeIpAddress;
     private byte[] userHash;
+    private List<ITransaction> childrenTransactions;
 
     public boolean isSource(){
-        return leftParent == null && rightParent == null;
+        return childrenTransactions == null || childrenTransactions.size() == 0;
     }
 
     public Transaction(byte[] hash){
@@ -95,12 +96,15 @@ public class Transaction implements ITransaction {
 
     @Override
     public void setTotalTrustScore(int totalTrustScore) {
-
     }
 
     @Override
     public void setThresholdAchieved(boolean isAchieved) {
+    }
 
+    @Override
+    public void setChildrenTransactions(List<ITransaction> childrenTransactions) {
+        this.childrenTransactions = childrenTransactions;
     }
 
     @Override
