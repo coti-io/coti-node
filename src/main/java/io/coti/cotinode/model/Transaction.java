@@ -1,20 +1,23 @@
 package io.coti.cotinode.model;
 
-import ch.qos.logback.core.html.IThrowableRenderer;
-import io.coti.cotinode.model.Interfaces.ITransaction;
+import io.coti.cotinode.model.Interfaces.IEntity;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.Setter;
 
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-public class Transaction implements ITransaction {
-    private byte[] hash;
-    private ITransaction leftParent;
-    private ITransaction rightParent;
-    private List<ITransaction> trustChain;
+@Data
+public class Transaction implements IEntity {
+    @Setter(AccessLevel.NONE) private byte[] hash;
+    private Transaction leftParent;
+    private Transaction rightParent;
+    private List<byte[]> trustChainTransactionHashes;
     private boolean transactionConsensus;
     private boolean dspConsensus;
-    private boolean totalTrustScore;
+    private int totalTrustScore;
     private Date createTime;
     private Date updateTime;
     private Date attachmentTime;
@@ -23,12 +26,13 @@ public class Transaction implements ITransaction {
     private Date powStartTime;
     private Date powEndTime;
     private int baseTransactionsCount;
-    private boolean senderTrustScore;
-    private List<ITransaction> baseTransactions;
+    private int senderTrustScore;
+    private List<byte[]> baseTransactions;
     private byte[] senderNodeHash;
     private String senderNodeIpAddress;
     private byte[] userHash;
-    private List<ITransaction> childrenTransactions;
+    private List<byte[]> childrenTransactions;
+    private boolean isValid;
 
     public boolean isSource(){
         return childrenTransactions == null || childrenTransactions.size() == 0;
@@ -60,8 +64,7 @@ public class Transaction implements ITransaction {
         return Arrays.equals(hash, ((Transaction) other).getKey());
     }
 
-    @Override
-    public void attachToSource(ITransaction source){
+    public void attachToSource(Transaction source){
         if (leftParent == null){
             leftParent = source;
         }
@@ -72,53 +75,5 @@ public class Transaction implements ITransaction {
             System.out.println("Unable to attach to source, both parents are full");
             throw new RuntimeException("Unable to attach to source.");
         }
-    }
-
-    @Override
-    public Date getCreateDateTime() {
-        return null;
-    }
-
-    @Override
-    public boolean isThresholdAchieved() {
-        return false;
-    }
-
-    @Override
-    public int getTotalTrustScore() {
-        return 0;
-    }
-
-    @Override
-    public int getSenderTrustScore() {
-        return 0;
-    }
-
-    @Override
-    public void setTotalTrustScore(int totalTrustScore) {
-    }
-
-    @Override
-    public void setThresholdAchieved(boolean isAchieved) {
-    }
-
-    @Override
-    public void setChildrenTransactions(List<ITransaction> childrenTransactions) {
-        this.childrenTransactions = childrenTransactions;
-    }
-
-    @Override
-    public byte[] getHash() {
-        return new byte[0];
-    }
-
-    @Override
-    public ITransaction getLeftParent() {
-        return null;
-    }
-
-    @Override
-    public ITransaction getRightParent() {
-        return null;
     }
 }

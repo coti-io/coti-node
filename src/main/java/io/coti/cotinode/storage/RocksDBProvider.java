@@ -78,33 +78,33 @@ public class RocksDBProvider implements IPersistenceProvider {
     }
 
     @Override
-    public ITransaction getTransaction(byte[] key) {
-        return (ITransaction) get(Transaction.class, key);
+    public Transaction getTransaction(byte[] key) {
+        return (Transaction) get(Transaction.class, key);
     }
 
     @Override
-    public IBaseTransaction getBaseTransaction(byte[] key) {
-        return (IBaseTransaction) get(BaseTransaction.class, key);
+    public BaseTransaction getBaseTransaction(byte[] key) {
+        return (BaseTransaction) get(BaseTransaction.class, key);
     }
 
     @Override
-    public IAddress getAddress(byte[] key) {
-        return (IAddress) get(Address.class, key);
+    public Address getAddress(byte[] key) {
+        return (Address) get(Address.class, key);
     }
 
     @Override
-    public IBalance getBalance(byte[] key) {
-        return (IBalance) get(Balance.class, key);
+    public Balance getBalance(byte[] key) {
+        return (Balance) get(Balance.class, key);
     }
 
     @Override
-    public IPreBalance getPreBalance(byte[] key) {
-        return (IPreBalance) get(PreBalance.class, key);
+    public PreBalance getPreBalance(byte[] key) {
+        return (PreBalance) get(PreBalance.class, key);
     }
 
     @Override
-    public List<ITransaction> getAllTransactions() {
-        return (List<ITransaction>) (List<?>) getAllEntities(Transaction.class);
+    public List<Transaction> getAllTransactions() {
+        return (List<Transaction>) (List<?>) getAllEntities(Transaction.class);
     }
 
     @Override
@@ -142,7 +142,7 @@ public class RocksDBProvider implements IPersistenceProvider {
         List<IEntity> entities = new ArrayList<>();
 
         while (iterator.isValid()) {
-            entities.add((ITransaction) SerializationUtils.deserialize(iterator.value()));
+            entities.add((Transaction) SerializationUtils.deserialize(iterator.value()));
             iterator.next();
         }
 

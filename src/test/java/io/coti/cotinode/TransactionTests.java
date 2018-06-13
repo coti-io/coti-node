@@ -1,12 +1,9 @@
 package io.coti.cotinode;
 
-import io.coti.cotinode.model.Balance;
-import io.coti.cotinode.model.Interfaces.IBalance;
 import io.coti.cotinode.model.Transaction;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 
@@ -29,7 +26,7 @@ public class TransactionTests {
     public void isSource_NonEmptyChildrenList_False(){
         Transaction transaction = new Transaction("Transaction 0".getBytes());
         transaction.setChildrenTransactions(
-                Collections.singletonList(new Transaction("Transaction 1".getBytes())));
+                Collections.singletonList("Transaction 1".getBytes()));
         Assert.assertFalse(transaction.isSource());
     }
 }

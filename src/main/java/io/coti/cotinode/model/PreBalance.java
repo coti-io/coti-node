@@ -1,13 +1,16 @@
 package io.coti.cotinode.model;
 
-import io.coti.cotinode.model.Interfaces.IPreBalance;
+import io.coti.cotinode.model.Interfaces.IEntity;
+import lombok.Data;
+
 import java.util.Arrays;
 import java.util.Map;
 
-public class PreBalance implements IPreBalance {
+@Data
+public class PreBalance implements IEntity {
     private byte[] hash;
     private byte[] userHash;
-    private Map<byte[], Double> addressHashTovValueTransferedMapping;
+    private Map<byte[], Double> addressHashToValueTransferredMapping;
 
     public PreBalance(byte[] hash){
         this.hash = hash;
