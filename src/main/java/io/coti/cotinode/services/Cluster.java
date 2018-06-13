@@ -7,6 +7,7 @@ import io.coti.cotinode.services.interfaces.ICluster;
 import io.coti.cotinode.storage.Interfaces.IPersistenceProvider;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
@@ -84,27 +85,38 @@ public class Cluster implements ICluster {
 
     @Override
     public void addNewTransaction(ITransaction transaction) {
+        transaction.setProcessStartTime(new Date());
+
+        // TODO Validation
 
         // Selection of sources
-        List<ITransaction> randomWeightedSources = null;
         ISourceSelector sourceSelector = new SourceSelector();
         List<ITransaction> selectedSourcesForAttachment = sourceSelector.selectSourcesForAttachment( trustScoreToSourceListMapping,
                 transaction.getSenderTrustScore(),
                 transaction.getCreateDateTime(),
                 5, // TODO: from config file and/or dynamic
                 10); // TODO: from config file and/or dynamic
-        // Update the total trust score of the parents
+
+        // Update sources
         for (ITransaction sourceTransaction : selectedSourcesForAttachment) {
             attachToSource(transaction, sourceTransaction);
         }
+
+        // Update the total trust score of the parents
+        transaction.setChildrenTransactions(new Vector<byte[]>());
         updateParentsTotalSumScore(transaction, 0);
 
+        // POW
+        transaction.setPowStartTime(new Date());
         // TODO : POW
+        transaction.setPowEndTime(new Date());
+
 
         for (ITransaction sourceTransaction : selectedSourcesForAttachment) {
 
         }
 
+        transaction.setProcessEndTime(new Date());
     }
 
     @Override
@@ -122,12 +134,14 @@ public class Cluster implements ICluster {
         }
     }
 
+    @Override
     public void attachToSource(ITransaction newTransaction, ITransaction source) {
         if(hashToUnconfirmedTransactionsMapping.get(source.getKey()) == null) {
             System.out.println("Cannot find source:" + source);
             throw new RuntimeException("Cannot find source:" + source);
         }
         newTransaction.attachToSource(source);
+        newTransaction.setAttachmentTime(new Date());
     }
 
 

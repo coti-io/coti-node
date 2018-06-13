@@ -7,11 +7,11 @@ import java.util.Arrays;
 
 public class BaseTransaction implements IBaseTransaction {
     private byte[] hash;
-    private IAddress address;
+    private Address address;
     private long value;
     private byte[] transactionHash;
     private int indexInTransactionsChain;
-    private IBaseTransaction nextBaseTransaction;
+    private BaseTransaction nextBaseTransaction;
 
     public BaseTransaction(byte[] hash){
         this.hash = hash;

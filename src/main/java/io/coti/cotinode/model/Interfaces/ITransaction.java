@@ -26,5 +26,15 @@ public interface ITransaction extends IEntity {
 
     void setThresholdAchieved(boolean isAchieved);
 
-    void setChildrenTransactions(List<ITransaction> childrenTransactions);
+    void setChildrenTransactions(List<byte[]> childrenTransactions);
+
+    void setAttachmentTime(Date date);
+
+    void setPowStartTime(Date powStartTime);
+
+    void setPowEndTime(Date powEndTime);
+
+    void setProcessStartTime(Date processStartTime);
+
+    void setProcessEndTime(Date processEndTime);
 }

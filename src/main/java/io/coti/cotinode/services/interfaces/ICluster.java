@@ -15,4 +15,5 @@ public interface ICluster {
     void deleteTransaction(byte[] hash);
     void addNewTransaction(ITransaction transaction);
     void updateParentsTotalSumScore(ITransaction transaction, int sonsTotalTrustScore);
+    void attachToSource(ITransaction newTransaction, ITransaction source);
 }

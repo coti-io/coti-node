@@ -11,10 +11,10 @@ public class Transaction implements ITransaction {
     private byte[] hash;
     private ITransaction leftParent;
     private ITransaction rightParent;
-    private List<ITransaction> trustChain;
+    private List<byte[]> trustChain;
     private boolean transactionConsensus;
     private boolean dspConsensus;
-    private boolean totalTrustScore;
+    private int totalTrustScore;
     private Date createTime;
     private Date updateTime;
     private Date attachmentTime;
@@ -23,12 +23,17 @@ public class Transaction implements ITransaction {
     private Date powStartTime;
     private Date powEndTime;
     private int baseTransactionsCount;
-    private boolean senderTrustScore;
+    private int senderTrustScore;
     private List<ITransaction> baseTransactions;
     private byte[] senderNodeHash;
     private String senderNodeIpAddress;
     private byte[] userHash;
-    private List<ITransaction> childrenTransactions;
+    private List<byte[]> childrenTransactions;
+
+    @Override
+    public void setAttachmentTime(Date attachmentTime) {
+        this.attachmentTime = attachmentTime;
+    }
 
     public boolean isSource(){
         return childrenTransactions == null || childrenTransactions.size() == 0;
@@ -76,34 +81,36 @@ public class Transaction implements ITransaction {
 
     @Override
     public Date getCreateDateTime() {
-        return null;
+        return createTime;
     }
 
     @Override
     public boolean isThresholdAchieved() {
-        return false;
+        return transactionConsensus;
     }
 
     @Override
     public int getTotalTrustScore() {
-        return 0;
+        return totalTrustScore;
     }
 
     @Override
     public int getSenderTrustScore() {
-        return 0;
+        return senderTrustScore;
     }
 
     @Override
     public void setTotalTrustScore(int totalTrustScore) {
+        this.totalTrustScore = totalTrustScore;
     }
 
     @Override
     public void setThresholdAchieved(boolean isAchieved) {
+        transactionConsensus = isAchieved;
     }
 
     @Override
-    public void setChildrenTransactions(List<ITransaction> childrenTransactions) {
+    public void setChildrenTransactions(List<byte[]> childrenTransactions) {
         this.childrenTransactions = childrenTransactions;
     }
 
@@ -114,11 +121,33 @@ public class Transaction implements ITransaction {
 
     @Override
     public ITransaction getLeftParent() {
-        return null;
+        return leftParent;
     }
 
     @Override
     public ITransaction getRightParent() {
-        return null;
+        return rightParent;
     }
+
+    @Override
+    public void setPowStartTime(Date powStartTime) {
+        this.powStartTime = powStartTime;
+    }
+
+    @Override
+    public void setPowEndTime(Date powEndTime) {
+        this.powEndTime = powEndTime;
+    }
+
+    @Override
+    public void setProcessStartTime(Date processStartTime) {
+        this.processStartTime = processStartTime;
+    }
+
+    @Override
+    public void setProcessEndTime(Date processEndTime) {
+        this.processEndTime = processEndTime;
+    }
+
+
 }
