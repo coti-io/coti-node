@@ -66,6 +66,7 @@ public class Cluster implements ICluster {
         }
         else{
             return persistenceProvider.getTransaction(hash);
+            // Replace with a service that  TODO call the Service that will
         }
     }
 
@@ -74,9 +75,9 @@ public class Cluster implements ICluster {
         if(hashToUnconfirmedTransactionsMapping.containsKey(hash)){
             hashToUnconfirmedTransactionsMapping.remove(hash);
         }
-        else{
-            persistenceProvider.deleteTransaction(hash);
-        }
+
+        persistenceProvider.deleteTransaction(hash);
+
     }
 
     public List<Transaction> getAllSourceTransactions() {

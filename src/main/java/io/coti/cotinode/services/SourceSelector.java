@@ -36,16 +36,18 @@ public class SourceSelector implements ISourceSelector {
     private List<Transaction> getNeighbourSources(
             Map<Integer,? extends List<Transaction>> trustScoreToSourceListMapping,
             int transactionTrustScore,
-            int maxTrustScoreRadius,
-            int minSourcePercentage){
+            int minSourcePercentage,
+            int maxTrustScoreRadius){
 
         List<Transaction> neighbourSources = new Vector<>();
 
+        // Get num of all transactions in numberOfSources
         AtomicInteger numberOfSources = new AtomicInteger();
         trustScoreToSourceListMapping.forEach((score, transactions) -> {
             numberOfSources.addAndGet(transactions.size());
         });
 
+        // Get neighbourSources according to the trustScore selection algorithm
         for(int trustScoreDifference = 1; trustScoreDifference < maxTrustScoreRadius; trustScoreDifference++) {
             int lowTrustScore = transactionTrustScore - trustScoreDifference;
             int highTrustScore = transactionTrustScore + trustScoreDifference;
@@ -70,7 +72,7 @@ public class SourceSelector implements ISourceSelector {
                 transactions.stream().
                         filter(s -> s.getCreateTime().before(transactionCreationTime)).collect(toList());
 
-        if(olderSources.size() <= 2) {
+        if(olderSources.size() < 2) {
             return olderSources;
         }
 
