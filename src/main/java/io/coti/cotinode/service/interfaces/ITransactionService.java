@@ -1,14 +1,14 @@
 package io.coti.cotinode.service.interfaces;
 
-import io.coti.cotinode.model.TransactionPackage;
+import io.coti.cotinode.data.TransactionData;
 
 public interface ITransactionService {
 
-    boolean addNewTransaction(TransactionPackage transactionPackage);
+    boolean addNewTransaction(TransactionData transactionData);
 
-    void cancelTransaction(TransactionPackage transactionPackage);
+    void cancelTransaction(TransactionData transactionData);
 
-    void confirmTransaction(TransactionPackage transactionPackage);
+    void confirmTransaction(TransactionData transactionData);
 
 
 }

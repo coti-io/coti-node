@@ -3,16 +3,19 @@ package io.coti.cotinode.storage;
 import io.coti.cotinode.model.*;
 import io.coti.cotinode.model.Interfaces.*;
 import io.coti.cotinode.storage.Interfaces.IPersistenceProvider;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.rocksdb.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
 
+@Slf4j
 @Service
 public class RocksDBProvider implements IPersistenceProvider {
     private RocksDB db;
@@ -33,7 +36,9 @@ public class RocksDBProvider implements IPersistenceProvider {
 
 
     @Override
+    @PostConstruct
     public void init() {
+        log.info("Initializing RocksDB");
         initiateColumnFamilyDescriptors();
         try {
             loadLibrary();
@@ -44,7 +49,7 @@ public class RocksDBProvider implements IPersistenceProvider {
             db = RocksDB.open(options, dbPath, columnFamilyDescriptors, columnFamilyHandles);
             populateColumnFamilies();
         } catch (Exception e) {
-            System.out.println("Error initiating Rocks DB");
+            log.error("Error initiating Rocks DB");
             e.printStackTrace();
         }
     }
@@ -165,7 +170,7 @@ public class RocksDBProvider implements IPersistenceProvider {
         if (!pathToLogDir.exists() || !pathToLogDir.isDirectory()) {
             boolean success = pathToLogDir.mkdir();
             if (!success) {
-                System.out.println("Unable to create new DB directory");
+                log.error("Unable to create new DB directory");
             }
         }
     }
@@ -173,7 +178,7 @@ public class RocksDBProvider implements IPersistenceProvider {
     private void loadLibrary() {
         try {
             RocksDB.loadLibrary();
-            System.out.println("RocksDB library loaded");
+            log.info("RocksDB library loaded");
         } catch (Exception e) {
             e.printStackTrace();
             throw e;

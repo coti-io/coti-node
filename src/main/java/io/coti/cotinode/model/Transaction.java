@@ -4,11 +4,13 @@ import io.coti.cotinode.model.Interfaces.IEntity;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+@Slf4j
 @Data
 public class Transaction implements IEntity {
     @Setter(AccessLevel.NONE) private byte[] hash;
@@ -72,7 +74,7 @@ public class Transaction implements IEntity {
             rightParent = source;
         }
         else{
-            System.out.println("Unable to attach to source, both parents are full");
+            log.error("Unable to attach to source, both parents are full");
             throw new RuntimeException("Unable to attach to source.");
         }
     }

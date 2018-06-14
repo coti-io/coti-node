@@ -3,6 +3,7 @@ package io.coti.cotinode;
 import io.coti.cotinode.model.*;
 import io.coti.cotinode.storage.Interfaces.IPersistenceProvider;
 import io.coti.cotinode.storage.RocksDBProvider;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -11,11 +12,11 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class RocksDBTests {
     private IPersistenceProvider provider;
     @Before
     public void init(){
-        System.out.println("Initializing!");
         provider = new RocksDBProvider();
         provider.init();
     }

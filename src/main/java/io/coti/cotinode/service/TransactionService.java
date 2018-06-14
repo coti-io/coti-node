@@ -1,11 +1,14 @@
 package io.coti.cotinode.service;
 
-import io.coti.cotinode.model.TransactionPackage;
+import io.coti.cotinode.model.Transaction;
+import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.service.interfaces.ITransactionService;
 import io.coti.cotinode.storage.Interfaces.IPersistenceProvider;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class TransactionService implements ITransactionService {
 
@@ -16,44 +19,47 @@ public class TransactionService implements ITransactionService {
     @Autowired
     BalanceService balanceService;
     @Autowired
-    BalanceService preBalanceService;
-    @Autowired
     ClusterService clusterService;
+    @Autowired IPersistenceProvider persistenceProvider;
 
     @Override
-    public boolean addNewTransaction(TransactionPackage transactionPackage) {
+    public boolean addNewTransaction(TransactionData transactionData) {
 
-        if(!userHashValidationService.isLegalHash(transactionPackage.hash)){
+        if(!userHashValidationService.isLegalHash(transactionData.hash.getBytes())){
             return false;
         }
 
-        if(!balanceService.isLegalTransaction(transactionPackage.hash)){
+        if(!balanceService.isLegalTransaction(transactionData.hash.getBytes())){
             return false;
         }
 
-        if(!preBalanceService.isLegalTransaction(transactionPackage.hash)){
+        if(!balanceService.isLegalTransaction(transactionData.hash.getBytes())){
             return false;
         }
 
-        preBalanceService.addToPreBalance(transactionPackage);
+        balanceService.addToPreBalance(transactionData);
 
-        if(!clusterService.addToCluster(transactionPackage)){
-            preBalanceService.revertTransaction(transactionPackage);
+        transactionData = clusterService.addToCluster(transactionData);
+        if(!transactionData.isAttached){
+            balanceService.revertTransaction(transactionData);
             return false;
         }
 
-        System.out.println(transactionPackage);
+        // Propogate??
+
+        log.info(transactionData.toString());
+        persistenceProvider.put(new Transaction(transactionData.hash.getBytes()));
 
         return true;
     }
 
     @Override
-    public void cancelTransaction(TransactionPackage transactionPackage){
+    public void cancelTransaction(TransactionData transactionData){
 
     }
 
     @Override
-    public void confirmTransaction(TransactionPackage transactionPackage) {
+    public void confirmTransaction(TransactionData transactionData) {
 
     }
 }

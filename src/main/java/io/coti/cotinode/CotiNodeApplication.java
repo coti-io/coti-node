@@ -8,5 +8,6 @@ public class CotiNodeApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(CotiNodeApplication.class, args);
+
     }
 }

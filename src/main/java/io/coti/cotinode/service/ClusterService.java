@@ -1,11 +1,11 @@
 package io.coti.cotinode.service;
 
-import io.coti.cotinode.model.TransactionPackage;
+import io.coti.cotinode.data.TransactionData;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ClusterService {
-    public boolean addToCluster(TransactionPackage transactionPackage) {
-        return true;
+    public TransactionData addToCluster(TransactionData transactionData) {
+        return transactionData;
     }
 }
