@@ -1,7 +1,7 @@
-package io.coti.cotinode.services;
+package io.coti.cotinode.service;
 
 import io.coti.cotinode.model.Transaction;
-import io.coti.cotinode.services.interfaces.ISourceSelector;
+import io.coti.cotinode.service.interfaces.ISourceSelector;
 
 import org.springframework.stereotype.Component;
 

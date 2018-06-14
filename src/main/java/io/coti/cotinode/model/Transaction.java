@@ -40,6 +40,10 @@ public class Transaction implements IEntity {
         return childrenTransactions == null || childrenTransactions.size() == 0;
     }
 
+    public boolean isConfirm(){
+        return transactionConsensus && dspConsensus;
+    }
+
     public Transaction(byte[] hash){
         this.hash = hash;
         this.trustChainTransactionHashes = new Vector<>();

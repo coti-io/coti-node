@@ -1,4 +1,4 @@
-package io.coti.cotinode.services.interfaces;
+package io.coti.cotinode.service.interfaces;
 
 import io.coti.cotinode.model.Transaction;
 
