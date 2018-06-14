@@ -1,35 +1,35 @@
 package io.coti.cotinode.model;
 
+import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.model.Interfaces.IEntity;
 import lombok.Data;
 
-import java.util.Arrays;
 import java.util.Map;
 
 @Data
 public class PreBalance implements IEntity {
-    private byte[] hash;
-    private byte[] userHash;
-    private Map<byte[], Double> addressHashToValueTransferredMapping;
+    private Hash hash;
+    private Hash userHash;
+    private Map<Hash, Double> addressHashToValueTransferredMapping;
 
-    public PreBalance(byte[] hash){
+    public PreBalance(Hash hash) {
         this.hash = hash;
     }
 
     @Override
-    public byte[] getKey() {
+    public Hash getKey() {
         return hash;
     }
 
     @Override
-    public boolean equals(Object other){
-        if (other == this){
+    public boolean equals(Object other) {
+        if (other == this) {
             return true;
         }
 
-        if(!(other instanceof PreBalance)){
+        if (!(other instanceof PreBalance)) {
             return false;
         }
-        return Arrays.equals(hash, ((PreBalance) other).getKey());
+        return hash.equals(((PreBalance) other).hash);
     }
 }

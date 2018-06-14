@@ -1,5 +1,6 @@
 package io.coti.cotinode.service;
 
+import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.model.PreBalance;
 import io.coti.cotinode.service.interfaces.ISourceSelector;
 import io.coti.cotinode.model.Transaction;
@@ -21,8 +22,8 @@ public class Cluster implements ICluster {
 
     //region init process
     //private IPersistenceProvider persistenceProvider; // TODO: replace with TransactionService
-    private ConcurrentHashMap<byte[], Transaction> hashToAllClusterTransactionsMapping;
-    private ConcurrentHashMap<byte[], Transaction> hashToUnconfirmedTransactionsMapping;
+    private ConcurrentHashMap<Hash, Transaction> hashToAllClusterTransactionsMapping;
+    private ConcurrentHashMap<Hash, Transaction> hashToUnconfirmedTransactionsMapping;
     private ConcurrentHashMap<Integer, List<Transaction>> trustScoreToSourceListMapping;
 
     @Override
@@ -51,7 +52,7 @@ public class Cluster implements ICluster {
                                 toMap(Transaction::getHash, Function.identity())));
     }
 
-    private void setTrustScoreToSourceListMapping(ConcurrentHashMap<byte[], Transaction> hashToUnconfirmedTransactionsMapping) {
+    private void setTrustScoreToSourceListMapping(ConcurrentHashMap<Hash, Transaction> hashToUnconfirmedTransactionsMapping) {
         this.trustScoreToSourceListMapping = new ConcurrentHashMap<>();
         for ( Transaction transaction: hashToUnconfirmedTransactionsMapping.values()) {
             if (transaction.isSource()){
@@ -91,7 +92,7 @@ public class Cluster implements ICluster {
     }
 
     @Override
-    public void deleteTransactionFromHashToAllClusterTransactionsMapping(byte[] hash) {
+    public void deleteTransactionFromHashToAllClusterTransactionsMapping(Hash hash) {
         if(hashToAllClusterTransactionsMapping.containsKey(hash)){
             hashToAllClusterTransactionsMapping.remove(hash);
         }
@@ -103,7 +104,7 @@ public class Cluster implements ICluster {
     }
 
     @Override
-    public void deleteTransactionFromHashToToUnconfirmedTransactionsMapping(byte[] hash) {
+    public void deleteTransactionFromHashToToUnconfirmedTransactionsMapping(Hash hash) {
         Transaction transaction = null;
         if(hashToUnconfirmedTransactionsMapping.containsKey(hash)){
             transaction = hashToUnconfirmedTransactionsMapping.get(hash);
@@ -113,11 +114,11 @@ public class Cluster implements ICluster {
         //persistenceProvider.deleteTransaction(hash);
         // TODO: replace with TransactionService
 
-        deleteTrustScoreToSourceListMapping( hash, transaction);
+        deleteTrustScoreToSourceListMapping(hash, transaction);
     }
 
     @Override
-    public void deleteTrustScoreToSourceListMapping(byte[] hash, Transaction transaction ) {
+    public void deleteTrustScoreToSourceListMapping(Hash hash, Transaction transaction ) {
         if (trustScoreToSourceListMapping.containsKey(transaction.getSenderTrustScore())) {
             trustScoreToSourceListMapping.get(transaction.getSenderTrustScore()).remove(transaction);
         }
@@ -199,7 +200,7 @@ public class Cluster implements ICluster {
     }
 
     @Override
-    public void updateParentsTotalSumScore(Transaction transaction, int sonsTotalTrustScore, List<byte[]> trustChainTransactionHashes) {
+    public void updateParentsTotalSumScore(Transaction transaction, int sonsTotalTrustScore, List<Hash> trustChainTransactionHashes) {
         if (transaction != null && !transaction.isTransactionConsensus()) {
             if (transaction.getTotalTrustScore() <  sonsTotalTrustScore + transaction.getSenderTrustScore()) {
                 transaction.setTotalTrustScore(sonsTotalTrustScore + transaction.getSenderTrustScore());
@@ -211,7 +212,7 @@ public class Cluster implements ICluster {
                     }
                 }
             }
-            List<byte[]> parentTrustChainTransactionHashes = new Vector<byte[]>(transaction.getTrustChainTransactionHashes());
+            List<Hash> parentTrustChainTransactionHashes = new Vector<Hash>(transaction.getTrustChainTransactionHashes());
             parentTrustChainTransactionHashes.add(transaction.getHash());
             updateParentsTotalSumScore(transaction.getLeftParent(),
                     transaction.getTotalTrustScore(),

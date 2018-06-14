@@ -1,6 +1,7 @@
 package io.coti.cotinode.controllers;
 
 import io.coti.cotinode.data.BaseTransactionObject;
+import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.model.NodeInformation;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.service.BalanceService;
@@ -43,7 +44,7 @@ public class NodeAPIController {
     }
 
     @RequestMapping(value = "/balances", method = GET)
-    public List<BaseTransactionObject> getBalance(@RequestHeader("Hash")List<byte[]> addressHashes){
+    public List<BaseTransactionObject> getBalance(@RequestHeader("Hash")List<Hash> addressHashes){
         return balanceService.getBalances(addressHashes);
     }
 }

@@ -25,15 +25,15 @@ public class TransactionService implements ITransactionService {
     @Override
     public boolean addNewTransaction(TransactionData transactionData) {
 
-        if(!userHashValidationService.isLegalHash(transactionData.hash.getBytes())){
+        if(!userHashValidationService.isLegalHash(transactionData.hash)){
             return false;
         }
 
-        if(!balanceService.isLegalTransaction(transactionData.hash.getBytes())){
+        if(!balanceService.isLegalTransaction(transactionData.hash)){
             return false;
         }
 
-        if(!balanceService.isLegalTransaction(transactionData.hash.getBytes())){
+        if(!balanceService.isLegalTransaction(transactionData.hash)){
             return false;
         }
 
@@ -48,7 +48,7 @@ public class TransactionService implements ITransactionService {
         // Propogate??
 
         log.info(transactionData.toString());
-        persistenceProvider.put(new Transaction(transactionData.hash.getBytes()));
+        persistenceProvider.put(new Transaction(transactionData.hash));
 
         return true;
     }

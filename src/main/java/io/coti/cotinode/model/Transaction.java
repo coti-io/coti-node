@@ -1,5 +1,6 @@
 package io.coti.cotinode.model;
 
+import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.model.Interfaces.IEntity;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -14,11 +15,11 @@ import java.util.Vector;
 @Slf4j
 @Data
 public class Transaction implements IEntity {
-    @Setter(AccessLevel.NONE) private byte[] hash;
+    @Setter(AccessLevel.NONE) private Hash hash;
     private Transaction leftParent;
     private Transaction rightParent;
-    private List<byte[]> trustChainTransactionHashes;
-    private byte[] userTrustScoreTokenHashes;
+    private List<Hash> trustChainTransactionHashes;
+    private Hash userTrustScoreTokenHashes;
     private boolean transactionConsensus;
     private boolean dspConsensus;
     private int totalTrustScore;
@@ -31,11 +32,11 @@ public class Transaction implements IEntity {
     private Date powEndTime;
     private int baseTransactionsCount;
     private int senderTrustScore;
-    private List<byte[]> baseTransactions;
-    private byte[] senderNodeHash;
+    private List<Hash> baseTransactions;
+    private Hash senderNodeHash;
     private String senderNodeIpAddress;
-    private byte[] userHash;
-    private List<byte[]> childrenTransactions;
+    private Hash userHash;
+    private List<Hash> childrenTransactions;
     private boolean isValid;
 
     public boolean isSource(){
@@ -46,14 +47,14 @@ public class Transaction implements IEntity {
         return transactionConsensus && dspConsensus;
     }
 
-    public Transaction(byte[] hash){
+    public Transaction(Hash hash){
         this.hash = hash;
         this.trustChainTransactionHashes = new Vector<>();
         this.childrenTransactions = new Vector<>();
     }
 
     @Override
-    public byte[] getKey() {
+    public Hash getKey() {
         return hash;
     }
 
@@ -63,15 +64,15 @@ public class Transaction implements IEntity {
     }
 
     @Override
-    public boolean equals(Object other){
-        if (other == this){
+    public boolean equals(Object other) {
+        if (other == this) {
             return true;
         }
 
-        if(!(other instanceof Transaction)){
+        if (!(other instanceof Transaction)) {
             return false;
         }
-        return Arrays.equals(hash, ((Transaction) other).getKey());
+        return hash.equals(((Transaction) other).hash);
     }
 
     public void attachToSource(Transaction source){

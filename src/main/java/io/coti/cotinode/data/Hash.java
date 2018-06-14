@@ -1,9 +1,17 @@
 package io.coti.cotinode.data;
 
+import lombok.Data;
+
+import java.io.Serializable;
 import java.util.Arrays;
 
-public class Hash {
-    public byte[] hash;
+@Data
+public class Hash implements Serializable {
+    private byte[] bytes;
+
+    public Hash(byte[] bytes){
+        this.bytes = bytes;
+    }
 
     @Override
     public boolean equals(Object other) {
@@ -14,6 +22,6 @@ public class Hash {
         if (!(other instanceof Hash)) {
             return false;
         }
-        return Arrays.equals(hash, ((Hash) other).hash);
+        return Arrays.equals(bytes, ((Hash) other).bytes);
     }
 }

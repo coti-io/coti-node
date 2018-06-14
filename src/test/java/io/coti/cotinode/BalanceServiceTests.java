@@ -1,6 +1,7 @@
 package io.coti.cotinode;
 
 import io.coti.cotinode.data.BaseTransactionObject;
+import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.service.BalanceService;
 import org.junit.Assert;
@@ -32,16 +33,16 @@ public class BalanceServiceTests {
     public void getBalances_StoreAndRetrieveBalances_ReturnsBalances() {
         balanceService.addToBalance(new TransactionData(
                 Arrays.asList(
-                        new BaseTransactionObject("Address1".getBytes(), 12.5),
-                        new BaseTransactionObject("Address2".getBytes(), 44))));
+                        new BaseTransactionObject(new Hash("Address1".getBytes()), 12.5),
+                        new BaseTransactionObject(new Hash("Address2".getBytes()), 44))));
 
         List<BaseTransactionObject> balances =
                 balanceService.getBalances(Arrays.asList(
-                        "Address1".getBytes(),
-                        "Address2".getBytes()));
+                        new Hash("Address1".getBytes()),
+                        new Hash("Address2".getBytes())));
         List<BaseTransactionObject> expectedBalances = Arrays.asList(
-                new BaseTransactionObject("Address1".getBytes(), 12.5),
-                new BaseTransactionObject("Address2".getBytes(), 44));
+                new BaseTransactionObject(new Hash("Address1".getBytes()), 12.5),
+                new BaseTransactionObject(new Hash("Address2".getBytes()), 44));
         Assert.assertTrue(balances.equals(expectedBalances));
     }
 }

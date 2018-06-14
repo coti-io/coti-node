@@ -4,7 +4,7 @@ import java.util.List;
 
 public class TransactionData {
     public List<BaseTransactionObject> baseTransactions;
-    public String hash;
+    public Hash hash;
     public boolean isAttached;
 
     public TransactionData(List<BaseTransactionObject> baseTransactions){

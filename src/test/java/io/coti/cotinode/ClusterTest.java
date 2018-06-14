@@ -1,5 +1,6 @@
 package io.coti.cotinode;
 
+import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.model.Transaction;
 import io.coti.cotinode.service.Cluster;
 import io.coti.cotinode.service.interfaces.ICluster;
@@ -21,10 +22,10 @@ public class ClusterTest {
         System.out.println("Initializing!");
         allClusterTransactions = new Vector<>();
 
-        Transaction transaction1 = new Transaction("1".getBytes());
-        Transaction transaction2 = new Transaction("2".getBytes());
-        Transaction transaction3 = new Transaction("3".getBytes());
-        Transaction transaction4 = new Transaction("4".getBytes());
+        Transaction transaction1 = new Transaction(new Hash("1".getBytes()));
+        Transaction transaction2 = new Transaction(new Hash("2".getBytes()));
+        Transaction transaction3 = new Transaction(new Hash("3".getBytes()));
+        Transaction transaction4 = new Transaction(new Hash("4".getBytes()));
         allClusterTransactions.add(transaction1);
         allClusterTransactions.add(transaction2);
         allClusterTransactions.add(transaction3);

@@ -1,6 +1,7 @@
 package io.coti.cotinode.service;
 
 import io.coti.cotinode.data.BaseTransactionObject;
+import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import org.springframework.stereotype.Service;
 
@@ -11,7 +12,7 @@ import java.util.concurrent.ConcurrentMap;
 
 @Service
 public class BalanceService {
-    ConcurrentMap<byte[], Double> addressHashToAmountMapping;
+    ConcurrentMap<Hash, Double> addressHashToAmountMapping;
 
     public BalanceService() {
         addressHashToAmountMapping = new ConcurrentHashMap<>();
@@ -24,16 +25,16 @@ public class BalanceService {
         }
     }
 
-    private void updateAddressBalance(byte[] address, double amount) {
+    private void updateAddressBalance(Hash address, double amount) {
         addressHashToAmountMapping.
                 merge(address, amount,
                         (oldAmount, additionalAmount) -> oldAmount + additionalAmount);
     }
 
 
-    public List<BaseTransactionObject> getBalances(List<byte[]> addressHashes) {
+    public List<BaseTransactionObject> getBalances(List<Hash> addressHashes) {
         List<BaseTransactionObject> requestedBalances = new LinkedList<>();
-        for (byte[] addressHash :
+        for (Hash addressHash :
                 addressHashes) {
             requestedBalances.add(
                     new BaseTransactionObject(addressHash, addressHashToAmountMapping.getOrDefault(addressHash, 0.0)));
@@ -41,7 +42,7 @@ public class BalanceService {
         return requestedBalances;
     }
 
-    public boolean isLegalTransaction(byte[] hash) {
+    public boolean isLegalTransaction(Hash hash) {
         return true;
     }
 
@@ -49,5 +50,9 @@ public class BalanceService {
     }
 
     public void revertTransaction(TransactionData transactionData) {
+    }
+
+    public void shutdown() {
+        
     }
 }
