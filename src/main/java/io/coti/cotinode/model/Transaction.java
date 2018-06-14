@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Vector;
 
 @Slf4j
 @Data
@@ -17,6 +18,7 @@ public class Transaction implements IEntity {
     private Transaction leftParent;
     private Transaction rightParent;
     private List<byte[]> trustChainTransactionHashes;
+    private byte[] userTrustScoreTokenHashes;
     private boolean transactionConsensus;
     private boolean dspConsensus;
     private int totalTrustScore;
@@ -40,8 +42,14 @@ public class Transaction implements IEntity {
         return childrenTransactions == null || childrenTransactions.size() == 0;
     }
 
+    public boolean isConfirm(){
+        return transactionConsensus && dspConsensus;
+    }
+
     public Transaction(byte[] hash){
         this.hash = hash;
+        this.trustChainTransactionHashes = new Vector<>();
+        this.childrenTransactions = new Vector<>();
     }
 
     @Override
@@ -69,9 +77,11 @@ public class Transaction implements IEntity {
     public void attachToSource(Transaction source){
         if (leftParent == null){
             leftParent = source;
+            source.childrenTransactions.add(hash);
         }
         else if(rightParent == null){
             rightParent = source;
+            source.childrenTransactions.add(hash);
         }
         else{
             log.error("Unable to attach to source, both parents are full");
