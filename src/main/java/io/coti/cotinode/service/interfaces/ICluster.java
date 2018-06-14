@@ -10,7 +10,9 @@ import org.springframework.stereotype.Component;
 @Component
 public interface ICluster {
     void initCluster(List<Transaction> allClusterTransactions);
-    void addUnconfirmedTransaction(Transaction transaction, byte[] hash);
+    void addToHashToAllClusterTransactionsMap(Transaction transaction);
+    void addToUnconfirmedTransactionMap(Transaction transaction);
+    void addToTrustScoreToSourceListMap(Transaction transaction);
     boolean addNewTransaction(Transaction transaction);
     void updateParentsTotalSumScore(Transaction transaction, int sonsTotalTrustScore, List<byte[]> trustChainTransactionHashes);
     void attachToSource(Transaction newTransaction, Transaction source);

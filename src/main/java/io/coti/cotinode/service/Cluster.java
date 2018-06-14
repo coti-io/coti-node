@@ -66,11 +66,29 @@ public class Cluster implements ICluster {
 
     //region Description
     @Override
-    public void addUnconfirmedTransaction(Transaction transaction, byte[] hash) {
-        hashToUnconfirmedTransactionsMapping.put(hash, transaction);
+    public void addToHashToAllClusterTransactionsMap(Transaction transaction) {
+        hashToAllClusterTransactionsMapping.put(transaction.getHash(), transaction);
         // TODO use the TransactionService
     }
 
+    @Override
+    public void addToUnconfirmedTransactionMap(Transaction transaction) {
+        hashToUnconfirmedTransactionsMapping.put(transaction.getHash(), transaction);
+        // TODO use the TransactionService
+    }
+
+    @Override
+    public void addToTrustScoreToSourceListMap(Transaction transaction) {
+
+        if (transaction.isSource()){
+            if (!this.trustScoreToSourceListMapping.containsKey(transaction.getSenderTrustScore())) {
+                this.trustScoreToSourceListMapping.put(transaction.getSenderTrustScore(), new Vector<Transaction>());
+            }
+            this.trustScoreToSourceListMapping.get(transaction.getSenderTrustScore()).add(transaction);
+        }
+
+        // TODO use the TransactionService
+    }
 
     @Override
     public void deleteTransactionFromHashToAllClusterTransactionsMapping(byte[] hash) {
@@ -157,12 +175,27 @@ public class Cluster implements ICluster {
             }
         }
 
+        // updating transaction collections with the new transaction
+        addNewTransactionToAllCollections (transaction);
+
         // Update the total trust score of the parents
         updateParentsTotalSumScore(transaction, 0, transaction.getTrustChainTransactionHashes());
 
         transaction.setProcessEndTime(new Date());
 
         return true;
+    }
+
+    private void addNewTransactionToAllCollections (Transaction transaction)
+    {
+        // add to allClusterTransactions map
+        addToHashToAllClusterTransactionsMap(transaction);
+
+        // add to unconfirmedTransaction map
+        addToUnconfirmedTransactionMap(transaction);
+
+        //  add to TrustScoreToSourceList map
+        addToTrustScoreToSourceListMap(transaction);
     }
 
     @Override

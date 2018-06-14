@@ -20,9 +20,15 @@ public class ClusterTest {
     public void setUp() throws Exception {
         System.out.println("Initializing!");
         allClusterTransactions = new Vector<>();
-        allClusterTransactions.add(new Transaction("1".getBytes()));
-        allClusterTransactions.add(new Transaction("2".getBytes()));
-        allClusterTransactions.add(new Transaction("3".getBytes()));
+
+        Transaction transaction1 = new Transaction("1".getBytes());
+        Transaction transaction2 = new Transaction("2".getBytes());
+        Transaction transaction3 = new Transaction("3".getBytes());
+        Transaction transaction4 = new Transaction("4".getBytes());
+        allClusterTransactions.add(transaction1);
+        allClusterTransactions.add(transaction2);
+        allClusterTransactions.add(transaction3);
+        allClusterTransactions.add(transaction4);
         cluster = new Cluster();
     }
 
