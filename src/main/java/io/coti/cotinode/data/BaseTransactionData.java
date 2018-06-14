@@ -1,19 +1,17 @@
-package io.coti.cotinode.model;
+package io.coti.cotinode.data;
 
-import io.coti.cotinode.data.Hash;
-import io.coti.cotinode.model.Interfaces.IEntity;
 import lombok.Data;
 
 @Data
-public class BaseTransaction implements IEntity {
+public class BaseTransactionData implements IEntity {
     private Hash hash;
-    private Address address;
+    private AddressData addressData;
     private long value;
     private Hash transactionHash;
     private int indexInTransactionsChain;
-    private BaseTransaction nextBaseTransaction;
+    private BaseTransactionData nextBaseTransactionData;
 
-    public BaseTransaction(Hash hash) {
+    public BaseTransactionData(Hash hash, double amount) {
         this.hash = hash;
     }
 
@@ -28,9 +26,9 @@ public class BaseTransaction implements IEntity {
             return true;
         }
 
-        if (!(other instanceof BaseTransaction)) {
+        if (!(other instanceof BaseTransactionData)) {
             return false;
         }
-        return hash.equals(((BaseTransaction) other).hash);
+        return hash.equals(((BaseTransactionData) other).hash);
     }
 }

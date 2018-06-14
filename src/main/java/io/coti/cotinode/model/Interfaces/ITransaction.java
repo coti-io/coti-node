@@ -1,5 +1,7 @@
 package io.coti.cotinode.model.Interfaces;
 
+import io.coti.cotinode.data.IEntity;
+
 import java.util.Date;
 import java.util.List;
 

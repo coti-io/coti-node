@@ -1,4 +1,6 @@
 package io.coti.cotinode.model.Interfaces;
 
-public interface IBalance extends IEntity{
+import io.coti.cotinode.data.IEntity;
+
+public interface IBalance extends IEntity {
 }

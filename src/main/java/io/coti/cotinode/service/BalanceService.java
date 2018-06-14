@@ -1,6 +1,6 @@
 package io.coti.cotinode.service;
 
-import io.coti.cotinode.data.BaseTransactionObject;
+import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import org.springframework.stereotype.Service;
@@ -19,10 +19,7 @@ public class BalanceService {
     }
 
     public void addToBalance(TransactionData transactionData) {
-        for (BaseTransactionObject baseTransaction :
-                transactionData.baseTransactions) {
-            updateAddressBalance(baseTransaction.getAddressHash(), baseTransaction.getAmount());
-        }
+
     }
 
     private void updateAddressBalance(Hash address, double amount) {
@@ -32,12 +29,12 @@ public class BalanceService {
     }
 
 
-    public List<BaseTransactionObject> getBalances(List<Hash> addressHashes) {
-        List<BaseTransactionObject> requestedBalances = new LinkedList<>();
+    public List<BaseTransactionData> getBalances(List<Hash> addressHashes) {
+        List<BaseTransactionData> requestedBalances = new LinkedList<>();
         for (Hash addressHash :
                 addressHashes) {
             requestedBalances.add(
-                    new BaseTransactionObject(
+                    new BaseTransactionData(
                             addressHash,
                             addressHashToAmountMapping.getOrDefault(addressHash, 0.0)));
         }

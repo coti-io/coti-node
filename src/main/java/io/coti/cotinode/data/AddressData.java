@@ -1,17 +1,15 @@
-package io.coti.cotinode.model;
+package io.coti.cotinode.data;
 
-import io.coti.cotinode.data.Hash;
-import io.coti.cotinode.model.Interfaces.IEntity;
 import lombok.Data;
 
 import java.util.Date;
 
 @Data
-public class Address implements IEntity {
+public class AddressData implements IEntity {
     private Hash hash;
     private Date creationTime;
 
-    public Address(Hash hash) {
+    public AddressData(Hash hash) {
         this.hash = hash;
     }
 
@@ -26,9 +24,9 @@ public class Address implements IEntity {
             return true;
         }
 
-        if (!(other instanceof Address)) {
+        if (!(other instanceof AddressData)) {
             return false;
         }
-        return hash.equals(((Address) other).hash);
+        return hash.equals(((AddressData) other).hash);
     }
 }

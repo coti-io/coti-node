@@ -1,4 +1,4 @@
-package io.coti.cotinode.model;
+package io.coti.cotinode.data;
 
 import java.time.Instant;
 

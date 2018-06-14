@@ -1,7 +1,5 @@
-package io.coti.cotinode.model;
+package io.coti.cotinode.data;
 
-import io.coti.cotinode.data.Hash;
-import io.coti.cotinode.model.Interfaces.IEntity;
 import lombok.Data;
 
 import java.util.Map;

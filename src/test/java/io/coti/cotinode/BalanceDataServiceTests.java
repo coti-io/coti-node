@@ -1,6 +1,6 @@
 package io.coti.cotinode;
 
-import io.coti.cotinode.data.BaseTransactionObject;
+import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.service.BalanceService;
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class BalanceServiceTests {
+public class BalanceDataServiceTests {
 
     @Autowired
     BalanceService balanceService;
@@ -25,24 +25,22 @@ public class BalanceServiceTests {
 
     @Test
     public void getBalances_EmptyBalancesList_ReturnsEmptyList() {
-        List<BaseTransactionObject> balances = balanceService.getBalances(new ArrayList<>());
+        List<BaseTransactionData> balances = balanceService.getBalances(new ArrayList<>());
         Assert.assertTrue(balances.equals(new ArrayList<>()));
     }
 
     @Test
     public void getBalances_StoreAndRetrieveBalances_ReturnsBalances() {
         balanceService.addToBalance(new TransactionData(
-                Arrays.asList(
-                        new BaseTransactionObject(new Hash("Address1".getBytes()), 12.5),
-                        new BaseTransactionObject(new Hash("Address2".getBytes()), 44))));
+                new Hash("TransactionData 1".getBytes())));
 
-        List<BaseTransactionObject> balances =
+        List<BaseTransactionData> balances =
                 balanceService.getBalances(Arrays.asList(
                         new Hash("Address1".getBytes()),
                         new Hash("Address2".getBytes())));
-        List<BaseTransactionObject> expectedBalances = Arrays.asList(
-                new BaseTransactionObject(new Hash("Address1".getBytes()), 12.5),
-                new BaseTransactionObject(new Hash("Address2".getBytes()), 44));
+        List<BaseTransactionData> expectedBalances = Arrays.asList(
+                new BaseTransactionData(new Hash("Address1".getBytes()), 12.5),
+                new BaseTransactionData(new Hash("Address2".getBytes()), 44));
         Assert.assertTrue(balances.equals(expectedBalances));
     }
 }
