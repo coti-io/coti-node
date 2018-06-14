@@ -1,20 +1,22 @@
 package io.coti.cotinode.model;
 
-import io.coti.cotinode.model.Interfaces.IAddress;
+import io.coti.cotinode.data.Hash;
+import io.coti.cotinode.model.Interfaces.IEntity;
+import lombok.Data;
 
-import java.util.Arrays;
 import java.util.Date;
 
-public class Address implements IAddress {
-    private byte[] hash;
+@Data
+public class Address implements IEntity {
+    private Hash hash;
     private Date creationTime;
 
-    public Address(byte[] hash) {
+    public Address(Hash hash) {
         this.hash = hash;
     }
 
     @Override
-    public byte[] getKey() {
+    public Hash getKey() {
         return hash;
     }
 
@@ -27,6 +29,6 @@ public class Address implements IAddress {
         if (!(other instanceof Address)) {
             return false;
         }
-        return Arrays.equals(hash, ((Address) other).getKey());
+        return hash.equals(((Address) other).hash);
     }
 }

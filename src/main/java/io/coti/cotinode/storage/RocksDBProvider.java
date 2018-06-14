@@ -1,18 +1,23 @@
 package io.coti.cotinode.storage;
 
+import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.model.*;
 import io.coti.cotinode.model.Interfaces.*;
 import io.coti.cotinode.storage.Interfaces.IPersistenceProvider;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.rocksdb.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
 
+@Slf4j
 @Service
 public class RocksDBProvider implements IPersistenceProvider {
     private RocksDB db;
@@ -33,7 +38,9 @@ public class RocksDBProvider implements IPersistenceProvider {
 
 
     @Override
+    @PostConstruct
     public void init() {
+        log.info("Initializing RocksDB");
         initiateColumnFamilyDescriptors();
         try {
             loadLibrary();
@@ -44,7 +51,7 @@ public class RocksDBProvider implements IPersistenceProvider {
             db = RocksDB.open(options, dbPath, columnFamilyDescriptors, columnFamilyHandles);
             populateColumnFamilies();
         } catch (Exception e) {
-            System.out.println("Error initiating Rocks DB");
+            log.error("Error initiating Rocks DB");
             e.printStackTrace();
         }
     }
@@ -68,7 +75,7 @@ public class RocksDBProvider implements IPersistenceProvider {
         try {
             db.put(
                     classNameToColumnFamilyHandleMapping.get(entity.getClass().getName()),
-                    entity.getKey(),
+                    entity.getKey().getBytes(),
                     SerializationUtils.serialize(entity));
             return true;
         } catch (Exception e) {
@@ -78,47 +85,49 @@ public class RocksDBProvider implements IPersistenceProvider {
     }
 
     @Override
-    public ITransaction getTransaction(byte[] key) {
-        return (ITransaction) get(Transaction.class, key);
+    public Transaction getTransaction(Hash key) {
+        return (Transaction) get(Transaction.class, key);
     }
 
     @Override
-    public IBaseTransaction getBaseTransaction(byte[] key) {
-        return (IBaseTransaction) get(BaseTransaction.class, key);
+    public BaseTransaction getBaseTransaction(Hash key) {
+        return (BaseTransaction) get(BaseTransaction.class, key);
     }
 
     @Override
-    public IAddress getAddress(byte[] key) {
-        return (IAddress) get(Address.class, key);
+    public Address getAddress(Hash key) {
+        return (Address) get(Address.class, key);
     }
 
     @Override
-    public IBalance getBalance(byte[] key) {
-        return (IBalance) get(Balance.class, key);
+    public Balance getBalance(Hash key) {
+        return (Balance) get(Balance.class, key);
     }
 
     @Override
-    public IPreBalance getPreBalance(byte[] key) {
-        return (IPreBalance) get(PreBalance.class, key);
+    public PreBalance getPreBalance(Hash key) {
+        return (PreBalance) get(PreBalance.class, key);
     }
 
     @Override
-    public List<ITransaction> getAllTransactions() {
-        return (List<ITransaction>) (List<?>) getAllEntities(Transaction.class);
+    public List<Transaction> getAllTransactions() {
+        return (List<Transaction>) (List<?>) getAllEntities(Transaction.class);
     }
 
     @Override
-    public void deleteTransaction(byte[] key) {
+    public void deleteTransaction(Hash key) {
         delete(Transaction.class, key);
     }
 
     @Override
-    public void deleteBaseTransaction(byte[] key) {
+    public void deleteBaseTransaction(Hash key) {
         delete(BaseTransaction.class, key);
     }
 
+    @PreDestroy
     @Override
     public void shutdown() {
+        log.info("Shutting down rocksDB");
         for (ColumnFamilyHandle columnFamilyHandle :
                 columnFamilyHandles) {
             columnFamilyHandle.close();
@@ -142,18 +151,18 @@ public class RocksDBProvider implements IPersistenceProvider {
         List<IEntity> entities = new ArrayList<>();
 
         while (iterator.isValid()) {
-            entities.add((ITransaction) SerializationUtils.deserialize(iterator.value()));
+            entities.add((Transaction) SerializationUtils.deserialize(iterator.value()));
             iterator.next();
         }
 
         return entities;
     }
 
-    private IEntity get(Class<?> entityClass, byte[] key) {
+    private IEntity get(Class<?> entityClass, Hash key) {
         try {
-            byte[] entityBytes = db.get(
-                    classNameToColumnFamilyHandleMapping.get(entityClass.getName()), key);
-            return (IEntity) SerializationUtils.deserialize(entityBytes);
+            Hash entityHash = new Hash(db.get(
+                    classNameToColumnFamilyHandleMapping.get(entityClass.getName()), key.getBytes()));
+            return (IEntity) SerializationUtils.deserialize(entityHash.getBytes());
         } catch (RocksDBException e) {
             e.printStackTrace();
             return null;
@@ -165,7 +174,7 @@ public class RocksDBProvider implements IPersistenceProvider {
         if (!pathToLogDir.exists() || !pathToLogDir.isDirectory()) {
             boolean success = pathToLogDir.mkdir();
             if (!success) {
-                System.out.println("Unable to create new DB directory");
+                log.error("Unable to create new DB directory");
             }
         }
     }
@@ -173,16 +182,16 @@ public class RocksDBProvider implements IPersistenceProvider {
     private void loadLibrary() {
         try {
             RocksDB.loadLibrary();
-            System.out.println("RocksDB library loaded");
+            log.info("RocksDB library loaded");
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
         }
     }
 
-    private void delete(Class<?> entityClass, byte[] key) {
+    private void delete(Class<?> entityClass, Hash key) {
         try {
-            db.delete(classNameToColumnFamilyHandleMapping.get(entityClass.getName()), key);
+            db.delete(classNameToColumnFamilyHandleMapping.get(entityClass.getName()), key.getBytes());
         } catch (RocksDBException e) {
             e.printStackTrace();
         }

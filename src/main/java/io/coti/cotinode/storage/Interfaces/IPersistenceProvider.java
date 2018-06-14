@@ -1,5 +1,7 @@
 package io.coti.cotinode.storage.Interfaces;
 
+import io.coti.cotinode.data.Hash;
+import io.coti.cotinode.model.*;
 import io.coti.cotinode.model.Interfaces.*;
 
 import java.util.List;
@@ -9,21 +11,21 @@ public interface IPersistenceProvider {
 
     boolean put(IEntity IEntity);
 
-    List<ITransaction> getAllTransactions();
+    List<Transaction> getAllTransactions();
 
-    ITransaction getTransaction(byte[] key);
+    Transaction getTransaction(Hash key);
 
-    IBaseTransaction getBaseTransaction(byte[] key);
+    BaseTransaction getBaseTransaction(Hash key);
 
-    IAddress getAddress(byte[] key);
+    Address getAddress(Hash key);
 
-    IBalance getBalance(byte[] key);
+    Balance getBalance(Hash key);
 
-    IPreBalance getPreBalance(byte[] key);
+    PreBalance getPreBalance(Hash key);
 
-    void deleteTransaction(byte[] key);
+    void deleteTransaction(Hash key);
 
-    void deleteBaseTransaction(byte[] key);
+    void deleteBaseTransaction(Hash key);
 
     void deleteDatabaseFolder();
 

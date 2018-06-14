@@ -1,20 +1,28 @@
 package io.coti.cotinode.model;
 
-import ch.qos.logback.core.html.IThrowableRenderer;
-import io.coti.cotinode.model.Interfaces.ITransaction;
+import io.coti.cotinode.data.Hash;
+import io.coti.cotinode.model.Interfaces.IEntity;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Vector;
 
-public class Transaction implements ITransaction {
-    private byte[] hash;
-    private ITransaction leftParent;
-    private ITransaction rightParent;
-    private List<Transaction> trustChain;
+@Slf4j
+@Data
+public class Transaction implements IEntity {
+    @Setter(AccessLevel.NONE) private Hash hash;
+    private Transaction leftParent;
+    private Transaction rightParent;
+    private List<Hash> trustChainTransactionHashes;
+    private Hash userTrustScoreTokenHashes;
     private boolean transactionConsensus;
     private boolean dspConsensus;
-    private boolean totalTrustScore;
+    private int totalTrustScore;
     private Date createTime;
     private Date updateTime;
     private Date attachmentTime;
@@ -23,22 +31,30 @@ public class Transaction implements ITransaction {
     private Date powStartTime;
     private Date powEndTime;
     private int baseTransactionsCount;
-    private boolean senderTrustScore;
-    private List<ITransaction> baseTransactions;
-    private byte[] senderNodeHash;
+    private int senderTrustScore;
+    private List<Hash> baseTransactions;
+    private Hash senderNodeHash;
     private String senderNodeIpAddress;
-    private byte[] userHash;
+    private Hash userHash;
+    private List<Hash> childrenTransactions;
+    private boolean isValid;
 
     public boolean isSource(){
-        return leftParent == null && rightParent == null;
+        return childrenTransactions == null || childrenTransactions.size() == 0;
     }
 
-    public Transaction(byte[] hash){
+    public boolean isConfirm(){
+        return transactionConsensus && dspConsensus;
+    }
+
+    public Transaction(Hash hash){
         this.hash = hash;
+        this.trustChainTransactionHashes = new Vector<>();
+        this.childrenTransactions = new Vector<>();
     }
 
     @Override
-    public byte[] getKey() {
+    public Hash getKey() {
         return hash;
     }
 
@@ -48,73 +64,29 @@ public class Transaction implements ITransaction {
     }
 
     @Override
-    public boolean equals(Object other){
-        if (other == this){
+    public boolean equals(Object other) {
+        if (other == this) {
             return true;
         }
 
-        if(!(other instanceof Transaction)){
+        if (!(other instanceof Transaction)) {
             return false;
         }
-        return Arrays.equals(hash, ((Transaction) other).getKey());
+        return hash.equals(((Transaction) other).hash);
     }
 
-    @Override
-    public void attachToSource(ITransaction source){
+    public void attachToSource(Transaction source){
         if (leftParent == null){
             leftParent = source;
+            source.childrenTransactions.add(hash);
         }
         else if(rightParent == null){
             rightParent = source;
+            source.childrenTransactions.add(hash);
         }
         else{
-            System.out.println("Unable to attach to source, both parents are full");
+            log.error("Unable to attach to source, both parents are full");
             throw new RuntimeException("Unable to attach to source.");
         }
-    }
-
-    @Override
-    public Date getCreateDateTime() {
-        return null;
-    }
-
-    @Override
-    public boolean isThresholdAchieved() {
-        return false;
-    }
-
-    @Override
-    public int getTotalTrustScore() {
-        return 0;
-    }
-
-    @Override
-    public int getSenderTrustScore() {
-        return 0;
-    }
-
-    @Override
-    public void setTotalTrustScore(int totalTrustScore) {
-
-    }
-
-    @Override
-    public void setThresholdAchieved(boolean isAchieved) {
-
-    }
-
-    @Override
-    public byte[] getHash() {
-        return new byte[0];
-    }
-
-    @Override
-    public ITransaction getLeftParent() {
-        return null;
-    }
-
-    @Override
-    public ITransaction getRightParent() {
-        return null;
     }
 }

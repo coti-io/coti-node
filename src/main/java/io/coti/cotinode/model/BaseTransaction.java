@@ -1,36 +1,36 @@
 package io.coti.cotinode.model;
 
-import io.coti.cotinode.model.Interfaces.IAddress;
-import io.coti.cotinode.model.Interfaces.IBaseTransaction;
+import io.coti.cotinode.data.Hash;
+import io.coti.cotinode.model.Interfaces.IEntity;
+import lombok.Data;
 
-import java.util.Arrays;
-
-public class BaseTransaction implements IBaseTransaction {
-    private byte[] hash;
-    private IAddress address;
+@Data
+public class BaseTransaction implements IEntity {
+    private Hash hash;
+    private Address address;
     private long value;
-    private byte[] transactionHash;
+    private Hash transactionHash;
     private int indexInTransactionsChain;
-    private IBaseTransaction nextBaseTransaction;
+    private BaseTransaction nextBaseTransaction;
 
-    public BaseTransaction(byte[] hash){
+    public BaseTransaction(Hash hash) {
         this.hash = hash;
     }
 
     @Override
-    public byte[] getKey() {
+    public Hash getKey() {
         return hash;
     }
 
     @Override
-    public boolean equals(Object other){
-        if (other == this){
+    public boolean equals(Object other) {
+        if (other == this) {
             return true;
         }
 
-        if(!(other instanceof BaseTransaction)){
+        if (!(other instanceof BaseTransaction)) {
             return false;
         }
-        return Arrays.equals(hash, ((BaseTransaction) other).getKey());
+        return hash.equals(((BaseTransaction) other).hash);
     }
 }
