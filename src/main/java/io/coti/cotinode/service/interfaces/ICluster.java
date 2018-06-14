@@ -12,13 +12,13 @@ import org.springframework.stereotype.Component;
 public interface ICluster {
     void initCluster(List<Transaction> allClusterTransactions);
     void addToHashToAllClusterTransactionsMap(Transaction transaction);
-    void addToUnconfirmedTransactionMap(Transaction transaction);
+    void addToUnTccConfirmedTransactionMap(Transaction transaction);
     void addToTrustScoreToSourceListMap(Transaction transaction);
     boolean addNewTransaction(Transaction transaction);
     void updateParentsTotalSumScore(Transaction transaction, int sonsTotalTrustScore, List<Hash> trustChainTransactionHashes);
     void attachToSource(Transaction newTransaction, Transaction source);
     List<Transaction> getAllSourceTransactions();
-    void deleteTransactionFromHashToAllClusterTransactionsMapping(Hash hash);
-    void deleteTransactionFromHashToToUnconfirmedTransactionsMapping(Hash hash);
+   // void deleteTransactionFromHashToAllClusterTransactionsMapping(Hash hash);
+    void deleteTransactionFromHashToUnTccConfirmedTransactionsMapping(Hash hash);
     void deleteTrustScoreToSourceListMapping(Hash hash, Transaction transaction );
 }

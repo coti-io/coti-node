@@ -1,7 +1,6 @@
 package io.coti.cotinode.service;
 
 import io.coti.cotinode.data.Hash;
-import io.coti.cotinode.model.PreBalance;
 import io.coti.cotinode.service.interfaces.ISourceSelector;
 import io.coti.cotinode.model.Transaction;
 import io.coti.cotinode.service.interfaces.ICluster;
@@ -10,7 +9,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -23,29 +21,29 @@ public class Cluster implements ICluster {
     //region init process
     //private IPersistenceProvider persistenceProvider; // TODO: replace with TransactionService
     private ConcurrentHashMap<Hash, Transaction> hashToAllClusterTransactionsMapping;
-    private ConcurrentHashMap<Hash, Transaction> hashToUnconfirmedTransactionsMapping;
+    private ConcurrentHashMap<Hash, Transaction> hashToUnTccConfirmationTransactionsMapping;
     private ConcurrentHashMap<Integer, List<Transaction>> trustScoreToSourceListMapping;
 
     @Override
     public void initCluster(List<Transaction> allClusterTransactions){
         hashToAllClusterTransactionsMapping = new ConcurrentHashMap<>();;
-        hashToUnconfirmedTransactionsMapping = new ConcurrentHashMap<>();
+        hashToUnTccConfirmationTransactionsMapping = new ConcurrentHashMap<>();
         trustScoreToSourceListMapping = new ConcurrentHashMap<>();
 
         setAllClusterTransactionsMap(allClusterTransactions);
-        setUnconfirmedTransactions(allClusterTransactions);
-        setTrustScoreToSourceListMapping(hashToUnconfirmedTransactionsMapping);
+        setUnTccConfirmedTransactions(allClusterTransactions);
+        setTrustScoreToSourceListMapping(hashToUnTccConfirmationTransactionsMapping);
     }
 
     private void setAllClusterTransactionsMap(List<Transaction> allTransactions) {
-        this.hashToUnconfirmedTransactionsMapping.
+        this.hashToUnTccConfirmationTransactionsMapping.
                 putAll(allTransactions.stream().
                         collect(Collectors.
                                 toMap(Transaction::getHash, Function.identity())));
     }
 
-    private void setUnconfirmedTransactions(List<Transaction> allTransactions) {
-        this.hashToUnconfirmedTransactionsMapping.
+    private void setUnTccConfirmedTransactions(List<Transaction> allTransactions) {
+        this.hashToUnTccConfirmationTransactionsMapping.
                 putAll(allTransactions.stream().
                         filter(Transaction::isConfirm).
                         collect(Collectors.
@@ -54,11 +52,12 @@ public class Cluster implements ICluster {
 
     private void setTrustScoreToSourceListMapping(ConcurrentHashMap<Hash, Transaction> hashToUnconfirmedTransactionsMapping) {
         this.trustScoreToSourceListMapping = new ConcurrentHashMap<>();
+        for (int i=1; i <= 100; i++) {
+            trustScoreToSourceListMapping.put(i, new Vector<Transaction>());
+        }
+
         for ( Transaction transaction: hashToUnconfirmedTransactionsMapping.values()) {
-            if (transaction.isSource()){
-                if (!this.trustScoreToSourceListMapping.containsKey(transaction.getSenderTrustScore())) {
-                    this.trustScoreToSourceListMapping.put(transaction.getSenderTrustScore(), new Vector<Transaction>());
-                }
+            if (transaction.isSource() && transaction.getSenderTrustScore() >=1 && transaction.getSenderTrustScore() <=100 ){
                 this.trustScoreToSourceListMapping.get(transaction.getSenderTrustScore()).add(transaction);
             }
         }
@@ -73,42 +72,26 @@ public class Cluster implements ICluster {
     }
 
     @Override
-    public void addToUnconfirmedTransactionMap(Transaction transaction) {
-        hashToUnconfirmedTransactionsMapping.put(transaction.getHash(), transaction);
+    public void addToUnTccConfirmedTransactionMap(Transaction transaction) {
+        hashToUnTccConfirmationTransactionsMapping.put(transaction.getHash(), transaction);
         // TODO use the TransactionService
     }
 
     @Override
     public void addToTrustScoreToSourceListMap(Transaction transaction) {
 
-        if (transaction.isSource()){
-            if (!this.trustScoreToSourceListMapping.containsKey(transaction.getSenderTrustScore())) {
-                this.trustScoreToSourceListMapping.put(transaction.getSenderTrustScore(), new Vector<Transaction>());
-            }
-            this.trustScoreToSourceListMapping.get(transaction.getSenderTrustScore()).add(transaction);
+        if (transaction.isSource() && transaction.getSenderTrustScore() >=1 && transaction.getSenderTrustScore() <=100){
+                this.trustScoreToSourceListMapping.get(transaction.getSenderTrustScore()).add(transaction);
         }
-
         // TODO use the TransactionService
     }
 
     @Override
-    public void deleteTransactionFromHashToAllClusterTransactionsMapping(Hash hash) {
-        if(hashToAllClusterTransactionsMapping.containsKey(hash)){
-            hashToAllClusterTransactionsMapping.remove(hash);
-        }
-
-        //persistenceProvider.deleteTransaction(hash);
-        // TODO: replace with TransactionService
-
-        deleteTransactionFromHashToToUnconfirmedTransactionsMapping(hash);
-    }
-
-    @Override
-    public void deleteTransactionFromHashToToUnconfirmedTransactionsMapping(Hash hash) {
+    public void deleteTransactionFromHashToUnTccConfirmedTransactionsMapping(Hash hash) {
         Transaction transaction = null;
-        if(hashToUnconfirmedTransactionsMapping.containsKey(hash)){
-            transaction = hashToUnconfirmedTransactionsMapping.get(hash);
-            hashToUnconfirmedTransactionsMapping.remove(hash);
+        if(hashToUnTccConfirmationTransactionsMapping.containsKey(hash)){
+            transaction = hashToUnTccConfirmationTransactionsMapping.get(hash);
+            hashToUnTccConfirmationTransactionsMapping.remove(hash);
         }
 
         //persistenceProvider.deleteTransaction(hash);
@@ -136,7 +119,7 @@ public class Cluster implements ICluster {
 
     @Override
     public List<Transaction> getAllSourceTransactions() {
-        return hashToUnconfirmedTransactionsMapping.values().stream().
+        return hashToUnTccConfirmationTransactionsMapping.values().stream().
                 filter(Transaction::isSource).collect(Collectors.toList());
     }
     //endregion
@@ -150,13 +133,20 @@ public class Cluster implements ICluster {
 
         // TODO: Get The transaction trust score from trust score node.
 
-        // Selection of sources
-        ISourceSelector sourceSelector = new SourceSelector();
-        List<Transaction> selectedSourcesForAttachment = sourceSelector.selectSourcesForAttachment( trustScoreToSourceListMapping,
-                transaction.getSenderTrustScore(),
-                transaction.getCreateTime(),
-                5, // TODO: get value from config file and/or dynamic
-                10); // TODO:  get value from config file and/or dynamic
+        List<Transaction> selectedSourcesForAttachment = null;
+        ConcurrentHashMap<Integer, List<Transaction>> localThreadTustScoreToSourceListMapping =
+                new ConcurrentHashMap<>(trustScoreToSourceListMapping);
+        if (localThreadTustScoreToSourceListMapping.size() > 1) {
+            // Selection of sources
+            ISourceSelector sourceSelector = new SourceSelector();
+
+            selectedSourcesForAttachment = sourceSelector.selectSourcesForAttachment(localThreadTustScoreToSourceListMapping,
+                    transaction.getSenderTrustScore(),
+                    transaction.getCreateTime(),
+                    5, // TODO: get value from config file and/or dynamic
+                    10); // TODO:  get value from config file and/or dynamic
+
+        }
 
         // TODO: Validate the sources.
 
@@ -166,7 +156,7 @@ public class Cluster implements ICluster {
         transaction.setPowEndTime(new Date());
 
         // Attache sources
-        if (trustScoreToSourceListMapping.size() > 1) {
+        if (localThreadTustScoreToSourceListMapping.size() > 1) {
             if (selectedSourcesForAttachment.size() == 0) {
                 // TODO: wait
             }
@@ -192,8 +182,8 @@ public class Cluster implements ICluster {
         // add to allClusterTransactions map
         addToHashToAllClusterTransactionsMap(transaction);
 
-        // add to unconfirmedTransaction map
-        addToUnconfirmedTransactionMap(transaction);
+        // add to unTccConfirmedTransaction map
+        addToUnTccConfirmedTransactionMap(transaction);
 
         //  add to TrustScoreToSourceList map
         addToTrustScoreToSourceListMap(transaction);
@@ -206,14 +196,13 @@ public class Cluster implements ICluster {
                 transaction.setTotalTrustScore(sonsTotalTrustScore + transaction.getSenderTrustScore());
                 transaction.setTrustChainTransactionHashes(trustChainTransactionHashes);
                 if (transaction.getTotalTrustScore() >= 300 ) {// TODO : set the number as consant
-                    if (transaction.isDspConsensus()) {
-                        transaction.setTransactionConsensus(true);
-                        hashToUnconfirmedTransactionsMapping.remove(transaction.getKey());
-                    }
+                    transaction.setTransactionConsensus(true);
+                    hashToUnTccConfirmationTransactionsMapping.remove(transaction.getKey());
                 }
             }
             List<Hash> parentTrustChainTransactionHashes = new Vector<Hash>(transaction.getTrustChainTransactionHashes());
             parentTrustChainTransactionHashes.add(transaction.getHash());
+
             updateParentsTotalSumScore(transaction.getLeftParent(),
                     transaction.getTotalTrustScore(),
                     parentTrustChainTransactionHashes);
@@ -235,7 +224,5 @@ public class Cluster implements ICluster {
         deleteTrustScoreToSourceListMapping(source.getHash(), source);
     }
     //endregion
-
-
 }
 
