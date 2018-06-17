@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -123,8 +124,10 @@ public class RocksDBProvider implements IPersistenceProvider {
         delete(BaseTransaction.class, key);
     }
 
+    @PreDestroy
     @Override
     public void shutdown() {
+        log.info("Shutting down rocksDB");
         for (ColumnFamilyHandle columnFamilyHandle :
                 columnFamilyHandles) {
             columnFamilyHandle.close();

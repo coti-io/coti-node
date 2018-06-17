@@ -37,7 +37,9 @@ public class BalanceService {
         for (Hash addressHash :
                 addressHashes) {
             requestedBalances.add(
-                    new BaseTransactionObject(addressHash, addressHashToAmountMapping.getOrDefault(addressHash, 0.0)));
+                    new BaseTransactionObject(
+                            addressHash,
+                            addressHashToAmountMapping.getOrDefault(addressHash, 0.0)));
         }
         return requestedBalances;
     }
@@ -53,6 +55,6 @@ public class BalanceService {
     }
 
     public void shutdown() {
-        
+
     }
 }

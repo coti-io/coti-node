@@ -5,6 +5,8 @@ import io.coti.cotinode.service.interfaces.ISourceSelector;
 import io.coti.cotinode.model.Transaction;
 import io.coti.cotinode.service.interfaces.ICluster;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -14,12 +16,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Component
 @Data
 public class Cluster implements ICluster {
 
     //region init process
     //private IPersistenceProvider persistenceProvider; // TODO: replace with TransactionService
+
+    @Autowired
+    private ISourceSelector sourceSelector;
     private ConcurrentHashMap<Hash, Transaction> hashToAllClusterTransactionsMapping;
     private ConcurrentHashMap<Hash, Transaction> hashToUnTccConfirmationTransactionsMapping;
     private ConcurrentHashMap<Integer, List<Transaction>> trustScoreToSourceListMapping;
@@ -137,12 +143,11 @@ public class Cluster implements ICluster {
         ConcurrentHashMap<Integer, List<Transaction>> localThreadTustScoreToSourceListMapping =
                 new ConcurrentHashMap<>(trustScoreToSourceListMapping);
         if (localThreadTustScoreToSourceListMapping.size() > 1) {
-            // Selection of sources
-            ISourceSelector sourceSelector = new SourceSelector();
 
+            // Selection of sources
             selectedSourcesForAttachment = sourceSelector.selectSourcesForAttachment(localThreadTustScoreToSourceListMapping,
                     transaction.getSenderTrustScore(),
-                    transaction.getCreateTime(),
+                    transaction.getAttachmentTime(),
                     5, // TODO: get value from config file and/or dynamic
                     10); // TODO:  get value from config file and/or dynamic
 
@@ -216,7 +221,7 @@ public class Cluster implements ICluster {
     @Override
     public void attachToSource(Transaction newTransaction, Transaction source) {
         if(hashToAllClusterTransactionsMapping.get(source.getKey()) == null) {
-            System.out.println("Cannot find source:" + source);
+            log.error("Cannot find source:" + source);
             //throw new RuntimeException("Cannot find source:" + source);
         }
         newTransaction.attachToSource(source);
