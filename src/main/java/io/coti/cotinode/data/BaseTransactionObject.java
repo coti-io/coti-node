@@ -1,6 +1,5 @@
 package io.coti.cotinode.data;
 
-import io.coti.cotinode.model.BaseTransaction;
 import lombok.Data;
 
 @Data

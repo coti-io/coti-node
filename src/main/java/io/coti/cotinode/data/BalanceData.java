@@ -1,19 +1,17 @@
-package io.coti.cotinode.model;
+package io.coti.cotinode.data;
 
-import io.coti.cotinode.data.Hash;
-import io.coti.cotinode.model.Interfaces.IEntity;
 import lombok.Data;
 
 import java.util.Date;
 import java.util.Map;
 
 @Data
-public class Balance implements IEntity {
+public class BalanceData implements IEntity {
     public Hash hash;
     private Date creationTIme;
     private Map<byte[], Double> addressHashToValueTransferredMapping;
 
-    public Balance(Hash hash) {
+    public BalanceData(Hash hash) {
         this.hash = hash;
     }
 
@@ -28,9 +26,9 @@ public class Balance implements IEntity {
             return true;
         }
 
-        if (!(other instanceof Balance)) {
+        if (!(other instanceof BalanceData)) {
             return false;
         }
-        return hash.equals(((Balance) other).hash);
+        return hash.equals(((BalanceData) other).hash);
     }
 }

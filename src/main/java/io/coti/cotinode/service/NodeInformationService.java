@@ -1,6 +1,6 @@
 package io.coti.cotinode.service;
 
-import io.coti.cotinode.model.NodeInformation;
+import io.coti.cotinode.data.NodeInformation;
 import org.springframework.stereotype.Service;
 
 @Service

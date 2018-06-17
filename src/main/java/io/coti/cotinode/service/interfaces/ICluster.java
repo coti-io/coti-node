@@ -5,7 +5,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.model.Transaction;
-import io.coti.cotinode.storage.Interfaces.IPersistenceProvider;
 import org.springframework.stereotype.Component;
 
 @Component

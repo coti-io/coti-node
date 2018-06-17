@@ -1,7 +1,7 @@
 package io.coti.cotinode.model;
 
 import io.coti.cotinode.data.Hash;
-import io.coti.cotinode.model.Interfaces.IEntity;
+import io.coti.cotinode.data.IEntity;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Setter;

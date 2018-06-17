@@ -1,9 +1,7 @@
 package io.coti.cotinode.storage;
 
-import io.coti.cotinode.data.Hash;
-import io.coti.cotinode.model.*;
-import io.coti.cotinode.model.Interfaces.*;
-import io.coti.cotinode.storage.Interfaces.IPersistenceProvider;
+import io.coti.cotinode.data.*;
+import io.coti.cotinode.storage.Interfaces.IDatabaseConnector;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.rocksdb.*;
@@ -19,23 +17,22 @@ import java.util.*;
 
 @Slf4j
 @Service
-public class RocksDBProvider implements IPersistenceProvider {
-    private RocksDB db;
+public class RocksDBConnector implements IDatabaseConnector {
     private final String logPath = ".\\rocksDB";
     private final String dbPath = ".\\rocksDB";
     private final List<String> columnFamilyClassNames = Arrays.asList(
             "DefaultColumnClassName",
-            Transaction.class.getName(),
-            BaseTransaction.class.getName(),
-            Address.class.getName(),
-            Balance.class.getName(),
+            TransactionData.class.getName(),
+            BaseTransactionData.class.getName(),
+            AddressData.class.getName(),
+            BalanceData.class.getName(),
             PreBalance.class.getName()
     );
 
+    private List<ColumnFamilyDescriptor> columnFamilyDescriptors = new ArrayList<>();
+    private RocksDB db;
     private Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
     private List<ColumnFamilyHandle> columnFamilyHandles = new ArrayList<>();
-    List<ColumnFamilyDescriptor> columnFamilyDescriptors = new ArrayList<>();
-
 
     @Override
     @PostConstruct
@@ -71,6 +68,16 @@ public class RocksDBProvider implements IPersistenceProvider {
     }
 
     @Override
+    public byte[] getByHash(String columnFamilyName, Hash hash) {
+        try {
+            return db.get(classNameToColumnFamilyHandleMapping.get(columnFamilyName), hash.getBytes());
+        } catch (RocksDBException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    @Override
     public boolean put(IEntity entity) {
         try {
             db.put(
@@ -85,43 +92,27 @@ public class RocksDBProvider implements IPersistenceProvider {
     }
 
     @Override
-    public Transaction getTransaction(Hash key) {
-        return (Transaction) get(Transaction.class, key);
+    public List<IEntity> getAll(String dataObjectClassName) {
+        RocksIterator iterator =
+                db.newIterator(classNameToColumnFamilyHandleMapping.get(dataObjectClassName));
+        iterator.seekToFirst();
+        List<IEntity> entities = new ArrayList<>();
+
+        while (iterator.isValid()) {
+            entities.add((TransactionData) SerializationUtils.deserialize(iterator.value()));
+            iterator.next();
+        }
+
+        return entities;
     }
 
     @Override
-    public BaseTransaction getBaseTransaction(Hash key) {
-        return (BaseTransaction) get(BaseTransaction.class, key);
-    }
-
-    @Override
-    public Address getAddress(Hash key) {
-        return (Address) get(Address.class, key);
-    }
-
-    @Override
-    public Balance getBalance(Hash key) {
-        return (Balance) get(Balance.class, key);
-    }
-
-    @Override
-    public PreBalance getPreBalance(Hash key) {
-        return (PreBalance) get(PreBalance.class, key);
-    }
-
-    @Override
-    public List<Transaction> getAllTransactions() {
-        return (List<Transaction>) (List<?>) getAllEntities(Transaction.class);
-    }
-
-    @Override
-    public void deleteTransaction(Hash key) {
-        delete(Transaction.class, key);
-    }
-
-    @Override
-    public void deleteBaseTransaction(Hash key) {
-        delete(BaseTransaction.class, key);
+    public void delete(String dataObjectClassName, Hash key) {
+        try {
+            db.delete(classNameToColumnFamilyHandleMapping.get(dataObjectClassName), key.getBytes());
+        } catch (RocksDBException e) {
+            e.printStackTrace();
+        }
     }
 
     @PreDestroy
@@ -135,27 +126,12 @@ public class RocksDBProvider implements IPersistenceProvider {
         db.close();
     }
 
-    @Override
-    public void deleteDatabaseFolder() {
+    private void deleteDatabaseFolder() {
         try {
             FileUtils.deleteDirectory(new File(dbPath));
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private List<IEntity> getAllEntities(Class<?> entityClass) {
-        RocksIterator iterator =
-                db.newIterator(classNameToColumnFamilyHandleMapping.get(entityClass.getName()));
-        iterator.seekToFirst();
-        List<IEntity> entities = new ArrayList<>();
-
-        while (iterator.isValid()) {
-            entities.add((Transaction) SerializationUtils.deserialize(iterator.value()));
-            iterator.next();
-        }
-
-        return entities;
     }
 
     private IEntity get(Class<?> entityClass, Hash key) {
@@ -189,11 +165,4 @@ public class RocksDBProvider implements IPersistenceProvider {
         }
     }
 
-    private void delete(Class<?> entityClass, Hash key) {
-        try {
-            db.delete(classNameToColumnFamilyHandleMapping.get(entityClass.getName()), key.getBytes());
-        } catch (RocksDBException e) {
-            e.printStackTrace();
-        }
-    }
 }
