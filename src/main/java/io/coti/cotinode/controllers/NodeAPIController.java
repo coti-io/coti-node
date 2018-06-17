@@ -62,7 +62,7 @@ public class NodeAPIController {
     }
 
     @RequestMapping(value = "/address", method = PUT)
-    public boolean addAddress(@RequestHeader("Hash") Hash addressHash) {
+    public boolean addAddress(@RequestBody Hash addressHash) {
         if (addressHash == null) {
             return false;
         }
