@@ -9,6 +9,15 @@ import java.util.Arrays;
 public class Hash implements Serializable {
     private byte[] bytes;
 
+    public Hash(){
+
+    }
+
+
+    public Hash(String hash){
+        this.bytes = hash.getBytes();
+    }
+
     public Hash(byte[] bytes){
         this.bytes = bytes;
     }

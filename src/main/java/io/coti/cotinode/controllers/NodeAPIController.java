@@ -17,8 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.springframework.web.bind.annotation.RequestMethod.GET;
-import static org.springframework.web.bind.annotation.RequestMethod.PUT;
+import static org.springframework.web.bind.annotation.RequestMethod.*;
 
 @Slf4j
 @RestController
@@ -34,24 +33,39 @@ public class NodeAPIController {
     private NodeInformationService nodeInformationService;
 
     @RequestMapping(value = "/transaction", method = PUT)
-    public void addTransaction(@RequestBody TransactionData transactionData){
-        log.info(transactionData.toString());
-        if(transactionData == null){
+    public void addTransaction(@RequestBody TransactionData transactionData) {
+        if (transactionData == null) {
             return;
         }
         transactionService.addNewTransaction(transactionData);
     }
 
+    @RequestMapping(value = "/transaction", method = POST)
+    public void getTransactionDetails(@RequestBody Hash transactionHash) {
+        if (transactionHash == null) {
+            return;
+        }
+        transactionService.getTransactionData(transactionHash);
+    }
+
     @RequestMapping(value = "/nodeInfo", method = GET)
-    public NodeInformation getNodeInfo(){
+    public NodeInformation getNodeInfo() {
         return nodeInformationService.getNodeInformation();
     }
 
-    @RequestMapping(value = "/balances", method = GET)
-    public List<BaseTransactionData> getBalance(@RequestHeader("Hash")List<Hash> addressHashes){
-        if(addressHashes == null){
+    @RequestMapping(value = "/balances", method = POST)
+    public List<BaseTransactionData> getBalance(@RequestBody List<Hash> addressHashes) {
+        if (addressHashes == null) {
             return new ArrayList<>();
         }
         return balanceService.getBalances(addressHashes);
+    }
+
+    @RequestMapping(value = "/address", method = PUT)
+    public boolean addAddress(@RequestHeader("Hash") Hash addressHash) {
+        if (addressHash == null) {
+            return false;
+        }
+        return balanceService.addNewAddress(addressHash);
     }
 }
