@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class BalanceDataServiceTests {
+public class BalanceDifferenceDataServiceTests {
 
     @Autowired
     BalanceService balanceService;

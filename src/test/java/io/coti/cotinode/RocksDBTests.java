@@ -10,9 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Slf4j
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = AppConfig.class)
@@ -24,9 +21,9 @@ public class RocksDBTests {
     @Autowired
     private Addresses addresses;
     @Autowired
-    private Balances balances;
+    private BalanceDifferences balanceDifferences;
     @Autowired
-    private PreBalances preBalances;
+    private PreBalanceDifferences preBalanceDifferences;
 
     @Test
     public void saveAndRetrieveSingleTransaction() {
@@ -99,17 +96,17 @@ public class RocksDBTests {
 
     @Test
     public void saveAndGetBalance() {
-        BalanceData balanceData1 = new BalanceData(new Hash("BalanceData 0".getBytes()));
-        balances.put(balanceData1);
-        BalanceData balanceData2 = balances.getByHash(new Hash("BalanceData 0".getBytes()));
-        Assert.assertEquals(balanceData1, balanceData2);
+        BalanceDifferenceData balanceDifferenceData1 = new BalanceDifferenceData(new Hash("BalanceDifferenceData 0".getBytes()));
+        balanceDifferences.put(balanceDifferenceData1);
+        BalanceDifferenceData balanceDifferenceData2 = balanceDifferences.getByHash(new Hash("BalanceDifferenceData 0".getBytes()));
+        Assert.assertEquals(balanceDifferenceData1, balanceDifferenceData2);
     }
 
     @Test
     public void saveAndGetPreBalance() {
-        PreBalance preBalance1 = new PreBalance(new Hash("BalanceData 0".getBytes()));
-        preBalances.put(preBalance1);
-        PreBalance preBalance2 = preBalances.getByHash(new Hash("BalanceData 0".getBytes()));
-        Assert.assertEquals(preBalance1, preBalance2);
+        PreBalanceDifferenceData preBalanceDifferenceData1 = new PreBalanceDifferenceData(new Hash("BalanceDifferenceData 0".getBytes()));
+        preBalanceDifferences.put(preBalanceDifferenceData1);
+        PreBalanceDifferenceData preBalanceDifferenceData2 = preBalanceDifferences.getByHash(new Hash("BalanceDifferenceData 0".getBytes()));
+        Assert.assertEquals(preBalanceDifferenceData1, preBalanceDifferenceData2);
     }
 }

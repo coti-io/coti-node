@@ -1,8 +1,8 @@
 package io.coti.cotinode.model;
 
 import io.coti.cotinode.data.Hash;
-import io.coti.cotinode.data.IEntity;
-import io.coti.cotinode.storage.Interfaces.IDatabaseConnector;
+import io.coti.cotinode.data.interfaces.IEntity;
+import io.coti.cotinode.database.Interfaces.IDatabaseConnector;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,15 +20,19 @@ public abstract class Collection<T extends IEntity> {
     }
 
     public void put(IEntity entity) {
-        databaseConnector.put(getClass().getName(), entity);
+        databaseConnector.put(getClass().getName(), entity.getKey().getBytes(), SerializationUtils.serialize(entity));
     }
 
     public T getByHash(Hash hash) {
-        return (T) SerializationUtils.deserialize(
-                databaseConnector.getByHash(getClass().getName(), hash));
+        byte[] bytes = databaseConnector.getByKey(getClass().getName(), hash.getBytes());
+        T deserialized = (T) SerializationUtils.deserialize(bytes);
+        if(deserialized instanceof IEntity) {
+            deserialized.setKey(hash);
+        }
+        return deserialized;
     }
 
     public void delete(Hash hash){
-        databaseConnector.delete(getClass().getName(), hash);
+        databaseConnector.delete(getClass().getName(), hash.getBytes());
     }
 }

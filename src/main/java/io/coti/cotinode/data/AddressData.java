@@ -1,12 +1,13 @@
 package io.coti.cotinode.data;
 
+import io.coti.cotinode.data.interfaces.IEntity;
 import lombok.Data;
 
 import java.util.Date;
 
 @Data
 public class AddressData implements IEntity {
-    private Hash hash;
+    private transient Hash hash;
     private Date creationTime;
 
     public AddressData(Hash hash) {
@@ -16,6 +17,11 @@ public class AddressData implements IEntity {
     @Override
     public Hash getKey() {
         return hash;
+    }
+
+    @Override
+    public void setKey(Hash hash) {
+        this.hash = hash;
     }
 
     @Override

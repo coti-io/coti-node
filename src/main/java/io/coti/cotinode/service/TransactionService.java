@@ -2,7 +2,6 @@ package io.coti.cotinode.service;
 
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.service.interfaces.ITransactionService;
-import io.coti.cotinode.storage.Interfaces.IDatabaseConnector;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

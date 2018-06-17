@@ -26,14 +26,14 @@ public class CollectionsConfiguration {
     }
 
     @Bean
-    public Balances balances(){
-        Balances balances = new Balances();
-        return balances;
+    public BalanceDifferences balances(){
+        BalanceDifferences balanceDifferences = new BalanceDifferences();
+        return balanceDifferences;
     }
 
     @Bean
-    public PreBalances preBalances(){
-        PreBalances preBalances = new PreBalances();
-        return preBalances;
+    public PreBalanceDifferences preBalances(){
+        PreBalanceDifferences preBalanceDifferences = new PreBalanceDifferences();
+        return preBalanceDifferences;
     }
 }
