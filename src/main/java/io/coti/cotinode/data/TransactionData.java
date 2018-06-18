@@ -1,8 +1,7 @@
 package io.coti.cotinode.data;
 
-import lombok.AccessLevel;
+import io.coti.cotinode.data.interfaces.IEntity;
 import lombok.Data;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
@@ -12,7 +11,7 @@ import java.util.Vector;
 @Slf4j
 @Data
 public class TransactionData implements IEntity {
-    @Setter(AccessLevel.NONE)
+    private transient Hash hash;
     private Hash hash;
     private TransactionData leftParent;
     private TransactionData rightParent;
@@ -38,27 +37,26 @@ public class TransactionData implements IEntity {
     private List<Hash> childrenTransactions;
     private boolean isValid;
 
-    public boolean isSource(){
-        return childrenTransactions == null || childrenTransactions.size() == 0;
+    private TransactionData(){
+
     }
 
-    public boolean isConfirm(){
-        return transactionConsensus && dspConsensus;
-    }
-
-    public TransactionData(Hash hash){
+    public TransactionData(Hash hash) {
         this.hash = hash;
         this.trustChainTransactionHashes = new Vector<>();
         this.childrenTransactions = new Vector<>();
     }
 
-    @Override
-    public Hash getKey() {
-        return hash;
+    public boolean isSource() {
+        return childrenTransactions == null || childrenTransactions.size() == 0;
+    }
+
+    public boolean isConfirm() {
+        return transactionConsensus && dspConsensus;
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return String.valueOf(hash);
     }
 
@@ -74,18 +72,26 @@ public class TransactionData implements IEntity {
         return hash.equals(((TransactionData) other).hash);
     }
 
-    public void attachToSource(TransactionData source){
-        if (leftParent == null){
+    public void attachToSource(TransactionData source) {
+        if (leftParent == null) {
             leftParent = source;
             source.childrenTransactions.add(hash);
-        }
-        else if(rightParent == null){
+        } else if (rightParent == null) {
             rightParent = source;
             source.childrenTransactions.add(hash);
-        }
-        else{
+        } else {
             log.error("Unable to attach to source, both parents are full");
             throw new RuntimeException("Unable to attach to source.");
         }
+    }
+
+    @Override
+    public Hash getKey() {
+        return this.hash;
+    }
+
+    @Override
+    public void setKey(Hash hash) {
+        this.hash = hash;
     }
 }

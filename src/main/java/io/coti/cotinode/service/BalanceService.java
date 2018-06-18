@@ -1,6 +1,5 @@
 package io.coti.cotinode.service;
 
-import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.model.Balances;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.*;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -154,15 +152,10 @@ public class BalanceService implements IBalanceService {
     public void updateAddressBalance(Hash address, double amount) {
         preBalanceMap.put(address,amount);
     }
-
     public Map<Hash,Double> getBalances(List<Hash> addressHashes) {
         Map<Hash,Double> requestedBalances = new HashMap<>();
         for (Hash addressHash : addressHashes) {
             requestedBalances.put(addressHash,preBalanceMap.get(addressHash));
-        }
-        return requestedBalances;
-    }
-
 
     // TODO: not in use
     public synchronized boolean balanceCheck(TransactionData data){
@@ -181,9 +174,12 @@ public class BalanceService implements IBalanceService {
         log.info("Balance check completed successfully");
 
         return true;
+        return new GetBalancesResponse(
+                HttpStatus.OK,
+                "");
     }
 
-
+        return false;
 
 
     ////// ################# SETTERS AND GETTERS ######################

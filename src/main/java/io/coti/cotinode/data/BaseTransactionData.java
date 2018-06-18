@@ -1,10 +1,11 @@
 package io.coti.cotinode.data;
 
+import io.coti.cotinode.data.interfaces.IEntity;
 import lombok.Data;
 
 @Data
 public class BaseTransactionData implements IEntity {
-    private Hash hash;
+    private transient Hash hash;
     private AddressData addressData;
     private double value;
     private Hash transactionHash;
@@ -18,6 +19,11 @@ public class BaseTransactionData implements IEntity {
     @Override
     public Hash getKey() {
         return hash;
+    }
+
+    @Override
+    public void setKey(Hash hash) {
+        this.hash = hash;
     }
 
     @Override

@@ -1,9 +1,9 @@
-package io.coti.cotinode.storage;
+package io.coti.cotinode.database;
 
 import io.coti.cotinode.data.Hash;
-import io.coti.cotinode.data.IEntity;
+import io.coti.cotinode.data.interfaces.IEntity;
 import io.coti.cotinode.model.*;
-import io.coti.cotinode.storage.Interfaces.IDatabaseConnector;
+import io.coti.cotinode.database.Interfaces.IDatabaseConnector;
 import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.*;
 import org.springframework.stereotype.Service;
@@ -12,7 +12,7 @@ import org.springframework.util.SerializationUtils;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.File;
-import java.nio.ByteBuffer;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -26,8 +26,8 @@ public class RocksDBConnector implements IDatabaseConnector {
             Transactions.class.getName(),
             BaseTransactions.class.getName(),
             Addresses.class.getName(),
-            Balances.class.getName(),
-            PreBalances.class.getName()
+            BalanceDifferences.class.getName(),
+            PreBalanceDifferences.class.getName()
     );
     private List<ColumnFamilyDescriptor> columnFamilyDescriptors = new ArrayList<>();
     private RocksDB db;
@@ -72,11 +72,11 @@ public class RocksDBConnector implements IDatabaseConnector {
     }
 
     @Override
-    public byte[] getByHash(String columnFamilyName, Hash hash) {
+    public byte[] getByKey(String columnFamilyName, byte[] key) {
         try {
             //  db.getSnapshot()
 
-            return db.get(classNameToColumnFamilyHandleMapping.get(columnFamilyName), hash.getBytes());
+            return db.get(classNameToColumnFamilyHandleMapping.get(columnFamilyName), key);
         } catch (RocksDBException e) {
             e.printStackTrace();
             return null;
@@ -158,12 +158,12 @@ public class RocksDBConnector implements IDatabaseConnector {
 //    public Map<Hash, Double> getGapFromDB()
 
     @Override
-    public boolean put(String columnFamilyName, IEntity entity) {
+    public boolean put(String columnFamilyName, byte[] key, byte[] value) {
         try {
             db.put(
                     classNameToColumnFamilyHandleMapping.get(columnFamilyName),
-                    entity.getKey().getBytes(),
-                    SerializationUtils.serialize(entity));
+                    key,
+                    value);
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -172,16 +172,15 @@ public class RocksDBConnector implements IDatabaseConnector {
     }
 
     @Override
-    public void delete(String columnFamilyName, Hash key) {
+    public void delete(String columnFamilyName, byte[] key) {
         try {
-            db.delete(classNameToColumnFamilyHandleMapping.get(columnFamilyName), key.getBytes());
+            db.delete(classNameToColumnFamilyHandleMapping.get(columnFamilyName), key);
         } catch (RocksDBException e) {
             e.printStackTrace();
         }
     }
 
     @PreDestroy
-    @Override
     public void shutdown() {
         log.info("Shutting down rocksDB");
         for (ColumnFamilyHandle columnFamilyHandle :

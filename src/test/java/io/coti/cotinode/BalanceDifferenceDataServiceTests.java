@@ -13,12 +13,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class BalanceDataServiceTests {
+public class BalanceDifferenceDataServiceTests {
 
     @Autowired
-    private BalanceService balanceService;
+    BalanceService balanceService;
 
-
+    @Before
+    public void init() {
+        balanceService = new BalanceService();
+    }
+//
 //    @Test
 //    public void getBalances_EmptyBalancesList_ReturnsEmptyList() {
 //        List<BaseTransactionData> balances = balanceService.getBalances(new ArrayList<>());
