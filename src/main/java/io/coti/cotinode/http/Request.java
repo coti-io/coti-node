@@ -6,4 +6,5 @@ import lombok.Data;
 @Data
 public abstract class Request implements IRequest {
 
+
 }
