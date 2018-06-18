@@ -3,15 +3,16 @@ package io.coti.cotinode.data;
 import io.coti.cotinode.data.interfaces.IEntity;
 import lombok.Data;
 
+import java.util.Date;
 import java.util.Map;
 
 @Data
-public class PreBalanceDifferenceData implements IEntity {
+public class ConfirmedTransactionData implements IEntity {
     private transient Hash hash;
-    private Hash userHash;
-    private Map<Hash, Double> addressHashToValueTransferredMapping;
+    private Date creationTIme;
+    private Map<byte[], Double> addressHashToValueTransferredMapping;
 
-    public PreBalanceDifferenceData(Hash hash) {
+    public ConfirmedTransactionData(Hash hash) {
         this.hash = hash;
     }
 
@@ -31,9 +32,9 @@ public class PreBalanceDifferenceData implements IEntity {
             return true;
         }
 
-        if (!(other instanceof PreBalanceDifferenceData)) {
+        if (!(other instanceof ConfirmedTransactionData)) {
             return false;
         }
-        return hash.equals(((PreBalanceDifferenceData) other).hash);
+        return hash.equals(((ConfirmedTransactionData) other).hash);
     }
 }

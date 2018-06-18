@@ -35,6 +35,10 @@ public class TransactionData implements IEntity {
     private List<Hash> childrenTransactions;
     private boolean isValid;
 
+    private TransactionData(){
+
+    }
+
     public TransactionData(Hash hash) {
         this.hash = hash;
         this.trustChainTransactionHashes = new Vector<>();

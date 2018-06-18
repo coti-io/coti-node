@@ -1,8 +1,10 @@
 package io.coti.cotinode.model;
 
-import io.coti.cotinode.data.PreBalanceDifferenceData;
+import io.coti.cotinode.data.UnconfirmedTransactionData;
+import lombok.Data;
 
-public class PreBalanceDifferences extends Collection<PreBalanceDifferenceData> {
+@Data
+public class PreBalanceDifferences extends Collection<UnconfirmedTransactionData> {
 
     public PreBalanceDifferences() {
     }
