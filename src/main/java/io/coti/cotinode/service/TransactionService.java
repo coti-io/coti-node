@@ -19,9 +19,9 @@ public class TransactionService implements ITransactionService {
     @Autowired
     private ClusterService clusterService;
     @Autowired
-    Transactions transactions;
+    private Transactions transactions;
     @Autowired
-    ISourceValidationService sourceValidationService;
+    private ISourceValidationService sourceValidationService;
 
     public boolean addNewTransaction(TransactionData transactionData) {
         if(!validateDataIntegrity(transactionData)){

@@ -52,11 +52,11 @@ public class NodeAPIController {
         return nodeInformationService.getNodeInformation();
     }
 
-    @RequestMapping(value = "/address", method = PUT)
-    public boolean addAddress(@RequestBody Hash addressHash) {
-        if (addressHash == null) {
-            return false;
-        }
-        return balanceService.addNewAddress(addressHash);
-    }
+//    @RequestMapping(value = "/address", method = PUT)
+//    public boolean addAddress(@RequestBody Hash addressHash) {
+//        if (addressHash == null) {
+//            return false;
+//        }
+//        return balanceService.addNewAddress(addressHash);
+//    }
 }

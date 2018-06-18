@@ -12,7 +12,6 @@ import java.util.Vector;
 @Data
 public class TransactionData implements IEntity {
     private transient Hash hash;
-    private Hash hash;
     private TransactionData leftParent;
     private TransactionData rightParent;
     private List<Hash> trustChainTransactionHashes;

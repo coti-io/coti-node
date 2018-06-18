@@ -21,9 +21,7 @@ public class Hash implements Serializable {
         this.bytes = bytes;
     }
 
-    public Hash(String hashText){
-        this.bytes = hashText.getBytes();
-    }
+
 
     @Override
     public boolean equals(Object other) {
@@ -42,10 +40,6 @@ public class Hash implements Serializable {
         return new String(bytes);
     }
 
-    @Override
-    public String toString(){
-        return new String(bytes);
-    }
 
 
 }
