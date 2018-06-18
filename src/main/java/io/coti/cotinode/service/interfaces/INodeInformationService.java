@@ -1,6 +1,6 @@
 package io.coti.cotinode.service.interfaces;
 
-import io.coti.cotinode.http.interfaces.NodeInformationResponse;
+import io.coti.cotinode.http.NodeInformationResponse;
 
 public interface INodeInformationService {
 

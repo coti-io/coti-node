@@ -1,6 +1,6 @@
 package io.coti.cotinode.controllers;
 
-import io.coti.cotinode.http.interfaces.NodeInformationResponse;
+import io.coti.cotinode.http.NodeInformationResponse;
 import io.coti.cotinode.service.interfaces.INodeInformationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;

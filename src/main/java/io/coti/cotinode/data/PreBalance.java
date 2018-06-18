@@ -1,5 +1,6 @@
 package io.coti.cotinode.data;
 
+import io.coti.cotinode.data.interfaces.IEntity;
 import lombok.Data;
 
 import java.util.Map;
@@ -17,6 +18,11 @@ public class PreBalance implements IEntity {
     @Override
     public Hash getKey() {
         return hash;
+    }
+
+    @Override
+    public void setKey(Hash hash) {
+        this.hash = hash;
     }
 
     @Override
