@@ -47,11 +47,4 @@ public class BalanceService {
 
     public void addToPreBalance(TransactionData transactionData) {
     }
-
-    public void revertTransaction(TransactionData transactionData) {
-    }
-
-    public void shutdown() {
-
-    }
 }

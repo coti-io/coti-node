@@ -1,7 +1,8 @@
 package io.coti.cotinode.service;
 
 import io.coti.cotinode.data.Hash;
-import io.coti.cotinode.model.Transaction;
+
+import io.coti.cotinode.data.TransactionData;
 import lombok.Data;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
@@ -19,24 +20,19 @@ import java.util.stream.Collectors;
 
 @Service
 public class ConfirmationService {
+    int TRESHOLD = 300;
     Logger log = LoggerFactory.getLogger(this.getClass().getName());
-    ConcurrentHashMap<Hash, Transaction> hashToUnTddConfirmTransactionsMapping;
-    private List<Pair> edges; // Adjacency List
-    LinkedList<Transaction> result;
+    ConcurrentHashMap<Hash, TransactionData> hashToUnTddConfirmTransactionsMapping;
+    LinkedList<TransactionData>result;
 
+    ConcurrentHashMap<Hash, TransactionData> hashToTddConfirmTransactionsMapping;
 
-
-    ConcurrentHashMap<Hash, Transaction> hashToTddConfirmTransactionsMapping;
-  //  List<LinkedList<Pair>> edges;
-
-
-    public void init(ConcurrentHashMap<Hash, Transaction> hashToUnConfirmationTransactionsMapping) {
-      for (Map.Entry<Hash, Transaction> entry : hashToUnConfirmationTransactionsMapping.entrySet()) {
+    public void init(ConcurrentHashMap<Hash, TransactionData> hashToUnConfirmationTransactionsMapping) {
+      for (Map.Entry<Hash, TransactionData> entry : hashToUnConfirmationTransactionsMapping.entrySet()) {
           if (!entry.getValue().isTransactionConsensus()) {
               this.hashToUnTddConfirmTransactionsMapping.put( entry.getValue().getHash(),entry.getValue());
           }
       }
-      initEdges();
     }
 
     @Async
@@ -50,63 +46,67 @@ public class ConfirmationService {
         return new AsyncResult<>(processInfo);
     }
 
-    public void initEdges() {
-        edges = new Vector<Pair>();
-        for (Transaction transaction : hashToUnTddConfirmTransactionsMapping.values()) {
-            transaction.setTotalTrustScore(0);
-            LinkedList<Transaction> childList =  new LinkedList<Transaction>();
-            for (Hash childHash : transaction.getChildrenTransactions()) {
-                childList.addFirst(hashToUnTddConfirmTransactionsMapping.get(childHash));
-            }
-            edges.add(new Pair(transaction, childList));
-        }
-    }
-
     public void findTransactionToconfirm() {
 
     }
 
-    @Data
-    public class Pair{
-        Transaction parent;
-        LinkedList<Transaction> childs;
-        public Pair(Transaction parent,LinkedList<Transaction> childs){
-            this.parent = parent;
-            this.childs = childs;
-        }
-    }
-
     //takes adjacency list of a directed acyclic graph(DAG) as input
     //returns a linkedlist which consists the vertices in topological order
-    public LinkedList<Transaction> topologicSorting(){
+    public LinkedList<TransactionData>topologicSorting(){
 
-        HashSet< Transaction> visited =new HashSet< Transaction>();
+        result=new LinkedList<TransactionData>();
 
-        result=new LinkedList<Transaction>();
         //loop is for making sure that every vertex is visited since if we select only one random source
         //all vertices might not be reachable from this source
         //eg:1->2->3,1->3 and if we select 3 as source first then no vertex can be visited ofcourse except for 3
-        for(Pair pair : edges){
-            if(!visited.contains(pair.getParent()) ) {
-                topoSortHelper(pair.parent, visited);
+        for(Map.Entry<Hash, TransactionData>  entry : hashToUnTddConfirmTransactionsMapping.entrySet()){
+            if(!entry.getValue().isVisit()) {
+                topoSortHelper(entry.getValue());
             }
         }
         return result;
     }
 
-    private void topoSortHelper(Transaction parentTransaction, HashSet< Transaction> visited){
-//        for(Hash hash : parentTransaction.getChildrenTransactions()){
-//            //skipping through if already visited
-//            if(!visited.contains(hashToUnTddConfirmTransactionsMapping.get(hash)) ) {
-//                topoSortHelper(edges,adj.v,visited,result);
-//            }
-//
-//        }
-//        //making the vertex visited for future reference
-//        visited[src]=true;
-//        //pushing to the stack as departing
-//        result.addFirst(src);
-        
+    private void setMaxSonsTotalTrustScoregetMaxSonsTotalTrustScore(TransactionData parent) {
+        int maxSonsTotalTrustScore = 0;
+        Hash maxSonsTotalTrustScoreHash = null;
+        for (Hash hash : parent.getChildrenTransactions()) {
+            if (hashToUnTddConfirmTransactionsMapping.get(hash).getTotalTrustScore()
+                    > maxSonsTotalTrustScore) {
+                maxSonsTotalTrustScore = hashToUnTddConfirmTransactionsMapping.get(hash).getTotalTrustScore();
+                maxSonsTotalTrustScoreHash = hash;
+            }
+        }
+
+        //updating parent trustChainTransactionHashes
+        List<Hash> maxSonsTotalTrustScoreTrustChainTransactionHashes =
+                new Vector<>(hashToUnTddConfirmTransactionsMapping.get(maxSonsTotalTrustScoreHash).getTrustChainTransactionHashes());
+        maxSonsTotalTrustScoreTrustChainTransactionHashes.add(maxSonsTotalTrustScoreHash);
+        parent.setTrustChainTransactionHashes(maxSonsTotalTrustScoreTrustChainTransactionHashes);
+    }
+
+    private void topoSortHelper(TransactionData parentTransactionData){
+        for(Hash transactionDataHash : parentTransactionData.getChildrenTransactions()){
+            TransactionData childTransactionData = hashToUnTddConfirmTransactionsMapping.get(transactionDataHash);
+            if(!childTransactionData.isVisit())  {
+                topoSortHelper(childTransactionData);
+            }
+
+        }
+        //making the vertex visited for future reference
+        parentTransactionData.setVisit(true);
+
+        //pushing to the stack as departing
+        result.addLast(parentTransactionData);
+    }
+
+    private void setTransactionConsensus() {
+        result.forEach((transaction) -> {
+            setMaxSonsTotalTrustScoregetMaxSonsTotalTrustScore(transaction);
+            if(transaction.getTotalTrustScore() >= TRESHOLD) {
+                transaction.setTransactionConsensus(true);
+            }
+        });
     }
 
 }

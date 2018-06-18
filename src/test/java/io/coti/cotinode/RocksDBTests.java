@@ -2,35 +2,28 @@ package io.coti.cotinode;
 
 import io.coti.cotinode.data.*;
 import io.coti.cotinode.model.*;
-import io.coti.cotinode.storage.Interfaces.IDatabaseConnector;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringRunner;
 
 @Slf4j
+@RunWith(SpringRunner.class)
+@ContextConfiguration(classes = AppConfig.class)
 public class RocksDBTests {
-    private IDatabaseConnector provider;
-
     @Autowired
     private Transactions transactions;
+    @Autowired
     private BaseTransactions baseTransactions;
+    @Autowired
     private Addresses addresses;
-    private Balances balances;
-    private PreBalances preBalances;
-
-    @Before
-    public void init() {
-        transactions = new Transactions();
-        baseTransactions = new BaseTransactions();
-        addresses = new Addresses();
-        balances = new Balances();
-        preBalances = new PreBalances();
-    }
+    @Autowired
+    private BalanceDifferences balanceDifferences;
+    @Autowired
+    private PreBalanceDifferences preBalanceDifferences;
 
     @Test
     public void saveAndRetrieveSingleTransaction() {
@@ -64,32 +57,20 @@ public class RocksDBTests {
     }
 
     @Test
-    public void saveManyAndGetAll() {
-        TransactionData transactionData1 = new TransactionData(new Hash("TransactionData A".getBytes()));
-        TransactionData transactionData2 = new TransactionData(new Hash("TransactionData B".getBytes()));
-        transactions.put(transactionData1);
-        transactions.put(transactionData2);
-        List<TransactionData> transactionData = transactions.getAll();
-
-        Assert.assertEquals(transactionData1, transactionData.get(0));
-        Assert.assertEquals(transactionData2, transactionData.get(1));
-        Assert.assertEquals(2, transactionData.size());
-    }
-
-    @Test
     public void saveAndDeleteTransactions() {
         TransactionData transactionData1 = new TransactionData(new Hash("TransactionData 0".getBytes()));
         transactions.put(transactionData1);
         TransactionData transactionData2 = transactions.getByHash(new Hash("TransactionData 0".getBytes()));
         Assert.assertEquals(transactionData1, transactionData2);
         transactions.delete(transactionData1.getKey());
-        Assert.assertEquals(transactions.getAll(), new ArrayList<TransactionData>());
+        transactionData2 = transactions.getByHash(new Hash("TransactionData 0".getBytes()));
+        Assert.assertEquals(transactionData2, null);
     }
 
     @Test
     public void saveAndGetBaseTransaction() {
         BaseTransactionData baseTransactionData1 = new BaseTransactionData(new Hash("TransactionData 0".getBytes()), 12.2);
-        provider.put(baseTransactionData1);
+        baseTransactions.put(baseTransactionData1);
         BaseTransactionData baseTransactionData2 = baseTransactions.getByHash(new Hash("TransactionData 0".getBytes()));
         Assert.assertEquals(baseTransactionData1, baseTransactionData2);
     }
@@ -109,22 +90,23 @@ public class RocksDBTests {
         BaseTransactionData transaction2 = baseTransactions.getByHash(new Hash("TransactionData 0".getBytes()));
         Assert.assertEquals(transaction1, transaction2);
         baseTransactions.delete(transaction1.getKey());
-        Assert.assertEquals(baseTransactions.getAll(), new ArrayList<BaseTransactionData>());
+        transaction2 = baseTransactions.getByHash(new Hash("TransactionData 0".getBytes()));
+        Assert.assertEquals(transaction2, null);
     }
 
     @Test
     public void saveAndGetBalance() {
-        BalanceData balanceData1 = new BalanceData(new Hash("BalanceData 0".getBytes()));
-        balances.put(balanceData1);
-        BalanceData balanceData2 = balances.getByHash(new Hash("BalanceData 0".getBytes()));
-        Assert.assertEquals(balanceData1, balanceData2);
+        BalanceDifferenceData balanceDifferenceData1 = new BalanceDifferenceData(new Hash("BalanceDifferenceData 0".getBytes()));
+        balanceDifferences.put(balanceDifferenceData1);
+        BalanceDifferenceData balanceDifferenceData2 = balanceDifferences.getByHash(new Hash("BalanceDifferenceData 0".getBytes()));
+        Assert.assertEquals(balanceDifferenceData1, balanceDifferenceData2);
     }
 
     @Test
     public void saveAndGetPreBalance() {
-        PreBalance preBalance1 = new PreBalance(new Hash("BalanceData 0".getBytes()));
-        preBalances.put(preBalance1);
-        PreBalance preBalance2 = preBalances.getByHash(new Hash("BalanceData 0".getBytes()));
-        Assert.assertEquals(preBalance1, preBalance2);
+        PreBalanceDifferenceData preBalanceDifferenceData1 = new PreBalanceDifferenceData(new Hash("BalanceDifferenceData 0".getBytes()));
+        preBalanceDifferences.put(preBalanceDifferenceData1);
+        PreBalanceDifferenceData preBalanceDifferenceData2 = preBalanceDifferences.getByHash(new Hash("BalanceDifferenceData 0".getBytes()));
+        Assert.assertEquals(preBalanceDifferenceData1, preBalanceDifferenceData2);
     }
 }

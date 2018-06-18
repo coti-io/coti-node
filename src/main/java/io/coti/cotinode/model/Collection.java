@@ -1,41 +1,38 @@
 package io.coti.cotinode.model;
 
 import io.coti.cotinode.data.Hash;
-import io.coti.cotinode.data.IEntity;
-import io.coti.cotinode.storage.Interfaces.IDatabaseConnector;
-import io.coti.cotinode.storage.RocksDBConnector;
+import io.coti.cotinode.data.interfaces.IEntity;
+import io.coti.cotinode.database.Interfaces.IDatabaseConnector;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
 
-import java.util.List;
-
 @Slf4j
+@Service
 public abstract class Collection<T extends IEntity> {
-
-    public Class<T> dataObjectClass;
 
     @Autowired
     IDatabaseConnector databaseConnector;
 
     public void init(){
-        databaseConnector = new RocksDBConnector();
+        log.info("Collection init ruuning. Class: " + getClass().getName());
     }
 
     public void put(IEntity entity) {
-        databaseConnector.put(entity);
+        databaseConnector.put(getClass().getName(), entity.getKey().getBytes(), SerializationUtils.serialize(entity));
     }
 
     public T getByHash(Hash hash) {
-        return (T) SerializationUtils.deserialize(
-                databaseConnector.getByHash(dataObjectClass.getName(), hash));
-    }
-
-    public List<T> getAll(){
-        return (List<T>)databaseConnector.getAll(dataObjectClass.getName());
+        byte[] bytes = databaseConnector.getByKey(getClass().getName(), hash.getBytes());
+        T deserialized = (T) SerializationUtils.deserialize(bytes);
+        if(deserialized instanceof IEntity) {
+            deserialized.setKey(hash);
+        }
+        return deserialized;
     }
 
     public void delete(Hash hash){
-        databaseConnector.delete(dataObjectClass.getName(), hash);
+        databaseConnector.delete(getClass().getName(), hash.getBytes());
     }
 }

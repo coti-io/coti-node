@@ -1,0 +1,54 @@
+package io.coti.cotinode;
+
+import io.coti.cotinode.data.Hash;
+import io.coti.cotinode.data.TransactionData;
+import io.coti.cotinode.service.BalanceService;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.concurrent.ConcurrentHashMap;
+
+import static org.junit.Assert.*;
+
+public class ConfirmationServiceTest {
+
+    @Autowired
+    ConcurrentHashMap<Hash, TransactionData> hashToUnConfirmationTransactionsMapping;
+
+    @Before
+    public void init() {
+        this.hashToUnConfirmationTransactionsMapping = new ConcurrentHashMap<Hash, TransactionData> ();
+
+        TransactionData TransactionData0 = new TransactionData(new Hash("0".getBytes()));
+        TransactionData0.setSenderTrustScore(80);
+
+        TransactionData TransactionData1 = new TransactionData(new Hash("1".getBytes()));
+        TransactionData1.setSenderTrustScore(120);
+
+        TransactionData TransactionData2 = new TransactionData(new Hash("2".getBytes()));
+        TransactionData2.setSenderTrustScore(100);
+
+        TransactionData TransactionData3 = new TransactionData(new Hash("3".getBytes()));
+        TransactionData3.setSenderTrustScore(90);
+
+        TransactionData TransactionData4 = new TransactionData(new Hash("4".getBytes()));
+        TransactionData4.setSenderTrustScore(100);
+
+        TransactionData TransactionData5 = new TransactionData(new Hash("4".getBytes()));
+        TransactionData5.setSenderTrustScore(90);
+    }
+
+
+    @Test
+    public void process() {
+    }
+
+    @Test
+    public void findTransactionToconfirm() {
+    }
+
+    @Test
+    public void topologicSorting() {
+    }
+}

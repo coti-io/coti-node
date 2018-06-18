@@ -3,14 +3,15 @@ package io.coti.cotinode.data;
 import io.coti.cotinode.data.interfaces.IEntity;
 import lombok.Data;
 
-import java.util.Date;
+import java.util.Map;
 
 @Data
-public class AddressData implements IEntity {
+public class PreBalanceDifferenceData implements IEntity {
     private transient Hash hash;
-    private Date creationTime;
+    private Hash userHash;
+    private Map<Hash, Double> addressHashToValueTransferredMapping;
 
-    public AddressData(Hash hash) {
+    public PreBalanceDifferenceData(Hash hash) {
         this.hash = hash;
     }
 
@@ -30,9 +31,9 @@ public class AddressData implements IEntity {
             return true;
         }
 
-        if (!(other instanceof AddressData)) {
+        if (!(other instanceof PreBalanceDifferenceData)) {
             return false;
         }
-        return hash.equals(((AddressData) other).hash);
+        return hash.equals(((PreBalanceDifferenceData) other).hash);
     }
 }

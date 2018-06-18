@@ -4,20 +4,20 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.coti.cotinode.data.Hash;
-import io.coti.cotinode.model.Transaction;
+import io.coti.cotinode.data.TransactionData;
 import org.springframework.stereotype.Component;
 
 @Component
 public interface ICluster {
-    void initCluster(List<Transaction> allClusterTransactions);
-    void addToHashToAllClusterTransactionsMap(Transaction transaction);
-    void addToUnTccConfirmedTransactionMap(Transaction transaction);
-    void addToTrustScoreToSourceListMap(Transaction transaction);
-    boolean addNewTransaction(Transaction transaction, boolean isFromPpropagation);
-    void updateParentsTotalSumScore(Transaction transaction, int sonsTotalTrustScore, List<Hash> trustChainTransactionHashes);
-    void attachToSource(Transaction newTransaction, Transaction source);
-    List<Transaction> getAllSourceTransactions();
+    void initCluster(List<TransactionData> allClusterTransactions);
+    void addToHashToAllClusterTransactionsMap(TransactionData transaction);
+    void addToUnTccConfirmedTransactionMap(TransactionData transaction);
+    void addToTrustScoreToSourceListMap(TransactionData transaction);
+    boolean addNewTransaction(TransactionData transaction, boolean isFromPpropagation);
+    void updateParentsTotalSumScore(TransactionData transaction, int sonsTotalTrustScore, List<Hash> trustChainTransactionHashes);
+    void attachToSource(TransactionData newTransaction, TransactionData source);
+    List<TransactionData> getAllSourceTransactions();
    // void deleteTransactionFromHashToAllClusterTransactionsMapping(Hash hash);
     void deleteTransactionFromHashToUnTccConfirmedTransactionsMapping(Hash hash);
-    void deleteTrustScoreToSourceListMapping(Hash hash, Transaction transaction );
+    void deleteTrustScoreToSourceListMapping(Hash hash, TransactionData transaction );
 }

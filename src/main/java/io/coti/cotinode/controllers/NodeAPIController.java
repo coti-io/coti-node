@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
@@ -35,6 +36,9 @@ public class NodeAPIController {
     @RequestMapping(value = "/transaction", method = PUT)
     public void addTransaction(@RequestBody TransactionData transactionData){
         log.info(transactionData.toString());
+        if(transactionData == null){
+            return;
+        }
         transactionService.addNewTransaction(transactionData);
     }
 
@@ -45,6 +49,9 @@ public class NodeAPIController {
 
     @RequestMapping(value = "/balances", method = GET)
     public List<BaseTransactionData> getBalance(@RequestHeader("Hash")List<Hash> addressHashes){
+        if(addressHashes == null){
+            return new ArrayList<>();
+        }
         return balanceService.getBalances(addressHashes);
     }
 }

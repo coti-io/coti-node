@@ -1,8 +1,9 @@
 package io.coti.cotinode.service;
 
 import io.coti.cotinode.data.Hash;
+import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.service.interfaces.ISourceSelector;
-import io.coti.cotinode.model.Transaction;
+
 import io.coti.cotinode.service.interfaces.ICluster;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -26,12 +27,12 @@ public class Cluster implements ICluster {
 
     @Autowired
     private ISourceSelector sourceSelector;
-    private ConcurrentHashMap<Hash, Transaction> hashToAllClusterTransactionsMapping;
-    private ConcurrentHashMap<Hash, Transaction> hashToUnTccConfirmationTransactionsMapping;
-    private ConcurrentHashMap<Integer, List<Transaction>> trustScoreToSourceListMapping;
+    private ConcurrentHashMap<Hash, TransactionData> hashToAllClusterTransactionsMapping;
+    private ConcurrentHashMap<Hash, TransactionData> hashToUnTccConfirmationTransactionsMapping;
+    private ConcurrentHashMap<Integer, List<TransactionData>> trustScoreToSourceListMapping;
 
     @Override
-    public void initCluster(List<Transaction> allClusterTransactions){
+    public void initCluster(List<TransactionData> allClusterTransactions){
         hashToAllClusterTransactionsMapping = new ConcurrentHashMap<>();;
         hashToUnTccConfirmationTransactionsMapping = new ConcurrentHashMap<>();
         trustScoreToSourceListMapping = new ConcurrentHashMap<>();
@@ -41,28 +42,28 @@ public class Cluster implements ICluster {
         setTrustScoreToSourceListMapping(hashToUnTccConfirmationTransactionsMapping);
     }
 
-    private void setAllClusterTransactionsMap(List<Transaction> allTransactions) {
+    private void setAllClusterTransactionsMap(List<TransactionData> allTransactions) {
         this.hashToUnTccConfirmationTransactionsMapping.
                 putAll(allTransactions.stream().
                         collect(Collectors.
-                                toMap(Transaction::getHash, Function.identity())));
+                                toMap(TransactionData::getHash, Function.identity())));
     }
 
-    private void setUnTccConfirmedTransactions(List<Transaction> allTransactions) {
+    private void setUnTccConfirmedTransactions(List<TransactionData> allTransactions) {
         this.hashToUnTccConfirmationTransactionsMapping.
                 putAll(allTransactions.stream().
-                        filter(Transaction::isConfirm).
+                        filter(TransactionData::isConfirm).
                         collect(Collectors.
-                                toMap(Transaction::getHash, Function.identity())));
+                                toMap(TransactionData::getHash, Function.identity())));
     }
 
-    private void setTrustScoreToSourceListMapping(ConcurrentHashMap<Hash, Transaction> hashToUnconfirmedTransactionsMapping) {
+    private void setTrustScoreToSourceListMapping(ConcurrentHashMap<Hash, TransactionData> hashToUnconfirmedTransactionsMapping) {
         this.trustScoreToSourceListMapping = new ConcurrentHashMap<>();
         for (int i=1; i <= 100; i++) {
-            trustScoreToSourceListMapping.put(i, new Vector<Transaction>());
+            trustScoreToSourceListMapping.put(i, new Vector<TransactionData>());
         }
 
-        for ( Transaction transaction: hashToUnconfirmedTransactionsMapping.values()) {
+        for ( TransactionData transaction: hashToUnconfirmedTransactionsMapping.values()) {
             if (transaction.isSource() && transaction.getSenderTrustScore() >=1 && transaction.getSenderTrustScore() <=100 ){
                 this.trustScoreToSourceListMapping.get(transaction.getSenderTrustScore()).add(transaction);
             }
@@ -72,19 +73,19 @@ public class Cluster implements ICluster {
 
     //region Description
     @Override
-    public void addToHashToAllClusterTransactionsMap(Transaction transaction) {
+    public void addToHashToAllClusterTransactionsMap(TransactionData transaction) {
         hashToAllClusterTransactionsMapping.put(transaction.getHash(), transaction);
         // TODO use the TransactionService
     }
 
     @Override
-    public void addToUnTccConfirmedTransactionMap(Transaction transaction) {
+    public void addToUnTccConfirmedTransactionMap(TransactionData transaction) {
         hashToUnTccConfirmationTransactionsMapping.put(transaction.getHash(), transaction);
         // TODO use the TransactionService
     }
 
     @Override
-    public void addToTrustScoreToSourceListMap(Transaction transaction) {
+    public void addToTrustScoreToSourceListMap(TransactionData transaction) {
 
         if (transaction.isSource() && transaction.getSenderTrustScore() >=1 && transaction.getSenderTrustScore() <=100){
             this.trustScoreToSourceListMapping.get(transaction.getSenderTrustScore()).add(transaction);
@@ -94,7 +95,7 @@ public class Cluster implements ICluster {
 
     @Override
     public void deleteTransactionFromHashToUnTccConfirmedTransactionsMapping(Hash hash) {
-        Transaction transaction = null;
+        TransactionData transaction = null;
         if(hashToUnTccConfirmationTransactionsMapping.containsKey(hash)){
             transaction = hashToUnTccConfirmationTransactionsMapping.get(hash);
             hashToUnTccConfirmationTransactionsMapping.remove(hash);
@@ -107,12 +108,12 @@ public class Cluster implements ICluster {
     }
 
     @Override
-    public void deleteTrustScoreToSourceListMapping(Hash hash, Transaction transaction ) {
+    public void deleteTrustScoreToSourceListMapping(Hash hash, TransactionData transaction ) {
         if (trustScoreToSourceListMapping.containsKey(transaction.getSenderTrustScore())) {
             trustScoreToSourceListMapping.get(transaction.getSenderTrustScore()).remove(transaction);
         }
         else {
-            for (List<Transaction> transactionList : trustScoreToSourceListMapping.values()) {
+            for (List<TransactionData> transactionList : trustScoreToSourceListMapping.values()) {
                 if (transactionList.contains(transaction)) {
                     transactionList.remove(transaction);
                 }
@@ -124,23 +125,23 @@ public class Cluster implements ICluster {
     }
 
     @Override
-    public List<Transaction> getAllSourceTransactions() {
+    public List<TransactionData> getAllSourceTransactions() {
         return hashToUnTccConfirmationTransactionsMapping.values().stream().
-                filter(Transaction::isSource).collect(Collectors.toList());
+                filter(TransactionData::isSource).collect(Collectors.toList());
     }
     //endregion
 
     //region Adding new transaction Process
     @Override
-    public boolean addNewTransaction(Transaction transaction, boolean isFromPropagation) {
+    public boolean addNewTransaction(TransactionData transaction, boolean isFromPropagation) {
         transaction.setProcessStartTime(new Date());
 
         // TODO: Validate the transaction, including balance && preBalance. Maybe it will be out of the Cluster class
 
         // TODO: Get The transaction trust score from trust score node.
 
-        List<Transaction> selectedSourcesForAttachment = null;
-        ConcurrentHashMap<Integer, List<Transaction>> localThreadTustScoreToSourceListMapping =
+        List<TransactionData> selectedSourcesForAttachment = null;
+        ConcurrentHashMap<Integer, List<TransactionData>> localThreadTustScoreToSourceListMapping =
                 new ConcurrentHashMap<>(trustScoreToSourceListMapping);
         if (localThreadTustScoreToSourceListMapping.size() > 1) {
 
@@ -167,7 +168,7 @@ public class Cluster implements ICluster {
                 // TODO: wait
             }
 
-            for (Transaction sourceTransaction : selectedSourcesForAttachment) {
+            for (TransactionData sourceTransaction : selectedSourcesForAttachment) {
                 attachToSource(transaction, sourceTransaction);
             }
         }
@@ -183,7 +184,7 @@ public class Cluster implements ICluster {
         return true;
     }
 
-    private void addNewTransactionToAllCollections (Transaction transaction)
+    private void addNewTransactionToAllCollections (TransactionData transaction)
     {
         // add to allClusterTransactions map
         addToHashToAllClusterTransactionsMap(transaction);
@@ -196,7 +197,7 @@ public class Cluster implements ICluster {
     }
 
     @Override
-    public void updateParentsTotalSumScore(Transaction transaction, int sonsTotalTrustScore, List<Hash> trustChainTransactionHashes) {
+    public void updateParentsTotalSumScore(TransactionData transaction, int sonsTotalTrustScore, List<Hash> trustChainTransactionHashes) {
         if (transaction != null && !transaction.isTransactionConsensus()) {
             if (transaction.getTotalTrustScore() <  sonsTotalTrustScore + transaction.getSenderTrustScore()) {
                 transaction.setTotalTrustScore(sonsTotalTrustScore + transaction.getSenderTrustScore());
@@ -220,7 +221,7 @@ public class Cluster implements ICluster {
     }
 
     @Override
-    public void attachToSource(Transaction newTransaction, Transaction source) {
+    public void attachToSource(TransactionData newTransaction, TransactionData source) {
         if(hashToAllClusterTransactionsMapping.get(source.getKey()) == null) {
             log.error("Cannot find source:" + source);
             //throw new RuntimeException("Cannot find source:" + source);
