@@ -13,6 +13,10 @@ public class Hash implements Serializable {
         this.bytes = bytes;
     }
 
+    public Hash(String hashText){
+        this.bytes = hashText.getBytes();
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other == this) {
@@ -24,4 +28,11 @@ public class Hash implements Serializable {
         }
         return Arrays.equals(bytes, ((Hash) other).bytes);
     }
+
+    @Override
+    public String toString(){
+        return new String(bytes);
+    }
+
+
 }

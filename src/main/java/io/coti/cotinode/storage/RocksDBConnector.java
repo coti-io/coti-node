@@ -2,11 +2,9 @@ package io.coti.cotinode.storage;
 
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.IEntity;
-import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.model.*;
 import io.coti.cotinode.storage.Interfaces.IDatabaseConnector;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
 import org.rocksdb.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
@@ -14,7 +12,7 @@ import org.springframework.util.SerializationUtils;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.File;
-import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -76,12 +74,88 @@ public class RocksDBConnector implements IDatabaseConnector {
     @Override
     public byte[] getByHash(String columnFamilyName, Hash hash) {
         try {
+            //  db.getSnapshot()
+
             return db.get(classNameToColumnFamilyHandleMapping.get(columnFamilyName), hash.getBytes());
         } catch (RocksDBException e) {
             e.printStackTrace();
             return null;
         }
     }
+
+    private RocksIterator getIterator(String coulumnFamilyName) {
+        RocksIterator it = null;
+        try {
+            ReadOptions readOptions = new ReadOptions();
+
+            ColumnFamilyHandle coulumnFamilyHandler = classNameToColumnFamilyHandleMapping.get(coulumnFamilyName);
+            it = db.newIterator(coulumnFamilyHandler, readOptions);
+            if (coulumnFamilyHandler == null) {
+                log.error("Column family {} iterator wasn't found ", coulumnFamilyName);
+            }
+        } catch (Exception ex) {
+            log.error("Exception while getting iterator of {}", coulumnFamilyName,ex);
+        }
+        return it;
+
+
+    }
+
+    public Map<Object, Object> getFullMapFromDB(String columnFamilyName) {
+        Map<Object, Object> balancesFromDB = new HashMap<>();
+        try {
+            RocksIterator iterator = getIterator(columnFamilyName);
+            iterator.seekToFirst();
+            while (iterator.isValid()) {
+                balancesFromDB.put( SerializationUtils.deserialize(iterator.key()), SerializationUtils.deserialize(iterator.value()));
+
+                iterator.next();
+            }
+        }
+        catch (Exception ex){
+            log.error("Exception while iterating on {}", columnFamilyName , ex);
+
+        }
+        return balancesFromDB;
+    }
+
+    public Map<Object,Object> getMapAfterKeyFromDB(String columnFamilyName, Object key){
+        Map<Object, Object> balancesFromDB = new HashMap<>();
+        boolean insert = false;
+        try{
+            RocksIterator iterator = getIterator(columnFamilyName);
+            iterator.seekToFirst();
+            while (iterator.isValid()) {
+                if( SerializationUtils.deserialize(iterator.key()).equals(key)){
+                    insert = true;
+                }
+                if(insert) {
+                    balancesFromDB.put(SerializationUtils.deserialize(iterator.key()), SerializationUtils.deserialize(iterator.value()));
+                }
+                iterator.next();
+            }
+        }
+        catch(Exception ex){
+            log.error("Exception while iterating on {}", columnFamilyName , ex);
+        }
+        return balancesFromDB;
+    }
+
+
+    public RocksIterator getLastElementIteratorFromColumnFamily(String columnFamilyName){
+        RocksIterator iterator = null;
+        try{
+            iterator = getIterator(columnFamilyName);
+            iterator.seekToLast();
+
+        }
+        catch (Exception ex){
+            log.error("Exception in getting the last element from a column family",ex);
+        }
+        return iterator;
+    }
+
+//    public Map<Hash, Double> getGapFromDB()
 
     @Override
     public boolean put(String columnFamilyName, IEntity entity) {

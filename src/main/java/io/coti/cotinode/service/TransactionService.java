@@ -11,11 +11,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class TransactionService implements ITransactionService {
     @Autowired
-    UserHashValidationService userHashValidationService;
+    private UserHashValidationService userHashValidationService;
     @Autowired
-    BalanceService balanceService;
+    private BalanceService balanceService;
     @Autowired
-    ClusterService clusterService;
+    private ClusterService clusterService;
 
     public boolean addNewTransaction(TransactionData transactionData) {
 

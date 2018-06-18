@@ -16,12 +16,8 @@ import java.util.List;
 public class BalanceDataServiceTests {
 
     @Autowired
-    BalanceService balanceService;
+    private BalanceService balanceService;
 
-    @Before
-    public void init() {
-        balanceService = new BalanceService();
-    }
 
     @Test
     public void getBalances_EmptyBalancesList_ReturnsEmptyList() {

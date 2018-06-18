@@ -12,7 +12,8 @@ import java.util.Vector;
 @Slf4j
 @Data
 public class TransactionData implements IEntity {
-    @Setter(AccessLevel.NONE) private Hash hash;
+    @Setter(AccessLevel.NONE)
+    private Hash hash;
     private TransactionData leftParent;
     private TransactionData rightParent;
     private List<Hash> trustChainTransactionHashes;
@@ -29,7 +30,8 @@ public class TransactionData implements IEntity {
     private Date powEndTime;
     private int baseTransactionsCount;
     private int senderTrustScore;
-    private List<Hash> baseTransactions;
+    private List<Hash> baseTransactionsHash;
+    private List<BaseTransactionData> baseTransactionsData;
     private Hash senderNodeHash;
     private String senderNodeIpAddress;
     private Hash userHash;
