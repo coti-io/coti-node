@@ -1,18 +1,20 @@
 package io.coti.cotinode.service;
 
-import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
+import io.coti.cotinode.http.GetBalancesRequest;
+import io.coti.cotinode.http.GetBalancesResponse;
 import io.coti.cotinode.model.BalanceDifferences;
+import io.coti.cotinode.service.interfaces.IBalanceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 @Service
-public class BalanceService {
+public class BalanceService implements IBalanceService {
     ConcurrentMap<Hash, Double> addressHashToAmountMapping;
 
     @Autowired
@@ -39,8 +41,10 @@ public class BalanceService {
     public void addToPreBalance(TransactionData transactionData) {
     }
 
-    public List<BaseTransactionData> getBalances(List<Hash> addressHashes) {
-        return null;
+    public GetBalancesResponse getBalances(GetBalancesRequest request) {
+        return new GetBalancesResponse(
+                HttpStatus.OK,
+                "");
     }
 
     public boolean addNewAddress(Hash addressHash) {

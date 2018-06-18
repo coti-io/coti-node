@@ -1,21 +1,20 @@
 package io.coti.cotinode.controllers;
 
-import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.NodeInformation;
 import io.coti.cotinode.data.TransactionData;
+import io.coti.cotinode.http.GetBalancesRequest;
+import io.coti.cotinode.http.GetBalancesResponse;
 import io.coti.cotinode.service.BalanceService;
 import io.coti.cotinode.service.NodeInformationService;
 import io.coti.cotinode.service.TransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.springframework.web.bind.annotation.RequestMethod.*;
 
@@ -51,14 +50,6 @@ public class NodeAPIController {
     @RequestMapping(value = "/nodeInfo", method = GET)
     public NodeInformation getNodeInfo() {
         return nodeInformationService.getNodeInformation();
-    }
-
-    @RequestMapping(value = "/balances", method = POST)
-    public List<BaseTransactionData> getBalance(@RequestBody List<Hash> addressHashes) {
-        if (addressHashes == null) {
-            return new ArrayList<>();
-        }
-        return balanceService.getBalances(addressHashes);
     }
 
     @RequestMapping(value = "/address", method = PUT)
