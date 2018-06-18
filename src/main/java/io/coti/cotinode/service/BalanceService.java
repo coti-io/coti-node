@@ -4,6 +4,7 @@ import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.http.GetBalancesRequest;
 import io.coti.cotinode.http.GetBalancesResponse;
+import io.coti.cotinode.http.Response;
 import io.coti.cotinode.model.ConfirmedTransactions;
 import io.coti.cotinode.service.interfaces.IBalanceService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import static io.coti.cotinode.http.Response.MESSAGE_SUCCESS;
+import static io.coti.cotinode.http.Response.STATUS_SUCCESS;
 
 @Service
 public class BalanceService implements IBalanceService {
@@ -43,8 +47,8 @@ public class BalanceService implements IBalanceService {
 
     public GetBalancesResponse getBalances(GetBalancesRequest request) {
         return new GetBalancesResponse(
-                HttpStatus.OK,
-                "");
+                STATUS_SUCCESS,
+                MESSAGE_SUCCESS);
     }
 
     public boolean addNewAddress(Hash addressHash) {

@@ -11,6 +11,6 @@ public class NodeInformationResponse extends Response {
     private InetAddress IpV4Address;
 
     public NodeInformationResponse(){
-        super(HttpStatus.OK, "Node information");
+        super(STATUS_SUCCESS, "Node information");
     }
 }

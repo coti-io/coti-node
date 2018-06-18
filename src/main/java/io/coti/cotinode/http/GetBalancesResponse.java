@@ -10,7 +10,7 @@ import java.util.List;
 @Data
 public class GetBalancesResponse extends Response{
 
-    public GetBalancesResponse(HttpStatus status, String message) {
+    public GetBalancesResponse(String status, String message) {
         super(status, message);
         amounts = Arrays.asList(
                 new AbstractMap.SimpleEntry<>("ABCD", 21.2));
