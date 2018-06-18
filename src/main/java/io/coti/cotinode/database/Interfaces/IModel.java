@@ -1,4 +1,4 @@
-package io.coti.cotinode.storage.Interfaces;
+package io.coti.cotinode.database.Interfaces;
 
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.IEntity;

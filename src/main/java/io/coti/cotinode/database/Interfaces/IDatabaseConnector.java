@@ -7,4 +7,6 @@ public interface IDatabaseConnector {
     byte[] getByKey(String columnFamilyName, byte[] key);
 
     void delete(String columnFamilyName, byte[] key);
+
+    void init();
 }
