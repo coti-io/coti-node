@@ -13,7 +13,7 @@ public interface ICluster {
     void addToHashToAllClusterTransactionsMap(Transaction transaction);
     void addToUnTccConfirmedTransactionMap(Transaction transaction);
     void addToTrustScoreToSourceListMap(Transaction transaction);
-    boolean addNewTransaction(Transaction transaction);
+    boolean addNewTransaction(Transaction transaction, boolean isFromPpropagation);
     void updateParentsTotalSumScore(Transaction transaction, int sonsTotalTrustScore, List<Hash> trustChainTransactionHashes);
     void attachToSource(Transaction newTransaction, Transaction source);
     List<Transaction> getAllSourceTransactions();

@@ -87,7 +87,7 @@ public class Cluster implements ICluster {
     public void addToTrustScoreToSourceListMap(Transaction transaction) {
 
         if (transaction.isSource() && transaction.getSenderTrustScore() >=1 && transaction.getSenderTrustScore() <=100){
-                this.trustScoreToSourceListMapping.get(transaction.getSenderTrustScore()).add(transaction);
+            this.trustScoreToSourceListMapping.get(transaction.getSenderTrustScore()).add(transaction);
         }
         // TODO use the TransactionService
     }
@@ -132,7 +132,7 @@ public class Cluster implements ICluster {
 
     //region Adding new transaction Process
     @Override
-    public boolean addNewTransaction(Transaction transaction) {
+    public boolean addNewTransaction(Transaction transaction, boolean isFromPropagation) {
         transaction.setProcessStartTime(new Date());
 
         // TODO: Validate the transaction, including balance && preBalance. Maybe it will be out of the Cluster class
@@ -150,15 +150,16 @@ public class Cluster implements ICluster {
                     transaction.getAttachmentTime(),
                     5, // TODO: get value from config file and/or dynamic
                     10); // TODO:  get value from config file and/or dynamic
-
         }
 
         // TODO: Validate the sources.
 
         // POW
-        transaction.setPowStartTime(new Date());
-        // TODO : POW
-        transaction.setPowEndTime(new Date());
+        if (isFromPropagation) {
+            transaction.setPowStartTime(new Date());
+            // TODO : POW
+            transaction.setPowEndTime(new Date());
+        }
 
         // Attache sources
         if (localThreadTustScoreToSourceListMapping.size() > 1) {
