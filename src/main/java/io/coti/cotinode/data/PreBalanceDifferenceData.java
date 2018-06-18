@@ -10,6 +10,8 @@ public class PreBalanceDifferenceData implements IEntity {
     private transient Hash hash;
     private Hash userHash;
     private Map<Hash, Double> addressHashToValueTransferredMapping;
+    private boolean DoubleSpendPreventionConsensus;
+    private boolean TrustChainConsensus;
 
     public PreBalanceDifferenceData(Hash hash) {
         this.hash = hash;
