@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 @Component
 public interface ICluster {
     void initCluster(List<TransactionData> allClusterTransactions);
-    void addToHashToAllClusterTransactionsMap(TransactionData transaction);
     void addToUnTccConfirmedTransactionMap(TransactionData transaction);
     void addToTrustScoreToSourceListMap(TransactionData transaction);
     boolean addNewTransaction(TransactionData transaction, boolean isFromPpropagation);

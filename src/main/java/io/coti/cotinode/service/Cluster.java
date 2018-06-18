@@ -27,32 +27,22 @@ public class Cluster implements ICluster {
 
     @Autowired
     private ISourceSelector sourceSelector;
-    private ConcurrentHashMap<Hash, TransactionData> hashToAllClusterTransactionsMapping;
     private ConcurrentHashMap<Hash, TransactionData> hashToUnTccConfirmationTransactionsMapping;
     private ConcurrentHashMap<Integer, List<TransactionData>> trustScoreToSourceListMapping;
 
     @Override
-    public void initCluster(List<TransactionData> allClusterTransactions){
-        hashToAllClusterTransactionsMapping = new ConcurrentHashMap<>();;
+    public void initCluster(List<TransactionData> notConfoirmTransactions){
         hashToUnTccConfirmationTransactionsMapping = new ConcurrentHashMap<>();
         trustScoreToSourceListMapping = new ConcurrentHashMap<>();
 
-        setAllClusterTransactionsMap(allClusterTransactions);
-        setUnTccConfirmedTransactions(allClusterTransactions);
+        setUnTccConfirmedTransactions(notConfoirmTransactions);
         setTrustScoreToSourceListMapping(hashToUnTccConfirmationTransactionsMapping);
-    }
-
-    private void setAllClusterTransactionsMap(List<TransactionData> allTransactions) {
-        this.hashToUnTccConfirmationTransactionsMapping.
-                putAll(allTransactions.stream().
-                        collect(Collectors.
-                                toMap(TransactionData::getHash, Function.identity())));
     }
 
     private void setUnTccConfirmedTransactions(List<TransactionData> allTransactions) {
         this.hashToUnTccConfirmationTransactionsMapping.
                 putAll(allTransactions.stream().
-                        filter(TransactionData::isConfirm).
+                        filter(x -> !x.isTransactionConsensus()).
                         collect(Collectors.
                                 toMap(TransactionData::getHash, Function.identity())));
     }
@@ -72,11 +62,6 @@ public class Cluster implements ICluster {
     //endregion
 
     //region Description
-    @Override
-    public void addToHashToAllClusterTransactionsMap(TransactionData transaction) {
-        hashToAllClusterTransactionsMapping.put(transaction.getHash(), transaction);
-        // TODO use the TransactionService
-    }
 
     @Override
     public void addToUnTccConfirmedTransactionMap(TransactionData transaction) {
@@ -186,9 +171,6 @@ public class Cluster implements ICluster {
 
     private void addNewTransactionToAllCollections (TransactionData transaction)
     {
-        // add to allClusterTransactions map
-        addToHashToAllClusterTransactionsMap(transaction);
-
         // add to unTccConfirmedTransaction map
         addToUnTccConfirmedTransactionMap(transaction);
 
@@ -222,7 +204,7 @@ public class Cluster implements ICluster {
 
     @Override
     public void attachToSource(TransactionData newTransaction, TransactionData source) {
-        if(hashToAllClusterTransactionsMapping.get(source.getKey()) == null) {
+        if(hashToUnTccConfirmationTransactionsMapping.get(source.getKey()) == null) {
             log.error("Cannot find source:" + source);
             //throw new RuntimeException("Cannot find source:" + source);
         }

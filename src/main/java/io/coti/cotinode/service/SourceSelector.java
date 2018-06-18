@@ -1,6 +1,6 @@
 package io.coti.cotinode.service;
 
-import io.coti.cotinode.model.Transaction;
+import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.service.interfaces.ISourceSelector;
 
 import org.springframework.stereotype.Component;
@@ -17,14 +17,14 @@ import static java.util.stream.Collectors.toList;
 public class SourceSelector implements ISourceSelector {
 
     @Override
-    public List<Transaction> selectSourcesForAttachment(
-            Map<Integer,? extends List<Transaction>> trustScoreToTransactionMapping,
+    public List<TransactionData> selectSourcesForAttachment(
+            Map<Integer,? extends List<TransactionData>> trustScoreToTransactionMapping,
             int transactionTrustScore,
             Date transactionCreationTime,
             int minSourcePercentage,
             int maxNeighbourhoodRadius) {
 
-        List<Transaction> neighbourSources = getNeighbourSources(
+        List<TransactionData> neighbourSources = getNeighbourSources(
                 trustScoreToTransactionMapping,
                 transactionTrustScore,
                 maxNeighbourhoodRadius,
@@ -33,13 +33,13 @@ public class SourceSelector implements ISourceSelector {
         return selectTwoOptimalSources(neighbourSources, transactionCreationTime);
     }
 
-    private List<Transaction> getNeighbourSources(
-            Map<Integer,? extends List<Transaction>> trustScoreToSourceListMapping,
+    private List<TransactionData> getNeighbourSources(
+            Map<Integer,? extends List<TransactionData>> trustScoreToSourceListMapping,
             int transactionTrustScore,
             int minSourcePercentage,
             int maxTrustScoreRadius){
 
-        List<Transaction> neighbourSources = new Vector<>();
+        List<TransactionData> neighbourSources = new Vector<>();
 
         // Get num of all transactions in numberOfSources
         AtomicInteger numberOfSources = new AtomicInteger();
@@ -65,10 +65,10 @@ public class SourceSelector implements ISourceSelector {
         return neighbourSources;
     }
 
-    private List<Transaction> selectTwoOptimalSources(
-            List<Transaction> transactions,
+    private List<TransactionData> selectTwoOptimalSources(
+            List<TransactionData> transactions,
             Date transactionCreationTime) {
-        List<Transaction> olderSources =
+        List<TransactionData> olderSources =
                 transactions.stream().
                         filter(s -> s.getAttachmentTime().before(transactionCreationTime)).collect(toList());
 
@@ -82,7 +82,7 @@ public class SourceSelector implements ISourceSelector {
                         map(s -> transactionCreationTime.getTime() - s.getAttachmentTime().getTime()).mapToLong(Long::longValue).sum();
 
         // Now choose sources, randomly weighted by timestamp difference ("older" transactions have a bigger chance to be selected)
-        List<Transaction> randomWeightedSources = new Vector<>();
+        List<TransactionData> randomWeightedSources = new Vector<>();
         while(randomWeightedSources.size() < 2) {
 
             int randomIndex = -1;
@@ -95,7 +95,7 @@ public class SourceSelector implements ISourceSelector {
                 }
             }
 
-            Transaction randomSource = olderSources.get(randomIndex);
+            TransactionData randomSource = olderSources.get(randomIndex);
 
             if(randomWeightedSources.size() == 0)
                 randomWeightedSources.add(randomSource);
