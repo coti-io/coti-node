@@ -12,7 +12,6 @@ import org.springframework.util.SerializationUtils;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -74,7 +73,7 @@ public class RocksDBConnector implements IDatabaseConnector {
     @Override
     public byte[] getByKey(String columnFamilyName, byte[] key) {
         try {
-            //  db.getSnapshot()
+            return db.get(classNameToColumnFamilyHandleMapping.get(columnFamilyName), key);
 
             return db.get(classNameToColumnFamilyHandleMapping.get(columnFamilyName), key);
         } catch (RocksDBException e) {

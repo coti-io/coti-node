@@ -96,17 +96,17 @@ public class RocksDBTests {
 
     @Test
     public void saveAndGetBalance() {
-        BalanceDifferenceData balanceDifferenceData1 = new BalanceDifferenceData(new Hash("BalanceDifferenceData 0".getBytes()));
-        balanceDifferences.put(balanceDifferenceData1);
-        BalanceDifferenceData balanceDifferenceData2 = balanceDifferences.getByHash(new Hash("BalanceDifferenceData 0".getBytes()));
-        Assert.assertEquals(balanceDifferenceData1, balanceDifferenceData2);
+        ConfirmedTransactionData confirmedTransactionData1 = new ConfirmedTransactionData(new Hash("ConfirmedTransactionData 0".getBytes()));
+        balanceDifferences.put(confirmedTransactionData1);
+        ConfirmedTransactionData confirmedTransactionData2 = balanceDifferences.getByHash(new Hash("ConfirmedTransactionData 0".getBytes()));
+        Assert.assertEquals(confirmedTransactionData1, confirmedTransactionData2);
     }
 
     @Test
     public void saveAndGetPreBalance() {
-        PreBalanceDifferenceData preBalanceDifferenceData1 = new PreBalanceDifferenceData(new Hash("BalanceDifferenceData 0".getBytes()));
-        preBalanceDifferences.put(preBalanceDifferenceData1);
-        PreBalanceDifferenceData preBalanceDifferenceData2 = preBalanceDifferences.getByHash(new Hash("BalanceDifferenceData 0".getBytes()));
-        Assert.assertEquals(preBalanceDifferenceData1, preBalanceDifferenceData2);
+        UnconfirmedTransactionData unconfirmedTransactionData1 = new UnconfirmedTransactionData(new Hash("ConfirmedTransactionData 0".getBytes()));
+        preBalanceDifferences.put(unconfirmedTransactionData1);
+        UnconfirmedTransactionData unconfirmedTransactionData2 = preBalanceDifferences.getByHash(new Hash("ConfirmedTransactionData 0".getBytes()));
+        Assert.assertEquals(unconfirmedTransactionData1, unconfirmedTransactionData2);
     }
 }

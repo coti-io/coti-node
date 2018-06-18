@@ -1,8 +1,8 @@
 package io.coti.cotinode.model;
 
-import io.coti.cotinode.data.BalanceDifferenceData;
+import io.coti.cotinode.data.ConfirmedTransactionData;
 
-public class BalanceDifferences extends Collection<BalanceDifferenceData> {
+public class BalanceDifferences extends Collection<ConfirmedTransactionData> {
 
     public BalanceDifferences() {
     }

@@ -1,6 +1,5 @@
 package io.coti.cotinode.service;
 
-import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.database.Interfaces.IDatabaseConnector;
@@ -20,7 +19,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -166,11 +164,6 @@ public class BalanceService implements IBalanceService {
             requestedBalances.put(addressHash, preBalanceMap.get(addressHash));
 
 
-
-        }
-        return requestedBalances;
-    }
-
         public synchronized boolean preBalanceCheck (TransactionData data){
             for (BaseTransactionData baseTransaction : data.getBaseTransactionsData()) {
                 double currentPreBalance = preBalanceMap.get(baseTransaction.getHash());
@@ -192,6 +185,8 @@ public class BalanceService implements IBalanceService {
 
             public Map<Hash, Double> getBalanceMap () {
                 return balanceMap;
+                HttpStatus.OK,
+                "");
             }
 
             public void setBalanceMap (Map < Hash, Double > balanceMap){
@@ -201,7 +196,6 @@ public class BalanceService implements IBalanceService {
             public Map<Hash, Double> getPreBalanceMap () {
                 return preBalanceMap;
             }
-
             public void setPreBalanceMap (Map < Hash, Double > preBalanceMap){
                 this.preBalanceMap = preBalanceMap;
             }
