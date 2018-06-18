@@ -36,6 +36,10 @@ public class TransactionData implements IEntity {
     private boolean isValid;
     private transient boolean isVisit;
 
+    private TransactionData(){
+
+    }
+
     public TransactionData(Hash hash) {
         this.hash = hash;
         this.trustChainTransactionHashes = new Vector<>();
