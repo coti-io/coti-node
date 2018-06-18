@@ -1,7 +1,7 @@
 package io.coti.cotinode;
 
 import io.coti.cotinode.data.Hash;
-import io.coti.cotinode.model.Transaction;
+import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.service.Cluster;
 import io.coti.cotinode.service.interfaces.ICluster;
 import org.junit.After;
@@ -16,16 +16,16 @@ import static org.junit.Assert.*;
 public class ClusterTest {
 
     ICluster cluster;
-    List<Transaction> allClusterTransactions;
+    List<TransactionData> allClusterTransactions;
     @Before
     public void setUp() throws Exception {
         System.out.println("Initializing!");
         allClusterTransactions = new Vector<>();
 
-        Transaction transaction1 = new Transaction(new Hash("1".getBytes()));
-        Transaction transaction2 = new Transaction(new Hash("2".getBytes()));
-        Transaction transaction3 = new Transaction(new Hash("3".getBytes()));
-        Transaction transaction4 = new Transaction(new Hash("4".getBytes()));
+        TransactionData transaction1 = new TransactionData(new Hash("1".getBytes()));
+        TransactionData transaction2 = new TransactionData(new Hash("2".getBytes()));
+        TransactionData transaction3 = new TransactionData(new Hash("3".getBytes()));
+        TransactionData transaction4 = new TransactionData(new Hash("4".getBytes()));
         allClusterTransactions.add(transaction1);
         allClusterTransactions.add(transaction2);
         allClusterTransactions.add(transaction3);

@@ -36,6 +36,7 @@ public class TransactionData implements IEntity {
     private boolean isValid;
     private transient boolean isVisit;
 
+
     private TransactionData(){
 
     }

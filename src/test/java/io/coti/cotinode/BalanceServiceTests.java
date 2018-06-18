@@ -24,11 +24,11 @@ public class BalanceServiceTests {
         balanceService = new BalanceService();
     }
 
-    @Test
-    public void getBalances_EmptyBalancesList_ReturnsEmptyList() {
-        List<BaseTransactionData> balances = balanceService.getBalances(new ArrayList<>());
-        Assert.assertTrue(balances.equals(new ArrayList<>()));
-    }
+//    @Test
+//    public void getBalances_EmptyBalancesList_ReturnsEmptyList() {
+//        List<BaseTransactionData> balances = balanceService.getBalances(new ArrayList<>());
+//        Assert.assertTrue(balances.equals(new ArrayList<>()));
+//    }
 
 
 }
