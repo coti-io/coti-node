@@ -25,8 +25,8 @@ public class RocksDBConnector implements IDatabaseConnector {
             Transactions.class.getName(),
             BaseTransactions.class.getName(),
             Addresses.class.getName(),
-            BalanceDifferences.class.getName(),
-            PreBalanceDifferences.class.getName()
+            ConfirmedTransactions.class.getName(),
+            UnconfirmedTransactions.class.getName()
     );
     private List<ColumnFamilyDescriptor> columnFamilyDescriptors = new ArrayList<>();
     private RocksDB db;

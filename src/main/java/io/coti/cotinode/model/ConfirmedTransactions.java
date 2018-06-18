@@ -2,9 +2,9 @@ package io.coti.cotinode.model;
 
 import io.coti.cotinode.data.ConfirmedTransactionData;
 
-public class BalanceDifferences extends Collection<ConfirmedTransactionData> {
+public class ConfirmedTransactions extends Collection<ConfirmedTransactionData> {
 
-    public BalanceDifferences() {
+    public ConfirmedTransactions() {
     }
 
     public void init() {
