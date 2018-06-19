@@ -9,14 +9,23 @@ import org.springframework.stereotype.Component;
 
 @Component
 public interface ICluster {
-    void initCluster(List<TransactionData> allClusterTransactions);
+    void initCluster(List<TransactionData> allClusterTransactions) throws InterruptedException;
+
     void addToUnTccConfirmedTransactionMap(TransactionData transaction);
+
     void addToTrustScoreToSourceListMap(TransactionData transaction);
-    boolean addNewTransaction(TransactionData transaction, boolean isFromPpropagation);
-    void updateParentsTotalSumScore(TransactionData transaction, int sonsTotalTrustScore, List<Hash> trustChainTransactionHashes);
+
+    boolean addNewTransaction(TransactionData transaction);
+
+    List<TransactionData> getNewTransactions();
+
     void attachToSource(TransactionData newTransaction, TransactionData source);
+
     List<TransactionData> getAllSourceTransactions();
-   // void deleteTransactionFromHashToAllClusterTransactionsMapping(Hash hash);
+
+    void trustScoreConsensusProcess();
+
     void deleteTransactionFromHashToUnTccConfirmedTransactionsMapping(Hash hash);
-    void deleteTrustScoreToSourceListMapping(Hash hash, TransactionData transaction );
+
+    void deleteTrustScoreToSourceListMapping(TransactionData transaction);
 }

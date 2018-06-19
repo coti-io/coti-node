@@ -18,7 +18,7 @@ public class SourceSelector implements ISourceSelector {
 
     @Override
     public List<TransactionData> selectSourcesForAttachment(
-            Map<Integer,? extends List<TransactionData>> trustScoreToTransactionMapping,
+            Map<Integer, ? extends List<TransactionData>> trustScoreToTransactionMapping,
             int transactionTrustScore,
             Date transactionCreationTime,
             int minSourcePercentage,
@@ -34,10 +34,10 @@ public class SourceSelector implements ISourceSelector {
     }
 
     private List<TransactionData> getNeighbourSources(
-            Map<Integer,? extends List<TransactionData>> trustScoreToSourceListMapping,
+            Map<Integer, ? extends List<TransactionData>> trustScoreToSourceListMapping,
             int transactionTrustScore,
             int minSourcePercentage,
-            int maxTrustScoreRadius){
+            int maxTrustScoreRadius) {
 
         List<TransactionData> neighbourSources = new Vector<>();
 
@@ -48,7 +48,7 @@ public class SourceSelector implements ISourceSelector {
         });
 
         // Get neighbourSources according to the trustScore selection algorithm
-        for(int trustScoreDifference = 1; trustScoreDifference < maxTrustScoreRadius; trustScoreDifference++) {
+        for (int trustScoreDifference = 1; trustScoreDifference < maxTrustScoreRadius; trustScoreDifference++) {
             int lowTrustScore = transactionTrustScore - trustScoreDifference;
             int highTrustScore = transactionTrustScore + trustScoreDifference;
             if (lowTrustScore >= 1 && trustScoreToSourceListMapping.containsKey(lowTrustScore)) {
@@ -72,7 +72,7 @@ public class SourceSelector implements ISourceSelector {
                 transactions.stream().
                         filter(s -> s.getAttachmentTime().before(transactionCreationTime)).collect(toList());
 
-        if(olderSources.size() < 2) {
+        if (olderSources.size() < 2) {
             return olderSources;
         }
 
@@ -83,12 +83,12 @@ public class SourceSelector implements ISourceSelector {
 
         // Now choose sources, randomly weighted by timestamp difference ("older" transactions have a bigger chance to be selected)
         List<TransactionData> randomWeightedSources = new Vector<>();
-        while(randomWeightedSources.size() < 2) {
+        while (randomWeightedSources.size() < 2) {
 
             int randomIndex = -1;
             double random = Math.random() * totalWeight;
             for (int i = 0; i < olderSources.size(); ++i) {
-                random -=  transactionCreationTime.getTime()- olderSources.get(i).getAttachmentTime().getTime();
+                random -= transactionCreationTime.getTime() - olderSources.get(i).getAttachmentTime().getTime();
                 if (random < 0.0d) {
                     randomIndex = i;
                     break;
@@ -97,9 +97,9 @@ public class SourceSelector implements ISourceSelector {
 
             TransactionData randomSource = olderSources.get(randomIndex);
 
-            if(randomWeightedSources.size() == 0)
+            if (randomWeightedSources.size() == 0)
                 randomWeightedSources.add(randomSource);
-            else if(randomWeightedSources.size() == 1 && randomSource != randomWeightedSources.iterator().next())
+            else if (randomWeightedSources.size() == 1 && randomSource != randomWeightedSources.iterator().next())
                 randomWeightedSources.add(randomSource);
         }
 

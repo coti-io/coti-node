@@ -12,11 +12,12 @@ import java.util.Vector;
 @Data
 public class TransactionData implements IEntity {
     private transient Hash hash;
-    private TransactionData leftParent;
-    private TransactionData rightParent;
+    private Hash leftParent;
+    private Hash rightParent;
     private List<Hash> trustChainTransactionHashes;
     private Hash userTrustScoreTokenHashes;
     private boolean transactionConsensus;
+    private Date transactionConsensusUpdateTime;
     private boolean dspConsensus;
     private int totalTrustScore;
     private Date createTime;
@@ -37,7 +38,7 @@ public class TransactionData implements IEntity {
     private transient boolean isVisit;
 
 
-    private TransactionData(){
+    private TransactionData() {
 
     }
 
@@ -74,10 +75,10 @@ public class TransactionData implements IEntity {
 
     public void attachToSource(TransactionData source) {
         if (leftParent == null) {
-            leftParent = source;
+            leftParent = source.getHash();
             source.childrenTransactions.add(hash);
         } else if (rightParent == null) {
-            rightParent = source;
+            rightParent = source.getHash();
             source.childrenTransactions.add(hash);
         } else {
             log.error("Unable to attach to source, both parents are full");

@@ -1,5 +1,6 @@
 package io.coti.cotinode.service;
 
+import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.service.interfaces.ISourceValidationService;
 import org.springframework.stereotype.Component;
@@ -12,7 +13,7 @@ public class SourceValidationService implements ISourceValidationService {
         return validateSource(transactionData.getLeftParent()) && validateSource(transactionData.getRightParent());
     }
 
-    private boolean validateSource(TransactionData transactionData) {
+    private boolean validateSource(Hash hash) {
         return true;
     }
 }

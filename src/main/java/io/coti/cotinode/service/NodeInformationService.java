@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class NodeInformationService implements INodeInformationService {
 
-    public NodeInformationResponse getNodeInformation(){
+    public NodeInformationResponse getNodeInformation() {
         return new NodeInformationResponse();
     }
 }
