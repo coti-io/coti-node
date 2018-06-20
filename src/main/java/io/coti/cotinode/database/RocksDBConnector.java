@@ -25,8 +25,8 @@ public class RocksDBConnector implements IDatabaseConnector {
             Transactions.class.getName(),
             BaseTransactions.class.getName(),
             Addresses.class.getName(),
-            BalanceDifferences.class.getName(),
-            PreBalanceDifferences.class.getName()
+            ConfirmedTransaction.class.getName(),
+            UnconfirmedTransaction.class.getName()
     );
     private List<ColumnFamilyDescriptor> columnFamilyDescriptors = new ArrayList<>();
     private RocksDB db;
@@ -74,15 +74,13 @@ public class RocksDBConnector implements IDatabaseConnector {
     public byte[] getByKey(String columnFamilyName, byte[] key) {
         try {
             return db.get(classNameToColumnFamilyHandleMapping.get(columnFamilyName), key);
-
-            return db.get(classNameToColumnFamilyHandleMapping.get(columnFamilyName), key);
-        } catch (RocksDBException e) {
+            } catch (RocksDBException e) {
             e.printStackTrace();
             return null;
         }
     }
 
-    private RocksIterator getIterator(String coulumnFamilyName) {
+    public RocksIterator getIterator(String coulumnFamilyName) {
         RocksIterator it = null;
         try {
             ReadOptions readOptions = new ReadOptions();
@@ -96,65 +94,9 @@ public class RocksDBConnector implements IDatabaseConnector {
             log.error("Exception while getting iterator of {}", coulumnFamilyName,ex);
         }
         return it;
-
-
-    }
-
-    public Map<Object, Object> getFullMapFromDB(String columnFamilyName) {
-        Map<Object, Object> balancesFromDB = new HashMap<>();
-        try {
-            RocksIterator iterator = getIterator(columnFamilyName);
-            iterator.seekToFirst();
-            while (iterator.isValid()) {
-                balancesFromDB.put( SerializationUtils.deserialize(iterator.key()), SerializationUtils.deserialize(iterator.value()));
-
-                iterator.next();
-            }
-        }
-        catch (Exception ex){
-            log.error("Exception while iterating on {}", columnFamilyName , ex);
-
-        }
-        return balancesFromDB;
-    }
-
-    public Map<Object,Object> getMapAfterKeyFromDB(String columnFamilyName, Object key){
-        Map<Object, Object> balancesFromDB = new HashMap<>();
-        boolean insert = false;
-        try{
-            RocksIterator iterator = getIterator(columnFamilyName);
-            iterator.seekToFirst();
-            while (iterator.isValid()) {
-                if( SerializationUtils.deserialize(iterator.key()).equals(key)){
-                    insert = true;
-                }
-                if(insert) {
-                    balancesFromDB.put(SerializationUtils.deserialize(iterator.key()), SerializationUtils.deserialize(iterator.value()));
-                }
-                iterator.next();
-            }
-        }
-        catch(Exception ex){
-            log.error("Exception while iterating on {}", columnFamilyName , ex);
-        }
-        return balancesFromDB;
     }
 
 
-    public RocksIterator getLastElementIteratorFromColumnFamily(String columnFamilyName){
-        RocksIterator iterator = null;
-        try{
-            iterator = getIterator(columnFamilyName);
-            iterator.seekToLast();
-
-        }
-        catch (Exception ex){
-            log.error("Exception in getting the last element from a column family",ex);
-        }
-        return iterator;
-    }
-
-//    public Map<Hash, Double> getGapFromDB()
 
     @Override
     public boolean put(String columnFamilyName, byte[] key, byte[] value) {

@@ -4,9 +4,9 @@ import io.coti.cotinode.data.UnconfirmedTransactionData;
 import lombok.Data;
 
 @Data
-public class PreBalanceDifferences extends Collection<UnconfirmedTransactionData> {
+public class UnconfirmedTransaction extends Collection<UnconfirmedTransactionData> {
 
-    public PreBalanceDifferences() {
+    public UnconfirmedTransaction() {
     }
 
     public void init() {

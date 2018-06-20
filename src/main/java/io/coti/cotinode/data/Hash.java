@@ -9,9 +9,6 @@ import java.util.Arrays;
 public class Hash implements Serializable {
     private byte[] bytes;
 
-    public Hash(){
-
-    }
 
     public Hash(String hash){
         this.bytes = hash.getBytes();
@@ -35,9 +32,10 @@ public class Hash implements Serializable {
         return Arrays.equals(bytes, ((Hash) other).bytes);
     }
 
+
     @Override
-    public String toString(){
-        return new String(bytes);
+    public int hashCode() {
+        return Arrays.hashCode(bytes);
     }
 
     @Override

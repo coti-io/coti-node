@@ -10,7 +10,7 @@ import java.util.Map;
 public class ConfirmedTransactionData implements IEntity {
     private transient Hash hash;
     private Date creationTIme;
-    private Map<byte[], Double> addressHashToValueTransferredMapping;
+    private Map<Hash, Double> addressHashToValueTransferredMapping;
 
     public ConfirmedTransactionData(Hash hash) {
         this.hash = hash;

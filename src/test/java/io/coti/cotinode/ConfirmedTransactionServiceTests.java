@@ -7,22 +7,23 @@ import io.coti.cotinode.service.BalanceService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-public class ConfirmedTransactionDataServiceTests {
+@RunWith(SpringRunner.class)
+@ContextConfiguration(classes = AppConfig.class)
+public class ConfirmedTransactionServiceTests {
 
     @Autowired
-    BalanceService balanceService;
+    private BalanceService balanceService;
 
-    @Before
-    public void init() {
-        balanceService = new BalanceService();
-    }
-//
+
+
 //    @Test
 //    public void getBalances_EmptyBalancesList_ReturnsEmptyList() {
 //        List<BaseTransactionData> balances = balanceService.getBalances(new ArrayList<>());

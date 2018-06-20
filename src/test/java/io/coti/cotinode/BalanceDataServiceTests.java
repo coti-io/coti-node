@@ -18,20 +18,7 @@ public class BalanceDataServiceTests {
     private BalanceService balanceService;
 
 
-    @Test
-    public void getBalances_EmptyBalancesList_ReturnsEmptyList() {
-        Map<Hash, Double> balances = balanceService.getBalances(new ArrayList<>());
-        Assert.assertTrue(balances.equals(new ArrayList<>()));
-    }
+    private void testInitiation(){
 
-    @Test
-    public void getBalances_StoreAndRetrieveBalances_ReturnsBalances() {
-        balanceService.addToBalance(new TransactionData(new Hash("TransactionData 1".getBytes())));
-
-        Map<Hash, Double> balances = balanceService.getBalances(Arrays.asList(new Hash("Address1".getBytes()), new Hash("Address2".getBytes())));
-        Map<Hash, Double> expectedBalances = new ConcurrentHashMap<>();
-        expectedBalances.put(new Hash("Address1".getBytes()), 12.5);
-        expectedBalances.put(new Hash("Address2".getBytes()), 44.0);
-        Assert.assertTrue(balances.equals(expectedBalances));
     }
 }
