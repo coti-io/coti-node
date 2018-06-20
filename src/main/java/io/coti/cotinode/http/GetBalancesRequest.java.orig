@@ -1,0 +1,19 @@
+package io.coti.cotinode.http;
+
+import io.coti.cotinode.data.Hash;
+import lombok.Data;
+
+<<<<<<< HEAD
+import javax.validation.constraints.NotBlank;
+=======
+>>>>>>> ben/balance
+import java.util.List;
+
+@Data
+public class GetBalancesRequest extends Request {
+<<<<<<< HEAD
+    @NotBlank(message = "Addresses must not be null!")
+=======
+>>>>>>> ben/balance
+    public List<Hash> addresses;
+}

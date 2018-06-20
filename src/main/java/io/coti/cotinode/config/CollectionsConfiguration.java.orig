@@ -26,14 +26,26 @@ public class CollectionsConfiguration {
     }
 
     @Bean
-    public ConfirmedTransaction balances(){
-        ConfirmedTransactions confirmedTransaction = new ConfirmedTransactions();
-        return confirmedTransaction;
+<<<<<<< HEAD
+    public ConfirmedTransactions balances(){
+        ConfirmedTransactions confirmedTransactions = new ConfirmedTransactions();
+        return confirmedTransactions;
     }
 
     @Bean
     public UnconfirmedTransactions preBalances(){
         UnconfirmedTransactions unconfirmedTransactions = new UnconfirmedTransactions();
         return unconfirmedTransactions;
+=======
+    public ConfirmedTransaction balances(){
+        ConfirmedTransaction confirmedTransaction = new ConfirmedTransaction();
+        return confirmedTransaction;
+    }
+
+    @Bean
+    public UnconfirmedTransaction preBalances(){
+        UnconfirmedTransaction unconfirmedTransaction = new UnconfirmedTransaction();
+        return unconfirmedTransaction;
+>>>>>>> ben/balance
     }
 }

@@ -2,6 +2,7 @@ package io.coti.cotinode.controllers;
 
 import io.coti.cotinode.http.GetBalancesRequest;
 import io.coti.cotinode.http.GetBalancesResponse;
+import io.coti.cotinode.service.BalanceService;
 import io.coti.cotinode.service.interfaces.IBalanceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

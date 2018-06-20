@@ -28,14 +28,14 @@ public class TransactionData implements IEntity {
     private Date powEndTime;
     private int baseTransactionsCount;
     private int senderTrustScore;
-    private List<Hash> baseTransactions;
+    private List<Hash> baseTransactionsHash;
+    private List<BaseTransactionData> baseTransactionsData;
     private Hash senderNodeHash;
     private String senderNodeIpAddress;
     private Hash userHash;
     private List<Hash> childrenTransactions;
     private boolean isValid;
     private transient boolean isVisit;
-
 
     private TransactionData(){
 
