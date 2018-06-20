@@ -1,8 +1,6 @@
 package io.coti.cotinode.service.interfaces;
 
-import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.Hash;
-import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.data.UnconfirmedTransactionData;
 
 import java.util.List;

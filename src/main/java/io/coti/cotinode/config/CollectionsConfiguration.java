@@ -26,9 +26,9 @@ public class CollectionsConfiguration {
     }
 
     @Bean
-    public ConfirmedTransaction balances(){
-        ConfirmedTransactions confirmedTransaction = new ConfirmedTransactions();
-        return confirmedTransaction;
+    public ConfirmedTransactions balances(){
+        ConfirmedTransactions confirmedTransactions = new ConfirmedTransactions();
+        return confirmedTransactions;
     }
 
     @Bean

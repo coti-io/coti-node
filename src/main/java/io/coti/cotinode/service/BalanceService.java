@@ -1,10 +1,10 @@
 package io.coti.cotinode.service;
 
 import io.coti.cotinode.AppConfig;
-import io.coti.cotinode.data.*;
-import io.coti.cotinode.data.interfaces.IEntity;
+import io.coti.cotinode.data.ConfirmedTransactionData;
+import io.coti.cotinode.data.Hash;
+import io.coti.cotinode.data.UnconfirmedTransactionData;
 import io.coti.cotinode.database.Interfaces.IDatabaseConnector;
-import io.coti.cotinode.model.UnconfirmedTransaction;
 import io.coti.cotinode.service.interfaces.IBalanceService;
 import io.coti.cotinode.service.interfaces.IQueueService;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +18,9 @@ import javax.annotation.PostConstruct;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -41,7 +43,6 @@ public class BalanceService implements IBalanceService {
     private List<Map<Hash, Double>> unconfirmedTransactionMap;
     private List<Map<Hash, Double>> confirmedTransactionMap;
 
-    @PostConstruct
     private void init() {
 
         loadBalanceFromSnapshot();
@@ -66,25 +67,24 @@ public class BalanceService implements IBalanceService {
     }
 
     private void unconfirmedToConfirmedDB(List<UnconfirmedTransactionData> unconfirmedTransactionsToDelete) {
-        for(UnconfirmedTransactionData unconfirmedTransactionData: unconfirmedTransactionsToDelete){
+        for (UnconfirmedTransactionData unconfirmedTransactionData : unconfirmedTransactionsToDelete) {
             databaseConnector.put(appConfig.getConfirmedTransactionsColoumnFamilyName(),
-                    unconfirmedTransactionData.getKey().getBytes(),unconfirmedTransactionData.getHash().getBytes());
-            databaseConnector.delete(appConfig.getUnconfirmedTransactionsColoumnFamilyName(),unconfirmedTransactionData
+                    unconfirmedTransactionData.getKey().getBytes(), unconfirmedTransactionData.getHash().getBytes());
+            databaseConnector.delete(appConfig.getUnconfirmedTransactionsColoumnFamilyName(), unconfirmedTransactionData
                     .getKey().getBytes());
         }
     }
 
     private void unconfirmedTransactionMapToBalanceMaps() {
-        for(Map<Hash, Double> addressToBalanceMap : unconfirmedTransactionMap) {
+        for (Map<Hash, Double> addressToBalanceMap : unconfirmedTransactionMap) {
             for (Map.Entry<Hash, Double> entry : addressToBalanceMap.entrySet()) {
                 double balance = entry.getValue();
                 Hash key = entry.getKey();
-                preBalanceMap.put(key,balance);
-                if(balanceMap.containsKey(key)){
-                    balanceMap.put(key,balanceMap.get(key) + balance);
-                }
-                else{
-                    balanceMap.put(key,balance);
+                preBalanceMap.put(key, balance);
+                if (balanceMap.containsKey(key)) {
+                    balanceMap.put(key, balanceMap.get(key) + balance);
+                } else {
+                    balanceMap.put(key, balance);
 
                 }
             }
@@ -112,16 +112,14 @@ public class BalanceService implements IBalanceService {
             UnconfirmedTransactionData unconfirmedTransactionData = (UnconfirmedTransactionData) SerializationUtils
                     .deserialize(unconfirmedDBiterator.value());
             Hash transactionHashFromDB = (Hash) SerializationUtils.deserialize(unconfirmedDBiterator.key());
-            if(unconfirmedTransactionData.isTrustChainConsensus()){ //tcc =1
-                if(unconfirmedTransactionData.isDoubleSpendPreventionConsensus()){ // tcc = 1 + dspc = 1
+            if (unconfirmedTransactionData.isTrustChainConsensus()) { //tcc =1
+                if (unconfirmedTransactionData.isDoubleSpendPreventionConsensus()) { // tcc = 1 + dspc = 1
                     confirmedTransactionMap.add(unconfirmedTransactionData.getAddressHashToValueTransferredMapping());
                     unconfirmedTransactionsToDelete.add(unconfirmedTransactionData);
-                }
-                else{ // tcc = 1 + dspc = 0
+                } else { // tcc = 1 + dspc = 0
                     unconfirmedTransactionMap.add(unconfirmedTransactionData.getAddressHashToValueTransferredMapping());
                 }
-            }
-            else{ //tcc = 0
+            } else { //tcc = 0
                 unconfirmedTransactionMap.add(unconfirmedTransactionData.getAddressHashToValueTransferredMapping());
                 // TCC QUEUE -> QUEUE Service
                 queueService.addToTccQueue(unconfirmedTransactionData.getHash());
@@ -139,61 +137,59 @@ public class BalanceService implements IBalanceService {
         updateDbFromQueue();
     }
 
-    private void updateDbFromQueue(){
+    private void updateDbFromQueue() {
         ConcurrentLinkedQueue<Hash> updateBalanceQueue = queueService.getUpdateBalanceQueue();
-        while(!updateBalanceQueue.isEmpty()){
+        while (!updateBalanceQueue.isEmpty()) {
             Hash addressHash = updateBalanceQueue.poll();
-            UnconfirmedTransactionData unfonUnconfirmedTransactionData = (UnconfirmedTransactionData)SerializationUtils
-                    .deserialize( databaseConnector.getByKey(appConfig.getUnconfirmedTransactionsColoumnFamilyName(),addressHash.getBytes()));
+            UnconfirmedTransactionData unfonUnconfirmedTransactionData = (UnconfirmedTransactionData) SerializationUtils
+                    .deserialize(databaseConnector.getByKey(appConfig.getUnconfirmedTransactionsColoumnFamilyName(), addressHash.getBytes()));
             //dspc = 1
-            if(unfonUnconfirmedTransactionData.isDoubleSpendPreventionConsensus()){
+            if (unfonUnconfirmedTransactionData.isDoubleSpendPreventionConsensus()) {
                 ConfirmedTransactionData confirmedTransactionData = new ConfirmedTransactionData(addressHash);
                 confirmedTransactionData.setAddressHashToValueTransferredMapping(unfonUnconfirmedTransactionData.getAddressHashToValueTransferredMapping());
 
-                databaseConnector.put(appConfig.getConfirmedTransactionsColoumnFamilyName(),addressHash.getBytes(),
+                databaseConnector.put(appConfig.getConfirmedTransactionsColoumnFamilyName(), addressHash.getBytes(),
                         confirmedTransactionData.getHash().getBytes());
-                databaseConnector.delete(appConfig.getUnconfirmedTransactionsColoumnFamilyName(),addressHash.getBytes());
-                for(Map.Entry<Hash,Double> mapEntry : unfonUnconfirmedTransactionData.getAddressHashToValueTransferredMapping().entrySet()){
-                    balanceMap.put(mapEntry.getKey(),mapEntry.getValue());
-                    log.info("The address {} with the value {} was added to balance map",mapEntry.getKey(), mapEntry.getValue());
+                databaseConnector.delete(appConfig.getUnconfirmedTransactionsColoumnFamilyName(), addressHash.getBytes());
+                for (Map.Entry<Hash, Double> mapEntry : unfonUnconfirmedTransactionData.getAddressHashToValueTransferredMapping().entrySet()) {
+                    balanceMap.put(mapEntry.getKey(), mapEntry.getValue());
+                    log.info("The address {} with the value {} was added to balance map", mapEntry.getKey(), mapEntry.getValue());
                     preBalanceMap.remove(mapEntry.getKey());
                 }
-            }
-            else{ //dspc =0
+            } else { //dspc =0
                 unfonUnconfirmedTransactionData.setTrustChainConsensus(true);
-                databaseConnector.put(appConfig.getUnconfirmedTransactionsColoumnFamilyName(),addressHash.getBytes(),
+                databaseConnector.put(appConfig.getUnconfirmedTransactionsColoumnFamilyName(), addressHash.getBytes(),
                         unfonUnconfirmedTransactionData.getHash().getBytes());
 
             }
         }
     }
 
-    public boolean inMemorySync(List<Map.Entry<Hash, Double>> pairList){
-        for(Map.Entry<Hash, Double> mapEntry : pairList){
+    public boolean inMemorySync(List<Map.Entry<Hash, Double>> pairList) {
+        for (Map.Entry<Hash, Double> mapEntry : pairList) {
             //checkBalance
             double amount = mapEntry.getValue();
             Hash addressHash = mapEntry.getKey();
-            if(balanceMap.containsKey(addressHash) && amount + balanceMap.get(addressHash) < 0){
-                log.error("The address {} with the amount {} is exceeds it's current balance {} ",addressHash.toString(),
-                        amount,balanceMap.get(addressHash));
+            if (balanceMap.containsKey(addressHash) && amount + balanceMap.get(addressHash) < 0) {
+                log.error("The address {} with the amount {} is exceeds it's current balance {} ", addressHash.toString(),
+                        amount, balanceMap.get(addressHash));
                 return false;
             }
             //checkPreBalance
-            if(preBalanceMap.containsKey(addressHash) && amount + preBalanceMap.get(addressHash)< 0){
-                log.error("The address {} with the amount {} is exceeds it's current preBalance {} ",addressHash.toString(),
-                        amount,preBalanceMap.get(addressHash));
+            if (preBalanceMap.containsKey(addressHash) && amount + preBalanceMap.get(addressHash) < 0) {
+                log.error("The address {} with the amount {} is exceeds it's current preBalance {} ", addressHash.toString(),
+                        amount, preBalanceMap.get(addressHash));
                 return false;
-            }
-            else{//update preBalance
-                preBalanceMap.put(addressHash,amount + preBalanceMap.get(addressHash));
+            } else {//update preBalance
+                preBalanceMap.put(addressHash, amount + preBalanceMap.get(addressHash));
             }
 
         }
         return true;
     }
 
-    public void dbSync(UnconfirmedTransactionData unconfirmedTransactionData){
-        for(Map.Entry<Hash, Double> mapEntry : unconfirmedTransactionData.getAddressHashToValueTransferredMapping().entrySet()){
+    public void dbSync(UnconfirmedTransactionData unconfirmedTransactionData) {
+        for (Map.Entry<Hash, Double> mapEntry : unconfirmedTransactionData.getAddressHashToValueTransferredMapping().entrySet()) {
             queueService.addToTccQueue(mapEntry.getKey());
         }
     }
