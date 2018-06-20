@@ -3,7 +3,7 @@ package io.coti.cotinode.service;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.model.Transactions;
-import io.coti.cotinode.service.interfaces.ISourceValidationService;
+import io.coti.cotinode.service.interfaces.IValidationService;
 import io.coti.cotinode.service.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ public class TransactionService implements ITransactionService {
     @Autowired
     private Transactions transactions;
     @Autowired
-    private ISourceValidationService sourceValidationService;
+    private IValidationService validationService;
 
     @Override
     public boolean addNewTransaction(List<Map.Entry<Hash, Double>> transferredAmounts) {
