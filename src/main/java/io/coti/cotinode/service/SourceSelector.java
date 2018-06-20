@@ -58,7 +58,8 @@ public class SourceSelector implements ISourceSelector {
                     trustScoreToSourceListMapping.containsKey(highTrustScore)) {
                 neighbourSources.addAll(trustScoreToSourceListMapping.get(highTrustScore));
             }
-            if (neighbourSources.size() / numberOfSources.get() > (double) minSourcePercentage / 100) {
+            if (numberOfSources.get() == 0 ||
+                    neighbourSources.size() / numberOfSources.get() > (double) minSourcePercentage / 100) {
                 break;
             }
         }
@@ -70,7 +71,7 @@ public class SourceSelector implements ISourceSelector {
             Date transactionCreationTime) {
         List<TransactionData> olderSources =
                 transactions.stream().
-                        filter(s -> s.getAttachmentTime().before(transactionCreationTime)).collect(toList());
+                        filter(s -> !s.getCreateTime().after(transactionCreationTime)).collect(toList());
 
         if (olderSources.size() < 2) {
             return olderSources;
@@ -79,7 +80,7 @@ public class SourceSelector implements ISourceSelector {
         // Calculate total timestamp differences from the transaction's timestamp
         long totalWeight =
                 olderSources.stream().
-                        map(s -> transactionCreationTime.getTime() - s.getAttachmentTime().getTime()).mapToLong(Long::longValue).sum();
+                        map(s -> transactionCreationTime.getTime() - s.getCreateTime().getTime()).mapToLong(Long::longValue).sum();
 
         // Now choose sources, randomly weighted by timestamp difference ("older" transactions have a bigger chance to be selected)
         List<TransactionData> randomWeightedSources = new Vector<>();
@@ -88,7 +89,7 @@ public class SourceSelector implements ISourceSelector {
             int randomIndex = -1;
             double random = Math.random() * totalWeight;
             for (int i = 0; i < olderSources.size(); ++i) {
-                random -= transactionCreationTime.getTime() - olderSources.get(i).getAttachmentTime().getTime();
+                random -= transactionCreationTime.getTime() - olderSources.get(i).getCreateTime().getTime();
                 if (random < 0.0d) {
                     randomIndex = i;
                     break;

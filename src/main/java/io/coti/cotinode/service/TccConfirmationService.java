@@ -3,6 +3,8 @@ package io.coti.cotinode.service;
 import io.coti.cotinode.data.Hash;
 
 import io.coti.cotinode.data.TransactionData;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
@@ -10,10 +12,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
+@Configurable
 public class TccConfirmationService {
     private int TRESHOLD = 300;
     private Logger log = LoggerFactory.getLogger(this.getClass().getName());
@@ -31,9 +35,14 @@ public class TccConfirmationService {
 
     //takes adjacency list of a directed acyclic graph(DAG) as input
     //returns a linkedlist which consists the vertices in topological order
-    public LinkedList<TransactionData> topologicalSorting() {
-
+    public void topologicalSorting() {
+        log.info("{} Starting topologicalSorting", Instant.now());
         result = new LinkedList<TransactionData>();
+
+        // Reset
+        for (Map.Entry<Hash, TransactionData> entry : hashToUnTddConfirmTransactionsMapping.entrySet()) {
+           entry.getValue().setVisit(false);
+        }
 
         //loop is for making sure that every vertex is visited since if we select only one random source
         //all vertices might not be reachable from this source
@@ -43,7 +52,11 @@ public class TccConfirmationService {
                 topologicalSortingHelper(entry.getValue());
             }
         }
-        return result;
+        synchronized(log) {
+            log.info("{} Ending topologicalSorting()", Instant.now());
+            result.forEach(transaction ->  log.info("{} After topologicalSorting in result: {}", Instant.now(), transaction.getHash()));
+        }
+
     }
 
     private void setTotalSumScore(TransactionData parent) {

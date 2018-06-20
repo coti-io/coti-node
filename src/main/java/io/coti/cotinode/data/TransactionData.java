@@ -4,6 +4,7 @@ import io.coti.cotinode.data.interfaces.IEntity;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.reflect.Field;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
@@ -60,6 +61,7 @@ public class TransactionData implements IEntity {
     public String toString() {
         return String.valueOf(hash);
     }
+
 
     @Override
     public boolean equals(Object other) {

@@ -11,10 +11,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -23,6 +26,8 @@ import java.util.stream.Collectors;
 @Configurable
 @Data
 public class Cluster implements ICluster {
+
+    private static Object locker = new Object();
 
     @Autowired
     private ISourceSelector sourceSelector;
@@ -38,11 +43,22 @@ public class Cluster implements ICluster {
     private Executor executor;
 
     private void addNewTransactionToAllCollections(TransactionData transaction) {
-        // add to unTccConfirmedTransaction map
-        addToUnTccConfirmedTransactionMap(transaction);
+        synchronized (locker) {
+            // add to unTccConfirmedTransaction map
+            addToUnTccConfirmedTransactionMap(transaction);
 
-        //  add to TrustScoreToSourceList map
-        addToTrustScoreToSourceListMap(transaction);
+            //  add to TrustScoreToSourceList map
+            addToTrustScoreToSourceListMap(transaction);
+        }
+    }
+
+    private int getTotalNumberOfSources() {
+        // Get num of all transactions in numberOfSources
+        AtomicInteger numberOfSources = new AtomicInteger();
+        trustScoreToSourceListMapping.forEach((score, transactions) -> {
+            numberOfSources.addAndGet(transactions.size());
+        });
+        return numberOfSources.intValue();
     }
 
     private void setUnTccConfirmedTransactions(List<TransactionData> allTransactions) {
@@ -68,14 +84,16 @@ public class Cluster implements ICluster {
 
     @Override
     public void initCluster(List<TransactionData> notConfirmTransactions) {
-        executor = Executors.newCachedThreadPool();
+        executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
         hashToUnTccConfirmationTransactionsMapping = new ConcurrentHashMap<>();
         trustScoreToSourceListMapping = new ConcurrentHashMap<>();
 
         setUnTccConfirmedTransactions(notConfirmTransactions);
         setTrustScoreToSourceListMapping(hashToUnTccConfirmationTransactionsMapping);
         tccConfirmationService = new TccConfirmationService(); // @Autowired doesn't work in test ??
-        trustScoreConsensusProcess();
+        sourceSelector = new SourceSelector();
+        //forEach(transaction -> addNewTransaction(transaction));
+        //  trustScoreConsensusProcess();
     }
 
     @Override
@@ -95,16 +113,16 @@ public class Cluster implements ICluster {
 
     @Override
     public void deleteTransactionFromHashToUnTccConfirmedTransactionsMapping(Hash hash) {
-        TransactionData transaction = null;
-        if (hashToUnTccConfirmationTransactionsMapping.containsKey(hash)) {
-            transaction = hashToUnTccConfirmationTransactionsMapping.get(hash);
-            hashToUnTccConfirmationTransactionsMapping.remove(hash);
+
+        synchronized (locker) {
+            TransactionData transaction = null;
+            if (hashToUnTccConfirmationTransactionsMapping.containsKey(hash)) {
+                transaction = hashToUnTccConfirmationTransactionsMapping.get(hash);
+                hashToUnTccConfirmationTransactionsMapping.remove(hash);
+            }
+
+            deleteTrustScoreToSourceListMapping(transaction);
         }
-
-        //persistenceProvider.deleteTransaction(hash);
-        // TODO: replace with TransactionService
-
-        deleteTrustScoreToSourceListMapping(transaction);
     }
 
     @Override
@@ -119,8 +137,6 @@ public class Cluster implements ICluster {
             }
         }
 
-        //persistenceProvider.deleteTransaction(hash);
-        // TODO: replace with TransactionService
     }
 
     @Override
@@ -134,59 +150,110 @@ public class Cluster implements ICluster {
 
         //TODO: Get new transactions from the queue service
 
+        getNewTransactions.parallelStream().forEach(transactionData -> addNewTransaction(transactionData));
         return getNewTransactions;
     }
 
     @Override
     public boolean addNewTransaction(TransactionData transaction) {
-        transaction.setProcessStartTime(new Date());
 
-        // TODO: Get The transaction trust score from trust score node.
+        try {
+            transaction.setProcessStartTime(new Date());
+            log.info("{} Starting process of attaching transaction with hash: {}: trustScore: {}", Instant.now(), transaction.getHash(), transaction.getSenderTrustScore());
+            // TODO: Get The transaction trust score from trust score node.
 
-        List<TransactionData> selectedSourcesForAttachment = null;
-        ConcurrentHashMap<Integer, List<TransactionData>> localThreadTustScoreToSourceListMapping =
-                new ConcurrentHashMap<>(trustScoreToSourceListMapping);
-        if (localThreadTustScoreToSourceListMapping.size() > 1) {
+            final ConcurrentHashMap<Integer, List<TransactionData>> localThreadTrustScoreToSourceListMapping =
+                    new ConcurrentHashMap<>(trustScoreToSourceListMapping);
 
-            // Selection of sources
-            selectedSourcesForAttachment = sourceSelector.selectSourcesForAttachment(localThreadTustScoreToSourceListMapping,
-                    transaction.getSenderTrustScore(),
-                    transaction.getAttachmentTime(),
-                    5, // TODO: get value from config file and/or dynamic
-                    10); // TODO:  get value from config file and/or dynamic
+
+//        for (final List<TransactionData> finalSelectedSourcesForAttachment = new Vector<TransactionData>(selectedSourcesForAttachment);
+//             finalSelectedSourcesForAttachment.size() == 0 &&  localThreadTustScoreToSourceListMapping.size() > 0 ; ) {
+            AtomicBoolean executed = new AtomicBoolean();
+
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    do {
+                        List<TransactionData> selectedSourcesForAttachment = null;
+                        executed.set(true);
+                        int localTrustScoreToSourceListMappingSum = getTotalNumberOfSources();
+                        log.info("{} num of aources: {}", Instant.now(), localTrustScoreToSourceListMappingSum);
+                        if (localTrustScoreToSourceListMappingSum > 0) {
+
+                            // Selection of sources
+                            selectedSourcesForAttachment = sourceSelector.selectSourcesForAttachment(localThreadTrustScoreToSourceListMapping,
+                                    transaction.getSenderTrustScore(),
+                                    transaction.getCreateTime(),
+                                    10, // TODO: get value from config file and/or dynamic
+                                    20); // TODO:  get value from config file and/or dynamic
+                            if (selectedSourcesForAttachment.size() == 0) {
+                                executed.set(false);
+                                log.info("{} in attachment process of transaction with hash: {}: whe have source: {}, waiting for more transactions!!", Instant.now(), transaction.getHash());
+                            } else {
+                                log.info("{} in attachment process of transaction with hash: {}: whe have source: {}, continue to POW!!", Instant.now(), transaction.getHash());
+                            }
+                        } else {
+                            log.info("{} in attachment process of transaction with hash: {}: , there is no other transactions in cluster. No need for attachment", Instant.now(), transaction.getHash());
+                        }
+
+                        if (executed.get() && PowProcess(transaction)) {
+
+                            if (localTrustScoreToSourceListMappingSum > 0) {
+
+                                // Attache sources
+                                attachmentProcess(localThreadTrustScoreToSourceListMapping, selectedSourcesForAttachment, transaction);
+                            }
+                            // updating transaction collections with the new transaction
+                            addNewTransactionToAllCollections(transaction);
+
+                            transaction.setProcessEndTime(new Date());
+                            log.info("{} Ending process of attaching transaction with hash: {} trustScore: {}  LeftParentHash: {}  RightParentHash: {}",
+                                    Instant.now(),
+                                    transaction.getHash(),
+                                    transaction.getSenderTrustScore(),
+                                    transaction.getLeftParent(),
+                                    transaction.getRightParent());
+
+                        }
+                        try {
+                            TimeUnit.SECONDS.sleep(3);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    } while (!executed.get());
+                }
+
+            });
+
+        } catch (Exception e) {
+            log.error(e.toString());
         }
 
-        final List<TransactionData> finalSelectedSourcesForAttachment = new Vector<TransactionData>(selectedSourcesForAttachment);
-
-        executor.execute(() -> {
-            // if (isFromPropagation) {
-            transaction.setPowStartTime(new Date());
-            // TODO : POW
-            transaction.setPowEndTime(new Date());
-            //  }
-
-            // Attache sources
-            if (localThreadTustScoreToSourceListMapping.size() > 1) {
-                if (finalSelectedSourcesForAttachment.size() == 0) {
-                    // TODO: wait
-                }
-
-                for (TransactionData sourceTransaction : finalSelectedSourcesForAttachment) {
-                    attachToSource(transaction, sourceTransaction);
-                }
-            }
-
-            // updating transaction collections with the new transaction
-            addNewTransactionToAllCollections(transaction);
-
-            // Update the total trust score of the parents
-            //updateParentsTotalSumScore(transaction, 0, transaction.getTrustChainTransactionHashes());
-
-            transaction.setProcessEndTime(new Date());
-        });
-        // TODO: Validate the sources.
-
         return true;
+    }
+
+    private boolean PowProcess(TransactionData transaction) {
+        log.info("{} in attachment process of transaction with hash: {}: , starting POW", Instant.now(), transaction.getHash());
+        transaction.setPowStartTime(new Date());
+        // TODO : POW
+        transaction.setPowEndTime(new Date());
+        log.info("{} in attachment process of transaction with hash: {}: , ending POW", Instant.now(), transaction.getHash());
+        return true;
+    }
+
+    private void attachmentProcess(ConcurrentHashMap<Integer, List<TransactionData>> localThreadTrustScoreToSourceListMapping,
+                                   List<TransactionData> selectedSourcesForAttachment,
+                                   TransactionData transaction) {
+        if (localThreadTrustScoreToSourceListMapping.size() > 1) {
+
+            for (TransactionData sourceTransaction : selectedSourcesForAttachment) {
+                log.info("{} in attachment process of transaction with hash: {}: whe have source: {}", Instant.now(), transaction.getHash(), sourceTransaction.getHash());
+                attachToSource(transaction, sourceTransaction);
+            }
+            // TODO: Validate the sources.
+
+        }
+
     }
 
     @Override
@@ -194,36 +261,46 @@ public class Cluster implements ICluster {
         if (hashToUnTccConfirmationTransactionsMapping.get(source.getKey()) == null) {
             log.error("Cannot find source:" + source);
         }
-        newTransaction.attachToSource(source);
         newTransaction.setAttachmentTime(new Date());
-        deleteTrustScoreToSourceListMapping(source);
+
+        synchronized (locker) {
+            newTransaction.attachToSource(source);
+            deleteTrustScoreToSourceListMapping(source);
+        }
     }
 
     @Override
     public void trustScoreConsensusProcess() {
         log.info("###Start Processing with Thread id: " + Thread.currentThread().getId());
 
-        while (true) {
-            executor.execute(() -> {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    tccConfirmationService.init(hashToUnTccConfirmationTransactionsMapping);
+                    tccConfirmationService.topologicalSorting();
+                    List<Hash> transactionConsensusConfirmed = tccConfirmationService.setTransactionConsensus();
 
-                tccConfirmationService.init(hashToUnTccConfirmationTransactionsMapping);
-                tccConfirmationService.topologicalSorting();
-                List<Hash> transactionConsensusConfirmed = tccConfirmationService.setTransactionConsensus();
-
-                // Update TransactionService & BalanceService
-                for (Hash hash : transactionConsensusConfirmed) {
-                    deleteTransactionFromHashToUnTccConfirmedTransactionsMapping(hash);
-                    //balanceService.
+                    // Update TransactionService & BalanceService
+                    for (Hash hash : transactionConsensusConfirmed) {
+                        log.info(" {} transaction with hash: {}: is confirmed with trustScore: {} ans totalTrustScore: {}",
+                                Instant.now(),
+                                hashToUnTccConfirmationTransactionsMapping.get(hash).getHash(),
+                                hashToUnTccConfirmationTransactionsMapping.get(hash).getSenderTrustScore(),
+                                hashToUnTccConfirmationTransactionsMapping.get(hash).getTotalTrustScore());
+                        deleteTransactionFromHashToUnTccConfirmedTransactionsMapping(hash);
+                        //balanceService.
+                    }
+                    try {
+                        TimeUnit.SECONDS.sleep(30);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
-
-
-            });
-            try {
-                TimeUnit.SECONDS.sleep(3);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
             }
-        }
+        });
+
+
     }
 }
 

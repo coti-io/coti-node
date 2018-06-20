@@ -7,7 +7,6 @@ import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import org.springframework.stereotype.Component;
 
-@Component
 public interface ICluster {
     void initCluster(List<TransactionData> allClusterTransactions) throws InterruptedException;
 
