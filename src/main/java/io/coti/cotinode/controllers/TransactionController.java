@@ -29,7 +29,7 @@ public class TransactionController {
     @RequestMapping(method = PUT)
     @ResponseStatus(HttpStatus.CREATED)
     public AddTransactionResponse addTransaction(@Valid @RequestBody AddTransactionRequest addTransactionRequest) {
-        transactionService.addNewTransaction(addTransactionRequest.transferredAmounts);
+        transactionService.addNewTransaction(addTransactionRequest);
         return new AddTransactionResponse(addTransactionRequest.transactionHash);
     }
 

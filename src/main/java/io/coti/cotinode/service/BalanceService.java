@@ -165,7 +165,7 @@ public class BalanceService implements IBalanceService {
         }
     }
 
-    public boolean inMemorySync(List<Map.Entry<Hash, Double>> pairList) {
+    public boolean checkBalancesAndAddToPreBalance(List<Map.Entry<Hash, Double>> pairList) {
         for (Map.Entry<Hash, Double> mapEntry : pairList) {
             //checkBalance
             double amount = mapEntry.getValue();

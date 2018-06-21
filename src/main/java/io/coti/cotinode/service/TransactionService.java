@@ -2,15 +2,13 @@ package io.coti.cotinode.service;
 
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
+import io.coti.cotinode.http.AddTransactionRequest;
 import io.coti.cotinode.model.Transactions;
 import io.coti.cotinode.service.interfaces.IValidationService;
 import io.coti.cotinode.service.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Service
@@ -27,18 +25,28 @@ public class TransactionService implements ITransactionService {
     private IValidationService validationService;
 
     @Override
-    public boolean addNewTransaction(List<Map.Entry<Hash, Double>> transferredAmounts) {
-//        if(!validateDataIntegrity(transactionData)){
-//            return false;
-//        }
-//
-//        if(!sourceValidationService.validateSources(transactionData)){
-//            return false;
-//        }
+    public boolean addNewTransaction(AddTransactionRequest request) {
+        TransactionData transactionData = new TransactionData(request.transactionHash);
+
+        if(!validationService.validateUserHash(request.transactionHash)){
+            return false;
+        }
+
+        if(!balanceService.checkBalancesAndAddToPreBalance(request.transferredAmounts)){
+            return false;
+        }
+
+        //Transaction = Attach to sources
+
+        validationService.validateSource(transactionData.getLeftParent());
+        validationService.validateSource(transactionData.getRightParent());
+        transactions.put(transactionData);
+
+//        balanceService.dbSync();
+
 //
 //        balanceService.addToPreBalance(transactionData);
 //        transactionData = clusterService.addToCluster(transactionData);
-//        transactions.put(transactionData);
         return true;
     }
 

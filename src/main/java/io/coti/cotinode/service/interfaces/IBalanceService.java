@@ -8,7 +8,7 @@ import java.util.Map;
 
 public interface IBalanceService {
 
-    public boolean inMemorySync(List<Map.Entry<Hash, Double>> pairList);
+    public boolean checkBalancesAndAddToPreBalance(List<Map.Entry<Hash, Double>> pairList);
 
     public void dbSync(UnconfirmedTransactionData unconfirmedTransactionData);
 }

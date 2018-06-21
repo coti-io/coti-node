@@ -1,5 +1,6 @@
 package io.coti.cotinode.service;
 
+import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.service.interfaces.IValidationService;
 import org.springframework.stereotype.Component;
@@ -8,16 +9,12 @@ import org.springframework.stereotype.Component;
 public class ValidationService implements IValidationService {
 
     @Override
-    public boolean validateUserHash(TransactionData transactionData) {
-        return false;
+    public boolean validateUserHash(Hash hash) {
+        return true;
     }
 
     @Override
-    public boolean validateSources(TransactionData transactionData) {
-        return validateSource(transactionData.getLeftParent()) && validateSource(transactionData.getRightParent());
-    }
-
-    private boolean validateSource(TransactionData transactionData) {
+    public boolean validateSource(TransactionData transactionData) {
         return true;
     }
 }
