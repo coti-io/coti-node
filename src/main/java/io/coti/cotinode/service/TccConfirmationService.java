@@ -21,14 +21,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TccConfirmationService {
     private int TRESHOLD = 300;
     private Logger log = LoggerFactory.getLogger(this.getClass().getName());
-    private ConcurrentHashMap<Hash, TransactionData> hashToUnTddConfirmTransactionsMapping;
+    private ConcurrentHashMap<Hash, TransactionData> hashToUnTccConfirmTransactionsMapping;
     private LinkedList<TransactionData> result;
 
     public void init(ConcurrentHashMap<Hash, TransactionData> hashToUnConfirmationTransactionsMapping) {
-        hashToUnTddConfirmTransactionsMapping = new ConcurrentHashMap<>();
+        hashToUnTccConfirmTransactionsMapping = new ConcurrentHashMap<>();
         for (Map.Entry<Hash, TransactionData> entry : hashToUnConfirmationTransactionsMapping.entrySet()) {
             if (!entry.getValue().isTransactionConsensus()) {
-                hashToUnTddConfirmTransactionsMapping.put(entry.getValue().getHash(), entry.getValue());
+                hashToUnTccConfirmTransactionsMapping.put(entry.getValue().getHash(), entry.getValue());
             }
         }
     }
@@ -36,25 +36,25 @@ public class TccConfirmationService {
     //takes adjacency list of a directed acyclic graph(DAG) as input
     //returns a linkedlist which consists the vertices in topological order
     public void topologicalSorting() {
-        log.info("{} Starting topologicalSorting", Instant.now());
+        log.info("Starting topologicalSorting");
         result = new LinkedList<TransactionData>();
 
         // Reset
-        for (Map.Entry<Hash, TransactionData> entry : hashToUnTddConfirmTransactionsMapping.entrySet()) {
+        for (Map.Entry<Hash, TransactionData> entry : hashToUnTccConfirmTransactionsMapping.entrySet()) {
            entry.getValue().setVisit(false);
         }
 
         //loop is for making sure that every vertex is visited since if we select only one random source
         //all vertices might not be reachable from this source
         //eg:1->2->3,1->3 and if we select 3 as source first then no vertex can be visited ofcourse except for 3
-        for (Map.Entry<Hash, TransactionData> entry : hashToUnTddConfirmTransactionsMapping.entrySet()) {
+        for (Map.Entry<Hash, TransactionData> entry : hashToUnTccConfirmTransactionsMapping.entrySet()) {
             if (!entry.getValue().isVisit()) {
                 topologicalSortingHelper(entry.getValue());
             }
         }
         synchronized(log) {
-            log.info("{} Ending topologicalSorting()", Instant.now());
-            result.forEach(transaction ->  log.info("{} After topologicalSorting in result: {}", Instant.now(), transaction.getHash()));
+            log.info("Ending topologicalSorting()");
+            result.forEach(transaction ->  log.info("After topologicalSorting in result: {} and his trustScore is;{}",  transaction.getHash(), transaction.getSenderTrustScore()));
 
         }
 
@@ -64,10 +64,15 @@ public class TccConfirmationService {
         int maxSonsTotalTrustScore = 0;
         Hash maxSonsTotalTrustScoreHash = null;
         for (Hash hash : parent.getChildrenTransactions()) {
-            if (hashToUnTddConfirmTransactionsMapping.get(hash).getTotalTrustScore()
-                    > maxSonsTotalTrustScore) {
-                maxSonsTotalTrustScore = hashToUnTddConfirmTransactionsMapping.get(hash).getTotalTrustScore();
-                maxSonsTotalTrustScoreHash = hash;
+            try {
+                if (hashToUnTccConfirmTransactionsMapping.get(hash).getTotalTrustScore()
+                        > maxSonsTotalTrustScore) {
+                    maxSonsTotalTrustScore = hashToUnTccConfirmTransactionsMapping.get(hash).getTotalTrustScore();
+                    maxSonsTotalTrustScoreHash = hash;
+                }
+            } catch (Exception e) {
+                log.error("in setTotalSumScore: parent: {} child: {}", parent.getHash(), hash );
+                throw e;
             }
         }
 
@@ -77,7 +82,7 @@ public class TccConfirmationService {
         //updating parent trustChainTransactionHashes
         if (maxSonsTotalTrustScoreHash != null) { // not a source
             List<Hash> maxSonsTotalTrustScoreChain =
-                    new Vector<>(hashToUnTddConfirmTransactionsMapping.get(maxSonsTotalTrustScoreHash).getTrustChainTransactionHashes());
+                    new Vector<>(hashToUnTccConfirmTransactionsMapping.get(maxSonsTotalTrustScoreHash).getTrustChainTransactionHashes());
             maxSonsTotalTrustScoreChain.add(maxSonsTotalTrustScoreHash);
             parent.setTrustChainTransactionHashes(maxSonsTotalTrustScoreChain);
         }
@@ -85,7 +90,7 @@ public class TccConfirmationService {
 
     private void topologicalSortingHelper(TransactionData parentTransactionData) {
         for (Hash transactionDataHash : parentTransactionData.getChildrenTransactions()) {
-            TransactionData childTransactionData = hashToUnTddConfirmTransactionsMapping.get(transactionDataHash);
+            TransactionData childTransactionData = hashToUnTccConfirmTransactionsMapping.get(transactionDataHash);
             if (!childTransactionData.isVisit()) {
                 topologicalSortingHelper(childTransactionData);
             }

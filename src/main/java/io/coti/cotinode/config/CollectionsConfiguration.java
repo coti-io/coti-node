@@ -26,14 +26,14 @@ public class CollectionsConfiguration {
     }
 
     @Bean
-    public BalanceDifferences balances(){
-        BalanceDifferences balanceDifferences = new BalanceDifferences();
-        return balanceDifferences;
+    public ConfirmedTransactions balances(){
+        ConfirmedTransactions confirmedTransactions = new ConfirmedTransactions();
+        return confirmedTransactions;
     }
 
     @Bean
-    public PreBalanceDifferences preBalances(){
-        PreBalanceDifferences preBalanceDifferences = new PreBalanceDifferences();
-        return preBalanceDifferences;
+    public UnconfirmedTransactions preBalances(){
+        UnconfirmedTransactions unconfirmedTransactions = new UnconfirmedTransactions();
+        return unconfirmedTransactions;
     }
 }

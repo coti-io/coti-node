@@ -21,9 +21,9 @@ public class RocksDBTests {
     @Autowired
     private Addresses addresses;
     @Autowired
-    private BalanceDifferences balanceDifferences;
+    private ConfirmedTransactions confirmedTransactions;
     @Autowired
-    private PreBalanceDifferences preBalanceDifferences;
+    private UnconfirmedTransactions unconfirmedTransactions;
 
     @Test
     public void saveAndRetrieveSingleTransaction() {
@@ -97,16 +97,16 @@ public class RocksDBTests {
     @Test
     public void saveAndGetBalance() {
         ConfirmedTransactionData confirmedTransactionData1 = new ConfirmedTransactionData(new Hash("ConfirmedTransactionData 0".getBytes()));
-        balanceDifferences.put(confirmedTransactionData1);
-        ConfirmedTransactionData confirmedTransactionData2 = balanceDifferences.getByHash(new Hash("ConfirmedTransactionData 0".getBytes()));
+        confirmedTransactions.put(confirmedTransactionData1);
+        ConfirmedTransactionData confirmedTransactionData2 = confirmedTransactions.getByHash(new Hash("ConfirmedTransactionData 0".getBytes()));
         Assert.assertEquals(confirmedTransactionData1, confirmedTransactionData2);
     }
 
     @Test
     public void saveAndGetPreBalance() {
         UnconfirmedTransactionData unconfirmedTransactionData1 = new UnconfirmedTransactionData(new Hash("ConfirmedTransactionData 0".getBytes()));
-        preBalanceDifferences.put(unconfirmedTransactionData1);
-        UnconfirmedTransactionData unconfirmedTransactionData2 = preBalanceDifferences.getByHash(new Hash("ConfirmedTransactionData 0".getBytes()));
+        unconfirmedTransactions.put(unconfirmedTransactionData1);
+        UnconfirmedTransactionData unconfirmedTransactionData2 = unconfirmedTransactions.getByHash(new Hash("ConfirmedTransactionData 0".getBytes()));
         Assert.assertEquals(unconfirmedTransactionData1, unconfirmedTransactionData2);
     }
 }

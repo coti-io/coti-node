@@ -13,7 +13,7 @@ import org.springframework.util.SerializationUtils;
 public abstract class Collection<T extends IEntity> {
 
     @Autowired
-    IDatabaseConnector databaseConnector;
+    private IDatabaseConnector databaseConnector;
 
     public void init(){
         log.info("Collection init ruuning. Class: " + getClass().getName());

@@ -25,8 +25,8 @@ public class RocksDBConnector implements IDatabaseConnector {
             Transactions.class.getName(),
             BaseTransactions.class.getName(),
             Addresses.class.getName(),
-            BalanceDifferences.class.getName(),
-            PreBalanceDifferences.class.getName()
+            ConfirmedTransactions.class.getName(),
+            UnconfirmedTransactions.class.getName()
     );
     private List<ColumnFamilyDescriptor> columnFamilyDescriptors = new ArrayList<>();
     private RocksDB db;
@@ -74,11 +74,29 @@ public class RocksDBConnector implements IDatabaseConnector {
     public byte[] getByKey(String columnFamilyName, byte[] key) {
         try {
             return db.get(classNameToColumnFamilyHandleMapping.get(columnFamilyName), key);
-        } catch (RocksDBException e) {
+            } catch (RocksDBException e) {
             e.printStackTrace();
             return null;
         }
     }
+
+    public RocksIterator getIterator(String coulumnFamilyName) {
+        RocksIterator it = null;
+        try {
+            ReadOptions readOptions = new ReadOptions();
+
+            ColumnFamilyHandle coulumnFamilyHandler = classNameToColumnFamilyHandleMapping.get(coulumnFamilyName);
+            it = db.newIterator(coulumnFamilyHandler, readOptions);
+            if (coulumnFamilyHandler == null) {
+                log.error("Column family {} iterator wasn't found ", coulumnFamilyName);
+            }
+        } catch (Exception ex) {
+            log.error("Exception while getting iterator of {}", coulumnFamilyName,ex);
+        }
+        return it;
+    }
+
+
 
     @Override
     public boolean put(String columnFamilyName, byte[] key, byte[] value) {

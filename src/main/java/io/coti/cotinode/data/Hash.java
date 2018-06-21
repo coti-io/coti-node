@@ -9,17 +9,18 @@ import java.util.Arrays;
 public class Hash implements Serializable {
     private byte[] bytes;
 
-    public Hash(){
-
-    }
 
     public Hash(String hash){
         this.bytes = hash.getBytes();
     }
 
+
+
     public Hash(byte[] bytes){
         this.bytes = bytes;
     }
+
+
 
     @Override
     public boolean equals(Object other) {
@@ -33,8 +34,18 @@ public class Hash implements Serializable {
         return Arrays.equals(bytes, ((Hash) other).bytes);
     }
 
+
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(bytes);
+    }
+
     @Override
     public String toString(){
         return new String(bytes);
     }
+
+
+
 }

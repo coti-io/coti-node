@@ -1,21 +1,25 @@
 package io.coti.cotinode.controllers;
 
 import io.coti.cotinode.data.Hash;
-import io.coti.cotinode.data.TransactionData;
-import io.coti.cotinode.http.AddAddressRequest;
-import io.coti.cotinode.http.AddAddressResponse;
-import io.coti.cotinode.service.interfaces.IAddressService;
+import io.coti.cotinode.http.AddTransactionRequest;
+import io.coti.cotinode.http.AddTransactionResponse;
+import io.coti.cotinode.http.GetTransactionRequest;
+import io.coti.cotinode.http.GetTransactionResponse;
 import io.coti.cotinode.service.interfaces.ITransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.Valid;
 
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
-@Controller
+@RestController
 @RequestMapping("/transaction")
 public class TransactionController {
 
@@ -23,18 +27,15 @@ public class TransactionController {
     private ITransactionService transactionService;
 
     @RequestMapping(method = PUT)
-    public void addTransaction(@RequestBody TransactionData transactionData) {
-        if (transactionData == null) {
-            return;
-        }
-        transactionService.addNewTransaction(transactionData);
+    @ResponseStatus(HttpStatus.CREATED)
+    public AddTransactionResponse addTransaction(@Valid @RequestBody AddTransactionRequest addTransactionRequest) {
+        transactionService.addNewTransaction(addTransactionRequest.transferredAmounts);
+        return new AddTransactionResponse(addTransactionRequest.transactionHash);
     }
 
     @RequestMapping(method = POST)
-    public void getTransactionDetails(@RequestBody Hash transactionHash) {
-        if (transactionHash == null) {
-            return;
-        }
-        transactionService.getTransactionData(transactionHash);
+    public GetTransactionResponse getTransactionDetails(@Valid @RequestBody GetTransactionRequest getTransactionRequest) {
+        transactionService.getTransactionData(getTransactionRequest.transactionHash);
+        return new GetTransactionResponse();
     }
 }

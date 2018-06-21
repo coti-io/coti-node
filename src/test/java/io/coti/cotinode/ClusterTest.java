@@ -2,13 +2,14 @@ package io.coti.cotinode;
 
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
-import io.coti.cotinode.service.Cluster;
+import io.coti.cotinode.service.ClusterService;
 import io.coti.cotinode.service.interfaces.ICluster;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
@@ -41,6 +42,9 @@ public class ClusterTest {
 //        allClusterTransactions.add(transaction2);
 //        allClusterTransactions.add(transaction3);
 //        allClusterTransactions.add(transaction4);
+
+        Calendar calender = Calendar.getInstance();
+
         TransactionData TransactionData0 = new TransactionData(new Hash("0".getBytes()));
         TransactionData0.setSenderTrustScore(80);
         TransactionData0.setCreateTime(new Date());
@@ -67,26 +71,27 @@ public class ClusterTest {
         newTransactions.add(TransactionData3);
         newTransactions.add(TransactionData4);
 
-        TransactionData TransactionData5 = new TransactionData(new Hash("5".getBytes()));
-        TransactionData5.setSenderTrustScore(78);
-        TransactionData5.setCreateTime(new Date());
+//        TransactionData TransactionData5 = new TransactionData(new Hash("5".getBytes()));
+//        TransactionData5.setSenderTrustScore(78);
+//        TransactionData5.setCreateTime(new Date());
 
         TransactionData TransactionData6 = new TransactionData(new Hash("6".getBytes()));
         TransactionData6.setSenderTrustScore(73);
         TransactionData6.setRightParent(new Hash("7"));
         TransactionData6.setCreateTime(new Date());
+        TransactionData6.setProcessStartTime(new Date());
 
         TransactionData TransactionData7 = new TransactionData(new Hash("7".getBytes()));
         TransactionData7.setSenderTrustScore(70);
         List<Hash> hashChildrens = new Vector<>();
         hashChildrens.add(new Hash("6"));
         TransactionData7.setChildrenTransactions(hashChildrens);
-        TransactionData7.setCreateTime(new Date());
+        TransactionData7.setProcessStartTime(new Date());
 
         notTccConfirmTransactions.add(TransactionData6);
         notTccConfirmTransactions.add(TransactionData7);
 
-        cluster = new Cluster();
+        cluster = new ClusterService();
     }
 
     @After
@@ -104,7 +109,7 @@ public class ClusterTest {
             @Override
             public void run() {
                 TransactionData TransactionData5 = new TransactionData(new Hash("5".getBytes()));
-                TransactionData5.setSenderTrustScore(86);
+                TransactionData5.setSenderTrustScore(78);
                 TransactionData5.setCreateTime(new Date());
 
                 if (counter < newTransactions.size()) {
@@ -118,7 +123,7 @@ public class ClusterTest {
                     counter++;
                 }
             }
-        }, 15, 3, TimeUnit.SECONDS);
+        }, 4, 3, TimeUnit.SECONDS);
 
         while (true) {
             try {

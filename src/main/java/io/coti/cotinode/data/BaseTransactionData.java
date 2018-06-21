@@ -7,7 +7,7 @@ import lombok.Data;
 public class BaseTransactionData implements IEntity {
     private transient Hash hash;
     private AddressData addressData;
-    private long value;
+    private double value;
     private Hash transactionHash;
     private int indexInTransactionsChain;
     private BaseTransactionData nextBaseTransactionData;

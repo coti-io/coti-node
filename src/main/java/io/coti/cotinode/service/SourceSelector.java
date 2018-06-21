@@ -74,7 +74,7 @@ public class SourceSelector implements ISourceSelector {
             Date transactionCreationTime) {
         List<TransactionData> olderSources =
                 transactions.stream().
-                        filter(s -> !s.getCreateTime().after(transactionCreationTime)).collect(toList());
+                        filter(s -> !s.getProcessStartTime().after(transactionCreationTime)).collect(toList());
 
         if (olderSources.size() < 2) {
             return olderSources;
@@ -83,7 +83,7 @@ public class SourceSelector implements ISourceSelector {
         // Calculate total timestamp differences from the transaction's timestamp
         long totalWeight =
                 olderSources.stream().
-                        map(s -> transactionCreationTime.getTime() - s.getCreateTime().getTime()).mapToLong(Long::longValue).sum();
+                        map(s -> transactionCreationTime.getTime() - s.getProcessStartTime().getTime()).mapToLong(Long::longValue).sum();
 
         // Now choose sources, randomly weighted by timestamp difference ("older" transactions have a bigger chance to be selected)
         List<TransactionData> randomWeightedSources = new Vector<>();
@@ -92,14 +92,14 @@ public class SourceSelector implements ISourceSelector {
             int randomIndex = -1;
             double random = Math.random() * totalWeight;
             for (int i = 0; i < olderSources.size(); ++i) {
-                random -= transactionCreationTime.getTime() - olderSources.get(i).getCreateTime().getTime();
+                random -= transactionCreationTime.getTime() - olderSources.get(i).getProcessStartTime().getTime();
                 if (random < 0.0d) {
                     randomIndex = i;
                     break;
                 }
             }
 
-            log.info("{} in sourceSelect process randomIndex: {}: whe have source: {}??", Instant.now(), randomIndex);
+            log.info("in sourceSelect process randomIndex: {}: whe have source: {}??", randomIndex);
             TransactionData randomSource = olderSources.get(randomIndex);
 
 
