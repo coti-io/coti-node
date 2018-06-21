@@ -55,6 +55,7 @@ public class TccConfirmationService {
         synchronized(log) {
             log.info("{} Ending topologicalSorting()", Instant.now());
             result.forEach(transaction ->  log.info("{} After topologicalSorting in result: {}", Instant.now(), transaction.getHash()));
+
         }
 
     }

@@ -53,33 +53,40 @@ public class Cluster implements ICluster {
     }
 
     private int getTotalNumberOfSources() {
+
         // Get num of all transactions in numberOfSources
         AtomicInteger numberOfSources = new AtomicInteger();
-        trustScoreToSourceListMapping.forEach((score, transactions) -> {
-            numberOfSources.addAndGet(transactions.size());
-        });
+        synchronized (locker) {
+            trustScoreToSourceListMapping.forEach((score, transactions) -> {
+                numberOfSources.addAndGet(transactions.size());
+                transactions.forEach(transaction -> log.info(" {} sorce with hash:{}", Instant.now(), transaction.getHash()));
+
+            });
+        }
         return numberOfSources.intValue();
     }
 
-    private void setUnTccConfirmedTransactions(List<TransactionData> allTransactions) {
+    private void setUnTccConfirmedTransactions(List<TransactionData> notConfirmTransactions) {
+
         this.hashToUnTccConfirmationTransactionsMapping.
-                putAll(allTransactions.stream().
-                        filter(x -> !x.isTransactionConsensus()).
+                putAll(notConfirmTransactions.stream().
+                        //filter(x -> !x.isTransactionConsensus()).
                         collect(Collectors.
                                 toMap(TransactionData::getHash, Function.identity())));
     }
 
     private void setTrustScoreToSourceListMapping(ConcurrentHashMap<Hash, TransactionData> hashToUnconfirmedTransactionsMapping) {
+        log.info("{} starting function setTrustScoreToSourceListMapping", Instant.now());
         this.trustScoreToSourceListMapping = new ConcurrentHashMap<>();
         for (int i = 1; i <= 100; i++) {
             trustScoreToSourceListMapping.put(i, new Vector<TransactionData>());
         }
 
         for (TransactionData transaction : hashToUnconfirmedTransactionsMapping.values()) {
-            if (transaction.isSource() && transaction.getSenderTrustScore() >= 1 && transaction.getSenderTrustScore() <= 100) {
-                this.trustScoreToSourceListMapping.get(transaction.getSenderTrustScore()).add(transaction);
-            }
+            addToTrustScoreToSourceListMap(transaction);
+            log.info("{} calling addToTrustScoreToSourceListMap with transaction hash: {}", Instant.now(), transaction);
         }
+        log.info("{} starting function setTrustScoreToSourceListMapping", Instant.now());
     }
 
     @Override
@@ -92,8 +99,8 @@ public class Cluster implements ICluster {
         setTrustScoreToSourceListMapping(hashToUnTccConfirmationTransactionsMapping);
         tccConfirmationService = new TccConfirmationService(); // @Autowired doesn't work in test ??
         sourceSelector = new SourceSelector();
-        //forEach(transaction -> addNewTransaction(transaction));
-        //  trustScoreConsensusProcess();
+        trustScoreConsensusProcess();
+        log.info("{} end initCluster function", Instant.now());
     }
 
     @Override
@@ -105,8 +112,11 @@ public class Cluster implements ICluster {
     @Override
     public void addToTrustScoreToSourceListMap(TransactionData transaction) {
 
-        if (transaction.isSource() && transaction.getSenderTrustScore() >= 1 && transaction.getSenderTrustScore() <= 100) {
-            this.trustScoreToSourceListMapping.get(transaction.getSenderTrustScore()).add(transaction);
+        synchronized (locker) {
+            if (transaction.isSource() && transaction.getSenderTrustScore() >= 1 && transaction.getSenderTrustScore() <= 100) {
+                this.trustScoreToSourceListMapping.get(transaction.getSenderTrustScore()).add(transaction);
+                log.info("{} adding source to trustScoreToSourceListMapping with hash:{}", Instant.now(), transaction.getHash());
+            }
         }
         // TODO use the TransactionService
     }
@@ -129,13 +139,14 @@ public class Cluster implements ICluster {
     public void deleteTrustScoreToSourceListMapping(TransactionData transaction) {
         if (trustScoreToSourceListMapping.containsKey(transaction.getSenderTrustScore())) {
             trustScoreToSourceListMapping.get(transaction.getSenderTrustScore()).remove(transaction);
-        } else {
-            for (List<TransactionData> transactionList : trustScoreToSourceListMapping.values()) {
-                if (transactionList.contains(transaction)) {
-                    transactionList.remove(transaction);
-                }
-            }
         }
+//        else {
+//            for (List<TransactionData> transactionList : trustScoreToSourceListMapping.values()) {
+//                if (transactionList.contains(transaction)) {
+//                    transactionList.remove(transaction);
+//                }
+//            }
+//        }
 
     }
 
@@ -177,7 +188,7 @@ public class Cluster implements ICluster {
                         List<TransactionData> selectedSourcesForAttachment = null;
                         executed.set(true);
                         int localTrustScoreToSourceListMappingSum = getTotalNumberOfSources();
-                        log.info("{} num of aources: {}", Instant.now(), localTrustScoreToSourceListMappingSum);
+                        log.info("{} num of sources: {}", Instant.now(), localTrustScoreToSourceListMappingSum);
                         if (localTrustScoreToSourceListMappingSum > 0) {
 
                             // Selection of sources

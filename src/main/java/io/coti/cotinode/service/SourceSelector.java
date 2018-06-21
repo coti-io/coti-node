@@ -3,8 +3,10 @@ package io.coti.cotinode.service;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.service.interfaces.ISourceSelector;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.stream.Collectors.toList;
 
+@Slf4j
 @Component
 public class SourceSelector implements ISourceSelector {
 
@@ -96,7 +99,9 @@ public class SourceSelector implements ISourceSelector {
                 }
             }
 
+            log.info("{} in sourceSelect process randomIndex: {}: whe have source: {}??", Instant.now(), randomIndex);
             TransactionData randomSource = olderSources.get(randomIndex);
+
 
             if (randomWeightedSources.size() == 0)
                 randomWeightedSources.add(randomSource);

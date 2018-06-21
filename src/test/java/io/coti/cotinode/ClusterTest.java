@@ -24,12 +24,14 @@ public class ClusterTest {
 
     @Autowired
     private ICluster cluster;
-    private List<TransactionData> allClusterTransactions;
+    private List<TransactionData> newTransactions;
+    private List<TransactionData> notTccConfirmTransactions;
 
     @Before
     public void setUp() throws Exception {
         System.out.println("Initializing!");
-        allClusterTransactions = new Vector<>();
+        newTransactions = new Vector<>();
+        notTccConfirmTransactions = new Vector<>();
 
 //        TransactionData transaction1 = new TransactionData(new Hash("1".getBytes()));
 //        TransactionData transaction2 = new TransactionData(new Hash("2".getBytes()));
@@ -59,27 +61,31 @@ public class ClusterTest {
         TransactionData4.setSenderTrustScore(86);
         TransactionData4.setCreateTime(new Date());
 
+        newTransactions.add(TransactionData0);
+        newTransactions.add(TransactionData1);
+        newTransactions.add(TransactionData2);
+        newTransactions.add(TransactionData3);
+        newTransactions.add(TransactionData4);
+
         TransactionData TransactionData5 = new TransactionData(new Hash("5".getBytes()));
         TransactionData5.setSenderTrustScore(78);
         TransactionData5.setCreateTime(new Date());
 
         TransactionData TransactionData6 = new TransactionData(new Hash("6".getBytes()));
         TransactionData6.setSenderTrustScore(73);
-        TransactionData6.setTransactionConsensus(true);
+        TransactionData6.setRightParent(new Hash("7"));
         TransactionData6.setCreateTime(new Date());
 
-        TransactionData TransactionData7 = new TransactionData(new Hash("6".getBytes()));
+        TransactionData TransactionData7 = new TransactionData(new Hash("7".getBytes()));
         TransactionData7.setSenderTrustScore(70);
-        TransactionData7.setTransactionConsensus(true);
+        List<Hash> hashChildrens = new Vector<>();
+        hashChildrens.add(new Hash("6"));
+        TransactionData7.setChildrenTransactions(hashChildrens);
         TransactionData7.setCreateTime(new Date());
 
-        allClusterTransactions.add(TransactionData0);
-        allClusterTransactions.add(TransactionData1);
-        allClusterTransactions.add(TransactionData2);
-        allClusterTransactions.add(TransactionData3);
-        allClusterTransactions.add(TransactionData4);
-//        allClusterTransactions.add( TransactionData5);
-//        allClusterTransactions.add( TransactionData6);
+        notTccConfirmTransactions.add(TransactionData6);
+        notTccConfirmTransactions.add(TransactionData7);
+
         cluster = new Cluster();
     }
 
@@ -89,7 +95,7 @@ public class ClusterTest {
 
     @Test
     public void initCluster() throws InterruptedException {
-        cluster.initCluster(new Vector<>());
+        cluster.initCluster(notTccConfirmTransactions);
         ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
         //allClusterTransactions.forEach(transaction -> cluster.addNewTransaction(transaction));
 
@@ -101,18 +107,18 @@ public class ClusterTest {
                 TransactionData5.setSenderTrustScore(86);
                 TransactionData5.setCreateTime(new Date());
 
-                if (counter < allClusterTransactions.size()) {
-                    cluster.addNewTransaction(allClusterTransactions.get(counter));
+                if (counter < newTransactions.size()) {
+                    cluster.addNewTransaction(newTransactions.get(counter));
                     counter++;
-                } else if (counter == allClusterTransactions.size()) {
+                } else if (counter == newTransactions.size()) {
                     cluster.trustScoreConsensusProcess();
                     counter++;
-                } else if (counter == allClusterTransactions.size() + 1){
+                } else if (counter == newTransactions.size() + 1){
                     cluster.addNewTransaction(TransactionData5);
                     counter++;
                 }
             }
-        }, 0, 5, TimeUnit.SECONDS);
+        }, 15, 3, TimeUnit.SECONDS);
 
         while (true) {
             try {
