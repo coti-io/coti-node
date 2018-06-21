@@ -13,8 +13,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class TransactionService implements ITransactionService {
-    @Autowired
-    private UserHashValidationService userHashValidationService;
+
     @Autowired
     private BalanceService balanceService;
     @Autowired
@@ -51,7 +50,7 @@ public class TransactionService implements ITransactionService {
     }
 
     private boolean validateDataIntegrity(TransactionData transactionData) {
-        if (!userHashValidationService.isLegalHash(transactionData.getHash())) {
+        if (!validationService.validateUserHash(transactionData.getHash())) {
             return false;
         }
 //        if (!balanceService.isLegalTransaction(transactionData.getHash())) {
