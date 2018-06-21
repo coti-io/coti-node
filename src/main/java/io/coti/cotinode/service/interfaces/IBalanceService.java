@@ -10,5 +10,5 @@ public interface IBalanceService {
 
     public boolean checkBalancesAndAddToPreBalance(List<Map.Entry<Hash, Double>> pairList);
 
-    public void dbSync(UnconfirmedTransactionData unconfirmedTransactionData);
+    public void insertIntoUnconfirmedDBandAddToTccQeueue(UnconfirmedTransactionData unconfirmedTransactionData);
 }
