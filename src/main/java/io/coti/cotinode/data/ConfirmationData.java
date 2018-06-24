@@ -8,8 +8,9 @@ import java.util.Map;
 @Data
 public class UnconfirmedTransactionData implements IEntity {
     private transient Hash hash;
-    private Hash userHash;
     private Map<Hash, Double> addressHashToValueTransferredMapping;
+
+
     private boolean DoubleSpendPreventionConsensus;
     private boolean TrustChainConsensus;
 
