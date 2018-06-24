@@ -10,7 +10,7 @@ public interface ISourceSelector {
     public List<TransactionData> selectSourcesForAttachment(
             Map<Integer,? extends List<TransactionData>> trustScoreToTransactionMapping,
             int transactionTrustScore,
-            Date transactionCreationTime,
+            Date now,
             int minSourcePercentage,
             int maxNeighbourhoodRadius);
 }

@@ -34,6 +34,11 @@ public class QueueService implements IQueueService {
     }
 
     @Override
+    public void  removeTccQueue() {
+        tccQueue.clear();
+    }
+
+    @Override
     public void addToTransactionQueue(Hash hash) {
         transactionsQueue.add(hash);
     }

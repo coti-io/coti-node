@@ -3,8 +3,10 @@ package io.coti.cotinode.service;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.service.interfaces.ISourceSelector;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -13,14 +15,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.stream.Collectors.toList;
 
+@Slf4j
 @Component
 public class SourceSelector implements ISourceSelector {
 
     @Override
     public List<TransactionData> selectSourcesForAttachment(
-            Map<Integer,? extends List<TransactionData>> trustScoreToTransactionMapping,
+            Map<Integer, ? extends List<TransactionData>> trustScoreToTransactionMapping,
             int transactionTrustScore,
-            Date transactionCreationTime,
+            Date now,
             int minSourcePercentage,
             int maxNeighbourhoodRadius) {
 
@@ -30,14 +33,14 @@ public class SourceSelector implements ISourceSelector {
                 maxNeighbourhoodRadius,
                 minSourcePercentage);
 
-        return selectTwoOptimalSources(neighbourSources, transactionCreationTime);
+        return selectTwoOptimalSources(neighbourSources, now);
     }
 
     private List<TransactionData> getNeighbourSources(
-            Map<Integer,? extends List<TransactionData>> trustScoreToSourceListMapping,
+            Map<Integer, ? extends List<TransactionData>> trustScoreToSourceListMapping,
             int transactionTrustScore,
             int minSourcePercentage,
-            int maxTrustScoreRadius){
+            int maxTrustScoreRadius) {
 
         List<TransactionData> neighbourSources = new Vector<>();
 
@@ -48,7 +51,7 @@ public class SourceSelector implements ISourceSelector {
         });
 
         // Get neighbourSources according to the trustScore selection algorithm
-        for(int trustScoreDifference = 1; trustScoreDifference < maxTrustScoreRadius; trustScoreDifference++) {
+        for (int trustScoreDifference = 1; trustScoreDifference < maxTrustScoreRadius; trustScoreDifference++) {
             int lowTrustScore = transactionTrustScore - trustScoreDifference;
             int highTrustScore = transactionTrustScore + trustScoreDifference;
             if (lowTrustScore >= 1 && trustScoreToSourceListMapping.containsKey(lowTrustScore)) {
@@ -58,7 +61,8 @@ public class SourceSelector implements ISourceSelector {
                     trustScoreToSourceListMapping.containsKey(highTrustScore)) {
                 neighbourSources.addAll(trustScoreToSourceListMapping.get(highTrustScore));
             }
-            if (neighbourSources.size() / numberOfSources.get() > (double) minSourcePercentage / 100) {
+            if (numberOfSources.get() == 0 ||
+                    neighbourSources.size() / numberOfSources.get() > (double) minSourcePercentage / 100) {
                 break;
             }
         }
@@ -67,39 +71,41 @@ public class SourceSelector implements ISourceSelector {
 
     private List<TransactionData> selectTwoOptimalSources(
             List<TransactionData> transactions,
-            Date transactionCreationTime) {
+            Date now) {
         List<TransactionData> olderSources =
                 transactions.stream().
-                        filter(s -> s.getAttachmentTime().before(transactionCreationTime)).collect(toList());
+                        filter(s -> !s.getAttachmentTime().after(now)).collect(toList());
 
-        if(olderSources.size() < 2) {
+        if (olderSources.size() < 2) {
             return olderSources;
         }
 
         // Calculate total timestamp differences from the transaction's timestamp
         long totalWeight =
                 olderSources.stream().
-                        map(s -> transactionCreationTime.getTime() - s.getAttachmentTime().getTime()).mapToLong(Long::longValue).sum();
+                        map(s -> now.getTime() - s.getAttachmentTime().getTime()).mapToLong(Long::longValue).sum();
 
         // Now choose sources, randomly weighted by timestamp difference ("older" transactions have a bigger chance to be selected)
         List<TransactionData> randomWeightedSources = new Vector<>();
-        while(randomWeightedSources.size() < 2) {
+        while (randomWeightedSources.size() < 2) {
 
             int randomIndex = -1;
             double random = Math.random() * totalWeight;
             for (int i = 0; i < olderSources.size(); ++i) {
-                random -=  transactionCreationTime.getTime()- olderSources.get(i).getAttachmentTime().getTime();
-                if (random < 0.0d) {
+                random -= now.getTime() - olderSources.get(i).getAttachmentTime().getTime();
+               if (random < 0.0d) {
                     randomIndex = i;
                     break;
                 }
             }
 
+            //log.info("in sourceSelect process randomIndex: {}: whe have source: {}??", randomIndex);
             TransactionData randomSource = olderSources.get(randomIndex);
 
-            if(randomWeightedSources.size() == 0)
+
+            if (randomWeightedSources.size() == 0)
                 randomWeightedSources.add(randomSource);
-            else if(randomWeightedSources.size() == 1 && randomSource != randomWeightedSources.iterator().next())
+            else if (randomWeightedSources.size() == 1 && randomSource != randomWeightedSources.iterator().next())
                 randomWeightedSources.add(randomSource);
         }
 
