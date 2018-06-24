@@ -6,14 +6,19 @@ import lombok.Data;
 @Data
 public class BaseTransactionData implements IEntity {
     private transient Hash hash;
+    private String signature;
     private AddressData addressData;
-    private double value;
+    private Hash addressHash;
+    private double amount;
     private Hash transactionHash;
     private int indexInTransactionsChain;
     private BaseTransactionData nextBaseTransactionData;
 
-    public BaseTransactionData(Hash hash, double amount) {
-        this.hash = hash;
+    private BaseTransactionData(){}
+
+    public BaseTransactionData(String hashString, double amount){
+        this.hash = new Hash(hashString);
+        this.amount = amount;
     }
 
     @Override

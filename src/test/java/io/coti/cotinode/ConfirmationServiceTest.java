@@ -2,16 +2,12 @@ package io.coti.cotinode;
 
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
-import io.coti.cotinode.service.BalanceService;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
-
-import static org.junit.Assert.*;
 
 public class ConfirmationServiceTest {
 
@@ -41,11 +37,11 @@ public class ConfirmationServiceTest {
         TransactionData5.setSenderTrustScore(90);
 
 
-        TransactionData0.setLeftParent(TransactionData1);
-        TransactionData0.setRightParent(TransactionData2);
-        TransactionData1.setLeftParent(TransactionData3);
-        TransactionData1.setRightParent(TransactionData4);
-        TransactionData2.setRightParent(TransactionData5);
+//        TransactionData0.setLeftParentHash(TransactionData1);
+//        TransactionData0.setRightParentHash(TransactionData2);
+//        TransactionData1.setLeftParentHash(TransactionData3);
+//        TransactionData1.setRightParentHash(TransactionData4);
+//        TransactionData2.setRightParentHash(TransactionData5);
 
 
         TransactionData5.setChildrenTransactions(new Vector<Hash>(){{

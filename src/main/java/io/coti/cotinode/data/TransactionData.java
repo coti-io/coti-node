@@ -12,8 +12,8 @@ import java.util.Vector;
 @Data
 public class TransactionData implements IEntity {
     private transient Hash hash;
-    private TransactionData leftParent;
-    private TransactionData rightParent;
+    private Hash leftParentHash;
+    private Hash rightParentHash;
     private List<Hash> trustChainTransactionHashes;
     private Hash userTrustScoreTokenHashes;
     private boolean transactionConsensus;
@@ -70,19 +70,6 @@ public class TransactionData implements IEntity {
             return false;
         }
         return hash.equals(((TransactionData) other).hash);
-    }
-
-    public void attachToSource(TransactionData source) {
-        if (leftParent == null) {
-            leftParent = source;
-            source.childrenTransactions.add(hash);
-        } else if (rightParent == null) {
-            rightParent = source;
-            source.childrenTransactions.add(hash);
-        } else {
-            log.error("Unable to attach to source, both parents are full");
-            throw new RuntimeException("Unable to attach to source.");
-        }
     }
 
     @Override

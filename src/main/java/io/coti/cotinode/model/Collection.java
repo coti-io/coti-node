@@ -23,6 +23,10 @@ public abstract class Collection<T extends IEntity> {
         databaseConnector.put(getClass().getName(), entity.getKey().getBytes(), SerializationUtils.serialize(entity));
     }
 
+    public T getByHash(String hashStringInHexRepresentation){
+        return getByHash(new Hash(hashStringInHexRepresentation));
+    }
+
     public T getByHash(Hash hash) {
         byte[] bytes = databaseConnector.getByKey(getClass().getName(), hash.getBytes());
         T deserialized = (T) SerializationUtils.deserialize(bytes);

@@ -19,4 +19,8 @@ public abstract class Response implements IResponse {
         this.message = message;
     }
 
+    public Response(String message, String status) {
+        this.status = status;
+        this.message = message;
+    }
 }
