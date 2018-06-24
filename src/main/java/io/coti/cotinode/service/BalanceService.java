@@ -1,8 +1,7 @@
 package io.coti.cotinode.service;
 
-import io.coti.cotinode.data.ConfirmedTransactionData;
 import io.coti.cotinode.data.Hash;
-import io.coti.cotinode.data.UnconfirmedTransactionData;
+import io.coti.cotinode.data.ConfirmationData;
 import io.coti.cotinode.database.RocksDBConnector;
 import io.coti.cotinode.model.ConfirmedTransactions;
 import io.coti.cotinode.model.UnconfirmedTransactions;
@@ -46,8 +45,8 @@ public class BalanceService implements IBalanceService {
 
 
     private List<Map<Hash, Double>> unconfirmedTransactionList;
-
     private List<Map<Hash, Double>> confirmedTransactionList;
+
     @PostConstruct
     private void init() {
         try {
@@ -58,13 +57,13 @@ public class BalanceService implements IBalanceService {
 
             loadBalanceFromSnapshot();
 
-            List<UnconfirmedTransactionData> unconfirmedTransactionsToDelete = new LinkedList<>();
+            List<ConfirmationData> unconfirmedTransactionsToDelete = new LinkedList<>();
 
             // UnconfirmedTransactionFromDB init
             fillUnconfirmedTransactionsToDeleteFromDB(unconfirmedTransactionsToDelete);
 
             // ConfirmedTransactionFromDB init
-            fillConfirmedTransactionMapFromDB();
+            fillConfirmedTransactionListFromDB();
 
             //move items from unnconfirmed to confirmed db table
             removeFromUnconfirmedAndFillConfirmedInDB(unconfirmedTransactionsToDelete);
@@ -93,44 +92,47 @@ public class BalanceService implements IBalanceService {
         ConcurrentLinkedQueue<Hash> updateBalanceQueue = queueService.getUpdateBalanceQueue();
         while (!updateBalanceQueue.isEmpty()) {
             Hash addressHash = updateBalanceQueue.poll();
-            UnconfirmedTransactionData unconfirmedTransactionData = unconfirmedTransactions.getByHash(addressHash);
+            ConfirmationData confirmationData = unconfirmedTransactions.getByHash(addressHash);
             //dspc = 1
-            if (unconfirmedTransactionData.isDoubleSpendPreventionConsensus()) {
-                ConfirmedTransactionData confirmedTransactionData = new ConfirmedTransactionData(addressHash);
-                confirmedTransactionData.setAddressHashToValueTransferredMapping(unconfirmedTransactionData.getAddressHashToValueTransferredMapping());
+            if (confirmationData.isDoubleSpendPreventionConsensus()) {
+                ConfirmationData confirmedTransactionData = new ConfirmationData(addressHash);
+                confirmedTransactionData.setAddressHashToValueTransferredMapping(confirmationData.getAddressHashToValueTransferredMapping());
                 confirmedTransactions.put(confirmedTransactionData);
                 unconfirmedTransactions.delete(addressHash);
-                for (Map.Entry<Hash, Double> mapEntry : unconfirmedTransactionData.getAddressHashToValueTransferredMapping().entrySet()) {
+                for (Map.Entry<Hash, Double> mapEntry : confirmationData.getAddressHashToValueTransferredMapping().entrySet()) {
                     balanceMap.put(mapEntry.getKey(), mapEntry.getValue());
-                    log.info("The address {} with the value {} was added to balance map", mapEntry.getKey(), mapEntry.getValue());
                     preBalanceMap.remove(mapEntry.getKey());
+                    log.info("The address {} with the value {} was added to balance map and was removed from preBalanceMap", mapEntry.getKey(), mapEntry.getValue());
                 }
             } else { //dspc =0
-                unconfirmedTransactionData.setTrustChainConsensus(true);
-                unconfirmedTransactions.put(unconfirmedTransactionData);
+                confirmationData.setTrustChainConsensus(true);
+                unconfirmedTransactions.put(confirmationData);
+                log.info("The transaction {} was added to unconfirmedTransactions in the db", confirmationData.getKey());
 
             }
         }
     }
 
-    private void removeFromUnconfirmedAndFillConfirmedInDB(List<UnconfirmedTransactionData> unconfirmedTransactionsToDelete) {
-        for (UnconfirmedTransactionData unconfirmedTransactionData : unconfirmedTransactionsToDelete) {
-            confirmedTransactions.put(unconfirmedTransactionData);
-            unconfirmedTransactions.delete(unconfirmedTransactionData.getHash());
+    private void removeFromUnconfirmedAndFillConfirmedInDB(List<ConfirmationData> unconfirmedTransactionsToDelete) {
+        for (ConfirmationData confirmationData : unconfirmedTransactionsToDelete) {
+            confirmedTransactions.put(confirmationData);
+            unconfirmedTransactions.delete(confirmationData.getHash());
+            log.info("The transaction {} was removed from unconfirmedTransactions in the db", confirmationData.getKey());
+
         }
         unconfirmedTransactionsToDelete.clear();
     }
 
     private void insertFromTempDBmapToInMemMap(List<Map<Hash, Double>> addressToBalanceMapFromDB , Map<Hash, Double> addressToBalanceMapInMem ) {
-        for (Map<Hash, Double> addressToBalanceMap : unconfirmedTransactionList) {
+        for (Map<Hash, Double> addressToBalanceMap : addressToBalanceMapFromDB) {
             for (Map.Entry<Hash, Double> entry : addressToBalanceMap.entrySet()) {
                 double balance = entry.getValue();
                 Hash key = entry.getKey();
-                if(preBalanceMap.containsKey(key)) {
-                    preBalanceMap.put(key, balance + preBalanceMap.get(key));
+                if(addressToBalanceMapInMem.containsKey(key)) {
+                    addressToBalanceMapInMem.put(key, balance + addressToBalanceMapInMem.get(key));
                 }
                 else {
-                    preBalanceMap.put(key, balance);
+                    addressToBalanceMapInMem.put(key, balance);
                 }
             }
         }
@@ -138,11 +140,11 @@ public class BalanceService implements IBalanceService {
     }
 
 
-    private void fillConfirmedTransactionMapFromDB() {
+    private void fillConfirmedTransactionListFromDB() {
         RocksIterator confirmedDBiterator = databaseConnector.getIterator(UnconfirmedTransactions.class.getName());
         confirmedDBiterator.seekToFirst();
         while (confirmedDBiterator.isValid()) {
-            ConfirmedTransactionData confirmedTransactionData = (ConfirmedTransactionData) SerializationUtils
+            ConfirmationData confirmedTransactionData = (ConfirmationData) SerializationUtils
                     .deserialize(confirmedDBiterator.value());
             confirmedTransactionList.add(confirmedTransactionData.getAddressHashToValueTransferredMapping());
 
@@ -151,24 +153,24 @@ public class BalanceService implements IBalanceService {
         }
     }
 
-    private void fillUnconfirmedTransactionsToDeleteFromDB(List<UnconfirmedTransactionData> unconfirmedTransactionsToDelete) {
+    private void fillUnconfirmedTransactionsToDeleteFromDB(List<ConfirmationData> unconfirmedTransactionsToDelete) {
 
         RocksIterator unconfirmedDBiterator = databaseConnector.getIterator(UnconfirmedTransactions.class.getName());
         unconfirmedDBiterator.seekToFirst();
         while (unconfirmedDBiterator.isValid()) {
-            UnconfirmedTransactionData unconfirmedTransactionData = (UnconfirmedTransactionData) SerializationUtils
+            ConfirmationData confirmationData = (ConfirmationData) SerializationUtils
                     .deserialize(unconfirmedDBiterator.value());
-            if (unconfirmedTransactionData.isTrustChainConsensus()) { //tcc =1
-                if (unconfirmedTransactionData.isDoubleSpendPreventionConsensus()) { // tcc = 1 + dspc = 1
-                    confirmedTransactionList.add(unconfirmedTransactionData.getAddressHashToValueTransferredMapping());
-                    unconfirmedTransactionsToDelete.add(unconfirmedTransactionData);
+            if (confirmationData.isTrustChainConsensus()) { //tcc =1
+                if (confirmationData.isDoubleSpendPreventionConsensus()) { // tcc = 1 + dspc = 1
+                    confirmedTransactionList.add(confirmationData.getAddressHashToValueTransferredMapping());
+                    unconfirmedTransactionsToDelete.add(confirmationData);
                 } else { // tcc = 1 + dspc = 0
-                    unconfirmedTransactionList.add(unconfirmedTransactionData.getAddressHashToValueTransferredMapping());
+                    unconfirmedTransactionList.add(confirmationData.getAddressHashToValueTransferredMapping());
                 }
             } else { //tcc = 0      dspc 0/1
-                unconfirmedTransactionList.add(unconfirmedTransactionData.getAddressHashToValueTransferredMapping());
+                unconfirmedTransactionList.add(confirmationData.getAddressHashToValueTransferredMapping());
                 // TCC QUEUE -> QUEUE Service
-                queueService.addToTccQueue(unconfirmedTransactionData.getHash());
+                queueService.addToTccQueue(confirmationData.getHash());
             }
             unconfirmedDBiterator.next();
         }
@@ -190,7 +192,7 @@ public class BalanceService implements IBalanceService {
                     log.error("The address {} with the amount {} is exceeds it's current preBalance {} ", addressHash.toString(),
                             amount, preBalanceMap.get(addressHash));
                     return false;
-                } else {//update preBalance
+                } else {//update preBalanceH
                     preBalanceMap.put(addressHash, amount + preBalanceMap.get(addressHash));
                 }
 
@@ -201,13 +203,10 @@ public class BalanceService implements IBalanceService {
         return true;
     }
 
-    public void insertIntoUnconfirmedDBandAddToTccQeueue(UnconfirmedTransactionData unconfirmedTransactionData) {
+    public void insertIntoUnconfirmedDBandAddToTccQeueue(ConfirmationData confirmationData) {
         // put it in unconfirmedTransaction table
-        databaseConnector.put(UnconfirmedTransactions.class.getName(), unconfirmedTransactionData.getKey().getBytes(),
-                unconfirmedTransactionData.getHash().getBytes());
-        for (Map.Entry<Hash, Double> mapEntry : unconfirmedTransactionData.getAddressHashToValueTransferredMapping().entrySet()) {
-            queueService.addToTccQueue(mapEntry.getKey());
-        }
+        unconfirmedTransactions.put(confirmationData);
+        queueService.addToTccQueue(confirmationData.getHash());
     }
 
     private void loadBalanceFromSnapshot() {
@@ -232,6 +231,8 @@ public class BalanceService implements IBalanceService {
                     log.error("The address {} was already found in the snapshot", addressHash);
                 }
                 balanceMap.put(addressHash, addressAmount);
+                log.info("Loading from snapshot into inMem balance+preBalance address {} and amount {}",
+                        addressHash,addressAmount);
 
             }
             // copy the balance to preBalance
