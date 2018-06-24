@@ -1,5 +1,6 @@
 package io.coti.cotinode.data;
 
+import io.coti.cotinode.crypto.CryptoUtils;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -11,15 +12,16 @@ public class Hash implements Serializable {
 
 
     public Hash(String hash){
-        this.bytes = hash.getBytes();
+        this.bytes = CryptoUtils.hexStringToByteArray(hash);
     }
-
-
 
     public Hash(byte[] bytes){
         this.bytes = bytes;
     }
 
+    public String toHexString(){
+        return CryptoUtils.bytesToHex(bytes);
+    }
 
 
     @Override

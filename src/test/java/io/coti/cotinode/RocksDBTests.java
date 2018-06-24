@@ -69,9 +69,9 @@ public class RocksDBTests {
 
     @Test
     public void saveAndGetBaseTransaction() {
-        BaseTransactionData baseTransactionData1 = new BaseTransactionData(new Hash("TransactionData 0".getBytes()), 12.2);
+        BaseTransactionData baseTransactionData1 = new BaseTransactionData("ABCDEF", 12.2);
         baseTransactions.put(baseTransactionData1);
-        BaseTransactionData baseTransactionData2 = baseTransactions.getByHash(new Hash("TransactionData 0".getBytes()));
+        BaseTransactionData baseTransactionData2 = baseTransactions.getByHash("ABCDEF");
         Assert.assertEquals(baseTransactionData1, baseTransactionData2);
     }
 
@@ -85,12 +85,12 @@ public class RocksDBTests {
 
     @Test
     public void saveAndDeleteBaseTransactions() {
-        BaseTransactionData transaction1 = new BaseTransactionData(new Hash("TransactionData 0".getBytes()), 12.2);
+        BaseTransactionData transaction1 = new BaseTransactionData("ABCDEF", 12.2);
         baseTransactions.put(transaction1);
-        BaseTransactionData transaction2 = baseTransactions.getByHash(new Hash("TransactionData 0".getBytes()));
+        BaseTransactionData transaction2 = baseTransactions.getByHash("ABCDEF");
         Assert.assertEquals(transaction1, transaction2);
         baseTransactions.delete(transaction1.getKey());
-        transaction2 = baseTransactions.getByHash(new Hash("TransactionData 0".getBytes()));
+        transaction2 = baseTransactions.getByHash("ABCDEF");
         Assert.assertEquals(transaction2, null);
     }
 

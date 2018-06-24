@@ -1,14 +1,16 @@
 package io.coti.cotinode.http;
 
+import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.Hash;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
-import java.util.Map;
 
 public class AddTransactionRequest extends Request {
     @NotNull
-    public List<Map.Entry<Hash, Double>> transferredAmounts;
+    public List<BaseTransactionData> baseTransactions;
     @NotNull
     public Hash transactionHash;
+    @NotNull
+    public String message;
 }
