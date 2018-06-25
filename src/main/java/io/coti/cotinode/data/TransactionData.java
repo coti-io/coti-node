@@ -56,6 +56,10 @@ public class TransactionData implements IEntity {
         return transactionConsensus && dspConsensus;
     }
 
+    public void addToChildrenTransactions(Hash hash) {
+        childrenTransactions.add(hash);
+    }
+
     @Override
     public String toString() {
         return String.valueOf(hash);

@@ -31,7 +31,6 @@ public class TccConfirmationService {
     //takes adjacency list of a directed acyclic graph(DAG) as input
     //returns a linkedlist which consists the vertices in topological order
     public void topologicalSorting() {
-        log.info("Starting topologicalSorting");
         result = new LinkedList<TransactionData>();
 
         // Reset
@@ -48,8 +47,6 @@ public class TccConfirmationService {
             }
         }
         synchronized(log) {
-            log.info("Ending topologicalSorting()");
-            result.forEach(transaction ->  log.info("After topologicalSorting in result: {} and his trustScore is;{}",  transaction.getHash(), transaction.getSenderTrustScore()));
 
         }
 
@@ -106,6 +103,12 @@ public class TccConfirmationService {
                 transaction.setTransactionConsensus(true);
                 transaction.setTransactionConsensusUpdateTime(new Date());
                 transactionConsensusConfirmed.add(transaction.getHash());
+                log.info("transaction with hash:{} is confirmed with trustScore: 78 and totalTrustScore:{} !!!", transaction.getHash(),transaction.getSenderTrustScore());
+                log.info("Trust Chain Transaction Hashes of transaction {}", transaction.getHash());
+                for(Hash hash: transaction.getTrustChainTransactionHash()) {
+                    log.info(hash.toString());
+                }
+                log.info("end of trust chain");
             }
         }
 

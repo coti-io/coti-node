@@ -109,6 +109,7 @@ public class BalanceService implements IBalanceService {
         while (!updateBalanceQueue.isEmpty()) {
             Hash addressHash = updateBalanceQueue.poll();
             ConfirmationData confirmationData = unconfirmedTransactions.getByHash(addressHash);
+            log.info("confirmationData hash;{}",addressHash );
             //dspc = 1
             if (confirmationData.isDoubleSpendPreventionConsensus()) {
                 ConfirmationData confirmedTransactionData = new ConfirmationData(addressHash);

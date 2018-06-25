@@ -3,9 +3,8 @@ package io.coti.cotinode.service;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.model.Transactions;
-import io.coti.cotinode.service.interfaces.ISourceSelector;
-
 import io.coti.cotinode.service.interfaces.ICluster;
+import io.coti.cotinode.service.interfaces.ISourceSelector;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,7 +22,7 @@ import java.util.stream.Collectors;
 public class ClusterService implements ICluster {
 
     private static Object locker = new Object();
-
+    private final int DELAY_TIME_AFTER_TCC_PROCESS = 7;
     @Autowired
     QueueService queueService;
 
@@ -60,8 +59,6 @@ public class ClusterService implements ICluster {
 
         trustScoreToSourceListMapping.forEach((score, transactions) -> {
             numberOfSources.addAndGet(transactions.size());
-            transactions.forEach(transaction -> log.info("sorce with hash:{}", transaction.getHash()));
-
         });
 
         return numberOfSources.intValue();
@@ -77,7 +74,6 @@ public class ClusterService implements ICluster {
     }
 
     private void setTrustScoreToSourceListMapping(ConcurrentHashMap<Hash, TransactionData> hashToUnconfirmedTransactionsMapping) {
-        log.info("starting function setTrustScoreToSourceListMapping");
         this.trustScoreToSourceListMapping = new ConcurrentHashMap<>();
         for (int i = 1; i <= 100; i++) {
             trustScoreToSourceListMapping.put(i, new Vector<TransactionData>());
@@ -85,9 +81,7 @@ public class ClusterService implements ICluster {
 
         for (TransactionData transaction : hashToUnconfirmedTransactionsMapping.values()) {
             addToTrustScoreToSourceListMap(transaction);
-            log.info("calling addToTrustScoreToSourceListMap with transaction hash:{}", transaction);
         }
-        log.info("starting function setTrustScoreToSourceListMapping");
     }
 
     private List<TransactionData> getTransactionsByHashFromDb(List<Hash> notConfirmTransactions) {
@@ -108,8 +102,10 @@ public class ClusterService implements ICluster {
 
         synchronized (locker) {
             if (transaction.isSource() && transaction.getSenderTrustScore() >= 1 && transaction.getSenderTrustScore() <= 100) {
-                this.trustScoreToSourceListMapping.get(transaction.getSenderTrustScore()).add(transaction);
-                log.info("adding source to trustScoreToSourceListMapping with hash:{}", transaction.getHash());
+                List<TransactionData> transactionTrustScoreList = trustScoreToSourceListMapping.get(transaction.getSenderTrustScore());
+                if (!transactionTrustScoreList.contains(transaction)) {
+                    transactionTrustScoreList.add(transaction);
+                }
             }
         }
         // TODO use the TransactionService
@@ -132,14 +128,6 @@ public class ClusterService implements ICluster {
         if (transaction != null && trustScoreToSourceListMapping.containsKey(transaction.getSenderTrustScore())) {
             trustScoreToSourceListMapping.get(transaction.getSenderTrustScore()).remove(transaction);
         }
-//        else {
-//            for (List<TransactionData> transactionList : trustScoreToSourceListMapping.values()) {
-//                if (transactionList.contains(transaction)) {
-//                    transactionList.remove(transaction);
-//                }
-//            }
-//        }
-
     }
 
     private List<TransactionData> getAllSourceTransactions() {
@@ -149,17 +137,31 @@ public class ClusterService implements ICluster {
 
 
     private void attachmentProcess(TransactionData attachedTransactionFromDb) {
+        attachedTransactionFromDb.setAttachmentTime(new Date());
 
-        TransactionData transactionInUnconfirmedMap = hashToUnTccConfirmationTransactionsMapping.get(attachedTransactionFromDb.getHash());
+        Hash childHash = attachedTransactionFromDb.getHash();
+        Hash leftParentHash = attachedTransactionFromDb.getLeftParentHash();
+        Hash rightParentHash = attachedTransactionFromDb.getRightParentHash();
 
-     //   transactionInUnconfirmedMap.attachToSources(attachedTransactionFromDb);
-        deleteTrustScoreToSourceListMapping(dbTransactions.getByHash(attachedTransactionFromDb.getLeftParentHash()));
-        deleteTrustScoreToSourceListMapping(dbTransactions.getByHash(attachedTransactionFromDb.getRightParentHash()));
+        synchronized (locker) {
+            attachedTransactionFromDb.setLeftParentHash(leftParentHash);
+            attachedTransactionFromDb.setRightParentHash(rightParentHash);
+        }
+
+        if (leftParentHash != null && hashToUnTccConfirmationTransactionsMapping.get(leftParentHash) != null) {
+            hashToUnTccConfirmationTransactionsMapping.get(leftParentHash).addToChildrenTransactions(childHash);
+            deleteTrustScoreToSourceListMapping(dbTransactions.getByHash(leftParentHash));
+        }
+
+        if (rightParentHash != null && hashToUnTccConfirmationTransactionsMapping.get(rightParentHash) != null) {
+            hashToUnTccConfirmationTransactionsMapping.get(rightParentHash).addToChildrenTransactions(childHash);
+            deleteTrustScoreToSourceListMapping(dbTransactions.getByHash(rightParentHash));
+        }
+
         addNewTransactionToAllCollections(attachedTransactionFromDb);
     }
 
     private void trustScoreConsensusProcess() {
-        log.info("###Start Processing with Thread id: " + Thread.currentThread().getId());
 
         executor.execute(new Runnable() {
             @Override
@@ -171,16 +173,12 @@ public class ClusterService implements ICluster {
                     List<Hash> transactionConsensusConfirmed = tccConfirmationService.setTransactionConsensus();
 
                     for (Hash hash : transactionConsensusConfirmed) {
-                        log.info("transaction with hash:{}: is confirmed with trustScore: {} ans trustChainTrustScore: {} !!!",
-                                hashToUnTccConfirmationTransactionsMapping.get(hash).getHash(),
-                                hashToUnTccConfirmationTransactionsMapping.get(hash).getSenderTrustScore(),
-                                hashToUnTccConfirmationTransactionsMapping.get(hash).getTrustChainTrustScore());
                         deleteTransactionFromHashToUnTccConfirmedTransactionsMapping(hash);
                         queueService.addToUpdateBalanceQueue(hash);
 
                     }
                     try {
-                        TimeUnit.SECONDS.sleep(15);
+                        TimeUnit.SECONDS.sleep(DELAY_TIME_AFTER_TCC_PROCESS);
                     } catch (InterruptedException e) {
                         log.error(e.toString());
                     }
@@ -202,7 +200,6 @@ public class ClusterService implements ICluster {
             setTrustScoreToSourceListMapping(hashToUnTccConfirmationTransactionsMapping);
 
             trustScoreConsensusProcess();
-            log.info("end initCluster function");
         } catch (Exception e) {
             log.error("Error in initCluster", e);
         }
@@ -214,7 +211,6 @@ public class ClusterService implements ICluster {
         boolean thereAreSources = true;
         try {
             transactionFromDb.setProcessStartTime(new Date());
-            log.info("Starting process of attaching transactionFromDb with hash:{}: trustScore: {}", transactionFromDb.getHash(), transactionFromDb.getSenderTrustScore());
 
             // TODO: Get The transactionFromDb trust score from trust score node.
 
@@ -227,7 +223,6 @@ public class ClusterService implements ICluster {
                 localThreadTrustScoreToSourceListMapping = new ConcurrentHashMap<>(trustScoreToSourceListMapping);
                 localTrustScoreToSourceListMappingSum = getTotalNumberOfSources();
             }
-            log.info("num of sources: {}", localTrustScoreToSourceListMappingSum);
             if (localTrustScoreToSourceListMappingSum > 0) {
 
                 // Selection of sources
@@ -237,35 +232,47 @@ public class ClusterService implements ICluster {
                         10, // TODO: get value from config file and/or dynamic
                         20); // TODO:  get value from config file and/or dynamic
                 if (selectedSourcesForAttachment.size() == 0) {
-                    log.info("in attachment process of transactionFromDb with hash:{}: whe have source:, waiting for more transactions", transactionFromDb.getHash());
+                    log.info("in attachment process of transactionFromDb with hash:{}: waiting for more transactions ....", transactionFromDb.getHash());
                 } else if (selectedSourcesForAttachment.size() == 1) {
-                    log.info("in attachment process of transactionFromDb with hash:{}: whe have source: {}", transactionFromDb.getHash());
+                    log.info("in attachment process of transactionFromDb with hash:{}: whe have source {} !!! ",
+                            transactionFromDb.getHash(), selectedSourcesForAttachment.get(0).getHash());
                     transactionFromDb.setLeftParentHash(selectedSourcesForAttachment.get(0).getHash());
                 } else if (selectedSourcesForAttachment.size() == 2) {
-                    log.info("in attachment process of transactionFromDb with hash:{}: whe have source: {}", transactionFromDb.getHash());
+                    log.info("in attachment process of transactionFromDb with hash:{}: whe have source: {}, {} !!!",
+                            transactionFromDb.getHash(), selectedSourcesForAttachment.get(0).getHash(), selectedSourcesForAttachment.get(1).getHash());
                     transactionFromDb.setLeftParentHash(selectedSourcesForAttachment.get(0).getHash());
                     transactionFromDb.setLeftParentHash(selectedSourcesForAttachment.get(1).getHash());
                 }
             } else {
                 thereAreSources = false;
-                log.info("in attachment process of transactionFromDb with hash:{}: , there is no other transactions in cluster. No need for attachment", transactionFromDb.getHash());
+                log.info("in attachment process of transactionFromDb with hash:{}: , there is no other transactions in cluster. No need for attachment!!!", transactionFromDb.getHash());
             }
 
-            // Test only!!
+            /* Test only!!   */
             if (!thereAreSources || selectedSourcesForAttachment.size() > 0) {
+                synchronized (locker) {
+                    if (selectedSourcesForAttachment.size() > 0) {
+
+                        transactionFromDb.setLeftParentHash(selectedSourcesForAttachment.get(0).getHash());
+                        dbTransactions.getByHash(selectedSourcesForAttachment.get(0).getHash()).addToChildrenTransactions(transactionFromDb.getHash());
+
+
+                        if (selectedSourcesForAttachment.size() > 1) {
+                            transactionFromDb.setRightParentHash(selectedSourcesForAttachment.get(1).getHash());
+                            dbTransactions.getByHash(selectedSourcesForAttachment.get(1).getHash()).addToChildrenTransactions(transactionFromDb.getHash());
+                        }
+                    }
+                }
+
                 dbTransactions.put(transactionFromDb);
                 queueService.addToTccQueue(transactionFromDb.getHash());
             }
-            /////////////
+            /* end of Test section!!  */
 
         } catch (Exception e) {
             log.error("error in addNewTransaction", e);
         }
-        log.info("Ending process of attaching transactionFromDb with hash:{} trustScore: {}  LeftParentHash:{}  RightParentHash:{} !!!",
-                transactionFromDb.getHash(),
-                transactionFromDb.getSenderTrustScore(),
-                transactionFromDb.getLeftParentHash(),
-                transactionFromDb.getRightParentHash());
+
 
         return thereAreSources;
     }
@@ -291,9 +298,8 @@ public class ClusterService implements ICluster {
             tccConfirmationService = new TccConfirmationService(); // @Autowired doesn't work in test ??
             sourceSelector = new SourceSelector();
             trustScoreConsensusProcess();
-            log.info("end initCluster function");
         } catch (Exception e) {
-            log.error("error in initClusterFromTransactionLis",e);
+            log.error("error in initClusterFromTransactionLis", e);
         }
     }
 
