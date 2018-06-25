@@ -1,5 +1,6 @@
 package io.coti.cotinode.service.interfaces;
 
+import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.ConfirmationData;
 
@@ -8,7 +9,7 @@ import java.util.Map;
 
 public interface IBalanceService {
 
-    public boolean checkBalancesAndAddToPreBalance(List<Map.Entry<Hash, Double>> pairList);
+    boolean checkBalancesAndAddToPreBalance(List<BaseTransactionData> baseTransactionDatas);
 
-    public void insertIntoUnconfirmedDBandAddToTccQeueue(ConfirmationData confirmationData);
+    void insertIntoUnconfirmedDBandAddToTccQeueue(ConfirmationData confirmationData);
 }

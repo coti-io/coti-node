@@ -1,5 +1,6 @@
 package io.coti.cotinode.service;
 
+import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.ConfirmationData;
 import io.coti.cotinode.database.RocksDBConnector;
@@ -176,12 +177,12 @@ public class BalanceService implements IBalanceService {
         }
     }
 
-    public boolean checkBalancesAndAddToPreBalance(List<Map.Entry<Hash, Double>> pairList) {
+    public boolean checkBalancesAndAddToPreBalance(List<BaseTransactionData> baseTransactionDatas) {
         try {
-            for (Map.Entry<Hash, Double> mapEntry : pairList) {
+            for (BaseTransactionData baseTransactionData : baseTransactionDatas) {
                 //checkBalance
-                double amount = mapEntry.getValue();
-                Hash addressHash = mapEntry.getKey();
+                double amount = baseTransactionData.getAmount();
+                Hash addressHash = baseTransactionData.getAddressHash();
                 if (balanceMap.containsKey(addressHash) && amount + balanceMap.get(addressHash) < 0) {
                     log.error("The address {} with the amount {} is exceeds it's current balance {} ", addressHash.toString(),
                             amount, balanceMap.get(addressHash));

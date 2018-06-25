@@ -1,5 +1,6 @@
 package io.coti.cotinode;
 
+import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.ConfirmationData;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.interfaces.IEntity;
@@ -78,20 +79,18 @@ public class BalanceServiceTests {
 
     @Test
     public void checkBalancesTest() {
-        List<Entry<Hash, Double>> pairList = new LinkedList<>();
-        pairList.add(new AbstractMap.SimpleEntry<Hash, Double>(new Hash("BEN"), -150.0));
+        List<BaseTransactionData> baseTransactionDatas = new LinkedList<>();
+        baseTransactionDatas.add(new BaseTransactionData("BE", -150.0));
 
-        boolean ans = balanceService.checkBalancesAndAddToPreBalance(pairList);
+        boolean ans = balanceService.checkBalancesAndAddToPreBalance(baseTransactionDatas);
         Assert.assertFalse(ans);
 
-        List<Entry<Hash, Double>> pairList2 = new LinkedList<>();
-        pairList2.add(new AbstractMap.SimpleEntry<Hash, Double>(new Hash("BEN"), -20.0));
-        ans = balanceService.checkBalancesAndAddToPreBalance(pairList2);
+        List<BaseTransactionData> baseTransactionDatas2 = new LinkedList<>();
+        baseTransactionDatas.add(new BaseTransactionData("BE", -20));
+        ans = balanceService.checkBalancesAndAddToPreBalance(baseTransactionDatas2);
         Assert.assertTrue(ans);
 
-
         Assert.assertTrue(balanceService.getPreBalanceMap().get(new Hash("BEN")) == 100.0);
-
     }
 
     @Test // this method checks ConfirmationData.equals() as well
