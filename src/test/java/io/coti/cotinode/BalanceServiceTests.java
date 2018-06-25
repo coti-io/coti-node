@@ -35,9 +35,6 @@ public class BalanceServiceTests {
     private BalanceService balanceService;
 
     @Autowired
-    private RocksDBConnector dbConnector;
-
-    @Autowired
     private UnconfirmedTransactions unconfirmedTransactions;
 
     @Autowired
@@ -71,41 +68,47 @@ public class BalanceServiceTests {
     here we can check only the snapshot
      */
 
-        Assert.assertTrue(balanceService.getBalanceMap().get(new Hash("BEN")) == 120.0);
-        Assert.assertTrue(balanceService.getPreBalanceMap().get(new Hash("BEN")) == 120.0);
+        Assert.assertTrue(balanceService.getBalanceMap().get(new Hash("BE")) == 120.0);
+        Assert.assertTrue(balanceService.getPreBalanceMap().get(new Hash("BE")) == 120.0);
 
 
     }
 
     @Test
     public void checkBalancesTest() {
-        List<BaseTransactionData> baseTransactionDatas = new LinkedList<>();
-        baseTransactionDatas.add(new BaseTransactionData("BE", -150.0));
+        List<BaseTransactionData> baseTransactionDataList = new LinkedList<>();
+        baseTransactionDataList.add(new BaseTransactionData("BE", -150.0));
 
-        boolean ans = balanceService.checkBalancesAndAddToPreBalance(baseTransactionDatas);
+        boolean ans = balanceService.checkBalancesAndAddToPreBalance(baseTransactionDataList);
         Assert.assertFalse(ans);
 
+
         List<BaseTransactionData> baseTransactionDatas2 = new LinkedList<>();
-        baseTransactionDatas.add(new BaseTransactionData("BE", -20));
+        baseTransactionDatas2.add(new BaseTransactionData("BE", -20.0));
         ans = balanceService.checkBalancesAndAddToPreBalance(baseTransactionDatas2);
         Assert.assertTrue(ans);
 
-        Assert.assertTrue(balanceService.getPreBalanceMap().get(new Hash("BEN")) == 100.0);
+
+        Assert.assertTrue(balanceService.getPreBalanceMap().get(new Hash("BE")) == 100.0);
+
+
+
+
     }
 
     @Test // this method checks ConfirmationData.equals() as well
     public void insertIntoUnconfirmedDBandAddToTccQeueueTest() {
-        ConfirmationData confirmationData1 = new ConfirmationData(new Hash("T3")); //tcc =0 , dspc =0
+        ConfirmationData confirmationData1 = new ConfirmationData(new Hash("A3")); //tcc =0 , dspc =0
         populateTransactionWithDummy(confirmationData1);
         balanceService.insertIntoUnconfirmedDBandAddToTccQeueue(confirmationData1);
-        ConfirmationData confirmationData  = unconfirmedTransactions.getByHash(new Hash("T3"));
+        ConfirmationData confirmationData  = unconfirmedTransactions.getByHash(new Hash("A3"));
         Assert.assertTrue(queueService.getTccQueue().contains(confirmationData.getHash()));
 
     }
 
     private void populateTransactionWithDummy(ConfirmationData transaction) {
         Map<Hash, Double> addressToAmount = new HashMap<>();
-        addressToAmount.put(new Hash("Dummy"), 10.10);
+        addressToAmount.put(new Hash("DD"), 10.10);
         transaction.setAddressHashToValueTransferredMapping(addressToAmount);
     }
 
@@ -114,27 +117,27 @@ public class BalanceServiceTests {
 
 
         try {
-            ConfirmationData confirmationData1 = new ConfirmationData(new Hash("T1")); //tcc =0 , dspc =0
+            ConfirmationData confirmationData1 = new ConfirmationData(new Hash("A1")); //tcc =0 , dspc =0
             populateTransactionWithDummy(confirmationData1);
             unconfirmedTransactions.put(confirmationData1);
-            queueService.addToUpdateBalanceQueue(new Hash("T1"));
+            queueService.addToUpdateBalanceQueue(new Hash("A1"));
 
 
             TimeUnit.SECONDS.sleep(5); //wait for the scheduled task to end
-            ConfirmationData confirmationData = unconfirmedTransactions.getByHash(new Hash("T1"));
+            ConfirmationData confirmationData = unconfirmedTransactions.getByHash(new Hash("A1"));
             Assert.assertTrue(confirmationData.isTrustChainConsensus());
 
 
-            ConfirmationData confirmationData2 = new ConfirmationData(new Hash("T2")); //tcc =0 , dspc =0
+            ConfirmationData confirmationData2 = new ConfirmationData(new Hash("A2")); //tcc =0 , dspc =0
             populateTransactionWithDummy(confirmationData2);
             confirmationData2.setDoubleSpendPreventionConsensus(true);
             unconfirmedTransactions.put(confirmationData2);
 
-            queueService.addToUpdateBalanceQueue(new Hash("T2"));
+            queueService.addToUpdateBalanceQueue(new Hash("A2"));
             TimeUnit.SECONDS.sleep(5); //wait for the scheduled task to end
-            confirmationData = unconfirmedTransactions.getByHash(new Hash("T2"));
+            confirmationData = unconfirmedTransactions.getByHash(new Hash("A2"));
             Assert.assertNull(confirmationData);
-            ConfirmationData confirmedTransactionData = confirmedTransactions.getByHash(new Hash("T2"));
+            ConfirmationData confirmedTransactionData = confirmedTransactions.getByHash(new Hash("A2"));
             populateTransactionWithDummy(confirmedTransactionData);
             Assert.assertNotNull(confirmedTransactionData);
 

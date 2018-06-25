@@ -16,8 +16,8 @@ public class BaseTransactionData implements IEntity {
 
     private BaseTransactionData(){}
 
-    public BaseTransactionData(String hashString, double amount){
-        this.hash = new Hash(hashString);
+    public BaseTransactionData(String addressHashInput, double amount){
+        this.addressHash = new Hash(addressHashInput);
         this.amount = amount;
     }
 

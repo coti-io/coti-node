@@ -7,6 +7,7 @@ import io.coti.cotinode.database.RocksDBConnector;
 import io.coti.cotinode.model.ConfirmedTransactions;
 import io.coti.cotinode.model.UnconfirmedTransactions;
 import io.coti.cotinode.service.interfaces.IBalanceService;
+import io.coti.cotinode.service.interfaces.ICluster;
 import io.coti.cotinode.service.interfaces.IQueueService;
 import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.RocksIterator;
@@ -41,12 +42,17 @@ public class BalanceService implements IBalanceService {
     @Autowired
     private UnconfirmedTransactions unconfirmedTransactions;
 
+    @Autowired
+    private ICluster clusterService;
+
     private Map<Hash, Double> balanceMap;
     private Map<Hash, Double> preBalanceMap;
 
 
     private List<Map<Hash, Double>> unconfirmedTransactionList;
     private List<Map<Hash, Double>> confirmedTransactionList;
+
+    private boolean startScheduledTask;
 
     @PostConstruct
     private void init() {
@@ -61,19 +67,25 @@ public class BalanceService implements IBalanceService {
             List<ConfirmationData> unconfirmedTransactionsToDelete = new LinkedList<>();
 
             // UnconfirmedTransactionFromDB init
-            fillUnconfirmedTransactionsToDeleteFromDB(unconfirmedTransactionsToDelete);
+            readUnconfirmedTransactionsFromDB(unconfirmedTransactionsToDelete);
 
             // ConfirmedTransactionFromDB init
-            fillConfirmedTransactionListFromDB();
+            readConfirmedTransactionsFromDB();
 
             //move items from unnconfirmed to confirmed db table
             removeFromUnconfirmedAndFillConfirmedInDB(unconfirmedTransactionsToDelete);
 
+
+            // call cluster service with the unconfirmedTransactionList
+
             //move balances from unconfirmed/confirmed Transaction Map To Balance Maps
-            insertFromTempDBmapToInMemMap(confirmedTransactionList, balanceMap);
-            insertFromTempDBmapToInMemMap(unconfirmedTransactionList, preBalanceMap);
+            insertFromTempDBlistToInMemMap(confirmedTransactionList, balanceMap); // calc
+            insertFromTempDBlistToInMemMap(unconfirmedTransactionList, preBalanceMap); // calc
             confirmedTransactionList.clear();
             unconfirmedTransactionList.clear();
+
+
+            startScheduledTask = true;
 
         } catch (Exception ex) {
             log.error("Errors on initiation ", ex);
@@ -84,13 +96,16 @@ public class BalanceService implements IBalanceService {
      * The task will be executed a first time after the initialDelay (because of the init() ) value – and it will
      * continue to be executed according to the fixedDelay
      */
-    @Scheduled(fixedDelay = 5000, initialDelay = 1000)
+    @Scheduled(fixedDelayString = "${balance.scheduled.delay}", initialDelayString = "${balance.scheduled.initialdelay}")
     private void syncBalanceScheduled() {
-        updateDbFromQueue();
+        if(startScheduledTask) {
+            updateDbFromQueue();
+        }
     }
 
     private void updateDbFromQueue() {
         ConcurrentLinkedQueue<Hash> updateBalanceQueue = queueService.getUpdateBalanceQueue();
+        log.info("Balance queue size is {} about to iterate it", updateBalanceQueue.size());
         while (!updateBalanceQueue.isEmpty()) {
             Hash addressHash = updateBalanceQueue.poll();
             ConfirmationData confirmationData = unconfirmedTransactions.getByHash(addressHash);
@@ -102,13 +117,12 @@ public class BalanceService implements IBalanceService {
                 unconfirmedTransactions.delete(addressHash);
                 for (Map.Entry<Hash, Double> mapEntry : confirmationData.getAddressHashToValueTransferredMapping().entrySet()) {
                     balanceMap.put(mapEntry.getKey(), mapEntry.getValue());
-                    preBalanceMap.remove(mapEntry.getKey());
                     log.info("The address {} with the value {} was added to balance map and was removed from preBalanceMap", mapEntry.getKey(), mapEntry.getValue());
                 }
             } else { //dspc =0
                 confirmationData.setTrustChainConsensus(true);
                 unconfirmedTransactions.put(confirmationData);
-                log.info("The transaction {} was added to unconfirmedTransactions in the db", confirmationData.getKey());
+                log.info("The transaction {} was added to unconfirmedTransactions in the db and tcc was updated to true", confirmationData.getKey());
 
             }
         }
@@ -124,7 +138,7 @@ public class BalanceService implements IBalanceService {
         unconfirmedTransactionsToDelete.clear();
     }
 
-    private void insertFromTempDBmapToInMemMap(List<Map<Hash, Double>> addressToBalanceMapFromDB , Map<Hash, Double> addressToBalanceMapInMem ) {
+    private void insertFromTempDBlistToInMemMap(List<Map<Hash, Double>> addressToBalanceMapFromDB , Map<Hash, Double> addressToBalanceMapInMem ) {
         for (Map<Hash, Double> addressToBalanceMap : addressToBalanceMapFromDB) {
             for (Map.Entry<Hash, Double> entry : addressToBalanceMap.entrySet()) {
                 double balance = entry.getValue();
@@ -139,8 +153,8 @@ public class BalanceService implements IBalanceService {
         }
     }
 
-    private void fillConfirmedTransactionListFromDB() {
-        RocksIterator confirmedDBiterator = databaseConnector.getIterator(UnconfirmedTransactions.class.getName());
+    private void readConfirmedTransactionsFromDB() {
+        RocksIterator confirmedDBiterator = databaseConnector.getIterator(ConfirmedTransactions.class.getName());
         confirmedDBiterator.seekToFirst();
         while (confirmedDBiterator.isValid()) {
             ConfirmationData confirmedTransactionData = (ConfirmationData) SerializationUtils
@@ -152,7 +166,7 @@ public class BalanceService implements IBalanceService {
         }
     }
 
-    private void fillUnconfirmedTransactionsToDeleteFromDB(List<ConfirmationData> unconfirmedTransactionsToDelete) {
+    private void readUnconfirmedTransactionsFromDB(List<ConfirmationData> unconfirmedTransactionsToDelete) {
 
         RocksIterator unconfirmedDBiterator = databaseConnector.getIterator(UnconfirmedTransactions.class.getName());
         unconfirmedDBiterator.seekToFirst();
@@ -175,24 +189,38 @@ public class BalanceService implements IBalanceService {
         }
     }
 
-    public boolean checkBalancesAndAddToPreBalance(List<BaseTransactionData> baseTransactionDatas) {
+
+    public synchronized boolean checkBalancesAndAddToPreBalance(List<BaseTransactionData> baseTransactionDatas) {
         try {
             for (BaseTransactionData baseTransactionData : baseTransactionDatas) {
                 //checkBalance
                 double amount = baseTransactionData.getAmount();
                 Hash addressHash = baseTransactionData.getAddressHash();
-                if (balanceMap.containsKey(addressHash) && amount + balanceMap.get(addressHash) < 0) {
-                    log.error("The address {} with the amount {} is exceeds it's current balance {} ", addressHash.toString(),
-                            amount, balanceMap.get(addressHash));
-                    return false;
-                }
-                //checkPreBalance
-                if (preBalanceMap.containsKey(addressHash) && amount + preBalanceMap.get(addressHash) < 0) {
-                    log.error("The address {} with the amount {} is exceeds it's current preBalance {} ", addressHash.toString(),
+                if ((balanceMap.containsKey(addressHash) && amount + balanceMap.get(addressHash) < 0)
+                        || (!balanceMap.containsKey(addressHash) && amount < 0)) {
+                    log.error("Error in Balance check. Address {}  amount {} current Balance {} ", addressHash,
                             amount, preBalanceMap.get(addressHash));
                     return false;
-                } else {//update preBalanceH
-                    preBalanceMap.put(addressHash, amount + preBalanceMap.get(addressHash));
+                }
+
+
+                if(preBalanceMap.containsKey(addressHash)){
+                    if(amount + preBalanceMap.get(addressHash) < 0){
+                        log.error("Error in preBalance check. Address {}  amount {} current preBalance {} ", addressHash,
+                                amount, preBalanceMap.get(addressHash));
+                        return false;
+                    }
+                    else{
+                        preBalanceMap.put(addressHash, amount + preBalanceMap.get(addressHash));
+                    }
+                }
+                else{
+                    if(amount  < 0){
+                        log.error("Error in preBalance check. Address {}  amount {} current preBalance {} ", addressHash,
+                                amount, preBalanceMap.get(addressHash));
+                        return false;
+                    }
+                    preBalanceMap.put(addressHash, amount );
                 }
 
             }
@@ -201,6 +229,8 @@ public class BalanceService implements IBalanceService {
         }
         return true;
     }
+
+
 
     public void insertIntoUnconfirmedDBandAddToTccQeueue(ConfirmationData confirmationData) {
         // put it in unconfirmedTransaction table
@@ -221,7 +251,7 @@ public class BalanceService implements IBalanceService {
                 if (addressDetails.length != 2) {
                     throw new Exception("Bad csv file format");
                 }
-                Hash addressHash = new Hash(addressDetails[0].getBytes());
+                Hash addressHash = new Hash(addressDetails[0]);
                 Double addressAmount = Double.parseDouble(addressDetails[1]);
                 log.info("The hash {} was loaded from the snapshot with amount {}", addressHash, addressAmount);
 
