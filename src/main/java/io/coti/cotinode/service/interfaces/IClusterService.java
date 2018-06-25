@@ -7,11 +7,11 @@ import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import org.springframework.stereotype.Component;
 
-public interface ICluster {
-    // Test only!
-    void initClusterFromTransactionList(List<TransactionData> allClusterTransactions) throws InterruptedException;
+public interface IClusterService {
 
     void initCluster(List<Hash> notConfirmTransactions)  throws InterruptedException;
+
+    TransactionData addGenesisToSources(TransactionData zeroSpendTransaction);
 
     TransactionData selectSources(TransactionData transactionData);
 

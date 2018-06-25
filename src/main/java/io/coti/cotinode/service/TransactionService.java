@@ -24,7 +24,7 @@ public class TransactionService implements ITransactionService {
     @Autowired
     private IBalanceService balanceService;
     @Autowired
-    private ICluster clusterService;
+    private IClusterService clusterService;
     @Autowired
     private IValidationService validationService;
     @Autowired

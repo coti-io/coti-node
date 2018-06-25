@@ -45,21 +45,19 @@ public class BalanceServiceTests {
 
 
     @BeforeClass
-    public static void deleteRocksDBfolder() {
+        public static void deleteRocksDBfolder() {
 
-        File index = new File("rocksDB");
-        if (!index.exists()) {
-            return;
+            File index = new File("rocksDB");
+            if (!index.exists()) {
+                return;
+            }
+            String[] entries = index.list();
+            for (String s : entries) {
+                File currentFile = new File(index.getPath(), s);
+                currentFile.delete();
+            }
+            index.delete();
         }
-        String[] entries = index.list();
-        for (String s : entries) {
-            File currentFile = new File(index.getPath(), s);
-            currentFile.delete();
-        }
-        index.delete();
-
-
-    }
 
     @Test
     public void AInitTest() { // the name starts with a to check make sure it runs first

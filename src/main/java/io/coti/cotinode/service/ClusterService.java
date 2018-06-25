@@ -3,10 +3,11 @@ package io.coti.cotinode.service;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.model.Transactions;
-import io.coti.cotinode.service.interfaces.ICluster;
+import io.coti.cotinode.service.interfaces.IClusterService;
 import io.coti.cotinode.service.interfaces.ISourceSelector;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -19,10 +20,13 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class ClusterService implements ICluster {
+public class ClusterService implements IClusterService {
 
     private static Object locker = new Object();
-    private final int DELAY_TIME_AFTER_TCC_PROCESS = 7;
+
+    @Value("${cluster.delay.after.tcc}")
+    private int delayTimeAfterTccProcess;
+
     @Autowired
     QueueService queueService;
 
@@ -42,11 +46,20 @@ public class ClusterService implements ICluster {
     private ConcurrentHashMap<Integer, List<TransactionData>> trustScoreToSourceListMapping;
     private Executor executor;
 
-    private void addNewTransactionToAllCollections(TransactionData transaction) {
+    private void handleUnconfirmedFromQueueTransactions() {
+        ConcurrentLinkedQueue<Hash> UnconfirmedTransactionsHashFromQueue = queueService.getTccQueue();
+
+        for (Hash hash : UnconfirmedTransactionsHashFromQueue) {
+            TransactionData transaction = dbTransactions.getByHash(hash);
+            attachmentProcess(transaction);
+        }
+        queueService.removeTccQueue();
+    }
+
+    private void addNewTransactionToMemoryStorage(TransactionData transaction) {
         synchronized (locker) {
             // add to unTccConfirmedTransaction map
-            addToUnTccConfirmedTransactionMap(transaction);
-
+            hashToUnTccConfirmationTransactionsMapping.put(transaction.getHash(), transaction);
             //  add to TrustScoreToSourceList map
             addToTrustScoreToSourceListMap(transaction);
         }
@@ -90,12 +103,6 @@ public class ClusterService implements ICluster {
                 hash -> transactions.add(dbTransactions.getByHash(hash))
         );
         return transactions;
-    }
-
-
-    private void addToUnTccConfirmedTransactionMap(TransactionData transaction) {
-        hashToUnTccConfirmationTransactionsMapping.put(transaction.getHash(), transaction);
-        // TODO use the TransactionService
     }
 
     private void addToTrustScoreToSourceListMap(TransactionData transaction) {
@@ -158,7 +165,7 @@ public class ClusterService implements ICluster {
             deleteTrustScoreToSourceListMapping(dbTransactions.getByHash(rightParentHash));
         }
 
-        addNewTransactionToAllCollections(attachedTransactionFromDb);
+        addNewTransactionToMemoryStorage(attachedTransactionFromDb);
     }
 
     private void trustScoreConsensusProcess() {
@@ -178,7 +185,7 @@ public class ClusterService implements ICluster {
 
                     }
                     try {
-                        TimeUnit.SECONDS.sleep(DELAY_TIME_AFTER_TCC_PROCESS);
+                        TimeUnit.SECONDS.sleep(delayTimeAfterTccProcess);
                     } catch (InterruptedException e) {
                         log.error(e.toString());
                     }
@@ -191,7 +198,7 @@ public class ClusterService implements ICluster {
     public void initCluster(List<Hash> notConfirmTransactions) {
 
         try {
-            executor = Executors.newCachedThreadPool();
+            executor = Executors.newSingleThreadScheduledExecutor();
             hashToUnTccConfirmationTransactionsMapping = new ConcurrentHashMap<>();
             trustScoreToSourceListMapping = new ConcurrentHashMap<>();
 
@@ -206,7 +213,7 @@ public class ClusterService implements ICluster {
     }
 
 
-    @Override
+    // For Test Only !!!
     public boolean addNewTransaction(TransactionData transactionFromDb) {
         boolean thereAreSources = true;
         try {
@@ -277,40 +284,55 @@ public class ClusterService implements ICluster {
         return thereAreSources;
     }
 
+    public TransactionData addGenesisToSources(TransactionData zeroSpendTransaction) {
+        addNewTransactionToMemoryStorage(zeroSpendTransaction);
+        return zeroSpendTransaction;
+    }
+
+
     @Override
-    public TransactionData selectSources(TransactionData transactionData) {
-        transactionData.setLeftParentHash(new Hash("BEEA"));
-        transactionData.setRightParentHash(new Hash("BEED"));
-        return transactionData;
-    }
-
-
-    // This function is for test purpose only
-    public void initClusterFromTransactionList(List<TransactionData> notConfirmTransactions) {
-
+    public TransactionData selectSources(TransactionData transactionFromDb) {
         try {
-            executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
-            hashToUnTccConfirmationTransactionsMapping = new ConcurrentHashMap<>();
-            trustScoreToSourceListMapping = new ConcurrentHashMap<>();
+            transactionFromDb.setProcessStartTime(new Date());
 
-            setUnTccConfirmedTransactions(notConfirmTransactions);
-            setTrustScoreToSourceListMapping(hashToUnTccConfirmationTransactionsMapping);
-            tccConfirmationService = new TccConfirmationService(); // @Autowired doesn't work in test ??
-            sourceSelector = new SourceSelector();
-            trustScoreConsensusProcess();
+            // TODO: Get The transactionFromDb trust score from trust score node.
+
+            ConcurrentHashMap<Integer, List<TransactionData>> localThreadTrustScoreToSourceListMapping = null;
+
+
+            List<TransactionData> selectedSourcesForAttachment = null;
+            int localTrustScoreToSourceListMappingSum;
+            synchronized (locker) {
+                localThreadTrustScoreToSourceListMapping = new ConcurrentHashMap<>(trustScoreToSourceListMapping);
+                localTrustScoreToSourceListMappingSum = getTotalNumberOfSources();
+            }
+            if (localTrustScoreToSourceListMappingSum > 0) {
+
+                // Selection of sources
+                selectedSourcesForAttachment = sourceSelector.selectSourcesForAttachment(localThreadTrustScoreToSourceListMapping,
+                        transactionFromDb.getSenderTrustScore(),
+                        new Date(),
+                        10, // TODO: get value from config file and/or dynamic
+                        20); // TODO:  get value from config file and/or dynamic
+                if (selectedSourcesForAttachment.size() == 0) {
+                    log.info("in attachment process of transactionFromDb with hash:{}: waiting for more transactions ....", transactionFromDb.getHash());
+                } else if (selectedSourcesForAttachment.size() == 1) {
+                    log.info("in attachment process of transactionFromDb with hash:{}: whe have source {} !!! ",
+                            transactionFromDb.getHash(), selectedSourcesForAttachment.get(0).getHash());
+                    transactionFromDb.setLeftParentHash(selectedSourcesForAttachment.get(0).getHash());
+                } else if (selectedSourcesForAttachment.size() == 2) {
+                    log.info("in attachment process of transactionFromDb with hash:{}: whe have source: {}, {} !!!",
+                            transactionFromDb.getHash(), selectedSourcesForAttachment.get(0).getHash(), selectedSourcesForAttachment.get(1).getHash());
+                    transactionFromDb.setLeftParentHash(selectedSourcesForAttachment.get(0).getHash());
+                    transactionFromDb.setLeftParentHash(selectedSourcesForAttachment.get(1).getHash());
+                }
+            }
         } catch (Exception e) {
-            log.error("error in initClusterFromTransactionLis", e);
+            log.error("error in addNewTransaction", e);
         }
-    }
 
-    private void handleUnconfirmedFromQueueTransactions() {
-        ConcurrentLinkedQueue<Hash> UnconfirmedTransactionsHashFromQueue = queueService.getTccQueue();
 
-        for (Hash hash : UnconfirmedTransactionsHashFromQueue) {
-            TransactionData transaction = dbTransactions.getByHash(hash);
-            attachmentProcess(transaction);
-        }
-        queueService.removeTccQueue();
+        return transactionFromDb;
     }
 
 }

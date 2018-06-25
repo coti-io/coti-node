@@ -7,7 +7,7 @@ import io.coti.cotinode.database.RocksDBConnector;
 import io.coti.cotinode.model.ConfirmedTransactions;
 import io.coti.cotinode.model.UnconfirmedTransactions;
 import io.coti.cotinode.service.interfaces.IBalanceService;
-import io.coti.cotinode.service.interfaces.ICluster;
+import io.coti.cotinode.service.interfaces.IClusterService;
 import io.coti.cotinode.service.interfaces.IQueueService;
 import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.RocksIterator;
@@ -43,7 +43,7 @@ public class BalanceService implements IBalanceService {
     private UnconfirmedTransactions unconfirmedTransactions;
 
     @Autowired
-    private ICluster clusterService;
+    private IClusterService clusterService;
 
     private Map<Hash, Double> balanceMap;
     private Map<Hash, Double> preBalanceMap;
@@ -77,6 +77,7 @@ public class BalanceService implements IBalanceService {
 
 
             // call cluster service with the unconfirmedTransactionList
+
 
             //move balances from unconfirmed/confirmed Transaction Map To Balance Maps
             insertFromTempDBlistToInMemMap(confirmedTransactionList, balanceMap); // calc

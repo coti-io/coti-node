@@ -29,7 +29,7 @@ public class TransactionData implements IEntity {
     private Date powStartTime;
     private Date powEndTime;
     private double baseTransactionsCount;
-    private double senderTrustScore;
+    private int senderTrustScore;
     private List<Hash> baseTransactionsHash;
     private List<BaseTransactionData> baseTransactions;
     private Hash senderNodeHash;

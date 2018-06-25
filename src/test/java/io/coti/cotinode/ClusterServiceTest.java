@@ -5,10 +5,11 @@ import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.model.Transactions;
 import io.coti.cotinode.model.UnconfirmedTransactions;
-import io.coti.cotinode.service.interfaces.ICluster;
+import io.coti.cotinode.service.ClusterService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,41 +33,45 @@ public class ClusterServiceTest {
     Transactions transaction;
     private Random random = new Random();
     @Autowired
-    private ICluster cluster;
+    private ClusterService cluster;
     private List<TransactionData> newTransactions;
     private List<Hash> notTccConfirmTransactions;
 
+    @BeforeClass
+    public static void init(){
+        BalanceServiceTests.deleteRocksDBfolder();
+    }
     private void setUpNewTransactions(){
 
-        TransactionData TransactionData2 = new TransactionData(new Hash("22".getBytes()));
+        TransactionData TransactionData2 = new TransactionData(new Hash("22"));
         TransactionData2.setSenderTrustScore(92);
         TransactionData2.setCreateTime(new Date());
 
-        TransactionData TransactionData3 = new TransactionData(new Hash("33".getBytes()));
+        TransactionData TransactionData3 = new TransactionData(new Hash("33"));
         TransactionData3.setSenderTrustScore(84);
         TransactionData3.setCreateTime(new Date());
 
-        TransactionData TransactionData4 = new TransactionData(new Hash("44".getBytes()));
+        TransactionData TransactionData4 = new TransactionData(new Hash("44"));
         TransactionData4.setSenderTrustScore(86);
         TransactionData4.setCreateTime(new Date());
 
-        TransactionData TransactionData5 = new TransactionData(new Hash("55".getBytes()));
+        TransactionData TransactionData5 = new TransactionData(new Hash("55"));
         TransactionData5.setSenderTrustScore(76);
         TransactionData5.setCreateTime(new Date());
 
-        TransactionData TransactionData6 = new TransactionData(new Hash("66".getBytes()));
+        TransactionData TransactionData6 = new TransactionData(new Hash("66"));
         TransactionData6.setSenderTrustScore(78);
         TransactionData6.setCreateTime(new Date());
 
-        TransactionData TransactionData7 = new TransactionData(new Hash("77".getBytes()));
+        TransactionData TransactionData7 = new TransactionData(new Hash("77"));
         TransactionData7.setSenderTrustScore(86);
         TransactionData7.setCreateTime(new Date());
 
-        TransactionData TransactionData8 = new TransactionData(new Hash("88".getBytes()));
+        TransactionData TransactionData8 = new TransactionData(new Hash("88"));
         TransactionData8.setSenderTrustScore(80);
         TransactionData8.setCreateTime(new Date());
 
-        TransactionData TransactionData9 = new TransactionData(new Hash("99".getBytes()));
+        TransactionData TransactionData9 = new TransactionData(new Hash("99"));
         TransactionData9.setSenderTrustScore(72);
         TransactionData9.setCreateTime(new Date());
 
@@ -80,22 +85,20 @@ public class ClusterServiceTest {
         newTransactions.add(TransactionData9);
     }
     private void setUpTransactionsFromSnapShot() {
-        TransactionData TransactionData0 = new TransactionData(new Hash("00".getBytes()));
+        TransactionData TransactionData0 = new TransactionData(new Hash("00"));
         TransactionData0.setSenderTrustScore(70);
         List<Hash> hashChildren = new Vector<>();
-        hashChildren.add(new Hash("11".getBytes()));
+        hashChildren.add(new Hash("11"));
         TransactionData0.setChildrenTransactions(hashChildren);
         TransactionData0.setProcessStartTime(new Date());
         TransactionData0.setAttachmentTime(new Date());
 
-        TransactionData TransactionData1 = new TransactionData(new Hash("11".getBytes()));
+        TransactionData TransactionData1 = new TransactionData(new Hash("11"));
         TransactionData1.setSenderTrustScore(73);
         TransactionData1.setRightParentHash(TransactionData0.getHash());
         TransactionData1.setCreateTime(new Date());
         TransactionData1.setProcessStartTime(new Date());
         TransactionData1.setAttachmentTime(new Date());
-        transaction.delete(TransactionData0.getHash());
-        transaction.delete(TransactionData1.getHash());
 
         transaction.put(TransactionData0);
         transaction.put(TransactionData1);
@@ -104,27 +107,16 @@ public class ClusterServiceTest {
         notTccConfirmTransactions.add(TransactionData1.getHash());
     }
     private void setunconfirmedTransactionsTable(){
-        ConfirmationData confirmationData0 = new ConfirmationData(new Hash("00".getBytes()));
-        ConfirmationData confirmationData1 = new ConfirmationData(new Hash("11".getBytes()));
-        ConfirmationData confirmationData2 = new ConfirmationData(new Hash("22".getBytes()));
-        ConfirmationData confirmationData3 = new ConfirmationData(new Hash("33".getBytes()));
-        ConfirmationData confirmationData4 = new ConfirmationData(new Hash("44".getBytes()));
-        ConfirmationData confirmationData5 = new ConfirmationData(new Hash("55".getBytes()));
-        ConfirmationData confirmationData6 = new ConfirmationData(new Hash("66".getBytes()));
-        ConfirmationData confirmationData7 = new ConfirmationData(new Hash("77".getBytes()));
-        ConfirmationData confirmationData8 = new ConfirmationData(new Hash("88".getBytes()));
-        ConfirmationData confirmationData9 = new ConfirmationData(new Hash("99".getBytes()));
-
-        unconfirmedTransactions.delete(confirmationData0.getHash());
-        unconfirmedTransactions.delete(confirmationData1.getHash());
-        unconfirmedTransactions.delete(confirmationData2.getHash());
-        unconfirmedTransactions.delete(confirmationData3.getHash());
-        unconfirmedTransactions.delete(confirmationData4.getHash());
-        unconfirmedTransactions.delete(confirmationData5.getHash());
-        unconfirmedTransactions.delete(confirmationData6.getHash());
-        unconfirmedTransactions.delete(confirmationData7.getHash());
-        unconfirmedTransactions.delete(confirmationData8.getHash());
-        unconfirmedTransactions.delete(confirmationData9.getHash());
+        ConfirmationData confirmationData0 = new ConfirmationData(new Hash("00"));
+        ConfirmationData confirmationData1 = new ConfirmationData(new Hash("11"));
+        ConfirmationData confirmationData2 = new ConfirmationData(new Hash("22"));
+        ConfirmationData confirmationData3 = new ConfirmationData(new Hash("33"));
+        ConfirmationData confirmationData4 = new ConfirmationData(new Hash("44"));
+        ConfirmationData confirmationData5 = new ConfirmationData(new Hash("55"));
+        ConfirmationData confirmationData6 = new ConfirmationData(new Hash("66"));
+        ConfirmationData confirmationData7 = new ConfirmationData(new Hash("77"));
+        ConfirmationData confirmationData8 = new ConfirmationData(new Hash("88"));
+        ConfirmationData confirmationData9 = new ConfirmationData(new Hash("99"));
 
         unconfirmedTransactions.put(confirmationData0);
         unconfirmedTransactions.put(confirmationData1);
@@ -185,7 +177,7 @@ public class ClusterServiceTest {
 
                 }
             }
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             log.error("An error in initCluster() Test ", e);
         }
 
