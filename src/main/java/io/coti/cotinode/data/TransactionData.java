@@ -100,6 +100,6 @@ public class TransactionData implements IEntity {
     }
 
     public boolean hasSources(){
-        return getLeftParentHash() != null && getRightParentHash() != null;
+        return getLeftParentHash() != null || getRightParentHash() != null;
     }
 }
