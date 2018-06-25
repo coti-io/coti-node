@@ -3,6 +3,7 @@ package io.coti.cotinode.service;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.model.Transactions;
+import io.coti.cotinode.service.interfaces.IBalanceService;
 import io.coti.cotinode.service.interfaces.IClusterService;
 import io.coti.cotinode.service.interfaces.ISourceSelector;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
@@ -38,9 +41,6 @@ public class ClusterService implements IClusterService {
 
     @Autowired
     private TccConfirmationService tccConfirmationService;
-
-    @Autowired
-    private BalanceService balanceService;
 
     private ConcurrentHashMap<Hash, TransactionData> hashToUnTccConfirmationTransactionsMapping;
     private ConcurrentHashMap<Integer, List<TransactionData>> trustScoreToSourceListMapping;
@@ -192,6 +192,11 @@ public class ClusterService implements IClusterService {
                 }
             }
         });
+    }
+
+    @PostConstruct
+    void initCluster(){
+        initCluster(new ArrayList<>());
     }
 
     @Override

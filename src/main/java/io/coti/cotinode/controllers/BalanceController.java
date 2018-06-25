@@ -16,9 +16,6 @@ import javax.validation.Valid;
 @RequestMapping("/balance")
 public class BalanceController {
 
-    @Autowired
-    private IBalanceService balanceService;
-
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<GetBalancesResponse> getBalances(@Valid @RequestBody GetBalancesRequest getBalancesRequest) {
 

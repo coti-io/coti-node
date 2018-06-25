@@ -1,13 +1,12 @@
 package io.coti.cotinode.service;
 
 import io.coti.cotinode.data.BaseTransactionData;
-import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.ConfirmationData;
+import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.database.RocksDBConnector;
 import io.coti.cotinode.model.ConfirmedTransactions;
 import io.coti.cotinode.model.UnconfirmedTransactions;
 import io.coti.cotinode.service.interfaces.IBalanceService;
-import io.coti.cotinode.service.interfaces.IClusterService;
 import io.coti.cotinode.service.interfaces.IQueueService;
 import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.RocksIterator;
@@ -41,9 +40,6 @@ public class BalanceService implements IBalanceService {
 
     @Autowired
     private UnconfirmedTransactions unconfirmedTransactions;
-
-    @Autowired
-    private IClusterService clusterService;
 
     private Map<Hash, Double> balanceMap;
     private Map<Hash, Double> preBalanceMap;
@@ -99,7 +95,7 @@ public class BalanceService implements IBalanceService {
      */
     @Scheduled(fixedDelayString = "${balance.scheduled.delay}", initialDelayString = "${balance.scheduled.initialdelay}")
     private void syncBalanceScheduled() {
-        if(startScheduledTask) {
+        if (startScheduledTask) {
             updateDbFromQueue();
         }
     }
@@ -110,7 +106,7 @@ public class BalanceService implements IBalanceService {
         while (!updateBalanceQueue.isEmpty()) {
             Hash addressHash = updateBalanceQueue.poll();
             ConfirmationData confirmationData = unconfirmedTransactions.getByHash(addressHash);
-            log.info("confirmationData hash;{}",addressHash );
+            log.info("confirmationData hash;{}", addressHash);
             //dspc = 1
             if (confirmationData.isDoubleSpendPreventionConsensus()) {
                 ConfirmationData confirmedTransactionData = new ConfirmationData(addressHash);
@@ -140,15 +136,14 @@ public class BalanceService implements IBalanceService {
         unconfirmedTransactionsToDelete.clear();
     }
 
-    private void insertFromTempDBlistToInMemMap(List<Map<Hash, Double>> addressToBalanceMapFromDB , Map<Hash, Double> addressToBalanceMapInMem ) {
+    private void insertFromTempDBlistToInMemMap(List<Map<Hash, Double>> addressToBalanceMapFromDB, Map<Hash, Double> addressToBalanceMapInMem) {
         for (Map<Hash, Double> addressToBalanceMap : addressToBalanceMapFromDB) {
             for (Map.Entry<Hash, Double> entry : addressToBalanceMap.entrySet()) {
                 double balance = entry.getValue();
                 Hash key = entry.getKey();
-                if(addressToBalanceMapInMem.containsKey(key)) {
+                if (addressToBalanceMapInMem.containsKey(key)) {
                     addressToBalanceMapInMem.put(key, balance + addressToBalanceMapInMem.get(key));
-                }
-                else {
+                } else {
                     addressToBalanceMapInMem.put(key, balance);
                 }
             }
@@ -206,23 +201,21 @@ public class BalanceService implements IBalanceService {
                 }
 
 
-                if(preBalanceMap.containsKey(addressHash)){
-                    if(amount + preBalanceMap.get(addressHash) < 0){
+                if (preBalanceMap.containsKey(addressHash)) {
+                    if (amount + preBalanceMap.get(addressHash) < 0) {
                         log.error("Error in preBalance check. Address {}  amount {} current preBalance {} ", addressHash,
                                 amount, preBalanceMap.get(addressHash));
                         return false;
-                    }
-                    else{
+                    } else {
                         preBalanceMap.put(addressHash, amount + preBalanceMap.get(addressHash));
                     }
-                }
-                else{
-                    if(amount  < 0){
+                } else {
+                    if (amount < 0) {
                         log.error("Error in preBalance check. Address {}  amount {} current preBalance {} ", addressHash,
                                 amount, preBalanceMap.get(addressHash));
                         return false;
                     }
-                    preBalanceMap.put(addressHash, amount );
+                    preBalanceMap.put(addressHash, amount);
                 }
 
             }
@@ -231,7 +224,6 @@ public class BalanceService implements IBalanceService {
         }
         return true;
     }
-
 
 
     public void insertIntoUnconfirmedDBandAddToTccQeueue(ConfirmationData confirmationData) {
@@ -263,7 +255,7 @@ public class BalanceService implements IBalanceService {
                 }
                 balanceMap.put(addressHash, addressAmount);
                 log.info("Loading from snapshot into inMem balance+preBalance address {} and amount {}",
-                        addressHash,addressAmount);
+                        addressHash, addressAmount);
 
             }
             // copy the balance to preBalance
@@ -276,6 +268,7 @@ public class BalanceService implements IBalanceService {
     public Map<Hash, Double> getBalanceMap() {
         return balanceMap;
     }
+
     public Map<Hash, Double> getPreBalanceMap() {
         return preBalanceMap;
     }
