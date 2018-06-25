@@ -1,6 +1,7 @@
 package io.coti.cotinode.data;
 
 import io.coti.cotinode.data.interfaces.IEntity;
+import io.coti.cotinode.http.AddTransactionRequest;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,7 +31,7 @@ public class TransactionData implements IEntity {
     private double baseTransactionsCount;
     private double senderTrustScore;
     private List<Hash> baseTransactionsHash;
-    private List<BaseTransactionData> baseTransactionsData;
+    private List<BaseTransactionData> baseTransactions;
     private Hash senderNodeHash;
     private String senderNodeIpAddress;
     private Hash userHash;
@@ -39,7 +40,11 @@ public class TransactionData implements IEntity {
     private transient boolean isVisit;
 
     private TransactionData(){
+    }
 
+    public TransactionData(AddTransactionRequest request){
+        this.hash = request.transactionHash;
+        this.baseTransactions = request.baseTransactions;
     }
 
     public TransactionData(Hash hash) {

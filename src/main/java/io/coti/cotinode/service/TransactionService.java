@@ -15,10 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.Queue;
-
-import static io.coti.cotinode.http.HttpStringConstants.STATUS_ERROR;
-import static io.coti.cotinode.http.HttpStringConstants.STATUS_SUCCESS;
+import static io.coti.cotinode.http.HttpStringConstants.*;
 
 @Slf4j
 @Service
@@ -33,31 +30,27 @@ public class TransactionService implements ITransactionService {
     @Autowired
     private Transactions transactions;
 
-
     @Override
     public ResponseEntity<AddTransactionResponse> addNewTransaction(AddTransactionRequest request) {
         if (!validateAddresses(request)) {
             log.info("Failed to validate addresses!");
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
-                    .body(new AddTransactionResponse(request.transactionHash, STATUS_ERROR));
+                    .body(new AddTransactionResponse(
+                            STATUS_ERROR,
+                            AUTHENTICATION_FAILED_MESSAGE));
         }
 
         if (!balanceService.checkBalancesAndAddToPreBalance(request.baseTransactions)) {
             log.info("Pre balance check failed!");
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
-                    .body(new AddTransactionResponse(request.transactionHash, STATUS_ERROR));
+                    .body(new AddTransactionResponse(
+                            STATUS_ERROR,
+                            INSUFFICIENT_FUNDS_MESSAGE));
         }
 
-        handleTransactionAsync(new TransactionData(request.transactionHash));
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(new AddTransactionResponse(request.transactionHash, STATUS_SUCCESS));
-    }
-
-    private void handleTransactions (TransactionData transactionData) {
+        TransactionData transactionData = new TransactionData(request);
         transactionData = clusterService.selectSources(transactionData);
         if (!validationService.validateSource(transactionData.getLeftParentHash()) ||
                 !validationService.validateSource(transactionData.getRightParentHash())) {
@@ -74,20 +67,12 @@ public class TransactionService implements ITransactionService {
         transactions.put(transactionData);
 
         balanceService.insertIntoUnconfirmedDBandAddToTccQeueue(new ConfirmationData(transactionData.getHash()));
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new AddTransactionResponse(
+                        STATUS_SUCCESS,
+                        TRANSACTION_CREATED_MESSAGE));
     }
-
-    void handleTransactionAsync(TransactionData transactionDataToProcess) {
-        class HandleTransactionsRunnable implements Runnable {
-            TransactionData transactionDataToProcess;
-            HandleTransactionsRunnable(TransactionData transactionData) { transactionDataToProcess = transactionData; }
-            public void run() {
-                handleTransactions(transactionDataToProcess);
-            }
-        }
-        Thread t = new Thread(new HandleTransactionsRunnable(transactionDataToProcess));
-        t.start();
-    }
-
 
     private boolean validateAddresses(AddTransactionRequest request) {
         for (BaseTransactionData baseTransactionData :
