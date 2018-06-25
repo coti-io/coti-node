@@ -45,12 +45,14 @@ public class TransactionData implements IEntity {
     public TransactionData(AddTransactionRequest request){
         this.hash = request.transactionHash;
         this.baseTransactions = request.baseTransactions;
+        this.senderTrustScore = 50;
     }
 
     public TransactionData(Hash hash) {
         this.hash = hash;
         this.trustChainTransactionHash = new Vector<>();
         this.childrenTransactions = new Vector<>();
+        this.senderTrustScore = 50;
     }
 
     public boolean isSource() {
