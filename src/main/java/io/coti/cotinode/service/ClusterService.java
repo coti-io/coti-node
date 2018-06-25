@@ -109,7 +109,7 @@ public class ClusterService implements IClusterService {
 
         synchronized (locker) {
             if (transaction.isSource() && transaction.getSenderTrustScore() >= 1 && transaction.getSenderTrustScore() <= 100) {
-                List<TransactionData> transactionTrustScoreList = trustScoreToSourceListMapping.get(transaction.getSenderTrustScore());
+                List<TransactionData> transactionTrustScoreList = trustScoreToSourceListMapping.get(transaction.GetRoundedSenderTrustScore());
                 if (!transactionTrustScoreList.contains(transaction)) {
                     transactionTrustScoreList.add(transaction);
                 }
