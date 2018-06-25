@@ -3,16 +3,11 @@ package io.coti.cotinode.service;
 import io.coti.cotinode.data.Hash;
 
 import io.coti.cotinode.data.TransactionData;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Configurable;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -61,13 +56,13 @@ public class TccConfirmationService {
     }
 
     private void setTotalSumScore(TransactionData parent) {
-        int maxSonsTotalTrustScore = 0;
+        double maxSonsTotalTrustScore = 0;
         Hash maxSonsTotalTrustScoreHash = null;
         for (Hash hash : parent.getChildrenTransactions()) {
             try {
-                if (hashToUnTccConfirmTransactionsMapping.get(hash).getTotalTrustScore()
+                if (hashToUnTccConfirmTransactionsMapping.get(hash).getTrustChainTrustScore()
                         > maxSonsTotalTrustScore) {
-                    maxSonsTotalTrustScore = hashToUnTccConfirmTransactionsMapping.get(hash).getTotalTrustScore();
+                    maxSonsTotalTrustScore = hashToUnTccConfirmTransactionsMapping.get(hash).getTrustChainTrustScore();
                     maxSonsTotalTrustScoreHash = hash;
                 }
             } catch (Exception e) {
@@ -76,15 +71,15 @@ public class TccConfirmationService {
             }
         }
 
-        // updating parent totalTrustScore
-        parent.setTotalTrustScore(parent.getSenderTrustScore() + maxSonsTotalTrustScore);
+        // updating parent trustChainTrustScore
+        parent.setTrustChainTrustScore(parent.getSenderTrustScore() + maxSonsTotalTrustScore);
 
         //updating parent trustChainTransactionHashes
         if (maxSonsTotalTrustScoreHash != null) { // not a source
             List<Hash> maxSonsTotalTrustScoreChain =
-                    new Vector<>(hashToUnTccConfirmTransactionsMapping.get(maxSonsTotalTrustScoreHash).getTrustChainTransactionHashes());
+                    new Vector<>(hashToUnTccConfirmTransactionsMapping.get(maxSonsTotalTrustScoreHash).getTrustChainTransactionHash());
             maxSonsTotalTrustScoreChain.add(maxSonsTotalTrustScoreHash);
-            parent.setTrustChainTransactionHashes(maxSonsTotalTrustScoreChain);
+            parent.setTrustChainTransactionHash(maxSonsTotalTrustScoreChain);
         }
     }
 
@@ -107,7 +102,7 @@ public class TccConfirmationService {
         List<Hash> transactionConsensusConfirmed = new Vector<>();
         for(TransactionData transaction : result ) {
             setTotalSumScore(transaction);
-            if (transaction.getTotalTrustScore() >= TRESHOLD) {
+            if (transaction.getTrustChainTrustScore() >= TRESHOLD) {
                 transaction.setTransactionConsensus(true);
                 transaction.setTransactionConsensusUpdateTime(new Date());
                 transactionConsensusConfirmed.add(transaction.getHash());

@@ -22,7 +22,7 @@ public class SourceSelector implements ISourceSelector {
     @Override
     public List<TransactionData> selectSourcesForAttachment(
             Map<Integer, ? extends List<TransactionData>> trustScoreToTransactionMapping,
-            int transactionTrustScore,
+            double transactionTrustScore,
             Date now,
             int minSourcePercentage,
             int maxNeighbourhoodRadius) {
@@ -38,7 +38,7 @@ public class SourceSelector implements ISourceSelector {
 
     private List<TransactionData> getNeighbourSources(
             Map<Integer, ? extends List<TransactionData>> trustScoreToSourceListMapping,
-            int transactionTrustScore,
+            double transactionTrustScore,
             int minSourcePercentage,
             int maxTrustScoreRadius) {
 
@@ -52,8 +52,8 @@ public class SourceSelector implements ISourceSelector {
 
         // Get neighbourSources according to the trustScore selection algorithm
         for (int trustScoreDifference = 1; trustScoreDifference < maxTrustScoreRadius; trustScoreDifference++) {
-            int lowTrustScore = transactionTrustScore - trustScoreDifference;
-            int highTrustScore = transactionTrustScore + trustScoreDifference;
+            double lowTrustScore = transactionTrustScore - trustScoreDifference;
+            double highTrustScore = transactionTrustScore + trustScoreDifference;
             if (lowTrustScore >= 1 && trustScoreToSourceListMapping.containsKey(lowTrustScore)) {
                 neighbourSources.addAll(trustScoreToSourceListMapping.get(lowTrustScore));
             }

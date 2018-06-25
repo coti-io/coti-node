@@ -9,7 +9,7 @@ import java.util.Map;
 public interface ISourceSelector {
     public List<TransactionData> selectSourcesForAttachment(
             Map<Integer,? extends List<TransactionData>> trustScoreToTransactionMapping,
-            int transactionTrustScore,
+            double transactionTrustScore,
             Date now,
             int minSourcePercentage,
             int maxNeighbourhoodRadius);

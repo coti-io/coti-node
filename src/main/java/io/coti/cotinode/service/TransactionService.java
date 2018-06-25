@@ -33,6 +33,30 @@ public class TransactionService implements ITransactionService {
     @Autowired
     private Transactions transactions;
 
+
+    @Override
+    public ResponseEntity<AddTransactionResponse> addNewTransaction(AddTransactionRequest request) {
+        if (!validateAddresses(request)) {
+            log.info("Failed to validate addresses!");
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new AddTransactionResponse(request.transactionHash, STATUS_ERROR));
+        }
+
+        if (!balanceService.checkBalancesAndAddToPreBalance(request.baseTransactions)) {
+            log.info("Pre balance check failed!");
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new AddTransactionResponse(request.transactionHash, STATUS_ERROR));
+        }
+
+        handleTransactionAsync(new TransactionData(request.transactionHash));
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new AddTransactionResponse(request.transactionHash, STATUS_SUCCESS));
+    }
+
     private void handleTransactions (TransactionData transactionData) {
         transactionData = clusterService.selectSources(transactionData);
         if (!validationService.validateSource(transactionData.getLeftParentHash()) ||
@@ -50,7 +74,7 @@ public class TransactionService implements ITransactionService {
         transactions.put(transactionData);
 
         balanceService.insertIntoUnconfirmedDBandAddToTccQeueue(new ConfirmationData(transactionData.getHash()));
-        }
+    }
 
     void handleTransactionAsync(TransactionData transactionDataToProcess) {
         class HandleTransactionsRunnable implements Runnable {
@@ -64,28 +88,6 @@ public class TransactionService implements ITransactionService {
         t.start();
     }
 
-    @Override
-    public ResponseEntity<AddTransactionResponse> addNewTransaction(AddTransactionRequest request) {
-        if (!validateAddresses(request)) {
-            log.info("Failed to validate addresses!");
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(new AddTransactionResponse(request.transactionHash, STATUS_ERROR));
-        }
-
-//        if (!balanceService.checkBalancesAndAddToPreBalance(request.baseTransactions)) {
-//            log.info("Pre balance check failed!");
-//            return ResponseEntity
-//                    .status(HttpStatus.UNAUTHORIZED)
-//                    .body(new AddTransactionResponse(request.transactionHash, STATUS_ERROR));
-//        }
-
-        handleTransactionAsync(new TransactionData(request.transactionHash));
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(new AddTransactionResponse(request.transactionHash, STATUS_SUCCESS));
-    }
 
     private boolean validateAddresses(AddTransactionRequest request) {
         for (BaseTransactionData baseTransactionData :

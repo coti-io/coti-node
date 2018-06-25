@@ -8,9 +8,6 @@ import io.coti.cotinode.service.interfaces.ISourceSelector;
 import io.coti.cotinode.service.interfaces.ICluster;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Configurable;
-import org.springframework.stereotype.Component;
-import io.coti.cotinode.data.TransactionData;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -174,10 +171,10 @@ public class ClusterService implements ICluster {
                     List<Hash> transactionConsensusConfirmed = tccConfirmationService.setTransactionConsensus();
 
                     for (Hash hash : transactionConsensusConfirmed) {
-                        log.info("transaction with hash:{}: is confirmed with trustScore: {} ans totalTrustScore: {} !!!",
+                        log.info("transaction with hash:{}: is confirmed with trustScore: {} ans trustChainTrustScore: {} !!!",
                                 hashToUnTccConfirmationTransactionsMapping.get(hash).getHash(),
                                 hashToUnTccConfirmationTransactionsMapping.get(hash).getSenderTrustScore(),
-                                hashToUnTccConfirmationTransactionsMapping.get(hash).getTotalTrustScore());
+                                hashToUnTccConfirmationTransactionsMapping.get(hash).getTrustChainTrustScore());
                         deleteTransactionFromHashToUnTccConfirmedTransactionsMapping(hash);
                         queueService.addToUpdateBalanceQueue(hash);
 

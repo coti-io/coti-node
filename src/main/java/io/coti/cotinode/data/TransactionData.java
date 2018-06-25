@@ -14,11 +14,11 @@ public class TransactionData implements IEntity {
     private transient Hash hash;
     private Hash leftParentHash;
     private Hash rightParentHash;
-    private List<Hash> trustChainTransactionHashes;
+    private List<Hash> trustChainTransactionHash;
     private Hash userTrustScoreTokenHashes;
     private boolean transactionConsensus;
     private boolean dspConsensus;
-    private int totalTrustScore;
+    private double trustChainTrustScore;
     private Date transactionConsensusUpdateTime;
     private Date createTime;
     private Date updateTime;
@@ -27,8 +27,8 @@ public class TransactionData implements IEntity {
     private Date processEndTime;
     private Date powStartTime;
     private Date powEndTime;
-    private int baseTransactionsCount;
-    private int senderTrustScore;
+    private double baseTransactionsCount;
+    private double senderTrustScore;
     private List<Hash> baseTransactionsHash;
     private List<BaseTransactionData> baseTransactionsData;
     private Hash senderNodeHash;
@@ -44,7 +44,7 @@ public class TransactionData implements IEntity {
 
     public TransactionData(Hash hash) {
         this.hash = hash;
-        this.trustChainTransactionHashes = new Vector<>();
+        this.trustChainTransactionHash = new Vector<>();
         this.childrenTransactions = new Vector<>();
     }
 
