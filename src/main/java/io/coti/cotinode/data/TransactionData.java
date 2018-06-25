@@ -91,4 +91,8 @@ public class TransactionData implements IEntity {
     public void setKey(Hash hash) {
         this.hash = hash;
     }
+
+    public boolean hasSources(){
+        return getLeftParentHash() != null && getRightParentHash() != null;
+    }
 }

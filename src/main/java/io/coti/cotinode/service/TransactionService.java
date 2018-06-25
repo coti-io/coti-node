@@ -29,6 +29,8 @@ public class TransactionService implements ITransactionService {
     private IValidationService validationService;
     @Autowired
     private Transactions transactions;
+    @Autowired
+    IZeroSpendService zeroSpendService;
 
     @Override
     public ResponseEntity<AddTransactionResponse> addNewTransaction(AddTransactionRequest request) {
@@ -51,7 +53,24 @@ public class TransactionService implements ITransactionService {
         }
 
         TransactionData transactionData = new TransactionData(request);
+
         transactionData = clusterService.selectSources(transactionData);
+        if(!transactionData.hasSources()){
+            log.info("No sources found for transaction with trust score {}, generating a zero spend transaction", transactionData.getSenderTrustScore());
+            TransactionData zeroSpendTransaction = zeroSpendService.getZeroSpendTransaction(transactionData.getSenderTrustScore());
+            transactions.put(zeroSpendTransaction);
+            clusterService.addGenesisToSources(zeroSpendTransaction);
+            while(!transactionData.hasSources()){
+                log.info("Waiting 2 seconds for new zero spend transaction to be added to available sources");
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                transactionData = clusterService.selectSources(transactionData);
+            }
+        }
+
         if (!validationService.validateSource(transactionData.getLeftParentHash()) ||
                 !validationService.validateSource(transactionData.getRightParentHash())) {
             log.info("Unvalidated transaction source");
