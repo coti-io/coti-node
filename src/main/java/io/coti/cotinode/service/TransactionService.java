@@ -22,6 +22,8 @@ import static io.coti.cotinode.http.HttpStringConstants.*;
 public class TransactionService implements ITransactionService {
 
     @Autowired
+    IZeroSpendService zeroSpendService;
+    @Autowired
     private IBalanceService balanceService;
     @Autowired
     private IClusterService clusterService;
@@ -29,8 +31,6 @@ public class TransactionService implements ITransactionService {
     private IValidationService validationService;
     @Autowired
     private Transactions transactions;
-    @Autowired
-    IZeroSpendService zeroSpendService;
 
     @Override
     public ResponseEntity<AddTransactionResponse> addNewTransaction(AddTransactionRequest request) {
@@ -68,9 +68,8 @@ public class TransactionService implements ITransactionService {
             e.printStackTrace();
         }
 
-        transactions.put(transactionData);
+        createNewSourceTransaction(transactionData);
 
-        balanceService.insertIntoUnconfirmedDBandAddToTccQeueue(new ConfirmationData(transactionData.getHash()));
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(new AddTransactionResponse(
@@ -80,22 +79,47 @@ public class TransactionService implements ITransactionService {
 
     private TransactionData selectSources(TransactionData transactionData) {
         transactionData = clusterService.selectSources(transactionData);
-        if(!transactionData.hasSources()){
-            log.info("No sources found for transaction with trust score {}, generating a zero spend transaction", transactionData.getSenderTrustScore());
-            TransactionData zeroSpendTransaction = zeroSpendService.getZeroSpendTransaction(transactionData.getSenderTrustScore());
-            transactions.put(zeroSpendTransaction);
-            clusterService.addGenesisToSources(zeroSpendTransaction);
-            while(!transactionData.hasSources()){
-                log.info("Waiting 2 seconds for new zero spend transaction to be added to available sources");
+        if (transactionData.hasSources()) {
+            return transactionData;
+        }
+
+        log.info("No sources found for transaction with trust score {}", transactionData.getSenderTrustScore());
+        if (clusterService.hasGenesisTransaction()) {
+            log.info("Genesis transaction exists, waiting for additional transactions to arrive");
+            int retryTimes = 200 / transactionData.getSenderTrustScore();
+            while (!transactionData.hasSources() && retryTimes > 0) {
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                retryTimes--;
                 transactionData = clusterService.selectSources(transactionData);
+                if (transactionData.hasSources()) {
+                    return transactionData;
+                }
             }
         }
+
+        TransactionData zeroSpendTransaction = zeroSpendService.getZeroSpendTransaction(transactionData.getSenderTrustScore());
+        createNewSourceTransaction(zeroSpendTransaction);
+        clusterService.addTransactionDataToSources(zeroSpendTransaction);
+        transactionData = clusterService.selectSources(transactionData);
+        while (!transactionData.hasSources()) {
+            log.info("Waiting 2 seconds for new zero spend transaction to be added to available sources");
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            transactionData = clusterService.selectSources(transactionData);
+        }
         return transactionData;
+    }
+
+    private void createNewSourceTransaction(TransactionData transactionData) {
+        transactions.put(transactionData);
+        balanceService.insertIntoUnconfirmedDBandAddToTccQeueue(new ConfirmationData(transactionData.getHash()));
     }
 
     private boolean validateAddresses(AddTransactionRequest request) {

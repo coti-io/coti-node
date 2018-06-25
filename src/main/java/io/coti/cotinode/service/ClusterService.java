@@ -289,7 +289,7 @@ public class ClusterService implements IClusterService {
         return thereAreSources;
     }
 
-    public TransactionData addGenesisToSources(TransactionData zeroSpendTransaction) {
+    public TransactionData addTransactionDataToSources(TransactionData zeroSpendTransaction) {
         addNewTransactionToMemoryStorage(zeroSpendTransaction);
         return zeroSpendTransaction;
     }
@@ -338,6 +338,11 @@ public class ClusterService implements IClusterService {
 
 
         return transactionFromDb;
+    }
+
+    @Override
+    public boolean hasGenesisTransaction() {
+        return false;
     }
 
 }

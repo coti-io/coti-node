@@ -11,8 +11,9 @@ public interface IClusterService {
 
     void initCluster(List<Hash> notConfirmTransactions)  throws InterruptedException;
 
-    TransactionData addGenesisToSources(TransactionData zeroSpendTransaction);
+    TransactionData addTransactionDataToSources(TransactionData zeroSpendTransaction);
 
     TransactionData selectSources(TransactionData transactionData);
 
+    boolean hasGenesisTransaction();
 }
