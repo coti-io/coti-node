@@ -28,7 +28,7 @@ public class ValidationService implements IValidationService {
     }
 
     @Override
-    public boolean validateSource(TransactionData transactionData) {
+    public boolean validateSource(Hash hash) {
         return true;
     }
 

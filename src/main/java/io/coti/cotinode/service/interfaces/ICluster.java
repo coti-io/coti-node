@@ -15,4 +15,6 @@ public interface ICluster {
 
     boolean addNewTransaction(TransactionData transaction);
 
+    TransactionData selectSources(TransactionData transactionData);
+
 }

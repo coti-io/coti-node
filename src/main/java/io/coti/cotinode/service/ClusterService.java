@@ -273,6 +273,13 @@ public class ClusterService implements ICluster {
         return thereAreSources;
     }
 
+    @Override
+    public TransactionData selectSources(TransactionData transactionData) {
+        transactionData.setLeftParentHash(new Hash("BEEA"));
+        transactionData.setRightParentHash(new Hash("BEED"));
+        return transactionData;
+    }
+
 
     // This function is for test purpose only
     public void initClusterFromTransactionList(List<TransactionData> notConfirmTransactions) {

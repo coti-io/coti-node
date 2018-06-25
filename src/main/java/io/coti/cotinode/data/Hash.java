@@ -45,7 +45,7 @@ public class Hash implements Serializable {
 
     @Override
     public String toString(){
-        return new String(bytes);
+        return toHexString();
     }
 
 

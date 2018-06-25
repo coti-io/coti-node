@@ -137,9 +137,7 @@ public class BalanceService implements IBalanceService {
                 }
             }
         }
-
     }
-
 
     private void fillConfirmedTransactionListFromDB() {
         RocksIterator confirmedDBiterator = databaseConnector.getIterator(UnconfirmedTransactions.class.getName());
