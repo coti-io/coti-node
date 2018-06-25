@@ -13,8 +13,6 @@ public interface ICluster {
 
     void initCluster(List<Hash> notConfirmTransactions)  throws InterruptedException;
 
-    boolean addNewTransaction(TransactionData transaction);
-
     TransactionData selectSources(TransactionData transactionData);
 
 }
