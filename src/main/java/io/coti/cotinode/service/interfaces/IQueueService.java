@@ -9,6 +9,8 @@ public interface IQueueService {
 
     public  ConcurrentLinkedQueue<Hash> getTccQueue();
 
+    public void removeTccQueue();
+
     public void addToTransactionQueue(Hash hash);
 
     public ConcurrentLinkedQueue<Hash> getTransactionQueue();

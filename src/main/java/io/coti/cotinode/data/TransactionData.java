@@ -19,6 +19,7 @@ public class TransactionData implements IEntity {
     private boolean transactionConsensus;
     private boolean dspConsensus;
     private int totalTrustScore;
+    private Date transactionConsensusUpdateTime;
     private Date createTime;
     private Date updateTime;
     private Date attachmentTime;
