@@ -28,8 +28,8 @@ public class TransactionData implements IEntity {
     private Date processEndTime;
     private Date powStartTime;
     private Date powEndTime;
-    private double baseTransactionsCount;
-    private int senderTrustScore;
+    private int baseTransactionsCount;
+    private double senderTrustScore;
     private List<Hash> baseTransactionsHash;
     private List<BaseTransactionData> baseTransactions;
     private Hash senderNodeHash;
@@ -38,6 +38,13 @@ public class TransactionData implements IEntity {
     private List<Hash> childrenTransactions;
     private boolean isValid;
     private transient boolean isVisit;
+
+    public void setSenderTrustScore(double value){
+        senderTrustScore = value;
+    }
+    public int getSenderTrustScore(){
+        return (int) Math.round(senderTrustScore);
+    }
 
     private TransactionData(){
     }
