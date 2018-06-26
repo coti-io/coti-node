@@ -23,6 +23,7 @@ import javax.annotation.PostConstruct;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -126,11 +127,17 @@ public class BalanceService implements IBalanceService {
                 }
             } else { //dspc =0
                 confirmationData.setTrustChainConsensus(true);
-                unconfirmedTransactions.put(confirmationData);
+                setDSPCtoTrueAndInsertToUnconfirmed(confirmationData);
                 log.info("The transaction {} was added to unconfirmedTransactions in the db and tcc was updated to true", confirmationData.getKey());
 
             }
         }
+
+    }
+
+    private void setDSPCtoTrueAndInsertToUnconfirmed(ConfirmationData confirmationData){
+        confirmationData.setDoubleSpendPreventionConsensus(true);
+        unconfirmedTransactions.put(confirmationData);
     }
 
     private void removeFromUnconfirmedAndFillConfirmedInDB(List<ConfirmationData> unconfirmedTransactionsToDelete) {
@@ -230,7 +237,7 @@ public class BalanceService implements IBalanceService {
     private void generateGenesisTransactions() {
         for (TransactionData transactionData : zeroSpendService.getGenesisTransactions()) {
             transactions.put(transactionData);
-            insertIntoUnconfirmedDBandAddToTccQeueue(new ConfirmationData(transactionData.getHash()));
+            unconfirmedTransactions.put(new ConfirmationData(transactionData.getHash()));
 
         }
     }
@@ -276,9 +283,11 @@ public class BalanceService implements IBalanceService {
 
     public void insertIntoUnconfirmedDBandAddToTccQeueue(ConfirmationData confirmationData) {
         // put it in unconfirmedTransaction table
-        unconfirmedTransactions.put(confirmationData);
+        setDSPCtoTrueAndInsertToUnconfirmed(confirmationData);
         queueService.addToTccQueue(confirmationData.getHash());
     }
+
+
 
 
     public Map<Hash, Double> getBalanceMap() {

@@ -11,6 +11,7 @@ import io.coti.cotinode.model.UnconfirmedTransactions;
 import io.coti.cotinode.service.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +46,11 @@ public class CotiNodeTest {
     private int privatekeyInt = 122;
 
 
+    @BeforeClass
+    public static void init() {
+        BalanceServiceTests.deleteRocksDBfolder();
+    }
+
     /*
     scenario:
     Transaction{
@@ -66,38 +72,32 @@ public class CotiNodeTest {
         addTransactionRequest.transactionHash = new Hash("A1");
         addTransactionRequest.message = "message";
 
-        ResponseEntity<AddTransactionResponse> responseEntity =  transactionService.addNewTransaction(addTransactionRequest);
+        ResponseEntity<AddTransactionResponse> responseEntity = transactionService.addNewTransaction(addTransactionRequest);
         Assert.assertTrue(responseEntity.getStatusCode().equals(HttpStatus.CREATED));
 
-        ConfirmationData confirmationData = unconfirmedTransactions.getByHash(new Hash("A1"));
 
-        Assert.assertNotNull(confirmationData);
+        ConfirmationData unconfirmedData = unconfirmedTransactions.getByHash(new Hash("A1"));
+
+        Assert.assertNull(unconfirmedData);
+
+        ConfirmationData confirmedData = confirmedTransactions.getByHash(new Hash("A1"));
+
+        Assert.assertNotNull(confirmedData);
 
 
-        /*
-        BaseTransactionData baseTransactionData = new BaseTransactionData("00A598A8030DA6D86C6BC7F2F5144EA549D28211EA58FAA70EBF4C1E665C1FE9B5204B5D6F84822C307E4B4A7140737AEC23FC63B65B35F86A10026DBD2D864E6B",100.1);
-        baseTransactionData.setSignature("1C$80ECA0013536B8446714934649665E93C78B4B35184E9832F43D18C8F00411D4$670A77A6892681C1EFC5F6F08FA92590D44AC6C2536AAA3E481408F5BD18AA88");
-        BaseTransactionData baseTransactionData2 = new BaseTransactionData("00A598A8030DA6D86C6BC7F2F5144EA549D28211EA58FAA70EBF4C1E665C1FE9B5204B5D6F84822C307E4B4A7140737AEC23FC63B65B35F86A10026DBD2D864E6B",200.1);
-        baseTransactionData2.setSignature("1C$80ECA0013536B8446714934649665E93C78B4B35184E9832F43D18C8F00411D4$670A77A6892681C1EFC5F6F08FA92590D44AC6C2536AAA3E481408F5BD18AA88");
-        BaseTransactionData baseTransactionData3 = new BaseTransactionData("00A598A8030DA6D86C6BC7F2F5144EA549D28211EA58FAA70EBF4C1E665C1FE9B5204B5D6F84822C307E4B4A7140737AEC23FC63B65B35F86A10026DBD2D864E6B",300.1);
-        baseTransactionData3.setSignature("1C$80ECA0013536B8446714934649665E93C78B4B35184E9832F43D18C8F00411D4$670A77A6892681C1EFC5F6F08FA92590D44AC6C2536AAA3E481408F5BD18AA88");
-        List<BaseTransactionData> baseTransactionDataList = new LinkedList<>();
-        baseTransactionDataList.add(baseTransactionData);
-        baseTransactionDataList.add(baseTransactionData2);
-        baseTransactionDataList.add(baseTransactionData3);
-        */
     }
 
     private List<BaseTransactionData> createBaseTransactionList(int numOfBaseTransactions){
         List<BaseTransactionData> baseTransactionDataList = new LinkedList<>();
         for(int i = 0 ; i < numOfBaseTransactions ; i++){
             privatekeyInt++;
-        BigInteger privateKey = new BigInteger(String.valueOf(privatekeyInt));
-            BaseTransactionData baseTransactionData =
-                    new BaseTransactionData(new Hash(CryptoUtils.getPublicKeyFromPrivateKey(privateKey).toByteArray()),
-                            getRandomDouble(),new Hash(getRandomHexa()),
-                            CryptoUtils.getSignatureStringFromPrivateKeyAndMessage(privateKey, "message"));
-            baseTransactionDataList.add(baseTransactionData);
+        BigInteger privateKey = BigInteger.valueOf(privatekeyInt);
+        BaseTransactionData baseTransactionData =
+                new BaseTransactionData(new Hash(CryptoUtils.getPublicKeyFromPrivateKey(privateKey).toByteArray()),
+                        getRandomDouble(),new Hash(getRandomHexa()),
+                        CryptoUtils.getSignatureStringFromPrivateKeyAndMessage(privateKey, "message"));
+
+        baseTransactionDataList.add(baseTransactionData);
         }
 
 
