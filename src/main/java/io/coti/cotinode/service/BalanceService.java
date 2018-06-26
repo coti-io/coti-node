@@ -231,6 +231,7 @@ public class BalanceService implements IBalanceService {
         for (TransactionData transactionData : zeroSpendService.getGenesisTransactions()) {
             transactions.put(transactionData);
             insertIntoUnconfirmedDBandAddToTccQeueue(new ConfirmationData(transactionData.getHash()));
+
         }
     }
 

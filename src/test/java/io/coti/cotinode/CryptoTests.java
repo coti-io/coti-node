@@ -20,7 +20,7 @@ public class CryptoTests {
         log.info(CryptoUtils.bytesToHex(pair.getPublicKey().toByteArray()));
         Sign.SignatureData originalSignature = Sign.signMessage("Currency Of The Internet!".getBytes(), pair);
         String signatureString =
-                CryptoUtils.convertToString(originalSignature);
+                CryptoUtils.convertSignatureToString(originalSignature);
 
         log.info(signatureString);
 

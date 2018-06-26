@@ -1,10 +1,24 @@
 package io.coti.cotinode.crypto;
 
+import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Sign;
+
+import javax.xml.bind.DatatypeConverter;
+import java.math.BigInteger;
 
 public class CryptoUtils {
 
     private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
+
+    public static String getSignatureStringFromPrivateKeyAndMessage(BigInteger privateKey, String message){
+        ECKeyPair pair = ECKeyPair.create(privateKey);
+        Sign.SignatureData signatureData = Sign.signMessage(message.getBytes(), pair);
+        return convertSignatureToString(signatureData);
+    }
+
+    public static BigInteger getPublicKeyFromPrivateKey(BigInteger privateKey){
+        return Sign.publicKeyFromPrivate(privateKey);
+    }
 
     public static Sign.SignatureData convertSignatureFromString(String signatureString) {
         String[] signatureParts = signatureString.split("\\$");
@@ -17,7 +31,7 @@ public class CryptoUtils {
         return new Sign.SignatureData(v, r, s);
     }
 
-    public static String convertToString(Sign.SignatureData signatureData) {
+    public static String convertSignatureToString(Sign.SignatureData signatureData) {
         String vString = bytesToHex(new byte[]{signatureData.getV()});
         String rString = bytesToHex(signatureData.getR());
         String sString = bytesToHex(signatureData.getS());
@@ -42,5 +56,9 @@ public class CryptoUtils {
                     + Character.digit(s.charAt(i + 1), 16));
         }
         return data;
+    }
+
+    public static byte[] toByteArray(String s) {
+        return DatatypeConverter.parseHexBinary(s);
     }
 }

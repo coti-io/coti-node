@@ -126,6 +126,7 @@ public class TransactionService implements ITransactionService {
     private void createNewSourceTransaction(TransactionData transactionData) {
         transactions.put(transactionData);
         balanceService.insertIntoUnconfirmedDBandAddToTccQeueue(new ConfirmationData(transactionData.getHash()));
+        clusterService.addTransactionDataToSources(transactionData);
     }
 
     private boolean validateAddresses(AddTransactionRequest request) {
