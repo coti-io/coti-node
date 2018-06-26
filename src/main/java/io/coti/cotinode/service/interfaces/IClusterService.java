@@ -15,5 +15,5 @@ public interface IClusterService {
 
     TransactionData selectSources(TransactionData transactionData);
 
-    boolean hasGenesisTransaction();
+    boolean isSourceListEmpty();
 }

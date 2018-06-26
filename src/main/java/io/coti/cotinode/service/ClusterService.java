@@ -310,7 +310,7 @@ public class ClusterService implements IClusterService {
                 localThreadTrustScoreToSourceListMapping = new ConcurrentHashMap<>(trustScoreToSourceListMapping);
                 localTrustScoreToSourceListMappingSum = getTotalNumberOfSources();
             }
-            if (localTrustScoreToSourceListMappingSum > 0) {
+            if (isSourceListEmpty()) {
 
                 // Selection of sources
                 selectedSourcesForAttachment = sourceSelector.selectSourcesForAttachment(localThreadTrustScoreToSourceListMapping,
@@ -341,7 +341,9 @@ public class ClusterService implements IClusterService {
 
     @Override
     public boolean hasGenesisTransaction() {
-        return false;
+        trustScoreToSourceListMapping.forEach((score, transactions) -> {
+            if(transactions.transactions.size());
+        });
     }
 
 }
