@@ -4,7 +4,6 @@ import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.ConfirmationData;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
-import io.coti.cotinode.database.RocksDBConnector;
 import io.coti.cotinode.model.ConfirmedTransactions;
 import io.coti.cotinode.model.Transactions;
 import io.coti.cotinode.model.UnconfirmedTransactions;
@@ -54,7 +53,6 @@ public class BalanceService implements IBalanceService {
 
     private Map<Hash, Double> balanceMap;
     private Map<Hash, Double> preBalanceMap;
-
 
     private List<Map<Hash, Double>> unconfirmedTransactionList;
     private List<Map<Hash, Double>> confirmedTransactionList;

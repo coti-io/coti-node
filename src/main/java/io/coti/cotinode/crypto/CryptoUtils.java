@@ -20,8 +20,6 @@ public class CryptoUtils {
         return Sign.publicKeyFromPrivate(privateKey);
     }
 
-
-
     public static Sign.SignatureData convertSignatureFromString(String signatureString) {
         String[] signatureParts = signatureString.split("\\$");
         if (signatureParts.length != 3) {
@@ -60,5 +58,9 @@ public class CryptoUtils {
         return data;
     }
 
-
+    public static BigInteger generatePrivateKey(String seed, int index){
+        BigInteger value = new BigInteger(seed);
+        value = value.add(BigInteger.valueOf(index));
+        return value;
+    }
 }
