@@ -3,7 +3,6 @@ package io.coti.cotinode.service;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.model.Transactions;
-import io.coti.cotinode.service.interfaces.IBalanceService;
 import io.coti.cotinode.service.interfaces.IClusterService;
 import io.coti.cotinode.service.interfaces.ISourceSelector;
 import lombok.extern.slf4j.Slf4j;
@@ -109,7 +108,7 @@ public class ClusterService implements IClusterService {
 
         synchronized (locker) {
             if (transaction.isSource() && transaction.getSenderTrustScore() >= 1 && transaction.getSenderTrustScore() <= 100) {
-                List<TransactionData> transactionTrustScoreList = trustScoreToSourceListMapping.get(transaction.GetRoundedSenderTrustScore());
+                List<TransactionData> transactionTrustScoreList = trustScoreToSourceListMapping.get(transaction.getRoundedSenderTrustScore());
                 if (!transactionTrustScoreList.contains(transaction)) {
                     transactionTrustScoreList.add(transaction);
                 }

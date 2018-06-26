@@ -40,7 +40,7 @@ public class TransactionData implements IEntity {
     private transient boolean isVisit;
 
 
-    public int GetRoundedSenderTrustScore(){
+    public int getRoundedSenderTrustScore(){
         return (int) Math.round(senderTrustScore);
     }
 
