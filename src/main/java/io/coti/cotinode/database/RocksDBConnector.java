@@ -96,6 +96,10 @@ public class RocksDBConnector implements IDatabaseConnector {
         return it;
     }
 
+    @Override
+    public boolean isEmpty(String columnFamilyName) {
+        return getIterator(columnFamilyName).isValid();
+    }
 
 
     @Override

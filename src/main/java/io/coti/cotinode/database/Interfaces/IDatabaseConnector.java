@@ -6,11 +6,13 @@ import java.util.Map;
 
 public interface IDatabaseConnector {
 
-    public boolean put(String columnFamilyName, byte[] key, byte[] value);
+    boolean put(String columnFamilyName, byte[] key, byte[] value);
 
-    public byte[] getByKey(String columnFamilyName, byte[] key);
+    byte[] getByKey(String columnFamilyName, byte[] key);
 
-    public void delete(String columnFamilyName, byte[] key);
+    void delete(String columnFamilyName, byte[] key);
 
-    public RocksIterator getIterator(String coulumnFamilyName);
+    RocksIterator getIterator(String coulumnFamilyName);
+
+    boolean isEmpty(String columnFamilyName);
 }

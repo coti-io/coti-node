@@ -60,6 +60,11 @@ public class TransactionData implements IEntity {
         this.processStartTime = (new Date());
     }
 
+    public TransactionData(Hash hash, double trustScore) {
+        this(hash);
+        this.senderTrustScore = trustScore;
+    }
+
     public boolean isSource() {
         return childrenTransactions == null || childrenTransactions.size() == 0;
     }
