@@ -176,12 +176,17 @@ public class ClusterService implements IClusterService {
 
         if (selectedSourcesForAttachment.size() > 0) {
             transactionData.setLeftParentHash(selectedSourcesForAttachment.get(0).getHash());
-            log.info("The function found the following source:{}",selectedSourcesForAttachment.get(0).getHash());
         }
         if (selectedSourcesForAttachment.size() > 1) {
             transactionData.setRightParentHash(selectedSourcesForAttachment.get(1).getHash());
-            log.info("The function found the following sources:{}, {}",selectedSourcesForAttachment.get(0).getHash( ), selectedSourcesForAttachment.get(1).getHash());
         }
+
+        String hashes = "";
+        for (TransactionData td: selectedSourcesForAttachment) {
+            hashes += td.getHash() + " ";
+        }
+        log.info("For transaction with hash:{} we found the following sources:{}",transactionData.getHash(), hashes);
+
         return transactionData;
     }
 

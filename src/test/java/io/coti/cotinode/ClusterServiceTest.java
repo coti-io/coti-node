@@ -157,7 +157,6 @@ public class ClusterServiceTest {
                     if (cluster.selectSources(newTransactions.get(index))== null
                            || newTransactions.get(index).getLeftParentHash() != null
                            || newTransactions.get(index).getRightParentHash() != null) {
-                       log.info("removed hash:{}", newTransactions.get(index));
                        newTransactions.remove(index);
 
                    }
