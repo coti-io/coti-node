@@ -11,16 +11,21 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Vector;
 import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+
 public class ClusterService implements IClusterService {
 
     private static Object locker = new Object();
+    private final Vector<TransactionData>[] sourceListsByTrustScore = new Vector[101];
 
     @Value("${cluster.delay.after.tcc}")
     private int delayTimeAfterTccProcess;
@@ -38,9 +43,7 @@ public class ClusterService implements IClusterService {
     private TccConfirmationService tccConfirmationService;
 
     private ConcurrentHashMap<Hash, TransactionData> hashToUnTccConfirmationTransactionsMapping;
-    private final List<Vector<TransactionData>> sourceListsByTrustScore = new ArrayList<Vector<TransactionData>>();
     private Executor executor;
-
 
     @PostConstruct
     public void initCluster() {
@@ -55,8 +58,6 @@ public class ClusterService implements IClusterService {
             dbTransactions.init();
             setUnTccConfirmedTransactions(getTransactionsByHashFromDb(notConfirmTransactions));
             initSources();
-            setTrustScoreToSourceListMapping(hashToUnTccConfirmationTransactionsMapping);
-
             trustScoreConsensusProcess();
         } catch (Exception e) {
             log.error("Error in initCluster", e);
@@ -64,11 +65,15 @@ public class ClusterService implements IClusterService {
     }
 
     private void initSources() {
-        for(int i = 0; i <= 100; i++){
-            sourceListsByTrustScore.add(new Vector<>());
+        for (int i = 0; i <= 100; i++) {
+            sourceListsByTrustScore[i] = (new Vector<>());
         }
         for (TransactionData transaction : hashToUnTccConfirmationTransactionsMapping.values()) {
-            addToTrustScoreToSourceListMap(transaction);
+            List<TransactionData> sameTrustScoreTransactions =
+                    sourceListsByTrustScore[transaction.getRoundedSenderTrustScore()];
+            if (transaction.isSource() && !sameTrustScoreTransactions.contains(transaction)) {
+                sameTrustScoreTransactions.add(transaction);
+            }
         }
     }
 
@@ -110,8 +115,9 @@ public class ClusterService implements IClusterService {
 
     private void addToTrustScoreToSourceListMap(TransactionData transaction) {
         synchronized (locker) {
-            if (transaction.isSource() && transaction.getSenderTrustScore() >= 1 && transaction.getSenderTrustScore() <= 100) {
-                List<TransactionData> transactionTrustScoreList = sourceListsByTrustScore.get(transaction.getRoundedSenderTrustScore());
+            if (transaction.isSource()) {
+                List<TransactionData> transactionTrustScoreList =
+                        sourceListsByTrustScore[transaction.getRoundedSenderTrustScore()];
                 if (!transactionTrustScoreList.contains(transaction)) {
                     transactionTrustScoreList.add(transaction);
                 }
@@ -129,14 +135,12 @@ public class ClusterService implements IClusterService {
                 hashToUnTccConfirmationTransactionsMapping.remove(hash);
             }
 
-            deleteTrustScoreToSourceListMapping(transaction);
+            removeTransactionFromSourcesList(transaction);
         }
     }
 
-    private void deleteTrustScoreToSourceListMapping(TransactionData transaction) {
-        if (transaction != null && trustScoreToSourceListMapping.containsKey(transaction.getSenderTrustScore())) {
-            trustScoreToSourceListMapping.get(transaction.getSenderTrustScore()).remove(transaction);
-        }
+    private void removeTransactionFromSourcesList(TransactionData transaction) {
+        sourceListsByTrustScore[transaction.getRoundedSenderTrustScore()].remove(transaction);
     }
 
     private List<TransactionData> getAllSourceTransactions() {
@@ -159,12 +163,12 @@ public class ClusterService implements IClusterService {
 
         if (leftParentHash != null && hashToUnTccConfirmationTransactionsMapping.get(leftParentHash) != null) {
             hashToUnTccConfirmationTransactionsMapping.get(leftParentHash).addToChildrenTransactions(childHash);
-            deleteTrustScoreToSourceListMapping(dbTransactions.getByHash(leftParentHash));
+            removeTransactionFromSourcesList(dbTransactions.getByHash(leftParentHash));
         }
 
         if (rightParentHash != null && hashToUnTccConfirmationTransactionsMapping.get(rightParentHash) != null) {
             hashToUnTccConfirmationTransactionsMapping.get(rightParentHash).addToChildrenTransactions(childHash);
-            deleteTrustScoreToSourceListMapping(dbTransactions.getByHash(rightParentHash));
+            removeTransactionFromSourcesList(dbTransactions.getByHash(rightParentHash));
         }
 
         addNewTransactionToMemoryStorage(attachedTransactionFromDb);
@@ -204,8 +208,10 @@ public class ClusterService implements IClusterService {
 
     @Override
     public TransactionData selectSources(TransactionData transactionData) {
-        ConcurrentHashMap<Integer, List<TransactionData>> trustScoreToTransactionMappingSnapshot =
-                new ConcurrentHashMap<>(trustScoreToSourceListMapping);
+        Vector<TransactionData>[] trustScoreToTransactionMappingSnapshot = new Vector[101];
+        for(int i = 0; i <= 100; i++){
+            trustScoreToTransactionMappingSnapshot[i] = (Vector<TransactionData>) sourceListsByTrustScore[i].clone();
+        }
 
         List<TransactionData> selectedSourcesForAttachment =
                 sourceSelector.selectSourcesForAttachment(

@@ -17,7 +17,7 @@ public class SourceSelector implements ISourceSelector {
 
     @Override
     public List<TransactionData> selectSourcesForAttachment(
-            Map<Integer, List<TransactionData>> trustScoreToTransactionMapping,
+            Vector<TransactionData>[] trustScoreToTransactionMapping,
             double transactionTrustScore) {
 
         List<TransactionData> neighbourSources = getNeighbourSources(
@@ -26,48 +26,22 @@ public class SourceSelector implements ISourceSelector {
 
         return selectTwoOptimalSources(neighbourSources);
     }
-
     private List<TransactionData> getNeighbourSources(
-            Map<Integer, List<TransactionData>> trustScoreToSourceListMapping,
-            double transactionTrustScore) {
-
-        int roundedTrustScore = (int) Math.round(transactionTrustScore);
-        LinkedList<TransactionData> neighbourSources = new LinkedList<>();
-        int numberOfSources = getNumberOfSources(trustScoreToSourceListMapping);
-
-        for (int trustScoreDifference = 0; trustScoreDifference < maxNeighbourhoodRadius; trustScoreDifference++) {
-            int lowTrustScore = roundedTrustScore - trustScoreDifference;
-            int highTrustScore = roundedTrustScore + trustScoreDifference;
-            if (lowTrustScore >= 0 && trustScoreToSourceListMapping.containsKey(lowTrustScore)) {
-                neighbourSources.addAll(trustScoreToSourceListMapping.get(lowTrustScore));
-            }
-            if (highTrustScore <= 100 &&
-                    trustScoreToSourceListMapping.containsKey(highTrustScore)) {
-                neighbourSources.addAll(trustScoreToSourceListMapping.get(highTrustScore));
-            }
-            if (neighbourSources.size() / numberOfSources > (double) minSourcePercentage / 100) {
-                break;
-            }
-        }
-        return neighbourSources;
-    }
-
-    private List<TransactionData> getNeighbourSources2(
-            ArrayList<ArrayList<TransactionData>> trustScoreToSourceListMapping,
+            Vector<TransactionData>[] trustScoreToSourceListMapping,
             double transactionTrustScore) {
 
         int roundedTrustScore = (int) Math.round(transactionTrustScore);
         int numberOfSources = getNumberOfSources(trustScoreToSourceListMapping);
         int lowIndex = roundedTrustScore - 1;
         int highIndex = roundedTrustScore + 1;
-        ArrayList<TransactionData> neighbourSources = trustScoreToSourceListMapping.get(roundedTrustScore);
+        Vector<TransactionData> neighbourSources = trustScoreToSourceListMapping[roundedTrustScore];
 
         for (int trustScoreDifference = 0; trustScoreDifference < maxNeighbourhoodRadius; trustScoreDifference++) {
             if (lowIndex <= 100) {
-                neighbourSources.addAll(trustScoreToSourceListMapping.get(lowIndex));
+                neighbourSources.addAll(trustScoreToSourceListMapping[lowIndex]);
             }
             if (highIndex >= 0) {
-                neighbourSources.addAll(trustScoreToSourceListMapping.get(highIndex));
+                neighbourSources.addAll(trustScoreToSourceListMapping[highIndex]);
             }
             if (neighbourSources.size() / numberOfSources > (double) minSourcePercentage / 100) {
                 break;
@@ -76,11 +50,11 @@ public class SourceSelector implements ISourceSelector {
         return neighbourSources;
     }
 
-    private int getNumberOfSources(Map<Integer, List<TransactionData>> trustScoreToSourceListMapping) {
+    private int getNumberOfSources(Vector<TransactionData>[] trustScoreToSourceListMapping) {
         int numberOfSources = 0;
-        for(int i = 0; i < trustScoreToSourceListMapping.size(); i++){
-            if(trustScoreToSourceListMapping.get(i) != null){
-                numberOfSources += trustScoreToSourceListMapping.get(i).size();
+        for(int i = 0; i < trustScoreToSourceListMapping.length; i++){
+            if(trustScoreToSourceListMapping[i] != null){
+                numberOfSources += trustScoreToSourceListMapping[i].size();
             }
         }
         return numberOfSources;

@@ -155,16 +155,16 @@ public class ClusterServiceTest {
             exec.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
-                    if (newTransactions.size() > 0) {
-                        int index = random.nextInt(newTransactions.size());
-                        if (!cluster.addNewTransaction(newTransactions.get(index))
-                                || newTransactions.get(index).getLeftParentHash() != null
-                                || newTransactions.get(index).getRightParentHash() != null) {
-                            log.info("removed hash:{}", newTransactions.get(index));
-                            newTransactions.remove(index);
-
-                        }
-                    }
+//                    if (newTransactions.size() > 0) {
+//                        int index = random.nextInt(newTransactions.size());
+//                        if (cluster.selectSources(newTransactions.get(index)== null)
+//                                || newTransactions.get(index).getLeftParentHash() != null
+//                                || newTransactions.get(index).getRightParentHash() != null) {
+//                            log.info("removed hash:{}", newTransactions.get(index));
+//                            newTransactions.remove(index);
+//
+//                        }
+//                    }
                 }
             }, 4, 8, TimeUnit.SECONDS);
 

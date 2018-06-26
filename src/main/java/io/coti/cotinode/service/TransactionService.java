@@ -84,20 +84,17 @@ public class TransactionService implements ITransactionService {
         }
 
         log.info("No sources found for transaction with trust score {}", transactionData.getSenderTrustScore());
-        if (clusterService.isSourceListEmpty()) {
-            log.info("Genesis transaction exists, waiting for additional transactions to arrive");
-            int retryTimes = 200 / transactionData.getRoundedSenderTrustScore();
-            while (!transactionData.hasSources() && retryTimes > 0) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                retryTimes--;
-                transactionData = clusterService.selectSources(transactionData);
-                if (transactionData.hasSources()) {
-                    return transactionData;
-                }
+        int retryTimes = 200 / transactionData.getRoundedSenderTrustScore();
+        while (!transactionData.hasSources() && retryTimes > 0) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            retryTimes--;
+            transactionData = clusterService.selectSources(transactionData);
+            if (transactionData.hasSources()) {
+                return transactionData;
             }
         }
 
