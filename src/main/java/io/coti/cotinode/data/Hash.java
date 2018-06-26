@@ -40,8 +40,6 @@ public class Hash implements Serializable {
         return Arrays.equals(bytes, ((Hash) other).bytes);
     }
 
-
-
     @Override
     public int hashCode() {
         return Arrays.hashCode(bytes);
@@ -51,7 +49,4 @@ public class Hash implements Serializable {
     public String toString(){
         return toHexString();
     }
-
-
-
 }
