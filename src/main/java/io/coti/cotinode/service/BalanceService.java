@@ -46,9 +46,6 @@ public class BalanceService implements IBalanceService {
     private IQueueService queueService;
 
     @Autowired
-    private RocksDBConnector databaseConnector;
-
-    @Autowired
     private ConfirmedTransactions confirmedTransactions;
 
     @Autowired
@@ -73,15 +70,13 @@ public class BalanceService implements IBalanceService {
 
             List<ConfirmationData> unconfirmedTransactionsToDelete = new LinkedList<>();
 
-            // UnconfirmedTransactionFromDB init
-            readUnconfirmedTransactionsFromDB(unconfirmedTransactionsToDelete);
-
-            // ConfirmedTransactionFromDB init
+            if (unconfirmedTransactions.isEmpty()) {
+                generateGenesisTransactions();
+            } else {
+                readUnconfirmedTransactionsFromDB(unconfirmedTransactionsToDelete);
+            }
             readConfirmedTransactionsFromDB();
-
-            //move items from unnconfirmed to confirmed db table
             removeFromUnconfirmedAndFillConfirmedInDB(unconfirmedTransactionsToDelete);
-
 
             // call cluster service with the unconfirmedTransactionList
             List<Hash> hashesForClusterService = new LinkedList<>();
@@ -164,7 +159,7 @@ public class BalanceService implements IBalanceService {
     }
 
     private void readConfirmedTransactionsFromDB() {
-        RocksIterator confirmedDBiterator = databaseConnector.getIterator(ConfirmedTransactions.class.getName());
+        RocksIterator confirmedDBiterator = confirmedTransactions.getIterator();
         confirmedDBiterator.seekToFirst();
         while (confirmedDBiterator.isValid()) {
             ConfirmationData confirmedTransactionData = (ConfirmationData) SerializationUtils
@@ -178,13 +173,8 @@ public class BalanceService implements IBalanceService {
 
     private void readUnconfirmedTransactionsFromDB(List<ConfirmationData> unconfirmedTransactionsToDelete) {
 
-        RocksIterator unconfirmedDBiterator = databaseConnector.getIterator(UnconfirmedTransactions.class.getName());
+        RocksIterator unconfirmedDBiterator = unconfirmedTransactions.getIterator();
         unconfirmedDBiterator.seekToFirst();
-
-        if (!unconfirmedDBiterator.isValid()) { //empty table
-            readGenesisTransactionsAndInsertToUnconfirmedTransactions(zeroSpendService.getGenesisTransactions());
-            return;
-        }
 
         while (unconfirmedDBiterator.isValid()) {
             ConfirmationData confirmationData = (ConfirmationData) SerializationUtils
@@ -238,11 +228,11 @@ public class BalanceService implements IBalanceService {
         }
     }
 
-    private void readGenesisTransactionsAndInsertToUnconfirmedTransactions(List<TransactionData> transactionDataList) {
-        for (TransactionData transactionData : transactionDataList) {
+    private void generateGenesisTransactions() {
+        for (TransactionData transactionData : zeroSpendService.getGenesisTransactions()) {
             transactions.put(transactionData);
-            ConfirmationData confirmationData = new ConfirmationData(transactionData.getHash());
-            insertIntoUnconfirmedDBandAddToTccQeueue(confirmationData);
+            insertIntoUnconfirmedDBandAddToTccQeueue(new ConfirmationData(transactionData.getHash()));
+            clusterService.addTransactionDataToSources(transactionData);
         }
     }
 
