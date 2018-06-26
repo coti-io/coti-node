@@ -5,7 +5,9 @@ import io.coti.cotinode.service.interfaces.ISourceSelector;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Vector;
 
 import static java.util.stream.Collectors.toList;
 
@@ -26,6 +28,7 @@ public class SourceSelector implements ISourceSelector {
 
         return selectTwoOptimalSources(neighbourSources);
     }
+
     private List<TransactionData> getNeighbourSources(
             Vector<TransactionData>[] trustScoreToSourceListMapping,
             double transactionTrustScore) {
@@ -46,16 +49,16 @@ public class SourceSelector implements ISourceSelector {
             if (neighbourSources.size() / numberOfSources > (double) minSourcePercentage / 100) {
                 break;
             }
-            lowIndex = roundedTrustScore - 1;
-            highIndex = roundedTrustScore + 1;
+            lowIndex--;
+            highIndex++;
         }
         return neighbourSources;
     }
 
     private int getNumberOfSources(Vector<TransactionData>[] trustScoreToSourceListMapping) {
         int numberOfSources = 0;
-        for(int i = 0; i < trustScoreToSourceListMapping.length; i++){
-            if(trustScoreToSourceListMapping[i] != null){
+        for (int i = 0; i < trustScoreToSourceListMapping.length; i++) {
+            if (trustScoreToSourceListMapping[i] != null) {
                 numberOfSources += trustScoreToSourceListMapping[i].size();
             }
         }
