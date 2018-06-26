@@ -2,76 +2,93 @@ package io.coti.cotinode.service;
 
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.service.interfaces.ISourceSelector;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.*;
 
 import static java.util.stream.Collectors.toList;
 
 @Slf4j
 @Component
 public class SourceSelector implements ISourceSelector {
+    private final int minSourcePercentage = 10;
+    private final int maxNeighbourhoodRadius = 20;
 
     @Override
     public List<TransactionData> selectSourcesForAttachment(
-            Map<Integer, ? extends List<TransactionData>> trustScoreToTransactionMapping,
-            double transactionTrustScore,
-            Date now,
-            int minSourcePercentage,
-            int maxNeighbourhoodRadius) {
+            Map<Integer, List<TransactionData>> trustScoreToTransactionMapping,
+            double transactionTrustScore) {
 
         List<TransactionData> neighbourSources = getNeighbourSources(
                 trustScoreToTransactionMapping,
-                transactionTrustScore,
-                maxNeighbourhoodRadius,
-                minSourcePercentage);
+                transactionTrustScore);
 
-        return selectTwoOptimalSources(neighbourSources, now);
+        return selectTwoOptimalSources(neighbourSources);
     }
 
     private List<TransactionData> getNeighbourSources(
-            Map<Integer, ? extends List<TransactionData>> trustScoreToSourceListMapping,
-            double transactionTrustScore,
-            int minSourcePercentage,
-            int maxTrustScoreRadius) {
+            Map<Integer, List<TransactionData>> trustScoreToSourceListMapping,
+            double transactionTrustScore) {
 
-        List<TransactionData> neighbourSources = new Vector<>();
+        int roundedTrustScore = (int) Math.round(transactionTrustScore);
+        LinkedList<TransactionData> neighbourSources = new LinkedList<>();
+        int numberOfSources = getNumberOfSources(trustScoreToSourceListMapping);
 
-        // Get num of all transactions in numberOfSources
-        AtomicInteger numberOfSources = new AtomicInteger();
-        trustScoreToSourceListMapping.forEach((score, transactions) -> {
-            numberOfSources.addAndGet(transactions.size());
-        });
-
-        // Get neighbourSources according to the trustScore selection algorithm
-        for (int trustScoreDifference = 1; trustScoreDifference < maxTrustScoreRadius; trustScoreDifference++) {
-            double lowTrustScore = transactionTrustScore - trustScoreDifference;
-            double highTrustScore = transactionTrustScore + trustScoreDifference;
-            if (lowTrustScore >= 1 && trustScoreToSourceListMapping.containsKey(lowTrustScore)) {
+        for (int trustScoreDifference = 0; trustScoreDifference < maxNeighbourhoodRadius; trustScoreDifference++) {
+            int lowTrustScore = roundedTrustScore - trustScoreDifference;
+            int highTrustScore = roundedTrustScore + trustScoreDifference;
+            if (lowTrustScore >= 0 && trustScoreToSourceListMapping.containsKey(lowTrustScore)) {
                 neighbourSources.addAll(trustScoreToSourceListMapping.get(lowTrustScore));
             }
             if (highTrustScore <= 100 &&
                     trustScoreToSourceListMapping.containsKey(highTrustScore)) {
                 neighbourSources.addAll(trustScoreToSourceListMapping.get(highTrustScore));
             }
-            if (numberOfSources.get() == 0 ||
-                    neighbourSources.size() / numberOfSources.get() > (double) minSourcePercentage / 100) {
+            if (neighbourSources.size() / numberOfSources > (double) minSourcePercentage / 100) {
                 break;
             }
         }
         return neighbourSources;
     }
 
+    private List<TransactionData> getNeighbourSources2(
+            ArrayList<ArrayList<TransactionData>> trustScoreToSourceListMapping,
+            double transactionTrustScore) {
+
+        int roundedTrustScore = (int) Math.round(transactionTrustScore);
+        int numberOfSources = getNumberOfSources(trustScoreToSourceListMapping);
+        int lowIndex = roundedTrustScore - 1;
+        int highIndex = roundedTrustScore + 1;
+        ArrayList<TransactionData> neighbourSources = trustScoreToSourceListMapping.get(roundedTrustScore);
+
+        for (int trustScoreDifference = 0; trustScoreDifference < maxNeighbourhoodRadius; trustScoreDifference++) {
+            if (lowIndex <= 100) {
+                neighbourSources.addAll(trustScoreToSourceListMapping.get(lowIndex));
+            }
+            if (highIndex >= 0) {
+                neighbourSources.addAll(trustScoreToSourceListMapping.get(highIndex));
+            }
+            if (neighbourSources.size() / numberOfSources > (double) minSourcePercentage / 100) {
+                break;
+            }
+        }
+        return neighbourSources;
+    }
+
+    private int getNumberOfSources(Map<Integer, List<TransactionData>> trustScoreToSourceListMapping) {
+        int numberOfSources = 0;
+        for(int i = 0; i < trustScoreToSourceListMapping.size(); i++){
+            if(trustScoreToSourceListMapping.get(i) != null){
+                numberOfSources += trustScoreToSourceListMapping.get(i).size();
+            }
+        }
+        return numberOfSources;
+    }
+
     private List<TransactionData> selectTwoOptimalSources(
-            List<TransactionData> transactions,
-            Date now) {
+            List<TransactionData> transactions) {
+        Date now = new Date();
         List<TransactionData> olderSources =
                 transactions.stream().
                         filter(s -> !s.getAttachmentTime().after(now)).collect(toList());
@@ -93,7 +110,7 @@ public class SourceSelector implements ISourceSelector {
             double random = Math.random() * totalWeight;
             for (int i = 0; i < olderSources.size(); ++i) {
                 random -= now.getTime() - olderSources.get(i).getAttachmentTime().getTime();
-               if (random < 0.0d) {
+                if (random < 0.0d) {
                     randomIndex = i;
                     break;
                 }

@@ -11,12 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -42,8 +38,39 @@ public class ClusterService implements IClusterService {
     private TccConfirmationService tccConfirmationService;
 
     private ConcurrentHashMap<Hash, TransactionData> hashToUnTccConfirmationTransactionsMapping;
-    private ConcurrentHashMap<Integer, List<TransactionData>> trustScoreToSourceListMapping;
+    private final List<Vector<TransactionData>> sourceListsByTrustScore = new ArrayList<Vector<TransactionData>>();
     private Executor executor;
+
+
+    @PostConstruct
+    public void initCluster() {
+        initCluster(new ArrayList<>());
+    }
+
+    @Override
+    public void initCluster(List<Hash> notConfirmTransactions) {
+        try {
+            executor = Executors.newSingleThreadScheduledExecutor();
+            hashToUnTccConfirmationTransactionsMapping = new ConcurrentHashMap<>();
+            dbTransactions.init();
+            setUnTccConfirmedTransactions(getTransactionsByHashFromDb(notConfirmTransactions));
+            initSources();
+            setTrustScoreToSourceListMapping(hashToUnTccConfirmationTransactionsMapping);
+
+            trustScoreConsensusProcess();
+        } catch (Exception e) {
+            log.error("Error in initCluster", e);
+        }
+    }
+
+    private void initSources() {
+        for(int i = 0; i <= 100; i++){
+            sourceListsByTrustScore.add(new Vector<>());
+        }
+        for (TransactionData transaction : hashToUnTccConfirmationTransactionsMapping.values()) {
+            addToTrustScoreToSourceListMap(transaction);
+        }
+    }
 
     private void handleUnconfirmedFromQueueTransactions() {
         ConcurrentLinkedQueue<Hash> UnconfirmedTransactionsHashFromQueue = queueService.getTccQueue();
@@ -64,18 +91,6 @@ public class ClusterService implements IClusterService {
         }
     }
 
-    private int getTotalNumberOfSources() {
-
-        // Get num of all transactions in numberOfSources
-        AtomicInteger numberOfSources = new AtomicInteger();
-
-        trustScoreToSourceListMapping.forEach((score, transactions) -> {
-            numberOfSources.addAndGet(transactions.size());
-        });
-
-        return numberOfSources.intValue();
-    }
-
     private void setUnTccConfirmedTransactions(List<TransactionData> notConfirmTransactions) {
 
         this.hashToUnTccConfirmationTransactionsMapping.
@@ -83,17 +98,6 @@ public class ClusterService implements IClusterService {
                         //filter(x -> !x.isTransactionConsensus()).
                                 collect(Collectors.
                                 toMap(TransactionData::getHash, Function.identity())));
-    }
-
-    private void setTrustScoreToSourceListMapping(ConcurrentHashMap<Hash, TransactionData> hashToUnconfirmedTransactionsMapping) {
-        this.trustScoreToSourceListMapping = new ConcurrentHashMap<>();
-        for (int i = 1; i <= 100; i++) {
-            trustScoreToSourceListMapping.put(i, new Vector<TransactionData>());
-        }
-
-        for (TransactionData transaction : hashToUnconfirmedTransactionsMapping.values()) {
-            addToTrustScoreToSourceListMap(transaction);
-        }
     }
 
     private List<TransactionData> getTransactionsByHashFromDb(List<Hash> notConfirmTransactions) {
@@ -105,10 +109,9 @@ public class ClusterService implements IClusterService {
     }
 
     private void addToTrustScoreToSourceListMap(TransactionData transaction) {
-
         synchronized (locker) {
             if (transaction.isSource() && transaction.getSenderTrustScore() >= 1 && transaction.getSenderTrustScore() <= 100) {
-                List<TransactionData> transactionTrustScoreList = trustScoreToSourceListMapping.get(transaction.getRoundedSenderTrustScore());
+                List<TransactionData> transactionTrustScoreList = sourceListsByTrustScore.get(transaction.getRoundedSenderTrustScore());
                 if (!transactionTrustScoreList.contains(transaction)) {
                     transactionTrustScoreList.add(transaction);
                 }
@@ -193,158 +196,29 @@ public class ClusterService implements IClusterService {
         });
     }
 
-    @PostConstruct
-    void initCluster(){
-        initCluster(new ArrayList<>());
-    }
-
-    @Override
-    public void initCluster(List<Hash> notConfirmTransactions) {
-
-        try {
-            executor = Executors.newSingleThreadScheduledExecutor();
-            hashToUnTccConfirmationTransactionsMapping = new ConcurrentHashMap<>();
-            trustScoreToSourceListMapping = new ConcurrentHashMap<>();
-
-            dbTransactions.init();
-            setUnTccConfirmedTransactions(getTransactionsByHashFromDb(notConfirmTransactions));
-            setTrustScoreToSourceListMapping(hashToUnTccConfirmationTransactionsMapping);
-
-            trustScoreConsensusProcess();
-        } catch (Exception e) {
-            log.error("Error in initCluster", e);
-        }
-    }
-
-
-    // For Test Only !!!
-    public boolean addNewTransaction(TransactionData transactionFromDb) {
-        boolean thereAreSources = true;
-        try {
-            transactionFromDb.setProcessStartTime(new Date());
-
-            // TODO: Get The transactionFromDb trust score from trust score node.
-
-            ConcurrentHashMap<Integer, List<TransactionData>> localThreadTrustScoreToSourceListMapping = null;
-
-
-            List<TransactionData> selectedSourcesForAttachment = null;
-            int localTrustScoreToSourceListMappingSum;
-            synchronized (locker) {
-                localThreadTrustScoreToSourceListMapping = new ConcurrentHashMap<>(trustScoreToSourceListMapping);
-                localTrustScoreToSourceListMappingSum = getTotalNumberOfSources();
-            }
-            if (localTrustScoreToSourceListMappingSum > 0) {
-
-                // Selection of sources
-                selectedSourcesForAttachment = sourceSelector.selectSourcesForAttachment(localThreadTrustScoreToSourceListMapping,
-                        transactionFromDb.getSenderTrustScore(),
-                        new Date(),
-                        10, // TODO: get value from config file and/or dynamic
-                        20); // TODO:  get value from config file and/or dynamic
-                if (selectedSourcesForAttachment.size() == 0) {
-                    log.info("in attachment process of transactionFromDb with hash:{}: waiting for more transactions ....", transactionFromDb.getHash());
-                } else if (selectedSourcesForAttachment.size() == 1) {
-                    log.info("in attachment process of transactionFromDb with hash:{}: whe have source {} !!! ",
-                            transactionFromDb.getHash(), selectedSourcesForAttachment.get(0).getHash());
-                    transactionFromDb.setLeftParentHash(selectedSourcesForAttachment.get(0).getHash());
-                } else if (selectedSourcesForAttachment.size() == 2) {
-                    log.info("in attachment process of transactionFromDb with hash:{}: whe have source: {}, {} !!!",
-                            transactionFromDb.getHash(), selectedSourcesForAttachment.get(0).getHash(), selectedSourcesForAttachment.get(1).getHash());
-                    transactionFromDb.setLeftParentHash(selectedSourcesForAttachment.get(0).getHash());
-                    transactionFromDb.setLeftParentHash(selectedSourcesForAttachment.get(1).getHash());
-                }
-            } else {
-                thereAreSources = false;
-                log.info("in attachment process of transactionFromDb with hash:{}: , there is no other transactions in cluster. No need for attachment!!!", transactionFromDb.getHash());
-            }
-
-            /* Test only!!   */
-            if (!thereAreSources || selectedSourcesForAttachment.size() > 0) {
-                synchronized (locker) {
-                    if (selectedSourcesForAttachment.size() > 0) {
-
-                        transactionFromDb.setLeftParentHash(selectedSourcesForAttachment.get(0).getHash());
-                        dbTransactions.getByHash(selectedSourcesForAttachment.get(0).getHash()).addToChildrenTransactions(transactionFromDb.getHash());
-
-
-                        if (selectedSourcesForAttachment.size() > 1) {
-                            transactionFromDb.setRightParentHash(selectedSourcesForAttachment.get(1).getHash());
-                            dbTransactions.getByHash(selectedSourcesForAttachment.get(1).getHash()).addToChildrenTransactions(transactionFromDb.getHash());
-                        }
-                    }
-                }
-
-                dbTransactions.put(transactionFromDb);
-                queueService.addToTccQueue(transactionFromDb.getHash());
-            }
-            /* end of Test section!!  */
-
-        } catch (Exception e) {
-            log.error("error in addNewTransaction", e);
-        }
-
-
-        return thereAreSources;
-    }
 
     public TransactionData addTransactionDataToSources(TransactionData zeroSpendTransaction) {
         addNewTransactionToMemoryStorage(zeroSpendTransaction);
         return zeroSpendTransaction;
     }
 
-
     @Override
-    public TransactionData selectSources(TransactionData transactionFromDb) {
-        try {
-            transactionFromDb.setProcessStartTime(new Date());
+    public TransactionData selectSources(TransactionData transactionData) {
+        ConcurrentHashMap<Integer, List<TransactionData>> trustScoreToTransactionMappingSnapshot =
+                new ConcurrentHashMap<>(trustScoreToSourceListMapping);
 
-            // TODO: Get The transactionFromDb trust score from trust score node.
+        List<TransactionData> selectedSourcesForAttachment =
+                sourceSelector.selectSourcesForAttachment(
+                        trustScoreToTransactionMappingSnapshot,
+                        transactionData.getSenderTrustScore());
 
-            ConcurrentHashMap<Integer, List<TransactionData>> localThreadTrustScoreToSourceListMapping = null;
-
-
-            List<TransactionData> selectedSourcesForAttachment = null;
-            int localTrustScoreToSourceListMappingSum;
-            synchronized (locker) {
-                localThreadTrustScoreToSourceListMapping = new ConcurrentHashMap<>(trustScoreToSourceListMapping);
-                localTrustScoreToSourceListMappingSum = getTotalNumberOfSources();
-            }
-            if (isSourceListEmpty()) {
-
-                // Selection of sources
-                selectedSourcesForAttachment = sourceSelector.selectSourcesForAttachment(localThreadTrustScoreToSourceListMapping,
-                        transactionFromDb.getSenderTrustScore(),
-                        new Date(),
-                        10, // TODO: get value from config file and/or dynamic
-                        20); // TODO:  get value from config file and/or dynamic
-                if (selectedSourcesForAttachment.size() == 0) {
-                    log.info("in attachment process of transactionFromDb with hash:{}: waiting for more transactions ....", transactionFromDb.getHash());
-                } else if (selectedSourcesForAttachment.size() == 1) {
-                    log.info("in attachment process of transactionFromDb with hash:{}: whe have source {} !!! ",
-                            transactionFromDb.getHash(), selectedSourcesForAttachment.get(0).getHash());
-                    transactionFromDb.setLeftParentHash(selectedSourcesForAttachment.get(0).getHash());
-                } else if (selectedSourcesForAttachment.size() == 2) {
-                    log.info("in attachment process of transactionFromDb with hash:{}: whe have source: {}, {} !!!",
-                            transactionFromDb.getHash(), selectedSourcesForAttachment.get(0).getHash(), selectedSourcesForAttachment.get(1).getHash());
-                    transactionFromDb.setLeftParentHash(selectedSourcesForAttachment.get(0).getHash());
-                    transactionFromDb.setLeftParentHash(selectedSourcesForAttachment.get(1).getHash());
-                }
-            }
-        } catch (Exception e) {
-            log.error("error in addNewTransaction", e);
+        if (selectedSourcesForAttachment.size() > 0) {
+            transactionData.setLeftParentHash(selectedSourcesForAttachment.get(0).getHash());
+        }
+        if (selectedSourcesForAttachment.size() > 1) {
+            transactionData.setRightParentHash(selectedSourcesForAttachment.get(1).getHash());
         }
 
-
-        return transactionFromDb;
+        return transactionData;
     }
-
-    @Override
-    public boolean hasGenesisTransaction() {
-        trustScoreToSourceListMapping.forEach((score, transactions) -> {
-            if(transactions.transactions.size());
-        });
-    }
-
 }
-

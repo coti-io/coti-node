@@ -48,9 +48,8 @@ public class TransactionData implements IEntity {
     }
 
     public TransactionData(AddTransactionRequest request){
-        this.hash = request.transactionHash;
+        this(request.transactionHash);
         this.baseTransactions = request.baseTransactions;
-        this.senderTrustScore = 50;
     }
 
     public TransactionData(Hash hash) {
@@ -58,6 +57,7 @@ public class TransactionData implements IEntity {
         this.trustChainTransactionHash = new Vector<>();
         this.childrenTransactions = new Vector<>();
         this.senderTrustScore = 50;
+        this.processStartTime = (new Date());
     }
 
     public boolean isSource() {
