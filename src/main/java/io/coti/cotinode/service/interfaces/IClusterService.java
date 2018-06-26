@@ -7,10 +7,10 @@ import java.util.List;
 
 public interface IClusterService {
 
-    void initCluster(List<Hash> notConfirmTransactions) throws InterruptedException;
-
     TransactionData addTransactionDataToSources(TransactionData zeroSpendTransaction);
 
     TransactionData selectSources(TransactionData transactionData);
+
+    void setInitialUnconfirmedTransactions(List<Hash> transactionHashes);
 
 }

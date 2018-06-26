@@ -85,7 +85,7 @@ public class BalanceService implements IBalanceService {
                     hashesForClusterService.add(entry.getKey());
                 }
             }
-            clusterService.initCluster(hashesForClusterService);
+            clusterService.setInitialUnconfirmedTransactions(hashesForClusterService);
 
 
             //move balances from unconfirmed/confirmed Transaction Map To Balance Maps
@@ -110,7 +110,6 @@ public class BalanceService implements IBalanceService {
 
     private void updateDbFromQueue() {
         ConcurrentLinkedQueue<Hash> updateBalanceQueue = queueService.getUpdateBalanceQueue();
-        log.info("Balance queue size is {} about to iterate it", updateBalanceQueue.size());
         while (!updateBalanceQueue.isEmpty()) {
             Hash addressHash = updateBalanceQueue.poll();
             ConfirmationData confirmationData = unconfirmedTransactions.getByHash(addressHash);
@@ -232,7 +231,6 @@ public class BalanceService implements IBalanceService {
         for (TransactionData transactionData : zeroSpendService.getGenesisTransactions()) {
             transactions.put(transactionData);
             insertIntoUnconfirmedDBandAddToTccQeueue(new ConfirmationData(transactionData.getHash()));
-            clusterService.addTransactionDataToSources(transactionData);
         }
     }
 
