@@ -20,6 +20,8 @@ public class CryptoUtils {
         return Sign.publicKeyFromPrivate(privateKey);
     }
 
+
+
     public static Sign.SignatureData convertSignatureFromString(String signatureString) {
         String[] signatureParts = signatureString.split("\\$");
         if (signatureParts.length != 3) {
@@ -58,7 +60,5 @@ public class CryptoUtils {
         return data;
     }
 
-    public static byte[] toByteArray(String s) {
-        return DatatypeConverter.parseHexBinary(s);
-    }
+
 }

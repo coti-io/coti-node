@@ -20,7 +20,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -60,6 +59,21 @@ public class CotiNodeTest {
     @Test
     public void testFullProcess(){
 
+        AddTransactionRequest addTransactionRequest = new AddTransactionRequest();
+        List<BaseTransactionData> baseTransactionDataList = createBaseTransactionList(3);
+
+        addTransactionRequest.baseTransactions = baseTransactionDataList;
+        addTransactionRequest.transactionHash = new Hash("A1");
+        addTransactionRequest.message = "message";
+
+        ResponseEntity<AddTransactionResponse> responseEntity =  transactionService.addNewTransaction(addTransactionRequest);
+        Assert.assertTrue(responseEntity.getStatusCode().equals(HttpStatus.CREATED));
+
+        ConfirmationData confirmationData = unconfirmedTransactions.getByHash(new Hash("A1"));
+
+        Assert.assertNotNull(confirmationData);
+
+
         /*
         BaseTransactionData baseTransactionData = new BaseTransactionData("00A598A8030DA6D86C6BC7F2F5144EA549D28211EA58FAA70EBF4C1E665C1FE9B5204B5D6F84822C307E4B4A7140737AEC23FC63B65B35F86A10026DBD2D864E6B",100.1);
         baseTransactionData.setSignature("1C$80ECA0013536B8446714934649665E93C78B4B35184E9832F43D18C8F00411D4$670A77A6892681C1EFC5F6F08FA92590D44AC6C2536AAA3E481408F5BD18AA88");
@@ -72,25 +86,6 @@ public class CotiNodeTest {
         baseTransactionDataList.add(baseTransactionData2);
         baseTransactionDataList.add(baseTransactionData3);
         */
-        AddTransactionRequest addTransactionRequest = new AddTransactionRequest();
-        List<BaseTransactionData> baseTransactionDataList = createBaseTransactionList(3);
-
-        addTransactionRequest.baseTransactions = baseTransactionDataList;
-        addTransactionRequest.transactionHash = new Hash("A1");
-        addTransactionRequest.message = "some message";
-
-        ResponseEntity<AddTransactionResponse> responseEntity =  transactionService.addNewTransaction(addTransactionRequest);
-        Assert.assertTrue(responseEntity.getStatusCode().equals(HttpStatus.OK));
-
-
-
-        ConfirmationData confirmationData = confirmedTransactions.getByHash(new Hash("A1"));
-
-        Assert.assertNotNull(confirmationData);
-
-
-
-
     }
 
     private List<BaseTransactionData> createBaseTransactionList(int numOfBaseTransactions){
@@ -99,7 +94,7 @@ public class CotiNodeTest {
             privatekeyInt++;
         BigInteger privateKey = new BigInteger(String.valueOf(privatekeyInt));
             BaseTransactionData baseTransactionData =
-                    new BaseTransactionData(CryptoUtils.getPublicKeyFromPrivateKey(privateKey).toString(),
+                    new BaseTransactionData(new Hash(CryptoUtils.getPublicKeyFromPrivateKey(privateKey).toByteArray()),
                             getRandomDouble(),new Hash(getRandomHexa()),
                             CryptoUtils.getSignatureStringFromPrivateKeyAndMessage(privateKey, "message"));
             baseTransactionDataList.add(baseTransactionData);
