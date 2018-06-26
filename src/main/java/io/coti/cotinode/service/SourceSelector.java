@@ -3,6 +3,7 @@ package io.coti.cotinode.service;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.service.interfaces.ISourceSelector;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -14,8 +15,12 @@ import static java.util.stream.Collectors.toList;
 @Slf4j
 @Component
 public class SourceSelector implements ISourceSelector {
-    private final int minSourcePercentage = 10;
-    private final int maxNeighbourhoodRadius = 20;
+
+    @Value("${min.source.percentage}")
+    private int minSourcePercentage;
+
+    @Value("${max.neighbourhood.radius}")
+    private int maxNeighbourhoodRadius;
 
     @Override
     public List<TransactionData> selectSourcesForAttachment(

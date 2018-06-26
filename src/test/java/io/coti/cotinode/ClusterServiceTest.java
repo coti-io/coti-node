@@ -166,7 +166,7 @@ public class ClusterServiceTest {
                        }
                    }
                 }
-            }, 4, 8, TimeUnit.SECONDS);
+            }, 4, 3, TimeUnit.SECONDS);
 
             while (true) {
                 try {
