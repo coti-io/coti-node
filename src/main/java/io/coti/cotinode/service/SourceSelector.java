@@ -32,8 +32,8 @@ public class SourceSelector implements ISourceSelector {
 
         int roundedTrustScore = (int) Math.round(transactionTrustScore);
         int numberOfSources = getNumberOfSources(trustScoreToSourceListMapping);
-        int lowIndex = roundedTrustScore - 1;
-        int highIndex = roundedTrustScore + 1;
+        int lowIndex = roundedTrustScore;
+        int highIndex = roundedTrustScore;
         Vector<TransactionData> neighbourSources = trustScoreToSourceListMapping[roundedTrustScore];
 
         for (int trustScoreDifference = 0; trustScoreDifference < maxNeighbourhoodRadius; trustScoreDifference++) {
@@ -46,6 +46,8 @@ public class SourceSelector implements ISourceSelector {
             if (neighbourSources.size() / numberOfSources > (double) minSourcePercentage / 100) {
                 break;
             }
+            lowIndex = roundedTrustScore - 1;
+            highIndex = roundedTrustScore + 1;
         }
         return neighbourSources;
     }
