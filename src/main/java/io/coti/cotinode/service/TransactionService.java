@@ -42,6 +42,7 @@ public class TransactionService implements ITransactionService {
 
     @Override
     public ResponseEntity<AddTransactionResponse> addNewTransaction(AddTransactionRequest request) {
+        log.info("New transaction request is being processed. Transaction Hash: {}", request.transactionHash);
         if (!validateAddresses(request)) {
             log.info("Failed to validate addresses!");
             return ResponseEntity

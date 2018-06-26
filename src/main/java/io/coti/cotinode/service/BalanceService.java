@@ -110,7 +110,6 @@ public class BalanceService implements IBalanceService {
 
     private void updateDbFromQueue() {
         ConcurrentLinkedQueue<Hash> updateBalanceQueue = queueService.getUpdateBalanceQueue();
-        log.info("Balance queue size is {} about to iterate it", updateBalanceQueue.size());
         while (!updateBalanceQueue.isEmpty()) {
             Hash addressHash = updateBalanceQueue.poll();
             ConfirmationData confirmationData = unconfirmedTransactions.getByHash(addressHash);
