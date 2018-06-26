@@ -21,6 +21,12 @@ public class BaseTransactionData implements IEntity {
         this.amount = amount;
     }
 
+    public BaseTransactionData(String addressHash, double amount, Hash hash, String signature){
+        this(addressHash, amount);
+        this.hash = hash;
+        this.signature = signature;
+    }
+
     @Override
     public Hash getKey() {
         return hash;

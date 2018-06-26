@@ -16,7 +16,7 @@ public class Hash implements Serializable {
     }
 
     public Hash(String hash){
-        this.bytes = CryptoUtils.hexStringToByteArray(hash);
+        this.bytes = CryptoUtils.toByteArray(hash);
     }
 
     public Hash(byte[] bytes){
