@@ -103,8 +103,8 @@ public class TccConfirmationService {
                 transaction.setTransactionConsensus(true);
                 transaction.setTransactionConsensusUpdateTime(new Date());
                 transactionConsensusConfirmed.add(transaction.getHash());
-                log.info("transaction with hash:{} is confirmed with trustScore: 78 and totalTrustScore:{} !!!", transaction.getHash(),transaction.getSenderTrustScore());
-                log.info("Trust Chain Transaction Hashes of transaction {}", transaction.getHash());
+                log.info("transaction with hash:{} is confirmed with trustScore: {} and totalTrustScore:{} ", transaction.getHash(),transaction.getSenderTrustScore(),  transaction.getTrustChainTrustScore());
+                log.info("Trust Chain Transaction Hashes of transaction {}", Arrays.toString(transaction.getTrustChainTransactionHash().toArray()));
                 for(Hash hash: transaction.getTrustChainTransactionHash()) {
                     log.info(hash.toString());
                 }

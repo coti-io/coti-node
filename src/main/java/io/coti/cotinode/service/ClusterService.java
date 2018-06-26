@@ -128,6 +128,8 @@ public class ClusterService implements IClusterService {
         }
 
         addNewTransactionToMemoryStorage(attachedTransactionFromDb);
+
+        log.info("transaction with hash:{} attached to cluster, with leftParentHash {} and rightParentHash {}.",childHash ,leftParentHash ,rightParentHash);
     }
 
     private void initiateTrustScoreConsensusProcess() {
@@ -156,6 +158,7 @@ public class ClusterService implements IClusterService {
 
     public TransactionData addTransactionDataToSources(TransactionData zeroSpendTransaction) {
         addNewTransactionToMemoryStorage(zeroSpendTransaction);
+        log.info("added zeroSpendTransaction with hash:{}", zeroSpendTransaction.getHash());
         return zeroSpendTransaction;
     }
 
@@ -173,11 +176,12 @@ public class ClusterService implements IClusterService {
 
         if (selectedSourcesForAttachment.size() > 0) {
             transactionData.setLeftParentHash(selectedSourcesForAttachment.get(0).getHash());
+            log.info("The function found the following source:{}",selectedSourcesForAttachment.get(0).getHash());
         }
         if (selectedSourcesForAttachment.size() > 1) {
             transactionData.setRightParentHash(selectedSourcesForAttachment.get(1).getHash());
+            log.info("The function found the following sources:{}, {}",selectedSourcesForAttachment.get(0).getHash( ), selectedSourcesForAttachment.get(1).getHash());
         }
-
         return transactionData;
     }
 

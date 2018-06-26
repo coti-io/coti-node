@@ -19,7 +19,7 @@ public abstract class Collection<T extends IEntity> {
     private IDatabaseConnector databaseConnector;
 
     public void init(){
-        log.info("Collection init ruuning. Class: " + columnFamilyName);
+        log.info("Collection init running. Class: " + columnFamilyName);
     }
 
     public void put(IEntity entity) {
