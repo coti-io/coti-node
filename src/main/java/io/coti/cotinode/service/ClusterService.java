@@ -30,7 +30,7 @@ public class ClusterService implements IClusterService {
     private int delayTimeAfterTccProcess;
 
     @Autowired
-    QueueService queueService;
+    private QueueService queueService;
 
     @Autowired
     private Transactions dbTransactions;
