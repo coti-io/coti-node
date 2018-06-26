@@ -10,8 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
@@ -44,25 +42,6 @@ public class ClusterService implements IClusterService {
 
     private ConcurrentHashMap<Hash, TransactionData> hashToUnTccConfirmationTransactionsMapping;
     private Executor executor;
-
-    @PostConstruct
-    public void initCluster() {
-        initCluster(new ArrayList<>());
-    }
-
-    @Override
-    public void initCluster(List<Hash> notConfirmTransactions) {
-        try {
-            executor = Executors.newSingleThreadScheduledExecutor();
-            hashToUnTccConfirmationTransactionsMapping = new ConcurrentHashMap<>();
-            dbTransactions.init();
-            setUnTccConfirmedTransactions(getTransactionsByHashFromDb(notConfirmTransactions));
-            initSources();
-            trustScoreConsensusProcess();
-        } catch (Exception e) {
-            log.error("Error in initCluster", e);
-        }
-    }
 
     private void initSources() {
         for (int i = 0; i <= 100; i++) {
@@ -209,7 +188,7 @@ public class ClusterService implements IClusterService {
     @Override
     public TransactionData selectSources(TransactionData transactionData) {
         Vector<TransactionData>[] trustScoreToTransactionMappingSnapshot = new Vector[101];
-        for(int i = 0; i <= 100; i++){
+        for (int i = 0; i <= 100; i++) {
             trustScoreToTransactionMappingSnapshot[i] = (Vector<TransactionData>) sourceListsByTrustScore[i].clone();
         }
 
@@ -226,5 +205,16 @@ public class ClusterService implements IClusterService {
         }
 
         return transactionData;
+    }
+
+    @Override
+    public void setInitialUnconfirmedTransactions(List<Hash> transactionHashes) {
+
+        executor = Executors.newSingleThreadScheduledExecutor();
+        hashToUnTccConfirmationTransactionsMapping = new ConcurrentHashMap<>();
+        dbTransactions.init();
+        setUnTccConfirmedTransactions(transactionDatas);
+        initSources();
+        trustScoreConsensusProcess();
     }
 }
