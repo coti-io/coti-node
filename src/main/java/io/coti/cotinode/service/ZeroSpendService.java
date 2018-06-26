@@ -5,6 +5,7 @@ import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.service.interfaces.IZeroSpendService;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -16,6 +17,6 @@ public class ZeroSpendService implements IZeroSpendService {
 
     @Override
     public List<TransactionData> getGenesisTransactions() {
-        return null;
+        return Collections.emptyList();
     }
 }

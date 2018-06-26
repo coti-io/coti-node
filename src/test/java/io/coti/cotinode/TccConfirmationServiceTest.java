@@ -1,5 +1,6 @@
 package io.coti.cotinode;
 
+import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.service.BalanceService;
@@ -23,7 +24,6 @@ public class TccConfirmationServiceTest {
 
     @Before
     public void init() {
-
         TransactionData TransactionData0 = new TransactionData(new Hash("0".getBytes()));
         TransactionData0.setSenderTrustScore(80);
 

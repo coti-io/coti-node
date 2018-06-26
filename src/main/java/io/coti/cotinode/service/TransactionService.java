@@ -15,6 +15,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+import java.util.concurrent.TimeUnit;
+
 import static io.coti.cotinode.http.HttpStringConstants.*;
 
 @Slf4j
@@ -22,7 +25,7 @@ import static io.coti.cotinode.http.HttpStringConstants.*;
 public class TransactionService implements ITransactionService {
 
     @Autowired
-    IZeroSpendService zeroSpendService;
+    private IZeroSpendService zeroSpendService;
     @Autowired
     private IBalanceService balanceService;
     @Autowired
@@ -31,6 +34,11 @@ public class TransactionService implements ITransactionService {
     private IValidationService validationService;
     @Autowired
     private Transactions transactions;
+
+    @PostConstruct
+    private void init(){
+        log.info("Transaction service Started");
+    }
 
     @Override
     public ResponseEntity<AddTransactionResponse> addNewTransaction(AddTransactionRequest request) {
@@ -63,7 +71,7 @@ public class TransactionService implements ITransactionService {
 
         //POW:
         try {
-            Thread.sleep(10000);
+            TimeUnit.SECONDS.sleep(10);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

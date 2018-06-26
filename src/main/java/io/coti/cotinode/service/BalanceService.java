@@ -3,11 +3,15 @@ package io.coti.cotinode.service;
 import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.ConfirmationData;
 import io.coti.cotinode.data.Hash;
+import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.database.RocksDBConnector;
 import io.coti.cotinode.model.ConfirmedTransactions;
+import io.coti.cotinode.model.Transactions;
 import io.coti.cotinode.model.UnconfirmedTransactions;
 import io.coti.cotinode.service.interfaces.IBalanceService;
+import io.coti.cotinode.service.interfaces.IClusterService;
 import io.coti.cotinode.service.interfaces.IQueueService;
+import io.coti.cotinode.service.interfaces.IZeroSpendService;
 import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.RocksIterator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +34,15 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class BalanceService implements IBalanceService {
 
     @Autowired
+    private Transactions transactions;
+
+    @Autowired
+    private IZeroSpendService zeroSpendService;
+
+    @Autowired
+    private IClusterService clusterService;
+
+    @Autowired
     private IQueueService queueService;
 
     @Autowired
@@ -47,8 +60,6 @@ public class BalanceService implements IBalanceService {
 
     private List<Map<Hash, Double>> unconfirmedTransactionList;
     private List<Map<Hash, Double>> confirmedTransactionList;
-
-    private boolean startScheduledTask;
 
     @PostConstruct
     private void init() {
@@ -73,6 +84,13 @@ public class BalanceService implements IBalanceService {
 
 
             // call cluster service with the unconfirmedTransactionList
+            List<Hash> hashesForClusterService = new LinkedList<>();
+            for (Map<Hash, Double> addressToAmountMap : unconfirmedTransactionList) {
+                for (Map.Entry<Hash, Double> entry : addressToAmountMap.entrySet()) {
+                    hashesForClusterService.add(entry.getKey());
+                }
+            }
+            clusterService.initCluster(hashesForClusterService);
 
 
             //move balances from unconfirmed/confirmed Transaction Map To Balance Maps
@@ -80,10 +98,7 @@ public class BalanceService implements IBalanceService {
             insertFromTempDBlistToInMemMap(unconfirmedTransactionList, preBalanceMap); // calc
             confirmedTransactionList.clear();
             unconfirmedTransactionList.clear();
-
-
-            startScheduledTask = true;
-
+            log.info("Balance service is up");
         } catch (Exception ex) {
             log.error("Errors on initiation ", ex);
         }
@@ -95,9 +110,7 @@ public class BalanceService implements IBalanceService {
      */
     @Scheduled(fixedDelayString = "${balance.scheduled.delay}", initialDelayString = "${balance.scheduled.initialdelay}")
     private void syncBalanceScheduled() {
-        if (startScheduledTask) {
-            updateDbFromQueue();
-        }
+        updateDbFromQueue();
     }
 
     private void updateDbFromQueue() {
@@ -167,6 +180,12 @@ public class BalanceService implements IBalanceService {
 
         RocksIterator unconfirmedDBiterator = databaseConnector.getIterator(UnconfirmedTransactions.class.getName());
         unconfirmedDBiterator.seekToFirst();
+
+        if (!unconfirmedDBiterator.isValid()) { //empty table
+            readGenesisTransactionsAndInsertToUnconfirmedTransactions(zeroSpendService.getGenesisTransactions());
+            return;
+        }
+
         while (unconfirmedDBiterator.isValid()) {
             ConfirmationData confirmationData = (ConfirmationData) SerializationUtils
                     .deserialize(unconfirmedDBiterator.value());
@@ -186,6 +205,46 @@ public class BalanceService implements IBalanceService {
         }
     }
 
+    private void loadBalanceFromSnapshot() {
+        String snapshotFileLocation = "./Snapshot.csv";
+        File snapshotFile = new File(snapshotFileLocation);
+
+        try {
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(snapshotFile));
+            String line;
+
+            while ((line = bufferedReader.readLine()) != null) {
+                String[] addressDetails = line.split(",");
+                if (addressDetails.length != 2) {
+                    throw new Exception("Bad csv file format");
+                }
+                Hash addressHash = new Hash(addressDetails[0]);
+                Double addressAmount = Double.parseDouble(addressDetails[1]);
+                log.info("The hash {} was loaded from the snapshot with amount {}", addressHash, addressAmount);
+
+                if (balanceMap.containsKey(addressHash)) {
+                    // throw new Exception(String.format("Double address found in CSV file: %s", addressHash));
+                    log.error("The address {} was already found in the snapshot", addressHash);
+                }
+                balanceMap.put(addressHash, addressAmount);
+                log.info("Loading from snapshot into inMem balance+preBalance address {} and amount {}",
+                        addressHash, addressAmount);
+
+            }
+            // copy the balance to preBalance
+            preBalanceMap.putAll(balanceMap);
+        } catch (Exception e) {
+            log.error("Errors on snapshot loading: {}", e);
+        }
+    }
+
+    private void readGenesisTransactionsAndInsertToUnconfirmedTransactions(List<TransactionData> transactionDataList) {
+        for (TransactionData transactionData : transactionDataList) {
+            transactions.put(transactionData);
+            ConfirmationData confirmationData = new ConfirmationData(transactionData.getHash());
+            insertIntoUnconfirmedDBandAddToTccQeueue(confirmationData);
+        }
+    }
 
     public synchronized boolean checkBalancesAndAddToPreBalance(List<BaseTransactionData> baseTransactionDatas) {
         try {
@@ -232,38 +291,6 @@ public class BalanceService implements IBalanceService {
         queueService.addToTccQueue(confirmationData.getHash());
     }
 
-    private void loadBalanceFromSnapshot() {
-        String snapshotFileLocation = "./Snapshot.csv";
-        File snapshotFile = new File(snapshotFileLocation);
-
-        try {
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(snapshotFile));
-            String line;
-
-            while ((line = bufferedReader.readLine()) != null) {
-                String[] addressDetails = line.split(",");
-                if (addressDetails.length != 2) {
-                    throw new Exception("Bad csv file format");
-                }
-                Hash addressHash = new Hash(addressDetails[0]);
-                Double addressAmount = Double.parseDouble(addressDetails[1]);
-                log.info("The hash {} was loaded from the snapshot with amount {}", addressHash, addressAmount);
-
-                if (balanceMap.containsKey(addressHash)) {
-                    // throw new Exception(String.format("Double address found in CSV file: %s", addressHash));
-                    log.error("The address {} was already found in the snapshot", addressHash);
-                }
-                balanceMap.put(addressHash, addressAmount);
-                log.info("Loading from snapshot into inMem balance+preBalance address {} and amount {}",
-                        addressHash, addressAmount);
-
-            }
-            // copy the balance to preBalance
-            preBalanceMap.putAll(balanceMap);
-        } catch (Exception e) {
-            log.error("Errors on snapshot loading: {}", e);
-        }
-    }
 
     public Map<Hash, Double> getBalanceMap() {
         return balanceMap;
