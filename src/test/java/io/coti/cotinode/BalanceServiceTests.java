@@ -95,7 +95,7 @@ public class BalanceServiceTests {
     public void insertIntoUnconfirmedDBandAddToTccQeueueTest() {
         ConfirmationData confirmationData1 = new ConfirmationData(new Hash("A3")); //tcc =0 , dspc =0
         populateTransactionWithDummy(confirmationData1);
-        balanceService.insertIntoUnconfirmedDBandAddToTccQueue(confirmationData1);
+        balanceService.insertToUnconfirmedTransactions(confirmationData1);
         ConfirmationData confirmationData  = unconfirmedTransactions.getByHash(new Hash("A3"));
         Assert.assertTrue(queueService.getTccQueue().contains(confirmationData.getHash()));
 

@@ -126,7 +126,6 @@ public class BalanceService implements IBalanceService {
 
             }
         }
-
     }
 
     private void setDSPCtoTrueAndInsertToUnconfirmed(ConfirmationData confirmationData) {
@@ -190,8 +189,6 @@ public class BalanceService implements IBalanceService {
                 }
             } else { //tcc = 0      dspc 0/1
                 unconfirmedTransactionList.add(confirmationData.getAddressHashToValueTransferredMapping());
-                // TCC QUEUE -> QUEUE Service
-                queueService.addToTccQueue(confirmationData.getHash());
                 unconfirmedTransactionHashes.add(confirmationData.getHash());
             }
             unconfirmedDBiterator.next();
@@ -279,11 +276,9 @@ public class BalanceService implements IBalanceService {
         return true;
     }
 
-
-    public void insertIntoUnconfirmedDBandAddToTccQueue(ConfirmationData confirmationData) {
-        // put it in unconfirmedTransaction table
+    public boolean insertToUnconfirmedTransactions(ConfirmationData confirmationData) {
         setDSPCtoTrueAndInsertToUnconfirmed(confirmationData);
-        queueService.addToTccQueue(confirmationData.getHash());
+        return true;
     }
 
     @Override

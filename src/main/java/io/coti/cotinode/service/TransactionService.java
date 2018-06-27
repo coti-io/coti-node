@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import static io.coti.cotinode.http.HttpStringConstants.*;
@@ -73,12 +74,12 @@ public class TransactionService implements ITransactionService {
 
         //POW:
         try {
-            TimeUnit.SECONDS.sleep(10);
+            TimeUnit.SECONDS.sleep(5);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        createNewSourceTransaction(transactionData);
+        attachTransactionToCluster(transactionData);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -109,8 +110,8 @@ public class TransactionService implements ITransactionService {
         }
 
         TransactionData zeroSpendTransaction = zeroSpendService.getZeroSpendTransaction(transactionData.getSenderTrustScore());
-        createNewSourceTransaction(zeroSpendTransaction);
-        clusterService.addTransactionDataToSources(zeroSpendTransaction);
+        attachTransactionToCluster(zeroSpendTransaction);
+        clusterService.attachToCluster(zeroSpendTransaction);
         transactionData = clusterService.selectSources(transactionData);
         while (!transactionData.hasSources()) {
             log.info("Waiting 2 seconds for new zero spend transaction to be added to available sources");
@@ -124,10 +125,12 @@ public class TransactionService implements ITransactionService {
         return transactionData;
     }
 
-    private void createNewSourceTransaction(TransactionData transactionData) {
+    private void attachTransactionToCluster(TransactionData transactionData) {
+        transactionData.setAttachmentTime(new Date());
         transactions.put(transactionData);
-        balanceService.insertIntoUnconfirmedDBandAddToTccQueue(new ConfirmationData(transactionData.getHash()));
-        clusterService.addTransactionDataToSources(transactionData);
+        if(balanceService.insertToUnconfirmedTransactions(new ConfirmationData(transactionData.getHash()))) {
+            clusterService.attachToCluster(transactionData);
+        }
     }
 
     private boolean validateAddresses(AddTransactionRequest request) {

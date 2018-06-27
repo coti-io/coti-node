@@ -14,7 +14,7 @@ public interface IBalanceService {
 
     boolean checkBalancesAndAddToPreBalance(List<BaseTransactionData> baseTransactionDatas);
 
-    void insertIntoUnconfirmedDBandAddToTccQueue(ConfirmationData confirmationData);
+    boolean insertToUnconfirmedTransactions(ConfirmationData confirmationData);
 
     ResponseEntity<GetBalancesResponse> getBalances(GetBalancesRequest getBalancesRequest);
 }

@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 
@@ -73,6 +72,13 @@ public class SourceSelector implements ISourceSelector {
 
     public List<TransactionData> selectTwoOptimalSources(
             List<TransactionData> transactions) {
+        if (transactions.stream().anyMatch(transactionData -> transactionData.getAttachmentTime() == null)) {
+            try {
+                throw new Exception("TranactionsData must have an attachment time!");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
         Date now = new Date();
         List<TransactionData> olderSources =
