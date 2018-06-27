@@ -64,6 +64,7 @@ public class TransactionData implements IEntity {
     public TransactionData(Hash hash, double trustScore) {
         this(hash);
         this.senderTrustScore = trustScore;
+        this.attachmentTime = new Date();
     }
 
     public boolean isSource() {

@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 @Configurable
 public class TccConfirmationService {
-    private int TRESHOLD = 300;
+    private final int TRESHOLD = 10;
     private Logger log = LoggerFactory.getLogger(this.getClass().getName());
     private ConcurrentHashMap<Hash, TransactionData> hashToUnTccConfirmTransactionsMapping;
     private LinkedList<TransactionData> result;

@@ -25,6 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 
 @RunWith(SpringRunner.class)
@@ -77,15 +78,18 @@ public class CotiNodeTest {
         ResponseEntity<AddTransactionResponse> responseEntity = transactionService.addNewTransaction(addTransactionRequest);
         Assert.assertTrue(responseEntity.getStatusCode().equals(HttpStatus.CREATED));
 
-
-        ConfirmationData unconfirmedData = unconfirmedTransactions.getByHash(new Hash("A1"));
-
-        Assert.assertNull(unconfirmedData);
+        try {
+            TimeUnit.SECONDS.sleep(20);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         ConfirmationData confirmedData = confirmedTransactions.getByHash(new Hash("A1"));
 
-        Assert.assertNotNull(confirmedData);
+        ConfirmationData unconfirmedData = unconfirmedTransactions.getByHash(new Hash("A1"));
 
+        Assert.assertNotNull(confirmedData);
+        Assert.assertNull(unconfirmedData);
 
     }
 

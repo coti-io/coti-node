@@ -73,7 +73,7 @@ public class BalanceService implements IBalanceService {
 
             List<ConfirmationData> unconfirmedTransactionsToDelete = new LinkedList<>();
 
-            List<Hash> hashesForClusterService = new LinkedList<>();
+            List<Hash> hashesForClusterService;
             if (unconfirmedTransactions.isEmpty()) {
                 hashesForClusterService = generateGenesisTransactions();
             } else {
@@ -255,8 +255,6 @@ public class BalanceService implements IBalanceService {
                             amount, preBalanceMap.get(addressHash));
                     return false;
                 }
-
-
                 if (preBalanceMap.containsKey(addressHash)) {
                     if (amount + preBalanceMap.get(addressHash) < 0) {
                         log.error("Error in preBalance check. Address {}  amount {} current preBalance {} ", addressHash,
