@@ -1,19 +1,21 @@
-package io.coti.cotinode.service;
+package io.coti.cotinode;
 
 import io.coti.cotinode.AppConfig;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
+import io.coti.cotinode.service.SourceSelector;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Vector;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = AppConfig.class)
@@ -22,15 +24,13 @@ public class SourceSelectorTest {
     @Autowired
     private SourceSelector sourceSelector;
 
-    @Test
-    public void selectSourcesForAttachment() {
-    }
+    private List<TransactionData> newTransactions;
 
-    @Test
-    public void selectTwoOptimalSources() {
 
+    @Before
+    public void init() {
         Date now = new Date();
-        List<TransactionData> newTransactions = new ArrayList();
+        newTransactions = new Vector();
         TransactionData TransactionData2 = new TransactionData(new Hash("22"));
         TransactionData2.setSenderTrustScore(92);
         TransactionData2.setAttachmentTime(new Date(now.getTime() - 2000));
@@ -72,8 +72,25 @@ public class SourceSelectorTest {
         newTransactions.add(TransactionData7);
         newTransactions.add(TransactionData8);
         newTransactions.add(TransactionData9);
-        List<TransactionData> sources = sourceSelector.selectTwoOptimalSources(newTransactions);
+    }
 
+    @Test
+    public void selectTwoOptimalSources() {
+        List<TransactionData> sources = sourceSelector.selectTwoOptimalSources(newTransactions);
         Assert.assertTrue(sources.size() == 2);
     }
+
+    @Test
+    public void selectSourcesForAttachment() {
+        Vector<TransactionData>[] trustScoreToSourceListMapping = new Vector[101];
+        for (int i = 0; i <= 100; i++) {
+            trustScoreToSourceListMapping[i] = (new Vector<>());
+        }
+        for (TransactionData transaction : newTransactions) {
+            trustScoreToSourceListMapping[transaction.getRoundedSenderTrustScore()].add(transaction);
+        }
+        List<TransactionData> sources = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 97);
+        int i= 0;
+    }
+
 }
