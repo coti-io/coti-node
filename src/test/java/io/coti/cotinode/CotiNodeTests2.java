@@ -27,8 +27,8 @@ public class CotiNodeTests2 {
         System.out.println(seed1Address2Signature);
         System.out.println(seed2Address1Signature);
 
-        System.out.println(seed1Address1);
-        System.out.println(seed1Address2);
-        System.out.println(seed2Address1);
+        System.out.println(CryptoUtils.bytesToHex(seed1Address1.toByteArray()));
+        System.out.println(CryptoUtils.bytesToHex(seed1Address2.toByteArray()));
+        System.out.println(CryptoUtils.bytesToHex(seed2Address1.toByteArray()));
     }
 }

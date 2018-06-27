@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 
@@ -72,6 +73,17 @@ public class SourceSelector implements ISourceSelector {
 
     private List<TransactionData> selectTwoOptimalSources(
             List<TransactionData> transactions) {
+        if(true){
+            List<TransactionData> answer = new LinkedList<>();
+            if(transactions.size() <= 2){
+                return transactions;
+            }
+            else {
+                answer.add(transactions.get(0));
+                answer.add(transactions.get(1));
+                return answer;
+            }
+        }
         Date now = new Date();
         List<TransactionData> olderSources =
                 transactions.stream().
