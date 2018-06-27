@@ -41,8 +41,8 @@ public class SourceSelector implements ISourceSelector {
 
         int roundedTrustScore = (int) Math.round(transactionTrustScore);
         int numberOfSources = getNumberOfSources(trustScoreToSourceListMapping);
-        int lowIndex = roundedTrustScore;
-        int highIndex = roundedTrustScore;
+        int lowIndex = roundedTrustScore - 1;
+        int highIndex = roundedTrustScore + 1;
         Vector<TransactionData> neighbourSources = trustScoreToSourceListMapping[roundedTrustScore];
 
         for (int trustScoreDifference = 0; trustScoreDifference < maxNeighbourhoodRadius; trustScoreDifference++) {
