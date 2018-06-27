@@ -8,7 +8,7 @@ public class HttpStringConstants {
     public static final String TRANSACTION_CREATED_MESSAGE = "Transaction created";
 
     public static final String AUTHENTICATION_FAILED_MESSAGE = "Authentication failed!";
-    public static final String INSUFFICIENT_FUNDS_MESSAGE = "Balance for address is is insufficient!";
+    public static final String INSUFFICIENT_FUNDS_MESSAGE = "Balance for address is insufficient!";
 
     public static final String API_CLIENT_ERROR = "Api Client Error";
     public static final String API_SERVER_ERROR = "Api Server Error";
