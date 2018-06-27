@@ -45,6 +45,8 @@ public class CotiNodeTest {
 
     private int privatekeyInt = 122;
 
+    private final static String signatureMessage = "message";
+
 
     @BeforeClass
     public static void init() {
@@ -70,7 +72,7 @@ public class CotiNodeTest {
 
         addTransactionRequest.baseTransactions = baseTransactionDataList;
         addTransactionRequest.transactionHash = new Hash("A1");
-        addTransactionRequest.message = "message";
+        addTransactionRequest.message = signatureMessage;
 
         ResponseEntity<AddTransactionResponse> responseEntity = transactionService.addNewTransaction(addTransactionRequest);
         Assert.assertTrue(responseEntity.getStatusCode().equals(HttpStatus.CREATED));
@@ -95,7 +97,7 @@ public class CotiNodeTest {
         BaseTransactionData baseTransactionData =
                 new BaseTransactionData(new Hash(CryptoUtils.getPublicKeyFromPrivateKey(privateKey).toByteArray()),
                         getRandomDouble(),new Hash(getRandomHexa()),
-                        CryptoUtils.getSignatureStringFromPrivateKeyAndMessage(privateKey, "message"));
+                        CryptoUtils.getSignatureStringFromPrivateKeyAndMessage(privateKey, signatureMessage));
 
         baseTransactionDataList.add(baseTransactionData);
         }

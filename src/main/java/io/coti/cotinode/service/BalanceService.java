@@ -4,6 +4,7 @@ import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.ConfirmationData;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
+import io.coti.cotinode.http.AddTransactionResponse;
 import io.coti.cotinode.http.GetBalancesRequest;
 import io.coti.cotinode.http.GetBalancesResponse;
 import io.coti.cotinode.model.ConfirmedTransactions;
@@ -16,6 +17,7 @@ import io.coti.cotinode.service.interfaces.IZeroSpendService;
 import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.RocksIterator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ import javax.annotation.PostConstruct;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.AbstractMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -289,7 +292,18 @@ public class BalanceService implements IBalanceService {
 
     @Override
     public ResponseEntity<GetBalancesResponse> getBalances(GetBalancesRequest getBalancesRequest) {
-        return null;
+        GetBalancesResponse getBalancesResponse = new GetBalancesResponse();
+        List<AbstractMap.SimpleEntry<Hash, Double>> amounts = new LinkedList<>();
+        for(Hash hash : getBalancesRequest.getAddresses()){
+            if(balanceMap.containsKey(hash)){
+                amounts.add(new AbstractMap.SimpleEntry<>(hash,balanceMap.get(hash)));
+            }
+            else{
+                amounts.add(new AbstractMap.SimpleEntry<>(hash,-1.0));
+            }
+        }
+        getBalancesResponse.setAmounts(amounts);
+        return ResponseEntity.status(HttpStatus.OK).body(getBalancesResponse);
     }
 
 
