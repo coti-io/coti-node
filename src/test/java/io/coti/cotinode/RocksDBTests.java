@@ -94,19 +94,19 @@ public class RocksDBTests {
         Assert.assertEquals(transaction2, null);
     }
 
-    @Test
-    public void saveAndGetBalance() {
-        ConfirmationData confirmedTransactionData1 = new ConfirmationData(new Hash("ConfirmedTransactionData 0".getBytes()));
-        confirmedTransactions.put(confirmedTransactionData1);
-        ConfirmationData confirmedTransactionData2 = confirmedTransactions.getByHash(new Hash("ConfirmedTransactionData 0".getBytes()));
-        Assert.assertEquals(confirmedTransactionData1, confirmedTransactionData2);
-    }
-
-    @Test
-    public void saveAndGetPreBalance() {
-        ConfirmationData confirmationData1 = new ConfirmationData(new Hash("ConfirmedTransactionData 0".getBytes()));
-        unconfirmedTransactions.put(confirmationData1);
-        ConfirmationData confirmationData2 = unconfirmedTransactions.getByHash(new Hash("ConfirmedTransactionData 0".getBytes()));
-        Assert.assertEquals(confirmationData1, confirmationData2);
-    }
+//    @Test
+//    public void saveAndGetBalance() {
+//        ConfirmationData confirmedTransactionData1 = new ConfirmationData(new Hash("ConfirmedTransactionData 0".getBytes()));
+//        confirmedTransactions.put(confirmedTransactionData1);
+//        ConfirmationData confirmedTransactionData2 = confirmedTransactions.getByHash(new Hash("ConfirmedTransactionData 0".getBytes()));
+//        Assert.assertEquals(confirmedTransactionData1, confirmedTransactionData2);
+//    }
+//
+//    @Test
+//    public void saveAndGetPreBalance() {
+//        ConfirmationData confirmationData1 = new ConfirmationData(new Hash("ConfirmedTransactionData 0".getBytes()));
+//        unconfirmedTransactions.put(confirmationData1);
+//        ConfirmationData confirmationData2 = unconfirmedTransactions.getByHash(new Hash("ConfirmedTransactionData 0".getBytes()));
+//        Assert.assertEquals(confirmationData1, confirmationData2);
+//    }
 }

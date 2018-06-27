@@ -128,7 +128,7 @@ public class TransactionService implements ITransactionService {
     private void attachTransactionToCluster(TransactionData transactionData) {
         transactionData.setAttachmentTime(new Date());
         transactions.put(transactionData);
-        if(balanceService.insertToUnconfirmedTransactions(new ConfirmationData(transactionData.getHash()))) {
+        if(balanceService.insertToUnconfirmedTransactions(new ConfirmationData(transactionData))) {
             clusterService.attachToCluster(transactionData);
         }
     }

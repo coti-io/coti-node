@@ -4,6 +4,7 @@ import io.coti.cotinode.data.interfaces.IEntity;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Data
@@ -17,8 +18,13 @@ public class ConfirmationData implements IEntity {
     private boolean DoubleSpendPreventionConsensus;
     private boolean TrustChainConsensus;
 
-    public ConfirmationData(Hash hash) {
-        this.hash = hash;
+    public ConfirmationData(TransactionData transactionData) {
+        addressHashToValueTransferredMapping = new LinkedHashMap<>();
+        this.hash = transactionData.getHash();
+        for(BaseTransactionData baseTransactionData :
+                transactionData.getBaseTransactions()){
+            addressHashToValueTransferredMapping.put(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
+        }
     }
 
     @Override

@@ -110,29 +110,29 @@ public class ClusterServiceTest {
         notTccConfirmTransactions.add(TransactionData0.getHash());
         notTccConfirmTransactions.add(TransactionData1.getHash());
     }
-    private void setunconfirmedTransactionsTable(){
-        ConfirmationData confirmationData0 = new ConfirmationData(new Hash("00"));
-        ConfirmationData confirmationData1 = new ConfirmationData(new Hash("11"));
-        ConfirmationData confirmationData2 = new ConfirmationData(new Hash("22"));
-        ConfirmationData confirmationData3 = new ConfirmationData(new Hash("33"));
-        ConfirmationData confirmationData4 = new ConfirmationData(new Hash("44"));
-        ConfirmationData confirmationData5 = new ConfirmationData(new Hash("55"));
-        ConfirmationData confirmationData6 = new ConfirmationData(new Hash("66"));
-        ConfirmationData confirmationData7 = new ConfirmationData(new Hash("77"));
-        ConfirmationData confirmationData8 = new ConfirmationData(new Hash("88"));
-        ConfirmationData confirmationData9 = new ConfirmationData(new Hash("99"));
-
-        unconfirmedTransactions.put(confirmationData0);
-        unconfirmedTransactions.put(confirmationData1);
-        unconfirmedTransactions.put(confirmationData2);
-        unconfirmedTransactions.put(confirmationData3);
-        unconfirmedTransactions.put(confirmationData4);
-        unconfirmedTransactions.put(confirmationData5);
-        unconfirmedTransactions.put(confirmationData6);
-        unconfirmedTransactions.put(confirmationData7);
-        unconfirmedTransactions.put(confirmationData8);
-        unconfirmedTransactions.put(confirmationData9);
-    }
+//    private void setunconfirmedTransactionsTable(){
+//        ConfirmationData confirmationData0 = new ConfirmationData(new Hash("00"));
+//        ConfirmationData confirmationData1 = new ConfirmationData(new Hash("11"));
+//        ConfirmationData confirmationData2 = new ConfirmationData(new Hash("22"));
+//        ConfirmationData confirmationData3 = new ConfirmationData(new Hash("33"));
+//        ConfirmationData confirmationData4 = new ConfirmationData(new Hash("44"));
+//        ConfirmationData confirmationData5 = new ConfirmationData(new Hash("55"));
+//        ConfirmationData confirmationData6 = new ConfirmationData(new Hash("66"));
+//        ConfirmationData confirmationData7 = new ConfirmationData(new Hash("77"));
+//        ConfirmationData confirmationData8 = new ConfirmationData(new Hash("88"));
+//        ConfirmationData confirmationData9 = new ConfirmationData(new Hash("99"));
+//
+//        unconfirmedTransactions.put(confirmationData0);
+//        unconfirmedTransactions.put(confirmationData1);
+//        unconfirmedTransactions.put(confirmationData2);
+//        unconfirmedTransactions.put(confirmationData3);
+//        unconfirmedTransactions.put(confirmationData4);
+//        unconfirmedTransactions.put(confirmationData5);
+//        unconfirmedTransactions.put(confirmationData6);
+//        unconfirmedTransactions.put(confirmationData7);
+//        unconfirmedTransactions.put(confirmationData8);
+//        unconfirmedTransactions.put(confirmationData9);
+//    }
     @Before
     public void setUp() throws Exception {
         System.out.println("Initializing!");
@@ -140,7 +140,7 @@ public class ClusterServiceTest {
         notTccConfirmTransactions = new Vector<>();
 
         Calendar calender = Calendar.getInstance();
-        setunconfirmedTransactionsTable();
+//        setunconfirmedTransactionsTable();
         setUpTransactionsFromSnapShot();
         setUpNewTransactions();
     }

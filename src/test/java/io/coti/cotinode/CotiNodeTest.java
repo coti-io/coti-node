@@ -54,17 +54,6 @@ public class CotiNodeTest {
         BalanceServiceTests.deleteRocksDBfolder();
     }
 
-    /*
-    scenario:
-    Transaction{
-        base transaction AE,100.1
-        base transaction BE,100.1
-        base transaction CE,100.1
-    }
-    Addresses doesn't exist in balance / pre balance maps
-     */
-
-
     @Test
     public void testFullProcess(){
 

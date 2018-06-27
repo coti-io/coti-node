@@ -40,6 +40,7 @@ public class RocksDBConnector implements IDatabaseConnector {
     @PostConstruct
     public void init() {
         log.info("Initializing RocksDB");
+        deleteDatabaseFolder();
         initiateColumnFamilyDescriptors();
         try {
             loadLibrary();
@@ -54,6 +55,20 @@ public class RocksDBConnector implements IDatabaseConnector {
             e.printStackTrace();
         }
 
+    }
+
+    private static void deleteDatabaseFolder() {
+
+        File index = new File("rocksDB");
+        if (!index.exists()) {
+            return;
+        }
+        String[] entries = index.list();
+        for (String s : entries) {
+            File currentFile = new File(index.getPath(), s);
+            currentFile.delete();
+        }
+        index.delete();
     }
 
     private void populateColumnFamilies() {

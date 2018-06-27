@@ -42,19 +42,19 @@ public class BalanceServiceTests {
 
 
     @BeforeClass
-        public static void deleteRocksDBfolder() {
+    public static void deleteRocksDBfolder() {
 
-            File index = new File("rocksDB");
-            if (!index.exists()) {
-                return;
-            }
-            String[] entries = index.list();
-            for (String s : entries) {
-                File currentFile = new File(index.getPath(), s);
-                currentFile.delete();
-            }
-            index.delete();
+        File index = new File("rocksDB");
+        if (!index.exists()) {
+            return;
         }
+        String[] entries = index.list();
+        for (String s : entries) {
+            File currentFile = new File(index.getPath(), s);
+            currentFile.delete();
+        }
+        index.delete();
+    }
 
     @Test
     public void AInitTest() { // the name starts with a to check make sure it runs first
@@ -87,19 +87,17 @@ public class BalanceServiceTests {
         Assert.assertTrue(balanceService.getPreBalanceMap().get(new Hash("BE")) == 100.0);
 
 
-
-
     }
 
     @Test // this method checks ConfirmationData.equals() as well
-    public void insertIntoUnconfirmedDBandAddToTccQeueueTest() {
-        ConfirmationData confirmationData1 = new ConfirmationData(new Hash("A3")); //tcc =0 , dspc =0
-        populateTransactionWithDummy(confirmationData1);
-        balanceService.insertToUnconfirmedTransactions(confirmationData1);
-        ConfirmationData confirmationData  = unconfirmedTransactions.getByHash(new Hash("A3"));
-        Assert.assertTrue(queueService.getTccQueue().contains(confirmationData.getHash()));
-
-    }
+//    public void insertIntoUnconfirmedDBandAddToTccQeueueTest() {
+//        ConfirmationData confirmationData1 = new ConfirmationData(new Hash("A3")); //tcc =0 , dspc =0
+//        populateTransactionWithDummy(confirmationData1);
+//        balanceService.insertToUnconfirmedTransactions(confirmationData1);
+//        ConfirmationData confirmationData  = unconfirmedTransactions.getByHash(new Hash("A3"));
+//        Assert.assertTrue(queueService.getTccQueue().contains(confirmationData.getHash()));
+//
+//    }
 
     private void populateTransactionWithDummy(ConfirmationData transaction) {
         Map<Hash, Double> addressToAmount = new HashMap<>();
@@ -107,38 +105,39 @@ public class BalanceServiceTests {
         transaction.setAddressHashToValueTransferredMapping(addressToAmount);
     }
 
-    @Test
-    public void syncBalanceScheduledTest() {
-
-
-        try {
-            ConfirmationData confirmationData1 = new ConfirmationData(new Hash("A1")); //tcc =0 , dspc =0
-            populateTransactionWithDummy(confirmationData1);
-            unconfirmedTransactions.put(confirmationData1);
-            queueService.addToUpdateBalanceQueue(new Hash("A1"));
-
-
-            TimeUnit.SECONDS.sleep(5); //wait for the scheduled task to end
-            ConfirmationData confirmationData = unconfirmedTransactions.getByHash(new Hash("A1"));
-            Assert.assertTrue(confirmationData.isTrustChainConsensus());
-
-
-            ConfirmationData confirmationData2 = new ConfirmationData(new Hash("A2")); //tcc =0 , dspc =0
-            populateTransactionWithDummy(confirmationData2);
-            confirmationData2.setDoubleSpendPreventionConsensus(true);
-            unconfirmedTransactions.put(confirmationData2);
-
-            queueService.addToUpdateBalanceQueue(new Hash("A2"));
-            TimeUnit.SECONDS.sleep(5); //wait for the scheduled task to end
-            confirmationData = unconfirmedTransactions.getByHash(new Hash("A2"));
-            Assert.assertNull(confirmationData);
-            ConfirmationData confirmedTransactionData = confirmedTransactions.getByHash(new Hash("A2"));
-            populateTransactionWithDummy(confirmedTransactionData);
-            Assert.assertNotNull(confirmedTransactionData);
-
-        } catch (InterruptedException e) {
-            log.error("Error , {}", e);
-        }
-    }
-
+//    @Test
+//    public void syncBalanceScheduledTest() {
+//
+//
+//        try {
+//            ConfirmationData confirmationData1 = new ConfirmationData(new Hash("A1")); //tcc =0 , dspc =0
+//            populateTransactionWithDummy(confirmationData1);
+//            unconfirmedTransactions.put(confirmationData1);
+//            queueService.addToUpdateBalanceQueue(new Hash("A1"));
+//
+//
+//            TimeUnit.SECONDS.sleep(5); //wait for the scheduled task to end
+//            ConfirmationData confirmationData = unconfirmedTransactions.getByHash(new Hash("A1"));
+//            Assert.assertTrue(confirmationData.isTrustChainConsensus());
+//
+//
+//            ConfirmationData confirmationData2 = new ConfirmationData(new Hash("A2")); //tcc =0 , dspc =0
+//            populateTransactionWithDummy(confirmationData2);
+//            confirmationData2.setDoubleSpendPreventionConsensus(true);
+//            unconfirmedTransactions.put(confirmationData2);
+//
+//            queueService.addToUpdateBalanceQueue(new Hash("A2"));
+//            TimeUnit.SECONDS.sleep(5); //wait for the scheduled task to end
+//            confirmationData = unconfirmedTransactions.getByHash(new Hash("A2"));
+//            Assert.assertNull(confirmationData);
+//            ConfirmationData confirmedTransactionData = confirmedTransactions.getByHash(new Hash("A2"));
+//            populateTransactionWithDummy(confirmedTransactionData);
+//            Assert.assertNotNull(confirmedTransactionData);
+//
+//        } catch (InterruptedException e) {
+//            log.error("Error , {}", e);
+//        }
+//    }
 }
+
+

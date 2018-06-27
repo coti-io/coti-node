@@ -70,18 +70,16 @@ public class BalanceService implements IBalanceService {
             confirmedTransactionList = new LinkedList<>();
 
             loadBalanceFromSnapshot();
-
-            List<ConfirmationData> unconfirmedTransactionsToDelete = new LinkedList<>();
+            deleteConfirmedTransactions();
 
             List<Hash> hashesForClusterService;
             if (unconfirmedTransactions.isEmpty()) {
                 hashesForClusterService = generateGenesisTransactions();
             } else {
-                hashesForClusterService = readUnconfirmedTransactionsFromDB(unconfirmedTransactionsToDelete);
+                hashesForClusterService = readUnconfirmedTransactionsFromDB();
             }
-            readConfirmedTransactionsFromDB();
-            removeFromUnconfirmedAndFillConfirmedInDB(unconfirmedTransactionsToDelete);
             clusterService.setInitialUnconfirmedTransactions(hashesForClusterService);
+            readConfirmedTransactionsFromDB();
 
             //move balances from unconfirmed/confirmed Transaction Map To Balance Maps
             insertFromTempDBlistToInMemMap(confirmedTransactionList, balanceMap); // calc
@@ -94,16 +92,27 @@ public class BalanceService implements IBalanceService {
         }
     }
 
+    private void deleteConfirmedTransactions() {
+        RocksIterator unconfirmedDBiterator = unconfirmedTransactions.getIterator();
+        unconfirmedDBiterator.seekToFirst();
+        while (unconfirmedDBiterator.isValid()) {
+            ConfirmationData confirmationData = (ConfirmationData) SerializationUtils
+                    .deserialize(unconfirmedDBiterator.value());
+            if (confirmationData.isTrustChainConsensus() && confirmationData.isDoubleSpendPreventionConsensus()) {
+                confirmedTransactionList.add(confirmationData.getAddressHashToValueTransferredMapping());
+                confirmedTransactions.put(confirmationData);
+                unconfirmedTransactions.delete(confirmationData.getHash());
+            }
+            unconfirmedDBiterator.next();
+        }
+    }
+
     /**
      * The task will be executed a first time after the initialDelay (because of the init() ) value – and it will
      * continue to be executed according to the fixedDelay
      */
     @Scheduled(fixedDelayString = "${balance.scheduled.delay}", initialDelayString = "${balance.scheduled.initialdelay}")
-    private void syncBalanceScheduled() {
-        updateDbFromQueue();
-    }
-
-    private void updateDbFromQueue() {
+     private void updateBalanceFromQueueScheduledTask() {
         ConcurrentLinkedQueue<Hash> updateBalanceQueue = queueService.getUpdateBalanceQueue();
         while (!updateBalanceQueue.isEmpty()) {
             Hash addressHash = updateBalanceQueue.poll();
@@ -111,19 +120,15 @@ public class BalanceService implements IBalanceService {
             log.info("confirmationData hash;{}", addressHash);
             //dspc = 1
             if (confirmationData.isDoubleSpendPreventionConsensus()) {
-                ConfirmationData confirmedTransactionData = new ConfirmationData(addressHash);
+                ConfirmationData confirmedTransactionData = new ConfirmationData(transactions.getByHash(addressHash));
                 confirmedTransactionData.setAddressHashToValueTransferredMapping(confirmationData.getAddressHashToValueTransferredMapping());
                 confirmedTransactions.put(confirmedTransactionData);
                 unconfirmedTransactions.delete(addressHash);
-                for (Map.Entry<Hash, Double> mapEntry : confirmationData.getAddressHashToValueTransferredMapping().entrySet()) {
-                    balanceMap.put(mapEntry.getKey(), mapEntry.getValue());
-                    log.info("The address {} with the value {} was added to balance map and was removed from preBalanceMap", mapEntry.getKey(), mapEntry.getValue());
-                }
+                updateBalanceMap(balanceMap, confirmationData.getAddressHashToValueTransferredMapping());
             } else { //dspc =0
                 confirmationData.setTrustChainConsensus(true);
                 setDSPCtoTrueAndInsertToUnconfirmed(confirmationData);
                 log.info("The transaction {} was added to unconfirmedTransactions in the db and tcc was updated to true", confirmationData.getKey());
-
             }
         }
     }
@@ -133,27 +138,23 @@ public class BalanceService implements IBalanceService {
         unconfirmedTransactions.put(confirmationData);
     }
 
-    private void removeFromUnconfirmedAndFillConfirmedInDB(List<ConfirmationData> unconfirmedTransactionsToDelete) {
-        for (ConfirmationData confirmationData : unconfirmedTransactionsToDelete) {
-            confirmedTransactions.put(confirmationData);
-            unconfirmedTransactions.delete(confirmationData.getHash());
-            log.info("The transaction {} was removed from unconfirmedTransactions in the db", confirmationData.getKey());
-
-        }
-        unconfirmedTransactionsToDelete.clear();
-    }
-
     private void insertFromTempDBlistToInMemMap(List<Map<Hash, Double>> addressToBalanceMapFromDB, Map<Hash, Double> addressToBalanceMapInMem) {
         for (Map<Hash, Double> addressToBalanceMap : addressToBalanceMapFromDB) {
-            for (Map.Entry<Hash, Double> entry : addressToBalanceMap.entrySet()) {
-                double balance = entry.getValue();
-                Hash key = entry.getKey();
-                if (addressToBalanceMapInMem.containsKey(key)) {
-                    addressToBalanceMapInMem.put(key, balance + addressToBalanceMapInMem.get(key));
-                } else {
-                    addressToBalanceMapInMem.put(key, balance);
-                }
+            updateBalanceMap(addressToBalanceMapInMem, addressToBalanceMap);
+        }
+    }
+
+    private void updateBalanceMap(Map<Hash, Double> mapTo, Map<Hash, Double> mapFrom) {
+        for (Map.Entry<Hash, Double> entry : mapFrom.entrySet()) {
+
+            double balance = entry.getValue();
+            Hash key = entry.getKey();
+            if (mapTo.containsKey(key)) {
+                mapTo.put(key, balance + mapTo.get(key));
+            } else {
+                mapTo.put(key, balance);
             }
+            log.info("The address {} with the value {} was added to balance map and was removed from preBalanceMap", entry.getKey(), entry.getValue());
         }
     }
 
@@ -170,8 +171,8 @@ public class BalanceService implements IBalanceService {
         }
     }
 
-    private List<Hash> readUnconfirmedTransactionsFromDB(List<ConfirmationData> unconfirmedTransactionsToDelete) {
-        List<Hash> unconfirmedTransactionHashes = new LinkedList<>();
+    private List<Hash> readUnconfirmedTransactionsFromDB() {
+        List<Hash> hashesForClusterService = new LinkedList<>();
 
         RocksIterator unconfirmedDBiterator = unconfirmedTransactions.getIterator();
         unconfirmedDBiterator.seekToFirst();
@@ -179,21 +180,15 @@ public class BalanceService implements IBalanceService {
         while (unconfirmedDBiterator.isValid()) {
             ConfirmationData confirmationData = (ConfirmationData) SerializationUtils
                     .deserialize(unconfirmedDBiterator.value());
-            if (confirmationData.isTrustChainConsensus()) { //tcc =1
-                if (confirmationData.isDoubleSpendPreventionConsensus()) { // tcc = 1 + dspc = 1
-                    confirmedTransactionList.add(confirmationData.getAddressHashToValueTransferredMapping());
-                    unconfirmedTransactionsToDelete.add(confirmationData);
-                } else { // tcc = 1 + dspc = 0
-                    unconfirmedTransactionList.add(confirmationData.getAddressHashToValueTransferredMapping());
-                    unconfirmedTransactionHashes.add(confirmationData.getHash());
-                }
-            } else { //tcc = 0      dspc 0/1
-                unconfirmedTransactionList.add(confirmationData.getAddressHashToValueTransferredMapping());
-                unconfirmedTransactionHashes.add(confirmationData.getHash());
+            if (!confirmationData.isTrustChainConsensus()) {
+                hashesForClusterService.add(confirmationData.getHash());
             }
-            unconfirmedDBiterator.next();
+            if (!confirmationData.isTrustChainConsensus() ||
+                    !confirmationData.isDoubleSpendPreventionConsensus()) {
+                unconfirmedTransactionList.add(confirmationData.getAddressHashToValueTransferredMapping());
+            }
         }
-        return unconfirmedTransactionHashes;
+        return hashesForClusterService;
     }
 
     private void loadBalanceFromSnapshot() {
@@ -233,7 +228,7 @@ public class BalanceService implements IBalanceService {
         List<Hash> unconfirmedTransactionHashes = new LinkedList<>();
         for (TransactionData transactionData : zeroSpendService.getGenesisTransactions()) {
             transactions.put(transactionData);
-            ConfirmationData confirmationData = new ConfirmationData(transactionData.getHash());
+            ConfirmationData confirmationData = new ConfirmationData(transactionData);
             unconfirmedTransactions.put(confirmationData);
             unconfirmedTransactionHashes.add(confirmationData.getHash());
         }
