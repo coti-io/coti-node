@@ -6,6 +6,7 @@ import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.model.Transactions;
 import io.coti.cotinode.model.UnconfirmedTransactions;
 import io.coti.cotinode.service.ClusterService;
+import io.coti.cotinode.service.SourceSelector;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
@@ -28,9 +29,12 @@ public class ClusterServiceTest {
 
     private static int counter = 0;
     @Autowired
-    UnconfirmedTransactions unconfirmedTransactions;
+    private UnconfirmedTransactions unconfirmedTransactions;
     @Autowired
-    Transactions transaction;
+    private Transactions transaction;
+
+
+
     private Random random = new Random();
     @Autowired
     private ClusterService cluster;
@@ -148,7 +152,9 @@ public class ClusterServiceTest {
     @Test
     public void initCluster() throws InterruptedException {
         try {
+
             cluster.setInitialUnconfirmedTransactions(notTccConfirmTransactions);
+
             ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
 
             exec.scheduleAtFixedRate(() -> {

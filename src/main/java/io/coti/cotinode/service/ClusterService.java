@@ -42,34 +42,14 @@ public class ClusterService implements IClusterService {
     private ConcurrentHashMap<Hash, TransactionData> hashToTccUnconfirmedTransactionsMapping;
     private Executor executor = Executors.newSingleThreadScheduledExecutor();
 
-    @Override
-    public void setInitialUnconfirmedTransactions(List<Hash> transactionHashes) {
-        for (int i = 0; i <= 100; i++) {
-            sourceListsByTrustScore[i] = (new Vector<>());
-        }
+    private void handleUnconfirmedFromQueueTransactions() {
+        ConcurrentLinkedQueue<Hash> UnconfirmedTransactionsHashFromQueue = queueService.getTccQueue();
 
-        hashToTccUnconfirmedTransactionsMapping = new ConcurrentHashMap<>();
-        for(Hash transactionHash
-                : transactionHashes){
-            TransactionData transactionData = transactions.getByHash(transactionHash);
-            hashToTccUnconfirmedTransactionsMapping.put(transactionHash, transactionData);
-            sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].add(transactionData);
+        for (Hash hash : UnconfirmedTransactionsHashFromQueue) {
+            TransactionData transaction = transactions.getByHash(hash);
+            attachmentProcess(transaction);
         }
-
-        initiateTrustScoreConsensusProcessScheduled();
-    }
-
-    private boolean handleUnconfirmedFromQueueTransactions() {
-        ConcurrentLinkedQueue<Hash> unconfirmedTransactionsHashFromQueue = queueService.getTccQueue();
-        if (unconfirmedTransactionsHashFromQueue.size() > 0) {
-            for (Hash hash : unconfirmedTransactionsHashFromQueue) {
-                TransactionData transaction = transactions.getByHash(hash);
-                attachmentProcess(transaction);
-            }
-            queueService.removeTccQueue();
-            return true;
-        }
-        return false;
+        queueService.removeTccQueue();
     }
 
     private void addNewTransactionToMemoryStorage(TransactionData transaction) {
@@ -79,6 +59,14 @@ public class ClusterService implements IClusterService {
             //  add to TrustScoreToSourceList map
             addToTrustScoreToSourceListMap(transaction);
         }
+    }
+
+    private List<TransactionData> getTransactionsByHashFromDb(List<Hash> notConfirmTransactions) {
+        List<TransactionData> transactions = new Vector<>();
+        notConfirmTransactions.forEach(
+                hash -> transactions.add(this.transactions.getByHash(hash))
+        );
+        return transactions;
     }
 
     private void addToTrustScoreToSourceListMap(TransactionData transaction) {
@@ -111,6 +99,12 @@ public class ClusterService implements IClusterService {
         sourceListsByTrustScore[transaction.getRoundedSenderTrustScore()].remove(transaction);
     }
 
+    private List<TransactionData> getAllSourceTransactions() {
+        return hashToTccUnconfirmedTransactionsMapping.values().stream().
+                filter(TransactionData::isSource).collect(Collectors.toList());
+    }
+
+
     private void attachmentProcess(TransactionData attachedTransactionFromDb) {
         attachedTransactionFromDb.setAttachmentTime(new Date());
 
@@ -138,26 +132,24 @@ public class ClusterService implements IClusterService {
         log.info("transaction with hash:{} attached to cluster, with leftParentHash {} and rightParentHash {}.",childHash ,leftParentHash ,rightParentHash);
     }
 
-    private void initiateTrustScoreConsensusProcessScheduled() {
+    private void initiateTrustScoreConsensusProcess() {
 
         executor.execute(() -> {
             while (true) {
-                if (handleUnconfirmedFromQueueTransactions())
-                {
-                    tccConfirmationService.init(hashToTccUnconfirmedTransactionsMapping);
-                    tccConfirmationService.topologicalSorting();
-                    List<Hash> transactionConsensusConfirmed = tccConfirmationService.setTransactionConsensus();
+                handleUnconfirmedFromQueueTransactions();
+                tccConfirmationService.init(hashToTccUnconfirmedTransactionsMapping);
+                tccConfirmationService.topologicalSorting();
+                List<Hash> transactionConsensusConfirmed = tccConfirmationService.setTransactionConsensus();
 
-                    for (Hash hash : transactionConsensusConfirmed) {
-                        deleteTransactionFromHashToUnTccConfirmedTransactionsMapping(hash);
-                        queueService.addToUpdateBalanceQueue(hash);
+                for (Hash hash : transactionConsensusConfirmed) {
+                    deleteTransactionFromHashToUnTccConfirmedTransactionsMapping(hash);
+                    queueService.addToUpdateBalanceQueue(hash);
 
-                    }
-                    try {
-                        TimeUnit.SECONDS.sleep(delayTimeAfterTccProcess);
-                    } catch (InterruptedException e) {
-                        log.error(e.toString());
-                    }
+                }
+                try {
+                    TimeUnit.SECONDS.sleep(delayTimeAfterTccProcess);
+                } catch (InterruptedException e) {
+                    log.error(e.toString());
                 }
             }
         });
@@ -198,5 +190,20 @@ public class ClusterService implements IClusterService {
         return transactionData;
     }
 
+    @Override
+    public void setInitialUnconfirmedTransactions(List<Hash> transactionHashes) {
+        for (int i = 0; i <= 100; i++) {
+            sourceListsByTrustScore[i] = (new Vector<>());
+        }
 
+        hashToTccUnconfirmedTransactionsMapping = new ConcurrentHashMap<>();
+        for(Hash transactionHash
+                : transactionHashes){
+            TransactionData transactionData = transactions.getByHash(transactionHash);
+            hashToTccUnconfirmedTransactionsMapping.put(transactionHash, transactionData);
+            sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].add(transactionData);
+        }
+
+        initiateTrustScoreConsensusProcess();
+    }
 }

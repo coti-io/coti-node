@@ -22,7 +22,6 @@ import javax.annotation.PostConstruct;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -69,21 +68,14 @@ public class BalanceService implements IBalanceService {
 
             List<ConfirmationData> unconfirmedTransactionsToDelete = new LinkedList<>();
 
+            List<Hash> hashesForClusterService = new LinkedList<>();
             if (unconfirmedTransactions.isEmpty()) {
-                generateGenesisTransactions();
+                hashesForClusterService = generateGenesisTransactions();
             } else {
-                readUnconfirmedTransactionsFromDB(unconfirmedTransactionsToDelete);
+                hashesForClusterService = readUnconfirmedTransactionsFromDB(unconfirmedTransactionsToDelete);
             }
             readConfirmedTransactionsFromDB();
             removeFromUnconfirmedAndFillConfirmedInDB(unconfirmedTransactionsToDelete);
-
-            // call cluster service with the unconfirmedTransactionList
-            List<Hash> hashesForClusterService = new LinkedList<>();
-            for (Map<Hash, Double> addressToAmountMap : unconfirmedTransactionList) {
-                for (Map.Entry<Hash, Double> entry : addressToAmountMap.entrySet()) {
-                    hashesForClusterService.add(entry.getKey());
-                }
-            }
             clusterService.setInitialUnconfirmedTransactions(hashesForClusterService);
 
 
@@ -175,7 +167,8 @@ public class BalanceService implements IBalanceService {
         }
     }
 
-    private void readUnconfirmedTransactionsFromDB(List<ConfirmationData> unconfirmedTransactionsToDelete) {
+    private List<Hash> readUnconfirmedTransactionsFromDB(List<ConfirmationData> unconfirmedTransactionsToDelete) {
+        List<Hash> unconfirmedTransactionHashes = new LinkedList<>();
 
         RocksIterator unconfirmedDBiterator = unconfirmedTransactions.getIterator();
         unconfirmedDBiterator.seekToFirst();
@@ -189,14 +182,17 @@ public class BalanceService implements IBalanceService {
                     unconfirmedTransactionsToDelete.add(confirmationData);
                 } else { // tcc = 1 + dspc = 0
                     unconfirmedTransactionList.add(confirmationData.getAddressHashToValueTransferredMapping());
+                    unconfirmedTransactionHashes.add(confirmationData.getHash());
                 }
             } else { //tcc = 0      dspc 0/1
                 unconfirmedTransactionList.add(confirmationData.getAddressHashToValueTransferredMapping());
                 // TCC QUEUE -> QUEUE Service
                 queueService.addToTccQueue(confirmationData.getHash());
+                unconfirmedTransactionHashes.add(confirmationData.getHash());
             }
             unconfirmedDBiterator.next();
         }
+        return unconfirmedTransactionHashes;
     }
 
     private void loadBalanceFromSnapshot() {
@@ -232,12 +228,15 @@ public class BalanceService implements IBalanceService {
         }
     }
 
-    private void generateGenesisTransactions() {
+    private List<Hash> generateGenesisTransactions() {
+        List<Hash> unconfirmedTransactionHashes = new LinkedList<>();
         for (TransactionData transactionData : zeroSpendService.getGenesisTransactions()) {
             transactions.put(transactionData);
-            unconfirmedTransactions.put(new ConfirmationData(transactionData.getHash()));
-
+            ConfirmationData confirmationData = new ConfirmationData(transactionData.getHash());
+            unconfirmedTransactions.put(confirmationData);
+            unconfirmedTransactionHashes.add(confirmationData.getHash());
         }
+        return unconfirmedTransactionHashes;
     }
 
     public synchronized boolean checkBalancesAndAddToPreBalance(List<BaseTransactionData> baseTransactionDatas) {

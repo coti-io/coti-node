@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 
@@ -72,6 +73,7 @@ public class SourceSelector implements ISourceSelector {
 
     public List<TransactionData> selectTwoOptimalSources(
             List<TransactionData> transactions) {
+
         Date now = new Date();
         List<TransactionData> olderSources =
                 transactions.stream().
@@ -112,7 +114,7 @@ public class SourceSelector implements ISourceSelector {
 
         //logger.debug("Chose randomly weighted sources:\n" + randomWeightedSources);
 
-        return olderSources;
+        return randomWeightedSources;
 
     }
 
