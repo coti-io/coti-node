@@ -42,16 +42,6 @@ public class ClusterService implements IClusterService {
     private ConcurrentHashMap<Hash, TransactionData> hashToTccUnconfirmedTransactionsMapping;
     private Executor executor = Executors.newSingleThreadScheduledExecutor();
 
-    private void handleUnconfirmedFromQueueTransactions() {
-        ConcurrentLinkedQueue<Hash> UnconfirmedTransactionsHashFromQueue = queueService.getTccQueue();
-
-        for (Hash hash : UnconfirmedTransactionsHashFromQueue) {
-            TransactionData transaction = transactions.getByHash(hash);
-            attachmentProcess(transaction);
-        }
-        queueService.removeTccQueue();
-    }
-
     private void addNewTransactionToMemoryStorage(TransactionData transaction) {
         synchronized (locker) {
             // add to unTccConfirmedTransaction map
@@ -104,38 +94,15 @@ public class ClusterService implements IClusterService {
                 filter(TransactionData::isSource).collect(Collectors.toList());
     }
 
-
-    private void attachmentProcess(TransactionData attachedTransactionFromDb) {
-        attachedTransactionFromDb.setAttachmentTime(new Date());
-
-        Hash childHash = attachedTransactionFromDb.getHash();
-        Hash leftParentHash = attachedTransactionFromDb.getLeftParentHash();
-        Hash rightParentHash = attachedTransactionFromDb.getRightParentHash();
-
-        synchronized (locker) {
-            attachedTransactionFromDb.setLeftParentHash(leftParentHash);
-            attachedTransactionFromDb.setRightParentHash(rightParentHash);
-        }
-
-        if (leftParentHash != null && hashToTccUnconfirmedTransactionsMapping.get(leftParentHash) != null) {
-            hashToTccUnconfirmedTransactionsMapping.get(leftParentHash).addToChildrenTransactions(childHash);
-            removeTransactionFromSourcesList(transactions.getByHash(leftParentHash));
-        }
-
-        if (rightParentHash != null && hashToTccUnconfirmedTransactionsMapping.get(rightParentHash) != null) {
-            hashToTccUnconfirmedTransactionsMapping.get(rightParentHash).addToChildrenTransactions(childHash);
-            removeTransactionFromSourcesList(transactions.getByHash(rightParentHash));
-        }
-
-        addNewTransactionToMemoryStorage(attachedTransactionFromDb);
-
-        log.info("transaction with hash:{} attached to cluster, with leftParentHash {} and rightParentHash {}.",childHash ,leftParentHash ,rightParentHash);
-    }
-
     private void initiateTrustScoreConsensusProcess() {
         executor.execute(() -> {
             while (true) {
-                handleUnconfirmedFromQueueTransactions();
+                ConcurrentLinkedQueue<Hash> tccQueue = queueService.getTccQueue();
+                while(!tccQueue.isEmpty()){
+                    Hash transactionHash = tccQueue.poll();
+                    attachTransactionToCluster(transactions.getByHash(transactionHash));
+                }
+
                 tccConfirmationService.init(hashToTccUnconfirmedTransactionsMapping);
                 tccConfirmationService.topologicalSorting();
                 List<Hash> transactionConsensusConfirmed = tccConfirmationService.setTransactionConsensus();
@@ -152,6 +119,34 @@ public class ClusterService implements IClusterService {
                 }
             }
         });
+    }
+
+    private void attachTransactionToCluster(TransactionData transactionData) {
+        transactionData.setAttachmentTime(new Date());
+
+        Hash childHash = transactionData.getHash();
+        Hash leftParentHash = transactionData.getLeftParentHash();
+        Hash rightParentHash = transactionData.getRightParentHash();
+
+        synchronized (locker) {
+            transactionData.setLeftParentHash(leftParentHash);
+            transactionData.setRightParentHash(rightParentHash);
+        }
+
+        if (leftParentHash != null && hashToTccUnconfirmedTransactionsMapping.get(leftParentHash) != null) {
+            hashToTccUnconfirmedTransactionsMapping.get(leftParentHash).addToChildrenTransactions(childHash);
+            removeTransactionFromSourcesList(transactions.getByHash(leftParentHash));
+        }
+
+        if (rightParentHash != null && hashToTccUnconfirmedTransactionsMapping.get(rightParentHash) != null) {
+            hashToTccUnconfirmedTransactionsMapping.get(rightParentHash).addToChildrenTransactions(childHash);
+            removeTransactionFromSourcesList(transactions.getByHash(rightParentHash));
+        }
+
+        addNewTransactionToMemoryStorage(transactionData);
+
+        log.info("transaction with hash:{} attached to cluster, with leftParentHash {} and rightParentHash {}.",childHash ,leftParentHash ,rightParentHash);
+
     }
 
 
