@@ -58,7 +58,9 @@ public class CryptoUtils {
         return data;
     }
 
-    public static byte[] toByteArray(String s) {
-        return DatatypeConverter.parseHexBinary(s);
+    public static BigInteger generatePrivateKey(String seed, int index){
+        BigInteger value = new BigInteger(seed);
+        value = value.add(BigInteger.valueOf(index));
+        return value;
     }
 }

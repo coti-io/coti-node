@@ -130,8 +130,7 @@ public class TransactionService implements ITransactionService {
     }
 
     private boolean validateAddresses(AddTransactionRequest request) {
-        for (BaseTransactionData baseTransactionData :
-                request.baseTransactions) {
+        for (BaseTransactionData baseTransactionData : request.baseTransactions) {
             if (!validationService.validateSenderAddress(
                     request.message,
                     CryptoUtils.convertSignatureFromString(baseTransactionData.getSignature()),
