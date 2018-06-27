@@ -70,7 +70,7 @@ public class SourceSelector implements ISourceSelector {
         return numberOfSources;
     }
 
-    private List<TransactionData> selectTwoOptimalSources(
+    public List<TransactionData> selectTwoOptimalSources(
             List<TransactionData> transactions) {
         Date now = new Date();
         List<TransactionData> olderSources =

@@ -46,10 +46,6 @@ public class TccConfirmationService {
                 topologicalSortingHelper(entry.getValue());
             }
         }
-        synchronized(log) {
-
-        }
-
     }
 
     private void setTotalSumScore(TransactionData parent) {
