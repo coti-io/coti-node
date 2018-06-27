@@ -133,7 +133,6 @@ public class ClusterService implements IClusterService {
     }
 
     private void initiateTrustScoreConsensusProcess() {
-
         executor.execute(() -> {
             while (true) {
                 handleUnconfirmedFromQueueTransactions();

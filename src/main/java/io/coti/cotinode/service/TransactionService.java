@@ -7,6 +7,7 @@ import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.http.AddTransactionRequest;
 import io.coti.cotinode.http.AddTransactionResponse;
+import io.coti.cotinode.http.GetTransactionResponse;
 import io.coti.cotinode.model.Transactions;
 import io.coti.cotinode.service.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
@@ -149,5 +150,11 @@ public class TransactionService implements ITransactionService {
     @Override
     public TransactionData getTransactionData(Hash transactionHash) {
         return transactions.getByHash(transactionHash);
+    }
+
+    @Override
+    public ResponseEntity<GetTransactionResponse> getTransactionDetails(Hash transactionHash) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new GetTransactionResponse(transactions.getByHash(transactionHash)));
     }
 }

@@ -29,8 +29,7 @@ public class TransactionController {
     }
 
     @RequestMapping(method = POST)
-    public GetTransactionResponse getTransactionDetails(@Valid @RequestBody GetTransactionRequest getTransactionRequest) {
-        transactionService.getTransactionData(getTransactionRequest.transactionHash);
-        return new GetTransactionResponse();
+    public ResponseEntity<GetTransactionResponse> getTransactionDetails(@Valid @RequestBody GetTransactionRequest getTransactionRequest) {
+        return transactionService.getTransactionDetails(getTransactionRequest.transactionHash);
     }
 }

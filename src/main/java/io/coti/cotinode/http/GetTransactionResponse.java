@@ -1,10 +1,14 @@
 package io.coti.cotinode.http;
 
+import io.coti.cotinode.data.TransactionData;
+import lombok.Data;
+
+@Data
 public class GetTransactionResponse extends Response {
-    public GetTransactionResponse(){
-        this("TransactionResponse");
-    }
-    public GetTransactionResponse(String message) {
-        super(message);
+    private TransactionData transactionData;
+
+    public GetTransactionResponse(TransactionData transactionData) {
+        super();
+        this.transactionData = transactionData;
     }
 }
