@@ -48,7 +48,7 @@ public class SourceSelectorTest {
         TransactionData5.setAttachmentTime(new Date(now.getTime() - 5000));
 
         TransactionData TransactionData6 = new TransactionData(new Hash("66"));
-        TransactionData6.setSenderTrustScore(78);
+        TransactionData6.setSenderTrustScore(60);
         TransactionData6.setAttachmentTime(new Date(now.getTime() - 6000));
 
         TransactionData TransactionData7 = new TransactionData(new Hash("77"));
@@ -82,17 +82,22 @@ public class SourceSelectorTest {
     @Test
     public void selectSourcesForAttachment() {
         Vector<TransactionData>[] trustScoreToSourceListMapping = new Vector[101];
-        for (int i = 0; i <= 100; i++) {
+        for (int i = 0; i < trustScoreToSourceListMapping.length; i++) {
             trustScoreToSourceListMapping[i] = (new Vector<>());
         }
         for (TransactionData transaction : newTransactions) {
             trustScoreToSourceListMapping[transaction.getRoundedSenderTrustScore()].add(transaction);
         }
-        List<TransactionData> sources = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 15);
-        Assert.assertTrue(sources.size() == 0);
+        List<TransactionData> sources0 = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 38);
+        Assert.assertTrue(sources0.size() == 0);
 
-        sources = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 85);
-        Assert.assertTrue(sources.size() == 2);
+        List<TransactionData> sources1 = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 42);
+        Assert.assertTrue(sources1.size() == 1);
+
+        List<TransactionData> sources2 = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 92);
+        Assert.assertTrue(sources2.size() == 2);
+
+        log.info("End selectSourcesForAttachment test!!!");
     }
 
 }
