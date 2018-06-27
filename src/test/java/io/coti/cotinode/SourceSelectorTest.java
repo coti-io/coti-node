@@ -1,6 +1,5 @@
 package io.coti.cotinode;
 
-import io.coti.cotinode.AppConfig;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.service.SourceSelector;
@@ -89,8 +88,11 @@ public class SourceSelectorTest {
         for (TransactionData transaction : newTransactions) {
             trustScoreToSourceListMapping[transaction.getRoundedSenderTrustScore()].add(transaction);
         }
-        List<TransactionData> sources = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 97);
-        int i= 0;
+        List<TransactionData> sources = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 15);
+        Assert.assertTrue(sources.size() == 0);
+
+        sources = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 85);
+        Assert.assertTrue(sources.size() == 2);
     }
 
 }
