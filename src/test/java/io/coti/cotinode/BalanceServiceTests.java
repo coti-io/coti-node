@@ -3,8 +3,6 @@ package io.coti.cotinode;
 import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.ConfirmationData;
 import io.coti.cotinode.data.Hash;
-import io.coti.cotinode.data.interfaces.IEntity;
-import io.coti.cotinode.database.RocksDBConnector;
 import io.coti.cotinode.model.ConfirmedTransactions;
 import io.coti.cotinode.model.UnconfirmedTransactions;
 import io.coti.cotinode.service.BalanceService;
@@ -22,7 +20,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.File;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -98,7 +95,7 @@ public class BalanceServiceTests {
     public void insertIntoUnconfirmedDBandAddToTccQeueueTest() {
         ConfirmationData confirmationData1 = new ConfirmationData(new Hash("A3")); //tcc =0 , dspc =0
         populateTransactionWithDummy(confirmationData1);
-        balanceService.insertIntoUnconfirmedDBandAddToTccQeueue(confirmationData1);
+        balanceService.insertIntoUnconfirmedDBandAddToTccQueue(confirmationData1);
         ConfirmationData confirmationData  = unconfirmedTransactions.getByHash(new Hash("A3"));
         Assert.assertTrue(queueService.getTccQueue().contains(confirmationData.getHash()));
 

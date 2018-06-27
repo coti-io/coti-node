@@ -4,6 +4,8 @@ import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.ConfirmationData;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
+import io.coti.cotinode.http.GetBalancesRequest;
+import io.coti.cotinode.http.GetBalancesResponse;
 import io.coti.cotinode.model.ConfirmedTransactions;
 import io.coti.cotinode.model.Transactions;
 import io.coti.cotinode.model.UnconfirmedTransactions;
@@ -14,6 +16,7 @@ import io.coti.cotinode.service.interfaces.IZeroSpendService;
 import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.RocksIterator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
@@ -278,13 +281,16 @@ public class BalanceService implements IBalanceService {
     }
 
 
-    public void insertIntoUnconfirmedDBandAddToTccQeueue(ConfirmationData confirmationData) {
+    public void insertIntoUnconfirmedDBandAddToTccQueue(ConfirmationData confirmationData) {
         // put it in unconfirmedTransaction table
         setDSPCtoTrueAndInsertToUnconfirmed(confirmationData);
         queueService.addToTccQueue(confirmationData.getHash());
     }
 
-
+    @Override
+    public ResponseEntity<GetBalancesResponse> getBalances(GetBalancesRequest getBalancesRequest) {
+        return null;
+    }
 
 
     public Map<Hash, Double> getBalanceMap() {
