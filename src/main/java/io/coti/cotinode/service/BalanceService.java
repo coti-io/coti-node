@@ -4,7 +4,6 @@ import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.ConfirmationData;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
-import io.coti.cotinode.http.AddTransactionResponse;
 import io.coti.cotinode.http.GetBalancesRequest;
 import io.coti.cotinode.http.GetBalancesResponse;
 import io.coti.cotinode.model.ConfirmedTransactions;
@@ -84,7 +83,6 @@ public class BalanceService implements IBalanceService {
             removeFromUnconfirmedAndFillConfirmedInDB(unconfirmedTransactionsToDelete);
             clusterService.setInitialUnconfirmedTransactions(hashesForClusterService);
 
-
             //move balances from unconfirmed/confirmed Transaction Map To Balance Maps
             insertFromTempDBlistToInMemMap(confirmedTransactionList, balanceMap); // calc
             insertFromTempDBlistToInMemMap(unconfirmedTransactionList, preBalanceMap); // calc
@@ -131,7 +129,7 @@ public class BalanceService implements IBalanceService {
 
     }
 
-    private void setDSPCtoTrueAndInsertToUnconfirmed(ConfirmationData confirmationData){
+    private void setDSPCtoTrueAndInsertToUnconfirmed(ConfirmationData confirmationData) {
         confirmationData.setDoubleSpendPreventionConsensus(true);
         unconfirmedTransactions.put(confirmationData);
     }
@@ -294,18 +292,16 @@ public class BalanceService implements IBalanceService {
     public ResponseEntity<GetBalancesResponse> getBalances(GetBalancesRequest getBalancesRequest) {
         GetBalancesResponse getBalancesResponse = new GetBalancesResponse();
         List<AbstractMap.SimpleEntry<Hash, Double>> amounts = new LinkedList<>();
-        for(Hash hash : getBalancesRequest.getAddresses()){
-            if(balanceMap.containsKey(hash)){
-                amounts.add(new AbstractMap.SimpleEntry<>(hash,balanceMap.get(hash)));
-            }
-            else{
-                amounts.add(new AbstractMap.SimpleEntry<>(hash,-1.0));
+        for (Hash hash : getBalancesRequest.getAddresses()) {
+            if (balanceMap.containsKey(hash)) {
+                amounts.add(new AbstractMap.SimpleEntry<>(hash, balanceMap.get(hash)));
+            } else {
+                amounts.add(new AbstractMap.SimpleEntry<>(hash, -1.0));
             }
         }
         getBalancesResponse.setAmounts(amounts);
         return ResponseEntity.status(HttpStatus.OK).body(getBalancesResponse);
     }
-
 
     public Map<Hash, Double> getBalanceMap() {
         return balanceMap;

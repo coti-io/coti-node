@@ -58,6 +58,7 @@ public class TransactionData implements IEntity {
         this.childrenTransactions = new Vector<>();
         this.senderTrustScore = 50;
         this.processStartTime = (new Date());
+        this.dspConsensus = true;
     }
 
     public TransactionData(Hash hash, double trustScore) {
