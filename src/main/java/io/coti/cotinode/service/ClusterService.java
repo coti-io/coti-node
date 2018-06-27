@@ -132,7 +132,7 @@ public class ClusterService implements IClusterService {
         log.info("transaction with hash:{} attached to cluster, with leftParentHash {} and rightParentHash {}.",childHash ,leftParentHash ,rightParentHash);
     }
 
-    private void initiateTrustScoreConsensusProcess() {
+    private void initiateTrustScoreConsensusProcessScheduled() {
 
         executor.execute(() -> {
             while (true) {
@@ -204,6 +204,6 @@ public class ClusterService implements IClusterService {
             sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].add(transactionData);
         }
 
-        initiateTrustScoreConsensusProcess();
+        initiateTrustScoreConsensusProcessScheduled();
     }
 }
