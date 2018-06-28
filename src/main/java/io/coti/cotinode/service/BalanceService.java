@@ -58,16 +58,12 @@ public class BalanceService implements IBalanceService {
     private Map<Hash, Double> balanceMap;
     private Map<Hash, Double> preBalanceMap;
 
-    private List<Map<Hash, Double>> unconfirmedTransactionList;
-    private List<Map<Hash, Double>> confirmedTransactionList;
 
     @PostConstruct
     private void init() {
         try {
             balanceMap = new ConcurrentHashMap<>();
             preBalanceMap = new ConcurrentHashMap<>();
-            unconfirmedTransactionList = new LinkedList<>();
-            confirmedTransactionList = new LinkedList<>();
 
             loadBalanceFromSnapshot();
             deleteConfirmedTransactions();
@@ -81,11 +77,6 @@ public class BalanceService implements IBalanceService {
             clusterService.setInitialUnconfirmedTransactions(hashesForClusterService);
             readConfirmedTransactionsFromDB();
 
-            //move balances from unconfirmed/confirmed Transaction Map To Balance Maps
-            insertFromTempDBlistToInMemMap(confirmedTransactionList, balanceMap); // calc
-            insertFromTempDBlistToInMemMap(unconfirmedTransactionList, preBalanceMap); // calc
-            confirmedTransactionList.clear();
-            unconfirmedTransactionList.clear();
             log.info("Balance service is up");
         } catch (Exception ex) {
             log.error("Errors on initiation ", ex);
@@ -99,7 +90,7 @@ public class BalanceService implements IBalanceService {
             ConfirmationData confirmationData = (ConfirmationData) SerializationUtils
                     .deserialize(unconfirmedDBiterator.value());
             if (confirmationData.isTrustChainConsensus() && confirmationData.isDoubleSpendPreventionConsensus()) {
-                confirmedTransactionList.add(confirmationData.getAddressHashToValueTransferredMapping());
+                updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(),balanceMap);
                 confirmedTransactions.put(confirmationData);
                 unconfirmedTransactions.delete(confirmationData.getHash());
             }
@@ -137,12 +128,7 @@ public class BalanceService implements IBalanceService {
         confirmationData.setDoubleSpendPreventionConsensus(true);
         unconfirmedTransactions.put(confirmationData);
     }
-
-    private void insertFromTempDBlistToInMemMap(List<Map<Hash, Double>> addressToBalanceMapFromDB, Map<Hash, Double> addressToBalanceMapInMem) {
-        for (Map<Hash, Double> addressToBalanceMap : addressToBalanceMapFromDB) {
-            updateBalanceMap(addressToBalanceMapInMem, addressToBalanceMap);
-        }
-    }
+    
 
     private void updateBalanceMap(Map<Hash, Double> mapTo, Map<Hash, Double> mapFrom) {
         for (Map.Entry<Hash, Double> entry : mapFrom.entrySet()) {
@@ -164,7 +150,7 @@ public class BalanceService implements IBalanceService {
         while (confirmedDBiterator.isValid()) {
             ConfirmationData confirmedTransactionData = (ConfirmationData) SerializationUtils
                     .deserialize(confirmedDBiterator.value());
-            confirmedTransactionList.add(confirmedTransactionData.getAddressHashToValueTransferredMapping());
+            updateBalanceMap(confirmedTransactionData.getAddressHashToValueTransferredMapping(),balanceMap);
 
             confirmedDBiterator.next();
 
@@ -185,7 +171,7 @@ public class BalanceService implements IBalanceService {
             }
             if (!confirmationData.isTrustChainConsensus() ||
                     !confirmationData.isDoubleSpendPreventionConsensus()) {
-                unconfirmedTransactionList.add(confirmationData.getAddressHashToValueTransferredMapping());
+                updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(),preBalanceMap);
             }
         }
         return hashesForClusterService;
