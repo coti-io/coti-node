@@ -4,6 +4,7 @@ import io.coti.cotinode.data.Hash;
 
 import io.coti.cotinode.data.TransactionData;
 import org.springframework.beans.factory.annotation.Configurable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +15,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 @Configurable
 public class TccConfirmationService {
-    private final int TRESHOLD = 10;
+    @Value("${treshold}")
+    private int treshold;
     private Logger log = LoggerFactory.getLogger(this.getClass().getName());
     private ConcurrentHashMap<Hash, TransactionData> hashToUnTccConfirmTransactionsMapping;
     private LinkedList<TransactionData> result;
@@ -95,7 +97,7 @@ public class TccConfirmationService {
         List<Hash> transactionConsensusConfirmed = new Vector<>();
         for(TransactionData transaction : result ) {
             setTotalSumScore(transaction);
-            if (transaction.getTrustChainTrustScore() >= TRESHOLD) {
+            if (transaction.getTrustChainTrustScore() >= treshold) {
                 transaction.setTransactionConsensus(true);
                 transaction.setTransactionConsensusUpdateTime(new Date());
                 transactionConsensusConfirmed.add(transaction.getHash());
