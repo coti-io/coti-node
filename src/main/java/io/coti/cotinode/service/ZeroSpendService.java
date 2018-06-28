@@ -23,12 +23,9 @@ public class ZeroSpendService implements IZeroSpendService {
     public List<TransactionData> getGenesisTransactions() {
         List<TransactionData> genesisTransactions = new LinkedList<>();
         for (int trustScore = 0; trustScore <= 100; trustScore = trustScore + 10) {
-            BaseTransactionData btd = new BaseTransactionData("B1",10.0);
-            TransactionData td = new TransactionData(new Hash(currentHashCounter++), trustScore);
-            List<BaseTransactionData> baseTransactionsList = new LinkedList<>();
-            baseTransactionsList.add(btd);
-            td.setBaseTransactions(baseTransactionsList);
-            genesisTransactions.add(td);
+            TransactionData transactionData = new TransactionData(new Hash(currentHashCounter++), trustScore);
+            transactionData.setZeroSpend(true);
+            genesisTransactions.add(transactionData);
         }
         return genesisTransactions;
     }

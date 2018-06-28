@@ -12,6 +12,7 @@ import java.util.Vector;
 @Slf4j
 @Data
 public class TransactionData implements IEntity {
+    private List<BaseTransactionData> baseTransactions;
     private transient Hash hash;
     private Hash leftParentHash;
     private Hash rightParentHash;
@@ -31,23 +32,18 @@ public class TransactionData implements IEntity {
     private int baseTransactionsCount;
     private double senderTrustScore;
     private List<Hash> baseTransactionsHash;
-    private List<BaseTransactionData> baseTransactions;
     private Hash senderNodeHash;
     private String senderNodeIpAddress;
     private Hash userHash;
     private List<Hash> childrenTransactions;
     private boolean isValid;
     private transient boolean isVisit;
+    private boolean isZeroSpend;
 
-
-    public int getRoundedSenderTrustScore(){
-        return (int) Math.round(senderTrustScore);
+    private TransactionData() {
     }
 
-    private TransactionData(){
-    }
-
-    public TransactionData(AddTransactionRequest request){
+    public TransactionData(AddTransactionRequest request) {
         this(request.transactionHash);
         this.baseTransactions = request.baseTransactions;
     }
@@ -65,6 +61,10 @@ public class TransactionData implements IEntity {
         this(hash);
         this.senderTrustScore = trustScore;
         this.attachmentTime = new Date();
+    }
+
+    public int getRoundedSenderTrustScore() {
+        return (int) Math.round(senderTrustScore);
     }
 
     public boolean isSource() {
@@ -106,7 +106,7 @@ public class TransactionData implements IEntity {
         this.hash = hash;
     }
 
-    public boolean hasSources(){
+    public boolean hasSources() {
         return getLeftParentHash() != null || getRightParentHash() != null;
     }
 }

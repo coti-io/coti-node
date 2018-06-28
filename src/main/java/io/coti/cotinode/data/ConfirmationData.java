@@ -21,6 +21,9 @@ public class ConfirmationData implements IEntity {
     public ConfirmationData(TransactionData transactionData) {
         addressHashToValueTransferredMapping = new LinkedHashMap<>();
         this.hash = transactionData.getHash();
+        if(transactionData.isZeroSpend()){
+            return;
+        }
         for(BaseTransactionData baseTransactionData :
                 transactionData.getBaseTransactions()){
             addressHashToValueTransferredMapping.put(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
