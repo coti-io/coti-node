@@ -17,5 +17,9 @@ public interface IBalanceService {
     boolean insertToUnconfirmedTransactions(ConfirmationData confirmationData);
 
     ResponseEntity<GetBalancesResponse> getBalances(GetBalancesRequest getBalancesRequest);
+
+    Map<Hash, Double> getBalanceMap();
+
+    Map<Hash, Double> getPreBalanceMap();
 }
 
