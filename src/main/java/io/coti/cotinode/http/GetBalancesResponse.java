@@ -12,6 +12,6 @@ public class GetBalancesResponse extends Response {
     private List<AbstractMap.SimpleEntry<Hash, Double>> amounts;
 
     public GetBalancesResponse() {
-        super();
+        super("Balance details");
     }
 }
