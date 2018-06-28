@@ -3,7 +3,6 @@ package io.coti.cotinode;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.model.Transactions;
-import io.coti.cotinode.model.UnconfirmedTransactions;
 import io.coti.cotinode.service.ClusterService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.*;
@@ -14,7 +13,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
 import java.util.Vector;
 
 @RunWith(SpringRunner.class)
@@ -50,6 +48,24 @@ public class ClusterServiceTest {
     }
 
     @Test
+    public void selectSourcesWithToHighTrustScore() {
+        TransactionData TransactionData2 = new TransactionData(new Hash("22"));
+        TransactionData2.setSenderTrustScore(99);
+        TransactionData2.setCreateTime(new Date());
+        cluster.selectSources(TransactionData2);
+        Assert.assertEquals(TransactionData2.getLeftParentHash(), null);
+    }
+
+    @Test
+    public void selectSourcesWithToLowTrustScore() {
+        TransactionData TransactionData2 = new TransactionData(new Hash("22"));
+        TransactionData2.setSenderTrustScore(50);
+        TransactionData2.setCreateTime(new Date());
+        cluster.selectSources(TransactionData2);
+        Assert.assertEquals(TransactionData2.getLeftParentHash(), null);
+    }
+
+    @Test
     public void attachToCluster() {
         Exception ex = null;
         try {
@@ -74,7 +90,7 @@ public class ClusterServiceTest {
         TransactionData0.setAttachmentTime(new Date());
 
         TransactionData TransactionData1 = new TransactionData(new Hash("11"));
-        TransactionData1.setSenderTrustScore(73);
+        TransactionData1.setSenderTrustScore(83);
         TransactionData1.setRightParentHash(TransactionData0.getHash());
         TransactionData1.setCreateTime(new Date());
         TransactionData1.setProcessStartTime(new Date());

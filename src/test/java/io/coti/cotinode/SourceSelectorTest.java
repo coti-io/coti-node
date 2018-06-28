@@ -24,7 +24,7 @@ public class SourceSelectorTest {
     private SourceSelector sourceSelector;
     private Date now;
     private List<TransactionData> newTransactions;
-    
+
     @Before
     public void init() {
         now = new Date();
@@ -90,7 +90,7 @@ public class SourceSelectorTest {
         List<TransactionData> sources0 = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 38);
         Assert.assertTrue(sources0.size() == 0);
 
-        List<TransactionData> sources1 = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 42);
+        List<TransactionData> sources1 = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 50);
         Assert.assertTrue(sources1.size() == 1);
 
         List<TransactionData> sources2 = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 92);
