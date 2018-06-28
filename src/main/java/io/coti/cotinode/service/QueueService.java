@@ -16,13 +16,10 @@ public class QueueService implements IQueueService {
 
     private ConcurrentLinkedQueue<Hash> updateBalanceQueue;
 
-    private ConcurrentLinkedQueue<Hash> transactionsQueue;
-
     @PostConstruct
     private void init(){
         tccQueue = new ConcurrentLinkedQueue<>();
         updateBalanceQueue = new ConcurrentLinkedQueue<>();
-        transactionsQueue = new ConcurrentLinkedQueue<>();
     }
 
     @Override
@@ -42,22 +39,9 @@ public class QueueService implements IQueueService {
     }
 
     @Override
-    public void addToTransactionQueue(Hash hash) {
-        transactionsQueue.add(hash);
-        log.info("Hash {} , was added to transactionsQueue", hash);
-
-    }
-
-    @Override
-    public ConcurrentLinkedQueue<Hash> getTransactionQueue() {
-        return transactionsQueue;
-    }
-
-    @Override
     public void addToUpdateBalanceQueue(Hash hash) {
         updateBalanceQueue.add(hash);
         log.info("Hash {} , was added to updateBalanceQueue", hash);
-
     }
 
     @Override
