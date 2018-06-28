@@ -13,7 +13,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Vector;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -31,6 +33,23 @@ public class ClusterService implements IClusterService {
     @Autowired
     private TccConfirmationService tccConfirmationService;
     private ConcurrentHashMap<Hash, TransactionData> hashToUnconfirmedTransactionsMapping;
+
+    @Override
+    public void setInitialUnconfirmedTransactions(List<Hash> transactionHashes) {
+        for (int i = 0; i <= 100; i++) {
+            sourceListsByTrustScore[i] = (new Vector<>());
+        }
+
+        hashToUnconfirmedTransactionsMapping = new ConcurrentHashMap<>();
+        for (Hash transactionHash
+                : transactionHashes) {
+            TransactionData transactionData = transactions.getByHash(transactionHash);
+            hashToUnconfirmedTransactionsMapping.put(transactionHash, transactionData);
+            sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].add(transactionData);
+        }
+
+        initiateTrustScoreConsensusProcess();
+    }
 
     private void initiateTrustScoreConsensusProcess() {
         Executors.newSingleThreadScheduledExecutor().execute(() -> {
@@ -62,17 +81,17 @@ public class ClusterService implements IClusterService {
     }
 
     private void removeTransactionParentsFromSources(TransactionData newTransactionData) {
-        if(newTransactionData.getLeftParentHash() != null){
+        if (newTransactionData.getLeftParentHash() != null) {
             removeTransactionFromSources(newTransactionData.getLeftParentHash());
         }
-        if(newTransactionData.getRightParentHash() != null){
+        if (newTransactionData.getRightParentHash() != null) {
             removeTransactionFromSources(newTransactionData.getRightParentHash());
         }
     }
 
-    private void removeTransactionFromSources(Hash transactionHash){
+    private void removeTransactionFromSources(Hash transactionHash) {
         TransactionData transactionData = transactions.getByHash(transactionHash);
-        if(sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].contains(transactionData)){
+        if (sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].contains(transactionData)) {
             sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].remove(transactionData); // TODO: synchronize
         }
     }
@@ -97,28 +116,13 @@ public class ClusterService implements IClusterService {
         }
 
         String hashes = "";
-        for (TransactionData td: selectedSourcesForAttachment) {
+        for (TransactionData td : selectedSourcesForAttachment) {
             hashes += td.getHash() + " ";
         }
-        log.info("For transaction with hash:{} we found the following sources:{}",transactionData.getHash(), hashes);
+        log.info("For transaction with hash:{} we found the following sources:{}", transactionData.getHash(), hashes);
 
         return transactionData;
     }
 
-    @Override
-    public void setInitialUnconfirmedTransactions(List<Hash> transactionHashes) {
-        for (int i = 0; i <= 100; i++) {
-            sourceListsByTrustScore[i] = (new Vector<>());
-        }
 
-        hashToUnconfirmedTransactionsMapping = new ConcurrentHashMap<>();
-        for(Hash transactionHash
-                : transactionHashes){
-            TransactionData transactionData = transactions.getByHash(transactionHash);
-            hashToUnconfirmedTransactionsMapping.put(transactionHash, transactionData);
-            sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].add(transactionData);
-        }
-
-        initiateTrustScoreConsensusProcess();
-    }
 }

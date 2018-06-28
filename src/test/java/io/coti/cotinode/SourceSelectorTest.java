@@ -24,8 +24,7 @@ public class SourceSelectorTest {
     private SourceSelector sourceSelector;
     private Date now;
     private List<TransactionData> newTransactions;
-
-
+    
     @Before
     public void init() {
         now = new Date();

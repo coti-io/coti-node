@@ -1,93 +1,69 @@
 package io.coti.cotinode;
 
-import io.coti.cotinode.data.ConfirmationData;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.model.Transactions;
 import io.coti.cotinode.model.UnconfirmedTransactions;
 import io.coti.cotinode.service.ClusterService;
-import io.coti.cotinode.service.SourceSelector;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.Date;
+import java.util.List;
+import java.util.Random;
+import java.util.Vector;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = AppConfig.class)
 @Slf4j
 public class ClusterServiceTest {
 
-    private static int counter = 0;
-    @Autowired
-    private UnconfirmedTransactions unconfirmedTransactions;
     @Autowired
     private Transactions transaction;
-
-
-
-    private Random random = new Random();
     @Autowired
     private ClusterService cluster;
-    private List<TransactionData> newTransactions;
     private List<Hash> notTccConfirmTransactions;
 
     @BeforeClass
-    public static void init(){
+    public static void deleteDb() {
         BalanceServiceTests.deleteRocksDBfolder();
     }
-    private void setUpNewTransactions(){
 
+    @Before
+    public void setUp() {
+        notTccConfirmTransactions = new Vector<>();
+        setUpTransactionsFromSnapShot();
+        cluster.setInitialUnconfirmedTransactions(notTccConfirmTransactions);
+    }
+
+    @Test
+    public void selectSources() {
         TransactionData TransactionData2 = new TransactionData(new Hash("22"));
         TransactionData2.setSenderTrustScore(92);
         TransactionData2.setCreateTime(new Date());
-
-        TransactionData TransactionData3 = new TransactionData(new Hash("33"));
-        TransactionData3.setSenderTrustScore(84);
-        TransactionData3.setCreateTime(new Date());
-
-        TransactionData TransactionData4 = new TransactionData(new Hash("44"));
-        TransactionData4.setSenderTrustScore(86);
-        TransactionData4.setCreateTime(new Date());
-
-        TransactionData TransactionData5 = new TransactionData(new Hash("55"));
-        TransactionData5.setSenderTrustScore(76);
-        TransactionData5.setCreateTime(new Date());
-
-        TransactionData TransactionData6 = new TransactionData(new Hash("66"));
-        TransactionData6.setSenderTrustScore(78);
-        TransactionData6.setCreateTime(new Date());
-
-        TransactionData TransactionData7 = new TransactionData(new Hash("77"));
-        TransactionData7.setSenderTrustScore(86);
-        TransactionData7.setCreateTime(new Date());
-
-        TransactionData TransactionData8 = new TransactionData(new Hash("88"));
-        TransactionData8.setSenderTrustScore(80);
-        TransactionData8.setCreateTime(new Date());
-
-        TransactionData TransactionData9 = new TransactionData(new Hash("99"));
-        TransactionData9.setSenderTrustScore(72);
-        TransactionData9.setCreateTime(new Date());
-
-        newTransactions.add(TransactionData2);
-        newTransactions.add(TransactionData3);
-        newTransactions.add(TransactionData4);
-        newTransactions.add(TransactionData5);
-        newTransactions.add(TransactionData6);
-        newTransactions.add(TransactionData7);
-        newTransactions.add(TransactionData8);
-        newTransactions.add(TransactionData9);
+        cluster.selectSources(TransactionData2);
+        Assert.assertEquals(TransactionData2.getLeftParentHash(), new Hash("11"));
     }
+
+    @Test
+    public void attachToCluster() {
+        Exception ex = null;
+        try {
+            TransactionData TransactionData2 = new TransactionData(new Hash("22"));
+            TransactionData2.setSenderTrustScore(92);
+            TransactionData2.setCreateTime(new Date());
+            TransactionData2.setLeftParentHash(new Hash("00"));
+            cluster.attachToCluster(TransactionData2);
+        } catch (Exception e) {
+            ex = null;
+        }
+        Assert.assertEquals(null, ex);
+    }
+
     private void setUpTransactionsFromSnapShot() {
         TransactionData TransactionData0 = new TransactionData(new Hash("00"));
         TransactionData0.setSenderTrustScore(70);
@@ -110,77 +86,10 @@ public class ClusterServiceTest {
         notTccConfirmTransactions.add(TransactionData0.getHash());
         notTccConfirmTransactions.add(TransactionData1.getHash());
     }
-//    private void setunconfirmedTransactionsTable(){
-//        ConfirmationData confirmationData0 = new ConfirmationData(new Hash("00"));
-//        ConfirmationData confirmationData1 = new ConfirmationData(new Hash("11"));
-//        ConfirmationData confirmationData2 = new ConfirmationData(new Hash("22"));
-//        ConfirmationData confirmationData3 = new ConfirmationData(new Hash("33"));
-//        ConfirmationData confirmationData4 = new ConfirmationData(new Hash("44"));
-//        ConfirmationData confirmationData5 = new ConfirmationData(new Hash("55"));
-//        ConfirmationData confirmationData6 = new ConfirmationData(new Hash("66"));
-//        ConfirmationData confirmationData7 = new ConfirmationData(new Hash("77"));
-//        ConfirmationData confirmationData8 = new ConfirmationData(new Hash("88"));
-//        ConfirmationData confirmationData9 = new ConfirmationData(new Hash("99"));
-//
-//        unconfirmedTransactions.put(confirmationData0);
-//        unconfirmedTransactions.put(confirmationData1);
-//        unconfirmedTransactions.put(confirmationData2);
-//        unconfirmedTransactions.put(confirmationData3);
-//        unconfirmedTransactions.put(confirmationData4);
-//        unconfirmedTransactions.put(confirmationData5);
-//        unconfirmedTransactions.put(confirmationData6);
-//        unconfirmedTransactions.put(confirmationData7);
-//        unconfirmedTransactions.put(confirmationData8);
-//        unconfirmedTransactions.put(confirmationData9);
-//    }
-    @Before
-    public void setUp() throws Exception {
-        System.out.println("Initializing!");
-        newTransactions = new Vector<>();
-        notTccConfirmTransactions = new Vector<>();
-
-        Calendar calender = Calendar.getInstance();
-//        setunconfirmedTransactionsTable();
-        setUpTransactionsFromSnapShot();
-        setUpNewTransactions();
-    }
 
     @After
     public void tearDown() throws Exception {
     }
 
-    @Test
-    public void initCluster() throws InterruptedException {
-        try {
 
-            cluster.setInitialUnconfirmedTransactions(notTccConfirmTransactions);
-
-            ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
-
-            exec.scheduleAtFixedRate(() -> {
-               if (newTransactions.size() > 0) {
-                    int index = random.nextInt(newTransactions.size());
-                    if (cluster.selectSources(newTransactions.get(index))== null
-                           || newTransactions.get(index).getLeftParentHash() != null
-                           || newTransactions.get(index).getRightParentHash() != null) {
-                       newTransactions.remove(index);
-
-                   }
-               }
-            }, 4, 8, TimeUnit.SECONDS);
-
-            while (true) {
-                try {
-                    TimeUnit.SECONDS.sleep(3);
-                    //log.info("sleep");
-                } catch (InterruptedException e) {
-                    log.error("An error in initCluster() Test when sleep ", e);
-
-                }
-            }
-        } catch (Exception e) {
-            log.error("An error in initCluster() Test ", e);
-        }
-
-    }
 }

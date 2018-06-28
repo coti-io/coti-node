@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface IClusterService {
 
-    TransactionData attachToCluster(TransactionData zeroSpendTransaction);
+    TransactionData attachToCluster(TransactionData transactionData);
 
     TransactionData selectSources(TransactionData transactionData);
 
