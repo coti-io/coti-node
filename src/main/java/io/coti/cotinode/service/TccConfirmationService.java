@@ -47,7 +47,7 @@ public class TccConfirmationService {
         }
     }
 
-    private void setTotalSumScore(TransactionData parent) {
+    private void setTotalTrustScore(TransactionData parent) {
         double maxSonsTotalTrustScore = 0;
         Hash maxSonsTotalTrustScoreHash = null;
         for (Hash hash : parent.getChildrenTransactions()) {
@@ -93,7 +93,7 @@ public class TccConfirmationService {
     public List<Hash> getTccConfirmedTransactions() {
         List<Hash> transactionConsensusConfirmed = new LinkedList<>();
         for(TransactionData transaction : topologicalOrderedGraph) {
-            setTotalSumScore(transaction);
+            setTotalTrustScore(transaction);
             if (transaction.getTrustChainTrustScore() >= treshold) {
                 transaction.setTransactionConsensus(true);
                 transaction.setTransactionConsensusUpdateTime(new Date());
