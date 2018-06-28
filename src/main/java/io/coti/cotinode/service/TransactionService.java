@@ -38,7 +38,7 @@ public class TransactionService implements ITransactionService {
     private Transactions transactions;
 
     @PostConstruct
-    private void init(){
+    private void init() {
         log.info("Transaction service Started");
     }
 
@@ -52,6 +52,14 @@ public class TransactionService implements ITransactionService {
                     .body(new AddTransactionResponse(
                             STATUS_ERROR,
                             AUTHENTICATION_FAILED_MESSAGE));
+        }
+
+        if (!isLegalBalance(request)) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new AddTransactionResponse(
+                            STATUS_ERROR,
+                            ILLEGAL_TRANSACTION_MESSAGE));
         }
 
         if (!balanceService.checkBalancesAndAddToPreBalance(request.baseTransactions)) {
@@ -86,6 +94,15 @@ public class TransactionService implements ITransactionService {
                 .body(new AddTransactionResponse(
                         STATUS_SUCCESS,
                         TRANSACTION_CREATED_MESSAGE));
+    }
+
+    private boolean isLegalBalance(AddTransactionRequest request) {
+        double totalTransactionSum = 0;
+        for (BaseTransactionData baseTransactionData :
+                request.baseTransactions) {
+            totalTransactionSum = totalTransactionSum + baseTransactionData.getAmount();
+        }
+        return totalTransactionSum == 0;
     }
 
     private TransactionData selectSources(TransactionData transactionData) {
@@ -128,7 +145,7 @@ public class TransactionService implements ITransactionService {
     private void attachTransactionToCluster(TransactionData transactionData) {
         transactionData.setAttachmentTime(new Date());
         transactions.put(transactionData);
-        if(balanceService.insertToUnconfirmedTransactions(new ConfirmationData(transactionData))) {
+        if (balanceService.insertToUnconfirmedTransactions(new ConfirmationData(transactionData))) {
             clusterService.attachToCluster(transactionData);
         }
     }
@@ -136,7 +153,7 @@ public class TransactionService implements ITransactionService {
     private boolean validateAddresses(AddTransactionRequest request) {
         for (BaseTransactionData baseTransactionData : request.baseTransactions) {
 
-            if(baseTransactionData.getAmount() > 0){
+            if (baseTransactionData.getAmount() > 0) {
                 return true;
             }
 
