@@ -22,13 +22,13 @@ import java.util.Vector;
 public class SourceSelectorTest {
     @Autowired
     private SourceSelector sourceSelector;
-
+    private Date now;
     private List<TransactionData> newTransactions;
 
 
     @Before
     public void init() {
-        Date now = new Date();
+        now = new Date();
         newTransactions = new Vector();
         TransactionData TransactionData2 = new TransactionData(new Hash("22"));
         TransactionData2.setSenderTrustScore(92);
@@ -95,8 +95,23 @@ public class SourceSelectorTest {
         Assert.assertTrue(sources1.size() == 1);
 
         List<TransactionData> sources2 = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 92);
-        Assert.assertTrue(sources2.size() == 2);
+        Assert.assertTrue(sources2.size() == 1);
 
+        TransactionData TransactionData10 = new TransactionData(new Hash("10"));
+        TransactionData10.setSenderTrustScore(80);
+        TransactionData10.setAttachmentTime(new Date(now.getTime() - 8000));
+
+        TransactionData TransactionData11 = new TransactionData(new Hash("1111"));
+        TransactionData11.setSenderTrustScore(72);
+        TransactionData11.setAttachmentTime(new Date(now.getTime() - 9000));
+
+        newTransactions.add(TransactionData10);
+        trustScoreToSourceListMapping[TransactionData10.getRoundedSenderTrustScore()].add(TransactionData10);
+        newTransactions.add(TransactionData11);
+        trustScoreToSourceListMapping[TransactionData11.getRoundedSenderTrustScore()].add(TransactionData11);
+
+        List<TransactionData> sources3 = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 92);
+        Assert.assertTrue(sources3.size() == 2);
         log.info("End selectSourcesForAttachment test!!!");
     }
 

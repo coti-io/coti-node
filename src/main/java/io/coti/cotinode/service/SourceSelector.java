@@ -51,7 +51,7 @@ public class SourceSelector implements ISourceSelector {
             if (highIndex <= 100) {
                 neighbourSources.addAll(trustScoreToSourceListMapping[highIndex]);
             }
-            if (neighbourSources.size() / numberOfSources > (double) minSourcePercentage / 100) {
+            if ((double)neighbourSources.size() / numberOfSources > (double) minSourcePercentage / 100) {
                 break;
             }
             lowIndex--;
