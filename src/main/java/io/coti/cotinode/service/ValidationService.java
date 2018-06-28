@@ -4,6 +4,7 @@ import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.service.interfaces.IValidationService;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.web3j.crypto.Sign;
 
 import java.math.BigInteger;
