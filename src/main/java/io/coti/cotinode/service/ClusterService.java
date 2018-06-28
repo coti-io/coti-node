@@ -91,7 +91,7 @@ public class ClusterService implements IClusterService {
         }
 
         Hash rightParentHash = transactionData.getRightParentHash();
-        if(leftParentHash != null){
+        if(rightParentHash != null){
             TransactionData rightParentTransactionData = transactions.getByHash(rightParentHash);
             rightParentTransactionData.addToChildrenTransactions(transactionData.getHash());
             hashToUnconfirmedTransactionsMapping.put(rightParentTransactionData.getHash(),rightParentTransactionData);
