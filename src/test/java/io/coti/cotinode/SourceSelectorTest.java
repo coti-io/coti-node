@@ -3,12 +3,14 @@ package io.coti.cotinode;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.service.SourceSelector;
+import io.coti.cotinode.service.ValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -17,8 +19,9 @@ import java.util.List;
 import java.util.Vector;
 
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = AppConfig.class)
-@Slf4j
+@SpringBootTest(
+        classes = SourceSelector.class
+)
 public class SourceSelectorTest {
     @Autowired
     private SourceSelector sourceSelector;
@@ -111,7 +114,6 @@ public class SourceSelectorTest {
 
         List<TransactionData> sources3 = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 92);
         Assert.assertTrue(sources3.size() == 2);
-        log.info("End selectSourcesForAttachment test!!!");
     }
 
 }

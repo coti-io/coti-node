@@ -1,19 +1,14 @@
 package io.coti.cotinode;
 
-import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
-import io.coti.cotinode.service.BalanceService;
 import io.coti.cotinode.service.TccConfirmationService;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
-
-import static org.junit.Assert.*;
 
 @SpringBootTest
 public class TccConfirmationServiceTest {
