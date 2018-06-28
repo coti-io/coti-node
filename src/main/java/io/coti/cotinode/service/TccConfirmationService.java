@@ -19,7 +19,7 @@ public class TccConfirmationService {
     private int treshold;
     private Logger log = LoggerFactory.getLogger(this.getClass().getName());
     private ConcurrentHashMap<Hash, TransactionData> hashToUnTccConfirmTransactionsMapping;
-    private LinkedList<TransactionData> result;
+    private LinkedList<TransactionData> topologicalOrderedGraph;
 
     public void init(ConcurrentHashMap<Hash, TransactionData> hashToUnConfirmationTransactionsMapping) {
         hashToUnTccConfirmTransactionsMapping = new ConcurrentHashMap<>();
@@ -28,21 +28,18 @@ public class TccConfirmationService {
                 hashToUnTccConfirmTransactionsMapping.put(entry.getValue().getHash(), entry.getValue());
             }
         }
+        topologicalOrderedGraph = new LinkedList<>();
+        sortByTopologicalOrder();
     }
 
-    //takes adjacency list of a directed acyclic graph(DAG) as input
-    //returns a linkedlist which consists the vertices in topological order
-    public void topologicalSorting() {
-        result = new LinkedList<TransactionData>();
-
-        // Reset
+    private void sortByTopologicalOrder() {
         for (Map.Entry<Hash, TransactionData> entry : hashToUnTccConfirmTransactionsMapping.entrySet()) {
             entry.getValue().setVisit(false);
         }
 
         //loop is for making sure that every vertex is visited since if we select only one random source
         //all vertices might not be reachable from this source
-        //eg:1->2->3,1->3 and if we select 3 as source first then no vertex can be visited ofcourse except for 3
+        //eg:1->2->3,1->3 and if we select 3 as source first then no vertex can be visited of course except for 3
         for (Map.Entry<Hash, TransactionData> entry : hashToUnTccConfirmTransactionsMapping.entrySet()) {
             if (!entry.getValue().isVisit()) {
                 topologicalSortingHelper(entry.getValue());
@@ -90,12 +87,12 @@ public class TccConfirmationService {
         parentTransactionData.setVisit(true);
 
         //pushing to the stack as departing
-        result.addLast(parentTransactionData);
+        topologicalOrderedGraph.addLast(parentTransactionData);
     }
 
-    public List<Hash> setTransactionConsensus() {
-        List<Hash> transactionConsensusConfirmed = new Vector<>();
-        for(TransactionData transaction : result ) {
+    public List<Hash> getTccConfirmedTransactions() {
+        List<Hash> transactionConsensusConfirmed = new LinkedList<>();
+        for(TransactionData transaction : topologicalOrderedGraph) {
             setTotalSumScore(transaction);
             if (transaction.getTrustChainTrustScore() >= treshold) {
                 transaction.setTransactionConsensus(true);

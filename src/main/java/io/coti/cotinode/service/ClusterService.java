@@ -55,8 +55,7 @@ public class ClusterService implements IClusterService {
         Executors.newSingleThreadScheduledExecutor().execute(() -> {
             while (true) {
                 tccConfirmationService.init(hashToUnconfirmedTransactionsMapping);
-                tccConfirmationService.topologicalSorting();
-                List<Hash> transactionConsensusConfirmed = tccConfirmationService.setTransactionConsensus();
+                List<Hash> transactionConsensusConfirmed = tccConfirmationService.getTccConfirmedTransactions();
 
                 for (Hash hash : transactionConsensusConfirmed) {
                     hashToUnconfirmedTransactionsMapping.remove(hash);
@@ -72,12 +71,31 @@ public class ClusterService implements IClusterService {
         });
     }
 
+    @Override
     public TransactionData attachToCluster(TransactionData newTransactionData) {
+        setTransactionAsParent(newTransactionData);
         hashToUnconfirmedTransactionsMapping.put(newTransactionData.getHash(), newTransactionData);
         removeTransactionParentsFromSources(newTransactionData);
         sourceListsByTrustScore[newTransactionData.getRoundedSenderTrustScore()].add(newTransactionData);
         log.info("added newTransactionData with hash:{}", newTransactionData.getHash());
         return newTransactionData;
+    }
+
+    private void setTransactionAsParent(TransactionData transactionData) {
+        Hash leftParentHash = transactionData.getLeftParentHash();
+        if(leftParentHash != null){
+            TransactionData leftParentTransactionData = transactions.getByHash(leftParentHash);
+            leftParentTransactionData.addToChildrenTransactions(transactionData.getHash());
+            transactions.put(leftParentTransactionData);
+        }
+
+        Hash rightParentHash = transactionData.getRightParentHash();
+        if(leftParentHash != null){
+            TransactionData rightParentTransactionData = transactions.getByHash(rightParentHash);
+            rightParentTransactionData.addToChildrenTransactions(transactionData.getHash());
+            transactions.put(rightParentTransactionData);
+        }
+
     }
 
     private void removeTransactionParentsFromSources(TransactionData newTransactionData) {

@@ -99,8 +99,8 @@ public class TccConfirmationServiceTest {
 
     @Test
     public void setTransactionConsensus() {
-//        tccConfirmationService.topologicalSorting();
-//        List<Hash> transactionConsensusConfirmed = tccConfirmationService.setTransactionConsensus();
+//        tccConfirmationService.sortByTopologicalOrder();
+//        List<Hash> transactionConsensusConfirmed = tccConfirmationService.getTccConfirmedTransactions();
 //        Assert.assertTrue(transactionConsensusConfirmed.size() == 1);
     }
 }
