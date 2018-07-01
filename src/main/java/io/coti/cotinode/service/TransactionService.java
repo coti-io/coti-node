@@ -19,6 +19,8 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static io.coti.cotinode.http.HttpStringConstants.*;
@@ -38,9 +40,12 @@ public class TransactionService implements ITransactionService {
     @Autowired
     private Transactions transactions;
 
+    private HashMap<Hash, TransactionData> hashToWaitingChildrenTransactionsMapping;
+
     @PostConstruct
     private void init() {
         log.info("Transaction service Started");
+        hashToWaitingChildrenTransactionsMapping = new HashMap();
     }
 
     @Override
@@ -55,7 +60,7 @@ public class TransactionService implements ITransactionService {
                             AUTHENTICATION_FAILED_MESSAGE));
         }
 
-        if (!isLegalBalance(request)) {
+        if (!isLegalBalance(request.baseTransactions)) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(new AddTransactionResponse(
@@ -97,10 +102,119 @@ public class TransactionService implements ITransactionService {
                         TRANSACTION_CREATED_MESSAGE));
     }
 
-    private boolean isLegalBalance(AddTransactionRequest request) {
+    public ResponseEntity<AddTransactionResponse> addTransactionFromPropagation(AddTransactionRequest request) {
+        log.info("Adding a transaction from propagation request is being processed. Transaction Hash: {}", request.transactionHash);
+
+        if (getTransactionData(request.transactionHash) != null) {
+            log.info("Transaction already exist in local node!");
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new AddTransactionResponse(
+                            STATUS_ERROR,
+                            TRANSACTION_ALREADY_EXIST_MESSAGE));
+        }
+
+        // TODO: Propagate the transaction to neighbors
+
+        if (!ifAllTransactionParentsExistInLocalnode(request.transactionData)) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new AddTransactionResponse(
+                            STATUS_ERROR,
+                            WAITING_FOR_TRANSACTION_PARENT_MESSAGE));
+        }
+
+        addFromPrpagationAfterValidation(request.baseTransactions, request.transactionData);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new AddTransactionResponse(
+                        STATUS_ERROR,
+                        TRANSACTION_FROM_PROPAGATION_MESSAGE));
+
+
+    }
+
+    public void attachWaitingChildren(TransactionData parentTransactionData) {
+
+        // Loop on every child of the transaction
+        for (Hash childHash : parentTransactionData.getChildrenTransactions()) {
+            TransactionData childTransactionData = hashToWaitingChildrenTransactionsMapping.get(childHash);
+            if (childTransactionData != null) {
+                Hash leftParentHash = childTransactionData.getLeftParentHash();
+                Hash rightParentHash = childTransactionData.getRightParentHash();
+
+                // If all the child parents are in the local node, add the waiting child to the cluster.
+                if ((leftParentHash == null || getTransactionData(leftParentHash) != null)
+                        && (rightParentHash == null || getTransactionData(rightParentHash) != null)) {
+                    addFromPrpagationAfterValidation(childTransactionData.getBaseTransactions(), childTransactionData);
+                    hashToWaitingChildrenTransactionsMapping.remove(childHash);
+                }
+            }
+        }
+    }
+
+    private boolean ifAllTransactionParentsExistInLocalnode(TransactionData transactionData) {
+        boolean ifAllParentsExistInLocalNode = true;
+        Hash leftParentHash = transactionData.getLeftParentHash();
+        Hash rightParentHash = transactionData.getRightParentHash();
+
+        if (leftParentHash != null && getTransactionData(transactionData.getLeftParentHash()) == null) {
+            ifAllParentsExistInLocalNode = false;
+            // TODO: Ask neighbors for the leftParent
+        }
+
+        if (rightParentHash != null && getTransactionData(transactionData.getRightParentHash()) == null) {
+            ifAllParentsExistInLocalNode = false;
+            // TODO: Ask neighbors for the rightParent
+        }
+        if (!ifAllParentsExistInLocalNode) {
+            hashToWaitingChildrenTransactionsMapping.put(transactionData.getHash(), transactionData);
+        }
+        return ifAllParentsExistInLocalNode;
+    }
+
+
+    private ResponseEntity<AddTransactionResponse> addFromPrpagationAfterValidation(List<BaseTransactionData> baseTransactions,
+                                                                                    TransactionData transactionData) {
+        if (!isLegalBalance(baseTransactions)) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new AddTransactionResponse(
+                            STATUS_ERROR,
+                            ILLEGAL_TRANSACTION_MESSAGE));
+        }
+
+        if (!balanceService.checkBalancesAndAddToPreBalance(baseTransactions)) {
+            log.info("Pre balance check failed!");
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new AddTransactionResponse(
+                            STATUS_ERROR,
+                            INSUFFICIENT_FUNDS_MESSAGE));
+        }
+
+
+        // TODO: Validate POW:
+
+        try {
+            TimeUnit.SECONDS.sleep(5);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        attachTransactionToCluster(transactionData);
+
+        attachWaitingChildren(transactionData);
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(new AddTransactionResponse(
+                        STATUS_ERROR,
+                        AUTHENTICATION_FAILED_MESSAGE));
+    }
+    private boolean isLegalBalance(List<BaseTransactionData> baseTransactions) {
         BigDecimal totalTransactionSum = BigDecimal.ZERO;
         for (BaseTransactionData baseTransactionData :
-                request.baseTransactions) {
+                baseTransactions) {
             totalTransactionSum = totalTransactionSum.add(baseTransactionData.getAmount());
         }
         return totalTransactionSum.compareTo(BigDecimal.ZERO) == 0;
