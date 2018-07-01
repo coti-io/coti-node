@@ -1,6 +1,7 @@
 package io.coti.cotinode;
 
 
+import java.math.BigDecimal;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -21,5 +22,6 @@ public class TestUtils {
         Random r = new Random();
         return 1 + (100 - 1) * r.nextDouble();
     }
+
 }
 

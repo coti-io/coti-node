@@ -26,6 +26,7 @@ import javax.annotation.PostConstruct;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.math.BigDecimal;
 import java.util.AbstractMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -55,8 +56,8 @@ public class BalanceService implements IBalanceService {
     @Autowired
     private UnconfirmedTransactions unconfirmedTransactions;
 
-    private Map<Hash, Double> balanceMap;
-    private Map<Hash, Double> preBalanceMap;
+    private Map<Hash, BigDecimal> balanceMap;
+    private Map<Hash, BigDecimal> preBalanceMap;
 
 
     @PostConstruct
@@ -130,13 +131,13 @@ public class BalanceService implements IBalanceService {
     }
     
 
-    private void updateBalanceMap(Map<Hash, Double> mapTo, Map<Hash, Double> mapFrom) {
-        for (Map.Entry<Hash, Double> entry : mapFrom.entrySet()) {
+    private void updateBalanceMap(Map<Hash, BigDecimal> mapTo, Map<Hash, BigDecimal> mapFrom) {
+        for (Map.Entry<Hash, BigDecimal> entry : mapFrom.entrySet()) {
 
-            double balance = entry.getValue();
+            BigDecimal balance = entry.getValue();
             Hash key = entry.getKey();
             if (mapTo.containsKey(key)) {
-                mapTo.put(key, balance + mapTo.get(key));
+                mapTo.put(key, balance.add(mapTo.get(key)));
             } else {
                 mapTo.put(key, balance);
             }
@@ -191,7 +192,7 @@ public class BalanceService implements IBalanceService {
                     throw new Exception("Bad csv file format");
                 }
                 Hash addressHash = new Hash(addressDetails[0]);
-                Double addressAmount = Double.parseDouble(addressDetails[1]);
+                BigDecimal addressAmount = new BigDecimal(addressDetails[1]);
                 log.info("The hash {} was loaded from the snapshot with amount {}", addressHash, addressAmount);
 
                 if (balanceMap.containsKey(addressHash)) {
@@ -225,24 +226,24 @@ public class BalanceService implements IBalanceService {
         try {
             for (BaseTransactionData baseTransactionData : baseTransactionDatas) {
                 //checkBalance
-                double amount = baseTransactionData.getAmount();
+                BigDecimal amount = baseTransactionData.getAmount();
                 Hash addressHash = baseTransactionData.getAddressHash();
-                if ((balanceMap.containsKey(addressHash) && amount + balanceMap.get(addressHash) < 0)
-                        || (!balanceMap.containsKey(addressHash) && amount < 0)) {
+                if ((balanceMap.containsKey(addressHash) && amount.add( balanceMap.get(addressHash)).signum()  < 0)
+                        || (!balanceMap.containsKey(addressHash) && amount.signum() < 0)) {
                     log.error("Error in Balance check. Address {}  amount {} current Balance {} ", addressHash,
                             amount, preBalanceMap.get(addressHash));
                     return false;
                 }
                 if (preBalanceMap.containsKey(addressHash)) {
-                    if (amount + preBalanceMap.get(addressHash) < 0) {
+                    if (amount.add(preBalanceMap.get(addressHash)).signum() < 0) {
                         log.error("Error in preBalance check. Address {}  amount {} current preBalance {} ", addressHash,
                                 amount, preBalanceMap.get(addressHash));
                         return false;
                     } else {
-                        preBalanceMap.put(addressHash, amount + preBalanceMap.get(addressHash));
+                        preBalanceMap.put(addressHash, amount.add(preBalanceMap.get(addressHash)));
                     }
                 } else {
-                    if (amount < 0) {
+                    if (amount.signum() < 0) {
                         log.error("Error in preBalance check. Address {}  amount {} current preBalance {} ", addressHash,
                                 amount, preBalanceMap.get(addressHash));
                         return false;
@@ -265,23 +266,25 @@ public class BalanceService implements IBalanceService {
     @Override
     public ResponseEntity<GetBalancesResponse> getBalances(GetBalancesRequest getBalancesRequest) {
         GetBalancesResponse getBalancesResponse = new GetBalancesResponse();
-        List<AbstractMap.SimpleEntry<Hash, Double>> amounts = new LinkedList<>();
+        List<AbstractMap.SimpleEntry<Hash, BigDecimal>> amounts = new LinkedList<>();
         for (Hash hash : getBalancesRequest.getAddresses()) {
             if (balanceMap.containsKey(hash)) {
                 amounts.add(new AbstractMap.SimpleEntry<>(hash, balanceMap.get(hash)));
             } else {
-                amounts.add(new AbstractMap.SimpleEntry<>(hash, -1.0));
+                amounts.add(new AbstractMap.SimpleEntry<>(hash, new BigDecimal(-1)));
             }
         }
         getBalancesResponse.setAmounts(amounts);
         return ResponseEntity.status(HttpStatus.OK).body(getBalancesResponse);
     }
 
-    public Map<Hash, Double> getBalanceMap() {
+
+
+    public Map<Hash, BigDecimal> getBalanceMap() {
         return balanceMap;
     }
 
-    public Map<Hash, Double> getPreBalanceMap() {
+    public Map<Hash, BigDecimal> getPreBalanceMap() {
         return preBalanceMap;
     }
 

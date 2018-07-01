@@ -3,6 +3,7 @@ package io.coti.cotinode.data;
 import io.coti.cotinode.data.interfaces.IEntity;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -10,7 +11,7 @@ import java.util.Map;
 @Data
 public class ConfirmationData implements IEntity {
     private transient Hash hash;
-    private Map<Hash, Double> addressHashToValueTransferredMapping;
+    private Map<Hash, BigDecimal> addressHashToValueTransferredMapping;
 
     private Date creationTIme;
 

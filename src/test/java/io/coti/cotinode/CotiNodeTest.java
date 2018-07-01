@@ -13,7 +13,6 @@ import io.coti.cotinode.service.interfaces.IBalanceService;
 import io.coti.cotinode.service.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.List;
@@ -47,11 +47,6 @@ public class CotiNodeTest {
     private IBalanceService balanceService;
     private int privatekeyInt = 122;
 
-    @BeforeClass
-    public static void init() {
-        BalanceServiceTests.deleteRocksDBfolder();
-    }
-
     /*
        This is a good scenario where amount and address are dynamically generated
       */
@@ -72,7 +67,6 @@ public class CotiNodeTest {
 
         AddTransactionRequest addTransactionRequest2 = new AddTransactionRequest();
         List<BaseTransactionData> baseTransactionDataList2 = createBaseTransactionRandomList(3);
-
         addTransactionRequest2.baseTransactions = baseTransactionDataList2;
         addTransactionRequest2.transactionHash = new Hash("A2");
         addTransactionRequest2.message = signatureMessage;
@@ -82,13 +76,30 @@ public class CotiNodeTest {
 
         AddTransactionRequest addTransactionRequest3 = new AddTransactionRequest();
         List<BaseTransactionData> baseTransactionDataList3 = createBaseTransactionRandomList(3);
-
         addTransactionRequest3.baseTransactions = baseTransactionDataList3;
         addTransactionRequest3.transactionHash = new Hash("A3");
         addTransactionRequest3.message = signatureMessage;
         ResponseEntity<AddTransactionResponse> responseEntity3 = transactionService.addNewTransaction(addTransactionRequest3);
         Assert.assertTrue(responseEntity3.getStatusCode().equals(HttpStatus.CREATED));
         Assert.assertTrue(responseEntity3.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
+
+        AddTransactionRequest addTransactionRequest4 = new AddTransactionRequest();
+        List<BaseTransactionData> baseTransactionDataList4 = createBaseTransactionRandomList(3);
+        addTransactionRequest4.baseTransactions = baseTransactionDataList4;
+        addTransactionRequest4.transactionHash = new Hash("A4");
+        addTransactionRequest4.message = signatureMessage;
+        ResponseEntity<AddTransactionResponse> responseEntity4 = transactionService.addNewTransaction(addTransactionRequest4);
+        Assert.assertTrue(responseEntity4.getStatusCode().equals(HttpStatus.CREATED));
+        Assert.assertTrue(responseEntity4.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
+
+        AddTransactionRequest addTransactionRequest5 = new AddTransactionRequest();
+        List<BaseTransactionData> baseTransactionDataList5 = createBaseTransactionRandomList(3);
+        addTransactionRequest5.baseTransactions = baseTransactionDataList5;
+        addTransactionRequest5.transactionHash = new Hash("A5");
+        addTransactionRequest5.message = signatureMessage;
+        ResponseEntity<AddTransactionResponse> responseEntity5 = transactionService.addNewTransaction(addTransactionRequest4);
+        Assert.assertTrue(responseEntity5.getStatusCode().equals(HttpStatus.CREATED));
+        Assert.assertTrue(responseEntity5.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
 
 
         try {
@@ -113,10 +124,10 @@ public class CotiNodeTest {
         Hash fromAddress = new Hash(TestUtils.getRandomHexa());
 
         log.info("Base transaction {} with amount {} about to be sent ", baseTransactionHexaAddress, 3);
-        replaceBalancesWithAmount(fromAddress,2.0);
+        replaceBalancesWithAmount(fromAddress, new BigDecimal(2));
         ResponseEntity<AddTransactionResponse> badResponseEntity = transactionService.
-                addNewTransaction(createRequestWithOneBaseTransaction(new Hash("AB"),fromAddress,
-                        new Hash(baseTransactionHexaAddress), 3.0));
+                addNewTransaction(createRequestWithOneBaseTransaction(new Hash("AB"), fromAddress,
+                        new Hash(baseTransactionHexaAddress), new BigDecimal(3)));
         Assert.assertTrue(badResponseEntity.getStatusCode().equals(HttpStatus.UNAUTHORIZED));
         Assert.assertTrue(badResponseEntity.getBody().getStatus().equals(HttpStringConstants.STATUS_ERROR));
 
@@ -126,9 +137,9 @@ public class CotiNodeTest {
     @Test
     public void cTestBadScenarioNotEnoughSourcesForTcc() {
         Hash fromAddress = new Hash(TestUtils.getRandomHexa());
-        updateBalancesWithAddressAndAmount(fromAddress, 100.0);
+        updateBalancesWithAddressAndAmount(fromAddress, new BigDecimal(100));
         String baseTransactionHexaAddress = TestUtils.getRandomHexa();
-        double plusAmount = 50;
+        BigDecimal plusAmount = new BigDecimal(50);
         log.info("Base transaction {} with amount {} about to be sent ", baseTransactionHexaAddress, plusAmount);
         ResponseEntity<AddTransactionResponse> goodResponseEntity = transactionService.
                 addNewTransaction(createRequestWithOneBaseTransaction(new Hash("AC"), fromAddress
@@ -137,11 +148,11 @@ public class CotiNodeTest {
         Assert.assertTrue(goodResponseEntity.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
 
         String baseTransactionHexaAddress2 = TestUtils.getRandomHexa();
-        replaceBalancesWithAmount(fromAddress, 50.0);
+        replaceBalancesWithAmount(fromAddress, new BigDecimal(50));
         log.info("Base transaction {} with amount {} about to be sent ", baseTransactionHexaAddress2, 60);
         ResponseEntity<AddTransactionResponse> badResponseEntity = transactionService.
                 addNewTransaction(createRequestWithOneBaseTransaction(new Hash("AD"),
-                        fromAddress, new Hash(baseTransactionHexaAddress), 60.0));
+                        fromAddress, new Hash(baseTransactionHexaAddress), new BigDecimal(60)));
         Assert.assertTrue(badResponseEntity.getStatusCode().equals(HttpStatus.UNAUTHORIZED));
         Assert.assertTrue(badResponseEntity.getBody().getStatus().equals(HttpStringConstants.STATUS_ERROR));
 
@@ -160,31 +171,31 @@ public class CotiNodeTest {
 
     }
 
-    private void updateBalancesWithAddressAndAmount(Hash hash, Double amount) {
-        Map<Hash, Double> balanceMap = balanceService.getBalanceMap();
-        Map<Hash, Double> preBalanceMap = balanceService.getPreBalanceMap();
+    private void updateBalancesWithAddressAndAmount(Hash hash, BigDecimal amount) {
+        Map<Hash, BigDecimal> balanceMap = balanceService.getBalanceMap();
+        Map<Hash, BigDecimal> preBalanceMap = balanceService.getPreBalanceMap();
         if (balanceMap.containsKey(hash)) {
-            balanceMap.put(hash, amount + balanceMap.get(hash));
+            balanceMap.put(hash, amount.add(balanceMap.get(hash)));
         } else {
             balanceMap.put(hash, amount);
         }
         if (preBalanceMap.containsKey(hash)) {
-            preBalanceMap.put(hash, amount + preBalanceMap.get(hash));
+            preBalanceMap.put(hash, amount.add(preBalanceMap.get(hash)));
         } else {
             preBalanceMap.put(hash, amount);
         }
     }
 
-    private void replaceBalancesWithAmount(Hash hash, Double amount) {
-        Map<Hash, Double> balanceMap = balanceService.getBalanceMap();
-        Map<Hash, Double> preBalanceMap = balanceService.getPreBalanceMap();
+    private void replaceBalancesWithAmount(Hash hash, BigDecimal amount) {
+        Map<Hash, BigDecimal> balanceMap = balanceService.getBalanceMap();
+        Map<Hash, BigDecimal> preBalanceMap = balanceService.getPreBalanceMap();
 
         balanceMap.put(hash, amount);
         preBalanceMap.put(hash, amount);
 
     }
 
-    private AddTransactionRequest createRequestWithOneBaseTransaction(Hash transactionHash, Hash fromAddress, Hash baseTransactionAddress, Double amount) {
+    private AddTransactionRequest createRequestWithOneBaseTransaction(Hash transactionHash, Hash fromAddress, Hash baseTransactionAddress, BigDecimal amount) {
         List<BaseTransactionData> baseTransactionDataList = new LinkedList<>();
 
         BaseTransactionData baseTransactionData =
@@ -194,7 +205,7 @@ public class CotiNodeTest {
 
 
         BaseTransactionData myBaseTransactionData =
-                new BaseTransactionData(fromAddress, -1.0 * amount
+                new BaseTransactionData(fromAddress, amount.negate()
                         , new Hash("AB"),
                         CryptoUtils.getSignatureStringFromPrivateKeyAndMessage(BigInteger.valueOf(123), signatureMessage));
 
@@ -214,11 +225,11 @@ public class CotiNodeTest {
     private List<BaseTransactionData> createBaseTransactionRandomList(int numOfBaseTransactions) {
         List<BaseTransactionData> baseTransactionDataList = new LinkedList<>();
         Hash myAddress = new Hash(TestUtils.getRandomHexa());
-        updateBalancesWithAddressAndAmount(myAddress, 100.0 * numOfBaseTransactions);
+        updateBalancesWithAddressAndAmount(myAddress, new BigDecimal(100 * numOfBaseTransactions));
 
         for (int i = 0; i < numOfBaseTransactions; i++) {
             privatekeyInt++;
-            Double amount = TestUtils.getRandomDouble();
+            BigDecimal amount = new BigDecimal(TestUtils.getRandomDouble()).setScale(2, BigDecimal.ROUND_CEILING);
             BigInteger privateKey = BigInteger.valueOf(privatekeyInt);
             BaseTransactionData baseTransactionData =
                     new BaseTransactionData(new Hash(CryptoUtils.getPublicKeyFromPrivateKey(privateKey).toByteArray()), amount
@@ -226,7 +237,7 @@ public class CotiNodeTest {
                             CryptoUtils.getSignatureStringFromPrivateKeyAndMessage(privateKey, signatureMessage));
 
             BaseTransactionData myBaseTransactionData =
-                    new BaseTransactionData(myAddress, -1.0 * amount
+                    new BaseTransactionData(myAddress, amount.negate()
                             , myAddress,
                             CryptoUtils.getSignatureStringFromPrivateKeyAndMessage(privateKey, signatureMessage));
 

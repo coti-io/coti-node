@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -97,12 +98,12 @@ public class TransactionService implements ITransactionService {
     }
 
     private boolean isLegalBalance(AddTransactionRequest request) {
-        double totalTransactionSum = 0;
+        BigDecimal totalTransactionSum = BigDecimal.ZERO;
         for (BaseTransactionData baseTransactionData :
                 request.baseTransactions) {
-            totalTransactionSum = totalTransactionSum + baseTransactionData.getAmount();
+            totalTransactionSum = totalTransactionSum.add(baseTransactionData.getAmount());
         }
-        return totalTransactionSum == 0;
+        return totalTransactionSum.compareTo(BigDecimal.ZERO) == 0;
     }
 
     private TransactionData selectSources(TransactionData transactionData) {
@@ -153,7 +154,7 @@ public class TransactionService implements ITransactionService {
     private boolean validateAddresses(AddTransactionRequest request) {
         for (BaseTransactionData baseTransactionData : request.baseTransactions) {
 
-            if (baseTransactionData.getAmount() > 0) {
+            if (baseTransactionData.getAmount().signum() > 0) {
                 return true;
             }
 

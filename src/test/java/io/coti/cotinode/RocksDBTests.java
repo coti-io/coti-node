@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.math.BigDecimal;
+
 @Slf4j
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = AppConfig.class)
@@ -65,7 +67,7 @@ public class RocksDBTests {
 
     @Test
     public void saveAndGetBaseTransaction() {
-        BaseTransactionData baseTransactionData1 = new BaseTransactionData("ABCDEF", 12.2);
+        BaseTransactionData baseTransactionData1 = new BaseTransactionData("ABCDEF", new BigDecimal(12.2));
         baseTransactions.put(baseTransactionData1);
         BaseTransactionData baseTransactionData2 = baseTransactions.getByHash(new Hash("ABCDEF"));
         Assert.assertEquals(baseTransactionData1, baseTransactionData2);
@@ -81,7 +83,7 @@ public class RocksDBTests {
 
     @Test
     public void saveAndDeleteBaseTransactions() {
-        BaseTransactionData transaction1 = new BaseTransactionData("ABCDEF", 12.2);
+        BaseTransactionData transaction1 = new BaseTransactionData("ABCDEF", new BigDecimal(12.2));
         baseTransactions.put(transaction1);
         BaseTransactionData transaction2 = baseTransactions.getByHash("ABCDEF");
         Assert.assertEquals(transaction1, transaction2);

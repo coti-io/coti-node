@@ -19,6 +19,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -41,21 +42,6 @@ public class BalanceServiceTests {
     private QueueService queueService;
 
 
-    @BeforeClass
-    public static void deleteRocksDBfolder() {
-
-        File index = new File("rocksDB");
-        if (!index.exists()) {
-            return;
-        }
-        String[] entries = index.list();
-        for (String s : entries) {
-            File currentFile = new File(index.getPath(), s);
-            currentFile.delete();
-        }
-        index.delete();
-    }
-
     @Test
     public void AInitTest() { // the name starts with a to check make sure it runs first
     /*
@@ -63,8 +49,8 @@ public class BalanceServiceTests {
     here we can check only the snapshot
      */
 
-        Assert.assertTrue(balanceService.getBalanceMap().get(new Hash("BE")) == 120.0);
-        Assert.assertTrue(balanceService.getPreBalanceMap().get(new Hash("BE")) == 120.0);
+        Assert.assertTrue(balanceService.getBalanceMap().get(new Hash("BE")) == new BigDecimal(120.0));
+        Assert.assertTrue(balanceService.getPreBalanceMap().get(new Hash("BE")) == new BigDecimal(120.0));
 
 
     }
@@ -72,24 +58,25 @@ public class BalanceServiceTests {
     @Test
     public void checkBalancesTest() {
         List<BaseTransactionData> baseTransactionDataList = new LinkedList<>();
-        baseTransactionDataList.add(new BaseTransactionData("BE", -150.0));
+        baseTransactionDataList.add(new BaseTransactionData("BE", new BigDecimal(-150)));
 
         boolean ans = balanceService.checkBalancesAndAddToPreBalance(baseTransactionDataList);
         Assert.assertFalse(ans);
 
 
         List<BaseTransactionData> baseTransactionDatas2 = new LinkedList<>();
-        baseTransactionDatas2.add(new BaseTransactionData("BE", -20.0));
+        baseTransactionDatas2.add(new BaseTransactionData("BE", new BigDecimal(-20)));
         ans = balanceService.checkBalancesAndAddToPreBalance(baseTransactionDatas2);
         Assert.assertTrue(ans);
 
-
-        Assert.assertTrue(balanceService.getPreBalanceMap().get(new Hash("BE")) == 100.0);
+//Big decimals should be compared with compareTo and not equals
+        Assert.assertTrue(balanceService.getPreBalanceMap().get(new Hash("BE"))
+                .compareTo(new BigDecimal(100)) == 0);
 
 
     }
 
-    @Test // this method checks ConfirmationData.equals() as well
+//    @Test // this method checks ConfirmationData.equals() as well
 //    public void insertIntoUnconfirmedDBandAddToTccQeueueTest() {
 //        ConfirmationData confirmationData1 = new ConfirmationData(new Hash("A3")); //tcc =0 , dspc =0
 //        populateTransactionWithDummy(confirmationData1);
@@ -100,8 +87,8 @@ public class BalanceServiceTests {
 //    }
 
     private void populateTransactionWithDummy(ConfirmationData transaction) {
-        Map<Hash, Double> addressToAmount = new HashMap<>();
-        addressToAmount.put(new Hash("DD"), 10.10);
+        Map<Hash, BigDecimal> addressToAmount = new HashMap<>();
+        addressToAmount.put(new Hash("DD"), new BigDecimal(10.1));
         transaction.setAddressHashToValueTransferredMapping(addressToAmount);
     }
 

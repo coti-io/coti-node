@@ -26,11 +26,6 @@ public class ClusterServiceTest {
     private ClusterService cluster;
     private List<Hash> notTccConfirmTransactions;
 
-    @BeforeClass
-    public static void deleteDb() {
-        BalanceServiceTests.deleteRocksDBfolder();
-    }
-
     @Before
     public void setUp() {
         notTccConfirmTransactions = new Vector<>();

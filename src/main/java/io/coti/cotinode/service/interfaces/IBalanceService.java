@@ -7,6 +7,7 @@ import io.coti.cotinode.http.GetBalancesRequest;
 import io.coti.cotinode.http.GetBalancesResponse;
 import org.springframework.http.ResponseEntity;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -18,8 +19,8 @@ public interface IBalanceService {
 
     ResponseEntity<GetBalancesResponse> getBalances(GetBalancesRequest getBalancesRequest);
 
-    Map<Hash, Double> getBalanceMap();
+    Map<Hash, BigDecimal> getBalanceMap();
 
-    Map<Hash, Double> getPreBalanceMap();
+    Map<Hash, BigDecimal> getPreBalanceMap();
 }
 
