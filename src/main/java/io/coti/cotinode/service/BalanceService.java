@@ -55,6 +55,9 @@ public class BalanceService implements IBalanceService {
     @Autowired
     private UnconfirmedTransactions unconfirmedTransactions;
 
+    @Autowired
+    private BalanceSubscriptionService balanceSubscriptionService;
+
     private Map<Hash, Double> balanceMap;
     private Map<Hash, Double> preBalanceMap;
 
@@ -132,14 +135,15 @@ public class BalanceService implements IBalanceService {
 
     private void updateBalanceMap(Map<Hash, Double> mapTo, Map<Hash, Double> mapFrom) {
         for (Map.Entry<Hash, Double> entry : mapFrom.entrySet()) {
-
-            double balance = entry.getValue();
+                        double balance = entry.getValue();
             Hash key = entry.getKey();
             if (mapTo.containsKey(key)) {
                 mapTo.put(key, balance + mapTo.get(key));
             } else {
                 mapTo.put(key, balance);
             }
+
+            balanceSubscriptionService.updateClients(key, mapTo.get(key));
             log.info("The address {} with the value {} was added to balance map and was removed from preBalanceMap", entry.getKey(), entry.getValue());
         }
     }

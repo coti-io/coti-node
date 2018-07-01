@@ -1,5 +1,6 @@
 package io.coti.cotinode.service;
 
+import com.google.j2objc.annotations.AutoreleasePool;
 import io.coti.cotinode.crypto.CryptoUtils;
 import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.ConfirmationData;
@@ -36,6 +37,8 @@ public class TransactionService implements ITransactionService {
     private IValidationService validationService;
     @Autowired
     private Transactions transactions;
+    @Autowired
+    private BalanceSubscriptionService balanceSubscriptionService;
 
     @PostConstruct
     private void init() {
