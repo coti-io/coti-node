@@ -7,7 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Data
@@ -37,6 +39,7 @@ public class TransactionData implements IEntity {
     private Hash userHash;
     private List<Hash> childrenTransactions;
     private boolean isValid;
+    private Map<String, Boolean> validByNodes;
     private transient boolean isVisit;
     private boolean isZeroSpend;
 
@@ -55,6 +58,7 @@ public class TransactionData implements IEntity {
         this.senderTrustScore = 50;
         this.processStartTime = (new Date());
         this.dspConsensus = true;
+        this.validByNodes = new ConcurrentHashMap();
     }
 
     public TransactionData(Hash hash, double trustScore) {
@@ -109,4 +113,9 @@ public class TransactionData implements IEntity {
     public boolean hasSources() {
         return getLeftParentHash() != null || getRightParentHash() != null;
     }
+
+    public void addNodesToTransaction(Map<String, Boolean> validByNodes) {
+        this.validByNodes.putAll(validByNodes);
+    }
+
 }
