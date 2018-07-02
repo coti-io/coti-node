@@ -6,6 +6,8 @@ import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.http.GetBalancesRequest;
 import io.coti.cotinode.http.GetBalancesResponse;
+import io.coti.cotinode.http.websocket.UpdatedBalanceMessage;
+import io.coti.cotinode.http.websocket.WebSocketSender;
 import io.coti.cotinode.model.ConfirmedTransactions;
 import io.coti.cotinode.model.Transactions;
 import io.coti.cotinode.model.UnconfirmedTransactions;
@@ -18,6 +20,7 @@ import org.rocksdb.RocksIterator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
@@ -56,9 +59,12 @@ public class BalanceService implements IBalanceService {
     @Autowired
     private UnconfirmedTransactions unconfirmedTransactions;
 
+    @Autowired
+    private WebSocketSender webSocketSender;
+    
     private Map<Hash, BigDecimal> balanceMap;
     private Map<Hash, BigDecimal> preBalanceMap;
-
+    
     @PostConstruct
     private void init() {
         try {
@@ -141,6 +147,8 @@ public class BalanceService implements IBalanceService {
             } else {
                 mapTo.put(key, balance);
             }
+
+            webSocketSender.notifyBalanceChange(key, mapTo.get(key));
             log.info("The address {} with the value {} was added to balance map and was removed from preBalanceMap", entry.getKey(), entry.getValue());
         }
     }
