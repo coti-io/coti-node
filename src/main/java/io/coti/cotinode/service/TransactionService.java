@@ -39,6 +39,8 @@ public class TransactionService implements ITransactionService {
     private IValidationService validationService;
     @Autowired
     private Transactions transactions;
+    @Autowired
+    private PropagationService propagationService;
 
     private HashMap<Hash, TransactionData> hashToWaitingChildrenTransactionsMapping;
 
@@ -95,6 +97,8 @@ public class TransactionService implements ITransactionService {
 
         attachTransactionToCluster(transactionData);
 
+        propagationService.propagateToNeighbors(request);
+
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(new AddTransactionResponse(
@@ -114,9 +118,9 @@ public class TransactionService implements ITransactionService {
                             TRANSACTION_ALREADY_EXIST_MESSAGE));
         }
 
-        // TODO: Propagate the transaction to neighbors
+        propagationService.propagateToNeighbors(request);
 
-        if (!ifAllTransactionParentsExistInLocalnode(request.transactionData)) {
+        if (!ifAllTransactionParentsExistInLocalNode(request.transactionData)) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(new AddTransactionResponse(
@@ -124,7 +128,9 @@ public class TransactionService implements ITransactionService {
                             WAITING_FOR_TRANSACTION_PARENT_MESSAGE));
         }
 
-        addFromPrpagationAfterValidation(request.baseTransactions, request.transactionData);
+        ResponseEntity<AddTransactionResponse> transactionStatusAfterValidation = addFromPropagationAfterValidation(request.baseTransactions, request.transactionData);
+        // TODO: if transaction is "ok" or "not ok" need to spread answer accordingly
+
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(new AddTransactionResponse(
@@ -146,26 +152,26 @@ public class TransactionService implements ITransactionService {
                 // If all the child parents are in the local node, add the waiting child to the cluster.
                 if ((leftParentHash == null || getTransactionData(leftParentHash) != null)
                         && (rightParentHash == null || getTransactionData(rightParentHash) != null)) {
-                    addFromPrpagationAfterValidation(childTransactionData.getBaseTransactions(), childTransactionData);
+                    addFromPropagationAfterValidation(childTransactionData.getBaseTransactions(), childTransactionData);
                     hashToWaitingChildrenTransactionsMapping.remove(childHash);
                 }
             }
         }
     }
 
-    private boolean ifAllTransactionParentsExistInLocalnode(TransactionData transactionData) {
+    private boolean ifAllTransactionParentsExistInLocalNode(TransactionData transactionData) {
         boolean ifAllParentsExistInLocalNode = true;
         Hash leftParentHash = transactionData.getLeftParentHash();
         Hash rightParentHash = transactionData.getRightParentHash();
 
         if (leftParentHash != null && getTransactionData(transactionData.getLeftParentHash()) == null) {
             ifAllParentsExistInLocalNode = false;
-            // TODO: Ask neighbors for the leftParent
+            propagationService.getTransactionFromNeighbors(leftParentHash);
         }
 
         if (rightParentHash != null && getTransactionData(transactionData.getRightParentHash()) == null) {
             ifAllParentsExistInLocalNode = false;
-            // TODO: Ask neighbors for the rightParent
+            propagationService.getTransactionFromNeighbors(rightParentHash);
         }
         if (!ifAllParentsExistInLocalNode) {
             hashToWaitingChildrenTransactionsMapping.put(transactionData.getHash(), transactionData);
@@ -174,7 +180,7 @@ public class TransactionService implements ITransactionService {
     }
 
 
-    private ResponseEntity<AddTransactionResponse> addFromPrpagationAfterValidation(List<BaseTransactionData> baseTransactions,
+    private ResponseEntity<AddTransactionResponse> addFromPropagationAfterValidation(List<BaseTransactionData> baseTransactions,
                                                                                     TransactionData transactionData) {
         if (!isLegalBalance(baseTransactions)) {
             return ResponseEntity

@@ -65,7 +65,7 @@ public class ClusterService implements IClusterService {
                 try {
                     TimeUnit.SECONDS.sleep(delayTimeAfterTccProcess);
                 } catch (InterruptedException e) {
-                    log.error(e.toString());
+                    log.error("Errors when sleeping: {}", e);
                 }
             }
         });
