@@ -1,11 +1,13 @@
 package io.coti.cotinode.crypto;
 
+import lombok.extern.slf4j.Slf4j;
 import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Sign;
 
 import javax.xml.bind.DatatypeConverter;
 import java.math.BigInteger;
 
+@Slf4j
 public class CryptoUtils {
 
     private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
@@ -50,12 +52,20 @@ public class CryptoUtils {
 
     public static byte[] hexStringToByteArray(String s) {
         int len = s.length();
+        if(!checkIfLengthEven(len)){
+            log.error("The length of {} hash is odd ({}), cannot convert to bytes! creating empty byte array",s,len);
+            return new byte[0];
+        }
         byte[] data = new byte[len / 2];
         for (int i = 0; i < len; i += 2) {
             data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
                     + Character.digit(s.charAt(i + 1), 16));
         }
         return data;
+    }
+
+    private static boolean checkIfLengthEven(int length){
+        return (length & 1) == 0 ;
     }
 
     public static BigInteger generatePrivateKey(String seed, int index){

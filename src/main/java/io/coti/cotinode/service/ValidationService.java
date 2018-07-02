@@ -1,10 +1,8 @@
 package io.coti.cotinode.service;
 
 import io.coti.cotinode.data.Hash;
-import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.service.interfaces.IValidationService;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 import org.web3j.crypto.Sign;
 
 import java.math.BigInteger;
@@ -35,5 +33,10 @@ public class ValidationService implements IValidationService {
 
     private BigInteger getAddressFromMessageAndSignature(String signedMessage, Sign.SignatureData signatureData) throws SignatureException {
         return Sign.signedMessageToKey(signedMessage.getBytes(), signatureData);
+    }
+
+    @Override
+    public boolean validateAddressLength(Hash address) {
+        return (address.getBytes().length == 34) && (address.getBytes().length != 0);
     }
 }

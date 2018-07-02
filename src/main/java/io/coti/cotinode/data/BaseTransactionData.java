@@ -28,8 +28,6 @@ public class BaseTransactionData implements IEntity {
         this.amount = amount;
     }
 
-
-
     public BaseTransactionData(String addressHash, BigDecimal amount, Hash hash, String signature){
         this(addressHash, amount);
         this.hash = hash;

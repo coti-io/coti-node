@@ -59,7 +59,6 @@ public class BalanceService implements IBalanceService {
     private Map<Hash, BigDecimal> balanceMap;
     private Map<Hash, BigDecimal> preBalanceMap;
 
-
     @PostConstruct
     private void init() {
         try {
@@ -91,7 +90,7 @@ public class BalanceService implements IBalanceService {
             ConfirmationData confirmationData = (ConfirmationData) SerializationUtils
                     .deserialize(unconfirmedDBiterator.value());
             if (confirmationData.isTrustChainConsensus() && confirmationData.isDoubleSpendPreventionConsensus()) {
-                updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(),balanceMap);
+                updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(), balanceMap);
                 confirmedTransactions.put(confirmationData);
                 unconfirmedTransactions.delete(confirmationData.getHash());
             }
@@ -104,7 +103,7 @@ public class BalanceService implements IBalanceService {
      * continue to be executed according to the fixedDelay
      */
     @Scheduled(fixedDelayString = "${balance.scheduled.delay}", initialDelayString = "${balance.scheduled.initialdelay}")
-     private void updateBalanceFromQueueScheduledTask() {
+    private void updateBalanceFromQueueScheduledTask() {
         ConcurrentLinkedQueue<Hash> updateBalanceQueue = queueService.getUpdateBalanceQueue();
         while (!updateBalanceQueue.isEmpty()) {
             Hash addressHash = updateBalanceQueue.poll();
@@ -125,11 +124,12 @@ public class BalanceService implements IBalanceService {
         }
     }
 
+
     private void setDSPCtoTrueAndInsertToUnconfirmed(ConfirmationData confirmationData) {
         confirmationData.setDoubleSpendPreventionConsensus(true);
         unconfirmedTransactions.put(confirmationData);
     }
-    
+
 
     private void updateBalanceMap(Map<Hash, BigDecimal> mapTo, Map<Hash, BigDecimal> mapFrom) {
         for (Map.Entry<Hash, BigDecimal> entry : mapFrom.entrySet()) {
@@ -151,7 +151,7 @@ public class BalanceService implements IBalanceService {
         while (confirmedDBiterator.isValid()) {
             ConfirmationData confirmedTransactionData = (ConfirmationData) SerializationUtils
                     .deserialize(confirmedDBiterator.value());
-            updateBalanceMap(confirmedTransactionData.getAddressHashToValueTransferredMapping(),balanceMap);
+            updateBalanceMap(confirmedTransactionData.getAddressHashToValueTransferredMapping(), balanceMap);
 
             confirmedDBiterator.next();
 
@@ -172,7 +172,7 @@ public class BalanceService implements IBalanceService {
             }
             if (!confirmationData.isTrustChainConsensus() ||
                     !confirmationData.isDoubleSpendPreventionConsensus()) {
-                updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(),preBalanceMap);
+                updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(), preBalanceMap);
             }
         }
         return hashesForClusterService;
@@ -196,7 +196,7 @@ public class BalanceService implements IBalanceService {
                 log.info("The hash {} was loaded from the snapshot with amount {}", addressHash, addressAmount);
 
                 if (balanceMap.containsKey(addressHash)) {
-                    // throw new Exception(String.format("Double address found in CSV file: %s", addressHash));
+                    // throw new Exception(String.format("Double address found in CSV file: %s", address));
                     log.error("The address {} was already found in the snapshot", addressHash);
                 }
                 balanceMap.put(addressHash, addressAmount);
@@ -228,7 +228,7 @@ public class BalanceService implements IBalanceService {
                 //checkBalance
                 BigDecimal amount = baseTransactionData.getAmount();
                 Hash addressHash = baseTransactionData.getAddressHash();
-                if ((balanceMap.containsKey(addressHash) && amount.add( balanceMap.get(addressHash)).signum()  < 0)
+                if ((balanceMap.containsKey(addressHash) && amount.add(balanceMap.get(addressHash)).signum() < 0)
                         || (!balanceMap.containsKey(addressHash) && amount.signum() < 0)) {
                     log.error("Error in Balance check. Address {}  amount {} current Balance {} ", addressHash,
                             amount, preBalanceMap.get(addressHash));
@@ -277,7 +277,6 @@ public class BalanceService implements IBalanceService {
         getBalancesResponse.setAmounts(amounts);
         return ResponseEntity.status(HttpStatus.OK).body(getBalancesResponse);
     }
-
 
 
     public Map<Hash, BigDecimal> getBalanceMap() {
