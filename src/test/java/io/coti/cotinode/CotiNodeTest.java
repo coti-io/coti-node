@@ -1,5 +1,6 @@
 package io.coti.cotinode;
 
+import io.coti.cotinode.controllers.TransactionController;
 import io.coti.cotinode.crypto.CryptoUtils;
 import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.ConfirmationData;
@@ -37,20 +38,27 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class CotiNodeTest {
 
-    private final static String signatureMessage = "message";
     @Autowired
     private ITransactionService transactionService;
+
+    @Autowired
+    private TransactionController transactionController;
+
     @Autowired
     private ConfirmedTransactions confirmedTransactions;
+
     @Autowired
     private UnconfirmedTransactions unconfirmedTransactions;
+
     @Autowired
     private IBalanceService balanceService;
-    private int privatekeyInt = 122;
 
+    private int privatekeyInt = 122;
+    private final static String signatureMessage = "message";
     /*
        This is a good scenario where amount and address are dynamically generated
       */
+
     @Test
     public void aTestFullProcess() {
 
@@ -62,7 +70,7 @@ public class CotiNodeTest {
         addTransactionRequest.transactionHash = new Hash("A1");
         addTransactionRequest.message = signatureMessage;
 
-        ResponseEntity<AddTransactionResponse> responseEntity = transactionService.addNewTransaction(addTransactionRequest);
+        ResponseEntity<AddTransactionResponse> responseEntity = transactionController.addTransaction(addTransactionRequest);
         Assert.assertTrue(responseEntity.getStatusCode().equals(HttpStatus.CREATED));
         Assert.assertTrue(responseEntity.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
 

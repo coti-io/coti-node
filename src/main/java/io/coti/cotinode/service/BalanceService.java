@@ -266,9 +266,16 @@ public class BalanceService implements IBalanceService {
         return true;
     }
 
+    @Override
     public boolean insertToUnconfirmedTransactions(ConfirmationData confirmationData) {
-        setDSPCtoTrueAndInsertToUnconfirmed(confirmationData);
-        return true;
+        try {
+            setDSPCtoTrueAndInsertToUnconfirmed(confirmationData);
+            return true;
+        } catch (Exception ex) {
+            log.error("Exception while inserting unconfirmed transaction {} ", confirmationData, ex);
+
+            return false;
+        }
     }
 
     @Override
@@ -293,6 +300,23 @@ public class BalanceService implements IBalanceService {
 
     public Map<Hash, BigDecimal> getPreBalanceMap() {
         return preBalanceMap;
+    }
+
+    @Override
+    public void rollbackBaseTransactions(List<BaseTransactionData> baseTransactions) {
+        for (BaseTransactionData baseTransactionData : baseTransactions) {
+            if (preBalanceMap.containsKey(baseTransactionData.getAddressHash())) {
+                baseTransactionData.setAmount(baseTransactionData.getAmount().negate());
+            }
+            else {
+                // TODO : if not contains - can it happen ?
+                log.error("Error while rolling back. preBalance map doesn't contain the address {}",
+                        baseTransactionData.getAddressHash());
+            }
+        }
+        if (!checkBalancesAndAddToPreBalance(baseTransactions)) {
+            log.error("Error while rolling back. checkBalancesAndAddToPreBalance returned false");
+        }
     }
 
 }

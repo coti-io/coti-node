@@ -11,6 +11,9 @@ public class HttpStringConstants {
 
 
     public static final String TRANSACTION_CREATED_MESSAGE = "Transaction created";
+    public static final String TRANSACTION_CREATION_FAILED_MESSAGE = "Transaction creation failed";
+    public static final String TRANSACTION_ROLLBACK_MESSAGE = "Transaction creation failed";
+
 
     public static final String TRANSACTION_FROM_PROPAGATION_MESSAGE = "";
     public static final String WAITING_FOR_TRANSACTION_PARENT_MESSAGE = "Waiting_for_transaction_parent!";

@@ -5,6 +5,7 @@ import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.ConfirmationData;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
+import io.coti.cotinode.exception.TransactionException;
 import io.coti.cotinode.http.AddTransactionRequest;
 import io.coti.cotinode.http.AddTransactionResponse;
 import io.coti.cotinode.http.GetTransactionResponse;
@@ -19,7 +20,10 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -29,6 +33,10 @@ import static io.coti.cotinode.http.HttpStringConstants.*;
 @Service
 public class TransactionService implements ITransactionService {
 
+    private Map<Hash, TransactionData> propagationTransactionHash;
+
+    private HashMap<Hash, TransactionData> hashToWaitingChildrenTransactionsMapping;
+    
     @Autowired
     private IZeroSpendService zeroSpendService;
     @Autowired
@@ -42,9 +50,6 @@ public class TransactionService implements ITransactionService {
     @Autowired
     private PropagationService propagationService;
 
-    private HashMap<Hash, TransactionData> hashToWaitingChildrenTransactionsMapping;
-    Map<Hash,TransactionData> propagationTransactionHash;
-
     @PostConstruct
     private void init() {
         log.info("Transaction service Started");
@@ -53,7 +58,8 @@ public class TransactionService implements ITransactionService {
     }
 
     @Override
-    public ResponseEntity<AddTransactionResponse> addNewTransaction(AddTransactionRequest request) {
+    public ResponseEntity<AddTransactionResponse> addNewTransaction(AddTransactionRequest request)
+            throws TransactionException {
         log.info("New transaction request is being processed. Transaction Hash: {}", request.transactionHash);
         if (!validateAddresses(request)) {
             log.info("Failed to validate addresses!");
@@ -72,6 +78,7 @@ public class TransactionService implements ITransactionService {
                             ILLEGAL_TRANSACTION_MESSAGE));
         }
 
+
         if (!balanceService.checkBalancesAndAddToPreBalance(request.baseTransactions)) {
             log.info("Pre balance check failed!");
             return ResponseEntity
@@ -80,41 +87,43 @@ public class TransactionService implements ITransactionService {
                             STATUS_ERROR,
                             INSUFFICIENT_FUNDS_MESSAGE));
         }
-
-        TransactionData transactionData = new TransactionData(request);
-
-        transactionData = selectSources(transactionData);
-
-        if (!validationService.validateSource(transactionData.getLeftParentHash()) ||
-                !validationService.validateSource(transactionData.getRightParentHash())) {
-            log.info("Could not validate transaction source");
-        }
-
-        //POW:
         try {
+
+            TransactionData transactionData = new TransactionData(request);
+
+            transactionData = selectSources(transactionData);
+
+            if (!validationService.validateSource(transactionData.getLeftParentHash()) ||
+                    !validationService.validateSource(transactionData.getRightParentHash())) {
+                log.info("Could not validate transaction source");
+            }
+
+            // ############   POW   ###########
             TimeUnit.SECONDS.sleep(5);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            // ################################
+            attachTransactionToCluster(transactionData);
+            transactionData.setSenderNodeIpAddress(propagationService.getCurrentNodeIp());
+            transactionData.setValid(true);// It's needed?
+            propagationService.propagateToNeighbors(request);
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(new AddTransactionResponse(
+                            STATUS_SUCCESS,
+                            TRANSACTION_CREATED_MESSAGE));
+        } catch (Exception ex) {
+            log.error("Exception while adding a transaction", ex);
+            throw new TransactionException(ex);
+
         }
-
-        attachTransactionToCluster(transactionData);
-        transactionData.setSenderNodeIpAddress(propagationService.getCurrentNodeIp());
-        transactionData.setValid(true);// It's needed?
-        propagationService.propagateToNeighbors(request);
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(new AddTransactionResponse(
-                        STATUS_SUCCESS,
-                        TRANSACTION_CREATED_MESSAGE));
     }
 
-    public ResponseEntity<AddTransactionResponse> addTransactionFromPropagation(AddTransactionRequest request) {
+    public ResponseEntity<AddTransactionResponse> addTransactionFromPropagation(AddTransactionRequest request)
+            throws TransactionException {
         log.info("Adding a transaction from propagation request is being processed. Transaction Hash: {}", request.transactionHash);
 
         synchronized (this) {
             if (propagationTransactionHash.containsKey(request.transactionHash) || getTransactionData(request.transactionHash) != null) {
-                addNodesToTransaction(request.transactionHash, request.transactionData.getValidByNodes() );
+                addNodesToTransaction(request.transactionHash, request.transactionData.getValidByNodes());
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new AddTransactionResponse(
@@ -139,8 +148,10 @@ public class TransactionService implements ITransactionService {
         }
 
         propagationTransactionHash.remove(request.transactionHash);
-        return  response;
+        return response;
     }
+
+
 
     private void addNodesToTransaction(Hash transactionHash, Map<String, Boolean> validByNodes) {
         if (propagationTransactionHash.containsKey(transactionHash)) {
@@ -153,7 +164,7 @@ public class TransactionService implements ITransactionService {
         }
     }
 
-    public void attachWaitingChildren(TransactionData parentTransactionData) {
+    public void attachWaitingChildren(TransactionData parentTransactionData) throws TransactionException {
 
         // Loop on every child of the transaction
         for (Hash childHash : parentTransactionData.getChildrenTransactions()) {
@@ -193,8 +204,8 @@ public class TransactionService implements ITransactionService {
     }
 
 
-    private ResponseEntity<AddTransactionResponse> addFromPropagationAfterValidation(List<BaseTransactionData> baseTransactions,
-                                                                                    TransactionData transactionData) {
+    private ResponseEntity<AddTransactionResponse> addFromPropagationAfterValidation
+            (List<BaseTransactionData> baseTransactions, TransactionData transactionData) throws TransactionException {
         if (!isLegalBalance(baseTransactions)) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
@@ -217,13 +228,15 @@ public class TransactionService implements ITransactionService {
 
         try {
             TimeUnit.SECONDS.sleep(5);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+
+            attachTransactionToCluster(transactionData);
+
+            attachWaitingChildren(transactionData);
+        } catch (Exception ex) {
+            log.error("Error while addFromPropagationAfterValidation", ex);
+            throw new TransactionException(ex);
+
         }
-
-        attachTransactionToCluster(transactionData);
-
-        attachWaitingChildren(transactionData);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -231,6 +244,7 @@ public class TransactionService implements ITransactionService {
                         STATUS_SUCCESS,
                         TRANSACTION_CREATED_MESSAGE));
     }
+
     private boolean isLegalBalance(List<BaseTransactionData> baseTransactions) {
         BigDecimal totalTransactionSum = BigDecimal.ZERO;
         for (BaseTransactionData baseTransactionData :
@@ -253,6 +267,7 @@ public class TransactionService implements ITransactionService {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
+
             }
             retryTimes--;
             transactionData = clusterService.selectSources(transactionData);

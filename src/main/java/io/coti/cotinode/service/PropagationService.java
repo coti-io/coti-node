@@ -54,7 +54,6 @@ public class PropagationService implements IPropagationService {
             while (scanner.hasNextLine()) {
                 nodesIp.add(scanner.nextLine().trim());
             }
-        } catch (IOException e) {
             e.printStackTrace();
         }
     }

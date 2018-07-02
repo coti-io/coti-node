@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 @Configurable
 public class TccConfirmationService {
-    @Value("${threshold}")
+    @Value("${cluster.trust.chain.threshold}")
     private int threshold;
     private Logger log = LoggerFactory.getLogger(this.getClass().getName());
     private ConcurrentHashMap<Hash, TransactionData> hashToUnTccConfirmTransactionsMapping;
