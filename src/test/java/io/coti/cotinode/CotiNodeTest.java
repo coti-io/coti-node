@@ -4,6 +4,7 @@ import io.coti.cotinode.crypto.CryptoUtils;
 import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.ConfirmationData;
 import io.coti.cotinode.data.Hash;
+import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.http.AddTransactionRequest;
 import io.coti.cotinode.http.AddTransactionResponse;
 import io.coti.cotinode.http.HttpStringConstants;
@@ -97,11 +98,21 @@ public class CotiNodeTest {
         addTransactionRequest5.baseTransactions = baseTransactionDataList5;
         addTransactionRequest5.transactionHash = new Hash("A5");
         addTransactionRequest5.message = signatureMessage;
-        ResponseEntity<AddTransactionResponse> responseEntity5 = transactionService.addNewTransaction(addTransactionRequest4);
+        ResponseEntity<AddTransactionResponse> responseEntity5 = transactionService.addNewTransaction(addTransactionRequest5);
         Assert.assertTrue(responseEntity5.getStatusCode().equals(HttpStatus.CREATED));
         Assert.assertTrue(responseEntity5.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
 
-
+        AddTransactionRequest addTransactionRequest6 = new AddTransactionRequest();
+        List<BaseTransactionData> baseTransactionDataList6 = createBaseTransactionRandomList(3);
+        addTransactionRequest6.baseTransactions = baseTransactionDataList6;
+        addTransactionRequest6.transactionHash = new Hash("A6");
+        addTransactionRequest6.message = signatureMessage;
+        TransactionData transactionData6 = new TransactionData(addTransactionRequest6);
+        transactionData6.setLeftParentHash(new Hash("A5"));
+        addTransactionRequest6.transactionData = transactionData6;
+        ResponseEntity<AddTransactionResponse> responseEntity6 = transactionService.addTransactionFromPropagation(addTransactionRequest6);
+        Assert.assertTrue(responseEntity6.getStatusCode().equals(HttpStatus.CREATED));
+        Assert.assertTrue(responseEntity6.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
         try {
             log.info("CotiNodeTest is going to sleep for 20 sec");
             TimeUnit.SECONDS.sleep(20);

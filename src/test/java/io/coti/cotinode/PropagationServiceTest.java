@@ -32,8 +32,4 @@ public class PropagationServiceTest {
     public void getTransactionFromNeighbors() {
     }
 
-    @Test
-    public void loadNodesList() {
-
-    }
 }
