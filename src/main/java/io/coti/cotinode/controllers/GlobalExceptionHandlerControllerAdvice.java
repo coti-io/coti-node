@@ -16,7 +16,7 @@ public class GlobalExceptionHandlerControllerAdvice {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity handleArgumentNotValid(MethodArgumentNotValidException e) {
-        log.debug("Received a request with missing parameters.");
+        log.debug("Received a request with missing parameters.",e);
         ResponseEntity responseEntity = new ResponseEntity(
                 new ExceptionResponse(INVALID_PARAMETERS_MESSAGE, API_CLIENT_ERROR), HttpStatus.INTERNAL_SERVER_ERROR);
         return responseEntity;

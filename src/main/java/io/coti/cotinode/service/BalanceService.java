@@ -6,6 +6,8 @@ import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.http.GetBalancesRequest;
 import io.coti.cotinode.http.GetBalancesResponse;
+import io.coti.cotinode.http.websocket.UpdatedBalanceMessage;
+import io.coti.cotinode.http.websocket.WebSocketSender;
 import io.coti.cotinode.model.ConfirmedTransactions;
 import io.coti.cotinode.model.Transactions;
 import io.coti.cotinode.model.UnconfirmedTransactions;
@@ -18,6 +20,7 @@ import org.rocksdb.RocksIterator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
@@ -56,9 +59,11 @@ public class BalanceService implements IBalanceService {
     @Autowired
     private UnconfirmedTransactions unconfirmedTransactions;
 
+    @Autowired
+    private WebSocketSender webSocketSender;
+    
     private Map<Hash, BigDecimal> balanceMap;
     private Map<Hash, BigDecimal> preBalanceMap;
-
 
     @PostConstruct
     private void init() {
@@ -91,7 +96,7 @@ public class BalanceService implements IBalanceService {
             ConfirmationData confirmationData = (ConfirmationData) SerializationUtils
                     .deserialize(unconfirmedDBiterator.value());
             if (confirmationData.isTrustChainConsensus() && confirmationData.isDoubleSpendPreventionConsensus()) {
-                updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(),balanceMap);
+                updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(), balanceMap);
                 confirmedTransactions.put(confirmationData);
                 unconfirmedTransactions.delete(confirmationData.getHash());
             }
@@ -104,7 +109,7 @@ public class BalanceService implements IBalanceService {
      * continue to be executed according to the fixedDelay
      */
     @Scheduled(fixedDelayString = "${balance.scheduled.delay}", initialDelayString = "${balance.scheduled.initialdelay}")
-     private void updateBalanceFromQueueScheduledTask() {
+    private void updateBalanceFromQueueScheduledTask() {
         ConcurrentLinkedQueue<Hash> updateBalanceQueue = queueService.getUpdateBalanceQueue();
         while (!updateBalanceQueue.isEmpty()) {
             Hash addressHash = updateBalanceQueue.poll();
@@ -125,11 +130,12 @@ public class BalanceService implements IBalanceService {
         }
     }
 
+
     private void setDSPCtoTrueAndInsertToUnconfirmed(ConfirmationData confirmationData) {
         confirmationData.setDoubleSpendPreventionConsensus(true);
         unconfirmedTransactions.put(confirmationData);
     }
-    
+
 
     private void updateBalanceMap(Map<Hash, BigDecimal> mapTo, Map<Hash, BigDecimal> mapFrom) {
         for (Map.Entry<Hash, BigDecimal> entry : mapFrom.entrySet()) {
@@ -141,6 +147,8 @@ public class BalanceService implements IBalanceService {
             } else {
                 mapTo.put(key, balance);
             }
+
+            webSocketSender.notifyBalanceChange(key, mapTo.get(key));
             log.info("The address {} with the value {} was added to balance map and was removed from preBalanceMap", entry.getKey(), entry.getValue());
         }
     }
@@ -151,7 +159,7 @@ public class BalanceService implements IBalanceService {
         while (confirmedDBiterator.isValid()) {
             ConfirmationData confirmedTransactionData = (ConfirmationData) SerializationUtils
                     .deserialize(confirmedDBiterator.value());
-            updateBalanceMap(confirmedTransactionData.getAddressHashToValueTransferredMapping(),balanceMap);
+            updateBalanceMap(confirmedTransactionData.getAddressHashToValueTransferredMapping(), balanceMap);
 
             confirmedDBiterator.next();
 
@@ -172,7 +180,7 @@ public class BalanceService implements IBalanceService {
             }
             if (!confirmationData.isTrustChainConsensus() ||
                     !confirmationData.isDoubleSpendPreventionConsensus()) {
-                updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(),preBalanceMap);
+                updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(), preBalanceMap);
             }
         }
         return hashesForClusterService;
@@ -196,7 +204,7 @@ public class BalanceService implements IBalanceService {
                 log.info("The hash {} was loaded from the snapshot with amount {}", addressHash, addressAmount);
 
                 if (balanceMap.containsKey(addressHash)) {
-                    // throw new Exception(String.format("Double address found in CSV file: %s", addressHash));
+                    // throw new Exception(String.format("Double address found in CSV file: %s", address));
                     log.error("The address {} was already found in the snapshot", addressHash);
                 }
                 balanceMap.put(addressHash, addressAmount);
@@ -228,7 +236,7 @@ public class BalanceService implements IBalanceService {
                 //checkBalance
                 BigDecimal amount = baseTransactionData.getAmount();
                 Hash addressHash = baseTransactionData.getAddressHash();
-                if ((balanceMap.containsKey(addressHash) && amount.add( balanceMap.get(addressHash)).signum()  < 0)
+                if ((balanceMap.containsKey(addressHash) && amount.add(balanceMap.get(addressHash)).signum() < 0)
                         || (!balanceMap.containsKey(addressHash) && amount.signum() < 0)) {
                     log.error("Error in Balance check. Address {}  amount {} current Balance {} ", addressHash,
                             amount, preBalanceMap.get(addressHash));
@@ -277,7 +285,6 @@ public class BalanceService implements IBalanceService {
         getBalancesResponse.setAmounts(amounts);
         return ResponseEntity.status(HttpStatus.OK).body(getBalancesResponse);
     }
-
 
 
     public Map<Hash, BigDecimal> getBalanceMap() {

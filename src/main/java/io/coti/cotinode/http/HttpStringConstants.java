@@ -5,6 +5,11 @@ public class HttpStringConstants {
     public static final String STATUS_ERROR = "Error";
 
     public static final String ADDRESS_CREATED_MESSAGE = "Address %s created";
+    public static final String ADDRESS_ALREADY_EXISTS_MESSAGE = "Address %s already exists";
+    public static final String ADDRESS_CREATION_ERROR_MESSAGE = "Address %s had a creation error";
+    public static final String ADDRESS_LENGTH_ERROR_MESSAGE = "Address %s length is not valid";
+
+
     public static final String TRANSACTION_CREATED_MESSAGE = "Transaction created";
 
     public static final String TRANSACTION_FROM_PROPAGATION_MESSAGE = "";
