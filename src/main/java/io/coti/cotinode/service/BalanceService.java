@@ -64,7 +64,7 @@ public class BalanceService implements IBalanceService {
     
     private Map<Hash, BigDecimal> balanceMap;
     private Map<Hash, BigDecimal> preBalanceMap;
-    
+
     @PostConstruct
     private void init() {
         try {
