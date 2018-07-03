@@ -60,6 +60,8 @@ public class TransactionService implements ITransactionService {
     @Override
     public ResponseEntity<AddTransactionResponse> addNewTransaction(AddTransactionRequest request)
             throws TransactionException {
+
+
         log.info("New transaction request is being processed. Transaction Hash: {}", request.transactionHash);
         if (!validateAddresses(request)) {
             log.info("Failed to validate addresses!");
@@ -88,7 +90,6 @@ public class TransactionService implements ITransactionService {
                             INSUFFICIENT_FUNDS_MESSAGE));
         }
         try {
-
             TransactionData transactionData = new TransactionData(request);
 
             transactionData = selectSources(transactionData);
@@ -112,7 +113,7 @@ public class TransactionService implements ITransactionService {
                             TRANSACTION_CREATED_MESSAGE));
         } catch (Exception ex) {
             log.error("Exception while adding a transaction", ex);
-            throw new TransactionException(ex);
+            throw new TransactionException(ex, request.baseTransactions);
 
         }
     }
@@ -150,7 +151,6 @@ public class TransactionService implements ITransactionService {
         propagationTransactionHash.remove(request.transactionHash);
         return response;
     }
-
 
 
     private void addNodesToTransaction(Hash transactionHash, Map<String, Boolean> validByNodes) {
@@ -234,7 +234,7 @@ public class TransactionService implements ITransactionService {
             attachWaitingChildren(transactionData);
         } catch (Exception ex) {
             log.error("Error while addFromPropagationAfterValidation", ex);
-            throw new TransactionException(ex);
+            throw new TransactionException(ex, baseTransactions);
 
         }
 

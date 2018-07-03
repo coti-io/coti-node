@@ -1,7 +1,10 @@
-package io.coti.cotinode.controllers;
+package io.coti.cotinode.exception;
 
+import io.coti.cotinode.http.AddTransactionResponse;
 import io.coti.cotinode.http.ExceptionResponse;
+import io.coti.cotinode.service.interfaces.IBalanceService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -12,7 +15,10 @@ import static io.coti.cotinode.http.HttpStringConstants.*;
 
 @Slf4j
 @ControllerAdvice
-public class GlobalExceptionHandlerControllerAdvice {
+public class GlobalExceptionHandler {
+
+    @Autowired
+    private IBalanceService balanceService;
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity handleArgumentNotValid(MethodArgumentNotValidException e) {
@@ -24,7 +30,7 @@ public class GlobalExceptionHandlerControllerAdvice {
 
 
     @ExceptionHandler(NullPointerException.class)
-    public ResponseEntity handleNullPointerException(Exception e) {
+    public ResponseEntity handleNullPointerException(NullPointerException e) {
         log.error("Unhandled exception raised for the given request.");
         e.printStackTrace();
         ResponseEntity responseEntity = new ResponseEntity(
@@ -42,4 +48,19 @@ public class GlobalExceptionHandlerControllerAdvice {
 
         return responseEntity;
     }
+
+    @ExceptionHandler(TransactionException.class)
+    public ResponseEntity handleTransactionException(TransactionException e) {
+        log.error("An error while adding transaction, performing a rollback procedure",e);
+        balanceService.rollbackBaseTransactions(e.getBaseTransactionData());
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new AddTransactionResponse(
+                        STATUS_ERROR,
+                        TRANSACTION_ROLLBACK_MESSAGE));
+    }
+
+
+
+
 }

@@ -7,6 +7,7 @@ import io.coti.cotinode.http.HttpStringConstants;
 import io.coti.cotinode.service.interfaces.IAddressService;
 import io.coti.cotinode.service.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,6 @@ import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 @RequestMapping("/address")
 public class AddressController {
 
-
     @Autowired
     private IAddressService addressService;
 
@@ -32,6 +32,7 @@ public class AddressController {
 
     @RequestMapping(method = PUT)
     public ResponseEntity<AddAddressResponse> addAddress(@Valid @RequestBody AddAddressRequest addAddressRequest) {
+
         try {
             if (addressLengthValidation(addAddressRequest.getAddress())) {
                 if (addressService.addNewAddress(addAddressRequest.getAddress())) {

@@ -8,9 +8,6 @@ import io.coti.cotinode.http.AddTransactionResponse;
 import io.coti.cotinode.http.GetTransactionResponse;
 import org.springframework.http.ResponseEntity;
 
-import java.util.List;
-import java.util.Map;
-
 public interface ITransactionService {
 
     ResponseEntity<AddTransactionResponse> addNewTransaction(AddTransactionRequest request) throws TransactionException;
