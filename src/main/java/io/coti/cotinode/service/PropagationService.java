@@ -48,13 +48,16 @@ public class PropagationService implements IPropagationService {
 
 
     private void loadNodesList() {
+
         ClassLoader classLoader = getClass().getClassLoader();
         File file = new File(classLoader.getResource(nodesFile).getFile());
         try (Scanner scanner = new Scanner(file)) {
             while (scanner.hasNextLine()) {
                 nodesIp.add(scanner.nextLine().trim());
             }
-            e.printStackTrace();
+        }
+        catch (Exception ex){
+            log.error("An error while loading the nodesList", ex);
         }
     }
 
@@ -65,7 +68,7 @@ public class PropagationService implements IPropagationService {
         try {
             currentNodeIp = FileUtils.readFileToString(file).trim();
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("An error while loading the current node",e);
         }
     }
 

@@ -125,7 +125,7 @@ public class CotiNodeTest {
             log.info("CotiNodeTest is going to sleep for 20 sec");
             TimeUnit.SECONDS.sleep(20);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            log.error("error ",e);
         }
 
         ConfirmationData confirmedData = confirmedTransactions.getByHash(new Hash("A1"));

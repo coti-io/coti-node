@@ -6,7 +6,6 @@ import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.http.GetBalancesRequest;
 import io.coti.cotinode.http.GetBalancesResponse;
-import io.coti.cotinode.http.websocket.UpdatedBalanceMessage;
 import io.coti.cotinode.http.websocket.WebSocketSender;
 import io.coti.cotinode.model.ConfirmedTransactions;
 import io.coti.cotinode.model.Transactions;
@@ -20,7 +19,6 @@ import org.rocksdb.RocksIterator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
@@ -30,10 +28,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.math.BigDecimal;
-import java.util.AbstractMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -61,7 +56,7 @@ public class BalanceService implements IBalanceService {
 
     @Autowired
     private WebSocketSender webSocketSender;
-    
+
     private Map<Hash, BigDecimal> balanceMap;
     private Map<Hash, BigDecimal> preBalanceMap;
 
@@ -97,6 +92,7 @@ public class BalanceService implements IBalanceService {
                     .deserialize(unconfirmedDBiterator.value());
             if (confirmationData.isTrustChainConsensus() && confirmationData.isDoubleSpendPreventionConsensus()) {
                 updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(), balanceMap);
+                publishBalanceChangeToWebSocket(confirmationData.getAddressHashToValueTransferredMapping().keySet());
                 confirmedTransactions.put(confirmationData);
                 unconfirmedTransactions.delete(confirmationData.getHash());
             }
@@ -121,7 +117,9 @@ public class BalanceService implements IBalanceService {
                 confirmedTransactionData.setAddressHashToValueTransferredMapping(confirmationData.getAddressHashToValueTransferredMapping());
                 confirmedTransactions.put(confirmedTransactionData);
                 unconfirmedTransactions.delete(addressHash);
-                updateBalanceMap(balanceMap, confirmationData.getAddressHashToValueTransferredMapping());
+                updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(), balanceMap);
+                publishBalanceChangeToWebSocket(confirmationData.getAddressHashToValueTransferredMapping().keySet());
+
             } else { //dspc =0
                 confirmationData.setTrustChainConsensus(true);
                 setDSPCtoTrueAndInsertToUnconfirmed(confirmationData);
@@ -137,7 +135,7 @@ public class BalanceService implements IBalanceService {
     }
 
 
-    private void updateBalanceMap(Map<Hash, BigDecimal> mapTo, Map<Hash, BigDecimal> mapFrom) {
+    private void updateBalanceMap(Map<Hash, BigDecimal> mapFrom, Map<Hash, BigDecimal> mapTo) {
         for (Map.Entry<Hash, BigDecimal> entry : mapFrom.entrySet()) {
 
             BigDecimal balance = entry.getValue();
@@ -148,7 +146,6 @@ public class BalanceService implements IBalanceService {
                 mapTo.put(key, balance);
             }
 
-            webSocketSender.notifyBalanceChange(key, mapTo.get(key));
             log.info("The address {} with the value {} was added to balance map and was removed from preBalanceMap", entry.getKey(), entry.getValue());
         }
     }
@@ -160,7 +157,7 @@ public class BalanceService implements IBalanceService {
             ConfirmationData confirmedTransactionData = (ConfirmationData) SerializationUtils
                     .deserialize(confirmedDBiterator.value());
             updateBalanceMap(confirmedTransactionData.getAddressHashToValueTransferredMapping(), balanceMap);
-
+            publishBalanceChangeToWebSocket(confirmedTransactionData.getAddressHashToValueTransferredMapping().keySet());
             confirmedDBiterator.next();
 
         }
@@ -190,8 +187,8 @@ public class BalanceService implements IBalanceService {
         String snapshotFileLocation = "./Snapshot.csv";
         File snapshotFile = new File(snapshotFileLocation);
 
-        try {
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(snapshotFile));
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(snapshotFile))){
+
             String line;
 
             while ((line = bufferedReader.readLine()) != null) {
@@ -230,6 +227,13 @@ public class BalanceService implements IBalanceService {
         return unconfirmedTransactionHashes;
     }
 
+    private void publishBalanceChangeToWebSocket(Set<Hash> addresses) {
+        for (Hash address : addresses) {
+            webSocketSender.notifyBalanceChange(address, balanceMap.get(address));
+        }
+    }
+
+    @Override
     public synchronized boolean checkBalancesAndAddToPreBalance(List<BaseTransactionData> baseTransactionDatas) {
         try {
             for (BaseTransactionData baseTransactionData : baseTransactionDatas) {
@@ -307,8 +311,7 @@ public class BalanceService implements IBalanceService {
         for (BaseTransactionData baseTransactionData : baseTransactions) {
             if (preBalanceMap.containsKey(baseTransactionData.getAddressHash())) {
                 baseTransactionData.setAmount(baseTransactionData.getAmount().negate());
-            }
-            else {
+            } else {
                 // TODO : if not contains - can it happen ?
                 log.error("Error while rolling back. preBalance map doesn't contain the address {}",
                         baseTransactionData.getAddressHash());

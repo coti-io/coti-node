@@ -36,7 +36,7 @@ public class TransactionService implements ITransactionService {
     private Map<Hash, TransactionData> propagationTransactionHash;
 
     private HashMap<Hash, TransactionData> hashToWaitingChildrenTransactionsMapping;
-    
+
     @Autowired
     private IZeroSpendService zeroSpendService;
     @Autowired
@@ -283,7 +283,7 @@ public class TransactionService implements ITransactionService {
         while (!transactionData.hasSources()) {
             log.info("Waiting 2 seconds for new zero spend transaction to be added to available sources");
             try {
-                Thread.sleep(2000);
+                TimeUnit.SECONDS.sleep(2);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

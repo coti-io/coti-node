@@ -15,6 +15,7 @@ public class WebSocketSender {
     private SimpMessagingTemplate messagingSender;
 
     public void notifyBalanceChange(Hash addressHash, BigDecimal amount){
+        log.trace("Address {} with amount {} is about to be sent to the subscribed user", addressHash, amount);
         messagingSender.convertAndSend("/topic/" + addressHash.toHexString(),
                 new UpdatedBalanceMessage(addressHash, amount));
     }
