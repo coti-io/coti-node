@@ -1,9 +1,7 @@
 package io.coti.cotinode.service;
 
-import io.coti.cotinode.LiveView.LiveViewService;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
-import io.coti.cotinode.http.websocket.WebSocketSender;
 import io.coti.cotinode.model.Transactions;
 import io.coti.cotinode.service.interfaces.IClusterService;
 import io.coti.cotinode.service.interfaces.IQueueService;
@@ -79,7 +77,7 @@ public class ClusterService implements IClusterService {
 
     @Override
     public TransactionData attachToCluster(TransactionData newTransactionData) {
-        setTransactionAsParent(newTransactionData);
+        updateParents(newTransactionData);
         hashToUnconfirmedTransactionsMapping.put(newTransactionData.getHash(), newTransactionData);
         removeTransactionParentsFromSources(newTransactionData);
         sourceListsByTrustScore[newTransactionData.getRoundedSenderTrustScore()].add(newTransactionData);
@@ -88,7 +86,23 @@ public class ClusterService implements IClusterService {
         return newTransactionData;
     }
 
-    private void setTransactionAsParent(TransactionData transactionData) {
+    private void updateParents(TransactionData transactionData) {
+        updateSingleParent(transactionData, transactionData.getLeftParentHash());
+
+        updateSingleParent(transactionData, transactionData.getRightParentHash());
+
+    }
+
+    private void updateSingleParent(TransactionData transactionData, Hash parentHash) {
+        if (parentHash != null) {
+            TransactionData ParentTransactionData = transactions.getByHash(parentHash);
+            ParentTransactionData.addToChildrenTransactions(transactionData.getHash());
+            hashToUnconfirmedTransactionsMapping.put(ParentTransactionData.getHash(), ParentTransactionData);
+            transactions.put(ParentTransactionData);
+        }
+    }
+    /*
+       private void setTransactionAsParent(TransactionData transactionData) {
         Hash leftParentHash = transactionData.getLeftParentHash();
         if(leftParentHash != null){
             TransactionData leftParentTransactionData = transactions.getByHash(leftParentHash);
@@ -106,6 +120,7 @@ public class ClusterService implements IClusterService {
         }
 
     }
+     */
 
     private void removeTransactionParentsFromSources(TransactionData newTransactionData) {
         if (newTransactionData.getLeftParentHash() != null) {
@@ -122,6 +137,7 @@ public class ClusterService implements IClusterService {
             sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].remove(transactionData); // TODO: synchronize
         }
         liveViewService.updateNodeStatus(transactionData, 1);
+        sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].remove(transactionData); // TODO: synchronize
     }
 
     @Override

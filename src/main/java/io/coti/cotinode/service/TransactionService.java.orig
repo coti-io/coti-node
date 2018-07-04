@@ -7,9 +7,16 @@ import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.ConfirmationData;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
-import io.coti.cotinode.exception.TransactionException;
+<<<<<<< HEAD
 import io.coti.cotinode.http.*;
+=======
+import io.coti.cotinode.exception.TransactionException;
+import io.coti.cotinode.http.AddTransactionRequest;
+import io.coti.cotinode.http.AddTransactionResponse;
+import io.coti.cotinode.http.GetTransactionResponse;
 import io.coti.cotinode.http.websocket.WebSocketSender;
+import io.coti.cotinode.http.HttpStringConstants;
+>>>>>>> origin/dev
 import io.coti.cotinode.model.Transactions;
 import io.coti.cotinode.service.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +58,12 @@ public class TransactionService implements ITransactionService {
     private PropagationService propagationService;
     @Autowired
     private WebSocketSender webSocketSender;
+
+<<<<<<< HEAD
+    private HashMap<Hash, TransactionData> hashToWaitingChildrenTransactionsMapping;
+    private Map<Hash, TransactionData> propagationTransactionHash;
+=======
+>>>>>>> origin/dev
 
     @PostConstruct
     private void init() {
@@ -103,10 +116,14 @@ public class TransactionService implements ITransactionService {
 
             // ############   POW   ###########
             TimeUnit.SECONDS.sleep(5);
-            // ################################
-            attachTransactionToCluster(transactionData);
-            transactionData.setSenderNodeIpAddress(propagationService.getCurrentNodeIp());
-            transactionData.setValid(true);// It's needed?
+<<<<<<< HEAD
+        } catch (InterruptedException e) {
+            log.error("Errors when sleeping: {}", e);
+        }
+
+        attachTransactionToCluster(transactionData);
+        transactionData.setSenderNodeIpAddress(propagationService.getCurrentNodeIp());
+        transactionData.setValid(true);// It's needed?
 
         request.transactionData = transactionData;
 
@@ -120,6 +137,12 @@ public class TransactionService implements ITransactionService {
         }
         /////
 
+        propagationService.propagateToNeighbors(request);
+=======
+            // ################################
+            attachTransactionToCluster(transactionData);
+            transactionData.setSenderNodeIpAddress(propagationService.getCurrentNodeIp());
+            transactionData.setValid(true);// It's needed?
             propagationService.propagateToNeighbors(request);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
@@ -129,6 +152,7 @@ public class TransactionService implements ITransactionService {
         } catch (Exception ex) {
             log.error("Exception while adding a transaction", ex);
             throw new TransactionException(ex, request.baseTransactions);
+>>>>>>> origin/dev
 
         }
     }
@@ -227,8 +251,13 @@ public class TransactionService implements ITransactionService {
         return true;
     }
 
-    private ResponseEntity<AddTransactionResponse> addFromPropagationAfterValidation (List<BaseTransactionData> baseTransactions,
+<<<<<<< HEAD
+    private ResponseEntity<AddTransactionResponse> addFromPropagationAfterValidation(List<BaseTransactionData> baseTransactions,
                                                                                      TransactionData transactionData) {
+=======
+    private ResponseEntity<AddTransactionResponse> addFromPropagationAfterValidation
+            (List<BaseTransactionData> baseTransactions, TransactionData transactionData) throws TransactionException {
+>>>>>>> origin/dev
         if (!isLegalBalance(baseTransactions)) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
@@ -251,7 +280,15 @@ public class TransactionService implements ITransactionService {
 
         try {
             TimeUnit.SECONDS.sleep(5);
+<<<<<<< HEAD
+        } catch (InterruptedException e) {
+            log.error("Errors when sleeping: {}", e);
+        }
+=======
+>>>>>>> origin/dev
+
             attachTransactionToCluster(transactionData);
+
             attachWaitingChildren(transactionData);
         } catch (Exception ex) {
             log.error("Error while addFromPropagationAfterValidation", ex);

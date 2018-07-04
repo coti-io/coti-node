@@ -1,9 +1,12 @@
 package io.coti.cotinode;
 
+<<<<<<< HEAD
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+=======
 import io.coti.cotinode.controllers.TransactionController;
+>>>>>>> origin/dev
 import io.coti.cotinode.crypto.CryptoUtils;
 import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.ConfirmationData;

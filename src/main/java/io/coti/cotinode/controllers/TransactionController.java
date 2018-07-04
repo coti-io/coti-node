@@ -27,7 +27,7 @@ public class TransactionController {
 
     @RequestMapping(method = PUT)
     public ResponseEntity<AddTransactionResponse> addTransaction(@Valid @RequestBody AddTransactionRequest addTransactionRequest) {
-        return transactionService.addNewTransaction(addTransactionRequest);
+            return transactionService.addNewTransaction(addTransactionRequest);
     }
 
     @RequestMapping(method = POST)
