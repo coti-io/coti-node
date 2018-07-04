@@ -8,5 +8,5 @@ import javax.validation.constraints.NotNull;
 @Data
 public class AddAddressRequest extends Request {
     @NotNull(message = "Address Hash must not be blank")
-    public Hash addressHash;
+    private Hash address;
 }

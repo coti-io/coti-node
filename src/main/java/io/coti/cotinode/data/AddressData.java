@@ -12,6 +12,7 @@ public class AddressData implements IEntity {
 
     public AddressData(Hash hash) {
         this.hash = hash;
+        creationTime = new Date();
     }
 
     @Override

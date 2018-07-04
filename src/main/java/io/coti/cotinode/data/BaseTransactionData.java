@@ -4,6 +4,7 @@ import io.coti.cotinode.data.interfaces.IEntity;
 import lombok.Data;
 
 import java.util.Date;
+import java.math.BigDecimal;
 
 @Data
 public class BaseTransactionData implements IEntity {
@@ -11,7 +12,7 @@ public class BaseTransactionData implements IEntity {
     private String signature;
     private AddressData addressData;
     private Hash addressHash;
-    private double amount;
+    private BigDecimal amount;
     private Hash transactionHash;
     private int indexInTransactionsChain;
     private BaseTransactionData nextBaseTransactionData;
@@ -35,31 +36,34 @@ public class BaseTransactionData implements IEntity {
         return createTime;
     }
 
-    public BaseTransactionData(String addressHashInput, double amount){
+    public BaseTransactionData(String addressHashInput, BigDecimal amount){
         this.addressHash = new Hash(addressHashInput);
         this.amount = amount;
     }
 
-    public BaseTransactionData(Integer addressHashInput, double amount){
+    public BaseTransactionData(Hash hash, BigDecimal amount){
+        this.addressHash = hash;
+        this.amount = amount;
+    }
+
+    public BaseTransactionData(Integer addressHashInput, BigDecimal amount){
         this.addressHash = new Hash(addressHashInput);
         this.amount = amount;
     }
 
-
-
-    public BaseTransactionData(String addressHash, double amount, Hash hash, String signature){
+    public BaseTransactionData(String addressHash, BigDecimal amount, Hash hash, String signature){
         this(addressHash, amount);
         this.hash = hash;
         this.signature = signature;
     }
 
-    public BaseTransactionData(Integer addressHash, double amount, Hash hash, String signature){
+    public BaseTransactionData(Integer addressHash, BigDecimal amount, Hash hash, String signature){
         this(addressHash, amount);
         this.hash = hash;
         this.signature = signature;
     }
 
-    public BaseTransactionData(Hash hash, Double randomDouble, Hash hash1, String signature) {
+    public BaseTransactionData(Hash hash, BigDecimal randomDouble, Hash hash1, String signature) {
         this.addressHash = hash;
         this.amount = randomDouble;
         this.hash = hash1;

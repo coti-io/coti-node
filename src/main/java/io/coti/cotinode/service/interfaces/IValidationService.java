@@ -9,4 +9,6 @@ public interface IValidationService {
     boolean validateSenderAddress(String message, Sign.SignatureData signatureData, Hash addressHash);
 
     boolean validateSource(Hash hash);
+
+    boolean validateAddressLength(Hash address);
 }

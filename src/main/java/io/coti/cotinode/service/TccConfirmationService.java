@@ -15,8 +15,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 @Configurable
 public class TccConfirmationService {
-    @Value("${treshold}")
-    private int treshold;
+    @Value("${cluster.trust.chain.threshold}")
+    private int threshold;
     private Logger log = LoggerFactory.getLogger(this.getClass().getName());
     private ConcurrentHashMap<Hash, TransactionData> hashToUnTccConfirmTransactionsMapping;
     private LinkedList<TransactionData> topologicalOrderedGraph;
@@ -94,7 +94,7 @@ public class TccConfirmationService {
         List<Hash> transactionConsensusConfirmed = new LinkedList<>();
         for(TransactionData transaction : topologicalOrderedGraph) {
             setTotalTrustScore(transaction);
-            if (transaction.getTrustChainTrustScore() >= treshold) {
+            if (transaction.getTrustChainTrustScore() >= threshold) {
                 transaction.setTransactionConsensus(true);
                 transaction.setTransactionConsensusUpdateTime(new Date());
                 transactionConsensusConfirmed.add(transaction.getHash());

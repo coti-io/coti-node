@@ -5,14 +5,14 @@ import io.coti.cotinode.data.Hash;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public interface IQueueService {
-    public void addToTccQueue(Hash hash);
+    void addToTccQueue(Hash hash);
 
-    public ConcurrentLinkedQueue<Hash> getTccQueue();
+    ConcurrentLinkedQueue<Hash> getTccQueue();
 
-    public void removeTccQueue();
+    void removeTccQueue();
 
-    public void addToUpdateBalanceQueue(Hash hash);
+    void addToUpdateBalanceQueue(Hash hash);
 
-    public ConcurrentLinkedQueue<Hash> getUpdateBalanceQueue();
+    ConcurrentLinkedQueue<Hash> getUpdateBalanceQueue();
 
 }

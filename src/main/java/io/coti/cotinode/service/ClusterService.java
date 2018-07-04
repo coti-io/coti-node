@@ -1,5 +1,6 @@
 package io.coti.cotinode.service;
 
+import io.coti.cotinode.LiveView.LiveViewService;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.model.Transactions;
@@ -32,6 +33,9 @@ public class ClusterService implements IClusterService {
     private ISourceSelector sourceSelector;
     @Autowired
     private TccConfirmationService tccConfirmationService;
+    @Autowired
+    private LiveViewService liveViewService;
+
     private ConcurrentHashMap<Hash, TransactionData> hashToUnconfirmedTransactionsMapping;
 
     @Override
@@ -46,6 +50,7 @@ public class ClusterService implements IClusterService {
             TransactionData transactionData = transactions.getByHash(transactionHash);
             hashToUnconfirmedTransactionsMapping.put(transactionHash, transactionData);
             sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].add(transactionData);
+            liveViewService.addNode(transactionData);
         }
 
         initiateTrustScoreConsensusProcess();
@@ -65,7 +70,7 @@ public class ClusterService implements IClusterService {
                 try {
                     TimeUnit.SECONDS.sleep(delayTimeAfterTccProcess);
                 } catch (InterruptedException e) {
-                    log.error(e.toString());
+                    log.error("Errors when sleeping: {}", e);
                 }
             }
         });
@@ -73,15 +78,32 @@ public class ClusterService implements IClusterService {
 
     @Override
     public TransactionData attachToCluster(TransactionData newTransactionData) {
-        setTransactionAsParent(newTransactionData);
+        updateParents(newTransactionData);
         hashToUnconfirmedTransactionsMapping.put(newTransactionData.getHash(), newTransactionData);
         removeTransactionParentsFromSources(newTransactionData);
         sourceListsByTrustScore[newTransactionData.getRoundedSenderTrustScore()].add(newTransactionData);
         log.info("added newTransactionData with hash:{}", newTransactionData.getHash());
+        liveViewService.addNode(newTransactionData);
         return newTransactionData;
     }
 
-    private void setTransactionAsParent(TransactionData transactionData) {
+    private void updateParents(TransactionData transactionData) {
+        updateSingleParent(transactionData, transactionData.getLeftParentHash());
+
+        updateSingleParent(transactionData, transactionData.getRightParentHash());
+
+    }
+
+    private void updateSingleParent(TransactionData transactionData, Hash parentHash) {
+        if (parentHash != null) {
+            TransactionData ParentTransactionData = transactions.getByHash(parentHash);
+            ParentTransactionData.addToChildrenTransactions(transactionData.getHash());
+            hashToUnconfirmedTransactionsMapping.put(ParentTransactionData.getHash(), ParentTransactionData);
+            transactions.put(ParentTransactionData);
+        }
+    }
+    /*
+       private void setTransactionAsParent(TransactionData transactionData) {
         Hash leftParentHash = transactionData.getLeftParentHash();
         if(leftParentHash != null){
             TransactionData leftParentTransactionData = transactions.getByHash(leftParentHash);
@@ -99,6 +121,7 @@ public class ClusterService implements IClusterService {
         }
 
     }
+     */
 
     private void removeTransactionParentsFromSources(TransactionData newTransactionData) {
         if (newTransactionData.getLeftParentHash() != null) {
@@ -114,6 +137,8 @@ public class ClusterService implements IClusterService {
         if (sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].contains(transactionData)) {
             sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].remove(transactionData); // TODO: synchronize
         }
+        liveViewService.updateNodeStatus(transactionData, 1);
+        sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].remove(transactionData); // TODO: synchronize
     }
 
     @Override
