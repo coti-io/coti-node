@@ -1,7 +1,9 @@
 package io.coti.cotinode.service;
 
+import io.coti.cotinode.LiveView.LiveViewService;
 import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
+import io.coti.cotinode.http.websocket.WebSocketSender;
 import io.coti.cotinode.model.Transactions;
 import io.coti.cotinode.service.interfaces.IClusterService;
 import io.coti.cotinode.service.interfaces.IQueueService;
@@ -32,6 +34,9 @@ public class ClusterService implements IClusterService {
     private ISourceSelector sourceSelector;
     @Autowired
     private TccConfirmationService tccConfirmationService;
+    @Autowired
+    private LiveViewService liveViewService;
+
     private ConcurrentHashMap<Hash, TransactionData> hashToUnconfirmedTransactionsMapping;
 
     @Override
@@ -46,6 +51,7 @@ public class ClusterService implements IClusterService {
             TransactionData transactionData = transactions.getByHash(transactionHash);
             hashToUnconfirmedTransactionsMapping.put(transactionHash, transactionData);
             sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].add(transactionData);
+            liveViewService.addNode(transactionData);
         }
 
         initiateTrustScoreConsensusProcess();
@@ -78,6 +84,7 @@ public class ClusterService implements IClusterService {
         removeTransactionParentsFromSources(newTransactionData);
         sourceListsByTrustScore[newTransactionData.getRoundedSenderTrustScore()].add(newTransactionData);
         log.info("added newTransactionData with hash:{}", newTransactionData.getHash());
+        liveViewService.addNode(newTransactionData);
         return newTransactionData;
     }
 
@@ -114,6 +121,7 @@ public class ClusterService implements IClusterService {
         if (sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].contains(transactionData)) {
             sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].remove(transactionData); // TODO: synchronize
         }
+        liveViewService.updateNodeStatus(transactionData, 1);
     }
 
     @Override

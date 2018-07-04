@@ -1,5 +1,6 @@
 package io.coti.cotinode.service;
 
+import io.coti.cotinode.LiveView.LiveViewService;
 import io.coti.cotinode.data.BaseTransactionData;
 import io.coti.cotinode.data.ConfirmationData;
 import io.coti.cotinode.data.Hash;
@@ -56,6 +57,9 @@ public class BalanceService implements IBalanceService {
 
     @Autowired
     private WebSocketSender webSocketSender;
+
+    @Autowired
+    private LiveViewService liveViewService;
 
     private Map<Hash, BigDecimal> balanceMap;
     private Map<Hash, BigDecimal> preBalanceMap;
@@ -119,6 +123,7 @@ public class BalanceService implements IBalanceService {
                 unconfirmedTransactions.delete(addressHash);
                 updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(), balanceMap);
                 publishBalanceChangeToWebSocket(confirmationData.getAddressHashToValueTransferredMapping().keySet());
+                liveViewService.updateNodeStatus(transactions.getByHash(addressHash), 2);
 
             } else { //dspc =0
                 confirmationData.setTrustChainConsensus(true);

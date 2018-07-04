@@ -9,6 +9,7 @@ import io.coti.cotinode.exception.TransactionException;
 import io.coti.cotinode.http.AddTransactionRequest;
 import io.coti.cotinode.http.AddTransactionResponse;
 import io.coti.cotinode.http.GetTransactionResponse;
+import io.coti.cotinode.http.websocket.WebSocketSender;
 import io.coti.cotinode.http.HttpStringConstants;
 import io.coti.cotinode.model.Transactions;
 import io.coti.cotinode.service.interfaces.*;
@@ -49,6 +50,9 @@ public class TransactionService implements ITransactionService {
     private Transactions transactions;
     @Autowired
     private PropagationService propagationService;
+    @Autowired
+    private WebSocketSender webSocketSender;
+
 
     @PostConstruct
     private void init() {

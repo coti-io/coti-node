@@ -1,5 +1,6 @@
 package io.coti.cotinode.http.websocket;
 
+import io.coti.cotinode.LiveView.NodeData;
 import io.coti.cotinode.data.Hash;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +15,13 @@ public class WebSocketSender {
     @Autowired
     private SimpMessagingTemplate messagingSender;
 
-    public void notifyBalanceChange(Hash addressHash, BigDecimal amount){
+    public void notifyBalanceChange(Hash addressHash, BigDecimal amount) {
         log.trace("Address {} with amount {} is about to be sent to the subscribed user", addressHash, amount);
         messagingSender.convertAndSend("/topic/" + addressHash.toHexString(),
                 new UpdatedBalanceMessage(addressHash, amount));
+    }
+
+    public void sendNode(NodeData nodeData) {
+        messagingSender.convertAndSend("/topic/nodes", nodeData);
     }
 }
