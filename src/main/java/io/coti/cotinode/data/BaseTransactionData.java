@@ -23,6 +23,11 @@ public class BaseTransactionData implements IEntity {
         this.amount = amount;
     }
 
+    public BaseTransactionData(Hash hash, BigDecimal amount){
+        this.addressHash = hash;
+        this.amount = amount;
+    }
+
     public BaseTransactionData(Integer addressHashInput, BigDecimal amount){
         this.addressHash = new Hash(addressHashInput);
         this.amount = amount;

@@ -1,6 +1,6 @@
 package io.coti.cotinode;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ser.Serializers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import io.coti.cotinode.controllers.TransactionController;
@@ -15,6 +15,7 @@ import io.coti.cotinode.http.HttpStringConstants;
 import io.coti.cotinode.model.ConfirmedTransactions;
 import io.coti.cotinode.model.UnconfirmedTransactions;
 import io.coti.cotinode.service.interfaces.IBalanceService;
+import io.coti.cotinode.service.interfaces.IPropagationService;
 import io.coti.cotinode.service.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
@@ -33,6 +34,7 @@ import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -56,6 +58,9 @@ public class CotiNodeTest {
     @Autowired
     private IBalanceService balanceService;
 
+    @Autowired
+    private IPropagationService propagationService;
+
     private int privatekeyInt = 122;
     private final static String signatureMessage = "message";
     /*
@@ -72,10 +77,15 @@ public class CotiNodeTest {
         addTransactionRequest.baseTransactions = baseTransactionDataList;
         addTransactionRequest.transactionHash = new Hash("A1");
         addTransactionRequest.message = signatureMessage;
+        Executors.newSingleThreadScheduledExecutor().execute(() -> {
+            propagationService = null;
+        });
 
         ResponseEntity<AddTransactionResponse> responseEntity = transactionController.addTransaction(addTransactionRequest);
         Assert.assertTrue(responseEntity.getStatusCode().equals(HttpStatus.CREATED));
         Assert.assertTrue(responseEntity.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
+
+
 
         AddTransactionRequest addTransactionRequest2 = new AddTransactionRequest();
         List<BaseTransactionData> baseTransactionDataList2 = createBaseTransactionRandomList(3);
@@ -191,6 +201,27 @@ public class CotiNodeTest {
         confirmationData = confirmedTransactions.getByHash(new Hash("AC"));
         Assert.assertNull(confirmationData); // The transaction doesn't have enough sources before it
 
+    }
+    @Test
+    public void dTestSimpleRollBack(){
+        Map<Hash, BigDecimal> preBalanceMap = balanceService.getPreBalanceMap();
+        Hash address1 = new Hash("ABCD");
+        Hash address2 = new Hash("ABCDEF");
+
+        BaseTransactionData btd1 = new BaseTransactionData(address1,new BigDecimal(5.5));
+        BaseTransactionData btd2 = new BaseTransactionData(address2,new BigDecimal(6.57));
+        List<BaseTransactionData> baseTransactionDataList = new LinkedList<>();
+        baseTransactionDataList.add(btd1);
+        baseTransactionDataList.add(btd2);
+       // balanceService.checkBalancesAndAddToPreBalance(baseTransactionDataList);
+        updateBalancesWithAddressAndAmount(address1,new BigDecimal(5.5));
+        updateBalancesWithAddressAndAmount(address2,new BigDecimal(6.57));
+
+        balanceService.rollbackBaseTransactions(baseTransactionDataList);
+
+        Assert.assertTrue(preBalanceMap.get(address1).compareTo(BigDecimal.ZERO) == 0);
+
+        Assert.assertTrue(preBalanceMap.get(address2).compareTo(BigDecimal.ZERO) == 0);
 
     }
 
