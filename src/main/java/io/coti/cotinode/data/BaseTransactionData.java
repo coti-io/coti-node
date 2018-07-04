@@ -3,6 +3,8 @@ package io.coti.cotinode.data;
 import io.coti.cotinode.data.interfaces.IEntity;
 import lombok.Data;
 
+import java.util.Date;
+
 @Data
 public class BaseTransactionData implements IEntity {
     private transient Hash hash;
@@ -13,8 +15,25 @@ public class BaseTransactionData implements IEntity {
     private Hash transactionHash;
     private int indexInTransactionsChain;
     private BaseTransactionData nextBaseTransactionData;
+    private Date createTime;
 
     private BaseTransactionData(){}
+
+
+    public Hash getAddressHash()
+    {
+        return addressHash;
+    }
+
+    public int getIndexInTransactionsChain()
+    {
+        return indexInTransactionsChain;
+    }
+
+    public Date getCreateTime()
+    {
+        return createTime;
+    }
 
     public BaseTransactionData(String addressHashInput, double amount){
         this.addressHash = new Hash(addressHashInput);
