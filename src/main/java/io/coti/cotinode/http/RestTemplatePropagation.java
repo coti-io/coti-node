@@ -4,6 +4,7 @@ import io.coti.cotinode.http.interfaces.IPropagationCommunication;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -18,7 +19,7 @@ public class RestTemplatePropagation implements IPropagationCommunication {
 
     RestTemplate restTemplate;
 
-    private String requestMapping = "/propagatedTransaction";
+    private String requestTransactionMapping = "/propagatedTransaction";
 
     @PostConstruct
     private void init() {
@@ -28,7 +29,7 @@ public class RestTemplatePropagation implements IPropagationCommunication {
 
     @Override
     public void propagateTransactionToNeighbor(AddTransactionRequest request, String nodeIp) {
-        String url = nodeIp + requestMapping;
+        String url = nodeIp + requestTransactionMapping;
         try {
            // restTemplate.put(url, request);
         } catch (RestClientException e) {
@@ -37,12 +38,27 @@ public class RestTemplatePropagation implements IPropagationCommunication {
     }
 
     @Override
-    public void propagateTransactionFromNeighbor(GetTransactionRequest getTransactionRequest, String nodeIp) {
-        String url = nodeIp + requestMapping;
+    public ResponseEntity<Response> propagateTransactionFromNeighbor(GetTransactionRequest getTransactionRequest, String nodeIp) {
+        String url = nodeIp + requestTransactionMapping;
+        ResponseEntity<Response> response = null;
         try {
-           // restTemplate.postForLocation(url, getTransactionRequest);
+          // response = restTemplate.postForLocation(url, getTransactionRequest);
         } catch (RestClientException e) {
             log.error("Errors when propagating from url {} {}", url);
         }
+        return response;
+    }
+
+    @Override
+    public GetTransactionsResponse propagateMultiTransactionFromNeighbor(GetTransactionsRequest getTransactionsRequest, String nodeIp) {
+        GetTransactionsResponse getTransactionsResponse = null;
+        String url = nodeIp + requestTransactionMapping;
+        try {
+
+            getTransactionsResponse = restTemplate.postForObject(url, getTransactionsRequest, GetTransactionsResponse.class);
+        } catch (RestClientException e) {
+            log.error("Errors when propagating from url {} {}", url);
+        }
+        return getTransactionsResponse;
     }
 }

@@ -15,7 +15,6 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 @RestController
-@RequestMapping("/propagatedTransaction")
 public class PropagationController {
 
     @Autowired
@@ -24,13 +23,18 @@ public class PropagationController {
     @Autowired
     private IPropagationService propagationService;
 
-    @RequestMapping(method = POST)
+    @RequestMapping(value = "/propagatedTransaction", method = POST)
     public ResponseEntity<Response> getTransactionFromCurrentNode(@Valid @RequestBody GetTransactionRequest getTransactionRequest) {
         return propagationService.getTransactionFromCurrentNode(getTransactionRequest);
     }
 
-    @RequestMapping(method = PUT)
+    @RequestMapping(value = "/propagatedTransaction", method = PUT)
     public ResponseEntity<AddTransactionResponse> addTransaction(@Valid @RequestBody AddTransactionRequest addTransactionRequest) {
         return transactionService.addTransactionFromPropagation(addTransactionRequest);
+    }
+
+    @RequestMapping(value = "/initPropagatedTransaction", method = POST)
+    public ResponseEntity<Response> getTransactionsFromCurrentNode(@Valid @RequestBody GetTransactionsRequest getTransactionsRequest) {
+        return propagationService.getTransactionsFromCurrentNode(getTransactionsRequest);
     }
 }

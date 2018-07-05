@@ -66,6 +66,20 @@ public class PropagationService implements IPropagationService {
         }
     }
 
+    public ResponseEntity<Response> getTransactionsFromCurrentNode(GetTransactionsRequest getTransactionsRequest) {
+        List<TransactionData> transactionData = null;
+        // TODO: Implementing getting all transaction, or from the attachment time;
+//        if (transactionData == null) {
+//            propagateFromNeighbors(getTransactionRequest);
+//            return ResponseEntity.status(HttpStatus.NO_CONTENT)
+//                    .body(new AddTransactionResponse(
+//                            STATUS_SUCCESS,
+//                            TRANSACTION_CURRENTLY_MISSING_MESSAGE));
+//        }
+//        return ResponseEntity.status(HttpStatus.OK)
+//                .body(new GetTransactionResponse(transactions.getByHash(getTransactionRequest.transactionHash)));
+        return null;
+    }
 
     public ResponseEntity<Response> getTransactionFromCurrentNode(GetTransactionRequest getTransactionRequest) {
         TransactionData transactionData = transactions.getByHash(getTransactionRequest.transactionHash);
@@ -75,6 +89,9 @@ public class PropagationService implements IPropagationService {
                     .body(new AddTransactionResponse(
                             STATUS_SUCCESS,
                             TRANSACTION_CURRENTLY_MISSING_MESSAGE));
+        }
+        else {
+            // TODO: propagateToNeighbors
         }
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new GetTransactionResponse(transactions.getByHash(getTransactionRequest.transactionHash)));

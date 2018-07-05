@@ -17,3 +17,5 @@ public class AddTransactionRequest extends Request {
 
     public TransactionData transactionData;
 }
+
+
