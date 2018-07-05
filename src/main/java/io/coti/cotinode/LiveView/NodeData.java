@@ -7,6 +7,7 @@ public class NodeData {
     private String id;
     private String leftParent;
     private String rightParent;
+    private boolean isGenesis;
     private double trustScore;
     private int status;
 
