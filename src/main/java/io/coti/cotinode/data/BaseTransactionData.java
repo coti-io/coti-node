@@ -3,6 +3,7 @@ package io.coti.cotinode.data;
 import io.coti.cotinode.data.interfaces.IEntity;
 import lombok.Data;
 
+import java.util.Date;
 import java.math.BigDecimal;
 
 @Data
@@ -15,11 +16,33 @@ public class BaseTransactionData implements IEntity {
     private Hash transactionHash;
     private int indexInTransactionsChain;
     private BaseTransactionData nextBaseTransactionData;
+    private Date createTime;
 
     private BaseTransactionData(){}
 
+
+    public Hash getAddressHash()
+    {
+        return addressHash;
+    }
+
+    public int getIndexInTransactionsChain()
+    {
+        return indexInTransactionsChain;
+    }
+
+    public Date getCreateTime()
+    {
+        return createTime;
+    }
+
     public BaseTransactionData(String addressHashInput, BigDecimal amount){
         this.addressHash = new Hash(addressHashInput);
+        this.amount = amount;
+    }
+
+    public BaseTransactionData(Hash hash, BigDecimal amount){
+        this.addressHash = hash;
         this.amount = amount;
     }
 

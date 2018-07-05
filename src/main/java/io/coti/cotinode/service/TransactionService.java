@@ -109,17 +109,17 @@ public class TransactionService implements ITransactionService {
             transactionData.setSenderNodeIpAddress(propagationService.getCurrentNodeIp());
             transactionData.setValid(true);// It's needed?
 
-        request.transactionData = transactionData;
+            request.transactionData = transactionData;
 
-        //temp
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            String jsonInString = mapper.writeValueAsString(request);
-            int tem = 0;
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        /////
+            //temp
+            ObjectMapper mapper = new ObjectMapper();
+            try {
+                String jsonInString = mapper.writeValueAsString(request);
+                int tem = 0;
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+            /////
 
             propagationService.propagateToNeighbors(request);
             return ResponseEntity
@@ -228,7 +228,7 @@ public class TransactionService implements ITransactionService {
         return true;
     }
 
-    private ResponseEntity<AddTransactionResponse> addFromPropagationAfterValidation (List<BaseTransactionData> baseTransactions,
+    private ResponseEntity<AddTransactionResponse> addFromPropagationAfterValidation(List<BaseTransactionData> baseTransactions,
                                                                                      TransactionData transactionData) {
         if (!isLegalBalance(baseTransactions)) {
             return ResponseEntity
@@ -283,7 +283,7 @@ public class TransactionService implements ITransactionService {
         }
 
         log.info("No sources found for transaction with trust score {}", transactionData.getSenderTrustScore());
-        int retryTimes = 200 / transactionData.getRoundedSenderTrustScore();
+        int retryTimes = 200 / (transactionData.getRoundedSenderTrustScore() + 1);
         while (!transactionData.hasSources() && retryTimes > 0) {
             try {
                 Thread.sleep(1000);
@@ -317,9 +317,9 @@ public class TransactionService implements ITransactionService {
     private void attachTransactionToCluster(TransactionData transactionData) {
         transactionData.setAttachmentTime(new Date());
         transactions.put(transactionData);
-        if (balanceService.insertToUnconfirmedTransactions(new ConfirmationData(transactionData))) {
-            clusterService.attachToCluster(transactionData);
-        }
+        balanceService.insertToUnconfirmedTransactions(new ConfirmationData(transactionData));
+        clusterService.attachToCluster(transactionData);
+
     }
 
     private boolean validateAddresses(AddTransactionRequest request) {

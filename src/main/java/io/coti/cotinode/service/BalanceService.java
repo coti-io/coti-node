@@ -193,7 +193,7 @@ public class BalanceService implements IBalanceService {
         String snapshotFileLocation = "./Snapshot.csv";
         File snapshotFile = new File(snapshotFileLocation);
 
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(snapshotFile))){
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(snapshotFile))) {
 
             String line;
 
@@ -277,15 +277,9 @@ public class BalanceService implements IBalanceService {
     }
 
     @Override
-    public boolean insertToUnconfirmedTransactions(ConfirmationData confirmationData) {
-        try {
-            setDSPCtoTrueAndInsertToUnconfirmed(confirmationData);
-            return true;
-        } catch (Exception ex) {
-            log.error("Exception while inserting unconfirmed transaction {} ", confirmationData, ex);
+    public void insertToUnconfirmedTransactions(ConfirmationData confirmationData) {
+        setDSPCtoTrueAndInsertToUnconfirmed(confirmationData);
 
-            return false;
-        }
     }
 
     @Override
