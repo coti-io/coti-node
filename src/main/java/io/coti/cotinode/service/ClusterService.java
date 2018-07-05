@@ -102,26 +102,7 @@ public class ClusterService implements IClusterService {
             transactions.put(ParentTransactionData);
         }
     }
-    /*
-       private void setTransactionAsParent(TransactionData transactionData) {
-        Hash leftParentHash = transactionData.getLeftParentHash();
-        if(leftParentHash != null){
-            TransactionData leftParentTransactionData = transactions.getByHash(leftParentHash);
-            leftParentTransactionData.addToChildrenTransactions(transactionData.getHash());
-            hashToUnconfirmedTransactionsMapping.put(leftParentTransactionData.getHash(),leftParentTransactionData);
-            transactions.put(leftParentTransactionData);
-        }
 
-        Hash rightParentHash = transactionData.getRightParentHash();
-        if(rightParentHash != null){
-            TransactionData rightParentTransactionData = transactions.getByHash(rightParentHash);
-            rightParentTransactionData.addToChildrenTransactions(transactionData.getHash());
-            hashToUnconfirmedTransactionsMapping.put(rightParentTransactionData.getHash(),rightParentTransactionData);
-            transactions.put(rightParentTransactionData);
-        }
-
-    }
-     */
 
     private void removeTransactionParentsFromSources(TransactionData newTransactionData) {
         if (newTransactionData.getLeftParentHash() != null) {

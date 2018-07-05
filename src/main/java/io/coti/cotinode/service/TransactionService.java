@@ -57,6 +57,7 @@ public class TransactionService implements ITransactionService {
         log.info("Transaction service Started");
         hashToWaitingChildrenTransactionsMapping = new HashMap();
         propagationTransactionHash = new ConcurrentHashMap();
+
     }
 
     @Override
@@ -207,15 +208,15 @@ public class TransactionService implements ITransactionService {
         Hash rightParentHash = transactionData.getRightParentHash();
 
         GetTransactionRequest getTransactionRequest = new GetTransactionRequest();
-        boolean ifNeededToPropagateFromNeighbors =
+        boolean ifNotNeededToPropagateFromNeighbors =
                 ifTransactionParentExistInLocalNode(leftParentHash, getTransactionRequest) &&
                         ifTransactionParentExistInLocalNode(rightParentHash, getTransactionRequest);
 
 
-        if (!ifNeededToPropagateFromNeighbors) {
+        if (!ifNotNeededToPropagateFromNeighbors) {
             hashToWaitingChildrenTransactionsMapping.put(transactionData.getHash(), transactionData);
         }
-        return ifNeededToPropagateFromNeighbors;
+        return ifNotNeededToPropagateFromNeighbors;
     }
 
     private boolean ifTransactionParentExistInLocalNode(Hash parentHash, GetTransactionRequest getTransactionRequest) {

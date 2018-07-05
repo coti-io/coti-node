@@ -72,7 +72,8 @@ public class BalanceService implements IBalanceService {
 
             loadBalanceFromSnapshot();
             deleteConfirmedTransactions();
-
+            // TODO: call RestTemplatePropagation.propagateMultiTransactionFromNeighbor (with no parameter of fromAttachmentTimeStampIfThere AreNoTransactions)
+            // Then set all transactions on TCC=0, sort them topological, and  call for  every transaction to TransactionService.addTransactionFromPropagation
             List<Hash> hashesForClusterService;
             if (unconfirmedTransactions.isEmpty()) {
                 hashesForClusterService = generateGenesisTransactions();
