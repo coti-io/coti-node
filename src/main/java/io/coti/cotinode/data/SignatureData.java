@@ -1,12 +1,16 @@
-package io.coti.cotinode.crypto;
+package io.coti.cotinode.data;
 
-public class SignatureEntity {
+public class SignatureData {
 
     private String r;
     private String s;
 
 
-    public SignatureEntity(String r,String s)
+    public SignatureData(){
+
+    }
+
+    public SignatureData(String r, String s)
     {
         this.r = r;
         this.s = s;

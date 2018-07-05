@@ -42,6 +42,7 @@ public class TransactionData implements IEntity {
     private Map<String, Boolean> validByNodes;
     private transient boolean isVisit;
     private boolean isZeroSpend;
+    private String transactionDescription;
 
     private TransactionData() {
     }

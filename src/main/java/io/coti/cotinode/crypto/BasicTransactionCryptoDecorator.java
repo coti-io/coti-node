@@ -6,48 +6,77 @@ import org.bouncycastle.jcajce.provider.digest.Keccak;
 
 import javax.xml.bind.DatatypeConverter;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.*;
+
+import org.bouncycastle.util.encoders.Hex;
+
 
 public class BasicTransactionCryptoDecorator {
 
     BaseTransactionData baseTxData;
-
+    private static CryptoHelper crtpyoHelper = new CryptoHelper();
     public BasicTransactionCryptoDecorator(BaseTransactionData baseTxData)
     {
         this.baseTxData = baseTxData;
     }
 
-    private byte[] getBytes()
+    private byte[] getMessageInBytes()
     {
         byte[] addressBytes = DatatypeConverter.parseHexBinary(baseTxData.getAddressHash().toHexString());
+
+        String decimalStringRepresentation = DatatypeConverter.printDecimal(baseTxData.getAmount());
+        byte[] bytesOfAmount = decimalStringRepresentation.getBytes(StandardCharsets.UTF_8);
+
 
         ByteBuffer bufferIndex = ByteBuffer.allocate(4);
         bufferIndex.putInt(baseTxData.getIndexInTransactionsChain());
         byte[] IndexByteArray = bufferIndex.array();
 
         Date baseTransactionDate = baseTxData.getCreateTime();
-        int interval = (int)(baseTransactionDate.getTime()/1000);
+        int interval = (int)(baseTransactionDate.getTime());
+
         ByteBuffer dateBuffer = ByteBuffer.allocate(4);
-        byte[]  createTimeAsByteArray = dateBuffer.array();
-
         dateBuffer.putInt(interval);
-        ByteBuffer baseTransactionArray = ByteBuffer.wrap(addressBytes);
-        baseTransactionArray.put(IndexByteArray);
-        baseTransactionArray.put(createTimeAsByteArray);
 
-        return  baseTransactionArray.array();
+        ByteBuffer baseTransactionArray = ByteBuffer.allocate(addressBytes.length + bytesOfAmount.length + IndexByteArray.length + dateBuffer.array().length).
+                put(addressBytes).put(IndexByteArray).put(bytesOfAmount).put(dateBuffer.array());
+
+        byte[] arrToReturn = baseTransactionArray.array();
+        return  arrToReturn;
     }
 
-    public byte[] getOriginalMessageInByte(){
-        Keccak.Digest256 digest = new Keccak.Digest256();
-        digest.update(getBytes());
-        return digest.digest();
 
+
+    public String getBasicTransactionHashFromData(){
+        Keccak.Digest256 digest = new Keccak.Digest256();
+        byte[] bytesToHash = getMessageInBytes();
+        digest.update(bytesToHash);
+        String hash =   Hex.toHexString( digest.digest()).toUpperCase();
+        return hash;
     }
 
     public Hash getBasicTransactionHash()
     {
         return baseTxData.getHash();
+    }
+
+    public boolean IsBasicTransactionValid() throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeySpecException, NoSuchProviderException {
+        if (!getBasicTransactionHashFromData().equals(getBasicTransactionHash().toHexString()))
+            return false;
+
+
+        if (!baseTxData.isSignatureExists())
+            return true;
+
+        String addressWithoutCRC = baseTxData.getAddressHash().toString().substring(0,128);
+        boolean checkSigning = crtpyoHelper.VerifyByPublicKey(getMessageInBytes(),baseTxData.getSignatureData().getR(),baseTxData.getSignatureData().getS(),addressWithoutCRC);
+        return checkSigning;
+
     }
 
 
