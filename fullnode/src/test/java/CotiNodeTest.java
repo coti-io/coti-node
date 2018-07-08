@@ -56,7 +56,7 @@ public class CotiNodeTest {
     /*
        This is a good scenario where amount and address are dynamically generated
       */
-
+/*
     @Test
     public void aTestFullProcess() {
 
@@ -64,9 +64,9 @@ public class CotiNodeTest {
         AddTransactionRequest addTransactionRequest = new AddTransactionRequest();
         List<BaseTransactionData> baseTransactionDataList = createBaseTransactionRandomList(3);
 
-        addTransactionRequest.baseTransactions = baseTransactionDataList;
-        addTransactionRequest.transactionHash = new Hash("A1");
-        addTransactionRequest.message = signatureMessage;
+        addTransactionRequest.baseTransactions =baseTransactionDataList;
+        addTransactionRequest.hash = new Hash("A1");
+        addTransactionRequest.transactionDescription = signatureMessage;
         Executors.newSingleThreadScheduledExecutor().execute(() -> {
             propagationService = null;
         });
@@ -79,8 +79,8 @@ public class CotiNodeTest {
         AddTransactionRequest addTransactionRequest2 = new AddTransactionRequest();
         List<BaseTransactionData> baseTransactionDataList2 = createBaseTransactionRandomList(3);
         addTransactionRequest2.baseTransactions = baseTransactionDataList2;
-        addTransactionRequest2.transactionHash = new Hash("A2");
-        addTransactionRequest2.message = signatureMessage;
+        addTransactionRequest2.hash = new Hash("A2");
+        addTransactionRequest2.transactionDescription = signatureMessage;
         ResponseEntity<Response> responseEntity2 = transactionService.addNewTransaction(addTransactionRequest2);
         Assert.assertTrue(responseEntity2.getStatusCode().equals(HttpStatus.CREATED));
         Assert.assertTrue(responseEntity2.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
@@ -88,8 +88,8 @@ public class CotiNodeTest {
         AddTransactionRequest addTransactionRequest3 = new AddTransactionRequest();
         List<BaseTransactionData> baseTransactionDataList3 = createBaseTransactionRandomList(3);
         addTransactionRequest3.baseTransactions = baseTransactionDataList3;
-        addTransactionRequest3.transactionHash = new Hash("A3");
-        addTransactionRequest3.message = signatureMessage;
+        addTransactionRequest3.hash = new Hash("A3");
+        addTransactionRequest3.transactionDescription = signatureMessage;
         ResponseEntity<Response> responseEntity3 = transactionService.addNewTransaction(addTransactionRequest3);
         Assert.assertTrue(responseEntity3.getStatusCode().equals(HttpStatus.CREATED));
         Assert.assertTrue(responseEntity3.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
@@ -97,8 +97,8 @@ public class CotiNodeTest {
         AddTransactionRequest addTransactionRequest4 = new AddTransactionRequest();
         List<BaseTransactionData> baseTransactionDataList4 = createBaseTransactionRandomList(3);
         addTransactionRequest4.baseTransactions = baseTransactionDataList4;
-        addTransactionRequest4.transactionHash = new Hash("A4");
-        addTransactionRequest4.message = signatureMessage;
+        addTransactionRequest4.hash = new Hash("A4");
+        addTransactionRequest4.transactionDescription = signatureMessage;
         ResponseEntity<Response> responseEntity4 = transactionService.addNewTransaction(addTransactionRequest4);
         Assert.assertTrue(responseEntity4.getStatusCode().equals(HttpStatus.CREATED));
         Assert.assertTrue(responseEntity4.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
@@ -106,8 +106,8 @@ public class CotiNodeTest {
         AddTransactionRequest addTransactionRequest5 = new AddTransactionRequest();
         List<BaseTransactionData> baseTransactionDataList5 = createBaseTransactionRandomList(3);
         addTransactionRequest5.baseTransactions = baseTransactionDataList5;
-        addTransactionRequest5.transactionHash = new Hash("A5");
-        addTransactionRequest5.message = signatureMessage;
+        addTransactionRequest5.hash = new Hash("A5");
+        addTransactionRequest5.transactionDescription = signatureMessage;
         ResponseEntity<Response> responseEntity5 = transactionService.addNewTransaction(addTransactionRequest5);
         Assert.assertTrue(responseEntity5.getStatusCode().equals(HttpStatus.CREATED));
         Assert.assertTrue(responseEntity5.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
@@ -115,8 +115,8 @@ public class CotiNodeTest {
         AddTransactionRequest addTransactionRequest6 = new AddTransactionRequest();
         List<BaseTransactionData> baseTransactionDataList6 = createBaseTransactionRandomList(3);
         addTransactionRequest6.baseTransactions = baseTransactionDataList6;
-        addTransactionRequest6.transactionHash = new Hash("A6");
-        addTransactionRequest6.message = signatureMessage;
+        addTransactionRequest6.hash = new Hash("A6");
+        addTransactionRequest6.transactionDescription = signatureMessage;
         TransactionData transactionData6 = new TransactionData(addTransactionRequest.transactionHash, addTransactionRequest.baseTransactions);
         transactionData6.setLeftParentHash(new Hash("A5"));
         addTransactionRequest6.transactionData = transactionData6;
@@ -239,6 +239,7 @@ public class CotiNodeTest {
 
     }
 
+
     private AddTransactionRequest createRequestWithOneBaseTransaction(Hash transactionHash, Hash fromAddress, Hash baseTransactionAddress, BigDecimal amount) {
         List<BaseTransactionData> baseTransactionDataList = new LinkedList<>();
 
@@ -260,12 +261,12 @@ public class CotiNodeTest {
 
         AddTransactionRequest addTransactionRequest = new AddTransactionRequest();
         addTransactionRequest.baseTransactions = baseTransactionDataList;
-        addTransactionRequest.transactionHash = transactionHash;
-        addTransactionRequest.message = signatureMessage;
+        addTransactionRequest.hash = transactionHash;
+        addTransactionRequest.transactionDescription = signatureMessage;
         return addTransactionRequest;
     }
 
-
+/*
     private List<BaseTransactionData> createBaseTransactionRandomList(int numOfBaseTransactions) {
         List<BaseTransactionData> baseTransactionDataList = new LinkedList<>();
         Hash myAddress = new Hash(TestUtils.getRandomHexa());
@@ -291,7 +292,7 @@ public class CotiNodeTest {
 
         }
         return baseTransactionDataList;
-    }
+    }*/
 
 
 }

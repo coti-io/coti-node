@@ -81,41 +81,41 @@ public class CryptoHelperTests {
     }
 
     @Test
-    public void testBasicTransactionVerification() throws IOException, InvalidKeySpecException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
+    public void testBasicTransactionVerification() throws IOException{
         String jsonOfTransaction = "{\n" +
-                "\t'baseTransactions': [{\n" +
-                "\t\t\t'addressHash': '562cd1a12533d2e3826019fa72cd534037dc9738fbe40fa6cfbca2a4ea24bd1bd2c4da221e59cf1f276d71424f2969fef6cf20c475840e63241426d8542ee8904DD5D4BF',\n" +
-                "\t\t\t'indexInTransactionsChain': 0,\n" +
-                "\t\t\t'amount': -30,\n" +
-                "\t\t\t'hash': '180F10C1B32FF728C4F6CBAA16B3F0C7EF927E527B27762BABBE1DB667CDE8F3',\n" +
-                "\t\t\t'createTime': 1530781319130,\n" +
-                "\t\t\t'signatureData': {\n" +
-                "\t\t\t\t'r': '6b5a1c3148acd417b50bd1f8a7b860e3c20b8ecdd0a0863d448d06c5eb061ee',\n" +
-                "\t\t\t\t's': '2c7be9935c42dd72b05c7f1c4ed606d198df9723846b3bbe578ce6a18e66d997'\n" +
+                "\t\"baseTransactions\": [{\n" +
+                "\t\t\t\"addressHash\": \"562cd1a12533d2e3826019fa72cd534037dc9738fbe40fa6cfbca2a4ea24bd1bd2c4da221e59cf1f276d71424f2969fef6cf20c475840e63241426d8542ee8904DD5D4BF\",\n" +
+                "\t\t\t\"indexInTransactionsChain\": 0,\n" +
+                "\t\t\t\"amount\": -30,\n" +
+                "\t\t\t\"hash\": \"DB6A9DD1363F45143C23B30EB1410227602EDC14311A00F1F21E7CD49501CDB7\",\n" +
+                "\t\t\t\"createTime\": 1531051870651,\n" +
+                "\t\t\t\"signatureData\": {\n" +
+                "\t\t\t\t\"r\": \"6b5a1c3148acd417b50bd1f8a7b860e3c20b8ecdd0a0863d448d06c5eb061ee\",\n" +
+                "\t\t\t\t\"s\": \"2c7be9935c42dd72b05c7f1c4ed606d198df9723846b3bbe578ce6a18e66d997\"\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'addressHash': 'efe5ba44b6a69539a207dd6ec2915091c48f2e15bcddf80c7d409e33aaea7f797f7d0a8916ac2e5a41fb143f3a64f671b53f2d2eb9b4024671db3a6046939353EA55C4D7',\n" +
-                "\t\t\t'indexInTransactionsChain': 1,\n" +
-                "\t\t\t'amount': -10,\n" +
-                "\t\t\t'hash': '3F71725D8DA943523AB944EBE1A9FF36E1CAD86B71BB31F67A7A04A889CEAAA6',\n" +
-                "\t\t\t'createTime': 1530781477026,\n" +
-                "\t\t\t'signatureData': {\n" +
-                "\t\t\t\t'r': '522a95a88c77c2555e2f7a5f4eae114100cd8577fadd4c1861e792e7dcf5f8ef',\n" +
-                "\t\t\t\t's': '3d37e68de8b6c5b0730f4cc2c87710cf5daa5d5deb1234a01a2c2c325628ca8b'\n" +
+                "\t\t\t\"addressHash\": \"efe5ba44b6a69539a207dd6ec2915091c48f2e15bcddf80c7d409e33aaea7f797f7d0a8916ac2e5a41fb143f3a64f671b53f2d2eb9b4024671db3a6046939353EA55C4D7\",\n" +
+                "\t\t\t\"indexInTransactionsChain\": 1,\n" +
+                "\t\t\t\"amount\": -10,\n" +
+                "\t\t\t\"hash\": \"11FD3BE3576D8B9875C98CC9ED70D3FDBB323C5B17CFF7D141976E99BE148DC4\",\n" +
+                "\t\t\t\"createTime\": 1531051870653,\n" +
+                "\t\t\t\"signatureData\": {\n" +
+                "\t\t\t\t\"r\": \"522a95a88c77c2555e2f7a5f4eae114100cd8577fadd4c1861e792e7dcf5f8ef\",\n" +
+                "\t\t\t\t\"s\": \"3d37e68de8b6c5b0730f4cc2c87710cf5daa5d5deb1234a01a2c2c325628ca8b\"\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'addressHash': '751b0a3e2cf9d3ea9aec49538ff450f737181f0c4ecad7dc7995a205fbfe417a3a9ab2e8289db3a5bc28cd5a8c30f64ca246da6e241c8468c5ab2fe07a3cc6bde76d7cd0',\n" +
-                "\t\t\t'indexInTransactionsChain': 2,\n" +
-                "\t\t\t'amount': 30,\n" +
-                "\t\t\t'hash': '482EA5C35EF9BDE588D4EA91DAB6BD9A23E9B4EADE994763E099D38CB71D3541',\n" +
-                "\t\t\t'createTime': 1530781477030\n" +
+                "\t\t\t\"addressHash\": \"751b0a3e2cf9d3ea9aec49538ff450f737181f0c4ecad7dc7995a205fbfe417a3a9ab2e8289db3a5bc28cd5a8c30f64ca246da6e241c8468c5ab2fe07a3cc6bde76d7cd0\",\n" +
+                "\t\t\t\"indexInTransactionsChain\": 2,\n" +
+                "\t\t\t\"amount\": 30,\n" +
+                "\t\t\t\"hash\": \"6F792E1547F37E7542C6C1BB48ABA2088BDB58B97D59E173EE6E85F6DED516A4\",\n" +
+                "\t\t\t\"createTime\": 1531051870653\n" +
                 "\t\t}\n" +
                 "\t],\n" +
-                "\t'createTime': 1530781319128,\n" +
-                "\t'baseTransactionsCount': 3,\n" +
-                //"\t'transferDescription': 'test',\n" +
-                "\t'hash': '5EA6EB8335D71128DFD21459D4DDF329F529937646264A9882F73B34F7DA9589'\n" +
-                "}\n";
+                "\t\"createTime\": 1531051870649,\n" +
+                "\t\"baseTransactionsCount\": 3,\n" +
+                "\t\"transactionDescription\": \"test\",\n" +
+                "\t\"hash\": \"38AA9140BD54CE736D01FB05BF0A267D24D915463887C311B4D1343BA014E102\"\n" +
+                "}";
 
 
 
@@ -126,7 +126,7 @@ public class CryptoHelperTests {
 
         for (BaseTransactionData basicTx: obj.getBaseTransactions())
         {
-            BasicTransactionCryptoDecorator basicTransactionCrypto = new BasicTransactionCryptoDecorator(basicTx);
+            BasicTransactionCryptoDecorator basicTransactionCrypto = new BasicTransactionCryptoDecorator(basicTx,obj.getHash());
             Assert.assertTrue(basicTransactionCrypto.IsBasicTransactionValid());
         }
 
@@ -138,41 +138,41 @@ public class CryptoHelperTests {
 
 
     @Test
-    public void testTransactionVerification() throws IOException, InvalidKeySpecException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
+    public void testTransactionVerification() throws IOException{
         String jsonOfTransaction = "{\n" +
-                "\t'baseTransactions': [{\n" +
-                "\t\t\t'addressHash': '562cd1a12533d2e3826019fa72cd534037dc9738fbe40fa6cfbca2a4ea24bd1bd2c4da221e59cf1f276d71424f2969fef6cf20c475840e63241426d8542ee8904DD5D4BF',\n" +
-                "\t\t\t'indexInTransactionsChain': 0,\n" +
-                "\t\t\t'amount': -30,\n" +
-                "\t\t\t'hash': '180F10C1B32FF728C4F6CBAA16B3F0C7EF927E527B27762BABBE1DB667CDE8F3',\n" +
-                "\t\t\t'createTime': 1530781319130,\n" +
-                "\t\t\t'signatureData': {\n" +
-                "\t\t\t\t'r': '6b5a1c3148acd417b50bd1f8a7b860e3c20b8ecdd0a0863d448d06c5eb061ee',\n" +
-                "\t\t\t\t's': '2c7be9935c42dd72b05c7f1c4ed606d198df9723846b3bbe578ce6a18e66d997'\n" +
+                "\t\"baseTransactions\": [{\n" +
+                "\t\t\t\"addressHash\": \"562cd1a12533d2e3826019fa72cd534037dc9738fbe40fa6cfbca2a4ea24bd1bd2c4da221e59cf1f276d71424f2969fef6cf20c475840e63241426d8542ee8904DD5D4BF\",\n" +
+                "\t\t\t\"indexInTransactionsChain\": 0,\n" +
+                "\t\t\t\"amount\": -30,\n" +
+                "\t\t\t\"hash\": \"DB6A9DD1363F45143C23B30EB1410227602EDC14311A00F1F21E7CD49501CDB7\",\n" +
+                "\t\t\t\"createTime\": 1531051870651,\n" +
+                "\t\t\t\"signatureData\": {\n" +
+                "\t\t\t\t\"r\": \"6b5a1c3148acd417b50bd1f8a7b860e3c20b8ecdd0a0863d448d06c5eb061ee\",\n" +
+                "\t\t\t\t\"s\": \"2c7be9935c42dd72b05c7f1c4ed606d198df9723846b3bbe578ce6a18e66d997\"\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'addressHash': 'efe5ba44b6a69539a207dd6ec2915091c48f2e15bcddf80c7d409e33aaea7f797f7d0a8916ac2e5a41fb143f3a64f671b53f2d2eb9b4024671db3a6046939353EA55C4D7',\n" +
-                "\t\t\t'indexInTransactionsChain': 1,\n" +
-                "\t\t\t'amount': -10,\n" +
-                "\t\t\t'hash': '3F71725D8DA943523AB944EBE1A9FF36E1CAD86B71BB31F67A7A04A889CEAAA6',\n" +
-                "\t\t\t'createTime': 1530781477026,\n" +
-                "\t\t\t'signatureData': {\n" +
-                "\t\t\t\t'r': '522a95a88c77c2555e2f7a5f4eae114100cd8577fadd4c1861e792e7dcf5f8ef',\n" +
-                "\t\t\t\t's': '3d37e68de8b6c5b0730f4cc2c87710cf5daa5d5deb1234a01a2c2c325628ca8b'\n" +
+                "\t\t\t\"addressHash\": \"efe5ba44b6a69539a207dd6ec2915091c48f2e15bcddf80c7d409e33aaea7f797f7d0a8916ac2e5a41fb143f3a64f671b53f2d2eb9b4024671db3a6046939353EA55C4D7\",\n" +
+                "\t\t\t\"indexInTransactionsChain\": 1,\n" +
+                "\t\t\t\"amount\": -10,\n" +
+                "\t\t\t\"hash\": \"11FD3BE3576D8B9875C98CC9ED70D3FDBB323C5B17CFF7D141976E99BE148DC4\",\n" +
+                "\t\t\t\"createTime\": 1531051870653,\n" +
+                "\t\t\t\"signatureData\": {\n" +
+                "\t\t\t\t\"r\": \"522a95a88c77c2555e2f7a5f4eae114100cd8577fadd4c1861e792e7dcf5f8ef\",\n" +
+                "\t\t\t\t\"s\": \"3d37e68de8b6c5b0730f4cc2c87710cf5daa5d5deb1234a01a2c2c325628ca8b\"\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'addressHash': '751b0a3e2cf9d3ea9aec49538ff450f737181f0c4ecad7dc7995a205fbfe417a3a9ab2e8289db3a5bc28cd5a8c30f64ca246da6e241c8468c5ab2fe07a3cc6bde76d7cd0',\n" +
-                "\t\t\t'indexInTransactionsChain': 2,\n" +
-                "\t\t\t'amount': 30,\n" +
-                "\t\t\t'hash': '482EA5C35EF9BDE588D4EA91DAB6BD9A23E9B4EADE994763E099D38CB71D3541',\n" +
-                "\t\t\t'createTime': 1530781477030\n" +
+                "\t\t\t\"addressHash\": \"751b0a3e2cf9d3ea9aec49538ff450f737181f0c4ecad7dc7995a205fbfe417a3a9ab2e8289db3a5bc28cd5a8c30f64ca246da6e241c8468c5ab2fe07a3cc6bde76d7cd0\",\n" +
+                "\t\t\t\"indexInTransactionsChain\": 2,\n" +
+                "\t\t\t\"amount\": 30,\n" +
+                "\t\t\t\"hash\": \"6F792E1547F37E7542C6C1BB48ABA2088BDB58B97D59E173EE6E85F6DED516A4\",\n" +
+                "\t\t\t\"createTime\": 1531051870653\n" +
                 "\t\t}\n" +
                 "\t],\n" +
-                "\t'createTime': 1530781319128,\n" +
-                "\t'baseTransactionsCount': 3,\n" +
-                //"\t'transferDescription': 'test',\n" +
-                "\t'hash': '5EA6EB8335D71128DFD21459D4DDF329F529937646264A9882F73B34F7DA9589'\n" +
-                "}\n";
+                "\t\"createTime\": 1531051870649,\n" +
+                "\t\"baseTransactionsCount\": 3,\n" +
+                "\t\"transactionDescription\": \"test\",\n" +
+                "\t\"hash\": \"38AA9140BD54CE736D01FB05BF0A267D24D915463887C311B4D1343BA014E102\"\n" +
+                "}";
 
 
 
@@ -194,41 +194,41 @@ public class CryptoHelperTests {
 
 
     @Test
-    public void testTransactionVerificationInvalidTransactionHash() throws IOException, InvalidKeySpecException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
+    public void testTransactionVerificationInvalidTransactionHash() throws IOException{
         String jsonOfTransaction = "{\n" +
-                "\t'baseTransactions': [{\n" +
-                "\t\t\t'addressHash': '562cd1a12533d2e3826019fa72cd534037dc9738fbe40fa6cfbca2a4ea24bd1bd2c4da221e59cf1f276d71424f2969fef6cf20c475840e63241426d8542ee8904DD5D4BF',\n" +
-                "\t\t\t'indexInTransactionsChain': 0,\n" +
-                "\t\t\t'amount': -30,\n" +
-                "\t\t\t'hash': '180F10C1B32FF728C4F6CBAA16B3F0C7EF927E527B27762BABBE1DB667CDE8F3',\n" +
-                "\t\t\t'createTime': 1530781319130,\n" +
-                "\t\t\t'signatureData': {\n" +
-                "\t\t\t\t'r': '6b5a1c3148acd417b50bd1f8a7b860e3c20b8ecdd0a0863d448d06c5eb061ee',\n" +
-                "\t\t\t\t's': '2c7be9935c42dd72b05c7f1c4ed606d198df9723846b3bbe578ce6a18e66d997'\n" +
+                "\t\"baseTransactions\": [{\n" +
+                "\t\t\t\"addressHash\": \"562cd1a12533d2e3826019fa72cd534037dc9738fbe40fa6cfbca2a4ea24bd1bd2c4da221e59cf1f276d71424f2969fef6cf20c475840e63241426d8542ee8904DD5D4BF\",\n" +
+                "\t\t\t\"indexInTransactionsChain\": 0,\n" +
+                "\t\t\t\"amount\": -30,\n" +
+                "\t\t\t\"hash\": \"DB6A9DD1363F45143C23B30EB1410227602EDC14311A00F1F21E7CD49501CDB7\",\n" +
+                "\t\t\t\"createTime\": 1531051870651,\n" +
+                "\t\t\t\"signatureData\": {\n" +
+                "\t\t\t\t\"r\": \"6b5a1c3148acd417b50bd1f8a7b860e3c20b8ecdd0a0863d448d06c5eb061ee\",\n" +
+                "\t\t\t\t\"s\": \"2c7be9935c42dd72b05c7f1c4ed606d198df9723846b3bbe578ce6a18e66d997\"\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'addressHash': 'efe5ba44b6a69539a207dd6ec2915091c48f2e15bcddf80c7d409e33aaea7f797f7d0a8916ac2e5a41fb143f3a64f671b53f2d2eb9b4024671db3a6046939353EA55C4D7',\n" +
-                "\t\t\t'indexInTransactionsChain': 1,\n" +
-                "\t\t\t'amount': -10,\n" +
-                "\t\t\t'hash': '3F71725D8DA943523AB944EBE1A9FF36E1CAD86B71BB31F67A7A04A889CEAAA6',\n" +
-                "\t\t\t'createTime': 1530781477026,\n" +
-                "\t\t\t'signatureData': {\n" +
-                "\t\t\t\t'r': '522a95a88c77c2555e2f7a5f4eae114100cd8577fadd4c1861e792e7dcf5f8ef',\n" +
-                "\t\t\t\t's': '3d37e68de8b6c5b0730f4cc2c87710cf5daa5d5deb1234a01a2c2c325628ca8b'\n" +
+                "\t\t\t\"addressHash\": \"efe5ba44b6a69539a207dd6ec2915091c48f2e15bcddf80c7d409e33aaea7f797f7d0a8916ac2e5a41fb143f3a64f671b53f2d2eb9b4024671db3a6046939353EA55C4D7\",\n" +
+                "\t\t\t\"indexInTransactionsChain\": 1,\n" +
+                "\t\t\t\"amount\": -10,\n" +
+                "\t\t\t\"hash\": \"11FD3BE3576D8B9875C98CC9ED70D3FDBB323C5B17CFF7D141976E99BE148DC4\",\n" +
+                "\t\t\t\"createTime\": 1531051870653,\n" +
+                "\t\t\t\"signatureData\": {\n" +
+                "\t\t\t\t\"r\": \"522a95a88c77c2555e2f7a5f4eae114100cd8577fadd4c1861e792e7dcf5f8ef\",\n" +
+                "\t\t\t\t\"s\": \"3d37e68de8b6c5b0730f4cc2c87710cf5daa5d5deb1234a01a2c2c325628ca8b\"\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'addressHash': '751b0a3e2cf9d3ea9aec49538ff450f737181f0c4ecad7dc7995a205fbfe417a3a9ab2e8289db3a5bc28cd5a8c30f64ca246da6e241c8468c5ab2fe07a3cc6bde76d7cd0',\n" +
-                "\t\t\t'indexInTransactionsChain': 2,\n" +
-                "\t\t\t'amount': 30,\n" +
-                "\t\t\t'hash': '482EA5C35EF9BDE588D4EA91DAB6BD9A23E9B4EADE994763E099D38CB71D3541',\n" +
-                "\t\t\t'createTime': 1530781477030\n" +
+                "\t\t\t\"addressHash\": \"751b0a3e2cf9d3ea9aec49538ff450f737181f0c4ecad7dc7995a205fbfe417a3a9ab2e8289db3a5bc28cd5a8c30f64ca246da6e241c8468c5ab2fe07a3cc6bde76d7cd0\",\n" +
+                "\t\t\t\"indexInTransactionsChain\": 2,\n" +
+                "\t\t\t\"amount\": 30,\n" +
+                "\t\t\t\"hash\": \"6F792E1547F37E7542C6C1BB48ABA2088BDB58B97D59E173EE6E85F6DED516A4\",\n" +
+                "\t\t\t\"createTime\": 1531051870653\n" +
                 "\t\t}\n" +
                 "\t],\n" +
-                "\t'createTime': 1530781319128,\n" +
-                "\t'baseTransactionsCount': 3,\n" +
-                //"\t'transferDescription': 'test',\n" +
-                "\t'hash': '5EA6EB8335D71128DFD21459D4DDF329F529937646264A9882F73B34F7DA9566'\n" +
-                "}\n";
+                "\t\"createTime\": 1531051870649,\n" +
+                "\t\"baseTransactionsCount\": 3,\n" +
+                "\t\"transactionDescription\": \"test\",\n" +
+                "\t\"hash\": \"38AA9140BD54CE736D01FB05BF0A267D24D915463887C311B4D1343BA014E156\"\n" +
+                "}";
 
 
 

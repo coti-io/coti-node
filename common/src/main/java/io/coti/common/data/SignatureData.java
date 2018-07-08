@@ -1,6 +1,8 @@
 package io.coti.common.data;
 
-public class SignatureData {
+import io.coti.common.data.interfaces.IEntity;
+
+public class SignatureData implements IEntity {
 
     private String r;
     private String s;
@@ -21,4 +23,13 @@ public class SignatureData {
     public String getS(){ return this.s;}
 
 
+    @Override
+    public Hash getKey() {
+        return null;
+    }
+
+    @Override
+    public void setKey(Hash hash) {
+
+    }
 }

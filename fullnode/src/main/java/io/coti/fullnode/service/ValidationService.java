@@ -1,5 +1,7 @@
 package io.coti.fullnode.service;
 
+import io.coti.common.crypto.BasicTransactionCryptoDecorator;
+import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.Hash;
 import io.coti.fullnode.service.interfaces.IValidationService;
 import org.springframework.stereotype.Component;
@@ -7,23 +9,15 @@ import org.web3j.crypto.Sign;
 
 import java.math.BigInteger;
 import java.security.SignatureException;
-import java.util.Arrays;
 
 @Component
 public class ValidationService implements IValidationService {
 
+
     @Override
-    public boolean validateSenderAddress(String message, Sign.SignatureData signatureData, Hash addressHash) {
-
-        try {
-            BigInteger publicKey = getAddressFromMessageAndSignature(message, signatureData);
-            return Arrays.equals(addressHash.getBytes(), publicKey.toByteArray());
-
-        } catch (SignatureException e) {
-            e.printStackTrace();
-            return false;
-        }
-
+    public boolean validateBaseTransaction(BaseTransactionData baseTransactionData, Hash transactionHash) {
+        BasicTransactionCryptoDecorator baseTransactionCrypto = new BasicTransactionCryptoDecorator(baseTransactionData, transactionHash);
+        return baseTransactionCrypto.IsBasicTransactionValid();
     }
 
     @Override

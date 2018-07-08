@@ -11,10 +11,11 @@ public class AddTransactionRequest extends Request {
     @NotNull
     public List<BaseTransactionData> baseTransactions;
     @NotNull
-    public Hash transactionHash;
+    public Hash hash;
     @NotNull
-    public String message;
+    public String transactionDescription;
 
+    public double senderTrustScore;
     public TransactionData transactionData;
 }
 

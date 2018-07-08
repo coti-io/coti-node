@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 @Data
 public class BaseTransactionData implements IEntity {
     private transient Hash hash;
-    private String signature;
+
     private AddressData addressData;
     private Hash addressHash;
     private BigDecimal amount;
@@ -52,23 +52,30 @@ public class BaseTransactionData implements IEntity {
         this.amount = amount;
     }
 
-    public BaseTransactionData(String addressHash, BigDecimal amount, Hash hash, String signature){
+    public BaseTransactionData(String addressHash, BigDecimal amount, Hash hash, SignatureData signature){
         this(addressHash, amount);
         this.hash = hash;
-        this.signature = signature;
+        this.signatureData = signature;
     }
 
-    public BaseTransactionData(Integer addressHash, BigDecimal amount, Hash hash, String signature){
+    public BaseTransactionData(String addressHash, BigDecimal amount, Hash hash, Date createTime ,SignatureData signature){
         this(addressHash, amount);
         this.hash = hash;
-        this.signature = signature;
+        this.createTime = createTime;
+        this.signatureData = signature;
     }
 
-    public BaseTransactionData(Hash hash, BigDecimal randomDouble, Hash hash1, String signature) {
+    public BaseTransactionData(Integer addressHash, BigDecimal amount, Hash hash, SignatureData signature){
+        this(addressHash, amount);
+        this.hash = hash;
+        this.signatureData = signature;
+    }
+
+    public BaseTransactionData(Hash hash, BigDecimal randomDouble, Hash hash1, SignatureData signature) {
         this.addressHash = hash;
         this.amount = randomDouble;
         this.hash = hash1;
-        this.signature = signature;
+        this.signatureData = signature;
     }
 
 

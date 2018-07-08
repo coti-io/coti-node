@@ -1,14 +1,14 @@
 package io.coti.fullnode.service;
 
+import io.coti.common.crypto.TransactionCryptoDecorator;
 import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.ConfirmationData;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
 import io.coti.common.http.*;
-import io.coti.fullnode.LiveView.WebSocketSender;
-import io.coti.common.crypto.CryptoUtils;
-import io.coti.fullnode.exception.TransactionException;
 import io.coti.common.model.Transactions;
+import io.coti.fullnode.LiveView.WebSocketSender;
+import io.coti.fullnode.exception.TransactionException;
 import io.coti.fullnode.service.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,7 +63,7 @@ public class TransactionService implements ITransactionService {
             throws TransactionException {
 
 
-        log.info("New transaction request is being processed. Transaction Hash: {}", request.transactionHash);
+        log.info("New transaction request is being processed. Transaction Hash: {}", request.hash);
         if (!validateAddresses(request)) {
             log.info("Failed to validate addresses!");
             return ResponseEntity
@@ -91,7 +91,7 @@ public class TransactionService implements ITransactionService {
                             INSUFFICIENT_FUNDS_MESSAGE));
         }
         try {
-            TransactionData transactionData = new TransactionData(request.transactionHash, request.baseTransactions);
+            TransactionData transactionData = new TransactionData(request.hash, request.baseTransactions);
 
             transactionData = selectSources(transactionData);
 
@@ -121,11 +121,11 @@ public class TransactionService implements ITransactionService {
 
     public ResponseEntity<Response> addTransactionFromPropagation(AddTransactionRequest request)
             throws TransactionException {
-        log.info("Adding a transaction from propagation request is being processed. Transaction Hash: {}", request.transactionHash);
+        log.info("Adding a transaction from propagation request is being processed. Transaction Hash: {}", request.hash);
 
         synchronized (this) {
-            if (propagationTransactionHash.containsKey(request.transactionHash) || getTransactionData(request.transactionHash) != null) {
-                addNodesToTransaction(request.transactionHash, request.transactionData.getValidByNodes());
+            if (propagationTransactionHash.containsKey(request.hash) || getTransactionData(request.hash) != null) {
+                addNodesToTransaction(request.hash, request.transactionData.getValidByNodes());
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new AddTransactionResponse(
@@ -134,11 +134,11 @@ public class TransactionService implements ITransactionService {
             }
 
 
-            propagationTransactionHash.put(request.transactionHash, request.transactionData);
+            propagationTransactionHash.put(request.hash, request.transactionData);
         }
 
         if (!ifAllTransactionParentsExistInLocalNode(request.transactionData)) {
-            propagationTransactionHash.remove(request.transactionHash);
+            propagationTransactionHash.remove(request.hash);
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(new AddTransactionResponse(
@@ -152,7 +152,7 @@ public class TransactionService implements ITransactionService {
             propagationService.propagateToNeighbors(request.transactionData);
         }
 
-        propagationTransactionHash.remove(request.transactionHash);
+        propagationTransactionHash.remove(request.hash);
         return response;
     }
 
@@ -308,20 +308,15 @@ public class TransactionService implements ITransactionService {
     }
 
     private boolean validateAddresses(AddTransactionRequest request) {
+
+        TransactionCryptoDecorator verifyTransaction = new TransactionCryptoDecorator(request.baseTransactions, request.hash, request.transactionDescription);
         for (BaseTransactionData baseTransactionData : request.baseTransactions) {
 
             if (baseTransactionData.getAmount().signum() > 0) {
                 return true;
             }
-
-            if (!validationService.validateSenderAddress(
-                    request.message,
-                    CryptoUtils.convertSignatureFromString(baseTransactionData.getSignature()),
-                    baseTransactionData.getAddressHash())) {
-                return false;
-            }
         }
-        return true;
+        return verifyTransaction.isTransactionValid();
     }
 
     @Override

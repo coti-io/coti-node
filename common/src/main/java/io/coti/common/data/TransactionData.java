@@ -49,6 +49,27 @@ public class TransactionData implements IEntity {
     public TransactionData(Hash transactionHash, List<BaseTransactionData> baseTransactions) {
         this(transactionHash);
         this.baseTransactions = baseTransactions;
+        this.baseTransactions = baseTransactions;
+        this.childrenTransactions = new Vector<>();
+
+    }
+
+    public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription) {
+        this.hash = transactionHash;
+        this.transactionDescription = transactionDescription;
+        this.baseTransactions = baseTransactions;
+        this.childrenTransactions = new Vector<>();
+
+    }
+
+
+    public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription,double senderTrustScore) {
+        this.hash = transactionHash;
+        this.transactionDescription = transactionDescription;
+        this.baseTransactions = baseTransactions;
+        this.senderTrustScore = senderTrustScore;
+        this.childrenTransactions = new Vector<>();
+
     }
 
     public TransactionData(Hash hash) {
@@ -58,13 +79,14 @@ public class TransactionData implements IEntity {
         this.senderTrustScore = 50;
         this.processStartTime = (new Date());
         this.dspConsensus = true;
-        this.validByNodes = new ConcurrentHashMap();
     }
 
     public TransactionData(Hash hash, double trustScore) {
         this(hash);
         this.senderTrustScore = trustScore;
         this.attachmentTime = new Date();
+        this.childrenTransactions = new Vector<>();
+
     }
 
     public int getRoundedSenderTrustScore() {

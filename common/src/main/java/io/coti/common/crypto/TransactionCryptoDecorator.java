@@ -1,16 +1,14 @@
 package io.coti.common.crypto;
 
 import io.coti.common.data.BaseTransactionData;
+import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
 import org.bouncycastle.jcajce.provider.digest.Keccak;
 import org.bouncycastle.util.encoders.Hex;
 
 import java.nio.ByteBuffer;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class TransactionCryptoDecorator {
      final static int  baseTransactionHashSize = 32;
@@ -22,7 +20,16 @@ public class TransactionCryptoDecorator {
         this.txData = txData;
         for (BaseTransactionData bxData: txData.getBaseTransactions())
         {
-            baseTransactions.add(new BasicTransactionCryptoDecorator(bxData));
+            baseTransactions.add(new BasicTransactionCryptoDecorator(bxData,txData.getHash()));
+        }
+    }
+
+    public TransactionCryptoDecorator(List<BaseTransactionData> basicTransaction, Hash transactionHash, String transactionDescription)
+    {
+        this.txData = new TransactionData(basicTransaction,transactionHash,transactionDescription);
+        for (BaseTransactionData bxData: txData.getBaseTransactions())
+        {
+            baseTransactions.add(new BasicTransactionCryptoDecorator(bxData,txData.getHash()));
         }
     }
 
@@ -58,7 +65,7 @@ public class TransactionCryptoDecorator {
         return generatedTxHashFromBaseTransactions.equals(txHashFromData);
     }
 
-    public boolean isTransactionValid() throws InvalidKeySpecException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
+    public boolean isTransactionValid() {
         for (BasicTransactionCryptoDecorator bxCrypto: this.baseTransactions) {
             if (bxCrypto.IsBasicTransactionValid() ==false)
                     return false;
