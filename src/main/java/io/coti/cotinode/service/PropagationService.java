@@ -1,8 +1,9 @@
 package io.coti.cotinode.service;
 
+import io.coti.cotinode.data.Hash;
 import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.http.*;
-import io.coti.cotinode.http.interfaces.IPropagationCommunication;
+import io.coti.cotinode.http.interfaces.IPropagationSender;
 import io.coti.cotinode.model.Transactions;
 import io.coti.cotinode.service.interfaces.IPropagationService;
 import lombok.Data;
@@ -13,7 +14,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
@@ -39,35 +39,35 @@ public class PropagationService implements IPropagationService {
     private Transactions transactions;
 
     @Autowired
-    private IPropagationCommunication propagationCommunication;
+    private IPropagationSender propagationSender;
 
-    private List<String> NeighborsNodesIp;
+    private List<String> neighborsNodeIps;
     private String currentNodeIp;
 
     @PostConstruct
     private void init() {
         log.info("Propagation service Started");
-        NeighborsNodesIp = new ArrayList<>();
+        neighborsNodeIps = new ArrayList<>();
         loadNodesList();
         loadCurrentNode();
     }
 
-    public void propagateToNeighbors(AddTransactionRequest request) {
-        request.transactionData.getValidByNodes().put(currentNodeIp, true);
-        for (String nodeIp : NeighborsNodesIp) {
-            propagationCommunication.propagateTransactionToNeighbor(request, nodeIp);
+    public void propagateToNeighbors(TransactionData transactionData) {
+        transactionData.getValidByNodes().put(currentNodeIp, true);
+        for (String nodeIp : neighborsNodeIps) {
+            propagationSender.propagateTransactionToNeighbor(transactionData, nodeIp);
         }
     }
 
 
-    public void propagateFromNeighbors(GetTransactionRequest getTransactionRequest) {
-        for (String nodeIp : NeighborsNodesIp) {
-            propagationCommunication.propagateTransactionFromNeighbor(getTransactionRequest, nodeIp);
+    public void propagateFromNeighbors(Hash transactionHash) {
+        for (String nodeIp : neighborsNodeIps) {
+            propagationSender.propagateTransactionFromNeighbor(transactionHash, nodeIp);
         }
     }
 
-    public ResponseEntity<Response> getTransactionsFromCurrentNode(GetTransactionsRequest getTransactionsRequest) {
-        List<TransactionData> transactionData = null;
+    public ResponseEntity<TransactionData> getTrasaction(TransactionData transactionData) {
+        List<TransactionData> transactionDatas = null;
         // TODO: Implementing getting all transaction, or from the attachment time;
 //        if (transactionData == null) {
 //            propagateFromNeighbors(getTransactionRequest);
@@ -81,20 +81,25 @@ public class PropagationService implements IPropagationService {
         return null;
     }
 
-    public ResponseEntity<Response> getTransactionFromCurrentNode(GetTransactionRequest getTransactionRequest) {
+    public ResponseEntity getTransaction(GetTransactionRequest getTransactionRequest) {
         TransactionData transactionData = transactions.getByHash(getTransactionRequest.transactionHash);
-        if (transactionData == null) {
-            propagateFromNeighbors(getTransactionRequest);
-            return ResponseEntity.status(HttpStatus.NO_CONTENT)
-                    .body(new AddTransactionResponse(
-                            STATUS_SUCCESS,
-                            TRANSACTION_CURRENTLY_MISSING_MESSAGE));
+        if(transactionData != null){
+            propagateToNeighbors(transactionData);
         }
-        else {
-            // TODO: propagateToNeighbors
+        else{
+            for (String neighborIp:
+                    neighborsNodeIps) {
+
+
+            }
+            propagateFromNeighbors(getTransactionRequest.transactionHash);
         }
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(new GetTransactionResponse(transactions.getByHash(getTransactionRequest.transactionHash)));
+        return new ResponseEntity(HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<Response> getTransactionsFromCurrentNode(GetTransactionsRequest getTransactionsRequest) {
+        return null;
     }
 
     public void loadNodesList() {
@@ -102,7 +107,7 @@ public class PropagationService implements IPropagationService {
         File file = new File(classLoader.getResource(nodesFile).getFile());
         try (Scanner scanner = new Scanner(file)) {
             while (scanner.hasNextLine()) {
-                NeighborsNodesIp.add(scanner.nextLine().trim());
+                neighborsNodeIps.add(scanner.nextLine().trim());
             }
         }
         catch (Exception ex){

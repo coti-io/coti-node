@@ -61,7 +61,7 @@ public class TransactionService implements ITransactionService {
     }
 
     @Override
-    public ResponseEntity<AddTransactionResponse> addNewTransaction(AddTransactionRequest request)
+    public ResponseEntity<Response> addNewTransaction(AddTransactionRequest request)
             throws TransactionException {
 
 
@@ -107,21 +107,8 @@ public class TransactionService implements ITransactionService {
             // ################################
             attachTransactionToCluster(transactionData);
             transactionData.setSenderNodeIpAddress(propagationService.getCurrentNodeIp());
-            transactionData.setValid(true);// It's needed?
 
-            request.transactionData = transactionData;
-
-            //temp
-            ObjectMapper mapper = new ObjectMapper();
-            try {
-                String jsonInString = mapper.writeValueAsString(request);
-                int tem = 0;
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-            }
-            /////
-
-            propagationService.propagateToNeighbors(request);
+            propagationService.propagateToNeighbors(transactionData);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
                     .body(new AddTransactionResponse(
@@ -134,7 +121,7 @@ public class TransactionService implements ITransactionService {
         }
     }
 
-    public ResponseEntity<AddTransactionResponse> addTransactionFromPropagation(AddTransactionRequest request)
+    public ResponseEntity<Response> addTransactionFromPropagation(AddTransactionRequest request)
             throws TransactionException {
         log.info("Adding a transaction from propagation request is being processed. Transaction Hash: {}", request.transactionHash);
 
@@ -161,10 +148,10 @@ public class TransactionService implements ITransactionService {
                             WAITING_FOR_TRANSACTION_PARENT_MESSAGE));
         }
 
-        ResponseEntity<AddTransactionResponse> response = addFromPropagationAfterValidation(request.baseTransactions, request.transactionData);
+        ResponseEntity<Response> response = addFromPropagationAfterValidation(request.baseTransactions, request.transactionData);
         if ((response.getStatusCode().equals(HttpStatus.CREATED))
                 && response.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS)) {
-            propagationService.propagateToNeighbors(request);
+            propagationService.propagateToNeighbors(request.transactionData);
         }
 
         propagationTransactionHash.remove(request.transactionHash);
@@ -222,13 +209,13 @@ public class TransactionService implements ITransactionService {
     private boolean ifTransactionParentExistInLocalNode(Hash parentHash, GetTransactionRequest getTransactionRequest) {
         if (parentHash != null && getTransactionData(parentHash) == null) {
             getTransactionRequest.transactionHash = parentHash;
-            propagationService.propagateFromNeighbors(getTransactionRequest);
+            propagationService.propagateFromNeighbors(getTransactionRequest.transactionHash);
             return false;
         }
         return true;
     }
 
-    private ResponseEntity<AddTransactionResponse> addFromPropagationAfterValidation(List<BaseTransactionData> baseTransactions,
+    private ResponseEntity<Response> addFromPropagationAfterValidation(List<BaseTransactionData> baseTransactions,
                                                                                      TransactionData transactionData) {
         if (!isLegalBalance(baseTransactions)) {
             return ResponseEntity
@@ -345,7 +332,7 @@ public class TransactionService implements ITransactionService {
     }
 
     @Override
-    public ResponseEntity<GetTransactionResponse> getTransactionDetails(Hash transactionHash) {
+    public ResponseEntity<Response> getTransactionDetails(Hash transactionHash) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new GetTransactionResponse(transactions.getByHash(transactionHash)));
     }

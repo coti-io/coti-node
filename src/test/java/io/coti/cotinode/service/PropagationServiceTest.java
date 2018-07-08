@@ -37,7 +37,7 @@ public class PropagationServiceTest {
     public void propagateFromNeighbors() {
         GetTransactionRequest getTransactionRequest = new GetTransactionRequest();
         getTransactionRequest.transactionHash = new Hash("01");
-        propagationService.propagateFromNeighbors(getTransactionRequest);
+        propagationService.propagateFromNeighbors(getTransactionRequest.transactionHash);
     }
 
 

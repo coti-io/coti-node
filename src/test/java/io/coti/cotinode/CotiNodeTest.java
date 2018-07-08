@@ -12,6 +12,7 @@ import io.coti.cotinode.data.TransactionData;
 import io.coti.cotinode.http.AddTransactionRequest;
 import io.coti.cotinode.http.AddTransactionResponse;
 import io.coti.cotinode.http.HttpStringConstants;
+import io.coti.cotinode.http.Response;
 import io.coti.cotinode.model.ConfirmedTransactions;
 import io.coti.cotinode.model.UnconfirmedTransactions;
 import io.coti.cotinode.service.interfaces.IBalanceService;
@@ -81,7 +82,7 @@ public class CotiNodeTest {
             propagationService = null;
         });
 
-        ResponseEntity<AddTransactionResponse> responseEntity = transactionController.addTransaction(addTransactionRequest);
+        ResponseEntity<Response> responseEntity = transactionController.addTransaction(addTransactionRequest);
         Assert.assertTrue(responseEntity.getStatusCode().equals(HttpStatus.CREATED));
         Assert.assertTrue(responseEntity.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
 
@@ -92,7 +93,7 @@ public class CotiNodeTest {
         addTransactionRequest2.baseTransactions = baseTransactionDataList2;
         addTransactionRequest2.transactionHash = new Hash("A2");
         addTransactionRequest2.message = signatureMessage;
-        ResponseEntity<AddTransactionResponse> responseEntity2 = transactionService.addNewTransaction(addTransactionRequest2);
+        ResponseEntity<Response> responseEntity2 = transactionService.addNewTransaction(addTransactionRequest2);
         Assert.assertTrue(responseEntity2.getStatusCode().equals(HttpStatus.CREATED));
         Assert.assertTrue(responseEntity2.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
 
@@ -101,7 +102,7 @@ public class CotiNodeTest {
         addTransactionRequest3.baseTransactions = baseTransactionDataList3;
         addTransactionRequest3.transactionHash = new Hash("A3");
         addTransactionRequest3.message = signatureMessage;
-        ResponseEntity<AddTransactionResponse> responseEntity3 = transactionService.addNewTransaction(addTransactionRequest3);
+        ResponseEntity<Response> responseEntity3 = transactionService.addNewTransaction(addTransactionRequest3);
         Assert.assertTrue(responseEntity3.getStatusCode().equals(HttpStatus.CREATED));
         Assert.assertTrue(responseEntity3.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
 
@@ -110,7 +111,7 @@ public class CotiNodeTest {
         addTransactionRequest4.baseTransactions = baseTransactionDataList4;
         addTransactionRequest4.transactionHash = new Hash("A4");
         addTransactionRequest4.message = signatureMessage;
-        ResponseEntity<AddTransactionResponse> responseEntity4 = transactionService.addNewTransaction(addTransactionRequest4);
+        ResponseEntity<Response> responseEntity4 = transactionService.addNewTransaction(addTransactionRequest4);
         Assert.assertTrue(responseEntity4.getStatusCode().equals(HttpStatus.CREATED));
         Assert.assertTrue(responseEntity4.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
 
@@ -119,7 +120,7 @@ public class CotiNodeTest {
         addTransactionRequest5.baseTransactions = baseTransactionDataList5;
         addTransactionRequest5.transactionHash = new Hash("A5");
         addTransactionRequest5.message = signatureMessage;
-        ResponseEntity<AddTransactionResponse> responseEntity5 = transactionService.addNewTransaction(addTransactionRequest5);
+        ResponseEntity<Response> responseEntity5 = transactionService.addNewTransaction(addTransactionRequest5);
         Assert.assertTrue(responseEntity5.getStatusCode().equals(HttpStatus.CREATED));
         Assert.assertTrue(responseEntity5.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
 
@@ -132,7 +133,7 @@ public class CotiNodeTest {
         transactionData6.setLeftParentHash(new Hash("A5"));
         addTransactionRequest6.transactionData = transactionData6;
 
-        ResponseEntity<AddTransactionResponse> responseEntity6 = transactionService.addTransactionFromPropagation(addTransactionRequest6);
+        ResponseEntity<Response> responseEntity6 = transactionService.addTransactionFromPropagation(addTransactionRequest6);
         Assert.assertTrue(responseEntity6.getStatusCode().equals(HttpStatus.CREATED));
         Assert.assertTrue(responseEntity6.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
         try {
@@ -158,7 +159,7 @@ public class CotiNodeTest {
 
         log.info("Base transaction {} with amount {} about to be sent ", baseTransactionHexaAddress, 3);
         replaceBalancesWithAmount(fromAddress, new BigDecimal(2));
-        ResponseEntity<AddTransactionResponse> badResponseEntity = transactionService.
+        ResponseEntity<Response> badResponseEntity = transactionService.
                 addNewTransaction(createRequestWithOneBaseTransaction(new Hash("AB"), fromAddress,
                         new Hash(baseTransactionHexaAddress), new BigDecimal(3)));
         Assert.assertTrue(badResponseEntity.getStatusCode().equals(HttpStatus.UNAUTHORIZED));
@@ -174,7 +175,7 @@ public class CotiNodeTest {
         String baseTransactionHexaAddress = TestUtils.getRandomHexa();
         BigDecimal plusAmount = new BigDecimal(50);
         log.info("Base transaction {} with amount {} about to be sent ", baseTransactionHexaAddress, plusAmount);
-        ResponseEntity<AddTransactionResponse> goodResponseEntity = transactionService.
+        ResponseEntity<Response> goodResponseEntity = transactionService.
                 addNewTransaction(createRequestWithOneBaseTransaction(new Hash("AC"), fromAddress
                         , new Hash(baseTransactionHexaAddress), plusAmount));
         Assert.assertTrue(goodResponseEntity.getStatusCode().equals(HttpStatus.CREATED));
@@ -183,7 +184,7 @@ public class CotiNodeTest {
         String baseTransactionHexaAddress2 = TestUtils.getRandomHexa();
         replaceBalancesWithAmount(fromAddress, new BigDecimal(50));
         log.info("Base transaction {} with amount {} about to be sent ", baseTransactionHexaAddress2, 60);
-        ResponseEntity<AddTransactionResponse> badResponseEntity = transactionService.
+        ResponseEntity<Response> badResponseEntity = transactionService.
                 addNewTransaction(createRequestWithOneBaseTransaction(new Hash("AD"),
                         fromAddress, new Hash(baseTransactionHexaAddress), new BigDecimal(60)));
         Assert.assertTrue(badResponseEntity.getStatusCode().equals(HttpStatus.UNAUTHORIZED));

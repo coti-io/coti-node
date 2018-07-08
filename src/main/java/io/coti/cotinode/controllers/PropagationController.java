@@ -24,12 +24,12 @@ public class PropagationController {
     private IPropagationService propagationService;
 
     @RequestMapping(value = "/propagatedTransaction", method = POST)
-    public ResponseEntity<Response> getTransactionFromCurrentNode(@Valid @RequestBody GetTransactionRequest getTransactionRequest) {
-        return propagationService.getTransactionFromCurrentNode(getTransactionRequest);
+    public ResponseEntity<Response> getTransaction(@Valid @RequestBody GetTransactionRequest getTransactionRequest) {
+        return propagationService.getTransaction(getTransactionRequest);
     }
 
     @RequestMapping(value = "/propagatedTransaction", method = PUT)
-    public ResponseEntity<AddTransactionResponse> addTransaction(@Valid @RequestBody AddTransactionRequest addTransactionRequest) {
+    public ResponseEntity<Response> addTransaction(@Valid @RequestBody AddTransactionRequest addTransactionRequest) {
         return transactionService.addTransactionFromPropagation(addTransactionRequest);
     }
 
