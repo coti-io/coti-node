@@ -1,9 +1,6 @@
 package io.coti.cotinode.controllers;
 
-import io.coti.cotinode.http.AddTransactionRequest;
-import io.coti.cotinode.http.AddTransactionResponse;
-import io.coti.cotinode.http.GetTransactionRequest;
-import io.coti.cotinode.http.GetTransactionResponse;
+import io.coti.cotinode.http.*;
 import io.coti.cotinode.service.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,12 +23,12 @@ public class TransactionController {
     private ITransactionService transactionService;
 
     @RequestMapping(method = PUT)
-    public ResponseEntity<AddTransactionResponse> addTransaction(@Valid @RequestBody AddTransactionRequest addTransactionRequest) {
+    public ResponseEntity<Response> addTransaction(@Valid @RequestBody AddTransactionRequest addTransactionRequest) {
             return transactionService.addNewTransaction(addTransactionRequest);
     }
 
     @RequestMapping(method = POST)
-    public ResponseEntity<GetTransactionResponse> getTransactionDetails(@Valid @RequestBody GetTransactionRequest getTransactionRequest) {
+    public ResponseEntity<Response> getTransactionDetails(@Valid @RequestBody GetTransactionRequest getTransactionRequest) {
         return transactionService.getTransactionDetails(getTransactionRequest.transactionHash);
     }
 }

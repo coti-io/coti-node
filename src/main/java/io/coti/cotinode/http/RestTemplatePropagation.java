@@ -1,6 +1,8 @@
 package io.coti.cotinode.http;
 
-import io.coti.cotinode.http.interfaces.IPropagationCommunication;
+import io.coti.cotinode.data.Hash;
+import io.coti.cotinode.data.TransactionData;
+import io.coti.cotinode.http.interfaces.IPropagationSender;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +17,7 @@ import java.util.ArrayList;
 @Data
 @Slf4j
 @Service
-public class RestTemplatePropagation implements IPropagationCommunication {
+public class RestTemplatePropagation implements IPropagationSender {
 
     RestTemplate restTemplate;
 
@@ -28,7 +30,7 @@ public class RestTemplatePropagation implements IPropagationCommunication {
     }
 
     @Override
-    public void propagateTransactionToNeighbor(AddTransactionRequest request, String nodeIp) {
+    public void propagateTransactionToNeighbor(TransactionData transactionData, String nodeIp) {
         String url = nodeIp + requestTransactionMapping;
         try {
            // restTemplate.put(url, request);
@@ -38,7 +40,7 @@ public class RestTemplatePropagation implements IPropagationCommunication {
     }
 
     @Override
-    public ResponseEntity<Response> propagateTransactionFromNeighbor(GetTransactionRequest getTransactionRequest, String nodeIp) {
+    public ResponseEntity<Response> propagateTransactionFromNeighbor(Hash transactionHash, String nodeIp) {
         String url = nodeIp + requestTransactionMapping;
         ResponseEntity<Response> response = null;
         try {
