@@ -1,4 +1,7 @@
 /target/
+/fullnode/target/
+/dspnode/target/
+/common/target/
 !.mvn/wrapper/maven-wrapper.jar
 
 ### STS ###

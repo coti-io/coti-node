@@ -6,7 +6,12 @@
     <groupId>io.coti</groupId>
     <artifactId>coti-node</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <modules>
+        <module>common</module>
+        <module>fullnode</module>
+        <module>dspnode</module>
+    </modules>
+    <packaging>pom</packaging>
 
     <name>coti-node</name>
     <description>Coti Full Node</description>
@@ -92,6 +97,12 @@
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk15on</artifactId>
             <version>1.59</version>
+        </dependency>
+        <dependency>
+            <groupId>io.coti</groupId>
+            <artifactId>common</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
 
     </dependencies>
