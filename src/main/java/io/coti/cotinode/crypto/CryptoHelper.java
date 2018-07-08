@@ -55,15 +55,17 @@ public class CryptoHelper {
         PublicKey result = KeyFactory.getInstance(ecAlgorithm,new BouncyCastleProvider()).generatePublic(new ECPublicKeySpec(point, CryptoHelper.spec));
         return result;
     }
+    public static boolean VerifyByPublicKey(byte[] originalMessageToVerify, String rHex, String sHex, String publicKey) throws InvalidKeySpecException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
+        return VerifyByPublicKey(originalMessageToVerify,rHex,sHex,getPublicKeyFromHexString(publicKey));
+    }
 
-
-    public static boolean VerifyByPublicKey(byte[] dataToVerify, String rHex, String sHex, PublicKey publicKey)
+    public static boolean  VerifyByPublicKey(byte[] originalDataToVerify, String rHex, String sHex, PublicKey publicKey)
     {
             ECDSASigner signer = new ECDSASigner();
             signer.init(false, new ECPublicKeyParameters(((ECPublicKey)publicKey).getQ(), domain));
             BigInteger r = new BigInteger( rHex, 16);
             BigInteger s = new BigInteger( sHex, 16);
-            return signer.verifySignature(dataToVerify, r, s);
+            return signer.verifySignature(originalDataToVerify, r, s);
     }
 
     public static KeyPair generateKeyPair() throws  NoSuchAlgorithmException, InvalidAlgorithmParameterException {

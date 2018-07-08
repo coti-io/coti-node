@@ -17,7 +17,7 @@ public class BaseTransactionData implements IEntity {
     private int indexInTransactionsChain;
     private BaseTransactionData nextBaseTransactionData;
     private Date createTime;
-
+    private SignatureData signatureData;
     private BaseTransactionData(){}
 
 
@@ -68,6 +68,11 @@ public class BaseTransactionData implements IEntity {
         this.amount = randomDouble;
         this.hash = hash1;
         this.signature = signature;
+    }
+
+
+    public boolean isSignatureExists(){
+        return signatureData !=null;
     }
 
     @Override
