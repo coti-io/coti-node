@@ -121,13 +121,13 @@ public class CryptoHelperTests {
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
-        TransactionData obj = mapper.readValue(jsonOfTransaction,TransactionData.class);
+        TransactionData txData = mapper.readValue(jsonOfTransaction,TransactionData.class);
 
 
-        for (BaseTransactionData basicTx: obj.getBaseTransactions())
+        for (BaseTransactionData basicTx: txData.getBaseTransactions())
         {
-            BasicTransactionCryptoDecorator basicTransactionCrypto = new BasicTransactionCryptoDecorator(basicTx,obj.getHash());
-            Assert.assertTrue(basicTransactionCrypto.IsBasicTransactionValid());
+            BasicTransactionCryptoDecorator basicTransactionCrypto = new BasicTransactionCryptoDecorator(basicTx);
+            Assert.assertTrue(basicTransactionCrypto.IsBasicTransactionValid(txData.getHash()));
         }
 
 

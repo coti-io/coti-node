@@ -1,6 +1,7 @@
 import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.ConfirmationData;
 import io.coti.common.data.Hash;
+import io.coti.common.data.SignatureData;
 import io.coti.common.model.ConfirmedTransactions;
 import io.coti.common.model.UnconfirmedTransactions;
 import io.coti.fullnode.AppConfig;
@@ -17,10 +18,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(SpringRunner.class)
@@ -57,14 +55,14 @@ public class BalanceServiceTests {
     @Test
     public void checkBalancesTest() {
         List<BaseTransactionData> baseTransactionDataList = new LinkedList<>();
-        baseTransactionDataList.add(new BaseTransactionData("BE", new BigDecimal(-150)));
+        baseTransactionDataList.add(new BaseTransactionData(new Hash("BE"), new BigDecimal(-150),new Hash("BE"),new SignatureData("",""),new Date()));
 
         boolean ans = balanceService.checkBalancesAndAddToPreBalance(baseTransactionDataList);
         Assert.assertFalse(ans);
 
 
         List<BaseTransactionData> baseTransactionDatas2 = new LinkedList<>();
-        baseTransactionDatas2.add(new BaseTransactionData("BE", new BigDecimal(-20)));
+        baseTransactionDatas2.add(new BaseTransactionData(new Hash("BE"), new BigDecimal(-20),new Hash("BE"),new SignatureData("",""),new Date()));
         ans = balanceService.checkBalancesAndAddToPreBalance(baseTransactionDatas2);
         Assert.assertTrue(ans);
 

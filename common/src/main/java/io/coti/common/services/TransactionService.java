@@ -60,7 +60,7 @@ public class TransactionService implements ITransactionService {
     public ResponseEntity addPropagatedTransaction(TransactionData transactionData)
             throws TransactionException {
         log.info("New transaction request is being processed. Transaction Hash: {}", transactionData.getHash());
-        if (!validateAddresses(transactionData.getBaseTransactions(), transactionData.getHash(), transactionData.getTransactionDescription())) {
+        if (!validateAddresses(transactionData.getBaseTransactions(), transactionData.getHash(), transactionData.getTransactionDescription(), transactionData.getSenderTrustScore())) {
             log.info("Failed to validate addresses!");
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
@@ -105,7 +105,7 @@ public class TransactionService implements ITransactionService {
             throws TransactionException {
 
         log.info("New transaction request is being processed. Transaction Hash: {}", request.hash);
-        if (!validateAddresses(request.baseTransactions, request.hash, request.transactionDescription)) {
+        if (!validateAddresses(request.baseTransactions, request.hash, request.transactionDescription, request.senderTrustScore)) {
             log.info("Failed to validate addresses!");
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
@@ -132,7 +132,7 @@ public class TransactionService implements ITransactionService {
                             INSUFFICIENT_FUNDS_MESSAGE));
         }
         try {
-            TransactionData transactionData = new TransactionData(request.hash, request.baseTransactions);
+            TransactionData transactionData = new TransactionData(request.baseTransactions, request.hash, request.transactionDescription,request.senderTrustScore);
 
             transactionData = selectSources(transactionData);
 
@@ -347,9 +347,9 @@ public class TransactionService implements ITransactionService {
 
     }
 
-    private boolean validateAddresses(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription) {
+    private boolean validateAddresses(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, Double senderTrustScore) {
 
-        TransactionCryptoDecorator verifyTransaction = new TransactionCryptoDecorator(baseTransactions, transactionHash, transactionDescription);
+        TransactionCryptoDecorator verifyTransaction = new TransactionCryptoDecorator(baseTransactions, transactionHash, transactionDescription, senderTrustScore);
         for (BaseTransactionData baseTransactionData : baseTransactions) {
 
             if (baseTransactionData.getAmount().signum() > 0) {

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
@@ -17,6 +18,7 @@ import java.util.Vector;
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = AppConfig.class)
 @Slf4j
+
 public class ClusterServiceTest {
 
     @Autowired
@@ -34,7 +36,7 @@ public class ClusterServiceTest {
 
     @Test
     public void selectSources() {
-        TransactionData TransactionData2 = new TransactionData(new Hash("22"));
+        TransactionData TransactionData2 = new TransactionData(new ArrayList<>(),new Hash("22"), "test", 50);
         TransactionData2.setSenderTrustScore(92);
         TransactionData2.setCreateTime(new Date());
         cluster.selectSources(TransactionData2);
@@ -43,7 +45,7 @@ public class ClusterServiceTest {
 
     @Test
     public void selectSourcesWithToHighTrustScore() {
-        TransactionData TransactionData2 = new TransactionData(new Hash("22"));
+        TransactionData TransactionData2 = new TransactionData(new ArrayList<>(),new Hash("22"), "test", 50);
         TransactionData2.setSenderTrustScore(99);
         TransactionData2.setCreateTime(new Date());
         cluster.selectSources(TransactionData2);
@@ -52,7 +54,7 @@ public class ClusterServiceTest {
 
     @Test
     public void selectSourcesWithToLowTrustScore() {
-        TransactionData TransactionData2 = new TransactionData(new Hash("22"));
+        TransactionData TransactionData2 = new TransactionData(new ArrayList<>(),new Hash("22"),"test", 50);
         TransactionData2.setSenderTrustScore(50);
         TransactionData2.setCreateTime(new Date());
         cluster.selectSources(TransactionData2);
@@ -63,7 +65,7 @@ public class ClusterServiceTest {
     public void attachToCluster() {
         Exception ex = null;
         try {
-            TransactionData TransactionData2 = new TransactionData(new Hash("22"));
+            TransactionData TransactionData2 = new TransactionData(new ArrayList<>(),new Hash("22"), "test", 50);
             TransactionData2.setSenderTrustScore(92);
             TransactionData2.setCreateTime(new Date());
             TransactionData2.setLeftParentHash(new Hash("00"));
@@ -75,7 +77,7 @@ public class ClusterServiceTest {
     }
 
     private void setUpTransactionsFromSnapShot() {
-        TransactionData TransactionData0 = new TransactionData(new Hash("00"));
+        TransactionData TransactionData0 = new TransactionData(new ArrayList<>(),new Hash("00"), "test", 50);
         TransactionData0.setSenderTrustScore(70);
         List<Hash> hashChildren = new Vector<>();
         hashChildren.add(new Hash("11"));
@@ -83,7 +85,7 @@ public class ClusterServiceTest {
         TransactionData0.setProcessStartTime(new Date());
         TransactionData0.setAttachmentTime(new Date());
 
-        TransactionData TransactionData1 = new TransactionData(new Hash("11"));
+        TransactionData TransactionData1 = new TransactionData(new ArrayList<>(),new Hash("11"), "test", 50);
         TransactionData1.setSenderTrustScore(83);
         TransactionData1.setRightParentHash(TransactionData0.getHash());
         TransactionData1.setCreateTime(new Date());

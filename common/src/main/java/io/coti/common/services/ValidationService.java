@@ -16,8 +16,8 @@ public class ValidationService implements IValidationService {
 
     @Override
     public boolean validateBaseTransaction(BaseTransactionData baseTransactionData, Hash transactionHash) {
-        BasicTransactionCryptoDecorator baseTransactionCrypto = new BasicTransactionCryptoDecorator(baseTransactionData, transactionHash);
-        return baseTransactionCrypto.IsBasicTransactionValid();
+        BasicTransactionCryptoDecorator baseTransactionCrypto = new BasicTransactionCryptoDecorator(baseTransactionData);
+        return baseTransactionCrypto.IsBasicTransactionValid(transactionHash);
     }
 
     @Override
