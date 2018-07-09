@@ -16,7 +16,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 @RestController
-public class FullNodePropagation {
+public class FullNodePropagationController {
 
     @Autowired
     private TransactionService transactionService;
@@ -26,4 +26,6 @@ public class FullNodePropagation {
         transactionService.addTransactionToFullNodeFromPropagation(addTransactionRequest.transactionData);
         return new ResponseEntity(HttpStatus.OK);
     }
+
+    
 }

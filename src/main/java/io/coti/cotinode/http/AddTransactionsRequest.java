@@ -1,7 +1,9 @@
 package io.coti.cotinode.http;
 
-import java.util.List;
+import lombok.Data;
 
+import java.util.List;
+@Data
 public class AddTransactionsRequest extends Request {
-    List<AddTransactionRequest> transactionsRequest;
+    private List<AddTransactionRequest> transactionsRequest;
 }

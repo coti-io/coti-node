@@ -30,7 +30,7 @@ public class PropagationController {
 
     @RequestMapping(value = "/propagatedTransaction", method = PUT)
     public ResponseEntity<Response> addTransaction(@Valid @RequestBody AddTransactionRequest addTransactionRequest) {
-        return transactionService.addTransactionFromPropagation(addTransactionRequest);
+        return transactionService.addTransactionFromPropagation(addTransactionRequest.transactionData);
     }
 
     @RequestMapping(value = "/initPropagatedTransaction", method = POST)

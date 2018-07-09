@@ -12,5 +12,7 @@ public interface IPropagationSender {
 
     GetTransactionsResponse propagateMultiTransactionFromNeighbor(GetTransactionsRequest getTransactionsRequest, String nodeIp);
 
+    GetTransactionsResponse propagateMultiTransactionFromNeighbor(int index, String nodeIp);
+
     //void propagateMultiTransactionToNeighbor(AddTransactionsRequest request, String nodeIp);
 }
