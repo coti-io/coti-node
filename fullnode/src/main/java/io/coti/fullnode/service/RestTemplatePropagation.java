@@ -63,4 +63,16 @@ public class RestTemplatePropagation implements IPropagationSender {
         }
         return getTransactionsResponse;
     }
+
+    public GetTransactionsResponse propagateMultiTransactionFromNeighbor(int index, String nodeIp) {
+        GetTransactionsResponse getTransactionsResponse = null;
+        String url = nodeIp + requestTransactionMapping;
+        try {
+
+            getTransactionsResponse = restTemplate.postForObject(url, index, GetTransactionsResponse.class);
+        } catch (RestClientException e) {
+            log.error("Errors when propagating from url {} {}", url);
+        }
+        return getTransactionsResponse;
+    }
 }

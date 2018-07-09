@@ -112,24 +112,24 @@ public class CotiNodeTest {
         Assert.assertTrue(responseEntity5.getStatusCode().equals(HttpStatus.CREATED));
         Assert.assertTrue(responseEntity5.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
 
-        AddTransactionRequest addTransactionRequest6 = new AddTransactionRequest();
-        List<BaseTransactionData> baseTransactionDataList6 = createBaseTransactionRandomList(3);
-        addTransactionRequest6.baseTransactions = baseTransactionDataList6;
-        addTransactionRequest6.hash = new Hash("A6");
-        addTransactionRequest6.transactionDescription = signatureMessage;
-        TransactionData transactionData6 = new TransactionData(addTransactionRequest.transactionHash, addTransactionRequest.baseTransactions);
-        transactionData6.setLeftParentHash(new Hash("A5"));
-        addTransactionRequest6.transactionData = transactionData6;
-
-        ResponseEntity<Response> responseEntity6 = transactionService.addTransactionFromPropagation(addTransactionRequest6);
-        Assert.assertTrue(responseEntity6.getStatusCode().equals(HttpStatus.CREATED));
-        Assert.assertTrue(responseEntity6.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
-        try {
-            log.info("CotiNodeTest is going to sleep for 20 sec");
-            TimeUnit.SECONDS.sleep(20);
-        } catch (InterruptedException e) {
-            log.error("error ", e);
-        }
+//        AddTransactionRequest addTransactionRequest6 = new AddTransactionRequest();
+//        List<BaseTransactionData> baseTransactionDataList6 = createBaseTransactionRandomList(3);
+//        addTransactionRequest6.baseTransactions = baseTransactionDataList6;
+//        addTransactionRequest6.transactionHash = new Hash("A6");
+//        addTransactionRequest6.message = signatureMessage;
+//        TransactionData transactionData6 = new TransactionData(addTransactionRequest6);
+//        transactionData6.setLeftParentHash(new Hash("A5"));
+//        addTransactionRequest6.transactionData = transactionData6;
+//
+//        ResponseEntity<Response> responseEntity6 = transactionService.addTransactionFromPropagation(addTransactionRequest6);
+//        Assert.assertTrue(responseEntity6.getStatusCode().equals(HttpStatus.CREATED));
+//        Assert.assertTrue(responseEntity6.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
+//        try {
+//            log.info("CotiNodeTest is going to sleep for 20 sec");
+//            TimeUnit.SECONDS.sleep(20);
+//        } catch (InterruptedException e) {
+//            log.error("error ",e);
+//        }
 
         ConfirmationData confirmedData = confirmedTransactions.getByHash(new Hash("A1"));
 

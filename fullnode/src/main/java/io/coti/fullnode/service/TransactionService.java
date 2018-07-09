@@ -48,6 +48,9 @@ public class TransactionService implements ITransactionService {
     @Autowired
     private PropagationService propagationService;
     @Autowired
+    private FullNodeIPropagationService fullNodeIPropagationService;
+
+    @Autowired
     private WebSocketSender webSocketSender;
 
     @PostConstruct
@@ -56,7 +59,9 @@ public class TransactionService implements ITransactionService {
         hashToWaitingChildrenTransactionsMapping = new HashMap();
         propagationTransactionHash = new ConcurrentHashMap();
 
+
     }
+
 
     @Override
     public ResponseEntity<Response> addNewTransaction(AddTransactionRequest request)
@@ -106,7 +111,8 @@ public class TransactionService implements ITransactionService {
             attachTransactionToCluster(transactionData);
             transactionData.setSenderNodeIpAddress(propagationService.getCurrentNodeIp());
 
-            propagationService.propagateToNeighbors(transactionData);
+            //propagationService.propagateToNeighbors(transactionData);
+            fullNodeIPropagationService.propagateToDspNode(transactionData);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
                     .body(new AddTransactionResponse(
@@ -119,13 +125,36 @@ public class TransactionService implements ITransactionService {
         }
     }
 
-    public ResponseEntity<Response> addTransactionFromPropagation(AddTransactionRequest request)
+    private boolean validateDspValidation(TransactionData transactionData) {
+        //TODO:  validate DSP validation
+        return true;
+    }
+
+    public void addTransactionToFullNodeFromPropagation(TransactionData transactionData)
             throws TransactionException {
-        log.info("Adding a transaction from propagation request is being processed. Transaction Hash: {}", request.hash);
+        log.info("Adding a transaction from propagation. Transaction Hash: {}", transactionData.getHash());
+
+            propagationTransactionHash.put(transactionData.getHash(), transactionData);
+
+            if (!ifAllTransactionParentsExistInLocalNode(transactionData)) {
+                propagationTransactionHash.remove(transactionData.getHash());
+                //TODO: Ask DSP node for missingh transaction
+            }
+
+            if (validateDspValidation(transactionData)) {
+                attachTransactionToCluster(transactionData);
+                attachWaitingChildren(transactionData);
+                propagationTransactionHash.remove(transactionData.getHash());
+            }
+    }
+
+    public ResponseEntity<Response> addTransactionFromPropagation(TransactionData transactionData)
+            throws TransactionException {
+        log.info("Adding a transaction from propagation request is being processed. Transaction Hash: {}", transactionData.getHash());
 
         synchronized (this) {
-            if (propagationTransactionHash.containsKey(request.hash) || getTransactionData(request.hash) != null) {
-                addNodesToTransaction(request.hash, request.transactionData.getValidByNodes());
+            if (propagationTransactionHash.containsKey(transactionData.getHash()) || getTransactionData(transactionData.getHash()) != null) {
+                addNodesToTransaction(transactionData.getHash(), transactionData.getValidByNodes());
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new AddTransactionResponse(
@@ -134,11 +163,11 @@ public class TransactionService implements ITransactionService {
             }
 
 
-            propagationTransactionHash.put(request.hash, request.transactionData);
+            propagationTransactionHash.put(transactionData.getHash(), transactionData);
         }
 
-        if (!ifAllTransactionParentsExistInLocalNode(request.transactionData)) {
-            propagationTransactionHash.remove(request.hash);
+        if (!ifAllTransactionParentsExistInLocalNode(transactionData)) {
+            propagationTransactionHash.remove(transactionData.getHash());
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(new AddTransactionResponse(
@@ -146,13 +175,13 @@ public class TransactionService implements ITransactionService {
                             WAITING_FOR_TRANSACTION_PARENT_MESSAGE));
         }
 
-        ResponseEntity<Response> response = addFromPropagationAfterValidation(request.baseTransactions, request.transactionData);
+        ResponseEntity<Response> response = addFromPropagationAfterValidation(transactionData.getBaseTransactions(), transactionData);
         if ((response.getStatusCode().equals(HttpStatus.CREATED))
                 && response.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS)) {
-            propagationService.propagateToNeighbors(request.transactionData);
+            propagationService.propagateToNeighbors(transactionData);
         }
 
-        propagationTransactionHash.remove(request.hash);
+        propagationTransactionHash.remove(transactionData.getHash());
         return response;
     }
 
@@ -193,21 +222,23 @@ public class TransactionService implements ITransactionService {
         Hash rightParentHash = transactionData.getRightParentHash();
 
         GetTransactionRequest getTransactionRequest = new GetTransactionRequest();
-        boolean ifNotNeededToPropagateFromNeighbors =
+        boolean transactionParentExistInLocalNode =
                 ifTransactionParentExistInLocalNode(leftParentHash, getTransactionRequest) &&
                         ifTransactionParentExistInLocalNode(rightParentHash, getTransactionRequest);
 
 
-        if (!ifNotNeededToPropagateFromNeighbors) {
+        if (!transactionParentExistInLocalNode) {
             hashToWaitingChildrenTransactionsMapping.put(transactionData.getHash(), transactionData);
         }
-        return ifNotNeededToPropagateFromNeighbors;
+        return transactionParentExistInLocalNode;
     }
 
     private boolean ifTransactionParentExistInLocalNode(Hash parentHash, GetTransactionRequest getTransactionRequest) {
         if (parentHash != null && getTransactionData(parentHash) == null) {
             getTransactionRequest.transactionHash = parentHash;
-            propagationService.propagateFromNeighbors(getTransactionRequest.transactionHash);
+            //propagationService.propagateFromNeighbors(getTransactionRequest.transactionHash);
+            fullNodeIPropagationService.propagateFromDspNode(getTransactionRequest.transactionHash,
+                    fullNodeIPropagationService.getMainDspNodeIp());
             return false;
         }
         return true;

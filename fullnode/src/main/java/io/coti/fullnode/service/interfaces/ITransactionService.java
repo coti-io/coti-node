@@ -15,5 +15,7 @@ public interface ITransactionService {
 
     ResponseEntity<Response> getTransactionDetails(Hash transactionHash);
 
-    ResponseEntity<Response> addTransactionFromPropagation(AddTransactionRequest request);
+    ResponseEntity<Response> addTransactionFromPropagation(TransactionData transactionData);
+
+    void addTransactionToFullNodeFromPropagation(TransactionData transactionData);
 }
