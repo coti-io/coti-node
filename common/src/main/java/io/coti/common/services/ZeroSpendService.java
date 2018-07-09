@@ -13,14 +13,14 @@ public class ZeroSpendService implements IZeroSpendService {
     private int currentHashCounter = 0;
     @Override
     public TransactionData getZeroSpendTransaction(double trustScore) {
-        return new TransactionData(new Hash(currentHashCounter++), trustScore);
+        return new TransactionData(null, new Hash(currentHashCounter++) , "ZeroSpend", trustScore);
     }
 
     @Override
     public List<TransactionData> getGenesisTransactions() {
         List<TransactionData> genesisTransactions = new LinkedList<>();
         for (int trustScore = 0; trustScore <= 100; trustScore = trustScore + 10) {
-            TransactionData transactionData = new TransactionData(new Hash(currentHashCounter++), trustScore);
+            TransactionData transactionData = new TransactionData(null, new Hash(currentHashCounter++) ,"Genesis", trustScore);
             transactionData.setZeroSpend(true);
             genesisTransactions.add(transactionData);
         }

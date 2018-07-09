@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.ArrayList;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -17,22 +18,22 @@ public class TccConfirmationServiceTest {
 
     @Before
     public void init() {
-        TransactionData TransactionData0 = new TransactionData(new Hash("0".getBytes()));
+        TransactionData TransactionData0 = new TransactionData(new ArrayList<>(),new Hash("0"),"test",20);
         TransactionData0.setSenderTrustScore(80);
 
-        TransactionData TransactionData1 = new TransactionData(new Hash("1".getBytes()));
+        TransactionData TransactionData1 = new TransactionData(new ArrayList<>(),new Hash("1".getBytes()),"test",20);
         TransactionData1.setSenderTrustScore(120);
 
-        TransactionData TransactionData2 = new TransactionData(new Hash("2".getBytes()));
+        TransactionData TransactionData2 = new TransactionData(new ArrayList<>(),new Hash("2".getBytes()),"test",20);
         TransactionData2.setSenderTrustScore(100);
 
-        TransactionData TransactionData3 = new TransactionData(new Hash("3".getBytes()));
+        TransactionData TransactionData3 = new TransactionData(new ArrayList<>(),new Hash("3".getBytes()),"test",20);
         TransactionData3.setSenderTrustScore(90);
 
-        TransactionData TransactionData4 = new TransactionData(new Hash("4".getBytes()));
+        TransactionData TransactionData4 = new TransactionData(new ArrayList<>(),new Hash("4".getBytes()),"test",20);
         TransactionData4.setSenderTrustScore(100);
 
-        TransactionData TransactionData5 = new TransactionData(new Hash("5".getBytes()));
+        TransactionData TransactionData5 = new TransactionData(new ArrayList<>(),new Hash("5".getBytes()),"test",20);
         TransactionData5.setSenderTrustScore(90);
 
 

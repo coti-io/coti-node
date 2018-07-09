@@ -1,5 +1,6 @@
 package io.coti.common.data;
 
+
 import io.coti.common.data.interfaces.IEntity;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -9,11 +10,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+
 @Slf4j
 @Data
 public class TransactionData implements IEntity {
     private List<BaseTransactionData> baseTransactions;
     private transient Hash hash;
+
     private Hash leftParentHash;
     private Hash rightParentHash;
     private List<Hash> trustChainTransactionHash;
@@ -42,24 +45,10 @@ public class TransactionData implements IEntity {
     private boolean isZeroSpend;
     private String transactionDescription;
 
+
     private TransactionData() {
     }
 
-    public TransactionData(Hash transactionHash, List<BaseTransactionData> baseTransactions) {
-        this(transactionHash);
-        this.baseTransactions = baseTransactions;
-        this.baseTransactions = baseTransactions;
-        this.childrenTransactions = new Vector<>();
-
-    }
-
-    public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription) {
-        this.hash = transactionHash;
-        this.transactionDescription = transactionDescription;
-        this.baseTransactions = baseTransactions;
-        this.childrenTransactions = new Vector<>();
-
-    }
 
 
     public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription,double senderTrustScore) {
@@ -67,26 +56,20 @@ public class TransactionData implements IEntity {
         this.transactionDescription = transactionDescription;
         this.baseTransactions = baseTransactions;
         this.senderTrustScore = senderTrustScore;
-        this.childrenTransactions = new Vector<>();
 
+        this.initTransactionData();
     }
 
-    public TransactionData(Hash hash) {
-        this.hash = hash;
+    private void  initTransactionData()
+    {
         this.trustChainTransactionHash = new Vector<>();
         this.childrenTransactions = new Vector<>();
-        this.senderTrustScore = 50;
         this.processStartTime = (new Date());
-        this.dspConsensus = true;
     }
 
-    public TransactionData(Hash hash, double trustScore) {
-        this(hash);
-        this.senderTrustScore = trustScore;
-        this.attachmentTime = new Date();
-        this.childrenTransactions = new Vector<>();
 
-    }
+
+
 
     public int getRoundedSenderTrustScore() {
         return (int) Math.round(senderTrustScore);
@@ -94,10 +77,6 @@ public class TransactionData implements IEntity {
 
     public boolean isSource() {
         return childrenTransactions == null || childrenTransactions.size() == 0;
-    }
-
-    public boolean isConfirm() {
-        return trustChainConsensus && dspConsensus;
     }
 
     public void addToChildrenTransactions(Hash hash) {

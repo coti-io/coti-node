@@ -20,17 +20,14 @@ public class TransactionCryptoDecorator {
         this.txData = txData;
         for (BaseTransactionData bxData: txData.getBaseTransactions())
         {
-            baseTransactions.add(new BasicTransactionCryptoDecorator(bxData,txData.getHash()));
+            baseTransactions.add(new BasicTransactionCryptoDecorator(bxData));
         }
     }
 
-    public TransactionCryptoDecorator(List<BaseTransactionData> basicTransaction, Hash transactionHash, String transactionDescription)
+    public TransactionCryptoDecorator(List<BaseTransactionData> basicTransaction, Hash transactionHash, String transactionDescription, double senderTransactionScore)
     {
-        this.txData = new TransactionData(basicTransaction,transactionHash,transactionDescription);
-        for (BaseTransactionData bxData: txData.getBaseTransactions())
-        {
-            baseTransactions.add(new BasicTransactionCryptoDecorator(bxData,txData.getHash()));
-        }
+        this(new TransactionData(basicTransaction,transactionHash,transactionDescription,senderTransactionScore));
+
     }
 
 
@@ -67,7 +64,7 @@ public class TransactionCryptoDecorator {
 
     public boolean isTransactionValid() {
         for (BasicTransactionCryptoDecorator bxCrypto: this.baseTransactions) {
-            if (bxCrypto.IsBasicTransactionValid() ==false)
+            if (bxCrypto.IsBasicTransactionValid(txData.getHash()) ==false)
                     return false;
         }
         return this.IsTransacHashCorrect();

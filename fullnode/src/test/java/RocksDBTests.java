@@ -1,7 +1,4 @@
-import io.coti.common.data.AddressData;
-import io.coti.common.data.BaseTransactionData;
-import io.coti.common.data.Hash;
-import io.coti.common.data.TransactionData;
+import io.coti.common.data.*;
 import io.coti.common.model.*;
 import io.coti.fullnode.AppConfig;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +10,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
 
 @Slf4j
 @RunWith(SpringRunner.class)
@@ -27,7 +26,7 @@ public class RocksDBTests {
 
     @Test
     public void saveAndRetrieveSingleTransaction() {
-        TransactionData transactionData1 = new TransactionData(new Hash("TransactionData 0".getBytes()));
+        TransactionData transactionData1 = new TransactionData(new ArrayList<>(),new Hash("TransactionData 0".getBytes()),"test",5);
         transactions.put(transactionData1);
         TransactionData transactionData2 = transactions.getByHash(transactionData1.getKey());
         Assert.assertEquals(transactionData1, transactionData2);
@@ -35,8 +34,8 @@ public class RocksDBTests {
 
     @Test
     public void saveAndRetrieveWithManyTransactions() {
-        TransactionData transactionData1 = new TransactionData(new Hash("TransactionData 0".getBytes()));
-        TransactionData transactionData2 = new TransactionData(new Hash("TransactionData 2".getBytes()));
+        TransactionData transactionData1 = new TransactionData(new ArrayList<>(),new Hash("TransactionData 0".getBytes()),"test",5);
+        TransactionData transactionData2 = new TransactionData(new ArrayList<>(),new Hash("TransactionData 2".getBytes()),"test",5);
         transactions.put(transactionData1);
         transactions.put(transactionData2);
         TransactionData transactionData3 = transactions.getByHash(new Hash("TransactionData 0".getBytes()));
@@ -45,8 +44,8 @@ public class RocksDBTests {
 
     @Test
     public void saveManyAndRetrieveManyTransactions() {
-        TransactionData transactionData1 = new TransactionData(new Hash("TransactionData 0".getBytes()));
-        TransactionData transactionData2 = new TransactionData(new Hash("TransactionData 1".getBytes()));
+        TransactionData transactionData1 = new TransactionData(new ArrayList<>(),new Hash("TransactionData 0".getBytes()),"test",5);
+        TransactionData transactionData2 = new TransactionData(new ArrayList<>(),new Hash("TransactionData 1".getBytes()),"test",5);
         transactions.put(transactionData1);
         transactions.put(transactionData2);
         TransactionData transactionData3 = transactions.getByHash(new Hash("TransactionData 0".getBytes()));
@@ -58,7 +57,7 @@ public class RocksDBTests {
 
     @Test
     public void saveAndDeleteTransactions() {
-        TransactionData transactionData1 = new TransactionData(new Hash("TransactionData 0".getBytes()));
+        TransactionData transactionData1 = new TransactionData(null,new Hash("TransactionData 0".getBytes()),"test",5);
         transactions.put(transactionData1);
         TransactionData transactionData2 = transactions.getByHash(new Hash("TransactionData 0".getBytes()));
         Assert.assertEquals(transactionData1, transactionData2);
@@ -69,7 +68,7 @@ public class RocksDBTests {
 
     @Test
     public void saveAndGetBaseTransaction() {
-        BaseTransactionData baseTransactionData1 = new BaseTransactionData("ABCDEF", new BigDecimal(12.2));
+        BaseTransactionData baseTransactionData1 = new BaseTransactionData(new Hash("ABCDEF"),new BigDecimal(12.2),new Hash("ABCDEF"),new SignatureData("",""),new Date());
         baseTransactions.put(baseTransactionData1);
         BaseTransactionData baseTransactionData2 = baseTransactions.getByHash(new Hash("ABCDEF"));
         Assert.assertEquals(baseTransactionData1, baseTransactionData2);
@@ -85,7 +84,7 @@ public class RocksDBTests {
 
     @Test
     public void saveAndDeleteBaseTransactions() {
-        BaseTransactionData transaction1 = new BaseTransactionData("ABCDEF", new BigDecimal(12.2));
+        BaseTransactionData transaction1 = new BaseTransactionData(new Hash("ABCDEF"),new BigDecimal(12.2),new Hash("ABCDEF"),new SignatureData("",""),new Date());
         baseTransactions.put(transaction1);
         BaseTransactionData transaction2 = baseTransactions.getByHash("ABCDEF");
         Assert.assertEquals(transaction1, transaction2);

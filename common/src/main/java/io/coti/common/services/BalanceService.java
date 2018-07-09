@@ -99,7 +99,7 @@ public class BalanceService implements IBalanceService {
                 updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(), balanceMap);
                 publishBalanceChangeToWebSocket(confirmationData.getAddressHashToValueTransferredMapping().keySet());
                 confirmedTransactions.put(confirmationData);
-                unconfirmedTransactions.delete(confirmationData.getHash());
+                unconfirmedTransactions.delete(confirmationData.getKey());
             }
             unconfirmedDBiterator.next();
         }
@@ -179,7 +179,7 @@ public class BalanceService implements IBalanceService {
             ConfirmationData confirmationData = (ConfirmationData) SerializationUtils
                     .deserialize(unconfirmedDBiterator.value());
             if (!confirmationData.isTrustChainConsensus()) {
-                hashesForClusterService.add(confirmationData.getHash());
+                hashesForClusterService.add(confirmationData.getKey());
             }
             if (!confirmationData.isTrustChainConsensus() ||
                     !confirmationData.isDoubleSpendPreventionConsensus()) {
@@ -228,7 +228,7 @@ public class BalanceService implements IBalanceService {
             transactions.put(transactionData);
             ConfirmationData confirmationData = new ConfirmationData(transactionData);
             unconfirmedTransactions.put(confirmationData);
-            unconfirmedTransactionHashes.add(confirmationData.getHash());
+            unconfirmedTransactionHashes.add(confirmationData.getKey());
         }
         return unconfirmedTransactionHashes;
     }

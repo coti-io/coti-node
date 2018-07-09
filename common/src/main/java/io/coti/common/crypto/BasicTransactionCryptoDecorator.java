@@ -20,14 +20,25 @@ public class BasicTransactionCryptoDecorator {
 
     BaseTransactionData baseTxData;
     private static CryptoHelper crtpyoHelper = new CryptoHelper();
-    Hash transactionHash;
-    public BasicTransactionCryptoDecorator(BaseTransactionData baseTxData, Hash transactionHash)
+
+    public BasicTransactionCryptoDecorator(BaseTransactionData baseTxData)
     {
         this.baseTxData = baseTxData;
-        this.transactionHash = transactionHash;
     }
 
-    private byte[] getMessageInBytes()
+    private byte[] getMessageWithTransactionHashInBytes(Hash transactionHash)
+    {
+
+        byte[] basicTransactionBytes = this.getMessageInBytes();
+
+        ByteBuffer dateBuffer = ByteBuffer.allocate(basicTransactionBytes.length + transactionHash.getBytes().length);
+        dateBuffer.put(basicTransactionBytes).put(transactionHash.getBytes());
+
+        byte[] arrToReturn = dateBuffer.array();
+        return  arrToReturn;
+    }
+
+    public byte[] getMessageInBytes()
     {
         byte[] addressBytes = DatatypeConverter.parseHexBinary(baseTxData.getAddressHash().toHexString());
 
@@ -53,25 +64,11 @@ public class BasicTransactionCryptoDecorator {
         return  arrToReturn;
     }
 
-
-
-    private byte[] getMessageWithTransactionHashInBytes()
-    {
-
-        byte[] basicTransactionBytes = getMessageInBytes();
-
-        ByteBuffer dateBuffer = ByteBuffer.allocate(basicTransactionBytes.length + transactionHash.getBytes().length);
-        dateBuffer.put(basicTransactionBytes).put(transactionHash.getBytes());
-
-        byte[] arrToReturn = dateBuffer.array();
-        return  arrToReturn;
-    }
-
-    public String getBasicTransactionHashFromData(){
+    public Hash createBasicTransactionHashFromData(){
         Keccak.Digest256 digest = new Keccak.Digest256();
         byte[] bytesToHash = getMessageInBytes();
         digest.update(bytesToHash);
-        String hash =   Hex.toHexString( digest.digest()).toUpperCase();
+        Hash hash = new Hash(Hex.toHexString( digest.digest()).toUpperCase());
         return hash;
     }
 
@@ -80,9 +77,10 @@ public class BasicTransactionCryptoDecorator {
         return baseTxData.getHash();
     }
 
-    public boolean IsBasicTransactionValid() {
+
+    public boolean IsBasicTransactionValid(Hash transactionHash) {
         try {
-            if (!getBasicTransactionHashFromData().equals(getBasicTransactionHash().toHexString()))
+            if (!this.createBasicTransactionHashFromData().equals(getBasicTransactionHash()))
                 return false;
 
 
@@ -90,7 +88,7 @@ public class BasicTransactionCryptoDecorator {
                 return true;
 
             String addressWithoutCRC = baseTxData.getAddressHash().toString().substring(0, 128);
-            boolean checkSigning = crtpyoHelper.VerifyByPublicKey(getMessageWithTransactionHashInBytes(), baseTxData.getSignatureData().getR(), baseTxData.getSignatureData().getS(), addressWithoutCRC);
+            boolean checkSigning = crtpyoHelper.VerifyByPublicKey(getMessageWithTransactionHashInBytes(transactionHash), baseTxData.getSignatureData().getR(), baseTxData.getSignatureData().getS(), addressWithoutCRC);
             return checkSigning;
 
         } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidAlgorithmParameterException | InvalidKeySpecException e) {
