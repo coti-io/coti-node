@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
 
 @Slf4j
-@Service
 public abstract class Collection<T extends IEntity> {
 
     private String columnFamilyName = getClass().getName();

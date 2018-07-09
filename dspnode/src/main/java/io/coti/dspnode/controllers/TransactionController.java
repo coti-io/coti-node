@@ -1,7 +1,6 @@
-package io.coti.fullnode.controllers;
+package io.coti.dspnode.controllers;
 
-import io.coti.common.http.AddTransactionRequest;
-import io.coti.common.http.GetTransactionRequest;
+import io.coti.common.data.TransactionData;
 import io.coti.common.http.Response;
 import io.coti.common.services.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
@@ -13,24 +12,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 
-import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
+
 
 @Slf4j
 @RestController
 @RequestMapping("/transaction")
 public class TransactionController {
-
     @Autowired
     private ITransactionService transactionService;
 
     @RequestMapping(method = PUT)
-    public ResponseEntity<Response> addTransaction(@Valid @RequestBody AddTransactionRequest addTransactionRequest) {
-        return transactionService.addNewTransaction(addTransactionRequest);
-    }
-
-    @RequestMapping(method = POST)
-    public ResponseEntity<Response> getTransactionDetails(@Valid @RequestBody GetTransactionRequest getTransactionRequest) {
-        return transactionService.getTransactionDetails(getTransactionRequest.transactionHash);
+    public ResponseEntity<Response> addPropagatedTransaction(@Valid @RequestBody TransactionData transactionData) {
+        return transactionService.addPropagatedTransaction(transactionData);
     }
 }

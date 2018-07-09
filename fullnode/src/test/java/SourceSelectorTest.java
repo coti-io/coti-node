@@ -1,6 +1,6 @@
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
-import io.coti.fullnode.service.SourceSelector;
+import io.coti.common.services.SourceSelector;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

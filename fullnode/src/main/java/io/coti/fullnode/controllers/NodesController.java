@@ -1,7 +1,7 @@
 package io.coti.fullnode.controllers;
 
 import io.coti.common.data.GraphData;
-import io.coti.fullnode.LiveView.LiveViewService;
+import io.coti.common.services.LiveView.LiveViewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;

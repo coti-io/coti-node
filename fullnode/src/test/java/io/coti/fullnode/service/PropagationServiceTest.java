@@ -1,5 +1,6 @@
 package io.coti.fullnode.service;
 
+import io.coti.common.services.PropagationService;
 import io.coti.fullnode.controllers.PropagationController;
 import io.coti.common.data.Hash;
 import io.coti.common.http.GetTransactionRequest;
@@ -8,7 +9,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)

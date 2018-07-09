@@ -1,5 +1,5 @@
-import io.coti.fullnode.service.ValidationService;
-import io.coti.fullnode.service.interfaces.IValidationService;
+import io.coti.common.services.ValidationService;
+import io.coti.common.services.interfaces.IValidationService;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

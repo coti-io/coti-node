@@ -1,5 +1,5 @@
 import io.coti.fullnode.AppConfig;
-import io.coti.fullnode.service.BalanceService;
+import io.coti.common.services.BalanceService;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;

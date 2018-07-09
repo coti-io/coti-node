@@ -2,7 +2,7 @@ import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
 import io.coti.common.model.Transactions;
 import io.coti.fullnode.AppConfig;
-import io.coti.fullnode.service.ClusterService;
+import io.coti.common.services.ClusterService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.*;
 import org.junit.runner.RunWith;

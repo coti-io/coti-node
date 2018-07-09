@@ -1,4 +1,4 @@
-import io.coti.fullnode.service.BalanceService;
+import io.coti.common.services.BalanceService;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 

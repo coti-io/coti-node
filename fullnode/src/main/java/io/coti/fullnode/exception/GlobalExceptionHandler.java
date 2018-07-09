@@ -1,8 +1,9 @@
 package io.coti.fullnode.exception;
 
+import io.coti.common.exceptions.TransactionException;
 import io.coti.common.http.AddTransactionResponse;
 import io.coti.common.http.ExceptionResponse;
-import io.coti.fullnode.service.interfaces.IBalanceService;
+import io.coti.common.services.interfaces.IBalanceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
