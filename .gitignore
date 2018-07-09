@@ -29,3 +29,4 @@
 
 ### DB ###
 /rocksDB/
+/fullnode/rocksDB/*

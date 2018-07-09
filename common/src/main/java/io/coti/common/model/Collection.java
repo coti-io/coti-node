@@ -12,7 +12,7 @@ import org.springframework.util.SerializationUtils;
 @Slf4j
 public abstract class Collection<T extends IEntity> {
 
-    private String columnFamilyName = getClass().getName();
+    protected String columnFamilyName = getClass().getName();
 
     @Autowired
     private IDatabaseConnector databaseConnector;
