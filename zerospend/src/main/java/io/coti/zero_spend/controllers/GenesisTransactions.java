@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -22,7 +23,7 @@ public class GenesisTransactions {
         int currentHashCounter = 0;
         List<TransactionData> genesisTransactions = new LinkedList<>();
         for (int trustScore = 0; trustScore <= 100; trustScore = trustScore + 10) {
-            TransactionData transactionData = new TransactionData(new Hash(currentHashCounter++), trustScore);
+            TransactionData transactionData = new TransactionData(new ArrayList<>(),new Hash(currentHashCounter++), "genesis",trustScore);
             transactionData.setZeroSpend(true);
             genesisTransactions.add(transactionData);
         }

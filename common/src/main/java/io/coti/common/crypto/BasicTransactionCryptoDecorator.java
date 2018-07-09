@@ -2,6 +2,7 @@ package io.coti.common.crypto;
 
 import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.Hash;
+import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jcajce.provider.digest.Keccak;
 
 import javax.xml.bind.DatatypeConverter;
@@ -15,7 +16,9 @@ import java.util.*;
 
 import org.bouncycastle.util.encoders.Hex;
 
+import static com.sun.corba.se.impl.util.Utility.printStackTrace;
 
+@Slf4j
 public class BasicTransactionCryptoDecorator {
 
     BaseTransactionData baseTxData;
@@ -91,8 +94,8 @@ public class BasicTransactionCryptoDecorator {
             boolean checkSigning = crtpyoHelper.VerifyByPublicKey(getMessageWithTransactionHashInBytes(transactionHash), baseTxData.getSignatureData().getR(), baseTxData.getSignatureData().getS(), addressWithoutCRC);
             return checkSigning;
 
-        } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidAlgorithmParameterException | InvalidKeySpecException e) {
-            e.printStackTrace();
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            log.error("error", e);
             return false;
 
         }

@@ -55,7 +55,7 @@ public class CryptoHelper {
         PublicKey result = KeyFactory.getInstance(ecAlgorithm,new BouncyCastleProvider()).generatePublic(new ECPublicKeySpec(point, CryptoHelper.spec));
         return result;
     }
-    public static boolean VerifyByPublicKey(byte[] originalMessageToVerify, String rHex, String sHex, String publicKey) throws InvalidKeySpecException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
+    public static boolean VerifyByPublicKey(byte[] originalMessageToVerify, String rHex, String sHex, String publicKey) throws InvalidKeySpecException, NoSuchAlgorithmException {
         return VerifyByPublicKey(originalMessageToVerify,rHex,sHex,getPublicKeyFromHexString(publicKey));
     }
 
