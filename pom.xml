@@ -10,6 +10,7 @@
         <module>common</module>
         <module>fullnode</module>
         <module>dspnode</module>
+        <module>zerospend</module>
     </modules>
     <packaging>pom</packaging>
 

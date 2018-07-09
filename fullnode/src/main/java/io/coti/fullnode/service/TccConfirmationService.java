@@ -23,7 +23,7 @@ public class TccConfirmationService {
     public void init(ConcurrentHashMap<Hash, TransactionData> hashToUnConfirmationTransactionsMapping) {
         hashToUnTccConfirmTransactionsMapping = new ConcurrentHashMap<>();
         for (Map.Entry<Hash, TransactionData> entry : hashToUnConfirmationTransactionsMapping.entrySet()) {
-            if (!entry.getValue().isTransactionConsensus()) {
+            if (!entry.getValue().isTrustChainConsensus()) {
                 hashToUnTccConfirmTransactionsMapping.put(entry.getValue().getHash(), entry.getValue());
             }
         }
@@ -94,7 +94,7 @@ public class TccConfirmationService {
         for(TransactionData transaction : topologicalOrderedGraph) {
             setTotalTrustScore(transaction);
             if (transaction.getTrustChainTrustScore() >= threshold) {
-                transaction.setTransactionConsensus(true);
+                transaction.setTrustChainConsensus(true);
                 transaction.setTransactionConsensusUpdateTime(new Date());
                 transactionConsensusConfirmed.add(transaction.getHash());
                 log.info("transaction with hash:{} is confirmed with trustScore: {} and totalTrustScore:{} ", transaction.getHash(),transaction.getSenderTrustScore(),  transaction.getTrustChainTrustScore());

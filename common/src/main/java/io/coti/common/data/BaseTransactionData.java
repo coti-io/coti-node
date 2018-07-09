@@ -22,6 +22,8 @@ public class BaseTransactionData implements IEntity {
     private BaseTransactionData(){}
 
 
+
+
     public Hash getAddressHash()
     {
         return addressHash;

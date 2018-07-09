@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Data
@@ -19,7 +18,7 @@ public class TransactionData implements IEntity {
     private Hash rightParentHash;
     private List<Hash> trustChainTransactionHash;
     private Hash userTrustScoreTokenHashes;
-    private boolean transactionConsensus;
+    private boolean trustChainConsensus;
     private boolean dspConsensus;
     private double trustChainTrustScore;
     private Date transactionConsensusUpdateTime;
@@ -98,7 +97,7 @@ public class TransactionData implements IEntity {
     }
 
     public boolean isConfirm() {
-        return transactionConsensus && dspConsensus;
+        return trustChainConsensus && dspConsensus;
     }
 
     public void addToChildrenTransactions(Hash hash) {

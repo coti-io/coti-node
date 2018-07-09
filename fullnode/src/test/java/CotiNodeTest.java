@@ -117,7 +117,7 @@ public class CotiNodeTest {
         addTransactionRequest6.baseTransactions = baseTransactionDataList6;
         addTransactionRequest6.hash = new Hash("A6");
         addTransactionRequest6.transactionDescription = signatureMessage;
-        TransactionData transactionData6 = new TransactionData(addTransactionRequest.transactionHash, addTransactionRequest.baseTransactions);
+        TransactionData transactionData6 = new TransactionData(addTransactionRequest.hash, addTransactionRequest.baseTransactions);
         transactionData6.setLeftParentHash(new Hash("A5"));
         addTransactionRequest6.transactionData = transactionData6;
 
@@ -237,8 +237,8 @@ public class CotiNodeTest {
         balanceMap.put(hash, amount);
         preBalanceMap.put(hash, amount);
 
-    }
 
+    }
 
     private AddTransactionRequest createRequestWithOneBaseTransaction(Hash transactionHash, Hash fromAddress, Hash baseTransactionAddress, BigDecimal amount) {
         List<BaseTransactionData> baseTransactionDataList = new LinkedList<>();
@@ -266,7 +266,7 @@ public class CotiNodeTest {
         return addTransactionRequest;
     }
 
-/*
+
     private List<BaseTransactionData> createBaseTransactionRandomList(int numOfBaseTransactions) {
         List<BaseTransactionData> baseTransactionDataList = new LinkedList<>();
         Hash myAddress = new Hash(TestUtils.getRandomHexa());
@@ -292,7 +292,7 @@ public class CotiNodeTest {
 
         }
         return baseTransactionDataList;
-    }*/
+    }
 
-
-}
+*/
+    }
