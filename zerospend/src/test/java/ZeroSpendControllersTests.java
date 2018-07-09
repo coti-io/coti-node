@@ -1,9 +1,7 @@
-
 import io.coti.common.data.TransactionData;
 import io.coti.zero_spend.ZeroSpendConfiguration;
 import io.coti.zero_spend.controllers.GenesisTransactions;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.units.qual.A;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -11,16 +9,13 @@ import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
+
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = ZeroSpendConfiguration.class)
@@ -31,9 +26,9 @@ public class ZeroSpendControllersTests {
 
     @Autowired
     private GenesisTransactions genesisTransactions;
-
+/*
     @Test
-    public void aTestZeroSpendGetGenessisController(){
+    public void aTestZeroSpendGetGenessisController() {
         ResponseEntity<List<TransactionData>> genesisTransactionsResponse = genesisTransactions.getGenesisTransactions();
         List<TransactionData> zeroSpendTransactions = genesisTransactionsResponse.getBody();
         Assert.assertTrue(genesisTransactionsResponse.getStatusCode() == HttpStatus.OK);
@@ -41,9 +36,8 @@ public class ZeroSpendControllersTests {
         Assert.assertTrue(zeroSpendTransactions.size() == 11);
 
     }
-
+*/
 //    public void bTest
-
 
 
 }

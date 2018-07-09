@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/get_transaction")
-public class ZeroSpendTransactionController {
+public class ZeroSpendGetTransactionController {
 
     public ResponseEntity<TransactionData> getZeroSpendTransaction(){
 
