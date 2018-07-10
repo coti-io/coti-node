@@ -14,6 +14,8 @@ public interface IPropagationSender {
 
     List<TransactionData> propagateMultiTransactionFromDsp(int index);
 
-    Hash getLastTransactionHashFromOtherDsp(int index);
+    void propagateTransactionToSpecificDspNode(TransactionData transactionData, String node);
+
+    String getMostUpdatedDspNode();
 
 }

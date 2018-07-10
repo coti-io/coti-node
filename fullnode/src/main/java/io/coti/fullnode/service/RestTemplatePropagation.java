@@ -29,7 +29,7 @@ public class RestTemplatePropagation implements IPropagationSender {
     private RestTemplate restTemplate;
     private String requestTransactionMapping = "/propagatedTransaction";
     private List<String> dspNodesList;
-    private String mainDspNodeIp;
+    private String firstDspNodeIp;
     private String secondDspNodeIp;
 
     @PostConstruct
@@ -42,12 +42,13 @@ public class RestTemplatePropagation implements IPropagationSender {
 
     @Override
     public void propagateTransactionToDspNode(TransactionData transactionData) {
-        propagateTransactionToSpecificDspNode(transactionData, mainDspNodeIp);
+        propagateTransactionToSpecificDspNode(transactionData, firstDspNodeIp);
         propagateTransactionToSpecificDspNode(transactionData, secondDspNodeIp);
     }
 
+    @Override
     public void propagateTransactionToSpecificDspNode(TransactionData transactionData, String node) {
-        String url = node + "propagateTransactionToDsp";
+        String url = node + "/propagateTransactionToDsp";
         AddTransactionDataRequest request = new AddTransactionDataRequest();
         request.transactionData = transactionData;
         try {
@@ -58,29 +59,48 @@ public class RestTemplatePropagation implements IPropagationSender {
     }
 
     @Override
-    public TransactionData propagateTransactionFromDspByHash(Hash transactionHash) {
-        String url = mainDspNodeIp + "propagateTransactionFromDspByHash";
-        ResponseEntity<GetTransactionResponse> response = null;
-        GetTransactionDataRequest request = new GetTransactionDataRequest();
-        request.transactionHash = transactionHash;
+    public String getMostUpdatedDspNode() {
+        if (getLastIndexFromDspNode(firstDspNodeIp) >= getLastIndexFromDspNode(secondDspNodeIp)) {
+            return firstDspNodeIp;
+        }
+        return secondDspNodeIp;
+    }
 
+    private int getLastIndexFromDspNode(String dspNodeUrl) {
+        String url = dspNodeUrl + "/getLastIndex";
+        GetLastIndexRequest request = new GetLastIndexRequest();
+        ResponseEntity<GetLastIndexResponse> response = null;
         try {
             response = restTemplate.postForObject(url, request, ResponseEntity.class);
         } catch (RestClientException e) {
             log.error("Errors when propagating from url {} {}", url);
         }
-        return response.getBody().getTransactionData();
+        return response.getBody().getLastIndex();
+    }
+
+
+    @Override
+    public TransactionData propagateTransactionFromDspByHash(Hash transactionHash) {
+        TransactionData transactionData = getTransactionByHash(transactionHash, firstDspNodeIp);
+        if (transactionData != null) {
+            return transactionData;
+        }
+        return getTransactionByHash(transactionHash, secondDspNodeIp);
     }
 
     @Override
     public TransactionData propagateTransactionFromDspByIndex(int index) {
-        return getTransactionByIndex(index, mainDspNodeIp);
+        TransactionData transactionData = getTransactionByIndex(index, firstDspNodeIp);
+        if (transactionData != null) {
+            return transactionData;
+        }
+        return getTransactionByIndex(index, secondDspNodeIp);
     }
 
     @Override
     public List<TransactionData> propagateMultiTransactionFromDsp(int lastIndex) {
         ResponseEntity<GetTransactionsResponse> getTransactionsResponse = null;
-        String url = mainDspNodeIp + "propagateMultiTransactionFromDsp";
+        String url = getMostUpdatedDspNode() + "/propagateMultiTransactionFromDsp";
         GetTransactionsDataRequest getTransactionsRequest = new GetTransactionsDataRequest();
         getTransactionsRequest.lastIndex = lastIndex;
         try {
@@ -92,18 +112,25 @@ public class RestTemplatePropagation implements IPropagationSender {
         return getTransactionsResponse.getBody().getTransactionsData();
     }
 
-
-    @Override
-    public Hash getLastTransactionHashFromOtherDsp(int index) {
-        return getTransactionByIndex(index, secondDspNodeIp).getHash();
-    }
-
-
     private TransactionData getTransactionByIndex(int index, String dspNodeIp) {
-        String url = dspNodeIp + "propagateTransactionFromDspByHash";
+        String url = dspNodeIp + "/propagateTransactionFromDspByIndex";
         ResponseEntity<GetTransactionResponse> response = null;
         GetTransactionDataRequest request = new GetTransactionDataRequest();
         request.index = index;
+        try {
+            response = restTemplate.postForObject(url, request, ResponseEntity.class);
+        } catch (RestClientException e) {
+            log.error("Errors when propagating from url {} {}", url);
+        }
+        return response.getBody().getTransactionData();
+    }
+
+    private TransactionData getTransactionByHash(Hash transactionHash, String dspNodeIp) {
+        String url = dspNodeIp + "/propagateTransactionFromDspByHash";
+        GetTransactionDataRequest request = new GetTransactionDataRequest();
+        ResponseEntity<GetTransactionResponse> response = null;
+        request.transactionHash = transactionHash;
+
         try {
             response = restTemplate.postForObject(url, request, ResponseEntity.class);
         } catch (RestClientException e) {
@@ -123,8 +150,8 @@ public class RestTemplatePropagation implements IPropagationSender {
             log.error("An error while loading the nodesList", ex);
         }
         Random random = new Random();
-        mainDspNodeIp = dspNodesList.get(random.nextInt(dspNodesList.size()));
-        dspNodesList.remove(mainDspNodeIp);
+        firstDspNodeIp = dspNodesList.get(random.nextInt(dspNodesList.size()));
+        dspNodesList.remove(firstDspNodeIp);
         secondDspNodeIp = dspNodesList.get(random.nextInt(dspNodesList.size()));
 
     }

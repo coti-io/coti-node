@@ -86,23 +86,20 @@ public class PropagationService implements IPropagationService {
     }
 
     @Override
-    public List<TransactionData> propagateMultiTransactionFromDsp(int index) {
-        List<TransactionData> transactions = propagationSender.propagateMultiTransactionFromDsp(index);
+    public List<TransactionData> propagateMultiTransactionFromDsp(int lastIndex) {
+        List<TransactionData> transactions = propagationSender.propagateMultiTransactionFromDsp(lastIndex);
 
-        transactions.sort(new Comparator<TransactionData>() {
-            @Override
-            public int compare(TransactionData t1, TransactionData t2) {
-                if (t1.getIndex() > t2.getIndex()) {
-                    return 1;
-                }
-                return -1;
+        transactions.sort((t1, t2) -> {
+            if (t1.getIndex() > t2.getIndex()) {
+                return 1;
             }
+            return -1;
         });
 
-        if (transactions.get(transactions.size() - 1).getHash() == propagationSender.getLastTransactionHashFromOtherDsp(index))
+       //if (transactions.get(transactions.size() - 1).getHash() == propagationSender.getLastTransactionHashFromOtherDsp(lastIndex))
             return transactions;
         // TODO: Response if they are not equal
-        return null;
+       // return null;
     }
 
     @Override

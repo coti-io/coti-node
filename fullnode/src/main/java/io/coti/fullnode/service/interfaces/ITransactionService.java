@@ -11,6 +11,8 @@ public interface ITransactionService {
 
     ResponseEntity<Response> addNewTransaction(AddTransactionRequest request) throws TransactionException;
 
+    void setTransactionConfirmedFromPropagation(TransactionData transactionData) throws TransactionException;
+
     TransactionData getTransactionData(Hash transactionHash);
 
     ResponseEntity<Response> getTransactionDetails(Hash transactionHash);

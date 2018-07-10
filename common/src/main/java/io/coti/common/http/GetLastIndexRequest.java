@@ -1,4 +1,8 @@
 package io.coti.common.http;
 
-public class GetLastIndexRequest {
+import lombok.Data;
+
+@Data
+public class GetLastIndexRequest extends Request {
+
 }
