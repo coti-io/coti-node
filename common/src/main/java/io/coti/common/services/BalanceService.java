@@ -147,7 +147,7 @@ public class BalanceService implements IBalanceService {
                 mapTo.put(key, balance);
             }
 
-            log.info("The address {} with the value {} was added to balance map and was removed from preBalanceMap", entry.getKey(), entry.getValue());
+            log.debug("The address {} with the value {} was added to balance map and was removed from preBalanceMap", entry.getKey(), entry.getValue());
         }
     }
 
@@ -201,7 +201,7 @@ public class BalanceService implements IBalanceService {
                 }
                 Hash addressHash = new Hash(addressDetails[0]);
                 BigDecimal addressAmount = new BigDecimal(addressDetails[1]);
-                log.info("The hash {} was loaded from the snapshot with amount {}", addressHash, addressAmount);
+                log.debug("The hash {} was loaded from the snapshot with amount {}", addressHash, addressAmount);
 
                 if (balanceMap.containsKey(addressHash)) {
                     // throw new Exception(String.format("Double address found in CSV file: %s", address));
@@ -209,7 +209,7 @@ public class BalanceService implements IBalanceService {
                     throw new Exception(String.format("The address %s was already found in the snapshot", addressHash));
                 }
                 balanceMap.put(addressHash, addressAmount);
-                log.info("Loading from snapshot into inMem balance+preBalance address {} and amount {}",
+                log.debug("Loading from snapshot into inMem balance+preBalance address {} and amount {}",
                         addressHash, addressAmount);
             }
             // copy the balance to preBalance
