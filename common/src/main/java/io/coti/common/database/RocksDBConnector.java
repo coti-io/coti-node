@@ -10,6 +10,7 @@ import org.rocksdb.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
+import org.web3j.abi.datatypes.Bool;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -45,7 +46,6 @@ public class RocksDBConnector implements IDatabaseConnector {
     }
 
     private static void deleteDatabaseFolder() {
-
         File index = new File("rocksDB");
         if (!index.exists()) {
             return;
@@ -62,6 +62,7 @@ public class RocksDBConnector implements IDatabaseConnector {
     public void init() {
         log.info("Initializing RocksDB");
         if(resetDatabase) {
+            deleteDatabaseFolder();
             copyInitialDatabaseFolder();
         }
         initiateColumnFamilyDescriptors();
