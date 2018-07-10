@@ -5,6 +5,7 @@ import io.coti.common.data.TransactionData;
 import io.coti.common.services.interfaces.IZeroSpendService;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -13,7 +14,9 @@ public class ZeroSpendService implements IZeroSpendService {
     private int currentHashCounter = 0;
     @Override
     public TransactionData getZeroSpendTransaction(double trustScore) {
-        return new TransactionData(null, new Hash(currentHashCounter++) , "ZeroSpend", trustScore);
+        TransactionData transactionData =  new TransactionData(null, new Hash(currentHashCounter++) , "ZeroSpend", trustScore);
+        transactionData.setAttachmentTime(new Date(0));
+        return transactionData;
     }
 
     @Override
@@ -23,6 +26,7 @@ public class ZeroSpendService implements IZeroSpendService {
             TransactionData transactionData = new TransactionData(null, new Hash(currentHashCounter++) ,"Genesis", trustScore);
             transactionData.setZeroSpend(true);
             genesisTransactions.add(transactionData);
+            transactionData.setAttachmentTime(new Date(0));
         }
         return genesisTransactions;
     }
