@@ -7,12 +7,9 @@ import io.coti.common.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.rocksdb.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
-import org.web3j.abi.datatypes.Bool;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -24,13 +21,6 @@ import java.util.*;
 @Slf4j
 @Service
 public class RocksDBConnector implements IDatabaseConnector {
-    @Value("${application.name}")
-    private String applicationName;
-    @Value("${resetDatabase}")
-    private boolean resetDatabase;
-    private int maxNeighbourhoodRadius;
-    private String logPath;
-    private String dbPath;
     private final String initialDBPath = ".\\initialDatabase";
     private final List<String> columnFamilyClassNames = Arrays.asList(
             "DefaultColumnClassName",
@@ -40,6 +30,12 @@ public class RocksDBConnector implements IDatabaseConnector {
             ConfirmedTransactions.class.getName(),
             UnconfirmedTransactions.class.getName()
     );
+    @Value("${application.name}")
+    private String applicationName;
+    @Value("${resetDatabase}")
+    private boolean resetDatabase;
+    private String logPath;
+    private String dbPath;
     private List<ColumnFamilyDescriptor> columnFamilyDescriptors = new ArrayList<>();
     private RocksDB db;
     private Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
@@ -66,9 +62,7 @@ public class RocksDBConnector implements IDatabaseConnector {
     public void init() {
         logPath = ".\\" + applicationName + "rocksDB";
         dbPath = ".\\" + applicationName + "rocksDB";
-        log.info(applicationName);
-        log.info("Initializing RocksDB");
-        if(resetDatabase) {
+        if (resetDatabase) {
             deleteDatabaseFolder();
             copyInitialDatabaseFolder();
         }
