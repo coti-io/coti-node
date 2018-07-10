@@ -1,37 +1,17 @@
-import io.coti.common.data.BaseTransactionData;
-import io.coti.common.data.ConfirmationData;
-import io.coti.common.data.Hash;
-import io.coti.common.data.TransactionData;
-import io.coti.fullnode.controllers.TransactionController;
-import io.coti.common.crypto.CryptoUtils;
-import io.coti.common.http.AddTransactionRequest;
-import io.coti.common.http.HttpStringConstants;
-import io.coti.common.http.Response;
 import io.coti.common.model.ConfirmedTransactions;
 import io.coti.common.model.UnconfirmedTransactions;
 import io.coti.fullnode.AppConfig;
+import io.coti.fullnode.controllers.TransactionController;
 import io.coti.fullnode.service.interfaces.IBalanceService;
 import io.coti.fullnode.service.interfaces.IPropagationService;
 import io.coti.fullnode.service.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
 import org.junit.FixMethodOrder;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(SpringRunner.class)

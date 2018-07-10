@@ -2,19 +2,18 @@ package io.coti.fullnode.service;
 
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
-import io.coti.common.http.GetTransactionsRequest;
-import io.coti.common.http.GetTransactionsResponse;
-import io.coti.common.http.Response;
-import org.springframework.http.ResponseEntity;
+
+import java.util.List;
 
 public interface IPropagationSender {
-    void propagateTransactionToNeighbor(TransactionData transactionData, String nodeIp);
+    void propagateTransactionToDspNode(TransactionData transactionData);
 
-    ResponseEntity<Response> propagateTransactionFromNeighbor(Hash transactionHash, String nodeIp);
+    TransactionData propagateTransactionFromDspByHash(Hash transactionHash);
 
-    GetTransactionsResponse propagateMultiTransactionFromNeighbor(GetTransactionsRequest getTransactionsRequest, String nodeIp);
+    TransactionData propagateTransactionFromDspByIndex(int index);
 
-    GetTransactionsResponse propagateMultiTransactionFromNeighbor(int index, String nodeIp);
+    List<TransactionData> propagateMultiTransactionFromDsp(int index);
 
-    //void propagateMultiTransactionToNeighbor(AddTransactionsRequest request, String nodeIp);
+    Hash getLastTransactionHashFromOtherDsp(int index);
+
 }

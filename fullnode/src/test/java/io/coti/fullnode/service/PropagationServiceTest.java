@@ -1,14 +1,11 @@
 package io.coti.fullnode.service;
 
 import io.coti.fullnode.controllers.PropagationController;
-import io.coti.common.data.Hash;
-import io.coti.common.http.GetTransactionRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
@@ -22,32 +19,30 @@ public class PropagationServiceTest {
     private PropagationController propagationController;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp () throws Exception {
 
     }
 
     @Test
-    public void propagateToNeighbors() {
+    public void propagateToNeighbors () {
 
     }
 
     @Test
-    public void propagateFromNeighbors() {
-        GetTransactionRequest getTransactionRequest = new GetTransactionRequest();
-        getTransactionRequest.transactionHash = new Hash("01");
-        propagationService.propagateFromNeighbors(getTransactionRequest.transactionHash);
+    public void propagateFromNeighbors () {
+
     }
 
 
     @Test
-    public void getTransactionFromCurrentNode() {
+    public void getTransactionFromCurrentNode () {
     }
 
     @Test
-    public void loadNodesList() {
+    public void loadNodesList () {
     }
 
     @Test
-    public void loadCurrentNode() {
+    public void loadCurrentNode () {
     }
 }

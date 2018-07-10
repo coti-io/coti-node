@@ -7,14 +7,7 @@ import io.coti.common.data.TransactionData;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
-public class AddTransactionRequest extends Request {
+public class AddTransactionDataRequest extends Request {
     @NotNull
-    public List<BaseTransactionData> baseTransactions;
-    @NotNull
-    public Hash hash;
-    @NotNull
-    public String transactionDescription;
-
+    public TransactionData transactionData;
 }
-
-

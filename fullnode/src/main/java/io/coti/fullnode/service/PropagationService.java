@@ -2,24 +2,16 @@ package io.coti.fullnode.service;
 
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
-import io.coti.common.http.GetTransactionRequest;
-import io.coti.common.http.GetTransactionsRequest;
-import io.coti.common.http.Response;
-import io.coti.common.model.Transactions;
 import io.coti.fullnode.service.interfaces.IPropagationService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
+import java.io.*;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
 
@@ -27,99 +19,102 @@ import java.util.Scanner;
 @Slf4j
 @Service
 public class PropagationService implements IPropagationService {
-    @Value("${nodes.file}")
-    private String nodesFile;
 
-    @Value("${current.node.file}")
-    private String currentNodeFile;
-
-    @Autowired
-    private Transactions transactions;
+    @Value("${last.transaction.file}")
+    private String lastTransactionFile;
 
     @Autowired
     private IPropagationSender propagationSender;
 
-    private List<String> neighborsNodeIps;
-    private String currentNodeIp;
+    private int lastIndex;
+    private Hash lastTransactionHash;
+
 
     @PostConstruct
     private void init() {
-        log.info("Propagation io.coti.fullnode.service Started");
-        neighborsNodeIps = new ArrayList<>();
-        loadNodesList();
-        loadCurrentNode();
+        log.info("full node Propagation service Started");
+        loadLastTransactionFromFile();
     }
 
-    public void propagateToNeighbors(TransactionData transactionData) {
-        transactionData.getValidByNodes().put(currentNodeIp, true);
-        for (String nodeIp : neighborsNodeIps) {
-            propagationSender.propagateTransactionToNeighbor(transactionData, nodeIp);
-        }
-    }
+    private void loadLastTransactionFromFile() {
 
-
-    public void propagateFromNeighbors(Hash transactionHash) {
-        for (String nodeIp : neighborsNodeIps) {
-            propagationSender.propagateTransactionFromNeighbor(transactionHash, nodeIp);
-        }
-    }
-
-    public ResponseEntity<TransactionData> getTrasaction(TransactionData transactionData) {
-        List<TransactionData> transactionDatas = null;
-        // TODO: Implementing getting all transaction, or from the attachment time;
-//        if (transactionData == null) {
-//            propagateFromNeighbors(getTransactionRequest);
-//            return ResponseEntity.status(HttpStatus.NO_CONTENT)
-//                    .body(new AddTransactionResponse(
-//                            STATUS_SUCCESS,
-//                            TRANSACTION_CURRENTLY_MISSING_MESSAGE));
-//        }
-//        return ResponseEntity.status(HttpStatus.OK)
-//                .body(new GetTransactionResponse(transactions.getByHash(getTransactionRequest.transactionHash)));
-        return null;
-    }
-
-    public ResponseEntity getTransaction(GetTransactionRequest getTransactionRequest) {
-        TransactionData transactionData = transactions.getByHash(getTransactionRequest.transactionHash);
-        if (transactionData != null) {
-            propagateToNeighbors(transactionData);
-        } else {
-            for (String neighborIp :
-                    neighborsNodeIps) {
-
-
+        try {
+            Scanner scanner = new Scanner(new File(lastTransactionFile));
+            if (scanner.hasNextLine()) {
+                lastIndex = Integer.parseInt(scanner.nextLine());
+            } else {
+                lastIndex = -1;
             }
-            propagateFromNeighbors(getTransactionRequest.transactionHash);
+            if (scanner.hasNextLine()) {
+                lastTransactionHash = new Hash(scanner.nextLine());
+            }
+            scanner.close();
+        } catch (FileNotFoundException e) {
+            log.error("Error loading from lastTransaction file", e);
         }
-        return new ResponseEntity(HttpStatus.OK);
     }
 
     @Override
-    public ResponseEntity<Response> getTransactionsFromCurrentNode(GetTransactionsRequest getTransactionsRequest) {
+    public void updateLastTransactionFromFile() {
+        PrintWriter pw = null;
+        try {
+            pw = new PrintWriter(new FileWriter("out.txt"));
+        } catch (IOException e) {
+            log.error("Error saving to lastTransaction file", e);
+        }
+
+        pw.write(lastIndex);
+        pw.write(lastTransactionHash.toString());
+
+        pw.close();
+    }
+
+
+    @Override
+    public void propagateTransactionToDspNode(TransactionData transactionData) {
+        propagationSender.propagateTransactionToDspNode(transactionData);
+    }
+
+    @Override
+    public TransactionData propagateTransactionFromDspByHash(Hash transactionHash) {
+        return propagationSender.propagateTransactionFromDspByHash(transactionHash);
+    }
+
+    @Override
+    public TransactionData propagateTransactionFromDspByIndex(int index) {
+        return propagationSender.propagateTransactionFromDspByIndex(index);
+    }
+
+    @Override
+    public List<TransactionData> propagateMultiTransactionFromDsp(int index) {
+        List<TransactionData> transactions = propagationSender.propagateMultiTransactionFromDsp(index);
+
+        transactions.sort(new Comparator<TransactionData>() {
+            @Override
+            public int compare(TransactionData t1, TransactionData t2) {
+                if (t1.getIndex() > t2.getIndex()) {
+                    return 1;
+                }
+                return -1;
+            }
+        });
+
+        if (transactions.get(transactions.size() - 1).getHash() == propagationSender.getLastTransactionHashFromOtherDsp(index))
+            return transactions;
+        // TODO: Response if they are not equal
         return null;
     }
 
-    public void loadNodesList() {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File file = new File(classLoader.getResource(nodesFile).getFile());
-        try (Scanner scanner = new Scanner(file)) {
-            while (scanner.hasNextLine()) {
-                neighborsNodeIps.add(scanner.nextLine().trim());
+    @Override
+    public void updateLastIndex(TransactionData transactionData) {
+        synchronized (this) {
+            if (transactionData.getIndex() > lastIndex) {
+                lastIndex = transactionData.getIndex();
+                lastTransactionHash = transactionData.getHash();
+                updateLastTransactionFromFile();
             }
-        } catch (Exception ex) {
-            log.error("An error while loading the nodesList", ex);
         }
     }
 
-
-    public void loadCurrentNode() {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File file = new File(classLoader.getResource(currentNodeFile).getFile());
-        try {
-            currentNodeIp = FileUtils.readFileToString(file).trim();
-        } catch (IOException e) {
-            log.error("An error while loading the current node", e);
-        }
-    }
 
 }

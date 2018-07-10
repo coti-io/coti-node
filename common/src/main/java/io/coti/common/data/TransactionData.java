@@ -42,6 +42,7 @@ public class TransactionData implements IEntity {
     private transient boolean isVisit;
     private boolean isZeroSpend;
     private String transactionDescription;
+    private int index;
 
     private TransactionData() {
     }
