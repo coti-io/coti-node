@@ -7,7 +7,9 @@ import io.coti.common.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.rocksdb.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
 import org.web3j.abi.datatypes.Bool;
@@ -22,6 +24,8 @@ import java.util.*;
 @Slf4j
 @Service
 public class RocksDBConnector implements IDatabaseConnector {
+    @Autowired
+    private ApplicationContext applicationContext;
     @Value("${resetDatabase}")
     private boolean resetDatabase;
     private int maxNeighbourhoodRadius;
@@ -60,6 +64,7 @@ public class RocksDBConnector implements IDatabaseConnector {
 
     @PostConstruct
     public void init() {
+        log.info(applicationContext.getId());
         log.info("Initializing RocksDB");
         if(resetDatabase) {
             deleteDatabaseFolder();

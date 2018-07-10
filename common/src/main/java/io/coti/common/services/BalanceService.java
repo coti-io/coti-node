@@ -2,15 +2,15 @@ package io.coti.common.services;
 
 import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.ConfirmationData;
-import io.coti.common.data.TransactionData;
-import io.coti.common.services.LiveView.LiveViewService;
 import io.coti.common.data.Hash;
+import io.coti.common.data.TransactionData;
 import io.coti.common.http.GetBalancesRequest;
 import io.coti.common.http.GetBalancesResponse;
-import io.coti.common.services.LiveView.WebSocketSender;
 import io.coti.common.model.ConfirmedTransactions;
 import io.coti.common.model.Transactions;
 import io.coti.common.model.UnconfirmedTransactions;
+import io.coti.common.services.LiveView.LiveViewService;
+import io.coti.common.services.LiveView.WebSocketSender;
 import io.coti.common.services.interfaces.IBalanceService;
 import io.coti.common.services.interfaces.IClusterService;
 import io.coti.common.services.interfaces.IQueueService;
@@ -65,27 +65,23 @@ public class BalanceService implements IBalanceService {
     private Map<Hash, BigDecimal> preBalanceMap;
 
     @PostConstruct
-    private void init() {
+    private void init() throws Exception {
         balanceMap = new ConcurrentHashMap<>();
         preBalanceMap = new ConcurrentHashMap<>();
         loadBalanceFromSnapshot();
-        try {
 //            deleteConfirmedTransactions();
-            // TODO: call RestTemplatePropagation.propagateMultiTransactionFromNeighbor (with no parameter of fromAttachmentTimeStampIfThere AreNoTransactions)
-            // Then set all transactions on TCC=0, sort them topological, and  call for  every transaction to TransactionService.addPropagatedTransaction
-            List<Hash> hashesForClusterService;
-            if (unconfirmedTransactions.isEmpty()) {
-                throw new Exception("No cluster data exists!");
-            } else {
-                hashesForClusterService = readUnconfirmedTransactionsFromDB();
-            }
-            clusterService.setInitialUnconfirmedTransactions(hashesForClusterService);
-            readConfirmedTransactionsFromDB();
-
-            log.info("Balance service is up");
-        } catch (Exception ex) {
-            log.error("Errors on initiation ", ex);
+        // TODO: call RestTemplatePropagation.propagateMultiTransactionFromNeighbor (with no parameter of fromAttachmentTimeStampIfThere AreNoTransactions)
+        // Then set all transactions on TCC=0, sort them topological, and  call for  every transaction to TransactionService.addPropagatedTransaction
+        List<Hash> hashesForClusterService;
+        if (unconfirmedTransactions.isEmpty()) {
+            throw new Exception("No cluster data exists!");
+        } else {
+            hashesForClusterService = readUnconfirmedTransactionsFromDB();
         }
+        clusterService.setInitialUnconfirmedTransactions(hashesForClusterService);
+        readConfirmedTransactionsFromDB();
+
+        log.info("Balance service is up");
     }
 
     private void deleteConfirmedTransactions() {
@@ -190,7 +186,7 @@ public class BalanceService implements IBalanceService {
         return hashesForClusterService;
     }
 
-    private void loadBalanceFromSnapshot() {
+    private void loadBalanceFromSnapshot() throws Exception {
         String snapshotFileLocation = "./Snapshot.csv";
         File snapshotFile = new File(snapshotFileLocation);
 
@@ -210,16 +206,17 @@ public class BalanceService implements IBalanceService {
                 if (balanceMap.containsKey(addressHash)) {
                     // throw new Exception(String.format("Double address found in CSV file: %s", address));
                     log.error("The address {} was already found in the snapshot", addressHash);
+                    throw new Exception(String.format("The address %s was already found in the snapshot", addressHash));
                 }
                 balanceMap.put(addressHash, addressAmount);
                 log.info("Loading from snapshot into inMem balance+preBalance address {} and amount {}",
                         addressHash, addressAmount);
-
             }
             // copy the balance to preBalance
             preBalanceMap.putAll(balanceMap);
         } catch (Exception e) {
             log.error("Errors on snapshot loading: {}", e);
+            throw e;
         }
     }
 
@@ -280,7 +277,6 @@ public class BalanceService implements IBalanceService {
     @Override
     public void insertToUnconfirmedTransactions(ConfirmationData confirmationData) {
         setDSPCtoTrueAndInsertToUnconfirmed(confirmationData);
-
     }
 
     @Override
@@ -297,7 +293,6 @@ public class BalanceService implements IBalanceService {
         getBalancesResponse.setAmounts(amounts);
         return ResponseEntity.status(HttpStatus.OK).body(getBalancesResponse);
     }
-
 
     public Map<Hash, BigDecimal> getBalanceMap() {
         return balanceMap;
