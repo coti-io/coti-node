@@ -24,13 +24,13 @@ import java.util.*;
 @Slf4j
 @Service
 public class RocksDBConnector implements IDatabaseConnector {
-    @Autowired
-    private ApplicationContext applicationContext;
+    @Value("${application.name}")
+    private String applicationName;
     @Value("${resetDatabase}")
     private boolean resetDatabase;
     private int maxNeighbourhoodRadius;
-    private final String logPath = ".\\rocksDB";
-    private final String dbPath = ".\\rocksDB";
+    private String logPath;
+    private String dbPath;
     private final String initialDBPath = ".\\initialDatabase";
     private final List<String> columnFamilyClassNames = Arrays.asList(
             "DefaultColumnClassName",
@@ -64,7 +64,9 @@ public class RocksDBConnector implements IDatabaseConnector {
 
     @PostConstruct
     public void init() {
-        log.info(applicationContext.getId());
+        logPath = ".\\" + applicationName + "rocksDB";
+        dbPath = ".\\" + applicationName + "rocksDB";
+        log.info(applicationName);
         log.info("Initializing RocksDB");
         if(resetDatabase) {
             deleteDatabaseFolder();

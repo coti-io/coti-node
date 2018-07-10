@@ -30,3 +30,5 @@
 ### DB ###
 /rocksDB/
 /fullnode/rocksDB/*
+/DSPNoderocksDB/
+/FullNoderocksDB/
