@@ -7,6 +7,7 @@ import io.coti.common.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.rocksdb.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
 
@@ -20,6 +21,9 @@ import java.util.*;
 @Slf4j
 @Service
 public class RocksDBConnector implements IDatabaseConnector {
+    @Value("${resetDatabase}")
+    private boolean resetDatabase;
+    private int maxNeighbourhoodRadius;
     private final String logPath = ".\\rocksDB";
     private final String dbPath = ".\\rocksDB";
     private final String initialDBPath = ".\\initialDatabase";
@@ -57,7 +61,9 @@ public class RocksDBConnector implements IDatabaseConnector {
     @PostConstruct
     public void init() {
         log.info("Initializing RocksDB");
-        copyInitialDatabaseFolder();
+        if(resetDatabase) {
+            copyInitialDatabaseFolder();
+        }
         initiateColumnFamilyDescriptors();
         try {
             loadLibrary();
