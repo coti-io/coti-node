@@ -66,17 +66,16 @@ public class BalanceService implements IBalanceService {
 
     @PostConstruct
     private void init() {
+        balanceMap = new ConcurrentHashMap<>();
+        preBalanceMap = new ConcurrentHashMap<>();
+        loadBalanceFromSnapshot();
         try {
-            balanceMap = new ConcurrentHashMap<>();
-            preBalanceMap = new ConcurrentHashMap<>();
-
-            loadBalanceFromSnapshot();
-            deleteConfirmedTransactions();
+//            deleteConfirmedTransactions();
             // TODO: call RestTemplatePropagation.propagateMultiTransactionFromNeighbor (with no parameter of fromAttachmentTimeStampIfThere AreNoTransactions)
             // Then set all transactions on TCC=0, sort them topological, and  call for  every transaction to TransactionService.addPropagatedTransaction
             List<Hash> hashesForClusterService;
             if (unconfirmedTransactions.isEmpty()) {
-                hashesForClusterService = generateGenesisTransactions();
+                throw new Exception("No cluster data exists!");
             } else {
                 hashesForClusterService = readUnconfirmedTransactionsFromDB();
             }
@@ -90,18 +89,20 @@ public class BalanceService implements IBalanceService {
     }
 
     private void deleteConfirmedTransactions() {
-        RocksIterator unconfirmedDBiterator = unconfirmedTransactions.getIterator();
-        unconfirmedDBiterator.seekToFirst();
-        while (unconfirmedDBiterator.isValid()) {
+        RocksIterator unconfirmedDBIterator = unconfirmedTransactions.getIterator();
+        unconfirmedDBIterator.seekToFirst();
+        while (unconfirmedDBIterator.isValid()) {
             ConfirmationData confirmationData = (ConfirmationData) SerializationUtils
-                    .deserialize(unconfirmedDBiterator.value());
+                    .deserialize(unconfirmedDBIterator.value());
+            confirmationData.setKey(new Hash(unconfirmedDBIterator.key()));
             if (confirmationData.isTrustChainConsensus() && confirmationData.isDoubleSpendPreventionConsensus()) {
                 updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(), balanceMap);
                 publishBalanceChangeToWebSocket(confirmationData.getAddressHashToValueTransferredMapping().keySet());
                 confirmedTransactions.put(confirmationData);
                 unconfirmedTransactions.delete(confirmationData.getKey());
+                log.info("Moved unconfirmed transaction to be confirmed: {}", confirmationData.getKey());
             }
-            unconfirmedDBiterator.next();
+            unconfirmedDBIterator.next();
         }
     }
 
@@ -134,12 +135,10 @@ public class BalanceService implements IBalanceService {
         }
     }
 
-
     private void setDSPCtoTrueAndInsertToUnconfirmed(ConfirmationData confirmationData) {
         confirmationData.setDoubleSpendPreventionConsensus(true);
         unconfirmedTransactions.put(confirmationData);
     }
-
 
     private void updateBalanceMap(Map<Hash, BigDecimal> mapFrom, Map<Hash, BigDecimal> mapTo) {
         for (Map.Entry<Hash, BigDecimal> entry : mapFrom.entrySet()) {
@@ -172,12 +171,13 @@ public class BalanceService implements IBalanceService {
     private List<Hash> readUnconfirmedTransactionsFromDB() {
         List<Hash> hashesForClusterService = new LinkedList<>();
 
-        RocksIterator unconfirmedDBiterator = unconfirmedTransactions.getIterator();
-        unconfirmedDBiterator.seekToFirst();
+        RocksIterator unconfirmedDBIterator = unconfirmedTransactions.getIterator();
+        unconfirmedDBIterator.seekToFirst();
 
-        while (unconfirmedDBiterator.isValid()) {
+        while (unconfirmedDBIterator.isValid()) {
             ConfirmationData confirmationData = (ConfirmationData) SerializationUtils
-                    .deserialize(unconfirmedDBiterator.value());
+                    .deserialize(unconfirmedDBIterator.value());
+            confirmationData.setKey(new Hash(unconfirmedDBIterator.key()));
             if (!confirmationData.isTrustChainConsensus()) {
                 hashesForClusterService.add(confirmationData.getKey());
             }
@@ -185,12 +185,13 @@ public class BalanceService implements IBalanceService {
                     !confirmationData.isDoubleSpendPreventionConsensus()) {
                 updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(), preBalanceMap);
             }
+            unconfirmedDBIterator.next();
         }
         return hashesForClusterService;
     }
 
     private void loadBalanceFromSnapshot() {
-        String snapshotFileLocation = "./../Snapshot.csv";
+        String snapshotFileLocation = "./Snapshot.csv";
         File snapshotFile = new File(snapshotFileLocation);
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(snapshotFile))) {

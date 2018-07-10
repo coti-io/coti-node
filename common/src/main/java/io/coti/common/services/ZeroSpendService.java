@@ -1,5 +1,6 @@
 package io.coti.common.services;
 
+import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
 import io.coti.common.services.interfaces.IZeroSpendService;
@@ -25,6 +26,7 @@ public class ZeroSpendService implements IZeroSpendService {
         for (int trustScore = 0; trustScore <= 100; trustScore = trustScore + 10) {
             TransactionData transactionData = new TransactionData(null, new Hash(currentHashCounter++) ,"Genesis", trustScore);
             transactionData.setZeroSpend(true);
+            transactionData.setAttachmentTime(new Date());
             genesisTransactions.add(transactionData);
             transactionData.setAttachmentTime(new Date(0));
         }

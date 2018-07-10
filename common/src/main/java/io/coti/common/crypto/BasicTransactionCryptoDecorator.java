@@ -4,33 +4,26 @@ import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.Hash;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jcajce.provider.digest.Keccak;
+import org.bouncycastle.util.encoders.Hex;
 
 import javax.xml.bind.DatatypeConverter;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.*;
-
-import org.bouncycastle.util.encoders.Hex;
-
-import static com.sun.corba.se.impl.util.Utility.printStackTrace;
+import java.util.Date;
 
 @Slf4j
 public class BasicTransactionCryptoDecorator {
 
-    BaseTransactionData baseTxData;
     private static CryptoHelper crtpyoHelper = new CryptoHelper();
+    BaseTransactionData baseTxData;
 
-    public BasicTransactionCryptoDecorator(BaseTransactionData baseTxData)
-    {
+    public BasicTransactionCryptoDecorator(BaseTransactionData baseTxData) {
         this.baseTxData = baseTxData;
     }
 
-    private byte[] getMessageWithTransactionHashInBytes(Hash transactionHash)
-    {
+    private byte[] getMessageWithTransactionHashInBytes(Hash transactionHash) {
 
         byte[] basicTransactionBytes = this.getMessageInBytes();
 
@@ -38,11 +31,10 @@ public class BasicTransactionCryptoDecorator {
         dateBuffer.put(basicTransactionBytes).put(transactionHash.getBytes());
 
         byte[] arrToReturn = dateBuffer.array();
-        return  arrToReturn;
+        return arrToReturn;
     }
 
-    public byte[] getMessageInBytes()
-    {
+    public byte[] getMessageInBytes() {
         byte[] addressBytes = DatatypeConverter.parseHexBinary(baseTxData.getAddressHash().toHexString());
 
         String decimalStringRepresentation = DatatypeConverter.printDecimal(baseTxData.getAmount());
@@ -54,7 +46,7 @@ public class BasicTransactionCryptoDecorator {
         byte[] IndexByteArray = bufferIndex.array();
 
         Date baseTransactionDate = baseTxData.getCreateTime();
-        int interval = (int)(baseTransactionDate.getTime());
+        int interval = (int) (baseTransactionDate.getTime());
 
         ByteBuffer dateBuffer = ByteBuffer.allocate(4);
         dateBuffer.putInt(interval);
@@ -64,19 +56,18 @@ public class BasicTransactionCryptoDecorator {
                 put(addressBytes).put(IndexByteArray).put(bytesOfAmount).put(dateBuffer.array());
 
         byte[] arrToReturn = baseTransactionArray.array();
-        return  arrToReturn;
+        return arrToReturn;
     }
 
-    public Hash createBasicTransactionHashFromData(){
+    public Hash createBasicTransactionHashFromData() {
         Keccak.Digest256 digest = new Keccak.Digest256();
         byte[] bytesToHash = getMessageInBytes();
         digest.update(bytesToHash);
-        Hash hash = new Hash(Hex.toHexString( digest.digest()).toUpperCase());
+        Hash hash = new Hash(Hex.toHexString(digest.digest()).toUpperCase());
         return hash;
     }
 
-    public Hash getBasicTransactionHash()
-    {
+    public Hash getBasicTransactionHash() {
         return baseTxData.getHash();
     }
 

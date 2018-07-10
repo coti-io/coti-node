@@ -5,6 +5,7 @@ import io.coti.common.data.interfaces.IEntity;
 import io.coti.common.database.Interfaces.IDatabaseConnector;
 import io.coti.common.model.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.rocksdb.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
@@ -12,6 +13,7 @@ import org.springframework.util.SerializationUtils;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -20,6 +22,7 @@ import java.util.*;
 public class RocksDBConnector implements IDatabaseConnector {
     private final String logPath = ".\\rocksDB";
     private final String dbPath = ".\\rocksDB";
+    private final String initialDBPath = ".\\initialDatabase";
     private final List<String> columnFamilyClassNames = Arrays.asList(
             "DefaultColumnClassName",
             Transactions.class.getName(),
@@ -54,7 +57,7 @@ public class RocksDBConnector implements IDatabaseConnector {
     @PostConstruct
     public void init() {
         log.info("Initializing RocksDB");
-        deleteDatabaseFolder();
+        copyInitialDatabaseFolder();
         initiateColumnFamilyDescriptors();
         try {
             loadLibrary();
@@ -68,7 +71,14 @@ public class RocksDBConnector implements IDatabaseConnector {
             log.error("Error initiating Rocks DB");
             e.printStackTrace();
         }
+    }
 
+    private void copyInitialDatabaseFolder() {
+        try {
+            FileUtils.copyDirectory(new File(initialDBPath), new File(dbPath));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void populateColumnFamilies() {
@@ -100,9 +110,9 @@ public class RocksDBConnector implements IDatabaseConnector {
         try {
             ReadOptions readOptions = new ReadOptions();
 
-            ColumnFamilyHandle coulumnFamilyHandler = classNameToColumnFamilyHandleMapping.get(coulumnFamilyName);
-            it = db.newIterator(coulumnFamilyHandler, readOptions);
-            if (coulumnFamilyHandler == null) {
+            ColumnFamilyHandle columnFamilyHandler = classNameToColumnFamilyHandleMapping.get(coulumnFamilyName);
+            it = db.newIterator(columnFamilyHandler, readOptions);
+            if (columnFamilyHandler == null) {
                 log.error("Column family {} iterator wasn't found ", coulumnFamilyName);
             }
         } catch (Exception ex) {
@@ -113,7 +123,9 @@ public class RocksDBConnector implements IDatabaseConnector {
 
     @Override
     public boolean isEmpty(String columnFamilyName) {
-        return !getIterator(columnFamilyName).isValid();
+        RocksIterator iterator = getIterator(columnFamilyName);
+        iterator.seekToFirst();
+        return !iterator.isValid();
     }
 
 
