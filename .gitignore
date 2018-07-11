@@ -2,6 +2,7 @@
 /fullnode/target/
 /dspnode/target/
 /common/target/
+/zerospend/target/
 !.mvn/wrapper/maven-wrapper.jar
 
 ### STS ###
@@ -32,3 +33,10 @@
 /fullnode/rocksDB/*
 /DSPNoderocksDB/
 /FullNoderocksDB/
+
+
+*.jar
+*.class
+MANIFEST.MF
+*.original
+/zerospend/target/

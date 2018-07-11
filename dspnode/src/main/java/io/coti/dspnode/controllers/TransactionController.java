@@ -3,6 +3,7 @@ package io.coti.dspnode.controllers;
 import io.coti.common.data.TransactionData;
 import io.coti.common.http.Response;
 import io.coti.common.services.interfaces.ITransactionService;
+import io.coti.dspnode.services.TransactionReceiverService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,10 +21,10 @@ import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 @RequestMapping("/transaction")
 public class TransactionController {
     @Autowired
-    private ITransactionService transactionService;
+    private TransactionReceiverService transactionReceiverService;
 
     @RequestMapping(method = PUT)
-    public ResponseEntity<Response> addPropagatedTransaction(@Valid @RequestBody TransactionData transactionData) {
-        return transactionService.addPropagatedTransaction(transactionData);
+    public ResponseEntity<Response> addPropagatedTransactionFromFullNode(@Valid @RequestBody TransactionData transactionData) {
+        return transactionReceiverService.addPropagatedTransactionFromFullNode(transactionData);
     }
 }

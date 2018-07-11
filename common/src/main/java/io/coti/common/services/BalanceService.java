@@ -74,7 +74,7 @@ public class BalanceService implements IBalanceService {
         // Then set all transactions on TCC=0, sort them topological, and  call for  every transaction to TransactionService.addPropagatedTransaction
         List<Hash> hashesForClusterService;
         if (unconfirmedTransactions.isEmpty()) {
-            throw new Exception("0!");
+            throw new Exception("Database is empty! please use --resetData=true");
         } else {
             hashesForClusterService = readUnconfirmedTransactionsFromDB();
         }

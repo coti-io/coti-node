@@ -57,49 +57,6 @@ public class TransactionService implements ITransactionService {
         propagationTransactionHash = new ConcurrentHashMap();
     }
 
-    public ResponseEntity addPropagatedTransaction(TransactionData transactionData)
-            throws TransactionException {
-        log.info("New transaction request is being processed. Transaction Hash: {}", transactionData.getHash());
-        if (!validateAddresses(transactionData.getBaseTransactions(), transactionData.getHash(), transactionData.getTransactionDescription(), transactionData.getSenderTrustScore())) {
-            log.info("Failed to validate addresses!");
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(new AddTransactionResponse(
-                            STATUS_ERROR,
-                            AUTHENTICATION_FAILED_MESSAGE));
-        }
-
-        if (!isLegalBalance(transactionData.getBaseTransactions())) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(new AddTransactionResponse(
-                            STATUS_ERROR,
-                            ILLEGAL_TRANSACTION_MESSAGE));
-        }
-
-        if (!balanceService.checkBalancesAndAddToPreBalance(transactionData.getBaseTransactions())) {
-            log.info("Pre balance check failed!");
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(new AddTransactionResponse(
-                            STATUS_ERROR,
-                            INSUFFICIENT_FUNDS_MESSAGE));
-        }
-        try {
-            attachTransactionToCluster(transactionData);
-//            transactionData.setSenderNodeIpAddress(propagationService.getCurrentNodeIp());
-//            propagationService.propagateToNeighbors(transactionData);
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(new AddTransactionResponse(
-                            STATUS_SUCCESS,
-                            TRANSACTION_CREATED_MESSAGE));
-        } catch (Exception ex) {
-            log.error("Exception while adding a transaction", ex);
-            throw new TransactionException(ex, transactionData.getBaseTransactions());
-        }
-    }
-
     @Override
     public ResponseEntity<Response> addNewTransaction(AddTransactionRequest request)
             throws TransactionException {

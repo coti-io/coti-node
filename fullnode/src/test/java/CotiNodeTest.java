@@ -122,9 +122,9 @@ public class CotiNodeTest {
         transactionData6.setLeftParentHash(new Hash("A5"));
         addTransactionRequest6.transactionData = transactionData6;
 
-        ResponseEntity<Response> responseEntity6 = transactionService.addPropagatedTransaction(transactionData6);
-        Assert.assertTrue(responseEntity6.getStatusCode().equals(HttpStatus.CREATED));
-        Assert.assertTrue(responseEntity6.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
+//        ResponseEntity<Response> responseEntity6 = transactionService.addPropagatedTransactionFromFullNode(transactionData6);
+//        Assert.assertTrue(responseEntity6.getStatusCode().equals(HttpStatus.CREATED));
+//        Assert.assertTrue(responseEntity6.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
         try {
             log.info("CotiNodeTest is going to sleep for 20 sec");
             TimeUnit.SECONDS.sleep(20);

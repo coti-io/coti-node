@@ -3,6 +3,7 @@ package io.coti.common.services;
 import io.coti.common.crypto.BasicTransactionCryptoDecorator;
 import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.Hash;
+import io.coti.common.data.TransactionData;
 import io.coti.common.services.interfaces.IValidationService;
 import org.springframework.stereotype.Component;
 import org.web3j.crypto.Sign;
@@ -32,5 +33,15 @@ public class ValidationService implements IValidationService {
     @Override
     public boolean validateAddressLength(Hash address) {
         return (address.getBytes().length == 34) && (address.getBytes().length != 0);
+    }
+
+    @Override
+    public boolean partialValidation(TransactionData transactionData) {
+        return true;
+    }
+
+    @Override
+    public boolean fullValidation(TransactionData transactionData) {
+        return true;
     }
 }
