@@ -37,9 +37,10 @@ public class PropagationService implements IPropagationService {
     }
 
     private void loadLastTransactionFromFile() {
-
-        try {
-            Scanner scanner = new Scanner(new File(lastTransactionFile));
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file = new File(classLoader.getResource(lastTransactionFile).getFile());
+        try(Scanner scanner = new Scanner(file))
+        {
             if (scanner.hasNextLine()) {
                 lastIndex = Integer.parseInt(scanner.nextLine());
             } else {
@@ -48,7 +49,6 @@ public class PropagationService implements IPropagationService {
             if (scanner.hasNextLine()) {
                 lastTransactionHash = new Hash(scanner.nextLine());
             }
-            scanner.close();
         } catch (FileNotFoundException e) {
             log.error("Error loading from lastTransaction file", e);
         }

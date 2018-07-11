@@ -1,9 +1,9 @@
 package io.coti.fullnode.controllers;
 
-import io.coti.common.http.*;
+import io.coti.common.http.AddTransactionDataRequest;
+import io.coti.common.http.GetLastIndexResponse;
 import io.coti.fullnode.exception.TransactionException;
-import io.coti.fullnode.service.TransactionService;
-import io.coti.fullnode.service.interfaces.IPropagationService;
+import io.coti.fullnode.service.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,27 +22,30 @@ import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 public class PropagationController {
 
     @Autowired
-    private TransactionService transactionService;
+    private ITransactionService transactionService;
+
+    @RequestMapping(value = "/test", method = POST)
+    public ResponseEntity<GetLastIndexResponse> test() {
+
+        ResponseEntity<GetLastIndexResponse> response = ResponseEntity.status(HttpStatus.OK).body(new GetLastIndexResponse(42));
+        return response;
+    }
 
     @RequestMapping(value = "/propagatedAddTransaction", method = PUT)
-    public ResponseEntity<Response> addTransaction(@Valid @RequestBody AddTransactionDataRequest addTransactionDataRequest) {
+    public void addTransaction(@Valid @RequestBody AddTransactionDataRequest addTransactionDataRequest) {
         try {
             transactionService.addTransactionFromPropagation(addTransactionDataRequest.transactionData);
         } catch (TransactionException e) {
-            log.error("Exception in Propagation from DSP server:",e);
-            return new ResponseEntity(HttpStatus.EXPECTATION_FAILED);
+            log.error("Exception in Propagation from DSP server:", e);
         }
-        return new ResponseEntity(HttpStatus.OK);
     }
 
     @RequestMapping(value = "/propagatedUpdateTransaction", method = PUT)
-    public ResponseEntity<Response> setTransactionConfirmedFromPropagation(@Valid @RequestBody AddTransactionDataRequest addTransactionDataRequest) {
+    public void setTransactionConfirmedFromPropagation(@Valid @RequestBody AddTransactionDataRequest addTransactionDataRequest) {
         try {
             transactionService.setTransactionConfirmedFromPropagation(addTransactionDataRequest.transactionData);
         } catch (TransactionException e) {
-            log.error("Exception in update confirmed propagation from DSP server:",e);
-            return new ResponseEntity(HttpStatus.EXPECTATION_FAILED);
+            log.error("Exception in update confirmed propagation from DSP server:", e);
         }
-        return new ResponseEntity(HttpStatus.OK);
     }
 }

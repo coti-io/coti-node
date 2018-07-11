@@ -15,9 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 
-import static org.springframework.web.bind.annotation.RequestMethod.GET;
-import static org.springframework.web.bind.annotation.RequestMethod.POST;
-import static org.springframework.web.bind.annotation.RequestMethod.PUT;
+import static org.springframework.web.bind.annotation.RequestMethod.*;
 
 @Slf4j
 @RestController
@@ -39,7 +37,7 @@ public class TransactionController {
 
     @RequestMapping(method = GET)
     public ResponseEntity<GetTransactionResponse> getLastTransaction() {
-        GetTransactionResponse response = new GetTransactionResponse (transactionService.getLastTransactionHash());
-        return new ResponseEntity<> (response, HttpStatus.OK );
+        GetTransactionResponse response = new GetTransactionResponse(transactionService.getLastTransactionHash());
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

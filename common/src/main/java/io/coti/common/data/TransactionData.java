@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Data
@@ -64,7 +63,7 @@ public class TransactionData implements IEntity {
     }
 
 
-    public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription,double senderTrustScore) {
+    public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, double senderTrustScore) {
         this.hash = transactionHash;
         this.transactionDescription = transactionDescription;
         this.baseTransactions = baseTransactions;

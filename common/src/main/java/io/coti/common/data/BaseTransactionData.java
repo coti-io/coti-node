@@ -1,11 +1,10 @@
 package io.coti.common.data;
 
-import io.coti.common.data.AddressData;
 import io.coti.common.data.interfaces.IEntity;
 import lombok.Data;
 
-import java.util.Date;
 import java.math.BigDecimal;
+import java.util.Date;
 
 @Data
 public class BaseTransactionData implements IEntity {
@@ -19,53 +18,40 @@ public class BaseTransactionData implements IEntity {
     private BaseTransactionData nextBaseTransactionData;
     private Date createTime;
     private SignatureData signatureData;
-    private BaseTransactionData(){}
 
-
-    public Hash getAddressHash()
-    {
-        return addressHash;
+    private BaseTransactionData() {
     }
 
-    public int getIndexInTransactionsChain()
-    {
-        return indexInTransactionsChain;
-    }
 
-    public Date getCreateTime()
-    {
-        return createTime;
-    }
-
-    public BaseTransactionData(String addressHashInput, BigDecimal amount){
+    public BaseTransactionData(String addressHashInput, BigDecimal amount) {
         this.addressHash = new Hash(addressHashInput);
         this.amount = amount;
     }
 
-    public BaseTransactionData(Hash hash, BigDecimal amount){
+    public BaseTransactionData(Hash hash, BigDecimal amount) {
         this.addressHash = hash;
         this.amount = amount;
     }
 
-    public BaseTransactionData(Integer addressHashInput, BigDecimal amount){
+    public BaseTransactionData(Integer addressHashInput, BigDecimal amount) {
         this.addressHash = new Hash(addressHashInput);
         this.amount = amount;
     }
 
-    public BaseTransactionData(String addressHash, BigDecimal amount, Hash hash, SignatureData signature){
+    public BaseTransactionData(String addressHash, BigDecimal amount, Hash hash, SignatureData signature) {
         this(addressHash, amount);
         this.hash = hash;
         this.signatureData = signature;
     }
 
-    public BaseTransactionData(String addressHash, BigDecimal amount, Hash hash, Date createTime ,SignatureData signature){
+    public BaseTransactionData(String addressHash, BigDecimal amount, Hash hash, Date createTime, SignatureData signature) {
         this(addressHash, amount);
         this.hash = hash;
         this.createTime = createTime;
         this.signatureData = signature;
     }
 
-    public BaseTransactionData(Integer addressHash, BigDecimal amount, Hash hash, SignatureData signature){
+    public BaseTransactionData(Integer addressHash, BigDecimal amount, Hash hash, SignatureData signature) {
         this(addressHash, amount);
         this.hash = hash;
         this.signatureData = signature;
@@ -78,9 +64,20 @@ public class BaseTransactionData implements IEntity {
         this.signatureData = signature;
     }
 
+    public Hash getAddressHash() {
+        return addressHash;
+    }
 
-    public boolean isSignatureExists(){
-        return signatureData !=null;
+    public int getIndexInTransactionsChain() {
+        return indexInTransactionsChain;
+    }
+
+    public Date getCreateTime() {
+        return createTime;
+    }
+
+    public boolean isSignatureExists() {
+        return signatureData != null;
     }
 
     @Override

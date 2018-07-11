@@ -68,10 +68,9 @@ public class RestTemplatePropagation implements IPropagationSender {
 
     private int getLastIndexFromDspNode(String dspNodeUrl) {
         String url = dspNodeUrl + "/getLastIndex";
-        GetLastIndexRequest request = new GetLastIndexRequest();
         ResponseEntity<GetLastIndexResponse> response = null;
         try {
-            response = restTemplate.postForObject(url, request, ResponseEntity.class);
+            response = restTemplate.postForObject(url, null, ResponseEntity.class);
         } catch (RestClientException e) {
             log.error("Errors when propagating from url {} {}", url);
         }
@@ -105,7 +104,7 @@ public class RestTemplatePropagation implements IPropagationSender {
         getTransactionsRequest.lastIndex = lastIndex;
         try {
 
-            getTransactionsResponse = restTemplate.postForObject(url, getTransactionsRequest, ResponseEntity.class);
+            //   getTransactionsResponse = restTemplate.postForObject(url, getTransactionsRequest, ResponseEntity.class);
         } catch (RestClientException e) {
             log.error("Errors when propagating from url {} {}", url);
         }
@@ -153,6 +152,26 @@ public class RestTemplatePropagation implements IPropagationSender {
         firstDspNodeIp = dspNodesList.get(random.nextInt(dspNodesList.size()));
         dspNodesList.remove(firstDspNodeIp);
         secondDspNodeIp = dspNodesList.get(random.nextInt(dspNodesList.size()));
-
+        dspNodesList.remove(secondDspNodeIp);
+        informDspNodes();
     }
+
+    private void informDspNodes() {
+        informDspNode(firstDspNodeIp, true);
+        informDspNode(secondDspNodeIp, true);
+        dspNodesList.forEach(dspNode -> informDspNode(dspNode, false));
+    }
+
+    private void informDspNode(String dspNode, boolean ifToPropagate) {
+        String url = dspNode + "/informDspIfTpPropagate";
+        InformDspNodeRequest request = new InformDspNodeRequest();
+        request.setToPropagate(ifToPropagate);
+        try {
+            //restTemplate.put(url, request);
+        } catch (RestClientException e) {
+            log.error("Errors when propagating to url {} {}", url);
+        }
+    }
+
+
 }

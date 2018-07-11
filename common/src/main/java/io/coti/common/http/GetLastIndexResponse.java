@@ -1,13 +1,18 @@
 package io.coti.common.http;
 
-import io.coti.common.data.TransactionData;
 import lombok.Data;
 
 @Data
+//@JsonRootName(value = "lastIndex")
 public class GetLastIndexResponse extends Response {
 
-    private int lastIndex;
-    public  GetLastIndexResponse (int lastIndex) {
+    public int lastIndex;
+
+    public GetLastIndexResponse() {
+        super();
+    }
+
+    public GetLastIndexResponse(int lastIndex) {
         super();
         this.lastIndex = lastIndex;
     }

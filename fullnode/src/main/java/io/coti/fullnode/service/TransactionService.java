@@ -55,7 +55,7 @@ public class TransactionService implements ITransactionService {
         log.info("Transaction io.coti.fullnode.service Started");
         hashToWaitingChildrenTransactionsMapping = new ConcurrentHashMap<>();
         propagationTransactionHash = new ConcurrentHashMap<>();
-        propagateMultiTransactionFromDsp();
+        //propagateMultiTransactionFromDsp();
 
     }
 
