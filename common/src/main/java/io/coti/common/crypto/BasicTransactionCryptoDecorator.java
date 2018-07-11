@@ -4,39 +4,32 @@ import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.Hash;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jcajce.provider.digest.Keccak;
-import org.bouncycastle.util.encoders.Hex;
 
 import javax.xml.bind.DatatypeConverter;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Date;
+import java.util.*;
+
+import org.bouncycastle.util.encoders.Hex;
 
 @Slf4j
 public class BasicTransactionCryptoDecorator {
 
-    private static CryptoHelper crtpyoHelper = new CryptoHelper();
     BaseTransactionData baseTxData;
+    private static CryptoHelper crtpyoHelper = new CryptoHelper();
 
-    public BasicTransactionCryptoDecorator(BaseTransactionData baseTxData) {
+    public BasicTransactionCryptoDecorator(BaseTransactionData baseTxData)
+    {
         this.baseTxData = baseTxData;
     }
 
-    private byte[] getMessageWithTransactionHashInBytes(Hash transactionHash) {
+    public byte[] getMessageInBytes()
+    {
 
-        byte[] basicTransactionBytes = this.getMessageInBytes();
 
-        ByteBuffer dateBuffer = ByteBuffer.allocate(basicTransactionBytes.length + transactionHash.getBytes().length);
-        dateBuffer.put(basicTransactionBytes).put(transactionHash.getBytes());
-
-        byte[] arrToReturn = dateBuffer.array();
-        return arrToReturn;
-    }
-
-    public byte[] getMessageInBytes() {
-        byte[] addressBytes = DatatypeConverter.parseHexBinary(baseTxData.getAddressHash().toHexString());
-
+        byte[] addressBytes = baseTxData.getAddressHash().getBytes();
         String decimalStringRepresentation = DatatypeConverter.printDecimal(baseTxData.getAmount());
         byte[] bytesOfAmount = decimalStringRepresentation.getBytes(StandardCharsets.UTF_8);
 
@@ -46,28 +39,30 @@ public class BasicTransactionCryptoDecorator {
         byte[] IndexByteArray = bufferIndex.array();
 
         Date baseTransactionDate = baseTxData.getCreateTime();
-        int interval = (int) (baseTransactionDate.getTime());
+        int interval = (int)(baseTransactionDate.getTime());
 
         ByteBuffer dateBuffer = ByteBuffer.allocate(4);
         dateBuffer.putInt(interval);
+
 
 
         ByteBuffer baseTransactionArray = ByteBuffer.allocate(addressBytes.length + bytesOfAmount.length + IndexByteArray.length + dateBuffer.array().length).
                 put(addressBytes).put(IndexByteArray).put(bytesOfAmount).put(dateBuffer.array());
 
         byte[] arrToReturn = baseTransactionArray.array();
-        return arrToReturn;
+        return  arrToReturn;
     }
 
-    public Hash createBasicTransactionHashFromData() {
+    public Hash createBasicTransactionHashFromData(){
         Keccak.Digest256 digest = new Keccak.Digest256();
         byte[] bytesToHash = getMessageInBytes();
         digest.update(bytesToHash);
-        Hash hash = new Hash(Hex.toHexString(digest.digest()).toUpperCase());
+        Hash hash = new Hash(Hex.toHexString( digest.digest()));
         return hash;
     }
 
-    public Hash getBasicTransactionHash() {
+    public Hash getBasicTransactionHash()
+    {
         return baseTxData.getHash();
     }
 
@@ -77,12 +72,16 @@ public class BasicTransactionCryptoDecorator {
             if (!this.createBasicTransactionHashFromData().equals(getBasicTransactionHash()))
                 return false;
 
+            if (!crtpyoHelper.VerifyAddressCrc32(baseTxData.getAddressHash()))
+                return false;
+
 
             if (!baseTxData.isSignatureExists())
                 return true;
 
+
             String addressWithoutCRC = baseTxData.getAddressHash().toString().substring(0, 128);
-            boolean checkSigning = crtpyoHelper.VerifyByPublicKey(getMessageWithTransactionHashInBytes(transactionHash), baseTxData.getSignatureData().getR(), baseTxData.getSignatureData().getS(), addressWithoutCRC);
+            boolean checkSigning = crtpyoHelper.VerifyByPublicKey(transactionHash.getBytes(), baseTxData.getSignatureData().getR(), baseTxData.getSignatureData().getS(), addressWithoutCRC);
             return checkSigning;
 
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {

@@ -1,6 +1,7 @@
 package io.coti.common.crypto;
 
 import io.coti.common.data.AddressData;
+import io.coti.common.data.Hash;
 import org.bouncycastle.asn1.sec.SECNamedCurves;
 import org.bouncycastle.asn1.x9.X9ECParameters;
 
@@ -16,6 +17,7 @@ import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.jce.spec.ECPublicKeySpec;
 
 
+import javax.xml.bind.DatatypeConverter;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.*;
@@ -59,13 +61,34 @@ public class CryptoHelper {
         return VerifyByPublicKey(originalMessageToVerify,rHex,sHex,getPublicKeyFromHexString(publicKey));
     }
 
+
+
+    public static boolean VerifyAddressCrc32(Hash addressHash){
+
+        Checksum crc32 = new CRC32();
+
+        byte[] checkSumOfAddress = Arrays.copyOfRange(addressHash.getBytes(),64,68);
+
+        crc32.update(addressHash.getBytes(), 0, 64);
+        long checksumValue = crc32.getValue();
+
+        byte[] array = new byte[8];
+        ByteBuffer buf = ByteBuffer.wrap(array);
+        buf.putLong(checksumValue);
+
+
+        byte[] checkSumArray =Arrays.copyOfRange( buf.array(), 4, 8);;
+
+        return Arrays.equals(checkSumArray,checkSumOfAddress);
+    }
+
     public static boolean  VerifyByPublicKey(byte[] originalDataToVerify, String rHex, String sHex, PublicKey publicKey)
     {
-            ECDSASigner signer = new ECDSASigner();
-            signer.init(false, new ECPublicKeyParameters(((ECPublicKey)publicKey).getQ(), domain));
-            BigInteger r = new BigInteger( rHex, 16);
-            BigInteger s = new BigInteger( sHex, 16);
-            return signer.verifySignature(originalDataToVerify, r, s);
+        ECDSASigner signer = new ECDSASigner();
+        signer.init(false, new ECPublicKeyParameters(((ECPublicKey)publicKey).getQ(), domain));
+        BigInteger r = new BigInteger( rHex, 16);
+        BigInteger s = new BigInteger( sHex, 16);
+        return signer.verifySignature(originalDataToVerify, r, s);
     }
 
     public static KeyPair generateKeyPair() throws  NoSuchAlgorithmException, InvalidAlgorithmParameterException {

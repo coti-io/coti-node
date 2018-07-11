@@ -11,8 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TransactionCryptoDecorator {
-     final static int  baseTransactionHashSize = 32;
-    ArrayList<BasicTransactionCryptoDecorator> baseTransactions = new ArrayList<BasicTransactionCryptoDecorator>();
+    final static int  baseTransactionHashSize = 32;
+    ArrayList<BasicTransactionCryptoDecorator> baseTransactions = new ArrayList<>();
     TransactionData txData;
 
     public TransactionCryptoDecorator(TransactionData txData)
@@ -47,7 +47,7 @@ public class TransactionCryptoDecorator {
         byte[] bytesToHash = getBaseTransactionsHashesBytes();
         digest.update(bytesToHash);
         byte[] digestedHash = digest.digest();
-        String hash =   Hex.toHexString( digestedHash).toUpperCase();
+        String hash =   Hex.toHexString( digestedHash);
         return hash;
     }
 
@@ -56,18 +56,21 @@ public class TransactionCryptoDecorator {
     private boolean IsTransacHashCorrect()
     {
 
-        String generatedTxHashFromBaseTransactions = getHashFromBasicTransactionHashesData().toUpperCase();
-        String txHashFromData = this.txData.getHash().toHexString().toUpperCase();
+        String generatedTxHashFromBaseTransactions = getHashFromBasicTransactionHashesData();
+        String txHashFromData = this.txData.getHash().toHexString();
 
         return generatedTxHashFromBaseTransactions.equals(txHashFromData);
     }
 
     public boolean isTransactionValid() {
+
+        if (!this.IsTransacHashCorrect())
+            return false;
         for (BasicTransactionCryptoDecorator bxCrypto: this.baseTransactions) {
             if (bxCrypto.IsBasicTransactionValid(txData.getHash()) ==false)
-                    return false;
+                return false;
         }
-        return this.IsTransacHashCorrect();
+        return true;
     }
 
 

@@ -23,25 +23,6 @@ public class BaseTransactionData implements IEntity {
     private BaseTransactionData(){}
 
 
-
-
-    public Hash getAddressHash()
-    {
-        return addressHash;
-    }
-
-    public int getIndexInTransactionsChain()
-    {
-        return indexInTransactionsChain;
-    }
-
-    public Date getCreateTime()
-    {
-        return createTime;
-    }
-
-
-
     public BaseTransactionData(Hash addressHash, BigDecimal amount, Hash baseTransactionhash, SignatureData signature , Date createTime ){
         this.addressHash = addressHash;
         this.amount = amount;
