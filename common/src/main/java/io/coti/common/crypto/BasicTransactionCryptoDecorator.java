@@ -18,7 +18,7 @@ import org.bouncycastle.util.encoders.Hex;
 public class BasicTransactionCryptoDecorator {
 
     BaseTransactionData baseTxData;
-    private static CryptoHelper crtpyoHelper = new CryptoHelper();
+    private static CryptoHelper cryptoHelper = new CryptoHelper();
 
     public BasicTransactionCryptoDecorator(BaseTransactionData baseTxData)
     {
@@ -72,7 +72,7 @@ public class BasicTransactionCryptoDecorator {
             if (!this.createBasicTransactionHashFromData().equals(getBasicTransactionHash()))
                 return false;
 
-            if (!crtpyoHelper.VerifyAddressCrc32(baseTxData.getAddressHash()))
+            if (!cryptoHelper.VerifyAddressCrc32(baseTxData.getAddressHash()))
                 return false;
 
 
@@ -81,7 +81,7 @@ public class BasicTransactionCryptoDecorator {
 
 
             String addressWithoutCRC = baseTxData.getAddressHash().toString().substring(0, 128);
-            boolean checkSigning = crtpyoHelper.VerifyByPublicKey(transactionHash.getBytes(), baseTxData.getSignatureData().getR(), baseTxData.getSignatureData().getS(), addressWithoutCRC);
+            boolean checkSigning = cryptoHelper.VerifyByPublicKey(transactionHash.getBytes(), baseTxData.getSignatureData().getR(), baseTxData.getSignatureData().getS(), addressWithoutCRC);
             return checkSigning;
 
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
