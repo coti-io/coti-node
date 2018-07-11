@@ -15,12 +15,12 @@ import java.util.*;
 import org.bouncycastle.util.encoders.Hex;
 
 @Slf4j
-public class BasicTransactionCryptoDecorator {
+public class BasicTransactionCryptoWrapper {
 
     BaseTransactionData baseTxData;
     private static CryptoHelper cryptoHelper = new CryptoHelper();
 
-    public BasicTransactionCryptoDecorator(BaseTransactionData baseTxData)
+    public BasicTransactionCryptoWrapper(BaseTransactionData baseTxData)
     {
         this.baseTxData = baseTxData;
     }
@@ -54,7 +54,7 @@ public class BasicTransactionCryptoDecorator {
     }
 
     public Hash createBasicTransactionHashFromData(){
-        Keccak.Digest256 digest = new Keccak.Digest256();
+        Keccak.Digest512 digest = new Keccak.Digest512();
         byte[] bytesToHash = getMessageInBytes();
         digest.update(bytesToHash);
         Hash hash = new Hash(Hex.toHexString( digest.digest()));
@@ -72,7 +72,7 @@ public class BasicTransactionCryptoDecorator {
             if (!this.createBasicTransactionHashFromData().equals(getBasicTransactionHash()))
                 return false;
 
-            if (!cryptoHelper.VerifyAddressCrc32(baseTxData.getAddressHash()))
+            if (!CryptoHelper.IsAddressValid(baseTxData.getAddressHash()))
                 return false;
 
 

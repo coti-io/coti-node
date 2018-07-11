@@ -10,21 +10,21 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TransactionCryptoDecorator {
-    final static int  baseTransactionHashSize = 32;
-    ArrayList<BasicTransactionCryptoDecorator> baseTransactions = new ArrayList<>();
+public class TransactionCryptoWrapper {
+    final static int  baseTransactionHashSize = 64;
+    ArrayList<BasicTransactionCryptoWrapper> baseTransactions = new ArrayList<>();
     TransactionData txData;
 
-    public TransactionCryptoDecorator(TransactionData txData)
+    public TransactionCryptoWrapper(TransactionData txData)
     {
         this.txData = txData;
         for (BaseTransactionData bxData: txData.getBaseTransactions())
         {
-            baseTransactions.add(new BasicTransactionCryptoDecorator(bxData));
+            baseTransactions.add(new BasicTransactionCryptoWrapper(bxData));
         }
     }
 
-    public TransactionCryptoDecorator(List<BaseTransactionData> basicTransaction, Hash transactionHash, String transactionDescription, double senderTransactionScore)
+    public TransactionCryptoWrapper(List<BaseTransactionData> basicTransaction, Hash transactionHash, String transactionDescription, double senderTransactionScore)
     {
         this(new TransactionData(basicTransaction,transactionHash,transactionDescription,senderTransactionScore));
 
@@ -35,7 +35,7 @@ public class TransactionCryptoDecorator {
     private byte[] getBaseTransactionsHashesBytes()
     {
         ByteBuffer baseTransactionHashBuffer = ByteBuffer.allocate(baseTransactions.size() * baseTransactionHashSize);
-        for (BasicTransactionCryptoDecorator bxCrypto: this.baseTransactions) {
+        for (BasicTransactionCryptoWrapper bxCrypto: this.baseTransactions) {
             byte[] baseTransactionHashBytes = bxCrypto.getBasicTransactionHash().getBytes();
             baseTransactionHashBuffer = baseTransactionHashBuffer.put(baseTransactionHashBytes);
         }
@@ -43,7 +43,7 @@ public class TransactionCryptoDecorator {
     }
 
     public String getHashFromBasicTransactionHashesData(){
-        Keccak.Digest256 digest = new Keccak.Digest256();
+        Keccak.Digest512 digest = new Keccak.Digest512();
         byte[] bytesToHash = getBaseTransactionsHashesBytes();
         digest.update(bytesToHash);
         byte[] digestedHash = digest.digest();
@@ -66,7 +66,7 @@ public class TransactionCryptoDecorator {
 
         if (!this.IsTransacHashCorrect())
             return false;
-        for (BasicTransactionCryptoDecorator bxCrypto: this.baseTransactions) {
+        for (BasicTransactionCryptoWrapper bxCrypto: this.baseTransactions) {
             if (bxCrypto.IsBasicTransactionValid(txData.getHash()) ==false)
                 return false;
         }

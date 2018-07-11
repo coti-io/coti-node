@@ -19,6 +19,7 @@ import org.bouncycastle.jce.spec.ECPublicKeySpec;
 
 import javax.xml.bind.DatatypeConverter;
 import java.math.BigInteger;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
@@ -51,6 +52,10 @@ public class CryptoHelper {
         return pubKey;
     }
 
+
+
+
+
     private static PublicKey getPublicKeyFromByte(byte[] pubKey) throws NoSuchAlgorithmException, InvalidKeySpecException
     {
         org.bouncycastle.math.ec.ECPoint point = curve.getCurve().decodePoint(pubKey);
@@ -63,24 +68,41 @@ public class CryptoHelper {
 
 
 
-    public static boolean VerifyAddressCrc32(Hash addressHash){
-
-        Checksum crc32 = new CRC32();
-
-        byte[] checkSumOfAddress = Arrays.copyOfRange(addressHash.getBytes(),64,68);
-
-        crc32.update(addressHash.getBytes(), 0, 64);
-        long checksumValue = crc32.getValue();
-
-        byte[] array = new byte[8];
-        ByteBuffer buf = ByteBuffer.wrap(array);
-        buf.putLong(checksumValue);
+    public static Hash RemoveLeadingZerosFromAddress(Hash addressHash){
+        byte[] addressBytes = addressHash.getBytes();
+        byte[] xPart = Arrays.copyOfRange(addressBytes,0, (addressBytes.length/2) -2 );
+        byte[] yPart = Arrays.copyOfRange(addressBytes,(addressBytes.length/2) - 2,addressBytes.length - 4);
 
 
-        byte[] checkSumArray =Arrays.copyOfRange( buf.array(), 4, 8);;
+        byte[] xPointPart = new byte[0];
+        byte[] yPointPart = new byte[0];
 
-        return Arrays.equals(checkSumArray,checkSumOfAddress);
+
+        for (int i=0; i <xPart.length;i++)
+        {
+            if (xPart[i] == 0)
+                continue;
+            xPointPart = Arrays.copyOfRange(xPart, i, xPart.length);
+            break;
+        }
+
+        for (int i=0; i <yPart.length;i++)
+        {
+            if (yPart[i] == 0)
+                continue;
+
+            yPointPart = Arrays.copyOfRange(yPart, i, yPart.length);
+            break;
+        }
+
+        ByteBuffer addressBuffer = ByteBuffer.allocate(xPointPart.length + yPointPart.length +4 );
+        addressBuffer.put(xPointPart);
+        addressBuffer.put(yPointPart);
+        addressBuffer.put(Arrays.copyOfRange(addressHash.getBytes(),64,68));
+        return new Hash(addressBuffer.array());
     }
+
+
 
     public static boolean  VerifyByPublicKey(byte[] originalDataToVerify, String rHex, String sHex, PublicKey publicKey)
     {
@@ -99,16 +121,21 @@ public class CryptoHelper {
         return pair;
     }
 
-    public static boolean IsAddressValid(AddressData addressData)
+    public static boolean IsAddressValid(Hash addressHash)
     {
-        byte[] addressBytes = addressData.getHash().getBytes();
 
-        if (addressBytes.length != 68)
+        if (addressHash.getBytes().length != 68)
             return false;
 
+
+
         Checksum checksum = new CRC32();
-        byte[] addressWithoutCheckSum = Arrays.copyOfRange(addressBytes,0 , 64);
-        byte[] addressCheckSum = Arrays.copyOfRange(addressBytes,64 , 68);
+        Hash addressWithoutPadding =  CryptoHelper.RemoveLeadingZerosFromAddress(addressHash);
+
+        byte[] addressWithoutPaddingBytes = addressWithoutPadding.getBytes();
+
+        byte[] addressWithoutCheckSum = Arrays.copyOfRange(addressWithoutPaddingBytes,0 , addressWithoutPaddingBytes.length-4);
+        byte[] addressCheckSum = Arrays.copyOfRange(addressWithoutPaddingBytes,addressWithoutPaddingBytes.length -4 , addressWithoutPaddingBytes.length);
         checksum.update(addressWithoutCheckSum, 0, addressWithoutCheckSum.length);
 
         byte[] checksumValue = ByteBuffer.allocate(4).putInt((int)checksum.getValue()).array();

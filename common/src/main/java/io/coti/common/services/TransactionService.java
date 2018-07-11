@@ -1,6 +1,6 @@
 package io.coti.common.services;
 
-import io.coti.common.crypto.TransactionCryptoDecorator;
+import io.coti.common.crypto.TransactionCryptoWrapper;
 import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.ConfirmationData;
 import io.coti.common.data.Hash;
@@ -306,7 +306,7 @@ public class TransactionService implements ITransactionService {
 
     private boolean validateAddresses(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, Double senderTrustScore) {
 
-        TransactionCryptoDecorator verifyTransaction = new TransactionCryptoDecorator(baseTransactions, transactionHash, transactionDescription, senderTrustScore);
+        TransactionCryptoWrapper verifyTransaction = new TransactionCryptoWrapper(baseTransactions, transactionHash, transactionDescription, senderTrustScore);
         for (BaseTransactionData baseTransactionData : baseTransactions) {
 
             if (baseTransactionData.getAmount().signum() > 0) {
