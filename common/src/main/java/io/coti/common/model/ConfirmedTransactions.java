@@ -67,9 +67,13 @@ public class ConfirmedTransactions extends Collection<ConfirmationData> {
     @Override
     public void put(IEntity entity) {
         throw new UnsupportedOperationException("This message is unused in confirmed/unconfirmed transactions." +
-                " please use 'public void putConfirmedAndUpdateTransaction(IEntity entity, boolean dspc," +
+                " please use 'public void putConfirmationDataAndUpdateTransaction(IEntity entity)'");
                 " TccInfo tccInfo)'");
 
+    }
+
+    public void putConfirmationDataAndUpdateTransaction(IEntity entity){
+        modelUtil.putConfirmedOrUnconfirmedHelper(columnFamilyName,entity);
     }
 
 

@@ -24,6 +24,7 @@ public class ConfirmationData implements IEntity {
     public ConfirmationData(TransactionData transactionData) {
         addressHashToValueTransferredMapping = new LinkedHashMap<>();
         this.key = transactionData.getHash();
+        this.transactionData = transactionData;
         if (transactionData.isZeroSpend()) {
             return;
         }

@@ -12,6 +12,14 @@ public class UnconfirmedTransactions extends Collection<ConfirmationData> {
     public UnconfirmedTransactions() {
     }
 
+                " please use 'public void putConfirmationDataAndUpdateTransaction(IEntity entity)'");
+
+
+
+
+    public void putConfirmationDataAndUpdateTransaction(IEntity entity){
+        modelUtil.putConfirmedOrUnconfirmedHelper(columnFamilyName,entity);
+    }
 
     public void init() {
         super.init();

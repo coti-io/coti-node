@@ -16,7 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/getGenesisTransactions")
-public class GenesisTransactions {
+public class GetGenesisTransactions {
 
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<TransactionData>> getGenesisTransactions() {

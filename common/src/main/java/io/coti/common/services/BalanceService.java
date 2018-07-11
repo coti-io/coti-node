@@ -63,6 +63,8 @@ public class BalanceService implements IBalanceService {
 
     @PostConstruct
     private void init() throws Exception {
+
+
         balanceMap = new ConcurrentHashMap<>();
         preBalanceMap = new ConcurrentHashMap<>();
         loadBalanceFromSnapshot();
@@ -110,7 +112,7 @@ public class BalanceService implements IBalanceService {
 
     private void setDSPCtoTrueAndInsertToUnconfirmed(ConfirmationData confirmationData) {
         confirmationData.setDoubleSpendPreventionConsensus(true);
-        unconfirmedTransactions.put(confirmationData);
+        unconfirmedTransactions.putConfirmationDataAndUpdateTransaction(confirmationData);
     }
 
     private void updateBalanceMap(Map<Hash, BigDecimal> mapFrom, Map<Hash, BigDecimal> mapTo) {
@@ -164,7 +166,7 @@ public class BalanceService implements IBalanceService {
     }
 
     private void loadBalanceFromSnapshot() throws Exception {
-        String snapshotFileLocation = "./Snapshot.csv";
+        String snapshotFileLocation = "./Snapshot3.csv";
         File snapshotFile = new File(snapshotFileLocation);
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(snapshotFile))) {
@@ -190,6 +192,7 @@ public class BalanceService implements IBalanceService {
             }
 
             preBalanceMap.putAll(balanceMap);
+            log.info("******** SNAPSHOT LOADING FINISHED !! *********");
         } catch (Exception e) {
             log.error("Errors on snapshot loading: {}", e);
             throw e;

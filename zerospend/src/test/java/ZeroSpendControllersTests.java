@@ -1,5 +1,5 @@
 import io.coti.zero_spend.ZeroSpendConfiguration;
-import io.coti.zero_spend.controllers.GenesisTransactions;
+import io.coti.zero_spend.controllers.GetGenesisTransactions;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.FixMethodOrder;
 import org.junit.runner.RunWith;
@@ -18,7 +18,7 @@ public class ZeroSpendControllersTests {
 
 
     @Autowired
-    private GenesisTransactions genesisTransactions;
+    private GetGenesisTransactions genesisTransactions;
 /*
     @Test
     public void aTestZeroSpendGetGenessisController() {
