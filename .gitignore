@@ -3,6 +3,8 @@
 /dspnode/target/
 /common/target/
 /zerospend/target/
+/logs/
+/zerospend/target/
 !.mvn/wrapper/maven-wrapper.jar
 
 ### STS ###

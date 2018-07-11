@@ -46,6 +46,7 @@ public class BaseTransactionCryptoWrapper {
 
 
 
+
         ByteBuffer baseTransactionArray = ByteBuffer.allocate(addressBytes.length + bytesOfAmount.length + IndexByteArray.length + dateBuffer.array().length).
                 put(addressBytes).put(IndexByteArray).put(bytesOfAmount).put(dateBuffer.array());
 
@@ -74,6 +75,7 @@ public class BaseTransactionCryptoWrapper {
 
             if (!CryptoHelper.IsAddressValid(baseTxData.getAddressHash()))
                 return false;
+
 
 
             if (baseTxData.getAmount().signum()>0)
