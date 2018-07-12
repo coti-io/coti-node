@@ -10,7 +10,7 @@ import java.util.List;
 @Data
 public class GetBalancesResponse extends Response {
 
-    private List<AbstractMap.SimpleEntry<Hash, BigDecimal>> amounts;
+    private List<GetBalancesResponseEntity> amounts;
 
     public GetBalancesResponse() {
         super("Balance details");

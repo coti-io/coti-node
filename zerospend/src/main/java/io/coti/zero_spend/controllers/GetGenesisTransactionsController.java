@@ -16,7 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/getGenesisTransactions")
-public class GetGenesisTransactions {
+public class GetGenesisTransactionsController {
 
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<TransactionData>> getGenesisTransactions() {
@@ -25,6 +25,7 @@ public class GetGenesisTransactions {
         for (int trustScore = 0; trustScore <= 100; trustScore = trustScore + 10) {
             TransactionData transactionData = new TransactionData(new ArrayList<>(),new Hash(currentHashCounter++), "genesis",trustScore);
             transactionData.setZeroSpend(true);
+            transactionData.setSenderTrustScore(80);
             genesisTransactions.add(transactionData);
         }
 

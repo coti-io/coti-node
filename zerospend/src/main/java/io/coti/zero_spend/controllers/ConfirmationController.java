@@ -15,8 +15,8 @@ public class ConfirmationController {
 
 
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<String> confirmTransaction(TransactionData transactionData) {
-
+    public ResponseEntity<String> confirmTransaction() {
+int x = 5;
 
         return null;
     }

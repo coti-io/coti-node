@@ -3,6 +3,7 @@ package io.coti.common.services;
 import io.coti.common.data.*;
 import io.coti.common.http.GetBalancesRequest;
 import io.coti.common.http.GetBalancesResponse;
+import io.coti.common.http.GetBalancesResponseEntity;
 import io.coti.common.model.ConfirmedTransactions;
 import io.coti.common.model.Transactions;
 import io.coti.common.model.UnconfirmedTransactions;
@@ -166,7 +167,7 @@ public class BalanceService implements IBalanceService {
     }
 
     private void loadBalanceFromSnapshot() throws Exception {
-        String snapshotFileLocation = "./Snapshot3.csv";
+        String snapshotFileLocation = "./Snapshot.csv";
         File snapshotFile = new File(snapshotFileLocation);
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(snapshotFile))) {
@@ -250,12 +251,12 @@ public class BalanceService implements IBalanceService {
     @Override
     public ResponseEntity<GetBalancesResponse> getBalances(GetBalancesRequest getBalancesRequest) {
         GetBalancesResponse getBalancesResponse = new GetBalancesResponse();
-        List<AbstractMap.SimpleEntry<Hash, BigDecimal>> amounts = new LinkedList<>();
+        List<GetBalancesResponseEntity> amounts = new LinkedList<>();
         for (Hash hash : getBalancesRequest.getAddresses()) {
             if (balanceMap.containsKey(hash)) {
-                amounts.add(new AbstractMap.SimpleEntry<>(hash, balanceMap.get(hash)));
+                amounts.add(new GetBalancesResponseEntity(hash,balanceMap.get(hash)));//new AbstractMap.SimpleEntry<>(hash, balanceMap.get(hash)));
             } else {
-                amounts.add(new AbstractMap.SimpleEntry<>(hash, new BigDecimal(-1)));
+                amounts.add(new GetBalancesResponseEntity(hash,new BigDecimal(-1)));
             }
         }
         getBalancesResponse.setAmounts(amounts);

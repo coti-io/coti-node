@@ -1,18 +1,31 @@
 package io.coti.zero_spend.controllers;
 
 import io.coti.common.data.TransactionData;
+import io.coti.common.http.GetZeroSpendTransactionsRequest;
+import io.coti.zero_spend.services.interfaces.IGetZeroSpendTrxService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/get_transaction")
 public class GetZeroSpendTransactionController {
 
-    public ResponseEntity<TransactionData> getZeroSpendTransaction(){
+
+    @Autowired
+    private IGetZeroSpendTrxService getZeroSpendTrxService;
 
 
-        return null;
+    @RequestMapping(method = RequestMethod.POST)
+    public ResponseEntity<TransactionData> getZeroSpendTransaction(GetZeroSpendTransactionsRequest
+                                                                           getZeroSpendTransactionsRequest) {
+
+
+        return getZeroSpendTrxService
+                .generateZeroSpendTrx(getZeroSpendTransactionsRequest);
 
     }
 
