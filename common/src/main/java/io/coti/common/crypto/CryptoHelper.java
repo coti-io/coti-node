@@ -68,9 +68,9 @@ public class CryptoHelper {
 
 
 
-    public static byte[] RemoveLeadingZerosFromAddress(byte[] addressBytes){
-        byte[] xPart = Arrays.copyOfRange(addressBytes,0, addressBytes.length/2 );
-        byte[] yPart = Arrays.copyOfRange(addressBytes,addressBytes.length/2,addressBytes.length);
+    public static byte[] RemoveLeadingZerosFromAddress(byte[] addressBytesWithoutChecksum){
+        byte[] xPart = Arrays.copyOfRange(addressBytesWithoutChecksum,0, addressBytesWithoutChecksum.length/2 );
+        byte[] yPart = Arrays.copyOfRange(addressBytesWithoutChecksum,addressBytesWithoutChecksum.length/2,addressBytesWithoutChecksum.length);
 
         byte[] xPointPart = new byte[0];
         byte[] yPointPart = new byte[0];

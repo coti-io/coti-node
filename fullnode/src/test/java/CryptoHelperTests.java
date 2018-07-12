@@ -49,9 +49,9 @@ public class CryptoHelperTests {
     public void CheckRemovingLeadingZerosFromXpointAddress()
     {
         CryptoHelper helper = new CryptoHelper();
-        String address = "0003dabc04ac8680698104f35d5818432c619a2a7e42bfc8d791181d897b6bfa664664133b80585844c7452bcb50c860a1167b1be8cfa201c44dd94eb706c8b447d81fd6";
-        byte[] addressWithoutZeros = helper.RemoveLeadingZerosFromAddress(new Hash(address).getBytes());
-        Assert.assertTrue(Arrays.equals(addressWithoutZeros,new Hash("03dabc04ac8680698104f35d5818432c619a2a7e42bfc8d791181d897b6bfa664664133b80585844c7452bcb50c860a1167b1be8cfa201c44dd94eb706c8b447d81fd6").getBytes()));
+        String addressWithoutChecksum = "0003dabc04ac8680698104f35d5818432c619a2a7e42bfc8d791181d897b6bfa664664133b80585844c7452bcb50c860a1167b1be8cfa201c44dd94eb706c8b4";
+        byte[] addressWithoutZeros = helper.RemoveLeadingZerosFromAddress(new Hash(addressWithoutChecksum).getBytes());
+        Assert.assertTrue(Arrays.equals(addressWithoutZeros,new Hash("03dabc04ac8680698104f35d5818432c619a2a7e42bfc8d791181d897b6bfa664664133b80585844c7452bcb50c860a1167b1be8cfa201c44dd94eb706c8b4").getBytes()));
     }
 
 
@@ -59,9 +59,9 @@ public class CryptoHelperTests {
     public void CheckRemovingLeadingZerosFromYpointAddress()
     {
         CryptoHelper helper = new CryptoHelper();
-        String address = "d4501c35e1662ce0d66db15de20c665abc8e462edb208d51fd573a5490883bfc0000b505805f18fe49bf2dc3cdf06ada9198328f61ed782e9bab7e9fd314ecf40ac88438";
-        byte[] addressWithoutZeros = helper.RemoveLeadingZerosFromAddress(new Hash(address).getBytes());
-        Assert.assertTrue(Arrays.equals(addressWithoutZeros,new Hash("d4501c35e1662ce0d66db15de20c665abc8e462edb208d51fd573a5490883bfcb505805f18fe49bf2dc3cdf06ada9198328f61ed782e9bab7e9fd314ecf40ac88438").getBytes()));
+        String addressWithoutChecksum = "d4501c35e1662ce0d66db15de20c665abc8e462edb208d51fd573a5490883bfc0000b505805f18fe49bf2dc3cdf06ada9198328f61ed782e9bab7e9fd314ecf4";
+        byte[] addressWithoutZeros = helper.RemoveLeadingZerosFromAddress(new Hash(addressWithoutChecksum).getBytes());
+        Assert.assertTrue(Arrays.equals(addressWithoutZeros,new Hash("d4501c35e1662ce0d66db15de20c665abc8e462edb208d51fd573a5490883bfcb505805f18fe49bf2dc3cdf06ada9198328f61ed782e9bab7e9fd314ecf4").getBytes()));
     }
 
 
