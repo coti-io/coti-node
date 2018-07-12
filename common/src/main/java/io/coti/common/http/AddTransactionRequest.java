@@ -16,7 +16,6 @@ public class AddTransactionRequest extends Request {
     public String transactionDescription;
 
     public double senderTrustScore;
-    public TransactionData transactionData;
 }
 
 

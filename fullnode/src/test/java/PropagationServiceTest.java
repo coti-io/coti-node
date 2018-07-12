@@ -1,5 +1,5 @@
 import io.coti.fullnode.AppConfig;
-import io.coti.common.services.PropagationService;
+import io.coti.fullnode.service.PropagationService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;

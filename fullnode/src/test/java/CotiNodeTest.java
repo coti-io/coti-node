@@ -1,5 +1,6 @@
 import io.coti.common.crypto.CryptoUtils;
 import io.coti.common.data.*;
+import io.coti.common.http.AddTransactionDataRequest;
 import io.coti.common.http.AddTransactionRequest;
 import io.coti.common.http.HttpStringConstants;
 import io.coti.common.http.Response;
@@ -66,8 +67,9 @@ public class CotiNodeTest {
         List<BaseTransactionData> baseTransactionDataList = createBaseTransactionRandomList(3);
 
         addTransactionRequest.baseTransactions =baseTransactionDataList;
-        addTransactionRequest.hash = new Hash("A1");
+        addTransactionRequest.hash = new Hash("d1");
         addTransactionRequest.transactionDescription = transactionDescription;
+        addTransactionRequest.senderTrustScore = 80;
         Executors.newSingleThreadScheduledExecutor().execute(() -> {
             propagationService = null;
         });
@@ -80,8 +82,9 @@ public class CotiNodeTest {
         AddTransactionRequest addTransactionRequest2 = new AddTransactionRequest();
         List<BaseTransactionData> baseTransactionDataList2 = createBaseTransactionRandomList(3);
         addTransactionRequest2.baseTransactions = baseTransactionDataList2;
-        addTransactionRequest2.hash = new Hash("A2");
+        addTransactionRequest2.hash = new Hash("d2");
         addTransactionRequest2.transactionDescription = transactionDescription;
+        addTransactionRequest2.senderTrustScore = 90;
         ResponseEntity<Response> responseEntity2 = transactionService.addNewTransaction(addTransactionRequest2);
         Assert.assertTrue(responseEntity2.getStatusCode().equals(HttpStatus.CREATED));
         Assert.assertTrue(responseEntity2.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
@@ -89,8 +92,9 @@ public class CotiNodeTest {
         AddTransactionRequest addTransactionRequest3 = new AddTransactionRequest();
         List<BaseTransactionData> baseTransactionDataList3 = createBaseTransactionRandomList(3);
         addTransactionRequest3.baseTransactions = baseTransactionDataList3;
-        addTransactionRequest3.hash = new Hash("A3");
+        addTransactionRequest3.hash = new Hash("d3");
         addTransactionRequest3.transactionDescription = transactionDescription;
+        addTransactionRequest3.senderTrustScore = 70;
         ResponseEntity<Response> responseEntity3 = transactionService.addNewTransaction(addTransactionRequest3);
         Assert.assertTrue(responseEntity3.getStatusCode().equals(HttpStatus.CREATED));
         Assert.assertTrue(responseEntity3.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
@@ -98,8 +102,9 @@ public class CotiNodeTest {
         AddTransactionRequest addTransactionRequest4 = new AddTransactionRequest();
         List<BaseTransactionData> baseTransactionDataList4 = createBaseTransactionRandomList(3);
         addTransactionRequest4.baseTransactions = baseTransactionDataList4;
-        addTransactionRequest4.hash = new Hash("A4");
+        addTransactionRequest4.hash = new Hash("d4");
         addTransactionRequest4.transactionDescription = transactionDescription;
+        addTransactionRequest4.senderTrustScore = 55;
         ResponseEntity<Response> responseEntity4 = transactionService.addNewTransaction(addTransactionRequest4);
         Assert.assertTrue(responseEntity4.getStatusCode().equals(HttpStatus.CREATED));
         Assert.assertTrue(responseEntity4.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
@@ -107,20 +112,22 @@ public class CotiNodeTest {
         AddTransactionRequest addTransactionRequest5 = new AddTransactionRequest();
         List<BaseTransactionData> baseTransactionDataList5 = createBaseTransactionRandomList(3);
         addTransactionRequest5.baseTransactions = baseTransactionDataList5;
-        addTransactionRequest5.hash = new Hash("A5");
+        addTransactionRequest5.hash = new Hash("d5");
         addTransactionRequest5.transactionDescription = transactionDescription;
+        addTransactionRequest.senderTrustScore = 85;
         ResponseEntity<Response> responseEntity5 = transactionService.addNewTransaction(addTransactionRequest5);
         Assert.assertTrue(responseEntity5.getStatusCode().equals(HttpStatus.CREATED));
         Assert.assertTrue(responseEntity5.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
 
-        AddTransactionRequest addTransactionRequest6 = new AddTransactionRequest();
-        List<BaseTransactionData> baseTransactionDataList6 = createBaseTransactionRandomList(3);
-        addTransactionRequest6.baseTransactions = baseTransactionDataList6;
-        addTransactionRequest6.hash = new Hash("A6");
-        addTransactionRequest6.transactionDescription = transactionDescription;
-        TransactionData transactionData6 = new TransactionData(addTransactionRequest.baseTransactions,addTransactionRequest.hash,"someDescription", 40 );
-        transactionData6.setLeftParentHash(new Hash("A5"));
-        addTransactionRequest6.transactionData = transactionData6;
+//        AddTransactionDataRequest addTransactionRequest6 = new AddTransactionDataRequest();
+//        List<BaseTransactionData> baseTransactionDataList6 = createBaseTransactionRandomList(3);
+//        TransactionData transactionData6 = new TransactionData(addTransactionRequest.baseTransactions,addTransactionRequest.hash,"someDescription", 40 );
+//        addTransactionRequest6.transactionData = transactionData6;
+//        addTransactionRequest6.transactionData.setBaseTransactions(baseTransactionDataList6);
+//        addTransactionRequest6.transactionData.setHash(new Hash("A6"));
+//        addTransactionRequest6.transactionData.setTransactionDescription(transactionDescription);
+//        transactionData6.setLeftParentHash(new Hash("A5"));
+
 
 //        ResponseEntity<Response> responseEntity6 = transactionService.addPropagatedTransactionFromFullNode(transactionData6);
 //        Assert.assertTrue(responseEntity6.getStatusCode().equals(HttpStatus.CREATED));
@@ -132,9 +139,9 @@ public class CotiNodeTest {
             log.error("error ", e);
         }
 
-        ConfirmationData confirmedData = confirmedTransactions.getByHash(new Hash("A1"));
+        ConfirmationData confirmedData = confirmedTransactions.getByHash(new Hash("d1"));
 
-        ConfirmationData unconfirmedData = unconfirmedTransactions.getByHash(new Hash("A1"));
+        ConfirmationData unconfirmedData = unconfirmedTransactions.getByHash(new Hash("d1"));
 
         Assert.assertNotNull(confirmedData);
         Assert.assertNull(unconfirmedData);

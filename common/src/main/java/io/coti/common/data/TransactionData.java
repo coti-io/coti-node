@@ -5,6 +5,7 @@ import io.coti.common.data.interfaces.IEntity;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.beans.Transient;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -44,12 +45,10 @@ public class TransactionData implements IEntity {
     private transient boolean isVisit;
     private boolean isZeroSpend;
     private String transactionDescription;
-
+    private int index;
 
     private TransactionData() {
     }
-
-
 
     public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription,double senderTrustScore) {
         this.hash = transactionHash;

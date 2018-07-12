@@ -134,12 +134,14 @@ public class ClusterService implements IClusterService {
                 sourceSelector.selectSourcesForAttachment(
                         trustScoreToTransactionMappingSnapshot,
                         transactionData.getSenderTrustScore());
-
+        log.info("child:{} ", transactionData.getHash());
         if (selectedSourcesForAttachment.size() > 0) {
             transactionData.setLeftParentHash(selectedSourcesForAttachment.get(0).getHash());
+            log.info("left parent :{} ", selectedSourcesForAttachment.get(0).getHash());
         }
         if (selectedSourcesForAttachment.size() > 1) {
             transactionData.setRightParentHash(selectedSourcesForAttachment.get(1).getHash());
+            log.info("right parent :{} ", selectedSourcesForAttachment.get(1).getHash());
         }
 
         String hashes = "";

@@ -14,4 +14,12 @@ public interface ITransactionService {
     TransactionData getTransactionData(Hash transactionHash);
 
     ResponseEntity<Response> getTransactionDetails(Hash transactionHash);
+
+    void propagateMultiTransactionFromDsp();
+
+    void addTransactionFromPropagation(TransactionData transactionData) throws TransactionException;
+
+    void setTransactionConfirmedFromPropagation(TransactionData transactionData) throws TransactionException;
+
+    TransactionData getLastTransactionHash();
 }

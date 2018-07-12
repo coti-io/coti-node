@@ -35,11 +35,12 @@ public class TccConfirmationService {
         for (Map.Entry<Hash, TransactionData> entry : hashToUnTccConfirmTransactionsMapping.entrySet()) {
             entry.getValue().setVisit(false);
         }
-
+        log.info(" sortByTopologicalOrder 2");
         //loop is for making sure that every vertex is visited since if we select only one random source
         //all vertices might not be reachable from this source
         //eg:1->2->3,1->3 and if we select 3 as source first then no vertex can be visited of course except for 3
         for (Map.Entry<Hash, TransactionData> entry : hashToUnTccConfirmTransactionsMapping.entrySet()) {
+            log.info("iteration");
             if (!entry.getValue().isVisit()) {
                 topologicalSortingHelper(entry.getValue());
             }
@@ -75,7 +76,9 @@ public class TccConfirmationService {
     }
 
     private void topologicalSortingHelper(TransactionData parentTransactionData) {
+        //log.info("starting topologicalSortingHelper");
         for (Hash transactionDataHash : parentTransactionData.getChildrenTransactions()) {
+            //log.info("topologicalSortingHelper iteration");
             TransactionData childTransactionData = hashToUnTccConfirmTransactionsMapping.get(transactionDataHash);
             if (!childTransactionData.isVisit()) {
                 topologicalSortingHelper(childTransactionData);
