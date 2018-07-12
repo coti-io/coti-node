@@ -15,12 +15,12 @@ import java.util.*;
 import org.bouncycastle.util.encoders.Hex;
 
 @Slf4j
-public class BasicTransactionCryptoWrapper {
+public class BaseTransactionCryptoWrapper {
 
     BaseTransactionData baseTxData;
     private static CryptoHelper cryptoHelper = new CryptoHelper();
 
-    public BasicTransactionCryptoWrapper(BaseTransactionData baseTxData)
+    public BaseTransactionCryptoWrapper(BaseTransactionData baseTxData)
     {
         this.baseTxData = baseTxData;
     }
@@ -39,10 +39,10 @@ public class BasicTransactionCryptoWrapper {
         byte[] IndexByteArray = bufferIndex.array();
 
         Date baseTransactionDate = baseTxData.getCreateTime();
-        int interval = (int)(baseTransactionDate.getTime());
+        int timestamp = (int)(baseTransactionDate.getTime());
 
         ByteBuffer dateBuffer = ByteBuffer.allocate(4);
-        dateBuffer.putInt(interval);
+        dateBuffer.putInt(timestamp);
 
 
 
@@ -53,7 +53,7 @@ public class BasicTransactionCryptoWrapper {
         return  arrToReturn;
     }
 
-    public Hash createBasicTransactionHashFromData(){
+    public Hash createBaseTransactionHashFromData(){
         Keccak.Digest512 digest = new Keccak.Digest512();
         byte[] bytesToHash = getMessageInBytes();
         digest.update(bytesToHash);
@@ -61,22 +61,22 @@ public class BasicTransactionCryptoWrapper {
         return hash;
     }
 
-    public Hash getBasicTransactionHash()
+    public Hash getBaseTransactionHash()
     {
         return baseTxData.getHash();
     }
 
 
-    public boolean IsBasicTransactionValid(Hash transactionHash) {
+    public boolean IsBaseTransactionValid(Hash transactionHash) {
         try {
-            if (!this.createBasicTransactionHashFromData().equals(getBasicTransactionHash()))
+            if (!this.createBaseTransactionHashFromData().equals(getBaseTransactionHash()))
                 return false;
 
             if (!CryptoHelper.IsAddressValid(baseTxData.getAddressHash()))
                 return false;
 
 
-            if (!baseTxData.isSignatureExists())
+            if (baseTxData.getAmount().signum()>0)
                 return true;
 
 

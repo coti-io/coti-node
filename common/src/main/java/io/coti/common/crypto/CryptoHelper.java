@@ -68,11 +68,9 @@ public class CryptoHelper {
 
 
 
-    public static Hash RemoveLeadingZerosFromAddress(Hash addressHash){
-        byte[] addressBytes = addressHash.getBytes();
-        byte[] xPart = Arrays.copyOfRange(addressBytes,0, (addressBytes.length/2) -2 );
-        byte[] yPart = Arrays.copyOfRange(addressBytes,(addressBytes.length/2) - 2,addressBytes.length - 4);
-
+    public static byte[] RemoveLeadingZerosFromAddress(byte[] addressBytes){
+        byte[] xPart = Arrays.copyOfRange(addressBytes,0, addressBytes.length/2 );
+        byte[] yPart = Arrays.copyOfRange(addressBytes,addressBytes.length/2,addressBytes.length);
 
         byte[] xPointPart = new byte[0];
         byte[] yPointPart = new byte[0];
@@ -95,11 +93,10 @@ public class CryptoHelper {
             break;
         }
 
-        ByteBuffer addressBuffer = ByteBuffer.allocate(xPointPart.length + yPointPart.length +4 );
+        ByteBuffer addressBuffer = ByteBuffer.allocate(xPointPart.length + yPointPart.length);
         addressBuffer.put(xPointPart);
         addressBuffer.put(yPointPart);
-        addressBuffer.put(Arrays.copyOfRange(addressHash.getBytes(),64,68));
-        return new Hash(addressBuffer.array());
+        return addressBuffer.array();
     }
 
 
@@ -123,20 +120,16 @@ public class CryptoHelper {
 
     public static boolean IsAddressValid(Hash addressHash)
     {
-
-        if (addressHash.getBytes().length != 68)
+        byte[] addressBytes = addressHash.getBytes();
+        if (addressBytes.length != 68)
             return false;
 
-
-
         Checksum checksum = new CRC32();
-        Hash addressWithoutPadding =  CryptoHelper.RemoveLeadingZerosFromAddress(addressHash);
+        byte[] addressWithoutCheckSum = Arrays.copyOfRange(addressBytes,0 , addressBytes.length-4);
+        byte[] addressWithoutPadding =  CryptoHelper.RemoveLeadingZerosFromAddress(addressWithoutCheckSum);
 
-        byte[] addressWithoutPaddingBytes = addressWithoutPadding.getBytes();
-
-        byte[] addressWithoutCheckSum = Arrays.copyOfRange(addressWithoutPaddingBytes,0 , addressWithoutPaddingBytes.length-4);
-        byte[] addressCheckSum = Arrays.copyOfRange(addressWithoutPaddingBytes,addressWithoutPaddingBytes.length -4 , addressWithoutPaddingBytes.length);
-        checksum.update(addressWithoutCheckSum, 0, addressWithoutCheckSum.length);
+        byte[] addressCheckSum = Arrays.copyOfRange(addressBytes,addressBytes.length -4 , addressBytes.length);
+        checksum.update(addressWithoutPadding, 0, addressWithoutPadding.length);
 
         byte[] checksumValue = ByteBuffer.allocate(4).putInt((int)checksum.getValue()).array();
         return Arrays.equals(checksumValue,addressCheckSum);

@@ -307,12 +307,7 @@ public class TransactionService implements ITransactionService {
     private boolean validateAddresses(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, Double senderTrustScore) {
 
         TransactionCryptoWrapper verifyTransaction = new TransactionCryptoWrapper(baseTransactions, transactionHash, transactionDescription, senderTrustScore);
-        for (BaseTransactionData baseTransactionData : baseTransactions) {
 
-            if (baseTransactionData.getAmount().signum() > 0) {
-                return true;
-            }
-        }
         return verifyTransaction.isTransactionValid();
     }
 

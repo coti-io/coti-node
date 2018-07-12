@@ -1,6 +1,6 @@
 package io.coti.common.services;
 
-import io.coti.common.crypto.BasicTransactionCryptoWrapper;
+import io.coti.common.crypto.BaseTransactionCryptoWrapper;
 import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
@@ -17,8 +17,8 @@ public class ValidationService implements IValidationService {
 
     @Override
     public boolean validateBaseTransaction(BaseTransactionData baseTransactionData, Hash transactionHash) {
-        BasicTransactionCryptoWrapper baseTransactionCrypto = new BasicTransactionCryptoWrapper(baseTransactionData);
-        return baseTransactionCrypto.IsBasicTransactionValid(transactionHash);
+        BaseTransactionCryptoWrapper baseTransactionCrypto = new BaseTransactionCryptoWrapper(baseTransactionData);
+        return baseTransactionCrypto.IsBaseTransactionValid(transactionHash);
     }
 
     @Override

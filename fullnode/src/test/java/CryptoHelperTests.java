@@ -1,10 +1,8 @@
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.coti.common.crypto.CryptoUtils;
-import io.coti.common.data.AddressData;
 import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.TransactionData;
-import io.coti.common.crypto.BasicTransactionCryptoWrapper;
+import io.coti.common.crypto.BaseTransactionCryptoWrapper;
 import io.coti.common.crypto.CryptoHelper;
 import io.coti.common.crypto.TransactionCryptoWrapper;
 import io.coti.common.data.Hash;
@@ -12,11 +10,8 @@ import org.bouncycastle.jce.interfaces.ECPublicKey;
 import org.junit.Assert;
 import org.junit.Test;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
@@ -55,8 +50,8 @@ public class CryptoHelperTests {
     {
         CryptoHelper helper = new CryptoHelper();
         String address = "0003dabc04ac8680698104f35d5818432c619a2a7e42bfc8d791181d897b6bfa664664133b80585844c7452bcb50c860a1167b1be8cfa201c44dd94eb706c8b447d81fd6";
-        Hash addressWithoutZeros = helper.RemoveLeadingZerosFromAddress(new Hash(address));
-        Assert.assertTrue(Arrays.equals(addressWithoutZeros.getBytes(),new Hash("03dabc04ac8680698104f35d5818432c619a2a7e42bfc8d791181d897b6bfa664664133b80585844c7452bcb50c860a1167b1be8cfa201c44dd94eb706c8b447d81fd6").getBytes()));
+        byte[] addressWithoutZeros = helper.RemoveLeadingZerosFromAddress(new Hash(address).getBytes());
+        Assert.assertTrue(Arrays.equals(addressWithoutZeros,new Hash("03dabc04ac8680698104f35d5818432c619a2a7e42bfc8d791181d897b6bfa664664133b80585844c7452bcb50c860a1167b1be8cfa201c44dd94eb706c8b447d81fd6").getBytes()));
     }
 
 
@@ -65,8 +60,8 @@ public class CryptoHelperTests {
     {
         CryptoHelper helper = new CryptoHelper();
         String address = "d4501c35e1662ce0d66db15de20c665abc8e462edb208d51fd573a5490883bfc0000b505805f18fe49bf2dc3cdf06ada9198328f61ed782e9bab7e9fd314ecf40ac88438";
-        Hash addressWithoutZeros = helper.RemoveLeadingZerosFromAddress(new Hash(address));
-        Assert.assertTrue(Arrays.equals(addressWithoutZeros.getBytes(),new Hash("d4501c35e1662ce0d66db15de20c665abc8e462edb208d51fd573a5490883bfcb505805f18fe49bf2dc3cdf06ada9198328f61ed782e9bab7e9fd314ecf40ac88438").getBytes()));
+        byte[] addressWithoutZeros = helper.RemoveLeadingZerosFromAddress(new Hash(address).getBytes());
+        Assert.assertTrue(Arrays.equals(addressWithoutZeros,new Hash("d4501c35e1662ce0d66db15de20c665abc8e462edb208d51fd573a5490883bfcb505805f18fe49bf2dc3cdf06ada9198328f61ed782e9bab7e9fd314ecf40ac88438").getBytes()));
     }
 
 
@@ -191,8 +186,8 @@ public class CryptoHelperTests {
 
         for (BaseTransactionData basicTx: txData.getBaseTransactions())
         {
-            BasicTransactionCryptoWrapper basicTransactionCrypto = new BasicTransactionCryptoWrapper(basicTx);
-            Assert.assertTrue(basicTransactionCrypto.IsBasicTransactionValid(txData.getHash()));
+            BaseTransactionCryptoWrapper basicTransactionCrypto = new BaseTransactionCryptoWrapper(basicTx);
+            Assert.assertTrue(basicTransactionCrypto.IsBaseTransactionValid(txData.getHash()));
         }
     }
 
@@ -265,8 +260,8 @@ public class CryptoHelperTests {
 
         for (BaseTransactionData basicTx: txData.getBaseTransactions())
         {
-            BasicTransactionCryptoWrapper basicTransactionCrypto = new BasicTransactionCryptoWrapper(basicTx);
-            Assert.assertFalse(basicTransactionCrypto.IsBasicTransactionValid(txData.getHash()));
+            BaseTransactionCryptoWrapper basicTransactionCrypto = new BaseTransactionCryptoWrapper(basicTx);
+            Assert.assertFalse(basicTransactionCrypto.IsBaseTransactionValid(txData.getHash()));
         }
     }
 
