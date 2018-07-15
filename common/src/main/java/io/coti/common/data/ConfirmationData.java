@@ -18,7 +18,6 @@ public class ConfirmationData implements IEntity {
     private boolean DoubleSpendPreventionConsensus;
     private boolean TrustChainConsensus;
 
-    private TransactionData transactionData;
 
     public  ConfirmationData(){}
 
@@ -32,7 +31,6 @@ public class ConfirmationData implements IEntity {
                 transactionData.getBaseTransactions()) {
             addressHashToValueTransferredMapping.put(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
         }
-        this.transactionData = transactionData;
     }
 
     @Override

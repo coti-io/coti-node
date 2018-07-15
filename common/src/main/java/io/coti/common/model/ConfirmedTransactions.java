@@ -2,6 +2,7 @@ package io.coti.common.model;
 
 import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.ConfirmationData;
+import io.coti.common.data.TccInfo;
 import io.coti.common.data.TransactionData;
 import io.coti.common.data.interfaces.IEntity;
 import io.coti.common.database.Interfaces.IDatabaseConnector;
@@ -10,13 +11,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
 
+import java.util.Date;
+
 @Slf4j
 @Service
 public class ConfirmedTransactions extends Collection<ConfirmationData> {
-
+    
+    @Autowired
+    private IDatabaseConnector databaseConnector;
 
     @Autowired
-    private ModelUtil modelUtil;
+    private Transactions transactions;
 
     public ConfirmedTransactions() {
     }
@@ -25,9 +30,47 @@ public class ConfirmedTransactions extends Collection<ConfirmationData> {
         super.init();
     }
 
+    public void putInConfirmedAndUpdateTransaction(IEntity entity, boolean isDspc, TccInfo tccInfo){
+        try {
+            databaseConnector.put(columnFamilyName, entity.getKey().getBytes(), SerializationUtils.serialize(entity));
+            ConfirmationData confirmationData = (ConfirmationData) entity;
+            TransactionData transactionData = transactions.getByHash(confirmationData.getKey());
+
+            for (BaseTransactionData baseTransaction : transactionData.getBaseTransactions()) {
+                if (!confirmationData.getAddressHashToValueTransferredMapping().containsKey(baseTransaction.getAddressHash())) {
+                    log.warn("Warning! The confirmationData holds an address that does not exist in the transaction it " +
+                            "points to ");
+                    return;
+                }
+                baseTransaction.setAmount(confirmationData.getAddressHashToValueTransferredMapping()
+                        .get(baseTransaction.getAddressHash()));
+
+            }
+            transactionData.setCreateTime(confirmationData.getCreationTIme());
+            transactionData.setDspConsensus(confirmationData.isDoubleSpendPreventionConsensus());
+
+            transactionData.setTrustChainConsensus(confirmationData.isTrustChainConsensus());
+            transactionData.setTrustChainTransactionHash(tccInfo.getTrustChainTransactionHash());
+            transactionData.setTrustChainTrustScore(tccInfo.getTrustChainTrustScore());
+
+            if(isDspc){
+                transactionData.setTransactionConsensusUpdateTime(new Date());
+            }
+            databaseConnector.put(Transactions.class.getName(), transactionData.getHash().getBytes(),
+                    SerializationUtils.serialize(transactionData));
+
+        } catch (Exception ex) {
+            log.error("Exception while inserting data to confimationTable and transactionTable");
+        }
+    }
+
     @Override
     public void put(IEntity entity) {
-        modelUtil.putConfirmedOrUnconfirmedHelper(columnFamilyName,entity);
+        throw new UnsupportedOperationException("This message is unused in confirmed/unconfirmed transactions." +
+                " please use 'public void putInConfirmedAndUpdateTransaction(IEntity entity, boolean dspc," +
+                " TccInfo tccInfo)'");
 
     }
+
+
 }

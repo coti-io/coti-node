@@ -1,10 +1,10 @@
 package io.coti.common.services;
 
 import io.coti.common.data.Hash;
+import io.coti.common.data.TccInfo;
 import io.coti.common.data.TransactionData;
 import io.coti.common.services.LiveView.LiveViewService;
 import io.coti.common.model.Transactions;
-import io.coti.common.services.TccConfirmationService;
 import io.coti.common.services.interfaces.IClusterService;
 import io.coti.common.services.interfaces.IQueueService;
 import io.coti.common.services.interfaces.ISourceSelector;
@@ -61,12 +61,12 @@ public class ClusterService implements IClusterService {
         Executors.newSingleThreadScheduledExecutor().execute(() -> {
             while (true) {
                 tccConfirmationService.init(hashToUnconfirmedTransactionsMapping);
-                List<Hash> transactionConsensusConfirmed = tccConfirmationService.getTccConfirmedTransactions();
+                List<TccInfo> transactionConsensusConfirmed = tccConfirmationService.getTccConfirmedTransactions();
 
-                for (Hash hash : transactionConsensusConfirmed) {
-                    hashToUnconfirmedTransactionsMapping.remove(hash);
-                    queueService.addToUpdateBalanceQueue(hash);
-                    log.info("TCC has been reached for transaction {}!!", hash);
+                for (TccInfo tccInfo : transactionConsensusConfirmed) {
+                    hashToUnconfirmedTransactionsMapping.remove(tccInfo.getHash());
+                    queueService.addToUpdateBalanceQueue(tccInfo);
+                    log.info("TCC has been reached for transaction {}!!", tccInfo.getHash());
                 }
                 try {
                     TimeUnit.SECONDS.sleep(delayTimeAfterTccProcess);

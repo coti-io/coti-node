@@ -9,18 +9,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class UnconfirmedTransactions extends Collection<ConfirmationData> {
 
-
-    @Autowired
-    private ModelUtil modelUtil;
-
     public UnconfirmedTransactions() {
     }
 
-    @Override
-    public void put(IEntity entity) {
-        modelUtil.putConfirmedOrUnconfirmedHelper(columnFamilyName,entity);
 
-    }
     public void init() {
         super.init();
     }

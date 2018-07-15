@@ -1,6 +1,7 @@
 package io.coti.common.services;
 
 import io.coti.common.data.Hash;
+import io.coti.common.data.TccInfo;
 import io.coti.common.data.TransactionData;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Value;
@@ -89,14 +90,17 @@ public class TccConfirmationService {
         topologicalOrderedGraph.addLast(parentTransactionData);
     }
 
-    public List<Hash> getTccConfirmedTransactions() {
-        List<Hash> transactionConsensusConfirmed = new LinkedList<>();
+    public List<TccInfo> getTccConfirmedTransactions() {
+        List<TccInfo> transactionConsensusConfirmed = new LinkedList<>();
         for(TransactionData transaction : topologicalOrderedGraph) {
             setTotalTrustScore(transaction);
             if (transaction.getTrustChainTrustScore() >= threshold) {
                 transaction.setTrustChainConsensus(true);
                 transaction.setTransactionConsensusUpdateTime(new Date());
-                transactionConsensusConfirmed.add(transaction.getHash());
+                TccInfo tccInfo = new TccInfo(transaction.getHash(), transaction.getTrustChainTransactionHash()
+                        , transaction.getTrustChainTrustScore());
+
+                transactionConsensusConfirmed.add(tccInfo);
                 log.info("transaction with hash:{} is confirmed with trustScore: {} and totalTrustScore:{} ", transaction.getHash(),transaction.getSenderTrustScore(),  transaction.getTrustChainTrustScore());
                 log.info("Trust Chain Transaction Hashes of transaction {}", Arrays.toString(transaction.getTrustChainTransactionHash().toArray()));
                 for(Hash hash: transaction.getTrustChainTransactionHash()) {

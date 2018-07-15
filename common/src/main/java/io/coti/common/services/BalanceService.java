@@ -1,9 +1,6 @@
 package io.coti.common.services;
 
-import io.coti.common.data.BaseTransactionData;
-import io.coti.common.data.ConfirmationData;
-import io.coti.common.data.Hash;
-import io.coti.common.data.TransactionData;
+import io.coti.common.data.*;
 import io.coti.common.http.GetBalancesRequest;
 import io.coti.common.http.GetBalancesResponse;
 import io.coti.common.model.ConfirmedTransactions;
@@ -84,44 +81,26 @@ public class BalanceService implements IBalanceService {
         log.info("Balance service is up");
     }
 
-    private void deleteConfirmedTransactions() {
-        RocksIterator unconfirmedDBIterator = unconfirmedTransactions.getIterator();
-        unconfirmedDBIterator.seekToFirst();
-        while (unconfirmedDBIterator.isValid()) {
-            ConfirmationData confirmationData = (ConfirmationData) SerializationUtils
-                    .deserialize(unconfirmedDBIterator.value());
-            confirmationData.setKey(new Hash(unconfirmedDBIterator.key()));
-            if (confirmationData.isTrustChainConsensus() && confirmationData.isDoubleSpendPreventionConsensus()) {
-                updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(), balanceMap);
-                publishBalanceChangeToWebSocket(confirmationData.getAddressHashToValueTransferredMapping().keySet());
-                confirmedTransactions.put(confirmationData);
-                unconfirmedTransactions.delete(confirmationData.getKey());
-                log.info("Moved unconfirmed transaction to be confirmed: {}", confirmationData.getKey());
-            }
-            unconfirmedDBIterator.next();
-        }
-    }
-
     /**
      * The task will be executed a first time after the initialDelay (because of the init() ) value – and it will
      * continue to be executed according to the fixedDelay
      */
     @Scheduled(fixedDelayString = "${balance.scheduled.delay}", initialDelayString = "${balance.scheduled.initialdelay}")
     private void updateBalanceFromQueueScheduledTask() {
-        ConcurrentLinkedQueue<Hash> updateBalanceQueue = queueService.getUpdateBalanceQueue();
+        ConcurrentLinkedQueue<TccInfo> updateBalanceQueue = queueService.getUpdateBalanceQueue();
         while (!updateBalanceQueue.isEmpty()) {
-            Hash addressHash = updateBalanceQueue.poll();
-            ConfirmationData confirmationData = unconfirmedTransactions.getByHash(addressHash);
-            log.info("confirmationData hash;{}", addressHash);
+            TccInfo tccInfo = updateBalanceQueue.poll();
+            ConfirmationData confirmationData = unconfirmedTransactions.getByHash(tccInfo.getHash());
+            log.info("confirmationData hash;{}", tccInfo.getHash());
             //dspc = 1
             if (confirmationData.isDoubleSpendPreventionConsensus()) {
-                ConfirmationData confirmedTransactionData = new ConfirmationData(transactions.getByHash(addressHash));
+                ConfirmationData confirmedTransactionData = new ConfirmationData(transactions.getByHash(tccInfo.getHash()));
                 confirmedTransactionData.setAddressHashToValueTransferredMapping(confirmationData.getAddressHashToValueTransferredMapping());
-                confirmedTransactions.put(confirmedTransactionData);
-                unconfirmedTransactions.delete(addressHash);
+                confirmedTransactions.putInConfirmedAndUpdateTransaction(confirmedTransactionData, true, tccInfo);
+                unconfirmedTransactions.delete(tccInfo.getHash());
                 updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(), balanceMap);
                 publishBalanceChangeToWebSocket(confirmationData.getAddressHashToValueTransferredMapping().keySet());
-                liveViewService.updateNodeStatus(transactions.getByHash(addressHash), 2);
+                liveViewService.updateNodeStatus(transactions.getByHash(tccInfo.getHash()), 2);
 
             } else { //dspc =0
                 confirmationData.setTrustChainConsensus(true);
@@ -217,17 +196,6 @@ public class BalanceService implements IBalanceService {
             log.error("Errors on snapshot loading: {}", e);
             throw e;
         }
-    }
-
-    private List<Hash> generateGenesisTransactions() {
-        List<Hash> unconfirmedTransactionHashes = new LinkedList<>();
-        for (TransactionData transactionData : zeroSpendService.getGenesisTransactions()) {
-            transactions.put(transactionData);
-            ConfirmationData confirmationData = new ConfirmationData(transactionData);
-            unconfirmedTransactions.put(confirmationData);
-            unconfirmedTransactionHashes.add(confirmationData.getKey());
-        }
-        return unconfirmedTransactionHashes;
     }
 
     private void publishBalanceChangeToWebSocket(Set<Hash> addresses) {

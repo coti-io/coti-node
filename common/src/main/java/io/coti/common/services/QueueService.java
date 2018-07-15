@@ -1,6 +1,7 @@
 package io.coti.common.services;
 
 import io.coti.common.data.Hash;
+import io.coti.common.data.TccInfo;
 import io.coti.common.services.interfaces.IQueueService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -14,7 +15,7 @@ public class QueueService implements IQueueService {
 
     private ConcurrentLinkedQueue<Hash> tccQueue;
 
-    private ConcurrentLinkedQueue<Hash> updateBalanceQueue;
+    private ConcurrentLinkedQueue<TccInfo> updateBalanceQueue;
 
     @PostConstruct
     private void init(){
@@ -39,13 +40,13 @@ public class QueueService implements IQueueService {
     }
 
     @Override
-    public void addToUpdateBalanceQueue(Hash hash) {
-        updateBalanceQueue.add(hash);
-        log.info("Hash {} , was added to updateBalanceQueue", hash);
+    public void addToUpdateBalanceQueue(TccInfo tccInfo) {
+        updateBalanceQueue.add(tccInfo);
+        log.info("TccInfo {} , was added to updateBalanceQueue", tccInfo);
     }
 
     @Override
-    public ConcurrentLinkedQueue<Hash> getUpdateBalanceQueue() {
+    public ConcurrentLinkedQueue<TccInfo> getUpdateBalanceQueue() {
         return updateBalanceQueue;
     }
 }

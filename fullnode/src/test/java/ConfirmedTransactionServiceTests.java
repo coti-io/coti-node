@@ -13,6 +13,9 @@ public class ConfirmedTransactionServiceTests {
     private BalanceService balanceService;
 
 
+
+
+
 //    @Test
 //    public void getBalances_EmptyBalancesList_ReturnsEmptyList() {
 //        List<BaseTransactionData> balances = balanceService.getBalances(new ArrayList<>());
