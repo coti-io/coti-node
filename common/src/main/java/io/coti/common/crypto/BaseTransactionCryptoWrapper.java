@@ -54,10 +54,10 @@ public class BaseTransactionCryptoWrapper {
     }
 
     public Hash createBaseTransactionHashFromData(){
-        Keccak.Digest512 digest = new Keccak.Digest512();
+        Keccak.Digest256 digest = new Keccak.Digest256();
         byte[] bytesToHash = getMessageInBytes();
         digest.update(bytesToHash);
-        Hash hash = new Hash(Hex.toHexString( digest.digest()));
+        Hash hash = new Hash(Hex.toHexString(digest.digest()));
         return hash;
     }
 

@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TransactionCryptoWrapper {
-    final static int  baseTransactionHashSize = 64;
+    final static int  baseTransactionHashSize = 32;
     ArrayList<BaseTransactionCryptoWrapper> baseTransactions = new ArrayList<>();
     TransactionData txData;
 
@@ -43,11 +43,11 @@ public class TransactionCryptoWrapper {
     }
 
     public String getHashFromBaseTransactionHashesData(){
-        Keccak.Digest512 digest = new Keccak.Digest512();
+        Keccak.Digest256 digest = new Keccak.Digest256();
         byte[] bytesToHash = getBaseTransactionsHashesBytes();
         digest.update(bytesToHash);
         byte[] digestedHash = digest.digest();
-        String hash =   Hex.toHexString( digestedHash);
+        String hash = Hex.toHexString(digestedHash);
         return hash;
     }
 

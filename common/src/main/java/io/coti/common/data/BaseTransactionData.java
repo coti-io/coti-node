@@ -12,7 +12,7 @@ public class BaseTransactionData implements IEntity {
 
     private transient Hash hash;
 
-    private AddressData addressData;
+
     private Hash addressHash;
     private BigDecimal amount;
     private Hash transactionHash;
@@ -26,7 +26,6 @@ public class BaseTransactionData implements IEntity {
     public BaseTransactionData(Hash addressHash, BigDecimal amount, Hash baseTransactionhash, SignatureData signature , Date createTime ){
         this.addressHash = addressHash;
 
-        this.addressData = new AddressData(this.addressHash);
         this.amount = amount;
         this.hash = baseTransactionhash;
         this.signatureData = signature;

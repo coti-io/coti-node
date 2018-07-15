@@ -55,6 +55,11 @@ public class TransactionData implements IEntity {
         this.hash = transactionHash;
         this.transactionDescription = transactionDescription;
         this.baseTransactions = baseTransactions;
+
+        for (BaseTransactionData baseTransaction: this.baseTransactions) {
+            baseTransaction.setTransactionHash(transactionHash);
+        }
+
         this.senderTrustScore = senderTrustScore;
 
         this.initTransactionData();

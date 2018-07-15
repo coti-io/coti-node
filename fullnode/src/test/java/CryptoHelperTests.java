@@ -123,58 +123,58 @@ public class CryptoHelperTests {
     public void testBasicTransactionVerification() throws IOException{
         String jsonOfTransaction = "{\n" +
                 "\t'baseTransactions': [{\n" +
-                "\t\t\t'hash': '54e43a7b3485e1dca039888b4cf1951caa737c01219f71db01fa31c73afa745645137e4473db82e1986b7c590d093eb32d613924f5a5187e5f2ff4395bbe5eb55203282c',\n" +
+                "\t\t\t'addressHash': '54e43a7b3485e1dca039888b4cf1951caa737c01219f71db01fa31c73afa745645137e4473db82e1986b7c590d093eb32d613924f5a5187e5f2ff4395bbe5eb55203282c',\n" +
                 "\t\t\t'indexInTransactionsChain': 0,\n" +
                 "\t\t\t'amount': '-30.000000000000000000',\n" +
-                "\t\t\t'hash': '36b0e1b46556cb8e7a6fb1cf297bc799381d40bc83f48986dc9ac0dbdd52ce4ea894c517f635e8a4c0943f9a2c1d46f6ce55b34c277b7cf70e0704a7c6f4d113',\n" +
-                "\t\t\t'createTime': 1531325119553,\n" +
+                "\t\t\t'hash': '914755201efd8eadea48430e92bda14a7357b4bf95f366bf3641f0a26ac113d9',\n" +
+                "\t\t\t'createTime': 1531688758490,\n" +
                 "\t\t\t'signatureData': {\n" +
-                "\t\t\t\t'r': 'e33794aee374bc1a949a2aa365d056ad57efdb193d948bd51ea2a712d06e862b',\n" +
-                "\t\t\t\t's': 'f9f3f79c0ed0609dff9894aba3a8d800c445c0e4885cd739cb4b69b6d0ed03f6'\n" +
+                "\t\t\t\t'r': '664d990b6d49a83bd9380642480facbe77a283875ba1e327836178caed358784',\n" +
+                "\t\t\t\t's': '9a5e6590b2720db6ebdab71bbaac2618839c381bf6c227590e9a776533728bef'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'hash': '988149bfdcaf6ebc115d2370c159988223d889e0142fecf6dccc10a61763e1b7cc5caa07a32ec65f2105dedc878f1214a5e02db7bfd5c30591405dbd7ac720a78ceb7e7b',\n" +
+                "\t\t\t'addressHash': '988149bfdcaf6ebc115d2370c159988223d889e0142fecf6dccc10a61763e1b7cc5caa07a32ec65f2105dedc878f1214a5e02db7bfd5c30591405dbd7ac720a78ceb7e7b',\n" +
                 "\t\t\t'indexInTransactionsChain': 1,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
-                "\t\t\t'hash': '9eff5b4ed178c83af8c3b57cfbca4293728d52e188a947930437b0a1aa0a8bb396e6782667bfaa488400042c65098f0ac4f01863bbb32cb3e3cd1f92e5bff095',\n" +
-                "\t\t\t'createTime': 1531325119557,\n" +
+                "\t\t\t'hash': 'd05c75913d6fc08673111f965c83a451b0469ce0c98e07ccb2ad418a1f2d39af',\n" +
+                "\t\t\t'createTime': 1531688758492,\n" +
                 "\t\t\t'signatureData': {\n" +
-                "\t\t\t\t'r': '6dba0a0e7e620f5fca08ba10e3b30946c31f77af0851a82ec87511c0ef7800c',\n" +
-                "\t\t\t\t's': '9edb9bd30fe90916ae10c9461e8626b4e0aba668f6c43bb7ecc752889989c3c1'\n" +
+                "\t\t\t\t'r': '57ddb4df8e408e8708b3e7a68e82d514ce0ef4409b3e0560a8f6f7558e339584',\n" +
+                "\t\t\t\t's': '6be9722669490e4abfda538cb8e86f4a1b08038e5d6bfa40c28cc9f90473b404'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'hash': 'fba6bdf0937c21ba35817bab7781e8f174964768706e63b87e63187c45b0e84f5837f092b2197d42d84d3608fe59aaeeda64aceb45938b16e6a3b6b5ef28dbf20f8a9f74',\n" +
+                "\t\t\t'addressHash': 'fba6bdf0937c21ba35817bab7781e8f174964768706e63b87e63187c45b0e84f5837f092b2197d42d84d3608fe59aaeeda64aceb45938b16e6a3b6b5ef28dbf20f8a9f74',\n" +
                 "\t\t\t'indexInTransactionsChain': 2,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
-                "\t\t\t'hash': 'fce287772288c65be41ea1e607b8012b1f46cfd05bacc921a736db58e9a9d28dc215e6f231592688978cdf1a305b79526450d399436c0e927b473b1206878f2b',\n" +
-                "\t\t\t'createTime': 1531325119558,\n" +
+                "\t\t\t'hash': '664792bbf4c80c7e5952888b054ab8a96a0109806ec7519289d652d082b44405',\n" +
+                "\t\t\t'createTime': 1531688758496,\n" +
                 "\t\t\t'signatureData': {\n" +
-                "\t\t\t\t'r': 'c159fdcb2260c65264aaac9c4ee1274ba8b0173bc039645dd866f698a13183a4',\n" +
-                "\t\t\t\t's': '8e974f8141c4e5bc401f51c42881946dca2aed9a9d2efb1acf61afd21150a4c0'\n" +
+                "\t\t\t\t'r': 'dec9e04812c9de6a4384b27b4b58823b045c95b0e9aedc60781326acbeb06dfc',\n" +
+                "\t\t\t\t's': 'f3d88198f4a6964790ed61c8146600da2384929a378f2649e2193cfdd068609d'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'hash': '4f4c693378d2a5ad9c633fb92e36bf003df06ab743c75a80624e0e912b7b5fa58f69d0bd655157b5e216e72a4d4f14e29bb7c0a996d14fb34f76adefbae4ea1e29dd9316',\n" +
+                "\t\t\t'addressHash': '4f4c693378d2a5ad9c633fb92e36bf003df06ab743c75a80624e0e912b7b5fa58f69d0bd655157b5e216e72a4d4f14e29bb7c0a996d14fb34f76adefbae4ea1e29dd9316',\n" +
                 "\t\t\t'indexInTransactionsChain': 3,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
-                "\t\t\t'hash': '63a5a3117695db3c66bd7015b82254a3b0a40fae64820f1d2e2e40d5bffe187b2c29b694e97808459d9fd70cc73b9793d09807cf89b6772c6ee0cf2654e12ddc',\n" +
-                "\t\t\t'createTime': 1531325119559,\n" +
+                "\t\t\t'hash': '1636f09572156d0298a439254543f93faecee0413bf437ae74fd6e7ee5cf5483',\n" +
+                "\t\t\t'createTime': 1531688758496,\n" +
                 "\t\t\t'signatureData': {\n" +
-                "\t\t\t\t'r': '16a90ab949412ce2f4627bab4808c65aa67d07976901cd181f864c114a109c69',\n" +
-                "\t\t\t\t's': '1ec87f03a3b4ea5be2199c57ac6858acf698c940e7d0e855e70f0b1a8be2657e'\n" +
+                "\t\t\t\t'r': '71270624df733adf4d9c33f5ffccce5f8b9669f34033460c9dabf75b48596ad5',\n" +
+                "\t\t\t\t's': '3890ea35df9fe7f42e7697469378d6b9e499be51068d2b601456cdcd1b72585c'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'hash': '016d30272b03183635d14f9c45754c1bdb32b7b78d4c60031570f9b367a1e057d1d7f88736a745f41170e5edc1689e6f0f64ed43ea3b6dc19d17e4d7e2e83b32fcb79dc0',\n" +
+                "\t\t\t'addressHash': '016d30272b03183635d14f9c45754c1bdb32b7b78d4c60031570f9b367a1e057d1d7f88736a745f41170e5edc1689e6f0f64ed43ea3b6dc19d17e4d7e2e83b32fcb79dc0',\n" +
                 "\t\t\t'indexInTransactionsChain': 4,\n" +
                 "\t\t\t'amount': '60.000000000000000000',\n" +
-                "\t\t\t'hash': '16ae3ece9fcac1268f0407fcfb6402e568a917ea26ede90415f986b4337244bbf84fdcb07c2761d6886f4bd1eb424be1860bc9a0b2ace87adb908ef7864d1b01',\n" +
-                "\t\t\t'createTime': 1531325119560\n" +
+                "\t\t\t'hash': '34ecf925edf9fcd76d8bdaccb6bf1e2ee2bd0a22a1b307920325fce1bf1b616b',\n" +
+                "\t\t\t'createTime': 1531688758497\n" +
                 "\t\t}\n" +
                 "\t],\n" +
-                "\t'createTime': 1531325119544,\n" +
+                "\t'createTime': 1531688758484,\n" +
                 "\t'baseTransactionsCount': 5,\n" +
                 "\t'transactionDescription': 'test',\n" +
-                "\t'hash': '371d4730c61f94c2204c1cd29015f26ff588f49d5263aa84f408bf29a0188b4f19f720e3be2533c777a7ac8de5cf5787c6ec40d8761c23fc95b67d52f8e61cc3',\n" +
-                "\t'senderTrustScore': 64.71902931299373\n" +
+                "\t'hash': '81b4f2dc2b07cd92ed1b1b678568b112f53d1147687193686d17d35801522b34',\n" +
+                "\t'senderTrustScore': 56.239619552073165\n" +
                 "}";
 
 
@@ -197,59 +197,59 @@ public class CryptoHelperTests {
     public void testInvalidBasicTransactionVerification() throws IOException{
         String jsonOfTransaction = "{\n" +
                 "\t'baseTransactions': [{\n" +
-                "\t\t\t'hash': '54e43a7b3485e1dca039888b4cf1951caa737c01219f71db01fa31c73afa745645137e4473db82e1986b7c590d093eb32d613924f5a5187e5f2ff4395bbe5eb55203282c',\n" +
+                "\t\t\t'addressHash': '54e43a7b3485e1dca039888b4cf1951caa737c01219f71db01fa31c73afa745645137e4473db82e1986b7c590d093eb32d613924f5a5187e5f2ff4395bbe5eb55203282c',\n" +
                 "\t\t\t'indexInTransactionsChain': 0,\n" +
                 "\t\t\t'amount': '-30.000000000000000000',\n" +
-                "\t\t\t'hash': '36b0e1b46556cb8e7a6fb1cf297bc799381d40bc83f48986dc9ac0dbdd52ce4ea894c517f635e8a4c0943f9a2c1d46f6ce55b34c277b7cf70e0704a7c6f4d144',\n" +
-                "\t\t\t'createTime': 1531325119553,\n" +
+                "\t\t\t'hash': '914755201efd8eadea48430e92bda14a7357b4bf95f366bf3641f0a26ac113d8',\n" +
+                "\t\t\t'createTime': 1531688758490,\n" +
                 "\t\t\t'signatureData': {\n" +
-                "\t\t\t\t'r': 'e33794aee374bc1a949a2aa365d056ad57efdb193d948bd51ea2a712d06e862b',\n" +
-                "\t\t\t\t's': 'f9f3f79c0ed0609dff9894aba3a8d800c445c0e4885cd739cb4b69b6d0ed03f6'\n" +
+                "\t\t\t\t'r': '664d990b6d49a83bd9380642480facbe77a283875ba1e327836178caed358784',\n" +
+                "\t\t\t\t's': '9a5e6590b2720db6ebdab71bbaac2618839c381bf6c227590e9a776533728bef'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'hash': '988149bfdcaf6ebc115d2370c159988223d889e0142fecf6dccc10a61763e1b7cc5caa07a32ec65f2105dedc878f1214a5e02db7bfd5c30591405dbd7ac720a78ceb7e7b',\n" +
+                "\t\t\t'addressHash': '988149bfdcaf6ebc115d2370c159988223d889e0142fecf6dccc10a61763e1b7cc5caa07a32ec65f2105dedc878f1214a5e02db7bfd5c30591405dbd7ac720a78ceb7e7b',\n" +
                 "\t\t\t'indexInTransactionsChain': 1,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
-                "\t\t\t'hash': '9eff5b4ed178c83af8c3b57cfbca4293728d52e188a947930437b0a1aa0a8bb396e6782667bfaa488400042c65098f0ac4f01863bbb32cb3e3cd1f92e5bff077',\n" +
-                "\t\t\t'createTime': 1531325119557,\n" +
+                "\t\t\t'hash': 'd05c75913d6fc08673111f965c83a451b0469ce0c98e07ccb2ad418a1f2d39ae',\n" +
+                "\t\t\t'createTime': 1531688758492,\n" +
                 "\t\t\t'signatureData': {\n" +
-                "\t\t\t\t'r': '6dba0a0e7e620f5fca08ba10e3b30946c31f77af0851a82ec87511c0ef7800c',\n" +
-                "\t\t\t\t's': '9edb9bd30fe90916ae10c9461e8626b4e0aba668f6c43bb7ecc752889989c3c1'\n" +
+                "\t\t\t\t'r': '57ddb4df8e408e8708b3e7a68e82d514ce0ef4409b3e0560a8f6f7558e339584',\n" +
+                "\t\t\t\t's': '6be9722669490e4abfda538cb8e86f4a1b08038e5d6bfa40c28cc9f90473b404'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'hash': 'fba6bdf0937c21ba35817bab7781e8f174964768706e63b87e63187c45b0e84f5837f092b2197d42d84d3608fe59aaeeda64aceb45938b16e6a3b6b5ef28dbf20f8a9f74',\n" +
+                "\t\t\t'addressHash': 'fba6bdf0937c21ba35817bab7781e8f174964768706e63b87e63187c45b0e84f5837f092b2197d42d84d3608fe59aaeeda64aceb45938b16e6a3b6b5ef28dbf20f8a9f74',\n" +
                 "\t\t\t'indexInTransactionsChain': 2,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
-                "\t\t\t'hash': 'fce287772288c65be41ea1e607b8012b1f46cfd05bacc921a736db58e9a9d28dc215e6f231592688978cdf1a305b79526450d399436c0e927b473b1206878f88',\n" +
-                "\t\t\t'createTime': 1531325119558,\n" +
+                "\t\t\t'hash': '664792bbf4c80c7e5952888b054ab8a96a0109806ec7519289d652d082b4440t',\n" +
+                "\t\t\t'createTime': 1531688758496,\n" +
                 "\t\t\t'signatureData': {\n" +
-                "\t\t\t\t'r': 'c159fdcb2260c65264aaac9c4ee1274ba8b0173bc039645dd866f698a13183a4',\n" +
-                "\t\t\t\t's': '8e974f8141c4e5bc401f51c42881946dca2aed9a9d2efb1acf61afd21150a4c0'\n" +
+                "\t\t\t\t'r': 'dec9e04812c9de6a4384b27b4b58823b045c95b0e9aedc60781326acbeb06dfc',\n" +
+                "\t\t\t\t's': 'f3d88198f4a6964790ed61c8146600da2384929a378f2649e2193cfdd068609d'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'hash': '4f4c693378d2a5ad9c633fb92e36bf003df06ab743c75a80624e0e912b7b5fa58f69d0bd655157b5e216e72a4d4f14e29bb7c0a996d14fb34f76adefbae4ea1e29dd9316',\n" +
+                "\t\t\t'addressHash': '4f4c693378d2a5ad9c633fb92e36bf003df06ab743c75a80624e0e912b7b5fa58f69d0bd655157b5e216e72a4d4f14e29bb7c0a996d14fb34f76adefbae4ea1e29dd9316',\n" +
                 "\t\t\t'indexInTransactionsChain': 3,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
-                "\t\t\t'hash': '63a5a3117695db3c66bd7015b82254a3b0a40fae64820f1d2e2e40d5bffe187b2c29b694e97808459d9fd70cc73b9793d09807cf89b6772c6ee0cf2654e12d90',\n" +
-                "\t\t\t'createTime': 1531325119559,\n" +
+                "\t\t\t'hash': '1636f09572156d0298a439254543f93faecee0413bf437ae74fd6e7ee5cf548c',\n" +
+                "\t\t\t'createTime': 1531688758496,\n" +
                 "\t\t\t'signatureData': {\n" +
-                "\t\t\t\t'r': '16a90ab949412ce2f4627bab4808c65aa67d07976901cd181f864c114a109c69',\n" +
-                "\t\t\t\t's': '1ec87f03a3b4ea5be2199c57ac6858acf698c940e7d0e855e70f0b1a8be2657e'\n" +
+                "\t\t\t\t'r': '71270624df733adf4d9c33f5ffccce5f8b9669f34033460c9dabf75b48596ad5',\n" +
+                "\t\t\t\t's': '3890ea35df9fe7f42e7697469378d6b9e499be51068d2b601456cdcd1b72585c'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'hash': '016d30272b03183635d14f9c45754c1bdb32b7b78d4c60031570f9b367a1e057d1d7f88736a745f41170e5edc1689e6f0f64ed43ea3b6dc19d17e4d7e2e83b32fcb79dc0',\n" +
+                "\t\t\t'addressHash': '016d30272b03183635d14f9c45754c1bdb32b7b78d4c60031570f9b367a1e057d1d7f88736a745f41170e5edc1689e6f0f64ed43ea3b6dc19d17e4d7e2e83b32fcb79dc0',\n" +
                 "\t\t\t'indexInTransactionsChain': 4,\n" +
                 "\t\t\t'amount': '60.000000000000000000',\n" +
-                "\t\t\t'hash': '16ae3ece9fcac1268f0407fcfb6402e568a917ea26ede90415f986b4337244bbf84fdcb07c2761d6886f4bd1eb424be1860bc9a0b2ace87adb908ef7864d1b23',\n" +
-                "\t\t\t'createTime': 1531325119560\n" +
+                "\t\t\t'hash': '34ecf925edf9fcd76d8bdaccb6bf1e2ee2bd0a22a1b307920325fce1bf1b616a',\n" +
+                "\t\t\t'createTime': 1531688758497\n" +
                 "\t\t}\n" +
                 "\t],\n" +
-                "\t'createTime': 1531325119544,\n" +
+                "\t'createTime': 1531688758484,\n" +
                 "\t'baseTransactionsCount': 5,\n" +
                 "\t'transactionDescription': 'test',\n" +
-                "\t'hash': '371d4730c61f94c2204c1cd29015f26ff588f49d5263aa84f408bf29a0188b4f19f720e3be2533c777a7ac8de5cf5787c6ec40d8761c23fc95b67d52f8e61cc3',\n" +
-                "\t'senderTrustScore': 64.71902931299373\n" +
-                "}";
+                "\t'hash': '81b4f2dc2b07cd92ed1b1b678568b112f53d1147687193686d17d35801522b34',\n" +
+                "\t'senderTrustScore': 56.239619552073165\n" +
+                "}\n";
 
 
 
@@ -269,58 +269,58 @@ public class CryptoHelperTests {
     public void testTransactionVerification() throws IOException{
         String jsonOfTransaction = "{\n" +
                 "\t'baseTransactions': [{\n" +
-                "\t\t\t'hash': '54e43a7b3485e1dca039888b4cf1951caa737c01219f71db01fa31c73afa745645137e4473db82e1986b7c590d093eb32d613924f5a5187e5f2ff4395bbe5eb55203282c',\n" +
+                "\t\t\t'addressHash': '54e43a7b3485e1dca039888b4cf1951caa737c01219f71db01fa31c73afa745645137e4473db82e1986b7c590d093eb32d613924f5a5187e5f2ff4395bbe5eb55203282c',\n" +
                 "\t\t\t'indexInTransactionsChain': 0,\n" +
                 "\t\t\t'amount': '-30.000000000000000000',\n" +
-                "\t\t\t'hash': '36b0e1b46556cb8e7a6fb1cf297bc799381d40bc83f48986dc9ac0dbdd52ce4ea894c517f635e8a4c0943f9a2c1d46f6ce55b34c277b7cf70e0704a7c6f4d113',\n" +
-                "\t\t\t'createTime': 1531325119553,\n" +
+                "\t\t\t'hash': '914755201efd8eadea48430e92bda14a7357b4bf95f366bf3641f0a26ac113d9',\n" +
+                "\t\t\t'createTime': 1531688758490,\n" +
                 "\t\t\t'signatureData': {\n" +
-                "\t\t\t\t'r': 'e33794aee374bc1a949a2aa365d056ad57efdb193d948bd51ea2a712d06e862b',\n" +
-                "\t\t\t\t's': 'f9f3f79c0ed0609dff9894aba3a8d800c445c0e4885cd739cb4b69b6d0ed03f6'\n" +
+                "\t\t\t\t'r': '664d990b6d49a83bd9380642480facbe77a283875ba1e327836178caed358784',\n" +
+                "\t\t\t\t's': '9a5e6590b2720db6ebdab71bbaac2618839c381bf6c227590e9a776533728bef'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'hash': '988149bfdcaf6ebc115d2370c159988223d889e0142fecf6dccc10a61763e1b7cc5caa07a32ec65f2105dedc878f1214a5e02db7bfd5c30591405dbd7ac720a78ceb7e7b',\n" +
+                "\t\t\t'addressHash': '988149bfdcaf6ebc115d2370c159988223d889e0142fecf6dccc10a61763e1b7cc5caa07a32ec65f2105dedc878f1214a5e02db7bfd5c30591405dbd7ac720a78ceb7e7b',\n" +
                 "\t\t\t'indexInTransactionsChain': 1,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
-                "\t\t\t'hash': '9eff5b4ed178c83af8c3b57cfbca4293728d52e188a947930437b0a1aa0a8bb396e6782667bfaa488400042c65098f0ac4f01863bbb32cb3e3cd1f92e5bff095',\n" +
-                "\t\t\t'createTime': 1531325119557,\n" +
+                "\t\t\t'hash': 'd05c75913d6fc08673111f965c83a451b0469ce0c98e07ccb2ad418a1f2d39af',\n" +
+                "\t\t\t'createTime': 1531688758492,\n" +
                 "\t\t\t'signatureData': {\n" +
-                "\t\t\t\t'r': '6dba0a0e7e620f5fca08ba10e3b30946c31f77af0851a82ec87511c0ef7800c',\n" +
-                "\t\t\t\t's': '9edb9bd30fe90916ae10c9461e8626b4e0aba668f6c43bb7ecc752889989c3c1'\n" +
+                "\t\t\t\t'r': '57ddb4df8e408e8708b3e7a68e82d514ce0ef4409b3e0560a8f6f7558e339584',\n" +
+                "\t\t\t\t's': '6be9722669490e4abfda538cb8e86f4a1b08038e5d6bfa40c28cc9f90473b404'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'hash': 'fba6bdf0937c21ba35817bab7781e8f174964768706e63b87e63187c45b0e84f5837f092b2197d42d84d3608fe59aaeeda64aceb45938b16e6a3b6b5ef28dbf20f8a9f74',\n" +
+                "\t\t\t'addressHash': 'fba6bdf0937c21ba35817bab7781e8f174964768706e63b87e63187c45b0e84f5837f092b2197d42d84d3608fe59aaeeda64aceb45938b16e6a3b6b5ef28dbf20f8a9f74',\n" +
                 "\t\t\t'indexInTransactionsChain': 2,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
-                "\t\t\t'hash': 'fce287772288c65be41ea1e607b8012b1f46cfd05bacc921a736db58e9a9d28dc215e6f231592688978cdf1a305b79526450d399436c0e927b473b1206878f2b',\n" +
-                "\t\t\t'createTime': 1531325119558,\n" +
+                "\t\t\t'hash': '664792bbf4c80c7e5952888b054ab8a96a0109806ec7519289d652d082b44405',\n" +
+                "\t\t\t'createTime': 1531688758496,\n" +
                 "\t\t\t'signatureData': {\n" +
-                "\t\t\t\t'r': 'c159fdcb2260c65264aaac9c4ee1274ba8b0173bc039645dd866f698a13183a4',\n" +
-                "\t\t\t\t's': '8e974f8141c4e5bc401f51c42881946dca2aed9a9d2efb1acf61afd21150a4c0'\n" +
+                "\t\t\t\t'r': 'dec9e04812c9de6a4384b27b4b58823b045c95b0e9aedc60781326acbeb06dfc',\n" +
+                "\t\t\t\t's': 'f3d88198f4a6964790ed61c8146600da2384929a378f2649e2193cfdd068609d'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'hash': '4f4c693378d2a5ad9c633fb92e36bf003df06ab743c75a80624e0e912b7b5fa58f69d0bd655157b5e216e72a4d4f14e29bb7c0a996d14fb34f76adefbae4ea1e29dd9316',\n" +
+                "\t\t\t'addressHash': '4f4c693378d2a5ad9c633fb92e36bf003df06ab743c75a80624e0e912b7b5fa58f69d0bd655157b5e216e72a4d4f14e29bb7c0a996d14fb34f76adefbae4ea1e29dd9316',\n" +
                 "\t\t\t'indexInTransactionsChain': 3,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
-                "\t\t\t'hash': '63a5a3117695db3c66bd7015b82254a3b0a40fae64820f1d2e2e40d5bffe187b2c29b694e97808459d9fd70cc73b9793d09807cf89b6772c6ee0cf2654e12ddc',\n" +
-                "\t\t\t'createTime': 1531325119559,\n" +
+                "\t\t\t'hash': '1636f09572156d0298a439254543f93faecee0413bf437ae74fd6e7ee5cf5483',\n" +
+                "\t\t\t'createTime': 1531688758496,\n" +
                 "\t\t\t'signatureData': {\n" +
-                "\t\t\t\t'r': '16a90ab949412ce2f4627bab4808c65aa67d07976901cd181f864c114a109c69',\n" +
-                "\t\t\t\t's': '1ec87f03a3b4ea5be2199c57ac6858acf698c940e7d0e855e70f0b1a8be2657e'\n" +
+                "\t\t\t\t'r': '71270624df733adf4d9c33f5ffccce5f8b9669f34033460c9dabf75b48596ad5',\n" +
+                "\t\t\t\t's': '3890ea35df9fe7f42e7697469378d6b9e499be51068d2b601456cdcd1b72585c'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'hash': '016d30272b03183635d14f9c45754c1bdb32b7b78d4c60031570f9b367a1e057d1d7f88736a745f41170e5edc1689e6f0f64ed43ea3b6dc19d17e4d7e2e83b32fcb79dc0',\n" +
+                "\t\t\t'addressHash': '016d30272b03183635d14f9c45754c1bdb32b7b78d4c60031570f9b367a1e057d1d7f88736a745f41170e5edc1689e6f0f64ed43ea3b6dc19d17e4d7e2e83b32fcb79dc0',\n" +
                 "\t\t\t'indexInTransactionsChain': 4,\n" +
                 "\t\t\t'amount': '60.000000000000000000',\n" +
-                "\t\t\t'hash': '16ae3ece9fcac1268f0407fcfb6402e568a917ea26ede90415f986b4337244bbf84fdcb07c2761d6886f4bd1eb424be1860bc9a0b2ace87adb908ef7864d1b01',\n" +
-                "\t\t\t'createTime': 1531325119560\n" +
+                "\t\t\t'hash': '34ecf925edf9fcd76d8bdaccb6bf1e2ee2bd0a22a1b307920325fce1bf1b616b',\n" +
+                "\t\t\t'createTime': 1531688758497\n" +
                 "\t\t}\n" +
                 "\t],\n" +
-                "\t'createTime': 1531325119544,\n" +
+                "\t'createTime': 1531688758484,\n" +
                 "\t'baseTransactionsCount': 5,\n" +
                 "\t'transactionDescription': 'test',\n" +
-                "\t'hash': '371d4730c61f94c2204c1cd29015f26ff588f49d5263aa84f408bf29a0188b4f19f720e3be2533c777a7ac8de5cf5787c6ec40d8761c23fc95b67d52f8e61cc3',\n" +
-                "\t'senderTrustScore': 64.71902931299373\n" +
+                "\t'hash': '81b4f2dc2b07cd92ed1b1b678568b112f53d1147687193686d17d35801522b34',\n" +
+                "\t'senderTrustScore': 56.239619552073165\n" +
                 "}\n";
 
 
@@ -340,58 +340,58 @@ public class CryptoHelperTests {
     public void testTransactionVerificationInvalidTransactionHash() throws IOException{
         String jsonOfTransaction = "{\n" +
                 "\t'baseTransactions': [{\n" +
-                "\t\t\t'hash': '54e43a7b3485e1dca039888b4cf1951caa737c01219f71db01fa31c73afa745645137e4473db82e1986b7c590d093eb32d613924f5a5187e5f2ff4395bbe5eb55203282c',\n" +
+                "\t\t\t'addressHash': '54e43a7b3485e1dca039888b4cf1951caa737c01219f71db01fa31c73afa745645137e4473db82e1986b7c590d093eb32d613924f5a5187e5f2ff4395bbe5eb55203282c',\n" +
                 "\t\t\t'indexInTransactionsChain': 0,\n" +
                 "\t\t\t'amount': '-30.000000000000000000',\n" +
-                "\t\t\t'hash': '36b0e1b46556cb8e7a6fb1cf297bc799381d40bc83f48986dc9ac0dbdd52ce4ea894c517f635e8a4c0943f9a2c1d46f6ce55b34c277b7cf70e0704a7c6f4d113',\n" +
-                "\t\t\t'createTime': 1531325119553,\n" +
+                "\t\t\t'hash': '914755201efd8eadea48430e92bda14a7357b4bf95f366bf3641f0a26ac113d9',\n" +
+                "\t\t\t'createTime': 1531688758490,\n" +
                 "\t\t\t'signatureData': {\n" +
-                "\t\t\t\t'r': 'e33794aee374bc1a949a2aa365d056ad57efdb193d948bd51ea2a712d06e862b',\n" +
-                "\t\t\t\t's': 'f9f3f79c0ed0609dff9894aba3a8d800c445c0e4885cd739cb4b69b6d0ed03f6'\n" +
+                "\t\t\t\t'r': '664d990b6d49a83bd9380642480facbe77a283875ba1e327836178caed358784',\n" +
+                "\t\t\t\t's': '9a5e6590b2720db6ebdab71bbaac2618839c381bf6c227590e9a776533728bef'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'hash': '988149bfdcaf6ebc115d2370c159988223d889e0142fecf6dccc10a61763e1b7cc5caa07a32ec65f2105dedc878f1214a5e02db7bfd5c30591405dbd7ac720a78ceb7e7b',\n" +
+                "\t\t\t'addressHash': '988149bfdcaf6ebc115d2370c159988223d889e0142fecf6dccc10a61763e1b7cc5caa07a32ec65f2105dedc878f1214a5e02db7bfd5c30591405dbd7ac720a78ceb7e7b',\n" +
                 "\t\t\t'indexInTransactionsChain': 1,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
-                "\t\t\t'hash': '9eff5b4ed178c83af8c3b57cfbca4293728d52e188a947930437b0a1aa0a8bb396e6782667bfaa488400042c65098f0ac4f01863bbb32cb3e3cd1f92e5bff095',\n" +
-                "\t\t\t'createTime': 1531325119557,\n" +
+                "\t\t\t'hash': 'd05c75913d6fc08673111f965c83a451b0469ce0c98e07ccb2ad418a1f2d39af',\n" +
+                "\t\t\t'createTime': 1531688758492,\n" +
                 "\t\t\t'signatureData': {\n" +
-                "\t\t\t\t'r': '6dba0a0e7e620f5fca08ba10e3b30946c31f77af0851a82ec87511c0ef7800c',\n" +
-                "\t\t\t\t's': '9edb9bd30fe90916ae10c9461e8626b4e0aba668f6c43bb7ecc752889989c3c1'\n" +
+                "\t\t\t\t'r': '57ddb4df8e408e8708b3e7a68e82d514ce0ef4409b3e0560a8f6f7558e339584',\n" +
+                "\t\t\t\t's': '6be9722669490e4abfda538cb8e86f4a1b08038e5d6bfa40c28cc9f90473b404'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'hash': 'fba6bdf0937c21ba35817bab7781e8f174964768706e63b87e63187c45b0e84f5837f092b2197d42d84d3608fe59aaeeda64aceb45938b16e6a3b6b5ef28dbf20f8a9f74',\n" +
+                "\t\t\t'addressHash': 'fba6bdf0937c21ba35817bab7781e8f174964768706e63b87e63187c45b0e84f5837f092b2197d42d84d3608fe59aaeeda64aceb45938b16e6a3b6b5ef28dbf20f8a9f74',\n" +
                 "\t\t\t'indexInTransactionsChain': 2,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
-                "\t\t\t'hash': 'fce287772288c65be41ea1e607b8012b1f46cfd05bacc921a736db58e9a9d28dc215e6f231592688978cdf1a305b79526450d399436c0e927b473b1206878f2b',\n" +
-                "\t\t\t'createTime': 1531325119558,\n" +
+                "\t\t\t'hash': '664792bbf4c80c7e5952888b054ab8a96a0109806ec7519289d652d082b44405',\n" +
+                "\t\t\t'createTime': 1531688758496,\n" +
                 "\t\t\t'signatureData': {\n" +
-                "\t\t\t\t'r': 'c159fdcb2260c65264aaac9c4ee1274ba8b0173bc039645dd866f698a13183a4',\n" +
-                "\t\t\t\t's': '8e974f8141c4e5bc401f51c42881946dca2aed9a9d2efb1acf61afd21150a4c0'\n" +
+                "\t\t\t\t'r': 'dec9e04812c9de6a4384b27b4b58823b045c95b0e9aedc60781326acbeb06dfc',\n" +
+                "\t\t\t\t's': 'f3d88198f4a6964790ed61c8146600da2384929a378f2649e2193cfdd068609d'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'hash': '4f4c693378d2a5ad9c633fb92e36bf003df06ab743c75a80624e0e912b7b5fa58f69d0bd655157b5e216e72a4d4f14e29bb7c0a996d14fb34f76adefbae4ea1e29dd9316',\n" +
+                "\t\t\t'addressHash': '4f4c693378d2a5ad9c633fb92e36bf003df06ab743c75a80624e0e912b7b5fa58f69d0bd655157b5e216e72a4d4f14e29bb7c0a996d14fb34f76adefbae4ea1e29dd9316',\n" +
                 "\t\t\t'indexInTransactionsChain': 3,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
-                "\t\t\t'hash': '63a5a3117695db3c66bd7015b82254a3b0a40fae64820f1d2e2e40d5bffe187b2c29b694e97808459d9fd70cc73b9793d09807cf89b6772c6ee0cf2654e12ddc',\n" +
-                "\t\t\t'createTime': 1531325119559,\n" +
+                "\t\t\t'hash': '1636f09572156d0298a439254543f93faecee0413bf437ae74fd6e7ee5cf5483',\n" +
+                "\t\t\t'createTime': 1531688758496,\n" +
                 "\t\t\t'signatureData': {\n" +
-                "\t\t\t\t'r': '16a90ab949412ce2f4627bab4808c65aa67d07976901cd181f864c114a109c69',\n" +
-                "\t\t\t\t's': '1ec87f03a3b4ea5be2199c57ac6858acf698c940e7d0e855e70f0b1a8be2657e'\n" +
+                "\t\t\t\t'r': '71270624df733adf4d9c33f5ffccce5f8b9669f34033460c9dabf75b48596ad5',\n" +
+                "\t\t\t\t's': '3890ea35df9fe7f42e7697469378d6b9e499be51068d2b601456cdcd1b72585c'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'hash': '016d30272b03183635d14f9c45754c1bdb32b7b78d4c60031570f9b367a1e057d1d7f88736a745f41170e5edc1689e6f0f64ed43ea3b6dc19d17e4d7e2e83b32fcb79dc0',\n" +
+                "\t\t\t'addressHash': '016d30272b03183635d14f9c45754c1bdb32b7b78d4c60031570f9b367a1e057d1d7f88736a745f41170e5edc1689e6f0f64ed43ea3b6dc19d17e4d7e2e83b32fcb79dc0',\n" +
                 "\t\t\t'indexInTransactionsChain': 4,\n" +
                 "\t\t\t'amount': '60.000000000000000000',\n" +
-                "\t\t\t'hash': '16ae3ece9fcac1268f0407fcfb6402e568a917ea26ede90415f986b4337244bbf84fdcb07c2761d6886f4bd1eb424be1860bc9a0b2ace87adb908ef7864d1b01',\n" +
-                "\t\t\t'createTime': 1531325119560\n" +
+                "\t\t\t'hash': '34ecf925edf9fcd76d8bdaccb6bf1e2ee2bd0a22a1b307920325fce1bf1b616b',\n" +
+                "\t\t\t'createTime': 1531688758497\n" +
                 "\t\t}\n" +
                 "\t],\n" +
-                "\t'createTime': 1531325119544,\n" +
+                "\t'createTime': 1531688758484,\n" +
                 "\t'baseTransactionsCount': 5,\n" +
                 "\t'transactionDescription': 'test',\n" +
-                "\t'hash': '371d4730c61f94c2204c1cd29015f26ff588f49d5263aa84f408bf29a0188b4f19f720e3be2533c777a7ac8de5cf5787c6ec40d8761c23fc95b67d52f8e61cff',\n" +
-                "\t'senderTrustScore': 64.71902931299373\n" +
+                "\t'hash': '81b4f2dc2b07cd92ed1b1b678568b112f53d1147687193686d17d35801522b31',\n" +
+                "\t'senderTrustScore': 56.239619552073165\n" +
                 "}\n";
 
 
