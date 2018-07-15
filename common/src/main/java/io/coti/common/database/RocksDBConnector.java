@@ -45,8 +45,8 @@ public class RocksDBConnector implements IDatabaseConnector {
         log.info("RocksDB constructor running");
     }
 
-    private static void deleteDatabaseFolder() {
-        File index = new File("rocksDB");
+    private void deleteDatabaseFolder() {
+        File index = new File(dbPath);
         if (!index.exists()) {
             return;
         }
@@ -116,18 +116,18 @@ public class RocksDBConnector implements IDatabaseConnector {
         }
     }
 
-    public RocksIterator getIterator(String coulumnFamilyName) {
+    public RocksIterator getIterator(String columnFamilyName) {
         RocksIterator it = null;
         try {
             ReadOptions readOptions = new ReadOptions();
 
-            ColumnFamilyHandle columnFamilyHandler = classNameToColumnFamilyHandleMapping.get(coulumnFamilyName);
+            ColumnFamilyHandle columnFamilyHandler = classNameToColumnFamilyHandleMapping.get(columnFamilyName);
             it = db.newIterator(columnFamilyHandler, readOptions);
             if (columnFamilyHandler == null) {
-                log.error("Column family {} iterator wasn't found ", coulumnFamilyName);
+                log.error("Column family {} iterator wasn't found ", columnFamilyName);
             }
         } catch (Exception ex) {
-            log.error("Exception while getting iterator of {}", coulumnFamilyName, ex);
+            log.error("Exception while getting iterator of {}", columnFamilyName, ex);
         }
         return it;
     }
