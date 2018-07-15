@@ -8,7 +8,7 @@ import io.coti.common.services.ZeroSpendService;
 import java.io.File;
 
 public class InitialDBCreator {
-    public static void recreateInitialDatabaseFolder(String[] args) {
+    public static void main(String[] args) {
         System.out.println("Deleting initialDB folder...");
         deleteInitialDatabaseFolder();
         RocksDBConnector connector = new RocksDBConnector();

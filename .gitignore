@@ -33,10 +33,11 @@
 /fullnode/rocksDB/*
 /DSPNoderocksDB/
 /FullNoderocksDB/
-
+/initialDatabase/
 
 *.jar
 *.class
 MANIFEST.MF
 *.original
 /zerospend/target/
+
