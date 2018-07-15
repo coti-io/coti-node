@@ -35,9 +35,9 @@ public class TransactionData implements IEntity {
     private int baseTransactionsCount;
     private double senderTrustScore;
     private List<Hash> baseTransactionsHash;
-    private Hash senderNodeHash;
-    private String senderNodeIpAddress;
-    private Hash userHash;
+    private Hash senderHash;
+    private String nodeIpAddress;
+    private Hash nodeHash;
     private List<Hash> childrenTransactions;
     private boolean isValid;
     private Map<String, Boolean> validByNodes;
