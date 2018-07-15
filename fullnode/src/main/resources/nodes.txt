@@ -1,3 +1,3 @@
-10.0.0.5:8082
-10.0.0.5:8083
-10.0.0.5:8084
+http://localhost:8082
+http://localhost:8083
+http://localhost:8084

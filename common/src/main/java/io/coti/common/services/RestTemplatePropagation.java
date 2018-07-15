@@ -52,7 +52,7 @@ public class RestTemplatePropagation implements IPropagationSender {
         AddTransactionDataRequest request = new AddTransactionDataRequest();
         request.transactionData = transactionData;
         try {
-            // restTemplate.put(url, request);
+            //restTemplate.put(url, request);
         } catch (RestClientException e) {
             log.error("Errors when propagating to url {} {}", url);
         }
@@ -70,7 +70,7 @@ public class RestTemplatePropagation implements IPropagationSender {
         String url = dspNodeUrl + "/getLastIndex";
         ResponseEntity<GetLastIndexResponse> response = null;
         try {
-            response = restTemplate.postForObject(url, null, ResponseEntity.class);
+            //response = restTemplate.postForObject(url, null, ResponseEntity.class);
         } catch (RestClientException e) {
             log.error("Errors when propagating from url {} {}", url);
         }
@@ -117,7 +117,7 @@ public class RestTemplatePropagation implements IPropagationSender {
         GetTransactionDataRequest request = new GetTransactionDataRequest();
         request.index = index;
         try {
-            response = restTemplate.postForObject(url, request, ResponseEntity.class);
+            //response = restTemplate.postForObject(url, request, ResponseEntity.class);
         } catch (RestClientException e) {
             log.error("Errors when propagating from url {} {}", url);
         }
@@ -150,8 +150,10 @@ public class RestTemplatePropagation implements IPropagationSender {
         }
         Random random = new Random();
         firstDspNodeIp = dspNodesList.get(random.nextInt(dspNodesList.size()));
+        log.info("first dsp node: {}", firstDspNodeIp);
         dspNodesList.remove(firstDspNodeIp);
         secondDspNodeIp = dspNodesList.get(random.nextInt(dspNodesList.size()));
+        log.info("second dsp node: {}", secondDspNodeIp);
         dspNodesList.remove(secondDspNodeIp);
         informDspNodes();
     }

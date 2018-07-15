@@ -121,7 +121,7 @@ public class TransactionService implements ITransactionService {
             attachTransactionToCluster(transactionData);
 //            transactionData.setSenderNodeIpAddress(propagationService.getCurrentNodeIp());
 
-//            propagationService.propagateToNeighbors(transactionData);
+           propagationService.propagateTransactionToDspNode(transactionData);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
                     .body(new AddTransactionResponse(
