@@ -17,7 +17,7 @@ public class HttpStringConstants {
 
     public static final String TRANSACTION_CURRENTLY_MISSING_MESSAGE = "Transaction is currently missing. Waiting for propagation from neighbors!";
     public static final String WAITING_FOR_TRANSACTION_PARENT_MESSAGE = "Waiting_for_transaction_parent!";
-    public static final String TRANSACTION_ALREADY_EXIST_MESSAGE = "Transaction already exist!";
+    public static final String TRANSACTION_ALREADY_EXIST_MESSAGE = "Transaction already exists!";
     public static final String AUTHENTICATION_FAILED_MESSAGE = "Authentication failed!";
     public static final String INSUFFICIENT_FUNDS_MESSAGE = "Balance for address is insufficient!";
     public static final String ILLEGAL_TRANSACTION_MESSAGE = "Illegal transaction - sum of base transactions must be 0!";

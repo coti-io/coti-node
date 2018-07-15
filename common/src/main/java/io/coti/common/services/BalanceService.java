@@ -204,7 +204,6 @@ public class BalanceService implements IBalanceService {
                 log.debug("The hash {} was loaded from the snapshot with amount {}", addressHash, addressAmount);
 
                 if (balanceMap.containsKey(addressHash)) {
-                    // throw new Exception(String.format("Double address found in CSV file: %s", address));
                     log.error("The address {} was already found in the snapshot", addressHash);
                     throw new Exception(String.format("The address %s was already found in the snapshot", addressHash));
                 }
@@ -212,7 +211,7 @@ public class BalanceService implements IBalanceService {
                 log.debug("Loading from snapshot into inMem balance+preBalance address {} and amount {}",
                         addressHash, addressAmount);
             }
-            // copy the balance to preBalance
+
             preBalanceMap.putAll(balanceMap);
         } catch (Exception e) {
             log.error("Errors on snapshot loading: {}", e);

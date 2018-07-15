@@ -13,7 +13,7 @@ public class FullNodeApplication {
 
         SpringApplication.run(FullNodeApplication.class, args);
         log.info("############################################################");
-        log.info("################    COTI NODE IS UP       ##################");
+        log.info("#############    COTI FULL NODE IS UP       ################");
         log.info("############################################################");
     }
 }

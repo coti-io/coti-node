@@ -21,7 +21,7 @@ public class ModelUtil {
     public void putConfirmedOrUnconfirmedHelper(String columnName, IEntity entity){
         try {
             databaseConnector.put(columnName, entity.getKey().getBytes(), SerializationUtils.serialize(entity));
-            ConfirmationData confirmationData = (ConfirmationData) entity;
+     /*       ConfirmationData confirmationData = (ConfirmationData) entity;
             TransactionData transactionData = confirmationData.getTransactionData();//confirmationData.get
 
             for (BaseTransactionData baseTransaction : transactionData.getBaseTransactions()) {
@@ -38,7 +38,7 @@ public class ModelUtil {
             transactionData.setDspConsensus(confirmationData.isDoubleSpendPreventionConsensus());
             transactionData.setTrustChainConsensus(confirmationData.isTrustChainConsensus());
             databaseConnector.put(Transactions.class.getName(), transactionData.getHash().getBytes(),
-                    SerializationUtils.serialize(transactionData));
+                    SerializationUtils.serialize(transactionData)); */
 
         } catch (Exception ex) {
             log.error("Exception while inserting data to confimationTable and transactionTable");
