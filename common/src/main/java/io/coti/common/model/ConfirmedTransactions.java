@@ -30,7 +30,7 @@ public class ConfirmedTransactions extends Collection<ConfirmationData> {
         super.init();
     }
 
-    public void putInConfirmedAndUpdateTransaction(IEntity entity, boolean isDspc, TccInfo tccInfo){
+    public void putConfirmedAndUpdateTransaction(IEntity entity, TccInfo tccInfo){
         try {
             databaseConnector.put(columnFamilyName, entity.getKey().getBytes(), SerializationUtils.serialize(entity));
             ConfirmationData confirmationData = (ConfirmationData) entity;
@@ -53,7 +53,7 @@ public class ConfirmedTransactions extends Collection<ConfirmationData> {
             transactionData.setTrustChainTransactionHash(tccInfo.getTrustChainTransactionHash());
             transactionData.setTrustChainTrustScore(tccInfo.getTrustChainTrustScore());
 
-            if(isDspc){
+            if(confirmationData.isDoubleSpendPreventionConsensus()){
                 transactionData.setTransactionConsensusUpdateTime(new Date());
             }
             databaseConnector.put(Transactions.class.getName(), transactionData.getHash().getBytes(),
@@ -67,7 +67,7 @@ public class ConfirmedTransactions extends Collection<ConfirmationData> {
     @Override
     public void put(IEntity entity) {
         throw new UnsupportedOperationException("This message is unused in confirmed/unconfirmed transactions." +
-                " please use 'public void putInConfirmedAndUpdateTransaction(IEntity entity, boolean dspc," +
+                " please use 'public void putConfirmedAndUpdateTransaction(IEntity entity, boolean dspc," +
                 " TccInfo tccInfo)'");
 
     }

@@ -94,13 +94,11 @@ public class BalanceService implements IBalanceService {
             log.info("confirmationData hash;{}", tccInfo.getHash());
             //dspc = 1
             if (confirmationData.isDoubleSpendPreventionConsensus()) {
-                ConfirmationData confirmedTransactionData = new ConfirmationData(transactions.getByHash(tccInfo.getHash()));
-                confirmedTransactionData.setAddressHashToValueTransferredMapping(confirmationData.getAddressHashToValueTransferredMapping());
-                confirmedTransactions.putInConfirmedAndUpdateTransaction(confirmedTransactionData, true, tccInfo);
-                unconfirmedTransactions.delete(tccInfo.getHash());
+                confirmedTransactions.putConfirmedAndUpdateTransaction(confirmationData, tccInfo);
+                unconfirmedTransactions.delete(confirmationData.getKey());
                 updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(), balanceMap);
                 publishBalanceChangeToWebSocket(confirmationData.getAddressHashToValueTransferredMapping().keySet());
-                liveViewService.updateNodeStatus(transactions.getByHash(tccInfo.getHash()), 2);
+                liveViewService.updateNodeStatus(transactions.getByHash(confirmationData.getKey()), 2);
 
             } else { //dspc =0
                 confirmationData.setTrustChainConsensus(true);
