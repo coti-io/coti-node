@@ -5,7 +5,7 @@ import io.coti.common.data.Hash;
 import io.coti.common.data.SignatureData;
 import io.coti.common.data.TransactionData;
 import io.coti.common.http.GetZeroSpendTransactionsRequest;
-import io.coti.zero_spend.monitor.interfaces.IMonitorAccess;
+import io.coti.zero_spend.monitor.interfaces.IAccessMonitor;
 import io.coti.zero_spend.services.interfaces.IGetZeroSpendTrxService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,7 +22,7 @@ public class GetZeroSpendTrxService implements IGetZeroSpendTrxService {
 
 
     @Autowired
-    private IMonitorAccess monitorAccess;
+    private IAccessMonitor monitorAccess;
 
     private final Hash baseTransactionAddressHash = new Hash("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\" +\n" +
             "               \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
