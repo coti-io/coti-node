@@ -18,7 +18,7 @@ import java.util.Date;
 public class ConfirmedTransactions extends Collection<ConfirmationData> {
     
     @Autowired
-    private IDatabaseConnector databaseConnector;
+    public IDatabaseConnector databaseConnector;
 
     @Autowired
     private Transactions transactions;

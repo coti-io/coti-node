@@ -15,7 +15,7 @@ public abstract class Collection<T extends IEntity> {
     protected String columnFamilyName = getClass().getName();
 
     @Autowired
-    private IDatabaseConnector databaseConnector;
+    public IDatabaseConnector databaseConnector;
 
     public void init(){
         log.info("Collection init running. Class: " + columnFamilyName);

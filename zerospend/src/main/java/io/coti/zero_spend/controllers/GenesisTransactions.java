@@ -29,6 +29,5 @@ public class GenesisTransactions {
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(genesisTransactions);
-
     }
 }

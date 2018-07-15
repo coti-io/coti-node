@@ -22,6 +22,7 @@ import java.util.*;
 @Service
 public class RocksDBConnector implements IDatabaseConnector {
     private final String initialDBPath = ".\\initialDatabase";
+    private String logsPath;
     private final List<String> columnFamilyClassNames = Arrays.asList(
             "DefaultColumnClassName",
             Transactions.class.getName(),
@@ -34,7 +35,6 @@ public class RocksDBConnector implements IDatabaseConnector {
     private String applicationName;
     @Value("${resetDatabase}")
     private boolean resetDatabase;
-    private String logPath;
     private String dbPath;
     private List<ColumnFamilyDescriptor> columnFamilyDescriptors = new ArrayList<>();
     private RocksDB db;
@@ -59,9 +59,12 @@ public class RocksDBConnector implements IDatabaseConnector {
     }
 
     @PostConstruct
-    public void init() {
-        logPath = ".\\" + applicationName + "rocksDB";
-        dbPath = ".\\" + applicationName + "rocksDB";
+    public void init(){
+        init(".\\" + applicationName + "rocksDB");
+    }
+
+    public void init(String dbPath) {
+        this.dbPath = dbPath;
         if (resetDatabase) {
             deleteDatabaseFolder();
             copyInitialDatabaseFolder();
@@ -182,7 +185,7 @@ public class RocksDBConnector implements IDatabaseConnector {
     }
 
     private void createLogsPath() {
-        File pathToLogDir = Paths.get(logPath).toFile();
+        File pathToLogDir = Paths.get(dbPath).toFile();
         if (!pathToLogDir.exists() || !pathToLogDir.isDirectory()) {
             boolean success = pathToLogDir.mkdir();
             if (!success) {

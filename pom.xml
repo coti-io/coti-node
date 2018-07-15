@@ -13,6 +13,7 @@
         <module>fullnode</module>
         <module>dspnode</module>
         <module>zerospend</module>
+        <module>tools</module>
     </modules>
 
     <name>coti-node</name>
