@@ -62,6 +62,14 @@ public class TransactionService implements ITransactionService {
             throws TransactionException {
 
         log.info("New transaction request is being processed. Transaction Hash: {}", request.hash);
+        if(isTransactionExists(request.hash)) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new AddTransactionResponse(
+                            STATUS_ERROR,
+                            TRANSACTION_ALREADY_EXIST_MESSAGE));
+        }
+
         if (!validateAddresses(request.baseTransactions, request.hash, request.transactionDescription, request.senderTrustScore)) {
             log.info("Failed to validate addresses!");
             return ResponseEntity
@@ -309,6 +317,11 @@ public class TransactionService implements ITransactionService {
         TransactionCryptoWrapper verifyTransaction = new TransactionCryptoWrapper(baseTransactions, transactionHash, transactionDescription, senderTrustScore);
 
         return verifyTransaction.isTransactionValid();
+    }
+
+    private boolean isTransactionExists(Hash transactionHash){
+        TransactionData transaction = getTransactionData(transactionHash);
+        return transaction != null ? true : false;
     }
 
     @Override
