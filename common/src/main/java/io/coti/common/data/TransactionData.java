@@ -45,6 +45,8 @@ public class TransactionData implements IEntity {
     private boolean isZeroSpend;
     private String transactionDescription;
 
+    private long index;
+
 
     private TransactionData() {
     }

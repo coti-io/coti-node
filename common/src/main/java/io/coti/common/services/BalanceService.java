@@ -1,6 +1,8 @@
 package io.coti.common.services;
 
 import io.coti.common.data.*;
+import io.coti.common.data.BaseTransactionData;
+import io.coti.common.data.ConfirmationData;
 import io.coti.common.http.GetBalancesRequest;
 import io.coti.common.http.GetBalancesResponse;
 import io.coti.common.http.GetBalancesResponseEntity;
@@ -113,7 +115,7 @@ public class BalanceService implements IBalanceService {
 
     private void setDSPCtoTrueAndInsertToUnconfirmed(ConfirmationData confirmationData) {
         confirmationData.setDoubleSpendPreventionConsensus(true);
-        unconfirmedTransactions.putConfirmationDataAndUpdateTransaction(confirmationData);
+        unconfirmedTransactions.put(confirmationData);
     }
 
     private void updateBalanceMap(Map<Hash, BigDecimal> mapFrom, Map<Hash, BigDecimal> mapTo) {
@@ -181,15 +183,12 @@ public class BalanceService implements IBalanceService {
                 }
                 Hash addressHash = new Hash(addressDetails[0]);
                 BigDecimal addressAmount = new BigDecimal(addressDetails[1]);
-                log.debug("The hash {} was loaded from the snapshot with amount {}", addressHash, addressAmount);
 
                 if (balanceMap.containsKey(addressHash)) {
                     log.error("The address {} was already found in the snapshot", addressHash);
                     throw new Exception(String.format("The address %s was already found in the snapshot", addressHash));
                 }
                 balanceMap.put(addressHash, addressAmount);
-                log.debug("Loading from snapshot into inMem balance+preBalance address {} and amount {}",
-                        addressHash, addressAmount);
             }
 
             preBalanceMap.putAll(balanceMap);

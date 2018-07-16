@@ -1,4 +1,8 @@
 import io.coti.common.data.*;
+import io.coti.common.data.AddressData;
+import io.coti.common.data.BaseTransactionData;
+import io.coti.common.data.SignatureData;
+import io.coti.common.data.TransactionData;
 import io.coti.common.model.*;
 import io.coti.fullnode.AppConfig;
 import lombok.extern.slf4j.Slf4j;

@@ -1,5 +1,9 @@
 import io.coti.common.crypto.CryptoUtils;
 import io.coti.common.data.*;
+import io.coti.common.data.BaseTransactionData;
+import io.coti.common.data.ConfirmationData;
+import io.coti.common.data.SignatureData;
+import io.coti.common.data.TransactionData;
 import io.coti.common.http.AddTransactionRequest;
 import io.coti.common.http.HttpStringConstants;
 import io.coti.common.http.Response;

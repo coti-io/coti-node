@@ -1,7 +1,6 @@
 package io.coti.dspnode.services;
 
 import io.coti.common.data.TransactionData;
-import org.hibernate.validator.constraints.URL;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;

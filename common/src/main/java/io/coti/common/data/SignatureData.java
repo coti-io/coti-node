@@ -1,5 +1,6 @@
 package io.coti.common.data;
 
+import io.coti.common.data.Hash;
 import io.coti.common.data.interfaces.IEntity;
 import lombok.Data;
 

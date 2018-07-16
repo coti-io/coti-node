@@ -1,6 +1,5 @@
 package io.coti.common.crypto;
 
-import io.coti.common.data.AddressData;
 import io.coti.common.data.Hash;
 import org.bouncycastle.asn1.sec.SECNamedCurves;
 import org.bouncycastle.asn1.x9.X9ECParameters;
@@ -17,9 +16,7 @@ import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.jce.spec.ECPublicKeySpec;
 
 
-import javax.xml.bind.DatatypeConverter;
 import java.math.BigInteger;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
