@@ -188,7 +188,7 @@ public class BalanceService implements IBalanceService {
                 log.debug("Loading from snapshot into inMem balance+preBalance address {} and amount {}",
                         addressHash, addressAmount);
             }
-
+            log.info("Snapshot is finished");
             preBalanceMap.putAll(balanceMap);
         } catch (Exception e) {
             log.error("Errors on snapshot loading: {}", e);
