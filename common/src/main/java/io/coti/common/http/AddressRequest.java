@@ -6,7 +6,7 @@ import lombok.Data;
 import javax.validation.constraints.NotNull;
 
 @Data
-public class AddAddressRequest extends Request {
+public class AddressRequest extends Request {
     @NotNull(message = "Address Hash must not be blank")
     private Hash address;
 }
