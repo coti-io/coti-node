@@ -32,9 +32,9 @@ public class ConfirmedTransactions extends Collection<ConfirmationData> {
 
     public void putConfirmedAndUpdateTransaction(IEntity entity, TccInfo tccInfo){
         try {
-            databaseConnector.put(columnFamilyName, entity.getKey().getBytes(), SerializationUtils.serialize(entity));
+            databaseConnector.put(columnFamilyName, entity.getHash().getBytes(), SerializationUtils.serialize(entity));
             ConfirmationData confirmationData = (ConfirmationData) entity;
-            TransactionData transactionData = transactions.getByHash(confirmationData.getKey());
+            TransactionData transactionData = transactions.getByHash(confirmationData.getHash());
 
             for (BaseTransactionData baseTransaction : transactionData.getBaseTransactions()) {
                 if (!confirmationData.getAddressHashToValueTransferredMapping().containsKey(baseTransaction.getAddressHash())) {

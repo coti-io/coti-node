@@ -6,6 +6,6 @@ import io.coti.common.data.Hash;
 import java.io.Serializable;
 
 public interface IEntity extends Serializable {
-    Hash getKey();
-    void setKey(Hash hash);
+    Hash getHash();
+    void setHash(Hash hash);
 }

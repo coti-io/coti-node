@@ -1,10 +1,11 @@
 package io.coti.common.data;
 
-import io.coti.common.data.interfaces.IEntity;
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Data
-public class SignatureData implements IEntity {
+public class SignatureData implements Serializable {
 
     private String r;
     private String s;
@@ -18,14 +19,4 @@ public class SignatureData implements IEntity {
         this.s = s;
     }
 
-
-    @Override
-    public Hash getKey() {
-        return null;
-    }
-
-    @Override
-    public void setKey(Hash hash) {
-
-    }
 }

@@ -10,7 +10,7 @@ import java.util.Map;
 
 @Data
 public class ConfirmationData implements IEntity {
-    private transient Hash key;
+    private transient Hash hash;
     private Map<Hash, BigDecimal> addressHashToValueTransferredMapping;
 
     private Date creationTIme;
@@ -23,7 +23,7 @@ public class ConfirmationData implements IEntity {
 
     public ConfirmationData(TransactionData transactionData) {
         addressHashToValueTransferredMapping = new LinkedHashMap<>();
-        this.key = transactionData.getHash();
+        this.hash = transactionData.getHash();
         if (transactionData.isZeroSpend()) {
             return;
         }
@@ -34,13 +34,13 @@ public class ConfirmationData implements IEntity {
     }
 
     @Override
-    public Hash getKey() {
-        return key;
+    public Hash getHash() {
+        return hash;
     }
 
     @Override
-    public void setKey(Hash hash) {
-        this.key = hash;
+    public void setHash(Hash hash) {
+        this.hash = hash;
     }
 
     @Override
@@ -52,6 +52,6 @@ public class ConfirmationData implements IEntity {
         if (!(other instanceof ConfirmationData)) {
             return false;
         }
-        return key.equals(((ConfirmationData) other).key);
+        return hash.equals(((ConfirmationData) other).hash);
     }
 }

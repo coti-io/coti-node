@@ -17,7 +17,6 @@ public class BaseTransactionData implements IEntity {
     private BigDecimal amount;
     private Hash transactionHash;
     private int indexInTransactionsChain;
-    private BaseTransactionData nextBaseTransactionData;
     private Date createTime =null;
     private SignatureData signatureData;
     private BaseTransactionData(){}
@@ -41,12 +40,12 @@ public class BaseTransactionData implements IEntity {
     }
 
     @Override
-    public Hash getKey() {
+    public Hash getHash() {
         return hash;
     }
 
     @Override
-    public void setKey(Hash hash) {
+    public void setHash(Hash hash) {
         this.hash = hash;
     }
 

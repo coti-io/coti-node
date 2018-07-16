@@ -28,7 +28,7 @@ public class RocksDBTests {
     public void saveAndRetrieveSingleTransaction() {
         TransactionData transactionData1 = new TransactionData(new ArrayList<>(),new Hash("TransactionData 0".getBytes()),"test",5);
         transactions.put(transactionData1);
-        TransactionData transactionData2 = transactions.getByHash(transactionData1.getKey());
+        TransactionData transactionData2 = transactions.getByHash(transactionData1.getHash());
         Assert.assertEquals(transactionData1, transactionData2);
     }
 
@@ -61,7 +61,7 @@ public class RocksDBTests {
         transactions.put(transactionData1);
         TransactionData transactionData2 = transactions.getByHash(new Hash("TransactionData 0".getBytes()));
         Assert.assertEquals(transactionData1, transactionData2);
-        transactions.delete(transactionData1.getKey());
+        transactions.delete(transactionData1.getHash());
         transactionData2 = transactions.getByHash(new Hash("TransactionData 0".getBytes()));
         Assert.assertEquals(transactionData2, null);
     }
@@ -88,7 +88,7 @@ public class RocksDBTests {
         baseTransactions.put(transaction1);
         BaseTransactionData transaction2 = baseTransactions.getByHash("ABCDEF");
         Assert.assertEquals(transaction1, transaction2);
-        baseTransactions.delete(transaction1.getKey());
+        baseTransactions.delete(transaction1.getHash());
         transaction2 = baseTransactions.getByHash("ABCDEF");
         Assert.assertEquals(transaction2, null);
     }

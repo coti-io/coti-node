@@ -6,7 +6,6 @@ import io.coti.common.database.Interfaces.IDatabaseConnector;
 import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.RocksIterator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
 
 @Slf4j
@@ -22,7 +21,7 @@ public abstract class Collection<T extends IEntity> {
     }
 
     public void put(IEntity entity) {
-        databaseConnector.put(columnFamilyName, entity.getKey().getBytes(), SerializationUtils.serialize(entity));
+        databaseConnector.put(columnFamilyName, entity.getHash().getBytes(), SerializationUtils.serialize(entity));
     }
 
     public T getByHash(String hashStringInHexRepresentation){
@@ -33,7 +32,7 @@ public abstract class Collection<T extends IEntity> {
         byte[] bytes = databaseConnector.getByKey(columnFamilyName, hash.getBytes());
         T deserialized = (T) SerializationUtils.deserialize(bytes);
         if(deserialized instanceof IEntity) {
-            deserialized.setKey(hash);
+            deserialized.setHash(hash);
         }
         return deserialized;
     }

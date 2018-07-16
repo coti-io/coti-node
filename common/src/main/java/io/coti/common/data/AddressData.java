@@ -16,12 +16,12 @@ public class AddressData implements IEntity {
     }
 
     @Override
-    public Hash getKey() {
+    public Hash getHash() {
         return hash;
     }
 
     @Override
-    public void setKey(Hash hash) {
+    public void setHash(Hash hash) {
         this.hash = hash;
     }
 

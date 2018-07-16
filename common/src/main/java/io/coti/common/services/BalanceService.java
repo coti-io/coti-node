@@ -95,15 +95,15 @@ public class BalanceService implements IBalanceService {
             //dspc = 1
             if (confirmationData.isDoubleSpendPreventionConsensus()) {
                 confirmedTransactions.putConfirmedAndUpdateTransaction(confirmationData, tccInfo);
-                unconfirmedTransactions.delete(confirmationData.getKey());
+                unconfirmedTransactions.delete(confirmationData.getHash());
                 updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(), balanceMap);
                 publishBalanceChangeToWebSocket(confirmationData.getAddressHashToValueTransferredMapping().keySet());
-                liveViewService.updateNodeStatus(transactions.getByHash(confirmationData.getKey()), 2);
+                liveViewService.updateNodeStatus(transactions.getByHash(confirmationData.getHash()), 2);
 
             } else { //dspc =0
                 confirmationData.setTrustChainConsensus(true);
                 setDSPCtoTrueAndInsertToUnconfirmed(confirmationData);
-                log.info("The transaction {} was added to unconfirmedTransactions in the db and tcc was updated to true", confirmationData.getKey());
+                log.info("The transaction {} was added to unconfirmedTransactions in the db and tcc was updated to true", confirmationData.getHash());
             }
         }
     }
@@ -150,9 +150,9 @@ public class BalanceService implements IBalanceService {
         while (unconfirmedDBIterator.isValid()) {
             ConfirmationData confirmationData = (ConfirmationData) SerializationUtils
                     .deserialize(unconfirmedDBIterator.value());
-            confirmationData.setKey(new Hash(unconfirmedDBIterator.key()));
+            confirmationData.setHash(new Hash(unconfirmedDBIterator.key()));
             if (!confirmationData.isTrustChainConsensus()) {
-                hashesForClusterService.add(confirmationData.getKey());
+                hashesForClusterService.add(confirmationData.getHash());
             }
             if (!confirmationData.isTrustChainConsensus() ||
                     !confirmationData.isDoubleSpendPreventionConsensus()) {
