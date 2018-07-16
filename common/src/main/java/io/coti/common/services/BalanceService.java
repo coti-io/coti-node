@@ -108,6 +108,19 @@ public class BalanceService implements IBalanceService {
         }
     }
 
+
+    private void updateAddressTransactionHistory(TransactionData transactionData)
+    {
+        /*
+        for (BaseTransactionData baseTransactionData: transactionData.getBaseTransactions()) {
+
+
+            getByHash(baseTransactionData.getAddressHash());
+        }
+        databaseConnector.put(AddressTransactionsHistory.class.getName(), transactionData.getHash().getBytes(),
+                SerializationUtils.serialize(transactionData));*/
+    }
+
     private void setDSPCtoTrueAndInsertToUnconfirmed(ConfirmationData confirmationData) {
         confirmationData.setDoubleSpendPreventionConsensus(true);
         unconfirmedTransactions.put(confirmationData);

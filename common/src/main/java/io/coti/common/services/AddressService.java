@@ -17,8 +17,7 @@ public class AddressService implements IAddressService {
     @Autowired
     private Addresses addresses;
 
-    @Autowired
-    private BaseTransactions baseTransactions;
+
 
     @Override
     public boolean addNewAddress(Hash addressHash) {
@@ -37,14 +36,5 @@ public class AddressService implements IAddressService {
             return false;
         }
         return true;
-    }
-
-    @Override
-    public TransactionData[] addressTransactions(Hash addressHash) {
-
-
-        ///baseTransactions.
-        //return new TransactionData[0];
-        return null;
     }
 }

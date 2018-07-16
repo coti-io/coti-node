@@ -1,9 +1,6 @@
 package io.coti.common.model;
 
-import io.coti.common.data.BaseTransactionData;
-import io.coti.common.data.ConfirmationData;
-import io.coti.common.data.TccInfo;
-import io.coti.common.data.TransactionData;
+import io.coti.common.data.*;
 import io.coti.common.data.interfaces.IEntity;
 import io.coti.common.database.Interfaces.IDatabaseConnector;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +19,8 @@ public class ConfirmedTransactions extends Collection<ConfirmationData> {
 
     @Autowired
     private Transactions transactions;
+
+
 
     public ConfirmedTransactions() {
     }
@@ -58,8 +57,10 @@ public class ConfirmedTransactions extends Collection<ConfirmationData> {
             databaseConnector.put(Transactions.class.getName(), transactionData.getHash().getBytes(),
                     SerializationUtils.serialize(transactionData));
 
+
+
         } catch (Exception ex) {
-            log.error("Exception while inserting data to confimationTable and transactionTable");
+            log.error("Exception while inserting data to confimationTable and transactionTable",ex);
         }
     }
 
@@ -70,6 +71,4 @@ public class ConfirmedTransactions extends Collection<ConfirmationData> {
                 " TccInfo tccInfo)'");
 
     }
-
-
 }

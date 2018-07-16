@@ -25,6 +25,10 @@ import static io.coti.common.http.HttpStringConstants.*;
 @Service
 public class TransactionService implements ITransactionService {
 
+
+
+
+
     private Map<Hash, TransactionData> propagationTransactionHash;
 
     private HashMap<Hash, TransactionData> hashToWaitingChildrenTransactionsMapping;
@@ -366,4 +370,16 @@ public class TransactionService implements ITransactionService {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new GetTransactionResponse(transactionResponseData));
     }
+
+    @Override
+    public TransactionData[] getAddressTransactions(Hash addressHash) {
+
+        baseTransactions.
+        ///baseTransactions.
+        //return new TransactionData[0];
+        return null;
+    }
+
+
+
 }
