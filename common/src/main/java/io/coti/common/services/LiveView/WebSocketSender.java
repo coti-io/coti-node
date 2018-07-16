@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 
 @Slf4j
@@ -15,6 +16,13 @@ import java.math.BigDecimal;
 public class WebSocketSender {
 
     private SimpMessagingTemplate messagingSender;
+
+    @PostConstruct
+    private void init(){
+int x = 5;
+    }
+
+
     @Autowired
     public WebSocketSender(SimpMessagingTemplate simpMessagingTemplate){
         this.messagingSender = simpMessagingTemplate;

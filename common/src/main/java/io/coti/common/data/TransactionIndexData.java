@@ -1,4 +1,4 @@
-package io.coti.zero_spend.data;
+package io.coti.common.data;
 
 import io.coti.common.data.Hash;
 import io.coti.common.data.interfaces.IEntity;
@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 public class TransactionIndexData implements IEntity {
 
-    private Hash key;
+    private transient Hash key;
     private long index;
 
     private TransactionIndexData() {
@@ -17,5 +17,7 @@ public class TransactionIndexData implements IEntity {
         this.key = key;
         this.index = index;
     }
+
+
 
 }

@@ -1,14 +1,15 @@
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
 import io.coti.common.http.GetZeroSpendTransactionsRequest;
-import io.coti.zero_spend.ZeroSpendConfiguration;
+import io.coti.zero_spend.AppConfig;
 import io.coti.zero_spend.controllers.AddTransactionController;
 import io.coti.zero_spend.controllers.GetMonitorController;
 import io.coti.zero_spend.controllers.GetZeroSpendTransactionController;
-import io.coti.zero_spend.http.AddTransactionRequest;
+import io.coti.common.http.AddTransactionZeroSpendRequest;
 import io.coti.zero_spend.http.MonitorElement;
-import io.coti.zero_spend.services.AddTransactionService;
+import io.coti.common.services.AddTransactionService;
 import lombok.extern.slf4j.Slf4j;
+
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -27,7 +28,7 @@ import java.util.List;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = ZeroSpendConfiguration.class)
+@ContextConfiguration(classes = AppConfig.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Slf4j
 public class ZeroSpendControllersTests {
@@ -52,7 +53,7 @@ public class ZeroSpendControllersTests {
     @Test
     public void aAddTransactionTest() {
 
-        AddTransactionRequest addTransactionRequest = new AddTransactionRequest();
+        AddTransactionZeroSpendRequest addTransactionRequest = new AddTransactionZeroSpendRequest();
         Hash transactionHash = new Hash("AAAA");
         TransactionData transactionData = new TransactionData(new LinkedList<>(), transactionHash, "testTransaction", 60);
         addTransactionRequest.setTransactionData(transactionData);

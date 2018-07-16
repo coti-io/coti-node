@@ -1,11 +1,12 @@
-package io.coti.zero_spend.model;
+package io.coti.common.model;
 
-import io.coti.common.model.Collection;
-import io.coti.zero_spend.data.TransactionIndexData;
+import io.coti.common.data.TransactionIndexData;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 
+@Slf4j
 @Service
 public class TransactionIndex extends Collection<TransactionIndexData> {
 
@@ -14,6 +15,7 @@ public class TransactionIndex extends Collection<TransactionIndexData> {
 
     @PostConstruct
     public void init() {
+
         super.init();
     }
 

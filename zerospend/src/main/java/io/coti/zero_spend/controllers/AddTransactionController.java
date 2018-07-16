@@ -1,8 +1,8 @@
 package io.coti.zero_spend.controllers;
 
-import io.coti.zero_spend.http.AddTransactionRequest;
-import io.coti.zero_spend.http.AddTransactionResponse;
-import io.coti.zero_spend.services.interfaces.IAddTransactionService;
+import io.coti.common.http.AddTransactionZeroSpendRequest;
+import io.coti.common.http.AddTransactionZeroSpendResponse;
+import io.coti.common.services.interfaces.IAddTransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,7 +18,7 @@ public class AddTransactionController {
 
 
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<AddTransactionResponse> addTransaction(AddTransactionRequest addTransactionRequest){
+    public ResponseEntity<AddTransactionZeroSpendResponse> addTransaction(AddTransactionZeroSpendRequest addTransactionRequest){
         return addTransactionService.addTransaction(addTransactionRequest);
     }
 
