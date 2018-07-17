@@ -126,8 +126,9 @@ public class BalanceService implements IBalanceService {
             if (address == null)
             {
                 address = new AddressData(baseTransactionData.getAddressHash());
+                addresses.put(address);
             }
-            addressesTransactionsHistory.put(address);
+
         }
     }
 

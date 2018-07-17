@@ -339,35 +339,7 @@ public class TransactionService implements ITransactionService {
                     .body(new AddTransactionResponse(
                             STATUS_ERROR,
                             TRANSACTION_DOESNT_EXIST_MESSAGE));
-        TransactionResponseData transactionResponseData = new TransactionResponseData();
-        transactionResponseData.setHash(transactionData.getHash().toHexString());
-        transactionResponseData.setAmount(transactionData.getAmount());
-        transactionResponseData.setLeftParentHash( transactionData.getLeftParentHash() == null ? null : transactionData.getLeftParentHash().toHexString());
-        transactionResponseData.setRightParentHash(transactionData.getRightParentHash() == null ? null : transactionData.getRightParentHash().toHexString());
-        List<String> trustChainTransactionHashes = new Vector<>();
-        for(Hash trustChainHash : transactionData.getTrustChainTransactionHashes()){
-            trustChainTransactionHashes.add(trustChainHash.toHexString());
-        }
-        transactionResponseData.setTrustChainTransactionHashes(trustChainTransactionHashes);
-        transactionResponseData.setTrustChainConsensus(transactionData.isTrustChainConsensus());
-        transactionResponseData.setDspConsensus(transactionData.isDspConsensus());
-        transactionResponseData.setTrustChainTrustScore(transactionData.getTrustChainTrustScore());
-        transactionResponseData.setTransactionConsensusUpdateTime(transactionData.getTransactionConsensusUpdateTime());
-        transactionResponseData.setCreateTime(transactionData.getCreateTime());
-        transactionResponseData.setAttachmentTime(transactionData.getAttachmentTime());
-        transactionResponseData.setProcessStartTime(transactionData.getProcessStartTime());
-        transactionResponseData.setPowStartTime(transactionData.getPowStartTime());
-        transactionResponseData.setPowEndTime(transactionData.getPowEndTime());
-        transactionResponseData.setSenderTrustScore(transactionData.getSenderTrustScore());
-
-        List<String> childrenTransactions = new Vector<>();
-        for(Hash childrenTransaction : transactionData.getChildrenTransactions()){
-            childrenTransactions.add(childrenTransaction.toHexString());
-        }
-        transactionResponseData.setChildrenTransactions(childrenTransactions);
-        transactionResponseData.setTransactionDescription(transactionData.getTransactionDescription());
-        transactionResponseData.setValid(transactionData.isValid());
-        transactionResponseData.setZeroSpend(transactionData.isZeroSpend());
+        TransactionResponseData transactionResponseData = new TransactionResponseData(transactionData);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new GetTransactionResponse(transactionResponseData));
     }
