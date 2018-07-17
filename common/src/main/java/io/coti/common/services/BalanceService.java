@@ -3,6 +3,7 @@ package io.coti.common.services;
 import io.coti.common.data.*;
 import io.coti.common.http.GetBalancesRequest;
 import io.coti.common.http.GetBalancesResponse;
+import io.coti.common.model.AddressesTransactionsHistory;
 import io.coti.common.model.ConfirmedTransactions;
 import io.coti.common.model.Transactions;
 import io.coti.common.model.UnconfirmedTransactions;
@@ -42,6 +43,10 @@ public class BalanceService implements IBalanceService {
 
     @Autowired
     private IClusterService clusterService;
+
+    @Autowired
+    private AddressesTransactionsHistory addressesTransactionsHistory;
+
 
     @Autowired
     private IQueueService queueService;
@@ -97,8 +102,11 @@ public class BalanceService implements IBalanceService {
                 confirmedTransactions.putConfirmedAndUpdateTransaction(confirmationData, tccInfo);
                 unconfirmedTransactions.delete(confirmationData.getHash());
                 updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(), balanceMap);
+
+                TransactionData currentTransactionData = transactions.getByHash(confirmationData.getHash());
+                updateAddressTransactionHistory(currentTransactionData);
                 publishBalanceChangeToWebSocket(confirmationData.getAddressHashToValueTransferredMapping().keySet());
-                liveViewService.updateNodeStatus(transactions.getByHash(confirmationData.getHash()), 2);
+                liveViewService.updateNodeStatus(currentTransactionData, 2);
 
             } else { //dspc =0
                 confirmationData.setTrustChainConsensus(true);
@@ -111,14 +119,16 @@ public class BalanceService implements IBalanceService {
 
     private void updateAddressTransactionHistory(TransactionData transactionData)
     {
-        /*
         for (BaseTransactionData baseTransactionData: transactionData.getBaseTransactions()) {
+            AddressTransactionsHistory addressHistory = addressesTransactionsHistory.getByHash(baseTransactionData.getAddressHash());
 
-
-            getByHash(baseTransactionData.getAddressHash());
+            if (addressHistory == null)
+            {
+                addressHistory = new AddressTransactionsHistory(baseTransactionData.getAddressHash());
+            }
+            addressHistory.addTransactionHashToHistory(transactionData.getHash());
+            addressesTransactionsHistory.put(addressHistory);
         }
-        databaseConnector.put(AddressTransactionsHistory.class.getName(), transactionData.getHash().getBytes(),
-                SerializationUtils.serialize(transactionData));*/
     }
 
     private void setDSPCtoTrueAndInsertToUnconfirmed(ConfirmationData confirmationData) {

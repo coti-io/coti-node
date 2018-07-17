@@ -15,6 +15,6 @@ public interface ITransactionService {
 
     ResponseEntity<Response> getTransactionDetails(Hash transactionHash);
 
-    TransactionData[] getAddressTransactions(Hash addressHash);
+    ResponseEntity<Response> getAddressTransactions(Hash addressHash);
 
 }

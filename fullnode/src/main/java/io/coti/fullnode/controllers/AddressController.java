@@ -87,27 +87,7 @@ public class AddressController {
 
     }
 
-/*
-    @RequestMapping(method = POST)
-    public ResponseEntity<AddressExistsResponse> getAddressTransactions(@Valid @RequestBody AddressRequest addressRequest) {
 
-        try {
-
-            Hash addressHash = addressRequest.getAddress();
-            boolean result = addressService.addressExists(addressHash);
-
-            return ResponseEntity.status(HttpStatus.OK).body(new AddressExistsResponse( addressHash,result ?  HttpStringConstants.ADDRESS_EXISTS_MESSAGE : HttpStringConstants.ADDRESS_NOT_EXISTS_MESSAGE));
-
-        } catch (Exception ex) {
-
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new AddressExistsResponse(new Hash("")
-                            , HttpStringConstants.ADDRESS_CREATION_ERROR_MESSAGE));
-        }
-
-    }
-*/
 
     private boolean addressLengthValidation(Hash address) {
 

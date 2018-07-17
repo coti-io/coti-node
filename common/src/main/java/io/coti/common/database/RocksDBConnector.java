@@ -1,5 +1,6 @@
 package io.coti.common.database;
 
+import io.coti.common.data.AddressTransactionsHistory;
 import io.coti.common.data.Hash;
 import io.coti.common.data.interfaces.IEntity;
 import io.coti.common.database.Interfaces.IDatabaseConnector;
@@ -28,6 +29,7 @@ public class RocksDBConnector implements IDatabaseConnector {
             Transactions.class.getName(),
             BaseTransactions.class.getName(),
             Addresses.class.getName(),
+            AddressesTransactionsHistory.class.getName(),
             ConfirmedTransactions.class.getName(),
             UnconfirmedTransactions.class.getName()
     );

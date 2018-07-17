@@ -13,17 +13,17 @@ public class AddressTransactionsHistory implements IEntity {
 
     private transient Hash hash;
     private Date creationTime;
-    private List<Hash> basicTransaction;
+    private List<Hash> transactionsHistory;
 
 
     public AddressTransactionsHistory(Hash hash) {
         this.hash = hash;
         creationTime = new Date();
-        basicTransaction = new ArrayList<>();
+        transactionsHistory = new ArrayList<>();
     }
 
-    public void addBasicTransactionHashToHistory(Hash basicTransactionHash){
-        basicTransaction.add(basicTransactionHash);
+    public void addTransactionHashToHistory(Hash transactionHash){
+        transactionsHistory.add(transactionHash);
     }
 
     @Override

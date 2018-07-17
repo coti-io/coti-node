@@ -1,6 +1,7 @@
 package io.coti.common.services;
 
 import io.coti.common.crypto.BaseTransactionCryptoWrapper;
+import io.coti.common.crypto.CryptoHelper;
 import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
@@ -13,6 +14,8 @@ import java.security.SignatureException;
 
 @Component
 public class ValidationService implements IValidationService {
+
+
 
 
     @Override
@@ -32,7 +35,7 @@ public class ValidationService implements IValidationService {
 
     @Override
     public boolean validateAddressLength(Hash address) {
-        return (address.getBytes().length == 34) && (address.getBytes().length != 0);
+        return CryptoHelper.IsAddressValid(address);
     }
 
     @Override
