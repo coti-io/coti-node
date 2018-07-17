@@ -12,7 +12,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
-
+/*
 @Slf4j
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = AppConfig.class)
@@ -94,3 +94,4 @@ public class RocksDBTests {
     }
 
 }
+*/

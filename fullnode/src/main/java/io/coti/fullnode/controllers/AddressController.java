@@ -67,7 +67,7 @@ public class AddressController {
     }
 
 
-    @RequestMapping(value = "/addressExists",method = POST)
+    @RequestMapping(method = POST)
     public ResponseEntity<AddressExistsResponse> addressExists(@Valid @RequestBody AddressRequest addressRequest) {
 
         try {

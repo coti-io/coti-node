@@ -12,14 +12,14 @@ import java.util.Vector;
 
 @Data
 public class GetAddressTransactionHistory extends Response {
-    private List<TransactionResponseData> transactionsResponseData;
+    private List<TransactionResponseData> transactionsData;
 
     public GetAddressTransactionHistory(List<TransactionData> transactionsData) {
         super();
-        transactionsResponseData = new Vector<>();
+        this.transactionsData = new Vector<>();
         for (TransactionData transactionData: transactionsData
              ) {
-            transactionsResponseData.add(new TransactionResponseData(transactionData));
+            this.transactionsData.add(new TransactionResponseData(transactionData));
         }
 
 

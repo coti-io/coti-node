@@ -97,15 +97,13 @@ public class BalanceService implements IBalanceService {
         while (!updateBalanceQueue.isEmpty()) {
             TccInfo tccInfo = updateBalanceQueue.poll();
             ConfirmationData confirmationData = unconfirmedTransactions.getByHash(tccInfo.getHash());
+            TransactionData currentTransactionData = transactions.getByHash(confirmationData.getHash());
             log.info("confirmationData hash;{}", tccInfo.getHash());
             //dspc = 1
             if (confirmationData.isDoubleSpendPreventionConsensus()) {
                 confirmedTransactions.putConfirmedAndUpdateTransaction(confirmationData, tccInfo);
                 unconfirmedTransactions.delete(confirmationData.getHash());
                 updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(), balanceMap);
-                TransactionData currentTransactionData = transactions.getByHash(confirmationData.getHash());
-                updateAddressTransactionHistory(currentTransactionData);
-                UpdateAddresses(currentTransactionData);
                 publishBalanceChangeToWebSocket(confirmationData.getAddressHashToValueTransferredMapping().keySet());
                 liveViewService.updateNodeStatus(currentTransactionData, 2);
 
@@ -117,34 +115,6 @@ public class BalanceService implements IBalanceService {
         }
     }
 
-
-    private void UpdateAddresses(TransactionData transactionData)
-    {
-        for (BaseTransactionData baseTransactionData: transactionData.getBaseTransactions()) {
-            AddressData address = addresses.getByHash(baseTransactionData.getAddressHash());
-
-            if (address == null)
-            {
-                address = new AddressData(baseTransactionData.getAddressHash());
-                addresses.put(address);
-            }
-
-        }
-    }
-
-    private void updateAddressTransactionHistory(TransactionData transactionData)
-    {
-        for (BaseTransactionData baseTransactionData: transactionData.getBaseTransactions()) {
-            AddressTransactionsHistory addressHistory = addressesTransactionsHistory.getByHash(baseTransactionData.getAddressHash());
-
-            if (addressHistory == null)
-            {
-                addressHistory = new AddressTransactionsHistory(baseTransactionData.getAddressHash());
-            }
-            addressHistory.addTransactionHashToHistory(transactionData.getHash());
-            addressesTransactionsHistory.put(addressHistory);
-        }
-    }
 
     private void setDSPCtoTrueAndInsertToUnconfirmed(ConfirmationData confirmationData) {
         confirmationData.setDoubleSpendPreventionConsensus(true);

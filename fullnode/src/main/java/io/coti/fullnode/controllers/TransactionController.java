@@ -36,7 +36,7 @@ public class TransactionController {
     }
 
 
-    @RequestMapping(value = "/getAddressTransactions", method = POST)
+    @RequestMapping(value = "/addressTransactions", method = POST)
     public ResponseEntity<Response> getAddressTransactions(@Valid @RequestBody AddressRequest addressRequest) {
         return transactionService.getAddressTransactions(addressRequest.getAddress());
     }

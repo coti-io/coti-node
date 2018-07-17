@@ -1,23 +1,22 @@
 package io.coti.common.data;
 
-import io.coti.common.data.interfaces.IEntity;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.math.BigDecimal;
 
 @Data
-public class BaseTransactionData implements IEntity {
+public class BaseTransactionData implements Serializable {
 
 
-    private transient Hash hash;
+    private Hash hash;
 
 
     private Hash addressHash;
     private BigDecimal amount;
-    private Hash transactionHash;
     private int indexInTransactionsChain;
-    private Date createTime =null;
+    private Date createTime;
     private SignatureData signatureData;
     private BaseTransactionData(){}
 
@@ -39,15 +38,6 @@ public class BaseTransactionData implements IEntity {
         return signatureData !=null;
     }
 
-    @Override
-    public Hash getHash() {
-        return hash;
-    }
-
-    @Override
-    public void setHash(Hash hash) {
-        this.hash = hash;
-    }
 
     @Override
     public boolean equals(Object other) {

@@ -26,7 +26,6 @@ public class RocksDBConnector implements IDatabaseConnector {
     private final List<String> columnFamilyClassNames = Arrays.asList(
             "DefaultColumnClassName",
             Transactions.class.getName(),
-            BaseTransactions.class.getName(),
             Addresses.class.getName(),
             AddressesTransactionsHistory.class.getName(),
             ConfirmedTransactions.class.getName(),

@@ -308,9 +308,24 @@ public class TransactionService implements ITransactionService {
     private void attachTransactionToCluster(TransactionData transactionData) {
         transactionData.setAttachmentTime(new Date());
         transactions.put(transactionData);
+        updateAddressTransactionHistory(transactionData);
         balanceService.insertToUnconfirmedTransactions(new ConfirmationData(transactionData));
         clusterService.attachToCluster(transactionData);
 
+    }
+
+    private void updateAddressTransactionHistory(TransactionData transactionData)
+    {
+        for (BaseTransactionData baseTransactionData: transactionData.getBaseTransactions()) {
+            AddressTransactionsHistory addressHistory = addressesTransactionsHistory.getByHash(baseTransactionData.getAddressHash());
+
+            if (addressHistory == null)
+            {
+                addressHistory = new AddressTransactionsHistory(baseTransactionData.getAddressHash());
+            }
+            addressHistory.addTransactionHashToHistory(transactionData.getHash());
+            addressesTransactionsHistory.put(addressHistory);
+        }
     }
 
     private boolean validateAddresses(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, Double senderTrustScore, Date createTime) {
