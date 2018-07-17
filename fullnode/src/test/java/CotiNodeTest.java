@@ -118,7 +118,7 @@ public class CotiNodeTest {
         addTransactionRequest6.baseTransactions = baseTransactionDataList6;
         addTransactionRequest6.hash = new Hash("A6");
         addTransactionRequest6.transactionDescription = transactionDescription;
-        TransactionData transactionData6 = new TransactionData(addTransactionRequest.baseTransactions,addTransactionRequest.hash,"someDescription", 40 );
+        TransactionData transactionData6 = new TransactionData(addTransactionRequest.baseTransactions,addTransactionRequest.hash,"someDescription", 40 , new Date());
         transactionData6.setLeftParentHash(new Hash("A5"));
         addTransactionRequest6.transactionData = transactionData6;
 

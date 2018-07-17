@@ -8,12 +8,12 @@ import java.util.List;
 public class TccInfo {
 
     private Hash hash;
-    private List<Hash> trustChainTransactionHash;
+    private List<Hash> trustChainTransactionHashes;
     private double trustChainTrustScore;
 
-    public TccInfo(Hash hash, List<Hash> trustChainTransactionHash, double trustChainTrustScore) {
+    public TccInfo(Hash hash, List<Hash> trustChainTransactionHashes, double trustChainTrustScore) {
         this.hash = hash;
-        this.trustChainTransactionHash = trustChainTransactionHash;
+        this.trustChainTransactionHashes = trustChainTransactionHashes;
         this.trustChainTrustScore = trustChainTrustScore;
     }
 

@@ -9,6 +9,7 @@ import org.bouncycastle.util.encoders.Hex;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Date;
 
 public class TransactionCryptoWrapper {
     final static int  baseTransactionHashSize = 32;
@@ -24,9 +25,9 @@ public class TransactionCryptoWrapper {
         }
     }
 
-    public TransactionCryptoWrapper(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, double senderTransactionScore)
+    public TransactionCryptoWrapper(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, double senderTransactionScore, Date createTime)
     {
-        this(new TransactionData(baseTransactions,transactionHash,transactionDescription,senderTransactionScore));
+        this(new TransactionData(baseTransactions,transactionHash,transactionDescription,senderTransactionScore,createTime));
 
     }
 

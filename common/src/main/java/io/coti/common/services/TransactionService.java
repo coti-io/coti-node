@@ -1,10 +1,7 @@
 package io.coti.common.services;
 
 import io.coti.common.crypto.TransactionCryptoWrapper;
-import io.coti.common.data.BaseTransactionData;
-import io.coti.common.data.ConfirmationData;
-import io.coti.common.data.Hash;
-import io.coti.common.data.TransactionData;
+import io.coti.common.data.*;
 import io.coti.common.exceptions.TransactionException;
 import io.coti.common.http.*;
 import io.coti.common.model.Transactions;
@@ -18,10 +15,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -70,7 +64,7 @@ public class TransactionService implements ITransactionService {
                             TRANSACTION_ALREADY_EXIST_MESSAGE));
         }
 
-        if (!validateAddresses(request.baseTransactions, request.hash, request.transactionDescription, request.senderTrustScore)) {
+        if (!validateAddresses(request.baseTransactions, request.hash, request.transactionDescription, request.senderTrustScore, request.createTime)) {
             log.info("Failed to validate addresses!");
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
@@ -97,7 +91,7 @@ public class TransactionService implements ITransactionService {
                             INSUFFICIENT_FUNDS_MESSAGE));
         }
         try {
-            TransactionData transactionData = new TransactionData(request.baseTransactions, request.hash, request.transactionDescription,request.senderTrustScore);
+            TransactionData transactionData = new TransactionData(request.baseTransactions, request.hash, request.transactionDescription,request.senderTrustScore, request.createTime);
 
             transactionData = selectSources(transactionData);
 
@@ -105,10 +99,12 @@ public class TransactionService implements ITransactionService {
                     !validationService.validateSource(transactionData.getRightParentHash())) {
                 log.info("Could not validate transaction source");
             }
-
+            transactionData.setPowStartTime(new Date());
             // ############   POW   ###########
             TimeUnit.SECONDS.sleep(5);
             // ################################
+            transactionData.setPowEndTime(new Date());
+
             attachTransactionToCluster(transactionData);
 //            transactionData.setSenderNodeIpAddress(propagationService.getCurrentNodeIp());
 
@@ -312,16 +308,16 @@ public class TransactionService implements ITransactionService {
 
     }
 
-    private boolean validateAddresses(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, Double senderTrustScore) {
+    private boolean validateAddresses(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, Double senderTrustScore, Date createTime) {
 
-        TransactionCryptoWrapper verifyTransaction = new TransactionCryptoWrapper(baseTransactions, transactionHash, transactionDescription, senderTrustScore);
+        TransactionCryptoWrapper verifyTransaction = new TransactionCryptoWrapper(baseTransactions, transactionHash, transactionDescription, senderTrustScore, createTime);
 
         return verifyTransaction.isTransactionValid();
     }
 
     private boolean isTransactionExists(Hash transactionHash){
         TransactionData transaction = getTransactionData(transactionHash);
-        return transaction != null ? true : false;
+        return transaction != null;
     }
 
     @Override
@@ -331,7 +327,43 @@ public class TransactionService implements ITransactionService {
 
     @Override
     public ResponseEntity<Response> getTransactionDetails(Hash transactionHash) {
+        TransactionData transactionData = transactions.getByHash(transactionHash);
+        if(transactionData == null)
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new AddTransactionResponse(
+                            STATUS_ERROR,
+                            TRANSACTION_DOESNT_EXIST_MESSAGE));
+        TransactionResponseData transactionResponseData = new TransactionResponseData();
+        transactionResponseData.setHash(transactionData.getHash().toHexString());
+        transactionResponseData.setAmount(transactionData.getAmount());
+        transactionResponseData.setLeftParentHash( transactionData.getLeftParentHash() == null ? null : transactionData.getLeftParentHash().toHexString());
+        transactionResponseData.setRightParentHash(transactionData.getRightParentHash() == null ? null : transactionData.getRightParentHash().toHexString());
+        List<String> trustChainTransactionHashes = new Vector<>();
+        for(Hash trustChainHash : transactionData.getTrustChainTransactionHashes()){
+            trustChainTransactionHashes.add(trustChainHash.toHexString());
+        }
+        transactionResponseData.setTrustChainTransactionHashes(trustChainTransactionHashes);
+        transactionResponseData.setTrustChainConsensus(transactionData.isTrustChainConsensus());
+        transactionResponseData.setDspConsensus(transactionData.isDspConsensus());
+        transactionResponseData.setTrustChainTrustScore(transactionData.getTrustChainTrustScore());
+        transactionResponseData.setTransactionConsensusUpdateTime(transactionData.getTransactionConsensusUpdateTime());
+        transactionResponseData.setCreateTime(transactionData.getCreateTime());
+        transactionResponseData.setAttachmentTime(transactionData.getAttachmentTime());
+        transactionResponseData.setProcessStartTime(transactionData.getProcessStartTime());
+        transactionResponseData.setPowStartTime(transactionData.getPowStartTime());
+        transactionResponseData.setPowEndTime(transactionData.getPowEndTime());
+        transactionResponseData.setSenderTrustScore(transactionData.getSenderTrustScore());
+
+        List<String> childrenTransactions = new Vector<>();
+        for(Hash childrenTransaction : transactionData.getChildrenTransactions()){
+            childrenTransactions.add(childrenTransaction.toHexString());
+        }
+        transactionResponseData.setChildrenTransactions(childrenTransactions);
+        transactionResponseData.setTransactionDescription(transactionData.getTransactionDescription());
+        transactionResponseData.setValid(transactionData.isValid());
+        transactionResponseData.setZeroSpend(transactionData.isZeroSpend());
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new GetTransactionResponse(transactions.getByHash(transactionHash)));
+                .body(new GetTransactionResponse(transactionResponseData));
     }
 }

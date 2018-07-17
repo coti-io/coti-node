@@ -69,9 +69,9 @@ public class TccConfirmationService {
         //updating parent trustChainTransactionHashes
         if (maxSonsTotalTrustScoreHash != null) { // not a source
             List<Hash> maxSonsTotalTrustScoreChain =
-                    new Vector<>(hashToUnTccConfirmTransactionsMapping.get(maxSonsTotalTrustScoreHash).getTrustChainTransactionHash());
+                    new Vector<>(hashToUnTccConfirmTransactionsMapping.get(maxSonsTotalTrustScoreHash).getTrustChainTransactionHashes());
             maxSonsTotalTrustScoreChain.add(maxSonsTotalTrustScoreHash);
-            parent.setTrustChainTransactionHash(maxSonsTotalTrustScoreChain);
+            parent.setTrustChainTransactionHashes(maxSonsTotalTrustScoreChain);
         }
     }
 
@@ -97,13 +97,13 @@ public class TccConfirmationService {
             if (transaction.getTrustChainTrustScore() >= threshold) {
                 transaction.setTrustChainConsensus(true);
                 transaction.setTransactionConsensusUpdateTime(new Date());
-                TccInfo tccInfo = new TccInfo(transaction.getHash(), transaction.getTrustChainTransactionHash()
+                TccInfo tccInfo = new TccInfo(transaction.getHash(), transaction.getTrustChainTransactionHashes()
                         , transaction.getTrustChainTrustScore());
 
                 transactionConsensusConfirmed.add(tccInfo);
                 log.info("transaction with hash:{} is confirmed with trustScore: {} and totalTrustScore:{} ", transaction.getHash(),transaction.getSenderTrustScore(),  transaction.getTrustChainTrustScore());
-                log.info("Trust Chain Transaction Hashes of transaction {}", Arrays.toString(transaction.getTrustChainTransactionHash().toArray()));
-                for(Hash hash: transaction.getTrustChainTransactionHash()) {
+                log.info("Trust Chain Transaction Hashes of transaction {}", Arrays.toString(transaction.getTrustChainTransactionHashes().toArray()));
+                for(Hash hash: transaction.getTrustChainTransactionHashes()) {
                     log.info(hash.toString());
                 }
                 log.info("end of trust chain");

@@ -27,6 +27,7 @@ public class Hash implements Serializable {
         return CryptoUtils.bytesToHex(bytes);
     }
 
+    public boolean isNull() { return bytes == null; }
 
     @Override
     public boolean equals(Object other) {

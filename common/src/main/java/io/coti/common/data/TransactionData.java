@@ -5,6 +5,7 @@ import io.coti.common.data.interfaces.IEntity;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -16,30 +17,27 @@ import java.util.Vector;
 public class TransactionData implements IEntity {
     private List<BaseTransactionData> baseTransactions;
     private transient Hash hash;
-
+    private BigDecimal amount;
     private Hash leftParentHash;
     private Hash rightParentHash;
-    private List<Hash> trustChainTransactionHash;
+    private List<Hash> trustChainTransactionHashes;
     private Hash userTrustScoreTokenHashes;
     private boolean trustChainConsensus;
     private boolean dspConsensus;
     private double trustChainTrustScore;
     private Date transactionConsensusUpdateTime;
     private Date createTime;
-    private Date updateTime;
     private Date attachmentTime;
     private Date processStartTime;
-    private Date processEndTime;
     private Date powStartTime;
     private Date powEndTime;
-    private int baseTransactionsCount;
     private double senderTrustScore;
     private List<Hash> baseTransactionsHash;
     private Hash senderHash;
     private String nodeIpAddress;
     private Hash nodeHash;
     private List<Hash> childrenTransactions;
-    private boolean isValid;
+    private boolean valid;
     private Map<String, Boolean> validByNodes;
     private transient boolean isVisit;
     private boolean isZeroSpend;
@@ -51,19 +49,23 @@ public class TransactionData implements IEntity {
 
 
 
-    public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription,double senderTrustScore) {
+    public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription,double senderTrustScore, Date createTime) {
         this.hash = transactionHash;
         this.transactionDescription = transactionDescription;
         this.baseTransactions = baseTransactions;
-
+        this.createTime = createTime;
         this.senderTrustScore = senderTrustScore;
-
+        BigDecimal amount = BigDecimal.ZERO;
+        for(BaseTransactionData baseTransaction : baseTransactions){
+            amount = amount.add(baseTransaction.getAmount().signum() > 0 ? baseTransaction.getAmount() : BigDecimal.ZERO);
+        }
+        this.amount = amount;
         this.initTransactionData();
     }
 
     private void  initTransactionData()
     {
-        this.trustChainTransactionHash = new Vector<>();
+        this.trustChainTransactionHashes = new Vector<>();
         this.childrenTransactions = new Vector<>();
         this.processStartTime = (new Date());
     }

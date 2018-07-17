@@ -26,7 +26,7 @@ public class RocksDBTests {
 
     @Test
     public void saveAndRetrieveSingleTransaction() {
-        TransactionData transactionData1 = new TransactionData(new ArrayList<>(),new Hash("TransactionData 0".getBytes()),"test",5);
+        TransactionData transactionData1 = new TransactionData(new ArrayList<>(),new Hash("TransactionData 0".getBytes()),"test",5, new Date());
         transactions.put(transactionData1);
         TransactionData transactionData2 = transactions.getByHash(transactionData1.getHash());
         Assert.assertEquals(transactionData1, transactionData2);
@@ -34,8 +34,8 @@ public class RocksDBTests {
 
     @Test
     public void saveAndRetrieveWithManyTransactions() {
-        TransactionData transactionData1 = new TransactionData(new ArrayList<>(),new Hash("TransactionData 0".getBytes()),"test",5);
-        TransactionData transactionData2 = new TransactionData(new ArrayList<>(),new Hash("TransactionData 2".getBytes()),"test",5);
+        TransactionData transactionData1 = new TransactionData(new ArrayList<>(),new Hash("TransactionData 0".getBytes()),"test",5, new Date());
+        TransactionData transactionData2 = new TransactionData(new ArrayList<>(),new Hash("TransactionData 2".getBytes()),"test",5, new Date());
         transactions.put(transactionData1);
         transactions.put(transactionData2);
         TransactionData transactionData3 = transactions.getByHash(new Hash("TransactionData 0".getBytes()));
@@ -44,8 +44,8 @@ public class RocksDBTests {
 
     @Test
     public void saveManyAndRetrieveManyTransactions() {
-        TransactionData transactionData1 = new TransactionData(new ArrayList<>(),new Hash("TransactionData 0".getBytes()),"test",5);
-        TransactionData transactionData2 = new TransactionData(new ArrayList<>(),new Hash("TransactionData 1".getBytes()),"test",5);
+        TransactionData transactionData1 = new TransactionData(new ArrayList<>(),new Hash("TransactionData 0".getBytes()),"test",5, new Date());
+        TransactionData transactionData2 = new TransactionData(new ArrayList<>(),new Hash("TransactionData 1".getBytes()),"test",5, new Date());
         transactions.put(transactionData1);
         transactions.put(transactionData2);
         TransactionData transactionData3 = transactions.getByHash(new Hash("TransactionData 0".getBytes()));
@@ -57,7 +57,7 @@ public class RocksDBTests {
 
     @Test
     public void saveAndDeleteTransactions() {
-        TransactionData transactionData1 = new TransactionData(null,new Hash("TransactionData 0".getBytes()),"test",5);
+        TransactionData transactionData1 = new TransactionData(null,new Hash("TransactionData 0".getBytes()),"test",5, new Date());
         transactions.put(transactionData1);
         TransactionData transactionData2 = transactions.getByHash(new Hash("TransactionData 0".getBytes()));
         Assert.assertEquals(transactionData1, transactionData2);

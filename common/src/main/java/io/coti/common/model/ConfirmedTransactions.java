@@ -46,11 +46,10 @@ public class ConfirmedTransactions extends Collection<ConfirmationData> {
                         .get(baseTransaction.getAddressHash()));
 
             }
-            transactionData.setCreateTime(confirmationData.getCreationTIme());
             transactionData.setDspConsensus(confirmationData.isDoubleSpendPreventionConsensus());
 
-            transactionData.setTrustChainConsensus(confirmationData.isTrustChainConsensus());
-            transactionData.setTrustChainTransactionHash(tccInfo.getTrustChainTransactionHash());
+            transactionData.setTrustChainConsensus(true);
+            transactionData.setTrustChainTransactionHashes(tccInfo.getTrustChainTransactionHashes());
             transactionData.setTrustChainTrustScore(tccInfo.getTrustChainTrustScore());
 
             if(confirmationData.isDoubleSpendPreventionConsensus()){

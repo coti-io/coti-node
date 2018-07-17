@@ -6,6 +6,7 @@ import io.coti.common.data.TransactionData;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Date;
 
 public class AddTransactionRequest extends Request {
     @NotNull
@@ -15,6 +16,7 @@ public class AddTransactionRequest extends Request {
     @NotNull
     public String transactionDescription;
 
+    public Date createTime;
     public double senderTrustScore;
     public TransactionData transactionData;
 }
