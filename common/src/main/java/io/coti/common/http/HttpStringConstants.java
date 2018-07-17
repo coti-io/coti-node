@@ -11,6 +11,7 @@ public class HttpStringConstants {
 
     public static final String TRANSACTION_ALREADY_EXIST_MESSAGE = "Transaction already exists!";
     public static final String ADDRESS_NOT_EXISTS_MESSAGE = "Address %s not exists";
+    public static final String ADDRESS_EXISTS_MESSAGE = "Address %s exists";
 
     public static final String TRANSACTION_CREATED_MESSAGE = "Transaction created";
     public static final String TRANSACTION_CREATION_FAILED_MESSAGE = "Transaction creation failed";
