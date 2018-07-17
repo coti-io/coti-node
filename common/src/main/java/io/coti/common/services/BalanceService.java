@@ -3,10 +3,7 @@ package io.coti.common.services;
 import io.coti.common.data.*;
 import io.coti.common.http.GetBalancesRequest;
 import io.coti.common.http.GetBalancesResponse;
-import io.coti.common.model.AddressesTransactionsHistory;
-import io.coti.common.model.ConfirmedTransactions;
-import io.coti.common.model.Transactions;
-import io.coti.common.model.UnconfirmedTransactions;
+import io.coti.common.model.*;
 import io.coti.common.services.LiveView.LiveViewService;
 import io.coti.common.services.LiveView.WebSocketSender;
 import io.coti.common.services.interfaces.IBalanceService;
@@ -34,6 +31,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @Slf4j
 @Service
 public class BalanceService implements IBalanceService {
+
+
+    @Autowired
+    private Addresses addresses;
 
 
     @Autowired
@@ -104,6 +105,7 @@ public class BalanceService implements IBalanceService {
                 updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(), balanceMap);
                 TransactionData currentTransactionData = transactions.getByHash(confirmationData.getHash());
                 updateAddressTransactionHistory(currentTransactionData);
+                UpdateAddresses(currentTransactionData);
                 publishBalanceChangeToWebSocket(confirmationData.getAddressHashToValueTransferredMapping().keySet());
                 liveViewService.updateNodeStatus(currentTransactionData, 2);
 
@@ -112,6 +114,20 @@ public class BalanceService implements IBalanceService {
                 setDSPCtoTrueAndInsertToUnconfirmed(confirmationData);
                 log.info("The transaction {} was added to unconfirmedTransactions in the db and tcc was updated to true", confirmationData.getHash());
             }
+        }
+    }
+
+
+    private void UpdateAddresses(TransactionData transactionData)
+    {
+        for (BaseTransactionData baseTransactionData: transactionData.getBaseTransactions()) {
+            AddressData address = addresses.getByHash(baseTransactionData.getAddressHash());
+
+            if (address == null)
+            {
+                address = new AddressData(baseTransactionData.getAddressHash());
+            }
+            addressesTransactionsHistory.put(address);
         }
     }
 
