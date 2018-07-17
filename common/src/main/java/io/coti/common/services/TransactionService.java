@@ -347,7 +347,7 @@ public class TransactionService implements ITransactionService {
 
     @Override
     public ResponseEntity<Response> getAddressTransactions(Hash addressHash) {
-        List<TransactionData> transactionsDataList = new ArrayList<>();
+        List<TransactionData> transactionsDataList = new Vector<>();
         AddressTransactionsHistory history = addressesTransactionsHistory.getByHash(addressHash);
         for (Hash transactionHash: history.getTransactionsHistory()) {
             TransactionData transactionData =  transactions.getByHash(transactionHash);

@@ -9,14 +9,14 @@ import java.util.Date;
 @Data
 public class BaseTransactionResponseData {
 
-
-    private Hash addressHash;
+    private String hash;
+    private String addressHash;
     private BigDecimal amount;
     private Date createTime;
 
-
     public BaseTransactionResponseData(BaseTransactionData baseTransactionData){
-        this.addressHash = baseTransactionData.getAddressHash();
+        this.hash = baseTransactionData.getHash() == null ? null : baseTransactionData.getHash().toHexString();
+        this.addressHash = baseTransactionData.getAddressHash().toHexString();
         this.amount = baseTransactionData.getAmount();
         this.createTime = baseTransactionData.getCreateTime();
 

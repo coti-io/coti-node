@@ -11,6 +11,7 @@ import java.util.Vector;
 public class TransactionResponseData {
     private String hash;
     private BigDecimal amount;
+    private List<BaseTransactionResponseData> baseTransactionResponses;
     private String leftParentHash;
     private String rightParentHash;
     private List<String> trustChainTransactionHashes;
@@ -29,6 +30,7 @@ public class TransactionResponseData {
     private boolean isZeroSpend;
     private String transactionDescription;
 
+
     public TransactionResponseData(){ }
 
     public TransactionResponseData(TransactionData transactionData)
@@ -37,6 +39,13 @@ public class TransactionResponseData {
 
         this.hash = transactionData.getHash().toHexString();
         this.amount =transactionData.getAmount();
+        this.baseTransactionResponses = new Vector<>();
+        if(transactionData.getBaseTransactions() != null){
+         for (BaseTransactionData bxData: transactionData.getBaseTransactions()
+                 ) {
+             this.baseTransactionResponses.add(new BaseTransactionResponseData(bxData));
+         }
+        }
         this.leftParentHash =  transactionData.getLeftParentHash() == null ? null : transactionData.getLeftParentHash().toHexString();
         this.rightParentHash =transactionData.getRightParentHash() == null ? null : transactionData.getRightParentHash().toHexString();
         List<String> trustChainTransactionHashes = new Vector<>();
