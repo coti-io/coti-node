@@ -2,7 +2,6 @@ package io.coti.dspnode.controllers;
 
 import io.coti.common.data.TransactionData;
 import io.coti.common.http.Response;
-import io.coti.common.services.interfaces.ITransactionService;
 import io.coti.dspnode.services.TransactionReceiverService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

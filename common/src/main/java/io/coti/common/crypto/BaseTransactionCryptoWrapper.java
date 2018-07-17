@@ -27,12 +27,9 @@ public class BaseTransactionCryptoWrapper {
 
     public byte[] getMessageInBytes()
     {
-
-
         byte[] addressBytes = baseTxData.getAddressHash().getBytes();
-        String decimalStringRepresentation = DatatypeConverter.printDecimal(baseTxData.getAmount());
+        String decimalStringRepresentation = baseTxData.getAmount().toString();
         byte[] bytesOfAmount = decimalStringRepresentation.getBytes(StandardCharsets.UTF_8);
-
 
         ByteBuffer bufferIndex = ByteBuffer.allocate(4);
         bufferIndex.putInt(baseTxData.getIndexInTransactionsChain());
@@ -43,8 +40,6 @@ public class BaseTransactionCryptoWrapper {
 
         ByteBuffer dateBuffer = ByteBuffer.allocate(4);
         dateBuffer.putInt(timestamp);
-
-
 
         ByteBuffer baseTransactionArray = ByteBuffer.allocate(addressBytes.length + bytesOfAmount.length + IndexByteArray.length + dateBuffer.array().length).
                 put(addressBytes).put(IndexByteArray).put(bytesOfAmount).put(dateBuffer.array());
@@ -65,7 +60,6 @@ public class BaseTransactionCryptoWrapper {
     {
         return baseTxData.getHash();
     }
-
 
     public boolean IsBaseTransactionValid(Hash transactionHash) {
         try {

@@ -16,7 +16,6 @@ public class TransactionPropagationService {
 
     List<URI> neighborDspNodeURIs;
 
-
     public void PropagateTransactionToNeighbors(TransactionData transactionData){
         for(URI dspNodeUri : neighborDspNodeURIs){
             sendTransaction(dspNodeUri, transactionData);

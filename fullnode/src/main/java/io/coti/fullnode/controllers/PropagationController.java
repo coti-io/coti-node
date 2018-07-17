@@ -4,7 +4,7 @@ import io.coti.common.http.AddTransactionRequest;
 import io.coti.common.http.GetTransactionRequest;
 import io.coti.common.http.GetTransactionsRequest;
 import io.coti.common.http.Response;
-import io.coti.common.services.TransactionService;
+import io.coti.common.services.TransactionHelper;
 import io.coti.common.services.interfaces.IPropagationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +21,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 public class PropagationController {
 
     @Autowired
-    private TransactionService transactionService;
+    private TransactionHelper transactionHelper;
 
     @Autowired
     private IPropagationService propagationService;
@@ -33,7 +33,7 @@ public class PropagationController {
 
     @RequestMapping(value = "/propagatedTransaction", method = PUT)
     public ResponseEntity<Response> addTransaction(@Valid @RequestBody AddTransactionRequest addTransactionRequest) {
-        return transactionService.addPropagatedTransaction(addTransactionRequest);
+        return transactionHelper.addPropagatedTransaction(addTransactionRequest);
     }
 
     @RequestMapping(value = "/initPropagatedTransaction", method = POST)
