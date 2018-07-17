@@ -28,6 +28,7 @@ public class RocksDBConnector implements IDatabaseConnector {
             Transactions.class.getName(),
             BaseTransactions.class.getName(),
             Addresses.class.getName(),
+            AddressesTransactionsHistory.class.getName(),
             ConfirmedTransactions.class.getName(),
             UnconfirmedTransactions.class.getName()
     );

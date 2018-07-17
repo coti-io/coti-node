@@ -1,7 +1,8 @@
 package io.coti.fullnode.controllers;
 
 import io.coti.common.data.Hash;
-import io.coti.common.http.AddAddressRequest;
+import io.coti.common.http.AddressExistsResponse;
+import io.coti.common.http.AddressRequest;
 import io.coti.common.http.AddAddressResponse;
 import io.coti.common.http.HttpStringConstants;
 import io.coti.common.services.interfaces.IAddressService;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 
+import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 @Slf4j
@@ -30,7 +32,7 @@ public class AddressController {
     private IValidationService validationService;
 
     @RequestMapping(method = PUT)
-    public ResponseEntity<AddAddressResponse> addAddress(@Valid @RequestBody AddAddressRequest addAddressRequest) {
+    public ResponseEntity<AddAddressResponse> addAddress(@Valid @RequestBody AddressRequest addAddressRequest) {
 
         try {
             if (addressLengthValidation(addAddressRequest.getAddress())) {
@@ -65,9 +67,30 @@ public class AddressController {
     }
 
 
+    @RequestMapping(value = "/addressExists",method = POST)
+    public ResponseEntity<AddressExistsResponse> addressExists(@Valid @RequestBody AddressRequest addressRequest) {
+
+        try {
+
+            Hash addressHash = addressRequest.getAddress();
+            boolean result = addressService.addressExists(addressHash);
+
+            return ResponseEntity.status(HttpStatus.OK).body(new AddressExistsResponse( addressHash,result ?  HttpStringConstants.ADDRESS_EXISTS_MESSAGE : HttpStringConstants.ADDRESS_NOT_EXISTS_MESSAGE));
+
+        } catch (Exception ex) {
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new AddressExistsResponse(new Hash("")
+                            , HttpStringConstants.ADDRESS_CREATION_ERROR_MESSAGE));
+        }
+
+    }
+
+
     private boolean addressLengthValidation(Hash address) {
 
-        return validationService.validateAddressLength(address);
+        return validationService.validateAddress(address);
     }
 
 

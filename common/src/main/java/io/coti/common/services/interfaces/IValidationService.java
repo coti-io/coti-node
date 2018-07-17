@@ -10,7 +10,7 @@ public interface IValidationService {
 
     boolean validateSource(Hash hash);
 
-    boolean validateAddressLength(Hash address);
+    boolean validateAddress(Hash address);
 
     boolean partialValidation(TransactionData transactionData);
 

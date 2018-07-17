@@ -25,4 +25,12 @@ public class AddressService implements IAddressService {
         log.info("Address {} already exists",addressHash);
         return false;
     }
+
+    @Override
+    public boolean addressExists(Hash addressHash) {
+        if( addresses.getByHash(addressHash) == null){
+            return false;
+        }
+        return true;
+    }
 }

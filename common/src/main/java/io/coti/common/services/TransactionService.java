@@ -4,6 +4,7 @@ import io.coti.common.crypto.TransactionCryptoWrapper;
 import io.coti.common.data.*;
 import io.coti.common.exceptions.TransactionException;
 import io.coti.common.http.*;
+import io.coti.common.model.AddressesTransactionsHistory;
 import io.coti.common.model.Transactions;
 import io.coti.common.services.LiveView.WebSocketSender;
 import io.coti.common.services.interfaces.*;
@@ -26,6 +27,10 @@ import static io.coti.common.http.HttpStringConstants.*;
 public class TransactionService implements ITransactionService {
 
     private Map<Hash, TransactionData> propagationTransactionHash;
+
+
+    @Autowired
+    private AddressesTransactionsHistory addressesTransactionsHistory;
 
     private HashMap<Hash, TransactionData> hashToWaitingChildrenTransactionsMapping;
 
@@ -365,5 +370,18 @@ public class TransactionService implements ITransactionService {
         transactionResponseData.setZeroSpend(transactionData.isZeroSpend());
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new GetTransactionResponse(transactionResponseData));
+    }
+
+
+    @Override
+    public ResponseEntity<Response> getAddressTransactions(Hash addressHash) {
+        List<TransactionData> transactionsDataList = new ArrayList<>();
+        AddressTransactionsHistory history = addressesTransactionsHistory.getByHash(addressHash);
+        for (Hash transactionHash: history.getTransactionsHistory()) {
+            TransactionData transactionData =  transactions.getByHash(transactionHash);
+            transactionsDataList.add(transactionData);
+
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistory(transactionsDataList));
     }
 }

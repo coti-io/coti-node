@@ -1,6 +1,7 @@
 package io.coti.fullnode.controllers;
 
 import io.coti.common.http.AddTransactionRequest;
+import io.coti.common.http.AddressRequest;
 import io.coti.common.http.GetTransactionRequest;
 import io.coti.common.http.Response;
 import io.coti.common.services.interfaces.ITransactionService;
@@ -32,5 +33,11 @@ public class TransactionController {
     @RequestMapping(method = POST)
     public ResponseEntity<Response> getTransactionDetails(@Valid @RequestBody GetTransactionRequest getTransactionRequest) {
         return transactionService.getTransactionDetails(getTransactionRequest.transactionHash);
+    }
+
+
+    @RequestMapping(value = "/getAddressTransactions", method = POST)
+    public ResponseEntity<Response> getAddressTransactions(@Valid @RequestBody AddressRequest addressRequest) {
+        return transactionService.getAddressTransactions(addressRequest.getAddress());
     }
 }

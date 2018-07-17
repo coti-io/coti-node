@@ -15,6 +15,8 @@ public class HttpStringConstants {
     public static final String TRANSACTION_DOESNT_EXIST_MESSAGE = "Transaction doesn't exist";
     public static final String TRANSACTION_ROLLBACK_MESSAGE = "Transaction creation failed";
 
+    public static final String ADDRESS_EXISTS_MESSAGE = "Address %s exists";
+    public static final String ADDRESS_NOT_EXISTS_MESSAGE = "Address %s not exists";
 
     public static final String TRANSACTION_CURRENTLY_MISSING_MESSAGE = "Transaction is currently missing. Waiting for propagation from neighbors!";
     public static final String WAITING_FOR_TRANSACTION_PARENT_MESSAGE = "Waiting_for_transaction_parent!";
