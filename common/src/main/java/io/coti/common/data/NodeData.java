@@ -2,6 +2,8 @@ package io.coti.common.data;
 
 import lombok.Data;
 
+import java.util.Date;
+
 @Data
 public class NodeData {
     private String id;
