@@ -51,7 +51,6 @@ public class ClusterService implements IClusterService {
             TransactionData transactionData = transactions.getByHash(transactionHash);
             hashToUnconfirmedTransactionsMapping.put(transactionHash, transactionData);
             sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].add(transactionData);
-            liveViewService.addNode(transactionData);
         }
 
         initiateTrustScoreConsensusProcess();
