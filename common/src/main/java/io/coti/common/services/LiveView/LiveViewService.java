@@ -30,14 +30,13 @@ public class LiveViewService {
         nodeData.setId(transactionData.getHash().toHexString());
         nodeData.setTrustScore(transactionData.getSenderTrustScore());
         nodeData.setGenesis(transactionData.isZeroSpend());
-        if (transactionData.isZeroSpend()) {
-            nodeData.setStatus(3);
-        }
-        else if (transactionData.isSource()) {
+        
+        if (transactionData.isSource()) {
             nodeData.setStatus(0);
         } else {
             nodeData.setStatus(transactionData.isTrustChainConsensus() ? 2 : 1);
         }
+
         if (transactionData.getLeftParentHash() != null) {
             nodeData.setLeftParent(transactionData.getLeftParentHash().toHexString());
         }
@@ -55,16 +54,14 @@ public class LiveViewService {
         nodeData.setTrustScore(transactionData.getSenderTrustScore());
         int currentIndex = graphData.nodes.indexOf(nodeData);
         NodeData newNode = graphData.nodes.get(currentIndex);
-        if(!newNode.isGenesis()) {
-            newNode.setStatus(newStatus);
-        }
+        newNode.setStatus(newStatus);
         setNodeDataDatesFromTransactionData(transactionData, newNode);
         webSocketSender.sendNode(newNode);
     }
 
     public void setNodeDataDatesFromTransactionData(TransactionData transactionData, NodeData nodeData) {
-        if (transactionData.getAttachmentTime() != null && transactionData.getTransactionConsensusUpdateTime() != null) {
-            nodeData.setTccDuration((transactionData.getTransactionConsensusUpdateTime().getTime() - transactionData.getAttachmentTime().getTime()) / 1000);
+        if (transactionData.getAttachmentTime()!= null && transactionData.getTransactionConsensusUpdateTime()!= null) {
+            nodeData.setTccDuration( (transactionData.getTransactionConsensusUpdateTime().getTime() - transactionData.getAttachmentTime().getTime())/ 1000);
         }
     }
 }
