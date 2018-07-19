@@ -30,17 +30,18 @@ public class ConfirmedTransactions extends Collection<ConfirmationData> {
         super.init();
     }
 
-    public void putConfirmedAndUpdateTransaction(IEntity entity, TccInfo tccInfo){
+    public TransactionData putConfirmedAndUpdateTransaction(IEntity entity, TccInfo tccInfo){
+        TransactionData transactionData = null;
         try {
             databaseConnector.put(columnFamilyName, entity.getHash().getBytes(), SerializationUtils.serialize(entity));
             ConfirmationData confirmationData = (ConfirmationData) entity;
-            TransactionData transactionData = transactions.getByHash(confirmationData.getHash());
+            transactionData = transactions.getByHash(confirmationData.getHash());
 
             for (BaseTransactionData baseTransaction : transactionData.getBaseTransactions()) {
                 if (!confirmationData.getAddressHashToValueTransferredMapping().containsKey(baseTransaction.getAddressHash())) {
                     log.warn("Warning! The confirmationData holds an address that does not exist in the transaction it " +
                             "points to ");
-                    return;
+                    return null;
                 }
                 baseTransaction.setAmount(confirmationData.getAddressHashToValueTransferredMapping()
                         .get(baseTransaction.getAddressHash()));
@@ -49,6 +50,7 @@ public class ConfirmedTransactions extends Collection<ConfirmationData> {
             transactionData.setDspConsensus(confirmationData.isDoubleSpendPreventionConsensus());
 
             transactionData.setTrustChainConsensus(true);
+            transactionData.setTransactionConsensusUpdateTime(new Date());
             transactionData.setTrustChainTransactionHashes(tccInfo.getTrustChainTransactionHashes());
             transactionData.setTrustChainTrustScore(tccInfo.getTrustChainTrustScore());
 
@@ -61,6 +63,7 @@ public class ConfirmedTransactions extends Collection<ConfirmationData> {
         } catch (Exception ex) {
             log.error("Exception while inserting data to confimationTable and transactionTable");
         }
+        return transactionData;
     }
 
     @Override

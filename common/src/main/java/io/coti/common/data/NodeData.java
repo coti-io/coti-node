@@ -10,6 +10,7 @@ public class NodeData {
     private boolean isGenesis;
     private double trustScore;
     private int status;
+    private long tccDuration;
 
 
     @Override

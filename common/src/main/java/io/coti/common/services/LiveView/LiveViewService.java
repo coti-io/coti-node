@@ -37,6 +37,7 @@ public class LiveViewService {
         if (transactionData.getRightParentHash() != null) {
             nodeData.setRightParent(transactionData.getRightParentHash().toHexString());
         }
+        setNodeDataDatesFromTransactionData(transactionData, nodeData);
         graphData.nodes.add(nodeData);
         webSocketSender.sendNode(nodeData);
     }
@@ -48,6 +49,13 @@ public class LiveViewService {
         int currentIndex = graphData.nodes.indexOf(nodeData);
         NodeData newNode = graphData.nodes.get(currentIndex);
         newNode.setStatus(newStatus);
+        setNodeDataDatesFromTransactionData(transactionData, newNode);
         webSocketSender.sendNode(newNode);
+    }
+
+    public void setNodeDataDatesFromTransactionData(TransactionData transactionData, NodeData nodeData) {
+        if (transactionData.getAttachmentTime()!= null && transactionData.getTransactionConsensusUpdateTime()!= null) {
+            nodeData.setTccDuration( (transactionData.getTransactionConsensusUpdateTime().getTime() - transactionData.getAttachmentTime().getTime())/ 1000);
+        }
     }
 }
