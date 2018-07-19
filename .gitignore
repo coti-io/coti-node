@@ -41,3 +41,4 @@ MANIFEST.MF
 *.original
 /zerospend/target/
 
+/fullnode/FullNoderocksDB

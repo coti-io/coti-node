@@ -9,7 +9,7 @@ import io.coti.common.model.UnconfirmedTransactions;
 import io.coti.fullnode.AppConfig;
 import io.coti.common.services.interfaces.IBalanceService;
 import io.coti.common.services.interfaces.IPropagationService;
-import io.coti.common.services.interfaces.ITransactionService;
+import io.coti.fullnode.services.TransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -41,8 +41,6 @@ public class CotiNodeTest {
     private final static String transactionDescription = "message";
     private final static SignatureData signatureMessage = new SignatureData("message","message");
     @Autowired
-    private ITransactionService transactionService;
-    @Autowired
     private TransactionController transactionController;
     @Autowired
     private ConfirmedTransactions confirmedTransactions;
@@ -51,7 +49,10 @@ public class CotiNodeTest {
     @Autowired
     private IBalanceService balanceService;
     @Autowired
+    private TransactionService transactionService;
+    @Autowired
     private IPropagationService propagationService;
+
     private int privatekeyInt = 122;
     /*
        This is a good scenario where amount and address are dynamically generated

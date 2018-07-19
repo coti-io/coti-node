@@ -11,23 +11,28 @@ import java.util.Arrays;
 public class Hash implements Serializable {
     private byte[] bytes;
 
-    public Hash(Integer hashIndex){
+    private Hash() {
+    }
+
+    public Hash(Integer hashIndex) {
         this.bytes = Ints.toByteArray(hashIndex);
     }
 
-    public Hash(String hash){
+    public Hash(String hash) {
         this.bytes = CryptoUtils.hexStringToByteArray(hash);
     }
 
-    public Hash(byte[] bytes){
+    public Hash(byte[] bytes) {
         this.bytes = bytes;
     }
 
-    public String toHexString(){
+    public String toHexString() {
         return CryptoUtils.bytesToHex(bytes);
     }
 
-    public boolean isNull() { return bytes == null; }
+    public boolean isNull() {
+        return bytes == null;
+    }
 
     @Override
     public boolean equals(Object other) {
@@ -47,7 +52,7 @@ public class Hash implements Serializable {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return toHexString();
     }
 }

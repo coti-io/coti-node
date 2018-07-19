@@ -1,40 +1,35 @@
 package io.coti.dspnode.services;
 
+import io.coti.common.communication.MultiClientZeroMQPublisher;
 import io.coti.common.data.TransactionData;
-import org.hibernate.validator.constraints.URL;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.client.ClientHttpRequestFactory;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.util.SerializationUtils;
 
-import java.net.URI;
-import java.util.List;
+import javax.annotation.PostConstruct;
 
+@Slf4j
 @Service
 public class TransactionPropagationService {
+    @Value("${dsp.propagation.address}")
+    private String propagationAddress;
+    @Autowired
+    private MultiClientZeroMQPublisher multiClientPublisher;
 
-    List<URI> neighborDspNodeURIs;
-
-
-    public void PropagateTransactionToNeighbors(TransactionData transactionData){
-        for(URI dspNodeUri : neighborDspNodeURIs){
-            sendTransaction(dspNodeUri, transactionData);
-        }
+    @PostConstruct
+    public void init() {
+        multiClientPublisher.init(propagationAddress);
     }
 
-    private void sendTransaction(URI dspNodeUri, TransactionData transactionData) {
-        ClientHttpRequestFactory requestFactory = getClientHttpRequestFactory();
-        RestTemplate restTemplate = new RestTemplate(requestFactory);
-        HttpEntity<TransactionData> request = new HttpEntity<>(transactionData);
-        TransactionData data = restTemplate.postForObject(dspNodeUri, request, TransactionData.class);
+    public void propagateSignedTransaction(TransactionData transactionData) {
+        multiClientPublisher.sendToAll("SignedTransactions", SerializationUtils.serialize(transactionData));
     }
 
-    private ClientHttpRequestFactory getClientHttpRequestFactory() {
-        int timeout = 5000;
-        HttpComponentsClientHttpRequestFactory clientHttpRequestFactory
-                = new HttpComponentsClientHttpRequestFactory();
-        clientHttpRequestFactory.setConnectTimeout(timeout);
-        return clientHttpRequestFactory;
+    @Scheduled(fixedRate = 30000)
+    void printStats() {
+        log.info("Connected Clients: {}", multiClientPublisher.getConnectedClients());
     }
 }

@@ -7,7 +7,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = AppConfig.class)
-public class ConfirmedTransactionServiceTests {
+public class ConfirmedTransactionHelperTests {
 
     @Autowired
     private BalanceService balanceService;

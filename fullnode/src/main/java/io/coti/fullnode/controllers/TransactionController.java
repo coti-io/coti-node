@@ -4,7 +4,8 @@ import io.coti.common.http.AddTransactionRequest;
 import io.coti.common.http.AddressRequest;
 import io.coti.common.http.GetTransactionRequest;
 import io.coti.common.http.Response;
-import io.coti.common.services.interfaces.ITransactionService;
+import io.coti.common.services.TransactionHelper;
+import io.coti.fullnode.services.TransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,9 @@ import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 public class TransactionController {
 
     @Autowired
-    private ITransactionService transactionService;
+    private TransactionService transactionService;
+    @Autowired
+    private TransactionHelper transactionHelper;
 
     @RequestMapping(method = PUT)
     public ResponseEntity<Response> addTransaction(@Valid @RequestBody AddTransactionRequest addTransactionRequest) {
@@ -32,9 +35,8 @@ public class TransactionController {
 
     @RequestMapping(method = POST)
     public ResponseEntity<Response> getTransactionDetails(@Valid @RequestBody GetTransactionRequest getTransactionRequest) {
-        return transactionService.getTransactionDetails(getTransactionRequest.transactionHash);
+        return transactionHelper.getTransactionDetails(getTransactionRequest.transactionHash);
     }
-
 
     @RequestMapping(value = "/addressTransactions", method = POST)
     public ResponseEntity<Response> getAddressTransactions(@Valid @RequestBody AddressRequest addressRequest) {

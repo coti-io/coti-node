@@ -43,11 +43,8 @@ public class TransactionData implements IEntity {
     private boolean isZeroSpend;
     private String transactionDescription;
 
-
     private TransactionData() {
     }
-
-
 
     public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription,double senderTrustScore, Date createTime) {
         this.hash = transactionHash;

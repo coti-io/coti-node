@@ -8,11 +8,7 @@ import java.math.BigDecimal;
 
 @Data
 public class BaseTransactionData implements Serializable {
-
-
     private Hash hash;
-
-
     private Hash addressHash;
     private BigDecimal amount;
     private int indexInTransactionsChain;
