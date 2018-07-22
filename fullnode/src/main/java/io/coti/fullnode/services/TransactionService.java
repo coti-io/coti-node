@@ -1,8 +1,8 @@
 package io.coti.fullnode.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import io.coti.common.communication.interfaces.ITransactionPropagationSubscriber;
+import io.coti.common.communication.interfaces.ITransactionSender;
 import io.coti.common.data.AddressTransactionsHistory;
-import io.coti.common.data.ConfirmationData;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
 import io.coti.common.exceptions.TransactionException;
@@ -18,17 +18,16 @@ import io.coti.common.services.interfaces.IValidationService;
 import io.coti.common.services.interfaces.IZeroSpendService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.SerializationUtils;
 
 import javax.annotation.PostConstruct;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import static io.coti.common.http.HttpStringConstants.*;
 
@@ -44,14 +43,17 @@ public class TransactionService {
     @Autowired
     private IZeroSpendService zeroSpendService;
     @Autowired
-    private TransactionSender transactionSender;
+    private ITransactionSender transactionSender;
     @Autowired
     private AddressesTransactionsHistory addressesTransactionsHistory;
     @Autowired
     private Transactions transactions;
+    @Autowired
+    private ITransactionPropagationSubscriber transactionPropagationReceiver;
 
     @PostConstruct
     private void init() {
+        transactionPropagationReceiver.init(propagatedTransactionConsumer);
     }
 
     public ResponseEntity<Response> addNewTransaction(AddTransactionRequest request)
@@ -122,7 +124,7 @@ public class TransactionService {
             transactionData.setAttachmentTime(new Date());
             transactionHelper.attachTransactionToCluster(transactionData);
             // TODO: Send to DSP Node
-//            transactionSender.sendTransaction(transactionData);
+            transactionSender.sendTransaction(transactionData);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
                     .body(new AddTransactionResponse(
@@ -175,11 +177,15 @@ public class TransactionService {
     public ResponseEntity<Response> getAddressTransactions(Hash addressHash) {
         List<TransactionData> transactionsDataList = new Vector<>();
         AddressTransactionsHistory history = addressesTransactionsHistory.getByHash(addressHash);
-        for (Hash transactionHash: history.getTransactionsHistory()) {
-            TransactionData transactionData =  transactions.getByHash(transactionHash);
+        for (Hash transactionHash : history.getTransactionsHistory()) {
+            TransactionData transactionData = transactions.getByHash(transactionHash);
             transactionsDataList.add(transactionData);
 
         }
         return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistory(transactionsDataList));
     }
+
+    private Consumer<TransactionData> propagatedTransactionConsumer = transactionData -> {
+        log.info("Transaction received: {}", transactionData.getHash().toHexString());
+    };
 }

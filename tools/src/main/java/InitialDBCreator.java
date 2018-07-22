@@ -28,7 +28,6 @@ public class InitialDBCreator {
         }
     }
 
-
     private static void deleteInitialDatabaseFolder() {
         File index = new File("initialDatabase");
         if (!index.exists()) {
