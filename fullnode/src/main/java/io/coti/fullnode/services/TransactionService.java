@@ -124,7 +124,7 @@ public class TransactionService {
             transactionData.setAttachmentTime(new Date());
             transactionHelper.attachTransactionToCluster(transactionData);
             // TODO: Send to DSP Node
-            transactionSender.sendTransaction(transactionData);
+       //     transactionSender.sendTransaction(transactionData);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
                     .body(new AddTransactionResponse(
