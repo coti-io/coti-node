@@ -34,8 +34,7 @@ public class ZeroMQTransactionPropagationSubscriber implements ITransactionPropa
                 String channel = propagationReceiver.recvStr();
                 log.info("Received a new message on channel: {}", channel);
                 byte[] message = propagationReceiver.recv();
-                TransactionData transactionData = null;
-                transactionData = transactionSerializer.deserializeMessage(message);
+                TransactionData transactionData = transactionSerializer.deserializeMessage(message);
                 unconfirmedTransactionsHandler.accept(transactionData);
             }
         });
