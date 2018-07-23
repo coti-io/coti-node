@@ -53,7 +53,7 @@ public class TransactionService {
 
     @PostConstruct
     private void init() {
-        transactionPropagationReceiver.init(propagatedTransactionConsumer);
+        transactionPropagationReceiver.init(propagatedTransactionsFromDspHandler, "FullNodes");
     }
 
     public ResponseEntity<Response> addNewTransaction(AddTransactionRequest request)
@@ -124,7 +124,7 @@ public class TransactionService {
             transactionData.setAttachmentTime(new Date());
             transactionHelper.attachTransactionToCluster(transactionData);
             // TODO: Send to DSP Node
-       //     transactionSender.sendTransaction(transactionData);
+            transactionSender.sendTransaction(transactionData);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
                     .body(new AddTransactionResponse(
@@ -185,7 +185,7 @@ public class TransactionService {
         return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistory(transactionsDataList));
     }
 
-    private Consumer<TransactionData> propagatedTransactionConsumer = transactionData -> {
+    private Consumer<TransactionData> propagatedTransactionsFromDspHandler = transactionData -> {
         log.info("Transaction received: {}", transactionData.getHash().toHexString());
     };
 }

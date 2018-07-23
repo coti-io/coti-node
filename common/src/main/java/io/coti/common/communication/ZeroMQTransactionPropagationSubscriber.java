@@ -15,8 +15,9 @@ import java.util.function.Consumer;
 @Slf4j
 @Service
 public class ZeroMQTransactionPropagationSubscriber implements ITransactionPropagationSubscriber {
-    @Value("#{'${server.addresses}'.split(',')}")
-    private List<String> serverAddresses;
+    @Value("#{'${propagation.server.addresses}'.split(',')}")
+    private List<String> propagationServerAddresses;
+    private String listeningChannel;
 
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket propagationReceiver;
@@ -24,8 +25,9 @@ public class ZeroMQTransactionPropagationSubscriber implements ITransactionPropa
     @Autowired
     private ITransactionSerializer transactionSerializer;
 
-
-    public void init(Consumer<TransactionData> unconfirmedTransactionsHandler) {
+    @Override
+    public void init(Consumer<TransactionData> unconfirmedTransactionsHandler, String listeningChannel) {
+        this.listeningChannel = listeningChannel;
         zeroMQContext = ZMQ.context(1);
         initSockets();
 
@@ -45,10 +47,10 @@ public class ZeroMQTransactionPropagationSubscriber implements ITransactionPropa
         propagationReceiver = zeroMQContext.socket(ZMQ.SUB);
         ZeroMQUtils.bindToRandomPort(propagationReceiver);
         for (String serverAddress :
-                serverAddresses
+                propagationServerAddresses
                 ) {
             propagationReceiver.connect(serverAddress);
-            propagationReceiver.subscribe("New Transactions".getBytes());
+            propagationReceiver.subscribe(listeningChannel.getBytes());
         }
     }
 }

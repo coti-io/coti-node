@@ -5,5 +5,5 @@ import io.coti.common.data.TransactionData;
 import java.util.function.Consumer;
 
 public interface ITransactionPropagationSubscriber {
-    void init(Consumer<TransactionData> unconfirmedTransactionsHandler);
+    void init(Consumer<TransactionData> unconfirmedTransactionsHandler, String listeningChannel);
 }

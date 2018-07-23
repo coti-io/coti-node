@@ -15,4 +15,6 @@ public interface IValidationService {
     boolean partialValidation(TransactionData transactionData);
 
     boolean fullValidation(TransactionData transactionData);
+
+    boolean validatePow(TransactionData transactionData);
 }

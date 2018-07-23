@@ -5,6 +5,7 @@ import io.coti.common.data.interfaces.IEntity;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
@@ -14,7 +15,7 @@ import java.util.Vector;
 
 @Slf4j
 @Data
-public class TransactionData implements IEntity {
+public class TransactionData implements IEntity, Comparable<TransactionData> {
     private List<BaseTransactionData> baseTransactions;
     private transient Hash hash;
     private BigDecimal amount;
@@ -67,10 +68,6 @@ public class TransactionData implements IEntity {
         this.processStartTime = (new Date());
     }
 
-
-
-
-
     public int getRoundedSenderTrustScore() {
         return (int) Math.round(senderTrustScore);
     }
@@ -118,4 +115,12 @@ public class TransactionData implements IEntity {
         this.validByNodes.putAll(validByNodes);
     }
 
+    @Override
+    public int compareTo(TransactionData other) {
+        return Double.compare(this.senderTrustScore, other.senderTrustScore);
+    }
+
+    public void addSignature(String nodeId, boolean result) {
+        return;
+    }
 }

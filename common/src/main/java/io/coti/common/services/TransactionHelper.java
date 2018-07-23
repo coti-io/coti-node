@@ -193,8 +193,6 @@ public class TransactionHelper {
     }
 
     public boolean validateAddresses(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, Double senderTrustScore, Date createTime) {
-
-
         TransactionCryptoWrapper verifyTransaction = new TransactionCryptoWrapper(baseTransactions, transactionHash, transactionDescription, senderTrustScore, createTime);
 
         return verifyTransaction.isTransactionValid();
@@ -203,6 +201,11 @@ public class TransactionHelper {
     public boolean isTransactionExists(Hash transactionHash) {
         TransactionData transaction = getTransactionData(transactionHash);
         return transaction != null;
+    }
+
+    public boolean validateDataIntegrity(TransactionData transactionData) {
+//        return validateAddresses(transactionData.getBaseTransactions(), transactionData.getHash(), transactionData.getTransactionDescription(), transactionData.getSenderTrustScore(), transactionData.getCreateTime());
+        return true;
     }
 
     public TransactionData getTransactionData(Hash transactionHash) {
