@@ -4,6 +4,8 @@
 /common/target/
 /zerospend/target/
 !.mvn/wrapper/maven-wrapper.jar
+dsp*.properties
+fullnode*.properties
 
 ### STS ###
 .apt_generated
