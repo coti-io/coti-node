@@ -31,8 +31,8 @@
 ### DB ###
 /rocksDB/
 /fullnode/rocksDB/*
-/DSPNoderocksDB/
-/FullNoderocksDB/
+/DSPNoderocksDB*/
+/FullNoderocksDB*/
 /initialDatabase/
 
 *.jar

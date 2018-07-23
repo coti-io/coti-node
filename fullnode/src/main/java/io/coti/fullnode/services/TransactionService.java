@@ -187,5 +187,15 @@ public class TransactionService {
 
     private Consumer<TransactionData> propagatedTransactionsFromDspHandler = transactionData -> {
         log.info("Transaction received: {}", transactionData.getHash().toHexString());
+        if (transactionHelper.isTransactionExists(transactionData.getHash())) {
+            log.info("Transaction already exists");
+            return;
+        }
+        if (!transactionHelper.validateDataIntegrity(transactionData)) {
+            log.info("Data Integrity validation failed");
+            return;
+        }
+        transactions.put(transactionData);
+        clusterService.attachToCluster(transactionData);
     };
 }

@@ -47,8 +47,10 @@ public class TransactionService {
     private ITransactionSender transactionSender;
 
     private Function<TransactionData, String> newTransactionFromFullNodeHandler = transactionData -> {
+        log.info("Running new transactions from full node handler");
         if (transactionHelper.isTransactionExists(transactionData.getHash()) ||
                 transactionsInProcess.contains(transactionData)){
+            log.info("Transaction already exists");
             return "Transaction Exists: " + transactionData.getHash();
         }
         if(!transactionHelper.validateDataIntegrity(transactionData) ||
@@ -58,6 +60,7 @@ public class TransactionService {
         }
         transactionsInProcess.add(transactionData);
         transactionPropagationPublisher.propagateTransactionToDSPs(transactionData);
+        transactionPropagationPublisher.propagateTransactionToFullNodes(transactionData);
         transactions.put(transactionData);
         transactionsToValidate.add(transactionData);
         checkAttachedTransactions();
