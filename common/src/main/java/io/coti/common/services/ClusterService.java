@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
@@ -117,9 +118,9 @@ public class ClusterService implements IClusterService {
         TransactionData transactionData = transactions.getByHash(transactionHash);
         if (sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].contains(transactionData)) {
             sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].remove(transactionData); // TODO: synchronize
+            transactionData.setVerificationTime(new Date());
+            liveViewService.updateNodeStatus(transactionData, 1);
         }
-        liveViewService.updateNodeStatus(transactionData, 1);
-        sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].remove(transactionData); // TODO: synchronize
     }
 
     @Override

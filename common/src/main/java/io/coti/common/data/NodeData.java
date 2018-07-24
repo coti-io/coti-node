@@ -13,6 +13,9 @@ public class NodeData {
     private double trustScore;
     private int status;
     private long tccDuration;
+    private Date attachmentTime;
+    private Date transactionConsensusUpdateTime;
+    private Date verificationTime;
 
 
     @Override
