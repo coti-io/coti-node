@@ -1,8 +1,9 @@
-/target/
-/fullnode/target/
-/dspnode/target/
-/common/target/
-/zerospend/target/
+target/
+fullnode/target/
+dspnode/target/
+common/target/
+zerospend/target/
+tools/target/
 !.mvn/wrapper/maven-wrapper.jar
 dsp*.properties
 fullnode*.properties
@@ -23,24 +24,23 @@ fullnode*.properties
 *.ipr
 
 ### NetBeans ###
-/nbproject/private/
-/build/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
 
 ### DB ###
-/rocksDB/
-/fullnode/rocksDB/*
-/DSPNoderocksDB*/
-/FullNoderocksDB*/
-/initialDatabase/
+rocksDB/
+fullnode/rocksDB/*
+DSPNoderocksDB*/
+FullNoderocksDB*/
+initialDatabase/
 
 *.jar
 *.class
 MANIFEST.MF
 *.original
-/zerospend/target/
 
-/fullnode/FullNoderocksDB
+fullnode/FullNoderocksDB

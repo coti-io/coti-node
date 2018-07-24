@@ -1,3 +1,5 @@
+package io.coti.tools;
+
 import io.coti.common.data.ConfirmationData;
 import io.coti.common.data.TransactionData;
 import io.coti.common.database.RocksDBConnector;
@@ -12,7 +14,7 @@ public class InitialDBCreator {
         System.out.println("Deleting initialDB folder...");
         deleteInitialDatabaseFolder();
         RocksDBConnector connector = new RocksDBConnector();
-        connector.init(".\\initialDatabase");
+        connector.init("initialDatabase");
         ZeroSpendService zeroSpendService = new ZeroSpendService();
         Transactions transactions = new Transactions();
         transactions.init();

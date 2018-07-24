@@ -172,7 +172,7 @@ public class BalanceService implements IBalanceService {
     }
 
     private void loadBalanceFromSnapshot() throws Exception {
-        String snapshotFileLocation = "./Snapshot.csv";
+        String snapshotFileLocation = "snapshot.csv";
         File snapshotFile = new File(snapshotFileLocation);
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(snapshotFile))) {
