@@ -45,4 +45,9 @@ public class ValidationService implements IValidationService {
     public boolean fullValidation(TransactionData transactionData) {
         return true;
     }
+
+    @Override
+    public boolean validatePow(TransactionData transactionData) {
+        return true;
+    }
 }

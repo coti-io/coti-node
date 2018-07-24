@@ -97,11 +97,10 @@ public class BalanceService implements IBalanceService {
         while (!updateBalanceQueue.isEmpty()) {
             TccInfo tccInfo = updateBalanceQueue.poll();
             ConfirmationData confirmationData = unconfirmedTransactions.getByHash(tccInfo.getHash());
-            TransactionData currentTransactionData = transactions.getByHash(confirmationData.getHash());
             log.info("confirmationData hash;{}", tccInfo.getHash());
             //dspc = 1
             if (confirmationData.isDoubleSpendPreventionConsensus()) {
-                currentTransactionData = confirmedTransactions.putConfirmedAndUpdateTransaction(confirmationData, tccInfo);
+                TransactionData currentTransactionData = confirmedTransactions.putConfirmedAndUpdateTransaction(confirmationData, tccInfo);
                 unconfirmedTransactions.delete(confirmationData.getHash());
                 updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(), balanceMap);
                 publishBalanceChangeToWebSocket(confirmationData.getAddressHashToValueTransferredMapping().keySet());
@@ -114,7 +113,6 @@ public class BalanceService implements IBalanceService {
             }
         }
     }
-
 
     private void setDSPCtoTrueAndInsertToUnconfirmed(ConfirmationData confirmationData) {
         confirmationData.setDoubleSpendPreventionConsensus(true);

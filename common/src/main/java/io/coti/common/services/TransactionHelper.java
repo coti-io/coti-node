@@ -157,6 +157,7 @@ public class TransactionHelper {
         // TODO: Validate POW:
         try {
             TimeUnit.SECONDS.sleep(5);
+            transactionData.setAttachmentTime(new Date());
             attachTransactionToCluster(transactionData);
             attachWaitingChildren(transactionData);
         } catch (Exception ex) {
@@ -193,8 +194,6 @@ public class TransactionHelper {
     }
 
     public boolean validateAddresses(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, Double senderTrustScore, Date createTime) {
-
-
         TransactionCryptoWrapper verifyTransaction = new TransactionCryptoWrapper(baseTransactions, transactionHash, transactionDescription, senderTrustScore, createTime);
 
         return verifyTransaction.isTransactionValid();
@@ -203,6 +202,11 @@ public class TransactionHelper {
     public boolean isTransactionExists(Hash transactionHash) {
         TransactionData transaction = getTransactionData(transactionHash);
         return transaction != null;
+    }
+
+    public boolean validateDataIntegrity(TransactionData transactionData) {
+//        return validateAddresses(transactionData.getBaseTransactions(), transactionData.getHash(), transactionData.getTransactionDescription(), transactionData.getSenderTrustScore(), transactionData.getCreateTime());
+        return true;
     }
 
     public TransactionData getTransactionData(Hash transactionHash) {
@@ -227,7 +231,6 @@ public class TransactionHelper {
     }
 
     public void attachTransactionToCluster(TransactionData transactionData) {
-        transactionData.setAttachmentTime(new Date());
         transactions.put(transactionData);
         updateAddressTransactionHistory(transactionData);
         balanceService.insertToUnconfirmedTransactions(new ConfirmationData(transactionData));

@@ -21,6 +21,8 @@ import java.util.*;
 @Slf4j
 @Service
 public class RocksDBConnector implements IDatabaseConnector {
+    @Value("${database.folder.name}")
+    private String databaseFolderName;
     private final String initialDBPath = ".\\initialDatabase";
     private String logsPath;
     private final List<String> columnFamilyClassNames = Arrays.asList(
@@ -60,7 +62,7 @@ public class RocksDBConnector implements IDatabaseConnector {
 
     @PostConstruct
     public void init(){
-        init(".\\" + applicationName + "rocksDB");
+        init(".\\" + applicationName + databaseFolderName);
     }
 
     public void init(String dbPath) {
