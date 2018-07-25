@@ -100,12 +100,12 @@ public class BalanceService implements IBalanceService {
             ConfirmationData confirmationData = unconfirmedTransactions.getByHash(tccInfo.getHash());
             log.info("confirmationData hash;{}", tccInfo.getHash());
             //dspc = 1
+            TransactionData currentTransactionData = confirmedTransactions.putConfirmedAndUpdateTransaction(confirmationData, tccInfo);
             if (confirmationData.isDoubleSpendPreventionConsensus()) {
-                TransactionData currentTransactionData = confirmedTransactions.putConfirmedAndUpdateTransaction(confirmationData, tccInfo);
                 unconfirmedTransactions.delete(confirmationData.getHash());
                 updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(), balanceMap);
                 publishBalanceChangeToWebSocket(confirmationData.getAddressHashToValueTransferredMapping().keySet());
-                webSocketSender.notifyTransactionHistoryChange(currentTransactionData, TransactionStatus.DSPC_APPROVED);
+                webSocketSender.notifyTransactionHistoryChange(currentTransactionData, TransactionStatus.TCC_APPROVED);
                 liveViewService.updateNodeStatus(currentTransactionData, 2);
 
             } else { //dspc =0
