@@ -1,6 +1,6 @@
 package io.coti.fullnode.controllers;
 
-import com.sun.javaws.exceptions.InvalidArgumentException;
+//import com.sun.javaws.exceptions.InvalidArgumentException;
 import io.coti.common.http.data.GetAddressData;
 import io.coti.common.data.Hash;
 import io.coti.common.http.*;
@@ -37,7 +37,7 @@ public class AddressController {
 
 
     @RequestMapping(method = PUT)
-    public ResponseEntity<AddAddressResponse> addAddress(@Valid @RequestBody AddressRequest addAddressRequest) throws InvalidArgumentException{
+    public ResponseEntity<AddAddressResponse> addAddress(@Valid @RequestBody AddressRequest addAddressRequest) throws Exception{
 
             if (addressLengthValidation(addAddressRequest.getAddress())) {
                 if (addressService.addNewAddress(addAddressRequest.getAddress())) {
@@ -51,9 +51,11 @@ public class AddressController {
             } else {
                 log.error("Address {} had length error. length: {}", addAddressRequest.getAddress(),
                         addAddressRequest.getAddress().getBytes().length);
-
-                throw new InvalidArgumentException(new String[]{ String.format(addAddressRequest.getAddress().toHexString(),
-                        HttpStringConstants.ADDRESS_INVALID_ERROR_MESSAGE)});
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(new AddAddressResponse("", AddressStatus.Exists));
+            /*    throw new InvalidArgumentException(new String[]{ String.format(addAddressRequest.getAddress().toHexString(),
+                        HttpStringConstants.ADDRESS_INVALID_ERROR_MESSAGE)});*/
             }
     }
 

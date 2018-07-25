@@ -1,6 +1,6 @@
 package io.coti.fullnode.exception;
 
-import com.sun.javaws.exceptions.InvalidArgumentException;
+//import com.sun.javaws.exceptions.InvalidArgumentException;
 import io.coti.common.exceptions.TransactionException;
 import io.coti.common.http.AddTransactionResponse;
 import io.coti.common.http.ExceptionResponse;
@@ -67,12 +67,12 @@ public class GlobalExceptionHandler {
 
 
 
-    @ExceptionHandler(InvalidArgumentException.class)
+  /*  @ExceptionHandler(InvalidArgumentException.class)
     public ResponseEntity handleInvalidArgumentException(InvalidArgumentException e) {
         log.error("Unhandled io.coti.fullnode.exception raised for the given request. invalid argument");
         ResponseEntity responseEntity = new ResponseEntity(
                 new ExceptionResponse(INVALID_PARAMETERS_MESSAGE, API_SERVER_ERROR), HttpStatus.INTERNAL_SERVER_ERROR);
         return responseEntity;
-    }
+    } */
 
 }
