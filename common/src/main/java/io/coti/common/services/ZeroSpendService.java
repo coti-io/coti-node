@@ -17,7 +17,7 @@ public class ZeroSpendService implements IZeroSpendService {
     @Override
     public TransactionData getZeroSpendTransaction(double trustScore) {
         TransactionData transactionData =  new TransactionData(new Vector<>(), new Hash(currentHashCounter++) , "ZeroSpend", trustScore, new Date());
-        transactionData.setAttachmentTime(new Date(0));
+        transactionData.setAttachmentTime(new Date());
         return transactionData;
     }
 
@@ -29,7 +29,7 @@ public class ZeroSpendService implements IZeroSpendService {
             transactionData.setZeroSpend(true);
             transactionData.setAttachmentTime(new Date());
             genesisTransactions.add(transactionData);
-            transactionData.setAttachmentTime(new Date(0));
+            transactionData.setAttachmentTime(new Date());
         }
         return genesisTransactions;
     }

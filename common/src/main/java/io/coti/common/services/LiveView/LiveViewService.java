@@ -49,6 +49,7 @@ public class LiveViewService {
         // AttachmentTime less then 15 minutes
       //  if(((new Date().getTime()  - transactionData.getAttachmentTime().getTime())/ (60 * 1000)) < 15) {
             webSocketSender.sendNode(nodeData);
+
        // }
 
     }
@@ -62,7 +63,7 @@ public class LiveViewService {
         newNode.setStatus(newStatus);
         setNodeDataDatesFromTransactionData(transactionData, newNode);
        // if(((new Date().getTime()  - transactionData.getAttachmentTime().getTime())/ (60 * 1000)) < 15) {
-            webSocketSender.sendNode(nodeData);
+            webSocketSender.sendNode(newNode);
        // }
     }
 
