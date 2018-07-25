@@ -1,5 +1,8 @@
-package io.coti.common.data;
+package io.coti.common.http.data;
 
+import io.coti.common.data.BaseTransactionData;
+import io.coti.common.data.Hash;
+import io.coti.common.data.TransactionData;
 import lombok.Data;
 
 import java.util.Date;

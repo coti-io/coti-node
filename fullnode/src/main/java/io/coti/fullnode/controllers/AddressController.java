@@ -1,10 +1,10 @@
 package io.coti.fullnode.controllers;
 
+import com.sun.javaws.exceptions.InvalidArgumentException;
+import io.coti.common.http.data.GetAddressData;
 import io.coti.common.data.Hash;
-import io.coti.common.http.AddressExistsResponse;
-import io.coti.common.http.AddressRequest;
-import io.coti.common.http.AddAddressResponse;
-import io.coti.common.http.HttpStringConstants;
+import io.coti.common.http.*;
+import io.coti.common.http.data.AddressStatus;
 import io.coti.common.services.interfaces.IAddressService;
 import io.coti.common.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+
+import java.util.List;
+import java.util.Vector;
 
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
@@ -31,60 +34,41 @@ public class AddressController {
     @Autowired
     private IValidationService validationService;
 
-    @RequestMapping(method = PUT)
-    public ResponseEntity<AddAddressResponse> addAddress(@Valid @RequestBody AddressRequest addAddressRequest) {
 
-        try {
+
+    @RequestMapping(method = PUT)
+    public ResponseEntity<AddAddressResponse> addAddress(@Valid @RequestBody AddressRequest addAddressRequest) throws InvalidArgumentException{
+
             if (addressLengthValidation(addAddressRequest.getAddress())) {
                 if (addressService.addNewAddress(addAddressRequest.getAddress())) {
                     return ResponseEntity
                             .status(HttpStatus.CREATED)
-                            .body(new AddAddressResponse(addAddressRequest.getAddress(),
-                                    HttpStringConstants.ADDRESS_CREATED_MESSAGE));
+                            .body(new AddAddressResponse(addAddressRequest.getAddress().toHexString(), AddressStatus.Created));
                 }
                 return ResponseEntity
                         .status(HttpStatus.OK)
-                        .body(new AddAddressResponse(addAddressRequest.getAddress(),
-                                HttpStringConstants.ADDRESS_ALREADY_EXISTS_MESSAGE));
+                        .body(new AddAddressResponse(addAddressRequest.getAddress().toHexString(), AddressStatus.Exists));
             } else {
                 log.error("Address {} had length error. length: {}", addAddressRequest.getAddress(),
                         addAddressRequest.getAddress().getBytes().length);
-                return ResponseEntity
-                        .status(HttpStatus.BAD_REQUEST)
-                        .body(new AddAddressResponse(addAddressRequest.getAddress()
-                                , HttpStringConstants.ADDRESS_LENGTH_ERROR_MESSAGE, HttpStringConstants.STATUS_ERROR));
 
+                throw new InvalidArgumentException(new String[]{ String.format(addAddressRequest.getAddress().toHexString(),
+                        HttpStringConstants.ADDRESS_INVALID_ERROR_MESSAGE)});
             }
-
-        } catch (Exception ex) {
-            log.error("Address {} had an error in creation", addAddressRequest.getAddress(), ex);
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new AddAddressResponse(addAddressRequest.getAddress()
-                            , HttpStringConstants.ADDRESS_CREATION_ERROR_MESSAGE, HttpStringConstants.STATUS_ERROR));
-        }
-
     }
 
 
     @RequestMapping(method = POST)
-    public ResponseEntity<AddressExistsResponse> addressExists(@Valid @RequestBody AddressRequest addressRequest) {
+    public ResponseEntity<AddressesExistsResponse> addressExists(@Valid @RequestBody AddressBulkRequest addressRequest) {
+            Hash[] addressesHash = addressRequest.getAddresses();
+        List<GetAddressData> addressesResults = new Vector<>();
 
-        try {
-
-            Hash addressHash = addressRequest.getAddress();
+        for (Hash addressHash : addressesHash) {
             boolean result = addressService.addressExists(addressHash);
 
-            return ResponseEntity.status(HttpStatus.OK).body(new AddressExistsResponse( addressHash,result ?  HttpStringConstants.ADDRESS_EXISTS_MESSAGE : HttpStringConstants.ADDRESS_NOT_EXISTS_MESSAGE));
-
-        } catch (Exception ex) {
-
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new AddressExistsResponse(new Hash("")
-                            , HttpStringConstants.ADDRESS_CREATION_ERROR_MESSAGE));
+            addressesResults.add(new GetAddressData(addressHash.toHexString(),result));
         }
-
+            return ResponseEntity.status(HttpStatus.OK).body(new AddressesExistsResponse(addressesResults));
     }
 
 

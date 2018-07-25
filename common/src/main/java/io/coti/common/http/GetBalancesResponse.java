@@ -5,14 +5,20 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.AbstractMap;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Data
-public class GetBalancesResponse extends Response {
+public class GetBalancesResponse extends BaseResponse {
 
-    private List<AbstractMap.SimpleEntry<Hash, BigDecimal>> amounts;
+    Map<String, BigDecimal> addressesBalance;
 
     public GetBalancesResponse() {
-        super("Balance details");
+        addressesBalance = new HashMap<String, BigDecimal>();
+    }
+
+    public void addAddressBalanceToResponse(Hash address, BigDecimal balance) {
+        addressesBalance.put(address.toHexString(), balance);
     }
 }

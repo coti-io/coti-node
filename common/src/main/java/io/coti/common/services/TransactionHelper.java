@@ -4,6 +4,7 @@ import io.coti.common.crypto.TransactionCryptoWrapper;
 import io.coti.common.data.*;
 import io.coti.common.exceptions.TransactionException;
 import io.coti.common.http.*;
+import io.coti.common.http.data.TransactionResponseData;
 import io.coti.common.model.AddressesTransactionsHistory;
 import io.coti.common.model.Transactions;
 import io.coti.common.services.interfaces.IBalanceService;
@@ -195,7 +196,6 @@ public class TransactionHelper {
 
     public boolean validateAddresses(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, Double senderTrustScore, Date createTime) {
         TransactionCryptoWrapper verifyTransaction = new TransactionCryptoWrapper(baseTransactions, transactionHash, transactionDescription, senderTrustScore, createTime);
-
         return verifyTransaction.isTransactionValid();
     }
 
@@ -213,7 +213,7 @@ public class TransactionHelper {
         return transactions.getByHash(transactionHash);
     }
 
-    public ResponseEntity<Response> getTransactionDetails(Hash transactionHash) {
+    public ResponseEntity<BaseResponse> getTransactionDetails(Hash transactionHash) {
         TransactionData transactionData = transactions.getByHash(transactionHash);
         if (transactionData == null)
             return ResponseEntity

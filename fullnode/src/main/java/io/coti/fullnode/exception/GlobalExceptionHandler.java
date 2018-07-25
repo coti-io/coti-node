@@ -1,16 +1,21 @@
 package io.coti.fullnode.exception;
 
+import com.sun.javaws.exceptions.InvalidArgumentException;
 import io.coti.common.exceptions.TransactionException;
 import io.coti.common.http.AddTransactionResponse;
 import io.coti.common.http.ExceptionResponse;
 import io.coti.common.services.interfaces.IBalanceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import static io.coti.common.http.HttpStringConstants.*;
 
@@ -33,19 +38,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NullPointerException.class)
     public ResponseEntity handleNullPointerException(NullPointerException e) {
         log.error("Unhandled io.coti.fullnode.exception raised for the given request.");
-        e.printStackTrace();
         ResponseEntity responseEntity = new ResponseEntity(
-                new ExceptionResponse(INNER_EXCEPTION_MESSAGE, API_SERVER_ERROR), HttpStatus.INTERNAL_SERVER_ERROR);
+                new ExceptionResponse(GENERAL_EXCEPTION_ERROR, API_SERVER_ERROR), HttpStatus.INTERNAL_SERVER_ERROR);
         return responseEntity;
     }
 
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity handleDefaultException(Exception e) {
-        log.error("Unhandled io.coti.fullnode.exception raised for the given request.");
-        e.printStackTrace();
+    public ResponseEntity handleDefaultException(Exception e)
+    {
+        log.error("Unhandled io.coti.fullnode.exception raised for the given request.",e);
         ResponseEntity responseEntity = new ResponseEntity(
-                new ExceptionResponse(INNER_EXCEPTION_MESSAGE, API_SERVER_ERROR), HttpStatus.INTERNAL_SERVER_ERROR);
+                new ExceptionResponse(GENERAL_EXCEPTION_ERROR, API_SERVER_ERROR), HttpStatus.INTERNAL_SERVER_ERROR);
 
         return responseEntity;
     }
@@ -63,5 +67,12 @@ public class GlobalExceptionHandler {
 
 
 
+    @ExceptionHandler(InvalidArgumentException.class)
+    public ResponseEntity handleInvalidArgumentException(InvalidArgumentException e) {
+        log.error("Unhandled io.coti.fullnode.exception raised for the given request. invalid argument");
+        ResponseEntity responseEntity = new ResponseEntity(
+                new ExceptionResponse(INVALID_PARAMETERS_MESSAGE, API_SERVER_ERROR), HttpStatus.INTERNAL_SERVER_ERROR);
+        return responseEntity;
+    }
 
 }

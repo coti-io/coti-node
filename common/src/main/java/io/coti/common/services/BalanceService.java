@@ -3,6 +3,7 @@ package io.coti.common.services;
 import io.coti.common.data.*;
 import io.coti.common.http.GetBalancesRequest;
 import io.coti.common.http.GetBalancesResponse;
+import io.coti.common.http.data.TransactionStatus;
 import io.coti.common.model.*;
 import io.coti.common.services.LiveView.LiveViewService;
 import io.coti.common.services.LiveView.WebSocketSender;
@@ -104,11 +105,13 @@ public class BalanceService implements IBalanceService {
                 unconfirmedTransactions.delete(confirmationData.getHash());
                 updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(), balanceMap);
                 publishBalanceChangeToWebSocket(confirmationData.getAddressHashToValueTransferredMapping().keySet());
+                webSocketSender.notifyTransactionHistoryChange(currentTransactionData, TransactionStatus.DSPC_APPROVED);
                 liveViewService.updateNodeStatus(currentTransactionData, 2);
 
             } else { //dspc =0
                 confirmationData.setTrustChainConsensus(true);
                 setDSPCtoTrueAndInsertToUnconfirmed(confirmationData);
+                webSocketSender.notifyTransactionHistoryChange(currentTransactionData, TransactionStatus.TCC_APPROVED);
                 log.info("The transaction {} was added to unconfirmedTransactions in the db and tcc was updated to true", confirmationData.getHash());
             }
         }
@@ -255,15 +258,13 @@ public class BalanceService implements IBalanceService {
     @Override
     public ResponseEntity<GetBalancesResponse> getBalances(GetBalancesRequest getBalancesRequest) {
         GetBalancesResponse getBalancesResponse = new GetBalancesResponse();
-        List<AbstractMap.SimpleEntry<Hash, BigDecimal>> amounts = new LinkedList<>();
         for (Hash hash : getBalancesRequest.getAddresses()) {
             if (balanceMap.containsKey(hash)) {
-                amounts.add(new AbstractMap.SimpleEntry<>(hash, balanceMap.get(hash)));
+                getBalancesResponse.addAddressBalanceToResponse(hash,balanceMap.get(hash));
             } else {
-                amounts.add(new AbstractMap.SimpleEntry<>(hash, new BigDecimal(-1)));
+                getBalancesResponse.addAddressBalanceToResponse(hash, new BigDecimal(0));
             }
         }
-        getBalancesResponse.setAmounts(amounts);
         return ResponseEntity.status(HttpStatus.OK).body(getBalancesResponse);
     }
 

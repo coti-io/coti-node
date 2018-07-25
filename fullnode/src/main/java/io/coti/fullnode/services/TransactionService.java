@@ -6,12 +6,12 @@ import io.coti.common.data.AddressTransactionsHistory;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
 import io.coti.common.exceptions.TransactionException;
-import io.coti.common.http.AddTransactionRequest;
-import io.coti.common.http.AddTransactionResponse;
-import io.coti.common.http.GetAddressTransactionHistory;
-import io.coti.common.http.Response;
+import io.coti.common.http.*;
+import io.coti.common.http.data.TransactionStatus;
 import io.coti.common.model.AddressesTransactionsHistory;
+import io.coti.common.model.DbItem;
 import io.coti.common.model.Transactions;
+import io.coti.common.services.LiveView.WebSocketSender;
 import io.coti.common.services.TransactionHelper;
 import io.coti.common.services.interfaces.IClusterService;
 import io.coti.common.services.interfaces.IValidationService;
@@ -50,6 +50,9 @@ public class TransactionService {
     private Transactions transactions;
     @Autowired
     private ITransactionPropagationSubscriber transactionPropagationReceiver;
+
+    @Autowired
+    private WebSocketSender webSocketSender;
 
     @PostConstruct
     private void init() {
@@ -115,6 +118,9 @@ public class TransactionService {
                 log.info("Could not validate transaction source");
                 //TODO: decide what to do here
             }
+
+
+
             transactionData.setPowStartTime(new Date());
             // ############   POW   ###########
             TimeUnit.SECONDS.sleep(5);
@@ -123,6 +129,7 @@ public class TransactionService {
 
             transactionData.setAttachmentTime(new Date());
             transactionHelper.attachTransactionToCluster(transactionData);
+            webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
             // TODO: Send to DSP Node
             transactionSender.sendTransaction(transactionData);
             return ResponseEntity
@@ -130,6 +137,8 @@ public class TransactionService {
                     .body(new AddTransactionResponse(
                             STATUS_SUCCESS,
                             TRANSACTION_CREATED_MESSAGE));
+
+
         } catch (Exception ex) {
             log.error("Exception while adding a transaction", ex);
             throw new TransactionException(ex, request.baseTransactions);
@@ -174,11 +183,16 @@ public class TransactionService {
         return transactionData;
     }
 
-    public ResponseEntity<Response> getAddressTransactions(Hash addressHash) {
+    public ResponseEntity<BaseResponse> getAddressTransactions(Hash addressHash) {
         List<TransactionData> transactionsDataList = new Vector<>();
-        AddressTransactionsHistory history = addressesTransactionsHistory.getByHash(addressHash);
-        for (Hash transactionHash : history.getTransactionsHistory()) {
-            TransactionData transactionData = transactions.getByHash(transactionHash);
+        DbItem<AddressTransactionsHistory> dbAddress =  addressesTransactionsHistory.getByHashItem(addressHash);
+
+        if (!dbAddress.isExists)
+            return  ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistory(transactionsDataList));
+
+        AddressTransactionsHistory history = dbAddress.item;
+        for (Hash transactionHash: history.getTransactionsHistory()) {
+            TransactionData transactionData =  transactions.getByHash(transactionHash);
             transactionsDataList.add(transactionData);
 
         }

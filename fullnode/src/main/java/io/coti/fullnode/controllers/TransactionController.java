@@ -1,9 +1,6 @@
 package io.coti.fullnode.controllers;
 
-import io.coti.common.http.AddTransactionRequest;
-import io.coti.common.http.AddressRequest;
-import io.coti.common.http.GetTransactionRequest;
-import io.coti.common.http.Response;
+import io.coti.common.http.*;
 import io.coti.common.services.TransactionHelper;
 import io.coti.fullnode.services.TransactionService;
 import lombok.extern.slf4j.Slf4j;
@@ -34,12 +31,12 @@ public class TransactionController {
     }
 
     @RequestMapping(method = POST)
-    public ResponseEntity<Response> getTransactionDetails(@Valid @RequestBody GetTransactionRequest getTransactionRequest) {
+    public ResponseEntity<BaseResponse> getTransactionDetails(@Valid @RequestBody GetTransactionRequest getTransactionRequest) {
         return transactionHelper.getTransactionDetails(getTransactionRequest.transactionHash);
     }
 
     @RequestMapping(value = "/addressTransactions", method = POST)
-    public ResponseEntity<Response> getAddressTransactions(@Valid @RequestBody AddressRequest addressRequest) {
+    public ResponseEntity<BaseResponse> getAddressTransactions(@Valid @RequestBody AddressRequest addressRequest) throws Exception {
         return transactionService.getAddressTransactions(addressRequest.getAddress());
     }
 }

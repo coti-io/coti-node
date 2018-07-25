@@ -1,6 +1,7 @@
-package io.coti.common.data;
+package io.coti.common.http.data;
 
 
+import io.coti.common.data.BaseTransactionData;
 import lombok.Data;
 
 import java.math.BigDecimal;
