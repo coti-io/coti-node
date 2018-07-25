@@ -1,5 +1,6 @@
-package io.coti.common.communication;
+package io.coti.common.services;
 
+import io.coti.common.communication.ZeroMQUtils;
 import io.coti.common.communication.interfaces.ITransactionPropagationSubscriber;
 import io.coti.common.communication.interfaces.ITransactionSerializer;
 import io.coti.common.data.TransactionData;
@@ -17,7 +18,6 @@ import java.util.function.Consumer;
 public class ZeroMQTransactionPropagationSubscriber implements ITransactionPropagationSubscriber {
     @Value("#{'${propagation.server.addresses}'.split(',')}")
     private List<String> propagationServerAddresses;
-    private String listeningChannel;
 
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket propagationReceiver;
@@ -26,8 +26,7 @@ public class ZeroMQTransactionPropagationSubscriber implements ITransactionPropa
     private ITransactionSerializer transactionSerializer;
 
     @Override
-    public void init(Consumer<TransactionData> unconfirmedTransactionsHandler, String listeningChannel) {
-        this.listeningChannel = listeningChannel;
+    public void init(Consumer<TransactionData> unconfirmedTransactionsHandler) {
         zeroMQContext = ZMQ.context(1);
         initSockets();
 
@@ -50,7 +49,7 @@ public class ZeroMQTransactionPropagationSubscriber implements ITransactionPropa
                 propagationServerAddresses
                 ) {
             propagationReceiver.connect(serverAddress);
-            propagationReceiver.subscribe(listeningChannel.getBytes());
+            propagationReceiver.subscribe("New Transactions".getBytes());
         }
     }
 }

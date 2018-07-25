@@ -35,12 +35,13 @@ fullnode*.properties
 /fullnode/rocksDB/*
 /DSPNoderocksDB*/
 /FullNoderocksDB*/
+/ZeroSpendrocksDB/
 /initialDatabase/
 
-*.jar
 *.class
+*.jar
+
 MANIFEST.MF
 *.original
-/zerospend/target/
 
 /fullnode/FullNoderocksDB
