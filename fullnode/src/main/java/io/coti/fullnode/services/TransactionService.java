@@ -200,7 +200,7 @@ public class TransactionService {
     }
 
     private Consumer<TransactionData> propagatedTransactionsFromDspHandler = transactionData -> {
-        log.info("Transaction received: {}", transactionData.getHash().toHexString());
+        log.info("Propagated Transaction received: {}", transactionData.getHash().toHexString());
         if (transactionHelper.isTransactionExists(transactionData.getHash())) {
             log.info("Transaction already exists");
             return;
@@ -209,8 +209,8 @@ public class TransactionService {
             log.info("Data Integrity validation failed");
             return;
         }
-        transactions.put(transactionData);
 
         transactionHelper.attachTransactionToCluster(transactionData);
+        webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
     };
 }
