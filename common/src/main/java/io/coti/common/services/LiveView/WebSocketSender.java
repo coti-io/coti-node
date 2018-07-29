@@ -31,7 +31,7 @@ public class WebSocketSender {
     }
 
     public void notifyTransactionHistoryChange(TransactionData transactionData, TransactionStatus transactionStatus) {
-        log.info("Transaction {} with is about to be sent to the subscribed user", transactionData.getHash().toHexString());
+        log.info("Transaction {} is about to be sent to the subscribed user", transactionData.getHash().toHexString());
 
         for (BaseTransactionData bxData: transactionData.getBaseTransactions())
         {

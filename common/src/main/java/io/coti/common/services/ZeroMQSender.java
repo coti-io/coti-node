@@ -1,8 +1,9 @@
 package io.coti.common.services;
 
 import io.coti.common.communication.ZeroMQUtils;
-import io.coti.common.communication.interfaces.ITransactionSender;
-import io.coti.common.communication.interfaces.ITransactionSerializer;
+import io.coti.common.communication.interfaces.ISender;
+import io.coti.common.communication.interfaces.ISerializer;
+import io.coti.common.data.AddressData;
 import io.coti.common.data.TransactionData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,14 +17,14 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class ZeroMQTransactionSender implements ITransactionSender {
+public class ZeroMQSender implements ISender {
     @Value("#{'${receiving.server.addresses}'.split(',')}")
     private List<String> receivingServerAddresses;
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket sender;
 
     @Autowired
-    private ITransactionSerializer transactionSerializer;
+    private ISerializer serializer;
 
     @PostConstruct
     private void init() {
@@ -38,11 +39,24 @@ public class ZeroMQTransactionSender implements ITransactionSender {
     }
 
     @Override
-    public void sendTransaction(TransactionData transactionData) {
-        byte[] message = transactionSerializer.serializeTransaction(transactionData);
+    public void sendAddress(AddressData addressData) {
+        byte[] message = serializer.serializeAddress(addressData);
         synchronized (zeroMQContext) {
             try {
-                sender.sendMore("");
+                sender.sendMore(AddressData.class.getName());
+                sender.send(message);
+            } catch (ZMQException exception) {
+                return;
+            }
+        }
+    }
+
+    @Override
+    public void sendTransaction(TransactionData transactionData) {
+        byte[] message = serializer.serializeTransaction(transactionData);
+        synchronized (zeroMQContext) {
+            try {
+                sender.sendMore(TransactionData.class.getName());
                 sender.send(message);
             } catch (ZMQException exception) {
                 return;

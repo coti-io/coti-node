@@ -1,9 +1,7 @@
 package io.coti.dspnode.services;
 
-import io.coti.common.communication.interfaces.ITransactionSender;
-import io.coti.common.communication.interfaces.publisher.ITransactionPropagationPublisher;
-import io.coti.common.communication.interfaces.ITransactionPropagationSubscriber;
-import io.coti.common.communication.interfaces.ITransactionReceiver;
+import io.coti.common.communication.interfaces.ISender;
+import io.coti.common.communication.interfaces.publisher.IPropagationPublisher;
 import io.coti.common.data.TransactionData;
 import io.coti.common.model.Transactions;
 import io.coti.common.services.TransactionHelper;
@@ -19,8 +17,6 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 @Slf4j
 @Service
@@ -30,13 +26,9 @@ public class TransactionService {
     List<TransactionData> transactionsInProcess;
 
     @Autowired
-    private ITransactionReceiver transactionReceiver;
-    @Autowired
     private TransactionHelper transactionHelper;
     @Autowired
-    private ITransactionPropagationPublisher transactionPropagationPublisher;
-    @Autowired
-    private ITransactionPropagationSubscriber transactionPropagationSubscriber;
+    private IPropagationPublisher propagationPublisher;
     @Autowired
     private IBalanceService balanceService;
     @Autowired
@@ -44,47 +36,28 @@ public class TransactionService {
     @Autowired
     private Transactions transactions;
     @Autowired
-    private ITransactionSender transactionSender;
+    private ISender transactionSender;
 
-    private Function<TransactionData, String> newTransactionFromFullNodeHandler = transactionData -> {
+    public String handleNewTransactionFromFullNode(TransactionData transactionData) {
         log.info("Running new transactions from full node handler");
         if (transactionHelper.isTransactionExists(transactionData.getHash()) ||
-                transactionsInProcess.contains(transactionData)){
+                transactionsInProcess.contains(transactionData)) {
             log.info("Transaction already exists");
             return "Transaction Exists: " + transactionData.getHash();
         }
-        if(!transactionHelper.validateDataIntegrity(transactionData) ||
+        if (!transactionHelper.validateDataIntegrity(transactionData) ||
                 !balanceService.checkBalancesAndAddToPreBalance(transactionData.getBaseTransactions()) ||
                 !validationService.validatePow(transactionData)) {
             return "Invalid Transaction Received: " + transactionData.getHash();
         }
         transactionsInProcess.add(transactionData);
-        transactionPropagationPublisher.propagateTransactionToDSPs(transactionData);
-        transactionPropagationPublisher.propagateTransactionToFullNodes(transactionData);
+        propagationPublisher.propagateTransaction(transactionData, TransactionData.class.getName() + "Full Nodes");
+        propagationPublisher.propagateTransaction(transactionData, TransactionData.class.getName() + "DSP Nodes");
         transactions.put(transactionData);
         transactionsToValidate.add(transactionData);
         checkAttachedTransactions();
         return "Received Transaction: " + transactionData.getHash();
-    };
-    private Consumer<TransactionData> propagatedTransactionsFromDSPsHandler = new Consumer<TransactionData>() {
-        @Override
-        public void accept(TransactionData transactionData) {
-            if (transactionHelper.isTransactionExists(transactionData.getHash())) {
-                log.info("Transaction already exists");
-                return;
-            }
-            if (!transactionHelper.validateDataIntegrity(transactionData)) {
-                log.info("Data Integrity validation failed");
-                return;
-            }
-            transactions.put(transactionData);
-            transactionPropagationPublisher.propagateTransactionToFullNodes(transactionData);
-            if(!transactionHelper.checkBalancesAndAddToPreBalance(transactionData.getBaseTransactions())){
-                transactionData.addSignature("Node ID", false); // TODO: replace with a sign mechanism
-                transactionSender.sendTransaction(transactionData);
-            }
-        }
-    };
+    }
 
     private void checkAttachedTransactions() {
         if (isValidatorRunning.compareAndSet(false, true)) {
@@ -94,7 +67,6 @@ public class TransactionService {
             TransactionData transactionData = transactionsToValidate.remove();
             boolean result = validationService.fullValidation(transactionData);
             transactionData.addSignature("Node ID", result);
-//            transactionSender.sendTransaction(transactionData);
             transactionsInProcess.remove(transactionData);
         }
         isValidatorRunning.set(false);
@@ -102,10 +74,26 @@ public class TransactionService {
 
     @PostConstruct
     private void init() {
-        transactionReceiver.init(newTransactionFromFullNodeHandler);
         transactionsToValidate = new PriorityQueue<>();
         isValidatorRunning = new AtomicBoolean(false);
-        transactionPropagationSubscriber.init(propagatedTransactionsFromDSPsHandler, "DSPs");
         transactionsInProcess = new LinkedList<>();
+    }
+
+    public void handlePropagatedTransaction(TransactionData transactionData) {
+        log.info("Received new propagated Address: {}", transactionData);
+        if (transactionHelper.isTransactionExists(transactionData.getHash())) {
+            log.info("Transaction already exists");
+            return;
+        }
+        if (!transactionHelper.validateDataIntegrity(transactionData)) {
+            log.info("Data Integrity validation failed");
+            return;
+        }
+        transactions.put(transactionData);
+        propagationPublisher.propagateTransaction(transactionData, TransactionData.class.getName() + "Full Nodes");
+        if (!transactionHelper.checkBalancesAndAddToPreBalance(transactionData.getBaseTransactions())) {
+            transactionData.addSignature("Node ID", false); // TODO: replace with a sign mechanism
+            transactionSender.sendTransaction(transactionData);
+        }
     }
 }

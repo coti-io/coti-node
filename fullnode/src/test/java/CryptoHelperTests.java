@@ -123,7 +123,7 @@ public class CryptoHelperTests {
     public void testBasicTransactionVerification() throws IOException{
         String jsonOfTransaction = "{\n" +
                 "\t'baseTransactions': [{\n" +
-                "\t\t\t'addressHash': '54e43a7b3485e1dca039888b4cf1951caa737c01219f71db01fa31c73afa745645137e4473db82e1986b7c590d093eb32d613924f5a5187e5f2ff4395bbe5eb55203282c',\n" +
+                "\t\t\t'address': '54e43a7b3485e1dca039888b4cf1951caa737c01219f71db01fa31c73afa745645137e4473db82e1986b7c590d093eb32d613924f5a5187e5f2ff4395bbe5eb55203282c',\n" +
                 "\t\t\t'indexInTransactionsChain': 0,\n" +
                 "\t\t\t'amount': '-30.000000000000000000',\n" +
                 "\t\t\t'hash': '914755201efd8eadea48430e92bda14a7357b4bf95f366bf3641f0a26ac113d9',\n" +
@@ -133,7 +133,7 @@ public class CryptoHelperTests {
                 "\t\t\t\t's': '9a5e6590b2720db6ebdab71bbaac2618839c381bf6c227590e9a776533728bef'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'addressHash': '988149bfdcaf6ebc115d2370c159988223d889e0142fecf6dccc10a61763e1b7cc5caa07a32ec65f2105dedc878f1214a5e02db7bfd5c30591405dbd7ac720a78ceb7e7b',\n" +
+                "\t\t\t'address': '988149bfdcaf6ebc115d2370c159988223d889e0142fecf6dccc10a61763e1b7cc5caa07a32ec65f2105dedc878f1214a5e02db7bfd5c30591405dbd7ac720a78ceb7e7b',\n" +
                 "\t\t\t'indexInTransactionsChain': 1,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
                 "\t\t\t'hash': 'd05c75913d6fc08673111f965c83a451b0469ce0c98e07ccb2ad418a1f2d39af',\n" +
@@ -143,7 +143,7 @@ public class CryptoHelperTests {
                 "\t\t\t\t's': '6be9722669490e4abfda538cb8e86f4a1b08038e5d6bfa40c28cc9f90473b404'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'addressHash': 'fba6bdf0937c21ba35817bab7781e8f174964768706e63b87e63187c45b0e84f5837f092b2197d42d84d3608fe59aaeeda64aceb45938b16e6a3b6b5ef28dbf20f8a9f74',\n" +
+                "\t\t\t'address': 'fba6bdf0937c21ba35817bab7781e8f174964768706e63b87e63187c45b0e84f5837f092b2197d42d84d3608fe59aaeeda64aceb45938b16e6a3b6b5ef28dbf20f8a9f74',\n" +
                 "\t\t\t'indexInTransactionsChain': 2,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
                 "\t\t\t'hash': '664792bbf4c80c7e5952888b054ab8a96a0109806ec7519289d652d082b44405',\n" +
@@ -153,7 +153,7 @@ public class CryptoHelperTests {
                 "\t\t\t\t's': 'f3d88198f4a6964790ed61c8146600da2384929a378f2649e2193cfdd068609d'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'addressHash': '4f4c693378d2a5ad9c633fb92e36bf003df06ab743c75a80624e0e912b7b5fa58f69d0bd655157b5e216e72a4d4f14e29bb7c0a996d14fb34f76adefbae4ea1e29dd9316',\n" +
+                "\t\t\t'address': '4f4c693378d2a5ad9c633fb92e36bf003df06ab743c75a80624e0e912b7b5fa58f69d0bd655157b5e216e72a4d4f14e29bb7c0a996d14fb34f76adefbae4ea1e29dd9316',\n" +
                 "\t\t\t'indexInTransactionsChain': 3,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
                 "\t\t\t'hash': '1636f09572156d0298a439254543f93faecee0413bf437ae74fd6e7ee5cf5483',\n" +
@@ -163,7 +163,7 @@ public class CryptoHelperTests {
                 "\t\t\t\t's': '3890ea35df9fe7f42e7697469378d6b9e499be51068d2b601456cdcd1b72585c'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'addressHash': '016d30272b03183635d14f9c45754c1bdb32b7b78d4c60031570f9b367a1e057d1d7f88736a745f41170e5edc1689e6f0f64ed43ea3b6dc19d17e4d7e2e83b32fcb79dc0',\n" +
+                "\t\t\t'address': '016d30272b03183635d14f9c45754c1bdb32b7b78d4c60031570f9b367a1e057d1d7f88736a745f41170e5edc1689e6f0f64ed43ea3b6dc19d17e4d7e2e83b32fcb79dc0',\n" +
                 "\t\t\t'indexInTransactionsChain': 4,\n" +
                 "\t\t\t'amount': '60.000000000000000000',\n" +
                 "\t\t\t'hash': '34ecf925edf9fcd76d8bdaccb6bf1e2ee2bd0a22a1b307920325fce1bf1b616b',\n" +
@@ -197,7 +197,7 @@ public class CryptoHelperTests {
     public void testInvalidBasicTransactionVerification() throws IOException{
         String jsonOfTransaction = "{\n" +
                 "\t'baseTransactions': [{\n" +
-                "\t\t\t'addressHash': '54e43a7b3485e1dca039888b4cf1951caa737c01219f71db01fa31c73afa745645137e4473db82e1986b7c590d093eb32d613924f5a5187e5f2ff4395bbe5eb55203282c',\n" +
+                "\t\t\t'address': '54e43a7b3485e1dca039888b4cf1951caa737c01219f71db01fa31c73afa745645137e4473db82e1986b7c590d093eb32d613924f5a5187e5f2ff4395bbe5eb55203282c',\n" +
                 "\t\t\t'indexInTransactionsChain': 0,\n" +
                 "\t\t\t'amount': '-30.000000000000000000',\n" +
                 "\t\t\t'hash': '914755201efd8eadea48430e92bda14a7357b4bf95f366bf3641f0a26ac113d8',\n" +
@@ -207,7 +207,7 @@ public class CryptoHelperTests {
                 "\t\t\t\t's': '9a5e6590b2720db6ebdab71bbaac2618839c381bf6c227590e9a776533728bef'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'addressHash': '988149bfdcaf6ebc115d2370c159988223d889e0142fecf6dccc10a61763e1b7cc5caa07a32ec65f2105dedc878f1214a5e02db7bfd5c30591405dbd7ac720a78ceb7e7b',\n" +
+                "\t\t\t'address': '988149bfdcaf6ebc115d2370c159988223d889e0142fecf6dccc10a61763e1b7cc5caa07a32ec65f2105dedc878f1214a5e02db7bfd5c30591405dbd7ac720a78ceb7e7b',\n" +
                 "\t\t\t'indexInTransactionsChain': 1,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
                 "\t\t\t'hash': 'd05c75913d6fc08673111f965c83a451b0469ce0c98e07ccb2ad418a1f2d39ae',\n" +
@@ -217,7 +217,7 @@ public class CryptoHelperTests {
                 "\t\t\t\t's': '6be9722669490e4abfda538cb8e86f4a1b08038e5d6bfa40c28cc9f90473b404'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'addressHash': 'fba6bdf0937c21ba35817bab7781e8f174964768706e63b87e63187c45b0e84f5837f092b2197d42d84d3608fe59aaeeda64aceb45938b16e6a3b6b5ef28dbf20f8a9f74',\n" +
+                "\t\t\t'address': 'fba6bdf0937c21ba35817bab7781e8f174964768706e63b87e63187c45b0e84f5837f092b2197d42d84d3608fe59aaeeda64aceb45938b16e6a3b6b5ef28dbf20f8a9f74',\n" +
                 "\t\t\t'indexInTransactionsChain': 2,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
                 "\t\t\t'hash': '664792bbf4c80c7e5952888b054ab8a96a0109806ec7519289d652d082b4440t',\n" +
@@ -227,7 +227,7 @@ public class CryptoHelperTests {
                 "\t\t\t\t's': 'f3d88198f4a6964790ed61c8146600da2384929a378f2649e2193cfdd068609d'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'addressHash': '4f4c693378d2a5ad9c633fb92e36bf003df06ab743c75a80624e0e912b7b5fa58f69d0bd655157b5e216e72a4d4f14e29bb7c0a996d14fb34f76adefbae4ea1e29dd9316',\n" +
+                "\t\t\t'address': '4f4c693378d2a5ad9c633fb92e36bf003df06ab743c75a80624e0e912b7b5fa58f69d0bd655157b5e216e72a4d4f14e29bb7c0a996d14fb34f76adefbae4ea1e29dd9316',\n" +
                 "\t\t\t'indexInTransactionsChain': 3,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
                 "\t\t\t'hash': '1636f09572156d0298a439254543f93faecee0413bf437ae74fd6e7ee5cf548c',\n" +
@@ -237,7 +237,7 @@ public class CryptoHelperTests {
                 "\t\t\t\t's': '3890ea35df9fe7f42e7697469378d6b9e499be51068d2b601456cdcd1b72585c'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'addressHash': '016d30272b03183635d14f9c45754c1bdb32b7b78d4c60031570f9b367a1e057d1d7f88736a745f41170e5edc1689e6f0f64ed43ea3b6dc19d17e4d7e2e83b32fcb79dc0',\n" +
+                "\t\t\t'address': '016d30272b03183635d14f9c45754c1bdb32b7b78d4c60031570f9b367a1e057d1d7f88736a745f41170e5edc1689e6f0f64ed43ea3b6dc19d17e4d7e2e83b32fcb79dc0',\n" +
                 "\t\t\t'indexInTransactionsChain': 4,\n" +
                 "\t\t\t'amount': '60.000000000000000000',\n" +
                 "\t\t\t'hash': '34ecf925edf9fcd76d8bdaccb6bf1e2ee2bd0a22a1b307920325fce1bf1b616a',\n" +
@@ -269,7 +269,7 @@ public class CryptoHelperTests {
     public void testTransactionVerification() throws IOException{
         String jsonOfTransaction = "{\n" +
                 "\t'baseTransactions': [{\n" +
-                "\t\t\t'addressHash': '54e43a7b3485e1dca039888b4cf1951caa737c01219f71db01fa31c73afa745645137e4473db82e1986b7c590d093eb32d613924f5a5187e5f2ff4395bbe5eb55203282c',\n" +
+                "\t\t\t'address': '54e43a7b3485e1dca039888b4cf1951caa737c01219f71db01fa31c73afa745645137e4473db82e1986b7c590d093eb32d613924f5a5187e5f2ff4395bbe5eb55203282c',\n" +
                 "\t\t\t'indexInTransactionsChain': 0,\n" +
                 "\t\t\t'amount': '-30.000000000000000000',\n" +
                 "\t\t\t'hash': '914755201efd8eadea48430e92bda14a7357b4bf95f366bf3641f0a26ac113d9',\n" +
@@ -279,7 +279,7 @@ public class CryptoHelperTests {
                 "\t\t\t\t's': '9a5e6590b2720db6ebdab71bbaac2618839c381bf6c227590e9a776533728bef'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'addressHash': '988149bfdcaf6ebc115d2370c159988223d889e0142fecf6dccc10a61763e1b7cc5caa07a32ec65f2105dedc878f1214a5e02db7bfd5c30591405dbd7ac720a78ceb7e7b',\n" +
+                "\t\t\t'address': '988149bfdcaf6ebc115d2370c159988223d889e0142fecf6dccc10a61763e1b7cc5caa07a32ec65f2105dedc878f1214a5e02db7bfd5c30591405dbd7ac720a78ceb7e7b',\n" +
                 "\t\t\t'indexInTransactionsChain': 1,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
                 "\t\t\t'hash': 'd05c75913d6fc08673111f965c83a451b0469ce0c98e07ccb2ad418a1f2d39af',\n" +
@@ -289,7 +289,7 @@ public class CryptoHelperTests {
                 "\t\t\t\t's': '6be9722669490e4abfda538cb8e86f4a1b08038e5d6bfa40c28cc9f90473b404'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'addressHash': 'fba6bdf0937c21ba35817bab7781e8f174964768706e63b87e63187c45b0e84f5837f092b2197d42d84d3608fe59aaeeda64aceb45938b16e6a3b6b5ef28dbf20f8a9f74',\n" +
+                "\t\t\t'address': 'fba6bdf0937c21ba35817bab7781e8f174964768706e63b87e63187c45b0e84f5837f092b2197d42d84d3608fe59aaeeda64aceb45938b16e6a3b6b5ef28dbf20f8a9f74',\n" +
                 "\t\t\t'indexInTransactionsChain': 2,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
                 "\t\t\t'hash': '664792bbf4c80c7e5952888b054ab8a96a0109806ec7519289d652d082b44405',\n" +
@@ -299,7 +299,7 @@ public class CryptoHelperTests {
                 "\t\t\t\t's': 'f3d88198f4a6964790ed61c8146600da2384929a378f2649e2193cfdd068609d'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'addressHash': '4f4c693378d2a5ad9c633fb92e36bf003df06ab743c75a80624e0e912b7b5fa58f69d0bd655157b5e216e72a4d4f14e29bb7c0a996d14fb34f76adefbae4ea1e29dd9316',\n" +
+                "\t\t\t'address': '4f4c693378d2a5ad9c633fb92e36bf003df06ab743c75a80624e0e912b7b5fa58f69d0bd655157b5e216e72a4d4f14e29bb7c0a996d14fb34f76adefbae4ea1e29dd9316',\n" +
                 "\t\t\t'indexInTransactionsChain': 3,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
                 "\t\t\t'hash': '1636f09572156d0298a439254543f93faecee0413bf437ae74fd6e7ee5cf5483',\n" +
@@ -309,7 +309,7 @@ public class CryptoHelperTests {
                 "\t\t\t\t's': '3890ea35df9fe7f42e7697469378d6b9e499be51068d2b601456cdcd1b72585c'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'addressHash': '016d30272b03183635d14f9c45754c1bdb32b7b78d4c60031570f9b367a1e057d1d7f88736a745f41170e5edc1689e6f0f64ed43ea3b6dc19d17e4d7e2e83b32fcb79dc0',\n" +
+                "\t\t\t'address': '016d30272b03183635d14f9c45754c1bdb32b7b78d4c60031570f9b367a1e057d1d7f88736a745f41170e5edc1689e6f0f64ed43ea3b6dc19d17e4d7e2e83b32fcb79dc0',\n" +
                 "\t\t\t'indexInTransactionsChain': 4,\n" +
                 "\t\t\t'amount': '60.000000000000000000',\n" +
                 "\t\t\t'hash': '34ecf925edf9fcd76d8bdaccb6bf1e2ee2bd0a22a1b307920325fce1bf1b616b',\n" +
@@ -340,7 +340,7 @@ public class CryptoHelperTests {
     public void testTransactionVerificationInvalidTransactionHash() throws IOException{
         String jsonOfTransaction = "{\n" +
                 "\t'baseTransactions': [{\n" +
-                "\t\t\t'addressHash': '54e43a7b3485e1dca039888b4cf1951caa737c01219f71db01fa31c73afa745645137e4473db82e1986b7c590d093eb32d613924f5a5187e5f2ff4395bbe5eb55203282c',\n" +
+                "\t\t\t'address': '54e43a7b3485e1dca039888b4cf1951caa737c01219f71db01fa31c73afa745645137e4473db82e1986b7c590d093eb32d613924f5a5187e5f2ff4395bbe5eb55203282c',\n" +
                 "\t\t\t'indexInTransactionsChain': 0,\n" +
                 "\t\t\t'amount': '-30.000000000000000000',\n" +
                 "\t\t\t'hash': '914755201efd8eadea48430e92bda14a7357b4bf95f366bf3641f0a26ac113d9',\n" +
@@ -350,7 +350,7 @@ public class CryptoHelperTests {
                 "\t\t\t\t's': '9a5e6590b2720db6ebdab71bbaac2618839c381bf6c227590e9a776533728bef'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'addressHash': '988149bfdcaf6ebc115d2370c159988223d889e0142fecf6dccc10a61763e1b7cc5caa07a32ec65f2105dedc878f1214a5e02db7bfd5c30591405dbd7ac720a78ceb7e7b',\n" +
+                "\t\t\t'address': '988149bfdcaf6ebc115d2370c159988223d889e0142fecf6dccc10a61763e1b7cc5caa07a32ec65f2105dedc878f1214a5e02db7bfd5c30591405dbd7ac720a78ceb7e7b',\n" +
                 "\t\t\t'indexInTransactionsChain': 1,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
                 "\t\t\t'hash': 'd05c75913d6fc08673111f965c83a451b0469ce0c98e07ccb2ad418a1f2d39af',\n" +
@@ -360,7 +360,7 @@ public class CryptoHelperTests {
                 "\t\t\t\t's': '6be9722669490e4abfda538cb8e86f4a1b08038e5d6bfa40c28cc9f90473b404'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'addressHash': 'fba6bdf0937c21ba35817bab7781e8f174964768706e63b87e63187c45b0e84f5837f092b2197d42d84d3608fe59aaeeda64aceb45938b16e6a3b6b5ef28dbf20f8a9f74',\n" +
+                "\t\t\t'address': 'fba6bdf0937c21ba35817bab7781e8f174964768706e63b87e63187c45b0e84f5837f092b2197d42d84d3608fe59aaeeda64aceb45938b16e6a3b6b5ef28dbf20f8a9f74',\n" +
                 "\t\t\t'indexInTransactionsChain': 2,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
                 "\t\t\t'hash': '664792bbf4c80c7e5952888b054ab8a96a0109806ec7519289d652d082b44405',\n" +
@@ -370,7 +370,7 @@ public class CryptoHelperTests {
                 "\t\t\t\t's': 'f3d88198f4a6964790ed61c8146600da2384929a378f2649e2193cfdd068609d'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'addressHash': '4f4c693378d2a5ad9c633fb92e36bf003df06ab743c75a80624e0e912b7b5fa58f69d0bd655157b5e216e72a4d4f14e29bb7c0a996d14fb34f76adefbae4ea1e29dd9316',\n" +
+                "\t\t\t'address': '4f4c693378d2a5ad9c633fb92e36bf003df06ab743c75a80624e0e912b7b5fa58f69d0bd655157b5e216e72a4d4f14e29bb7c0a996d14fb34f76adefbae4ea1e29dd9316',\n" +
                 "\t\t\t'indexInTransactionsChain': 3,\n" +
                 "\t\t\t'amount': '-10.000000000000000000',\n" +
                 "\t\t\t'hash': '1636f09572156d0298a439254543f93faecee0413bf437ae74fd6e7ee5cf5483',\n" +
@@ -380,7 +380,7 @@ public class CryptoHelperTests {
                 "\t\t\t\t's': '3890ea35df9fe7f42e7697469378d6b9e499be51068d2b601456cdcd1b72585c'\n" +
                 "\t\t\t}\n" +
                 "\t\t}, {\n" +
-                "\t\t\t'addressHash': '016d30272b03183635d14f9c45754c1bdb32b7b78d4c60031570f9b367a1e057d1d7f88736a745f41170e5edc1689e6f0f64ed43ea3b6dc19d17e4d7e2e83b32fcb79dc0',\n" +
+                "\t\t\t'address': '016d30272b03183635d14f9c45754c1bdb32b7b78d4c60031570f9b367a1e057d1d7f88736a745f41170e5edc1689e6f0f64ed43ea3b6dc19d17e4d7e2e83b32fcb79dc0',\n" +
                 "\t\t\t'indexInTransactionsChain': 4,\n" +
                 "\t\t\t'amount': '60.000000000000000000',\n" +
                 "\t\t\t'hash': '34ecf925edf9fcd76d8bdaccb6bf1e2ee2bd0a22a1b307920325fce1bf1b616b',\n" +

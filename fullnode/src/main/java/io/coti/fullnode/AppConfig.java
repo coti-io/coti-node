@@ -1,7 +1,7 @@
 package io.coti.fullnode;
 
-import io.coti.common.services.ZeroMQTransactionPropagationPublisher;
-import io.coti.common.services.ZeroMQTransactionReceiver;
+import io.coti.common.services.ZeroMQPropagationPublisher;
+import io.coti.common.services.ZeroMQReceiver;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
@@ -13,7 +13,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         basePackages = {"io.coti.fullnode", "io.coti.common"},
         excludeFilters = {
                 @ComponentScan.Filter(
-                        type = FilterType.ASSIGNABLE_TYPE, value = {ZeroMQTransactionPropagationPublisher.class, ZeroMQTransactionReceiver.class} )
+                        type = FilterType.ASSIGNABLE_TYPE, value = {ZeroMQPropagationPublisher.class, ZeroMQReceiver.class} )
         }
 )
 @EnableScheduling

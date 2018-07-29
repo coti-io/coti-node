@@ -1,7 +1,7 @@
 package io.coti.fullnode.services;
 
-import io.coti.common.communication.interfaces.ITransactionPropagationSubscriber;
-import io.coti.common.communication.interfaces.ITransactionSender;
+import io.coti.common.communication.interfaces.ISender;
+import io.coti.common.data.AddressData;
 import io.coti.common.data.AddressTransactionsHistory;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
@@ -43,21 +44,13 @@ public class TransactionService {
     @Autowired
     private IZeroSpendService zeroSpendService;
     @Autowired
-    private ITransactionSender transactionSender;
+    private ISender transactionSender;
     @Autowired
     private AddressesTransactionsHistory addressesTransactionsHistory;
     @Autowired
     private Transactions transactions;
     @Autowired
-    private ITransactionPropagationSubscriber transactionPropagationReceiver;
-
-    @Autowired
     private WebSocketSender webSocketSender;
-
-    @PostConstruct
-    private void init() {
-        transactionPropagationReceiver.init(propagatedTransactionsFromDspHandler, "FullNodes");
-    }
 
     public ResponseEntity<Response> addNewTransaction(AddTransactionRequest request)
             throws TransactionException {
@@ -118,7 +111,6 @@ public class TransactionService {
                 log.info("Could not validate transaction source");
                 //TODO: decide what to do here
             }
-
 
 
             transactionData.setPowStartTime(new Date());
@@ -185,21 +177,21 @@ public class TransactionService {
 
     public ResponseEntity<BaseResponse> getAddressTransactions(Hash addressHash) {
         List<TransactionData> transactionsDataList = new Vector<>();
-        DbItem<AddressTransactionsHistory> dbAddress =  addressesTransactionsHistory.getByHashItem(addressHash);
+        DbItem<AddressTransactionsHistory> dbAddress = addressesTransactionsHistory.getByHashItem(addressHash);
 
         if (!dbAddress.isExists)
-            return  ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistory(transactionsDataList));
+            return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistory(transactionsDataList));
 
         AddressTransactionsHistory history = dbAddress.item;
-        for (Hash transactionHash: history.getTransactionsHistory()) {
-            TransactionData transactionData =  transactions.getByHash(transactionHash);
+        for (Hash transactionHash : history.getTransactionsHistory()) {
+            TransactionData transactionData = transactions.getByHash(transactionHash);
             transactionsDataList.add(transactionData);
 
         }
         return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistory(transactionsDataList));
     }
 
-    private Consumer<TransactionData> propagatedTransactionsFromDspHandler = transactionData -> {
+    public void handlePropagatedTransaction(TransactionData transactionData) {
         log.info("Propagated Transaction received: {}", transactionData.getHash().toHexString());
         if (transactionHelper.isTransactionExists(transactionData.getHash())) {
             log.info("Transaction already exists");
@@ -212,5 +204,5 @@ public class TransactionService {
 
         transactionHelper.attachTransactionToCluster(transactionData);
         webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
-    };
+    }
 }
