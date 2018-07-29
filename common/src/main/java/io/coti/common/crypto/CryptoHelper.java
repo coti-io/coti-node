@@ -1,12 +1,13 @@
 package io.coti.common.crypto;
 
-import io.coti.common.data.AddressData;
 import io.coti.common.data.Hash;
+import io.coti.common.data.SignatureData;
 import org.bouncycastle.asn1.sec.SECNamedCurves;
 import org.bouncycastle.asn1.x9.X9ECParameters;
 
 import org.bouncycastle.crypto.params.ECDomainParameters;
 
+import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
 import org.bouncycastle.crypto.signers.ECDSASigner;
 
@@ -15,11 +16,11 @@ import org.bouncycastle.jce.interfaces.ECPublicKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.jce.spec.ECPublicKeySpec;
+import org.bouncycastle.math.ec.ECPoint;
 
 
 import javax.xml.bind.DatatypeConverter;
 import java.math.BigInteger;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
@@ -37,7 +38,7 @@ public class CryptoHelper {
     private static final ECParameterSpec spec = new ECParameterSpec(curve.getCurve(), curve.getG(), curve.getN(), curve.getH());
 
 
-    public static PublicKey getPublicKeyFromHexString(String pubKeyHex) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    public static PublicKey getPublicKeyFromPrivateKey(String pubKeyHex) throws NoSuchAlgorithmException, InvalidKeySpecException {
         String pointX = pubKeyHex.substring(0, (pubKeyHex.length()/2));
         String pointY = pubKeyHex.substring(pubKeyHex.length()/2);
 
@@ -63,7 +64,7 @@ public class CryptoHelper {
         return result;
     }
     public static boolean VerifyByPublicKey(byte[] originalMessageToVerify, String rHex, String sHex, String publicKey) throws InvalidKeySpecException, NoSuchAlgorithmException {
-        return VerifyByPublicKey(originalMessageToVerify,rHex,sHex,getPublicKeyFromHexString(publicKey));
+        return VerifyByPublicKey(originalMessageToVerify,rHex,sHex, getPublicKeyFromPrivateKey(publicKey));
     }
 
 
@@ -99,7 +100,25 @@ public class CryptoHelper {
         return addressBuffer.array();
     }
 
+    public static SignatureData SignBytes(byte[] bytesToSign, String privateKeyHex) {
 
+        byte[] privateKey = DatatypeConverter.parseHexBinary(privateKeyHex);
+        ECDSASigner signer = new ECDSASigner();
+        signer.init(true, new ECPrivateKeyParameters(new BigInteger(privateKey), domain));
+        BigInteger[] signature =  signer.generateSignature(bytesToSign);
+        BigInteger r = signature[0];
+        BigInteger s = signature[1];
+        return new SignatureData(r.toString(16), s.toString(16));
+    }
+
+    public static String GetPublicKeyFromPrivateKey(String privateKeyHex) {
+        byte[] privateKey = DatatypeConverter.parseHexBinary(privateKeyHex);
+        ECPoint curvePt = domain.getG().multiply(new BigInteger(privateKey));
+        curvePt = curvePt.normalize();
+        String x = curvePt.getXCoord().toBigInteger().toString(16);
+        String y = curvePt.getYCoord().toBigInteger().toString(16);
+        return x + y;
+    }
 
     public static boolean  VerifyByPublicKey(byte[] originalDataToVerify, String rHex, String sHex, PublicKey publicKey)
     {

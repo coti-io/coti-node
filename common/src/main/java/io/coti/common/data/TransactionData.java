@@ -37,6 +37,7 @@ public class TransactionData implements IEntity, Comparable<TransactionData> {
     private Hash senderHash;
     private String nodeIpAddress;
     private Hash nodeHash;
+    private SignatureData nodeSignature;
     private List<Hash> childrenTransactions;
     private boolean valid;
     private Map<String, Boolean> validByNodes;

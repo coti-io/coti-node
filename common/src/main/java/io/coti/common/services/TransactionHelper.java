@@ -194,8 +194,8 @@ public class TransactionHelper {
         }
     }
 
-    public boolean validateAddresses(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, Double senderTrustScore, Date createTime) {
-        TransactionCryptoWrapper verifyTransaction = new TransactionCryptoWrapper(baseTransactions, transactionHash, transactionDescription, senderTrustScore, createTime);
+    public boolean validateTransaction(TransactionData transactionData) {
+        TransactionCryptoWrapper verifyTransaction = new TransactionCryptoWrapper(transactionData);
         return verifyTransaction.isTransactionValid();
     }
 

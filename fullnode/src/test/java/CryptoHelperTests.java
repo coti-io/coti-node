@@ -1,6 +1,7 @@
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.common.data.BaseTransactionData;
+import io.coti.common.data.SignatureData;
 import io.coti.common.data.TransactionData;
 import io.coti.common.crypto.BaseTransactionCryptoWrapper;
 import io.coti.common.crypto.CryptoHelper;
@@ -24,7 +25,7 @@ public class CryptoHelperTests {
     public void CheckPublicKeyRecovery() throws InvalidKeySpecException, NoSuchAlgorithmException {
 
         CryptoHelper helper = new CryptoHelper();
-        PublicKey key = helper.getPublicKeyFromHexString("c9fd981b86819a190272911bb9890ab29292fdb0666c2601331559ffd01c4b5bcf5cb0819c3ef7f046d9955659fe2a433eadaa5db674405d3780f9b637768d54");
+        PublicKey key = helper.getPublicKeyFromPrivateKey("c9fd981b86819a190272911bb9890ab29292fdb0666c2601331559ffd01c4b5bcf5cb0819c3ef7f046d9955659fe2a433eadaa5db674405d3780f9b637768d54");
         Assert.assertEquals("c9fd981b86819a190272911bb9890ab29292fdb0666c2601331559ffd01c4b5b",((ECPublicKey) key).getQ().getRawXCoord().toString());
     }
 
@@ -40,7 +41,7 @@ public class CryptoHelperTests {
 
         String rHex = "0af936b4ddb6e33269f63d52586ffa3ce7d9358a2fed7fde9536e19a70723860";
         String sHex = "c3a122626df0b7c9d731a8eb9cd42abce7fdd477c591d9f6569be8561ad27639";
-        PublicKey key = helper.getPublicKeyFromHexString("989fc9a6b0829cd4aa83e3d7f2d24322dc6c08db80fcef988f8fba226de8f28f5a624afacb6ac328547c94f4b3407e6012f81ebcd59b1b1883037198f3088770");
+        PublicKey key = helper.getPublicKeyFromPrivateKey("989fc9a6b0829cd4aa83e3d7f2d24322dc6c08db80fcef988f8fba226de8f28f5a624afacb6ac328547c94f4b3407e6012f81ebcd59b1b1883037198f3088770");
         Assert.assertEquals(helper.VerifyByPublicKey(dataToVerify,rHex, sHex,key), true);
     }
 
@@ -77,7 +78,7 @@ public class CryptoHelperTests {
 
         String rHex = "0af936b4ddb6e33269f63d52586ffa3ce7d9358a2fed7fde9536e19a70723849"; //instead of .......60 changed r value to ......49
         String sHex = "c3a122626df0b7c9d731a8eb9cd42abce7fdd477c591d9f6569be8561ad27639";
-        PublicKey key = helper.getPublicKeyFromHexString("989fc9a6b0829cd4aa83e3d7f2d24322dc6c08db80fcef988f8fba226de8f28f5a624afacb6ac328547c94f4b3407e6012f81ebcd59b1b1883037198f3088770");
+        PublicKey key = helper.getPublicKeyFromPrivateKey("989fc9a6b0829cd4aa83e3d7f2d24322dc6c08db80fcef988f8fba226de8f28f5a624afacb6ac328547c94f4b3407e6012f81ebcd59b1b1883037198f3088770");
         Assert.assertEquals(helper.VerifyByPublicKey(dataToVerify,rHex, sHex,key), false);
     }
 
@@ -333,7 +334,27 @@ public class CryptoHelperTests {
     }
 
 
+    @Test
+    public void SigningWithPrivateKeyTest() throws InvalidKeySpecException, NoSuchAlgorithmException {
 
+        String hexPrivateKey ="1731ceb7b1d3a9c78d6a3009ca7021569eeb6a4ece86f0b744afbc3fabf82f8e";
+        byte[] msgToSign = "1731ceb7b1d3a9c78d6a3009ca7021569eeb6a4ece86f0b744afbc3fabf82f8e".getBytes();
+        CryptoHelper helper = new CryptoHelper();
+        SignatureData signatureData =  helper.SignBytes(msgToSign,hexPrivateKey);
+
+        String publicKey = CryptoHelper.GetPublicKeyFromPrivateKey(hexPrivateKey);
+        boolean resultVerify = CryptoHelper.VerifyByPublicKey(msgToSign,signatureData.getR(), signatureData.getS(), publicKey);
+        Assert.assertTrue(resultVerify);
+    }
+
+
+    @Test
+    public void ExtractPublicKeyFromPrivateKey() {
+
+        String hexPrivateKey ="1731ceb7b1d3a9c78d6a3009ca7021569eeb6a4ece86f0b744afbc3fabf82f8e";
+        String publicKey = CryptoHelper.GetPublicKeyFromPrivateKey(hexPrivateKey);
+        Assert.assertTrue("a053a4ddfd9c4e27b919a26ccb2d99a55f679c13fec197efc48fc887661a626db19a99660f8ae3babddebf924923afb22c7d4fe251f96f1880c4b8f89106d139".equals(publicKey));
+    }
 
 
     @Test

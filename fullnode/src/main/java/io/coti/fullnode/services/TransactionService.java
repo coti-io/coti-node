@@ -1,6 +1,7 @@
 package io.coti.fullnode.services;
 
 import io.coti.common.communication.interfaces.ISender;
+import io.coti.common.crypto.NodeCryptoHelper;
 import io.coti.common.data.AddressTransactionsHistory;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
@@ -61,13 +62,19 @@ public class TransactionService {
                             TRANSACTION_ALREADY_EXIST_MESSAGE));
         }
 
-        if (!transactionHelper.validateAddresses(
-                request.baseTransactions,
-                request.hash,
-                request.transactionDescription,
-                request.senderTrustScore,
-                request.createTime)) {
-            log.info("Failed to validate addresses!");
+
+
+        TransactionData transactionData =
+                new TransactionData(
+                        request.baseTransactions,
+                        request.hash,
+                        request.transactionDescription,
+                        request.senderTrustScore,
+                        request.createTime);
+
+
+        if (!transactionHelper.validateTransaction(transactionData)) {
+            log.info("Failed to validate transaction!");
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(new AddTransactionResponse(
@@ -75,7 +82,7 @@ public class TransactionService {
                             AUTHENTICATION_FAILED_MESSAGE));
         }
 
-        if (!transactionHelper.isLegalBalance(request.baseTransactions)) {
+        if (!transactionHelper.isLegalBalance(transactionData.getBaseTransactions())) {
             log.info("Illegal transaction balance!");
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
@@ -84,7 +91,7 @@ public class TransactionService {
                             ILLEGAL_TRANSACTION_MESSAGE));
         }
 
-        if (!transactionHelper.checkBalancesAndAddToPreBalance(request.baseTransactions)) {
+        if (!transactionHelper.checkBalancesAndAddToPreBalance(transactionData.getBaseTransactions())) {
             log.info("Pre balance check failed!");
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
@@ -92,13 +99,7 @@ public class TransactionService {
                             STATUS_ERROR,
                             INSUFFICIENT_FUNDS_MESSAGE));
         }
-        TransactionData transactionData =
-                new TransactionData(
-                        request.baseTransactions,
-                        request.hash,
-                        request.transactionDescription,
-                        request.senderTrustScore,
-                        request.createTime);
+
         try {
             transactionData = selectSources(transactionData);
 
@@ -116,6 +117,9 @@ public class TransactionService {
             transactionData.setPowEndTime(new Date());
 
             transactionData.setAttachmentTime(new Date());
+            setNodeHashAndSignature(transactionData);
+
+
             transactionHelper.attachTransactionToCluster(transactionData);
             webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
             // TODO: Send to DSP Node
@@ -131,6 +135,11 @@ public class TransactionService {
             log.error("Exception while adding a transaction", ex);
             throw new TransactionException(ex, request.baseTransactions);
         }
+    }
+
+    private void setNodeHashAndSignature(TransactionData transactionData) {
+        NodeCryptoHelper wrapper = new NodeCryptoHelper();
+        wrapper.setNodeHashAndSignature(transactionData);
     }
 
     public TransactionData selectSources(TransactionData transactionData) {
