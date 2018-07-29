@@ -1,6 +1,6 @@
 package io.coti.dspnode.services;
 
-import io.coti.common.communication.interfaces.publisher.IPropagationPublisher;
+import io.coti.common.communication.interfaces.IPropagationPublisher;
 import io.coti.common.data.AddressData;
 import io.coti.common.model.Addresses;
 import lombok.extern.slf4j.Slf4j;

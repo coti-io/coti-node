@@ -1,7 +1,7 @@
 package io.coti.dspnode.services;
 
 import io.coti.common.communication.interfaces.ISender;
-import io.coti.common.communication.interfaces.publisher.IPropagationPublisher;
+import io.coti.common.communication.interfaces.IPropagationPublisher;
 import io.coti.common.data.TransactionData;
 import io.coti.common.model.Transactions;
 import io.coti.common.services.TransactionHelper;

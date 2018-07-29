@@ -1,7 +1,7 @@
 package io.coti.common.services;
 
+import io.coti.common.communication.interfaces.IPropagationPublisher;
 import io.coti.common.communication.interfaces.ISerializer;
-import io.coti.common.communication.interfaces.publisher.IPropagationPublisher;
 import io.coti.common.data.AddressData;
 import io.coti.common.data.TransactionData;
 import lombok.extern.slf4j.Slf4j;

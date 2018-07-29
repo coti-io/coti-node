@@ -1,7 +1,6 @@
 package io.coti.fullnode.services;
 
 import io.coti.common.communication.interfaces.ISender;
-import io.coti.common.data.AddressData;
 import io.coti.common.data.AddressTransactionsHistory;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
@@ -22,13 +21,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 import static io.coti.common.http.HttpStringConstants.*;
 
