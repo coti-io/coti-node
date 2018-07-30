@@ -1,12 +1,14 @@
 package io.coti.common.data;
 
 import com.google.common.primitives.Ints;
-import io.coti.common.crypto.CryptoUtils;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.Serializable;
 import java.util.Arrays;
 
+@Slf4j
 @Data
 public class Hash implements Serializable {
     private byte[] bytes;
@@ -19,7 +21,12 @@ public class Hash implements Serializable {
     }
 
     public Hash(String hash) {
-        this.bytes = CryptoUtils.hexStringToByteArray(hash);
+        try {
+            this.bytes = DatatypeConverter.parseHexBinary(hash);
+        } catch (Exception e) {
+            log.error("Illegal hash string: {}", hash);
+            this.bytes = new byte[0];
+        }
     }
 
     public Hash(byte[] bytes) {
@@ -27,7 +34,7 @@ public class Hash implements Serializable {
     }
 
     public String toHexString() {
-        return CryptoUtils.bytesToHex(bytes);
+        return DatatypeConverter.printHexBinary(bytes);
     }
 
     public boolean isNull() {

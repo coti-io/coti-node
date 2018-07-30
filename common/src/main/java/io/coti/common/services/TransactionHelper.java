@@ -30,9 +30,6 @@ import static io.coti.common.http.HttpStringConstants.*;
 @Service
 public class TransactionHelper {
 
-    private Map<Hash, TransactionData> ongoingPropagatedTransactionsHashes;
-
-
     @Autowired
     private AddressesTransactionsHistory addressesTransactionsHistory;
 
@@ -49,46 +46,6 @@ public class TransactionHelper {
     private void init() {
         log.info("Transaction Helper Started");
         hashToWaitingChildrenTransactionsMapping = new HashMap();
-        ongoingPropagatedTransactionsHashes = new ConcurrentHashMap();
-    }
-
-
-    public void addPropagatedTransaction(TransactionData transactionData)
-            throws TransactionException {
-        synchronized (this) {
-
-
-            if (ongoingPropagatedTransactionsHashes.containsKey(transactionData.getHash()) || getTransactionData(transactionData.getHash()) != null) {
-                addNodesToTransaction(transactionData.getHash(), transactionData.getValidByNodes());
-            }
-
-            ongoingPropagatedTransactionsHashes.put(transactionData.getHash(), transactionData);
-        }
-
-        if (!ifAllTransactionParentsExistInLocalNode(transactionData)) {
-            ongoingPropagatedTransactionsHashes.remove(transactionData.getHash());
-
-        }
-
-        ResponseEntity<Response> response = addFromPropagationAfterValidation(transactionData.getBaseTransactions(), transactionData);
-        if ((response.getStatusCode().equals(HttpStatus.CREATED))
-                && response.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS)) {
-//            propagationService.propagateToNeighbors(request.transactionData);
-        }
-
-        ongoingPropagatedTransactionsHashes.remove(transactionData.getHash());
-    }
-
-
-    private void addNodesToTransaction(Hash transactionHash, Map<String, Boolean> validByNodes) {
-        if (ongoingPropagatedTransactionsHashes.containsKey(transactionHash)) {
-            ongoingPropagatedTransactionsHashes.get(transactionHash).addNodesToTransaction(validByNodes);
-        }
-        TransactionData transaction = getTransactionData(transactionHash);
-        if (transaction != null) {
-            transaction.addNodesToTransaction(validByNodes);
-            transactions.put(transaction);
-        }
     }
 
     public void attachWaitingChildren(TransactionData parentTransactionData) throws TransactionException {
@@ -108,32 +65,6 @@ public class TransactionHelper {
                 }
             }
         }
-    }
-
-    private boolean ifAllTransactionParentsExistInLocalNode(TransactionData transactionData) {
-
-        Hash leftParentHash = transactionData.getLeftParentHash();
-        Hash rightParentHash = transactionData.getRightParentHash();
-
-        GetTransactionRequest getTransactionRequest = new GetTransactionRequest();
-        boolean ifNotNeededToPropagateFromNeighbors =
-                ifTransactionParentExistInLocalNode(leftParentHash, getTransactionRequest) &&
-                        ifTransactionParentExistInLocalNode(rightParentHash, getTransactionRequest);
-
-
-        if (!ifNotNeededToPropagateFromNeighbors) {
-            hashToWaitingChildrenTransactionsMapping.put(transactionData.getHash(), transactionData);
-        }
-        return ifNotNeededToPropagateFromNeighbors;
-    }
-
-    private boolean ifTransactionParentExistInLocalNode(Hash parentHash, GetTransactionRequest getTransactionRequest) {
-        if (parentHash != null && getTransactionData(parentHash) == null) {
-            getTransactionRequest.transactionHash = parentHash;
-//            propagationService.propagateFromNeighbors(getTransactionRequest.transactionHash);
-            return false;
-        }
-        return true;
     }
 
     private ResponseEntity<Response> addFromPropagationAfterValidation(List<BaseTransactionData> baseTransactions,

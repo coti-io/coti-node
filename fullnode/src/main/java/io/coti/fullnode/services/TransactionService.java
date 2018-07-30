@@ -62,8 +62,6 @@ public class TransactionService {
                             TRANSACTION_ALREADY_EXIST_MESSAGE));
         }
 
-
-
         TransactionData transactionData =
                 new TransactionData(
                         request.baseTransactions,
@@ -71,7 +69,6 @@ public class TransactionService {
                         request.transactionDescription,
                         request.senderTrustScore,
                         request.createTime);
-
 
         if (!transactionHelper.validateTransaction(transactionData)) {
             log.info("Failed to validate transaction!");
@@ -108,7 +105,6 @@ public class TransactionService {
                 log.info("Could not validate transaction source");
                 //TODO: decide what to do here
             }
-
 
             transactionData.setPowStartTime(new Date());
             // ############   POW   ###########
@@ -202,7 +198,8 @@ public class TransactionService {
             log.info("Transaction already exists");
             return;
         }
-        if (!transactionHelper.validateDataIntegrity(transactionData)) {
+        if (!transactionHelper.validateDataIntegrity(transactionData) ||
+                !NodeCryptoHelper.verifyTransactionSignature(transactionData)) {
             log.info("Data Integrity validation failed");
             return;
         }

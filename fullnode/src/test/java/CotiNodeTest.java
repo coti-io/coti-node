@@ -1,4 +1,3 @@
-import io.coti.common.crypto.CryptoUtils;
 import io.coti.common.data.*;
 import io.coti.common.http.AddTransactionRequest;
 import io.coti.common.http.HttpStringConstants;
@@ -238,10 +237,10 @@ public class CotiNodeTest {
     private AddTransactionRequest createRequestWithOneBaseTransaction(Hash transactionHash, Hash fromAddress, Hash baseTransactionAddress, BigDecimal amount) {
         List<BaseTransactionData> baseTransactionDataList = new LinkedList<>();
 
-        BaseTransactionData baseTransactionData =
-                new BaseTransactionData(new Hash(CryptoUtils.getPublicKeyFromPrivateKey(BigInteger.valueOf(123)).toByteArray()),
-                        amount, baseTransactionAddress,
-                        signatureMessage, new Date());
+//        BaseTransactionData baseTransactionData =
+//                new BaseTransactionData(new Hash(CryptoUtils.getPublicKeyFromPrivateKey(BigInteger.valueOf(123)).toByteArray()),
+//                        amount, baseTransactionAddress,
+//                        signatureMessage, new Date());
 
 
         BaseTransactionData myBaseTransactionData =
@@ -250,7 +249,7 @@ public class CotiNodeTest {
                         signatureMessage, new Date());
 
 
-        baseTransactionDataList.add(baseTransactionData);
+//        baseTransactionDataList.add(baseTransactionData);
         baseTransactionDataList.add(myBaseTransactionData);
 
 
@@ -271,10 +270,10 @@ public class CotiNodeTest {
             privatekeyInt++;
             BigDecimal amount = new BigDecimal(TestUtils.getRandomDouble()).setScale(2, BigDecimal.ROUND_CEILING);
             BigInteger privateKey = BigInteger.valueOf(privatekeyInt);
-            BaseTransactionData baseTransactionData =
-                    new BaseTransactionData(new Hash(CryptoUtils.getPublicKeyFromPrivateKey(privateKey).toByteArray()), amount
-                            , new Hash(TestUtils.getRandomHexa()),
-                            signatureMessage, new Date());
+//            BaseTransactionData baseTransactionData =
+//                    new BaseTransactionData(new Hash(CryptoUtils.getPublicKeyFromPrivateKey(privateKey).toByteArray()), amount
+//                            , new Hash(TestUtils.getRandomHexa()),
+//                            signatureMessage, new Date());
 
             BaseTransactionData myBaseTransactionData =
                     new BaseTransactionData(myAddress, amount.negate()
@@ -282,7 +281,7 @@ public class CotiNodeTest {
                             signatureMessage, new Date());
 
 
-            baseTransactionDataList.add(baseTransactionData);
+//            baseTransactionDataList.add(baseTransactionData);
             baseTransactionDataList.add(myBaseTransactionData);
 
         }
