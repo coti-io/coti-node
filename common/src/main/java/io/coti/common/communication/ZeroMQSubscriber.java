@@ -35,7 +35,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                 propagationServerAddresses
                 ) {
             propagationReceiver.connect(serverAddress);
-            for(String channel : channelsToSubscribe) {
+            for (String channel : channelsToSubscribe) {
                 propagationReceiver.subscribe(channel);
             }
         }
@@ -49,19 +49,27 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         Thread receiverThread = new Thread(() -> {
             while (!Thread.interrupted()) {
                 String channel = propagationReceiver.recvStr();
-                if(channel.contains(TransactionData.class.getName()) &&
-                        messagesHandler.containsKey(channel)){
+                if (channel.contains(TransactionData.class.getName()) &&
+                        messagesHandler.containsKey(channel)) {
                     log.info("Received a new message on channel: {}", channel);
                     byte[] message = propagationReceiver.recv();
-                    TransactionData transactionData = serializer.deserializeTransaction(message);
-                    messagesHandler.get(channel).accept(transactionData);
+                    try {
+                        TransactionData transactionData = serializer.deserialize(message);
+                        messagesHandler.get(channel).accept(transactionData);
+                    } catch (ClassCastException e) {
+                        log.error("Invalid request received: " + e.getMessage());
+                    }
                 }
-                if(channel.contains(AddressData.class.getName()) &&
-                        messagesHandler.containsKey(channel)){
-                     log.info("Received a new message on channel: {}", channel);
+                if (channel.contains(AddressData.class.getName()) &&
+                        messagesHandler.containsKey(channel)) {
+                    log.info("Received a new message on channel: {}", channel);
                     byte[] message = propagationReceiver.recv();
-                    AddressData addressData = serializer.deserializeAddress(message);
-                    messagesHandler.get(channel).accept(addressData);
+                    try {
+                        AddressData addressData = serializer.deserialize(message);
+                        messagesHandler.get(channel).accept(addressData);
+                    } catch (ClassCastException e) {
+                        log.error("Invalid request received: " + e.getMessage());
+                    }
                 }
             }
         });

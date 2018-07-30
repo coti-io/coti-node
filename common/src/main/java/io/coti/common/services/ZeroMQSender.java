@@ -40,7 +40,7 @@ public class ZeroMQSender implements ISender {
 
     @Override
     public void sendAddress(AddressData addressData) {
-        byte[] message = serializer.serializeAddress(addressData);
+        byte[] message = serializer.serialize(addressData);
         synchronized (zeroMQContext) {
             try {
                 sender.sendMore(AddressData.class.getName());
@@ -53,7 +53,7 @@ public class ZeroMQSender implements ISender {
 
     @Override
     public void sendTransaction(TransactionData transactionData) {
-        byte[] message = serializer.serializeTransaction(transactionData);
+        byte[] message = serializer.serialize(transactionData);
         synchronized (zeroMQContext) {
             try {
                 sender.sendMore(TransactionData.class.getName());

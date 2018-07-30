@@ -21,7 +21,7 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
     private ZMQ.Socket propagator;
 
     @Autowired
-    private ISerializer transactionSerializer;
+    private ISerializer serializer;
 
     @PostConstruct
     private void init() {
@@ -33,7 +33,7 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
     @Override
     public void propagateTransaction(TransactionData transactionData, String channel) {
         log.info("Propagating transaction {} to {}", transactionData.getHash().toHexString(), channel);
-        byte[] message = transactionSerializer.serializeTransaction(transactionData);
+        byte[] message = serializer.serialize(transactionData);
         propagator.sendMore(channel.getBytes());
         propagator.send(message);
     }
@@ -41,7 +41,7 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
     @Override
     public void propagateAddress(AddressData addressData, String channel) {
         log.info("Propagating address {} to {}", addressData.getHash().toHexString(), channel);
-        byte[] message = transactionSerializer.serializeAddress(addressData);
+        byte[] message = serializer.serialize(addressData);
         propagator.sendMore(channel.getBytes());
         propagator.send(message);
     }

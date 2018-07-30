@@ -1,7 +1,7 @@
 package io.coti.common.services;
 
-import io.coti.common.communication.interfaces.ISerializer;
 import io.coti.common.communication.interfaces.IReceiver;
+import io.coti.common.communication.interfaces.ISerializer;
 import io.coti.common.data.AddressData;
 import io.coti.common.data.TransactionData;
 import lombok.extern.slf4j.Slf4j;
@@ -47,15 +47,23 @@ public class ZeroMQReceiver implements IReceiver {
                     classNameToHandlerMapping.containsKey(classType)) {
                 log.info("Received a new Transaction...");
                 byte[] message = receiver.recv();
-                TransactionData transactionData = serializer.deserializeTransaction(message);
-                String answer = classNameToHandlerMapping.get(classType).apply(transactionData);
+                try {
+                    TransactionData transactionData = serializer.deserialize(message);
+                    String answer = classNameToHandlerMapping.get(classType).apply(transactionData);
+                } catch (ClassCastException e) {
+                    log.error("Invalid request received: " + e.getMessage());
+                }
             }
             if (classType.equals(AddressData.class.getName()) &&
                     classNameToHandlerMapping.containsKey(classType)) {
                 log.info("Received a new Address...");
                 byte[] message = receiver.recv();
-                AddressData addressData = serializer.deserializeAddress(message);
-                String answer = classNameToHandlerMapping.get(classType).apply(addressData);
+                try {
+                    AddressData addressData = serializer.deserialize(message);
+                    String answer = classNameToHandlerMapping.get(classType).apply(addressData);
+                } catch (ClassCastException e) {
+                    log.error("Invalid request received: " + e.getMessage());
+                }
             }
         }
     }
