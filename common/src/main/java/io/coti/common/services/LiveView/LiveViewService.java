@@ -3,12 +3,13 @@ package io.coti.common.services.LiveView;
 import io.coti.common.data.GraphData;
 import io.coti.common.data.NodeData;
 import io.coti.common.data.TransactionData;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.LinkedList;
-
+@Slf4j
 @Service
 public class LiveViewService {
 
@@ -48,6 +49,7 @@ public class LiveViewService {
         graphData.nodes.add(nodeData);
         // AttachmentTime less then 15 minutes
       //  if(((new Date().getTime()  - transactionData.getAttachmentTime().getTime())/ (60 * 1000)) < 15) {
+
             webSocketSender.sendNode(nodeData);
 
        // }
@@ -63,7 +65,8 @@ public class LiveViewService {
         newNode.setStatus(newStatus);
         setNodeDataDatesFromTransactionData(transactionData, newNode);
        // if(((new Date().getTime()  - transactionData.getAttachmentTime().getTime())/ (60 * 1000)) < 15) {
-            webSocketSender.sendNode(newNode);
+
+        webSocketSender.sendNode(newNode);
        // }
     }
 

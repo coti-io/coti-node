@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="60 seconds">
+
+    <property name="LOGS_PATH" value="./logs" />
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>
+                %d{dd/MM/yyyy HH:mm:ss.SSS} [%thread][%-5level][%logger{0}] %msg%n
+            </Pattern>
+        </layout>
+    </appender>
+
+
+
+    <appender name="ERROR_LOG_FILE"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <file>${LOGS_PATH}/common_cotiNode_error.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <charset>UTF-8</charset>
+            <Pattern>
+                %d{dd/MM/yyyy HH:mm:ss.SSS} [%thread][%-5level][%logger{0}] %msg%n
+            </Pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOGS_PATH}/archived/common_cotiNode_error.%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="DEBUG_LOG_FILE"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOGS_PATH}/common_cotiNode_debug.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <charset>UTF-8</charset>
+            <Pattern>
+                %d{dd/MM/yyyy HH:mm:ss.SSS} [%thread][%-5level][%logger{0}] %msg%n
+            </Pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOGS_PATH}/archived/common_cotiNode_debug.%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="INFO_LOG_FILE"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>DEBUG</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+        <file>${LOGS_PATH}/common_cotiNode.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <charset>UTF-8</charset>
+            <Pattern>
+                %d{dd/MM/yyyy HH:mm:ss.SSS} [%thread][%-5level][%logger{0}] %msg%n
+            </Pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOGS_PATH}/archived/common_cotiNode.%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="DUMP_LOG_FILE"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOGS_PATH}/common_cotiNode_dump.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <charset>UTF-8</charset>
+            <Pattern>
+                %d{dd/MM/yyyy HH:mm:ss.SSS} [%thread][%-5level][%logger{0}] %msg%n
+            </Pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOGS_PATH}/archived/common_cotiNode_dump.%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>10</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <!-- Loggers -->
+    <logger name="io.coti" additivity="true">
+        <level value="DEBUG" />
+        <appender-ref ref="DEBUG_LOG_FILE" />
+        <appender-ref ref="ERROR_LOG_FILE" />
+        <appender-ref ref="STDOUT" />
+    </logger>
+
+
+    <!-- Root Logger -->
+    <root level="DEBUG" >
+        <appender-ref ref="DUMP_LOG_FILE" />
+        <appender-ref ref="ERROR_LOG_FILE" />
+    </root>
+
+    <root level="INFO" >
+        <appender-ref ref="INFO_LOG_FILE" />
+    </root>
+
+
+
+
+</configuration>
