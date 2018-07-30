@@ -16,22 +16,19 @@ import java.security.spec.InvalidKeySpecException;
 public class NodeCryptoHelper {
 
     private static String nodePublicKey;
-    private static String _nodePrivateKey;
-
+    private static String nodePrivateKey;
 
     @Value("#{'${global.private.key}'}")
-    public void setNodePublicKey(String privateKeyHex)
+    public void setNodePublicKey(String nodePrivateKey)
     {
-        NodeCryptoHelper._nodePrivateKey = privateKeyHex;
-        nodePublicKey = CryptoHelper.GetPublicKeyFromPrivateKey(_nodePrivateKey);
+        this.nodePrivateKey = nodePrivateKey;
+        nodePublicKey = CryptoHelper.GetPublicKeyFromPrivateKey(nodePrivateKey);
     }
-
-
 
     public void setNodeHashAndSignature(TransactionData transactionData)
     {
         transactionData.setNodeHash(new Hash(nodePublicKey));
-        SignatureData signatureData = CryptoHelper.SignBytes(transactionData.getHash().getBytes(),_nodePrivateKey);
+        SignatureData signatureData = CryptoHelper.SignBytes(transactionData.getHash().getBytes(), nodePrivateKey);
         transactionData.setNodeSignature(signatureData);
     }
 

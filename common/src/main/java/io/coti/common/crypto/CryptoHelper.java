@@ -4,20 +4,16 @@ import io.coti.common.data.Hash;
 import io.coti.common.data.SignatureData;
 import org.bouncycastle.asn1.sec.SECNamedCurves;
 import org.bouncycastle.asn1.x9.X9ECParameters;
-
 import org.bouncycastle.crypto.params.ECDomainParameters;
-
 import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
 import org.bouncycastle.crypto.signers.ECDSASigner;
-
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.jce.spec.ECPublicKeySpec;
 import org.bouncycastle.math.ec.ECPoint;
-
 
 import javax.xml.bind.DatatypeConverter;
 import java.math.BigInteger;
@@ -38,7 +34,7 @@ public class CryptoHelper {
     private static final ECParameterSpec spec = new ECParameterSpec(curve.getCurve(), curve.getG(), curve.getN(), curve.getH());
 
 
-    public static PublicKey getPublicKeyFromPrivateKey(String pubKeyHex) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    public static PublicKey getPublicKeyFromHexString(String pubKeyHex) throws NoSuchAlgorithmException, InvalidKeySpecException {
         String pointX = pubKeyHex.substring(0, (pubKeyHex.length()/2));
         String pointY = pubKeyHex.substring(pubKeyHex.length()/2);
 
@@ -64,7 +60,7 @@ public class CryptoHelper {
         return result;
     }
     public static boolean VerifyByPublicKey(byte[] originalMessageToVerify, String rHex, String sHex, String publicKey) throws InvalidKeySpecException, NoSuchAlgorithmException {
-        return VerifyByPublicKey(originalMessageToVerify,rHex,sHex, getPublicKeyFromPrivateKey(publicKey));
+        return VerifyByPublicKey(originalMessageToVerify,rHex,sHex, getPublicKeyFromHexString(publicKey));
     }
 
 

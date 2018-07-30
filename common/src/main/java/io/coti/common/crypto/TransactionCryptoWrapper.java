@@ -25,12 +25,6 @@ public class TransactionCryptoWrapper {
         }
     }
 
-    public TransactionCryptoWrapper(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, double senderTransactionScore, Date createTime)
-    {
-        this(new TransactionData(baseTransactions,transactionHash,transactionDescription,senderTransactionScore,createTime));
-
-    }
-
 
 
     private byte[] getBaseTransactionsHashesBytes()

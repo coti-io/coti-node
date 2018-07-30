@@ -24,7 +24,7 @@ public class ValidationServiceTests {
         String seed1 = "1010";
         String message = "This is my message";
         BigInteger seed1PrivateKey1 = CryptoUtils.generatePrivateKey(seed1, 1);
-        BigInteger seed1Address1 = CryptoUtils.getPublicKeyFromPrivateKey(seed1PrivateKey1);
+        BigInteger seed1Address1 = CryptoUtils.getPublicKeyFromHexString(seed1PrivateKey1);
         ECKeyPair pair = ECKeyPair.create(seed1PrivateKey1);
 
         Assert.assertTrue(
