@@ -1,5 +1,6 @@
 package io.coti.common.services;
 
+import io.coti.common.communication.DspVote;
 import io.coti.common.communication.interfaces.IReceiver;
 import io.coti.common.communication.interfaces.ISerializer;
 import io.coti.common.data.AddressData;
@@ -61,6 +62,17 @@ public class ZeroMQReceiver implements IReceiver {
                 try {
                     AddressData addressData = serializer.deserialize(message);
                     String answer = classNameToHandlerMapping.get(classType).apply(addressData);
+                } catch (ClassCastException e) {
+                    log.error("Invalid request received: " + e.getMessage());
+                }
+            }
+            if (classType.equals(DspVote.class.getName()) &&
+                    classNameToHandlerMapping.containsKey(classType)) {
+                log.info("Received a new Address...");
+                byte[] message = receiver.recv();
+                try {
+                    DspVote dspVote = serializer.deserialize(message);
+                    String answer = classNameToHandlerMapping.get(classType).apply(dspVote);
                 } catch (ClassCastException e) {
                     log.error("Invalid request received: " + e.getMessage());
                 }

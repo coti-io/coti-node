@@ -13,6 +13,7 @@ import io.coti.common.model.DbItem;
 import io.coti.common.model.Transactions;
 import io.coti.common.services.LiveView.WebSocketSender;
 import io.coti.common.services.TransactionHelper;
+import io.coti.common.services.ValidationService;
 import io.coti.common.services.interfaces.IClusterService;
 import io.coti.common.services.interfaces.IValidationService;
 import io.coti.common.services.interfaces.IZeroSpendService;
@@ -53,7 +54,15 @@ public class TransactionService {
             throws TransactionException {
         log.info("New transaction request is being processed. [Transaction Hash={}, Trust score={}", request.hash, request.senderTrustScore);
 
-        if (transactionHelper.isTransactionExists(request.hash)) {
+        TransactionData transactionData =
+                new TransactionData(
+                        request.baseTransactions,
+                        request.hash,
+                        request.transactionDescription,
+                        request.senderTrustScore,
+                        request.createTime);
+
+        if (!transactionHelper.startHandleTransaction(transactionData)) {
             log.info("Received existing transaction!");
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
@@ -62,13 +71,6 @@ public class TransactionService {
                             TRANSACTION_ALREADY_EXIST_MESSAGE));
         }
 
-        TransactionData transactionData =
-                new TransactionData(
-                        request.baseTransactions,
-                        request.hash,
-                        request.transactionDescription,
-                        request.senderTrustScore,
-                        request.createTime);
 
         if (!transactionHelper.validateTransaction(transactionData)) {
             log.info("Failed to validate transaction!");
@@ -120,6 +122,7 @@ public class TransactionService {
             webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
             // TODO: Send to DSP Node
             transactionSender.sendTransaction(transactionData);
+            transactionHelper.endHandleTransaction(transactionData);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
                     .body(new AddTransactionResponse(
@@ -128,6 +131,7 @@ public class TransactionService {
 
 
         } catch (Exception ex) {
+            transactionHelper.endHandleTransaction(transactionData);
             log.error("Exception while adding a transaction", ex);
             throw new TransactionException(ex, request.baseTransactions);
         }
@@ -194,17 +198,19 @@ public class TransactionService {
 
     public void handlePropagatedTransaction(TransactionData transactionData) {
         log.info("Propagated Transaction received: {}", transactionData.getHash().toHexString());
-        if (transactionHelper.isTransactionExists(transactionData.getHash())) {
+        if (!transactionHelper.startHandleTransaction(transactionData)) {
             log.info("Transaction already exists");
             return;
         }
         if (!transactionHelper.validateDataIntegrity(transactionData) ||
-                !NodeCryptoHelper.verifyTransactionSignature(transactionData)) {
+                !NodeCryptoHelper.verifyTransactionSignature(transactionData) ||
+        !validationService.validatePow(transactionData)) {
             log.info("Data Integrity validation failed");
             return;
         }
 
         transactionHelper.attachTransactionToCluster(transactionData);
         webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
+        transactionHelper.endHandleTransaction(transactionData);
     }
 }

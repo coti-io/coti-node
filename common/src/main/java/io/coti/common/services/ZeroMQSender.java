@@ -1,5 +1,6 @@
 package io.coti.common.services;
 
+import io.coti.common.communication.DspVote;
 import io.coti.common.communication.ZeroMQUtils;
 import io.coti.common.communication.interfaces.ISender;
 import io.coti.common.communication.interfaces.ISerializer;
@@ -57,6 +58,19 @@ public class ZeroMQSender implements ISender {
         synchronized (zeroMQContext) {
             try {
                 sender.sendMore(TransactionData.class.getName());
+                sender.send(message);
+            } catch (ZMQException exception) {
+                return;
+            }
+        }
+    }
+
+    public void sendDspVote(DspVote dspVote){
+        log.info("Sending DSP Vote: {}={}", dspVote.transactionHash, dspVote.isValidTransaction);
+        byte[] message = serializer.serialize(dspVote);
+        synchronized (zeroMQContext) {
+            try {
+                sender.sendMore(DspVote.class.getName());
                 sender.send(message);
             } catch (ZMQException exception) {
                 return;

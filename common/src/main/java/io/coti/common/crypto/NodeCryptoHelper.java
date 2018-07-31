@@ -1,5 +1,6 @@
 package io.coti.common.crypto;
 
+import io.coti.common.communication.DspVote;
 import io.coti.common.data.Hash;
 import io.coti.common.data.SignatureData;
 import io.coti.common.data.TransactionData;
@@ -17,6 +18,12 @@ public class NodeCryptoHelper {
     private static String nodePublicKey;
     private static String nodePrivateKey;
 
+    @Value("#{'${global.private.key}'}")
+    public void setNodePublicKey(String nodePrivateKey) {
+        this.nodePrivateKey = nodePrivateKey;
+        nodePublicKey = CryptoHelper.GetPublicKeyFromPrivateKey(nodePrivateKey);
+    }
+
     public static boolean verifyTransactionSignature(TransactionData transactionData) {
         try {
             String publicKey = transactionData.getNodeHash().toHexString();
@@ -27,10 +34,10 @@ public class NodeCryptoHelper {
         }
     }
 
-    @Value("#{'${global.private.key}'}")
-    public void setNodePublicKey(String nodePrivateKey) {
-        this.nodePrivateKey = nodePrivateKey;
-        nodePublicKey = CryptoHelper.GetPublicKeyFromPrivateKey(nodePrivateKey);
+    public static void setNodeHashAndSignature(DspVote dspVote) {
+        dspVote.setVoterDspHash(new Hash(nodePublicKey));
+        SignatureData signatureData = CryptoHelper.SignBytes(dspVote.getHash().getBytes(), nodePrivateKey);
+        dspVote.setSignature(signatureData);
     }
 
     public void setNodeHashAndSignature(TransactionData transactionData) {

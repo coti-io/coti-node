@@ -2,8 +2,9 @@ package io.coti.common.services;
 
 import io.coti.common.crypto.TransactionCryptoWrapper;
 import io.coti.common.data.*;
-import io.coti.common.exceptions.TransactionException;
-import io.coti.common.http.*;
+import io.coti.common.http.AddTransactionResponse;
+import io.coti.common.http.BaseResponse;
+import io.coti.common.http.GetTransactionResponse;
 import io.coti.common.http.data.TransactionResponseData;
 import io.coti.common.model.AddressesTransactionsHistory;
 import io.coti.common.model.Transactions;
@@ -17,14 +18,12 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
+import java.util.Set;
 
-import static io.coti.common.http.HttpStringConstants.*;
+import static io.coti.common.http.HttpStringConstants.STATUS_ERROR;
+import static io.coti.common.http.HttpStringConstants.TRANSACTION_DOESNT_EXIST_MESSAGE;
 
 @Slf4j
 @Service
@@ -32,9 +31,7 @@ public class TransactionHelper {
 
     @Autowired
     private AddressesTransactionsHistory addressesTransactionsHistory;
-
-    private HashMap<Hash, TransactionData> hashToWaitingChildrenTransactionsMapping;
-
+    private Set<TransactionData> currentlyHandledTransactions = new HashSet<>();
     @Autowired
     private IBalanceService balanceService;
     @Autowired
@@ -45,63 +42,6 @@ public class TransactionHelper {
     @PostConstruct
     private void init() {
         log.info("Transaction Helper Started");
-        hashToWaitingChildrenTransactionsMapping = new HashMap();
-    }
-
-    public void attachWaitingChildren(TransactionData parentTransactionData) throws TransactionException {
-
-        // Loop on every child of the transaction
-        for (Hash childHash : parentTransactionData.getChildrenTransactions()) {
-            TransactionData childTransactionData = hashToWaitingChildrenTransactionsMapping.get(childHash);
-            if (childTransactionData != null) {
-                Hash leftParentHash = childTransactionData.getLeftParentHash();
-                Hash rightParentHash = childTransactionData.getRightParentHash();
-
-                // If all the child parents are in the local node, add the waiting child to the cluster.
-                if ((leftParentHash == null || getTransactionData(leftParentHash) != null)
-                        && (rightParentHash == null || getTransactionData(rightParentHash) != null)) {
-                    addFromPropagationAfterValidation(childTransactionData.getBaseTransactions(), childTransactionData);
-                    hashToWaitingChildrenTransactionsMapping.remove(childHash);
-                }
-            }
-        }
-    }
-
-    private ResponseEntity<Response> addFromPropagationAfterValidation(List<BaseTransactionData> baseTransactions,
-                                                                       TransactionData transactionData) {
-        if (!isLegalBalance(baseTransactions)) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(new AddTransactionResponse(
-                            STATUS_ERROR,
-                            ILLEGAL_TRANSACTION_MESSAGE));
-        }
-
-        if (!balanceService.checkBalancesAndAddToPreBalance(baseTransactions)) {
-            log.info("Pre balance check failed!");
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(new AddTransactionResponse(
-                            STATUS_ERROR,
-                            INSUFFICIENT_FUNDS_MESSAGE));
-        }
-
-        // TODO: Validate POW:
-        try {
-            TimeUnit.SECONDS.sleep(5);
-            transactionData.setAttachmentTime(new Date());
-            attachTransactionToCluster(transactionData);
-            attachWaitingChildren(transactionData);
-        } catch (Exception ex) {
-            log.error("Error while addFromPropagationAfterValidation", ex);
-            throw new TransactionException(ex, baseTransactions);
-        }
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(new AddTransactionResponse(
-                        STATUS_SUCCESS,
-                        TRANSACTION_CREATED_MESSAGE));
     }
 
     public boolean isLegalBalance(List<BaseTransactionData> baseTransactions) {
@@ -130,18 +70,36 @@ public class TransactionHelper {
         return verifyTransaction.isTransactionValid();
     }
 
-    public boolean isTransactionExists(Hash transactionHash) {
-        TransactionData transaction = getTransactionData(transactionHash);
-        return transaction != null;
+    private boolean isTransactionExists(TransactionData transactionData) {
+        if (currentlyHandledTransactions.contains(transactionData)) {
+            return true;
+        }
+        if (transactions.getByHash(transactionData.getHash()) != null) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean startHandleTransaction(TransactionData transactionData) {
+        synchronized (transactionData) {
+            if(isTransactionExists(transactionData)){
+                return false;
+            }
+            currentlyHandledTransactions.add(transactionData);
+            return true;
+        }
+    }
+
+    public boolean endHandleTransaction(TransactionData transactionData) {
+        synchronized (transactionData) {
+            currentlyHandledTransactions.remove(transactionData);
+            return true;
+        }
     }
 
     public boolean validateDataIntegrity(TransactionData transactionData) {
 //        return validateAddresses(transactionData.getBaseTransactions(), transactionData.getHash(), transactionData.getTransactionDescription(), transactionData.getSenderTrustScore(), transactionData.getCreateTime());
         return true;
-    }
-
-    public TransactionData getTransactionData(Hash transactionHash) {
-        return transactions.getByHash(transactionHash);
     }
 
     public ResponseEntity<BaseResponse> getTransactionDetails(Hash transactionHash) {
