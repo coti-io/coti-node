@@ -4,15 +4,13 @@ import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.Hash;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jcajce.provider.digest.Keccak;
+import org.bouncycastle.util.encoders.Hex;
 
-import javax.xml.bind.DatatypeConverter;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.*;
-
-import org.bouncycastle.util.encoders.Hex;
+import java.util.Date;
 
 @Slf4j
 public class BaseTransactionCryptoWrapper {

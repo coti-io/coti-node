@@ -34,7 +34,7 @@ public class Hash implements Serializable {
     }
 
     public String toHexString() {
-        return DatatypeConverter.printHexBinary(bytes);
+        return DatatypeConverter.printHexBinary(bytes).toLowerCase();
     }
 
     public boolean isNull() {
