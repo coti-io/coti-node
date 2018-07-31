@@ -20,9 +20,12 @@ import java.util.List;
 @Service
 public class ZeroMQSender implements ISender {
     @Value("#{'${receiving.server.addresses}'.split(',')}")
-    private List<String> receivingServerAddresses;
+    private List<String> receivingDspServerAddresses;
+    @Value("${receiving.zero.spend.address}")
+    private String receivingZeroSpendAddress;
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket sender;
+    private ZMQ.Socket zeroSpendSender;
 
     @Autowired
     private ISerializer serializer;
@@ -33,16 +36,19 @@ public class ZeroMQSender implements ISender {
         sender = zeroMQContext.socket(ZMQ.DEALER);
         ZeroMQUtils.bindToRandomPort(sender);
         for (String receivingServerAddress :
-                receivingServerAddresses
+                receivingDspServerAddresses
                 ) {
             sender.connect(receivingServerAddress);
         }
+        zeroSpendSender = zeroMQContext.socket(ZMQ.DEALER);
+        ZeroMQUtils.bindToRandomPort(zeroSpendSender);
+        zeroSpendSender.connect(receivingZeroSpendAddress);
     }
 
     @Override
     public void sendAddress(AddressData addressData) {
         byte[] message = serializer.serialize(addressData);
-        synchronized (zeroMQContext) {
+        synchronized (sender) {
             try {
                 sender.sendMore(AddressData.class.getName());
                 sender.send(message);
@@ -53,9 +59,9 @@ public class ZeroMQSender implements ISender {
     }
 
     @Override
-    public void sendTransaction(TransactionData transactionData) {
+    public void sendTransactionToDsps(TransactionData transactionData) {
         byte[] message = serializer.serialize(transactionData);
-        synchronized (zeroMQContext) {
+        synchronized (sender) {
             try {
                 sender.sendMore(TransactionData.class.getName());
                 sender.send(message);
@@ -65,10 +71,23 @@ public class ZeroMQSender implements ISender {
         }
     }
 
+    @Override
+    public void sendTransactionToZeroSpend(TransactionData transactionData) {
+        byte[] message = serializer.serialize(transactionData);
+        synchronized (zeroSpendSender) {
+            try {
+                zeroSpendSender.sendMore(TransactionData.class.getName());
+                zeroSpendSender.send(message);
+            } catch (ZMQException exception) {
+                return;
+            }
+        }
+    }
+
     public void sendDspVote(DspVote dspVote){
         log.info("Sending DSP Vote: {}={}", dspVote.transactionHash, dspVote.isValidTransaction);
         byte[] message = serializer.serialize(dspVote);
-        synchronized (zeroMQContext) {
+        synchronized (sender) {
             try {
                 sender.sendMore(DspVote.class.getName());
                 sender.send(message);

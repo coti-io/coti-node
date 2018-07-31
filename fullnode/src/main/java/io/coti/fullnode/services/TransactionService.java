@@ -13,7 +13,6 @@ import io.coti.common.model.DbItem;
 import io.coti.common.model.Transactions;
 import io.coti.common.services.LiveView.WebSocketSender;
 import io.coti.common.services.TransactionHelper;
-import io.coti.common.services.ValidationService;
 import io.coti.common.services.interfaces.IClusterService;
 import io.coti.common.services.interfaces.IValidationService;
 import io.coti.common.services.interfaces.IZeroSpendService;
@@ -62,6 +61,7 @@ public class TransactionService {
                         request.senderTrustScore,
                         request.createTime);
 
+        NodeCryptoHelper.setNodeHashAndSignature(transactionData);
         if (!transactionHelper.startHandleTransaction(transactionData)) {
             log.info("Received existing transaction!");
             return ResponseEntity
@@ -101,6 +101,12 @@ public class TransactionService {
 
         try {
             transactionData = selectSources(transactionData);
+            while(transactionData.getLeftParentHash() == null && transactionData.getRightParentHash() == null){
+                log.info("Could not find sources for transaction: {}. Sending to Zero Spend and retrying in 5 seconds.");
+                transactionSender.sendTransactionToZeroSpend(transactionData);
+                TimeUnit.SECONDS.sleep(5);
+                transactionData = selectSources(transactionData);
+            }
 
             if (!validationService.validateSource(transactionData.getLeftParentHash()) ||
                     !validationService.validateSource(transactionData.getRightParentHash())) {
@@ -115,13 +121,12 @@ public class TransactionService {
             transactionData.setPowEndTime(new Date());
 
             transactionData.setAttachmentTime(new Date());
-            setNodeHashAndSignature(transactionData);
 
 
             transactionHelper.attachTransactionToCluster(transactionData);
             webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
             // TODO: Send to DSP Node
-            transactionSender.sendTransaction(transactionData);
+            transactionSender.sendTransactionToDsps(transactionData);
             transactionHelper.endHandleTransaction(transactionData);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
@@ -135,11 +140,6 @@ public class TransactionService {
             log.error("Exception while adding a transaction", ex);
             throw new TransactionException(ex, request.baseTransactions);
         }
-    }
-
-    private void setNodeHashAndSignature(TransactionData transactionData) {
-        NodeCryptoHelper wrapper = new NodeCryptoHelper();
-        wrapper.setNodeHashAndSignature(transactionData);
     }
 
     public TransactionData selectSources(TransactionData transactionData) {

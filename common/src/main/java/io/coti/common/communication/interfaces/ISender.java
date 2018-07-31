@@ -6,9 +6,11 @@ import io.coti.common.data.TransactionData;
 
 public interface ISender {
 
-    void sendTransaction(TransactionData transactionData);
+    void sendTransactionToDsps(TransactionData transactionData);
 
     void sendAddress(AddressData addressData);
+
+    void sendTransactionToZeroSpend(TransactionData transactionData);
 
     void sendDspVote(DspVote dspVote);
 }

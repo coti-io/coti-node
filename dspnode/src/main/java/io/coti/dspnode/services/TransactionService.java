@@ -3,7 +3,6 @@ package io.coti.dspnode.services;
 import io.coti.common.communication.DspVote;
 import io.coti.common.communication.interfaces.IPropagationPublisher;
 import io.coti.common.communication.interfaces.ISender;
-import io.coti.common.crypto.CryptoHelper;
 import io.coti.common.crypto.NodeCryptoHelper;
 import io.coti.common.data.TransactionData;
 import io.coti.common.model.Transactions;
@@ -12,13 +11,10 @@ import io.coti.common.services.interfaces.IBalanceService;
 import io.coti.common.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -102,7 +98,7 @@ public class TransactionService {
         propagationPublisher.propagateTransaction(transactionData, TransactionData.class.getName() + "Full Nodes");
         if (!transactionHelper.checkBalancesAndAddToPreBalance(transactionData.getBaseTransactions())) {
             transactionData.addSignature("Node ID", false); // TODO: replace with a sign mechanism
-            sender.sendTransaction(transactionData);
+            sender.sendTransactionToDsps(transactionData);
         }
         transactionsToValidate.add(transactionData);
         transactionHelper.endHandleTransaction(transactionData);
