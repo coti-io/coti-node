@@ -4,6 +4,7 @@ import io.coti.common.communication.interfaces.ISender;
 import io.coti.common.data.AddressData;
 import io.coti.common.data.Hash;
 import io.coti.common.model.Addresses;
+import io.coti.common.services.LiveView.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,8 @@ public class AddressService {
     private ISender sender;
     @Autowired
     private Addresses addresses;
+    @Autowired
+    private WebSocketSender webSocketSender;
 
     public boolean addNewAddress(Hash addressHash) {
         if (!addressExists(addressHash)) {
@@ -23,6 +26,7 @@ public class AddressService {
             addresses.put(addressData);
             log.info("Address {} was successfully inserted", addressHash);
             sender.sendAddress(addressData);
+            webSocketSender.notifyGeneratedAddress(addressHash);
             return true;
         }
         log.info("Address {} already exists", addressHash);

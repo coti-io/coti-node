@@ -5,6 +5,7 @@ import io.coti.common.data.Hash;
 import io.coti.common.data.NodeData;
 import io.coti.common.data.TransactionData;
 import io.coti.common.http.data.TransactionStatus;
+import io.coti.common.http.websocket.GeneratedAddressMessage;
 import io.coti.common.http.websocket.NotifyTransactionChange;
 import io.coti.common.http.websocket.UpdatedBalanceMessage;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,7 @@ public class WebSocketSender {
     }
 
     public void notifyBalanceChange(Hash addressHash, BigDecimal amount) {
-        log.trace("Address {} with amount {} is about to be sent to the subscribed user", addressHash, amount);
+        log.trace("Address {} with balance {} is about to be sent to the subscribed user", addressHash.toHexString(), amount);
         messagingSender.convertAndSend("/topic/" + addressHash.toHexString(),
                 new UpdatedBalanceMessage(addressHash, amount));
     }
@@ -39,6 +40,12 @@ public class WebSocketSender {
                     new NotifyTransactionChange(transactionData,transactionStatus));
         }
 
+    }
+
+    public void notifyGeneratedAddress(Hash addressHash) {
+        log.info("Address {} is about to be sent to the subscribed user", addressHash.toHexString());
+        messagingSender.convertAndSend("/topic/address/" + addressHash.toHexString(),
+                new GeneratedAddressMessage(addressHash));
     }
 
 
