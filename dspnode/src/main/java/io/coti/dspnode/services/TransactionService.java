@@ -5,6 +5,7 @@ import io.coti.common.communication.interfaces.IPropagationPublisher;
 import io.coti.common.communication.interfaces.ISender;
 import io.coti.common.crypto.CryptoHelper;
 import io.coti.common.crypto.NodeCryptoHelper;
+import io.coti.common.data.SignatureData;
 import io.coti.common.data.TransactionData;
 import io.coti.common.model.Transactions;
 import io.coti.common.services.TransactionHelper;
@@ -71,9 +72,8 @@ public class TransactionService {
         while (!transactionsToValidate.isEmpty()) {
             TransactionData transactionData = transactionsToValidate.remove();
             log.info("DSP Fully Checking transaction: {}", transactionData.getHash());
-            DspVote dspVote = new DspVote();
-            dspVote.transactionHash = transactionData.getHash();
-            dspVote.isValidTransaction = validationService.fullValidation(transactionData);
+            DspVote dspVote = new DspVote(transactionData.getHash(), transactionData.getNodeHash(),
+                    validationService.fullValidation(transactionData), new SignatureData("",""));
             NodeCryptoHelper.setNodeHashAndSignature(dspVote); // TODO: Should sign the decision also
             sender.sendDspVote(dspVote);
         }

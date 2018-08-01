@@ -13,6 +13,7 @@ import org.zeromq.ZMQ;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -20,7 +21,6 @@ import java.util.function.Consumer;
 public class ZeroMQSubscriber implements IPropagationSubscriber {
     @Value("#{'${propagation.server.addresses}'.split(',')}")
     private List<String> propagationServerAddresses;
-    private HashMap<String, Consumer<Object>> messagesHandler;
 
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket propagationReceiver;
@@ -42,7 +42,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     }
 
     @Override
-    public void init(HashMap<String, Consumer<Object>> messagesHandler) {
+    public void init(Map<String, Consumer<Object>> messagesHandler) {
         zeroMQContext = ZMQ.context(1);
         List<String> channelsToSubscribe = new ArrayList<>(messagesHandler.keySet());
         initSockets(channelsToSubscribe);

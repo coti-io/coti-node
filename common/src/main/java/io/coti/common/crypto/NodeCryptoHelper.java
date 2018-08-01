@@ -18,16 +18,20 @@ public class NodeCryptoHelper {
     private static String nodePublicKey;
     private static String nodePrivateKey;
 
-    @Value("#{'${global.private.key}'}")
-    public void setNodePublicKey(String nodePrivateKey) {
-        this.nodePrivateKey = nodePrivateKey;
-        nodePublicKey = CryptoHelper.GetPublicKeyFromPrivateKey(nodePrivateKey);
-    }
-
     public static boolean verifyTransactionSignature(TransactionData transactionData) {
         try {
             String publicKey = transactionData.getNodeHash().toHexString();
             return CryptoHelper.VerifyByPublicKey(transactionData.getHash().getBytes(), transactionData.getNodeSignature().getR(), transactionData.getNodeSignature().getS(), publicKey);
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean verifyVoteSignature(DspVote dspVote) {
+        try {
+            String publicKey = dspVote.getVoterDspHash().toHexString();
+            return CryptoHelper.VerifyByPublicKey(dspVote.getHash().getBytes(), dspVote.getSignature().getR(), dspVote.getSignature().getS(), publicKey);
         } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
             e.printStackTrace();
             return false;
@@ -40,9 +44,19 @@ public class NodeCryptoHelper {
         dspVote.setSignature(signatureData);
     }
 
+    @Value("#{'${global.private.key}'}")
+    public void setNodePublicKey(String nodePrivateKey) {
+        this.nodePrivateKey = nodePrivateKey;
+        nodePublicKey = CryptoHelper.GetPublicKeyFromPrivateKey(nodePrivateKey);
+    }
+
     public void setNodeHashAndSignature(TransactionData transactionData) {
         transactionData.setNodeHash(new Hash(nodePublicKey));
         SignatureData signatureData = CryptoHelper.SignBytes(transactionData.getHash().getBytes(), nodePrivateKey);
         transactionData.setNodeSignature(signatureData);
+    }
+
+    public String getNodePublicKey(){
+        return nodePublicKey;
     }
 }

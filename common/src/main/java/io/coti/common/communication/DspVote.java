@@ -5,15 +5,29 @@ import io.coti.common.data.SignatureData;
 import io.coti.common.data.interfaces.IEntity;
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Data
 public class DspVote implements IEntity {
-    public Hash voterDspHash;
+    private Hash voterDspHash;
 
-    public Hash transactionHash;
+    private Hash transactionHash;
 
-    public boolean isValidTransaction;
+    private Boolean isValidTransaction;
 
-    public SignatureData signature;
+    private SignatureData signature;
+
+    public DspVote(Hash transactionHash, Hash voterDspId, Boolean isValidTransaction, SignatureData signature) {
+        this.transactionHash = transactionHash;
+        this.voterDspHash = voterDspId;
+        this.isValidTransaction = isValidTransaction;
+        this.signature = signature;
+    }
+
+    private DspVote(){}
+
+
+
 
     @Override
     public Hash getHash() {
