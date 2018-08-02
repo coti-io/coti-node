@@ -1,7 +1,7 @@
 package io.coti.fullnode;
 
-import io.coti.common.communication.ZeroMQPropagationPublisher;
-import io.coti.common.communication.ZeroMQReceiver;
+import io.coti.common.services.ZeroMQPropagationPublisher;
+import io.coti.common.services.ZeroMQReceiver;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;

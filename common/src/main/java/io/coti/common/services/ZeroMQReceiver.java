@@ -1,4 +1,4 @@
-package io.coti.common.communication;
+package io.coti.common.services;
 
 import io.coti.common.communication.DspVote;
 import io.coti.common.communication.interfaces.IReceiver;
@@ -18,7 +18,7 @@ import java.util.function.Function;
 @Slf4j
 @Service
 public class ZeroMQReceiver implements IReceiver {
-    private Map<String, Function<Object, String>> classNameToHandlerMapping;
+    private HashMap<String, Function<Object, String>> classNameToHandlerMapping;
 
     @Value("${transaction.receiving.port}")
     private String transactionReceivingPort;
@@ -30,7 +30,7 @@ public class ZeroMQReceiver implements IReceiver {
     private ISerializer serializer;
 
     @Override
-    public void init(Map<String, Function<Object, String>> classNameToHandlerMapping) {
+    public void init(HashMap<String, Function<Object, String>> classNameToHandlerMapping) {
         this.classNameToHandlerMapping = classNameToHandlerMapping;
         zeroMQContext = ZMQ.context(1);
         receiver = zeroMQContext.socket(ZMQ.ROUTER);

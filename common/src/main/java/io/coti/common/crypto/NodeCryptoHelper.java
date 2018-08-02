@@ -18,6 +18,12 @@ public class NodeCryptoHelper {
     private static String nodePublicKey;
     private static String nodePrivateKey;
 
+    @Value("#{'${global.private.key}'}")
+    public void setNodePublicKey(String nodePrivateKey) {
+        this.nodePrivateKey = nodePrivateKey;
+        nodePublicKey = CryptoHelper.GetPublicKeyFromPrivateKey(nodePrivateKey);
+    }
+
     public static boolean verifyTransactionSignature(TransactionData transactionData) {
         try {
             String publicKey = transactionData.getNodeHash().toHexString();
@@ -44,11 +50,6 @@ public class NodeCryptoHelper {
         dspVote.setSignature(signatureData);
     }
 
-    @Value("#{'${global.private.key}'}")
-    public void setNodePublicKey(String nodePrivateKey) {
-        this.nodePrivateKey = nodePrivateKey;
-        nodePublicKey = CryptoHelper.GetPublicKeyFromPrivateKey(nodePrivateKey);
-    }
 
     public void setNodeHashAndSignature(TransactionData transactionData) {
         transactionData.setNodeHash(new Hash(nodePublicKey));

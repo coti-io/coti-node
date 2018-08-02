@@ -1,4 +1,4 @@
-package io.coti.common.config;
+package io.coti.fullnode.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;

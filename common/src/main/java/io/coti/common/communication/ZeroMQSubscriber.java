@@ -4,6 +4,7 @@ import io.coti.common.communication.interfaces.IPropagationSubscriber;
 import io.coti.common.communication.interfaces.ISerializer;
 import io.coti.common.data.AddressData;
 import io.coti.common.data.TransactionData;
+import io.coti.common.data.ZMQChannel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,7 +14,6 @@ import org.zeromq.ZMQ;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -21,6 +21,7 @@ import java.util.function.Consumer;
 public class ZeroMQSubscriber implements IPropagationSubscriber {
     @Value("#{'${propagation.server.addresses}'.split(',')}")
     private List<String> propagationServerAddresses;
+    private HashMap<String, Consumer<Object>> messagesHandler;
 
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket propagationReceiver;
@@ -42,7 +43,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     }
 
     @Override
-    public void init(Map<String, Consumer<Object>> messagesHandler) {
+    public void init(HashMap<String, Consumer<Object>> messagesHandler) {
         zeroMQContext = ZMQ.context(1);
         List<String> channelsToSubscribe = new ArrayList<>(messagesHandler.keySet());
         initSockets(channelsToSubscribe);
@@ -67,6 +68,17 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                     try {
                         AddressData addressData = serializer.deserialize(message);
                         messagesHandler.get(channel).accept(addressData);
+                    } catch (ClassCastException e) {
+                        log.error("Invalid request received: " + e.getMessage());
+                    }
+                }
+                if(channel.contains(ZMQChannel.ZERO_SPEND_VOTING_ANSWER.channelName )&&
+                        messagesHandler.containsKey(channel)) {
+                    log.info("Received a new message on channel: {}", channel);
+                    byte[] message = propagationReceiver.recv();
+                    try {
+                        TransactionData transactionData = serializer.deserialize(message);
+                        messagesHandler.get(channel).accept(transactionData);
                     } catch (ClassCastException e) {
                         log.error("Invalid request received: " + e.getMessage());
                     }

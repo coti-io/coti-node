@@ -1,4 +1,4 @@
-package io.coti.common.communication;
+package io.coti.common.services;
 
 import io.coti.common.communication.interfaces.IPropagationPublisher;
 import io.coti.common.communication.interfaces.ISerializer;

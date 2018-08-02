@@ -6,13 +6,13 @@ import io.coti.common.communication.interfaces.IReceiver;
 import io.coti.common.crypto.NodeCryptoHelper;
 import io.coti.common.data.Hash;
 import io.coti.common.data.NonIndexedTransactionsData;
-import io.coti.common.data.SignatureData;
 import io.coti.common.data.TransactionData;
+import io.coti.common.data.ZMQChannel;
 import io.coti.common.model.NonIndexedTransactions;
 import io.coti.common.model.Transactions;
 import io.coti.zerospend.DspCsvImporter;
 import io.coti.zerospend.services.helper.TransactionHashWrapper;
-import io.coti.zerospend.services.interfaces.IDspVoteDecisionPublisher;
+import io.coti.zerospend.services.interfaces.ITransactionPublisher;
 import io.coti.zerospend.services.interfaces.ITransactionIndexerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +35,7 @@ public class DspVoteReceiver {
     private IReceiver zeroMQTransactionReceiver;
 
     @Autowired
-    private IDspVoteDecisionPublisher dspVoteDecisionPublisher;
+    private ITransactionPublisher dspVoteDecisionPublisher;
 
     @Autowired
     private NonIndexedTransactions nonIndexedTransactions;
@@ -57,7 +57,7 @@ public class DspVoteReceiver {
 
     private Map<String, Hash> hostNameToDspHash;
 
-    private final String dspGetNodeHashAction = "/getNodeHash"; // aka ping
+    private static final String dspGetNodeHashAction = "/getNodeHash"; // aka ping
 
     private Map<Hash, TransactionHashWrapper> transactionHashWrapperMap;
 
@@ -89,12 +89,12 @@ public class DspVoteReceiver {
 
     @PostConstruct
     private void init() {
-        Map<String, Consumer<Object>> messageHandler = new HashMap<>();
+        HashMap<String, Consumer<Object>> messageHandler = new HashMap<>();
         messageHandler.put(TransactionData.class.getName() + "DSP Nodes", newTransactionFromDsp);
         propagationSubscriber.init(messageHandler);
         hostNameToDspHash = dspCsvImporter.getHost2NodeHashMap();
 
-        Map<String, Function<Object, String>> voteMapping = new HashMap<>();
+        HashMap<String, Function<Object, String>> voteMapping = new HashMap<>();
         voteMapping.put(DspVote.class.getName(), newDspVoteFromDsp);
         zeroMQTransactionReceiver.init(voteMapping);
         transactionHashWrapperMap = new ConcurrentHashMap<>();
@@ -273,7 +273,7 @@ public class DspVoteReceiver {
         transactionHashWrapperMap.remove(transactionData.getHash());
         // TODO : nonIndexedTransactions.delete(transactionData.getHash()); ???
         transactionIndexerService.generateAndSetTransactionIndex(transactionData);
-        dspVoteDecisionPublisher.publish(transactionData);
+        dspVoteDecisionPublisher.publish(transactionData, ZMQChannel.ZERO_SPEND_VOTING_ANSWER.channelName);
     }
 
 
