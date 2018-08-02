@@ -13,7 +13,6 @@ import io.coti.common.model.DbItem;
 import io.coti.common.model.Transactions;
 import io.coti.common.services.LiveView.WebSocketSender;
 import io.coti.common.services.TransactionHelper;
-import io.coti.common.services.ValidationService;
 import io.coti.common.services.interfaces.IClusterService;
 import io.coti.common.services.interfaces.IValidationService;
 import io.coti.common.services.interfaces.IZeroSpendService;
@@ -50,57 +49,59 @@ public class TransactionService {
     @Autowired
     private WebSocketSender webSocketSender;
 
-    public ResponseEntity<Response> addNewTransaction(AddTransactionRequest request)
-            throws TransactionException {
-        log.info("New transaction request is being processed. [Transaction Hash={}, Trust score={}", request.hash, request.senderTrustScore);
-
-        TransactionData transactionData =
-                new TransactionData(
-                        request.baseTransactions,
-                        request.hash,
-                        request.transactionDescription,
-                        request.senderTrustScore,
-                        request.createTime);
-
-        if (!transactionHelper.startHandleTransaction(transactionData)) {
-            log.info("Received existing transaction!");
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(new AddTransactionResponse(
-                            STATUS_ERROR,
-                            TRANSACTION_ALREADY_EXIST_MESSAGE));
-        }
-
-
-        if (!transactionHelper.validateTransaction(transactionData)) {
-            log.info("Failed to validate transaction!");
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(new AddTransactionResponse(
-                            STATUS_ERROR,
-                            AUTHENTICATION_FAILED_MESSAGE));
-        }
-
-        if (!transactionHelper.isLegalBalance(transactionData.getBaseTransactions())) {
-            log.info("Illegal transaction balance!");
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(new AddTransactionResponse(
-                            STATUS_ERROR,
-                            ILLEGAL_TRANSACTION_MESSAGE));
-        }
-
-        if (!transactionHelper.checkBalancesAndAddToPreBalance(transactionData.getBaseTransactions())) {
-            log.info("Pre balance check failed!");
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(new AddTransactionResponse(
-                            STATUS_ERROR,
-                            INSUFFICIENT_FUNDS_MESSAGE));
-        }
-
+    public ResponseEntity<Response> addNewTransaction(AddTransactionRequest request) {
         try {
+            TransactionData transactionData =
+                    new TransactionData(
+                            request.baseTransactions,
+                            request.hash,
+                            request.transactionDescription,
+                            request.senderTrustScore,
+                            request.createTime);
+
+            log.info("New transaction request is being processed. [Transaction Hash={}, Trust score={}", request.hash, request.senderTrustScore);
+            NodeCryptoHelper.setNodeHashAndSignature(transactionData);
+            if (!transactionHelper.startHandleTransaction(transactionData)) {
+                log.info("Received existing transaction!");
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body(new AddTransactionResponse(
+                                STATUS_ERROR,
+                                TRANSACTION_ALREADY_EXIST_MESSAGE));
+            }
+
+            if (!transactionHelper.validateTransaction(transactionData)) {
+                log.info("Failed to validate transaction!");
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body(new AddTransactionResponse(
+                                STATUS_ERROR,
+                                AUTHENTICATION_FAILED_MESSAGE));
+            }
+
+            if (!transactionHelper.isLegalBalance(transactionData.getBaseTransactions())) {
+                log.info("Illegal transaction balance!");
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body(new AddTransactionResponse(
+                                STATUS_ERROR,
+                                ILLEGAL_TRANSACTION_MESSAGE));
+            }
+
+            if (!transactionHelper.checkBalancesAndAddToPreBalance(transactionData)) {
+                log.info("Pre balance check failed!");
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body(new AddTransactionResponse(
+                                STATUS_ERROR,
+                                INSUFFICIENT_FUNDS_MESSAGE));
+            }
             transactionData = selectSources(transactionData);
+            while (transactionData.getLeftParentHash() == null && transactionData.getRightParentHash() == null) {
+                log.info("Could not find sources for transaction: {}. Sending to Zero Spend and retrying in 5 seconds.");
+                TimeUnit.SECONDS.sleep(5);
+                transactionData = selectSources(transactionData);
+            }
 
             if (!validationService.validateSource(transactionData.getLeftParentHash()) ||
                     !validationService.validateSource(transactionData.getRightParentHash())) {
@@ -115,31 +116,26 @@ public class TransactionService {
             transactionData.setPowEndTime(new Date());
 
             transactionData.setAttachmentTime(new Date());
-            setNodeHashAndSignature(transactionData);
-
 
             transactionHelper.attachTransactionToCluster(transactionData);
+            transactionHelper.setTransactionStateToSaved(transactionData);
             webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
             // TODO: Send to DSP Node
             transactionSender.sendTransaction(transactionData);
-            transactionHelper.endHandleTransaction(transactionData);
+            transactionHelper.setTransactionStateToFinished(transactionData);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
                     .body(new AddTransactionResponse(
                             STATUS_SUCCESS,
                             TRANSACTION_CREATED_MESSAGE));
 
-
         } catch (Exception ex) {
-            transactionHelper.endHandleTransaction(transactionData);
             log.error("Exception while adding a transaction", ex);
-            throw new TransactionException(ex, request.baseTransactions);
+            throw new TransactionException(ex);
         }
-    }
-
-    private void setNodeHashAndSignature(TransactionData transactionData) {
-        NodeCryptoHelper wrapper = new NodeCryptoHelper();
-        wrapper.setNodeHashAndSignature(transactionData);
+        finally {
+            transactionHelper.endHandleTransaction(request.transactionData);
+        }
     }
 
     public TransactionData selectSources(TransactionData transactionData) {
@@ -202,15 +198,20 @@ public class TransactionService {
             log.info("Transaction already exists");
             return;
         }
-        if (!transactionHelper.validateDataIntegrity(transactionData) ||
+        if (!transactionHelper.validateTransaction(transactionData) ||
                 !NodeCryptoHelper.verifyTransactionSignature(transactionData) ||
-        !validationService.validatePow(transactionData)) {
+                !validationService.validatePow(transactionData)) {
             log.info("Data Integrity validation failed");
             return;
         }
-
+        if(!transactionHelper.checkBalancesAndAddToPreBalance(transactionData)){
+            log.info("Balance check failed!");
+            return;
+        }
         transactionHelper.attachTransactionToCluster(transactionData);
+        transactionHelper.setTransactionStateToSaved(transactionData);
         webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
+        transactionHelper.setTransactionStateToFinished(transactionData);
         transactionHelper.endHandleTransaction(transactionData);
     }
 }

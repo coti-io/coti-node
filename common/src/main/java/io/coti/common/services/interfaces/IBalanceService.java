@@ -3,6 +3,7 @@ package io.coti.common.services.interfaces;
 import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.ConfirmationData;
 import io.coti.common.data.Hash;
+import io.coti.common.data.TransactionData;
 import io.coti.common.http.GetBalancesRequest;
 import io.coti.common.http.GetBalancesResponse;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,6 @@ public interface IBalanceService {
 
     Map<Hash, BigDecimal> getPreBalanceMap();
 
-    void rollbackBaseTransactions(List<BaseTransactionData> baseTransactions);
+    void rollbackBaseTransaction(TransactionData transactionData);
 }
 

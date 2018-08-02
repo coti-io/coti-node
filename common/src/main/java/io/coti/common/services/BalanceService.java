@@ -25,7 +25,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -215,37 +218,32 @@ public class BalanceService implements IBalanceService {
 
     @Override
     public synchronized boolean checkBalancesAndAddToPreBalance(List<BaseTransactionData> baseTransactionDatas) {
-        try {
-            for (BaseTransactionData baseTransactionData : baseTransactionDatas) {
-                //checkBalance
-                BigDecimal amount = baseTransactionData.getAmount();
-                Hash addressHash = baseTransactionData.getAddressHash();
-                if ((balanceMap.containsKey(addressHash) && amount.add(balanceMap.get(addressHash)).signum() < 0)
-                        || (!balanceMap.containsKey(addressHash) && amount.signum() < 0)) {
-                    log.error("Error in Balance check. Address {}  amount {} current Balance {} ", addressHash,
+        for (BaseTransactionData baseTransactionData : baseTransactionDatas) {
+            //checkBalance
+            BigDecimal amount = baseTransactionData.getAmount();
+            Hash addressHash = baseTransactionData.getAddressHash();
+            if ((balanceMap.containsKey(addressHash) && amount.add(balanceMap.get(addressHash)).signum() < 0)
+                    || (!balanceMap.containsKey(addressHash) && amount.signum() < 0)) {
+                log.error("Error in Balance check. Address {}  amount {} current Balance {} ", addressHash,
+                        amount, preBalanceMap.get(addressHash));
+                return false;
+            }
+            if (preBalanceMap.containsKey(addressHash)) {
+                if (amount.add(preBalanceMap.get(addressHash)).signum() < 0) {
+                    log.error("Error in preBalance check. Address {}  amount {} current preBalance {} ", addressHash,
+                            amount, preBalanceMap.get(addressHash));
+                    return false;
+                } else {
+                    preBalanceMap.put(addressHash, amount.add(preBalanceMap.get(addressHash)));
+                }
+            } else {
+                if (amount.signum() < 0) {
+                    log.error("Error in preBalance check. Address {}  amount {} current preBalance {} ", addressHash,
                             amount, preBalanceMap.get(addressHash));
                     return false;
                 }
-                if (preBalanceMap.containsKey(addressHash)) {
-                    if (amount.add(preBalanceMap.get(addressHash)).signum() < 0) {
-                        log.error("Error in preBalance check. Address {}  amount {} current preBalance {} ", addressHash,
-                                amount, preBalanceMap.get(addressHash));
-                        return false;
-                    } else {
-                        preBalanceMap.put(addressHash, amount.add(preBalanceMap.get(addressHash)));
-                    }
-                } else {
-                    if (amount.signum() < 0) {
-                        log.error("Error in preBalance check. Address {}  amount {} current preBalance {} ", addressHash,
-                                amount, preBalanceMap.get(addressHash));
-                        return false;
-                    }
-                    preBalanceMap.put(addressHash, amount);
-                }
-
+                preBalanceMap.put(addressHash, amount);
             }
-        } catch (Exception ex) {
-            log.error("Exception on checking balances and adding to preBalance {}", ex);
         }
         return true;
     }
@@ -260,7 +258,7 @@ public class BalanceService implements IBalanceService {
         GetBalancesResponse getBalancesResponse = new GetBalancesResponse();
         for (Hash hash : getBalancesRequest.getAddresses()) {
             if (balanceMap.containsKey(hash)) {
-                getBalancesResponse.addAddressBalanceToResponse(hash,balanceMap.get(hash));
+                getBalancesResponse.addAddressBalanceToResponse(hash, balanceMap.get(hash));
             } else {
                 getBalancesResponse.addAddressBalanceToResponse(hash, new BigDecimal(0));
             }
@@ -277,19 +275,10 @@ public class BalanceService implements IBalanceService {
     }
 
     @Override
-    public void rollbackBaseTransactions(List<BaseTransactionData> baseTransactions) {
-        for (BaseTransactionData baseTransactionData : baseTransactions) {
-            if (preBalanceMap.containsKey(baseTransactionData.getAddressHash())) {
-                baseTransactionData.setAmount(baseTransactionData.getAmount().negate());
-            } else {
-                // TODO : if not contains - can it happen ?
-                log.error("Error while rolling back. preBalance map doesn't contain the address {}",
-                        baseTransactionData.getAddressHash());
-            }
-        }
-        if (!checkBalancesAndAddToPreBalance(baseTransactions)) {
-            log.error("Error while rolling back. checkBalancesAndAddToPreBalance returned false");
+    public void rollbackBaseTransaction(TransactionData transactionData) {
+        for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
+            baseTransactionData.setAmount(baseTransactionData.getAmount().negate());
+            preBalanceMap.replace(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
         }
     }
-
 }
