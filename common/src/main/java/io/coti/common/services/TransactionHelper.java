@@ -112,7 +112,7 @@ public class TransactionHelper {
         }
         if (hashToTransactionStateMapping.get(transactionData.getHash()) == PRE_BALANCE_CHANGED) {
             log.error("Reverting pre balance...");
-            balanceService.rollbackBaseTransaction(transactionData);
+            balanceService.rollbackBaseTransactions(transactionData);
             hashToTransactionStateMapping.replace(transactionData.getHash(), RECEIVED);
         }
         if (hashToTransactionStateMapping.get(transactionData.getHash()) == RECEIVED) {

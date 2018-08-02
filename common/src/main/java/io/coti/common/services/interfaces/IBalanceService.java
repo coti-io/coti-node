@@ -24,6 +24,6 @@ public interface IBalanceService {
 
     Map<Hash, BigDecimal> getPreBalanceMap();
 
-    void rollbackBaseTransaction(TransactionData transactionData);
+    void rollbackBaseTransactions(TransactionData transactionData);
 }
 

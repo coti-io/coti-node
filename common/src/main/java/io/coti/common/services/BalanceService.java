@@ -275,7 +275,7 @@ public class BalanceService implements IBalanceService {
     }
 
     @Override
-    public void rollbackBaseTransaction(TransactionData transactionData) {
+    public void rollbackBaseTransactions(TransactionData transactionData) {
         for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
             baseTransactionData.setAmount(baseTransactionData.getAmount().negate());
             preBalanceMap.replace(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());

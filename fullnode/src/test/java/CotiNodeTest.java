@@ -201,7 +201,7 @@ public class CotiNodeTest {
         updateBalancesWithAddressAndAmount(address1, new BigDecimal(5.5));
         updateBalancesWithAddressAndAmount(address2, new BigDecimal(6.57));
 
-//        balanceService.rollbackBaseTransaction(baseTransactionDataList);
+//        balanceService.rollbackBaseTransactions(baseTransactionDataList);
 
         Assert.assertTrue(preBalanceMap.get(address1).compareTo(BigDecimal.ZERO) == 0);
 
