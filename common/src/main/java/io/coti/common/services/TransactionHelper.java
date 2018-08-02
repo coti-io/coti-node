@@ -73,7 +73,7 @@ public class TransactionHelper {
         return verifyTransaction.isTransactionValid();
     }
 
-    private boolean isTransactionExists(TransactionData transactionData) {
+    public boolean isTransactionExists(TransactionData transactionData) {
         if (hashToTransactionStateMapping.containsKey(transactionData.getHash())) {
             return true;
         }
