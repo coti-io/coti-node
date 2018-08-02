@@ -45,4 +45,8 @@ public class NodeCryptoHelper {
         SignatureData signatureData = CryptoHelper.SignBytes(transactionData.getHash().getBytes(), nodePrivateKey);
         transactionData.setNodeSignature(signatureData);
     }
+
+    public static String getNodePublicKey() {
+        return nodePublicKey;
+    }
 }

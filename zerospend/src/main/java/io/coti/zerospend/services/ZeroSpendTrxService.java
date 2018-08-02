@@ -57,6 +57,10 @@ public class ZeroSpendTrxService {
 
     @Autowired
     private IValidationService validationService;
+
+    @Autowired
+    private NodeCryptoHelper nodeCryptoHelper;
+
     private Function<Object, String> newZsTransactionRequest = transactionData -> {
         if (transactionData != null) {
             if (transactionData instanceof TransactionData) {
@@ -94,7 +98,7 @@ public class ZeroSpendTrxService {
             return;
         }
 
-        if (!transactionHelper.validateDataIntegrity(transactionData) ||
+        if (//!transactionHelper.validateDataIntegrity(transactionData) ||
                 !NodeCryptoHelper.verifyTransactionSignature(transactionData) ||
                 !validationService.validatePow(transactionData) ||
                 !balanceService.checkBalancesAndAddToPreBalance(transactionData.getBaseTransactions()) ||
@@ -127,6 +131,7 @@ public class ZeroSpendTrxService {
         TransactionData zsTransactionData = new TransactionData(baseTransactionDataList, ZERO_SPEND_TRANSACTION_HASH,
                 zeroSpendDescription, transactionData.getSenderTrustScore(), new Date());
         addSignature(zsTransactionData);// TODO: YOHAI SIGNING FEATURE
+        zsTransactionData.setNodeHash(new Hash(NodeCryptoHelper.getNodePublicKey()));
         transactionIndexerService.generateAndSetTransactionIndex(transactionData);
         return zsTransactionData;
     }
