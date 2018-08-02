@@ -142,4 +142,22 @@ public class CryptoHelper {
         return Arrays.equals(checksumValue, addressCheckSum);
 
     }
+
+    private static byte[] getCrc32OfByteArray(byte[] array) {
+        Checksum checksum = new CRC32();
+
+        byte[] addressWithoutPadding = CryptoHelper.RemoveLeadingZerosFromAddress(array);
+        checksum.update(addressWithoutPadding, 0, addressWithoutPadding.length);
+        byte[] checksumValue = ByteBuffer.allocate(4).putInt((int) checksum.getValue()).array();
+        return checksumValue;
+    }
+
+
+    public static Hash getAddressFromPrivateKey(String privateKey) {
+
+        String publicKey = CryptoHelper.GetPublicKeyFromPrivateKey(privateKey);
+        byte[] crc32ToAdd = CryptoHelper.getCrc32OfByteArray(DatatypeConverter.parseHexBinary(publicKey));
+
+        return new Hash(publicKey + DatatypeConverter.printHexBinary(crc32ToAdd));
+    }
 }

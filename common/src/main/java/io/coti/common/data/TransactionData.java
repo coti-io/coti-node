@@ -1,20 +1,19 @@
 package io.coti.common.data;
 
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.coti.common.data.interfaces.IEntity;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
 
 
 @Slf4j
 @Data
+@JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, defaultImpl = TransactionData.class)
 public class TransactionData implements IEntity, Comparable<TransactionData> {
     private List<BaseTransactionData> baseTransactions;
     private transient Hash hash;
@@ -49,7 +48,11 @@ public class TransactionData implements IEntity, Comparable<TransactionData> {
     }
 
     public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription,double senderTrustScore, Date createTime) {
+        this(baseTransactions,transactionDescription,senderTrustScore,createTime);
         this.hash = transactionHash;
+    }
+
+    public TransactionData(List<BaseTransactionData> baseTransactions, String transactionDescription,double senderTrustScore, Date createTime) {
         this.transactionDescription = transactionDescription;
         this.baseTransactions = baseTransactions;
         this.createTime = createTime;
@@ -61,6 +64,7 @@ public class TransactionData implements IEntity, Comparable<TransactionData> {
         this.amount = amount;
         this.initTransactionData();
     }
+
 
     private void  initTransactionData()
     {

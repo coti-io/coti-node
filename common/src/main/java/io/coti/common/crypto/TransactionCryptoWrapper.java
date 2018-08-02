@@ -1,12 +1,14 @@
 package io.coti.common.crypto;
 
 import io.coti.common.data.BaseTransactionData;
+import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
 import org.bouncycastle.jcajce.provider.digest.Keccak;
 import org.bouncycastle.util.encoders.Hex;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Vector;
 
 public class TransactionCryptoWrapper {
     final static int baseTransactionHashSize = 32;
@@ -18,6 +20,13 @@ public class TransactionCryptoWrapper {
         for (BaseTransactionData bxData : txData.getBaseTransactions()) {
             baseTransactions.add(new BaseTransactionCryptoWrapper(bxData));
         }
+    }
+
+
+    public TransactionCryptoWrapper(TransactionData txData, Vector<BaseTransactionCryptoWrapper> baseTransactionsWrapper) {
+        this.txData = txData;
+        this.baseTransactions = new ArrayList<>(baseTransactionsWrapper);
+
     }
 
 
@@ -39,6 +48,20 @@ public class TransactionCryptoWrapper {
         return hash;
     }
 
+
+    public void setTransactionHash() {
+
+
+        for (BaseTransactionCryptoWrapper bxDataCrypto : this.baseTransactions) {
+            if (bxDataCrypto.getBaseTransactionHash() == null)
+                bxDataCrypto.setBaseTransactionHash();
+
+        }
+        String transactionHash = getHashFromBaseTransactionHashesData();
+        txData.setHash(new Hash(transactionHash));
+
+
+    }
 
     private boolean IsTransactionHashCorrect() {
 

@@ -11,7 +11,6 @@ public class BaseTransactionData implements Serializable {
     private Hash hash;
     private Hash addressHash;
     private BigDecimal amount;
-    private int indexInTransactionsChain;
     private Date createTime;
     private SignatureData signatureData;
     private BaseTransactionData(){}
@@ -27,7 +26,11 @@ public class BaseTransactionData implements Serializable {
     }
 
 
-
+    public BaseTransactionData(Hash addressHash, BigDecimal amount , Date createTime ){
+        this.addressHash = addressHash;
+        this.amount = amount;
+        this.createTime = createTime;
+    }
 
 
     public boolean isSignatureExists(){

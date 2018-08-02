@@ -2,6 +2,8 @@ package io.coti.common.crypto;
 
 import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.Hash;
+import io.coti.common.data.SignatureData;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jcajce.provider.digest.Keccak;
 import org.bouncycastle.util.encoders.Hex;
@@ -13,9 +15,10 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Date;
 
 @Slf4j
+@Data
 public class BaseTransactionCryptoWrapper {
 
-    BaseTransactionData baseTxData;
+    private BaseTransactionData baseTxData;
     private static CryptoHelper cryptoHelper = new CryptoHelper();
 
     public BaseTransactionCryptoWrapper(BaseTransactionData baseTxData)
@@ -23,15 +26,12 @@ public class BaseTransactionCryptoWrapper {
         this.baseTxData = baseTxData;
     }
 
+
     public byte[] getMessageInBytes()
     {
         byte[] addressBytes = baseTxData.getAddressHash().getBytes();
         String decimalStringRepresentation = baseTxData.getAmount().toString();
         byte[] bytesOfAmount = decimalStringRepresentation.getBytes(StandardCharsets.UTF_8);
-
-        ByteBuffer bufferIndex = ByteBuffer.allocate(4);
-        bufferIndex.putInt(baseTxData.getIndexInTransactionsChain());
-        byte[] IndexByteArray = bufferIndex.array();
 
         Date baseTransactionDate = baseTxData.getCreateTime();
         int timestamp = (int)(baseTransactionDate.getTime());
@@ -39,8 +39,8 @@ public class BaseTransactionCryptoWrapper {
         ByteBuffer dateBuffer = ByteBuffer.allocate(4);
         dateBuffer.putInt(timestamp);
 
-        ByteBuffer baseTransactionArray = ByteBuffer.allocate(addressBytes.length + bytesOfAmount.length + IndexByteArray.length + dateBuffer.array().length).
-                put(addressBytes).put(IndexByteArray).put(bytesOfAmount).put(dateBuffer.array());
+        ByteBuffer baseTransactionArray = ByteBuffer.allocate(addressBytes.length + bytesOfAmount.length + dateBuffer.array().length).
+                put(addressBytes).put(bytesOfAmount).put(dateBuffer.array());
 
         byte[] arrToReturn = baseTransactionArray.array();
         return  arrToReturn;
@@ -54,10 +54,17 @@ public class BaseTransactionCryptoWrapper {
         return hash;
     }
 
+
+    public void setBaseTransactionHash(){
+        baseTxData.setHash(createBaseTransactionHashFromData());
+    }
+
     public Hash getBaseTransactionHash()
     {
         return baseTxData.getHash();
     }
+
+
 
     public boolean IsBaseTransactionValid(Hash transactionHash) {
         try {
