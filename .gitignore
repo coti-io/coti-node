@@ -37,6 +37,7 @@ fullnode/rocksDB/*
 DSPNoderocksDB*/
 FullNoderocksDB*/
 initialDatabase/
+ZEROSPENDNODErocksDBdsp*
 
 *.jar
 *.class

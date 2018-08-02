@@ -72,7 +72,7 @@ public class ZeroSpendTrxService {
 
     @PostConstruct
     private void init() {
-        Map<String, Function<Object, String>> voteMapping = new HashMap<>();
+        HashMap<String, Function<Object, String>> voteMapping = new HashMap<>();
         voteMapping.put(TransactionData.class.getName() + "ZeroSpendNotEnoughSources", newZsTransactionRequest);
         zeroMQTransactionReceiver.init(voteMapping);
     }
