@@ -18,7 +18,6 @@ public class AddTransactionRequest extends Request {
 
     public Date createTime;
     public double senderTrustScore;
-    public TransactionData transactionData;
 }
 
 

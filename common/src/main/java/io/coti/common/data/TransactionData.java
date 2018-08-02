@@ -1,19 +1,19 @@
 package io.coti.common.data;
 
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.coti.common.data.interfaces.IEntity;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
 
 
 @Slf4j
 @Data
-@JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, defaultImpl = TransactionData.class)
 public class TransactionData implements IEntity, Comparable<TransactionData> {
     private List<BaseTransactionData> baseTransactions;
     private transient Hash hash;

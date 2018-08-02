@@ -201,7 +201,7 @@ public class CryptoHelperTests {
                 "\t'senderTrustScore': 60.99031461090401\n" +
                 "}";
 
-
+        jsonOfTransaction = "{}";
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
         TransactionData txData = mapper.readValue(jsonOfTransaction, TransactionData.class);

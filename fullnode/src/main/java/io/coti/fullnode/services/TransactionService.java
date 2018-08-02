@@ -50,14 +50,15 @@ public class TransactionService {
     private WebSocketSender webSocketSender;
 
     public ResponseEntity<Response> addNewTransaction(AddTransactionRequest request) {
+        TransactionData transactionData =
+                new TransactionData(
+                        request.baseTransactions,
+                        request.hash,
+                        request.transactionDescription,
+                        request.senderTrustScore,
+                        request.createTime);
         try {
-            TransactionData transactionData =
-                    new TransactionData(
-                            request.baseTransactions,
-                            request.hash,
-                            request.transactionDescription,
-                            request.senderTrustScore,
-                            request.createTime);
+
 
             log.info("New transaction request is being processed. [Transaction Hash={}, Trust score={}", request.hash, request.senderTrustScore);
             NodeCryptoHelper.setNodeHashAndSignature(transactionData);
@@ -134,7 +135,7 @@ public class TransactionService {
             throw new TransactionException(ex);
         }
         finally {
-            transactionHelper.endHandleTransaction(request.transactionData);
+            transactionHelper.endHandleTransaction(transactionData);
         }
     }
 

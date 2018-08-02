@@ -22,14 +22,6 @@ public class TransactionCryptoWrapper {
         }
     }
 
-
-    public TransactionCryptoWrapper(TransactionData txData, Vector<BaseTransactionCryptoWrapper> baseTransactionsWrapper) {
-        this.txData = txData;
-        this.baseTransactions = new ArrayList<>(baseTransactionsWrapper);
-
-    }
-
-
     private byte[] getBaseTransactionsHashesBytes() {
         ByteBuffer baseTransactionHashBuffer = ByteBuffer.allocate(baseTransactions.size() * baseTransactionHashSize);
         for (BaseTransactionCryptoWrapper bxCrypto : this.baseTransactions) {
