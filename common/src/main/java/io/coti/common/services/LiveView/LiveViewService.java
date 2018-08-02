@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.Vector;
+
 @Slf4j
 @Service
 public class LiveViewService {
@@ -20,7 +22,7 @@ public class LiveViewService {
 
     public LiveViewService() {
         this.graphData = new GraphData();
-        this.graphData.nodes = new LinkedList<>();
+        this.graphData.nodes = new Vector<>();
     }
 
     public GraphData getFullGraph() {
