@@ -258,9 +258,9 @@ public class BalanceService implements IBalanceService {
         GetBalancesResponse getBalancesResponse = new GetBalancesResponse();
         for (Hash hash : getBalancesRequest.getAddresses()) {
             if (balanceMap.containsKey(hash)) {
-                getBalancesResponse.addAddressBalanceToResponse(hash, balanceMap.get(hash));
+                getBalancesResponse.addAddressBalanceToResponse(hash, balanceMap.get(hash), preBalanceMap.get(hash));
             } else {
-                getBalancesResponse.addAddressBalanceToResponse(hash, new BigDecimal(0));
+                getBalancesResponse.addAddressBalanceToResponse(hash, new BigDecimal(0),new BigDecimal(0));
             }
         }
         return ResponseEntity.status(HttpStatus.OK).body(getBalancesResponse);
