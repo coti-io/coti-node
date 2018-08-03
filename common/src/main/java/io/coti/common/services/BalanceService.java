@@ -212,8 +212,12 @@ public class BalanceService implements IBalanceService {
 
     private void publishBalanceChangeToWebSocket(Set<Hash> addresses) {
         for (Hash address : addresses) {
-            webSocketSender.notifyBalanceChange(address, balanceMap.get(address),preBalanceMap.get(address) );
+            publishBalanceChangeToWebSocket(address);
         }
+    }
+
+    private void publishBalanceChangeToWebSocket(Hash address) {
+            webSocketSender.notifyBalanceChange(address, balanceMap.get(address),preBalanceMap.get(address) );
     }
 
     @Override
@@ -235,6 +239,7 @@ public class BalanceService implements IBalanceService {
                     return false;
                 } else {
                     preBalanceMap.put(addressHash, amount.add(preBalanceMap.get(addressHash)));
+                    publishBalanceChangeToWebSocket(addressHash);
                 }
             } else {
                 if (amount.signum() < 0) {
@@ -243,6 +248,7 @@ public class BalanceService implements IBalanceService {
                     return false;
                 }
                 preBalanceMap.put(addressHash, amount);
+                publishBalanceChangeToWebSocket(addressHash);
             }
         }
         return true;

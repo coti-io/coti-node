@@ -1,14 +1,13 @@
 package io.coti.common.http;
 
-
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 
 public class AddressesExistsResponse extends BaseResponse {
-    public HashMap<String,Boolean> addresses;
+    public LinkedHashMap<String,Boolean> addresses;
 
     public AddressesExistsResponse() {
-        addresses= new HashMap<>();
+        addresses= new LinkedHashMap<>();
     }
 
 
