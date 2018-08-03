@@ -1,17 +1,21 @@
 package io.coti.common.http;
 
 
-import io.coti.common.http.data.GetAddressData;
-
-import java.util.List;
+import java.util.HashMap;
 
 
 public class AddressesExistsResponse extends BaseResponse {
-    public List<GetAddressData> addresses;
+    public HashMap<String,Boolean> addresses;
 
-    public AddressesExistsResponse(List<GetAddressData> addressExists) {
-        this.addresses = addressExists;
+    public AddressesExistsResponse() {
+        addresses= new HashMap<>();
     }
+
+
+    public void addAddressToResult(String addressHash, Boolean isExists){
+        addresses.putIfAbsent(addressHash,isExists);
+    }
+
 }
 
 

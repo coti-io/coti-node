@@ -6,7 +6,6 @@ import io.coti.common.http.AddressBulkRequest;
 import io.coti.common.http.AddressRequest;
 import io.coti.common.http.AddressesExistsResponse;
 import io.coti.common.http.data.AddressStatus;
-import io.coti.common.http.data.GetAddressData;
 import io.coti.common.services.interfaces.IValidationService;
 import io.coti.fullnode.services.AddressService;
 import lombok.extern.slf4j.Slf4j;
@@ -59,14 +58,14 @@ public class AddressController {
     @RequestMapping(method = POST)
     public ResponseEntity<AddressesExistsResponse> addressExists(@Valid @RequestBody AddressBulkRequest addressRequest) {
         Hash[] addressesHash = addressRequest.getAddresses();
-        List<GetAddressData> addressesResults = new Vector<>();
+        AddressesExistsResponse addressResponse = new AddressesExistsResponse();
 
         for (Hash addressHash : addressesHash) {
             boolean result = addressService.addressExists(addressHash);
-
-            addressesResults.add(new GetAddressData(addressHash.toHexString(), result));
+            addressResponse.addAddressToResult(addressHash.toHexString(), result);
         }
-        return ResponseEntity.status(HttpStatus.OK).body(new AddressesExistsResponse(addressesResults));
+
+        return ResponseEntity.status(HttpStatus.OK).body(addressResponse);
     }
 
     private boolean addressLengthValidation(Hash address) {

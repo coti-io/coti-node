@@ -212,7 +212,7 @@ public class BalanceService implements IBalanceService {
 
     private void publishBalanceChangeToWebSocket(Set<Hash> addresses) {
         for (Hash address : addresses) {
-            webSocketSender.notifyBalanceChange(address, balanceMap.get(address));
+            webSocketSender.notifyBalanceChange(address, balanceMap.get(address),preBalanceMap.get(address) );
         }
     }
 

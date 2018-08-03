@@ -25,10 +25,10 @@ public class WebSocketSender {
         this.messagingSender = simpMessagingTemplate;
     }
 
-    public void notifyBalanceChange(Hash addressHash, BigDecimal amount) {
-        log.trace("Address {} with balance {} is about to be sent to the subscribed user", addressHash.toHexString(), amount);
+    public void notifyBalanceChange(Hash addressHash, BigDecimal balance, BigDecimal preBalance) {
+        log.trace("Address {} with balance {} and pre balance {} is about to be sent to the subscribed user", addressHash.toHexString(), balance, preBalance);
         messagingSender.convertAndSend("/topic/" + addressHash.toHexString(),
-                new UpdatedBalanceMessage(addressHash, amount));
+                new UpdatedBalanceMessage(addressHash, balance,preBalance));
     }
 
     public void notifyTransactionHistoryChange(TransactionData transactionData, TransactionStatus transactionStatus) {
