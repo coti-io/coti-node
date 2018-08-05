@@ -148,7 +148,6 @@ public class BalanceService implements IBalanceService {
                     .deserialize(confirmedDBiterator.value());
             confirmedTransactionData.setHash(new Hash(confirmedDBiterator.key()));
             updateBalanceMap(confirmedTransactionData.getAddressHashToValueTransferredMapping(), balanceMap);
-            publishBalanceChangeToWebSocket(confirmedTransactionData.getAddressHashToValueTransferredMapping().keySet());
             liveViewService.addNode(transactions.getByHash(confirmedTransactionData.getHash()));
             confirmedDBiterator.next();
         }
