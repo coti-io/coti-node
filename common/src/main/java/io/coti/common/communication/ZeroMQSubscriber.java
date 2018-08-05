@@ -4,6 +4,7 @@ import io.coti.common.communication.interfaces.IPropagationSubscriber;
 import io.coti.common.communication.interfaces.ISerializer;
 import io.coti.common.data.AddressData;
 import io.coti.common.data.TransactionData;
+import io.coti.common.data.ZMQChannel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -67,6 +68,17 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                     try {
                         AddressData addressData = serializer.deserialize(message);
                         messagesHandler.get(channel).accept(addressData);
+                    } catch (ClassCastException e) {
+                        log.error("Invalid request received: " + e.getMessage());
+                    }
+                }
+                if(channel.contains(ZMQChannel.ZERO_SPEND_VOTING_ANSWER.name() )&&
+                        messagesHandler.containsKey(channel)) {
+                    log.info("Received a new message on channel: {}", channel);
+                    byte[] message = propagationReceiver.recv();
+                    try {
+                        TransactionData transactionData = serializer.deserialize(message);
+                        messagesHandler.get(channel).accept(transactionData);
                     } catch (ClassCastException e) {
                         log.error("Invalid request received: " + e.getMessage());
                     }

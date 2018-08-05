@@ -34,6 +34,16 @@ public class NodeCryptoHelper {
         }
     }
 
+    public boolean verifyVoteSignature(DspVote dspVote) {
+        try {
+            String publicKey = dspVote.getVoterDspHash().toHexString();
+            return CryptoHelper.VerifyByPublicKey(dspVote.getHash().getBytes(), dspVote.getSignature().getR(), dspVote.getSignature().getS(), publicKey);
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public static void setNodeHashAndSignature(DspVote dspVote) {
         dspVote.setVoterDspHash(new Hash(nodePublicKey));
         SignatureData signatureData = CryptoHelper.SignBytes(dspVote.getHash().getBytes(), nodePrivateKey);
@@ -44,5 +54,9 @@ public class NodeCryptoHelper {
         transactionData.setNodeHash(new Hash(nodePublicKey));
         SignatureData signatureData = CryptoHelper.SignBytes(transactionData.getHash().getBytes(), nodePrivateKey);
         transactionData.setNodeSignature(signatureData);
+    }
+
+    public String getNodePublicKey(){
+        return nodePublicKey;
     }
 }

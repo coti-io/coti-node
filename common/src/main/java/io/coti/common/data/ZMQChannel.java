@@ -1,0 +1,7 @@
+package io.coti.common.data;
+
+public enum ZMQChannel {
+    ZERO_SPEND_VOTING_ANSWER,
+    ZERO_SPEND_TRANSACTION_NO_SOURCE,
+    ZERO_SPEND_TRANSACTION_STARVATION
+}

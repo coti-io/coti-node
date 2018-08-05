@@ -66,7 +66,7 @@ public class ZeroMQSender implements ISender {
     }
 
     public void sendDspVote(DspVote dspVote){
-        log.info("Sending DSP Vote: {}={}", dspVote.transactionHash, dspVote.isValidTransaction);
+        log.info("Sending DSP Vote: {}={}", dspVote.getTransactionHash(), dspVote.getIsValidTransaction());
         byte[] message = serializer.serialize(dspVote);
         synchronized (zeroMQContext) {
             try {

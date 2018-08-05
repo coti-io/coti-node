@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ public class TransactionData implements IEntity, Comparable<TransactionData> {
     private List<BaseTransactionData> baseTransactions;
     private transient Hash hash;
     private BigDecimal amount;
+    private BigInteger index;
     private Hash leftParentHash;
     private Hash rightParentHash;
     private List<Hash> trustChainTransactionHashes;
@@ -43,6 +45,9 @@ public class TransactionData implements IEntity, Comparable<TransactionData> {
     private transient boolean isVisit;
     private boolean isZeroSpend;
     private String transactionDescription;
+
+    private boolean isVotePositive;
+    private boolean isValidationApprovedByZeroSpend;
 
     private TransactionData() {
     }

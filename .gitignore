@@ -36,10 +36,13 @@ rocksDB/
 fullnode/rocksDB/*
 DSPNoderocksDB*/
 FullNoderocksDB*/
+ZeroSpendrocksDB*/
 initialDatabase/
+ZEROSPENDNODErocksDB*/
 
-*.jar
 *.class
+*.jar
+
 MANIFEST.MF
 *.original
 
