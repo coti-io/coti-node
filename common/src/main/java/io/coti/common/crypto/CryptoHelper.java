@@ -26,7 +26,7 @@ import java.util.zip.Checksum;
 
 
 public class CryptoHelper {
-
+    private static final ECDSASigner signer = new ECDSASigner();
     static final String ecSpec = "secp256k1";
     static final String ecAlgorithm = "ECDSA";
     private static final X9ECParameters curve = SECNamedCurves.getByName(ecSpec);
@@ -93,7 +93,6 @@ public class CryptoHelper {
     public static SignatureData SignBytes(byte[] bytesToSign, String privateKeyHex) {
 
         byte[] privateKey = DatatypeConverter.parseHexBinary(privateKeyHex);
-        ECDSASigner signer = new ECDSASigner();
         signer.init(true, new ECPrivateKeyParameters(new BigInteger(privateKey), domain));
         BigInteger[] signature = signer.generateSignature(bytesToSign);
         BigInteger r = signature[0];

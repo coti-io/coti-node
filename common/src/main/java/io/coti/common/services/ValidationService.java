@@ -19,7 +19,7 @@ public class ValidationService implements IValidationService {
     @Override
     public boolean validateBaseTransaction(BaseTransactionData baseTransactionData, Hash transactionHash) {
         BaseTransactionCryptoWrapper baseTransactionCrypto = new BaseTransactionCryptoWrapper(baseTransactionData);
-        return baseTransactionCrypto.IsBaseTransactionValid(transactionHash);
+        return BaseTransactionCryptoWrapper.IsBaseTransactionValid(transactionHash, baseTransactionData);
     }
 
     @Override

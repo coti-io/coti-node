@@ -2,11 +2,13 @@ package io.coti.common.crypto;
 
 import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.Hash;
+import io.coti.common.data.SignatureData;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jcajce.provider.digest.Keccak;
 import org.bouncycastle.util.encoders.Hex;
 
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
@@ -65,27 +67,20 @@ public class BaseTransactionCryptoWrapper {
 
 
 
-    public boolean IsBaseTransactionValid(Hash transactionHash) {
+    public static boolean IsBaseTransactionValid(Hash transactionHash, BaseTransactionData baseTransactionData) {
         try {
-            if (!this.createBaseTransactionHashFromData().equals(getBaseTransactionHash()))
+            if (!CryptoHelper.IsAddressValid(baseTransactionData.getAddressHash()))
                 return false;
 
-            if (!CryptoHelper.IsAddressValid(baseTxData.getAddressHash()))
-                return false;
-
-
-            if (baseTxData.getAmount().signum()>0)
+            if (baseTransactionData.getAmount().signum()>0)
                 return true;
 
-
-            String addressWithoutCRC = baseTxData.getAddressHash().toString().substring(0, 128);
-            boolean checkSigning = cryptoHelper.VerifyByPublicKey(transactionHash.getBytes(), baseTxData.getSignatureData().getR(), baseTxData.getSignatureData().getS(), addressWithoutCRC);
-            return checkSigning;
+            String addressWithoutCRC = baseTransactionData.getAddressHash().toString().substring(0, 128);
+            return cryptoHelper.VerifyByPublicKey(transactionHash.getBytes(), baseTransactionData.getSignatureData().getR(), baseTransactionData.getSignatureData().getS(), addressWithoutCRC);
 
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
             log.error("error", e);
             return false;
-
         }
     }
 

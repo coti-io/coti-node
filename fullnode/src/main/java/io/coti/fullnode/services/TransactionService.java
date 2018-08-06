@@ -112,7 +112,7 @@ public class TransactionService {
 
             transactionData.setPowStartTime(new Date());
             // ############   POW   ###########
-            TimeUnit.SECONDS.sleep(5);
+//            TimeUnit.SECONDS.sleep(5);
             // ################################
             transactionData.setPowEndTime(new Date());
 

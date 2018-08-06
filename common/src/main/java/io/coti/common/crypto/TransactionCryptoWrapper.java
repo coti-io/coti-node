@@ -63,14 +63,24 @@ public class TransactionCryptoWrapper {
         return generatedTxHashFromBaseTransactions.equalsIgnoreCase(txHashFromData);
     }
 
-    public boolean isTransactionValid() {
-
-        if (!this.IsTransactionHashCorrect())
-            return false;
-        for (BaseTransactionCryptoWrapper bxCrypto : this.baseTransactions) {
-            if (bxCrypto.IsBaseTransactionValid(txData.getHash()) == false)
+    public boolean isTransactionValid(TransactionData transactionData) {
+        for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
+            if (BaseTransactionCryptoWrapper.IsBaseTransactionValid(
+                    transactionData.getHash(),
+                    baseTransactionData) == false)
                 return false;
         }
         return true;
     }
+
+//    public boolean isTransactionValid(TransactionDatatxData) {
+//
+//        if (!this.IsTransactionHashCorrect())
+//            return false;
+//        for (BaseTransactionCryptoWrapper bxCrypto : this.baseTransactions) {
+//            if (bxCrypto.IsBaseTransactionValid(txData.getHash()) == false)
+//                return false;
+//        }
+//        return true;
+//    }
 }

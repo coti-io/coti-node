@@ -71,7 +71,7 @@ public class TransactionHelper implements ITransactionHelper {
 
     public boolean validateTransaction(TransactionData transactionData) {
         TransactionCryptoWrapper verifyTransaction = new TransactionCryptoWrapper(transactionData);
-        return verifyTransaction.isTransactionValid();
+        return verifyTransaction.isTransactionValid(transactionData);
     }
 
     private boolean isTransactionExists(TransactionData transactionData) {
