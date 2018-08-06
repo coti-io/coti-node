@@ -31,7 +31,9 @@ public class RocksDBConnector implements IDatabaseConnector {
             Addresses.class.getName(),
             AddressesTransactionsHistory.class.getName(),
             ConfirmedTransactions.class.getName(),
-            UnconfirmedTransactions.class.getName()
+            UnconfirmedTransactions.class.getName(),
+            TransactionIndex.class.getName(),
+            NonIndexedTransactions.class.getName()
     );
     @Value("${application.name}")
     private String applicationName;

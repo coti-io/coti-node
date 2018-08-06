@@ -71,6 +71,23 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                         log.error("Invalid request received: " + e.getMessage());
                     }
                 }
+
+                /*
+
+                TODO: ADD handling for dsp voting
+
+                 */
+                if(channel.contains(TransactionData.class.getName() + "vote answer" )&&
+                        messagesHandler.containsKey(channel)) {
+                    log.info("Received a new message on channel: {}", channel);
+                    byte[] message = propagationReceiver.recv();
+                    try {
+                        TransactionData transactionData = serializer.deserialize(message);
+                        messagesHandler.get(channel).accept(transactionData);
+                    } catch (ClassCastException e) {
+                        log.error("Invalid request received: " + e.getMessage());
+                    }
+                }
             }
         });
         receiverThread.start();
