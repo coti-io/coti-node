@@ -2,7 +2,6 @@ package io.coti.common.services;
 
 import io.coti.common.crypto.TransactionCryptoWrapper;
 import io.coti.common.data.*;
-import io.coti.common.exceptions.TransactionException;
 import io.coti.common.http.AddTransactionResponse;
 import io.coti.common.http.BaseResponse;
 import io.coti.common.http.GetTransactionResponse;
@@ -22,6 +21,7 @@ import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.coti.common.data.TransactionState.*;
@@ -40,11 +40,11 @@ public class TransactionHelper implements ITransactionHelper {
     private IClusterService clusterService;
     @Autowired
     private Transactions transactions;
-    private Map<Hash, TransactionState> hashToTransactionStateMapping;
+    private Map<Hash, Stack<TransactionState>> transactionHashToTransactionStateStackMapping;
 
     @PostConstruct
     private void init() {
-        hashToTransactionStateMapping = new ConcurrentHashMap<>();
+        transactionHashToTransactionStateStackMapping = new ConcurrentHashMap<>();
         log.info("Transaction Helper Started");
     }
 
@@ -75,7 +75,7 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     private boolean isTransactionExists(TransactionData transactionData) {
-        if (hashToTransactionStateMapping.containsKey(transactionData.getHash())) {
+        if (transactionHashToTransactionStateStackMapping.containsKey(transactionData.getHash())) {
             return true;
         }
         if (transactions.getByHash(transactionData.getHash()) != null) {
@@ -89,36 +89,53 @@ public class TransactionHelper implements ITransactionHelper {
             if (isTransactionExists(transactionData)) {
                 return false;
             }
-            hashToTransactionStateMapping.put(transactionData.getHash(), RECEIVED);
+            transactionHashToTransactionStateStackMapping.put(transactionData.getHash(), new Stack());
+            transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(RECEIVED);
             return true;
         }
     }
 
     public void endHandleTransaction(TransactionData transactionData) {
-        if (hashToTransactionStateMapping.get(transactionData.getHash()) == FINISHED) {
+        if (!transactionHashToTransactionStateStackMapping.containsKey(transactionData.getHash())) {
+            return;
+        }
+        if (transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).peek() == FINISHED) {
             log.info("Transaction handled successfully...");
         } else {
             rollbackTransaction(transactionData);
         }
 
         synchronized (transactionData) {
-            hashToTransactionStateMapping.remove(transactionData.getHash());
+            transactionHashToTransactionStateStackMapping.remove(transactionData.getHash());
         }
     }
 
     private void rollbackTransaction(TransactionData transactionData) {
-        if (hashToTransactionStateMapping.get(transactionData.getHash()) == SAVED_IN_DB) {
-            log.error("Reverting transaction saved in DB");
-            hashToTransactionStateMapping.replace(transactionData.getHash(), PRE_BALANCE_CHANGED);
+        Stack<TransactionState> currentTransactionStateStack = transactionHashToTransactionStateStackMapping.get(transactionData.getHash());
+        while (!currentTransactionStateStack.isEmpty()) {
+            switch (currentTransactionStateStack.pop()) {
+                case PRE_BALANCE_CHANGED:
+                    revertPreBalance(transactionData);
+                    break;
+                case SAVED_IN_DB:
+                    revertSavedInDB(transactionData);
+                    break;
+                case RECEIVED:
+                    transactionHashToTransactionStateStackMapping.remove(transactionData.getHash());
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid transaction state");
+            }
         }
-        if (hashToTransactionStateMapping.get(transactionData.getHash()) == PRE_BALANCE_CHANGED) {
-            log.error("Reverting pre balance...");
-            balanceService.rollbackBaseTransactions(transactionData);
-            hashToTransactionStateMapping.replace(transactionData.getHash(), RECEIVED);
-        }
-        if (hashToTransactionStateMapping.get(transactionData.getHash()) == RECEIVED) {
-            log.error("Reverting received transaction...");
-        }
+    }
+
+    private void revertSavedInDB(TransactionData transactionData) {
+        log.error("Reverting transaction saved in DB");
+    }
+
+    private void revertPreBalance(TransactionData transactionData) {
+        log.error("Reverting pre balance...");
+        balanceService.rollbackBaseTransactions(transactionData);
     }
 
     public ResponseEntity<BaseResponse> getTransactionDetails(Hash transactionHash) {
@@ -135,16 +152,14 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     public boolean checkBalancesAndAddToPreBalance(TransactionData transactionData) {
-        if (!hashToTransactionStateMapping.containsKey(transactionData.getHash())) {
-            return false;
-        }
-        if (!(hashToTransactionStateMapping.get(transactionData.getHash()) == RECEIVED)) {
+        if (!isTransactionExists(transactionData)) {
             return false;
         }
         if (!balanceService.checkBalancesAndAddToPreBalance(transactionData.getBaseTransactions())) {
             return false;
         }
-        return hashToTransactionStateMapping.replace(transactionData.getHash(), RECEIVED, PRE_BALANCE_CHANGED);
+        transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(PRE_BALANCE_CHANGED);
+        return true;
     }
 
     public void attachTransactionToCluster(TransactionData transactionData) {
@@ -155,19 +170,10 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     public void setTransactionStateToSaved(TransactionData transactionData) {
-        if (!(hashToTransactionStateMapping.get(transactionData.getHash()) == PRE_BALANCE_CHANGED)) {
-            throw new TransactionException("Transaction to be saved is not in Pre balance changed stage!");
-        } else {
-            hashToTransactionStateMapping.replace(transactionData.getHash(), SAVED_IN_DB);
-        }
+        transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(SAVED_IN_DB);
     }
 
     public void setTransactionStateToFinished(TransactionData transactionData) {
-        if (!(hashToTransactionStateMapping.get(transactionData.getHash()) == SAVED_IN_DB)) {
-            throw new TransactionException("Transaction to be propagated is not saved in DB!");
-        } else {
-            hashToTransactionStateMapping.replace(transactionData.getHash(), FINISHED);
-        }
+        transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(FINISHED);
     }
-
 }

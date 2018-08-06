@@ -44,6 +44,8 @@ public class TransactionService {
             log.info("Transaction already exists");
             return "Transaction Exists: " + transactionData.getHash();
         }
+        transactions.put(transactionData);
+        transactionHelper.setTransactionStateToSaved(transactionData);
         if (!transactionHelper.validateTransaction(transactionData) ||
                 !NodeCryptoHelper.verifyTransactionSignature(transactionData) ||
                 !validationService.validatePow(transactionData) ||
@@ -51,8 +53,6 @@ public class TransactionService {
             log.info("Invalid Transaction Received!");
             return "Invalid Transaction Received: " + transactionData.getHash();
         }
-        transactions.put(transactionData);
-        transactionHelper.setTransactionStateToSaved(transactionData);
         propagationPublisher.propagateTransaction(transactionData, TransactionData.class.getName() + "Full Nodes");
         propagationPublisher.propagateTransaction(transactionData, TransactionData.class.getName() + "DSP Nodes");
         transactionHelper.setTransactionStateToFinished(transactionData);
