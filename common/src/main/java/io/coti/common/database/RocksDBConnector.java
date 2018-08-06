@@ -31,8 +31,10 @@ public class RocksDBConnector implements IDatabaseConnector {
             Addresses.class.getName(),
             AddressesTransactionsHistory.class.getName(),
             ConfirmedTransactions.class.getName(),
-            UnconfirmedTransactions.class.getName()
+            UnconfirmedTransactions.class.getName(),
+            TrustScores.class.getName()
     );
+
     @Value("${application.name}")
     private String applicationName;
     @Value("${resetDatabase}")

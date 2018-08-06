@@ -1,12 +1,9 @@
 package io.coti.common.http;
 
-
 import lombok.Data;
 
-
 @Data
-public abstract class Response extends BaseResponse {
-    public String status;
+public class Response extends BaseResponse {
     public String message;
 
     public Response(){

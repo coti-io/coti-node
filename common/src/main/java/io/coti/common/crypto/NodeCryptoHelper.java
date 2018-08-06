@@ -1,9 +1,8 @@
 package io.coti.common.crypto;
 
 import io.coti.common.communication.DspVote;
-import io.coti.common.data.Hash;
-import io.coti.common.data.SignatureData;
-import io.coti.common.data.TransactionData;
+import io.coti.common.data.*;
+import io.coti.common.http.GetTransactionTrustScoreResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -44,5 +43,13 @@ public class NodeCryptoHelper {
         transactionData.setNodeHash(new Hash(nodePublicKey));
         SignatureData signatureData = CryptoHelper.SignBytes(transactionData.getHash().getBytes(), nodePrivateKey);
         transactionData.setNodeSignature(signatureData);
+    }
+
+    public static SignatureData signMessage(byte[] message) {
+        return CryptoHelper.SignBytes(message, nodePublicKey);
+    }
+
+    public static Hash getNodeHash() {
+        return new Hash(nodePublicKey);
     }
 }

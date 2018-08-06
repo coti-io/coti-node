@@ -7,8 +7,6 @@ import lombok.Data;
 public abstract class BaseResponse implements IResponse {
     public String status;
 
-
-
     public BaseResponse() {
         this.status = HttpStringConstants.STATUS_SUCCESS;
     }
