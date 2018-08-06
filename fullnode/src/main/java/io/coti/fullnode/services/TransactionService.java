@@ -12,8 +12,8 @@ import io.coti.common.model.AddressesTransactionsHistory;
 import io.coti.common.model.DbItem;
 import io.coti.common.model.Transactions;
 import io.coti.common.services.LiveView.WebSocketSender;
-import io.coti.common.services.TransactionHelper;
 import io.coti.common.services.interfaces.IClusterService;
+import io.coti.common.services.interfaces.ITransactionHelper;
 import io.coti.common.services.interfaces.IValidationService;
 import io.coti.common.services.interfaces.IZeroSpendService;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +33,7 @@ import static io.coti.common.http.HttpStringConstants.*;
 @Service
 public class TransactionService {
     @Autowired
-    private TransactionHelper transactionHelper;
+    private ITransactionHelper transactionHelper;
     @Autowired
     private IValidationService validationService;
     @Autowired

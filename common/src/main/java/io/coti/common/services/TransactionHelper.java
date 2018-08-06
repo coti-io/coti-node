@@ -11,6 +11,7 @@ import io.coti.common.model.AddressesTransactionsHistory;
 import io.coti.common.model.Transactions;
 import io.coti.common.services.interfaces.IBalanceService;
 import io.coti.common.services.interfaces.IClusterService;
+import io.coti.common.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -29,7 +30,7 @@ import static io.coti.common.http.HttpStringConstants.TRANSACTION_DOESNT_EXIST_M
 
 @Slf4j
 @Service
-public class TransactionHelper {
+public class TransactionHelper implements ITransactionHelper {
 
     @Autowired
     private AddressesTransactionsHistory addressesTransactionsHistory;

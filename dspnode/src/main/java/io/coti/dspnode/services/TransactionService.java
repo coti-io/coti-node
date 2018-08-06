@@ -6,8 +6,8 @@ import io.coti.common.communication.interfaces.ISender;
 import io.coti.common.crypto.NodeCryptoHelper;
 import io.coti.common.data.TransactionData;
 import io.coti.common.model.Transactions;
-import io.coti.common.services.TransactionHelper;
 import io.coti.common.services.interfaces.IBalanceService;
+import io.coti.common.services.interfaces.ITransactionHelper;
 import io.coti.common.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +26,7 @@ public class TransactionService {
     AtomicBoolean isValidatorRunning;
 
     @Autowired
-    private TransactionHelper transactionHelper;
+    private ITransactionHelper transactionHelper;
     @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired
@@ -86,7 +86,7 @@ public class TransactionService {
 
     public void handlePropagatedTransaction(TransactionData transactionData) {
         try {
-            log.info("Received new propagated Address: {}", transactionData);
+            log.info("DSP Propagated Transaction received: {}", transactionData.getHash().toHexString());
             if (!transactionHelper.startHandleTransaction(transactionData)) {
                 log.info("Transaction already exists");
                 return;
@@ -97,16 +97,18 @@ public class TransactionService {
                 log.info("Data Integrity validation failed");
                 return;
             }
-            if (!transactionHelper.checkBalancesAndAddToPreBalance(transactionData)) {
+            boolean checkBalancesAndAddToPreBalance = transactionHelper.checkBalancesAndAddToPreBalance(transactionData);
+            if (!checkBalancesAndAddToPreBalance) {
                 log.info("Balances check failed for transaction: {}", transactionData.getHash());
                 return;
             }
             transactions.put(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
-            if (!transactionHelper.checkBalancesAndAddToPreBalance(transactionData)) {
+
+          /*  if (!checkBalancesAndAddToPreBalance) {
                 transactionData.addSignature("Node ID", false); // TODO: replace with a sign mechanism
                 sender.sendTransaction(transactionData);
-            }
+            }*/
             propagationPublisher.propagateTransaction(transactionData, TransactionData.class.getName() + "Full Nodes");
             transactionHelper.setTransactionStateToFinished(transactionData);
             transactionsToValidate.add(transactionData);
