@@ -31,7 +31,6 @@ public class TransactionData implements IEntity, Comparable<TransactionData> {
     private Date processStartTime;
     private Date powStartTime;
     private Date powEndTime;
-    private Date verificationTime;
     private double senderTrustScore;
     private List<Hash> baseTransactionsHash;
     private Hash senderHash;

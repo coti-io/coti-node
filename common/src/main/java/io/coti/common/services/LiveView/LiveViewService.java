@@ -74,7 +74,6 @@ public class LiveViewService {
 
     public void setNodeDataDatesFromTransactionData(TransactionData transactionData, NodeData nodeData) {
         nodeData.setAttachmentTime(transactionData.getAttachmentTime());
-        nodeData.setVerificationTime(transactionData.getVerificationTime());
         nodeData.setTransactionConsensusUpdateTime(transactionData.getTransactionConsensusUpdateTime());
         if (transactionData.getAttachmentTime()!= null && transactionData.getTransactionConsensusUpdateTime()!= null) {
             nodeData.setTccDuration( (transactionData.getTransactionConsensusUpdateTime().getTime() - transactionData.getAttachmentTime().getTime())/ 1000);

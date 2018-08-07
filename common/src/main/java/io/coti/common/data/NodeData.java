@@ -15,7 +15,6 @@ public class NodeData {
     private long tccDuration;
     private Date attachmentTime;
     private Date transactionConsensusUpdateTime;
-    private Date verificationTime;
 
 
     @Override

@@ -118,7 +118,6 @@ public class ClusterService implements IClusterService {
         TransactionData transactionData = transactions.getByHash(transactionHash);
         if (sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].contains(transactionData)) {
             sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].remove(transactionData); // TODO: synchronize
-            transactionData.setVerificationTime(new Date());
             liveViewService.updateNodeStatus(transactionData, 1);
         }
     }
