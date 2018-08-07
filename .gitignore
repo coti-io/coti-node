@@ -4,6 +4,7 @@ dspnode/target/
 common/target/
 zerospend/target/
 tools/target/
+logs/
 !.mvn/wrapper/maven-wrapper.jar
 dsp*.properties
 fullnode*.properties

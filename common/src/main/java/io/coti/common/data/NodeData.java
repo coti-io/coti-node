@@ -2,6 +2,8 @@ package io.coti.common.data;
 
 import lombok.Data;
 
+import java.util.Date;
+
 @Data
 public class NodeData {
     private String id;
@@ -11,6 +13,8 @@ public class NodeData {
     private double trustScore;
     private int status;
     private long tccDuration;
+    private Date attachmentTime;
+    private Date transactionConsensusUpdateTime;
 
 
     @Override
