@@ -1,6 +1,7 @@
 package io.coti.fullnode.services;
 
 import io.coti.common.communication.interfaces.ISender;
+import io.coti.common.crypto.CryptoHelper;
 import io.coti.common.crypto.NodeCryptoHelper;
 import io.coti.common.data.AddressTransactionsHistory;
 import io.coti.common.data.Hash;
@@ -200,7 +201,7 @@ public class TransactionService {
             return;
         }
         if (!transactionHelper.validateTransaction(transactionData) ||
-                !NodeCryptoHelper.verifyTransactionSignature(transactionData) ||
+                !CryptoHelper.verifyTransactionSignature(transactionData) ||
                 !validationService.validatePow(transactionData)) {
             log.info("Data Integrity validation failed");
             return;

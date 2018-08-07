@@ -1,11 +1,9 @@
 package io.coti.trustscore.services;
 
-import io.coti.common.communication.interfaces.ISender;
-import io.coti.common.crypto.NodeCryptoHelper;
+import io.coti.common.crypto.CryptoHelper;
 import io.coti.common.data.AddressTransactionsHistory;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
-import io.coti.common.exceptions.TransactionException;
 import io.coti.common.http.*;
 import io.coti.common.http.data.TransactionStatus;
 import io.coti.common.model.AddressesTransactionsHistory;
@@ -22,12 +20,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Vector;
-import java.util.concurrent.TimeUnit;
-
-import static io.coti.common.http.HttpStringConstants.*;
 
 @Slf4j
 @Service
@@ -70,7 +64,7 @@ public class TransactionService {
             return;
         }
         if (!transactionHelper.validateTransaction(transactionData) ||
-                !NodeCryptoHelper.verifyTransactionSignature(transactionData) ||
+                !CryptoHelper.verifyTransactionSignature(transactionData) ||
                 !validationService.validatePow(transactionData)) {
             log.info("Data Integrity validation failed");
             return;

@@ -9,14 +9,21 @@ import java.util.Date;
 public class TrustScoreData implements IEntity {
     private Hash userHash;
     private Double trustScore;
+    private Double kycTrustScore;
+    private SignatureData signature;
     private Date createTime;
     private Date lastUpdateTime;
 
     public TrustScoreData(Hash userHash, double trustScore){
         this.userHash = userHash;
         this.trustScore = trustScore;
-        this.createTime = new Date();
         this.lastUpdateTime = new Date();
+    }
+
+    public TrustScoreData(Hash userHash, double kycTrustScore, SignatureData signature){
+        this.userHash = userHash;
+        this.kycTrustScore = kycTrustScore;
+        this.signature = signature;
     }
 
     @Override

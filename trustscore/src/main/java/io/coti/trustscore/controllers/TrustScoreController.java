@@ -18,18 +18,18 @@ public class TrustScoreController {
     private TrustScoreService trustScoreService;
 
     @RequestMapping(path = "/usertrustscore", method = RequestMethod.POST)
-    public ResponseEntity<Response> getUserTrustScore(@Valid @RequestBody GetTrustScoreRequest request) {
+    public ResponseEntity<BaseResponse> getUserTrustScore(@Valid @RequestBody GetTrustScoreRequest request) {
         return trustScoreService.getUserTrustScore(request.userHash);
     }
 
     @RequestMapping(path = "/usertrustscore", method = RequestMethod.PUT)
-    public ResponseEntity setUserTrustScore(@Valid @RequestBody SetTrustScoreRequest request) {
-        trustScoreService.setUserTrustScore(request);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<BaseResponse> setKycTrustScore(@Valid @RequestBody SetKycTrustScoreRequest request) {
+        return trustScoreService.setKycTrustScore(request);
+
     }
 
     @RequestMapping(path = "/transactiontrustscore", method = RequestMethod.POST)
-    public ResponseEntity<Response> getTransactionTrustScore(@Valid @RequestBody GetTransactionTrustScoreRequest request) {
+    public ResponseEntity<BaseResponse> getTransactionTrustScore(@Valid @RequestBody GetTransactionTrustScoreRequest request) {
         return trustScoreService.getTransactionTrustScore(request.userHash, request.transactionHash);
     }
 }

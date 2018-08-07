@@ -2,6 +2,8 @@ package io.coti.common.crypto;
 
 import io.coti.common.data.Hash;
 import io.coti.common.data.SignatureData;
+import io.coti.common.data.TransactionData;
+import io.coti.common.data.TrustScoreData;
 import org.bouncycastle.asn1.sec.SECNamedCurves;
 import org.bouncycastle.asn1.x9.X9ECParameters;
 import org.bouncycastle.crypto.params.ECDomainParameters;
@@ -23,7 +25,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
-
 
 public class CryptoHelper {
 
@@ -159,5 +160,26 @@ public class CryptoHelper {
         byte[] crc32ToAdd = CryptoHelper.getCrc32OfByteArray(DatatypeConverter.parseHexBinary(publicKey));
 
         return new Hash(publicKey + DatatypeConverter.printHexBinary(crc32ToAdd));
+    }
+
+    public static boolean verifyTransactionSignature(TransactionData transactionData) {
+        try {
+            String publicKey = transactionData.getNodeHash().toHexString();
+            return CryptoHelper.VerifyByPublicKey(transactionData.getHash().getBytes(), transactionData.getNodeSignature().getR(), transactionData.getNodeSignature().getS(), publicKey);
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static boolean verifyKycTrustScoreSignature(TrustScoreData trustScoreData, String kycServerPublicKey) {
+        try {
+            String message = trustScoreData.getUserHash().toHexString()+Double.toString(trustScoreData.getKycTrustScore());
+            return CryptoHelper.VerifyByPublicKey(DatatypeConverter.parseHexBinary(message), trustScoreData.getSignature().getR(), trustScoreData.getSignature().getS(), kycServerPublicKey);
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return false;
+
+        }
     }
 }

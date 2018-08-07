@@ -3,7 +3,7 @@ package io.coti.common.http;
 import lombok.Data;
 
 @Data
-public class GetUserTrustScoreResponse extends Response {
+public class GetUserTrustScoreResponse extends BaseResponse {
     private String userHash;
     private double trustScore;
 
@@ -12,7 +12,4 @@ public class GetUserTrustScoreResponse extends Response {
         this.trustScore = trustScore;
     }
 
-    public GetUserTrustScoreResponse(String message, String status) {
-        super(message, status);
-    }
 }

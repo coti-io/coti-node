@@ -4,7 +4,7 @@ import io.coti.common.http.data.TrustScoreResponseData;
 import lombok.Data;
 
 @Data
-public class GetTransactionTrustScoreResponse extends Response {
+public class GetTransactionTrustScoreResponse extends BaseResponse {
     private TrustScoreResponseData trustScoreResponseData;
 
     public GetTransactionTrustScoreResponse(TrustScoreResponseData trustScoreResponseData) {
