@@ -10,26 +10,26 @@ import lombok.Data;
 @Data
 public class TransactionCyptoCreator {
 
-    private TransactionData txData;
+    private TransactionData transactionData;
     private TransactionCryptoWrapper transactionCryptoWrapper;
 
-    public TransactionCyptoCreator(TransactionData tx) {
-        this.txData = tx;
-        this.transactionCryptoWrapper = new TransactionCryptoWrapper(tx);
+    public TransactionCyptoCreator(TransactionData transactionData) {
+        this.transactionData = transactionData;
+        this.transactionCryptoWrapper = new TransactionCryptoWrapper(transactionData);
     }
 
     public void signTransaction() {
 
-        if (txData.getHash() == null)
+        if (transactionData.getHash() == null)
             transactionCryptoWrapper.setTransactionHash();
 
-        for (BaseTransactionData bxData : txData.getBaseTransactions()) {
+        for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
 
-            if (bxData instanceof IPrivateKey) {
-                String privateKey = ((IPrivateKey) bxData).getPrivateKey();
+            if (baseTransactionData instanceof IPrivateKey) {
+                String privateKey = ((IPrivateKey) baseTransactionData).getPrivateKey();
 
-                SignatureData signatureData = CryptoHelper.SignBytes(this.txData.getHash().getBytes(), privateKey);
-                bxData.setSignatureData(signatureData);
+                SignatureData signatureData = CryptoHelper.SignBytes(this.transactionData.getHash().getBytes(), privateKey);
+                baseTransactionData.setSignatureData(signatureData);
             }
         }
     }

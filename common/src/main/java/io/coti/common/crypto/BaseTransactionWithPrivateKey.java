@@ -6,7 +6,7 @@ import io.coti.common.data.BaseTransactionData;
 import java.math.BigDecimal;
 import java.util.Date;
 
-public class BasicTransactionWithPrivateKey extends BaseTransactionData implements IPrivateKey {
+public class BaseTransactionWithPrivateKey extends BaseTransactionData implements IPrivateKey {
 
     private String privateKey;
 
@@ -16,7 +16,7 @@ public class BasicTransactionWithPrivateKey extends BaseTransactionData implemen
     }
 
 
-    public BasicTransactionWithPrivateKey(BigDecimal amount, Date createTime, String privateKey) {
+    public BaseTransactionWithPrivateKey(BigDecimal amount, Date createTime, String privateKey) {
         super(CryptoHelper.getAddressFromPrivateKey(privateKey), amount, createTime);
         this.privateKey = privateKey;
     }

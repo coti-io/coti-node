@@ -10,6 +10,7 @@ import org.bouncycastle.crypto.params.ECDomainParameters;
 import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
 import org.bouncycastle.crypto.signers.ECDSASigner;
+import org.bouncycastle.jcajce.provider.digest.Keccak;
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -181,5 +182,12 @@ public class CryptoHelper {
             return false;
 
         }
+    }
+
+    public static Hash cryptoHash(byte[] input) {
+        Keccak.Digest256 digest = new Keccak.Digest256();
+        digest.update(input);
+        Hash hash = new Hash(digest.digest());
+        return hash;
     }
 }

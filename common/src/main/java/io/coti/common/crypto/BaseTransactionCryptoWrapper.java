@@ -4,8 +4,6 @@ import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.Hash;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.jcajce.provider.digest.Keccak;
-import org.bouncycastle.util.encoders.Hex;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -46,11 +44,8 @@ public class BaseTransactionCryptoWrapper {
     }
 
     public Hash createBaseTransactionHashFromData(){
-        Keccak.Digest256 digest = new Keccak.Digest256();
         byte[] bytesToHash = getMessageInBytes();
-        digest.update(bytesToHash);
-        Hash hash = new Hash(Hex.toHexString(digest.digest()));
-        return hash;
+        return CryptoHelper.cryptoHash(bytesToHash);
     }
 
 

@@ -8,9 +8,7 @@ import io.coti.common.data.Hash;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
 import org.junit.Assert;
 import org.junit.Test;
-import org.web3j.crypto.WalletFile;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
@@ -19,8 +17,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Vector;
-import java.util.stream.Collectors;
 
 
 public class CryptoHelperTests {
@@ -50,7 +46,7 @@ public class CryptoHelperTests {
 
         String hexPrivateKey = "1731ceb7b1d3a9c78d6a3009ca7021569eeb6a4ece86f0b744afbc3fabf82f8e";
         ArrayList<BaseTransactionData> bxDataList = new ArrayList<>();
-        bxDataList.add(new BasicTransactionWithPrivateKey(new BigDecimal(-10), new Date(), hexPrivateKey));
+        bxDataList.add(new BaseTransactionWithPrivateKey(new BigDecimal(-10), new Date(), hexPrivateKey));
         bxDataList.add(new BaseTransactionData(
                 new Hash("19ecfb8159ee64f3907f2305fb52737f96efb3ed5cd8893bb9e79a98abd534ae331b0096f0fb5e1e18f9128231ee330cd025a243cc0e98aac40bdc7475d43d318763c3b0"),
                 new BigDecimal(10), new Date()));
