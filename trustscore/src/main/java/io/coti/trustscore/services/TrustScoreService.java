@@ -1,6 +1,5 @@
 package io.coti.trustscore.services;
 
-import io.coti.common.crypto.CryptoHelper;
 import io.coti.common.crypto.NodeCryptoHelper;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TrustScoreData;
@@ -80,7 +79,9 @@ public class TrustScoreService {
                 trustScoreData.setLastUpdateTime(date);
             }
             trustScores.put(trustScoreData);
-            return ResponseEntity.status(HttpStatus.OK).body(new SetKycTrustScoreResponse(trustScoreData));
+            SetKycTrustScoreResponse kycTrustScoreResponse = new SetKycTrustScoreResponse(trustScoreData);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(kycTrustScoreResponse);
         } catch (Exception e) {
             log.error(e.getMessage());
             return ResponseEntity
