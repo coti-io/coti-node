@@ -175,13 +175,29 @@ public class CryptoHelper {
 
     public static boolean verifyKycTrustScoreSignature(TrustScoreData trustScoreData, String kycServerPublicKey) {
         try {
-            String message = trustScoreData.getUserHash().toHexString()+Double.toString(trustScoreData.getKycTrustScore());
-            return CryptoHelper.VerifyByPublicKey(DatatypeConverter.parseHexBinary(message), trustScoreData.getSignature().getR(), trustScoreData.getSignature().getS(), kycServerPublicKey);
+            byte[] byteMessage = getKycTrustScoreMessageInBytes(trustScoreData);
+            byte[] cryptoHashedMessage = CryptoHelper.cryptoHash(byteMessage).getBytes();
+            return CryptoHelper.VerifyByPublicKey(cryptoHashedMessage, trustScoreData.getSignature().getR(), trustScoreData.getSignature().getS(), kycServerPublicKey);
         } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
             e.printStackTrace();
             return false;
 
         }
+    }
+
+    private static byte[] getKycTrustScoreMessageInBytes(TrustScoreData trustScoreData) {
+
+        byte[] userHash = trustScoreData.getUserHash().getBytes();
+
+        Double trustScore = trustScoreData.getKycTrustScore();
+        ByteBuffer trustScoreBuffer = ByteBuffer.allocate(8);
+        trustScoreBuffer.putDouble(trustScore);
+
+        ByteBuffer trustScoreMessageBuffer = ByteBuffer.allocate(userHash.length + 8).
+                put(userHash).put(trustScoreBuffer.array());
+
+        byte[] trustScoreMessageInBytes = trustScoreMessageBuffer.array();
+        return  trustScoreMessageInBytes;
     }
 
     public static Hash cryptoHash(byte[] input) {

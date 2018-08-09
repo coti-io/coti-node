@@ -21,7 +21,8 @@ public class HttpStringConstants {
     public static final String PARTIAL_VALIDATION_FAILED = "Partial Validation failed!";
 
     public static final String NON_EXISTING_USER_MESSAGE = "User does not exist!";
-
+    public static final String KYC_TRUST_SCORE_AUTHENTICATION_ERROR = "Kyc Trust Score Authentication Failed";
+    public static final String KYC_TRUST_SET_ERROR = "Kyc Trust Score Creation or Update Failed";
 
     public static final String API_CLIENT_ERROR = "Api Client Error";
     public static final String API_SERVER_ERROR = "Api Server Error";

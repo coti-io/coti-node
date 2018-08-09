@@ -1,5 +1,6 @@
 package io.coti.trustscore.services;
 
+import io.coti.common.crypto.CryptoHelper;
 import io.coti.common.crypto.NodeCryptoHelper;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TrustScoreData;
@@ -15,8 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 
-import static io.coti.common.http.HttpStringConstants.NON_EXISTING_USER_MESSAGE;
-import static io.coti.common.http.HttpStringConstants.STATUS_ERROR;
+import static io.coti.common.http.HttpStringConstants.*;
 
 @Slf4j
 @Service
@@ -61,11 +61,11 @@ public class TrustScoreService {
     public ResponseEntity<BaseResponse> setKycTrustScore(SetKycTrustScoreRequest request) {
         try {
             TrustScoreData trustScoreData = new TrustScoreData(request.userHash, request.kycTrustScore, request.signature);
-      /*  if (!CryptoHelper.verifyKycTrustScoreSignature(trustScoreData, kycServerPublicKey)) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new Response(NON_EXISTING_USER_MESSAGE, STATUS_ERROR));
-        } */
+            if (!CryptoHelper.verifyKycTrustScoreSignature(trustScoreData, kycServerPublicKey)) {
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body(new Response(KYC_TRUST_SCORE_AUTHENTICATION_ERROR, STATUS_ERROR));
+            }
             TrustScoreData dbTrustScoreData = trustScores.getByHash(trustScoreData.getUserHash());
             Date date = new Date();
             if (dbTrustScoreData != null) {
@@ -85,8 +85,8 @@ public class TrustScoreService {
         } catch (Exception e) {
             log.error(e.getMessage());
             return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new Response(NON_EXISTING_USER_MESSAGE, STATUS_ERROR));
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response(KYC_TRUST_SET_ERROR, STATUS_ERROR));
         }
     }
 }
