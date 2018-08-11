@@ -1,13 +1,14 @@
 package io.coti.common.http;
 
-import io.coti.common.http.data.TrustScoreResponseData;
+import io.coti.common.data.TransactionTrustScoreData;
+import io.coti.common.http.data.TransactionTrustScoreResponseData;
 import lombok.Data;
 
 @Data
 public class GetTransactionTrustScoreResponse extends BaseResponse {
-    private TrustScoreResponseData trustScoreResponseData;
+    private TransactionTrustScoreResponseData transactionTrustScoreData;
 
-    public GetTransactionTrustScoreResponse(TrustScoreResponseData trustScoreResponseData) {
-        this.trustScoreResponseData = trustScoreResponseData;
+    public GetTransactionTrustScoreResponse(TransactionTrustScoreResponseData transactionTrustScoreData) {
+        this.transactionTrustScoreData = transactionTrustScoreData;
     }
 }

@@ -3,7 +3,6 @@ package io.coti.common.crypto;
 import io.coti.common.data.Hash;
 import io.coti.common.data.SignatureData;
 import io.coti.common.data.TransactionData;
-import io.coti.common.data.TrustScoreData;
 import org.bouncycastle.asn1.sec.SECNamedCurves;
 import org.bouncycastle.asn1.x9.X9ECParameters;
 import org.bouncycastle.crypto.params.ECDomainParameters;
@@ -171,33 +170,6 @@ public class CryptoHelper {
             e.printStackTrace();
             return false;
         }
-    }
-
-    public static boolean verifyKycTrustScoreSignature(TrustScoreData trustScoreData, String kycServerPublicKey) {
-        try {
-            byte[] byteMessage = getKycTrustScoreMessageInBytes(trustScoreData);
-            byte[] cryptoHashedMessage = CryptoHelper.cryptoHash(byteMessage).getBytes();
-            return CryptoHelper.VerifyByPublicKey(cryptoHashedMessage, trustScoreData.getSignature().getR(), trustScoreData.getSignature().getS(), kycServerPublicKey);
-        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            return false;
-
-        }
-    }
-
-    private static byte[] getKycTrustScoreMessageInBytes(TrustScoreData trustScoreData) {
-
-        byte[] userHash = trustScoreData.getUserHash().getBytes();
-
-        Double trustScore = trustScoreData.getKycTrustScore();
-        ByteBuffer trustScoreBuffer = ByteBuffer.allocate(8);
-        trustScoreBuffer.putDouble(trustScore);
-
-        ByteBuffer trustScoreMessageBuffer = ByteBuffer.allocate(userHash.length + 8).
-                put(userHash).put(trustScoreBuffer.array());
-
-        byte[] trustScoreMessageInBytes = trustScoreMessageBuffer.array();
-        return  trustScoreMessageInBytes;
     }
 
     public static Hash cryptoHash(byte[] input) {

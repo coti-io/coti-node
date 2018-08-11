@@ -1,11 +1,11 @@
 package io.coti.trustscore.services;
 
-import io.coti.common.crypto.CryptoHelper;
 import io.coti.common.crypto.NodeCryptoHelper;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TrustScoreData;
 import io.coti.common.http.*;
-import io.coti.common.http.data.TrustScoreResponseData;
+import io.coti.common.data.TransactionTrustScoreData;
+import io.coti.common.http.data.TransactionTrustScoreResponseData;
 import io.coti.common.model.TrustScores;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,22 +46,17 @@ public class TrustScoreService {
                     .status(HttpStatus.BAD_REQUEST)
                     .body(new Response(NON_EXISTING_USER_MESSAGE, STATUS_ERROR));
         }
-        GetTransactionTrustScoreResponse getTransactionTrustScoreResponse =
-                new GetTransactionTrustScoreResponse(
-                        new TrustScoreResponseData(
-                                userHash,
-                                transactionHash,
-                                trustScoreData.getTrustScore(),
-                                NodeCryptoHelper.getNodeHash(),
-                                NodeCryptoHelper.signMessage((transactionHash.toHexString() + trustScoreData.getTrustScore().toString()).getBytes())
-                        ));
+        TransactionTrustScoreData transactionTrustScoreData = new TransactionTrustScoreData(userHash, transactionHash, trustScoreData.getTrustScore(), NodeCryptoHelper.getNodeHash());
+        transactionTrustScoreData.signMessage();
+        TransactionTrustScoreResponseData transactionTrustScoreResponseData = new TransactionTrustScoreResponseData(transactionTrustScoreData);
+        GetTransactionTrustScoreResponse getTransactionTrustScoreResponse = new GetTransactionTrustScoreResponse(transactionTrustScoreResponseData);
         return ResponseEntity.status(HttpStatus.OK).body(getTransactionTrustScoreResponse);
     }
 
     public ResponseEntity<BaseResponse> setKycTrustScore(SetKycTrustScoreRequest request) {
         try {
-            TrustScoreData trustScoreData = new TrustScoreData(request.userHash, request.kycTrustScore, request.signature);
-            if (!CryptoHelper.verifyKycTrustScoreSignature(trustScoreData, kycServerPublicKey)) {
+            TrustScoreData trustScoreData = new TrustScoreData(request.userHash, request.kycTrustScore, request.signature, new Hash(kycServerPublicKey));
+            if (!trustScoreData.verifySignature()) {
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new Response(KYC_TRUST_SCORE_AUTHENTICATION_ERROR, STATUS_ERROR));

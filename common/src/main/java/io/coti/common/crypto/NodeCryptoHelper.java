@@ -27,14 +27,8 @@ public class NodeCryptoHelper {
         dspVote.setSignature(signatureData);
     }
 
-    public static void setNodeHashAndSignature(TransactionData transactionData) {
-        transactionData.setNodeHash(new Hash(nodePublicKey));
-        SignatureData signatureData = CryptoHelper.SignBytes(transactionData.getHash().getBytes(), nodePrivateKey);
-        transactionData.setNodeSignature(signatureData);
-    }
-
     public static SignatureData signMessage(byte[] message) {
-        return CryptoHelper.SignBytes(message, nodePublicKey);
+        return CryptoHelper.SignBytes(message, nodePrivateKey);
     }
 
     public static Hash getNodeHash() {

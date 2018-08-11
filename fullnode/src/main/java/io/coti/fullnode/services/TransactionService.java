@@ -62,7 +62,7 @@ public class TransactionService {
 
 
             log.info("New transaction request is being processed. [Transaction Hash={}, Trust score={}", request.hash, request.senderTrustScore);
-            NodeCryptoHelper.setNodeHashAndSignature(transactionData);
+            transactionData.signMessage();
             if (!transactionHelper.startHandleTransaction(transactionData)) {
                 log.info("Received existing transaction!");
                 return ResponseEntity
