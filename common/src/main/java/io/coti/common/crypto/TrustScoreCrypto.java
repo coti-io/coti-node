@@ -1,6 +1,5 @@
 package io.coti.common.crypto;
 
-import io.coti.common.crypto.Interfaces.ISignatureValidationCrypto;
 import io.coti.common.data.TrustScoreData;
 import org.springframework.stereotype.Service;
 

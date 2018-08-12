@@ -1,14 +1,9 @@
 package io.coti.common.crypto;
 
-import io.coti.common.crypto.Interfaces.ISignatureCrypto;
-import io.coti.common.crypto.Interfaces.ISignatureValidationCrypto;
 import io.coti.common.data.TransactionTrustScoreData;
-import io.coti.common.data.interfaces.ISignable;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 
 @Service
 public class TransactionTrustScoreCrypto extends SignatureCrypto<TransactionTrustScoreData> {
