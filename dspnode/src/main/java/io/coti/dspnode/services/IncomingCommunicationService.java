@@ -3,6 +3,7 @@ package io.coti.dspnode.services;
 import io.coti.common.communication.interfaces.IPropagationSubscriber;
 import io.coti.common.communication.interfaces.IReceiver;
 import io.coti.common.data.AddressData;
+import io.coti.common.data.DspConsensusResult;
 import io.coti.common.data.TransactionData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,7 @@ public class IncomingCommunicationService {
         HashMap<String, Consumer<Object>> classNameToSubscriberHandlerMapping = new HashMap<>();
         classNameToSubscriberHandlerMapping.put(TransactionData.class.getName() + "DSP Nodes", data -> transactionService.handlePropagatedTransaction((TransactionData) data));
         classNameToSubscriberHandlerMapping.put(AddressData.class.getName() + "DSP Nodes", data -> addressService.handlePropagatedAddress((AddressData) data));
+        classNameToSubscriberHandlerMapping.put(DspConsensusResult.class.getName() + "Dsp Result", data -> transactionService.handleVoteConclusion((DspConsensusResult) data));
         propagationSubscriber.init(classNameToSubscriberHandlerMapping);
     }
 

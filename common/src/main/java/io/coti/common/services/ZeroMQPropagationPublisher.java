@@ -3,6 +3,7 @@ package io.coti.common.services;
 import io.coti.common.communication.interfaces.IPropagationPublisher;
 import io.coti.common.communication.interfaces.ISerializer;
 import io.coti.common.data.AddressData;
+import io.coti.common.data.DspConsensusResult;
 import io.coti.common.data.TransactionData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,14 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
     public void propagateAddress(AddressData addressData, String channel) {
         log.info("Propagating address {} to {}", addressData.getHash().toHexString(), channel);
         byte[] message = serializer.serialize(addressData);
+        propagator.sendMore(channel.getBytes());
+        propagator.send(message);
+    }
+
+    @Override
+    public void propagateDspResult(DspConsensusResult dspConsensusResult, String channel) {
+        log.info("Propagating dsp result of transaction {} to {}", dspConsensusResult.getTransactionHash().toHexString(), channel);
+        byte[] message = serializer.serialize(dspConsensusResult);
         propagator.sendMore(channel.getBytes());
         propagator.send(message);
     }

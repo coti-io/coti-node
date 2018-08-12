@@ -16,7 +16,7 @@ public class DspVoteCrypto extends SignatureCrypto<DspVote> {
         validTransactionBuffer.put(dspVote.isValidTransaction() ? (byte) 1 : (byte) 0);
 
         ByteBuffer dspVoteMessageBuffer = ByteBuffer.allocate(transactionHashInBytes.length + 1).
-                put(transactionHashInBytes).put(transactionHashInBytes).put(validTransactionBuffer.array());
+                put(transactionHashInBytes).put(validTransactionBuffer.array());
 
         byte[] dspVoteMessageInBytes = dspVoteMessageBuffer.array();
         byte[] cryptoHashedMessage = CryptoHelper.cryptoHash(dspVoteMessageInBytes).getBytes();

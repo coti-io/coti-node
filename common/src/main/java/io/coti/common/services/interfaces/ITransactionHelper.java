@@ -1,6 +1,7 @@
 package io.coti.common.services.interfaces;
 
 import io.coti.common.data.BaseTransactionData;
+import io.coti.common.data.DspConsensusResult;
 import io.coti.common.data.TransactionData;
 
 import java.util.List;
@@ -22,5 +23,7 @@ public interface ITransactionHelper {
     void setTransactionStateToSaved(TransactionData transactionData);
 
     void setTransactionStateToFinished(TransactionData transactionData);
+
+    boolean handleVoteConclusionResult(DspConsensusResult dspConsensusResult);
 
 }

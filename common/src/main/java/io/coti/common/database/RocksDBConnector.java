@@ -32,7 +32,9 @@ public class RocksDBConnector implements IDatabaseConnector {
             AddressesTransactionsHistory.class.getName(),
             ConfirmedTransactions.class.getName(),
             UnconfirmedTransactions.class.getName(),
-            TrustScores.class.getName()
+            TrustScores.class.getName(),
+            TransactionIndexes.class.getName(),
+            TransactionVotes.class.getName()
     );
 
     @Value("${application.name}")
@@ -63,7 +65,7 @@ public class RocksDBConnector implements IDatabaseConnector {
     }
 
     @PostConstruct
-    public void init(){
+    public void init() {
         init(applicationName + databaseFolderName);
     }
 

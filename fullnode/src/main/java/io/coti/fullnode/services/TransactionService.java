@@ -2,7 +2,6 @@ package io.coti.fullnode.services;
 
 import io.coti.common.communication.interfaces.ISender;
 import io.coti.common.crypto.CryptoHelper;
-import io.coti.common.crypto.NodeCryptoHelper;
 import io.coti.common.crypto.TransactionCrypto;
 import io.coti.common.data.AddressTransactionsHistory;
 import io.coti.common.data.Hash;
@@ -137,8 +136,7 @@ public class TransactionService {
         } catch (Exception ex) {
             log.error("Exception while adding a transaction", ex);
             throw new TransactionException(ex);
-        }
-        finally {
+        } finally {
             transactionHelper.endHandleTransaction(transactionData);
         }
     }
@@ -209,7 +207,7 @@ public class TransactionService {
             log.info("Data Integrity validation failed");
             return;
         }
-        if(!transactionHelper.checkBalancesAndAddToPreBalance(transactionData)){
+        if (!transactionHelper.checkBalancesAndAddToPreBalance(transactionData)) {
             log.info("Balance check failed!");
             return;
         }

@@ -176,4 +176,23 @@ public class TransactionHelper implements ITransactionHelper {
     public void setTransactionStateToFinished(TransactionData transactionData) {
         transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(FINISHED);
     }
+
+    @Override
+    public boolean handleVoteConclusionResult(DspConsensusResult dspConsensusResult) {
+        TransactionData existingTransactionData = transactions.getByHash(dspConsensusResult.getTransactionHash());
+        if (!(existingTransactionData.getDspConsensusResult() == null)) {
+            log.info("Transaction vote already exists");
+            return false;
+        }
+        existingTransactionData.setDspConsensusResult(dspConsensusResult);
+        if (dspConsensusResult.isDspConsensus()) {
+            log.info("Valid vote conclusion received for transaction: {}", dspConsensusResult.getHash());
+        } else {
+            log.info("Invalid vote conclusion received for transaction: {}", dspConsensusResult.getHash());
+        }
+
+        log.info("Vote received for transaction: {}={}, Index={}", dspConsensusResult.getHash(), dspConsensusResult.isDspConsensus(), dspConsensusResult.getIndex());
+        transactions.put(existingTransactionData);
+        return true;
+    }
 }

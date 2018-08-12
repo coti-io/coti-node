@@ -1,5 +1,6 @@
 package io.coti.common.crypto;
 
+import io.coti.common.data.DspVote;
 import io.coti.common.data.Hash;
 import io.coti.common.data.SignatureData;
 import io.coti.common.data.TransactionData;
@@ -125,6 +126,16 @@ public class CryptoHelper {
         g.initialize(ECNamedCurveTable.getParameterSpec(ecSpec), new SecureRandom());
         KeyPair pair = g.generateKeyPair();
         return pair;
+    }
+
+    public static boolean verifyVoteSignature(DspVote dspVote) {
+        try {
+            String publicKey = dspVote.getVoterDspHash().toHexString();
+            return CryptoHelper.VerifyByPublicKey(dspVote.getHash().getBytes(), dspVote.getSignature().getR(), dspVote.getSignature().getS(), publicKey);
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public static boolean IsAddressValid(Hash addressHash) {

@@ -1,7 +1,5 @@
 package io.coti.common.data;
 
-import io.coti.common.data.Hash;
-import io.coti.common.data.SignatureData;
 import io.coti.common.data.interfaces.IEntity;
 import io.coti.common.data.interfaces.ISignValidatable;
 import io.coti.common.data.interfaces.ISignable;
@@ -10,12 +8,17 @@ import lombok.Data;
 @Data
 public class DspVote implements IEntity, ISignable, ISignValidatable {
     public Hash voterDspHash;
-
     public Hash transactionHash;
-
     public boolean validTransaction;
-
     public SignatureData signature;
+
+    private DspVote() {
+    }
+
+    public DspVote(Hash transactionHash, boolean validTransaction) {
+        this.transactionHash = transactionHash;
+        this.validTransaction = validTransaction;
+    }
 
     @Override
     public Hash getHash() {

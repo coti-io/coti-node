@@ -1,8 +1,5 @@
 package io.coti.common.data;
 
-
-import io.coti.common.crypto.CryptoHelper;
-import io.coti.common.crypto.NodeCryptoHelper;
 import io.coti.common.data.interfaces.IEntity;
 import io.coti.common.data.interfaces.ISignable;
 import lombok.Data;
@@ -13,7 +10,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-
 
 @Slf4j
 @Data
@@ -26,7 +22,6 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
     private List<Hash> trustChainTransactionHashes;
     private Hash userTrustScoreTokenHashes;
     private boolean trustChainConsensus;
-    private boolean dspConsensus;
     private double trustChainTrustScore;
     private Date transactionConsensusUpdateTime;
     private Date createTime;
@@ -46,22 +41,23 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
     private transient boolean isVisit;
     private boolean isZeroSpend;
     private String transactionDescription;
+    private DspConsensusResult dspConsensusResult;
 
     private TransactionData() {
     }
 
-    public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription,double senderTrustScore, Date createTime) {
-        this(baseTransactions,transactionDescription,senderTrustScore,createTime);
+    public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, double senderTrustScore, Date createTime) {
+        this(baseTransactions, transactionDescription, senderTrustScore, createTime);
         this.hash = transactionHash;
     }
 
-    public TransactionData(List<BaseTransactionData> baseTransactions, String transactionDescription,double senderTrustScore, Date createTime) {
+    public TransactionData(List<BaseTransactionData> baseTransactions, String transactionDescription, double senderTrustScore, Date createTime) {
         this.transactionDescription = transactionDescription;
         this.baseTransactions = baseTransactions;
         this.createTime = createTime;
         this.senderTrustScore = senderTrustScore;
         BigDecimal amount = BigDecimal.ZERO;
-        for(BaseTransactionData baseTransaction : baseTransactions){
+        for (BaseTransactionData baseTransaction : baseTransactions) {
             amount = amount.add(baseTransaction.getAmount().signum() > 0 ? baseTransaction.getAmount() : BigDecimal.ZERO);
         }
         this.amount = amount;
@@ -69,8 +65,7 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
     }
 
 
-    private void  initTransactionData()
-    {
+    private void initTransactionData() {
         this.trustChainTransactionHashes = new Vector<>();
         this.childrenTransactions = new Vector<>();
         this.processStartTime = (new Date());

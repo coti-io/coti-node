@@ -40,7 +40,9 @@ fullnode/rocksDB/*
 DSPNoderocksDB*/
 FullNoderocksDB*/
 TrustScorerocksDB*/
+ZeroSpendrocksDB*/
 initialDatabase/
+ZeroSpendServerrocksDB*/
 
 *.jar
 *.class

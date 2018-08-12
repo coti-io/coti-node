@@ -1,13 +1,15 @@
 package io.coti.dspnode.services;
 
+import io.coti.common.crypto.DspVoteCrypto;
 import io.coti.common.data.DspVote;
 import io.coti.common.communication.interfaces.IPropagationPublisher;
 import io.coti.common.communication.interfaces.ISender;
 import io.coti.common.crypto.CryptoHelper;
 import io.coti.common.crypto.NodeCryptoHelper;
+import io.coti.common.data.DspConsensusResult;
+import io.coti.common.data.SignatureData;
 import io.coti.common.data.TransactionData;
 import io.coti.common.model.Transactions;
-import io.coti.common.services.interfaces.IBalanceService;
 import io.coti.common.services.interfaces.ITransactionHelper;
 import io.coti.common.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +33,6 @@ public class TransactionService {
     @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired
-    private IBalanceService balanceService;
-    @Autowired
     private IValidationService validationService;
     @Autowired
     private Transactions transactions;
@@ -54,8 +54,10 @@ public class TransactionService {
             log.info("Invalid Transaction Received!");
             return "Invalid Transaction Received: " + transactionData.getHash();
         }
+        propagationPublisher.propagateTransaction(transactionData, TransactionData.class.getName() + "ZeroSpend Node");
         propagationPublisher.propagateTransaction(transactionData, TransactionData.class.getName() + "Full Nodes");
         propagationPublisher.propagateTransaction(transactionData, TransactionData.class.getName() + "DSP Nodes");
+
         transactionHelper.setTransactionStateToFinished(transactionData);
         transactionsToValidate.add(transactionData);
         transactionHelper.endHandleTransaction(transactionData);
@@ -70,10 +72,11 @@ public class TransactionService {
         while (!transactionsToValidate.isEmpty()) {
             TransactionData transactionData = transactionsToValidate.remove();
             log.info("DSP Fully Checking transaction: {}", transactionData.getHash());
-            DspVote dspVote = new DspVote();
-            dspVote.transactionHash = transactionData.getHash();
-            dspVote.validTransaction = validationService.fullValidation(transactionData);
-            NodeCryptoHelper.setNodeHashAndSignature(dspVote); // TODO: Should sign the decision also
+            DspVote dspVote = new DspVote(
+                    transactionData.getHash(),
+                    validationService.fullValidation(transactionData));
+            DspVoteCrypto dspVoteCrypto = new DspVoteCrypto();
+            dspVoteCrypto.signMessage(dspVote);
             sender.sendDspVote(dspVote);
         }
         isValidatorRunning.set(false);
@@ -118,5 +121,9 @@ public class TransactionService {
         } finally {
             transactionHelper.endHandleTransaction(transactionData);
         }
+    }
+
+    public void handleVoteConclusion(DspConsensusResult dspConsensusResult) {
+        transactionHelper.handleVoteConclusionResult(dspConsensusResult);
     }
 }

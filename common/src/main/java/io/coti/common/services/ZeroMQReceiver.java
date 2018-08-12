@@ -68,7 +68,7 @@ public class ZeroMQReceiver implements IReceiver {
             }
             if (classType.equals(DspVote.class.getName()) &&
                     classNameToHandlerMapping.containsKey(classType)) {
-                log.info("Received a new Address...");
+                log.info("Received a new Dsp Vote...");
                 byte[] message = receiver.recv();
                 try {
                     DspVote dspVote = serializer.deserialize(message);

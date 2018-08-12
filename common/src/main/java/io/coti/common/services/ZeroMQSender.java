@@ -1,10 +1,10 @@
 package io.coti.common.services;
 
-import io.coti.common.data.DspVote;
 import io.coti.common.communication.ZeroMQUtils;
 import io.coti.common.communication.interfaces.ISender;
 import io.coti.common.communication.interfaces.ISerializer;
 import io.coti.common.data.AddressData;
+import io.coti.common.data.DspVote;
 import io.coti.common.data.TransactionData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,8 +21,11 @@ import java.util.List;
 public class ZeroMQSender implements ISender {
     @Value("#{'${receiving.server.addresses}'.split(',')}")
     private List<String> receivingServerAddresses;
+    @Value("${zerospend.receiving.address}")
+    private String zeroSpendServerAddress;
     private ZMQ.Context zeroMQContext;
-    private ZMQ.Socket sender;
+    private ZMQ.Socket transactionSender;
+    private ZMQ.Socket dspVoteSender;
 
     @Autowired
     private ISerializer serializer;
@@ -30,12 +33,17 @@ public class ZeroMQSender implements ISender {
     @PostConstruct
     private void init() {
         zeroMQContext = ZMQ.context(1);
-        sender = zeroMQContext.socket(ZMQ.DEALER);
-        ZeroMQUtils.bindToRandomPort(sender);
+        transactionSender = zeroMQContext.socket(ZMQ.DEALER);
+        ZeroMQUtils.bindToRandomPort(transactionSender);
         for (String receivingServerAddress :
                 receivingServerAddresses
-                ) {
-            sender.connect(receivingServerAddress);
+        ) {
+            transactionSender.connect(receivingServerAddress);
+        }
+        if (zeroSpendServerAddress != null) {
+            dspVoteSender = zeroMQContext.socket(ZMQ.DEALER);
+            ZeroMQUtils.bindToRandomPort(dspVoteSender);
+            dspVoteSender.connect(zeroSpendServerAddress);
         }
     }
 
@@ -44,8 +52,8 @@ public class ZeroMQSender implements ISender {
         byte[] message = serializer.serialize(addressData);
         synchronized (zeroMQContext) {
             try {
-                sender.sendMore(AddressData.class.getName());
-                sender.send(message);
+                transactionSender.sendMore(AddressData.class.getName());
+                transactionSender.send(message);
             } catch (ZMQException exception) {
                 return;
             }
@@ -57,21 +65,21 @@ public class ZeroMQSender implements ISender {
         byte[] message = serializer.serialize(transactionData);
         synchronized (zeroMQContext) {
             try {
-                sender.sendMore(TransactionData.class.getName());
-                sender.send(message);
+                transactionSender.sendMore(TransactionData.class.getName());
+                transactionSender.send(message);
             } catch (ZMQException exception) {
                 return;
             }
         }
     }
 
-    public void sendDspVote(DspVote dspVote){
-        log.info("Sending DSP Vote: {}={}", dspVote.transactionHash, dspVote.validTransaction);
+    public void sendDspVote(DspVote dspVote) {
+        log.info("Sending DSP Vote: {}={}", dspVote.getTransactionHash(), dspVote.isValidTransaction());
         byte[] message = serializer.serialize(dspVote);
         synchronized (zeroMQContext) {
             try {
-                sender.sendMore(DspVote.class.getName());
-                sender.send(message);
+                dspVoteSender.sendMore(DspVote.class.getName());
+                dspVoteSender.send(message);
             } catch (ZMQException exception) {
                 return;
             }

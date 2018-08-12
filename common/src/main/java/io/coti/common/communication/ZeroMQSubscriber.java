@@ -3,6 +3,7 @@ package io.coti.common.communication;
 import io.coti.common.communication.interfaces.IPropagationSubscriber;
 import io.coti.common.communication.interfaces.ISerializer;
 import io.coti.common.data.AddressData;
+import io.coti.common.data.DspConsensusResult;
 import io.coti.common.data.TransactionData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,6 @@ import java.util.function.Consumer;
 public class ZeroMQSubscriber implements IPropagationSubscriber {
     @Value("#{'${propagation.server.addresses}'.split(',')}")
     private List<String> propagationServerAddresses;
-    private HashMap<String, Consumer<Object>> messagesHandler;
 
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket propagationReceiver;
@@ -67,6 +67,17 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                     try {
                         AddressData addressData = serializer.deserialize(message);
                         messagesHandler.get(channel).accept(addressData);
+                    } catch (ClassCastException e) {
+                        log.error("Invalid request received: " + e.getMessage());
+                    }
+                }
+                if (channel.contains(DspConsensusResult.class.getName()) &&
+                        messagesHandler.containsKey(channel)) {
+                    log.info("Received a new message on channel: {}", channel);
+                    byte[] message = propagationReceiver.recv();
+                    try {
+                        DspConsensusResult dspConsensusResult = serializer.deserialize(message);
+                        messagesHandler.get(channel).accept(dspConsensusResult);
                     } catch (ClassCastException e) {
                         log.error("Invalid request received: " + e.getMessage());
                     }

@@ -1,9 +1,6 @@
 package io.coti.common.model;
 
-import io.coti.common.data.BaseTransactionData;
-import io.coti.common.data.ConfirmationData;
-import io.coti.common.data.TccInfo;
-import io.coti.common.data.TransactionData;
+import io.coti.common.data.*;
 import io.coti.common.data.interfaces.IEntity;
 import io.coti.common.database.Interfaces.IDatabaseConnector;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +13,7 @@ import java.util.Date;
 @Slf4j
 @Service
 public class ConfirmedTransactions extends Collection<ConfirmationData> {
-    
+
     @Autowired
     public IDatabaseConnector databaseConnector;
 
@@ -47,7 +44,7 @@ public class ConfirmedTransactions extends Collection<ConfirmationData> {
                         .get(baseTransaction.getAddressHash()));
 
             }
-            transactionData.setDspConsensus(confirmationData.isDoubleSpendPreventionConsensus());
+            transactionData.getDspConsensusResult().setDspConsensus(confirmationData.isDoubleSpendPreventionConsensus());
 
             transactionData.setTrustChainConsensus(true);
             transactionData.setTransactionConsensusUpdateTime(new Date());
