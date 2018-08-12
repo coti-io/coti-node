@@ -129,6 +129,16 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
     }
 
     @Override
+    public void setSignerHash(Hash signerHash) {
+        nodeHash = signerHash;
+    }
+
+    @Override
+    public void setSignature(SignatureData signature) {
+        nodeSignature = signature;
+    }
+
+  /*  @Override
     public void signMessage() {
         nodeHash = NodeCryptoHelper.getNodeHash();
         nodeSignature = NodeCryptoHelper.signMessage(this.getMessageInBytes());
@@ -137,5 +147,5 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
     @Override
     public byte[] getMessageInBytes() {
         return hash.getBytes();
-    }
+    } */
 }

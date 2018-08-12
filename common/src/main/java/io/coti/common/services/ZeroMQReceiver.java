@@ -1,6 +1,6 @@
 package io.coti.common.services;
 
-import io.coti.common.communication.DspVote;
+import io.coti.common.data.DspVote;
 import io.coti.common.communication.interfaces.IReceiver;
 import io.coti.common.communication.interfaces.ISerializer;
 import io.coti.common.data.AddressData;

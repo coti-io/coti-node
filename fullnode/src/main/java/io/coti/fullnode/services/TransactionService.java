@@ -3,6 +3,7 @@ package io.coti.fullnode.services;
 import io.coti.common.communication.interfaces.ISender;
 import io.coti.common.crypto.CryptoHelper;
 import io.coti.common.crypto.NodeCryptoHelper;
+import io.coti.common.crypto.TransactionCrypto;
 import io.coti.common.data.AddressTransactionsHistory;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
@@ -36,6 +37,8 @@ public class TransactionService {
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
+    private TransactionCrypto transactionCrypto;
+    @Autowired
     private IValidationService validationService;
     @Autowired
     private IClusterService clusterService;
@@ -62,7 +65,7 @@ public class TransactionService {
 
 
             log.info("New transaction request is being processed. [Transaction Hash={}, Trust score={}", request.hash, request.senderTrustScore);
-            transactionData.signMessage();
+            transactionCrypto.signMessage(transactionData);
             if (!transactionHelper.startHandleTransaction(transactionData)) {
                 log.info("Received existing transaction!");
                 return ResponseEntity

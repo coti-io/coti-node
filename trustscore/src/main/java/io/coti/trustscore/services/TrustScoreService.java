@@ -1,6 +1,8 @@
 package io.coti.trustscore.services;
 
 import io.coti.common.crypto.NodeCryptoHelper;
+import io.coti.common.crypto.TransactionTrustScoreCrypto;
+import io.coti.common.crypto.TrustScoreCrypto;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TrustScoreData;
 import io.coti.common.http.*;
@@ -21,7 +23,10 @@ import static io.coti.common.http.HttpStringConstants.*;
 @Slf4j
 @Service
 public class TrustScoreService {
-
+    @Autowired
+    private TransactionTrustScoreCrypto transactionTrustScoreCrypto;
+    @Autowired
+    private TrustScoreCrypto trustScoreCrypto;
     @Autowired
     private TrustScores trustScores;
     @Value("${kycserver.public.key}")
@@ -46,8 +51,8 @@ public class TrustScoreService {
                     .status(HttpStatus.BAD_REQUEST)
                     .body(new Response(NON_EXISTING_USER_MESSAGE, STATUS_ERROR));
         }
-        TransactionTrustScoreData transactionTrustScoreData = new TransactionTrustScoreData(userHash, transactionHash, trustScoreData.getTrustScore(), NodeCryptoHelper.getNodeHash());
-        transactionTrustScoreData.signMessage();
+        TransactionTrustScoreData transactionTrustScoreData = new TransactionTrustScoreData(userHash, transactionHash, trustScoreData.getTrustScore());
+        transactionTrustScoreCrypto.signMessage(transactionTrustScoreData);
         TransactionTrustScoreResponseData transactionTrustScoreResponseData = new TransactionTrustScoreResponseData(transactionTrustScoreData);
         GetTransactionTrustScoreResponse getTransactionTrustScoreResponse = new GetTransactionTrustScoreResponse(transactionTrustScoreResponseData);
         return ResponseEntity.status(HttpStatus.OK).body(getTransactionTrustScoreResponse);
@@ -56,7 +61,7 @@ public class TrustScoreService {
     public ResponseEntity<BaseResponse> setKycTrustScore(SetKycTrustScoreRequest request) {
         try {
             TrustScoreData trustScoreData = new TrustScoreData(request.userHash, request.kycTrustScore, request.signature, new Hash(kycServerPublicKey));
-            if (!trustScoreData.verifySignature()) {
+            if (!trustScoreCrypto.verifySignature(trustScoreData)) {
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new Response(KYC_TRUST_SCORE_AUTHENTICATION_ERROR, STATUS_ERROR));

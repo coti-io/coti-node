@@ -35,30 +35,6 @@ public class TrustScoreData implements IEntity, ISignValidatable {
         this.kycServerPublicKey = kycServerPublicKey;
     }
 
-    @Override
-    public boolean verifySignature() {
-        try {
-            return CryptoHelper.VerifyByPublicKey(this.getMessageInBytes(), signature.getR(), signature.getS(), kycServerPublicKey.toHexString());
-        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    @Override
-    public byte[] getMessageInBytes() {
-        byte[] userHashInBytes = userHash.getBytes();
-
-        ByteBuffer trustScoreBuffer = ByteBuffer.allocate(8);
-        trustScoreBuffer.putDouble(kycTrustScore);
-
-        ByteBuffer trustScoreMessageBuffer = ByteBuffer.allocate(userHashInBytes.length + 8).
-                put(userHashInBytes).put(trustScoreBuffer.array());
-
-        byte[] trustScoreMessageInBytes = trustScoreMessageBuffer.array();
-        byte[] cryptoHashedMessage = CryptoHelper.cryptoHash(trustScoreMessageInBytes).getBytes();
-        return cryptoHashedMessage;
-    }
 
     @Override
     public Hash getHash() {
@@ -71,4 +47,13 @@ public class TrustScoreData implements IEntity, ISignValidatable {
     }
 
 
+    @Override
+    public SignatureData getSignature() {
+        return signature;
+    }
+
+    @Override
+    public Hash getSignerHash() {
+        return kycServerPublicKey;
+    }
 }
