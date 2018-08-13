@@ -1,13 +1,11 @@
 package io.coti.dspnode.services;
 
-import io.coti.common.crypto.DspVoteCrypto;
-import io.coti.common.data.DspVote;
 import io.coti.common.communication.interfaces.IPropagationPublisher;
 import io.coti.common.communication.interfaces.ISender;
 import io.coti.common.crypto.CryptoHelper;
-import io.coti.common.crypto.NodeCryptoHelper;
+import io.coti.common.crypto.DspVoteCrypto;
 import io.coti.common.data.DspConsensusResult;
-import io.coti.common.data.SignatureData;
+import io.coti.common.data.DspVote;
 import io.coti.common.data.TransactionData;
 import io.coti.common.model.Transactions;
 import io.coti.common.services.interfaces.ITransactionHelper;
