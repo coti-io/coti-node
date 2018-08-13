@@ -64,11 +64,12 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
         this.initTransactionData();
     }
 
-    public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, List<TransactionTrustScoreData> trustScoreResults, Date createTime) {
+    public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, List<TransactionTrustScoreData> trustScoreResults, Date createTime, Hash senderHash) {
         this.hash = transactionHash;
         this.transactionDescription = transactionDescription;
         this.baseTransactions = baseTransactions;
         this.createTime = createTime;
+        this.senderHash = senderHash;
         this.trustScoreResults = trustScoreResults;
         BigDecimal amount = BigDecimal.ZERO;
         for (BaseTransactionData baseTransaction : baseTransactions) {

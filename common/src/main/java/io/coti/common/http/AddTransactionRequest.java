@@ -15,9 +15,12 @@ public class AddTransactionRequest extends Request {
     public Hash hash;
     @NotNull
     public String transactionDescription;
-
+    @NotNull
     public Date createTime;
+    @NotNull
     public List<TransactionTrustScoreData> trustScoreResults;
+    @NotNull
+    public Hash senderHash;
 }
 
 
