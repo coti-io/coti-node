@@ -57,9 +57,11 @@ public class TransactionService {
             log.info("Invalid Transaction Received!");
             return "Invalid Transaction Received: " + transactionData.getHash();
         }
-        propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "ZeroSpend Node");
+        propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "ZeroSpend Server");
         propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "Full Nodes");
         propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "DSP Nodes");
+        propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "TrustScore Nodes");
+
 
         transactionHelper.setTransactionStateToFinished(transactionData);
         transactionsToValidate.add(transactionData);

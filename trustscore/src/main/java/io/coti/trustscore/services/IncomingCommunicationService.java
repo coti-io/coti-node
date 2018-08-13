@@ -28,9 +28,9 @@ public class IncomingCommunicationService {
 
     private void initSubscriber() {
         HashMap<String, Consumer<Object>> classNameToSubscriberHandlerMapping = new HashMap<>();
-        classNameToSubscriberHandlerMapping.put(TransactionData.class.getName() + "Full Nodes", data
+        classNameToSubscriberHandlerMapping.put(TransactionData.class.getName() + "TrustScore Nodes", data
                 -> transactionService.handlePropagatedTransaction((TransactionData) data));
-        classNameToSubscriberHandlerMapping.put(AddressData.class.getName() + "Full Nodes", data
+        classNameToSubscriberHandlerMapping.put(AddressData.class.getName() + "TrustScore Nodes", data
                 -> addressService.handlePropagatedAddress((AddressData) data));
         propagationSubscriber.init(classNameToSubscriberHandlerMapping);
     }

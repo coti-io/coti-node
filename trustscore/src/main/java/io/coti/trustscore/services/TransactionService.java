@@ -31,10 +31,6 @@ public class TransactionService {
     @Autowired
     private IValidationService validationService;
     @Autowired
-    private IClusterService clusterService;
-    @Autowired
-    private IZeroSpendService zeroSpendService;
-    @Autowired
     private AddressesTransactionsHistory addressesTransactionsHistory;
     @Autowired
     private Transactions transactions;

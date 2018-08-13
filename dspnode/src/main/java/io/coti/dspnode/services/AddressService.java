@@ -29,6 +29,10 @@ public class AddressService {
             addNewAddress(addressData);
             propagationPublisher.propagate(addressData, AddressData.class.getName() + "Full Nodes");
             propagationPublisher.propagate(addressData, AddressData.class.getName() + "DSP Nodes");
+            propagationPublisher.propagate(addressData, AddressData.class.getName() + "TrustScore Nodes");
+            propagationPublisher.propagate(addressData, AddressData.class.getName() + "ZeroSpend Server");
+
+
             log.info("Address {} was successfully added", addressData);
         } else {
             log.info("Address {} already exists", addressData);
