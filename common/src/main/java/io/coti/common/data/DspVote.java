@@ -50,7 +50,7 @@ public class DspVote implements IEntity, ISignable, ISignValidatable {
         this.signature = signature;
     }
 
-    public String toString(){
+    public String toString() {
         return "Transaction Hash: " + transactionHash + " Voter Hash: " + voterDspHash + " IsValid: " + isValidTransaction();
     }
 }
