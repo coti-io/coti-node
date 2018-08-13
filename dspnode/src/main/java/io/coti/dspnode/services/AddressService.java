@@ -27,8 +27,8 @@ public class AddressService {
     public String handleReceivedAddress(AddressData addressData) {
         if (!addressExists(addressData)) {
             addNewAddress(addressData);
-            propagationPublisher.propagateAddress(addressData, AddressData.class.getName() + "Full Nodes");
-            propagationPublisher.propagateAddress(addressData, AddressData.class.getName() + "DSP Nodes");
+            propagationPublisher.propagate(addressData, AddressData.class.getName() + "Full Nodes");
+            propagationPublisher.propagate(addressData, AddressData.class.getName() + "DSP Nodes");
             log.info("Address {} was successfully added", addressData);
         } else {
             log.info("Address {} already exists", addressData);
@@ -39,7 +39,7 @@ public class AddressService {
     public void handlePropagatedAddress(AddressData addressData) {
         if(!addressExists(addressData)){
             addNewAddress(addressData);
-            propagationPublisher.propagateAddress(addressData, AddressData.class.getName() + "Full Nodes");
+            propagationPublisher.propagate(addressData, AddressData.class.getName() + "Full Nodes");
         }
     }
 }

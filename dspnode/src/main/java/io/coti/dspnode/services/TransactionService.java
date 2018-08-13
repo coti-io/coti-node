@@ -12,6 +12,7 @@ import io.coti.common.services.interfaces.ITransactionHelper;
 import io.coti.common.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class TransactionService {
     Queue<TransactionData> transactionsToValidate;
     AtomicBoolean isValidatorRunning;
+    @Value("#{'${zerospend.receiving.address}'.split(',')}")
+    private String zerospendReceivingAddress;
 
     @Autowired
     private ITransactionHelper transactionHelper;
@@ -54,9 +57,9 @@ public class TransactionService {
             log.info("Invalid Transaction Received!");
             return "Invalid Transaction Received: " + transactionData.getHash();
         }
-        propagationPublisher.propagateTransaction(transactionData, TransactionData.class.getName() + "ZeroSpend Node");
-        propagationPublisher.propagateTransaction(transactionData, TransactionData.class.getName() + "Full Nodes");
-        propagationPublisher.propagateTransaction(transactionData, TransactionData.class.getName() + "DSP Nodes");
+        propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "ZeroSpend Node");
+        propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "Full Nodes");
+        propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "DSP Nodes");
 
         transactionHelper.setTransactionStateToFinished(transactionData);
         transactionsToValidate.add(transactionData);
@@ -76,7 +79,8 @@ public class TransactionService {
                     transactionData.getHash(),
                     validationService.fullValidation(transactionData));
             dspVoteCrypto.signMessage(dspVote);
-            sender.sendDspVote(dspVote);
+            log.info("Sending DSP vote to: {}", zerospendReceivingAddress);
+            sender.send(dspVote, zerospendReceivingAddress);
         }
         isValidatorRunning.set(false);
     }
@@ -112,7 +116,7 @@ public class TransactionService {
                 transactionData.addSignature("Node ID", false); // TODO: replace with a sign mechanism
                 sender.sendTransaction(transactionData);
             }*/
-            propagationPublisher.propagateTransaction(transactionData, TransactionData.class.getName() + "Full Nodes");
+            propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "Full Nodes");
             transactionHelper.setTransactionStateToFinished(transactionData);
             transactionsToValidate.add(transactionData);
         } catch (Exception e) {

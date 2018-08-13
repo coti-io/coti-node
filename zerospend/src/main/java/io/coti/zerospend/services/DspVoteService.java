@@ -1,7 +1,6 @@
 package io.coti.zerospend.services;
 
 import io.coti.common.communication.interfaces.IPropagationPublisher;
-import io.coti.common.crypto.CryptoHelper;
 import io.coti.common.crypto.DspVoteCrypto;
 import io.coti.common.data.*;
 import io.coti.common.model.TransactionVotes;
@@ -35,8 +34,6 @@ public class DspVoteService {
     private Transactions transactions;
     @Autowired
     private TransactionIndexService transactionIndexService;
-    @Autowired
-    private DspVoteCrypto dspVoteCrypto;
     private ConcurrentMap<Hash, List<DspVote>> transactionHashToVotesListMapping;
     private static final String NODE_HASH_ENDPOINT = "/nodeHash";
     private List<Hash> currentLiveDspNodes;
@@ -55,6 +52,7 @@ public class DspVoteService {
     }
 
     public String receiveDspVote(DspVote dspVote) {
+        log.info("Received new Dsp Vote: {}", dspVote);
         Hash transactionHash = dspVote.getTransactionHash();
         synchronized (transactionHash.toHexString()) {
             TransactionVoteData transactionVoteData = transactionVotes.getByHash(transactionHash);
@@ -85,6 +83,7 @@ public class DspVoteService {
                 log.error("Transaction Not existing in mapping!!"); // TODO: Solve and delete!
                 return "Vote already processed";
             }
+            log.info("Adding new vote: {}", dspVote);
             transactionHashToVotesListMapping.get(transactionHash).add(dspVote);
         }
         return "Ok";
@@ -123,15 +122,18 @@ public class DspVoteService {
                     TransactionVoteData currentVotes = transactionVotes.getByHash(transactionHash);
 
                     for (DspVote additionalVote : transactionHashToVotesListEntrySet.getValue()) {
-                        currentVotes.getDspHashToVoteMapping().putIfAbsent(additionalVote.getHash(), additionalVote);
+                        currentVotes.getDspHashToVoteMapping().putIfAbsent(additionalVote.getVoterDspHash(), additionalVote);
                     }
 
                     if (isPositiveMajorityAchieved(currentVotes)) {
                         publishDecision(transactionHash, true);
+                        log.info("Valid vote majority achieved for: {}", currentVotes.getHash());
                     } else if (isNegativeMajorityAchieved(currentVotes)) {
                         publishDecision(transactionHash, false);
+                        log.info("Invalid vote majority achieved for: {}", currentVotes.getHash());
                     } else {
                         transactionVotes.put(currentVotes);
+                        log.info("Undecided majority: {}", currentVotes.getHash());
                     }
                 }
             }
@@ -144,7 +146,7 @@ public class DspVoteService {
         dspConsensusResult.setIndex(transactionIndexService.generateTransactionIndex(transactionData));
         dspConsensusResult.setDspConsensus(isLegalTransaction);
         dspConsensusResult.setIndexingTime(new Date());
-        propagationPublisher.propagateDspResult(dspConsensusResult, DspConsensusResult.class.getName() + "Dsp Result");
+        propagationPublisher.propagate(dspConsensusResult, DspConsensusResult.class.getName() + "Dsp Result");
         transactionData.setDspConsensusResult(dspConsensusResult);
         transactions.put(transactionData);
         transactionHashToVotesListMapping.remove(transactionHash);

@@ -19,6 +19,7 @@ import io.coti.common.services.interfaces.IValidationService;
 import io.coti.common.services.interfaces.IZeroSpendService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,8 @@ import static io.coti.common.http.HttpStringConstants.*;
 @Slf4j
 @Service
 public class TransactionService {
+    @Value("#{'${receiving.server.addresses}'.split(',')}")
+    private List<String> receivingServerAddresses;
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -44,7 +47,7 @@ public class TransactionService {
     @Autowired
     private IZeroSpendService zeroSpendService;
     @Autowired
-    private ISender transactionSender;
+    private ISender sender;
     @Autowired
     private AddressesTransactionsHistory addressesTransactionsHistory;
     @Autowired
@@ -132,8 +135,8 @@ public class TransactionService {
             transactionHelper.attachTransactionToCluster(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
             webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
-            // TODO: Send to DSP Node
-            transactionSender.sendTransaction(transactionData);
+            final TransactionData finalTransactionData = transactionData;
+            receivingServerAddresses.forEach(address -> sender.send(finalTransactionData, address));
             transactionHelper.setTransactionStateToFinished(transactionData);
             return ResponseEntity
                     .status(HttpStatus.CREATED)

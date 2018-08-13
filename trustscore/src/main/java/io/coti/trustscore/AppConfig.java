@@ -1,8 +1,8 @@
 package io.coti.trustscore;
 
-import io.coti.common.services.ZeroMQPropagationPublisher;
-import io.coti.common.services.ZeroMQReceiver;
-import io.coti.common.services.ZeroMQSender;
+import io.coti.common.communication.ZeroMQPropagationPublisher;
+import io.coti.common.communication.ZeroMQReceiver;
+import io.coti.common.communication.ZeroMQSender;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;

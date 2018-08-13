@@ -1,14 +1,8 @@
 package io.coti.common.communication.interfaces;
 
-import io.coti.common.data.DspVote;
-import io.coti.common.data.AddressData;
-import io.coti.common.data.TransactionData;
+import io.coti.common.data.interfaces.IEntity;
 
 public interface ISender {
 
-    void sendTransaction(TransactionData transactionData);
-
-    void sendAddress(AddressData addressData);
-
-    void sendDspVote(DspVote dspVote);
+    <T extends IEntity> void send(T toSend, String address);
 }

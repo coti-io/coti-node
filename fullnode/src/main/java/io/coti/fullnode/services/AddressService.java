@@ -7,11 +7,16 @@ import io.coti.common.model.Addresses;
 import io.coti.common.services.LiveView.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Slf4j
 @Service
 public class AddressService {
+    @Value("#{'${receiving.server.addresses}'.split(',')}")
+    private List<String> receivingServerAddresses;
 
     @Autowired
     private ISender sender;
@@ -21,11 +26,13 @@ public class AddressService {
     private WebSocketSender webSocketSender;
 
     public boolean addNewAddress(Hash addressHash) {
+
+
         if (!addressExists(addressHash)) {
             AddressData addressData = new AddressData(addressHash);
             addresses.put(addressData);
             log.info("Address {} was successfully inserted", addressHash);
-            sender.sendAddress(addressData);
+            receivingServerAddresses.forEach(address -> sender.send(addressData, address));
             webSocketSender.notifyGeneratedAddress(addressHash);
             return true;
         }
