@@ -10,6 +10,7 @@ logs/
 dsp*.properties
 fullnode*.properties
 trustscore*.properties
+zerospend*.properties
 
 ### STS ###
 .apt_generated

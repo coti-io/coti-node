@@ -7,9 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-
 @Slf4j
 @Service
 public class NodeCryptoHelper {
@@ -21,12 +18,6 @@ public class NodeCryptoHelper {
     public void setNodePublicKey(String nodePrivateKey) {
         this.nodePrivateKey = nodePrivateKey;
         nodePublicKey = CryptoHelper.GetPublicKeyFromPrivateKey(nodePrivateKey);
-    }
-
-    public static void setNodeHashAndSignature(DspVote dspVote) {
-        dspVote.setVoterDspHash(new Hash(nodePublicKey));
-        SignatureData signatureData = CryptoHelper.SignBytes(dspVote.getHash().getBytes(), nodePrivateKey);
-        dspVote.setSignature(signatureData);
     }
 
     public static SignatureData signMessage(byte[] message) {

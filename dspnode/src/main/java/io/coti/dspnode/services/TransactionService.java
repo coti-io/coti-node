@@ -38,6 +38,8 @@ public class TransactionService {
     private Transactions transactions;
     @Autowired
     private ISender sender;
+    @Autowired
+    private DspVoteCrypto dspVoteCrypto;
 
     public String handleNewTransactionFromFullNode(TransactionData transactionData) {
         log.info("Running new transactions from full node handler");
@@ -75,7 +77,6 @@ public class TransactionService {
             DspVote dspVote = new DspVote(
                     transactionData.getHash(),
                     validationService.fullValidation(transactionData));
-            DspVoteCrypto dspVoteCrypto = new DspVoteCrypto();
             dspVoteCrypto.signMessage(dspVote);
             sender.sendDspVote(dspVote);
         }

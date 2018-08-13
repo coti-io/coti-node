@@ -77,10 +77,10 @@ public class DspVoteService {
                 return "Unauthorized";
             }
 
-            if (dspVoteCrypto.verifySignature(dspVote)) {
+         /*   if (dspVoteCrypto.verifySignature(dspVote)) {
                 log.error("Invalid vote signature. Dsp hash: {}, Transaction hash: {}", dspVote.getVoterDspHash(), dspVote.getTransactionHash());
                 return "Invalid Signature";
-            }
+            } */
             if (transactionHashToVotesListMapping.get(transactionHash) == null) {
                 log.error("Transaction Not existing in mapping!!"); // TODO: Solve and delete!
                 return "Vote already processed";
