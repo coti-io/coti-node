@@ -30,7 +30,6 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
     private Date powStartTime;
     private Date powEndTime;
     private double senderTrustScore;
-    private List<Hash> baseTransactionsHash;
     private Hash senderHash;
     private String nodeIpAddress;
     private Hash nodeHash;
@@ -42,6 +41,7 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
     private boolean isZeroSpend;
     private String transactionDescription;
     private DspConsensusResult dspConsensusResult;
+    private List<TransactionTrustScoreData> trustScoreResults;
 
     private TransactionData() {
     }
@@ -56,6 +56,20 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
         this.baseTransactions = baseTransactions;
         this.createTime = createTime;
         this.senderTrustScore = senderTrustScore;
+        BigDecimal amount = BigDecimal.ZERO;
+        for (BaseTransactionData baseTransaction : baseTransactions) {
+            amount = amount.add(baseTransaction.getAmount().signum() > 0 ? baseTransaction.getAmount() : BigDecimal.ZERO);
+        }
+        this.amount = amount;
+        this.initTransactionData();
+    }
+
+    public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, List<TransactionTrustScoreData> trustScoreResults, Date createTime) {
+        this.hash = transactionHash;
+        this.transactionDescription = transactionDescription;
+        this.baseTransactions = baseTransactions;
+        this.createTime = createTime;
+        this.trustScoreResults = trustScoreResults;
         BigDecimal amount = BigDecimal.ZERO;
         for (BaseTransactionData baseTransaction : baseTransactions) {
             amount = amount.add(baseTransaction.getAmount().signum() > 0 ? baseTransaction.getAmount() : BigDecimal.ZERO);

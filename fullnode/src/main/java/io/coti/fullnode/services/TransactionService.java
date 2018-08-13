@@ -58,12 +58,12 @@ public class TransactionService {
                         request.baseTransactions,
                         request.hash,
                         request.transactionDescription,
-                        request.senderTrustScore,
+                        request.trustScoreResults,
                         request.createTime);
         try {
 
 
-            log.info("New transaction request is being processed. [Transaction Hash={}, Trust score={}", request.hash, request.senderTrustScore);
+            log.info("New transaction request is being processed. Transaction Hash={}", request.hash);
             transactionCrypto.signMessage(transactionData);
             if (!transactionHelper.startHandleTransaction(transactionData)) {
                 log.info("Received existing transaction!");
@@ -90,6 +90,14 @@ public class TransactionService {
                         .body(new AddTransactionResponse(
                                 STATUS_ERROR,
                                 ILLEGAL_TRANSACTION_MESSAGE));
+            }
+            if(!transactionHelper.validateTrustScore(transactionData)){
+                log.info("Invalid sender trust score!");
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body(new AddTransactionResponse(
+                                STATUS_ERROR,
+                                INVALID_TRUST_SCORE_MESSAGE));
             }
 
             if (!transactionHelper.checkBalancesAndAddToPreBalance(transactionData)) {

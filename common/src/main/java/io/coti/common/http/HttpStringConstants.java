@@ -18,6 +18,7 @@ public class HttpStringConstants {
     public static final String AUTHENTICATION_FAILED_MESSAGE = "Authentication failed!";
     public static final String INSUFFICIENT_FUNDS_MESSAGE = "Balance for address is insufficient!";
     public static final String ILLEGAL_TRANSACTION_MESSAGE = "Illegal transaction - sum of base transactions must be 0!";
+    public static final String INVALID_TRUST_SCORE_MESSAGE = "Invalid sender trust score!";
     public static final String PARTIAL_VALIDATION_FAILED = "Partial Validation failed!";
 
     public static final String NON_EXISTING_USER_MESSAGE = "User does not exist!";

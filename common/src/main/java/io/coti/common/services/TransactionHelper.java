@@ -1,6 +1,7 @@
 package io.coti.common.services;
 
 import io.coti.common.crypto.TransactionCryptoWrapper;
+import io.coti.common.crypto.TransactionTrustScoreCrypto;
 import io.coti.common.data.*;
 import io.coti.common.http.AddTransactionResponse;
 import io.coti.common.http.BaseResponse;
@@ -16,12 +17,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.coti.common.data.TransactionState.*;
@@ -40,6 +40,8 @@ public class TransactionHelper implements ITransactionHelper {
     private IClusterService clusterService;
     @Autowired
     private Transactions transactions;
+    @Autowired
+    private TransactionTrustScoreCrypto transactionTrustScoreCrypto;
     private Map<Hash, Stack<TransactionState>> transactionHashToTransactionStateStackMapping;
 
     @PostConstruct
@@ -82,6 +84,28 @@ public class TransactionHelper implements ITransactionHelper {
             return true;
         }
         return false;
+    }
+
+    public boolean validateTrustScore(TransactionData transactionData) {
+        Hash transactionHash = transactionData.getHash();
+        List<TransactionTrustScoreData> transactionTrustScores = transactionData.getTrustScoreResults();
+        if (transactionTrustScores == null)
+            return false;
+        Map<Double, Integer> trustScoreResults = new HashMap<>();
+        Double transactionTrustScore;
+        for (TransactionTrustScoreData transactionTrustScoreData : transactionTrustScores) {
+            if (transactionTrustScoreData.getTransactionHash().equals(transactionHash) && transactionTrustScoreCrypto.verifySignature(transactionTrustScoreData)) {
+                transactionTrustScore = transactionTrustScoreData.getTrustScore();
+                Integer trustScoreResult = trustScoreResults.get(transactionTrustScore);
+                trustScoreResults.put(transactionTrustScore, (trustScoreResult != null ? trustScoreResult : 0) + 1);
+            }
+        }
+        if (CollectionUtils.isEmpty(trustScoreResults))
+            return false;
+        transactionData.setSenderTrustScore(Collections.max(trustScoreResults.entrySet(), Map.Entry.comparingByValue()).getKey());
+        return true;
+
+
     }
 
     public boolean startHandleTransaction(TransactionData transactionData) {

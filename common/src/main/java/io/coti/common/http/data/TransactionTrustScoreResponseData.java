@@ -11,14 +11,14 @@ public class TransactionTrustScoreResponseData{
     private String transactionHash;
     private double trustScore;
     private String trustScoreNodeHash;
-    private SignatureData signature;
+    private SignatureData trustScoreNodeSignature;
 
     public TransactionTrustScoreResponseData(TransactionTrustScoreData transactionTrustScoreData) {
         this.userHash = transactionTrustScoreData.getUserHash().toHexString();
         this.transactionHash = transactionTrustScoreData.getTransactionHash().toHexString();
         this.trustScore = transactionTrustScoreData.getTrustScore();
         this.trustScoreNodeHash = transactionTrustScoreData.getTrustScoreNodeHash().toHexString();
-        this.signature = transactionTrustScoreData.getSignature();
+        this.trustScoreNodeSignature = transactionTrustScoreData.getSignature();
     }
 
 }
