@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ClusterService implements IClusterService {
     private final Vector<TransactionData>[] sourceListsByTrustScore = new Vector[101];
+
     @Value("${cluster.delay.after.tcc}")
     private int delayTimeAfterTccProcess;
     @Autowired
@@ -37,7 +38,6 @@ public class ClusterService implements IClusterService {
     private TccConfirmationService tccConfirmationService;
     @Autowired
     private LiveViewService liveViewService;
-
     private ConcurrentHashMap<Hash, TransactionData> hashToUnconfirmedTransactionsMapping;
 
     @Override
@@ -134,6 +134,10 @@ public class ClusterService implements IClusterService {
                         trustScoreToTransactionMappingSnapshot,
                         transactionData.getSenderTrustScore());
 
+        if(selectedSourcesForAttachment.size() == 0){
+            log.info("No sources were found for transaction:{} ", transactionData.getHash());
+            return transactionData;
+        }
         if (selectedSourcesForAttachment.size() > 0) {
             transactionData.setLeftParentHash(selectedSourcesForAttachment.get(0).getHash());
         }
@@ -150,5 +154,7 @@ public class ClusterService implements IClusterService {
         return transactionData;
     }
 
-
+    public Vector<TransactionData>[] getSourceListsByTrustScore() {
+        return sourceListsByTrustScore;
+    }
 }

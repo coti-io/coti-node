@@ -2,9 +2,7 @@ package io.coti.dspnode.services;
 
 import io.coti.common.communication.interfaces.IPropagationSubscriber;
 import io.coti.common.communication.interfaces.IReceiver;
-import io.coti.common.data.AddressData;
-import io.coti.common.data.DspConsensusResult;
-import io.coti.common.data.TransactionData;
+import io.coti.common.data.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,6 +23,8 @@ public class IncomingCommunicationService {
     private AddressService addressService;
     @Autowired
     private TransactionService transactionService;
+    @Autowired
+    private ZeroSpendTransactionService zeroSpendTransactionService;
 
     @PostConstruct
     public void init() {
@@ -37,15 +37,21 @@ public class IncomingCommunicationService {
         classNameToSubscriberHandlerMapping.put(TransactionData.class.getName() + "DSP Nodes", data -> transactionService.handlePropagatedTransaction((TransactionData) data));
         classNameToSubscriberHandlerMapping.put(AddressData.class.getName() + "DSP Nodes", data -> addressService.handlePropagatedAddress((AddressData) data));
         classNameToSubscriberHandlerMapping.put(DspConsensusResult.class.getName() + "Dsp Result", data -> transactionService.handleVoteConclusion((DspConsensusResult) data));
+        classNameToSubscriberHandlerMapping.put(TransactionData.class.getName() + ZeroSpendDescription.ZERO_SPEND_TRANSACTION_NO_SOURCE.name(), data
+                -> transactionService.handleZeroSpendNoSourceTrx((TransactionData) data));
+        classNameToSubscriberHandlerMapping.put(TransactionData.class.getName() + ZeroSpendDescription.ZERO_SPEND_TRANSACTION_STARVATION.name(), data
+                -> transactionService.handleZeroSpendStarvationTrx((TransactionData) data));
         propagationSubscriber.init(classNameToSubscriberHandlerMapping);
     }
 
     private void initReceiver() {
         HashMap<String, Function<Object, String>> classNameToReceiverHandlerMapping = new HashMap<>();
         classNameToReceiverHandlerMapping.put(TransactionData.class.getName(), data ->
-                transactionService.handleNewTransactionFromFullNode((TransactionData) data));
+                transactionService.handleNewTransaction((TransactionData) data));
         classNameToReceiverHandlerMapping.put(AddressData.class.getName(), data ->
                 addressService.handleReceivedAddress((AddressData) data));
+        classNameToReceiverHandlerMapping.put(ZeroSpendTransactionRequest.class.getName(), data ->
+                zeroSpendTransactionService.handleReceivedZeroSpendTransactionRequest((ZeroSpendTransactionRequest) data));
         receiver.init(classNameToReceiverHandlerMapping);
     }
 }

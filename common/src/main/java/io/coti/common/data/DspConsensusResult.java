@@ -4,6 +4,7 @@ import io.coti.common.data.interfaces.IEntity;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.Date;
 import java.util.List;
 
@@ -11,7 +12,7 @@ import java.util.List;
 public class DspConsensusResult implements Serializable, IEntity {
     private Hash transactionHash;
     private Hash zeroSpendServerHash;
-    private long index;
+    private BigInteger index;
     private Date indexingTime;
     private SignatureData signatureData;
     private List<DspVote> votesList;

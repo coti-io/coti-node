@@ -5,6 +5,7 @@ import io.coti.common.communication.interfaces.ISerializer;
 import io.coti.common.data.AddressData;
 import io.coti.common.data.DspConsensusResult;
 import io.coti.common.data.TransactionData;
+import io.coti.common.data.ZeroSpendDescription;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -57,10 +58,10 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                         TransactionData transactionData = serializer.deserialize(message);
                         messagesHandler.get(channel).accept(transactionData);
                     } catch (ClassCastException e) {
-                        log.error("Invalid request received: " + e.getMessage());
+                        log.error("Invalid request received: " ,e);
                     }
                 }
-                if (channel.contains(AddressData.class.getName()) &&
+                else if (channel.contains(AddressData.class.getName()) &&
                         messagesHandler.containsKey(channel)) {
                     log.info("Received a new message on channel: {}", channel);
                     byte[] message = propagationReceiver.recv();
@@ -68,10 +69,10 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                         AddressData addressData = serializer.deserialize(message);
                         messagesHandler.get(channel).accept(addressData);
                     } catch (ClassCastException e) {
-                        log.error("Invalid request received: " + e.getMessage());
+                        log.error("Invalid request received: " ,e);
                     }
                 }
-                if (channel.contains(DspConsensusResult.class.getName()) &&
+                else if (channel.contains(DspConsensusResult.class.getName()) &&
                         messagesHandler.containsKey(channel)) {
                     log.info("Received a new message on channel: {}", channel);
                     byte[] message = propagationReceiver.recv();
@@ -79,8 +80,33 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                         DspConsensusResult dspConsensusResult = serializer.deserialize(message);
                         messagesHandler.get(channel).accept(dspConsensusResult);
                     } catch (ClassCastException e) {
-                        log.error("Invalid request received: " + e.getMessage());
+                        log.error("Invalid request received: " ,e);
                     }
+                }
+//                else if((TransactionData.class.getName() + ZeroSpendDescription.ZERO_SPEND_TRANSACTION_NO_SOURCE.name()).equals(channel)&&
+//                        messagesHandler.containsKey(channel)) {
+//                    log.info("Received a new message on channel: {}", channel);
+//                    byte[] message = propagationReceiver.recv();
+//                    try {
+//                        TransactionData transactionData = serializer.deserialize(message);
+//                        messagesHandler.get(channel).accept(transactionData);
+//                    } catch (ClassCastException e) {
+//                        log.error("Invalid request received: " ,e);
+//                    }
+//                }
+//                else if((TransactionData.class.getName() + ZeroSpendDescription.ZERO_SPEND_TRANSACTION_STARVATION.name()).equals(channel)&&
+//                        messagesHandler.containsKey(channel)) {
+//                    log.info("Received a new message on channel: {}", channel);
+//                    byte[] message = propagationReceiver.recv();
+//                    try {
+//                        TransactionData transactionData = serializer.deserialize(message);
+//                        messagesHandler.get(channel).accept(transactionData);
+//                    } catch (ClassCastException e) {
+//                        log.error("Invalid request received: " ,e);
+//                    }
+//                }
+                else{
+                    log.error("Unknown channel! {} ",channel);
                 }
             }
         });

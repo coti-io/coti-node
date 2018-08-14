@@ -2,9 +2,7 @@ package io.coti.fullnode.services;
 
 import io.coti.common.communication.interfaces.ISender;
 import io.coti.common.crypto.TransactionCrypto;
-import io.coti.common.data.AddressTransactionsHistory;
-import io.coti.common.data.Hash;
-import io.coti.common.data.TransactionData;
+import io.coti.common.data.*;
 import io.coti.common.exceptions.TransactionException;
 import io.coti.common.http.*;
 import io.coti.common.http.data.TransactionStatus;
@@ -174,9 +172,10 @@ public class TransactionService {
             }
         }
 
-        TransactionData zeroSpendTransaction = zeroSpendService.getZeroSpendTransaction(transactionData.getSenderTrustScore());
-        transactionHelper.attachTransactionToCluster(zeroSpendTransaction);
-        clusterService.attachToCluster(zeroSpendTransaction);
+        ZeroSpendTransactionRequest zeroSpendTransactionRequest = new ZeroSpendTransactionRequest();
+        zeroSpendTransactionRequest.setTransactionData(transactionData);
+        receivingServerAddresses.forEach(address -> sender.send(zeroSpendTransactionRequest, address));
+
         transactionData = clusterService.selectSources(transactionData);
         while (!transactionData.hasSources()) {
             log.info("Waiting 2 seconds for new zero spend transaction to be added to available sources");
@@ -228,4 +227,5 @@ public class TransactionService {
         transactionHelper.setTransactionStateToFinished(transactionData);
         transactionHelper.endHandleTransaction(transactionData);
     }
+
 }

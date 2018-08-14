@@ -145,7 +145,8 @@ public class DspVoteService {
     private void publishDecision(Hash transactionHash, boolean isLegalTransaction) {
         TransactionData transactionData = transactions.getByHash(transactionHash);
         DspConsensusResult dspConsensusResult = new DspConsensusResult(transactionHash);
-        dspConsensusResult.setIndex(transactionIndexService.generateTransactionIndex(transactionData));
+        transactionIndexService.generateAndSetTransactionIndex(transactionData);
+        dspConsensusResult.setIndex(transactionData.getIndex());
         dspConsensusResult.setDspConsensus(isLegalTransaction);
         dspConsensusResult.setIndexingTime(new Date());
         propagationPublisher.propagate(dspConsensusResult, DspConsensusResult.class.getName() + "Dsp Result");

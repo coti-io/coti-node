@@ -43,10 +43,12 @@ FullNoderocksDB*/
 TrustScorerocksDB*/
 ZeroSpendrocksDB*/
 initialDatabase/
+ZEROSPENDNODErocksDB*/
 ZeroSpendServerrocksDB*/
 
-*.jar
 *.class
+*.jar
+
 MANIFEST.MF
 *.original
 

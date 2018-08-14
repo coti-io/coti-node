@@ -7,6 +7,7 @@ import io.coti.common.crypto.TransactionCrypto;
 import io.coti.common.data.DspConsensusResult;
 import io.coti.common.data.DspVote;
 import io.coti.common.data.TransactionData;
+import io.coti.common.data.ZeroSpendDescription;
 import io.coti.common.model.Transactions;
 import io.coti.common.services.interfaces.ITransactionHelper;
 import io.coti.common.services.interfaces.IValidationService;
@@ -44,7 +45,7 @@ public class TransactionService {
     @Autowired
     private DspVoteCrypto dspVoteCrypto;
 
-    public String handleNewTransactionFromFullNode(TransactionData transactionData) {
+    public String handleNewTransaction(TransactionData transactionData) {
         log.info("Running new transactions from full node handler");
         if (!transactionHelper.startHandleTransaction(transactionData)) {
             log.info("Transaction already exists");
@@ -59,6 +60,7 @@ public class TransactionService {
             log.info("Invalid Transaction Received!");
             return "Invalid Transaction Received: " + transactionData.getHash();
         }
+        transactionHelper.attachTransactionToCluster(transactionData);
         propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "ZeroSpend Server");
         propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "Full Nodes");
         propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "DSP Nodes");
@@ -132,5 +134,15 @@ public class TransactionService {
 
     public void handleVoteConclusion(DspConsensusResult dspConsensusResult) {
         transactionHelper.handleVoteConclusionResult(dspConsensusResult);
+    }
+
+    public String handleZeroSpendNoSourceTrx(TransactionData data) {
+        log.info("{} was received {}",ZeroSpendDescription.ZERO_SPEND_TRANSACTION_NO_SOURCE.name(),data);
+        return handleNewTransaction(data);
+    }
+
+    public String handleZeroSpendStarvationTrx(TransactionData data) {
+        log.info("{} was received {}",ZeroSpendDescription.ZERO_SPEND_TRANSACTION_STARVATION.name(),data);
+        return handleNewTransaction(data);
     }
 }
