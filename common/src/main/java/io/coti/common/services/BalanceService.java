@@ -25,10 +25,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.math.BigDecimal;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -216,42 +213,38 @@ public class BalanceService implements IBalanceService {
     }
 
     private void publishBalanceChangeToWebSocket(Hash address) {
-            webSocketSender.notifyBalanceChange(address, balanceMap.get(address),preBalanceMap.get(address) );
+        webSocketSender.notifyBalanceChange(address, balanceMap.get(address), preBalanceMap.get(address));
     }
 
     @Override
     public synchronized boolean checkBalancesAndAddToPreBalance(List<BaseTransactionData> baseTransactionDatas) {
+        Map<Hash, BigDecimal> preBalanceChanges = new HashMap<>();
         for (BaseTransactionData baseTransactionData : baseTransactionDatas) {
-            //checkBalance
+
             BigDecimal amount = baseTransactionData.getAmount();
             Hash addressHash = baseTransactionData.getAddressHash();
-            if ((balanceMap.containsKey(addressHash) && amount.add(balanceMap.get(addressHash)).signum() < 0)
-                    || (!balanceMap.containsKey(addressHash) && amount.signum() < 0)) {
+            BigDecimal balance = balanceMap.containsKey(addressHash) ? balanceMap.get(addressHash) : BigDecimal.ZERO;
+            BigDecimal preBalance = preBalanceMap.containsKey(addressHash) ? preBalanceMap.get(addressHash) : BigDecimal.ZERO;
+            if (amount.add(balance).signum() < 0) {
                 log.error("Error in Balance check. Address {}  amount {} current Balance {} ", addressHash,
-                        amount, preBalanceMap.get(addressHash));
+                        amount, balance);
                 return false;
             }
-            if (preBalanceMap.containsKey(addressHash)) {
-                if (amount.add(preBalanceMap.get(addressHash)).signum() < 0) {
-                    log.error("Error in preBalance check. Address {}  amount {} current preBalance {} ", addressHash,
-                            amount, preBalanceMap.get(addressHash));
-                    return false;
-                } else {
-                    preBalanceMap.put(addressHash, amount.add(preBalanceMap.get(addressHash)));
-                    publishBalanceChangeToWebSocket(addressHash);
-                }
-            } else {
-                if (amount.signum() < 0) {
-                    log.error("Error in preBalance check. Address {}  amount {} current preBalance {} ", addressHash,
-                            amount, preBalanceMap.get(addressHash));
-                    return false;
-                }
-                preBalanceMap.put(addressHash, amount);
-                publishBalanceChangeToWebSocket(addressHash);
+            if (amount.add(preBalance).signum() < 0) {
+                log.error("Error in PreBalance check. Address {}  amount {} current PreBalance {} ", addressHash,
+                        amount, preBalance);
+                return false;
             }
+            preBalanceChanges.put(addressHash, amount.add(preBalance));
         }
+        preBalanceChanges.forEach((addressHash, preBalance) -> {
+            preBalanceMap.put(addressHash, preBalance);
+            publishBalanceChangeToWebSocket(addressHash);
+        });
         return true;
+
     }
+
 
     @Override
     public void insertToUnconfirmedTransactions(ConfirmationData confirmationData) {
@@ -265,7 +258,7 @@ public class BalanceService implements IBalanceService {
             if (balanceMap.containsKey(hash)) {
                 getBalancesResponse.addAddressBalanceToResponse(hash, balanceMap.get(hash), preBalanceMap.get(hash));
             } else {
-                getBalancesResponse.addAddressBalanceToResponse(hash, new BigDecimal(0),new BigDecimal(0));
+                getBalancesResponse.addAddressBalanceToResponse(hash, new BigDecimal(0), new BigDecimal(0));
             }
         }
         return ResponseEntity.status(HttpStatus.OK).body(getBalancesResponse);
