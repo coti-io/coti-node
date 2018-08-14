@@ -2,8 +2,8 @@ package io.coti.dspnode.services;
 
 import io.coti.common.communication.interfaces.IPropagationPublisher;
 import io.coti.common.communication.interfaces.ISender;
-import io.coti.common.crypto.CryptoHelper;
 import io.coti.common.crypto.DspVoteCrypto;
+import io.coti.common.crypto.TransactionCrypto;
 import io.coti.common.data.DspConsensusResult;
 import io.coti.common.data.DspVote;
 import io.coti.common.data.TransactionData;
@@ -32,6 +32,8 @@ public class TransactionService {
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
+    private TransactionCrypto transactionCrypto;
+    @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired
     private IValidationService validationService;
@@ -51,7 +53,7 @@ public class TransactionService {
         transactions.put(transactionData);
         transactionHelper.setTransactionStateToSaved(transactionData);
         if (!transactionHelper.validateTransaction(transactionData) ||
-                !CryptoHelper.verifyTransactionSignature(transactionData) ||
+                !transactionCrypto.verifySignature(transactionData) ||
                 !validationService.validatePow(transactionData) ||
                 !transactionHelper.checkBalancesAndAddToPreBalance(transactionData)) {
             log.info("Invalid Transaction Received!");
@@ -101,7 +103,7 @@ public class TransactionService {
                 return;
             }
             if (!transactionHelper.validateTransaction(transactionData) ||
-                    !CryptoHelper.verifyTransactionSignature(transactionData) ||
+                    !transactionCrypto.verifySignature(transactionData) ||
                     !validationService.validatePow(transactionData)) {
                 log.info("Data Integrity validation failed");
                 return;

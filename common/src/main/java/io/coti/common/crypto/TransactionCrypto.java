@@ -4,7 +4,7 @@ import io.coti.common.data.TransactionData;
 import org.springframework.stereotype.Service;
 
 @Service
-public class TransactionCrypto extends SignatureCreationCrypto<TransactionData> {
+public class TransactionCrypto extends SignatureCrypto<TransactionData> {
 
     @Override
     public byte[] getMessageInBytes(TransactionData transactionData) {

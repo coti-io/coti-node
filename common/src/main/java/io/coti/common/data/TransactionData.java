@@ -1,6 +1,7 @@
 package io.coti.common.data;
 
 import io.coti.common.data.interfaces.IEntity;
+import io.coti.common.data.interfaces.ISignValidatable;
 import io.coti.common.data.interfaces.ISignable;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +14,7 @@ import java.util.Vector;
 
 @Slf4j
 @Data
-public class TransactionData implements IEntity, Comparable<TransactionData>, ISignable {
+public class TransactionData implements IEntity, Comparable<TransactionData>, ISignable, ISignValidatable {
     private List<BaseTransactionData> baseTransactions;
     private transient Hash hash;
     private BigDecimal amount;
@@ -148,14 +149,13 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
         nodeSignature = signature;
     }
 
-  /*  @Override
-    public void signMessage() {
-        nodeHash = NodeCryptoHelper.getNodeHash();
-        nodeSignature = NodeCryptoHelper.signMessage(this.getMessageInBytes());
+    @Override
+    public SignatureData getSignature() {
+        return nodeSignature;
     }
 
     @Override
-    public byte[] getMessageInBytes() {
-        return hash.getBytes();
-    } */
+    public Hash getSignerHash() {
+        return nodeHash;
+    }
 }

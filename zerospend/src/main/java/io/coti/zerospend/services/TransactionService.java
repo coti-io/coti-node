@@ -1,6 +1,6 @@
 package io.coti.zerospend.services;
 
-import io.coti.common.crypto.CryptoHelper;
+import io.coti.common.crypto.TransactionCrypto;
 import io.coti.common.data.TransactionData;
 import io.coti.common.services.TransactionHelper;
 import io.coti.common.services.interfaces.IValidationService;
@@ -16,6 +16,8 @@ public class TransactionService {
     @Autowired
     private TransactionHelper transactionHelper;
     @Autowired
+    private TransactionCrypto transactionCrypto;
+    @Autowired
     private DspVoteService dspVoteService;
 
     public void handlePropagatedTransactionFromDspNode(TransactionData transactionData) {
@@ -27,13 +29,13 @@ public class TransactionService {
     }
 
     private boolean addTransactionToLocalNode(TransactionData transactionData) {
-        log.info("Propagated Transaction received: {}", transactionData.getHash().toHexString());
+        log.info("DSP Propagated Transaction received: {}", transactionData.getHash().toHexString());
         if (!transactionHelper.startHandleTransaction(transactionData)) {
             log.info("Transaction already exists");
             return false;
         }
         if (!transactionHelper.validateTransaction(transactionData) ||
-                !CryptoHelper.verifyTransactionSignature(transactionData) ||
+                !transactionCrypto.verifySignature(transactionData) ||
                 !validationService.validatePow(transactionData)) {
             log.info("Data Integrity validation failed");
             return false;

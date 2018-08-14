@@ -162,16 +162,6 @@ public class CryptoHelper {
         return new Hash(publicKey + DatatypeConverter.printHexBinary(crc32ToAdd));
     }
 
-    public static boolean verifyTransactionSignature(TransactionData transactionData) {
-        try {
-            String publicKey = transactionData.getNodeHash().toHexString();
-            return CryptoHelper.VerifyByPublicKey(transactionData.getHash().getBytes(), transactionData.getNodeSignature().getR(), transactionData.getNodeSignature().getS(), publicKey);
-        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
     public static Hash cryptoHash(byte[] input) {
         Keccak.Digest256 digest = new Keccak.Digest256();
         digest.update(input);

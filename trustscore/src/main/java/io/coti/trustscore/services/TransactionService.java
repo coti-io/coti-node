@@ -1,19 +1,18 @@
 package io.coti.trustscore.services;
 
-import io.coti.common.crypto.CryptoHelper;
+import io.coti.common.crypto.TransactionCrypto;
 import io.coti.common.data.AddressTransactionsHistory;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
-import io.coti.common.http.*;
+import io.coti.common.http.BaseResponse;
+import io.coti.common.http.GetAddressTransactionHistory;
 import io.coti.common.http.data.TransactionStatus;
 import io.coti.common.model.AddressesTransactionsHistory;
 import io.coti.common.model.DbItem;
 import io.coti.common.model.Transactions;
 import io.coti.common.services.LiveView.WebSocketSender;
-import io.coti.common.services.interfaces.IClusterService;
 import io.coti.common.services.interfaces.ITransactionHelper;
 import io.coti.common.services.interfaces.IValidationService;
-import io.coti.common.services.interfaces.IZeroSpendService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,6 +27,8 @@ import java.util.Vector;
 public class TransactionService {
     @Autowired
     private ITransactionHelper transactionHelper;
+    @Autowired
+    private TransactionCrypto transactionCrypto;
     @Autowired
     private IValidationService validationService;
     @Autowired
@@ -60,7 +61,7 @@ public class TransactionService {
             return;
         }
         if (!transactionHelper.validateTransaction(transactionData) ||
-                !CryptoHelper.verifyTransactionSignature(transactionData) ||
+                !transactionCrypto.verifySignature(transactionData) ||
                 !validationService.validatePow(transactionData)) {
             log.info("Data Integrity validation failed");
             return;

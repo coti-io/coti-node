@@ -1,7 +1,6 @@
 package io.coti.fullnode.services;
 
 import io.coti.common.communication.interfaces.ISender;
-import io.coti.common.crypto.CryptoHelper;
 import io.coti.common.crypto.TransactionCrypto;
 import io.coti.common.data.AddressTransactionsHistory;
 import io.coti.common.data.Hash;
@@ -95,7 +94,7 @@ public class TransactionService {
                                 STATUS_ERROR,
                                 ILLEGAL_TRANSACTION_MESSAGE));
             }
-            if(!transactionHelper.validateTrustScore(transactionData)){
+            if (!transactionHelper.validateTrustScore(transactionData)) {
                 log.info("Invalid sender trust score!");
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
@@ -208,13 +207,13 @@ public class TransactionService {
     }
 
     public void handlePropagatedTransaction(TransactionData transactionData) {
-        log.info("Propagated Transaction received: {}", transactionData.getHash().toHexString());
+        log.info("DSP Propagated Transaction received: {}", transactionData.getHash().toHexString());
         if (!transactionHelper.startHandleTransaction(transactionData)) {
             log.info("Transaction already exists");
             return;
         }
         if (!transactionHelper.validateTransaction(transactionData) ||
-                !CryptoHelper.verifyTransactionSignature(transactionData) ||
+                !transactionCrypto.verifySignature(transactionData) ||
                 !validationService.validatePow(transactionData)) {
             log.info("Data Integrity validation failed");
             return;
