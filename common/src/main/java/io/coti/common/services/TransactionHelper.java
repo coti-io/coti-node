@@ -104,8 +104,6 @@ public class TransactionHelper implements ITransactionHelper {
             return false;
         transactionData.setSenderTrustScore(Collections.max(trustScoreResults.entrySet(), Map.Entry.comparingByValue()).getKey());
         return true;
-
-
     }
 
     public boolean startHandleTransaction(TransactionData transactionData) {
@@ -189,7 +187,6 @@ public class TransactionHelper implements ITransactionHelper {
     public void attachTransactionToCluster(TransactionData transactionData) {
         transactions.put(transactionData);
         updateAddressTransactionHistory(transactionData);
-        balanceService.insertToUnconfirmedTransactions(new ConfirmationData(transactionData));
         clusterService.attachToCluster(transactionData);
     }
 

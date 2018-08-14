@@ -63,10 +63,10 @@ public class TransactionService {
         propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "Full Nodes");
         propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "DSP Nodes");
         propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "TrustScore Nodes");
-
-
+        transactionHelper.attachTransactionToCluster(transactionData);
         transactionHelper.setTransactionStateToFinished(transactionData);
         transactionsToValidate.add(transactionData);
+
         transactionHelper.endHandleTransaction(transactionData);
         return "Received Transaction: " + transactionData.getHash();
     }
@@ -115,11 +115,6 @@ public class TransactionService {
             }
             transactions.put(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
-
-          /*  if (!checkBalancesAndAddToPreBalance) {
-                transactionData.addSignature("Node ID", false); // TODO: replace with a sign mechanism
-                sender.sendTransaction(transactionData);
-            }*/
             propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "Full Nodes");
             transactionHelper.setTransactionStateToFinished(transactionData);
             transactionsToValidate.add(transactionData);
@@ -131,6 +126,10 @@ public class TransactionService {
     }
 
     public void handleVoteConclusion(DspConsensusResult dspConsensusResult) {
-        transactionHelper.handleVoteConclusionResult(dspConsensusResult);
+        if (!transactionHelper.handleVoteConclusionResult(dspConsensusResult)) {
+            log.error("Illegal vote received: " + dspConsensusResult.getHash());
+        } else {
+            propagationPublisher.propagate(dspConsensusResult, DspConsensusResult.class.getName() + "Full Nodes");
+        }
     }
 }

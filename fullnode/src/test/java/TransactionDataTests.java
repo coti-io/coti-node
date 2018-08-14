@@ -1,4 +1,3 @@
-import io.coti.common.model.ConfirmedTransactions;
 import io.coti.common.model.Transactions;
 import io.coti.fullnode.AppConfig;
 import lombok.extern.slf4j.Slf4j;
@@ -15,8 +14,6 @@ public class TransactionDataTests {
     @Autowired
     private Transactions transactions;
 
-    @Autowired
-    private ConfirmedTransactions confirmedTransactions;
 
 //    @Test
 //    public void isSource_NullChildrenList_True(){

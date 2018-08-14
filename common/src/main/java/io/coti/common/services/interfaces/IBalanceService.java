@@ -1,9 +1,6 @@
 package io.coti.common.services.interfaces;
 
-import io.coti.common.data.BaseTransactionData;
-import io.coti.common.data.ConfirmationData;
-import io.coti.common.data.Hash;
-import io.coti.common.data.TransactionData;
+import io.coti.common.data.*;
 import io.coti.common.http.GetBalancesRequest;
 import io.coti.common.http.GetBalancesResponse;
 import org.springframework.http.ResponseEntity;
@@ -16,14 +13,16 @@ public interface IBalanceService {
 
     boolean checkBalancesAndAddToPreBalance(List<BaseTransactionData> baseTransactionDatas);
 
-    void insertToUnconfirmedTransactions(ConfirmationData confirmationData);
-
     ResponseEntity<GetBalancesResponse> getBalances(GetBalancesRequest getBalancesRequest);
 
-    Map<Hash, BigDecimal> getBalanceMap();
-
-    Map<Hash, BigDecimal> getPreBalanceMap();
-
     void rollbackBaseTransactions(TransactionData transactionData);
-}
 
+    void insertSavedTransaction(TransactionData transactionData);
+
+    void finalizeInit();
+
+    void setTccToTrue(TccInfo tccInfo);
+
+    void setDspcToTrue(DspConsensusResult dspConsensusResult);
+
+}

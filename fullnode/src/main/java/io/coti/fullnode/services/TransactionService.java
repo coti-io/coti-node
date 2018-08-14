@@ -3,6 +3,7 @@ package io.coti.fullnode.services;
 import io.coti.common.communication.interfaces.ISender;
 import io.coti.common.crypto.TransactionCrypto;
 import io.coti.common.data.AddressTransactionsHistory;
+import io.coti.common.data.DspConsensusResult;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
 import io.coti.common.exceptions.TransactionException;
@@ -12,10 +13,7 @@ import io.coti.common.model.AddressesTransactionsHistory;
 import io.coti.common.model.DbItem;
 import io.coti.common.model.Transactions;
 import io.coti.common.services.LiveView.WebSocketSender;
-import io.coti.common.services.interfaces.IClusterService;
-import io.coti.common.services.interfaces.ITransactionHelper;
-import io.coti.common.services.interfaces.IValidationService;
-import io.coti.common.services.interfaces.IZeroSpendService;
+import io.coti.common.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,6 +42,8 @@ public class TransactionService {
     @Autowired
     private IClusterService clusterService;
     @Autowired
+    private IBalanceService balanceService;
+    @Autowired
     private IZeroSpendService zeroSpendService;
     @Autowired
     private ISender sender;
@@ -64,8 +64,6 @@ public class TransactionService {
                         request.createTime,
                         request.senderHash);
         try {
-
-
             log.info("New transaction request is being processed. Transaction Hash={}", request.hash);
             transactionCrypto.signMessage(transactionData);
             if (!transactionHelper.startHandleTransaction(transactionData)) {
@@ -227,5 +225,15 @@ public class TransactionService {
         webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
         transactionHelper.setTransactionStateToFinished(transactionData);
         transactionHelper.endHandleTransaction(transactionData);
+    }
+
+    public void handleDspConsensusResult(DspConsensusResult dspConsensusResult) {
+        log.info("Received DspConsensus result: " + dspConsensusResult.getHash());
+        if(!transactionHelper.handleVoteConclusionResult(dspConsensusResult)){
+            log.error("Illegal Dsp consensus result");
+        }
+        else{
+            balanceService.setDspcToTrue(dspConsensusResult);
+        }
     }
 }

@@ -2,11 +2,8 @@ import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.ConfirmationData;
 import io.coti.common.data.Hash;
 import io.coti.common.data.SignatureData;
-import io.coti.common.model.ConfirmedTransactions;
-import io.coti.common.model.UnconfirmedTransactions;
-import io.coti.fullnode.AppConfig;
 import io.coti.common.services.BalanceService;
-import io.coti.common.services.QueueService;
+import io.coti.fullnode.AppConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -29,15 +26,6 @@ public class BalanceServiceTests {
     @Autowired
     private BalanceService balanceService;
 
-    @Autowired
-    private UnconfirmedTransactions unconfirmedTransactions;
-
-    @Autowired
-    private ConfirmedTransactions confirmedTransactions;
-
-    @Autowired
-    private QueueService queueService;
-
 
     @Test
     public void AInitTest() { // the name starts with a to check make sure it runs first
@@ -55,14 +43,14 @@ public class BalanceServiceTests {
     @Test
     public void checkBalancesTest() {
         List<BaseTransactionData> baseTransactionDataList = new LinkedList<>();
-        baseTransactionDataList.add(new BaseTransactionData(new Hash("BE"), new BigDecimal(-150),new Hash("BE"),new SignatureData("",""),new Date()));
+        baseTransactionDataList.add(new BaseTransactionData(new Hash("BE"), new BigDecimal(-150), new Hash("BE"), new SignatureData("", ""), new Date()));
 
         boolean ans = balanceService.checkBalancesAndAddToPreBalance(baseTransactionDataList);
         Assert.assertFalse(ans);
 
 
         List<BaseTransactionData> baseTransactionDatas2 = new LinkedList<>();
-        baseTransactionDatas2.add(new BaseTransactionData(new Hash("BE"), new BigDecimal(-20),new Hash("BE"),new SignatureData("",""),new Date()));
+        baseTransactionDatas2.add(new BaseTransactionData(new Hash("BE"), new BigDecimal(-20), new Hash("BE"), new SignatureData("", ""), new Date()));
         ans = balanceService.checkBalancesAndAddToPreBalance(baseTransactionDatas2);
         Assert.assertTrue(ans);
 
@@ -86,7 +74,7 @@ public class BalanceServiceTests {
     private void populateTransactionWithDummy(ConfirmationData transaction) {
         Map<Hash, BigDecimal> addressToAmount = new HashMap<>();
         addressToAmount.put(new Hash("DD"), new BigDecimal(10.1));
-        transaction.setAddressHashToValueTransferredMapping(addressToAmount);
+//        transaction.setAddressHashToValueTransferredMapping(addressToAmount);
     }
 
 //    @Test

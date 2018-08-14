@@ -60,6 +60,7 @@ public class TrustScoreService {
 
     public ResponseEntity<BaseResponse> setKycTrustScore(SetKycTrustScoreRequest request) {
         try {
+            log.info("Setting KYC trust score: " + request.userHash + "=" + request.kycTrustScore);
             TrustScoreData trustScoreData = new TrustScoreData(request.userHash, request.kycTrustScore, request.signature, new Hash(kycServerPublicKey));
             if (!trustScoreCrypto.verifySignature(trustScoreData)) {
                 return ResponseEntity

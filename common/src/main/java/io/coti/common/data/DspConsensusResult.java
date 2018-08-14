@@ -8,7 +8,7 @@ import java.util.Date;
 import java.util.List;
 
 @Data
-public class DspConsensusResult implements Serializable, IEntity {
+public class DspConsensusResult extends ConfirmationData implements Serializable, IEntity {
     private Hash transactionHash;
     private Hash zeroSpendServerHash;
     private long index;

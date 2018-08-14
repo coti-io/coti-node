@@ -4,21 +4,15 @@ import io.coti.common.data.*;
 import io.coti.common.http.GetBalancesRequest;
 import io.coti.common.http.GetBalancesResponse;
 import io.coti.common.http.data.TransactionStatus;
-import io.coti.common.model.*;
+import io.coti.common.model.Transactions;
 import io.coti.common.services.LiveView.LiveViewService;
 import io.coti.common.services.LiveView.WebSocketSender;
 import io.coti.common.services.interfaces.IBalanceService;
-import io.coti.common.services.interfaces.IClusterService;
-import io.coti.common.services.interfaces.IQueueService;
-import io.coti.common.services.interfaces.IZeroSpendService;
 import lombok.extern.slf4j.Slf4j;
-import org.rocksdb.RocksIterator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.util.SerializationUtils;
 
 import javax.annotation.PostConstruct;
 import java.io.BufferedReader;
@@ -26,151 +20,69 @@ import java.io.File;
 import java.io.FileReader;
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class BalanceService implements IBalanceService {
 
-
     @Autowired
-    private Addresses addresses;
-
-
+    private WebSocketSender webSocketSender;
     @Autowired
-    private AddressesTransactionsHistory addressesTransactionsHistory;
-
+    private LiveViewService liveViewService;
     @Autowired
     private Transactions transactions;
 
-    @Autowired
-    private IZeroSpendService zeroSpendService;
-
-    @Autowired
-    private IClusterService clusterService;
-
-    @Autowired
-    private IQueueService queueService;
-
-    @Autowired
-    private ConfirmedTransactions confirmedTransactions;
-
-    @Autowired
-    private UnconfirmedTransactions unconfirmedTransactions;
-
-    @Autowired
-    private WebSocketSender webSocketSender;
-
-    @Autowired
-    private LiveViewService liveViewService;
-
     private Map<Hash, BigDecimal> balanceMap;
     private Map<Hash, BigDecimal> preBalanceMap;
+    private BlockingQueue<ConfirmationData> confirmationQueue;
 
     @PostConstruct
     private void init() throws Exception {
+        confirmationQueue = new LinkedBlockingQueue<>();
         balanceMap = new ConcurrentHashMap<>();
         preBalanceMap = new ConcurrentHashMap<>();
         loadBalanceFromSnapshot();
-//            deleteConfirmedTransactions();
-        // TODO: call RestTemplatePropagation.propagateMultiTransactionFromNeighbor (with no parameter of fromAttachmentTimeStampIfThere AreNoTransactions)
-        // Then set all transactions on TCC=0, sort them topological, and  call for  every transaction to TransactionService.addPropagatedTransaction
-        List<Hash> hashesForClusterService;
-        if (unconfirmedTransactions.isEmpty()) {
-            throw new Exception("Database is empty! please use --resetData=true");
-        } else {
-            hashesForClusterService = readUnconfirmedTransactionsFromDB();
-        }
-        clusterService.setInitialUnconfirmedTransactions(hashesForClusterService);
-        readConfirmedTransactionsFromDB();
-
-        log.info("Balance service is up");
+        new Thread(() -> updateConfirmedTransactions()).start();
     }
 
-    /**
-     * The task will be executed a first time after the initialDelay (because of the init() ) value – and it will
-     * continue to be executed according to the fixedDelay
-     */
-    @Scheduled(fixedDelayString = "${balance.scheduled.delay}", initialDelayString = "${balance.scheduled.initialdelay}")
-    private void updateBalanceFromQueueScheduledTask() {
-        ConcurrentLinkedQueue<TccInfo> updateBalanceQueue = queueService.getUpdateBalanceQueue();
-        while (!updateBalanceQueue.isEmpty()) {
-            TccInfo tccInfo = updateBalanceQueue.poll();
-            ConfirmationData confirmationData = unconfirmedTransactions.getByHash(tccInfo.getHash());
-            log.info("confirmationData hash;{}", tccInfo.getHash());
-            //dspc = 1
-            TransactionData currentTransactionData = confirmedTransactions.putConfirmedAndUpdateTransaction(confirmationData, tccInfo);
-            if (confirmationData.isDoubleSpendPreventionConsensus()) {
-                unconfirmedTransactions.delete(confirmationData.getHash());
-                updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(), balanceMap);
-                publishBalanceChangeToWebSocket(confirmationData.getAddressHashToValueTransferredMapping().keySet());
-                webSocketSender.notifyTransactionHistoryChange(currentTransactionData, TransactionStatus.TCC_APPROVED);
-                liveViewService.updateNodeStatus(currentTransactionData, 2);
+    private void updateConfirmedTransactions() {
+        while (true) {
+            try {
+                ConfirmationData confirmationData = confirmationQueue.take();
+                TransactionData transactionData = transactions.getByHash(confirmationData.getHash());
+                if (confirmationData instanceof TccInfo &&
+                        transactionData.getDspConsensusResult() != null) {
+                    transactionData.setTrustChainConsensus(true);
+                    transactionData.setTrustChainTrustScore(((TccInfo) confirmationData).getTrustChainTrustScore());
+                    transactionData.setTrustChainTransactionHashes(((TccInfo) confirmationData).getTrustChainTransactionHashes());
+                    transactions.put(transactionData);
+                    processConfirmedTransaction(transactionData);
+                } else if (confirmationData instanceof DspConsensusResult &&
+                        transactionData.isTrustChainConsensus()) {
+                    transactionData.setDspConsensusResult((DspConsensusResult) confirmationData);
+                    processConfirmedTransaction(transactionData);
+                }
 
-            } else { //dspc =0
-                confirmationData.setTrustChainConsensus(true);
-                setDSPCtoTrueAndInsertToUnconfirmed(confirmationData);
-                webSocketSender.notifyTransactionHistoryChange(currentTransactionData, TransactionStatus.TCC_APPROVED);
-                log.info("The transaction {} was added to unconfirmedTransactions in the db and tcc was updated to true", confirmationData.getHash());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }
 
-    private void setDSPCtoTrueAndInsertToUnconfirmed(ConfirmationData confirmationData) {
-        confirmationData.setDoubleSpendPreventionConsensus(true);
-        unconfirmedTransactions.put(confirmationData);
-    }
-
-    private void updateBalanceMap(Map<Hash, BigDecimal> mapFrom, Map<Hash, BigDecimal> mapTo) {
-        for (Map.Entry<Hash, BigDecimal> entry : mapFrom.entrySet()) {
-
-            BigDecimal balance = entry.getValue();
-            Hash key = entry.getKey();
-            if (mapTo.containsKey(key)) {
-                mapTo.put(key, balance.add(mapTo.get(key)));
-            } else {
-                mapTo.put(key, balance);
-            }
-
-            log.debug("The address {} with the value {} was added to balance map and was removed from preBalanceMap", entry.getKey(), entry.getValue());
-        }
-    }
-
-    private void readConfirmedTransactionsFromDB() {
-        RocksIterator confirmedDBiterator = confirmedTransactions.getIterator();
-        confirmedDBiterator.seekToFirst();
-        while (confirmedDBiterator.isValid()) {
-            ConfirmationData confirmedTransactionData = (ConfirmationData) SerializationUtils
-                    .deserialize(confirmedDBiterator.value());
-            confirmedTransactionData.setHash(new Hash(confirmedDBiterator.key()));
-            updateBalanceMap(confirmedTransactionData.getAddressHashToValueTransferredMapping(), balanceMap);
-            liveViewService.addNode(transactions.getByHash(confirmedTransactionData.getHash()));
-            confirmedDBiterator.next();
-        }
-    }
-
-    private List<Hash> readUnconfirmedTransactionsFromDB() {
-        List<Hash> hashesForClusterService = new LinkedList<>();
-
-        RocksIterator unconfirmedDBIterator = unconfirmedTransactions.getIterator();
-        unconfirmedDBIterator.seekToFirst();
-
-        while (unconfirmedDBIterator.isValid()) {
-            ConfirmationData confirmationData = (ConfirmationData) SerializationUtils
-                    .deserialize(unconfirmedDBIterator.value());
-            confirmationData.setHash(new Hash(unconfirmedDBIterator.key()));
-            if (!confirmationData.isTrustChainConsensus()) {
-                hashesForClusterService.add(confirmationData.getHash());
-            }
-            if (!confirmationData.isTrustChainConsensus() ||
-                    !confirmationData.isDoubleSpendPreventionConsensus()) {
-                updateBalanceMap(confirmationData.getAddressHashToValueTransferredMapping(), preBalanceMap);
-            }
-            liveViewService.addNode(transactions.getByHash(confirmationData.getHash()));
-            unconfirmedDBIterator.next();
-        }
-        return hashesForClusterService;
+    private void processConfirmedTransaction(TransactionData transactionData) {
+        transactionData.getBaseTransactions().forEach(baseTransactionData -> {
+            balanceMap.putIfAbsent(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
+            balanceMap.computeIfPresent(baseTransactionData.getAddressHash(), (hash, currentAmount) -> currentAmount.add(baseTransactionData.getAmount()));
+        });
+        publishBalanceChangeToWebSocket(
+                transactionData.getBaseTransactions()
+                        .stream()
+                        .map(BaseTransactionData::getAddressHash)
+                        .collect(Collectors.toSet()));
+        liveViewService.updateNodeStatus(transactionData, 2);
+        webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.DSPC_APPROVED);
     }
 
     private void loadBalanceFromSnapshot() throws Exception {
@@ -247,11 +159,6 @@ public class BalanceService implements IBalanceService {
 
 
     @Override
-    public void insertToUnconfirmedTransactions(ConfirmationData confirmationData) {
-        setDSPCtoTrueAndInsertToUnconfirmed(confirmationData);
-    }
-
-    @Override
     public ResponseEntity<GetBalancesResponse> getBalances(GetBalancesRequest getBalancesRequest) {
         GetBalancesResponse getBalancesResponse = new GetBalancesResponse();
         for (Hash hash : getBalancesRequest.getAddresses()) {
@@ -277,6 +184,59 @@ public class BalanceService implements IBalanceService {
         for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
             baseTransactionData.setAmount(baseTransactionData.getAmount().negate());
             preBalanceMap.replace(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
+        }
+    }
+
+    @Override
+    public void insertSavedTransaction(TransactionData transactionData) {
+        transactionData.getBaseTransactions().forEach(baseTransactionData -> {
+            preBalanceMap.putIfAbsent(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
+            preBalanceMap.computeIfPresent(baseTransactionData.getAddressHash(), (currentHash, currentAmount) ->
+                    currentAmount.add(baseTransactionData.getAmount()));
+            if (transactionData.isValid() && transactionData.isTrustChainConsensus()) {
+                balanceMap.putIfAbsent(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
+                balanceMap.computeIfPresent(baseTransactionData.getAddressHash(), (currentHash, currentAmount) ->
+                        currentAmount.add(baseTransactionData.getAmount()));
+            }
+        });
+    }
+
+    @Override
+    public void finalizeInit() {
+        validateBalances();
+    }
+
+    private void validateBalances() {
+        preBalanceMap.forEach((hash, bigDecimal) -> {
+            if (bigDecimal.signum() == -1) {
+                log.error("PreBalance validation failed!");
+                throw new IllegalArgumentException("Snapshot or database are corrupted.");
+            }
+        });
+        balanceMap.forEach((hash, bigDecimal) -> {
+            if (bigDecimal.signum() == -1) {
+                log.error("Balance validation failed!");
+                throw new IllegalArgumentException("Snapshot or database are corrupted.");
+            }
+        });
+        log.info("Balances validation completed");
+    }
+
+    @Override
+    public void setTccToTrue(TccInfo tccInfo) {
+        try {
+            confirmationQueue.put(tccInfo);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void setDspcToTrue(DspConsensusResult dspConsensusResult) {
+        try {
+            confirmationQueue.put(dspConsensusResult);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 }

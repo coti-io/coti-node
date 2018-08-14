@@ -27,13 +27,6 @@ public class ClusterServiceTest {
     private ClusterService cluster;
     private List<Hash> notTccConfirmTransactions;
 
-    @Before
-    public void setUp() {
-        notTccConfirmTransactions = new Vector<>();
-        setUpTransactionsFromSnapShot();
-        cluster.setInitialUnconfirmedTransactions(notTccConfirmTransactions);
-    }
-
     @Test
     public void selectSources() {
         TransactionData TransactionData2 = new TransactionData(new ArrayList<>(),new Hash("22"), "test", 50, new Date());

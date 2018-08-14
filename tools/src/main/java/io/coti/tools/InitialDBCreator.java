@@ -1,10 +1,8 @@
 package io.coti.tools;
 
-import io.coti.common.data.ConfirmationData;
 import io.coti.common.data.TransactionData;
 import io.coti.common.database.RocksDBConnector;
 import io.coti.common.model.Transactions;
-import io.coti.common.model.UnconfirmedTransactions;
 import io.coti.common.services.ZeroSpendService;
 
 import java.io.File;
@@ -19,14 +17,9 @@ public class InitialDBCreator {
         Transactions transactions = new Transactions();
         transactions.init();
         transactions.databaseConnector = connector;
-        UnconfirmedTransactions unconfirmedTransactions = new UnconfirmedTransactions();
-        unconfirmedTransactions.init();
-        unconfirmedTransactions.databaseConnector = connector;
 
         for (TransactionData transactionData : zeroSpendService.getGenesisTransactions()) {
             transactions.put(transactionData);
-            ConfirmationData confirmationData = new ConfirmationData(transactionData);
-            unconfirmedTransactions.put(confirmationData);
         }
     }
 

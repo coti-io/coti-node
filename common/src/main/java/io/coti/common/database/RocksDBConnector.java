@@ -24,14 +24,11 @@ public class RocksDBConnector implements IDatabaseConnector {
     @Value("${database.folder.name}")
     private String databaseFolderName;
     private final String initialDBPath = "initialDatabase";
-    private String logsPath;
     private final List<String> columnFamilyClassNames = Arrays.asList(
             "DefaultColumnClassName",
             Transactions.class.getName(),
             Addresses.class.getName(),
             AddressesTransactionsHistory.class.getName(),
-            ConfirmedTransactions.class.getName(),
-            UnconfirmedTransactions.class.getName(),
             TrustScores.class.getName(),
             TransactionIndexes.class.getName(),
             TransactionVotes.class.getName()

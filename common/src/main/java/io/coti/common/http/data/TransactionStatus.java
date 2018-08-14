@@ -6,6 +6,4 @@ public enum TransactionStatus
     DSPC_APPROVED,
     ATTACHED_TO_DAG,
     Error
-
-
 }

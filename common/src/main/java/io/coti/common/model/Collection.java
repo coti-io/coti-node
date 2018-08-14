@@ -8,6 +8,8 @@ import org.rocksdb.RocksIterator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.SerializationUtils;
 
+import java.util.function.Consumer;
+
 @Slf4j
 public abstract class Collection<T extends IEntity> {
 
@@ -37,23 +39,20 @@ public abstract class Collection<T extends IEntity> {
         return deserialized;
     }
 
-
     public DbItem<T> getByHashItem(Hash hash) {
-
         T deserialized = getByHash(hash);
         return new DbItem(deserialized);
     }
 
-    public void delete(Hash hash){
-        databaseConnector.delete(columnFamilyName, hash.getBytes());
-    }
-
-    public boolean isEmpty(){
-        return databaseConnector.isEmpty(columnFamilyName);
-    }
-
-    public RocksIterator getIterator(){
-        return databaseConnector.getIterator(columnFamilyName);
+    public void forEach(Consumer<T> consumer){
+        RocksIterator iterator = databaseConnector.getIterator(columnFamilyName);
+        iterator.seekToFirst();
+        while (iterator.isValid()){
+            T deserialized = (T) SerializationUtils.deserialize(iterator.value());
+            deserialized.setHash(new Hash(iterator.key()));
+            consumer.accept(deserialized);
+            iterator.next();
+        }
     }
 }
 

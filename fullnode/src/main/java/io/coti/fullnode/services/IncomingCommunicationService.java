@@ -2,6 +2,7 @@ package io.coti.fullnode.services;
 
 import io.coti.common.communication.interfaces.IPropagationSubscriber;
 import io.coti.common.data.AddressData;
+import io.coti.common.data.DspConsensusResult;
 import io.coti.common.data.TransactionData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,8 @@ public class IncomingCommunicationService {
                 -> transactionService.handlePropagatedTransaction((TransactionData) data));
         classNameToSubscriberHandlerMapping.put(AddressData.class.getName() + "Full Nodes", data
                 -> addressService.handlePropagatedAddress((AddressData) data));
+        classNameToSubscriberHandlerMapping.put(DspConsensusResult.class.getName() + "Full Nodes", data
+                -> transactionService.handleDspConsensusResult((DspConsensusResult) data));
         propagationSubscriber.init(classNameToSubscriberHandlerMapping);
     }
 }

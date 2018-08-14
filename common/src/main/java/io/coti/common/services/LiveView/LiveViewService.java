@@ -49,9 +49,6 @@ public class LiveViewService {
         graphData.nodes.add(nodeData);
 
         webSocketSender.sendNode(nodeData);
-
-
-
     }
 
     public void updateNodeStatus(TransactionData transactionData, int newStatus) {
