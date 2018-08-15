@@ -25,21 +25,14 @@ public class InitializationService {
     @PostConstruct
     public void init() {
         transactions.forEach(transactionData -> {
-            log.info("Loading transaction: {}", transactionData.getHash());
-            if (isUnconfirmed(transactionData)) {
+            if (!transactionData.isTrustChainConsensus()) {
                 clusterService.addUnconfirmedTransaction(transactionData);
-                liveViewService.addNode(transactions.getByHash(transactionData.getHash()));
             }
-
+            liveViewService.addNode(transactions.getByHash(transactionData.getHash()));
             balanceService.insertSavedTransaction(transactionData);
         });
-
+        log.info("Transactions Load completed");
         balanceService.finalizeInit();
         clusterService.finalizeInit();
-    }
-
-    private boolean isUnconfirmed(TransactionData transactionData) {
-        return !transactionData.isTrustChainConsensus() ||
-                (transactionData.getDspConsensusResult() != null && !transactionData.getDspConsensusResult().isDspConsensus());
     }
 }

@@ -36,7 +36,7 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
     private Hash nodeHash;
     private SignatureData nodeSignature;
     private List<Hash> childrenTransactions;
-    private boolean valid;
+    private Boolean valid;
     private Map<String, Boolean> validByNodes;
     private transient boolean isVisit;
     private boolean isZeroSpend;
@@ -134,6 +134,9 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
         this.validByNodes.putAll(validByNodes);
     }
 
+    public Boolean isValid(){
+        return valid;
+    }
     @Override
     public int compareTo(TransactionData other) {
         return Double.compare(this.senderTrustScore, other.senderTrustScore);

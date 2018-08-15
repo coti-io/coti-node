@@ -28,7 +28,7 @@ public class TransactionResponseData {
     private Date powEndTime;
     private double senderTrustScore;
     private List<String> childrenTransactions;
-    private boolean isValid;
+    private Boolean isValid;
     private boolean isZeroSpend;
     private String transactionDescription;
 

@@ -13,6 +13,7 @@ import io.coti.common.services.interfaces.IBalanceService;
 import io.coti.common.services.interfaces.IClusterService;
 import io.coti.common.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -200,20 +201,28 @@ public class TransactionHelper implements ITransactionHelper {
 
     @Override
     public boolean handleVoteConclusionResult(DspConsensusResult dspConsensusResult) {
-        TransactionData existingTransactionData = transactions.getByHash(dspConsensusResult.getTransactionHash());
-        if (!(existingTransactionData.getDspConsensusResult() == null)) {
+        TransactionData transactionData = transactions.getByHash(dspConsensusResult.getTransactionHash());
+        if(transactionData == null){
+            log.info("Transaction doesn't exist");
+            return false;
+        }
+        if (!(transactionData.getDspConsensusResult() == null)) {
             log.info("Transaction vote already exists");
             return false;
         }
-        existingTransactionData.setDspConsensusResult(dspConsensusResult);
+        transactionData.setDspConsensusResult(dspConsensusResult);
         if (dspConsensusResult.isDspConsensus()) {
             log.info("Valid vote conclusion received for transaction: {}", dspConsensusResult.getHash());
         } else {
             log.info("Invalid vote conclusion received for transaction: {}", dspConsensusResult.getHash());
         }
 
-        log.info("Vote received for transaction: {}={}, Index={}", dspConsensusResult.getHash(), dspConsensusResult.isDspConsensus(), dspConsensusResult.getIndex());
-        transactions.put(existingTransactionData);
+        log.info("Vote received for transaction: Hash= {}, DspVoteResult= {}, Index= {}", dspConsensusResult.getHash(), dspConsensusResult.isDspConsensus(), dspConsensusResult.getIndex());
+        transactions.put(transactionData);
         return true;
+    }
+    @Override
+    public boolean isConfirmed(TransactionData transactionData) {
+        return transactionData.isTrustChainConsensus() && transactionData.getDspConsensusResult() != null && transactionData.getDspConsensusResult().isDspConsensus();
     }
 }

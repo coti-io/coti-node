@@ -1,6 +1,5 @@
 package io.coti.common.crypto;
 
-import io.coti.common.data.DspVote;
 import io.coti.common.data.Hash;
 import io.coti.common.data.SignatureData;
 import lombok.extern.slf4j.Slf4j;

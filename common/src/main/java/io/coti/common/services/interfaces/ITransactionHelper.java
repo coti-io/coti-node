@@ -28,4 +28,6 @@ public interface ITransactionHelper {
 
     boolean handleVoteConclusionResult(DspConsensusResult dspConsensusResult);
 
+    boolean isConfirmed(TransactionData transactionData);
+
 }

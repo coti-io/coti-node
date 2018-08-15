@@ -8,6 +8,8 @@ import io.coti.common.data.DspConsensusResult;
 import io.coti.common.data.DspVote;
 import io.coti.common.data.TransactionData;
 import io.coti.common.model.Transactions;
+import io.coti.common.services.interfaces.IBalanceService;
+import io.coti.common.services.interfaces.IClusterService;
 import io.coti.common.services.interfaces.ITransactionHelper;
 import io.coti.common.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +39,8 @@ public class TransactionService {
     private IPropagationPublisher propagationPublisher;
     @Autowired
     private IValidationService validationService;
+    @Autowired
+    private IBalanceService balanceService;
     @Autowired
     private Transactions transactions;
     @Autowired
@@ -126,9 +130,11 @@ public class TransactionService {
     }
 
     public void handleVoteConclusion(DspConsensusResult dspConsensusResult) {
+        log.info("Received DspConsensus result: " + dspConsensusResult.getHash());
         if (!transactionHelper.handleVoteConclusionResult(dspConsensusResult)) {
             log.error("Illegal vote received: " + dspConsensusResult.getHash());
         } else {
+            balanceService.setDspcToTrue(dspConsensusResult);
             propagationPublisher.propagate(dspConsensusResult, DspConsensusResult.class.getName() + "Full Nodes");
         }
     }

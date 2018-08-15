@@ -8,8 +8,10 @@ import io.coti.common.model.Transactions;
 import io.coti.common.services.LiveView.LiveViewService;
 import io.coti.common.services.LiveView.WebSocketSender;
 import io.coti.common.services.interfaces.IBalanceService;
+import io.coti.common.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -33,6 +35,8 @@ public class BalanceService implements IBalanceService {
     private LiveViewService liveViewService;
     @Autowired
     private Transactions transactions;
+    @Autowired
+    private ITransactionHelper transactionHelper;
 
     private Map<Hash, BigDecimal> balanceMap;
     private Map<Hash, BigDecimal> preBalanceMap;
@@ -52,17 +56,18 @@ public class BalanceService implements IBalanceService {
             try {
                 ConfirmationData confirmationData = confirmationQueue.take();
                 TransactionData transactionData = transactions.getByHash(confirmationData.getHash());
-                if (confirmationData instanceof TccInfo &&
-                        transactionData.getDspConsensusResult() != null) {
+                if (confirmationData instanceof TccInfo) {
                     transactionData.setTrustChainConsensus(true);
                     transactionData.setTrustChainTrustScore(((TccInfo) confirmationData).getTrustChainTrustScore());
                     transactionData.setTrustChainTransactionHashes(((TccInfo) confirmationData).getTrustChainTransactionHashes());
                     transactions.put(transactionData);
-                    processConfirmedTransaction(transactionData);
-                } else if (confirmationData instanceof DspConsensusResult &&
-                        transactionData.isTrustChainConsensus()) {
+                    if (transactionData.getDspConsensusResult() != null)
+                        processConfirmedTransaction(transactionData);
+                } else if (confirmationData instanceof DspConsensusResult) {
                     transactionData.setDspConsensusResult((DspConsensusResult) confirmationData);
-                    processConfirmedTransaction(transactionData);
+                    transactions.put(transactionData);
+                    if (transactionData.isTrustChainConsensus())
+                        processConfirmedTransaction(transactionData);
                 }
 
             } catch (InterruptedException e) {
@@ -82,7 +87,7 @@ public class BalanceService implements IBalanceService {
                         .map(BaseTransactionData::getAddressHash)
                         .collect(Collectors.toSet()));
         liveViewService.updateNodeStatus(transactionData, 2);
-        webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.DSPC_APPROVED);
+        webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.CONFIRMED);
     }
 
     private void loadBalanceFromSnapshot() throws Exception {
@@ -189,11 +194,12 @@ public class BalanceService implements IBalanceService {
 
     @Override
     public void insertSavedTransaction(TransactionData transactionData) {
+        boolean isConfirmed = transactionHelper.isConfirmed(transactionData);
         transactionData.getBaseTransactions().forEach(baseTransactionData -> {
             preBalanceMap.putIfAbsent(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
             preBalanceMap.computeIfPresent(baseTransactionData.getAddressHash(), (currentHash, currentAmount) ->
                     currentAmount.add(baseTransactionData.getAmount()));
-            if (transactionData.isValid() && transactionData.isTrustChainConsensus()) {
+            if (isConfirmed) {
                 balanceMap.putIfAbsent(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
                 balanceMap.computeIfPresent(baseTransactionData.getAddressHash(), (currentHash, currentAmount) ->
                         currentAmount.add(baseTransactionData.getAmount()));
@@ -204,22 +210,23 @@ public class BalanceService implements IBalanceService {
     @Override
     public void finalizeInit() {
         validateBalances();
+        log.info("Balance Service is up");
     }
 
     private void validateBalances() {
         preBalanceMap.forEach((hash, bigDecimal) -> {
             if (bigDecimal.signum() == -1) {
-                log.error("PreBalance validation failed!");
+                log.error("PreBalance Validation failed!");
                 throw new IllegalArgumentException("Snapshot or database are corrupted.");
             }
         });
         balanceMap.forEach((hash, bigDecimal) -> {
             if (bigDecimal.signum() == -1) {
-                log.error("Balance validation failed!");
+                log.error("Balance Validation failed!");
                 throw new IllegalArgumentException("Snapshot or database are corrupted.");
             }
         });
-        log.info("Balances validation completed");
+        log.info("Balance Validation completed");
     }
 
     @Override

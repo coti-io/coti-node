@@ -10,7 +10,6 @@ import io.coti.common.services.interfaces.IClusterService;
 import io.coti.common.services.interfaces.ISourceSelector;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -22,11 +21,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
-
 public class ClusterService implements IClusterService {
     private final Vector<TransactionData>[] sourceListsByTrustScore = new Vector[101];
-    @Value("${cluster.delay.after.tcc}")
-    private int delayTimeAfterTccProcess;
     @Autowired
     private Transactions transactions;
     @Autowired
@@ -37,7 +33,6 @@ public class ClusterService implements IClusterService {
     private TccConfirmationService tccConfirmationService;
     @Autowired
     private LiveViewService liveViewService;
-
     private boolean isStarted;
     private ConcurrentHashMap<Hash, TransactionData> hashToUnconfirmedTransactionsMapping;
 
@@ -58,10 +53,11 @@ public class ClusterService implements IClusterService {
     @Override
     public void finalizeInit() {
         isStarted = true;
+        log.info("Cluster Service is up");
     }
 
-    @Scheduled(fixedDelay = 14000, initialDelay = 10000)
-    private void checkForTrustChainConfirmedTransaction() {
+    @Scheduled(fixedDelay = 5000, initialDelay = 1000)
+    public void checkForTrustChainConfirmedTransaction() {
         if (!isStarted) {
             return;
         }
@@ -70,10 +66,6 @@ public class ClusterService implements IClusterService {
         List<TccInfo> transactionConsensusConfirmed = tccConfirmationService.getTccConfirmedTransactions();
 
         for (TccInfo tccInfo : transactionConsensusConfirmed) {
-            TransactionData transactionData = transactions.getByHash(tccInfo.getHash());
-            transactionData.setTrustChainConsensus(true);
-            transactionData.setTrustChainTransactionHashes(tccInfo.getTrustChainTransactionHashes());
-            transactionData.setTrustChainTrustScore(tccInfo.getTrustChainTrustScore());
             hashToUnconfirmedTransactionsMapping.remove(tccInfo.getHash());
             balanceService.setTccToTrue(tccInfo);
             log.info("TCC has been reached for transaction {}!!", tccInfo.getHash());
@@ -82,7 +74,7 @@ public class ClusterService implements IClusterService {
 
     @Override
     public TransactionData attachToCluster(TransactionData newTransactionData) {
-        if(newTransactionData.getChildrenTransactions() == null){
+        if (newTransactionData.getChildrenTransactions() == null) {
             newTransactionData.setChildrenTransactions(new LinkedList<>());
         }
 
@@ -90,7 +82,7 @@ public class ClusterService implements IClusterService {
         hashToUnconfirmedTransactionsMapping.put(newTransactionData.getHash(), newTransactionData);
         removeTransactionParentsFromSources(newTransactionData);
         sourceListsByTrustScore[newTransactionData.getRoundedSenderTrustScore()].add(newTransactionData);
-        log.info("added newTransactionData with hash:{}", newTransactionData.getHash());
+        log.info("Added New Transaction with hash:{}", newTransactionData.getHash());
         liveViewService.addNode(newTransactionData);
         return newTransactionData;
     }
