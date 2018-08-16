@@ -1,5 +1,6 @@
 package io.coti.common.data;
 
+import coti.crypto.AlphaNetProofOfWork;
 import io.coti.common.data.interfaces.IEntity;
 import io.coti.common.data.interfaces.ISignValidatable;
 import io.coti.common.data.interfaces.ISignable;
@@ -43,6 +44,7 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
     private String transactionDescription;
     private DspConsensusResult dspConsensusResult;
     private List<TransactionTrustScoreData> trustScoreResults;
+    private int[] nonces;
 
     private TransactionData() {
     }
@@ -97,11 +99,6 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
 
     public void addToChildrenTransactions(Hash hash) {
         childrenTransactions.add(hash);
-    }
-
-    @Override
-    public String toString() {
-        return String.valueOf(hash);
     }
 
     @Override
@@ -160,5 +157,13 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
     @Override
     public Hash getSignerHash() {
         return nodeHash;
+    }
+
+    @Override
+    public String toString() {
+        return "TransactionData{" +
+                "hash=" + String.valueOf(hash) +
+                ", senderTrustScore=" + senderTrustScore +
+                '}';
     }
 }

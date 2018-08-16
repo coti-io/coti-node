@@ -9,7 +9,6 @@ import io.coti.common.data.DspVote;
 import io.coti.common.data.TransactionData;
 import io.coti.common.model.Transactions;
 import io.coti.common.services.interfaces.IBalanceService;
-import io.coti.common.services.interfaces.IClusterService;
 import io.coti.common.services.interfaces.ITransactionHelper;
 import io.coti.common.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
@@ -58,7 +57,7 @@ public class TransactionService {
         transactionHelper.setTransactionStateToSaved(transactionData);
         if (!transactionHelper.validateTransaction(transactionData) ||
                 !transactionCrypto.verifySignature(transactionData) ||
-                !validationService.validatePow(transactionData) ||
+                !validationService.validatePoft(transactionData) ||
                 !transactionHelper.checkBalancesAndAddToPreBalance(transactionData)) {
             log.info("Invalid Transaction Received!");
             return "Invalid Transaction Received: " + transactionData.getHash();
@@ -108,7 +107,7 @@ public class TransactionService {
             }
             if (!transactionHelper.validateTransaction(transactionData) ||
                     !transactionCrypto.verifySignature(transactionData) ||
-                    !validationService.validatePow(transactionData)) {
+                    !validationService.validatePoft(transactionData)) {
                 log.info("Data Integrity validation failed");
                 return;
             }

@@ -62,7 +62,7 @@ public class TransactionService {
         }
         if (!transactionHelper.validateTransaction(transactionData) ||
                 !transactionCrypto.verifySignature(transactionData) ||
-                !validationService.validatePow(transactionData)) {
+                !validationService.validatePoft(transactionData)) {
             log.info("Data Integrity validation failed");
             return;
         }

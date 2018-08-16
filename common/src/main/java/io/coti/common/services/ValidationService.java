@@ -6,6 +6,7 @@ import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
 import io.coti.common.model.Transactions;
+import io.coti.common.services.interfaces.IPoftService;
 import io.coti.common.services.interfaces.IValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -18,6 +19,9 @@ import java.security.SignatureException;
 public class ValidationService implements IValidationService {
     @Autowired
     private Transactions transactions;
+
+    @Autowired
+    private IPoftService poftService;
 
     @Override
     public boolean validateBaseTransaction(BaseTransactionData baseTransactionData, Hash transactionHash) {
@@ -57,7 +61,7 @@ public class ValidationService implements IValidationService {
     }
 
     @Override
-    public boolean validatePow(TransactionData transactionData) {
-        return true;
+    public boolean validatePoft(TransactionData transactionData) {
+        return poftService.validatePoft(transactionData);
     }
 }

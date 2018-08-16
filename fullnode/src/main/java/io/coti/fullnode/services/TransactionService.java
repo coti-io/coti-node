@@ -54,6 +54,9 @@ public class TransactionService {
     @Autowired
     private WebSocketSender webSocketSender;
 
+    @Autowired
+    private IPoftService poftService;
+
     public ResponseEntity<Response> addNewTransaction(AddTransactionRequest request) {
         TransactionData transactionData =
                 new TransactionData(
@@ -124,7 +127,7 @@ public class TransactionService {
 
             transactionData.setPowStartTime(new Date());
             // ############   POW   ###########
-            TimeUnit.SECONDS.sleep(5);
+            poftService.poftAction(transactionData);
             // ################################
             transactionData.setPowEndTime(new Date());
 
@@ -212,7 +215,7 @@ public class TransactionService {
         }
         if (!transactionHelper.validateTransaction(transactionData) ||
                 !transactionCrypto.verifySignature(transactionData) ||
-                !validationService.validatePow(transactionData)) {
+                !validationService.validatePoft(transactionData)) {
             log.info("Data Integrity validation failed");
             return;
         }
