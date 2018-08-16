@@ -1,6 +1,8 @@
 package io.coti.common.data;
 
 import io.coti.common.data.interfaces.IEntity;
+import io.coti.common.data.interfaces.ISignValidatable;
+import io.coti.common.data.interfaces.ISignable;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -8,13 +10,13 @@ import java.util.Date;
 import java.util.List;
 
 @Data
-public class DspConsensusResult extends ConfirmationData implements Serializable, IEntity {
+public class DspConsensusResult extends ConfirmationData implements Serializable, IEntity, ISignable, ISignValidatable {
     private Hash transactionHash;
     private Hash zeroSpendServerHash;
     private long index;
     private Date indexingTime;
-    private SignatureData signatureData;
-    private List<DspVote> votesList;
+    private SignatureData zeroSpendSignature;
+    private List<DspVote> dspVotes;
     private boolean isDspConsensus;
 
     public DspConsensusResult(Hash transactionHash) {
@@ -32,5 +34,25 @@ public class DspConsensusResult extends ConfirmationData implements Serializable
     @Override
     public void setHash(Hash hash) {
         this.transactionHash = hash;
+    }
+
+    @Override
+    public SignatureData getSignature() {
+        return zeroSpendSignature;
+    }
+
+    @Override
+    public Hash getSignerHash() {
+        return zeroSpendServerHash;
+    }
+
+    @Override
+    public void setSignerHash(Hash signerHash) {
+        zeroSpendServerHash = signerHash;
+    }
+
+    @Override
+    public void setSignature(SignatureData signature) {
+        zeroSpendSignature = signature;
     }
 }

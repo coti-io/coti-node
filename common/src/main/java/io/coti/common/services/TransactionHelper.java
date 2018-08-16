@@ -1,5 +1,6 @@
 package io.coti.common.services;
 
+import io.coti.common.crypto.DspConsensusCrypto;
 import io.coti.common.crypto.TransactionCryptoWrapper;
 import io.coti.common.crypto.TransactionTrustScoreCrypto;
 import io.coti.common.data.*;
@@ -41,6 +42,8 @@ public class TransactionHelper implements ITransactionHelper {
     private IClusterService clusterService;
     @Autowired
     private Transactions transactions;
+    @Autowired
+    private DspConsensusCrypto dspConsensusCrypto;
     @Autowired
     private TransactionTrustScoreCrypto transactionTrustScoreCrypto;
     private Map<Hash, Stack<TransactionState>> transactionHashToTransactionStateStackMapping;
@@ -201,12 +204,16 @@ public class TransactionHelper implements ITransactionHelper {
 
     @Override
     public boolean handleVoteConclusionResult(DspConsensusResult dspConsensusResult) {
+        if(!dspConsensusCrypto.verifySignature(dspConsensusResult)){
+            log.info("DspConsensus signature verification failed");
+            return false;
+        }
         TransactionData transactionData = transactions.getByHash(dspConsensusResult.getTransactionHash());
         if(transactionData == null){
             log.info("Transaction doesn't exist");
             return false;
         }
-        if (!(transactionData.getDspConsensusResult() == null)) {
+        if (transactionData.getDspConsensusResult() != null) {
             log.info("Transaction vote already exists");
             return false;
         }
@@ -217,7 +224,7 @@ public class TransactionHelper implements ITransactionHelper {
             log.info("Invalid vote conclusion received for transaction: {}", dspConsensusResult.getHash());
         }
 
-        log.info("Vote received for transaction: Hash= {}, DspVoteResult= {}, Index= {}", dspConsensusResult.getHash(), dspConsensusResult.isDspConsensus(), dspConsensusResult.getIndex());
+        log.info("DspConsensus result for transaction: Hash= {}, DspVoteResult= {}, Index= {}", dspConsensusResult.getHash(), dspConsensusResult.isDspConsensus(), dspConsensusResult.getIndex());
         transactions.put(transactionData);
         return true;
     }

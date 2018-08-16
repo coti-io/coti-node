@@ -60,16 +60,14 @@ public class BalanceService implements IBalanceService {
                     transactionData.setTrustChainConsensus(true);
                     transactionData.setTrustChainTrustScore(((TccInfo) confirmationData).getTrustChainTrustScore());
                     transactionData.setTrustChainTransactionHashes(((TccInfo) confirmationData).getTrustChainTransactionHashes());
-                    transactions.put(transactionData);
-                    if (transactionData.getDspConsensusResult() != null)
+                    if (transactionData.isZeroSpend() || transactionData.getDspConsensusResult() != null)
                         processConfirmedTransaction(transactionData);
                 } else if (confirmationData instanceof DspConsensusResult) {
                     transactionData.setDspConsensusResult((DspConsensusResult) confirmationData);
-                    transactions.put(transactionData);
                     if (transactionData.isTrustChainConsensus())
                         processConfirmedTransaction(transactionData);
                 }
-
+                transactions.put(transactionData);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -77,6 +75,7 @@ public class BalanceService implements IBalanceService {
     }
 
     private void processConfirmedTransaction(TransactionData transactionData) {
+        transactionData.setTransactionConsensusUpdateTime(new Date());
         transactionData.getBaseTransactions().forEach(baseTransactionData -> {
             balanceMap.putIfAbsent(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
             balanceMap.computeIfPresent(baseTransactionData.getAddressHash(), (hash, currentAmount) -> currentAmount.add(baseTransactionData.getAmount()));
