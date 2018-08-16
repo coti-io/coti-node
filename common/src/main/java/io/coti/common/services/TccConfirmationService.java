@@ -52,7 +52,8 @@ public class TccConfirmationService {
         Hash maxSonsTotalTrustScoreHash = null;
         for (Hash hash : parent.getChildrenTransactions()) {
             try {
-                if (hashToUnTccConfirmTransactionsMapping.get(hash).getTrustChainTrustScore()
+                TransactionData child = hashToUnTccConfirmTransactionsMapping.get(hash);
+                if (child != null && child.getTrustChainTrustScore()
                         > maxSonsTotalTrustScore) {
                     maxSonsTotalTrustScore = hashToUnTccConfirmTransactionsMapping.get(hash).getTrustChainTrustScore();
                     maxSonsTotalTrustScoreHash = hash;
@@ -78,7 +79,7 @@ public class TccConfirmationService {
     private void topologicalSortingHelper(TransactionData parentTransactionData) {
         for (Hash transactionDataHash : parentTransactionData.getChildrenTransactions()) {
             TransactionData childTransactionData = hashToUnTccConfirmTransactionsMapping.get(transactionDataHash);
-            if (!childTransactionData.isVisit()) {
+            if (childTransactionData != null && !childTransactionData.isVisit()) {
                 topologicalSortingHelper(childTransactionData);
             }
 
