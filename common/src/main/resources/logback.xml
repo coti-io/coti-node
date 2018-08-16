@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true" scanPeriod="60 seconds">
-
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
     <property name="LOGS_PATH" value="./logs" />
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <Pattern>
-                %d{dd/MM/yyyy HH:mm:ss.SSS} [%thread][%-5level][%logger{0}] %msg%n
+                ${CONSOLE_LOG_PATTERN}
             </Pattern>
         </encoder>
     </appender>
@@ -22,12 +22,12 @@
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <charset>UTF-8</charset>
             <Pattern>
-                %d{dd/MM/yyyy HH:mm:ss.SSS} [%thread][%-5level][%logger{0}] %msg%n
+                ${FILE_LOG_PATTERN}
             </Pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${LOGS_PATH}/archived/${NODE_NAME}_error.%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
-            <maxFileSize>200MB</maxFileSize>
+            <maxFileSize>50MB</maxFileSize>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
     </appender>
@@ -38,7 +38,7 @@
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <charset>UTF-8</charset>
             <Pattern>
-                %d{dd/MM/yyyy HH:mm:ss.SSS} [%thread][%-5level][%logger{0}] %msg%n
+                ${FILE_LOG_PATTERN}
             </Pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
@@ -58,7 +58,7 @@
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <charset>UTF-8</charset>
             <Pattern>
-                %d{dd/MM/yyyy HH:mm:ss.SSS} [%thread][%-5level][%logger{0}] %msg%n
+                ${FILE_LOG_PATTERN}
             </Pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
@@ -74,7 +74,7 @@
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <charset>UTF-8</charset>
             <Pattern>
-                %d{dd/MM/yyyy HH:mm:ss.SSS} [%thread][%-5level][%logger{0}] %msg%n
+                ${FILE_LOG_PATTERN}
             </Pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
