@@ -3,21 +3,20 @@ package io.coti.common.services;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TccInfo;
 import io.coti.common.data.TransactionData;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @Service
 @Configurable
 public class TccConfirmationService {
     @Value("${cluster.trust.chain.threshold}")
     private int threshold;
-    private Logger log = LoggerFactory.getLogger(this.getClass().getName());
     private ConcurrentHashMap<Hash, TransactionData> hashToUnTccConfirmTransactionsMapping;
     private LinkedList<TransactionData> topologicalOrderedGraph;
 
@@ -59,7 +58,7 @@ public class TccConfirmationService {
                     maxSonsTotalTrustScoreHash = hash;
                 }
             } catch (Exception e) {
-                log.error("in setTotalSumScore: parent: {} child: {}", parent.getHash(), hash );
+                log.error("in setTotalSumScore: parent: {} child: {}", parent.getHash(), hash);
                 throw e;
             }
         }
@@ -93,7 +92,7 @@ public class TccConfirmationService {
 
     public List<TccInfo> getTccConfirmedTransactions() {
         List<TccInfo> transactionConsensusConfirmed = new LinkedList<>();
-        for(TransactionData transaction : topologicalOrderedGraph) {
+        for (TransactionData transaction : topologicalOrderedGraph) {
             setTotalTrustScore(transaction);
             if (transaction.getTrustChainTrustScore() >= threshold) {
                 transaction.setTrustChainConsensus(true);
@@ -102,9 +101,9 @@ public class TccConfirmationService {
                         , transaction.getTrustChainTrustScore());
 
                 transactionConsensusConfirmed.add(tccInfo);
-                log.info("transaction with hash:{} is confirmed with trustScore: {} and totalTrustScore:{} ", transaction.getHash(),transaction.getSenderTrustScore(),  transaction.getTrustChainTrustScore());
+                log.info("transaction with hash:{} is confirmed with trustScore: {} and totalTrustScore:{} ", transaction.getHash(), transaction.getSenderTrustScore(), transaction.getTrustChainTrustScore());
                 log.info("Trust Chain Transaction Hashes of transaction {}", Arrays.toString(transaction.getTrustChainTransactionHashes().toArray()));
-                for(Hash hash: transaction.getTrustChainTransactionHashes()) {
+                for (Hash hash : transaction.getTrustChainTransactionHashes()) {
                     log.info(hash.toString());
                 }
                 log.info("end of trust chain");

@@ -10,7 +10,7 @@ public interface IDatabaseConnector {
 
     void delete(String columnFamilyName, byte[] key);
 
-    RocksIterator getIterator(String coulumnFamilyName);
+    RocksIterator getIterator(String columnFamilyName);
 
     boolean isEmpty(String columnFamilyName);
 }

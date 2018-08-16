@@ -101,17 +101,13 @@ public class SourceSelector implements ISourceSelector {
                 }
             }
 
-            //log.info("in sourceSelect process randomIndex: {}: whe have source: {}??", randomIndex);
             TransactionData randomSource = olderSources.get(randomIndex);
-
 
             if (randomWeightedSources.size() == 0)
                 randomWeightedSources.add(randomSource);
             else if (randomWeightedSources.size() == 1 && randomSource != randomWeightedSources.iterator().next())
                 randomWeightedSources.add(randomSource);
         }
-
-        //logger.debug("Chose randomly weighted sources:\n" + randomWeightedSources);
 
         return randomWeightedSources;
 

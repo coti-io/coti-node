@@ -1,6 +1,5 @@
 package io.coti.common.http.data;
 
-import io.coti.common.data.Hash;
 import io.coti.common.data.SignatureData;
 import io.coti.common.data.TransactionTrustScoreData;
 import lombok.Data;

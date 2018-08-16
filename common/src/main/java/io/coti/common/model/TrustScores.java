@@ -1,7 +1,6 @@
 package io.coti.common.model;
 
 import io.coti.common.data.TrustScoreData;
-import io.coti.common.model.Collection;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

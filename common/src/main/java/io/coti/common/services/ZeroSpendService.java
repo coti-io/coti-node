@@ -1,6 +1,5 @@
 package io.coti.common.services;
 
-import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
 import io.coti.common.services.interfaces.IZeroSpendService;
@@ -14,9 +13,10 @@ import java.util.Vector;
 @Service
 public class ZeroSpendService implements IZeroSpendService {
     private int currentHashCounter = 0;
+
     @Override
     public TransactionData getZeroSpendTransaction(double trustScore) {
-        TransactionData transactionData =  new TransactionData(new Vector<>(), new Hash(currentHashCounter++) , "ZeroSpend", trustScore, new Date());
+        TransactionData transactionData = new TransactionData(new Vector<>(), new Hash(currentHashCounter++), "ZeroSpend", trustScore, new Date());
         transactionData.setAttachmentTime(new Date());
         return transactionData;
     }
@@ -25,7 +25,7 @@ public class ZeroSpendService implements IZeroSpendService {
     public List<TransactionData> getGenesisTransactions() {
         List<TransactionData> genesisTransactions = new LinkedList<>();
         for (int trustScore = 0; trustScore <= 100; trustScore = trustScore + 10) {
-            TransactionData transactionData = new TransactionData(new Vector<>(), new Hash(currentHashCounter++) ,"Genesis", trustScore, new Date());
+            TransactionData transactionData = new TransactionData(new Vector<>(), new Hash(currentHashCounter++), "Genesis", trustScore, new Date());
             transactionData.setZeroSpend(true);
             transactionData.setAttachmentTime(new Date());
             genesisTransactions.add(transactionData);

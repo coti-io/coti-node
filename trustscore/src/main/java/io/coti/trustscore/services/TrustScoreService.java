@@ -1,12 +1,11 @@
 package io.coti.trustscore.services;
 
-import io.coti.common.crypto.NodeCryptoHelper;
 import io.coti.common.crypto.TransactionTrustScoreCrypto;
 import io.coti.common.crypto.TrustScoreCrypto;
 import io.coti.common.data.Hash;
+import io.coti.common.data.TransactionTrustScoreData;
 import io.coti.common.data.TrustScoreData;
 import io.coti.common.http.*;
-import io.coti.common.data.TransactionTrustScoreData;
 import io.coti.common.http.data.TransactionTrustScoreResponseData;
 import io.coti.common.model.TrustScores;
 import lombok.extern.slf4j.Slf4j;

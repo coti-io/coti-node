@@ -1,13 +1,14 @@
 package io.coti.common.services.interfaces;
 
-import io.coti.common.data.*;
+import io.coti.common.data.BaseTransactionData;
+import io.coti.common.data.DspConsensusResult;
+import io.coti.common.data.TccInfo;
+import io.coti.common.data.TransactionData;
 import io.coti.common.http.GetBalancesRequest;
 import io.coti.common.http.GetBalancesResponse;
 import org.springframework.http.ResponseEntity;
 
-import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 
 public interface IBalanceService {
 

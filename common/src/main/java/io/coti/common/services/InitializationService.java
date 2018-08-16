@@ -1,6 +1,5 @@
 package io.coti.common.services;
 
-import io.coti.common.data.TransactionData;
 import io.coti.common.model.Transactions;
 import io.coti.common.services.LiveView.LiveViewService;
 import lombok.extern.slf4j.Slf4j;
@@ -8,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.util.concurrent.PriorityBlockingQueue;
 
 @Slf4j
 @Service

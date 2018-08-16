@@ -14,7 +14,6 @@ import io.coti.common.services.interfaces.IBalanceService;
 import io.coti.common.services.interfaces.IClusterService;
 import io.coti.common.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -204,12 +203,12 @@ public class TransactionHelper implements ITransactionHelper {
 
     @Override
     public boolean handleVoteConclusionResult(DspConsensusResult dspConsensusResult) {
-        if(!dspConsensusCrypto.verifySignature(dspConsensusResult)){
+        if (!dspConsensusCrypto.verifySignature(dspConsensusResult)) {
             log.info("DspConsensus signature verification failed");
             return false;
         }
         TransactionData transactionData = transactions.getByHash(dspConsensusResult.getTransactionHash());
-        if(transactionData == null){
+        if (transactionData == null) {
             log.info("Transaction doesn't exist");
             return false;
         }
@@ -228,6 +227,7 @@ public class TransactionHelper implements ITransactionHelper {
         transactions.put(transactionData);
         return true;
     }
+
     @Override
     public boolean isConfirmed(TransactionData transactionData) {
         return transactionData.isTrustChainConsensus() && transactionData.getDspConsensusResult() != null && transactionData.getDspConsensusResult().isDspConsensus();
