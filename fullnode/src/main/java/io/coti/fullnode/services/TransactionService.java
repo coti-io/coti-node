@@ -64,7 +64,7 @@ public class TransactionService {
                         request.createTime,
                         request.senderHash);
         try {
-            log.info("New transaction request is being processed. Transaction Hash={}", request.hash);
+            log.debug("New transaction request is being processed. Transaction Hash={}", request.hash);
             transactionCrypto.signMessage(transactionData);
             if (!transactionHelper.startHandleTransaction(transactionData)) {
                 log.info("Received existing transaction!");
@@ -205,9 +205,9 @@ public class TransactionService {
     }
 
     public void handlePropagatedTransaction(TransactionData transactionData) {
-        log.info("DSP Propagated Transaction received: {}", transactionData.getHash().toHexString());
+        log.debug("DSP Propagated Transaction received: {}", transactionData.getHash().toHexString());
         if (!transactionHelper.startHandleTransaction(transactionData)) {
-            log.info("Transaction already exists");
+            log.debug("Transaction already exists");
             return;
         }
         if (!transactionHelper.validateTransaction(transactionData) ||
@@ -228,7 +228,7 @@ public class TransactionService {
     }
 
     public void handleDspConsensusResult(DspConsensusResult dspConsensusResult) {
-        log.info("Received DspConsensus result: " + dspConsensusResult.getHash());
+        log.debug("Received DspConsensus result: " + dspConsensusResult.getHash());
         if (!transactionHelper.handleVoteConclusionResult(dspConsensusResult)) {
             log.error("Illegal Dsp consensus result");
         } else {

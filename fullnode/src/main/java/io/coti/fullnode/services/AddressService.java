@@ -36,7 +36,7 @@ public class AddressService {
             webSocketSender.notifyGeneratedAddress(addressHash);
             return true;
         }
-        log.info("Address {} already exists", addressHash);
+        log.debug("Address {} already exists", addressHash);
         return false;
     }
 

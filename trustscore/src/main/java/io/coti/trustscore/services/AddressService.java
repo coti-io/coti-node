@@ -24,7 +24,7 @@ public class AddressService {
             log.info("Address {} was successfully inserted", addressHash);
             return true;
         }
-        log.info("Address {} already exists", addressHash);
+        log.debug("Address {} already exists", addressHash);
         return false;
     }
 

@@ -68,7 +68,7 @@ public class ClusterService implements IClusterService {
         for (TccInfo tccInfo : transactionConsensusConfirmed) {
             hashToUnconfirmedTransactionsMapping.remove(tccInfo.getHash());
             balanceService.setTccToTrue(tccInfo);
-            log.info("TCC has been reached for transaction {}!!", tccInfo.getHash());
+            log.debug("TCC has been reached for transaction {}!!", tccInfo.getHash());
         }
     }
 
@@ -82,7 +82,7 @@ public class ClusterService implements IClusterService {
         hashToUnconfirmedTransactionsMapping.put(newTransactionData.getHash(), newTransactionData);
         removeTransactionParentsFromSources(newTransactionData);
         sourceListsByTrustScore[newTransactionData.getRoundedSenderTrustScore()].add(newTransactionData);
-        log.info("Added New Transaction with hash:{}", newTransactionData.getHash());
+        log.debug("Added New Transaction with hash:{}", newTransactionData.getHash());
         liveViewService.addNode(newTransactionData);
         return newTransactionData;
     }
@@ -141,7 +141,7 @@ public class ClusterService implements IClusterService {
         for (TransactionData td : selectedSourcesForAttachment) {
             hashes += td.getHash() + " ";
         }
-        log.info("For transaction with hash:{} we found the following sources:{}", transactionData.getHash(), hashes);
+        log.debug("For transaction with hash:{} we found the following sources:{}", transactionData.getHash(), hashes);
 
         return transactionData;
     }

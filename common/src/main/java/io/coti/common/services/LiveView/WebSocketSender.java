@@ -32,7 +32,7 @@ public class WebSocketSender {
     }
 
     public void notifyTransactionHistoryChange(TransactionData transactionData, TransactionStatus transactionStatus) {
-        log.info("Transaction {} is about to be sent to the subscribed user", transactionData.getHash().toHexString());
+        log.debug("Transaction {} is about to be sent to the subscribed user", transactionData.getHash().toHexString());
 
         for (BaseTransactionData bxData: transactionData.getBaseTransactions())
         {
@@ -43,7 +43,7 @@ public class WebSocketSender {
     }
 
     public void notifyGeneratedAddress(Hash addressHash) {
-        log.info("Address {} is about to be sent to the subscribed user", addressHash.toHexString());
+        log.debug("Address {} is about to be sent to the subscribed user", addressHash.toHexString());
         messagingSender.convertAndSend("/topic/address/" + addressHash.toHexString(),
                 new GeneratedAddressMessage(addressHash));
     }

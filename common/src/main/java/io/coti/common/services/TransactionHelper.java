@@ -126,7 +126,7 @@ public class TransactionHelper implements ITransactionHelper {
             return;
         }
         if (transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).peek() == FINISHED) {
-            log.info("Transaction handled successfully...");
+            log.debug("Transaction handled successfully...");
         } else {
             rollbackTransaction(transactionData);
         }
@@ -219,7 +219,7 @@ public class TransactionHelper implements ITransactionHelper {
         }
         transactionData.setDspConsensusResult(dspConsensusResult);
         if (dspConsensusResult.isDspConsensus()) {
-            log.info("Valid vote conclusion received for transaction: {}", dspConsensusResult.getHash());
+            log.debug("Valid vote conclusion received for transaction: {}", dspConsensusResult.getHash());
         } else {
             log.info("Invalid vote conclusion received for transaction: {}", dspConsensusResult.getHash());
         }

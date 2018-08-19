@@ -32,7 +32,7 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
 
     public <T extends IEntity> void propagate(T toPropagate, String channel) {
         synchronized (propagator) {
-            log.info("Propagating {} to {}", toPropagate.getHash().toHexString(), channel);
+            log.debug("Propagating {} to {}", toPropagate.getHash().toHexString(), channel);
             byte[] message = serializer.serialize(toPropagate);
             propagator.sendMore(channel.getBytes());
             propagator.send(message);

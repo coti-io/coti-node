@@ -49,9 +49,9 @@ public class TransactionService {
     private DspVoteCrypto dspVoteCrypto;
 
     public String handleNewTransactionFromFullNode(TransactionData transactionData) {
-        log.info("Running new transactions from full node handler");
+        log.debug("Running new transactions from full node handler");
         if (!transactionHelper.startHandleTransaction(transactionData)) {
-            log.info("Transaction already exists");
+            log.debug("Transaction already exists");
             return "Transaction Exists: " + transactionData.getHash();
         }
         transactions.put(transactionData);
@@ -82,12 +82,12 @@ public class TransactionService {
         }
         while (!transactionsToValidate.isEmpty()) {
             TransactionData transactionData = transactionsToValidate.remove();
-            log.info("DSP Fully Checking transaction: {}", transactionData.getHash());
+            log.debug("DSP Fully Checking transaction: {}", transactionData.getHash());
             DspVote dspVote = new DspVote(
                     transactionData.getHash(),
                     validationService.fullValidation(transactionData));
             dspVoteCrypto.signMessage(dspVote);
-            log.info("Sending DSP vote to: {}", zerospendReceivingAddress);
+            log.debug("Sending DSP vote to: {}", zerospendReceivingAddress);
             sender.send(dspVote, zerospendReceivingAddress);
         }
         isValidatorRunning.set(false);
@@ -101,9 +101,9 @@ public class TransactionService {
 
     public void handlePropagatedTransaction(TransactionData transactionData) {
         try {
-            log.info("DSP Propagated Transaction received: {}", transactionData.getHash().toHexString());
+            log.debug("DSP Propagated Transaction received: {}", transactionData.getHash().toHexString());
             if (!transactionHelper.startHandleTransaction(transactionData)) {
-                log.info("Transaction already exists");
+                log.debug("Transaction already exists");
                 return;
             }
             if (!transactionHelper.validateTransaction(transactionData) ||
@@ -130,7 +130,7 @@ public class TransactionService {
     }
 
     public void handleVoteConclusion(DspConsensusResult dspConsensusResult) {
-        log.info("Received DspConsensus result: " + dspConsensusResult.getHash());
+        log.debug("Received DspConsensus result: " + dspConsensusResult.getHash());
         if (!transactionHelper.handleVoteConclusionResult(dspConsensusResult)) {
             log.error("Illegal vote received: " + dspConsensusResult.getHash());
         } else {

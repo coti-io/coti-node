@@ -29,9 +29,9 @@ public class TransactionService {
     }
 
     private boolean addTransactionToLocalNode(TransactionData transactionData) {
-        log.info("DSP Propagated Transaction received: {}", transactionData.getHash().toHexString());
+        log.debug("DSP Propagated Transaction received: {}", transactionData.getHash().toHexString());
         if (!transactionHelper.startHandleTransaction(transactionData)) {
-            log.info("Transaction already exists");
+            log.debug("Transaction already exists");
             return false;
         }
         if (!transactionHelper.validateTransaction(transactionData) ||

@@ -26,7 +26,7 @@ public class TransactionService {
     public void handlePropagatedTransaction(TransactionData transactionData) {
         log.info("Propagated Transaction received: {}", transactionData.getHash().toHexString());
         if (!transactionHelper.startHandleTransaction(transactionData)) {
-            log.info("Transaction already exists");
+            log.debug("Transaction already exists");
             return;
         }
         if (!transactionHelper.validateTransaction(transactionData) ||

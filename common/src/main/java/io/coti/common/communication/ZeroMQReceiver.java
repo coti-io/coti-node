@@ -42,7 +42,7 @@ public class ZeroMQReceiver implements IReceiver {
         while (true) {
             String classType = receiver.recvStr();
             if (classNameToHandlerMapping.containsKey(classType)) {
-                log.info("Received a new Transaction...");
+                log.debug("Received a new Transaction...");
                 byte[] message = receiver.recv();
                 try {
                     String answer = classNameToHandlerMapping.get(classType).

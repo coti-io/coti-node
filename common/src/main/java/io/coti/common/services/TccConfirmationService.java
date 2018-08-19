@@ -101,12 +101,7 @@ public class TccConfirmationService {
                         , transaction.getTrustChainTrustScore());
 
                 transactionConsensusConfirmed.add(tccInfo);
-                log.info("transaction with hash:{} is confirmed with trustScore: {} and totalTrustScore:{} ", transaction.getHash(), transaction.getSenderTrustScore(), transaction.getTrustChainTrustScore());
-                log.info("Trust Chain Transaction Hashes of transaction {}", Arrays.toString(transaction.getTrustChainTransactionHashes().toArray()));
-                for (Hash hash : transaction.getTrustChainTransactionHashes()) {
-                    log.info(hash.toString());
-                }
-                log.info("end of trust chain");
+                log.debug("transaction with hash:{} is confirmed with trustScore: {} and totalTrustScore:{} ", transaction.getHash(), transaction.getSenderTrustScore(), transaction.getTrustChainTrustScore());
             }
         }
 

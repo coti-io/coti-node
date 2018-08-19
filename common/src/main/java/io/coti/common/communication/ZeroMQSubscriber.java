@@ -52,7 +52,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                 String channel = propagationReceiver.recvStr();
                 if (channel.contains(TransactionData.class.getName()) &&
                         messagesHandler.containsKey(channel)) {
-                    log.info("Received a new message on channel: {}", channel);
+                    log.debug("Received a new message on channel: {}", channel);
                     byte[] message = propagationReceiver.recv();
                     try {
                         TransactionData transactionData = serializer.deserialize(message);
@@ -63,7 +63,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                 }
                 if (channel.contains(AddressData.class.getName()) &&
                         messagesHandler.containsKey(channel)) {
-                    log.info("Received a new message on channel: {}", channel);
+                    log.debug("Received a new message on channel: {}", channel);
                     byte[] message = propagationReceiver.recv();
                     try {
                         AddressData addressData = serializer.deserialize(message);
@@ -74,7 +74,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                 }
                 if (channel.contains(DspConsensusResult.class.getName()) &&
                         messagesHandler.containsKey(channel)) {
-                    log.info("Received a new message on channel: {}", channel);
+                    log.debug("Received a new message on channel: {}", channel);
                     byte[] message = propagationReceiver.recv();
                     try {
                         DspConsensusResult dspConsensusResult = serializer.deserialize(message);

@@ -49,15 +49,14 @@ public class DspVoteService {
     }
 
     public void preparePropagatedTransactionForVoting(TransactionData transactionData) {
-        log.info("Received new transaction. Live DSP Nodes: ");
-        currentLiveDspNodes.forEach(hash -> log.info(hash.toHexString()));
+        log.debug("Received new transaction. Live DSP Nodes: ");
         TransactionVoteData transactionVoteData = new TransactionVoteData(transactionData.getHash(), currentLiveDspNodes);
         transactionVotes.put(transactionVoteData);
         transactionHashToVotesListMapping.put(transactionData.getHash(), new LinkedList<>());
     }
 
     public String receiveDspVote(DspVote dspVote) {
-        log.info("Received new Dsp Vote: {}", dspVote);
+        log.debug("Received new Dsp Vote: {}", dspVote);
         Hash transactionHash = dspVote.getTransactionHash();
         synchronized (transactionHash.toHexString()) {
             TransactionVoteData transactionVoteData = transactionVotes.getByHash(transactionHash);
@@ -88,7 +87,7 @@ public class DspVoteService {
                 log.error("Transaction Not existing in mapping!!"); // TODO: Solve and delete!
                 return "Vote already processed";
             }
-            log.info("Adding new vote: {}", dspVote);
+            log.debug("Adding new vote: {}", dspVote);
             transactionHashToVotesListMapping.get(transactionHash).add(dspVote);
         }
         return "Ok";
@@ -129,7 +128,7 @@ public class DspVoteService {
                     transactionHashToVotesListEntrySet.getValue().forEach(dspVote -> mapHashToDspVote.putIfAbsent(dspVote.getVoterDspHash(), dspVote));
                     if (isPositiveMajorityAchieved(currentVotes)) {
                         publishDecision(transactionHash, mapHashToDspVote, true);
-                        log.info("Valid vote majority achieved for: {}", currentVotes.getHash());
+                        log.debug("Valid vote majority achieved for: {}", currentVotes.getHash());
                     } else if (isNegativeMajorityAchieved(currentVotes)) {
                         publishDecision(transactionHash, mapHashToDspVote, false);
                         log.info("Invalid vote majority achieved for: {}", currentVotes.getHash());
