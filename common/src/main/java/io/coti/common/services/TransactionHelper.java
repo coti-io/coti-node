@@ -4,6 +4,7 @@ import io.coti.common.crypto.DspConsensusCrypto;
 import io.coti.common.crypto.TransactionCryptoWrapper;
 import io.coti.common.crypto.TransactionTrustScoreCrypto;
 import io.coti.common.data.*;
+import io.coti.common.exceptions.TransactionException;
 import io.coti.common.http.AddTransactionResponse;
 import io.coti.common.http.BaseResponse;
 import io.coti.common.http.GetTransactionResponse;
@@ -79,7 +80,7 @@ public class TransactionHelper implements ITransactionHelper {
         return verifyTransaction.isTransactionValid();
     }
 
-    private boolean isTransactionExists(TransactionData transactionData) {
+    public boolean isTransactionExists(TransactionData transactionData) {
         if (transactionHashToTransactionStateStackMapping.containsKey(transactionData.getHash())) {
             return true;
         }

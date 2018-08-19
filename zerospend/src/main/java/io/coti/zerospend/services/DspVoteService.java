@@ -153,7 +153,7 @@ public class DspVoteService {
         mapHashToDspVote.forEach((hash, dspVote) -> dspVotes.add(dspVote));
         dspConsensusResult.setDspVotes(dspVotes);
         dspConsensusCrypto.signMessage(dspConsensusResult);
-        propagationPublisher.propagate(dspConsensusResult, DspConsensusResult.class.getName() + "Dsp Result");
+        propagationPublisher.propagate(dspConsensusResult, DspConsensusResult.class.getName() + "DSP Result");
         transactionData.setDspConsensusResult(dspConsensusResult);
         transactions.put(transactionData);
         transactionHashToVotesListMapping.remove(transactionHash);

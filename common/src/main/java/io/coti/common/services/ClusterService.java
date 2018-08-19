@@ -14,15 +14,17 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
 public class ClusterService implements IClusterService {
-    private final Vector<TransactionData>[] sourceListsByTrustScore = new Vector[101];
+    private List<List<TransactionData>> sourceListsByTrustScore = new ArrayList<>();
+
     @Autowired
     private Transactions transactions;
     @Autowired
@@ -40,14 +42,14 @@ public class ClusterService implements IClusterService {
     public void init() {
         hashToUnconfirmedTransactionsMapping = new ConcurrentHashMap<>();
         for (int i = 0; i <= 100; i++) {
-            sourceListsByTrustScore[i] = (new Vector<>());
+            sourceListsByTrustScore.add(new ArrayList<>());
         }
     }
 
     @Override
     public void addUnconfirmedTransaction(TransactionData transactionData) {
         hashToUnconfirmedTransactionsMapping.put(transactionData.getHash(), transactionData);
-        sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].add(transactionData);
+        sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionData);
     }
 
     @Override
@@ -81,7 +83,7 @@ public class ClusterService implements IClusterService {
         updateParents(newTransactionData);
         hashToUnconfirmedTransactionsMapping.put(newTransactionData.getHash(), newTransactionData);
         removeTransactionParentsFromSources(newTransactionData);
-        sourceListsByTrustScore[newTransactionData.getRoundedSenderTrustScore()].add(newTransactionData);
+        sourceListsByTrustScore.get(newTransactionData.getRoundedSenderTrustScore()).add(newTransactionData);
         log.info("Added New Transaction with hash:{}", newTransactionData.getHash());
         liveViewService.addNode(newTransactionData);
         return newTransactionData;
@@ -112,24 +114,26 @@ public class ClusterService implements IClusterService {
 
     private void removeTransactionFromSources(Hash transactionHash) {
         TransactionData transactionData = transactions.getByHash(transactionHash);
-        if (sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].contains(transactionData)) {
-            sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].remove(transactionData); // TODO: synchronize
+        if (sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).contains(transactionData)) {
+            sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).remove(transactionData); // TODO: synchronize
             liveViewService.updateNodeStatus(transactionData, 1);
         }
     }
 
     @Override
     public TransactionData selectSources(TransactionData transactionData) {
-        Vector<TransactionData>[] trustScoreToTransactionMappingSnapshot = new Vector[101];
-        for (int i = 0; i <= 100; i++) {
-            trustScoreToTransactionMappingSnapshot[i] = (Vector<TransactionData>) sourceListsByTrustScore[i].clone();
-        }
+        List<List<TransactionData>> trustScoreToTransactionMappingSnapshot =
+                Collections.unmodifiableList(sourceListsByTrustScore);
 
         List<TransactionData> selectedSourcesForAttachment =
                 sourceSelector.selectSourcesForAttachment(
                         trustScoreToTransactionMappingSnapshot,
                         transactionData.getSenderTrustScore());
 
+        if (selectedSourcesForAttachment.size() == 0) {
+            log.info("No sources were found for transaction:{} ", transactionData.getHash());
+            return transactionData;
+        }
         if (selectedSourcesForAttachment.size() > 0) {
             transactionData.setLeftParentHash(selectedSourcesForAttachment.get(0).getHash());
         }
@@ -144,5 +148,9 @@ public class ClusterService implements IClusterService {
         log.info("For transaction with hash:{} we found the following sources:{}", transactionData.getHash(), hashes);
 
         return transactionData;
+    }
+
+    public List<List<TransactionData>> getSourceListsByTrustScore() {
+        return sourceListsByTrustScore;
     }
 }

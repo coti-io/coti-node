@@ -15,18 +15,12 @@ public class ZeroSpendService implements IZeroSpendService {
     private int currentHashCounter = 0;
 
     @Override
-    public TransactionData getZeroSpendTransaction(double trustScore) {
-        TransactionData transactionData = new TransactionData(new Vector<>(), new Hash(currentHashCounter++), "ZeroSpend", trustScore, new Date());
-        transactionData.setAttachmentTime(new Date());
-        return transactionData;
-    }
-
-    @Override
     public List<TransactionData> getGenesisTransactions() {
         List<TransactionData> genesisTransactions = new LinkedList<>();
         for (int trustScore = 0; trustScore <= 100; trustScore = trustScore + 10) {
             TransactionData transactionData = new TransactionData(new Vector<>(), new Hash(currentHashCounter++), "Genesis", trustScore, new Date());
             transactionData.setZeroSpend(true);
+            transactionData.setGenesis(true);
             transactionData.setAttachmentTime(new Date());
             genesisTransactions.add(transactionData);
             transactionData.setAttachmentTime(new Date());

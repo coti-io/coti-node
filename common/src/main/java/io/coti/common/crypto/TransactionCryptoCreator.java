@@ -5,15 +5,13 @@ import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.SignatureData;
 import io.coti.common.data.TransactionData;
 import lombok.Data;
+import org.springframework.stereotype.Service;
 
-
-@Data
-public class TransactionCyptoCreator {
-
+public class TransactionCryptoCreator {
     private TransactionData transactionData;
     private TransactionCryptoWrapper transactionCryptoWrapper;
 
-    public TransactionCyptoCreator(TransactionData transactionData) {
+    public TransactionCryptoCreator(TransactionData transactionData) {
         this.transactionData = transactionData;
         this.transactionCryptoWrapper = new TransactionCryptoWrapper(transactionData);
     }

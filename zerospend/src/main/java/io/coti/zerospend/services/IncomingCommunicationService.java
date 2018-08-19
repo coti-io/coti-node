@@ -5,6 +5,7 @@ import io.coti.common.communication.interfaces.IReceiver;
 import io.coti.common.data.AddressData;
 import io.coti.common.data.DspVote;
 import io.coti.common.data.TransactionData;
+import io.coti.common.data.ZeroSpendTransactionRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,11 +16,12 @@ import java.util.function.Function;
 
 @Service
 public class IncomingCommunicationService {
-
+    @Autowired
+    private IReceiver zeroMQTransactionReceiver;
+    @Autowired
+    private ZeroSpendTransactionCreationService zeroSpendTransactionCreationService;
     @Autowired
     private TransactionService transactionService;
-    @Autowired
-    private IReceiver receiver;
     @Autowired
     private IPropagationSubscriber propagationSubscriber;
     @Autowired
@@ -29,20 +31,23 @@ public class IncomingCommunicationService {
 
     @PostConstruct
     private void init() {
-        initDspVoteReceiver();
+        initZeroSpendTransactionRequestReceiver();
         initPropagationSubscriber();
     }
 
     private void initPropagationSubscriber() {
         HashMap<String, Consumer<Object>> classNameToSubscriberHandlerMapping = new HashMap<>();
-        classNameToSubscriberHandlerMapping.put(TransactionData.class.getName() + "ZeroSpend Server", transactionData -> transactionService.handlePropagatedTransactionFromDspNode((TransactionData) transactionData));
-        classNameToSubscriberHandlerMapping.put(AddressData.class.getName() + "ZeroSpend Server", data -> addressService.handlePropagatedAddress((AddressData) data));
+        classNameToSubscriberHandlerMapping.put(TransactionData.class.getName() + "DSP Nodes", transactionData ->
+                transactionService.handlePropagatedTransactionFromDspNode((TransactionData) transactionData));
+        classNameToSubscriberHandlerMapping.put(AddressData.class.getName() + "DSP Nodes", data ->
+                addressService.handlePropagatedAddress((AddressData) data));
         propagationSubscriber.init(classNameToSubscriberHandlerMapping);
     }
 
-    private void initDspVoteReceiver() {
-        HashMap<String, Function<Object, String>> voteMapping = new HashMap<>();
-        voteMapping.put(DspVote.class.getName(), dspVote -> dspVoteService.receiveDspVote((DspVote) dspVote));
-        receiver.init(voteMapping);
+    private void initZeroSpendTransactionRequestReceiver() {
+        HashMap<String, Function<Object, String>> classNameToReceiverHandlerMapping = new HashMap<>();
+        classNameToReceiverHandlerMapping.put(DspVote.class.getName(), dspVote -> dspVoteService.receiveDspVote((DspVote) dspVote));
+        classNameToReceiverHandlerMapping.put(ZeroSpendTransactionRequest.class.getName(), newZeroSpendTransactionRequest -> zeroSpendTransactionCreationService.createNewGenesisZeroSpendTransaction((ZeroSpendTransactionRequest) newZeroSpendTransactionRequest));
+        zeroMQTransactionReceiver.init(classNameToReceiverHandlerMapping);
     }
 }

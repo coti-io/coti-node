@@ -77,40 +77,4 @@ public class SourceSelectorTest {
         List<TransactionData> sources = sourceSelector.selectTwoOptimalSources(newTransactions);
         Assert.assertTrue(sources.size() == 2);
     }
-
-    @Test
-    public void selectSourcesForAttachment() {
-        Vector<TransactionData>[] trustScoreToSourceListMapping = new Vector[101];
-        for (int i = 0; i < trustScoreToSourceListMapping.length; i++) {
-            trustScoreToSourceListMapping[i] = (new Vector<>());
-        }
-        for (TransactionData transaction : newTransactions) {
-            trustScoreToSourceListMapping[transaction.getRoundedSenderTrustScore()].add(transaction);
-        }
-        List<TransactionData> sources0 = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 38);
-        Assert.assertTrue(sources0.size() == 0);
-
-        List<TransactionData> sources1 = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 50);
-        Assert.assertTrue(sources1.size() == 1);
-
-        List<TransactionData> sources2 = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 92);
-        Assert.assertTrue(sources2.size() == 1);
-
-        TransactionData TransactionData10 = new TransactionData(new ArrayList<>() ,new Hash("10"),  "test",100, new Date() );
-        TransactionData10.setSenderTrustScore(80);
-        TransactionData10.setAttachmentTime(new Date(now.getTime() - 8000));
-
-        TransactionData TransactionData11 = new TransactionData(new ArrayList<>(),new Hash("1111"),"test",100, new Date());
-        TransactionData11.setSenderTrustScore(72);
-        TransactionData11.setAttachmentTime(new Date(now.getTime() - 9000));
-
-        newTransactions.add(TransactionData10);
-        trustScoreToSourceListMapping[TransactionData10.getRoundedSenderTrustScore()].add(TransactionData10);
-        newTransactions.add(TransactionData11);
-        trustScoreToSourceListMapping[TransactionData11.getRoundedSenderTrustScore()].add(TransactionData11);
-
-        List<TransactionData> sources3 = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 92);
-        Assert.assertTrue(sources3.size() == 2);
-    }
-
 }

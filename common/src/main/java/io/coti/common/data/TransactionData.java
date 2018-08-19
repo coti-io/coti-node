@@ -40,6 +40,7 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
     private Map<String, Boolean> validByNodes;
     private transient boolean isVisit;
     private boolean isZeroSpend;
+    private boolean isGenesis;
     private String transactionDescription;
     private DspConsensusResult dspConsensusResult;
     private List<TransactionTrustScoreData> trustScoreResults;

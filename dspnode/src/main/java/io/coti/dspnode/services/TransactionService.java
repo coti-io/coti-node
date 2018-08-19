@@ -9,7 +9,6 @@ import io.coti.common.data.DspVote;
 import io.coti.common.data.TransactionData;
 import io.coti.common.model.Transactions;
 import io.coti.common.services.interfaces.IBalanceService;
-import io.coti.common.services.interfaces.IClusterService;
 import io.coti.common.services.interfaces.ITransactionHelper;
 import io.coti.common.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class TransactionService {
     Queue<TransactionData> transactionsToValidate;
     AtomicBoolean isValidatorRunning;
-    @Value("#{'${zerospend.receiving.address}'.split(',')}")
+    @Value("${zerospend.receiving.address}")
     private String zerospendReceivingAddress;
 
     @Autowired
@@ -63,6 +62,7 @@ public class TransactionService {
             log.info("Invalid Transaction Received!");
             return "Invalid Transaction Received: " + transactionData.getHash();
         }
+        transactionHelper.attachTransactionToCluster(transactionData);
         propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "ZeroSpend Server");
         propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "Full Nodes");
         propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "DSP Nodes");
