@@ -126,10 +126,7 @@ public class DspVoteService {
                     Hash transactionHash = transactionHashToVotesListEntrySet.getKey();
                     TransactionVoteData currentVotes = transactionVotes.getByHash(transactionHash);
                     Map<Hash, DspVote> mapHashToDspVote = currentVotes.getDspHashToVoteMapping();
-                    for (DspVote additionalVote : transactionHashToVotesListEntrySet.getValue()) {
-                        mapHashToDspVote.putIfAbsent(additionalVote.getVoterDspHash(), additionalVote);
-                    }
-
+                    transactionHashToVotesListEntrySet.getValue().forEach(dspVote -> mapHashToDspVote.putIfAbsent(dspVote.getVoterDspHash(), dspVote));
                     if (isPositiveMajorityAchieved(currentVotes)) {
                         publishDecision(transactionHash, mapHashToDspVote, true);
                         log.info("Valid vote majority achieved for: {}", currentVotes.getHash());
@@ -153,7 +150,7 @@ public class DspVoteService {
         dspConsensusResult.setDspConsensus(isLegalTransaction);
         dspConsensusResult.setIndexingTime(new Date());
         List<DspVote> dspVotes = new LinkedList<>();
-        mapHashToDspVote.forEach((hash,dspVote)-> dspVotes.add(dspVote));
+        mapHashToDspVote.forEach((hash, dspVote) -> dspVotes.add(dspVote));
         dspConsensusResult.setDspVotes(dspVotes);
         dspConsensusCrypto.signMessage(dspConsensusResult);
         propagationPublisher.propagate(dspConsensusResult, DspConsensusResult.class.getName() + "Dsp Result");

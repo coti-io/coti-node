@@ -78,8 +78,8 @@ public class BalanceService implements IBalanceService {
     private void processConfirmedTransaction(TransactionData transactionData) {
         transactionData.setTransactionConsensusUpdateTime(new Date());
         transactionData.getBaseTransactions().forEach(baseTransactionData -> {
-            balanceMap.putIfAbsent(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
             balanceMap.computeIfPresent(baseTransactionData.getAddressHash(), (hash, currentAmount) -> currentAmount.add(baseTransactionData.getAmount()));
+            balanceMap.putIfAbsent(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
         });
         publishBalanceChangeToWebSocket(
                 transactionData.getBaseTransactions()
@@ -186,10 +186,9 @@ public class BalanceService implements IBalanceService {
 
     @Override
     public void rollbackBaseTransactions(TransactionData transactionData) {
-        for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
-            baseTransactionData.setAmount(baseTransactionData.getAmount().negate());
-            preBalanceMap.replace(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
-        }
+        transactionData.getBaseTransactions().forEach(baseTransactionData ->
+                preBalanceMap.computeIfPresent(baseTransactionData.getAddressHash(), (addressHash, amount) -> amount.add(baseTransactionData.getAmount().negate()))
+        );
     }
 
     @Override

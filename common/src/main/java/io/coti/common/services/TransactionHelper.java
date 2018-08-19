@@ -95,16 +95,16 @@ public class TransactionHelper implements ITransactionHelper {
         if (transactionTrustScores == null)
             return false;
         Map<Double, Integer> trustScoreResults = new HashMap<>();
-        Double transactionTrustScore;
+        Set<Hash> transactionTrustScoreNodes = new HashSet<>();
         for (TransactionTrustScoreData transactionTrustScoreData : transactionTrustScores) {
-            if (transactionTrustScoreData.getTransactionHash().equals(transactionHash) && transactionTrustScoreCrypto.verifySignature(transactionTrustScoreData)) {
-                transactionTrustScore = transactionTrustScoreData.getTrustScore();
-                Integer trustScoreResult = trustScoreResults.get(transactionTrustScore);
-                trustScoreResults.put(transactionTrustScore, (trustScoreResult != null ? trustScoreResult : 0) + 1);
-            }
+            if (transactionTrustScoreNodes.contains(transactionTrustScoreData.getSignerHash()) || !transactionTrustScoreData.getTransactionHash().equals(transactionHash) ||
+                    !transactionTrustScoreCrypto.verifySignature(transactionTrustScoreData))
+                return false;
+            Double transactionTrustScore = transactionTrustScoreData.getTrustScore();
+            trustScoreResults.computeIfPresent(transactionTrustScore, (trustScore, currentAmount) -> currentAmount + 1);
+            trustScoreResults.putIfAbsent(transactionTrustScore, 1);
+            transactionTrustScoreNodes.add(transactionTrustScoreData.getSignerHash());
         }
-        if (CollectionUtils.isEmpty(trustScoreResults))
-            return false;
         transactionData.setSenderTrustScore(Collections.max(trustScoreResults.entrySet(), Map.Entry.comparingByValue()).getKey());
         return true;
     }

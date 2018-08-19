@@ -229,10 +229,9 @@ public class TransactionService {
 
     public void handleDspConsensusResult(DspConsensusResult dspConsensusResult) {
         log.info("Received DspConsensus result: " + dspConsensusResult.getHash());
-        if(!transactionHelper.handleVoteConclusionResult(dspConsensusResult)){
+        if (!transactionHelper.handleVoteConclusionResult(dspConsensusResult)) {
             log.error("Illegal Dsp consensus result");
-        }
-        else{
+        } else {
             balanceService.setDspcToTrue(dspConsensusResult);
         }
     }
