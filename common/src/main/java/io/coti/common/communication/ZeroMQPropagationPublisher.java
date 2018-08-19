@@ -26,13 +26,16 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
     private void init() {
         zeroMQContext = ZMQ.context(1);
         propagator = zeroMQContext.socket(ZMQ.PUB);
+        propagator.setHWM(10000);
         propagator.bind("tcp://*:" + propagationPort);
     }
 
     public <T extends IEntity> void propagate(T toPropagate, String channel) {
-        log.info("Propagating transaction {} to {}", toPropagate.getHash().toHexString(), channel);
-        byte[] message = serializer.serialize(toPropagate);
-        propagator.sendMore(channel.getBytes());
-        propagator.send(message);
+        synchronized (propagator) {
+            log.info("Propagating {} to {}", toPropagate.getHash().toHexString(), channel);
+            byte[] message = serializer.serialize(toPropagate);
+            propagator.sendMore(channel.getBytes());
+            propagator.send(message);
+        }
     }
 }

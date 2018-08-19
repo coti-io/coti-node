@@ -30,6 +30,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
 
     private void initSockets(List<String> channelsToSubscribe) {
         propagationReceiver = zeroMQContext.socket(ZMQ.SUB);
+        propagationReceiver.setHWM(10000);
         ZeroMQUtils.bindToRandomPort(propagationReceiver);
         for (String serverAddress :
                 propagationServerAddresses

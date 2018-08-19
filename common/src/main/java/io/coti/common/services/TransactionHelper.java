@@ -46,6 +46,7 @@ public class TransactionHelper implements ITransactionHelper {
     @Autowired
     private TransactionTrustScoreCrypto transactionTrustScoreCrypto;
     private Map<Hash, Stack<TransactionState>> transactionHashToTransactionStateStackMapping;
+    private long currentLastIndex = -1;
 
     @PostConstruct
     private void init() {
@@ -224,6 +225,9 @@ public class TransactionHelper implements ITransactionHelper {
         }
 
         log.info("DspConsensus result for transaction: Hash= {}, DspVoteResult= {}, Index= {}", dspConsensusResult.getHash(), dspConsensusResult.isDspConsensus(), dspConsensusResult.getIndex());
+        if(dspConsensusResult.getIndex() != ++currentLastIndex){
+            log.error("Server not synchronized. received index: " + dspConsensusResult.getIndex() + " current index: " +  currentLastIndex);
+        }
         transactions.put(transactionData);
         return true;
     }
