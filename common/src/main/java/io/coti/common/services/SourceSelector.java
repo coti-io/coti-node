@@ -78,7 +78,7 @@ public class SourceSelector implements ISourceSelector {
                 transactions.stream().
                         filter(s -> !s.getAttachmentTime().after(now)).collect(toList());
 
-        if (olderSources.size() < 2) {
+        if (olderSources.size() <= 2) {
             return olderSources;
         }
 

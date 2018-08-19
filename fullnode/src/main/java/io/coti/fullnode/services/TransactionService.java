@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 
@@ -124,6 +125,9 @@ public class TransactionService {
                 log.info("Could not validate transaction source");
                 //TODO: decide what to do here
             }
+            Random r = new Random();
+            int randomInt = r.nextInt(100) + 1;
+            transactionData.setSenderTrustScore(randomInt);
 
             transactionData.setPowStartTime(new Date());
             // ############   POW   ###########

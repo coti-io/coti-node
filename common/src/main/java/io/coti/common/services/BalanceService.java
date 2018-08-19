@@ -105,15 +105,15 @@ public class BalanceService implements IBalanceService {
                 }
                 Hash addressHash = new Hash(addressDetails[0]);
                 BigDecimal addressAmount = new BigDecimal(addressDetails[1]);
-                log.debug("The hash {} was loaded from the snapshot with amount {}", addressHash, addressAmount);
+           //     log.debug("The hash {} was loaded from the snapshot with amount {}", addressHash, addressAmount);
 
                 if (balanceMap.containsKey(addressHash)) {
                     log.error("The address {} was already found in the snapshot", addressHash);
                     throw new Exception(String.format("The address %s was already found in the snapshot", addressHash));
                 }
                 balanceMap.put(addressHash, addressAmount);
-                log.debug("Loading from snapshot into inMem balance+preBalance address {} and amount {}",
-                        addressHash, addressAmount);
+          //      log.debug("Loading from snapshot into inMem balance+preBalance address {} and amount {}",
+          //              addressHash, addressAmount);
             }
             log.info("Snapshot is finished");
             preBalanceMap.putAll(balanceMap);
