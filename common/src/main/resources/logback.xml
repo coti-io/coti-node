@@ -95,7 +95,7 @@
     <!-- Root Logger -->
     <root level="DEBUG" >
         <appender-ref ref="DUMP_LOG_FILE" />
-        <appender-ref ref="ERROR_LOG_FILE" />
+        <!--<appender-ref ref="ERROR_LOG_FILE" />-->
     </root>
 
     <root level="INFO" >

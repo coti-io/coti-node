@@ -2,30 +2,57 @@ import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.ConfirmationData;
 import io.coti.common.data.Hash;
 import io.coti.common.data.SignatureData;
+import io.coti.common.model.Transactions;
 import io.coti.common.services.BalanceService;
-import io.coti.fullnode.AppConfig;
+import io.coti.common.services.InitializationService;
+import io.coti.common.services.LiveView.LiveViewService;
+import io.coti.common.services.LiveView.WebSocketSender;
+import io.coti.common.services.TransactionHelper;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.After;
 import org.junit.Assert;
-import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.math.BigDecimal;
 import java.util.*;
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
-@RunWith(SpringRunner.class)
-@ContextConfiguration(classes = AppConfig.class)
+//@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+
+@ContextConfiguration(classes = BalanceServiceTestsAppConfig.class)
+@TestPropertySource(locations = "../fullnode1.properties")
+@SpringBootTest
 @Slf4j
+@RunWith(SpringRunner.class)
+//@RunWith(SpringJUnit4ClassRunner.class)
+
 public class BalanceServiceTests {
+
+    @MockBean
+    TransactionHelper transactionHelper;
+
+    @MockBean
+    InitializationService initializationService;
+
+    @MockBean
+    WebSocketSender webSocketSender;
+
+    @MockBean
+    private LiveViewService liveViewService;
+
+    @MockBean
+    private Transactions transactions;
+
+
 
     @Autowired
     private BalanceService balanceService;
-
 
     @Test
     public void AInitTest() { // the name starts with a to check make sure it runs first
@@ -33,17 +60,26 @@ public class BalanceServiceTests {
 
     here we can check only the snapshot
      */
+        BigDecimal addressBalance1 = balanceService.getBalanceMap().
+                get(new Hash("caba14b7fe219b3da5dee0c29389c88e4d134333a2ee104152d6e9f7b673be9e0e28ca511d1ac749f46bea7f1ab25818f335ab9111a6c5eebe2f650974e12d1b7dccd4d7"));
+        Assert.assertTrue(addressBalance1.compareTo(new BigDecimal("3941622.610838615")) == 0);
 
-        Assert.assertTrue(balanceService.getBalanceMap().get(new Hash("BE")) == new BigDecimal(120.0));
-        Assert.assertTrue(balanceService.getPreBalanceMap().get(new Hash("BE")) == new BigDecimal(120.0));
+        BigDecimal addressBalance2 = balanceService.getBalanceMap().
+                get(new Hash("5e6b6af708ae15c1c55641f9e87e71f5cd58fc71aa58ae55abe9d5aa88b2ad3c5295cbffcfbb3a087e8da72596d7c60eebb4c59748cc1906b2aa67be43ec3eb147c1a19a"));
+        Assert.assertFalse(addressBalance2.compareTo(new BigDecimal("3941622.610838615")) == 0);
 
-
+        int temp=0;
     }
 
     @Test
     public void checkBalancesTest() {
         List<BaseTransactionData> baseTransactionDataList = new LinkedList<>();
-        baseTransactionDataList.add(new BaseTransactionData(new Hash("BE"), new BigDecimal(-150), new Hash("BE"), new SignatureData("", ""), new Date()));
+        baseTransactionDataList.
+                add(new BaseTransactionData(new Hash("07ffe1f66fcfbd4adb004c0dde1414b62d604bc8a09caefe04ca085a6a0890dd9127f41238b76208b0c88b8ea6e05f4e848a4e9f431060cd53fdeebf6e6cf994a838e46e"),
+                new BigDecimal(-150),
+                        new Hash("BE"),
+                        new SignatureData("", ""),
+                        new Date()));
 
         boolean ans = balanceService.checkBalancesAndAddToPreBalance(baseTransactionDataList);
         Assert.assertFalse(ans);
@@ -75,6 +111,10 @@ public class BalanceServiceTests {
         Map<Hash, BigDecimal> addressToAmount = new HashMap<>();
         addressToAmount.put(new Hash("DD"), new BigDecimal(10.1));
 //        transaction.setAddressHashToValueTransferredMapping(addressToAmount);
+    }
+
+    @After
+    public void tearDown() {
     }
 
 //    @Test

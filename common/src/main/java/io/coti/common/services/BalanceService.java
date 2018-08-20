@@ -101,7 +101,7 @@ public class BalanceService implements IBalanceService {
         webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.CONFIRMED);
     }
 
-    private void loadBalanceFromSnapshot() throws Exception {
+    public void loadBalanceFromSnapshot() throws Exception {
         String snapshotFileLocation = "snapshot.csv";
         File snapshotFile = new File(snapshotFileLocation);
 
