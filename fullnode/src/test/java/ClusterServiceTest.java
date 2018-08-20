@@ -9,7 +9,6 @@ import io.coti.common.services.TccConfirmationService;
 import io.coti.common.services.interfaces.ISourceSelector;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,14 +23,20 @@ import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 
+import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.when;
+
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = ClusterServiceTestAppConfig.class)
+@ContextConfiguration(classes = ClusterService.class)
 @TestPropertySource(locations = "../fullnode1.properties")
 @Slf4j
 
 public class ClusterServiceTest {
+    @Autowired
+    private ClusterService cluster;
+
     @MockBean
-    private Transactions transaction;
+    private Transactions transactions;
 
     @MockBean
     InitializationService initializationService;
@@ -48,83 +53,78 @@ public class ClusterServiceTest {
     @MockBean
     private LiveViewService liveViewService;
 
-    @Autowired
-    private ClusterService cluster;
-
-    private List<Hash> notTccConfirmTransactions;
+    private TransactionData transactionData0, transactionData1 ;
 
     @Before
     public void setUpTransactionsFromSnapShot() {
 
-        notTccConfirmTransactions = new Vector<>();
-        TransactionData TransactionData0 = new TransactionData(new ArrayList<>(),new Hash("00"), "test", 70, new Date());
+        transactionData0 = new TransactionData(new ArrayList<>(),new Hash("00"), "test", 70, new Date());
         // TransactionData0.setSenderTrustScore(70);
         List<Hash> hashChildren = new Vector<>();
         hashChildren.add(new Hash("11"));
-        TransactionData0.setChildrenTransactions(hashChildren);
-        TransactionData0.setProcessStartTime(new Date());
-        TransactionData0.setAttachmentTime(new Date());
+        hashChildren.add(new Hash("00"));
+        transactionData0.setChildrenTransactions(hashChildren);
+        transactionData0.setProcessStartTime(new Date());
+        transactionData0.setAttachmentTime(new Date());
 
-        TransactionData TransactionData1 = new TransactionData(new ArrayList<>(),new Hash("11"), "test", 83, new Date());
+        transactionData1 = new TransactionData(new ArrayList<>(),new Hash("11"), "test", 83, new Date());
         // TransactionData1.setSenderTrustScore(83);
-        TransactionData1.setRightParentHash(TransactionData0.getHash());
+        transactionData1.setRightParentHash(transactionData0.getHash());
         //  TransactionData1.setCreateTime(new Date());
-        TransactionData1.setProcessStartTime(new Date());
-        TransactionData1.setAttachmentTime(new Date());
+        transactionData1.setProcessStartTime(new Date());
+        transactionData1.setAttachmentTime(new Date());
 
-        transaction.put(TransactionData0);
-        transaction.put(TransactionData1);
+        transactions.put(transactionData0);
+        transactions.put(transactionData1);
 
-        notTccConfirmTransactions.add(TransactionData0.getHash());
-        notTccConfirmTransactions.add(TransactionData1.getHash());
+        cluster.addUnconfirmedTransaction(transactionData0);
+        cluster.addUnconfirmedTransaction(transactionData1);
     }
 
     @Test
-    public void selectSources() {
-        TransactionData TransactionData2 = new TransactionData(new ArrayList<>(),new Hash("22"), "test", 92, new Date());
-      //  TransactionData2.setCreateTime(new Date());
-        cluster.selectSources(TransactionData2);
-        Assert.assertEquals(TransactionData2.getLeftParentHash(), new Hash("11"));
+    public void selectSources_noExceptionIsThrown(){
+        try {
+        TransactionData TransactionData = new TransactionData(new ArrayList<>(),new Hash("22"), "test", 92, new Date());
+        cluster.selectSources(TransactionData);
+        } catch (Exception e) {
+            assertNull(e);
+        }
     }
 
     @Test
-    public void selectSourcesWithToHighTrustScore() {
-        TransactionData TransactionData2 = new TransactionData(new ArrayList<>(),new Hash("22"), "test", 50, new Date());
-        TransactionData2.setSenderTrustScore(99);
-      //  TransactionData2.setCreateTime(new Date());
-        cluster.selectSources(TransactionData2);
-        Assert.assertEquals(TransactionData2.getLeftParentHash(), null);
-    }
-
-    @Test
-    public void selectSourcesWithToLowTrustScore() {
-        TransactionData TransactionData2 = new TransactionData(new ArrayList<>(),new Hash("22"),"test", 50, new Date());
-        TransactionData2.setSenderTrustScore(50);
-     //   TransactionData2.setCreateTime(new Date());
-        cluster.selectSources(TransactionData2);
-        Assert.assertEquals(TransactionData2.getLeftParentHash(), null);
-    }
-
-    @Test
-    public void attachToCluster() {
-        Exception ex = null;
+    public void attachToCluster_noExceptionIsThrown(){
         try {
             TransactionData TransactionData2 = new TransactionData(new ArrayList<>(),new Hash("22"), "test", 50, new Date());
             TransactionData2.setSenderTrustScore(92);
-         //   TransactionData2.setCreateTime(new Date());
             TransactionData2.setLeftParentHash(new Hash("00"));
+            when(transactions.getByHash(new Hash("00"))).thenReturn(transactionData0);
             cluster.attachToCluster(TransactionData2);
         } catch (Exception e) {
-            ex = null;
+            assertNull(e);
         }
-        Assert.assertEquals(null, ex);
     }
 
+    @Test
+    public void finalizeInit_noExceptionIsThrown() {
+        try {
+            cluster.finalizeInit();
+        } catch (Exception e) {
+            assertNull(e);
+        }
+    }
 
+    @Test
+    public void addUnconfirmedTransaction_noExceptionIsThrown() {
+        try {
+            TransactionData TransactionData = new TransactionData(new ArrayList<>(),new Hash("22"), "test", 50, new Date());
+            cluster.addUnconfirmedTransaction(TransactionData);
+        } catch (Exception e) {
+            assertNull(e);
+        }
+    }
 
     @After
     public void tearDown() {
+        cluster = null;
     }
-
-
 }

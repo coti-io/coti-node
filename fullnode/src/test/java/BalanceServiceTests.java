@@ -1,7 +1,6 @@
-import io.coti.common.data.BaseTransactionData;
-import io.coti.common.data.ConfirmationData;
-import io.coti.common.data.Hash;
-import io.coti.common.data.SignatureData;
+import io.coti.common.data.*;
+import io.coti.common.http.GetBalancesRequest;
+import io.coti.common.http.GetBalancesResponse;
 import io.coti.common.model.Transactions;
 import io.coti.common.services.BalanceService;
 import io.coti.common.services.InitializationService;
@@ -16,23 +15,33 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
-//@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 
-@ContextConfiguration(classes = BalanceServiceTestsAppConfig.class)
+import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.when;
+
+//@ContextConfiguration(classes = BalanceServiceTestsAppConfig.class)
+@ContextConfiguration(classes = BalanceService.class)
+//BalanceService.class
 @TestPropertySource(locations = "../fullnode1.properties")
 @SpringBootTest
 @Slf4j
 @RunWith(SpringRunner.class)
-//@RunWith(SpringJUnit4ClassRunner.class)
 
 public class BalanceServiceTests {
+
+    @Autowired
+    private BalanceService balanceService;
 
     @MockBean
     TransactionHelper transactionHelper;
@@ -50,106 +59,202 @@ public class BalanceServiceTests {
     private Transactions transactions;
 
 
-
-    @Autowired
-    private BalanceService balanceService;
-
     @Test
-    public void AInitTest() { // the name starts with a to check make sure it runs first
-    /*
-
-    here we can check only the snapshot
-     */
-        BigDecimal addressBalance1 = balanceService.getBalanceMap().
+    public void testBalanceAmountAsExpected() {
+        BigDecimal addressBalance = balanceService.getBalanceMap().
                 get(new Hash("caba14b7fe219b3da5dee0c29389c88e4d134333a2ee104152d6e9f7b673be9e0e28ca511d1ac749f46bea7f1ab25818f335ab9111a6c5eebe2f650974e12d1b7dccd4d7"));
-        Assert.assertTrue(addressBalance1.compareTo(new BigDecimal("3941622.610838615")) == 0);
-
-        BigDecimal addressBalance2 = balanceService.getBalanceMap().
-                get(new Hash("5e6b6af708ae15c1c55641f9e87e71f5cd58fc71aa58ae55abe9d5aa88b2ad3c5295cbffcfbb3a087e8da72596d7c60eebb4c59748cc1906b2aa67be43ec3eb147c1a19a"));
-        Assert.assertFalse(addressBalance2.compareTo(new BigDecimal("3941622.610838615")) == 0);
-
-        int temp=0;
+        Assert.assertEquals(addressBalance ,new BigDecimal("3941622.610838615"));
     }
 
     @Test
-    public void checkBalancesTest() {
+    public void testBalanceAmountAsNotExpected() {
+        BigDecimal addressBalance = balanceService.getBalanceMap().
+                get(new Hash("5e6b6af708ae15c1c55641f9e87e71f5cd58fc71aa58ae55abe9d5aa88b2ad3c5295cbffcfbb3a087e8da72596d7c60eebb4c59748cc1906b2aa67be43ec3eb147c1a19a"));
+        Assert.assertNotEquals(addressBalance,new BigDecimal("3941622.610838615"));
+    }
+
+    @Test
+    public void testPassingBalanceAndPreBalanceCheck_WhenEnoughCotiInAddress() {
         List<BaseTransactionData> baseTransactionDataList = new LinkedList<>();
         baseTransactionDataList.
-                add(new BaseTransactionData(new Hash("07ffe1f66fcfbd4adb004c0dde1414b62d604bc8a09caefe04ca085a6a0890dd9127f41238b76208b0c88b8ea6e05f4e848a4e9f431060cd53fdeebf6e6cf994a838e46e"),
-                new BigDecimal(-150),
+                add(new BaseTransactionData(new Hash("caba14b7fe219b3da5dee0c29389c88e4d134333a2ee104152d6e9f7b673be9e0e28ca511d1ac749f46bea7f1ab25818f335ab9111a6c5eebe2f650974e12d1b7dccd4d7"),
+                        new BigDecimal(-3000000),
+                        new Hash("AE"),
+                        new SignatureData("", ""),
+                        new Date()));
+
+        boolean ans = balanceService.checkBalancesAndAddToPreBalance(baseTransactionDataList);
+        Assert.assertTrue(ans);
+    }
+
+    @Test
+    public void testPassingBalanceAndPreBalanceCheck_WhenNotEnoughCotiInAddress() {
+        List<BaseTransactionData> baseTransactionDataList = new LinkedList<>();
+        baseTransactionDataList.
+                add(new BaseTransactionData(new Hash("8b4a58b51c89d52f41f67496389e79104ff3bf98e59b5766cd8d3683b8fbf653b51f403ee2d82aabc7215b6b046787c507a69749a070290b9a44c3a10389ab125545ea76"),
+                        new BigDecimal(-2000000),
                         new Hash("BE"),
                         new SignatureData("", ""),
                         new Date()));
 
         boolean ans = balanceService.checkBalancesAndAddToPreBalance(baseTransactionDataList);
         Assert.assertFalse(ans);
-
-
-        List<BaseTransactionData> baseTransactionDatas2 = new LinkedList<>();
-        baseTransactionDatas2.add(new BaseTransactionData(new Hash("BE"), new BigDecimal(-20), new Hash("BE"), new SignatureData("", ""), new Date()));
-        ans = balanceService.checkBalancesAndAddToPreBalance(baseTransactionDatas2);
-        Assert.assertTrue(ans);
-
-//Big decimals should be compared with compareTo and not equals
-        Assert.assertTrue(balanceService.getPreBalanceMap().get(new Hash("BE"))
-                .compareTo(new BigDecimal(100)) == 0);
-
-
     }
 
-//    @Test // this method checks ConfirmationData.equals() as well
-//    public void insertIntoUnconfirmedDBandAddToTccQeueueTest() {
-//        ConfirmationData confirmationData1 = new ConfirmationData(new Hash("A3")); //tcc =0 , dspc =0
-//        populateTransactionWithDummy(confirmationData1);
-//        balanceService.insertToUnconfirmedTransactions(confirmationData1);
-//        ConfirmationData confirmationData  = unconfirmedTransactions.getByHash(new Hash("A3"));
-//        Assert.assertTrue(queueService.getTccQueue().contains(confirmationData.getHash()));
-//
+    @Test
+    public void testPassingBalanceAndPreBalanceCheck_WhenAddressNotExist() {
+        List<BaseTransactionData> baseTransactionDataList = new LinkedList<>();
+        baseTransactionDataList.
+                add(new BaseTransactionData(new Hash("8b4a58b51c89d52f41f67496389e79104ff3bf98e59b5766cd8d3683b8fbf653b51f403ee2d82aabc7215b6b046787c507a69749a070290b9a44c3a10389ab125548ab12"),
+                        new BigDecimal(-200),
+                        new Hash("CE"),
+                        new SignatureData("", ""),
+                        new Date()));
+
+        boolean ans = balanceService.checkBalancesAndAddToPreBalance(baseTransactionDataList);
+        Assert.assertFalse(ans);
+    }
+
+    @Test
+    public void getBalances_addressHashInBalanceMap_correctBalanceAmountInResponse() {
+        Hash hash = new Hash("3b4964b8b7b7cdef275ae49d82913dc7e4bf5ee890d4ef47422b2aec3f11f7900e64930d6cf4eaa4e8a62898043fbbe09d29f54cdab51653912bc926754c80174d7d9401");
+        ResponseEntity<GetBalancesResponse> response = getBalance(Arrays.asList(hash));
+        Assert.assertEquals(response.getBody().getAddressesBalance().get(hash.toHexString()).getAddressBalance(), new BigDecimal("23423423.678"));
+    }
+
+    @Test
+    public void getBalances_addressHashNotInBalanceMap_balanceZeroInResponse() {
+        Hash hash = new Hash("3b4964b8b7b7cdef275ae49d82913dc7e4bf5ee890d4ef47422b2aec3f11f7900e64930d6cf4eaa4e8a62898043fbbe09d29f54cdab51653912bc926754c80174d7d1234");
+        ResponseEntity<GetBalancesResponse> response = getBalance(Arrays.asList(hash));
+        Assert.assertEquals(response.getBody().getAddressesBalance().get(hash.toHexString()).getAddressBalance(),new BigDecimal("0"));
+    }
+
+    @Test
+    public void getBalances_addingAmountToExistAddress_correctNewPreBalanceAmountInResponse() {
+        Hash hash = new Hash("f4581d2c6b53e1d6cf018040d83f1b01bbe91983a0bf0a0ec6823a8bc4ccd99c66e3a87e3fe1862aa0f5c907e56ecfa99ecf0e04883377c293c8f49a647a52c657cdb46a");
+        List<BaseTransactionData> baseTransactionDataList = new LinkedList<>();
+        baseTransactionDataList.
+                add(new BaseTransactionData(hash,
+                        new BigDecimal(-5000),
+                        new Hash("DE"),
+                        new SignatureData("", ""),
+                        new Date()));
+        balanceService.checkBalancesAndAddToPreBalance(baseTransactionDataList);
+        ResponseEntity<GetBalancesResponse> response = getBalance(Arrays.asList(hash));
+        Assert.assertEquals(response.getBody().getAddressesBalance().get(hash.toHexString()).getAddressPreBalance(),new BigDecimal("3932240.71924616"));
+    }
+
+    @Test
+    public void getBalances_addingAmountToExistAddress_newBalanceAmountInResponseNotAffected() {
+        Hash hash = new Hash("ed055b792cd7f322b006cd037f82fb151b7e5f1a14721f2595a6c78cc00266542fccdbc34cf9dcdd558128bead26073412dfd6dd9a389cbf06ec2a93e348ddde3f2678f2");
+        List<BaseTransactionData> baseTransactionDataList = new LinkedList<>();
+        baseTransactionDataList.
+                add(new BaseTransactionData(hash,
+                        new BigDecimal(-4000),
+                        new Hash("EE"),
+                        new SignatureData("", ""),
+                        new Date()));
+        balanceService.checkBalancesAndAddToPreBalance(baseTransactionDataList);
+
+        ResponseEntity<GetBalancesResponse> response = getBalance(Arrays.asList(hash));
+        Assert.assertEquals(response.getBody().getAddressesBalance().get(hash.toHexString()).getAddressBalance(),new BigDecimal("9099122.237011632"));
+    }
+
+    @Test
+    public void testRollbackBaseTransactions() {
+        Hash hash = new Hash("f345689c529d0a9dc3bb6d32b12fa70a2886a6984ee7ddf9e6796a9416cd7dc88be6e0c8ad6402e512e1e7254619a1c1a152065ba449616526fa04b0dd5c63517a6abf06");
+        TransactionData transactionData = new TransactionData(Arrays.asList(new BaseTransactionData(hash,
+                new BigDecimal(-2000),
+                new Hash("HE"),
+                new SignatureData("", ""),
+                new Date())), new Hash("ccccc"), "test", 82, new Date());
+        when(transactionHelper.isConfirmed(transactionData)).thenReturn(false);
+        balanceService.insertSavedTransaction(transactionData);
+        ResponseEntity<GetBalancesResponse> response = getBalance(Arrays.asList(hash));
+        BigDecimal preBalanceBeforeRollback = response.getBody().getAddressesBalance().get(hash.toHexString()).getAddressPreBalance();
+
+        balanceService.rollbackBaseTransactions(transactionData );
+
+        response = getBalance(Arrays.asList(hash));
+        BigDecimal preBalanceAfterRollback = response.getBody().getAddressesBalance().get(hash.toHexString()).getAddressPreBalance();
+        Assert.assertEquals(preBalanceBeforeRollback.add(new BigDecimal(2000)), preBalanceAfterRollback);
+    }
+
+    @Test
+    public void insertSavedTransaction_whenIsConformed_InsertBalancedAndPreBalance() {
+        Hash hash = new Hash("fa05d0ea7484aeb9b1b7a3c34960dadcf38f4bfafad4725671392d1f2fe73b473a22f4abf8bbc125bbf953ca4657dbaaddde7368d9c46fb83f4f6c0aa488bbf45c335a3e");
+        TransactionData transactionData = new TransactionData(Arrays.asList(new BaseTransactionData(hash,
+                new BigDecimal(-4000),
+                new Hash("FE"),
+                new SignatureData("", ""),
+                new Date())), new Hash("aaaaaaa"), "test", 92, new Date());
+
+        when(transactionHelper.isConfirmed(transactionData)).thenReturn(true);
+        balanceService.insertSavedTransaction(transactionData);
+        ResponseEntity<GetBalancesResponse> response = getBalance(Arrays.asList(hash));
+        BigDecimal updatedBalance = response.getBody().getAddressesBalance().get(hash.toHexString()).getAddressBalance();
+        BigDecimal updatedPreBalance = response.getBody().getAddressesBalance().get(hash.toHexString()).getAddressPreBalance();
+        BigDecimal expectedUpdatedBalanceAndPreBalance = new BigDecimal("8650892.315172933");
+        Assert.assertTrue(updatedBalance.compareTo(expectedUpdatedBalanceAndPreBalance ) == 0 &&
+                updatedPreBalance.compareTo(expectedUpdatedBalanceAndPreBalance ) == 0);
+    }
+
+    @Test
+    public void insertSavedTransaction_whenIsNotConformed_InsertOnlyInPreBalance() {
+        Hash hash = new Hash("330e5f410d6d07aec8722e3da94c81504e4eb558d2c462c1d228f12c74c9b24304ad83197e73f299130be557e78ce07e5569d6a4545cd4c5cbd1af219693e8b769f19aca");
+        TransactionData transactionData = new TransactionData(Arrays.asList(new BaseTransactionData(hash,
+                new BigDecimal(-4000),
+                new Hash("GE"),
+                new SignatureData("", ""),
+                new Date())), new Hash("bbbbbb"), "test", 82, new Date());
+        when(transactionHelper.isConfirmed(transactionData)).thenReturn(false);
+        balanceService.insertSavedTransaction(transactionData);
+        ResponseEntity<GetBalancesResponse> response = getBalance(Arrays.asList(hash));
+        BigDecimal updatedBalance = response.getBody().getAddressesBalance().get(hash.toHexString()).getAddressBalance();
+        BigDecimal updatedPreBalance = response.getBody().getAddressesBalance().get(hash.toHexString()).getAddressPreBalance();
+        Assert.assertTrue(updatedBalance.compareTo(new BigDecimal("5478282.176401698")) == 0 &&
+                updatedPreBalance.compareTo(new BigDecimal("5474282.176401698")) == 0);
+    }
+
+    @Test
+    public void finalizeInit_noExceptionIsThrown() {
+        try {
+            balanceService.finalizeInit();
+        } catch (Exception e) {
+            assertNull(e);
+        }
+    }
+
+    //run this test only individually
+//    @Test
+//    public void setTccToTrue_noExceptionIsThrown() {
+//        try {
+//            balanceService.setTccToTrue(new TccInfo(null, null, 0));
+//        } catch (Exception e) {
+//            assertNull(e);
+//        }
 //    }
 
-    private void populateTransactionWithDummy(ConfirmationData transaction) {
-        Map<Hash, BigDecimal> addressToAmount = new HashMap<>();
-        addressToAmount.put(new Hash("DD"), new BigDecimal(10.1));
-//        transaction.setAddressHashToValueTransferredMapping(addressToAmount);
+    //run this test only individually
+//    @Test
+//    public void setDspcToTrue_noExceptionIsThrown() {
+//        try {
+//            balanceService.setDspcToTrue(new DspConsensusResult(null));
+//        } catch (Exception e) {
+//            assertNull(e);
+//        }
+//    }
+
+    private ResponseEntity<GetBalancesResponse> getBalance(List<Hash> addresses) {
+        GetBalancesRequest getBalancesRequest = new GetBalancesRequest();
+        getBalancesRequest.setAddresses(addresses);
+        return balanceService.getBalances(getBalancesRequest);
     }
 
     @After
     public void tearDown() {
+        balanceService = null;
     }
-
-//    @Test
-//    public void syncBalanceScheduledTest() {
-//
-//
-//        try {
-//            ConfirmationData confirmationData1 = new ConfirmationData(new Hash("A1")); //tcc =0 , dspc =0
-//            populateTransactionWithDummy(confirmationData1);
-//            unconfirmedTransactions.put(confirmationData1);
-//            queueService.addToUpdateBalanceQueue(new Hash("A1"));
-//
-//
-//            TimeUnit.SECONDS.sleep(5); //wait for the scheduled task to end
-//            ConfirmationData confirmationData = unconfirmedTransactions.getByHash(new Hash("A1"));
-//            Assert.assertTrue(confirmationData.isTrustChainConsensus());
-//
-//
-//            ConfirmationData confirmationData2 = new ConfirmationData(new Hash("A2")); //tcc =0 , dspc =0
-//            populateTransactionWithDummy(confirmationData2);
-//            confirmationData2.setDoubleSpendPreventionConsensus(true);
-//            unconfirmedTransactions.put(confirmationData2);
-//
-//            queueService.addToUpdateBalanceQueue(new Hash("A2"));
-//            TimeUnit.SECONDS.sleep(5); //wait for the scheduled task to end
-//            confirmationData = unconfirmedTransactions.getByHash(new Hash("A2"));
-//            Assert.assertNull(confirmationData);
-//            ConfirmationData confirmedTransactionData = confirmedTransactions.getByHash(new Hash("A2"));
-//            populateTransactionWithDummy(confirmedTransactionData);
-//            Assert.assertNotNull(confirmedTransactionData);
-//
-//        } catch (InterruptedException e) {
-//            log.error("Error , {}", e);
-//        }
-//    }
 }
 
 
