@@ -67,7 +67,7 @@ public class TransactionService {
             log.debug("New transaction request is being processed. Transaction Hash={}", request.hash);
             transactionCrypto.signMessage(transactionData);
             if (!transactionHelper.startHandleTransaction(transactionData)) {
-                log.info("Received existing transaction!");
+                log.debug("Received existing transaction: {}", transactionData.getHash().toHexString());
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new AddTransactionResponse(
@@ -76,7 +76,7 @@ public class TransactionService {
             }
 
             if (!transactionHelper.validateTransaction(transactionData)) {
-                log.info("Failed to validate transaction!");
+                log.error("Data Integrity validation failed: {}", transactionData.getHash().toHexString());
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new AddTransactionResponse(
@@ -85,7 +85,7 @@ public class TransactionService {
             }
 
             if (!transactionHelper.isLegalBalance(transactionData.getBaseTransactions())) {
-                log.info("Illegal transaction balance!");
+                log.error("Illegal transaction balance: {}", transactionData.getHash().toHexString());
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new AddTransactionResponse(
@@ -93,7 +93,7 @@ public class TransactionService {
                                 ILLEGAL_TRANSACTION_MESSAGE));
             }
             if (!transactionHelper.validateTrustScore(transactionData)) {
-                log.info("Invalid sender trust score!");
+                log.error("Invalid sender trust score: {}", transactionData.getHash().toHexString());
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new AddTransactionResponse(
@@ -102,7 +102,7 @@ public class TransactionService {
             }
 
             if (!transactionHelper.checkBalancesAndAddToPreBalance(transactionData)) {
-                log.info("Pre balance check failed!");
+                log.error("Balance and Pre balance check failed: {}", transactionData.getHash().toHexString());
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new AddTransactionResponse(
@@ -111,14 +111,14 @@ public class TransactionService {
             }
             transactionData = selectSources(transactionData);
             while (transactionData.getLeftParentHash() == null && transactionData.getRightParentHash() == null) {
-                log.info("Could not find sources for transaction: {}. Sending to Zero Spend and retrying in 5 seconds.");
+                log.debug("Could not find sources for transaction: {}. Sending to Zero Spend and retrying in 5 seconds.");
                 TimeUnit.SECONDS.sleep(5);
                 transactionData = selectSources(transactionData);
             }
 
             if (!validationService.validateSource(transactionData.getLeftParentHash()) ||
                     !validationService.validateSource(transactionData.getRightParentHash())) {
-                log.info("Could not validate transaction source");
+                log.debug("Could not validate transaction source");
                 //TODO: decide what to do here
             }
 
@@ -143,7 +143,7 @@ public class TransactionService {
                             TRANSACTION_CREATED_MESSAGE));
 
         } catch (Exception ex) {
-            log.error("Exception while adding a transaction", ex);
+            log.error("Exception while adding transaction: {}", transactionData.getHash().toHexString(), ex);
             throw new TransactionException(ex);
         } finally {
             transactionHelper.endHandleTransaction(transactionData);
@@ -156,7 +156,7 @@ public class TransactionService {
             return transactionData;
         }
 
-        log.info("No sources found for transaction with trust score {}", transactionData.getSenderTrustScore());
+        log.debug("No sources found for transaction {} with trust score {}", transactionData.getHash().toHexString(), transactionData.getSenderTrustScore());
         int retryTimes = 200 / (transactionData.getRoundedSenderTrustScore() + 1);
         while (!transactionData.hasSources() && retryTimes > 0) {
             try {
@@ -177,7 +177,7 @@ public class TransactionService {
         clusterService.attachToCluster(zeroSpendTransaction);
         transactionData = clusterService.selectSources(transactionData);
         while (!transactionData.hasSources()) {
-            log.info("Waiting 2 seconds for new zero spend transaction to be added to available sources");
+            log.debug("Waiting 2 seconds for new zero spend transaction to be added to available sources for transaction {}", transactionData.getHash().toHexString());
             try {
                 TimeUnit.SECONDS.sleep(2);
             } catch (InterruptedException e) {
@@ -207,17 +207,17 @@ public class TransactionService {
     public void handlePropagatedTransaction(TransactionData transactionData) {
         log.debug("DSP Propagated Transaction received: {}", transactionData.getHash().toHexString());
         if (!transactionHelper.startHandleTransaction(transactionData)) {
-            log.debug("Transaction already exists");
+            log.debug("Transaction already exists: {}", transactionData.getHash().toHexString());
             return;
         }
         if (!transactionHelper.validateTransaction(transactionData) ||
                 !transactionCrypto.verifySignature(transactionData) ||
                 !validationService.validatePow(transactionData)) {
-            log.info("Data Integrity validation failed");
+            log.error("Data Integrity validation failed: {}", transactionData.getHash().toHexString());
             return;
         }
         if (!transactionHelper.checkBalancesAndAddToPreBalance(transactionData)) {
-            log.info("Balance check failed!");
+            log.error("Balance check failed: {}", transactionData.getHash().toHexString());
             return;
         }
         transactionHelper.attachTransactionToCluster(transactionData);
@@ -228,9 +228,9 @@ public class TransactionService {
     }
 
     public void handleDspConsensusResult(DspConsensusResult dspConsensusResult) {
-        log.debug("Received DspConsensus result: " + dspConsensusResult.getHash());
+        log.debug("Received DspConsensus result for transaction: {}",  dspConsensusResult.getHash());
         if (!transactionHelper.handleVoteConclusionResult(dspConsensusResult)) {
-            log.error("Illegal Dsp consensus result");
+            log.error("Illegal Dsp consensus result for transaction: {}", dspConsensusResult.getHash());
         } else {
             balanceService.setDspcToTrue(dspConsensusResult);
         }

@@ -30,4 +30,10 @@ public interface ITransactionHelper {
 
     boolean isConfirmed(TransactionData transactionData);
 
+    boolean isDspConfirmed(TransactionData transactionData);
+
+    long getTotalTransactions();
+
+    long getLastIndex();
+
 }

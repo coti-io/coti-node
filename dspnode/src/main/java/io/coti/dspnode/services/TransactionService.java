@@ -103,21 +103,21 @@ public class TransactionService {
         try {
             log.debug("DSP Propagated Transaction received: {}", transactionData.getHash().toHexString());
             if (!transactionHelper.startHandleTransaction(transactionData)) {
-                log.debug("Transaction already exists");
+                log.debug("Transaction already exists: {}", transactionData.getHash().toHexString());
                 return;
             }
             if (!transactionHelper.validateTransaction(transactionData) ||
                     !transactionCrypto.verifySignature(transactionData) ||
                     !validationService.validatePow(transactionData)) {
-                log.info("Data Integrity validation failed");
+                log.error("Data Integrity validation failed: {}", transactionData.getHash().toHexString());
                 return;
             }
             boolean checkBalancesAndAddToPreBalance = transactionHelper.checkBalancesAndAddToPreBalance(transactionData);
             if (!checkBalancesAndAddToPreBalance) {
-                log.info("Balances check failed for transaction: {}", transactionData.getHash());
+                log.error("Balance check failed: {}", transactionData.getHash().toHexString());
                 return;
             }
-            transactions.put(transactionData);
+            transactionHelper.attachTransactionToCluster(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
             propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "Full Nodes");
             transactionHelper.setTransactionStateToFinished(transactionData);
@@ -130,9 +130,9 @@ public class TransactionService {
     }
 
     public void handleVoteConclusion(DspConsensusResult dspConsensusResult) {
-        log.debug("Received DspConsensus result: " + dspConsensusResult.getHash());
+        log.debug("Received DspConsensus result for transaction: {}",  dspConsensusResult.getHash());
         if (!transactionHelper.handleVoteConclusionResult(dspConsensusResult)) {
-            log.error("Illegal vote received: " + dspConsensusResult.getHash());
+            log.error("Illegal Dsp consensus result for transaction: {}", dspConsensusResult.getHash());
         } else {
             balanceService.setDspcToTrue(dspConsensusResult);
             propagationPublisher.propagate(dspConsensusResult, DspConsensusResult.class.getName() + "Full Nodes");

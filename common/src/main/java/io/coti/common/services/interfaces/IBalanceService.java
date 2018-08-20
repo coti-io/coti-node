@@ -26,4 +26,9 @@ public interface IBalanceService {
 
     void setDspcToTrue(DspConsensusResult dspConsensusResult);
 
+    long getTotalConfirmed();
+
+    long getTccConfirmed();
+
+    long getDspConfirmed();
 }

@@ -4,6 +4,7 @@ import io.coti.common.model.Transactions;
 import io.coti.common.services.LiveView.LiveViewService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -15,6 +16,8 @@ public class InitializationService {
     private Transactions transactions;
     @Autowired
     private BalanceService balanceService;
+    @Autowired
+    private TransactionHelper transactionHelper;
     @Autowired
     private ClusterService clusterService;
     @Autowired
@@ -32,5 +35,15 @@ public class InitializationService {
         log.info("Transactions Load completed");
         balanceService.finalizeInit();
         clusterService.finalizeInit();
+    }
+
+    @Scheduled(initialDelay = 5000, fixedDelay = 5000)
+    public void lastState() {
+        log.info("Transactions = {}, TccConfirmed = {}, DspConfirmed = {}, Confirmed = {}, LastIndex = {}",
+                transactionHelper.getTotalTransactions(),
+                balanceService.getTccConfirmed(),
+                balanceService.getDspConfirmed(),
+                balanceService.getTotalConfirmed(),
+                transactionHelper.getLastIndex());
     }
 }

@@ -6,6 +6,7 @@ import io.coti.common.crypto.DspVoteCrypto;
 import io.coti.common.data.*;
 import io.coti.common.model.TransactionVotes;
 import io.coti.common.model.Transactions;
+import io.coti.common.services.interfaces.IBalanceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,6 +40,8 @@ public class DspVoteService {
     private DspConsensusCrypto dspConsensusCrypto;
     @Autowired
     private TransactionIndexService transactionIndexService;
+    @Autowired
+    private IBalanceService balanceService;
     private ConcurrentMap<Hash, List<DspVote>> transactionHashToVotesListMapping;
     private static final String NODE_HASH_ENDPOINT = "/nodeHash";
     private List<Hash> currentLiveDspNodes;
@@ -101,12 +104,12 @@ public class DspVoteService {
             try {
                 Hash voterHash = restTemplate.getForObject(dspServerAddress + NODE_HASH_ENDPOINT, Hash.class);
                 if (voterHash == null) {
-                    log.info("Voter hash received is null: {}", dspServerAddress);
+                    log.error("Voter hash received is null: {}", dspServerAddress);
                 } else {
                     onlineDspHashes.add(voterHash);
                 }
             } catch (RestClientException e) {
-                log.info("Unresponsive Dsp Node: {}", dspServerAddress);
+                log.error("Unresponsive Dsp Node: {}", dspServerAddress);
             }
         }
         if (onlineDspHashes.isEmpty()) {
@@ -131,7 +134,7 @@ public class DspVoteService {
                         log.debug("Valid vote majority achieved for: {}", currentVotes.getHash());
                     } else if (isNegativeMajorityAchieved(currentVotes)) {
                         publishDecision(transactionHash, mapHashToDspVote, false);
-                        log.info("Invalid vote majority achieved for: {}", currentVotes.getHash());
+                        log.debug("Invalid vote majority achieved for: {}", currentVotes.getHash());
                     } else {
                         log.info("Undecided majority: {}", currentVotes.getHash());
                     }
@@ -153,8 +156,8 @@ public class DspVoteService {
         dspConsensusResult.setDspVotes(dspVotes);
         dspConsensusCrypto.signMessage(dspConsensusResult);
         propagationPublisher.propagate(dspConsensusResult, DspConsensusResult.class.getName() + "Dsp Result");
-        transactionData.setDspConsensusResult(dspConsensusResult);
-        transactions.put(transactionData);
+        propagationPublisher.propagate(dspConsensusResult, DspConsensusResult.class.getName() + "TrustScore Nodes");
+        balanceService.setDspcToTrue(dspConsensusResult);
         transactionHashToVotesListMapping.remove(transactionHash);
     }
 

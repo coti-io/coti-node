@@ -31,17 +31,17 @@ public class TransactionService {
     private boolean addTransactionToLocalNode(TransactionData transactionData) {
         log.debug("DSP Propagated Transaction received: {}", transactionData.getHash().toHexString());
         if (!transactionHelper.startHandleTransaction(transactionData)) {
-            log.debug("Transaction already exists");
+            log.debug("Transaction already exists: {}", transactionData.getHash().toHexString());
             return false;
         }
         if (!transactionHelper.validateTransaction(transactionData) ||
                 !transactionCrypto.verifySignature(transactionData) ||
                 !validationService.validatePow(transactionData)) {
-            log.info("Data Integrity validation failed");
+            log.error("Data Integrity validation failed: {}", transactionData.getHash().toHexString());
             return false;
         }
         if (!transactionHelper.checkBalancesAndAddToPreBalance(transactionData)) {
-            log.info("Balance check failed!");
+            log.error("Balance check failed: {}", transactionData.getHash().toHexString());
             return false;
         }
         transactionHelper.attachTransactionToCluster(transactionData);

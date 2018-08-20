@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -42,6 +43,9 @@ public class BalanceService implements IBalanceService {
     private Map<Hash, BigDecimal> balanceMap;
     private Map<Hash, BigDecimal> preBalanceMap;
     private BlockingQueue<ConfirmationData> confirmationQueue;
+    private AtomicLong totalConfirmed = new AtomicLong(0);
+    private AtomicLong tccConfirmed = new AtomicLong(0);
+    private AtomicLong dspConfirmed = new AtomicLong(0);
 
     @PostConstruct
     private void init() throws Exception {
@@ -61,13 +65,14 @@ public class BalanceService implements IBalanceService {
                     transactionData.setTrustChainConsensus(true);
                     transactionData.setTrustChainTrustScore(((TccInfo) confirmationData).getTrustChainTrustScore());
                     transactionData.setTrustChainTransactionHashes(((TccInfo) confirmationData).getTrustChainTransactionHashes());
-                    if (transactionData.isZeroSpend() || transactionData.getDspConsensusResult() != null)
-                        processConfirmedTransaction(transactionData);
+                    tccConfirmed.incrementAndGet();
                 } else if (confirmationData instanceof DspConsensusResult) {
                     transactionData.setDspConsensusResult((DspConsensusResult) confirmationData);
-                    if (transactionData.isTrustChainConsensus())
-                        processConfirmedTransaction(transactionData);
+                    if (transactionHelper.isDspConfirmed(transactionData))
+                        dspConfirmed.incrementAndGet();
                 }
+                if (transactionHelper.isConfirmed(transactionData))
+                    processConfirmedTransaction(transactionData);
                 transactions.put(transactionData);
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -81,6 +86,7 @@ public class BalanceService implements IBalanceService {
             balanceMap.computeIfPresent(baseTransactionData.getAddressHash(), (hash, currentAmount) -> currentAmount.add(baseTransactionData.getAmount()));
             balanceMap.putIfAbsent(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
         });
+        totalConfirmed.incrementAndGet();
         publishBalanceChangeToWebSocket(
                 transactionData.getBaseTransactions()
                         .stream()
@@ -194,6 +200,7 @@ public class BalanceService implements IBalanceService {
     @Override
     public void insertSavedTransaction(TransactionData transactionData) {
         boolean isConfirmed = transactionHelper.isConfirmed(transactionData);
+        boolean isDspConfirmed = transactionHelper.isDspConfirmed(transactionData);
         transactionData.getBaseTransactions().forEach(baseTransactionData -> {
             preBalanceMap.putIfAbsent(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
             preBalanceMap.computeIfPresent(baseTransactionData.getAddressHash(), (currentHash, currentAmount) ->
@@ -204,6 +211,12 @@ public class BalanceService implements IBalanceService {
                         currentAmount.add(baseTransactionData.getAmount()));
             }
         });
+        if (isDspConfirmed)
+            dspConfirmed.incrementAndGet();
+        if (transactionData.isTrustChainConsensus())
+            tccConfirmed.incrementAndGet();
+        if (isConfirmed)
+            totalConfirmed.incrementAndGet();
     }
 
     @Override
@@ -245,4 +258,21 @@ public class BalanceService implements IBalanceService {
             e.printStackTrace();
         }
     }
+
+    @Override
+    public long getTotalConfirmed() {
+        return totalConfirmed.get();
+    }
+
+    @Override
+    public long getTccConfirmed() {
+        return tccConfirmed.get();
+    }
+
+    @Override
+    public long getDspConfirmed() {
+        return dspConfirmed.get();
+    }
+
+
 }
