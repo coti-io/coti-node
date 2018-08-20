@@ -1,6 +1,7 @@
 package io.coti.common.data;
 
 import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,6 +15,10 @@ public class Hash implements Serializable {
     private byte[] bytes;
 
     private Hash() {
+    }
+
+    public Hash(Long hashIndex) {
+        this.bytes = Longs.toByteArray(hashIndex);
     }
 
     public Hash(Integer hashIndex) {

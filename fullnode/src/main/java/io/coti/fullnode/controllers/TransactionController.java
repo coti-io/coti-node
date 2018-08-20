@@ -2,6 +2,7 @@ package io.coti.fullnode.controllers;
 
 import io.coti.common.http.*;
 import io.coti.common.services.TransactionHelper;
+import io.coti.common.services.TransactionIndexService;
 import io.coti.fullnode.services.TransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
@@ -24,6 +26,8 @@ public class TransactionController {
     private TransactionService transactionService;
     @Autowired
     private TransactionHelper transactionHelper;
+    @Autowired
+    private TransactionIndexService transactionIndexService;
 
     @RequestMapping(method = PUT)
     public ResponseEntity<Response> addTransaction(@Valid @RequestBody AddTransactionRequest addTransactionRequest) {
@@ -36,7 +40,12 @@ public class TransactionController {
     }
 
     @RequestMapping(value = "/addressTransactions", method = POST)
-    public ResponseEntity<BaseResponse> getAddressTransactions(@Valid @RequestBody AddressRequest addressRequest) throws Exception {
+    public ResponseEntity<BaseResponse> getAddressTransactions(@Valid @RequestBody AddressRequest addressRequest) {
         return transactionService.getAddressTransactions(addressRequest.getAddress());
+    }
+
+    @RequestMapping(value = "/index", method = GET)
+    public ResponseEntity getCurrentIndex() {
+        return ResponseEntity.ok(transactionIndexService.getLastTransactionIndex());
     }
 }

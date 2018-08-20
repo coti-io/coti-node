@@ -10,11 +10,11 @@ import javax.annotation.PostConstruct;
 @Service
 public class AddressesTransactionsHistory extends Collection<AddressTransactionsHistory> {
 
-        public AddressesTransactionsHistory() {
-                }
+    public AddressesTransactionsHistory() {
+    }
 
-        @PostConstruct
-        public void init() {
-                super.init();
-        }
+    @PostConstruct
+    public void init() {
+        super.init();
+    }
 }

@@ -42,12 +42,13 @@ public class TransactionHelper implements ITransactionHelper {
     @Autowired
     private Transactions transactions;
     @Autowired
+    private TransactionIndexService transactionIndexService;
+    @Autowired
     private DspConsensusCrypto dspConsensusCrypto;
     @Autowired
     private TransactionTrustScoreCrypto transactionTrustScoreCrypto;
     private Map<Hash, Stack<TransactionState>> transactionHashToTransactionStateStackMapping;
-    private AtomicLong currentLastIndex = new AtomicLong(-1);
-    private AtomicLong totalTransactions = new AtomicLong(0);
+    private AtomicLong totalTransactions = new AtomicLong(11);
 
     @PostConstruct
     private void init() {
@@ -190,8 +191,8 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     public void attachTransactionToCluster(TransactionData transactionData) {
-        transactions.put(transactionData);
         totalTransactions.incrementAndGet();
+        transactions.put(transactionData);
         updateAddressTransactionHistory(transactionData);
         clusterService.attachToCluster(transactionData);
     }
@@ -227,9 +228,7 @@ public class TransactionHelper implements ITransactionHelper {
         }
 
         log.debug("DspConsensus result for transaction: Hash= {}, DspVoteResult= {}, Index= {}", dspConsensusResult.getHash(), dspConsensusResult.isDspConsensus(), dspConsensusResult.getIndex());
-        if (dspConsensusResult.getIndex() != currentLastIndex.incrementAndGet()) {
-            log.error("Server not synchronized. received index: {}, current last index: {}", dspConsensusResult.getIndex(), currentLastIndex.get());
-        }
+        transactionIndexService.insertNewTransaction(transactionData);
 
         transactions.put(transactionData);
         return true;
@@ -248,10 +247,5 @@ public class TransactionHelper implements ITransactionHelper {
     @Override
     public long getTotalTransactions() {
         return totalTransactions.get();
-    }
-
-    @Override
-    public long getLastIndex() {
-        return currentLastIndex.get();
     }
 }

@@ -36,6 +36,8 @@ public class BalanceService implements IBalanceService {
     @Autowired
     private LiveViewService liveViewService;
     @Autowired
+    private TransactionIndexService transactionIndexService;
+    @Autowired
     private Transactions transactions;
     @Autowired
     private ITransactionHelper transactionHelper;
@@ -273,6 +275,4 @@ public class BalanceService implements IBalanceService {
     public long getDspConfirmed() {
         return dspConfirmed.get();
     }
-
-
 }

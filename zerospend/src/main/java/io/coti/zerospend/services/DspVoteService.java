@@ -6,7 +6,9 @@ import io.coti.common.crypto.DspVoteCrypto;
 import io.coti.common.data.*;
 import io.coti.common.model.TransactionVotes;
 import io.coti.common.model.Transactions;
+import io.coti.common.services.TransactionHelper;
 import io.coti.common.services.interfaces.IBalanceService;
+import io.coti.common.services.TransactionIndexService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +30,9 @@ import java.util.concurrent.ConcurrentMap;
 public class DspVoteService {
     @Value("#{'${dsp.server.addresses}'.split(',')}")
     private List<String> dspServerAddresses;
+
+    @Autowired
+    private TransactionIndexService transactionIndexService;
     @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired
@@ -39,7 +44,7 @@ public class DspVoteService {
     @Autowired
     private DspConsensusCrypto dspConsensusCrypto;
     @Autowired
-    private TransactionIndexService transactionIndexService;
+    private TransactionIndexingService transactionIndexingService;
     @Autowired
     private IBalanceService balanceService;
     private ConcurrentMap<Hash, List<DspVote>> transactionHashToVotesListMapping;
@@ -148,7 +153,7 @@ public class DspVoteService {
     private void publishDecision(Hash transactionHash, Map<Hash, DspVote> mapHashToDspVote, boolean isLegalTransaction) {
         TransactionData transactionData = transactions.getByHash(transactionHash);
         DspConsensusResult dspConsensusResult = new DspConsensusResult(transactionHash);
-        dspConsensusResult.setIndex(transactionIndexService.generateTransactionIndex(transactionData));
+        dspConsensusResult.setIndex(transactionIndexingService.generateTransactionIndex(transactionData));
         dspConsensusResult.setDspConsensus(isLegalTransaction);
         dspConsensusResult.setIndexingTime(new Date());
         List<DspVote> dspVotes = new LinkedList<>();
@@ -158,6 +163,9 @@ public class DspVoteService {
         propagationPublisher.propagate(dspConsensusResult, DspConsensusResult.class.getName() + "Dsp Result");
         propagationPublisher.propagate(dspConsensusResult, DspConsensusResult.class.getName() + "TrustScore Nodes");
         balanceService.setDspcToTrue(dspConsensusResult);
+        transactionData.setDspConsensusResult(dspConsensusResult);
+        transactionIndexService.insertNewTransaction(transactionData);
+
         transactionHashToVotesListMapping.remove(transactionHash);
     }
 
