@@ -1,14 +1,13 @@
 package io.coti.common.http.data;
 
 import io.coti.common.data.BaseTransactionData;
-import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Vector;
 
 @Data
 public class TransactionResponseData {
@@ -38,39 +37,34 @@ public class TransactionResponseData {
 
     public TransactionResponseData(TransactionData transactionData) {
 
-        this.hash = transactionData.getHash().toHexString();
-        this.amount = transactionData.getAmount();
-        this.baseTransactionResponses = new Vector<>();
+        hash = transactionData.getHash().toHexString();
+        amount = transactionData.getAmount();
+        baseTransactionResponses = new LinkedList<>();
         if (transactionData.getBaseTransactions() != null) {
-            for (BaseTransactionData bxData : transactionData.getBaseTransactions()
+            for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()
             ) {
-                this.baseTransactionResponses.add(new BaseTransactionResponseData(bxData));
+                baseTransactionResponses.add(new BaseTransactionResponseData(baseTransactionData));
             }
         }
-        this.leftParentHash = transactionData.getLeftParentHash() == null ? null : transactionData.getLeftParentHash().toHexString();
-        this.rightParentHash = transactionData.getRightParentHash() == null ? null : transactionData.getRightParentHash().toHexString();
-        List<String> trustChainTransactionHashes = new Vector<>();
-        for (Hash trustChainHash : transactionData.getTrustChainTransactionHashes()) {
-            trustChainTransactionHashes.add(trustChainHash.toHexString());
-        }
-        this.trustChainTransactionHashes = trustChainTransactionHashes;
-        this.trustChainConsensus = transactionData.isTrustChainConsensus();
-        this.trustChainTrustScore = transactionData.getTrustChainTrustScore();
-        this.transactionConsensusUpdateTime = transactionData.getTransactionConsensusUpdateTime();
-        this.createTime = transactionData.getCreateTime();
-        this.attachmentTime = transactionData.getAttachmentTime();
-        this.processStartTime = transactionData.getProcessStartTime();
-        this.powStartTime = transactionData.getPowStartTime();
-        this.powEndTime = transactionData.getPowEndTime();
-        this.senderTrustScore = transactionData.getSenderTrustScore();
+        leftParentHash = transactionData.getLeftParentHash() == null ? null : transactionData.getLeftParentHash().toHexString();
+        rightParentHash = transactionData.getRightParentHash() == null ? null : transactionData.getRightParentHash().toHexString();
+        trustChainTransactionHashes = new LinkedList<>();
+        transactionData.getTrustChainTransactionHashes().forEach(trustChainHash -> trustChainTransactionHashes.add(trustChainHash.toHexString()));
 
-        List<String> childrenTransactions = new Vector<>();
-        for (Hash childrenTransaction : transactionData.getChildrenTransactions()) {
-            childrenTransactions.add(childrenTransaction.toHexString());
-        }
-        this.childrenTransactions = childrenTransactions;
-        this.transactionDescription = transactionData.getTransactionDescription();
-        this.isValid = transactionData.isValid();
-        this.isZeroSpend = transactionData.isZeroSpend();
+        trustChainConsensus = transactionData.isTrustChainConsensus();
+        trustChainTrustScore = transactionData.getTrustChainTrustScore();
+        transactionConsensusUpdateTime = transactionData.getTransactionConsensusUpdateTime();
+        createTime = transactionData.getCreateTime();
+        attachmentTime = transactionData.getAttachmentTime();
+        processStartTime = transactionData.getProcessStartTime();
+        powStartTime = transactionData.getPowStartTime();
+        powEndTime = transactionData.getPowEndTime();
+        senderTrustScore = transactionData.getSenderTrustScore();
+
+        childrenTransactions = new LinkedList<>();
+        transactionData.getChildrenTransactions().forEach(childrenTransaction -> childrenTransactions.add(childrenTransaction.toHexString()));
+        transactionDescription = transactionData.getTransactionDescription();
+        isValid = transactionData.isValid();
+        isZeroSpend = transactionData.isZeroSpend();
     }
 }

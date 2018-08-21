@@ -7,10 +7,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
 
 @Slf4j
 @Data
@@ -83,7 +80,7 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
 
     private void initTransactionData() {
         this.trustChainTransactionHashes = new Vector<>();
-        this.childrenTransactions = new Vector<>();
+        this.childrenTransactions = new LinkedList<>();
         this.processStartTime = (new Date());
     }
 

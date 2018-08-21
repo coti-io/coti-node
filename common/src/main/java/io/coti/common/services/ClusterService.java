@@ -18,6 +18,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 @Service
@@ -35,6 +36,7 @@ public class ClusterService implements IClusterService {
     private LiveViewService liveViewService;
     private boolean isStarted;
     private ConcurrentHashMap<Hash, TransactionData> hashToUnconfirmedTransactionsMapping;
+    private AtomicLong totalSources = new AtomicLong(0);
 
     @PostConstruct
     public void init() {
@@ -47,7 +49,10 @@ public class ClusterService implements IClusterService {
     @Override
     public void addUnconfirmedTransaction(TransactionData transactionData) {
         hashToUnconfirmedTransactionsMapping.put(transactionData.getHash(), transactionData);
-        sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].add(transactionData);
+        if(transactionData.getChildrenTransactions() == null || transactionData.getChildrenTransactions().isEmpty()) {
+            sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].add(transactionData);
+            totalSources.incrementAndGet();
+        }
     }
 
     @Override
@@ -82,6 +87,7 @@ public class ClusterService implements IClusterService {
         hashToUnconfirmedTransactionsMapping.put(newTransactionData.getHash(), newTransactionData);
         removeTransactionParentsFromSources(newTransactionData);
         sourceListsByTrustScore[newTransactionData.getRoundedSenderTrustScore()].add(newTransactionData);
+        totalSources.incrementAndGet();
         log.debug("Added New Transaction with hash:{}", newTransactionData.getHash());
         liveViewService.addNode(newTransactionData);
         return newTransactionData;
@@ -115,6 +121,7 @@ public class ClusterService implements IClusterService {
         if (sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].contains(transactionData)) {
             sourceListsByTrustScore[transactionData.getRoundedSenderTrustScore()].remove(transactionData); // TODO: synchronize
             liveViewService.updateNodeStatus(transactionData, 1);
+            totalSources.decrementAndGet();
         }
     }
 
@@ -145,4 +152,10 @@ public class ClusterService implements IClusterService {
 
         return transactionData;
     }
+
+    @Override
+    public long getTotalSources() {
+        return totalSources.get();
+    }
+
 }

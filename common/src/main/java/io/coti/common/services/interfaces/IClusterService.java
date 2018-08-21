@@ -11,4 +11,6 @@ public interface IClusterService {
     void addUnconfirmedTransaction(TransactionData transactionData);
 
     void finalizeInit();
+
+    long getTotalSources();
 }
