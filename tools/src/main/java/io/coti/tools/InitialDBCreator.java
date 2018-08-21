@@ -1,7 +1,5 @@
 package io.coti.tools;
 
-import io.coti.common.crypto.CryptoHelper;
-import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
 import io.coti.common.data.TransactionIndexData;
 import io.coti.common.database.RocksDBConnector;

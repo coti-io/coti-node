@@ -29,13 +29,20 @@ public class TransactionIndexService {
         TransactionIndexData transactionIndexData = null;
         for (long i = 0; i <= maxTransactionIndex.get(); i++) {
             transactionIndexData = transactionIndexes.getByHash(new Hash(i));
+            if (transactionIndexData == null) {
+                log.error("Null transaction index data found for index: {}", i);
+                System.exit(-1);
+            }
+
             TransactionData transactionData = transactions.getByHash(transactionIndexData.getTransactionHash());
             if (transactionIndexData == null || transactionData == null) {
-                log.error("Null index data found");
+                log.error("Null transaction data found for index: {}", i);
+                System.exit(-1);
             }
             accumulatedHash = getAccumulatedHash(accumulatedHash, transactionData);
             if (!Arrays.equals(accumulatedHash, transactionIndexData.getAccumulatedHash())) {
                 log.error("Incorrect accumulated hash");
+                System.exit(-1);
             }
         }
         lastTransactionIndex = transactionIndexData;

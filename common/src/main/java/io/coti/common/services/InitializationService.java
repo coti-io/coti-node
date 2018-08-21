@@ -24,7 +24,8 @@ public class InitializationService {
     private MonitorService monitorService;
     @Autowired
     private LiveViewService liveViewService;
-
+    @Autowired
+    private TransactionHelper transactionHelper;
     @PostConstruct
     public void init() {
         AtomicLong maxTransactionIndex = new AtomicLong(Long.MIN_VALUE);
@@ -37,13 +38,14 @@ public class InitializationService {
             if (transactionData.getDspConsensusResult() != null) {
                 maxTransactionIndex.set(Math.max(maxTransactionIndex.get(), transactionData.getDspConsensusResult().getIndex()));
             }
+            transactionHelper.incrementTotalTransactions();
         });
         log.info("Transactions Load completed");
         balanceService.finalizeInit();
         clusterService.finalizeInit();
+        transactionIndexService.init(maxTransactionIndex);
         monitorService.init();
 
-        transactionIndexService.init(maxTransactionIndex);
     }
 
 }

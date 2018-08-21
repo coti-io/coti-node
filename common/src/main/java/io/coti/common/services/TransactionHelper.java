@@ -48,7 +48,7 @@ public class TransactionHelper implements ITransactionHelper {
     @Autowired
     private TransactionTrustScoreCrypto transactionTrustScoreCrypto;
     private Map<Hash, Stack<TransactionState>> transactionHashToTransactionStateStackMapping;
-    private AtomicLong totalTransactions = new AtomicLong(11);
+    private AtomicLong totalTransactions = new AtomicLong(0);
 
     @PostConstruct
     private void init() {
@@ -247,5 +247,10 @@ public class TransactionHelper implements ITransactionHelper {
     @Override
     public long getTotalTransactions() {
         return totalTransactions.get();
+    }
+
+    @Override
+    public long incrementTotalTransactions() {
+        return totalTransactions.incrementAndGet();
     }
 }

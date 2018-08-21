@@ -34,4 +34,6 @@ public interface ITransactionHelper {
 
    long getTotalTransactions();
 
+   long incrementTotalTransactions();
+
 }

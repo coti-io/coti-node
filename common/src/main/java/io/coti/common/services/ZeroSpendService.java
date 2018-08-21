@@ -6,7 +6,6 @@ import io.coti.common.data.TransactionData;
 import io.coti.common.services.interfaces.IZeroSpendService;
 import org.springframework.stereotype.Service;
 
-import java.io.Console;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
