@@ -1,7 +1,6 @@
 package io.coti.common.http.data;
 
-public enum AddressStatus
-{
+public enum AddressStatus {
     Created,
     Exists
 }

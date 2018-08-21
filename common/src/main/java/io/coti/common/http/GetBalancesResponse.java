@@ -5,9 +5,7 @@ import io.coti.common.http.data.AddressBalance;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.util.AbstractMap;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Data
@@ -20,6 +18,6 @@ public class GetBalancesResponse extends BaseResponse {
     }
 
     public void addAddressBalanceToResponse(Hash address, BigDecimal balance, BigDecimal preBalance) {
-        addressesBalance.put(address.toHexString(), new AddressBalance( balance,preBalance));
+        addressesBalance.put(address.toHexString(), new AddressBalance(balance, preBalance));
     }
 }

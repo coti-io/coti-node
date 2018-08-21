@@ -15,7 +15,7 @@ public class BaseTransactionResponseData {
     private BigDecimal amount;
     private Date createTime;
 
-    public BaseTransactionResponseData(BaseTransactionData baseTransactionData){
+    public BaseTransactionResponseData(BaseTransactionData baseTransactionData) {
         this.hash = baseTransactionData.getHash() == null ? null : baseTransactionData.getHash().toHexString();
         this.addressHash = baseTransactionData.getAddressHash().toHexString();
         this.amount = baseTransactionData.getAmount();

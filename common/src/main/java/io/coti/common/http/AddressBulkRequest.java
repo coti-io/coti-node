@@ -12,7 +12,7 @@ public class AddressBulkRequest {
     @NotNull(message = "Address Hashes must not be blank")
     public Hash[] addresses;
 
-    public AddressBulkRequest(){
+    public AddressBulkRequest() {
 
     }
 }

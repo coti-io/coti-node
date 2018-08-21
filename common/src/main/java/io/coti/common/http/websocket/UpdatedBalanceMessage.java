@@ -12,7 +12,7 @@ public class UpdatedBalanceMessage {
     public String addressHash;
     public BigDecimal balance;
 
-    public UpdatedBalanceMessage(Hash addressHash, BigDecimal balance,BigDecimal preBalance) {
+    public UpdatedBalanceMessage(Hash addressHash, BigDecimal balance, BigDecimal preBalance) {
         this.addressHash = addressHash.toHexString();
         this.balance = balance;
         this.preBalance = preBalance;

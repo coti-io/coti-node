@@ -6,6 +6,6 @@ public class GeneratedAddressMessage {
     public String addressHash;
 
     public GeneratedAddressMessage(Hash addressHash) {
-         this.addressHash = addressHash.toHexString();
+        this.addressHash = addressHash.toHexString();
     }
 }

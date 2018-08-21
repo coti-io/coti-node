@@ -8,12 +8,10 @@ import io.coti.common.http.data.TransactionStatus;
 public class NotifyTransactionChange {
 
 
-
     public TransactionStatus status;
     public TransactionResponseData transactionData;
 
-    public NotifyTransactionChange(TransactionData transactionData, TransactionStatus transactionStatus)
-    {
+    public NotifyTransactionChange(TransactionData transactionData, TransactionStatus transactionStatus) {
         this.status = transactionStatus;
         this.transactionData = new TransactionResponseData(transactionData);
     }
