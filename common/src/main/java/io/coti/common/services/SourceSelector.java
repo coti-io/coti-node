@@ -1,14 +1,13 @@
 package io.coti.common.services;
 
 import io.coti.common.data.TransactionData;
+import io.coti.common.model.Collection;
 import io.coti.common.services.interfaces.ISourceSelector;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Vector;
+import java.util.*;
 
 import static java.util.stream.Collectors.toList;
 
@@ -24,7 +23,7 @@ public class SourceSelector implements ISourceSelector {
 
     @Override
     public List<TransactionData> selectSourcesForAttachment(
-            Vector<TransactionData>[] trustScoreToTransactionMapping,
+            List<List<TransactionData>> trustScoreToTransactionMapping,
             double transactionTrustScore) {
 
         List<TransactionData> neighbourSources = getNeighbourSources(
@@ -35,21 +34,22 @@ public class SourceSelector implements ISourceSelector {
     }
 
     private List<TransactionData> getNeighbourSources(
-            Vector<TransactionData>[] trustScoreToSourceListMapping,
+            List<List<TransactionData>> trustScoreToSourceListMapping,
             double transactionTrustScore) {
 
         int roundedTrustScore = (int) Math.round(transactionTrustScore);
         int numberOfSources = getNumberOfSources(trustScoreToSourceListMapping);
         int lowIndex = roundedTrustScore - 1;
         int highIndex = roundedTrustScore + 1;
-        Vector<TransactionData> neighbourSources = trustScoreToSourceListMapping[roundedTrustScore];
+        List<TransactionData> neighbourSources = new LinkedList<>();
+        neighbourSources.addAll(trustScoreToSourceListMapping.get(roundedTrustScore));
 
         for (int trustScoreDifference = 0; trustScoreDifference < maxNeighbourhoodRadius; trustScoreDifference++) {
             if (lowIndex >= 0) {
-                neighbourSources.addAll(trustScoreToSourceListMapping[lowIndex]);
+                neighbourSources.addAll(trustScoreToSourceListMapping.get(lowIndex));
             }
             if (highIndex <= 100) {
-                neighbourSources.addAll(trustScoreToSourceListMapping[highIndex]);
+                neighbourSources.addAll(trustScoreToSourceListMapping.get(highIndex));
             }
             if ((double) neighbourSources.size() / numberOfSources > (double) minSourcePercentage / 100) {
                 break;
@@ -60,18 +60,17 @@ public class SourceSelector implements ISourceSelector {
         return neighbourSources;
     }
 
-    private int getNumberOfSources(Vector<TransactionData>[] trustScoreToSourceListMapping) {
+    private int getNumberOfSources(List<List<TransactionData>> trustScoreToSourceListMapping) {
         int numberOfSources = 0;
-        for (int i = 0; i < trustScoreToSourceListMapping.length; i++) {
-            if (trustScoreToSourceListMapping[i] != null) {
-                numberOfSources += trustScoreToSourceListMapping[i].size();
+        for (int i = 0; i < trustScoreToSourceListMapping.size(); i++) {
+            if (trustScoreToSourceListMapping.get(i) != null) {
+                numberOfSources += trustScoreToSourceListMapping.get(i).size();
             }
         }
         return numberOfSources;
     }
 
-    public List<TransactionData> selectTwoOptimalSources(
-            List<TransactionData> transactions) {
+    public List<TransactionData> selectTwoOptimalSources(List<TransactionData> transactions) {
 
         Date now = new Date();
         List<TransactionData> olderSources =

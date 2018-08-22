@@ -7,6 +7,6 @@ import java.util.Vector;
 
 public interface ISourceSelector {
     List<TransactionData> selectSourcesForAttachment(
-            Vector<TransactionData>[] trustScoreToTransactionMapping,
+            List<List<TransactionData>> trustScoreToTransactionMapping,
             double transactionTrustScore);
 }
