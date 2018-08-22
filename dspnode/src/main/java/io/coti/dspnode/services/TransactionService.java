@@ -4,12 +4,13 @@ import io.coti.common.communication.interfaces.IPropagationPublisher;
 import io.coti.common.communication.interfaces.ISender;
 import io.coti.common.crypto.DspVoteCrypto;
 import io.coti.common.crypto.TransactionCrypto;
+import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.DspConsensusResult;
 import io.coti.common.data.DspVote;
 import io.coti.common.data.TransactionData;
 import io.coti.common.model.Transactions;
+import io.coti.common.services.BaseTransactionService;
 import io.coti.common.services.interfaces.IBalanceService;
-import io.coti.common.services.interfaces.IClusterService;
 import io.coti.common.services.interfaces.ITransactionHelper;
 import io.coti.common.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Service
-public class TransactionService {
+public class TransactionService extends BaseTransactionService {
     Queue<TransactionData> transactionsToValidate;
     AtomicBoolean isValidatorRunning;
     @Value("#{'${zerospend.receiving.address}'.split(',')}")
@@ -99,38 +100,15 @@ public class TransactionService {
         isValidatorRunning = new AtomicBoolean(false);
     }
 
-    public void handlePropagatedTransaction(TransactionData transactionData) {
-        try {
-            log.debug("DSP Propagated Transaction received: {}", transactionData.getHash().toHexString());
-            if (!transactionHelper.startHandleTransaction(transactionData)) {
-                log.debug("Transaction already exists: {}", transactionData.getHash().toHexString());
-                return;
-            }
-            if (!transactionHelper.validateTransaction(transactionData) ||
-                    !transactionCrypto.verifySignature(transactionData) ||
-                    !validationService.validatePow(transactionData)) {
-                log.error("Data Integrity validation failed: {}", transactionData.getHash().toHexString());
-                return;
-            }
-            boolean checkBalancesAndAddToPreBalance = transactionHelper.checkBalancesAndAddToPreBalance(transactionData);
-            if (!checkBalancesAndAddToPreBalance) {
-                log.error("Balance check failed: {}", transactionData.getHash().toHexString());
-                return;
-            }
-            transactionHelper.attachTransactionToCluster(transactionData);
-            transactionHelper.setTransactionStateToSaved(transactionData);
-            propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "Full Nodes");
-            transactionHelper.setTransactionStateToFinished(transactionData);
-            transactionsToValidate.add(transactionData);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-        } finally {
-            transactionHelper.endHandleTransaction(transactionData);
-        }
+    public void continueHandlePropagatedTransaction(TransactionData transactionData) {
+        super.handlePropagatedTransaction(transactionData);
+        propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "Full Nodes");
+        transactionHelper.setTransactionStateToFinished(transactionData);
+        transactionsToValidate.add(transactionData);
     }
 
     public void handleVoteConclusion(DspConsensusResult dspConsensusResult) {
-        log.debug("Received DspConsensus result for transaction: {}",  dspConsensusResult.getHash());
+        log.debug("Received DspConsensus result for transaction: {}", dspConsensusResult.getHash());
         if (!transactionHelper.handleVoteConclusionResult(dspConsensusResult)) {
             log.error("Illegal Dsp consensus result for transaction: {}", dspConsensusResult.getHash());
         } else {

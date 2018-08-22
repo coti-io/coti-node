@@ -12,6 +12,7 @@ import io.coti.common.http.data.TransactionStatus;
 import io.coti.common.model.AddressesTransactionsHistory;
 import io.coti.common.model.DbItem;
 import io.coti.common.model.Transactions;
+import io.coti.common.services.BaseTransactionService;
 import io.coti.common.services.LiveView.WebSocketSender;
 import io.coti.common.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +31,7 @@ import static io.coti.common.http.HttpStringConstants.*;
 
 @Slf4j
 @Service
-public class TransactionService {
+public class TransactionService extends BaseTransactionService {
     @Value("#{'${receiving.server.addresses}'.split(',')}")
     private List<String> receivingServerAddresses;
     @Autowired
@@ -203,31 +204,13 @@ public class TransactionService {
         return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistory(transactionsDataList));
     }
 
-        public void handlePropagatedTransaction(TransactionData transactionData) {
-            log.debug("DSP Propagated Transaction received: {}", transactionData.getHash().toHexString());
-            if (!transactionHelper.startHandleTransaction(transactionData)) {
-                log.debug("Transaction already exists: {}", transactionData.getHash().toHexString());
-                return;
-            }
-        if (!transactionHelper.validateTransaction(transactionData) ||
-                !transactionCrypto.verifySignature(transactionData) ||
-                !validationService.validatePow(transactionData)) {
-            log.error("Data Integrity validation failed: {}", transactionData.getHash().toHexString());
-            return;
-        }
-        if (!transactionHelper.checkBalancesAndAddToPreBalance(transactionData)) {
-            log.error("Balance check failed: {}", transactionData.getHash().toHexString());
-            return;
-        }
-        transactionHelper.attachTransactionToCluster(transactionData);
-        transactionHelper.setTransactionStateToSaved(transactionData);
+    @Override
+    protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
         webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
-        transactionHelper.setTransactionStateToFinished(transactionData);
-        transactionHelper.endHandleTransaction(transactionData);
     }
 
     public void handleDspConsensusResult(DspConsensusResult dspConsensusResult) {
-        log.debug("Received DspConsensus result for transaction: {}",  dspConsensusResult.getHash());
+        log.debug("Received DspConsensus result for transaction: {}", dspConsensusResult.getHash());
         if (!transactionHelper.handleVoteConclusionResult(dspConsensusResult)) {
             log.error("Illegal Dsp consensus result for transaction: {}", dspConsensusResult.getHash());
         } else {

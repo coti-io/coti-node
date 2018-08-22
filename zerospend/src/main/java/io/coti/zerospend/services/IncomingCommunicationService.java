@@ -35,7 +35,7 @@ public class IncomingCommunicationService {
 
     private void initPropagationSubscriber() {
         HashMap<String, Consumer<Object>> classNameToSubscriberHandlerMapping = new HashMap<>();
-        classNameToSubscriberHandlerMapping.put(TransactionData.class.getName() + "ZeroSpend Server", transactionData -> transactionService.handlePropagatedTransactionFromDspNode((TransactionData) transactionData));
+        classNameToSubscriberHandlerMapping.put(TransactionData.class.getName() + "ZeroSpend Server", transactionData -> transactionService.handlePropagatedTransaction((TransactionData) transactionData));
         classNameToSubscriberHandlerMapping.put(AddressData.class.getName() + "ZeroSpend Server", data -> addressService.handlePropagatedAddress((AddressData) data));
         propagationSubscriber.init(classNameToSubscriberHandlerMapping);
     }

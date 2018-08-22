@@ -56,8 +56,6 @@ public class TransactionHelper implements ITransactionHelper {
     private Map<Hash, Stack<TransactionState>> transactionHashToTransactionStateStackMapping;
     private AtomicLong totalTransactions = new AtomicLong(0);
     private Set<Hash> noneIndexedTransactionHashes = null;
-    private List<TransactionData> postponedTransactions = new LinkedList<>();
-
 
     @PostConstruct
     private void init() {
@@ -201,10 +199,6 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     public void attachTransactionToCluster(TransactionData transactionData) {
-        if (hasOneOfParentsNotArrivedYet(transactionData)) {
-            postponedTransactions.add(transactionData);
-            return;
-        }
         transactionData.setTrustChainConsensus(false);
         transactionData.setTrustChainTransactionHashes(new LinkedList<>());
         transactionData.setChildrenTransactions(new LinkedList<>());
@@ -220,20 +214,6 @@ public class TransactionHelper implements ITransactionHelper {
         }
         updateAddressTransactionHistory(transactionData);
         clusterService.attachToCluster(transactionData);
-        TransactionData postponedTransaction = postponedTransactions.stream().filter(
-                postponedTransactionData ->
-                        postponedTransactionData.getRightParentHash().equals(transactionData.getHash()) ||
-                                postponedTransactionData.getLeftParentHash().equals(transactionData.getHash()))
-                .findFirst().orElse(null);
-        if(postponedTransaction != null){
-            postponedTransactions.remove(postponedTransaction);
-            attachTransactionToCluster(transactionData);
-        }
-    }
-
-    private boolean hasOneOfParentsNotArrivedYet(TransactionData transactionData) {
-        return (transactionData.getLeftParentHash() != null && transactions.getByHash(transactionData.getLeftParentHash()) == null) ||
-                transactionData.getRightParentHash() != null && transactions.getByHash(transactionData.getRightParentHash()) == null;
     }
 
     public void setTransactionStateToSaved(TransactionData transactionData) {
