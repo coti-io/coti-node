@@ -1,4 +1,7 @@
-import io.coti.common.data.*;
+import io.coti.common.data.BaseTransactionData;
+import io.coti.common.data.Hash;
+import io.coti.common.data.SignatureData;
+import io.coti.common.data.TransactionData;
 import io.coti.common.http.GetBalancesRequest;
 import io.coti.common.http.GetBalancesResponse;
 import io.coti.common.model.Transactions;
@@ -17,7 +20,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.math.BigDecimal;
@@ -26,19 +28,15 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.when;
 
-//@ContextConfiguration(classes = BalanceServiceTestsAppConfig.class)
 @ContextConfiguration(classes = BalanceService.class)
-//BalanceService.class
-@TestPropertySource(locations = "../fullnode1.properties")
 @SpringBootTest
 @Slf4j
 @RunWith(SpringRunner.class)
 
-public class BalanceServiceTests {
+public class BalanceServiceTest {
 
     @Autowired
     private BalanceService balanceService;
@@ -63,14 +61,14 @@ public class BalanceServiceTests {
     public void testBalanceAmountAsExpected() {
         BigDecimal addressBalance = balanceService.getBalanceMap().
                 get(new Hash("caba14b7fe219b3da5dee0c29389c88e4d134333a2ee104152d6e9f7b673be9e0e28ca511d1ac749f46bea7f1ab25818f335ab9111a6c5eebe2f650974e12d1b7dccd4d7"));
-        Assert.assertEquals(addressBalance ,new BigDecimal("3941622.610838615"));
+        Assert.assertEquals(addressBalance, new BigDecimal("3941622.610838615"));
     }
 
     @Test
     public void testBalanceAmountAsNotExpected() {
         BigDecimal addressBalance = balanceService.getBalanceMap().
                 get(new Hash("5e6b6af708ae15c1c55641f9e87e71f5cd58fc71aa58ae55abe9d5aa88b2ad3c5295cbffcfbb3a087e8da72596d7c60eebb4c59748cc1906b2aa67be43ec3eb147c1a19a"));
-        Assert.assertNotEquals(addressBalance,new BigDecimal("3941622.610838615"));
+        Assert.assertNotEquals(addressBalance, new BigDecimal("3941622.610838615"));
     }
 
     @Test
@@ -126,7 +124,7 @@ public class BalanceServiceTests {
     public void getBalances_addressHashNotInBalanceMap_balanceZeroInResponse() {
         Hash hash = new Hash("3b4964b8b7b7cdef275ae49d82913dc7e4bf5ee890d4ef47422b2aec3f11f7900e64930d6cf4eaa4e8a62898043fbbe09d29f54cdab51653912bc926754c80174d7d1234");
         ResponseEntity<GetBalancesResponse> response = getBalance(Arrays.asList(hash));
-        Assert.assertEquals(response.getBody().getAddressesBalance().get(hash.toHexString()).getAddressBalance(),new BigDecimal("0"));
+        Assert.assertEquals(response.getBody().getAddressesBalance().get(hash.toHexString()).getAddressBalance(), new BigDecimal("0"));
     }
 
     @Test
@@ -141,7 +139,7 @@ public class BalanceServiceTests {
                         new Date()));
         balanceService.checkBalancesAndAddToPreBalance(baseTransactionDataList);
         ResponseEntity<GetBalancesResponse> response = getBalance(Arrays.asList(hash));
-        Assert.assertEquals(response.getBody().getAddressesBalance().get(hash.toHexString()).getAddressPreBalance(),new BigDecimal("3932240.71924616"));
+        Assert.assertEquals(response.getBody().getAddressesBalance().get(hash.toHexString()).getAddressPreBalance(), new BigDecimal("3932240.71924616"));
     }
 
     @Test
@@ -157,7 +155,7 @@ public class BalanceServiceTests {
         balanceService.checkBalancesAndAddToPreBalance(baseTransactionDataList);
 
         ResponseEntity<GetBalancesResponse> response = getBalance(Arrays.asList(hash));
-        Assert.assertEquals(response.getBody().getAddressesBalance().get(hash.toHexString()).getAddressBalance(),new BigDecimal("9099122.237011632"));
+        Assert.assertEquals(response.getBody().getAddressesBalance().get(hash.toHexString()).getAddressBalance(), new BigDecimal("9099122.237011632"));
     }
 
     @Test
@@ -173,7 +171,7 @@ public class BalanceServiceTests {
         ResponseEntity<GetBalancesResponse> response = getBalance(Arrays.asList(hash));
         BigDecimal preBalanceBeforeRollback = response.getBody().getAddressesBalance().get(hash.toHexString()).getAddressPreBalance();
 
-        balanceService.rollbackBaseTransactions(transactionData );
+        balanceService.rollbackBaseTransactions(transactionData);
 
         response = getBalance(Arrays.asList(hash));
         BigDecimal preBalanceAfterRollback = response.getBody().getAddressesBalance().get(hash.toHexString()).getAddressPreBalance();
@@ -195,8 +193,8 @@ public class BalanceServiceTests {
         BigDecimal updatedBalance = response.getBody().getAddressesBalance().get(hash.toHexString()).getAddressBalance();
         BigDecimal updatedPreBalance = response.getBody().getAddressesBalance().get(hash.toHexString()).getAddressPreBalance();
         BigDecimal expectedUpdatedBalanceAndPreBalance = new BigDecimal("8650892.315172933");
-        Assert.assertTrue(updatedBalance.compareTo(expectedUpdatedBalanceAndPreBalance ) == 0 &&
-                updatedPreBalance.compareTo(expectedUpdatedBalanceAndPreBalance ) == 0);
+        Assert.assertTrue(updatedBalance.compareTo(expectedUpdatedBalanceAndPreBalance) == 0 &&
+                updatedPreBalance.compareTo(expectedUpdatedBalanceAndPreBalance) == 0);
     }
 
     @Test

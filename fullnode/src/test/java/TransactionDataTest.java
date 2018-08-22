@@ -1,40 +1,43 @@
-import io.coti.common.model.Transactions;
-import io.coti.fullnode.AppConfig;
+import io.coti.common.data.Hash;
+import io.coti.common.data.TransactionData;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Assert;
+import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.LinkedList;
+
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = AppConfig.class)
+@ContextConfiguration(classes = TransactionData.class)
 @Slf4j
-public class TransactionDataTests {
+public class TransactionDataTest {
 
-    @Autowired
-    private Transactions transactions;
+    @Test
+    public void isSource_NullChildrenList_True() {
+        TransactionData transactionData = new TransactionData(new ArrayList<>(), new Hash("11"), "test", 83, new Date());
+        Assert.assertTrue(transactionData.isSource());
+    }
 
+    //
+    @Test
+    public void isSource_EmptyChildrenList_True() {
+        TransactionData transactionData = new TransactionData(new ArrayList<>(), new Hash("22"), "test", 83, new Date());
+        transactionData.setChildrenTransactions(new LinkedList<>());
+        Assert.assertTrue(transactionData.isSource());
+    }
 
-//    @Test
-//    public void isSource_NullChildrenList_True(){
-//        TransactionData transactionData = new TransactionData(new Hash("TransactionData 0".getBytes()));
-//        Assert.assertTrue(transactionData.isSource());
-//    }
-//
-//    @Test
-//    public void isSource_EmptyChildrenList_True(){
-//        TransactionData transactionData = new TransactionData(new Hash("TransactionData 0".getBytes()));
-//        transactionData.setChildrenTransactions(new LinkedList<>());
-//        Assert.assertTrue(transactionData.isSource());
-//    }
-//
-//    @Test
-//    public void isSource_NonEmptyChildrenList_False(){
-//        TransactionData transactionData = new TransactionData(new Hash("TransactionData 0".getBytes()));
-//        transactionData.setChildrenTransactions(
-//                Collections.singletonList(new Hash("TransactionData 1".getBytes())));
-//        Assert.assertFalse(transactionData.isSource());
-//    }
+    @Test
+    public void isSource_NonEmptyChildrenList_False() {
+        TransactionData transactionData = new TransactionData(new ArrayList<>(), new Hash("33"), "test", 83, new Date());
+        transactionData.setChildrenTransactions(
+                Collections.singletonList(new Hash("TransactionData 1".getBytes())));
+        Assert.assertFalse(transactionData.isSource());
+    }
 
 //    @Test
 //    public void confirmationDataPlusTransactionDataPUTtest() {

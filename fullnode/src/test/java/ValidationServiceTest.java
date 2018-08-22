@@ -9,7 +9,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 @SpringBootTest(
         classes = ValidationService.class
 )
-public class ValidationServiceTests {
+public class ValidationServiceTest {
 
     @Autowired
     private IValidationService validationService;

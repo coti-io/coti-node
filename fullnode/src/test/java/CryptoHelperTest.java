@@ -19,7 +19,7 @@ import java.util.Arrays;
 import java.util.Date;
 
 
-public class CryptoHelperTests {
+public class CryptoHelperTest {
 
     @Test
     public void deserializeBaseTransaction() throws IOException {

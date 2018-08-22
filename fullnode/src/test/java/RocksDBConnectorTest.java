@@ -5,15 +5,17 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Arrays;
 
 @RunWith(SpringRunner.class)
+@ContextConfiguration(classes = RocksDBConnector.class)
 @SpringBootTest(
         classes = RocksDBConnector.class
 )
-public class RocksDBConnectorTests {
+public class RocksDBConnectorTest {
     @Autowired
     private RocksDBConnector rocksDBConnector;
 

@@ -1,77 +1,82 @@
 import io.coti.common.data.Hash;
+import io.coti.common.data.TccInfo;
 import io.coti.common.data.TransactionData;
 import io.coti.common.services.TccConfirmationService;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.Date;
+import java.util.stream.Collectors;
 
-@SpringBootTest
+@RunWith(SpringRunner.class)
+@ContextConfiguration(classes = TccConfirmationService.class)
+@TestPropertySource(locations = "../fullnode1.properties")
+@Slf4j
 public class TccConfirmationServiceTest {
 
-    ConcurrentHashMap<Hash, TransactionData> hashToUnConfirmationTransactionsMapping;
-
+    private ConcurrentHashMap<Hash, TransactionData> hashToUnConfirmationTransactionsMapping;
+    private TransactionData transactionData0, transactionData1, transactionData2, transactionData3, transactionData4, TransactionData5, transactionData6;
+    @Autowired
     TccConfirmationService tccConfirmationService;
+
+    @Value("${cluster.trust.chain.threshold}")
+    private int threshold;
 
     @Before
     public void init() {
-        TransactionData TransactionData0 = new TransactionData(new ArrayList<>(),new Hash("0"),"test",20, new Date());
-        TransactionData0.setSenderTrustScore(80);
+        transactionData0 = new TransactionData(new ArrayList<>(), new Hash("00"), "test", 20, new Date());
+        transactionData1 = new TransactionData(new ArrayList<>(), new Hash("11"), "test", 70, new Date());
+        transactionData2 = new TransactionData(new ArrayList<>(), new Hash("22"), "test", 100, new Date());
+        transactionData3 = new TransactionData(new ArrayList<>(), new Hash("33"), "test", 90, new Date());
+        transactionData4 = new TransactionData(new ArrayList<>(), new Hash("44"), "test", 50, new Date());
+        TransactionData5 = new TransactionData(new ArrayList<>(), new Hash("55"), "test", 70, new Date());
+        transactionData6 = new TransactionData(new ArrayList<>(), new Hash("66"), "test", 60, new Date());
 
-        TransactionData TransactionData1 = new TransactionData(new ArrayList<>(),new Hash("1".getBytes()),"test",20, new Date());
-        TransactionData1.setSenderTrustScore(120);
-
-        TransactionData TransactionData2 = new TransactionData(new ArrayList<>(),new Hash("2".getBytes()),"test",20, new Date());
-        TransactionData2.setSenderTrustScore(100);
-
-        TransactionData TransactionData3 = new TransactionData(new ArrayList<>(),new Hash("3".getBytes()),"test",20, new Date());
-        TransactionData3.setSenderTrustScore(90);
-
-        TransactionData TransactionData4 = new TransactionData(new ArrayList<>(),new Hash("4".getBytes()),"test",20, new Date());
-        TransactionData4.setSenderTrustScore(100);
-
-        TransactionData TransactionData5 = new TransactionData(new ArrayList<>(),new Hash("5".getBytes()),"test",20, new Date());
-        TransactionData5.setSenderTrustScore(90);
-
-
-//        TransactionData0.setLeftParentHash(TransactionData1);
-//        TransactionData0.setRightParentHash(TransactionData2);
-//        TransactionData1.setLeftParentHash(TransactionData3);
-//        TransactionData1.setRightParentHash(TransactionData4);
-//        TransactionData2.setRightParentHash(TransactionData5);
-        // TransactionData5.setLeftParent(TransactionData4.getHash()); //?
+        transactionData0.setLeftParentHash(transactionData1.getHash());
+        transactionData0.setRightParentHash(transactionData2.getHash());
+        transactionData1.setLeftParentHash(transactionData3.getHash());
+        transactionData1.setRightParentHash(transactionData4.getHash());
+        transactionData2.setRightParentHash(TransactionData5.getHash());
+        transactionData6.setLeftParentHash(transactionData1.getHash());
 
         TransactionData5.setChildrenTransactions(new Vector<Hash>() {{
-            add(TransactionData2.getHash());
+            add(transactionData2.getHash());
         }});
-        TransactionData2.setChildrenTransactions(new Vector<Hash>() {{
-            add(TransactionData0.getHash());
+        transactionData2.setChildrenTransactions(new Vector<Hash>() {{
+            add(transactionData0.getHash());
         }});
-        TransactionData1.setChildrenTransactions(new Vector<Hash>() {{
-            add(TransactionData0.getHash());
+        transactionData1.setChildrenTransactions(new Vector<Hash>() {{
+            add(transactionData6.getHash());
+            add(transactionData0.getHash());
         }});
-        TransactionData1.setChildrenTransactions(new Vector<Hash>() {{
-            add(TransactionData0.getHash());
+        transactionData3.setChildrenTransactions(new Vector<Hash>() {{
+            add(transactionData1.getHash());
         }});
-        TransactionData3.setChildrenTransactions(new Vector<Hash>() {{
-            add(TransactionData1.getHash());
-        }});
-        TransactionData4.setChildrenTransactions(new Vector<Hash>() {{
-            add(TransactionData1.getHash());
+        transactionData4.setChildrenTransactions(new Vector<Hash>() {{
+            add(transactionData1.getHash());
             // add(TransactionData5.getHash()); //?
         }});
 
         this.hashToUnConfirmationTransactionsMapping = new ConcurrentHashMap<Hash, TransactionData>() {{
-            put(TransactionData0.getHash(), TransactionData0);
-            put(TransactionData1.getHash(), TransactionData1);
-            put(TransactionData2.getHash(), TransactionData2);
-            put(TransactionData3.getHash(), TransactionData3);
-            put(TransactionData4.getHash(), TransactionData4);
+            put(transactionData0.getHash(), transactionData0);
+            put(transactionData1.getHash(), transactionData1);
+            put(transactionData2.getHash(), transactionData2);
+            put(transactionData3.getHash(), transactionData3);
+            put(transactionData4.getHash(), transactionData4);
             put(TransactionData5.getHash(), TransactionData5);
+            put(transactionData6.getHash(), transactionData6);
         }};
 
         tccConfirmationService = new TccConfirmationService();
@@ -80,22 +85,23 @@ public class TccConfirmationServiceTest {
 
 
     @Test
-    public void process() {
+    public void getTccConfirmedTransactions_whenOnlyOneTransactionPassesTheThreshold() {
+        List<TccInfo> allTransactions = tccConfirmationService.getTccConfirmedTransactions();
+        // Because it's a test, the TccConfirmationService class sets threshold=0, so we will filter it here
+        List<TccInfo> transactionConsensusConfirmed = allTransactions.stream()
+                .filter(t -> t.getTrustChainTrustScore() > threshold)
+                .collect(Collectors.toList());
+        Assert.assertTrue(transactionConsensusConfirmed.size() == 1);
     }
 
     @Test
-    public void findTransactionToconfirm() {
-    }
-
-    @Test
-    public void topologicSorting() {
-
-    }
-
-    @Test
-    public void setTransactionConsensus() {
-//        tccConfirmationService.sortByTopologicalOrder();
-//        List<Hash> transactionConsensusConfirmed = tccConfirmationService.getTccConfirmedTransactions();
-//        Assert.assertTrue(transactionConsensusConfirmed.size() == 1);
+    public void getTccConfirmedTransactions_whenTwoTransactionPassesTheThreshold() {
+        transactionData4.setSenderTrustScore(85);
+        List<TccInfo> allTransactions = tccConfirmationService.getTccConfirmedTransactions();
+        // Because it's a test, the TccConfirmationService class sets threshold=0, so we will filter it here
+        List<TccInfo> transactionConsensusConfirmed = allTransactions.stream()
+                .filter(t -> t.getTrustChainTrustScore() > threshold)
+                .collect(Collectors.toList());
+        Assert.assertTrue(transactionConsensusConfirmed.size() == 2);
     }
 }
