@@ -147,7 +147,7 @@ public class CotiNodeTest {
 //        BigDecimal plusAmount = new BigDecimal(50);
 //        log.info("Base transaction {} with amount {} about to be sent ", baseTransactionHexaAddress, plusAmount);
 //        ResponseEntity<Response> goodResponseEntity = transactionService.
-//                addNewTransaction(createRequestWithOneBaseTransaction(new Hash("AC"), fromAddress
+//                addNoneIndexedTransaction(createRequestWithOneBaseTransaction(new Hash("AC"), fromAddress
 //                        , new Hash(baseTransactionHexaAddress), plusAmount));
 //        Assert.assertTrue(goodResponseEntity.getStatusCode().equals(HttpStatus.CREATED));
 //        Assert.assertTrue(goodResponseEntity.getBody().getStatus().equals(HttpStringConstants.STATUS_SUCCESS));
@@ -156,7 +156,7 @@ public class CotiNodeTest {
 ////        replaceBalancesWithAmount(fromAddress, new BigDecimal(50));
 //        log.info("Base transaction {} with amount {} about to be sent ", baseTransactionHexaAddress2, 60);
 //        ResponseEntity<Response> badResponseEntity = transactionService.
-//                addNewTransaction(createRequestWithOneBaseTransaction(new Hash("AD"),
+//                addNoneIndexedTransaction(createRequestWithOneBaseTransaction(new Hash("AD"),
 //                        fromAddress, new Hash(baseTransactionHexaAddress), new BigDecimal(60)));
 //        Assert.assertTrue(badResponseEntity.getStatusCode().equals(HttpStatus.UNAUTHORIZED));
 //        Assert.assertTrue(badResponseEntity.getBody().getStatus().equals(HttpStringConstants.STATUS_ERROR));

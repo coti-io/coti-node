@@ -1,14 +1,17 @@
 package io.coti.common.services;
 
+import com.google.common.collect.Sets;
 import io.coti.common.crypto.DspConsensusCrypto;
 import io.coti.common.crypto.TransactionCryptoWrapper;
 import io.coti.common.crypto.TransactionTrustScoreCrypto;
 import io.coti.common.data.*;
 import io.coti.common.http.AddTransactionResponse;
 import io.coti.common.http.BaseResponse;
+import io.coti.common.http.GetTransactionBatchResponse;
 import io.coti.common.http.GetTransactionResponse;
 import io.coti.common.http.data.TransactionResponseData;
 import io.coti.common.model.AddressesTransactionsHistory;
+import io.coti.common.model.TransactionIndexes;
 import io.coti.common.model.Transactions;
 import io.coti.common.services.interfaces.IBalanceService;
 import io.coti.common.services.interfaces.IClusterService;
@@ -24,6 +27,7 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import static io.coti.common.data.TransactionState.*;
 import static io.coti.common.http.HttpStringConstants.STATUS_ERROR;
@@ -42,6 +46,8 @@ public class TransactionHelper implements ITransactionHelper {
     @Autowired
     private Transactions transactions;
     @Autowired
+    private TransactionIndexes transactionIndexes;
+    @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
     private DspConsensusCrypto dspConsensusCrypto;
@@ -49,10 +55,14 @@ public class TransactionHelper implements ITransactionHelper {
     private TransactionTrustScoreCrypto transactionTrustScoreCrypto;
     private Map<Hash, Stack<TransactionState>> transactionHashToTransactionStateStackMapping;
     private AtomicLong totalTransactions = new AtomicLong(0);
+    private Set<Hash> noneIndexedTransactionHashes = null;
+    private List<TransactionData> postponedTransactions = new LinkedList<>();
+
 
     @PostConstruct
     private void init() {
         transactionHashToTransactionStateStackMapping = new ConcurrentHashMap<>();
+        noneIndexedTransactionHashes = Sets.newConcurrentHashSet();
         log.info("Transaction Helper Started");
     }
 
@@ -191,6 +201,13 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     public void attachTransactionToCluster(TransactionData transactionData) {
+        if (hasOneOfParentsNotArrivedYet(transactionData)) {
+            postponedTransactions.add(transactionData);
+            return;
+        }
+        transactionData.setTrustChainConsensus(false);
+        transactionData.setTrustChainTransactionHashes(new LinkedList<>());
+        transactionData.setChildrenTransactions(new LinkedList<>());
         totalTransactions.incrementAndGet();
         transactionData.setTrustChainConsensus(false);
         transactionData.setTrustChainTransactionHashes(new LinkedList<>());
@@ -198,8 +215,25 @@ public class TransactionHelper implements ITransactionHelper {
         transactionData.setTransactionConsensusUpdateTime(null);
         transactionData.setChildrenTransactions(new LinkedList<>());
         transactions.put(transactionData);
+        if (transactionData.getDspConsensusResult() == null) {
+            addNoneIndexedTransaction(transactionData);
+        }
         updateAddressTransactionHistory(transactionData);
         clusterService.attachToCluster(transactionData);
+        TransactionData postponedTransaction = postponedTransactions.stream().filter(
+                postponedTransactionData ->
+                        postponedTransactionData.getRightParentHash().equals(transactionData.getHash()) ||
+                                postponedTransactionData.getLeftParentHash().equals(transactionData.getHash()))
+                .findFirst().orElse(null);
+        if(postponedTransaction != null){
+            postponedTransactions.remove(postponedTransaction);
+            attachTransactionToCluster(transactionData);
+        }
+    }
+
+    private boolean hasOneOfParentsNotArrivedYet(TransactionData transactionData) {
+        return (transactionData.getLeftParentHash() != null && transactions.getByHash(transactionData.getLeftParentHash()) == null) ||
+                transactionData.getRightParentHash() != null && transactions.getByHash(transactionData.getRightParentHash()) == null;
     }
 
     public void setTransactionStateToSaved(TransactionData transactionData) {
@@ -233,6 +267,7 @@ public class TransactionHelper implements ITransactionHelper {
         }
 
         log.debug("DspConsensus result for transaction: Hash= {}, DspVoteResult= {}, Index= {}", dspConsensusResult.getHash(), dspConsensusResult.isDspConsensus(), dspConsensusResult.getIndex());
+
         transactionIndexService.insertNewTransaction(transactionData);
 
         transactions.put(transactionData);
@@ -257,5 +292,24 @@ public class TransactionHelper implements ITransactionHelper {
     @Override
     public long incrementTotalTransactions() {
         return totalTransactions.incrementAndGet();
+    }
+
+    @Override
+    public GetTransactionBatchResponse getTransactionBatch(long startingIndex) {
+        List<TransactionData> transactionsToSend = new LinkedList<>();
+
+        for (long i = startingIndex; i <= transactionIndexService.getLastTransactionIndex().getIndex(); i++) {
+            transactionsToSend.add(transactions.getByHash(transactionIndexes.getByHash(new Hash(i)).getTransactionHash()));
+        }
+        transactionsToSend.addAll(noneIndexedTransactionHashes.stream().map(hash -> transactions.getByHash(hash)).collect(Collectors.toList()));
+        return new GetTransactionBatchResponse(transactionsToSend);
+    }
+
+    public void addNoneIndexedTransaction(TransactionData transactionData) {
+        noneIndexedTransactionHashes.add(transactionData.getHash());
+    }
+
+    public void removeNoneIndexedTransaction(TransactionData transactionData) {
+        noneIndexedTransactionHashes.remove(transactionData.getHash());
     }
 }

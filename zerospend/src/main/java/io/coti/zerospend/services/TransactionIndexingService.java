@@ -30,4 +30,5 @@ public class TransactionIndexingService {
         log.info("Transaction Index set: {}", transactionIndexData.getIndex());
         return transactionIndexData.getIndex();
     }
+
 }

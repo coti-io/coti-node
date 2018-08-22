@@ -6,6 +6,7 @@ import io.coti.common.data.TransactionData;
 import io.coti.common.data.TransactionIndexData;
 import io.coti.common.model.TransactionIndexes;
 import io.coti.common.model.Transactions;
+import io.coti.common.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,8 @@ import java.util.concurrent.atomic.AtomicLong;
 @Service
 public class TransactionIndexService {
 
+    @Autowired
+    private ITransactionHelper transactionHelper;
     @Autowired
     private TransactionIndexes transactionIndexes;
     @Autowired
@@ -60,6 +63,7 @@ public class TransactionIndexService {
                     transactionData.getDspConsensusResult().getIndex(),
                     getAccumulatedHash(lastTransactionIndex.getAccumulatedHash(), transactionData));
             transactionIndexes.put(lastTransactionIndex);
+            transactionHelper.removeNoneIndexedTransaction(transactionData);
         } else {
             log.error("Index is not of the last transaction: Index={}, currentLast={}", transactionData.getDspConsensusResult().getIndex(), lastTransactionIndex.getIndex());
             return false;

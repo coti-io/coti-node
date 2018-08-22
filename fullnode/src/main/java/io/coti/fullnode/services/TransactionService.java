@@ -203,12 +203,12 @@ public class TransactionService {
         return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistory(transactionsDataList));
     }
 
-    public void handlePropagatedTransaction(TransactionData transactionData) {
-        log.debug("DSP Propagated Transaction received: {}", transactionData.getHash().toHexString());
-        if (!transactionHelper.startHandleTransaction(transactionData)) {
-            log.debug("Transaction already exists: {}", transactionData.getHash().toHexString());
-            return;
-        }
+        public void handlePropagatedTransaction(TransactionData transactionData) {
+            log.debug("DSP Propagated Transaction received: {}", transactionData.getHash().toHexString());
+            if (!transactionHelper.startHandleTransaction(transactionData)) {
+                log.debug("Transaction already exists: {}", transactionData.getHash().toHexString());
+                return;
+            }
         if (!transactionHelper.validateTransaction(transactionData) ||
                 !transactionCrypto.verifySignature(transactionData) ||
                 !validationService.validatePow(transactionData)) {

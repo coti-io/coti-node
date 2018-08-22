@@ -3,6 +3,7 @@ package io.coti.common.services.interfaces;
 import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.DspConsensusResult;
 import io.coti.common.data.TransactionData;
+import io.coti.common.http.GetTransactionBatchResponse;
 
 import java.util.List;
 
@@ -32,8 +33,13 @@ public interface ITransactionHelper {
 
     boolean isDspConfirmed(TransactionData transactionData);
 
-   long getTotalTransactions();
+    long getTotalTransactions();
 
-   long incrementTotalTransactions();
+    long incrementTotalTransactions();
+   
+    GetTransactionBatchResponse getTransactionBatch(long startingIndex);
 
+    void addNoneIndexedTransaction(TransactionData transactionData);
+
+    void removeNoneIndexedTransaction(TransactionData transactionData);
 }

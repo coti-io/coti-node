@@ -13,7 +13,7 @@ import java.util.*;
 @Data
 public class TransactionData implements IEntity, Comparable<TransactionData>, ISignable, ISignValidatable {
     private List<BaseTransactionData> baseTransactions;
-    private transient Hash hash;
+    private Hash hash;
     private BigDecimal amount;
     private Hash leftParentHash;
     private Hash rightParentHash;

@@ -67,4 +67,6 @@ public class TransactionResponseData {
         isValid = transactionData.isValid();
         isZeroSpend = transactionData.isZeroSpend();
     }
+
+
 }
