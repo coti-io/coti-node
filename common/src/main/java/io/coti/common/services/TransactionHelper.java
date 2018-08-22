@@ -192,6 +192,11 @@ public class TransactionHelper implements ITransactionHelper {
 
     public void attachTransactionToCluster(TransactionData transactionData) {
         totalTransactions.incrementAndGet();
+        transactionData.setTrustChainConsensus(false);
+        transactionData.setTrustChainTransactionHashes(new LinkedList<>());
+        transactionData.setTrustChainTrustScore(0);
+        transactionData.setTransactionConsensusUpdateTime(null);
+        transactionData.setChildrenTransactions(new LinkedList<>());
         transactions.put(transactionData);
         updateAddressTransactionHistory(transactionData);
         clusterService.attachToCluster(transactionData);

@@ -73,7 +73,9 @@ public class TransactionIndexService {
 
     public static byte[] getAccumulatedHash(byte[] previousAccumulatedHash, TransactionData newTransactionData) {
         byte[] newTransactionHash = newTransactionData.getHash().getBytes();
-
+        log.debug("{}",previousAccumulatedHash);
+        log.debug("{}",newTransactionHash);
+        log.debug("{}",newTransactionData.getDspConsensusResult().getIndex());
         ByteBuffer combinedHash = ByteBuffer.allocate(previousAccumulatedHash.length + newTransactionHash.length + Long.BYTES);
         combinedHash.put(previousAccumulatedHash).put(newTransactionHash).putLong(newTransactionData.getDspConsensusResult().getIndex());
         return CryptoHelper.cryptoHash(combinedHash.array()).getBytes();

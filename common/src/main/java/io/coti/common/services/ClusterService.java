@@ -102,10 +102,10 @@ public class ClusterService implements IClusterService {
 
     private void updateSingleParent(TransactionData transactionData, Hash parentHash) {
         if (parentHash != null) {
-            TransactionData ParentTransactionData = transactions.getByHash(parentHash);
-            ParentTransactionData.addToChildrenTransactions(transactionData.getHash());
-            hashToUnconfirmedTransactionsMapping.put(ParentTransactionData.getHash(), ParentTransactionData);
-            transactions.put(ParentTransactionData);
+            TransactionData parentTransactionData = transactions.getByHash(parentHash);
+            parentTransactionData.addToChildrenTransactions(transactionData.getHash());
+            hashToUnconfirmedTransactionsMapping.put(parentTransactionData.getHash(), parentTransactionData);
+            transactions.put(parentTransactionData);
         }
     }
 
