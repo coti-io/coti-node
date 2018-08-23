@@ -27,7 +27,7 @@ public class InitialDBCreator {
         byte[] accumulatedHash = "GENESIS".getBytes();
         for (TransactionData transactionData : zeroSpendService.getGenesisTransactions()) {
             transactions.put(transactionData);
-            accumulatedHash = TransactionIndexService.getAccumulatedHash(accumulatedHash, transactionData);
+            accumulatedHash = TransactionIndexService.getAccumulatedHash(accumulatedHash, transactionData.getHash(), transactionData.getDspConsensusResult().getIndex());
             transactionIndexes.put(new TransactionIndexData(transactionData.getHash(), transactionData.getDspConsensusResult().getIndex(), accumulatedHash));
         }
     }

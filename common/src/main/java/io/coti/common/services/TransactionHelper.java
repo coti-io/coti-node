@@ -245,7 +245,7 @@ public class TransactionHelper implements ITransactionHelper {
 
         log.debug("DspConsensus result for transaction: Hash= {}, DspVoteResult= {}, Index= {}", dspConsensusResult.getHash(), dspConsensusResult.isDspConsensus(), dspConsensusResult.getIndex());
 
-        transactionIndexService.insertNewTransaction(transactionData);
+        transactionIndexService.insertNewTransactionIndex(transactionData);
 
         transactions.put(transactionData);
         return true;

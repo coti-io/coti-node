@@ -42,7 +42,7 @@ public class TransactionIndexService {
                 log.error("Null transaction data found for index: {}", i);
                 System.exit(-1);
             }
-            accumulatedHash = getAccumulatedHash(accumulatedHash, transactionData);
+            accumulatedHash = getAccumulatedHash(accumulatedHash, transactionData.getHash(), transactionData.getDspConsensusResult().getIndex());
             if (!Arrays.equals(accumulatedHash, transactionIndexData.getAccumulatedHash())) {
                 log.error("Incorrect accumulated hash");
                 System.exit(-1);
@@ -51,17 +51,14 @@ public class TransactionIndexService {
         lastTransactionIndex = transactionIndexData;
     }
 
-    public boolean insertNewTransaction(TransactionData transactionData) {
+    public synchronized boolean insertNewTransactionIndex(TransactionData transactionData) {
         if (transactionData.getDspConsensusResult() == null) {
             log.error("Invalid transaction index");
             return false;
         }
         if (transactionData.getDspConsensusResult().getIndex() == lastTransactionIndex.getIndex() + 1) {
             log.debug("Inserting new transaction with index: {}", lastTransactionIndex.getIndex() + 1);
-            lastTransactionIndex = new TransactionIndexData(
-                    transactionData.getHash(),
-                    transactionData.getDspConsensusResult().getIndex(),
-                    getAccumulatedHash(lastTransactionIndex.getAccumulatedHash(), transactionData));
+            lastTransactionIndex = getNextIndexData(lastTransactionIndex, transactionData);
             transactionIndexes.put(lastTransactionIndex);
             transactionHelper.removeNoneIndexedTransaction(transactionData);
         } else {
@@ -75,13 +72,19 @@ public class TransactionIndexService {
         return lastTransactionIndex;
     }
 
-    public static byte[] getAccumulatedHash(byte[] previousAccumulatedHash, TransactionData newTransactionData) {
-        byte[] newTransactionHash = newTransactionData.getHash().getBytes();
+    public static TransactionIndexData getNextIndexData(TransactionIndexData currentLastTransactionIndexData, TransactionData newTransactionData) {
+        return new TransactionIndexData(
+                newTransactionData.getHash(),
+                currentLastTransactionIndexData.getIndex() + 1,
+                getAccumulatedHash(currentLastTransactionIndexData.getAccumulatedHash(), newTransactionData.getHash(), currentLastTransactionIndexData.getIndex() + 1));
+    }
+
+    public static byte[] getAccumulatedHash(byte[] previousAccumulatedHash, Hash newTransactionHash, long newIndex) {
+        byte[] newTransactionHashBytes = newTransactionHash.getBytes();
         log.debug("{}",previousAccumulatedHash);
         log.debug("{}",newTransactionHash);
-        log.debug("{}",newTransactionData.getDspConsensusResult().getIndex());
-        ByteBuffer combinedHash = ByteBuffer.allocate(previousAccumulatedHash.length + newTransactionHash.length + Long.BYTES);
-        combinedHash.put(previousAccumulatedHash).put(newTransactionHash).putLong(newTransactionData.getDspConsensusResult().getIndex());
+        ByteBuffer combinedHash = ByteBuffer.allocate(previousAccumulatedHash.length + newTransactionHashBytes.length + Long.BYTES);
+        combinedHash.put(previousAccumulatedHash).put(newTransactionHashBytes).putLong(newIndex);
         return CryptoHelper.cryptoHash(combinedHash.array()).getBytes();
     }
 

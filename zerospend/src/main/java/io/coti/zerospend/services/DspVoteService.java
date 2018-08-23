@@ -6,9 +6,8 @@ import io.coti.common.crypto.DspVoteCrypto;
 import io.coti.common.data.*;
 import io.coti.common.model.TransactionVotes;
 import io.coti.common.model.Transactions;
-import io.coti.common.services.TransactionHelper;
-import io.coti.common.services.interfaces.IBalanceService;
 import io.coti.common.services.TransactionIndexService;
+import io.coti.common.services.interfaces.IBalanceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,8 +42,6 @@ public class DspVoteService {
     private DspVoteCrypto dspVoteCrypto;
     @Autowired
     private DspConsensusCrypto dspConsensusCrypto;
-    @Autowired
-    private TransactionIndexingService transactionIndexingService;
     @Autowired
     private IBalanceService balanceService;
     private ConcurrentMap<Hash, List<DspVote>> transactionHashToVotesListMapping;
@@ -153,7 +150,7 @@ public class DspVoteService {
     private void publishDecision(Hash transactionHash, Map<Hash, DspVote> mapHashToDspVote, boolean isLegalTransaction) {
         TransactionData transactionData = transactions.getByHash(transactionHash);
         DspConsensusResult dspConsensusResult = new DspConsensusResult(transactionHash);
-        dspConsensusResult.setIndex(transactionIndexingService.generateTransactionIndex(transactionData));
+        dspConsensusResult.setIndex(generateTransactionIndex(transactionData));
         dspConsensusResult.setDspConsensus(isLegalTransaction);
         dspConsensusResult.setIndexingTime(new Date());
         List<DspVote> dspVotes = new LinkedList<>();
@@ -164,9 +161,14 @@ public class DspVoteService {
         propagationPublisher.propagate(dspConsensusResult, DspConsensusResult.class.getName() + "TrustScore Nodes");
         balanceService.setDspcToTrue(dspConsensusResult);
         transactionData.setDspConsensusResult(dspConsensusResult);
-        transactionIndexService.insertNewTransaction(transactionData);
-
+        transactionIndexService.insertNewTransactionIndex(transactionData);
         transactionHashToVotesListMapping.remove(transactionHash);
+    }
+
+    private synchronized long generateTransactionIndex(TransactionData transactionData) {
+        TransactionIndexData lastTransactionIndexData = transactionIndexService.getLastTransactionIndex();
+        TransactionIndexData transactionIndexData = TransactionIndexService.getNextIndexData(lastTransactionIndexData, transactionData);
+        return transactionIndexData.getIndex();
     }
 
     private boolean isPositiveMajorityAchieved(TransactionVoteData currentVotes) {

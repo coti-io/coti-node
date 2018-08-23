@@ -54,7 +54,7 @@ public class InitializationService {
                     } else {
                         transactions.put(transactionData);
                         if (transactionData.getDspConsensusResult() != null) {
-                            transactionIndexService.insertNewTransaction(transactionData);
+                            transactionIndexService.insertNewTransactionIndex(transactionData);
                         }
                         handleExistingTransaction(maxTransactionIndex, transactionData);
                     }
