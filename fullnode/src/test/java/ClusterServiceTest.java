@@ -93,7 +93,7 @@ public class ClusterServiceTest {
     public void selectSources_onlyTransactionData1SourceAvailable_transactionData1AsLeftParent() {
         TransactionData TransactionData = new TransactionData(new ArrayList<>(), new Hash("22"), "test", 92, new Date());
         //  TransactionData2.setCreateTime(new Date());
-        when(sourceSelector.selectSourcesForAttachment(any(Vector[].class),
+        when(sourceSelector.selectSourcesForAttachment(any(List.class),
                 any(double.class)))
                 .thenReturn(new Vector<>(Arrays.asList(transactionData1)));
         cluster.selectSources(TransactionData);
@@ -104,7 +104,7 @@ public class ClusterServiceTest {
     public void selectSources_twoSourcesAvailable_twoSourcesAsParents() {
         TransactionData TransactionData = new TransactionData(new ArrayList<>(), new Hash("22"), "test", 92, new Date());
         //  TransactionData2.setCreateTime(new Date());
-        when(sourceSelector.selectSourcesForAttachment(any(Vector[].class),
+        when(sourceSelector.selectSourcesForAttachment(any(List.class),
                 any(double.class)))
                 .thenReturn(new Vector<>(Arrays.asList(transactionData0, transactionData1)));
         cluster.selectSources(TransactionData);

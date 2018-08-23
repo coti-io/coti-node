@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ import java.util.Vector;
 @SpringBootTest(
         classes = SourceSelector.class
 )
+@TestPropertySource(locations = "../test.properties")
 public class SourceSelectorTest {
     @Autowired
     private SourceSelector sourceSelector;
@@ -80,12 +82,12 @@ public class SourceSelectorTest {
 
     @Test
     public void selectSourcesForAttachment() {
-        Vector<TransactionData>[] trustScoreToSourceListMapping = new Vector[101];
-        for (int i = 0; i < trustScoreToSourceListMapping.length; i++) {
-            trustScoreToSourceListMapping[i] = (new Vector<>());
+        List<List<TransactionData>> trustScoreToSourceListMapping = new ArrayList<>();
+        for (int i = 0; i <= 100; i++) {
+            trustScoreToSourceListMapping.add(new ArrayList<>());
         }
         for (TransactionData transaction : newTransactions) {
-            trustScoreToSourceListMapping[transaction.getRoundedSenderTrustScore()].add(transaction);
+            trustScoreToSourceListMapping.get(transaction.getRoundedSenderTrustScore()).add(transaction);
         }
         List<TransactionData> sources0 = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 38);
         Assert.assertTrue(sources0.size() == 0);
@@ -105,9 +107,9 @@ public class SourceSelectorTest {
         TransactionData11.setAttachmentTime(new Date(now.getTime() - 9000));
 
         newTransactions.add(TransactionData10);
-        trustScoreToSourceListMapping[TransactionData10.getRoundedSenderTrustScore()].add(TransactionData10);
+        trustScoreToSourceListMapping.get(TransactionData10.getRoundedSenderTrustScore()).add(TransactionData10);
         newTransactions.add(TransactionData11);
-        trustScoreToSourceListMapping[TransactionData11.getRoundedSenderTrustScore()].add(TransactionData11);
+        trustScoreToSourceListMapping.get(TransactionData11.getRoundedSenderTrustScore()).add(TransactionData11);
 
         List<TransactionData> sources3 = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 92);
         Assert.assertTrue(sources3.size() == 2);
