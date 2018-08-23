@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -26,7 +27,7 @@ public abstract class TransactionService {
     private Transactions transactions;
     private List<TransactionData> postponedTransactions = new LinkedList<>();
 
-    public void handlePropagatedTransaction(TransactionData transactionData){
+    public void handlePropagatedTransaction(TransactionData transactionData) {
         if (!transactionHelper.startHandleTransaction(transactionData)) {
             log.debug("Transaction already exists: {}", transactionData.getHash().toHexString());
             return;
@@ -37,7 +38,7 @@ public abstract class TransactionService {
             log.error("Data Integrity validation failed: {}", transactionData.getHash().toHexString());
             return;
         }
-        if (hasOneOfParentsNotArrivedYet(transactionData)) {
+        if (hasOneOfParentsMissing(transactionData)) {
             postponedTransactions.add(transactionData);
             return;
         }
@@ -50,22 +51,22 @@ public abstract class TransactionService {
 
         continueHandlePropagatedTransaction(transactionData);
 
-        TransactionData postponedTransaction = postponedTransactions.stream().filter(
+        List<TransactionData> postponedParentTransactions = postponedTransactions.stream().filter(
                 postponedTransactionData ->
                         postponedTransactionData.getRightParentHash().equals(transactionData.getHash()) ||
                                 postponedTransactionData.getLeftParentHash().equals(transactionData.getHash()))
-                .findFirst().orElse(null);
-        if(postponedTransaction != null){
+                .collect(Collectors.toList());
+        postponedParentTransactions.forEach(postponedTransaction -> {
             postponedTransactions.remove(postponedTransaction);
-            handlePropagatedTransaction(transactionData);
-        }
+            handlePropagatedTransaction(postponedTransaction);
+        });
         transactionHelper.setTransactionStateToFinished(transactionData);
         transactionHelper.endHandleTransaction(transactionData);
     }
 
     protected abstract void continueHandlePropagatedTransaction(TransactionData transactionData);
 
-    private boolean hasOneOfParentsNotArrivedYet(TransactionData transactionData) {
+    private boolean hasOneOfParentsMissing(TransactionData transactionData) {
         return (transactionData.getLeftParentHash() != null && transactions.getByHash(transactionData.getLeftParentHash()) == null) ||
                 transactionData.getRightParentHash() != null && transactions.getByHash(transactionData.getRightParentHash()) == null;
     }

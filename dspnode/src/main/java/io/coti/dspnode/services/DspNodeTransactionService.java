@@ -7,7 +7,6 @@ import io.coti.common.crypto.TransactionCrypto;
 import io.coti.common.data.DspConsensusResult;
 import io.coti.common.data.DspVote;
 import io.coti.common.data.TransactionData;
-import io.coti.common.model.Transactions;
 import io.coti.common.services.TransactionService;
 import io.coti.common.services.interfaces.IBalanceService;
 import io.coti.common.services.interfaces.ITransactionHelper;
@@ -42,8 +41,6 @@ public class DspNodeTransactionService extends TransactionService {
     @Autowired
     private IBalanceService balanceService;
     @Autowired
-    private Transactions transactions;
-    @Autowired
     private ISender sender;
     @Autowired
     private DspVoteCrypto dspVoteCrypto;
@@ -54,8 +51,6 @@ public class DspNodeTransactionService extends TransactionService {
             log.debug("Transaction already exists");
             return "Transaction Exists: " + transactionData.getHash();
         }
-        transactions.put(transactionData);
-        transactionHelper.setTransactionStateToSaved(transactionData);
         if (!transactionHelper.validateTransaction(transactionData) ||
                 !transactionCrypto.verifySignature(transactionData) ||
                 !validationService.validatePow(transactionData) ||
@@ -63,11 +58,12 @@ public class DspNodeTransactionService extends TransactionService {
             log.info("Invalid Transaction Received!");
             return "Invalid Transaction Received: " + transactionData.getHash();
         }
+        transactionHelper.attachTransactionToCluster(transactionData);
+        transactionHelper.setTransactionStateToSaved(transactionData);
         propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "ZeroSpend Server");
         propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "Full Nodes");
         propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "DSP Nodes");
         propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "TrustScore Nodes");
-        transactionHelper.attachTransactionToCluster(transactionData);
         transactionHelper.setTransactionStateToFinished(transactionData);
         transactionsToValidate.add(transactionData);
 

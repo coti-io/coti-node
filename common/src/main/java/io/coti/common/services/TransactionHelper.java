@@ -55,7 +55,7 @@ public class TransactionHelper implements ITransactionHelper {
     private TransactionTrustScoreCrypto transactionTrustScoreCrypto;
     private Map<Hash, Stack<TransactionState>> transactionHashToTransactionStateStackMapping;
     private AtomicLong totalTransactions = new AtomicLong(0);
-    private Set<Hash> noneIndexedTransactionHashes = null;
+    private Set<Hash> noneIndexedTransactionHashes;
 
     @PostConstruct
     private void init() {
@@ -199,9 +199,6 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     public void attachTransactionToCluster(TransactionData transactionData) {
-        transactionData.setTrustChainConsensus(false);
-        transactionData.setTrustChainTransactionHashes(new LinkedList<>());
-        transactionData.setChildrenTransactions(new LinkedList<>());
         totalTransactions.incrementAndGet();
         transactionData.setTrustChainConsensus(false);
         transactionData.setTrustChainTransactionHashes(new LinkedList<>());
