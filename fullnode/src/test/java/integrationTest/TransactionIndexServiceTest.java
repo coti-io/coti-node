@@ -20,7 +20,5 @@ import testUtils.TestUtils;
 @TestPropertySource(locations = "../test.properties")
 @Slf4j
 public class TransactionIndexServiceTest {
-
-
     TransactionData transactionData1 = TestUtils.createTransactionWithSpecificHash(new Hash("AA"));
 }
