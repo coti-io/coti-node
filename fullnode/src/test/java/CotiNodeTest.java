@@ -8,7 +8,7 @@ import io.coti.common.http.Response;
 import io.coti.common.services.interfaces.IBalanceService;
 import io.coti.fullnode.AppConfig;
 import io.coti.fullnode.controllers.TransactionController;
-import io.coti.fullnode.services.TransactionService;
+import io.coti.fullnode.services.FullNodeTransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -42,7 +42,7 @@ public class CotiNodeTest {
     @Autowired
     private IBalanceService balanceService;
     @Autowired
-    private TransactionService transactionService;
+    private FullNodeTransactionService transactionService;
 
     private int privatekeyInt = 122;
     /*

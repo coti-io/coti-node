@@ -20,7 +20,7 @@ public class IncomingCommunicationService {
     @Autowired
     private AddressService addressService;
     @Autowired
-    private TransactionService transactionService;
+    private FullNodeTransactionService transactionService;
 
     @PostConstruct
     public void init() {

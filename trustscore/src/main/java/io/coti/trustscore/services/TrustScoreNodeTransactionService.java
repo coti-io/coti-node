@@ -3,8 +3,7 @@ package io.coti.trustscore.services;
 import io.coti.common.data.DspConsensusResult;
 import io.coti.common.data.TransactionData;
 import io.coti.common.http.data.TransactionStatus;
-import io.coti.common.model.Transactions;
-import io.coti.common.services.BaseTransactionService;
+import io.coti.common.services.TransactionService;
 import io.coti.common.services.LiveView.WebSocketSender;
 import io.coti.common.services.interfaces.IBalanceService;
 import io.coti.common.services.interfaces.ITransactionHelper;
@@ -12,12 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedList;
-import java.util.List;
-
 @Slf4j
 @Service
-public class TransactionService extends BaseTransactionService {
+public class TrustScoreNodeTransactionService extends TransactionService {
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired

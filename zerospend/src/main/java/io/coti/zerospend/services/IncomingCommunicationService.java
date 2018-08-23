@@ -17,7 +17,7 @@ import java.util.function.Function;
 public class IncomingCommunicationService {
 
     @Autowired
-    private TransactionService transactionService;
+    private ZeroSpendTransactionService transactionService;
     @Autowired
     private IReceiver receiver;
     @Autowired

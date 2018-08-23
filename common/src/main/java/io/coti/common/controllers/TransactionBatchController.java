@@ -24,7 +24,6 @@ public class TransactionBatchController {
 
     @RequestMapping(value = "/getTransactionBatch", method = POST)
     public ResponseEntity<GetTransactionBatchResponse> getTransactionBatch(@Valid @RequestBody GetTransactionBatchRequest getTransactionBatchRequest) {
-        log.info("Recccccc");
         return ResponseEntity.ok(transactionHelper.getTransactionBatch(getTransactionBatchRequest.getStartingIndex()));
     }
 }

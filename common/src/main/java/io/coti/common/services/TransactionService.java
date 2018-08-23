@@ -14,7 +14,7 @@ import java.util.List;
 
 @Slf4j
 @Service
-public abstract class BaseTransactionService {
+public abstract class TransactionService {
 
     @Autowired
     private ITransactionHelper transactionHelper;

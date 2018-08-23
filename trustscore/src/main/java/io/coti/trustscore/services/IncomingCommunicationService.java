@@ -20,7 +20,7 @@ public class IncomingCommunicationService {
     @Autowired
     private AddressService addressService;
     @Autowired
-    private TransactionService transactionService;
+    private TrustScoreNodeTransactionService transactionService;
 
     @PostConstruct
     public void init() {
@@ -33,7 +33,8 @@ public class IncomingCommunicationService {
                 -> transactionService.handlePropagatedTransaction((TransactionData) data));
         classNameToSubscriberHandlerMapping.put(AddressData.class.getName() + "TrustScore Nodes", data
                 -> addressService.handlePropagatedAddress((AddressData) data));
-        classNameToSubscriberHandlerMapping.put(DspConsensusResult.class.getName() + "TrustScore Nodes", data -> transactionService.handleVoteConclusion((DspConsensusResult) data));
+        classNameToSubscriberHandlerMapping.put(DspConsensusResult.class.getName() + "TrustScore Nodes", data
+                -> transactionService.handleVoteConclusion((DspConsensusResult) data));
         propagationSubscriber.init(classNameToSubscriberHandlerMapping);
     }
 }

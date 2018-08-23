@@ -12,7 +12,7 @@ import io.coti.common.http.data.TransactionStatus;
 import io.coti.common.model.AddressesTransactionsHistory;
 import io.coti.common.model.DbItem;
 import io.coti.common.model.Transactions;
-import io.coti.common.services.BaseTransactionService;
+import io.coti.common.services.TransactionService;
 import io.coti.common.services.LiveView.WebSocketSender;
 import io.coti.common.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ import static io.coti.common.http.HttpStringConstants.*;
 
 @Slf4j
 @Service
-public class TransactionService extends BaseTransactionService {
+public class FullNodeTransactionService extends TransactionService {
     @Value("#{'${receiving.server.addresses}'.split(',')}")
     private List<String> receivingServerAddresses;
     @Autowired

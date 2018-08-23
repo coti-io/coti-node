@@ -4,12 +4,11 @@ import io.coti.common.communication.interfaces.IPropagationPublisher;
 import io.coti.common.communication.interfaces.ISender;
 import io.coti.common.crypto.DspVoteCrypto;
 import io.coti.common.crypto.TransactionCrypto;
-import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.DspConsensusResult;
 import io.coti.common.data.DspVote;
 import io.coti.common.data.TransactionData;
 import io.coti.common.model.Transactions;
-import io.coti.common.services.BaseTransactionService;
+import io.coti.common.services.TransactionService;
 import io.coti.common.services.interfaces.IBalanceService;
 import io.coti.common.services.interfaces.ITransactionHelper;
 import io.coti.common.services.interfaces.IValidationService;
@@ -26,7 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Service
-public class TransactionService extends BaseTransactionService {
+public class DspNodeTransactionService extends TransactionService {
     Queue<TransactionData> transactionsToValidate;
     AtomicBoolean isValidatorRunning;
     @Value("#{'${zerospend.receiving.address}'.split(',')}")

@@ -24,7 +24,7 @@ public class IncomingCommunicationService {
     @Autowired
     private AddressService addressService;
     @Autowired
-    private TransactionService transactionService;
+    private DspNodeTransactionService transactionService;
 
     @PostConstruct
     public void init() {

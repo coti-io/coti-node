@@ -3,7 +3,7 @@ package io.coti.fullnode.controllers;
 import io.coti.common.http.*;
 import io.coti.common.services.TransactionHelper;
 import io.coti.common.services.TransactionIndexService;
-import io.coti.fullnode.services.TransactionService;
+import io.coti.fullnode.services.FullNodeTransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +23,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 public class TransactionController {
 
     @Autowired
-    private TransactionService transactionService;
+    private FullNodeTransactionService transactionService;
     @Autowired
     private TransactionHelper transactionHelper;
     @Autowired

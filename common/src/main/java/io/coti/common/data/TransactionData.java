@@ -136,7 +136,13 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
     }
     @Override
     public int compareTo(TransactionData other) {
-        return Double.compare(this.senderTrustScore, other.senderTrustScore);
+        try {
+            return Double.compare(this.senderTrustScore, other.senderTrustScore);
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+        return -1;
     }
 
     @Override
