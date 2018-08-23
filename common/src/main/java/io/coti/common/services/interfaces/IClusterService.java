@@ -4,9 +4,9 @@ import io.coti.common.data.TransactionData;
 
 public interface IClusterService {
 
-    TransactionData attachToCluster(TransactionData transactionData);
+    void attachToCluster(TransactionData transactionData);
 
-    TransactionData selectSources(TransactionData transactionData);
+    void selectSources(TransactionData transactionData);
 
     void addUnconfirmedTransaction(TransactionData transactionData);
 

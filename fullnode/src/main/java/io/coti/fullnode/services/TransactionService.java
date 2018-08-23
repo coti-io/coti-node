@@ -109,11 +109,11 @@ public class TransactionService {
                                 STATUS_ERROR,
                                 INSUFFICIENT_FUNDS_MESSAGE));
             }
-            transactionData = selectSources(transactionData);
+            selectSources(transactionData);
             while (transactionData.getLeftParentHash() == null && transactionData.getRightParentHash() == null) {
                 log.debug("Could not find sources for transaction: {}. Sending to Zero Spend and retrying in 5 seconds.");
                 TimeUnit.SECONDS.sleep(5);
-                transactionData = selectSources(transactionData);
+                selectSources(transactionData);
             }
 
             if (!validationService.validateSource(transactionData.getLeftParentHash()) ||
@@ -150,10 +150,10 @@ public class TransactionService {
         }
     }
 
-    public TransactionData selectSources(TransactionData transactionData) {
-        transactionData = clusterService.selectSources(transactionData);
+    public void selectSources(TransactionData transactionData) {
+        clusterService.selectSources(transactionData);
         if (transactionData.hasSources()) {
-            return transactionData;
+            return;
         }
 
         log.debug("No sources found for transaction {} with trust score {}", transactionData.getHash().toHexString(), transactionData.getSenderTrustScore());
@@ -166,16 +166,16 @@ public class TransactionService {
 
             }
             retryTimes--;
-            transactionData = clusterService.selectSources(transactionData);
+            clusterService.selectSources(transactionData);
             if (transactionData.hasSources()) {
-                return transactionData;
+                return;
             }
         }
 
         TransactionData zeroSpendTransaction = zeroSpendService.getZeroSpendTransaction(transactionData.getSenderTrustScore());
         transactionHelper.attachTransactionToCluster(zeroSpendTransaction);
         clusterService.attachToCluster(zeroSpendTransaction);
-        transactionData = clusterService.selectSources(transactionData);
+        clusterService.selectSources(transactionData);
         while (!transactionData.hasSources()) {
             log.debug("Waiting 2 seconds for new zero spend transaction to be added to available sources for transaction {}", transactionData.getHash().toHexString());
             try {
@@ -183,9 +183,8 @@ public class TransactionService {
             } catch (InterruptedException e) {
                 log.error("Errors when sleeping: {}", e);
             }
-            transactionData = clusterService.selectSources(transactionData);
+            clusterService.selectSources(transactionData);
         }
-        return transactionData;
     }
 
     public ResponseEntity<BaseResponse> getAddressTransactions(Hash addressHash) {

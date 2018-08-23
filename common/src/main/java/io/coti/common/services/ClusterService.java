@@ -80,19 +80,19 @@ public class ClusterService implements IClusterService {
     }
 
     @Override
-    public TransactionData attachToCluster(TransactionData newTransactionData) {
-        if (newTransactionData.getChildrenTransactions() == null) {
-            newTransactionData.setChildrenTransactions(new LinkedList<>());
+    public void attachToCluster(TransactionData transactionData) {
+        if (transactionData.getChildrenTransactions() == null) {
+            transactionData.setChildrenTransactions(new LinkedList<>());
         }
 
-        updateParents(newTransactionData);
-        hashToUnconfirmedTransactionsMapping.put(newTransactionData.getHash(), newTransactionData);
-        removeTransactionParentsFromSources(newTransactionData);
-        sourceListsByTrustScore.get(newTransactionData.getRoundedSenderTrustScore()).add(newTransactionData);
+        updateParents(transactionData);
+        hashToUnconfirmedTransactionsMapping.put(transactionData.getHash(), transactionData);
+        removeTransactionParentsFromSources(transactionData);
+        sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionData);
         totalSources.incrementAndGet();
-        log.debug("Added New Transaction with hash:{}", newTransactionData.getHash());
-        liveViewService.addNode(newTransactionData);
-        return newTransactionData;
+        log.debug("Added New Transaction with hash:{}", transactionData.getHash());
+        liveViewService.addNode(transactionData);
+        return;
     }
 
     private void updateParents(TransactionData transactionData) {
@@ -109,12 +109,12 @@ public class ClusterService implements IClusterService {
         }
     }
 
-    private void removeTransactionParentsFromSources(TransactionData newTransactionData) {
-        if (newTransactionData.getLeftParentHash() != null) {
-            removeTransactionFromSources(newTransactionData.getLeftParentHash());
+    private void removeTransactionParentsFromSources(TransactionData transactionData) {
+        if (transactionData.getLeftParentHash() != null) {
+            removeTransactionFromSources(transactionData.getLeftParentHash());
         }
-        if (newTransactionData.getRightParentHash() != null) {
-            removeTransactionFromSources(newTransactionData.getRightParentHash());
+        if (transactionData.getRightParentHash() != null) {
+            removeTransactionFromSources(transactionData.getRightParentHash());
         }
     }
 
@@ -128,7 +128,7 @@ public class ClusterService implements IClusterService {
     }
 
     @Override
-    public TransactionData selectSources(TransactionData transactionData) {
+    public void selectSources(TransactionData transactionData) {
         List<List<TransactionData>> trustScoreToTransactionMappingSnapshot =
                 Collections.unmodifiableList(sourceListsByTrustScore);
 
@@ -139,7 +139,7 @@ public class ClusterService implements IClusterService {
 
         if (selectedSourcesForAttachment.size() == 0) {
             log.info("No sources were found for transaction:{} ", transactionData.getHash());
-            return transactionData;
+            return;
         }
         if (selectedSourcesForAttachment.size() > 0) {
             transactionData.setLeftParentHash(selectedSourcesForAttachment.get(0).getHash());
@@ -148,13 +148,11 @@ public class ClusterService implements IClusterService {
             transactionData.setRightParentHash(selectedSourcesForAttachment.get(1).getHash());
         }
 
-        String hashes = "";
-        for (TransactionData td : selectedSourcesForAttachment) {
-            hashes += td.getHash() + " ";
-        }
-        log.debug("For transaction with hash:{} we found the following sources:{}", transactionData.getHash(), hashes);
+        List<Hash> selectedSourceHashes = new LinkedList<>();
+        selectedSourcesForAttachment.forEach(source -> selectedSourceHashes.add(source.getHash()));
+        log.debug("For transaction with hash:{} we found the following sources:{}", transactionData.getHash(), selectedSourceHashes);
 
-        return transactionData;
+        return;
     }
 
     public List<List<TransactionData>> getSourceListsByTrustScore() {

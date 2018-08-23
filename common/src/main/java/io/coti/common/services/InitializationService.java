@@ -28,7 +28,7 @@ public class InitializationService {
     private TransactionHelper transactionHelper;
     @PostConstruct
     public void init() {
-        AtomicLong maxTransactionIndex = new AtomicLong(Long.MIN_VALUE);
+        AtomicLong maxTransactionIndex = new AtomicLong(-1);
         transactions.forEach(transactionData -> {
             if (!transactionData.isTrustChainConsensus()) {
                 clusterService.addUnconfirmedTransaction(transactionData);
