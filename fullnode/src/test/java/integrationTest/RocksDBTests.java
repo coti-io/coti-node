@@ -25,7 +25,7 @@ import java.util.Date;
 })
 @RunWith(SpringRunner.class)
 
-@TestPropertySource(locations = "../fullnode1.properties")
+@TestPropertySource(locations = "../test.properties")
 @Slf4j
 public class RocksDBTests {
 
@@ -105,10 +105,12 @@ public class RocksDBTests {
 
     @Test
     public void saveAndGetTransactionIndexes() {
-        TransactionIndexData transactionIndexData1 = new TransactionIndexData(new Hash("TransactionIndex 0".getBytes()), 6);
+        TransactionIndexData transactionIndexData1 = new TransactionIndexData(new Hash("TransactionIndex 0".getBytes()), 6, null);
         transactionIndexes.put(transactionIndexData1);
         TransactionIndexData transactionIndexData2 = transactionIndexes.getByHash(new Hash("TransactionIndex 0".getBytes()));
         Assert.assertEquals(transactionIndexData1, transactionIndexData2);
+        //5472616e73616374696f6e496e6465782030
+        //transactionIndexData1.getHash()
     }
 
     @Test

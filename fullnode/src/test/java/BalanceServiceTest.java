@@ -10,6 +10,7 @@ import io.coti.common.services.InitializationService;
 import io.coti.common.services.LiveView.LiveViewService;
 import io.coti.common.services.LiveView.WebSocketSender;
 import io.coti.common.services.TransactionHelper;
+import io.coti.common.services.TransactionIndexService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Assert;
@@ -55,6 +56,9 @@ public class BalanceServiceTest {
 
     @MockBean
     private Transactions transactions;
+
+    @MockBean
+    private TransactionIndexService transactionIndexService;
 
 
     @Test

@@ -26,7 +26,6 @@ import static org.mockito.Mockito.when;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = ClusterService.class)
-//@TestPropertySource(locations = "../fullnode1.properties")
 @Slf4j
 public class ClusterServiceTest {
     @Autowired

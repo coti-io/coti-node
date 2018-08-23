@@ -1,20 +1,29 @@
 import io.coti.common.database.RocksDBConnector;
-import io.coti.common.model.Transactions;
+import io.coti.common.model.*;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Arrays;
 
+
+@ContextConfiguration(classes = {Transactions.class,
+        Addresses.class,
+        RocksDBConnector.class,
+        AddressesTransactionsHistory.class,
+        TrustScores.class,
+        TransactionIndexes.class,
+        TransactionVotes.class
+})
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = RocksDBConnector.class)
-@SpringBootTest(
-        classes = RocksDBConnector.class
-)
+
+@TestPropertySource(locations = "../test.properties")
+@Slf4j
 public class RocksDBConnectorTest {
     @Autowired
     private RocksDBConnector rocksDBConnector;

@@ -8,7 +8,6 @@ import io.coti.common.services.*;
 import io.coti.common.services.LiveView.LiveViewService;
 import io.coti.common.services.LiveView.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +15,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
-
 
 @ContextConfiguration(classes = {Transactions.class,
         Addresses.class,
@@ -42,23 +40,21 @@ import org.springframework.test.context.junit4.SpringRunner;
 @RunWith(SpringRunner.class)
 @TestPropertySource(locations = "../test.properties")
 @Slf4j
-public class InitializationServiceTest {
 
-    @Before
-    public void init() {
-
-//        org.apache.log4j.Logger logger4j = org.apache.log4j.Logger.getRootLogger();
-//        logger4j.setLevel(org.apache.log4j.Level.toLevel("ERROR"));
-    }
+public class MonitorServiceTest {
     @Autowired
     private InitializationService initializationService;
+
+    @Autowired
+    private MonitorService monitorService;
 
     @MockBean
     private WebSocketSender webSocketSender;
 
     @Test
-    public void testInit() {
+    public void lastState() {
 
+        monitorService.lastState();
     }
 
 }

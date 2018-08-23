@@ -1,11 +1,12 @@
 import io.coti.common.crypto.DspConsensusCrypto;
 import io.coti.common.crypto.TransactionTrustScoreCrypto;
-import io.coti.common.data.BaseTransactionData;
-import io.coti.common.data.Hash;
-import io.coti.common.data.SignatureData;
+import io.coti.common.data.*;
+import io.coti.common.http.BaseResponse;
+import io.coti.common.http.GetTransactionResponse;
 import io.coti.common.model.AddressesTransactionsHistory;
 import io.coti.common.model.Transactions;
 import io.coti.common.services.TransactionHelper;
+import io.coti.common.services.TransactionIndexService;
 import io.coti.common.services.interfaces.IBalanceService;
 import io.coti.common.services.interfaces.IClusterService;
 import org.junit.Assert;
@@ -14,11 +15,15 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
+import testUtils.TestUtils;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Date;
+
+import static org.mockito.Mockito.when;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(
@@ -28,11 +33,11 @@ import java.util.Date;
                 IClusterService.class,
                 Transactions.class,
                 DspConsensusCrypto.class,
-                TransactionTrustScoreCrypto.class
+                TransactionTrustScoreCrypto.class,
+                TransactionIndexService.class
         }
 )
 public class TransactionHelperTest {
-
     @Autowired
     private TransactionHelper transactionHelper;
 
@@ -48,6 +53,8 @@ public class TransactionHelperTest {
     private DspConsensusCrypto dspConsensusCrypto;
     @MockBean
     private TransactionTrustScoreCrypto transactionTrustScoreCrypto;
+    @MockBean
+    private TransactionIndexService transactionIndexService;
 
     @Test
     public void isLegalBalance_whenBalanceIsLegal() {
@@ -69,7 +76,7 @@ public class TransactionHelperTest {
                 new SignatureData("", ""),
                 new Date());
 
-        Assert.assertTrue(transactionHelper.isLegalBalance(Arrays.asList(baseTransactionData1 ,baseTransactionData2, baseTransactionData3)));
+        Assert.assertTrue(transactionHelper.isLegalBalance(Arrays.asList(baseTransactionData1, baseTransactionData2, baseTransactionData3)));
     }
 
     @Test
@@ -92,6 +99,81 @@ public class TransactionHelperTest {
                 new SignatureData("", ""),
                 new Date());
 
-        Assert.assertFalse(transactionHelper.isLegalBalance(Arrays.asList(baseTransactionData1 ,baseTransactionData2, baseTransactionData3)));
+        Assert.assertFalse(transactionHelper.isLegalBalance(Arrays.asList(baseTransactionData1, baseTransactionData2, baseTransactionData3)));
+    }
+
+    @Test
+    public void testStartHandleTransaction() {
+        TransactionData transactionData1 = TestUtils.createTransactionWithSpecificHash(new Hash("AA"));
+        TransactionData transactionData2 = TestUtils.createTransactionWithSpecificHash(new Hash("BB"));
+        boolean handlingNewTransaction1 = transactionHelper.startHandleTransaction(transactionData1);
+        boolean failedHandlingExistTransaction1 = transactionHelper.startHandleTransaction(transactionData1);
+        boolean handlingNewTransaction2 = transactionHelper.startHandleTransaction(transactionData2);
+        Assert.assertTrue(handlingNewTransaction1
+                && !failedHandlingExistTransaction1
+        && handlingNewTransaction2 );
+    }
+
+    @Test
+    public void testEndHandleTransaction() {
+        TransactionData transactionData1 = TestUtils.createTransactionWithSpecificHash(new Hash("CC"));
+        transactionHelper.startHandleTransaction(transactionData1);
+        transactionHelper.endHandleTransaction(transactionData1);
+        boolean successInsertToMapAfterDeleted =  transactionHelper.startHandleTransaction(transactionData1);
+        Assert.assertTrue(successInsertToMapAfterDeleted);
+    }
+
+    @Test
+    public void testGetTransactionDetails() {
+        TransactionData tx = createTransaction();
+        when(transactions.getByHash(tx.getHash())).thenReturn(tx);
+        ResponseEntity<BaseResponse> transactionDetails =
+                transactionHelper.getTransactionDetails(tx.getHash());
+        String s = transactionDetails.toString();
+        Assert.assertTrue(tx.getHash().toHexString()
+                .equals(((GetTransactionResponse) transactionDetails.getBody()).getTransactionData().getHash()));
+    }
+
+    @Test
+    public void isConfirmed_whenTccConfirmedAndDspConfirmed_returnsTrue() {
+        TransactionData tx = createTransaction();
+        tx.setTrustChainConsensus(true);
+        tx.setDspConsensusResult(new DspConsensusResult(new Hash("55")));
+        tx.getDspConsensusResult().setDspConsensus(true);
+        Assert.assertTrue(transactionHelper.isConfirmed(tx));
+    }
+
+    @Test
+    public void isConfirmed_whenTccConfirmedAndNotDspConfirmed_returnsFalse() {
+        TransactionData tx = createTransaction();
+        tx.setTrustChainConsensus(true);
+        tx.setDspConsensusResult(new DspConsensusResult(new Hash("66")));
+        tx.getDspConsensusResult().setDspConsensus(false);
+        Assert.assertFalse(transactionHelper.isConfirmed(tx));
+    }
+
+    @Test
+    public void isConfirmed_whenTccNotConfirmedAndDspConfirmed_returnsFalse() {
+        TransactionData tx = createTransaction();
+        tx.setTrustChainConsensus(false);
+        tx.setDspConsensusResult(new DspConsensusResult(new Hash("77")));
+        tx.getDspConsensusResult().setDspConsensus(true);
+        Assert.assertFalse(transactionHelper.isConfirmed(tx));
+    }
+
+    private TransactionData createTransaction() {
+        return TestUtils.createTransactionWithSpecificHash(new Hash("AE"));
+    }
+
+
+
+    @Test
+    public void testIncrementTotalTransactions() {
+        long totalTransactionsBeforeIncrement = transactionHelper.getTotalTransactions();
+        transactionHelper.incrementTotalTransactions();
+        transactionHelper.incrementTotalTransactions();
+        long totalTransactionsAfterIncrement = transactionHelper.getTotalTransactions();
+        Assert.assertTrue(totalTransactionsBeforeIncrement + 2 ==
+                totalTransactionsAfterIncrement);
     }
 }

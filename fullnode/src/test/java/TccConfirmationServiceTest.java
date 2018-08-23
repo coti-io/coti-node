@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = TccConfirmationService.class)
-@TestPropertySource(locations = "../fullnode1.properties")
+@TestPropertySource(locations = "../test.properties")
 @Slf4j
 public class TccConfirmationServiceTest {
 
