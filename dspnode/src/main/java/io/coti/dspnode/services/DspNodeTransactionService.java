@@ -97,10 +97,11 @@ public class DspNodeTransactionService extends TransactionService {
 
     public void continueHandlePropagatedTransaction(TransactionData transactionData) {
         super.handlePropagatedTransaction(transactionData);
-                    !validationService.validatePot(transactionData)) {
-        propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "Full Nodes");
-        transactionHelper.setTransactionStateToFinished(transactionData);
-        transactionsToValidate.add(transactionData);
+                if (validationService.validatePot(transactionData)) {
+                    propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "Full Nodes");
+                    transactionHelper.setTransactionStateToFinished(transactionData);
+                    transactionsToValidate.add(transactionData);
+                }
     }
 
     public void handleVoteConclusion(DspConsensusResult dspConsensusResult) {

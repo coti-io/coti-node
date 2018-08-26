@@ -209,8 +209,9 @@ public class FullNodeTransactionService extends TransactionService {
 
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
-                !validationService.validatePot(transactionData)) {
-        webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
+               if (validationService.validatePot(transactionData)) {
+                   webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
+               }
     }
 
     public void handleDspConsensusResult(DspConsensusResult dspConsensusResult) {

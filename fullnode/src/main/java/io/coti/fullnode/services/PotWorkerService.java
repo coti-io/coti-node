@@ -17,22 +17,25 @@ public class PotWorkerService extends PotService {
 
     @PostConstruct
     public void init() {
-        queuesPot.put(4,  PriorityExecutor.newFixedThreadPool(8));
-        queuesPot.put(3,  PriorityExecutor.newFixedThreadPool(3));
-        queuesPot.put(2,  PriorityExecutor.newFixedThreadPool(2));
-        queuesPot.put(1,  PriorityExecutor.newFixedThreadPool(2));
+        queuesPot.put(5,  PriorityExecutor.newFixedThreadPool(6,10));
+        queuesPot.put(4,  PriorityExecutor.newFixedThreadPool(1,2));
+        queuesPot.put(3,  PriorityExecutor.newFixedThreadPool(1,2));
+        queuesPot.put(2,  PriorityExecutor.newFixedThreadPool(1,1));
+        queuesPot.put(1,  PriorityExecutor.newFixedThreadPool(1,1));
 
     }
 
     public void potAction(TransactionData transactionData) throws InterruptedException {
 
-        int bucketChoice=0;
+        int bucketChoice;
         int trustScore = transactionData.getRoundedSenderTrustScore();
-        if (trustScore>=94)
+        if (trustScore>=90)
             bucketChoice =4;
-        else if (trustScore>=70)
-            bucketChoice =3;
+        else if (trustScore>=60)
+            bucketChoice =4;
         else if (trustScore>=40)
+            bucketChoice =3;
+        else if (trustScore>=20)
             bucketChoice =2;
         else
             bucketChoice =1;

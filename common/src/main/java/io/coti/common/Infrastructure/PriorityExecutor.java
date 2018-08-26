@@ -8,8 +8,8 @@ public class PriorityExecutor extends ThreadPoolExecutor {
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
     }
 
-    public static ExecutorService newFixedThreadPool(int nThreads) {
-        return new PriorityExecutor(nThreads, nThreads, 0L,
+    public static ExecutorService newFixedThreadPool(int nThreads, int maxPoolSize) {
+        return new PriorityExecutor(nThreads, maxPoolSize, 0L,
                 TimeUnit.MILLISECONDS, new PriorityBlockingQueue<>());
     }
 
