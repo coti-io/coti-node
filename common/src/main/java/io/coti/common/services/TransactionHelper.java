@@ -209,6 +209,9 @@ public class TransactionHelper implements ITransactionHelper {
         if (transactionData.getDspConsensusResult() == null) {
             addNoneIndexedTransaction(transactionData);
         }
+        else{
+            balanceService.setDspcToTrue(transactionData.getDspConsensusResult());
+        }
         updateAddressTransactionHistory(transactionData);
         clusterService.attachToCluster(transactionData);
     }

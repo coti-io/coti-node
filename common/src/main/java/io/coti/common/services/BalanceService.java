@@ -36,8 +36,6 @@ public class BalanceService implements IBalanceService {
     @Autowired
     private LiveViewService liveViewService;
     @Autowired
-    private TransactionIndexService transactionIndexService;
-    @Autowired
     private Transactions transactions;
     @Autowired
     private ITransactionHelper transactionHelper;
@@ -70,8 +68,9 @@ public class BalanceService implements IBalanceService {
                     tccConfirmed.incrementAndGet();
                 } else if (confirmationData instanceof DspConsensusResult) {
                     transactionData.setDspConsensusResult((DspConsensusResult) confirmationData);
-                    if (transactionHelper.isDspConfirmed(transactionData))
+                    if (transactionHelper.isDspConfirmed(transactionData)) {
                         dspConfirmed.incrementAndGet();
+                    }
                 }
                 if (transactionHelper.isConfirmed(transactionData))
                     processConfirmedTransaction(transactionData);

@@ -35,6 +35,8 @@ public class InitializationService {
     private LiveViewService liveViewService;
     @Autowired
     private TransactionHelper transactionHelper;
+    @Autowired
+    private TransactionService transactionService;
 
     @PostConstruct
     public void init() {
@@ -47,18 +49,8 @@ public class InitializationService {
         if (recoveryServerAddress != null) {
             List<TransactionData> missingTransactions = requestMissingTransactions(maxTransactionIndex.get() + 1);
             if (missingTransactions != null) {
-                missingTransactions.forEach(transactionData -> {
-                    if (transactions.getByHash(transactionData.getHash()) != null) {
-                        log.info("Received a transaction that already exists");
-                        return;
-                    } else {
-                        transactions.put(transactionData);
-                        if (transactionData.getDspConsensusResult() != null) {
-                            transactionIndexService.insertNewTransactionIndex(transactionData);
-                        }
-                        handleExistingTransaction(maxTransactionIndex, transactionData);
-                    }
-                });
+                missingTransactions.forEach(transactionData ->
+                        transactionService.handlePropagatedTransaction(transactionData));
             }
         }
 
