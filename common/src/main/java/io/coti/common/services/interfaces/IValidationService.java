@@ -16,5 +16,5 @@ public interface IValidationService {
 
     boolean fullValidation(TransactionData transactionData);
 
-    boolean validatePow(TransactionData transactionData);
+    boolean validatePot(TransactionData transactionData);
 }

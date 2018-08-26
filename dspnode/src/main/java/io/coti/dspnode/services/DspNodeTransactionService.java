@@ -53,7 +53,7 @@ public class DspNodeTransactionService extends TransactionService {
         }
         if (!transactionHelper.validateTransaction(transactionData) ||
                 !transactionCrypto.verifySignature(transactionData) ||
-                !validationService.validatePow(transactionData) ||
+                !validationService.validatePot(transactionData) ||
                 !transactionHelper.checkBalancesAndAddToPreBalance(transactionData)) {
             log.info("Invalid Transaction Received!");
             return "Invalid Transaction Received: " + transactionData.getHash();
@@ -97,6 +97,7 @@ public class DspNodeTransactionService extends TransactionService {
 
     public void continueHandlePropagatedTransaction(TransactionData transactionData) {
         super.handlePropagatedTransaction(transactionData);
+                    !validationService.validatePot(transactionData)) {
         propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "Full Nodes");
         transactionHelper.setTransactionStateToFinished(transactionData);
         transactionsToValidate.add(transactionData);

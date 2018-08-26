@@ -34,7 +34,7 @@ public abstract class TransactionService {
         }
         if (!transactionHelper.validateTransaction(transactionData) ||
                 !transactionCrypto.verifySignature(transactionData) ||
-                !validationService.validatePow(transactionData)) {
+                !validationService.validatePot(transactionData)) {
             log.error("Data Integrity validation failed: {}", transactionData.getHash().toHexString());
             return;
         }
