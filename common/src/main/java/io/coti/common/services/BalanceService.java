@@ -174,12 +174,13 @@ public class BalanceService implements IBalanceService {
     @Override
     public ResponseEntity<GetBalancesResponse> getBalances(GetBalancesRequest getBalancesRequest) {
         GetBalancesResponse getBalancesResponse = new GetBalancesResponse();
+        BigDecimal balance;
+        BigDecimal preBalance;
         for (Hash hash : getBalancesRequest.getAddresses()) {
-            if (balanceMap.containsKey(hash)) {
-                getBalancesResponse.addAddressBalanceToResponse(hash, balanceMap.get(hash), preBalanceMap.get(hash));
-            } else {
-                getBalancesResponse.addAddressBalanceToResponse(hash, new BigDecimal(0), new BigDecimal(0));
-            }
+            balance = balanceMap.containsKey(hash) ? balanceMap.get(hash) : new BigDecimal(0);
+            preBalance = preBalanceMap.containsKey(hash) ? preBalanceMap.get(hash) : new BigDecimal(0);
+            getBalancesResponse.addAddressBalanceToResponse(hash, balance, preBalance);
+
         }
         return ResponseEntity.status(HttpStatus.OK).body(getBalancesResponse);
     }
