@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="60 seconds">
+
+    <property name="LOGS_PATH" value="./logs/zerospend" />
+    <property name="NODE_NAME" value="zerospend" />
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <Pattern>
+                %d{dd/MM/yyyy HH:mm:ss.SSS} [%thread][%-5level][%logger{0}] %msg%n
+            </Pattern>
+        </encoder>
+    </appender>
+
+    <appender name="ERROR_LOG_FILE"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <file>${LOGS_PATH}/${NODE_NAME}_error.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <charset>UTF-8</charset>
+            <Pattern>
+                %d{dd/MM/yyyy HH:mm:ss.SSS} [%thread][%-5level][%logger{0}] %msg%n
+            </Pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOGS_PATH}/archived/${NODE_NAME}_error.%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+            <maxFileSize>200MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="DEBUG_LOG_FILE"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOGS_PATH}/${NODE_NAME}_debug.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <charset>UTF-8</charset>
+            <Pattern>
+                %d{dd/MM/yyyy HH:mm:ss.SSS} [%thread][%-5level][%logger{0}] %msg%n
+            </Pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOGS_PATH}/archived/${NODE_NAME}_debug.%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="INFO_LOG_FILE"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>DEBUG</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+        <file>${LOGS_PATH}/${NODE_NAME}.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <charset>UTF-8</charset>
+            <Pattern>
+                %d{dd/MM/yyyy HH:mm:ss.SSS} [%thread][%-5level][%logger{0}] %msg%n
+            </Pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOGS_PATH}/archived/${NODE_NAME}.%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="DUMP_LOG_FILE"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOGS_PATH}/${NODE_NAME}_dump.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <charset>UTF-8</charset>
+            <Pattern>
+                %d{dd/MM/yyyy HH:mm:ss.SSS} [%thread][%-5level][%logger{0}] %msg%n
+            </Pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOGS_PATH}/archived/${NODE_NAME}_dump.%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>
+            <maxHistory>10</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="POFT_LOG_FILE"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOGS_PATH}/${NODE_NAME}_poft.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <charset>UTF-8</charset>
+            <Pattern>
+                %d{dd/MM/yyyy HH:mm:ss.SSS} [%thread][%-5level][%logger{0}] %msg%n
+            </Pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOGS_PATH}/archived/${NODE_NAME}_poft.%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>
+            <maxHistory>10</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <!-- Loggers -->
+    <logger name="io.coti" additivity="true">
+        <level value="DEBUG" />
+        <!--<appender-ref ref="DEBUG_LOG_FILE" />-->
+        <appender-ref ref="ERROR_LOG_FILE" />
+        <!-- <appender-ref ref="STDOUT" />-->
+    </logger>
+
+    <logger name="io.coti.common.aspect" additivity="true">
+        <level value="DEBUG" />
+        <!--<appender-ref ref="DEBUG_LOG_FILE" />-->
+        <appender-ref ref="POFT_LOG_FILE" />
+       <!-- <appender-ref ref="STDOUT" />-->
+    </logger>
+
+    <!-- Root Logger -->
+    <root level="DEBUG" >
+        <appender-ref ref="DUMP_LOG_FILE" />
+       <!-- <appender-ref ref="ERROR_LOG_FILE" />-->
+    </root>
+
+    <root level="INFO" >
+        <appender-ref ref="INFO_LOG_FILE" />
+    </root>
+
+</configuration>
