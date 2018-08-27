@@ -6,6 +6,7 @@ import io.coti.common.data.*;
 import io.coti.common.http.BaseResponse;
 import io.coti.common.http.GetTransactionResponse;
 import io.coti.common.model.AddressesTransactionsHistory;
+import io.coti.common.model.TransactionIndexes;
 import io.coti.common.model.Transactions;
 import io.coti.common.services.TransactionHelper;
 import io.coti.common.services.TransactionIndexService;
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import testUtils.TestUtils;
 
@@ -26,7 +28,7 @@ import java.util.Arrays;
 import java.util.Date;
 
 import static org.mockito.Mockito.when;
-
+@TestPropertySource(locations = "../test.properties")
 @RunWith(SpringRunner.class)
 @SpringBootTest(
         classes = {TransactionHelper.class,
@@ -36,7 +38,7 @@ import static org.mockito.Mockito.when;
                 Transactions.class,
                 DspConsensusCrypto.class,
                 TransactionTrustScoreCrypto.class,
-                TransactionIndexService.class
+                TransactionIndexService.class,
         }
 )
 public class TransactionHelperTest {
@@ -53,6 +55,8 @@ public class TransactionHelperTest {
     private Transactions transactions;
     @MockBean
     private TransactionIndexService transactionIndexService;
+    @MockBean
+    private TransactionIndexes transactionIndexes;
 
     @Test
     public void isLegalBalance_whenBalanceIsLegal() {
