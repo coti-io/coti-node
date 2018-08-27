@@ -12,7 +12,7 @@ import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 
 @Slf4j
 @Service
-public class PotService implements IPotService {
+public abstract class PotService implements IPotService {
     @Value("${network.difficulty}")
     protected String difficulty;
     protected static byte[] targetDifficulty;

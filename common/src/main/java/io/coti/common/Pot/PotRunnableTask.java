@@ -8,7 +8,7 @@ public class PotRunnableTask implements Comparable<PotRunnableTask>,Runnable{
     private byte[] targetDifficulty;
     private TransactionData transactionData;
 
-    public int getPrioritry(){
+    public int getPriority(){
         return this.transactionData.getRoundedSenderTrustScore();
     }
 
@@ -37,6 +37,6 @@ public class PotRunnableTask implements Comparable<PotRunnableTask>,Runnable{
 
     @Override
     public int compareTo(PotRunnableTask other) {
-        return Double.compare(this.getPrioritry(), other.getPrioritry());
+        return Double.compare(this.getPriority(), other.getPriority());
     }
 }

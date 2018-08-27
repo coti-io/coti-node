@@ -8,7 +8,7 @@ public class ComparableFutureTask extends FutureTask<Void> implements Comparable
 
     public ComparableFutureTask(PotRunnableTask runnable) {
         super(runnable,null);
-        this.priority = runnable.getPrioritry();
+        this.priority = runnable.getPriority();
     }
 
     @Override

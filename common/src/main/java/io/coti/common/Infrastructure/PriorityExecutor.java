@@ -1,4 +1,5 @@
 package io.coti.common.Infrastructure;
+
 import java.util.concurrent.*;
 
 public class PriorityExecutor extends ThreadPoolExecutor {
