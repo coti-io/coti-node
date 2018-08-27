@@ -1,4 +1,4 @@
-import coti.crypto.IAlgorithm;
+import coti.pot.IAlgorithm;
 
 class TrustScoreDifficulty {
     private int _trustScore;

@@ -1,5 +1,5 @@
 package io.coti.common.services;
-import coti.crypto.ProofOfTransaction;
+import coti.pot.ProofOfTransaction;
 import io.coti.common.data.TransactionData;
 import io.coti.common.services.interfaces.IPotService;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +12,7 @@ import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 
 @Slf4j
 @Service
-public abstract class PotService implements IPotService {
+public class PotService implements IPotService {
     @Value("${network.difficulty}")
     protected String difficulty;
     protected static byte[] targetDifficulty;

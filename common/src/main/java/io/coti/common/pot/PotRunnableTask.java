@@ -1,7 +1,7 @@
-package io.coti.common.Pot;
+package io.coti.common.pot;
 
 
-import coti.crypto.ProofOfTransaction;
+import coti.pot.ProofOfTransaction;
 import io.coti.common.data.TransactionData;
 
 public class PotRunnableTask implements Comparable<PotRunnableTask>,Runnable{

@@ -1,6 +1,6 @@
 
 
-import coti.crypto.ProofOfTransaction;
+import coti.pot.ProofOfTransaction;
 import io.coti.common.crypto.BaseTransactionWithPrivateKey;
 import io.coti.common.crypto.TransactionCrypto;
 import io.coti.common.crypto.TransactionCyptoCreator;

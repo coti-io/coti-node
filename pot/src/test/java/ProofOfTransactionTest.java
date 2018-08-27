@@ -1,4 +1,4 @@
-import coti.crypto.ProofOfTransaction;
+import coti.pot.ProofOfTransaction;
 
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 

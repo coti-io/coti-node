@@ -1,4 +1,4 @@
-package coti.crypto;
+package coti.pot;
 
 public interface IAlgorithm {
     enum AlgorithmTypes {

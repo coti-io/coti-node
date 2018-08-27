@@ -1,4 +1,4 @@
-package coti.crypto;
+package coti.pot;
 import java.util.*;
 
 class AlgorithmOrder implements IAlgorithmOrder {

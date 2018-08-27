@@ -1,4 +1,4 @@
-package io.coti.common.Infrastructure;
+package io.coti.common.pot;
 
 import java.util.concurrent.*;
 

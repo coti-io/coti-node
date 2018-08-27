@@ -1,5 +1,5 @@
 
-import coti.crypto.ProofOfTransaction;
+import coti.pot.ProofOfTransaction;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;

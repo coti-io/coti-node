@@ -1,4 +1,4 @@
-package coti.crypto;
+package coti.pot;
 
 import org.apache.commons.lang3.ArrayUtils;
 import java.math.BigInteger;

@@ -1,7 +1,7 @@
 
 
-import coti.crypto.IAlgorithm.AlgorithmTypes;
-import coti.crypto.ProofOfTransaction;
+import coti.pot.IAlgorithm.AlgorithmTypes;
+import coti.pot.ProofOfTransaction;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;

@@ -1,5 +1,5 @@
-import coti.crypto.Algorithm;
-import coti.crypto.IAlgorithm;
+import coti.pot.Algorithm;
+import coti.pot.IAlgorithm;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

@@ -9,13 +9,16 @@ import io.coti.common.model.Transactions;
 import io.coti.common.services.interfaces.IPotService;
 import io.coti.common.services.interfaces.IValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.web3j.crypto.Sign;
 
 import java.math.BigInteger;
 import java.security.SignatureException;
 
-@Component
+
+@Service
 public class ValidationService implements IValidationService {
     @Autowired
     private Transactions transactions;
@@ -39,10 +42,6 @@ public class ValidationService implements IValidationService {
             }
         }
         return true;
-    }
-
-    private BigInteger getAddressFromMessageAndSignature(String signedMessage, Sign.SignatureData signatureData) throws SignatureException {
-        return Sign.signedMessageToKey(signedMessage.getBytes(), signatureData);
     }
 
     @Override

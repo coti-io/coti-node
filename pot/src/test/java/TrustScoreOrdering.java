@@ -1,8 +1,7 @@
-import coti.crypto.IAlgorithm;
-import coti.crypto.ProofOfTransaction;
+import coti.pot.IAlgorithm;
+import coti.pot.ProofOfTransaction;
 import org.junit.jupiter.api.Test;
 
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 

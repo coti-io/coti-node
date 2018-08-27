@@ -1,4 +1,4 @@
-import coti.crypto.IAlgorithm;
+import coti.pot.IAlgorithm;
 import org.junit.jupiter.api.Test;
 
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;

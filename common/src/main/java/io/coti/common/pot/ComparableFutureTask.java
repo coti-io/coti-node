@@ -1,5 +1,4 @@
-package io.coti.common.Infrastructure;
-import io.coti.common.Pot.PotRunnableTask;
+package io.coti.common.pot;
 import java.util.concurrent.FutureTask;
 
 public class ComparableFutureTask extends FutureTask<Void> implements Comparable<ComparableFutureTask> {
