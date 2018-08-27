@@ -39,6 +39,8 @@ public class BalanceService implements IBalanceService {
     private Transactions transactions;
     @Autowired
     private ITransactionHelper transactionHelper;
+    @Autowired
+    private TransactionIndexService transactionIndexService;
 
     private Map<Hash, BigDecimal> balanceMap;
     private Map<Hash, BigDecimal> preBalanceMap;
@@ -68,12 +70,14 @@ public class BalanceService implements IBalanceService {
                     tccConfirmed.incrementAndGet();
                 } else if (confirmationData instanceof DspConsensusResult) {
                     transactionData.setDspConsensusResult((DspConsensusResult) confirmationData);
+                    transactionIndexService.insertNewTransactionIndex(transactionData);
                     if (transactionHelper.isDspConfirmed(transactionData)) {
                         dspConfirmed.incrementAndGet();
                     }
                 }
-                if (transactionHelper.isConfirmed(transactionData))
+                if (transactionHelper.isConfirmed(transactionData)) {
                     processConfirmedTransaction(transactionData);
+                }
                 transactions.put(transactionData);
             } catch (InterruptedException e) {
                 e.printStackTrace();

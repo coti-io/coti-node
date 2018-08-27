@@ -150,7 +150,7 @@ public class DspVoteService {
     private void publishDecision(Hash transactionHash, Map<Hash, DspVote> mapHashToDspVote, boolean isLegalTransaction) {
         TransactionData transactionData = transactions.getByHash(transactionHash);
         DspConsensusResult dspConsensusResult = new DspConsensusResult(transactionHash);
-        dspConsensusResult.setIndex(transactionIndexService.getLastTransactionIndex().getIndex() + 1);
+        dspConsensusResult.setIndex(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
         dspConsensusResult.setDspConsensus(isLegalTransaction);
         dspConsensusResult.setIndexingTime(new Date());
         List<DspVote> dspVotes = new LinkedList<>();

@@ -28,7 +28,7 @@ public class MonitorService {
                 balanceService.getTccConfirmed(),
                 balanceService.getDspConfirmed(),
                 balanceService.getTotalConfirmed(),
-                transactionIndexService.getLastTransactionIndex().getIndex(),
+                transactionIndexService.getLastTransactionIndexData().getIndex(),
                 clusterService.getTotalSources());
     }
 }

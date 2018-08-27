@@ -239,7 +239,6 @@ public class TransactionHelper implements ITransactionHelper {
             log.error("DspConsensus result already exists for transaction: {}", dspConsensusResult.getHash());
             return false;
         }
-        transactionData.setDspConsensusResult(dspConsensusResult);
         if (dspConsensusResult.isDspConsensus()) {
             log.debug("Valid vote conclusion received for transaction: {}", dspConsensusResult.getHash());
         } else {
@@ -248,9 +247,6 @@ public class TransactionHelper implements ITransactionHelper {
 
         log.debug("DspConsensus result for transaction: Hash= {}, DspVoteResult= {}, Index= {}", dspConsensusResult.getHash(), dspConsensusResult.isDspConsensus(), dspConsensusResult.getIndex());
 
-        transactionIndexService.insertNewTransactionIndex(transactionData);
-
-        transactions.put(transactionData);
         return true;
     }
 
@@ -278,7 +274,7 @@ public class TransactionHelper implements ITransactionHelper {
     public GetTransactionBatchResponse getTransactionBatch(long startingIndex) {
         List<TransactionData> transactionsToSend = new LinkedList<>();
 
-        for (long i = startingIndex; i <= transactionIndexService.getLastTransactionIndex().getIndex(); i++) {
+        for (long i = startingIndex; i <= transactionIndexService.getLastTransactionIndexData().getIndex(); i++) {
             transactionsToSend.add(transactions.getByHash(transactionIndexes.getByHash(new Hash(i)).getTransactionHash()));
         }
         transactionsToSend.addAll(noneIndexedTransactionHashes.stream().map(hash -> transactions.getByHash(hash)).collect(Collectors.toList()));

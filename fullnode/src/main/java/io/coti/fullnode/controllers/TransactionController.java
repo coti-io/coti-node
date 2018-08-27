@@ -46,6 +46,6 @@ public class TransactionController {
 
     @RequestMapping(value = "/index", method = GET)
     public ResponseEntity getCurrentIndex() {
-        return ResponseEntity.ok(transactionIndexService.getLastTransactionIndex());
+        return ResponseEntity.ok(transactionIndexService.getLastTransactionIndexData());
     }
 }
