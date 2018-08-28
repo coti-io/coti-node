@@ -1,7 +1,7 @@
 package io.coti.common.services;
 
-import io.coti.common.Channel;
-import io.coti.common.NodeType;
+import io.coti.common.communication.Channel;
+import io.coti.common.data.NodeType;
 import io.coti.common.communication.interfaces.IPropagationPublisher;
 import io.coti.common.communication.interfaces.IPropagationSubscriber;
 import io.coti.common.communication.interfaces.IReceiver;
@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 @Slf4j
 @Service

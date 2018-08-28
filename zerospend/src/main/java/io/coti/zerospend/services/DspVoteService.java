@@ -1,6 +1,6 @@
 package io.coti.zerospend.services;
 
-import io.coti.common.NodeType;
+import io.coti.common.data.NodeType;
 import io.coti.common.communication.interfaces.IPropagationPublisher;
 import io.coti.common.crypto.DspConsensusCrypto;
 import io.coti.common.crypto.DspVoteCrypto;
@@ -156,7 +156,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
         mapHashToDspVote.forEach((hash, dspVote) -> dspVotes.add(dspVote));
         dspConsensusResult.setDspVotes(dspVotes);
         dspConsensusCrypto.signMessage(dspConsensusResult);
-        propagationPublisher.propagate(dspConsensusResult, Arrays.asList(NodeType.DspNode));
+        propagationPublisher.propagate(dspConsensusResult, Arrays.asList(NodeType.DspNode,NodeType.TrustScoreNode));
         balanceService.setDspcToTrue(dspConsensusResult);
         transactionData.setDspConsensusResult(dspConsensusResult);
         transactionIndexService.insertNewTransactionIndex(transactionData);

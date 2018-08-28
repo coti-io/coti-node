@@ -1,6 +1,6 @@
 package io.coti.common.communication.interfaces;
 
-import io.coti.common.NodeType;
+import io.coti.common.data.NodeType;
 import io.coti.common.data.interfaces.IEntity;
 
 import java.util.List;

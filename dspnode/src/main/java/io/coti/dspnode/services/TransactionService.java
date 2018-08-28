@@ -1,6 +1,6 @@
 package io.coti.dspnode.services;
 
-import io.coti.common.NodeType;
+import io.coti.common.data.NodeType;
 import io.coti.common.communication.interfaces.IPropagationPublisher;
 import io.coti.common.communication.interfaces.ISender;
 import io.coti.common.crypto.DspVoteCrypto;
@@ -8,7 +8,6 @@ import io.coti.common.crypto.TransactionCrypto;
 import io.coti.common.data.DspVote;
 import io.coti.common.data.TransactionData;
 import io.coti.common.services.BaseNodeTransactionService;
-import io.coti.common.services.interfaces.IBalanceService;
 import io.coti.common.services.interfaces.ITransactionHelper;
 import io.coti.common.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
@@ -61,7 +60,7 @@ public class TransactionService extends BaseNodeTransactionService {
         transactionHelper.setTransactionStateToSaved(transactionData);
         propagationPublisher.propagate(transactionData, Arrays.asList(
                 NodeType.FullNode,
-                NodeType.TrustScroeNode,
+                NodeType.TrustScoreNode,
                 NodeType.DspNode,
                 NodeType.ZeroSpendServer));
         transactionHelper.setTransactionStateToFinished(transactionData);
@@ -96,13 +95,7 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     public void continueHandlePropagatedTransaction(TransactionData transactionData) {
-        super.handlePropagatedTransaction(transactionData);
-        propagationPublisher.propagate(transactionData, Arrays.asList(
-                NodeType.FullNode,
-                NodeType.TrustScroeNode,
-                NodeType.DspNode,
-                NodeType.ZeroSpendServer));
-        transactionHelper.setTransactionStateToFinished(transactionData);
+        propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
         transactionsToValidate.add(transactionData);
     }
 }

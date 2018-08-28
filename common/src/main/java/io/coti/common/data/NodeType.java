@@ -1,8 +1,8 @@
-package io.coti.common;
+package io.coti.common.data;
 
 public enum NodeType {
     FullNode,
     DspNode,
-    TrustScroeNode,
+    TrustScoreNode,
     ZeroSpendServer
 }

@@ -1,6 +1,6 @@
 package io.coti.zerospend.services;
 
-import io.coti.common.NodeType;
+import io.coti.common.data.NodeType;
 import io.coti.common.data.DspVote;
 import io.coti.common.services.BaseNodeInitializationService;
 import io.coti.common.services.CommunicationService;
@@ -21,8 +21,6 @@ public class InitializationService {
     private List<String> propagationServerAddresses;
     @Value("${propagation.port}")
     private String propagationPort;
-    @Value("#{'${receiving.server.addresses}'.split(',')}")
-    private List<String> receivingServerAddresses;
 
     @Autowired
     private CommunicationService communicationService;
@@ -40,7 +38,6 @@ public class InitializationService {
         communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
         communicationService.initSubscriber(propagationServerAddresses, NodeType.ZeroSpendServer);
         communicationService.initPropagator(propagationPort);
-        communicationService.initSender(receivingServerAddresses);
 
         baseNodeInitializationService.init();
     }

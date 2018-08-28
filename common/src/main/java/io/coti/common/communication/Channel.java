@@ -1,4 +1,6 @@
-package io.coti.common;
+package io.coti.common.communication;
+
+import io.coti.common.data.NodeType;
 
 public class Channel {
     public static String getChannelString(Class<?> classType, NodeType nodeType) {

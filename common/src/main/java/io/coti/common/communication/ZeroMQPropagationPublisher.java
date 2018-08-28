@@ -1,17 +1,14 @@
 package io.coti.common.communication;
 
-import io.coti.common.Channel;
-import io.coti.common.NodeType;
+import io.coti.common.data.NodeType;
 import io.coti.common.communication.interfaces.IPropagationPublisher;
 import io.coti.common.communication.interfaces.ISerializer;
 import io.coti.common.data.interfaces.IEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.zeromq.ZMQ;
 
-import javax.annotation.PostConstruct;
 import java.util.List;
 
 @Slf4j

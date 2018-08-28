@@ -1,19 +1,16 @@
 package io.coti.common.services;
 
-import io.coti.common.NodeType;
+import io.coti.common.data.NodeType;
 import io.coti.common.communication.interfaces.IPropagationPublisher;
-import io.coti.common.communication.interfaces.ISender;
 import io.coti.common.data.AddressData;
 import io.coti.common.data.Hash;
 import io.coti.common.model.Addresses;
 import io.coti.common.services.LiveView.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Slf4j
 @Service
@@ -47,11 +44,11 @@ public class BaseNodeAddressService {
     public void handlePropagatedAddress(AddressData addressData) {
         if (!addressExists(addressData.getHash())) {
             addNewAddress(addressData.getHash());
-            propagationPublisher.propagate(addressData, Arrays.asList(
-                    NodeType.FullNode,
-                    NodeType.TrustScroeNode,
-                    NodeType.DspNode,
-                    NodeType.ZeroSpendServer));
+            continueHandlePropagatedAddress(addressData);
         }
+    }
+
+    protected void continueHandlePropagatedAddress(AddressData addressData) {
+
     }
 }

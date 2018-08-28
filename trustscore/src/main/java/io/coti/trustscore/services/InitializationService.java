@@ -1,4 +1,4 @@
-package io.coti.fullnode.services;
+package io.coti.trustscore.services;
 
 import io.coti.common.data.NodeType;
 import io.coti.common.services.BaseNodeInitializationService;
@@ -12,8 +12,6 @@ import java.util.List;
 
 @Service
 public class InitializationService {
-    @Value("#{'${receiving.server.addresses}'.split(',')}")
-    private List<String> receivingServerAddresses;
     @Value("#{'${propagation.server.addresses}'.split(',')}")
     private List<String> propagationServerAddresses;
 
@@ -25,8 +23,7 @@ public class InitializationService {
 
     @PostConstruct
     public void init() {
-        communicationService.initSender(receivingServerAddresses);
-        communicationService.initSubscriber(propagationServerAddresses, NodeType.FullNode);
+        communicationService.initSubscriber(propagationServerAddresses, NodeType.TrustScoreNode);
 
         baseNodeInitializationService.init();
     }
