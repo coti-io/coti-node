@@ -1,13 +1,13 @@
 package io.coti.dspnode.services;
 
+import io.coti.common.NodeType;
 import io.coti.common.communication.interfaces.IPropagationPublisher;
 import io.coti.common.communication.interfaces.ISender;
 import io.coti.common.crypto.DspVoteCrypto;
 import io.coti.common.crypto.TransactionCrypto;
-import io.coti.common.data.DspConsensusResult;
 import io.coti.common.data.DspVote;
 import io.coti.common.data.TransactionData;
-import io.coti.common.services.TransactionService;
+import io.coti.common.services.BaseNodeTransactionService;
 import io.coti.common.services.interfaces.IBalanceService;
 import io.coti.common.services.interfaces.ITransactionHelper;
 import io.coti.common.services.interfaces.IValidationService;
@@ -18,13 +18,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.util.Arrays;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Service
-public class DspNodeTransactionService extends TransactionService {
+public class TransactionService extends BaseNodeTransactionService {
     Queue<TransactionData> transactionsToValidate;
     AtomicBoolean isValidatorRunning;
     @Value("#{'${zerospend.receiving.address}'.split(',')}")
@@ -38,8 +39,6 @@ public class DspNodeTransactionService extends TransactionService {
     private IPropagationPublisher propagationPublisher;
     @Autowired
     private IValidationService validationService;
-    @Autowired
-    private IBalanceService balanceService;
     @Autowired
     private ISender sender;
     @Autowired
@@ -60,10 +59,11 @@ public class DspNodeTransactionService extends TransactionService {
         }
         transactionHelper.attachTransactionToCluster(transactionData);
         transactionHelper.setTransactionStateToSaved(transactionData);
-        propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "ZeroSpend Server");
-        propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "Full Nodes");
-        propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "DSP Nodes");
-        propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "TrustScore Nodes");
+        propagationPublisher.propagate(transactionData, Arrays.asList(
+                NodeType.FullNode,
+                NodeType.TrustScroeNode,
+                NodeType.DspNode,
+                NodeType.ZeroSpendServer));
         transactionHelper.setTransactionStateToFinished(transactionData);
         transactionsToValidate.add(transactionData);
 
@@ -97,18 +97,12 @@ public class DspNodeTransactionService extends TransactionService {
 
     public void continueHandlePropagatedTransaction(TransactionData transactionData) {
         super.handlePropagatedTransaction(transactionData);
-        propagationPublisher.propagate(transactionData, TransactionData.class.getName() + "Full Nodes");
+        propagationPublisher.propagate(transactionData, Arrays.asList(
+                NodeType.FullNode,
+                NodeType.TrustScroeNode,
+                NodeType.DspNode,
+                NodeType.ZeroSpendServer));
         transactionHelper.setTransactionStateToFinished(transactionData);
         transactionsToValidate.add(transactionData);
-    }
-
-    public void handleVoteConclusion(DspConsensusResult dspConsensusResult) {
-        log.debug("Received DspConsensus result for transaction: {}", dspConsensusResult.getHash());
-        if (!transactionHelper.handleVoteConclusionResult(dspConsensusResult)) {
-            log.error("Illegal Dsp consensus result for transaction: {}", dspConsensusResult.getHash());
-        } else {
-            balanceService.setDspcToTrue(dspConsensusResult);
-            propagationPublisher.propagate(dspConsensusResult, DspConsensusResult.class.getName() + "Full Nodes");
-        }
     }
 }

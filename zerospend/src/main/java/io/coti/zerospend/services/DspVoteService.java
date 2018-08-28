@@ -1,11 +1,13 @@
 package io.coti.zerospend.services;
 
+import io.coti.common.NodeType;
 import io.coti.common.communication.interfaces.IPropagationPublisher;
 import io.coti.common.crypto.DspConsensusCrypto;
 import io.coti.common.crypto.DspVoteCrypto;
 import io.coti.common.data.*;
 import io.coti.common.model.TransactionVotes;
 import io.coti.common.model.Transactions;
+import io.coti.common.services.BaseNodeDspVoteService;
 import io.coti.common.services.TransactionIndexService;
 import io.coti.common.services.interfaces.IBalanceService;
 import lombok.extern.slf4j.Slf4j;
@@ -17,16 +19,13 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 @Slf4j
 @Service
-public class DspVoteService {
+public class DspVoteService extends BaseNodeDspVoteService {
     @Value("#{'${dsp.server.addresses}'.split(',')}")
     private List<String> dspServerAddresses;
 
@@ -157,8 +156,7 @@ public class DspVoteService {
         mapHashToDspVote.forEach((hash, dspVote) -> dspVotes.add(dspVote));
         dspConsensusResult.setDspVotes(dspVotes);
         dspConsensusCrypto.signMessage(dspConsensusResult);
-        propagationPublisher.propagate(dspConsensusResult, DspConsensusResult.class.getName() + "Dsp Result");
-        propagationPublisher.propagate(dspConsensusResult, DspConsensusResult.class.getName() + "TrustScore Nodes");
+        propagationPublisher.propagate(dspConsensusResult, Arrays.asList(NodeType.DspNode));
         balanceService.setDspcToTrue(dspConsensusResult);
         transactionData.setDspConsensusResult(dspConsensusResult);
         transactionIndexService.insertNewTransactionIndex(transactionData);
@@ -193,5 +191,9 @@ public class DspVoteService {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void continueHandleVoteConclusion(DspConsensusResult dspConsensusResult) {
     }
 }

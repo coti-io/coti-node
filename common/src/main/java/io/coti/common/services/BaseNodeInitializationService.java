@@ -3,24 +3,24 @@ package io.coti.common.services;
 import io.coti.common.data.TransactionData;
 import io.coti.common.http.GetTransactionBatchRequest;
 import io.coti.common.http.GetTransactionBatchResponse;
-import io.coti.common.model.TransactionIndexes;
 import io.coti.common.model.Transactions;
 import io.coti.common.services.LiveView.LiveViewService;
 import lombok.extern.slf4j.Slf4j;
+import org.omg.IOP.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 @Service
-public class InitializationService {
+public class BaseNodeInitializationService {
     @Value("${recovery.server.address}")
     private String recoveryServerAddress;
+
     @Autowired
     private Transactions transactions;
     @Autowired
@@ -36,10 +36,12 @@ public class InitializationService {
     @Autowired
     private TransactionHelper transactionHelper;
     @Autowired
-    private TransactionService transactionService;
+    private BaseNodeTransactionService transactionService;
+    @Autowired
+    private BaseNodeAddressService baseNodeAddressService;
 
-    @PostConstruct
     public void init() {
+        baseNodeAddressService.init();
         AtomicLong maxTransactionIndex = new AtomicLong(-1);
         transactions.forEach(transactionData -> handleExistingTransaction(maxTransactionIndex, transactionData));
         transactionIndexService.init(maxTransactionIndex);
@@ -87,7 +89,5 @@ public class InitializationService {
             log.error(e.getMessage());
             return null;
         }
-
     }
-
 }

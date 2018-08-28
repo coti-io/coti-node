@@ -1,8 +1,8 @@
 package io.coti.common.communication.interfaces;
 
 import java.util.HashMap;
-import java.util.function.Function;
+import java.util.function.Consumer;
 
 public interface IReceiver {
-    void init(HashMap<String, Function<Object, String>> classNameToHandlerMapping);
+    void init(String receivingPort, HashMap<String, Consumer<Object>> classNameToHandlerMapping);
 }

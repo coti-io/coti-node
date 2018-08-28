@@ -12,7 +12,7 @@ import io.coti.common.http.data.TransactionStatus;
 import io.coti.common.model.AddressesTransactionsHistory;
 import io.coti.common.model.DbItem;
 import io.coti.common.model.Transactions;
-import io.coti.common.services.TransactionService;
+import io.coti.common.services.BaseNodeTransactionService;
 import io.coti.common.services.LiveView.WebSocketSender;
 import io.coti.common.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ import static io.coti.common.http.HttpStringConstants.*;
 
 @Slf4j
 @Service
-public class FullNodeTransactionService extends TransactionService {
+public class TransactionService extends BaseNodeTransactionService {
     @Value("#{'${receiving.server.addresses}'.split(',')}")
     private List<String> receivingServerAddresses;
     @Autowired
@@ -207,14 +207,5 @@ public class FullNodeTransactionService extends TransactionService {
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
         webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
-    }
-
-    public void handleDspConsensusResult(DspConsensusResult dspConsensusResult) {
-        log.debug("Received DspConsensus result for transaction: {}", dspConsensusResult.getHash());
-        if (!transactionHelper.handleVoteConclusionResult(dspConsensusResult)) {
-            log.error("Illegal Dsp consensus result for transaction: {}", dspConsensusResult.getHash());
-        } else {
-            balanceService.setDspcToTrue(dspConsensusResult);
-        }
     }
 }

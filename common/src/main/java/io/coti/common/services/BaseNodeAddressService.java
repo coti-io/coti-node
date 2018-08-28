@@ -1,5 +1,7 @@
-package io.coti.fullnode.services;
+package io.coti.common.services;
 
+import io.coti.common.NodeType;
+import io.coti.common.communication.interfaces.IPropagationPublisher;
 import io.coti.common.communication.interfaces.ISender;
 import io.coti.common.data.AddressData;
 import io.coti.common.data.Hash;
@@ -10,29 +12,27 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
 @Service
-public class AddressService {
-    @Value("#{'${receiving.server.addresses}'.split(',')}")
-    private List<String> receivingServerAddresses;
-
-    @Autowired
-    private ISender sender;
+public class BaseNodeAddressService {
     @Autowired
     private Addresses addresses;
     @Autowired
     private WebSocketSender webSocketSender;
+    @Autowired
+    private IPropagationPublisher propagationPublisher;
+
+    public void init() {
+    }
 
     public boolean addNewAddress(Hash addressHash) {
-
-
         if (!addressExists(addressHash)) {
             AddressData addressData = new AddressData(addressHash);
             addresses.put(addressData);
             log.info("Address {} was successfully inserted", addressHash);
-            receivingServerAddresses.forEach(address -> sender.send(addressData, address));
             webSocketSender.notifyGeneratedAddress(addressHash);
             return true;
         }
@@ -45,6 +45,13 @@ public class AddressService {
     }
 
     public void handlePropagatedAddress(AddressData addressData) {
-        addNewAddress(addressData.getHash());
+        if (!addressExists(addressData.getHash())) {
+            addNewAddress(addressData.getHash());
+            propagationPublisher.propagate(addressData, Arrays.asList(
+                    NodeType.FullNode,
+                    NodeType.TrustScroeNode,
+                    NodeType.DspNode,
+                    NodeType.ZeroSpendServer));
+        }
     }
 }

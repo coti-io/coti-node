@@ -3,7 +3,7 @@ package io.coti.fullnode.controllers;
 import io.coti.common.http.*;
 import io.coti.common.services.TransactionHelper;
 import io.coti.common.services.TransactionIndexService;
-import io.coti.fullnode.services.FullNodeTransactionService;
+import io.coti.fullnode.services.TransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -13,9 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 
-import static org.springframework.web.bind.annotation.RequestMethod.GET;
-import static org.springframework.web.bind.annotation.RequestMethod.POST;
-import static org.springframework.web.bind.annotation.RequestMethod.PUT;
+import static org.springframework.web.bind.annotation.RequestMethod.*;
 
 @Slf4j
 @RestController
@@ -23,9 +21,9 @@ import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 public class TransactionController {
 
     @Autowired
-    private FullNodeTransactionService transactionService;
-    @Autowired
     private TransactionHelper transactionHelper;
+    @Autowired
+    private TransactionService transactionService;
     @Autowired
     private TransactionIndexService transactionIndexService;
 

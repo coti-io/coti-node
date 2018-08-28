@@ -19,16 +19,13 @@ import java.util.function.Consumer;
 @Slf4j
 @Service
 public class ZeroMQSubscriber implements IPropagationSubscriber {
-    @Value("#{'${propagation.server.addresses}'.split(',')}")
-    private List<String> propagationServerAddresses;
-
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket propagationReceiver;
 
     @Autowired
     private ISerializer serializer;
 
-    private void initSockets(List<String> channelsToSubscribe) {
+    private void initSockets(List<String> propagationServerAddresses, List<String> channelsToSubscribe) {
         propagationReceiver = zeroMQContext.socket(ZMQ.SUB);
         propagationReceiver.setHWM(10000);
         ZeroMQUtils.bindToRandomPort(propagationReceiver);
@@ -43,10 +40,10 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     }
 
     @Override
-    public void init(HashMap<String, Consumer<Object>> messagesHandler) {
+    public void init(List<String> propagationServerAddresses, HashMap<String, Consumer<Object>> messagesHandler) {
         zeroMQContext = ZMQ.context(1);
         List<String> channelsToSubscribe = new ArrayList<>(messagesHandler.keySet());
-        initSockets(channelsToSubscribe);
+        initSockets(propagationServerAddresses, channelsToSubscribe);
         Thread receiverThread = new Thread(() -> {
             while (!Thread.interrupted()) {
                 String channel = propagationReceiver.recvStr();

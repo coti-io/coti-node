@@ -1,6 +1,5 @@
 package io.coti.common.communication;
 
-import io.coti.common.communication.ZeroMQUtils;
 import io.coti.common.communication.interfaces.ISender;
 import io.coti.common.communication.interfaces.ISerializer;
 import io.coti.common.data.interfaces.IEntity;
@@ -11,6 +10,7 @@ import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
 
 import javax.annotation.PostConstruct;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,16 +25,17 @@ public class ZeroMQSender implements ISender {
 
     @PostConstruct
     private void init() {
+    }
+
+    @Override
+    public void init(List<String> receivingServerAddresses) {
         zeroMQContext = ZMQ.context(1);
         receivingAddressToSenderSocketMapping = new ConcurrentHashMap<>();
+        receivingServerAddresses.forEach(this::initializeSenderSocket);
     }
 
     @Override
     public <T extends IEntity> void send(T toSend, String address) {
-        if (!receivingAddressToSenderSocketMapping.containsKey(address)) {
-            initializeSenderSocket(address);
-        }
-
         byte[] message = serializer.serialize(toSend);
         synchronized (zeroMQContext) {
             try {

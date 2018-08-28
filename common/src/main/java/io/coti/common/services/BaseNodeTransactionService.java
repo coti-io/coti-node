@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public abstract class TransactionService {
+public abstract class BaseNodeTransactionService {
 
     @Autowired
     private ITransactionHelper transactionHelper;

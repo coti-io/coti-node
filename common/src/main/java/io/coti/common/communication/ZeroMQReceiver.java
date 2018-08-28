@@ -9,15 +9,13 @@ import org.springframework.stereotype.Service;
 import org.zeromq.ZMQ;
 
 import java.util.HashMap;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 @Slf4j
 @Service
 public class ZeroMQReceiver implements IReceiver {
-    private HashMap<String, Function<Object, String>> classNameToHandlerMapping;
-
-    @Value("${receiving.port}")
-    private String receivingPort;
+    private HashMap<String, Consumer<Object>> classNameToHandlerMapping;
 
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket receiver;
@@ -26,7 +24,7 @@ public class ZeroMQReceiver implements IReceiver {
     private ISerializer serializer;
 
     @Override
-    public void init(HashMap<String, Function<Object, String>> classNameToHandlerMapping) {
+    public void init(String receivingPort, HashMap<String, Consumer<Object>> classNameToHandlerMapping) {
         this.classNameToHandlerMapping = classNameToHandlerMapping;
         zeroMQContext = ZMQ.context(1);
         receiver = zeroMQContext.socket(ZMQ.ROUTER);
@@ -42,12 +40,11 @@ public class ZeroMQReceiver implements IReceiver {
         while (true) {
             String classType = receiver.recvStr();
             if (classNameToHandlerMapping.containsKey(classType)) {
-                log.debug("Received a new {}", classType);
+                log.info("Received a new {}", classType);
                 byte[] message = receiver.recv();
                 try {
-                    String answer = classNameToHandlerMapping.get(classType).
-                            apply(serializer.deserialize(message));
-                    log.debug("Receiver handler answer for {}: {}", classType, answer);
+                    classNameToHandlerMapping.get(classType).
+                            accept(serializer.deserialize(message));
                 } catch (ClassCastException e) {
                     log.error("Invalid request received: " + e.getMessage());
                 }
