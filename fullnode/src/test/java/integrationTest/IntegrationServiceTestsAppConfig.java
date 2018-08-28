@@ -44,4 +44,5 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @PropertySource("classpath:application.properties")
 public class IntegrationServiceTestsAppConfig {
+        
 }
