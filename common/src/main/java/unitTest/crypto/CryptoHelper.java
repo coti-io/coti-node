@@ -1,8 +1,7 @@
-package io.coti.common.crypto;
+package unitTest.crypto;
 
 import io.coti.common.data.Hash;
 import io.coti.common.data.SignatureData;
-import io.coti.common.data.TransactionData;
 import org.bouncycastle.asn1.sec.SECNamedCurves;
 import org.bouncycastle.asn1.x9.X9ECParameters;
 import org.bouncycastle.crypto.params.ECDomainParameters;

@@ -13,6 +13,7 @@ import io.coti.common.services.LiveView.LiveViewService;
 import io.coti.common.services.LiveView.WebSocketSender;
 import io.coti.common.services.TransactionHelper;
 import io.coti.common.services.TransactionIndexService;
+import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,9 +22,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
+import unitTest.crypto.CryptoHelper;
 
 import java.math.BigDecimal;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
@@ -32,24 +38,21 @@ import java.util.List;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.when;
 
+@TestPropertySource(locations = "../test.properties")
 @ContextConfiguration(classes = BalanceService.class)
 @SpringBootTest
 @RunWith(SpringRunner.class)
 
 public class BalanceServiceTest {
 
-    @Autowired
-    private BalanceService balanceService;
-
     @MockBean
     TransactionHelper transactionHelper;
-
     @MockBean
     InitializationService initializationService;
-
     @MockBean
     WebSocketSender webSocketSender;
-
+    @Autowired
+    private BalanceService balanceService;
     @MockBean
     private LiveViewService liveViewService;
 
@@ -61,14 +64,14 @@ public class BalanceServiceTest {
 
 
     @Test
-    public void testBalanceAmountAsExpected() {
+    public void testBalanceAmount_AsExpected() {
         BigDecimal addressBalance = balanceService.getBalanceMap().
                 get(new Hash("caba14b7fe219b3da5dee0c29389c88e4d134333a2ee104152d6e9f7b673be9e0e28ca511d1ac749f46bea7f1ab25818f335ab9111a6c5eebe2f650974e12d1b7dccd4d7"));
         Assert.assertEquals(addressBalance, new BigDecimal("3941622.610838615"));
     }
 
     @Test
-    public void testBalanceAmountAsNotExpected() {
+    public void testBalanceAmount_AsNotExpected() {
         BigDecimal addressBalance = balanceService.getBalanceMap().
                 get(new Hash("5e6b6af708ae15c1c55641f9e87e71f5cd58fc71aa58ae55abe9d5aa88b2ad3c5295cbffcfbb3a087e8da72596d7c60eebb4c59748cc1906b2aa67be43ec3eb147c1a19a"));
         Assert.assertNotEquals(addressBalance, new BigDecimal("3941622.610838615"));
@@ -250,6 +253,74 @@ public class BalanceServiceTest {
         GetBalancesRequest getBalancesRequest = new GetBalancesRequest();
         getBalancesRequest.setAddresses(addresses);
         return balanceService.getBalances(getBalancesRequest);
+    }
+
+    public static class CryptoHelperTest {
+
+        @Test
+        public void getPublicKeyFromHexString() throws InvalidKeySpecException, NoSuchAlgorithmException {
+            PublicKey publicKey
+                    = CryptoHelper.getPublicKeyFromHexString("3d070c0014fdeb9e9522f1bcd00c86cb9ebeadc142a0d40c73ddda58bb82fb61f5b0d20dd55bf90a378bacb28036b0ddafe743b7e452a3fd11f05b78f14f0f99");
+            String xCoord = ((BCECPublicKey) publicKey).getQ().getXCoord().toString();
+            String yCoord = ((BCECPublicKey) publicKey).getQ().getYCoord().toString();
+            Assert.assertTrue(xCoord.equals("3d070c0014fdeb9e9522f1bcd00c86cb9ebeadc142a0d40c73ddda58bb82fb61")
+                    && yCoord.equals("f5b0d20dd55bf90a378bacb28036b0ddafe743b7e452a3fd11f05b78f14f0f99"));
+        }
+
+        @Test
+        public void verifyByPublicKey() {
+        }
+
+        @Test
+        public void removeLeadingZerosFromAddress() {
+        }
+
+        @Test
+        public void signBytes() {
+            // SignatureData SignatureData1 = CryptoHelper.SignBytes("[B@2ddb3ae8".getBytes(Charset.forName("UTF-8")), "1731ceb7b1d3a9c78d6a3009ca7021569eeb6a4ece86f0b744afbc3fabf82f83");
+            SignatureData SignatureData = CryptoHelper.SignBytes("[B@2ddb3ae8".getBytes(), "1731ceb7b1d3a9c78d6a3009ca7021569eeb6a4ece86f0b744afbc3fabf82f83");
+            Assert.assertTrue(SignatureData.getR().length() == 64
+                    && SignatureData.getS().length() == 64);
+        }
+
+        @Test
+        public void getPublicKeyFromPrivateKey() {
+        }
+
+        @Test
+        public void verifyByPublicKey1() {
+        }
+
+        @Test
+        public void generateKeyPair() {
+        }
+
+        @Test
+        public void isAddressValid_validAddress_returnTrue() {
+            boolean validatedHash =
+                    CryptoHelper.IsAddressValid(new Hash("fd33fe95a50fb2e458449872412e76a57aabbb6378e48a0aad61ce9cd6a7fae44e80f336820939cefad94c4000e7674f8921fa8ac10335f7fc24dea5728234eadee36524"));
+            Assert.assertTrue(validatedHash);
+        }
+
+        @Test
+        public void isAddressValid_notValidAddress_returnFalse() {
+            boolean validatedHash =
+                    CryptoHelper.IsAddressValid(new Hash("dd33fe95a50fb2e458449872412e76a57aabbb6378e48a0aad61ce9cd6a7fae44e80f336820939cefad94c4000e7674f8921fa8ac10335f7fc24dea5728234eadee36524"));
+            Assert.assertFalse(validatedHash);
+        }
+
+        @Test
+        public void getAddressFromPrivateKey() {
+            Hash addressHash = CryptoHelper.getAddressFromPrivateKey("1731ceb7b1d3a9c78d6a3009ca7021569eeb6a4ece86f0b744afbc3fabf82f8e");
+            Assert.assertTrue(addressHash.toString().equals(
+                    "a053a4ddfd9c4e27b919a26ccb2d99a55f679c13fec197efc48fc887661a626db19a99660f8ae3babddebf924923afb22c7d4fe251f96f1880c4b8f89106d139fd5a8f93"));
+        }
+
+        @Test
+        public void cryptoHash() {
+            Hash cryptoHash = CryptoHelper.cryptoHash("GENESIS".getBytes());
+            Assert.assertTrue(cryptoHash.toString().equals("019f6193080fa2ce1eb4082321d3fc1563ca3ee6f96dc5b2092d4bd08cc1b2cb"));
+        }
     }
 }
 

@@ -1,4 +1,4 @@
-package unitTest;
+package unitTest.crypto;
 
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
@@ -17,6 +17,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.*;
@@ -25,19 +26,17 @@ import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+@TestPropertySource(locations = "../test.properties")
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = ClusterService.class)
 @Slf4j
 public class ClusterServiceTest {
-    @Autowired
-    private ClusterService cluster;
-
-    @MockBean
-    private Transactions transactions;
-
     @MockBean
     InitializationService initializationService;
-
+    @Autowired
+    private ClusterService cluster;
+    @MockBean
+    private Transactions transactions;
     @MockBean
     private BalanceService balanceService;
 

@@ -1,10 +1,7 @@
-package unitTest;
+package unitTest.crypto;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.coti.common.crypto.BaseTransactionWithPrivateKey;
-import io.coti.common.crypto.CryptoHelper;
-import io.coti.common.crypto.TransactionCyptoCreator;
 import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.Hash;
 import io.coti.common.data.SignatureData;
@@ -13,6 +10,10 @@ import org.bouncycastle.jce.interfaces.ECPublicKey;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -23,7 +24,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 
-
+@TestPropertySource(locations = "../test.properties")
+@SpringBootTest(classes = CryptoHelper.class)
+@RunWith(SpringRunner.class)
 public class CryptoHelperTest {
 
     private CryptoHelper helper;

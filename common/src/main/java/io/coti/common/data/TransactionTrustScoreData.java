@@ -1,15 +1,10 @@
 package io.coti.common.data;
 
-import io.coti.common.crypto.CryptoHelper;
-import io.coti.common.crypto.NodeCryptoHelper;
 import io.coti.common.data.interfaces.ISignValidatable;
 import io.coti.common.data.interfaces.ISignable;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.nio.ByteBuffer;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 
 @Data
 public class TransactionTrustScoreData implements Serializable, ISignable, ISignValidatable {

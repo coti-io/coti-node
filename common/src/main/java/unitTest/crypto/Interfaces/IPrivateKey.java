@@ -1,4 +1,4 @@
-package io.coti.common.crypto.Interfaces;
+package unitTest.crypto.Interfaces;
 
 public interface IPrivateKey {
     String getPrivateKey();

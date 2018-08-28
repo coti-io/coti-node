@@ -28,11 +28,10 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TccConfirmationServiceTest {
 
-    private ConcurrentHashMap<Hash, TransactionData> hashToUnConfirmationTransactionsMapping;
-    private TransactionData transactionData0, transactionData1, transactionData2, transactionData3, transactionData4, TransactionData5, transactionData6;
     @Autowired
     TccConfirmationService tccConfirmationService;
-
+    private ConcurrentHashMap<Hash, TransactionData> hashToUnConfirmationTransactionsMapping;
+    private TransactionData transactionData0, transactionData1, transactionData2, transactionData3, transactionData4, TransactionData5, transactionData6;
     @Value("${cluster.trust.chain.threshold}")
     private int threshold;
 

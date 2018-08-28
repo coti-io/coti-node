@@ -1,7 +1,5 @@
 package unitTest;
 
-import io.coti.common.crypto.DspConsensusCrypto;
-import io.coti.common.crypto.TransactionTrustScoreCrypto;
 import io.coti.common.data.*;
 import io.coti.common.http.BaseResponse;
 import io.coti.common.http.GetTransactionResponse;
@@ -22,12 +20,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import testUtils.TestUtils;
+import unitTest.crypto.DspConsensusCrypto;
+import unitTest.crypto.TransactionTrustScoreCrypto;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Date;
 
 import static org.mockito.Mockito.when;
+
 @TestPropertySource(locations = "../test.properties")
 @RunWith(SpringRunner.class)
 @SpringBootTest(

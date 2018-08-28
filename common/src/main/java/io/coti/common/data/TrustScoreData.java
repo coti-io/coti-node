@@ -1,16 +1,10 @@
 package io.coti.common.data;
 
-import io.coti.common.crypto.CryptoHelper;
 import io.coti.common.data.interfaces.IEntity;
 import io.coti.common.data.interfaces.ISignValidatable;
-import io.coti.common.data.interfaces.ISignable;
 import lombok.Data;
 
-import java.nio.ByteBuffer;
 import java.util.Date;
-
-import java.security.*;
-import java.security.spec.InvalidKeySpecException;
 
 @Data
 public class TrustScoreData implements IEntity, ISignValidatable {

@@ -1,17 +1,21 @@
 package testUtils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.Hash;
 import io.coti.common.data.SignatureData;
 import io.coti.common.data.TransactionData;
+import io.coti.common.http.AddTransactionRequest;
+import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
-
+@Slf4j
 public class TestUtils {
 
     private static final String[] hexaOptions = {"0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F"};
@@ -44,6 +48,25 @@ public class TestUtils {
                 80.53,
                 new Date());
         return tx;
+    }
+
+    public static TransactionData createTransactionFromJson(String transactionJson)  {
+        AddTransactionRequest addTransactionRequest = null;
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            addTransactionRequest =
+                    mapper.readValue(transactionJson, AddTransactionRequest.class);
+        } catch (IOException e) {
+            log.error("Error when create trx from JSON" +e);
+        }
+        return
+                new TransactionData(
+                        addTransactionRequest.baseTransactions,
+                        addTransactionRequest.hash,
+                        addTransactionRequest.transactionDescription,
+                        addTransactionRequest.trustScoreResults,
+                        addTransactionRequest.createTime,
+                        addTransactionRequest.senderHash);
     }
 
     public static BaseTransactionData createBaseTransactionDataWithSpecificHash(Hash hash){
