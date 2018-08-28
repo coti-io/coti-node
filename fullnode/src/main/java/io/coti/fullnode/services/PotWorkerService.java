@@ -1,5 +1,4 @@
 package io.coti.fullnode.services;
-
 import io.coti.common.pot.ComparableFutureTask;
 import io.coti.common.pot.PriorityExecutor;
 import io.coti.common.pot.PotRunnableTask;
