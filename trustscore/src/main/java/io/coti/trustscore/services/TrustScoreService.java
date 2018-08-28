@@ -1,7 +1,7 @@
 package io.coti.trustscore.services;
 
-import unitTest.crypto.TransactionTrustScoreCrypto;
-import unitTest.crypto.TrustScoreCrypto;
+import io.coti.common.crypto.TransactionTrustScoreCrypto;
+import io.coti.common.crypto.TrustScoreCrypto;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionTrustScoreData;
 import io.coti.common.data.TrustScoreData;

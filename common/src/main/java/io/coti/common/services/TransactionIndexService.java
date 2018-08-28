@@ -1,6 +1,6 @@
 package io.coti.common.services;
 
-import unitTest.crypto.CryptoHelper;
+import io.coti.common.crypto.CryptoHelper;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
 import io.coti.common.data.TransactionIndexData;

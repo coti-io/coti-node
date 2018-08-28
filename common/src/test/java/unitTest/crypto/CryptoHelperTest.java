@@ -2,6 +2,9 @@ package unitTest.crypto;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.coti.common.crypto.BaseTransactionWithPrivateKey;
+import io.coti.common.crypto.CryptoHelper;
+import io.coti.common.crypto.TransactionCyptoCreator;
 import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.Hash;
 import io.coti.common.data.SignatureData;
@@ -24,7 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 
-@TestPropertySource(locations = "../test.properties")
+@TestPropertySource(locations = "../../test.properties")
 @SpringBootTest(classes = CryptoHelper.class)
 @RunWith(SpringRunner.class)
 public class CryptoHelperTest {

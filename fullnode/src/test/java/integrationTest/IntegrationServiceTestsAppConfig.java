@@ -1,7 +1,7 @@
 package integrationTest;
 
-import unitTest.crypto.DspConsensusCrypto;
-import unitTest.crypto.TransactionTrustScoreCrypto;
+import io.coti.common.crypto.DspConsensusCrypto;
+import io.coti.common.crypto.TransactionTrustScoreCrypto;
 import io.coti.common.database.RocksDBConnector;
 import io.coti.common.model.*;
 import io.coti.common.services.*;

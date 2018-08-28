@@ -20,8 +20,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import testUtils.TestUtils;
-import unitTest.crypto.DspConsensusCrypto;
-import unitTest.crypto.TransactionTrustScoreCrypto;
+import io.coti.common.crypto.DspConsensusCrypto;
+import io.coti.common.crypto.TransactionTrustScoreCrypto;
 
 import java.math.BigDecimal;
 import java.util.Arrays;

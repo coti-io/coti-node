@@ -1,5 +1,6 @@
 package unitTest.crypto;
 
+import io.coti.common.crypto.BaseTransactionCryptoWrapper;
 import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;
@@ -15,7 +16,7 @@ import testUtils.TestUtils;
 
 import static org.junit.Assert.assertNull;
 
-@TestPropertySource(locations = "../test.properties")
+@TestPropertySource(locations = "../../test.properties")
 @SpringBootTest(classes = {BaseTransactionData.class, BaseTransactionCryptoWrapper.class})
 @RunWith(SpringRunner.class)
 @Slf4j

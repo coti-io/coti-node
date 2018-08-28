@@ -1,6 +1,6 @@
-package unitTest.crypto;
+package io.coti.common.crypto;
 
-import unitTest.crypto.Interfaces.IPrivateKey;
+import io.coti.common.crypto.Interfaces.IPrivateKey;
 import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.SignatureData;
 import io.coti.common.data.TransactionData;

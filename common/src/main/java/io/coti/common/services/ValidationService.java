@@ -1,7 +1,7 @@
 package io.coti.common.services;
 
-import unitTest.crypto.BaseTransactionCryptoWrapper;
-import unitTest.crypto.CryptoHelper;
+import io.coti.common.crypto.BaseTransactionCryptoWrapper;
+import io.coti.common.crypto.CryptoHelper;
 import io.coti.common.data.BaseTransactionData;
 import io.coti.common.data.Hash;
 import io.coti.common.data.TransactionData;

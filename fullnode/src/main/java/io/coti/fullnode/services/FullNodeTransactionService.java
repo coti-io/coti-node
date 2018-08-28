@@ -1,7 +1,7 @@
 package io.coti.fullnode.services;
 
 import io.coti.common.communication.interfaces.ISender;
-import unitTest.crypto.TransactionCrypto;
+import io.coti.common.crypto.TransactionCrypto;
 import io.coti.common.data.AddressTransactionsHistory;
 import io.coti.common.data.DspConsensusResult;
 import io.coti.common.data.Hash;

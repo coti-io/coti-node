@@ -24,7 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
-import unitTest.crypto.CryptoHelper;
+import io.coti.common.crypto.CryptoHelper;
 
 import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;

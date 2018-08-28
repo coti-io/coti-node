@@ -10,7 +10,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import testUtils.TestUtils;
 
-@TestPropertySource(locations = "../test.properties")
+@TestPropertySource(locations = "../../test.properties")
 @SpringBootTest(classes = BaseTransactionData.class)
 @RunWith(SpringRunner.class)
 public class BaseTransactionDataTest {

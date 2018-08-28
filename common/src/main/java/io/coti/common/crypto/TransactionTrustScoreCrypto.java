@@ -1,4 +1,4 @@
-package unitTest.crypto;
+package io.coti.common.crypto;
 
 import io.coti.common.data.TransactionTrustScoreData;
 import org.springframework.stereotype.Service;
