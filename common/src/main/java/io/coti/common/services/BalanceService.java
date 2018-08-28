@@ -217,12 +217,15 @@ public class BalanceService implements IBalanceService {
                         currentAmount.add(baseTransactionData.getAmount()));
             }
         });
-        if (isDspConfirmed)
+        if (isDspConfirmed) {
             dspConfirmed.incrementAndGet();
-        if (transactionData.isTrustChainConsensus())
+        }
+        if (transactionData.isTrustChainConsensus()) {
             tccConfirmed.incrementAndGet();
-        if (isConfirmed)
+        }
+        if (isConfirmed) {
             totalConfirmed.incrementAndGet();
+        }
     }
 
     @Override

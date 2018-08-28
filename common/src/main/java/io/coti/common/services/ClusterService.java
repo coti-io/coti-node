@@ -52,7 +52,7 @@ public class ClusterService implements IClusterService {
     public void addUnconfirmedTransaction(TransactionData transactionData) {
         hashToUnconfirmedTransactionsMapping.put(transactionData.getHash(), transactionData);
         sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionData);
-        if(transactionData.getChildrenTransactions() == null || transactionData.getChildrenTransactions().isEmpty()) {
+        if (transactionData.getChildrenTransactions() == null || transactionData.getChildrenTransactions().isEmpty()) {
             totalSources.incrementAndGet();
         }
     }
@@ -63,7 +63,7 @@ public class ClusterService implements IClusterService {
         log.info("Cluster Service is up");
     }
 
-    @Scheduled(fixedDelay = 5000, initialDelay = 1000)
+    @Scheduled(fixedDelay = 3000, initialDelay = 1000)
     public void checkForTrustChainConfirmedTransaction() {
         if (!isStarted) {
             return;
@@ -72,11 +72,11 @@ public class ClusterService implements IClusterService {
         tccConfirmationService.init(hashToUnconfirmedTransactionsMapping);
         List<TccInfo> transactionConsensusConfirmed = tccConfirmationService.getTccConfirmedTransactions();
 
-        for (TccInfo tccInfo : transactionConsensusConfirmed) {
+        transactionConsensusConfirmed.forEach(tccInfo -> {
             hashToUnconfirmedTransactionsMapping.remove(tccInfo.getHash());
             balanceService.setTccToTrue(tccInfo);
             log.debug("TCC has been reached for transaction {}!!", tccInfo.getHash());
-        }
+        });
     }
 
     @Override

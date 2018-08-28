@@ -17,33 +17,26 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TccConfirmationService {
     @Value("${cluster.trust.chain.threshold}")
     private int threshold;
-    private ConcurrentHashMap<Hash, TransactionData> hashToUnTccConfirmTransactionsMapping;
+    private ConcurrentHashMap<Hash, TransactionData> hashToTccUnConfirmTransactionsMapping;
     private LinkedList<TransactionData> topologicalOrderedGraph;
 
     public void init(ConcurrentHashMap<Hash, TransactionData> hashToUnConfirmationTransactionsMapping) {
-        hashToUnTccConfirmTransactionsMapping = new ConcurrentHashMap<>();
-        for (Map.Entry<Hash, TransactionData> entry : hashToUnConfirmationTransactionsMapping.entrySet()) {
-            if (!entry.getValue().isTrustChainConsensus()) {
-                hashToUnTccConfirmTransactionsMapping.put(entry.getValue().getHash(), entry.getValue());
-            }
-        }
+        hashToTccUnConfirmTransactionsMapping = new ConcurrentHashMap<>(hashToUnConfirmationTransactionsMapping);
         topologicalOrderedGraph = new LinkedList<>();
         sortByTopologicalOrder();
     }
 
     private void sortByTopologicalOrder() {
-        for (Map.Entry<Hash, TransactionData> entry : hashToUnTccConfirmTransactionsMapping.entrySet()) {
-            entry.getValue().setVisit(false);
-        }
+        hashToTccUnConfirmTransactionsMapping.forEach((hash, transactionData) -> transactionData.setVisit(false));
 
         //loop is for making sure that every vertex is visited since if we select only one random source
         //all vertices might not be reachable from this source
         //eg:1->2->3,1->3 and if we select 3 as source first then no vertex can be visited of course except for 3
-        for (Map.Entry<Hash, TransactionData> entry : hashToUnTccConfirmTransactionsMapping.entrySet()) {
-            if (!entry.getValue().isVisit()) {
-                topologicalSortingHelper(entry.getValue());
+        hashToTccUnConfirmTransactionsMapping.forEach( (hash, transactionData) -> {
+            if (!transactionData.isVisit()) {
+                topologicalSortingHelper(transactionData);
             }
-        }
+        });
     }
 
     private void setTotalTrustScore(TransactionData parent) {
@@ -51,10 +44,10 @@ public class TccConfirmationService {
         Hash maxSonsTotalTrustScoreHash = null;
         for (Hash hash : parent.getChildrenTransactions()) {
             try {
-                TransactionData child = hashToUnTccConfirmTransactionsMapping.get(hash);
+                TransactionData child = hashToTccUnConfirmTransactionsMapping.get(hash);
                 if (child != null && child.getTrustChainTrustScore()
                         > maxSonsTotalTrustScore) {
-                    maxSonsTotalTrustScore = hashToUnTccConfirmTransactionsMapping.get(hash).getTrustChainTrustScore();
+                    maxSonsTotalTrustScore = hashToTccUnConfirmTransactionsMapping.get(hash).getTrustChainTrustScore();
                     maxSonsTotalTrustScoreHash = hash;
                 }
             } catch (Exception e) {
@@ -69,7 +62,7 @@ public class TccConfirmationService {
         //updating parent trustChainTransactionHashes
         if (maxSonsTotalTrustScoreHash != null) { // not a source
             List<Hash> maxSonsTotalTrustScoreChain =
-                    new Vector<>(hashToUnTccConfirmTransactionsMapping.get(maxSonsTotalTrustScoreHash).getTrustChainTransactionHashes());
+                    new Vector<>(hashToTccUnConfirmTransactionsMapping.get(maxSonsTotalTrustScoreHash).getTrustChainTransactionHashes());
             maxSonsTotalTrustScoreChain.add(maxSonsTotalTrustScoreHash);
             parent.setTrustChainTransactionHashes(maxSonsTotalTrustScoreChain);
         }
@@ -77,7 +70,7 @@ public class TccConfirmationService {
 
     private void topologicalSortingHelper(TransactionData parentTransactionData) {
         for (Hash transactionDataHash : parentTransactionData.getChildrenTransactions()) {
-            TransactionData childTransactionData = hashToUnTccConfirmTransactionsMapping.get(transactionDataHash);
+            TransactionData childTransactionData = hashToTccUnConfirmTransactionsMapping.get(transactionDataHash);
             if (childTransactionData != null && !childTransactionData.isVisit()) {
                 topologicalSortingHelper(childTransactionData);
             }
