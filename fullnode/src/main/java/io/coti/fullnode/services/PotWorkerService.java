@@ -12,6 +12,7 @@ import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.concurrent.*;
 
 @Slf4j
@@ -19,36 +20,22 @@ import java.util.concurrent.*;
 public class PotWorkerService extends PotService {
 
     private static HashMap<Integer, ExecutorService> queuesPot = new HashMap<>();
-    public static HashMap<Integer,MonitorBuscketStatistics> monitorStatistics = new HashMap<>();
-
+    public static HashMap<Integer,MonitorBuscketStatistics> monitorStatistics = new LinkedHashMap<>();
 
     @PostConstruct
     public void init() {
-        queuesPot.put(5, PriorityExecutor.newFixedThreadPool(8, 10));
-        queuesPot.put(4, PriorityExecutor.newFixedThreadPool(3, 5));
-        queuesPot.put(3, PriorityExecutor.newFixedThreadPool(3, 4));
-        queuesPot.put(2, PriorityExecutor.newFixedThreadPool(3, 4));
-        queuesPot.put(1, PriorityExecutor.newFixedThreadPool(1, 1));
 
-        for (int i = 1; i < 6; i++) {
+        for (int i = 10; i <= 100; i=i+10) {
             monitorStatistics.put(i,new MonitorBuscketStatistics());
+            queuesPot.put(i, PriorityExecutor.newFixedThreadPool( (int)Math.floor(i/20), i/10));
         }
     }
 
     public void potAction(TransactionData transactionData) throws InterruptedException {
-        int bucketChoice;
-        int trustScore = transactionData.getRoundedSenderTrustScore();
-        if (trustScore >= 90)
-            bucketChoice = 5;
-        else if (trustScore >= 60)
-            bucketChoice = 4;
-        else if (trustScore >= 40)
-            bucketChoice = 3;
-        else if (trustScore >= 20)
-            bucketChoice = 2;
-        else
-            bucketChoice = 1;
 
+        int trustScore = transactionData.getRoundedSenderTrustScore();
+
+        int bucketChoice = (int)(Math.ceil(trustScore/10) * 10);
         queuesPot.get(bucketChoice).submit(new ComparableFutureTask(new PotRunnableTask(transactionData, targetDifficulty)));
         Instant starts = Instant.now();
         synchronized (transactionData) {

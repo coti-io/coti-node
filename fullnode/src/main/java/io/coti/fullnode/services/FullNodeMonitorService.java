@@ -16,8 +16,8 @@ public class FullNodeMonitorService extends MonitorService {
     public void lastState() {
         potWorkerService.monitorStatistics.forEach((bucketNumber, statistic) -> {
             if (statistic.getNumberOfTransaction() > 0)
-                log.info("Bucket = {}, NumberOfTransaction = {}, AverageTime = {} ms",
-                        bucketNumber,statistic.getNumberOfTransaction(),statistic.getAverage());
+                log.info("Bucket Range={}-{}, NumberOfTransaction = {}, AverageTime = {} ms",
+                        bucketNumber-10,bucketNumber,statistic.getNumberOfTransaction(),statistic.getAverage());
         });
     }
 }
