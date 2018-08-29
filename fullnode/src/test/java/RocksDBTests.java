@@ -1,17 +1,3 @@
-import io.coti.common.data.*;
-import io.coti.common.model.*;
-import io.coti.fullnode.AppConfig;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
 /*
 @Slf4j
 @RunWith(SpringRunner.class)

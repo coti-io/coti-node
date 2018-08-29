@@ -1,4 +1,4 @@
-import io.coti.common.services.BalanceService;
+import io.coti.basenode.services.BalanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class BalanceDataServiceTests {

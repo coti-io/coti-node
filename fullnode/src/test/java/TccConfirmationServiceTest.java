@@ -1,6 +1,6 @@
-import io.coti.common.data.Hash;
-import io.coti.common.data.TransactionData;
-import io.coti.common.services.TccConfirmationService;
+import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.services.TccConfirmationService;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.boot.test.context.SpringBootTest;

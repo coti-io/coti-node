@@ -1,7 +1,7 @@
 package io.coti.trustscore.services;
 
-import io.coti.common.data.DspConsensusResult;
-import io.coti.common.services.BaseNodeDspVoteService;
+import io.coti.basenode.data.DspConsensusResult;
+import io.coti.basenode.services.BaseNodeDspVoteService;
 import org.springframework.stereotype.Service;
 
 @Service

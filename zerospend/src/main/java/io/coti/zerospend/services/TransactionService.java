@@ -1,7 +1,7 @@
 package io.coti.zerospend.services;
 
-import io.coti.common.data.TransactionData;
-import io.coti.common.services.BaseNodeTransactionService;
+import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.services.BaseNodeTransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

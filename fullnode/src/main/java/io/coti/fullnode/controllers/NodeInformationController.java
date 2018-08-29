@@ -1,7 +1,7 @@
 package io.coti.fullnode.controllers;
 
-import io.coti.common.http.NodeInformationResponse;
-import io.coti.common.services.interfaces.INodeInformationService;
+import io.coti.basenode.http.NodeInformationResponse;
+import io.coti.basenode.services.interfaces.INodeInformationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;

@@ -1,15 +1,15 @@
 package io.coti.zerospend.services;
 
-import io.coti.common.data.NodeType;
-import io.coti.common.communication.interfaces.IPropagationPublisher;
-import io.coti.common.crypto.DspConsensusCrypto;
-import io.coti.common.crypto.DspVoteCrypto;
-import io.coti.common.data.*;
-import io.coti.common.model.TransactionVotes;
-import io.coti.common.model.Transactions;
-import io.coti.common.services.BaseNodeDspVoteService;
-import io.coti.common.services.TransactionIndexService;
-import io.coti.common.services.interfaces.IBalanceService;
+import io.coti.basenode.data.NodeType;
+import io.coti.basenode.communication.interfaces.IPropagationPublisher;
+import io.coti.basenode.crypto.DspConsensusCrypto;
+import io.coti.basenode.crypto.DspVoteCrypto;
+import io.coti.basenode.data.*;
+import io.coti.basenode.model.TransactionVotes;
+import io.coti.basenode.model.Transactions;
+import io.coti.basenode.services.BaseNodeDspVoteService;
+import io.coti.basenode.services.TransactionIndexService;
+import io.coti.basenode.services.interfaces.IBalanceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

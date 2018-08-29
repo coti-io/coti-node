@@ -1,11 +1,10 @@
 package io.coti.fullnode.services;
 
-import io.coti.common.communication.interfaces.IPropagationPublisher;
-import io.coti.common.communication.interfaces.ISender;
-import io.coti.common.data.AddressData;
-import io.coti.common.data.Hash;
-import io.coti.common.services.BaseNodeAddressService;
-import io.coti.common.services.LiveView.WebSocketSender;
+import io.coti.basenode.communication.interfaces.ISender;
+import io.coti.basenode.data.AddressData;
+import io.coti.basenode.data.Hash;
+import io.coti.basenode.services.BaseNodeAddressService;
+import io.coti.basenode.services.LiveView.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

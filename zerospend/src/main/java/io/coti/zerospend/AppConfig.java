@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
 @ComponentScan(
-        basePackages = {"io.coti.zerospend", "io.coti.common"}
+        basePackages = {"io.coti.zerospend", "io.coti.basenode"}
 )
 @EnableScheduling
 @PropertySource("classpath:application.properties")

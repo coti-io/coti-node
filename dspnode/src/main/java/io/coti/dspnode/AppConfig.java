@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
 @ComponentScan("io.coti.dspnode")
-@ComponentScan("io.coti.common")
+@ComponentScan("io.coti.basenode")
 @EnableScheduling
 @PropertySource("classpath:application.properties")
 public class AppConfig {

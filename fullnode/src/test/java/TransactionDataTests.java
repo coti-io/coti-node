@@ -1,4 +1,4 @@
-import io.coti.common.model.Transactions;
+import io.coti.basenode.model.Transactions;
 import io.coti.fullnode.AppConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.runner.RunWith;

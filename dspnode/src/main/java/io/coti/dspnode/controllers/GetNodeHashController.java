@@ -1,7 +1,7 @@
 package io.coti.dspnode.controllers;
 
-import io.coti.common.crypto.NodeCryptoHelper;
-import io.coti.common.data.Hash;
+import io.coti.basenode.crypto.NodeCryptoHelper;
+import io.coti.basenode.data.Hash;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

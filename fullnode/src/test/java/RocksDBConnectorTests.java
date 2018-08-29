@@ -1,5 +1,5 @@
-import io.coti.common.database.RocksDBConnector;
-import io.coti.common.model.Transactions;
+import io.coti.basenode.database.RocksDBConnector;
+import io.coti.basenode.model.Transactions;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;

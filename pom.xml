@@ -9,7 +9,7 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>common</module>
+        <module>basenode</module>
         <module>fullnode</module>
         <module>dspnode</module>
         <module>zerospend</module>

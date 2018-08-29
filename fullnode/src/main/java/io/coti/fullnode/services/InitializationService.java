@@ -1,8 +1,8 @@
 package io.coti.fullnode.services;
 
-import io.coti.common.data.NodeType;
-import io.coti.common.services.BaseNodeInitializationService;
-import io.coti.common.services.CommunicationService;
+import io.coti.basenode.data.NodeType;
+import io.coti.basenode.services.BaseNodeInitializationService;
+import io.coti.basenode.services.CommunicationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

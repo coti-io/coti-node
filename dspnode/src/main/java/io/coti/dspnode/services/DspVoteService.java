@@ -1,8 +1,8 @@
 package io.coti.dspnode.services;
 
-import io.coti.common.data.NodeType;
-import io.coti.common.data.DspConsensusResult;
-import io.coti.common.services.BaseNodeDspVoteService;
+import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.DspConsensusResult;
+import io.coti.basenode.services.BaseNodeDspVoteService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

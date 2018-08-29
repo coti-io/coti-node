@@ -1,10 +1,10 @@
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.coti.common.crypto.*;
-import io.coti.common.data.BaseTransactionData;
-import io.coti.common.data.SignatureData;
-import io.coti.common.data.TransactionData;
-import io.coti.common.data.Hash;
+import io.coti.basenode.crypto.*;
+import io.coti.basenode.data.BaseTransactionData;
+import io.coti.basenode.data.SignatureData;
+import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.Hash;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
 import org.junit.Assert;
 import org.junit.Test;

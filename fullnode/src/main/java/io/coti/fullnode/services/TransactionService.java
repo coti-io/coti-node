@@ -1,20 +1,19 @@
 package io.coti.fullnode.services;
 
-import io.coti.common.communication.interfaces.ISender;
-import io.coti.common.crypto.TransactionCrypto;
-import io.coti.common.data.AddressTransactionsHistory;
-import io.coti.common.data.DspConsensusResult;
-import io.coti.common.data.Hash;
-import io.coti.common.data.TransactionData;
-import io.coti.common.exceptions.TransactionException;
-import io.coti.common.http.*;
-import io.coti.common.http.data.TransactionStatus;
-import io.coti.common.model.AddressesTransactionsHistory;
-import io.coti.common.model.DbItem;
-import io.coti.common.model.Transactions;
-import io.coti.common.services.BaseNodeTransactionService;
-import io.coti.common.services.LiveView.WebSocketSender;
-import io.coti.common.services.interfaces.*;
+import io.coti.basenode.communication.interfaces.ISender;
+import io.coti.basenode.crypto.TransactionCrypto;
+import io.coti.basenode.data.AddressTransactionsHistory;
+import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.exceptions.TransactionException;
+import io.coti.basenode.http.*;
+import io.coti.basenode.http.data.TransactionStatus;
+import io.coti.basenode.model.AddressesTransactionsHistory;
+import io.coti.basenode.model.DbItem;
+import io.coti.basenode.model.Transactions;
+import io.coti.basenode.services.BaseNodeTransactionService;
+import io.coti.basenode.services.LiveView.WebSocketSender;
+import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,7 +26,7 @@ import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 
-import static io.coti.common.http.HttpStringConstants.*;
+import static io.coti.basenode.http.HttpStringConstants.*;
 
 @Slf4j
 @Service

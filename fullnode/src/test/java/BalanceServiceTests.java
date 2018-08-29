@@ -1,8 +1,8 @@
-import io.coti.common.data.BaseTransactionData;
-import io.coti.common.data.ConfirmationData;
-import io.coti.common.data.Hash;
-import io.coti.common.data.SignatureData;
-import io.coti.common.services.BalanceService;
+import io.coti.basenode.data.BaseTransactionData;
+import io.coti.basenode.data.ConfirmationData;
+import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.SignatureData;
+import io.coti.basenode.services.BalanceService;
 import io.coti.fullnode.AppConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;

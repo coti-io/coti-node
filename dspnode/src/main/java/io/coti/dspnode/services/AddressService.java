@@ -1,9 +1,9 @@
 package io.coti.dspnode.services;
 
-import io.coti.common.communication.interfaces.IPropagationPublisher;
-import io.coti.common.data.AddressData;
-import io.coti.common.data.NodeType;
-import io.coti.common.services.BaseNodeAddressService;
+import io.coti.basenode.communication.interfaces.IPropagationPublisher;
+import io.coti.basenode.data.AddressData;
+import io.coti.basenode.data.NodeType;
+import io.coti.basenode.services.BaseNodeAddressService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

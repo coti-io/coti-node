@@ -1,12 +1,12 @@
 package io.coti.fullnode.controllers;
 
-import io.coti.common.data.Hash;
-import io.coti.common.http.AddAddressResponse;
-import io.coti.common.http.AddressBulkRequest;
-import io.coti.common.http.AddressRequest;
-import io.coti.common.http.AddressesExistsResponse;
-import io.coti.common.http.data.AddressStatus;
-import io.coti.common.services.interfaces.IValidationService;
+import io.coti.basenode.data.Hash;
+import io.coti.basenode.http.AddAddressResponse;
+import io.coti.basenode.http.AddressBulkRequest;
+import io.coti.basenode.http.AddressRequest;
+import io.coti.basenode.http.AddressesExistsResponse;
+import io.coti.basenode.http.data.AddressStatus;
+import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.fullnode.services.AddressService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

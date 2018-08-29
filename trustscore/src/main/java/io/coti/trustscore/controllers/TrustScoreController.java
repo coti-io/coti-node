@@ -1,9 +1,9 @@
 package io.coti.trustscore.controllers;
 
-import io.coti.common.http.BaseResponse;
-import io.coti.common.http.GetTransactionTrustScoreRequest;
-import io.coti.common.http.GetTrustScoreRequest;
-import io.coti.common.http.SetKycTrustScoreRequest;
+import io.coti.basenode.http.BaseResponse;
+import io.coti.basenode.http.GetTransactionTrustScoreRequest;
+import io.coti.basenode.http.GetTrustScoreRequest;
+import io.coti.basenode.http.SetKycTrustScoreRequest;
 import io.coti.trustscore.services.TrustScoreService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,12 +1,12 @@
 package io.coti.tools;
 
-import io.coti.common.data.TransactionData;
-import io.coti.common.data.TransactionIndexData;
-import io.coti.common.database.RocksDBConnector;
-import io.coti.common.model.TransactionIndexes;
-import io.coti.common.model.Transactions;
-import io.coti.common.services.TransactionIndexService;
-import io.coti.common.services.ZeroSpendService;
+import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.TransactionIndexData;
+import io.coti.basenode.database.RocksDBConnector;
+import io.coti.basenode.model.TransactionIndexes;
+import io.coti.basenode.model.Transactions;
+import io.coti.basenode.services.TransactionIndexService;
+import io.coti.basenode.services.ZeroSpendService;
 
 import java.io.File;
 

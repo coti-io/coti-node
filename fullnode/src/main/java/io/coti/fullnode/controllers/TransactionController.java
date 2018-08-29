@@ -1,8 +1,8 @@
 package io.coti.fullnode.controllers;
 
-import io.coti.common.http.*;
-import io.coti.common.services.TransactionHelper;
-import io.coti.common.services.TransactionIndexService;
+import io.coti.basenode.http.*;
+import io.coti.basenode.services.TransactionHelper;
+import io.coti.basenode.services.TransactionIndexService;
 import io.coti.fullnode.services.TransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

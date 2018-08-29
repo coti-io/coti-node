@@ -1,7 +1,7 @@
 target/
 fullnode/target/
 dspnode/target/
-common/target/
+basenode/target/
 zerospend/target/
 tools/target/
 trustscore/target/

@@ -1,9 +1,9 @@
 package io.coti.fullnode.exception;
 
-import io.coti.common.exceptions.TransactionException;
-import io.coti.common.http.AddTransactionResponse;
-import io.coti.common.http.ExceptionResponse;
-import io.coti.common.services.TransactionHelper;
+import io.coti.basenode.exceptions.TransactionException;
+import io.coti.basenode.http.AddTransactionResponse;
+import io.coti.basenode.http.ExceptionResponse;
+import io.coti.basenode.services.TransactionHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,7 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import static io.coti.common.http.HttpStringConstants.*;
+import static io.coti.basenode.http.HttpStringConstants.*;
 
 @Slf4j
 @ControllerAdvice
