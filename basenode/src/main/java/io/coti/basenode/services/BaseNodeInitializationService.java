@@ -25,7 +25,7 @@ public class BaseNodeInitializationService {
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
-    private BalanceService balanceService;
+    private BaseNodeBalanceService baseNodeBalanceService;
     @Autowired
     private ClusterService clusterService;
     @Autowired
@@ -55,7 +55,7 @@ public class BaseNodeInitializationService {
             }
         }
 
-        balanceService.finalizeInit();
+        baseNodeBalanceService.finalizeInit();
         clusterService.finalizeInit();
     }
 
@@ -64,7 +64,7 @@ public class BaseNodeInitializationService {
             clusterService.addUnconfirmedTransaction(transactionData);
         }
         liveViewService.addNode(transactionData);
-        balanceService.insertSavedTransaction(transactionData);
+        baseNodeBalanceService.insertSavedTransaction(transactionData);
         if (transactionData.getDspConsensusResult() != null) {
             maxTransactionIndex.set(Math.max(maxTransactionIndex.get(), transactionData.getDspConsensusResult().getIndex()));
         } else {

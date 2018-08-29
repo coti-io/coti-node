@@ -28,12 +28,12 @@ public class AddressService extends BaseNodeAddressService {
         }
         AddressData newAddressData = new AddressData(addressHash);
         receivingServerAddresses.forEach(address -> sender.send(newAddressData, address));
-        continueHandleCreatedAddress(newAddressData);
+        continueHandleGeneratedAddress(newAddressData);
         return true;
     }
 
     @Override
-    protected void continueHandleCreatedAddress(AddressData addressData) {
+    protected void continueHandleGeneratedAddress(AddressData addressData) {
         webSocketSender.notifyGeneratedAddress(addressData.getHash());
     }
 }

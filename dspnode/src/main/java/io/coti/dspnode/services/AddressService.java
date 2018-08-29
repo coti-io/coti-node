@@ -33,7 +33,7 @@ public class AddressService extends BaseNodeAddressService {
     }
 
     @Override
-    protected void continueHandleCreatedAddress(AddressData addressData) {
+    protected void continueHandleGeneratedAddress(AddressData addressData) {
         propagationPublisher.propagate(addressData, Arrays.asList(NodeType.FullNode));
     }
 }

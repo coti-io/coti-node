@@ -11,7 +11,7 @@ public class MonitorService {
     @Autowired
     private TransactionHelper transactionHelper;
     @Autowired
-    private BalanceService balanceService;
+    private BaseNodeBalanceService baseNodeBalanceService;
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
@@ -25,9 +25,9 @@ public class MonitorService {
     public void lastState() {
         log.info("Transactions = {}, TccConfirmed = {}, DspConfirmed = {}, Confirmed = {}, LastIndex = {}, Sources = {}",
                 transactionHelper.getTotalTransactions(),
-                balanceService.getTccConfirmed(),
-                balanceService.getDspConfirmed(),
-                balanceService.getTotalConfirmed(),
+                baseNodeBalanceService.getTccConfirmed(),
+                baseNodeBalanceService.getDspConfirmed(),
+                baseNodeBalanceService.getTotalConfirmed(),
                 transactionIndexService.getLastTransactionIndexData().getIndex(),
                 clusterService.getTotalSources());
     }

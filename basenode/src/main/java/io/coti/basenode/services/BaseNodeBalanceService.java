@@ -6,7 +6,6 @@ import io.coti.basenode.http.GetBalancesResponse;
 import io.coti.basenode.http.data.TransactionStatus;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.LiveView.LiveViewService;
-import io.coti.basenode.services.LiveView.WebSocketSender;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -20,16 +19,18 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class BalanceService implements IBalanceService {
+public class BaseNodeBalanceService implements IBalanceService {
 
     @Autowired
     private LiveViewService liveViewService;
@@ -92,12 +93,13 @@ public class BalanceService implements IBalanceService {
             balanceMap.putIfAbsent(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
         });
         totalConfirmed.incrementAndGet();
-        publishBalanceChangeToWebSocket(
-                transactionData.getBaseTransactions()
-                        .stream()
-                        .map(BaseTransactionData::getAddressHash)
-                        .collect(Collectors.toSet()));
+
         liveViewService.updateNodeStatus(transactionData, 2);
+
+        transactionData.getBaseTransactions().forEach( baseTransactionData -> {
+            Hash addressHash = baseTransactionData.getAddressHash();
+            continueHandleBalanceChanges(addressHash, balanceMap.get(addressHash), preBalanceMap.get(addressHash));
+        });
 
         continueHandleAddressHistoryChanges(transactionData, TransactionStatus.CONFIRMED);
     }
@@ -132,12 +134,6 @@ public class BalanceService implements IBalanceService {
         } catch (Exception e) {
             log.error("Errors on snapshot loading: {}", e);
             throw e;
-        }
-    }
-
-    private void publishBalanceChangeToWebSocket(Set<Hash> addresses) {
-        for (Hash address : addresses) {
-            continueHandleBalanceChanges(address,  balanceMap.get(address), preBalanceMap.get(address));
         }
     }
 

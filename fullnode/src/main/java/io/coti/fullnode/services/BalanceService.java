@@ -3,11 +3,12 @@ package io.coti.fullnode.services;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.data.TransactionStatus;
+import io.coti.basenode.services.BaseNodeBalanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 
-public class BalanceService extends io.coti.basenode.services.BalanceService {
+public class BalanceService extends BaseNodeBalanceService {
 
     @Autowired
     private WebSocketSender webSocketSender;

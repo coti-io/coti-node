@@ -34,11 +34,11 @@ public class BaseNodeAddressService {
     public void handlePropagatedAddress(AddressData addressData) {
         if (!addressExists(addressData.getHash())) {
             addNewAddress(addressData.getHash());
-            continueHandleCreatedAddress(addressData);
+            continueHandleGeneratedAddress(addressData);
         }
     }
 
-    protected void continueHandleCreatedAddress(AddressData addressData) {
+    protected void continueHandleGeneratedAddress(AddressData addressData) {
 
     }
 }
