@@ -1,4 +1,4 @@
-package io.coti.basenode.services.LiveView;
+package io.coti.fullnode.services;
 
 import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
@@ -39,17 +39,11 @@ public class WebSocketSender {
             messagingSender.convertAndSend("/topic/addressTransactions/" + bxData.getAddressHash().toHexString(),
                     new NotifyTransactionChange(transactionData,transactionStatus));
         }
-
     }
 
     public void notifyGeneratedAddress(Hash addressHash) {
         log.debug("Address {} is about to be sent to the subscribed user", addressHash.toHexString());
         messagingSender.convertAndSend("/topic/address/" + addressHash.toHexString(),
                 new GeneratedAddressMessage(addressHash));
-    }
-
-
-    public void sendNode(NodeData nodeData) {
-        messagingSender.convertAndSend("/topic/nodes", nodeData);
     }
 }

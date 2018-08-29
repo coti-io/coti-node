@@ -32,8 +32,6 @@ import java.util.stream.Collectors;
 public class BalanceService implements IBalanceService {
 
     @Autowired
-    private WebSocketSender webSocketSender;
-    @Autowired
     private LiveViewService liveViewService;
     @Autowired
     private Transactions transactions;
@@ -100,7 +98,8 @@ public class BalanceService implements IBalanceService {
                         .map(BaseTransactionData::getAddressHash)
                         .collect(Collectors.toSet()));
         liveViewService.updateNodeStatus(transactionData, 2);
-        webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.CONFIRMED);
+
+        continueHandleAddressHistoryChanges(transactionData, TransactionStatus.CONFIRMED);
     }
 
     private void loadBalanceFromSnapshot() throws Exception {
@@ -138,12 +137,8 @@ public class BalanceService implements IBalanceService {
 
     private void publishBalanceChangeToWebSocket(Set<Hash> addresses) {
         for (Hash address : addresses) {
-            publishBalanceChangeToWebSocket(address);
+            continueHandleBalanceChanges(address,  balanceMap.get(address), preBalanceMap.get(address));
         }
-    }
-
-    private void publishBalanceChangeToWebSocket(Hash address) {
-        webSocketSender.notifyBalanceChange(address, balanceMap.get(address), preBalanceMap.get(address));
     }
 
     @Override
@@ -169,12 +164,15 @@ public class BalanceService implements IBalanceService {
         }
         preBalanceChanges.forEach((addressHash, preBalance) -> {
             preBalanceMap.put(addressHash, preBalance);
-            publishBalanceChangeToWebSocket(addressHash);
+            continueHandleBalanceChanges(addressHash,  balanceMap.get(addressHash), preBalanceMap.get(addressHash));
         });
         return true;
-
     }
 
+    protected void continueHandleBalanceChanges(Hash addressHash, BigDecimal newBalance, BigDecimal newPreBalance) {
+    }
+    protected void continueHandleAddressHistoryChanges(TransactionData transactionData, TransactionStatus transactionStatus) {
+    }
 
     @Override
     public ResponseEntity<GetBalancesResponse> getBalances(GetBalancesRequest getBalancesRequest) {

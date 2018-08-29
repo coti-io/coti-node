@@ -12,7 +12,6 @@ import io.coti.basenode.model.AddressesTransactionsHistory;
 import io.coti.basenode.model.DbItem;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
-import io.coti.basenode.services.LiveView.WebSocketSender;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

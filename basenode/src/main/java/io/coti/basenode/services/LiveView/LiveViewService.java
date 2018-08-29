@@ -5,6 +5,7 @@ import io.coti.basenode.data.NodeData;
 import io.coti.basenode.data.TransactionData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Vector;
@@ -14,7 +15,7 @@ import java.util.Vector;
 public class LiveViewService {
 
     @Autowired
-    private WebSocketSender webSocketSender;
+    private SimpMessagingTemplate messagingSender;
 
     private GraphData graphData;
 
@@ -48,7 +49,7 @@ public class LiveViewService {
         setNodeDataDatesFromTransactionData(transactionData, nodeData);
         graphData.nodes.add(nodeData);
 
-        webSocketSender.sendNode(nodeData);
+        sendNode(nodeData);
     }
 
     public void updateNodeStatus(TransactionData transactionData, int newStatus) {
@@ -59,10 +60,7 @@ public class LiveViewService {
         NodeData newNode = graphData.nodes.get(currentIndex);
         newNode.setStatus(newStatus);
         setNodeDataDatesFromTransactionData(transactionData, newNode);
-       // if(((new Date().getTime()  - transactionData.getAttachmentTime().getTime())/ (60 * 1000)) < 15) {
-
-        webSocketSender.sendNode(newNode);
-       // }
+        sendNode(newNode);
     }
 
     public void setNodeDataDatesFromTransactionData(TransactionData transactionData, NodeData nodeData) {
@@ -71,5 +69,9 @@ public class LiveViewService {
         if (transactionData.getAttachmentTime()!= null && transactionData.getTransactionConsensusUpdateTime()!= null) {
             nodeData.setTccDuration( (transactionData.getTransactionConsensusUpdateTime().getTime() - transactionData.getAttachmentTime().getTime())/ 1000);
         }
+    }
+
+    private void sendNode(NodeData nodeData) {
+        messagingSender.convertAndSend("/topic/nodes", nodeData);
     }
 }

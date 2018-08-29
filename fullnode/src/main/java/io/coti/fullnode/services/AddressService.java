@@ -4,7 +4,6 @@ import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.services.BaseNodeAddressService;
-import io.coti.basenode.services.LiveView.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,12 +26,14 @@ public class AddressService extends BaseNodeAddressService {
         if (!super.addNewAddress(addressHash)) {
             return false;
         }
-        receivingServerAddresses.forEach(address -> sender.send(new AddressData(addressHash), address));
+        AddressData newAddressData = new AddressData(addressHash);
+        receivingServerAddresses.forEach(address -> sender.send(newAddressData, address));
+        continueHandleCreatedAddress(newAddressData);
         return true;
     }
 
     @Override
-    protected void continueHandlePropagatedAddress(AddressData addressData) {
+    protected void continueHandleCreatedAddress(AddressData addressData) {
         webSocketSender.notifyGeneratedAddress(addressData.getHash());
     }
 }
