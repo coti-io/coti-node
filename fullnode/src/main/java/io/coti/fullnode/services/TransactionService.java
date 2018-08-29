@@ -53,6 +53,9 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private WebSocketSender webSocketSender;
 
+    @Autowired
+    private PotWorkerService potService;
+
     public ResponseEntity<Response> addNewTransaction(AddTransactionRequest request) {
         TransactionData transactionData =
                 new TransactionData(
@@ -122,8 +125,8 @@ public class TransactionService extends BaseNodeTransactionService {
             }
 
             transactionData.setPowStartTime(new Date());
-            // ############   POW   ###########
-            TimeUnit.SECONDS.sleep(5);
+            // ############   POT   ###########
+            potService.potAction(transactionData);
             // ################################
             transactionData.setPowEndTime(new Date());
 
@@ -204,6 +207,8 @@ public class TransactionService extends BaseNodeTransactionService {
 
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
-        webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
+               if (validationService.validatePot(transactionData)) {
+                   webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
+               }
     }
 }

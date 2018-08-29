@@ -1,23 +1,23 @@
 package io.coti.basenode.services;
-
 import io.coti.basenode.crypto.BaseTransactionCryptoWrapper;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.model.Transactions;
+import io.coti.basenode.services.interfaces.IPotService;
 import io.coti.basenode.services.interfaces.IValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.web3j.crypto.Sign;
+import org.springframework.stereotype.Service;
 
-import java.math.BigInteger;
-import java.security.SignatureException;
 
-@Component
+@Service
 public class ValidationService implements IValidationService {
     @Autowired
     private Transactions transactions;
+
+    @Autowired
+    private IPotService potService;
 
     @Override
     public boolean validateBaseTransaction(BaseTransactionData baseTransactionData, Hash transactionHash) {
@@ -37,10 +37,6 @@ public class ValidationService implements IValidationService {
         return true;
     }
 
-    private BigInteger getAddressFromMessageAndSignature(String signedMessage, Sign.SignatureData signatureData) throws SignatureException {
-        return Sign.signedMessageToKey(signedMessage.getBytes(), signatureData);
-    }
-
     @Override
     public boolean validateAddress(Hash address) {
         return CryptoHelper.IsAddressValid(address);
@@ -57,7 +53,7 @@ public class ValidationService implements IValidationService {
     }
 
     @Override
-    public boolean validatePow(TransactionData transactionData) {
-        return true;
+    public boolean validatePot(TransactionData transactionData) {
+        return potService.validatePot(transactionData);
     }
 }

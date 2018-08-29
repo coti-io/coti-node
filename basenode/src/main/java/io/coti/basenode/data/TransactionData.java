@@ -40,6 +40,7 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
     private String transactionDescription;
     private DspConsensusResult dspConsensusResult;
     private List<TransactionTrustScoreData> trustScoreResults;
+    private int[] nonces;
 
     private TransactionData() {
     }
@@ -94,11 +95,6 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
 
     public void addToChildrenTransactions(Hash hash) {
         childrenTransactions.add(hash);
-    }
-
-    @Override
-    public String toString() {
-        return String.valueOf(hash);
     }
 
     @Override
@@ -163,5 +159,10 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
     @Override
     public Hash getSignerHash() {
         return nodeHash;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("TransactionData: hash= {}, senderTrustScore= {}", String.valueOf(hash) ,senderTrustScore);
     }
 }
