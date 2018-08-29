@@ -1,13 +1,12 @@
 package integrationTest;
 
+import io.coti.common.data.Hash;
+import io.coti.common.data.TransactionIndexData;
 import io.coti.common.model.AddressesTransactionsHistory;
 import io.coti.common.model.TransactionIndexes;
 import io.coti.common.model.Transactions;
-import io.coti.common.services.InitializationService;
+import io.coti.common.services.*;
 import io.coti.common.services.LiveView.WebSocketSender;
-import io.coti.common.services.MonitorService;
-import io.coti.common.services.TransactionHelper;
-import io.coti.common.services.TransactionIndexService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,6 +15,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import static org.mockito.Mockito.when;
 
 @ContextConfiguration(classes = IntegrationServiceTestsAppConfig.class)
 @RunWith(SpringRunner.class)
@@ -29,7 +30,10 @@ public class MonitorServiceTest {
     @Autowired
     private MonitorService monitorService;
 
-    @Autowired
+    @MockBean
+    private TransactionService transactionService;
+
+    @MockBean
     private TransactionIndexService transactionIndexService;
 
     @MockBean
@@ -50,7 +54,9 @@ public class MonitorServiceTest {
     @Test
     public void lastState() {
         //uncomment it, when columnFamilyClassNames will contain RocksDBConnector.TransactionIndexes
-        //monitorService.lastState();
+                when(transactionIndexService.getLastTransactionIndexData())
+                .thenReturn(new TransactionIndexData(new Hash("aa"), 0, null));
+        monitorService.lastState();
     }
 
 }

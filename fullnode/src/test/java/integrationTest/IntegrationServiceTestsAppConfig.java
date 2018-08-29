@@ -15,7 +15,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
 @ComponentScan(
-        basePackageClasses = BalanceService.class,
+        basePackageClasses = InitializationService.class,
         useDefaultFilters = false,
         includeFilters = {
                 @ComponentScan.Filter(
@@ -44,5 +44,5 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @PropertySource("classpath:application.properties")
 public class IntegrationServiceTestsAppConfig {
-        
+
 }

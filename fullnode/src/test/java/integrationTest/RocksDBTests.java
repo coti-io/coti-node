@@ -103,16 +103,6 @@ public class RocksDBTests {
         Assert.assertEquals(trustScores1, trustScores2);
     }
 
-
-    @Test
-    public void saveAndGetTransactionIndexes() {
-        //uncomment it, when columnFamilyClassNames will contain RocksDBConnector.TransactionIndexes
-//        TransactionIndexData transactionIndexData1 = new TransactionIndexData(new Hash("TransactionIndex 0".getBytes()), 6, null);
-//        transactionIndexes.put(transactionIndexData1);
-//        TransactionIndexData transactionIndexData2 = transactionIndexes.getByHash(new Hash("TransactionIndex 0".getBytes()));
-//        Assert.assertEquals(transactionIndexData1, transactionIndexData2);
-    }
-
     @Test
     public void saveAndGetTransactionVotes() {
         TransactionVoteData transactionVoteData1 = new TransactionVoteData(new Hash("TransactionVote 0".getBytes()), null );
