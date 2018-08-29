@@ -3,7 +3,6 @@ package io.coti.dspnode.services;
 import io.coti.common.communication.interfaces.IPropagationPublisher;
 import io.coti.common.data.AddressData;
 import io.coti.common.data.NodeType;
-import io.coti.common.data.TransactionData;
 import io.coti.common.services.BaseNodeAddressService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

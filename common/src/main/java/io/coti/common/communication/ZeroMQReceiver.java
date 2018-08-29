@@ -40,7 +40,7 @@ public class ZeroMQReceiver implements IReceiver {
         while (true) {
             String classType = receiver.recvStr();
             if (classNameToHandlerMapping.containsKey(classType)) {
-                log.info("Received a new {}", classType);
+                log.debug("Received a new {}", classType);
                 byte[] message = receiver.recv();
                 try {
                     classNameToHandlerMapping.get(classType).

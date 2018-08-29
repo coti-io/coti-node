@@ -6,8 +6,8 @@ import io.coti.common.http.AddressBulkRequest;
 import io.coti.common.http.AddressRequest;
 import io.coti.common.http.AddressesExistsResponse;
 import io.coti.common.http.data.AddressStatus;
-import io.coti.common.services.BaseNodeAddressService;
 import io.coti.common.services.interfaces.IValidationService;
+import io.coti.fullnode.services.AddressService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,7 +27,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 public class AddressController {
 
     @Autowired
-    private BaseNodeAddressService addressService;
+    private AddressService addressService;
 
     @Autowired
     private IValidationService validationService;
@@ -36,7 +36,7 @@ public class AddressController {
     public ResponseEntity<AddAddressResponse> addAddress(@Valid @RequestBody AddressRequest addAddressRequest) {
 
         if (addressLengthValidation(addAddressRequest.getAddress())) {
-            if (addressService.addNewAddress(addAddressRequest.getAddress())) {
+            if (addressService.addAddress(addAddressRequest.getAddress())) {
                 return ResponseEntity
                         .status(HttpStatus.CREATED)
                         .body(new AddAddressResponse(addAddressRequest.getAddress().toHexString(), AddressStatus.Created));
