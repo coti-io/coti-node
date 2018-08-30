@@ -5,9 +5,11 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.data.TransactionStatus;
 import io.coti.basenode.services.BaseNodeBalanceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 
+@Service
 public class BalanceService extends BaseNodeBalanceService {
 
     @Autowired

@@ -12,7 +12,10 @@ import io.coti.basenode.model.AddressesTransactionsHistory;
 import io.coti.basenode.model.DbItem;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
-import io.coti.basenode.services.interfaces.*;
+import io.coti.basenode.services.interfaces.IClusterService;
+import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.interfaces.IValidationService;
+import io.coti.basenode.services.interfaces.IZeroSpendService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,8 +43,6 @@ public class TransactionService extends BaseNodeTransactionService {
     private IValidationService validationService;
     @Autowired
     private IClusterService clusterService;
-    @Autowired
-    private IBalanceService balanceService;
     @Autowired
     private IZeroSpendService zeroSpendService;
     @Autowired
