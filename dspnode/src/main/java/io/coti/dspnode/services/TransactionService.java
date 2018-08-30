@@ -51,7 +51,6 @@ public class TransactionService extends BaseNodeTransactionService {
         }
         if (!transactionHelper.validateTransaction(transactionData) ||
                 !transactionCrypto.verifySignature(transactionData) ||
-                !validationService.validatePot(transactionData) ||
                 !transactionHelper.checkBalancesAndAddToPreBalance(transactionData)) {
             log.info("Invalid Transaction Received!");
             return "Invalid Transaction Received: " + transactionData.getHash();
@@ -97,9 +96,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
     public void continueHandlePropagatedTransaction(TransactionData transactionData) {
         propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
-                if (validationService.validatePot(transactionData)) {
-                    propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
-                    transactionsToValidate.add(transactionData);
-                }
+        propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
+        transactionsToValidate.add(transactionData);
     }
 }

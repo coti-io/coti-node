@@ -207,8 +207,6 @@ public class TransactionService extends BaseNodeTransactionService {
 
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
-               if (validationService.validatePot(transactionData)) {
-                   webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
-               }
+        webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
     }
 }
