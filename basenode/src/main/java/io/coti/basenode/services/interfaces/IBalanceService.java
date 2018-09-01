@@ -12,6 +12,8 @@ import java.util.List;
 
 public interface IBalanceService {
 
+    void init() throws Exception;
+
     boolean checkBalancesAndAddToPreBalance(List<BaseTransactionData> baseTransactionDatas);
 
     ResponseEntity<GetBalancesResponse> getBalances(GetBalancesRequest getBalancesRequest);

@@ -61,7 +61,7 @@ public class TransactionHelper implements ITransactionHelper {
     private void init() {
         transactionHashToTransactionStateStackMapping = new ConcurrentHashMap<>();
         noneIndexedTransactionHashes = Sets.newConcurrentHashSet();
-        log.info("Transaction Helper Started");
+        log.info("{} is up", this.getClass().getSimpleName());
     }
 
     public boolean isLegalBalance(List<BaseTransactionData> baseTransactions) {

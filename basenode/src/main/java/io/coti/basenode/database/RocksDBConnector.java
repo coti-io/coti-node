@@ -45,7 +45,7 @@ public class RocksDBConnector implements IDatabaseConnector {
     private List<ColumnFamilyHandle> columnFamilyHandles = new ArrayList<>();
 
     public RocksDBConnector() {
-        log.info("RocksDB constructor running");
+        log.info("{} is up", this.getClass().getSimpleName());
     }
 
     private void deleteDatabaseFolder() {

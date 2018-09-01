@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,6 +27,11 @@ public abstract class BaseNodeTransactionService {
     @Autowired
     private Transactions transactions;
     private List<TransactionData> postponedTransactions = new LinkedList<>();
+
+    @PostConstruct
+    private void init() {
+        log.info("{} is up", this.getClass().getSimpleName());
+    }
 
     public void handlePropagatedTransaction(TransactionData transactionData) {
         if (!transactionHelper.startHandleTransaction(transactionData)) {

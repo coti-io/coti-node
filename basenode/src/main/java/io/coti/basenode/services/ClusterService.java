@@ -60,7 +60,7 @@ public class ClusterService implements IClusterService {
     @Override
     public void finalizeInit() {
         isStarted = true;
-        log.info("Cluster Service is up");
+        log.info("{} is up", this.getClass().getSimpleName());
     }
 
     @Scheduled(fixedDelay = 3000, initialDelay = 1000)

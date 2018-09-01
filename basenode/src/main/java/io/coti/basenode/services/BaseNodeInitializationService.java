@@ -5,6 +5,8 @@ import io.coti.basenode.http.GetTransactionBatchRequest;
 import io.coti.basenode.http.GetTransactionBatchResponse;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.LiveView.LiveViewService;
+import io.coti.basenode.services.interfaces.IAddressService;
+import io.coti.basenode.services.interfaces.IBalanceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,7 +27,7 @@ public class BaseNodeInitializationService {
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
-    private BaseNodeBalanceService baseNodeBalanceService;
+    private IBalanceService balanceService;
     @Autowired
     private ClusterService clusterService;
     @Autowired
@@ -37,26 +39,33 @@ public class BaseNodeInitializationService {
     @Autowired
     private BaseNodeTransactionService transactionService;
     @Autowired
-    private BaseNodeAddressService baseNodeAddressService;
+    private IAddressService addressService;
 
     public void init() {
-        baseNodeAddressService.init();
-        AtomicLong maxTransactionIndex = new AtomicLong(-1);
-        transactions.forEach(transactionData -> handleExistingTransaction(maxTransactionIndex, transactionData));
-        transactionIndexService.init(maxTransactionIndex);
-        log.info("Transactions Load completed");
-        monitorService.init();
+        try {
+            addressService.init();
+            balanceService.init();
+            AtomicLong maxTransactionIndex = new AtomicLong(-1);
+            transactions.forEach(transactionData -> handleExistingTransaction(maxTransactionIndex, transactionData));
+            transactionIndexService.init(maxTransactionIndex);
+            log.info("Transactions Load completed");
 
-        if (recoveryServerAddress != null) {
-            List<TransactionData> missingTransactions = requestMissingTransactions(maxTransactionIndex.get() + 1);
-            if (missingTransactions != null) {
-                missingTransactions.forEach(transactionData ->
-                        transactionService.handlePropagatedTransaction(transactionData));
+            monitorService.init();
+
+            if (recoveryServerAddress != null) {
+                List<TransactionData> missingTransactions = requestMissingTransactions(maxTransactionIndex.get() + 1);
+                if (missingTransactions != null) {
+                    missingTransactions.forEach(transactionData ->
+                            transactionService.handlePropagatedTransaction(transactionData));
+                }
             }
-        }
 
-        baseNodeBalanceService.finalizeInit();
-        clusterService.finalizeInit();
+            balanceService.finalizeInit();
+            clusterService.finalizeInit();
+        } catch (Exception e) {
+            log.error("Errors at {} : ", this.getClass().getSimpleName(), e);
+            System.exit(-1);
+        }
     }
 
     private void handleExistingTransaction(AtomicLong maxTransactionIndex, TransactionData transactionData) {
@@ -64,7 +73,7 @@ public class BaseNodeInitializationService {
             clusterService.addUnconfirmedTransaction(transactionData);
         }
         liveViewService.addNode(transactionData);
-        baseNodeBalanceService.insertSavedTransaction(transactionData);
+        balanceService.insertSavedTransaction(transactionData);
         if (transactionData.getDspConsensusResult() != null) {
             maxTransactionIndex.set(Math.max(maxTransactionIndex.get(), transactionData.getDspConsensusResult().getIndex()));
         } else {

@@ -3,17 +3,19 @@ package io.coti.basenode.services;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.model.Addresses;
+import io.coti.basenode.services.interfaces.IAddressService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class BaseNodeAddressService {
+public class BaseNodeAddressService implements IAddressService {
     @Autowired
     private Addresses addresses;
 
     public void init() {
+        log.info("{} is up", this.getClass().getSimpleName());
     }
 
     public boolean addNewAddress(Hash addressHash) {

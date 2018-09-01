@@ -14,7 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -48,8 +47,8 @@ public class BaseNodeBalanceService implements IBalanceService {
     private AtomicLong tccConfirmed = new AtomicLong(0);
     private AtomicLong dspConfirmed = new AtomicLong(0);
 
-    @PostConstruct
-    private void init() throws Exception {
+
+    public void init() throws Exception {
         confirmationQueue = new LinkedBlockingQueue<>();
         balanceMap = new ConcurrentHashMap<>();
         preBalanceMap = new ConcurrentHashMap<>();
@@ -69,9 +68,7 @@ public class BaseNodeBalanceService implements IBalanceService {
                     tccConfirmed.incrementAndGet();
                 } else if (confirmationData instanceof DspConsensusResult) {
                     transactionData.setDspConsensusResult((DspConsensusResult) confirmationData);
-                    if(transactionIndexService.getLastTransactionIndexData().getIndex() != transactionData.getDspConsensusResult().getIndex()) {
-                        transactionIndexService.insertNewTransactionIndex(transactionData);
-                    }
+                    insertNewTransactionIndex(transactionData);
                     if (transactionHelper.isDspConfirmed(transactionData)) {
                         dspConfirmed.incrementAndGet();
                     }
@@ -96,7 +93,7 @@ public class BaseNodeBalanceService implements IBalanceService {
 
         liveViewService.updateNodeStatus(transactionData, 2);
 
-        transactionData.getBaseTransactions().forEach( baseTransactionData -> {
+        transactionData.getBaseTransactions().forEach(baseTransactionData -> {
             Hash addressHash = baseTransactionData.getAddressHash();
             continueHandleBalanceChanges(addressHash, balanceMap.get(addressHash), preBalanceMap.get(addressHash));
         });
@@ -160,13 +157,18 @@ public class BaseNodeBalanceService implements IBalanceService {
         }
         preBalanceChanges.forEach((addressHash, preBalance) -> {
             preBalanceMap.put(addressHash, preBalance);
-            continueHandleBalanceChanges(addressHash,  balanceMap.get(addressHash), preBalanceMap.get(addressHash));
+            continueHandleBalanceChanges(addressHash, balanceMap.get(addressHash), preBalanceMap.get(addressHash));
         });
         return true;
     }
 
+    protected void insertNewTransactionIndex(TransactionData transactionData) {
+        transactionIndexService.insertNewTransactionIndex(transactionData);
+    }
+
     protected void continueHandleBalanceChanges(Hash addressHash, BigDecimal newBalance, BigDecimal newPreBalance) {
     }
+
     protected void continueHandleAddressHistoryChanges(TransactionData transactionData, TransactionStatus transactionStatus) {
     }
 
@@ -227,7 +229,7 @@ public class BaseNodeBalanceService implements IBalanceService {
     @Override
     public void finalizeInit() {
         validateBalances();
-        log.info("Balance Service is up");
+        log.info("{} is up", this.getClass().getSimpleName());
     }
 
     private void validateBalances() {
@@ -245,6 +247,7 @@ public class BaseNodeBalanceService implements IBalanceService {
         });
         log.info("Balance Validation completed");
     }
+
 
     @Override
     public void setTccToTrue(TccInfo tccInfo) {

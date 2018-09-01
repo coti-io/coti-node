@@ -27,25 +27,25 @@ public class TransactionIndexService {
     private Transactions transactions;
     private TransactionIndexData lastTransactionIndexData;
 
-    public void init(AtomicLong maxTransactionIndex) {
+    public void init(AtomicLong maxTransactionIndex) throws Exception {
         byte[] accumulatedHash = "GENESIS".getBytes();
         TransactionIndexData transactionIndexData = null;
         for (long i = 0; i <= maxTransactionIndex.get(); i++) {
             transactionIndexData = transactionIndexes.getByHash(new Hash(i));
             if (transactionIndexData == null) {
                 log.error("Null transaction index data found for index: {}", i);
-                System.exit(-1);
+                throw new Exception(String.format("Null transaction index data found for index: {}", i));
             }
 
             TransactionData transactionData = transactions.getByHash(transactionIndexData.getTransactionHash());
             if (transactionIndexData == null || transactionData == null) {
                 log.error("Null transaction data found for index: {}", i);
-                System.exit(-1);
+                throw new Exception(String.format("Null transaction data found for index: {}", i));
             }
             accumulatedHash = getAccumulatedHash(accumulatedHash, transactionData.getHash(), transactionData.getDspConsensusResult().getIndex());
             if (!Arrays.equals(accumulatedHash, transactionIndexData.getAccumulatedHash())) {
                 log.error("Incorrect accumulated hash");
-                System.exit(-1);
+                throw new Exception("Incorrect accumulated hash");
             }
         }
         lastTransactionIndexData = transactionIndexData;
