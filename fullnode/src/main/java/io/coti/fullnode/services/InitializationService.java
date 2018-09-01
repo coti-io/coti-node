@@ -25,9 +25,10 @@ public class InitializationService {
 
     @PostConstruct
     public void init() {
+        baseNodeInitializationService.init();
+
         communicationService.initSender(receivingServerAddresses);
         communicationService.initSubscriber(propagationServerAddresses, NodeType.FullNode);
 
-        baseNodeInitializationService.init();
     }
 }

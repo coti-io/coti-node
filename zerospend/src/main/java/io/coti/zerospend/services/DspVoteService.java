@@ -47,9 +47,10 @@ public class DspVoteService extends BaseNodeDspVoteService {
     private static final String NODE_HASH_ENDPOINT = "/nodeHash";
     private List<Hash> currentLiveDspNodes;
 
-    @PostConstruct
+    @Override
     public void init() {
         transactionHashToVotesListMapping = new ConcurrentHashMap<>();
+        super.init();
     }
 
     public void preparePropagatedTransactionForVoting(TransactionData transactionData) {

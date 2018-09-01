@@ -9,6 +9,8 @@ import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.DspConsensusResult;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.services.interfaces.IAddressService;
+import io.coti.basenode.services.interfaces.IDspVoteService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,11 +31,11 @@ public class CommunicationService {
     @Autowired
     private ISender sender;
     @Autowired
-    private BaseNodeAddressService addressService;
+    private IAddressService addressService;
     @Autowired
     private BaseNodeTransactionService transactionService;
     @Autowired
-    private BaseNodeDspVoteService dspVoteService;
+    private IDspVoteService dspVoteService;
 
     public void initSubscriber(List<String> propagationServerAddresses, NodeType nodeType) {
         HashMap<String, Consumer<Object>> classNameToSubscriberHandlerMapping = new HashMap<>();

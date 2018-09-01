@@ -36,6 +36,8 @@ public class InitializationService {
 
     @PostConstruct
     public void init() {
+        baseNodeInitializationService.init();
+
         HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping = new HashMap<>();
         classNameToReceiverHandlerMapping.put(TransactionData.class.getName(), data ->
                 transactionService.handleNewTransactionFromFullNode((TransactionData) data));
@@ -47,6 +49,6 @@ public class InitializationService {
         communicationService.initSubscriber(propagationServerAddresses, NodeType.DspNode);
         communicationService.initPropagator(propagationPort);
 
-        baseNodeInitializationService.init();
+
     }
 }

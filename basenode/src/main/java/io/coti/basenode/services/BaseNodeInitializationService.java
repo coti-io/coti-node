@@ -5,8 +5,7 @@ import io.coti.basenode.http.GetTransactionBatchRequest;
 import io.coti.basenode.http.GetTransactionBatchResponse;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.LiveView.LiveViewService;
-import io.coti.basenode.services.interfaces.IAddressService;
-import io.coti.basenode.services.interfaces.IBalanceService;
+import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,22 +28,25 @@ public class BaseNodeInitializationService {
     @Autowired
     private IBalanceService balanceService;
     @Autowired
-    private ClusterService clusterService;
+    private IClusterService clusterService;
     @Autowired
     private MonitorService monitorService;
     @Autowired
     private LiveViewService liveViewService;
     @Autowired
-    private TransactionHelper transactionHelper;
+    private ITransactionHelper transactionHelper;
     @Autowired
     private BaseNodeTransactionService transactionService;
     @Autowired
     private IAddressService addressService;
+    @Autowired
+    private IDspVoteService dspVoteService;
 
     public void init() {
         try {
             addressService.init();
             balanceService.init();
+            dspVoteService.init();
             AtomicLong maxTransactionIndex = new AtomicLong(-1);
             transactions.forEach(transactionData -> handleExistingTransaction(maxTransactionIndex, transactionData));
             transactionIndexService.init(maxTransactionIndex);
@@ -52,7 +54,7 @@ public class BaseNodeInitializationService {
 
             monitorService.init();
 
-            if (recoveryServerAddress != null) {
+            if (!recoveryServerAddress.isEmpty()) {
                 List<TransactionData> missingTransactions = requestMissingTransactions(maxTransactionIndex.get() + 1);
                 if (missingTransactions != null) {
                     missingTransactions.forEach(transactionData ->
