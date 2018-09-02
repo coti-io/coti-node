@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.Date;
 
 import static io.coti.basenode.http.HttpStringConstants.*;
@@ -30,6 +31,11 @@ public class TrustScoreService {
     private TrustScores trustScores;
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
+
+    @PostConstruct
+    private void init() {
+        log.info("{} is up", this.getClass().getSimpleName());
+    }
 
     public ResponseEntity<BaseResponse> getUserTrustScore(Hash userHash) {
         TrustScoreData trustScoreData = trustScores.getByHash(userHash);
