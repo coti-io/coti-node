@@ -8,4 +8,5 @@ import java.util.List;
 public interface IZeroSpendService {
 
     List<TransactionData> getGenesisTransactions();
+    TransactionData getZeroSpendTransaction(double trustScore);
 }
