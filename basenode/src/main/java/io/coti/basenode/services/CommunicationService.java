@@ -11,6 +11,7 @@ import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.services.interfaces.IAddressService;
 import io.coti.basenode.services.interfaces.IDspVoteService;
+import io.coti.basenode.services.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,7 +34,7 @@ public class CommunicationService {
     @Autowired
     private IAddressService addressService;
     @Autowired
-    private BaseNodeTransactionService transactionService;
+    private ITransactionService transactionService;
     @Autowired
     private IDspVoteService dspVoteService;
 

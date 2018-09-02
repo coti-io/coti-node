@@ -4,6 +4,7 @@ import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.interfaces.ITransactionService;
 import io.coti.basenode.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public abstract class BaseNodeTransactionService {
+public class BaseNodeTransactionService implements ITransactionService {
 
     @Autowired
     private ITransactionHelper transactionHelper;
@@ -28,11 +29,12 @@ public abstract class BaseNodeTransactionService {
     private Transactions transactions;
     private List<TransactionData> postponedTransactions = new LinkedList<>();
 
-    @PostConstruct
-    private void init() {
+    @Override
+    public void init() {
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
+    @Override
     public void handlePropagatedTransaction(TransactionData transactionData) {
         if (!transactionHelper.startHandleTransaction(transactionData)) {
             log.debug("Transaction already exists: {}", transactionData.getHash().toHexString());
@@ -46,6 +48,7 @@ public abstract class BaseNodeTransactionService {
         }
         if (hasOneOfParentsMissing(transactionData)) {
             postponedTransactions.add(transactionData);
+            log.info("{}",postponedTransactions.size());
             return;
         }
         if (!transactionHelper.checkBalancesAndAddToPreBalance(transactionData)) {
@@ -70,7 +73,8 @@ public abstract class BaseNodeTransactionService {
         transactionHelper.endHandleTransaction(transactionData);
     }
 
-    protected abstract void continueHandlePropagatedTransaction(TransactionData transactionData);
+    protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
+    }
 
     private boolean hasOneOfParentsMissing(TransactionData transactionData) {
         return (transactionData.getLeftParentHash() != null && transactions.getByHash(transactionData.getLeftParentHash()) == null) ||

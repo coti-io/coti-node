@@ -88,10 +88,11 @@ public class TransactionService extends BaseNodeTransactionService {
         isValidatorRunning.set(false);
     }
 
-    @PostConstruct
-    private void init() {
+    @Override
+    public void init() {
         transactionsToValidate = new PriorityQueue<>();
         isValidatorRunning = new AtomicBoolean(false);
+        super.init();
     }
 
     public void continueHandlePropagatedTransaction(TransactionData transactionData) {
