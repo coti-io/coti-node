@@ -18,20 +18,18 @@ public class BaseTransactionCryptoWrapper {
     private BaseTransactionData baseTxData;
     private static CryptoHelper cryptoHelper = new CryptoHelper();
 
-    public BaseTransactionCryptoWrapper(BaseTransactionData baseTxData)
-    {
+    public BaseTransactionCryptoWrapper(BaseTransactionData baseTxData) {
         this.baseTxData = baseTxData;
     }
 
 
-    public byte[] getMessageInBytes()
-    {
+    public byte[] getMessageInBytes() {
         byte[] addressBytes = baseTxData.getAddressHash().getBytes();
         String decimalStringRepresentation = baseTxData.getAmount().toString();
         byte[] bytesOfAmount = decimalStringRepresentation.getBytes(StandardCharsets.UTF_8);
 
         Date baseTransactionDate = baseTxData.getCreateTime();
-        int timestamp = (int)(baseTransactionDate.getTime());
+        int timestamp = (int) (baseTransactionDate.getTime());
 
         ByteBuffer dateBuffer = ByteBuffer.allocate(4);
         dateBuffer.putInt(timestamp);
@@ -40,24 +38,22 @@ public class BaseTransactionCryptoWrapper {
                 put(addressBytes).put(bytesOfAmount).put(dateBuffer.array());
 
         byte[] arrToReturn = baseTransactionArray.array();
-        return  arrToReturn;
+        return arrToReturn;
     }
 
-    public Hash createBaseTransactionHashFromData(){
+    public Hash createBaseTransactionHashFromData() {
         byte[] bytesToHash = getMessageInBytes();
         return CryptoHelper.cryptoHash(bytesToHash);
     }
 
 
-    public void setBaseTransactionHash(){
+    public void setBaseTransactionHash() {
         baseTxData.setHash(createBaseTransactionHashFromData());
     }
 
-    public Hash getBaseTransactionHash()
-    {
+    public Hash getBaseTransactionHash() {
         return baseTxData.getHash();
     }
-
 
 
     public boolean IsBaseTransactionValid(Hash transactionHash) {
@@ -69,7 +65,7 @@ public class BaseTransactionCryptoWrapper {
                 return false;
 
 
-            if (baseTxData.getAmount().signum()>0)
+            if (baseTxData.getAmount().signum() > 0)
                 return true;
 
 

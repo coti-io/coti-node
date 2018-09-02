@@ -6,7 +6,7 @@ import lombok.Data;
 public class Response extends BaseResponse {
     public String message;
 
-    public Response(){
+    public Response() {
         this("");
     }
 

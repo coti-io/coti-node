@@ -7,8 +7,9 @@ import java.util.Date;
 
 @Data
 public class AddressData implements IEntity {
-    private AddressData(){
+    private AddressData() {
     }
+
     private transient Hash hash;
     private Date creationTime;
 

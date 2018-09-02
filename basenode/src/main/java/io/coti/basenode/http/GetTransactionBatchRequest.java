@@ -8,8 +8,10 @@ import java.io.Serializable;
 public class GetTransactionBatchRequest implements Serializable {
     public long startingIndex;
 
-    private GetTransactionBatchRequest(){}
-    public GetTransactionBatchRequest(long startingIndex){
+    private GetTransactionBatchRequest() {
+    }
+
+    public GetTransactionBatchRequest(long startingIndex) {
         this.startingIndex = startingIndex;
     }
 }

@@ -7,7 +7,7 @@ import java.nio.ByteBuffer;
 import java.util.Date;
 
 @Service
-public class DspConsensusCrypto extends SignatureCrypto<DspConsensusResult>{
+public class DspConsensusCrypto extends SignatureCrypto<DspConsensusResult> {
     @Override
     public byte[] getMessageInBytes(DspConsensusResult dspConsensusResult) {
         byte[] transactionHashInBytes = dspConsensusResult.getTransactionHash().getBytes();
@@ -16,7 +16,7 @@ public class DspConsensusCrypto extends SignatureCrypto<DspConsensusResult>{
         indexBuffer.putLong(dspConsensusResult.getIndex());
 
         Date indexingTime = dspConsensusResult.getIndexingTime();
-        int timestamp = (int)(indexingTime.getTime());
+        int timestamp = (int) (indexingTime.getTime());
 
         ByteBuffer indexingTimeBuffer = ByteBuffer.allocate(4);
         indexingTimeBuffer.putInt(timestamp);

@@ -3,8 +3,8 @@ package io.coti.basenode.data;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.Date;
 import java.math.BigDecimal;
+import java.util.Date;
 
 @Data
 public class BaseTransactionData implements Serializable {
@@ -13,10 +13,12 @@ public class BaseTransactionData implements Serializable {
     private BigDecimal amount;
     private Date createTime;
     private SignatureData signatureData;
-    private BaseTransactionData(){}
+
+    private BaseTransactionData() {
+    }
 
 
-    public BaseTransactionData(Hash addressHash, BigDecimal amount, Hash baseTransactionhash, SignatureData signature , Date createTime ){
+    public BaseTransactionData(Hash addressHash, BigDecimal amount, Hash baseTransactionhash, SignatureData signature, Date createTime) {
         this.addressHash = addressHash;
 
         this.amount = amount;
@@ -26,15 +28,15 @@ public class BaseTransactionData implements Serializable {
     }
 
 
-    public BaseTransactionData(Hash addressHash, BigDecimal amount , Date createTime ){
+    public BaseTransactionData(Hash addressHash, BigDecimal amount, Date createTime) {
         this.addressHash = addressHash;
         this.amount = amount;
         this.createTime = createTime;
     }
 
 
-    public boolean isSignatureExists(){
-        return signatureData !=null;
+    public boolean isSignatureExists() {
+        return signatureData != null;
     }
 
 

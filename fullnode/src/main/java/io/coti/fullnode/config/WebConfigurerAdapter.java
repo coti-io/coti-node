@@ -12,16 +12,16 @@ import javax.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
-public class WebConfigurerAdapter  extends WebSecurityConfigurerAdapter {
+public class WebConfigurerAdapter extends WebSecurityConfigurerAdapter {
 
 
     @Override
-    protected void configure(HttpSecurity http) throws Exception{
+    protected void configure(HttpSecurity http) throws Exception {
         http.cors().and()
                 .csrf().disable().authorizeRequests().anyRequest().permitAll();
     }
 
-    @RequestMapping(method=RequestMethod.OPTIONS)
+    @RequestMapping(method = RequestMethod.OPTIONS)
     public void corsHeaders(HttpServletResponse response) {
         response.addHeader("Access-Control-Allow-Origin", "*");
         response.addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");

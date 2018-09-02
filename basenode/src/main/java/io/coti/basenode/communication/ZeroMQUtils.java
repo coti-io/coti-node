@@ -4,15 +4,14 @@ import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
 
 public class ZeroMQUtils {
-    public static void bindToRandomPort(ZMQ.Socket socket){
+    public static void bindToRandomPort(ZMQ.Socket socket) {
         boolean success = false;
         int socketNumber = 10000;
         while (!success) {
-            try{
+            try {
                 socket.bind("tcp://*:" + socketNumber);
                 success = true;
-            }
-            catch (ZMQException exception){
+            } catch (ZMQException exception) {
                 socketNumber++;
             }
         }

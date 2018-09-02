@@ -1,9 +1,9 @@
 package io.coti.basenode.http;
 
-public class ExceptionResponse extends Response{
+public class ExceptionResponse extends Response {
     public String type;
 
-    public ExceptionResponse(String message, String errorType){
+    public ExceptionResponse(String message, String errorType) {
         super(message);
         this.type = errorType;
         this.status = HttpStringConstants.STATUS_ERROR;

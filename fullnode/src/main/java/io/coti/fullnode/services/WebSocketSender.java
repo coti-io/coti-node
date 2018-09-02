@@ -2,7 +2,6 @@ package io.coti.fullnode.services;
 
 import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.NodeData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.data.TransactionStatus;
 import io.coti.basenode.http.websocket.GeneratedAddressMessage;
@@ -20,24 +19,24 @@ import java.math.BigDecimal;
 public class WebSocketSender {
 
     private SimpMessagingTemplate messagingSender;
+
     @Autowired
-    public WebSocketSender(SimpMessagingTemplate simpMessagingTemplate){
+    public WebSocketSender(SimpMessagingTemplate simpMessagingTemplate) {
         this.messagingSender = simpMessagingTemplate;
     }
 
     public void notifyBalanceChange(Hash addressHash, BigDecimal balance, BigDecimal preBalance) {
         log.trace("Address {} with balance {} and pre balance {} is about to be sent to the subscribed user", addressHash.toHexString(), balance, preBalance);
         messagingSender.convertAndSend("/topic/" + addressHash.toHexString(),
-                new UpdatedBalanceMessage(addressHash, balance,preBalance));
+                new UpdatedBalanceMessage(addressHash, balance, preBalance));
     }
 
     public void notifyTransactionHistoryChange(TransactionData transactionData, TransactionStatus transactionStatus) {
         log.debug("Transaction {} is about to be sent to the subscribed user", transactionData.getHash().toHexString());
 
-        for (BaseTransactionData bxData: transactionData.getBaseTransactions())
-        {
+        for (BaseTransactionData bxData : transactionData.getBaseTransactions()) {
             messagingSender.convertAndSend("/topic/addressTransactions/" + bxData.getAddressHash().toHexString(),
-                    new NotifyTransactionChange(transactionData,transactionStatus));
+                    new NotifyTransactionChange(transactionData, transactionStatus));
         }
     }
 

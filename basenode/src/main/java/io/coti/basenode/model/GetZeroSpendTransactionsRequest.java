@@ -10,5 +10,4 @@ public class GetZeroSpendTransactionsRequest {
     private Hash fullNodeHash;
 
 
-
 }

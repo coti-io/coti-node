@@ -1,6 +1,5 @@
 package io.coti.zerospend.services;
 
-import io.coti.basenode.data.NodeType;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.crypto.DspConsensusCrypto;
 import io.coti.basenode.crypto.DspVoteCrypto;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -157,7 +155,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
         mapHashToDspVote.forEach((hash, dspVote) -> dspVotes.add(dspVote));
         dspConsensusResult.setDspVotes(dspVotes);
         dspConsensusCrypto.signMessage(dspConsensusResult);
-        propagationPublisher.propagate(dspConsensusResult, Arrays.asList(NodeType.DspNode,NodeType.TrustScoreNode));
+        propagationPublisher.propagate(dspConsensusResult, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode));
         balanceService.setDspcToTrue(dspConsensusResult);
         transactionData.setDspConsensusResult(dspConsensusResult);
         transactionIndexService.insertNewTransactionIndex(transactionData);

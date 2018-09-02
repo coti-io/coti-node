@@ -36,7 +36,7 @@ public interface ITransactionHelper {
     long getTotalTransactions();
 
     long incrementTotalTransactions();
-   
+
     GetTransactionBatchResponse getTransactionBatch(long startingIndex);
 
     void addNoneIndexedTransaction(TransactionData transactionData);

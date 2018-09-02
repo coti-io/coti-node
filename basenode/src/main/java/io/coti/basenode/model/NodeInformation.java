@@ -15,7 +15,7 @@ public class NodeInformation {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return name + " " + ipAddress + " " + uptime;
     }
 }

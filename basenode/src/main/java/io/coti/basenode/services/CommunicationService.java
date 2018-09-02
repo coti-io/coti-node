@@ -1,13 +1,13 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.communication.Channel;
-import io.coti.basenode.data.NodeType;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.DspConsensusResult;
+import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.services.interfaces.IAddressService;
 import io.coti.basenode.services.interfaces.IDspVoteService;
@@ -52,7 +52,7 @@ public class CommunicationService {
         receiver.init(receivingPort, classNameToReceiverHandlerMapping);
     }
 
-    public void initSender(List<String> receivingServerAddresses){
+    public void initSender(List<String> receivingServerAddresses) {
         sender.init(receivingServerAddresses);
     }
 

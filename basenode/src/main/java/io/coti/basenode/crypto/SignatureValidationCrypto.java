@@ -5,7 +5,7 @@ import io.coti.basenode.data.interfaces.ISignValidatable;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
-public abstract class SignatureValidationCrypto<T extends ISignValidatable>{
+public abstract class SignatureValidationCrypto<T extends ISignValidatable> {
     public abstract byte[] getMessageInBytes(T signValidatable);
 
     public boolean verifySignature(T signValidatable) {

@@ -13,5 +13,6 @@ public class GetTransactionBatchResponse {
         this.transactions = transactions;
     }
 
-    public GetTransactionBatchResponse(){}
+    public GetTransactionBatchResponse() {
+    }
 }

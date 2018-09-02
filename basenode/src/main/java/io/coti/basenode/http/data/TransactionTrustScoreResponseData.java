@@ -5,7 +5,7 @@ import io.coti.basenode.data.TransactionTrustScoreData;
 import lombok.Data;
 
 @Data
-public class TransactionTrustScoreResponseData{
+public class TransactionTrustScoreResponseData {
     private String userHash;
     private String transactionHash;
     private double trustScore;

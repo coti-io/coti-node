@@ -10,11 +10,10 @@ public class SignatureData implements Serializable {
     private String r;
     private String s;
 
-    public SignatureData(){
+    public SignatureData() {
     }
 
-    public SignatureData(String r, String s)
-    {
+    public SignatureData(String r, String s) {
         this.r = r;
         this.s = s;
     }

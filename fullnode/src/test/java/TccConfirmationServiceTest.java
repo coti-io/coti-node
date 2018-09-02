@@ -6,9 +6,9 @@ import org.junit.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.Date;
 
 @SpringBootTest
 public class TccConfirmationServiceTest {
@@ -19,22 +19,22 @@ public class TccConfirmationServiceTest {
 
     @Before
     public void init() {
-        TransactionData TransactionData0 = new TransactionData(new ArrayList<>(),new Hash("0"),"test",20, new Date());
+        TransactionData TransactionData0 = new TransactionData(new ArrayList<>(), new Hash("0"), "test", 20, new Date());
         TransactionData0.setSenderTrustScore(80);
 
-        TransactionData TransactionData1 = new TransactionData(new ArrayList<>(),new Hash("1".getBytes()),"test",20, new Date());
+        TransactionData TransactionData1 = new TransactionData(new ArrayList<>(), new Hash("1".getBytes()), "test", 20, new Date());
         TransactionData1.setSenderTrustScore(120);
 
-        TransactionData TransactionData2 = new TransactionData(new ArrayList<>(),new Hash("2".getBytes()),"test",20, new Date());
+        TransactionData TransactionData2 = new TransactionData(new ArrayList<>(), new Hash("2".getBytes()), "test", 20, new Date());
         TransactionData2.setSenderTrustScore(100);
 
-        TransactionData TransactionData3 = new TransactionData(new ArrayList<>(),new Hash("3".getBytes()),"test",20, new Date());
+        TransactionData TransactionData3 = new TransactionData(new ArrayList<>(), new Hash("3".getBytes()), "test", 20, new Date());
         TransactionData3.setSenderTrustScore(90);
 
-        TransactionData TransactionData4 = new TransactionData(new ArrayList<>(),new Hash("4".getBytes()),"test",20, new Date());
+        TransactionData TransactionData4 = new TransactionData(new ArrayList<>(), new Hash("4".getBytes()), "test", 20, new Date());
         TransactionData4.setSenderTrustScore(100);
 
-        TransactionData TransactionData5 = new TransactionData(new ArrayList<>(),new Hash("5".getBytes()),"test",20, new Date());
+        TransactionData TransactionData5 = new TransactionData(new ArrayList<>(), new Hash("5".getBytes()), "test", 20, new Date());
         TransactionData5.setSenderTrustScore(90);
 
 

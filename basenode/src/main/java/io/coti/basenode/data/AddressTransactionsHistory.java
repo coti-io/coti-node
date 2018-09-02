@@ -22,7 +22,7 @@ public class AddressTransactionsHistory implements IEntity {
         transactionsHistory = new ArrayList<>();
     }
 
-    public void addTransactionHashToHistory(Hash transactionHash){
+    public void addTransactionHashToHistory(Hash transactionHash) {
         transactionsHistory.add(transactionHash);
     }
 

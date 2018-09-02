@@ -33,7 +33,7 @@ public class LiveViewService {
         nodeData.setId(transactionData.getHash().toHexString());
         nodeData.setTrustScore(transactionData.getSenderTrustScore());
         nodeData.setGenesis(transactionData.isZeroSpend());
-        
+
         if (transactionData.isSource()) {
             nodeData.setStatus(0);
         } else {
@@ -66,8 +66,8 @@ public class LiveViewService {
     public void setNodeDataDatesFromTransactionData(TransactionData transactionData, NodeData nodeData) {
         nodeData.setAttachmentTime(transactionData.getAttachmentTime());
         nodeData.setTransactionConsensusUpdateTime(transactionData.getTransactionConsensusUpdateTime());
-        if (transactionData.getAttachmentTime()!= null && transactionData.getTransactionConsensusUpdateTime()!= null) {
-            nodeData.setTccDuration( (transactionData.getTransactionConsensusUpdateTime().getTime() - transactionData.getAttachmentTime().getTime())/ 1000);
+        if (transactionData.getAttachmentTime() != null && transactionData.getTransactionConsensusUpdateTime() != null) {
+            nodeData.setTccDuration((transactionData.getTransactionConsensusUpdateTime().getTime() - transactionData.getAttachmentTime().getTime()) / 1000);
         }
     }
 

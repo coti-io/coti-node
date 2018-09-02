@@ -208,8 +208,7 @@ public class TransactionHelper implements ITransactionHelper {
         transactions.put(transactionData);
         if (transactionData.getDspConsensusResult() == null) {
             addNoneIndexedTransaction(transactionData);
-        }
-        else{
+        } else {
             balanceService.setDspcToTrue(transactionData.getDspConsensusResult());
         }
         updateAddressTransactionHistory(transactionData);

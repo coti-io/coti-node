@@ -1,7 +1,7 @@
 package io.coti.zerospend.services;
 
-import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.DspVote;
+import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
 import org.springframework.beans.factory.annotation.Autowired;

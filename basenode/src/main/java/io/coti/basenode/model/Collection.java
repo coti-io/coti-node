@@ -18,7 +18,7 @@ public abstract class Collection<T extends IEntity> {
     @Autowired
     public IDatabaseConnector databaseConnector;
 
-    public void init(){
+    public void init() {
         log.info("Collection init running. Class: " + columnFamilyName);
     }
 
@@ -26,14 +26,14 @@ public abstract class Collection<T extends IEntity> {
         databaseConnector.put(columnFamilyName, entity.getHash().getBytes(), SerializationUtils.serialize(entity));
     }
 
-    public T getByHash(String hashStringInHexRepresentation){
+    public T getByHash(String hashStringInHexRepresentation) {
         return getByHash(new Hash(hashStringInHexRepresentation));
     }
 
     public T getByHash(Hash hash) {
         byte[] bytes = databaseConnector.getByKey(columnFamilyName, hash.getBytes());
         T deserialized = (T) SerializationUtils.deserialize(bytes);
-        if(deserialized instanceof IEntity) {
+        if (deserialized instanceof IEntity) {
             deserialized.setHash(hash);
         }
         return deserialized;
@@ -44,10 +44,10 @@ public abstract class Collection<T extends IEntity> {
         return new DbItem(deserialized);
     }
 
-    public void forEach(Consumer<T> consumer){
+    public void forEach(Consumer<T> consumer) {
         RocksIterator iterator = databaseConnector.getIterator(columnFamilyName);
         iterator.seekToFirst();
-        while (iterator.isValid()){
+        while (iterator.isValid()) {
             T deserialized = (T) SerializationUtils.deserialize(iterator.value());
             deserialized.setHash(new Hash(iterator.key()));
             consumer.accept(deserialized);

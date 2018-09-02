@@ -1,11 +1,11 @@
 package io.coti.dspnode.services;
 
-import io.coti.basenode.data.NodeType;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.crypto.DspVoteCrypto;
 import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.DspVote;
+import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;

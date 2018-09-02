@@ -8,7 +8,10 @@ import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -32,7 +35,7 @@ public class TccConfirmationService {
         //loop is for making sure that every vertex is visited since if we select only one random source
         //all vertices might not be reachable from this source
         //eg:1->2->3,1->3 and if we select 3 as source first then no vertex can be visited of course except for 3
-        hashToTccUnConfirmTransactionsMapping.forEach( (hash, transactionData) -> {
+        hashToTccUnConfirmTransactionsMapping.forEach((hash, transactionData) -> {
             if (!transactionData.isVisit()) {
                 topologicalSortingHelper(transactionData);
             }

@@ -131,15 +131,15 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
         this.validByNodes.putAll(validByNodes);
     }
 
-    public Boolean isValid(){
+    public Boolean isValid() {
         return valid;
     }
+
     @Override
     public int compareTo(TransactionData other) {
         try {
             return Double.compare(this.senderTrustScore, other.senderTrustScore);
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return -1;
