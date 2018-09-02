@@ -5,7 +5,7 @@ import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.crypto.BaseTransactionWithPrivateKey;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.crypto.TransactionCrypto;
-import io.coti.basenode.crypto.TransactionCyptoCreator;
+import io.coti.zerospend.crypto.TransactionCyptoCreator;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.ZeroSpendTransactionRequest;
@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 
 import static io.coti.zerospend.data.ZeroSpendTransactionType.GENESIS;
 import static io.coti.zerospend.data.ZeroSpendTransactionType.STARVATION;
