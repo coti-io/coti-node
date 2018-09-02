@@ -10,7 +10,7 @@ import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.GetTransactionBatchResponse;
 import io.coti.basenode.http.GetTransactionResponse;
 import io.coti.basenode.http.data.TransactionResponseData;
-import io.coti.basenode.model.AddressesTransactionsHistory;
+import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IBalanceService;
@@ -38,7 +38,7 @@ import static io.coti.basenode.http.HttpStringConstants.TRANSACTION_DOESNT_EXIST
 public class TransactionHelper implements ITransactionHelper {
 
     @Autowired
-    private AddressesTransactionsHistory addressesTransactionsHistory;
+    private AddressTransactionsHistories addressTransactionsHistories;
     @Autowired
     private IBalanceService balanceService;
     @Autowired
@@ -75,13 +75,13 @@ public class TransactionHelper implements ITransactionHelper {
 
     private void updateAddressTransactionHistory(TransactionData transactionData) {
         for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
-            AddressTransactionsHistory addressHistory = addressesTransactionsHistory.getByHash(baseTransactionData.getAddressHash());
+            AddressTransactionsHistory addressHistory = addressTransactionsHistories.getByHash(baseTransactionData.getAddressHash());
 
             if (addressHistory == null) {
                 addressHistory = new AddressTransactionsHistory(baseTransactionData.getAddressHash());
             }
             addressHistory.addTransactionHashToHistory(transactionData.getHash());
-            addressesTransactionsHistory.put(addressHistory);
+            addressTransactionsHistories.put(addressHistory);
         }
     }
 

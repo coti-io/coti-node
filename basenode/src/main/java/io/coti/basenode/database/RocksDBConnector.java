@@ -28,7 +28,7 @@ public class RocksDBConnector implements IDatabaseConnector {
             "DefaultColumnClassName",
             Transactions.class.getName(),
             Addresses.class.getName(),
-            AddressesTransactionsHistory.class.getName(),
+            AddressTransactionsHistories.class.getName(),
             TrustScores.class.getName(),
             TransactionIndexes.class.getName(),
             TransactionVotes.class.getName()

@@ -8,9 +8,9 @@ import javax.annotation.PostConstruct;
 
 @Slf4j
 @Service
-public class AddressesTransactionsHistory extends Collection<AddressTransactionsHistory> {
+public class AddressTransactionsHistories extends Collection<AddressTransactionsHistory> {
 
-    public AddressesTransactionsHistory() {
+    public AddressTransactionsHistories() {
     }
 
     @PostConstruct

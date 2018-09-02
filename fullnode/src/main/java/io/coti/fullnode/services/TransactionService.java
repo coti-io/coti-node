@@ -8,7 +8,7 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.exceptions.TransactionException;
 import io.coti.basenode.http.*;
 import io.coti.basenode.http.data.TransactionStatus;
-import io.coti.basenode.model.AddressesTransactionsHistory;
+import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.IClusterService;
@@ -47,7 +47,7 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private ISender sender;
     @Autowired
-    private AddressesTransactionsHistory addressTransactionHistories;
+    private AddressTransactionsHistories addressTransactionHistories;
     @Autowired
     private Transactions transactions;
     @Autowired

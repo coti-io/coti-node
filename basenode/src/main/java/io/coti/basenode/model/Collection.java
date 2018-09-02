@@ -39,11 +39,6 @@ public abstract class Collection<T extends IEntity> {
         return deserialized;
     }
 
-    public DbItem<T> getByHashItem(Hash hash) {
-        T deserialized = getByHash(hash);
-        return new DbItem(deserialized);
-    }
-
     public void forEach(Consumer<T> consumer) {
         RocksIterator iterator = databaseConnector.getIterator(columnFamilyName);
         iterator.seekToFirst();
