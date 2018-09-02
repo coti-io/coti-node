@@ -9,6 +9,7 @@ import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
@@ -19,6 +20,11 @@ import java.util.concurrent.atomic.AtomicLong;
 @Service
 public class TransactionIndexService {
 
+
+
+    @Value("${zerospend.global.key}")
+    private String zeroSpendGlobalKey;
+
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -27,29 +33,6 @@ public class TransactionIndexService {
     private Transactions transactions;
     private TransactionIndexData lastTransactionIndexData;
 
-    public void init(AtomicLong maxTransactionIndex) {
-        byte[] accumulatedHash = "GENESIS".getBytes();
-        TransactionIndexData transactionIndexData = null;
-        for (long i = 0; i <= maxTransactionIndex.get(); i++) {
-            transactionIndexData = transactionIndexes.getByHash(new Hash(i));
-            if (transactionIndexData == null) {
-                log.error("Null transaction index data found for index: {}", i);
-                System.exit(-1);
-            }
-
-            TransactionData transactionData = transactions.getByHash(transactionIndexData.getTransactionHash());
-            if (transactionIndexData == null || transactionData == null) {
-                log.error("Null transaction data found for index: {}", i);
-                System.exit(-1);
-            }
-            accumulatedHash = getAccumulatedHash(accumulatedHash, transactionData.getHash(), transactionData.getDspConsensusResult().getIndex());
-            if (!Arrays.equals(accumulatedHash, transactionIndexData.getAccumulatedHash())) {
-                log.error("Incorrect accumulated hash");
-                System.exit(-1);
-            }
-        }
-        lastTransactionIndexData = transactionIndexData;
-    }
 
     public synchronized boolean insertNewTransactionIndex(TransactionData transactionData) {
         if (transactionData.getDspConsensusResult() == null) {
