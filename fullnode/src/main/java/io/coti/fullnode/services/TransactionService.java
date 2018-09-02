@@ -9,7 +9,6 @@ import io.coti.basenode.exceptions.TransactionException;
 import io.coti.basenode.http.*;
 import io.coti.basenode.http.data.TransactionStatus;
 import io.coti.basenode.model.AddressesTransactionsHistory;
-import io.coti.basenode.model.DbItem;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.IClusterService;
@@ -48,7 +47,7 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private ISender sender;
     @Autowired
-    private AddressesTransactionsHistory addressesTransactionsHistory;
+    private AddressesTransactionsHistory addressTransactionHistories;
     @Autowired
     private Transactions transactions;
     @Autowired
@@ -189,13 +188,13 @@ public class TransactionService extends BaseNodeTransactionService {
 
     public ResponseEntity<BaseResponse> getAddressTransactions(Hash addressHash) {
         List<TransactionData> transactionsDataList = new Vector<>();
-        DbItem<AddressTransactionsHistory> dbAddress = addressesTransactionsHistory.getByHashItem(addressHash);
+        AddressTransactionsHistory addressTransactionsHistory = addressTransactionHistories.getByHash(addressHash);
 
-        if (!dbAddress.isExists)
+        if (addressTransactionsHistory == null) {
             return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistory(transactionsDataList));
+        }
 
-        AddressTransactionsHistory history = dbAddress.item;
-        for (Hash transactionHash : history.getTransactionsHistory()) {
+        for (Hash transactionHash : addressTransactionsHistory.getTransactionsHistory()) {
             TransactionData transactionData = transactions.getByHash(transactionHash);
             transactionsDataList.add(transactionData);
 
