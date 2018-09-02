@@ -44,7 +44,6 @@ public class SourceSelector implements ISourceSelector {
         int lowIndex = roundedTrustScore - 1;
         int highIndex = roundedTrustScore + 1;
         List<TransactionData> neighbourSources = new LinkedList<>();
-        //List<TransactionData> neighbourSources = trustScoreToSourceListMapping.get(roundedTrustScore);
         neighbourSources.addAll(trustScoreToSourceListMapping.get(roundedTrustScore));
 
         for (int trustScoreDifference = 0; trustScoreDifference < maxNeighbourhoodRadius; trustScoreDifference++) {
