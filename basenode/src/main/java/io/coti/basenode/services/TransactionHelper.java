@@ -90,7 +90,7 @@ public class TransactionHelper implements ITransactionHelper {
         return verifyTransaction.isTransactionValid();
     }
 
-    private boolean isTransactionExists(TransactionData transactionData) {
+    public boolean isTransactionExists(TransactionData transactionData) {
         if (transactionHashToTransactionStateStackMapping.containsKey(transactionData.getHash())) {
             return true;
         }

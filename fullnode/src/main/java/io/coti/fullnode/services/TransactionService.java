@@ -5,6 +5,7 @@ import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.AddressTransactionsHistory;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.ZeroSpendTransactionRequest;
 import io.coti.basenode.exceptions.TransactionException;
 import io.coti.basenode.http.*;
 import io.coti.basenode.http.data.TransactionStatus;
@@ -109,11 +110,8 @@ public class TransactionService extends BaseNodeTransactionService {
                                 INSUFFICIENT_FUNDS_MESSAGE));
             }
             selectSources(transactionData);
-            while (transactionData.getLeftParentHash() == null && transactionData.getRightParentHash() == null) {
                 log.debug("Could not find sources for transaction: {}. Sending to Zero Spend and retrying in 5 seconds.");
-                TimeUnit.SECONDS.sleep(5);
                 selectSources(transactionData);
-            }
 
             if (!validationService.validateSource(transactionData.getLeftParentHash()) ||
                     !validationService.validateSource(transactionData.getRightParentHash())) {
@@ -171,10 +169,11 @@ public class TransactionService extends BaseNodeTransactionService {
             }
         }
 
-        TransactionData zeroSpendTransaction = zeroSpendService.getZeroSpendTransaction(transactionData.getSenderTrustScore());
-        transactionHelper.attachTransactionToCluster(zeroSpendTransaction);
-        clusterService.attachToCluster(zeroSpendTransaction);
+        ZeroSpendTransactionRequest zeroSpendTransactionRequest = new ZeroSpendTransactionRequest();
+        zeroSpendTransactionRequest.setTransactionData(transactionData);
+        receivingServerAddresses.forEach(address -> sender.send(zeroSpendTransactionRequest, address));
         clusterService.selectSources(transactionData);
+
         while (!transactionData.hasSources()) {
             log.debug("Waiting 2 seconds for new zero spend transaction to be added to available sources for transaction {}", transactionData.getHash().toHexString());
             try {
@@ -206,4 +205,5 @@ public class TransactionService extends BaseNodeTransactionService {
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
         webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
     }
+
 }

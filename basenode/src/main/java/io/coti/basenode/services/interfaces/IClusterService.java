@@ -2,7 +2,11 @@ package io.coti.basenode.services.interfaces;
 
 import io.coti.basenode.data.TransactionData;
 
-public interface IClusterService {
+import java.util.List;
+
+public interface  IClusterService {
+
+    List<List<TransactionData>> getSourceListsByTrustScore();
 
     void attachToCluster(TransactionData transactionData);
 
