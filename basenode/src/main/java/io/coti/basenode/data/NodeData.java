@@ -11,11 +11,10 @@ public class NodeData {
     private String rightParent;
     private boolean isGenesis;
     private double trustScore;
-    private int status;
+    private Integer status;
     private long tccDuration;
     private Date attachmentTime;
     private Date transactionConsensusUpdateTime;
-
 
     @Override
     public boolean equals(Object other) {
