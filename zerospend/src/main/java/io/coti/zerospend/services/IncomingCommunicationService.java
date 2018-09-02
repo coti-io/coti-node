@@ -20,7 +20,7 @@ import java.util.function.Function;
 public class IncomingCommunicationService {
 
 
-    @Value("#{'${propagation.dsp.addresses}'.split(',')}")
+    @Value("#{'${dsp.server.addresses}'.split(',')}")
     private List<String> propagationDspAddresses;
 
 
