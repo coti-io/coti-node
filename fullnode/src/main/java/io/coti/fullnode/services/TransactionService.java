@@ -15,7 +15,6 @@ import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
-import io.coti.basenode.services.interfaces.IZeroSpendService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,8 +42,7 @@ public class TransactionService extends BaseNodeTransactionService {
     private IValidationService validationService;
     @Autowired
     private IClusterService clusterService;
-    @Autowired
-    private IZeroSpendService zeroSpendService;
+
     @Autowired
     private ISender sender;
     @Autowired

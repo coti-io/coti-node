@@ -16,11 +16,12 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+/*
 @Service
 public class IncomingCommunicationService {
 
 
-    @Value("#{'${dsp.server.addresses}'.split(',')}")
+    @Value("#{'${propagation.server.addresses}'.split(',')}")
     private List<String> propagationDspAddresses;
 
 
@@ -66,4 +67,4 @@ public class IncomingCommunicationService {
         classNameToReceiverHandlerMapping.put(Channel.getChannelString(ZeroSpendTransactionRequest.class, NodeType.ZeroSpendServer) , newZeroSpendTransactionRequest -> zeroSpendTransactionCreationService.createNewGenesisZeroSpendTransaction((ZeroSpendTransactionRequest) newZeroSpendTransactionRequest));
         zeroMQTransactionReceiver.init(receivingPort, classNameToReceiverHandlerMapping);
     }
-}
+}*/

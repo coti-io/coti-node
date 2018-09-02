@@ -40,7 +40,7 @@ public class IncomingCommunicationService {
 
     @PostConstruct
     public void init() {
-        initReceiver();
+       // initReceiver();
         initSubscriber();
     }
 
@@ -50,6 +50,8 @@ public class IncomingCommunicationService {
         classNameToSubscriberHandlerMapping.put(AddressData.class.getName() + "DSP Nodes", data -> addressService.handlePropagatedAddress((AddressData) data));
         classNameToSubscriberHandlerMapping.put(DspConsensusResult.class.getName() + "DSP Result", data -> transactionService.handleVoteConclusion((DspConsensusResult) data));
         propagationSubscriber.init(propagationServerAddress,classNameToSubscriberHandlerMapping);
+
+
     }
 
     private void initReceiver() {
