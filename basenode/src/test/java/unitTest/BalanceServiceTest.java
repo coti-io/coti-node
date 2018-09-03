@@ -47,6 +47,10 @@ import static org.mockito.Mockito.when;
 
 public class BalanceServiceTest {
 
+    @MockBean
+    TransactionHelper transactionHelper;
+    @MockBean
+    BaseNodeInitializationService initializationService;
     @Autowired
     private BaseNodeBalanceService balanceService;
     @MockBean
@@ -55,10 +59,6 @@ public class BalanceServiceTest {
     private Transactions transactions;
     @MockBean
     private TransactionIndexService transactionIndexService;
-    @MockBean
-    TransactionHelper transactionHelper;
-    @MockBean
-    BaseNodeInitializationService initializationService;
 
     @Before
     public void init() throws Exception {

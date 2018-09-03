@@ -15,14 +15,15 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
+
 @Slf4j
 public class TestUtils {
 
-    private static final String[] hexaOptions = {"0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F"};
+    private static final String[] hexaOptions = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
 
-    public static String getRandomHexa(){
+    public static String getRandomHexa() {
         String hexa = "";
-        for(int i =0 ; i < 20 ; i++){
+        for (int i = 0; i < 20; i++) {
             int randomNum = ThreadLocalRandom.current().nextInt(0, 15 + 1);
             hexa += hexaOptions[randomNum];
         }
@@ -50,14 +51,14 @@ public class TestUtils {
         return tx;
     }
 
-    public static TransactionData createTransactionFromJson(String transactionJson)  {
+    public static TransactionData createTransactionFromJson(String transactionJson) {
         AddTransactionRequest addTransactionRequest = null;
         ObjectMapper mapper = new ObjectMapper();
         try {
             addTransactionRequest =
                     mapper.readValue(transactionJson, AddTransactionRequest.class);
         } catch (IOException e) {
-            log.error("Error when create trx from JSON" +e);
+            log.error("Error when create trx from JSON" + e);
         }
         return
                 new TransactionData(
@@ -69,7 +70,7 @@ public class TestUtils {
                         addTransactionRequest.senderHash);
     }
 
-    public static BaseTransactionData createBaseTransactionDataWithSpecificHash(Hash hash){
+    public static BaseTransactionData createBaseTransactionDataWithSpecificHash(Hash hash) {
         return new BaseTransactionData
                 (hash,
                         //new Hash("caba14b7fe219b3da5dee0c29389c88e4d134333a2ee104152d6e9f7b673be9e0e28ca511d1ac749f46bea7f1ab25818f335ab9111a6c5eebe2f650974e12d1b7dccd4d7"),

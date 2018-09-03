@@ -39,7 +39,7 @@ public class TransactionCryptoWrapperTest {
         Hash BaseTransactionsHash2 = notValidTransactionCryptoWrapper.getHashFromBaseTransactionHashesData();
         Assert.assertTrue(BaseTransactionsHash1.toString()
                 .equals("56236ae7d17e7f0bf1888d45dfb9cfb7648c15549aef9b79e360050a66388d21")
-        && BaseTransactionsHash2.toString()
+                && BaseTransactionsHash2.toString()
                 .equals("ebaa62e30ae91c0a9ec9756eafa0a9f2946f8f3780bee291a9b3e1c522cd1163"));
     }
 

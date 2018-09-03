@@ -54,8 +54,6 @@ public class CryptoHelperTest {
     }
 
 
-
-
     @Test
     public void CheckRemovingLeadingZerosFromXpointAddress() {
         CryptoHelper helper = new CryptoHelper();
@@ -155,7 +153,6 @@ public class CryptoHelperTest {
         txCreator.signTransaction();
         Assert.assertTrue(txCreator.getTransactionCryptoWrapper().isTransactionValid());
     }
-
 
 
     @Test

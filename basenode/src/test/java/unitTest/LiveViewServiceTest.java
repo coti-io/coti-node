@@ -23,7 +23,7 @@ import static org.junit.Assert.assertNull;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = {
-       // WebSocketSender.class,
+        // WebSocketSender.class,
         LiveViewService.class,
         SimpMessagingTemplate.class})
 public class LiveViewServiceTest {

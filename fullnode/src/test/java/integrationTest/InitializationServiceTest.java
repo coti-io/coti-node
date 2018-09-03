@@ -77,5 +77,6 @@ public class InitializationServiceTest {
 
     @Test
     public void init() {
+
     }
 }

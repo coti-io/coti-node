@@ -1,3 +1,5 @@
+package unitTest;
+
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.data.TransactionStatus;
@@ -56,12 +58,4 @@ public class WebSocketSenderTest {
         }
     }
 
-//    @Test
-//    public void sendNode_noExceptionIsThrown() {
-//        try {
-//            webSocketSender.sendNode(new NodeData());
-//        } catch (Exception e) {
-//            assertNull(e);
-//        }
-//    }
 }

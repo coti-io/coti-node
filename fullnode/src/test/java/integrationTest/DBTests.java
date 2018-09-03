@@ -42,7 +42,7 @@ import java.util.Date;
 })
 @SpringBootTest
 @RunWith(SpringRunner.class)
-public class RocksDBTests {
+public class DBTests {
     @Autowired
     private Transactions transactions;
     @Autowired
@@ -61,9 +61,6 @@ public class RocksDBTests {
     private LiveViewService liveViewService;
     @MockBean
     private SimpMessagingTemplate simpMessagingTemplate;
-
-//    @MockBean
-//    private org.springframework.messaging.MessageChannel MessageChannel;
 
     @Test
     public void saveAndRetrieveSingleTransaction() {
@@ -129,11 +126,10 @@ public class RocksDBTests {
                         6,
                         null);
         transactionIndexes.put(transactionIndexData1);
-        TrustScoreData transactionIndexData2 =
-                trustScores.getByHash(new Hash("TransactionIndexData 0".getBytes()));
+        TransactionIndexData transactionIndexData2 =
+                transactionIndexes.getByHash(transactionIndexData1.getHash());
         Assert.assertEquals(transactionIndexData1, transactionIndexData2);
     }
-
 
     @Test
     public void saveAndGetTransactionVotes() {
@@ -144,4 +140,5 @@ public class RocksDBTests {
                 transactionVotes.getByHash(new Hash("TransactionVoteData 0".getBytes()));
         Assert.assertEquals(transactionVoteData1, transactionVoteData2);
     }
+
 }

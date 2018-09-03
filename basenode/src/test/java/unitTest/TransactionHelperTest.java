@@ -1,5 +1,7 @@
 package unitTest;
 
+import io.coti.basenode.crypto.DspConsensusCrypto;
+import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.GetTransactionResponse;
@@ -20,8 +22,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import testUtils.TestUtils;
-import io.coti.basenode.crypto.DspConsensusCrypto;
-import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
