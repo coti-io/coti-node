@@ -23,9 +23,10 @@ public class InitializationService {
 
     @PostConstruct
     public void init() {
-        baseNodeInitializationService.init();
 
         communicationService.initSubscriber(propagationServerAddresses, NodeType.TrustScoreNode);
+
+        baseNodeInitializationService.init();
 
     }
 }

@@ -277,6 +277,7 @@ public class TransactionHelper implements ITransactionHelper {
             transactionsToSend.add(transactions.getByHash(transactionIndexes.getByHash(new Hash(i)).getTransactionHash()));
         }
         transactionsToSend.addAll(noneIndexedTransactionHashes.stream().map(hash -> transactions.getByHash(hash)).collect(Collectors.toList()));
+        transactionsToSend.sort(Comparator.comparing(transactionData -> transactionData.getAttachmentTime()));
         return new GetTransactionBatchResponse(transactionsToSend);
     }
 

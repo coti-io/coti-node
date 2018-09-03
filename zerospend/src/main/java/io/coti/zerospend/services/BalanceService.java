@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 public class BalanceService extends BaseNodeBalanceService {
 
     @Override
-    protected void insertNewTransactionIndex(TransactionData transactionData) {
+    protected boolean insertNewTransactionIndex(TransactionData transactionData) {
+        return true;
     }
 }

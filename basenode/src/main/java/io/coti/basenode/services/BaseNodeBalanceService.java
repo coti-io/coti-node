@@ -43,6 +43,7 @@ public class BaseNodeBalanceService implements IBalanceService {
     private Map<Hash, BigDecimal> balanceMap;
     private Map<Hash, BigDecimal> preBalanceMap;
     private BlockingQueue<ConfirmationData> confirmationQueue;
+    private Map<Long, DspConsensusResult> waitingDspConsensusResults = new ConcurrentHashMap<>();
     private AtomicLong totalConfirmed = new AtomicLong(0);
     private AtomicLong tccConfirmed = new AtomicLong(0);
     private AtomicLong dspConfirmed = new AtomicLong(0);
@@ -68,7 +69,9 @@ public class BaseNodeBalanceService implements IBalanceService {
                     tccConfirmed.incrementAndGet();
                 } else if (confirmationData instanceof DspConsensusResult) {
                     transactionData.setDspConsensusResult((DspConsensusResult) confirmationData);
-                    insertNewTransactionIndex(transactionData);
+                    if(!insertNewTransactionIndex(transactionData)){
+                        continue;
+                    }
                     if (transactionHelper.isDspConfirmed(transactionData)) {
                         dspConfirmed.incrementAndGet();
                     }
@@ -162,8 +165,20 @@ public class BaseNodeBalanceService implements IBalanceService {
         return true;
     }
 
-    protected void insertNewTransactionIndex(TransactionData transactionData) {
-        transactionIndexService.insertNewTransactionIndex(transactionData);
+    protected boolean insertNewTransactionIndex(TransactionData transactionData) {
+        DspConsensusResult dspConsensusResult = transactionData.getDspConsensusResult();
+        if (!transactionIndexService.insertNewTransactionIndex(transactionData)) {
+            waitingDspConsensusResults.put(dspConsensusResult.getIndex(), dspConsensusResult);
+            return false;
+        } else {
+            long index = dspConsensusResult.getIndex() + 1;
+            while (waitingDspConsensusResults.containsKey(index)) {
+                setDspcToTrue(waitingDspConsensusResults.get(index));
+                waitingDspConsensusResults.remove(index);
+                index++;
+            }
+            return true;
+        }
     }
 
     protected void continueHandleBalanceChanges(Hash addressHash, BigDecimal newBalance, BigDecimal newPreBalance) {

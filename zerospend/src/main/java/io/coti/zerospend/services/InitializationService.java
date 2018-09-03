@@ -31,7 +31,6 @@ public class InitializationService {
 
     @PostConstruct
     public void init() {
-        baseNodeInitializationService.init();
 
         HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping = new HashMap<>();
         classNameToReceiverHandlerMapping.put(DspVote.class.getName(), data ->
@@ -40,6 +39,8 @@ public class InitializationService {
         communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
         communicationService.initSubscriber(propagationServerAddresses, NodeType.ZeroSpendServer);
         communicationService.initPropagator(propagationPort);
+
+        baseNodeInitializationService.init();
 
     }
 }
