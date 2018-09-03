@@ -82,7 +82,7 @@ public class TransactionHelper implements ITransactionHelper {
         return verifyTransaction.isTransactionValid();
     }
 
-    private boolean isTransactionExists(TransactionData transactionData) {
+    public boolean isTransactionExists(TransactionData transactionData) {
         if (transactionHashToTransactionStateStackMapping.containsKey(transactionData.getHash())) {
             return true;
         }
@@ -251,7 +251,9 @@ public class TransactionHelper implements ITransactionHelper {
     @Override
     public GetTransactionBatchResponse getTransactionBatch(long startingIndex) {
         List<TransactionData> transactionsToSend = new LinkedList<>();
-
+        if(startingIndex > transactionIndexService.getLastTransactionIndexData().getIndex()){
+            return new GetTransactionBatchResponse(transactionsToSend);
+        }
         for (long i = startingIndex; i <= transactionIndexService.getLastTransactionIndexData().getIndex(); i++) {
             transactionsToSend.add(transactions.getByHash(transactionIndexes.getByHash(new Hash(i)).getTransactionHash()));
         }

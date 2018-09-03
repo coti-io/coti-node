@@ -6,20 +6,22 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+
 @Slf4j
 @Service
 public class NodeCryptoHelper {
 
-    private static String nodePublicKey;
-    private static String nodePrivateKey;
-
     @Value("#{'${global.private.key}'}")
-    public void setNodePublicKey(String nodePrivateKey) {
-        this.nodePrivateKey = nodePrivateKey;
+    private String nodePrivateKey;
+    private static String nodePublicKey;
+
+    @PostConstruct
+    public void init(){
         nodePublicKey = CryptoHelper.GetPublicKeyFromPrivateKey(nodePrivateKey);
     }
 
-    public static SignatureData signMessage(byte[] message) {
+    public SignatureData signMessage(byte[] message) {
         return CryptoHelper.SignBytes(message, nodePrivateKey);
     }
 

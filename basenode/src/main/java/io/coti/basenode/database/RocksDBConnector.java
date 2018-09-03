@@ -70,7 +70,6 @@ public class RocksDBConnector implements IDatabaseConnector {
         this.dbPath = dbPath;
         if (resetDatabase) {
             deleteDatabaseFolder();
-            copyInitialDatabaseFolder();
         }
         initiateColumnFamilyDescriptors();
         try {
@@ -83,14 +82,6 @@ public class RocksDBConnector implements IDatabaseConnector {
             populateColumnFamilies();
         } catch (Exception e) {
             log.error("Error initiating Rocks DB");
-            e.printStackTrace();
-        }
-    }
-
-    private void copyInitialDatabaseFolder() {
-        try {
-            FileUtils.copyDirectory(new File(initialDBPath), new File(dbPath));
-        } catch (IOException e) {
             e.printStackTrace();
         }
     }

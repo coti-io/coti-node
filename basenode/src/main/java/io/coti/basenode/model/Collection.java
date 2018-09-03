@@ -49,5 +49,11 @@ public abstract class Collection<T extends IEntity> {
             iterator.next();
         }
     }
+
+    public boolean isEmpty(){
+        RocksIterator iterator = databaseConnector.getIterator(columnFamilyName);
+        iterator.seekToFirst();
+        return !iterator.isValid();
+    }
 }
 
