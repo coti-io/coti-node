@@ -8,11 +8,6 @@
     <springProperty name="logging.file.name" source="logging.file.name"/>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
-            <level>INFO</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
         <encoder>
             <Pattern>
                 <pattern>${CONSOLE_LOG_PATTERN}</pattern>
