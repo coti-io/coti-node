@@ -30,7 +30,7 @@ public class BaseNodeInitializationService {
     @Autowired
     private IClusterService clusterService;
     @Autowired
-    private MonitorService monitorService;
+    private IMonitorService monitorService;
     @Autowired
     private LiveViewService liveViewService;
     @Autowired
