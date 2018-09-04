@@ -121,7 +121,7 @@ public class ClusterService implements IClusterService {
     private void removeTransactionFromSources(Hash transactionHash) {
         TransactionData transactionData = transactions.getByHash(transactionHash);
         if (sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).contains(transactionData)) {
-            sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).remove(transactionData); // TODO: synchronize
+            sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).remove(transactionData);
             liveViewService.updateNodeStatus(transactionData, 1);
             totalSources.decrementAndGet();
         }

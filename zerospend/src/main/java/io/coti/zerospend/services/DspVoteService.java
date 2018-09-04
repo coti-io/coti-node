@@ -87,7 +87,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
                 return "Invalid Signature";
             }
             if (transactionHashToVotesListMapping.get(transactionHash) == null) {
-                log.error("Transaction Not existing in mapping!!"); // TODO: Solve and delete!
+                log.error("Transaction Not existing in mapping!!");
                 return "Vote already processed";
             }
             log.debug("Adding new vote: {}", dspVote);
