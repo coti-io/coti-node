@@ -7,7 +7,7 @@ import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
 import io.coti.basenode.database.RocksDBConnector;
 import io.coti.basenode.http.AddTransactionRequest;
-import io.coti.basenode.model.AddressesTransactionsHistory;
+import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.*;
@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 @ContextConfiguration(classes = {TransactionController.class,
         ClusterService.class,
         TransactionHelper.class,
-        AddressesTransactionsHistory.class,
+        AddressTransactionsHistories.class,
         RocksDBConnector.class,
         BalanceService.class,
         LiveViewService.class,

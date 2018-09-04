@@ -25,7 +25,7 @@ import java.util.Date;
 @ContextConfiguration(classes = {BaseNodeBalanceService.class,
         Transactions.class,
         Addresses.class,
-        AddressesTransactionsHistory.class,
+        AddressTransactionsHistories.class,
         TrustScores.class,
         TransactionIndexes.class,
         TransactionVotes.class,
@@ -48,7 +48,7 @@ public class DBTests {
     @Autowired
     private Addresses addresses;
     @Autowired
-    private AddressesTransactionsHistory addressesTransactionsHistory;
+    private AddressTransactionsHistories addressesTransactionsHistory;
     @Autowired
     private TrustScores trustScores;
     @Autowired

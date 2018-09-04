@@ -5,7 +5,7 @@ import io.coti.basenode.crypto.DspConsensusCrypto;
 import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
 import io.coti.basenode.database.RocksDBConnector;
 import io.coti.basenode.model.Addresses;
-import io.coti.basenode.model.AddressesTransactionsHistory;
+import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.*;
@@ -33,7 +33,7 @@ import org.springframework.test.context.junit4.SpringRunner;
         RocksDBConnector.class,
         TransactionIndexService.class,
         TransactionHelper.class,
-        AddressesTransactionsHistory.class,
+        AddressTransactionsHistories.class,
         BalanceService.class,
         LiveViewService.class,
         ClusterService.class,

@@ -5,7 +5,7 @@ import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.GetTransactionResponse;
-import io.coti.basenode.model.AddressesTransactionsHistory;
+import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.TransactionHelper;
@@ -33,7 +33,7 @@ import static org.mockito.Mockito.when;
 @RunWith(SpringRunner.class)
 @SpringBootTest(
         classes = {TransactionHelper.class,
-                AddressesTransactionsHistory.class,
+                AddressTransactionsHistories .class,
                 IBalanceService.class,
                 IClusterService.class,
                 Transactions.class,
@@ -47,7 +47,7 @@ public class TransactionHelperTest {
     private TransactionHelper transactionHelper;
 
     @MockBean
-    private AddressesTransactionsHistory addressesTransactionsHistory;
+    private AddressTransactionsHistories addressesTransactionsHistory;
     @MockBean
     private IBalanceService balanceService;
     @MockBean
