@@ -22,7 +22,7 @@ public class PotDurationAspect {
         try {
             return joinPoint.proceed();
         } finally {
-            log.info("Pure pot Timing : {}(), took {} ms | inputs = {}",
+            log.trace("Pot Timing : {}(), took {} ms | inputs = {}",
                     joinPoint.getSignature().getName(),
                     NumberFormat.getInstance().format((System.currentTimeMillis() - startTimeMs)),
                     Arrays.toString(joinPoint.getArgs()));

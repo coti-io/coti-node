@@ -2,6 +2,7 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IClusterService;
+import io.coti.basenode.services.interfaces.IMonitorService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class MonitorService {
+public class BaseNodeMonitorService implements IMonitorService {
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
