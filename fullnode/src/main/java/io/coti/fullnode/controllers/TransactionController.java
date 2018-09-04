@@ -1,14 +1,16 @@
 package io.coti.fullnode.controllers;
 
-import io.coti.basenode.http.*;
+import io.coti.basenode.http.BaseResponse;
+import io.coti.basenode.http.Response;
 import io.coti.basenode.services.TransactionHelper;
 import io.coti.basenode.services.TransactionIndexService;
+import io.coti.fullnode.http.AddTransactionRequest;
+import io.coti.fullnode.http.AddressRequest;
+import io.coti.fullnode.http.GetTransactionRequest;
 import io.coti.fullnode.services.TransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,6 +28,7 @@ public class TransactionController {
     private TransactionHelper transactionHelper;
     @Autowired
     private TransactionService transactionService;
+
     @Autowired
     private TransactionIndexService transactionIndexService;
 
@@ -47,10 +50,5 @@ public class TransactionController {
     @RequestMapping(value = "/index", method = GET)
     public ResponseEntity getCurrentIndex() {
         return ResponseEntity.ok(transactionIndexService.getLastTransactionIndexData());
-    }
-
-    @InitBinder
-    public void activateDirectFieldAccess(WebDataBinder dataBinder) {
-        dataBinder.initDirectFieldAccess();
     }
 }

@@ -14,7 +14,7 @@ public class GetBalancesResponse extends BaseResponse {
     Map<String, AddressBalance> addressesBalance;
 
     public GetBalancesResponse() {
-        addressesBalance = new HashMap<String, AddressBalance>();
+        addressesBalance = new HashMap<>();
     }
 
     public void addAddressBalanceToResponse(Hash address, BigDecimal balance, BigDecimal preBalance) {

@@ -42,7 +42,7 @@ public class TransactionResponseData {
         baseTransactionResponses = new LinkedList<>();
         if (transactionData.getBaseTransactions() != null) {
             for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()
-                    ) {
+            ) {
                 baseTransactionResponses.add(new BaseTransactionResponseData(baseTransactionData));
             }
         }

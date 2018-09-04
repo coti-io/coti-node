@@ -5,7 +5,6 @@ import io.coti.basenode.crypto.DspConsensusCrypto;
 import io.coti.basenode.crypto.TransactionCryptoWrapper;
 import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
 import io.coti.basenode.data.*;
-import io.coti.basenode.http.AddTransactionResponse;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.GetTransactionBatchResponse;
 import io.coti.basenode.http.GetTransactionResponse;
@@ -179,7 +178,7 @@ public class TransactionHelper implements ITransactionHelper {
         if (transactionData == null)
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new AddTransactionResponse(
+                    .body(new GetTransactionResponse(
                             STATUS_ERROR,
                             TRANSACTION_DOESNT_EXIST_MESSAGE));
         TransactionResponseData transactionResponseData = new TransactionResponseData(transactionData);

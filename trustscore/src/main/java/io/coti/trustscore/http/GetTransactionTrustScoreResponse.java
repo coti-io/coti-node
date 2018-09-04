@@ -1,5 +1,6 @@
-package io.coti.basenode.http;
+package io.coti.trustscore.http;
 
+import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.data.TransactionTrustScoreResponseData;
 import lombok.Data;
 

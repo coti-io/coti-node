@@ -6,7 +6,8 @@ import io.coti.basenode.data.AddressTransactionsHistory;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.exceptions.TransactionException;
-import io.coti.basenode.http.*;
+import io.coti.basenode.http.BaseResponse;
+import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.TransactionStatus;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.Transactions;
@@ -15,6 +16,9 @@ import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.basenode.services.interfaces.IZeroSpendService;
+import io.coti.fullnode.http.AddTransactionRequest;
+import io.coti.fullnode.http.AddTransactionResponse;
+import io.coti.fullnode.http.GetAddressTransactionHistoryResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -191,7 +195,7 @@ public class TransactionService extends BaseNodeTransactionService {
         AddressTransactionsHistory addressTransactionsHistory = addressTransactionHistories.getByHash(addressHash);
 
         if (addressTransactionsHistory == null) {
-            return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistory(transactionsDataList));
+            return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistoryResponse(transactionsDataList));
         }
 
         for (Hash transactionHash : addressTransactionsHistory.getTransactionsHistory()) {
@@ -199,7 +203,7 @@ public class TransactionService extends BaseNodeTransactionService {
             transactionsDataList.add(transactionData);
 
         }
-        return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistory(transactionsDataList));
+        return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistoryResponse(transactionsDataList));
     }
 
     @Override

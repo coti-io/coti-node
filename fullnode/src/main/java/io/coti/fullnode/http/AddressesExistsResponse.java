@@ -1,4 +1,6 @@
-package io.coti.basenode.http;
+package io.coti.fullnode.http;
+
+import io.coti.basenode.http.BaseResponse;
 
 import java.util.LinkedHashMap;
 

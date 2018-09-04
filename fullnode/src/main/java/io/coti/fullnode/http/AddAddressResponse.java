@@ -1,6 +1,7 @@
-package io.coti.basenode.http;
+package io.coti.fullnode.http;
 
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.data.AddressStatus;
 
 public class AddAddressResponse extends BaseResponse {

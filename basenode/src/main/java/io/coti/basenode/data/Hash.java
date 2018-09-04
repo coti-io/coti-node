@@ -5,6 +5,7 @@ import com.google.common.primitives.Longs;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.validation.constraints.NotEmpty;
 import javax.xml.bind.DatatypeConverter;
 import java.io.Serializable;
 import java.util.Arrays;
@@ -12,6 +13,7 @@ import java.util.Arrays;
 @Slf4j
 @Data
 public class Hash implements Serializable {
+    @NotEmpty
     private byte[] bytes;
 
     private Hash() {

@@ -2,14 +2,14 @@ package io.coti.basenode.data;
 
 import lombok.Data;
 
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.NotEmpty;
 import java.io.Serializable;
 
 @Data
 public class SignatureData implements Serializable {
-    @NotNull
+    @NotEmpty
     private String r;
-    @NotNull
+    @NotEmpty
     private String s;
 
     public SignatureData() {
