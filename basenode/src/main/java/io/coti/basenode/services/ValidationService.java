@@ -1,4 +1,5 @@
 package io.coti.basenode.services;
+
 import io.coti.basenode.crypto.BaseTransactionCryptoWrapper;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.BaseTransactionData;

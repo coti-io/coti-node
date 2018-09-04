@@ -1,12 +1,10 @@
-
-
-import coti.pot.ProofOfTransaction;
 import io.coti.basenode.crypto.BaseTransactionWithPrivateKey;
 import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.crypto.TransactionCyptoCreator;
 import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.fullnode.FullNodeApplication;
+import io.coti.pot.ProofOfTrust;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
@@ -42,7 +40,7 @@ public class PotTest {
         TransactionCyptoCreator txCreator = new TransactionCyptoCreator(transactionData);
         txCreator.signTransaction();
         transactionCrypto.signMessage(transactionData);
-        ProofOfTransaction pow = new ProofOfTransaction(0);  // setup
+        ProofOfTrust pow = new ProofOfTrust(0);  // setup
         int[] nonces = pow.hash(transactionData.getHash().getBytes(), targetDifficulty); //calc
         boolean valid = pow.verify(transactionData.getHash().getBytes(), nonces, targetDifficulty); // verify - o(1)
         Assert.assertTrue(valid);

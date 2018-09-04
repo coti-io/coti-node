@@ -1,4 +1,4 @@
-import coti.pot.IAlgorithm;
+import io.coti.pot.interfaces.IAlgorithm;
 import org.junit.jupiter.api.Test;
 
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
@@ -7,14 +7,14 @@ public class TrustScoreTiming {
 
     @Test
     public void trustScoreTimingComparisons() {
-        int[] sampleSizes = new int[] {
+        int[] sampleSizes = new int[]{
                 10,
                 100,
                 1000,
                 10000
         };
 
-        String[] difficulties = new String[] {
+        String[] difficulties = new String[]{
                 "00500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
                 "00050000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
                 "00005000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
@@ -35,7 +35,7 @@ public class TrustScoreTiming {
         System.out.println("----------------------------------------------------------------------------------------------------------");
         System.out.println();
 
-        for (int i = IAlgorithm.AlgorithmTypes.values().length - 1; i >= 0 ; i--) {
+        for (int i = IAlgorithm.AlgorithmTypes.values().length - 1; i >= 0; i--) {
             int trustScore = TrustScoreDifficulty.getTrustScoreFromSegment(i);
             byte[] diff = parseHexBinary(difficulty);
             System.out.println("trust score: " + trustScore);

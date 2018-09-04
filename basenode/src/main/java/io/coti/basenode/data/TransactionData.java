@@ -164,6 +164,6 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
 
     @Override
     public String toString() {
-        return String.format("TransactionData: hash= {}, senderTrustScore= {}", String.valueOf(hash) ,senderTrustScore);
+        return String.format("TransactionData: hash= {}, senderTrustScore= {}", String.valueOf(hash), senderTrustScore);
     }
 }

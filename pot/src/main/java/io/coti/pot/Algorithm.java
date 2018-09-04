@@ -1,4 +1,10 @@
-package coti.pot;
+package io.coti.pot;
+
+import io.coti.pot.interfaces.IAlgorithm;
+import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import sun.security.provider.Sun;
+
 import java.lang.reflect.InvocationTargetException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -6,9 +12,6 @@ import java.security.Provider;
 import java.security.Security;
 import java.util.Arrays;
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import sun.security.provider.Sun;
 
 @Slf4j
 public class Algorithm implements IAlgorithm {
@@ -37,10 +40,8 @@ public class Algorithm implements IAlgorithm {
                 this.messageDigestAlgorithm = this.getBouncyCastle(hashingAlgorithm);
             else
                 this.cryptoHashAlgorithm = this.getCryptoHash(hashingAlgorithm);
-        }
-        catch (Exception e)
-        {
-            log.error("error finding algorithm {} in cryptohash, Exception {}",hashingAlgorithm, e);
+        } catch (Exception e) {
+            log.error("error finding algorithm {} in cryptohash, Exception {}", hashingAlgorithm, e);
         }
     }
 
@@ -52,8 +53,8 @@ public class Algorithm implements IAlgorithm {
     }
 
     private java.security.MessageDigest getBouncyCastle(AlgorithmTypes hashingAlgorithm) throws NoSuchAlgorithmException {
-            MessageDigest messageDigest = MessageDigest.getInstance(hashingAlgorithm.toString().replace('_', '-'), new BouncyCastleProvider());
-            return messageDigest;
+        MessageDigest messageDigest = MessageDigest.getInstance(hashingAlgorithm.toString().replace('_', '-'), new BouncyCastleProvider());
+        return messageDigest;
     }
 
     private fr.cryptohash.Digest getCryptoHash(AlgorithmTypes hashingAlgorithm) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {

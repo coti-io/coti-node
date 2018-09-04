@@ -1,7 +1,5 @@
-
-
-import coti.pot.IAlgorithm.AlgorithmTypes;
-import coti.pot.ProofOfTransaction;
+import io.coti.pot.interfaces.IAlgorithm.AlgorithmTypes;
+import io.coti.pot.ProofOfTrust;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -16,14 +14,14 @@ public class Instantiation {
     @Test
     public void theRightOrder() {
 
-        ProofOfTransaction pow = new ProofOfTransaction(100);
+        ProofOfTrust pow = new ProofOfTrust(100);
         assertNotNull(pow);
     }
 
     @Test
     public void correctOrder() {
 
-        ProofOfTransaction pow = new ProofOfTransaction(0);
+        ProofOfTrust pow = new ProofOfTrust(0);
         List<AlgorithmTypes> correct = new ArrayList<>();
 
         // This order is determined by the "seed" which is the input `order`

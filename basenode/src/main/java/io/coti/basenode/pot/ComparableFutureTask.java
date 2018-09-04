@@ -7,7 +7,7 @@ public class ComparableFutureTask extends FutureTask<Void> implements Comparable
     volatile int priority = 0;
 
     public ComparableFutureTask(PotRunnableTask runnable) {
-        super(runnable,null);
+        super(runnable, null);
         this.priority = runnable.getPriority();
     }
 

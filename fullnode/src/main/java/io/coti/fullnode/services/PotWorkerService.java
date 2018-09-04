@@ -1,4 +1,5 @@
 package io.coti.fullnode.services;
+
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.pot.ComparableFutureTask;
 import io.coti.basenode.pot.PotRunnableTask;
@@ -11,21 +12,21 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
 
 @Slf4j
 @Service
 public class PotWorkerService extends PotService {
 
     private static HashMap<Integer, ExecutorService> queuesPot = new HashMap<>();
-    public static HashMap<Integer,MonitorBuscketStatistics> monitorStatistics = new LinkedHashMap<>();
+    public static HashMap<Integer, MonitorBucketStatistics> monitorStatistics = new LinkedHashMap<>();
 
     @PostConstruct
     public void init() {
 
-        for (int i = 10; i <= 100; i=i+10) {
-            monitorStatistics.put(i,new MonitorBuscketStatistics());
-            queuesPot.put(i, io.coti.common.pot.PriorityExecutor.newFixedThreadPool( (int)Math.floor(i/20), i/10));
+        for (int i = 10; i <= 100; i = i + 10) {
+            monitorStatistics.put(i, new MonitorBucketStatistics());
+            queuesPot.put(i, io.coti.common.pot.PriorityExecutor.newFixedThreadPool((int) Math.floor(i / 20), i / 10));
         }
     }
 
@@ -33,7 +34,7 @@ public class PotWorkerService extends PotService {
 
         int trustScore = transactionData.getRoundedSenderTrustScore();
 
-        int bucketChoice = (int)(Math.ceil(trustScore/10) * 10);
+        int bucketChoice = (int) (Math.ceil(trustScore / 10) * 10);
         queuesPot.get(bucketChoice).submit(new ComparableFutureTask(new PotRunnableTask(transactionData, targetDifficulty)));
         Instant starts = Instant.now();
         synchronized (transactionData) {
@@ -42,8 +43,6 @@ public class PotWorkerService extends PotService {
         Instant ends = Instant.now();
         monitorStatistics.get(bucketChoice).addTransactionStatistics(Duration.between(starts, ends));
     }
-
-
 
 
 }
