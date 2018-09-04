@@ -1,4 +1,4 @@
-import coti.pot.IAlgorithm;
+import io.coti.pot.interfaces.IAlgorithm;
 
 class TrustScoreDifficulty {
     private int _trustScore;
@@ -18,6 +18,6 @@ class TrustScoreDifficulty {
     }
 
     static public int getTrustScoreFromSegment(int segmentIndex) {
-        return (int)((100.0 / IAlgorithm.AlgorithmTypes.values().length) * (segmentIndex + 1));
+        return (int) ((100.0 / IAlgorithm.AlgorithmTypes.values().length) * (segmentIndex + 1));
     }
 }

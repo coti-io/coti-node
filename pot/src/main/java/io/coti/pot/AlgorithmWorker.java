@@ -1,6 +1,10 @@
-package coti.pot;
+package io.coti.pot;
 
+import io.coti.pot.interfaces.IAlgorithm;
+import io.coti.pot.interfaces.IAlgorithmOrder;
+import io.coti.pot.interfaces.IAlgorithmWorker;
 import org.apache.commons.lang3.ArrayUtils;
+
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 

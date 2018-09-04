@@ -1,13 +1,11 @@
-import coti.pot.IAlgorithm;
-import coti.pot.ProofOfTransaction;
+import io.coti.pot.interfaces.IAlgorithm;
+import io.coti.pot.ProofOfTrust;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TrustScoreOrdering {
 
@@ -19,10 +17,10 @@ public class TrustScoreOrdering {
         for (int i = 0; i <= 100; i++) {
 
 
-            ProofOfTransaction pow1 = new ProofOfTransaction(i);
-            ProofOfTransaction pow2 = new ProofOfTransaction(i);
-            ProofOfTransaction pow3 = new ProofOfTransaction(i);
-            ProofOfTransaction pow4 = new ProofOfTransaction(i);
+            ProofOfTrust pow1 = new ProofOfTrust(i);
+            ProofOfTrust pow2 = new ProofOfTrust(i);
+            ProofOfTrust pow3 = new ProofOfTrust(i);
+            ProofOfTrust pow4 = new ProofOfTrust(i);
 
             int count1 = pow1.getHashingAlgorithms().size();
             int count2 = pow2.getHashingAlgorithms().size();
@@ -92,7 +90,7 @@ public class TrustScoreOrdering {
 
     private void correctSubset(List<IAlgorithm.AlgorithmTypes> masterList, List<IAlgorithm.AlgorithmTypes> order, int count) {
         List<IAlgorithm.AlgorithmTypes> shortList = masterList.subList(0, count);
-        for (IAlgorithm.AlgorithmTypes algo: order) {
+        for (IAlgorithm.AlgorithmTypes algo : order) {
             assertTrue(shortList.contains(algo));
         }
     }

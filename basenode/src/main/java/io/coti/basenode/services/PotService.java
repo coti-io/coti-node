@@ -1,13 +1,13 @@
 package io.coti.basenode.services;
 
-import coti.pot.ProofOfTransaction;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.services.interfaces.IPotService;
+import io.coti.pot.ProofOfTrust;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import javax.annotation.PostConstruct;
 
+import javax.annotation.PostConstruct;
 
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 
@@ -25,7 +25,7 @@ public class PotService implements IPotService {
 
     @Override
     public boolean validatePot(TransactionData transactionData) {
-        ProofOfTransaction pot = new ProofOfTransaction(
+        ProofOfTrust pot = new ProofOfTrust(
                 transactionData.getRoundedSenderTrustScore());
         boolean valid = pot.verify(transactionData.getHash().
                 getBytes(), transactionData.getNonces(), targetDifficulty);

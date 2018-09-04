@@ -1,5 +1,4 @@
-
-import coti.pot.ProofOfTransaction;
+import io.coti.pot.ProofOfTrust;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
@@ -26,7 +25,7 @@ public class BenchmarkBatching {
         for (int i = 0; i < sampleSize; i++) {
             long startTime = getCpuTime();
 
-            ProofOfTransaction pow = new ProofOfTransaction(trustScore);
+            ProofOfTrust pow = new ProofOfTrust(trustScore);
             pow.hash(inputData[i], targetDifficulty);
 
             long endTime = getCpuTime();
@@ -41,8 +40,7 @@ public class BenchmarkBatching {
         double median;
         if (durations.length % 2 == 0) {
             median = ((double) durations[durations.length / 2] + (double) durations[durations.length / 2 - 1]) / 2;
-        }
-        else {
+        } else {
             median = (double) durations[durations.length / 2];
         }
 
@@ -57,10 +55,12 @@ public class BenchmarkBatching {
         return _mean;
     }
 
-    /** Get CPU time in nanoseconds. */
-    public static long getCpuTime( ) {
-        ThreadMXBean bean = ManagementFactory.getThreadMXBean( );
-        return bean.isCurrentThreadCpuTimeSupported( ) ?
-                bean.getCurrentThreadCpuTime( ) : 0L;
+    /**
+     * Get CPU time in nanoseconds.
+     */
+    public static long getCpuTime() {
+        ThreadMXBean bean = ManagementFactory.getThreadMXBean();
+        return bean.isCurrentThreadCpuTimeSupported() ?
+                bean.getCurrentThreadCpuTime() : 0L;
     }
 }

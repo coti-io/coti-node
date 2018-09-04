@@ -1,21 +1,20 @@
-import coti.pot.ProofOfTransaction;
-
-import static javax.xml.bind.DatatypeConverter.parseHexBinary;
-
+import io.coti.pot.ProofOfTrust;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ProofOfTransactionTest {
-    private ProofOfTransaction pow;
+    private ProofOfTrust pow;
     private byte[] targetDifficulty = parseHexBinary("00F00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
     private byte[] transactionData = "hello world".getBytes();
 
     @BeforeEach
     public void setup() {
 
-        pow = new ProofOfTransaction( 0);
+        pow = new ProofOfTrust(0);
     }
 
     @Test

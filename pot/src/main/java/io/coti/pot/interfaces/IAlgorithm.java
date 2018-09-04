@@ -1,4 +1,4 @@
-package coti.pot;
+package io.coti.pot.interfaces;
 
 public interface IAlgorithm {
     enum AlgorithmTypes {

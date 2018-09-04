@@ -10,19 +10,19 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>pot</artifactId>
-   <dependencies>
-       <dependency>
-           <groupId>fr</groupId>
-           <artifactId>cryptohash</artifactId>
-           <version>0.0.1-SNAPSHOT</version>
-           <scope>system</scope>
-           <systemPath>${project.basedir}/../libs/fr_cryptohash.jar</systemPath>
-       </dependency>
-       <dependency>
-           <groupId>org.slf4j</groupId>
-           <artifactId>slf4j-api</artifactId>
-           <version>1.7.25</version>
-       </dependency>
+    <dependencies>
+        <dependency>
+            <groupId>fr</groupId>
+            <artifactId>cryptohash</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/../libs/fr_cryptohash.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.25</version>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -64,12 +64,12 @@
             <version>3.7</version>
         </dependency>
 
-       <dependency>
-           <groupId>org.projectlombok</groupId>
-           <artifactId>lombok</artifactId>
-           <version>1.18.0</version>
-           <scope>provided</scope>
-       </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.0</version>
+            <scope>provided</scope>
+        </dependency>
         <!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on -->
         <dependency>
             <groupId>org.bouncycastle</groupId>

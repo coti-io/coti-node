@@ -1,4 +1,5 @@
 package io.coti.fullnode.services;
+
 import io.coti.basenode.services.MonitorService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,7 @@ public class FullNodeMonitorService extends MonitorService {
         potWorkerService.monitorStatistics.forEach((bucketNumber, statistic) -> {
             if (statistic.getNumberOfTransaction() > 0)
                 log.info("Bucket Range={}-{}, NumberOfTransaction = {}, AverageTime = {} ms",
-                        bucketNumber-10,bucketNumber,statistic.getNumberOfTransaction(),statistic.getAverage());
+                        bucketNumber - 10, bucketNumber, statistic.getNumberOfTransaction(), statistic.getAverage());
         });
     }
 }

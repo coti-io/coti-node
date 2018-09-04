@@ -1,8 +1,13 @@
-package coti.pot;
+package io.coti.pot;
+
+import io.coti.pot.interfaces.IAlgorithm;
+import io.coti.pot.interfaces.IAlgorithmOrder;
+import io.coti.pot.interfaces.IAlgorithmWorker;
+import io.coti.pot.interfaces.IProofOfTrust;
 
 import java.util.List;
 
-public class ProofOfTransaction implements IProofOfTransaction {
+public class ProofOfTrust implements IProofOfTrust {
     private IAlgorithmOrder hashOrder;
     private IAlgorithmWorker hashWorker;
 
@@ -15,11 +20,12 @@ public class ProofOfTransaction implements IProofOfTransaction {
     public int[] hash(byte[] data, byte[] target) {
         return hashWorker.hash(data, target);
     }
+
     public boolean verify(byte[] data, int[] nonce, byte[] target) {
         return hashWorker.verify(data, nonce, target);
     }
 
-    public ProofOfTransaction( int trustScore) {
+    public ProofOfTrust(int trustScore) {
 
         if (trustScore < 0 || trustScore > maxTrustScore) {
             throw new IllegalArgumentException("trustScore must be between 0 and 100 inclusive");
