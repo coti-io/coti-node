@@ -14,30 +14,30 @@ function setConnected(isConnected) {
     console.log('set connected!');
 }
 
-function subscribe(address){
-		subscriptionAddress = '/topic/' + address;
-		console.log(subscriptionAddress);
-        stompClient.subscribe(subscribeToAddresses, "Subscription Request", function (subscription) {
-            console.log(JSON.parse(subscription.body).message);
-            console.log(JSON.parse(subscription.body).addressHash);
-			console.log(JSON.parse(subscription.body).balance);
-		});
+function subscribe(address) {
+    subscriptionAddress = '/topic/' + address;
+    console.log(subscriptionAddress);
+    stompClient.subscribe(subscribeToAddresses, "Subscription Request", function (subscription) {
+        console.log(JSON.parse(subscription.body).message);
+        console.log(JSON.parse(subscription.body).addressHash);
+        console.log(JSON.parse(subscription.body).balance);
+    });
 }
 
-function subscribeToAddresses(){
-		
-	for(var i = 2; i < process.argv.length; i++){
-		var element = process.argv[i];
-		console.log("Subscribing to:" + element);
-		subscribe(element);	
-	}
+function subscribeToAddresses() {
+
+    for (var i = 2; i < process.argv.length; i++) {
+        var element = process.argv[i];
+        console.log("Subscribing to:" + element);
+        subscribe(element);
+    }
 }
 
 function connect() {
     stompClient.connect({}, function (frame) {
         setConnected(true);
         console.log('Connected: ' + frame);
-		subscribeToAddresses();
+        subscribeToAddresses();
     });
 }
 

@@ -17,7 +17,6 @@ public class BaseTransactionData implements Serializable {
     private BigDecimal amount;
     @NotNull
     private Date createTime;
-    @NotNull
     private SignatureData signatureData;
 
     private BaseTransactionData() {

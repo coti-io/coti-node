@@ -18,8 +18,8 @@ public class GraphController {
     private LiveViewService liveViewService;
 
     @RequestMapping(method = GET)
-    public GraphData getFullGraph(){
-        log.info("graph : {}",liveViewService.getFullGraph());
+    public GraphData getFullGraph() {
+        log.info("graph : {}", liveViewService.getFullGraph());
         return liveViewService.getFullGraph();
     }
 }

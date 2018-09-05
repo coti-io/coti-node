@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true" scanPeriod="60 seconds">
-    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
 
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-    <property name="LOGS_PATH" value="./logs" />
-    <property resource="application.properties" />
+    <property name="LOGS_PATH" value="./logs"/>
+    <property resource="application.properties"/>
     <springProperty name="logging.file.name" source="logging.file.name"/>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
@@ -30,7 +30,8 @@
             </Pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${LOGS_PATH}/archived/${logging.file.name}_error.%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+            <fileNamePattern>${LOGS_PATH}/archived/${logging.file.name}_error.%d{yyyy-MM-dd}.%i.log.zip
+            </fileNamePattern>
             <maxFileSize>50MB</maxFileSize>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
@@ -46,23 +47,24 @@
             </Pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${LOGS_PATH}/archived/${logging.file.name}_debug.%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+            <fileNamePattern>${LOGS_PATH}/archived/${logging.file.name}_debug.%d{yyyy-MM-dd}.%i.log.zip
+            </fileNamePattern>
             <maxFileSize>50MB</maxFileSize>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
     </appender>
     <springProfile name="development">
-      <logger name="io.coti" level="debug">
-        <appender-ref ref="STDOUT"/>
-        <appender-ref ref="LOG_FILE"/>
-        <appender-ref ref="ERROR_LOG_FILE"/>
-      </logger>
+        <logger name="io.coti" level="debug">
+            <appender-ref ref="STDOUT"/>
+            <appender-ref ref="LOG_FILE"/>
+            <appender-ref ref="ERROR_LOG_FILE"/>
+        </logger>
 
-      <logger name="org.springframework" level="info">
-        <appender-ref ref="STDOUT"/>
-        <appender-ref ref="LOG_FILE"/>
-        <appender-ref ref="ERROR_LOG_FILE"/>
-      </logger>
+        <logger name="org.springframework" level="info">
+            <appender-ref ref="STDOUT"/>
+            <appender-ref ref="LOG_FILE"/>
+            <appender-ref ref="ERROR_LOG_FILE"/>
+        </logger>
     </springProfile>
 
     <springProfile name="production">

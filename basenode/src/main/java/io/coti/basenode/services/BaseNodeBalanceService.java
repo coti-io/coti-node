@@ -69,7 +69,7 @@ public class BaseNodeBalanceService implements IBalanceService {
                     tccConfirmed.incrementAndGet();
                 } else if (confirmationData instanceof DspConsensusResult) {
                     transactionData.setDspConsensusResult((DspConsensusResult) confirmationData);
-                    if(!insertNewTransactionIndex(transactionData)){
+                    if (!insertNewTransactionIndex(transactionData)) {
                         continue;
                     }
                     if (transactionHelper.isDspConfirmed(transactionData)) {
