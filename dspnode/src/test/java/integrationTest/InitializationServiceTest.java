@@ -20,7 +20,7 @@ public class InitializationServiceTest {
     private InitializationService initializationService;
 
     @Test
-    public void test() {
+    public void initialize() {
 
     }
 }
