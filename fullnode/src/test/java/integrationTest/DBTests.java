@@ -1,12 +1,10 @@
 package integrationTest;
 
-import io.coti.basenode.crypto.DspConsensusCrypto;
-import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.database.RocksDBConnector;
 import io.coti.basenode.model.*;
-import io.coti.basenode.services.*;
 import io.coti.basenode.services.LiveView.LiveViewService;
+import io.coti.fullnode.AppConfig;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,24 +20,25 @@ import java.util.ArrayList;
 import java.util.Date;
 
 @TestPropertySource(locations = "../test.properties")
-@ContextConfiguration(classes = {BaseNodeBalanceService.class,
-        Transactions.class,
-        Addresses.class,
-        AddressTransactionsHistories.class,
-        TrustScores.class,
-        TransactionIndexes.class,
-        TransactionVotes.class,
-        LiveViewService.class,
-        SimpMessagingTemplate.class,
-        RocksDBConnector.class,
-        TransactionHelper.class,
-        ClusterService.class,
-        SourceSelector.class,
-        TccConfirmationService.class,
-        TransactionIndexService.class,
-        DspConsensusCrypto.class,
-        TransactionTrustScoreCrypto.class
-})
+@ContextConfiguration(classes = AppConfig.class)
+//@ContextConfiguration(classes = {BaseNodeBalanceService.class,
+//        Transactions.class,
+//        Addresses.class,
+//        AddressTransactionsHistories.class,
+//        TrustScores.class,
+//        TransactionIndexes.class,
+//        TransactionVotes.class,
+//        LiveViewService.class,
+//        SimpMessagingTemplate.class,
+//        RocksDBConnector.class,
+//        TransactionHelper.class,
+//        ClusterService.class,
+//        SourceSelector.class,
+//        TccConfirmationService.class,
+//        TransactionIndexService.class,
+//        DspConsensusCrypto.class,
+//        TransactionTrustScoreCrypto.class
+//})
 @SpringBootTest
 @RunWith(SpringRunner.class)
 public class DBTests {
