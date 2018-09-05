@@ -7,6 +7,8 @@ import io.coti.fullnode.services.TransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,5 +47,10 @@ public class TransactionController {
     @RequestMapping(value = "/index", method = GET)
     public ResponseEntity getCurrentIndex() {
         return ResponseEntity.ok(transactionIndexService.getLastTransactionIndexData());
+    }
+
+    @InitBinder
+    public void activateDirectFieldAccess(WebDataBinder dataBinder) {
+        dataBinder.initDirectFieldAccess();
     }
 }

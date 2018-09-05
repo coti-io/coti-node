@@ -4,12 +4,16 @@ import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 @Data
 public class TransactionTrustScoreData implements Serializable, ISignable, ISignValidatable {
+    @NotNull
     private Hash userHash;
+    @NotNull
     private Hash transactionHash;
+    @NotNull
     private double trustScore;
     private Hash trustScoreNodeHash;
     private SignatureData trustScoreNodeSignature;
@@ -21,14 +25,6 @@ public class TransactionTrustScoreData implements Serializable, ISignable, ISign
         this.userHash = userHash;
         this.transactionHash = transactionHash;
         this.trustScore = trustScore;
-    }
-
-    public TransactionTrustScoreData(Hash userHash, Hash transactionHash, double trustScore, Hash trustScoreNodeHash, SignatureData trustScoreNodeSignature) {
-        this.userHash = userHash;
-        this.transactionHash = transactionHash;
-        this.trustScore = trustScore;
-        this.trustScoreNodeHash = trustScoreNodeHash;
-        this.trustScoreNodeSignature = trustScoreNodeSignature;
     }
 
     @Override

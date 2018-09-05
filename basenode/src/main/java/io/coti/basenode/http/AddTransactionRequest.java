@@ -4,13 +4,14 @@ import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionTrustScoreData;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
 public class AddTransactionRequest extends Request {
     @NotNull
-    public List<BaseTransactionData> baseTransactions;
+    public List<@Valid BaseTransactionData> baseTransactions;
     @NotNull
     public Hash hash;
     @NotNull
@@ -18,7 +19,7 @@ public class AddTransactionRequest extends Request {
     @NotNull
     public Date createTime;
     @NotNull
-    public List<TransactionTrustScoreData> trustScoreResults;
+    public List<@Valid TransactionTrustScoreData> trustScoreResults;
     @NotNull
     public Hash senderHash;
 }
