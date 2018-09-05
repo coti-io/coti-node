@@ -1,5 +1,5 @@
-import io.coti.pot.interfaces.IAlgorithm;
 import io.coti.pot.ProofOfTrust;
+import io.coti.pot.interfaces.IAlgorithm;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
