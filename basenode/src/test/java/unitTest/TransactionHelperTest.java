@@ -33,7 +33,7 @@ import static org.mockito.Mockito.when;
 @RunWith(SpringRunner.class)
 @SpringBootTest(
         classes = {TransactionHelper.class,
-                AddressTransactionsHistories .class,
+                AddressTransactionsHistories.class,
                 IBalanceService.class,
                 IClusterService.class,
                 Transactions.class,
