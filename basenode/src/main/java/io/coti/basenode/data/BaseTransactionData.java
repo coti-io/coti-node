@@ -17,6 +17,7 @@ public class BaseTransactionData implements Serializable {
     private BigDecimal amount;
     @NotNull
     private Date createTime;
+    @NotNull
     private SignatureData signatureData;
 
     private BaseTransactionData() {
@@ -38,12 +39,6 @@ public class BaseTransactionData implements Serializable {
         this.amount = amount;
         this.createTime = createTime;
     }
-
-
-    public boolean isSignatureExists() {
-        return signatureData != null;
-    }
-
 
     @Override
     public boolean equals(Object other) {

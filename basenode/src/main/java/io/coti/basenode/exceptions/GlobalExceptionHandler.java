@@ -1,4 +1,4 @@
-package io.coti.fullnode.exception;
+package io.coti.basenode.exceptions;
 
 import io.coti.basenode.exceptions.TransactionException;
 import io.coti.basenode.http.AddTransactionResponse;

@@ -15,7 +15,9 @@ public class TransactionTrustScoreData implements Serializable, ISignable, ISign
     private Hash transactionHash;
     @NotNull
     private double trustScore;
+    @NotNull
     private Hash trustScoreNodeHash;
+    @NotNull
     private SignatureData trustScoreNodeSignature;
 
     private TransactionTrustScoreData() {
