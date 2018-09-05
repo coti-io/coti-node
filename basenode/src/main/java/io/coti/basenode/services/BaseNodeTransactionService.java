@@ -47,7 +47,6 @@ public class BaseNodeTransactionService implements ITransactionService {
         }
         if (hasOneOfParentsMissing(transactionData)) {
             postponedTransactions.add(transactionData);
-            log.info("{}", postponedTransactions.size());
             return;
         }
         if (!transactionHelper.checkBalancesAndAddToPreBalance(transactionData)) {
