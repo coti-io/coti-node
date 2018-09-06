@@ -18,11 +18,11 @@ public class MonitorService extends BaseNodeMonitorService {
 
     }
 
-    @Scheduled(initialDelay = 1000, fixedDelay = 5000)
+    @Scheduled(initialDelay = 1000, fixedDelay = 60000)
     public void lastPot() {
         potWorkerService.monitorStatistics.forEach((bucketNumber, statistic) -> {
             if (statistic.getNumberOfTransaction() > 0)
-                log.info("Bucket Range={}-{}, NumberOfTransaction = {}, AverageTime = {} ms",
+                log.info("Proof of Trust Range= {}-{}, NumberOfTransaction = {}, AverageTime = {} ms",
                         bucketNumber - 10, bucketNumber, statistic.getNumberOfTransaction(), statistic.getAverage());
         });
     }

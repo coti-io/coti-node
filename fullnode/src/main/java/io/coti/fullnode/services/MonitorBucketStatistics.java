@@ -8,7 +8,7 @@ import java.time.Duration;
 public class MonitorBucketStatistics {
 
     public Duration totalTime;
-    public double numberOfTransaction;
+    public long numberOfTransaction;
 
     public MonitorBucketStatistics() {
         this.totalTime = Duration.ZERO;
@@ -21,6 +21,6 @@ public class MonitorBucketStatistics {
 
     public synchronized void addTransactionStatistics(Duration time) {
         totalTime = totalTime.plusNanos(time.toNanos());
-        numberOfTransaction = numberOfTransaction + 1;
+        numberOfTransaction++;
     }
 }

@@ -87,7 +87,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
                 return "Invalid Signature";
             }
             if (transactionHashToVotesListMapping.get(transactionHash) == null) {
-                log.error("Transaction Not existing in mapping!!");
+                log.debug("Transaction Not existing in mapping!!");
                 return "Vote already processed";
             }
             log.debug("Adding new vote: {}", dspVote);
@@ -136,7 +136,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
                         publishDecision(transactionHash, mapHashToDspVote, false);
                         log.debug("Invalid vote majority achieved for: {}", currentVotes.getHash());
                     } else {
-                        log.info("Undecided majority: {}", currentVotes.getHash());
+                        log.debug("Undecided majority: {}", currentVotes.getHash());
                     }
                     transactionVotes.put(currentVotes);
 
