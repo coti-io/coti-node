@@ -2,6 +2,7 @@ package io.coti.basenode.data;
 
 import lombok.Data;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -17,7 +18,7 @@ public class BaseTransactionData implements Serializable {
     private BigDecimal amount;
     @NotNull
     private Date createTime;
-    private SignatureData signatureData;
+    private @Valid SignatureData signatureData;
 
     private BaseTransactionData() {
     }

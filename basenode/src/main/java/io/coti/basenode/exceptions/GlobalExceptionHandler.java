@@ -20,13 +20,14 @@ public class GlobalExceptionHandler {
         log.info("Received a request with missing parameters.");
         log.info("Exception message: " + e);
         ResponseEntity responseEntity = new ResponseEntity(
-                new ExceptionResponse(INVALID_PARAMETERS_MESSAGE, API_CLIENT_ERROR), HttpStatus.INTERNAL_SERVER_ERROR);
+                new ExceptionResponse(INVALID_PARAMETERS_MESSAGE, API_CLIENT_ERROR), HttpStatus.BAD_REQUEST);
         return responseEntity;
     }
 
     @ExceptionHandler(NullPointerException.class)
     public ResponseEntity handleNullPointerException(NullPointerException e) {
-        log.error("Unhandled exception raised for the given request.", e);
+        log.error("NullPointer exception for a request.");
+        log.error("Exception: " , e);
         ResponseEntity responseEntity = new ResponseEntity(
                 new ExceptionResponse(GENERAL_EXCEPTION_ERROR, API_SERVER_ERROR), HttpStatus.INTERNAL_SERVER_ERROR);
         return responseEntity;
@@ -37,26 +38,24 @@ public class GlobalExceptionHandler {
         log.info("Received a request with missing parameters.");
         log.info("Exception message: " + e);
         ResponseEntity responseEntity = new ResponseEntity(
-                new ExceptionResponse(INVALID_PARAMETERS_MESSAGE, API_CLIENT_ERROR), HttpStatus.INTERNAL_SERVER_ERROR) ;
+                new ExceptionResponse(INVALID_PARAMETERS_MESSAGE, API_CLIENT_ERROR), HttpStatus.BAD_REQUEST);
         return responseEntity;
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity handleDefaultException(Exception e) {
-        log.error("Unhandled exception raised for the given request.", e);
+        log.error("Default exception for a request.");
+        log.error("Exception: ", e);
         ResponseEntity responseEntity = new ResponseEntity(
                 new ExceptionResponse(GENERAL_EXCEPTION_ERROR, API_SERVER_ERROR), HttpStatus.INTERNAL_SERVER_ERROR);
-
         return responseEntity;
     }
 
     @ExceptionHandler(TransactionException.class)
     public ResponseEntity handleTransactionException(TransactionException e) {
         log.error("An error while adding transaction, performing a rollback procedure", e);
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ExceptionResponse(
-                        STATUS_ERROR,
-                        TRANSACTION_ROLLBACK_MESSAGE));
+        ResponseEntity responseEntity = new ResponseEntity(
+                new ExceptionResponse(STATUS_ERROR, TRANSACTION_ROLLBACK_MESSAGE), HttpStatus.INTERNAL_SERVER_ERROR);
+        return responseEntity;
     }
 }
