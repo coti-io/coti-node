@@ -47,7 +47,7 @@ public class TransactionCreationService {
 
     public String createNewZeroSpendTransaction(TransactionData incomingTransactionData, ZeroSpendTransactionType zeroSpendTransactionType) {
         if (!validationService.fullValidation(incomingTransactionData)) {
-            log.error("Validation for waiting source  failed! requesting transaction {}", incomingTransactionData);
+            log.error("Validation for waiting source  failed! requesting transaction {}", incomingTransactionData.getHash());
             return "Invalid";
         }
         TransactionData zeroSpendTransaction = createZeroSpendTransaction(incomingTransactionData, zeroSpendTransactionType);
@@ -56,7 +56,7 @@ public class TransactionCreationService {
     }
 
     private TransactionData createZeroSpendTransaction(TransactionData existingTransactionData, ZeroSpendTransactionType zeroSpendTransactionType) {
-        log.info("Creating a new Zero Spend Transaction for {}", existingTransactionData);
+        log.info("Creating a new Zero Spend Transaction for {}", existingTransactionData.getHash());
         TransactionData transactionData = createZeroSpendTransactionData(existingTransactionData.getSenderTrustScore(), zeroSpendTransactionType);
 
         if (zeroSpendTransactionType == STARVATION) {
@@ -70,12 +70,12 @@ public class TransactionCreationService {
         dspVoteService.setIndexForDspResult(transactionData, dspConsensusResult);
         transactionHelper.attachTransactionToCluster(transactionData);
         transactionIndexService.insertNewTransactionIndex(transactionData);
-        log.info("Created a new Zero Spend Transaction: {}", transactionData);
+        log.info("Created a new Zero Spend Transaction: {}", transactionData.getHash());
         return transactionData;
     }
 
     private void sendTransactionToPublisher(TransactionData transactionData) {
-        log.info("Sending Zero Spend Transaction to DSPs. transaction: {}", transactionData);
+        log.info("Sending Zero Spend Transaction to DSPs. transaction: {}", transactionData.getHash());
         propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode));
 
     }
