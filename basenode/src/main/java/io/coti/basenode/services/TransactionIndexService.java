@@ -11,18 +11,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 @Service
 public class TransactionIndexService {
-    private Map<Hash, Long> transactionsIndexMap;
-
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -31,13 +26,7 @@ public class TransactionIndexService {
     private Transactions transactions;
     private TransactionIndexData lastTransactionIndexData;
 
-    public void init() {
-        lastTransactionIndexData = new TransactionIndexData(new Hash(-1), -1, "GENESIS".getBytes());
-        transactionsIndexMap = new ConcurrentHashMap<>();
-    }
-
     public void init(AtomicLong maxTransactionIndex) throws Exception {
-        transactionsIndexMap = new ConcurrentHashMap<>();
         byte[] accumulatedHash = "GENESIS".getBytes();
         TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash(-1), -1, "GENESIS".getBytes());
         for (long i = 0; i <= maxTransactionIndex.get(); i++) {

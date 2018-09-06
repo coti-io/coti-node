@@ -251,7 +251,7 @@ public class TransactionHelper implements ITransactionHelper {
     @Override
     public GetTransactionBatchResponse getTransactionBatch(long startingIndex) {
         List<TransactionData> transactionsToSend = new LinkedList<>();
-        if(startingIndex > transactionIndexService.getLastTransactionIndexData().getIndex()){
+        if (startingIndex > transactionIndexService.getLastTransactionIndexData().getIndex()) {
             return new GetTransactionBatchResponse(transactionsToSend);
         }
         for (long i = startingIndex; i <= transactionIndexService.getLastTransactionIndexData().getIndex(); i++) {

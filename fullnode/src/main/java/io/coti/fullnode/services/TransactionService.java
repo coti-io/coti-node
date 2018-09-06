@@ -17,7 +17,6 @@ import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
-import io.coti.basenode.services.interfaces.IZeroSpendService;
 import io.coti.fullnode.http.AddTransactionRequest;
 import io.coti.fullnode.http.AddTransactionResponse;
 import io.coti.fullnode.http.GetAddressTransactionHistoryResponse;
@@ -115,8 +114,8 @@ public class TransactionService extends BaseNodeTransactionService {
                                 INSUFFICIENT_FUNDS_MESSAGE));
             }
             selectSources(transactionData);
-                log.debug("Could not find sources for transaction: {}. Sending to Zero Spend and retrying in 5 seconds.");
-                selectSources(transactionData);
+            log.debug("Could not find sources for transaction: {}. Sending to Zero Spend and retrying in 5 seconds.");
+            selectSources(transactionData);
 
             if (!validationService.validateSource(transactionData.getLeftParentHash()) ||
                     !validationService.validateSource(transactionData.getRightParentHash())) {

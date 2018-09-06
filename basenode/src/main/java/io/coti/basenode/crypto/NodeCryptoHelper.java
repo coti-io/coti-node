@@ -17,7 +17,7 @@ public class NodeCryptoHelper {
     private static String nodePublicKey;
 
     @PostConstruct
-    public void init(){
+    public void init() {
         nodePublicKey = CryptoHelper.GetPublicKeyFromPrivateKey(nodePrivateKey);
     }
 

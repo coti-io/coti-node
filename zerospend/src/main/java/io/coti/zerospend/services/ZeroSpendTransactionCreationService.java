@@ -2,14 +2,14 @@ package io.coti.zerospend.services;
 
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
-import io.coti.basenode.crypto.BaseTransactionWithPrivateKey;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.*;
-import io.coti.zerospend.crypto.TransactionCryptoCreator;
 import io.coti.basenode.services.TransactionHelper;
 import io.coti.basenode.services.TransactionIndexService;
 import io.coti.basenode.services.interfaces.IValidationService;
+import io.coti.zerospend.crypto.BaseTransactionWithPrivateKey;
+import io.coti.zerospend.crypto.TransactionCryptoCreator;
 import io.coti.zerospend.data.ZeroSpendTransactionType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +29,7 @@ public class ZeroSpendTransactionCreationService {
     @Value("${global.private.key}")
     private String zeroSpendGlobalPrivateKey;
     @Autowired
-    private TransactionIndexService transactionIndexerService;
+    private TransactionIndexService transactionIndexService;
     @Autowired
     private TransactionHelper transactionHelper;
     @Autowired
@@ -87,27 +87,27 @@ public class ZeroSpendTransactionCreationService {
 
     private void sendTransactionToPublisher(TransactionData transactionData) {
         log.info("Sending Zero Spend Transaction to DSPs. transaction: {}  channel: {}", transactionData);
-        propagationPublisher.propagate(transactionData ,Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode));
+        propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode));
 
     }
 
     public void createGenesisTransactions() {
         log.info("Creating genesis transactions");
         List<TransactionData> genesisTransactions = new LinkedList<>();
-        int currentHashCounter =0;
+        int indexCounter = 0;
         for (int trustScore = 0; trustScore <= 100; trustScore = trustScore + 10) {
             TransactionData transactionData = createInitialZeroSpendTransaction(trustScore, "Genesis");
 
             DspConsensusResult dspConsensusResult = new DspConsensusResult(transactionData.getHash());
-            dspConsensusResult.setIndex(currentHashCounter);
+            dspConsensusResult.setIndex(indexCounter);
             dspConsensusResult.setDspConsensus(true);
             transactionData.setDspConsensusResult(dspConsensusResult);
             transactionData.setGenesis(true);
 
             genesisTransactions.add(transactionData);
             transactionHelper.attachTransactionToCluster(transactionData);
-            transactionIndexerService.insertNewTransactionIndex(transactionData);
-            currentHashCounter = currentHashCounter + 1;
+            transactionIndexService.insertNewTransactionIndex(transactionData);
+            indexCounter++;
         }
     }
 
@@ -116,7 +116,6 @@ public class ZeroSpendTransactionCreationService {
         BaseTransactionWithPrivateKey baseTransactionWithPrivateKey = new BaseTransactionWithPrivateKey(new BigDecimal(0), new Date(), zeroSpendGlobalPrivateKey);
         baseTransactions.add(baseTransactionWithPrivateKey);
         TransactionData transactionData = new TransactionData(baseTransactions, description, trustScore, new Date());
-        transactionData.setSenderTrustScore(trustScore);
         transactionData.setAttachmentTime(new Date());
         transactionData.setZeroSpend(true);
 

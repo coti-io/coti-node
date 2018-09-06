@@ -50,7 +50,7 @@ public abstract class Collection<T extends IEntity> {
         }
     }
 
-    public boolean isEmpty(){
+    public boolean isEmpty() {
         RocksIterator iterator = databaseConnector.getIterator(columnFamilyName);
         iterator.seekToFirst();
         return !iterator.isValid();

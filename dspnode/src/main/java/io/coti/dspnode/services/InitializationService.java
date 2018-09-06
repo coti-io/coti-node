@@ -5,7 +5,6 @@ import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
-import io.coti.basenode.services.TransactionIndexService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -44,11 +43,12 @@ public class InitializationService {
         classNameToReceiverHandlerMapping.put(AddressData.class.getName(), data ->
                 addressService.handleNewAddressFromFullNode((AddressData) data));
 
-        communicationService.initPropagator(propagationPort);
+        communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
         communicationService.initSender(receivingServerAddresses);
+        communicationService.initSubscriber(propagationServerAddresses, NodeType.DspNode);
+        communicationService.initPropagator(propagationPort);
 
         baseNodeInitializationService.init();
-        communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
-        communicationService.initSubscriber(propagationServerAddresses, NodeType.DspNode);
+
     }
 }

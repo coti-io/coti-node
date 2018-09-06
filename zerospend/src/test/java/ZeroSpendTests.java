@@ -1,7 +1,7 @@
-import io.coti.basenode.crypto.BaseTransactionWithPrivateKey;
 import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.zerospend.crypto.BaseTransactionWithPrivateKey;
 import io.coti.zerospend.crypto.TransactionCryptoCreator;
 import org.junit.Assert;
 import org.junit.Test;

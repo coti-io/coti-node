@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j
-public class StarvationService {
+public class SourceStarvationService {
     private final long MINIMUM_WAIT_TIME_IN_SECONDS = 300;
     private final long SOURCE_STARVATION_CHECK_TASK_DELAY = 5000;
 
@@ -34,14 +34,14 @@ public class StarvationService {
                 .stream()
                 .flatMap(Collection::stream)
                 .filter(transactionData -> !(transactionData.isGenesis()))
-                        .collect(Collectors.toList()).forEach(transactionData -> {
-                            double minimumWaitingTimeInMilliseconds = ((100 - transactionData.getSenderTrustScore()) * 15 + MINIMUM_WAIT_TIME_IN_SECONDS) * 1000;
-                            double actualWaitingTimeInMilliseconds = now.getTime() - transactionData.getAttachmentTime().getTime();
-                            log.info("Waiting transaction: {}. Time without attachment: {}, Minimum wait time: {}", transactionData.getHash(), millisecondsToMinutes(actualWaitingTimeInMilliseconds), millisecondsToMinutes(minimumWaitingTimeInMilliseconds));
-                            if (actualWaitingTimeInMilliseconds > minimumWaitingTimeInMilliseconds) {
-                                zeroSpendTransactionCreationService.createNewStarvationZeroSpendTransaction(transactionData);
-                            }
-                        });
+                .collect(Collectors.toList()).forEach(transactionData -> {
+            double minimumWaitingTimeInMilliseconds = ((100 - transactionData.getSenderTrustScore()) * 15 + MINIMUM_WAIT_TIME_IN_SECONDS) * 1000;
+            double actualWaitingTimeInMilliseconds = now.getTime() - transactionData.getAttachmentTime().getTime();
+            log.info("Waiting transaction: {}. Time without attachment: {}, Minimum wait time: {}", transactionData.getHash(), millisecondsToMinutes(actualWaitingTimeInMilliseconds), millisecondsToMinutes(minimumWaitingTimeInMilliseconds));
+            if (actualWaitingTimeInMilliseconds > minimumWaitingTimeInMilliseconds) {
+                zeroSpendTransactionCreationService.createNewStarvationZeroSpendTransaction(transactionData);
+            }
+        });
     }
 
     String millisecondsToMinutes(double milliseconds) {

@@ -4,7 +4,7 @@ import io.coti.basenode.data.TransactionData;
 
 import java.util.List;
 
-public interface  IClusterService {
+public interface IClusterService {
 
     List<List<TransactionData>> getSourceListsByTrustScore();
 

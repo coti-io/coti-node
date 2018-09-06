@@ -1,5 +1,6 @@
-package io.coti.basenode.crypto;
+package io.coti.zerospend.crypto;
 
+import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.Interfaces.IPrivateKey;
 import io.coti.basenode.data.BaseTransactionData;
 
