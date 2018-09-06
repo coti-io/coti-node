@@ -22,7 +22,7 @@ public class SourceStarvationService {
     @Autowired
     private IClusterService clusterService;
     @Autowired
-    private ZeroSpendTransactionCreationService zeroSpendTransactionCreationService;
+    private TransactionCreationService transactionCreationService;
 
     @Scheduled(fixedDelay = SOURCE_STARVATION_CHECK_TASK_DELAY)
     public void checkSourcesStarvation() {
@@ -39,7 +39,7 @@ public class SourceStarvationService {
             double actualWaitingTimeInMilliseconds = now.getTime() - transactionData.getAttachmentTime().getTime();
             log.info("Waiting transaction: {}. Time without attachment: {}, Minimum wait time: {}", transactionData.getHash(), millisecondsToMinutes(actualWaitingTimeInMilliseconds), millisecondsToMinutes(minimumWaitingTimeInMilliseconds));
             if (actualWaitingTimeInMilliseconds > minimumWaitingTimeInMilliseconds) {
-                zeroSpendTransactionCreationService.createNewStarvationZeroSpendTransaction(transactionData);
+                transactionCreationService.createNewStarvationZeroSpendTransaction(transactionData);
             }
         });
     }

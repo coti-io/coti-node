@@ -30,7 +30,7 @@ public class InitializationService {
     @Autowired
     private BaseNodeInitializationService baseNodeInitializationService;
     @Autowired
-    private ZeroSpendTransactionCreationService zeroSpendTransactionCreationService;
+    private TransactionCreationService transactionCreationService;
     @Autowired
     private Transactions transactions;
 
@@ -47,7 +47,7 @@ public class InitializationService {
         baseNodeInitializationService.init();
 
         if (transactions.isEmpty()) {
-            zeroSpendTransactionCreationService.createGenesisTransactions();
+            transactionCreationService.createGenesisTransactions();
         }
     }
 }

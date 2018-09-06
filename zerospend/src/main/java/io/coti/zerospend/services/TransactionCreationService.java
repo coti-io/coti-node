@@ -24,7 +24,7 @@ import static io.coti.zerospend.data.ZeroSpendTransactionType.STARVATION;
 
 @Slf4j
 @Service
-public class ZeroSpendTransactionCreationService {
+public class TransactionCreationService {
     private final BigDecimal zeroSpendAmount = new BigDecimal(0);
     @Value("${global.private.key}")
     private String zeroSpendGlobalPrivateKey;
