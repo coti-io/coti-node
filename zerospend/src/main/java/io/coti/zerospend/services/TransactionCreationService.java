@@ -46,7 +46,6 @@ public class TransactionCreationService {
     }
 
     public String createNewZeroSpendTransaction(TransactionData incomingTransactionData, ZeroSpendTransactionType zeroSpendTransactionType) {
-        log.info("Creating new Zero Spend transaction");
         if (!validationService.fullValidation(incomingTransactionData)) {
             log.error("Validation for waiting source  failed! requesting transaction {}", incomingTransactionData);
             return "Invalid";
@@ -76,7 +75,7 @@ public class TransactionCreationService {
     }
 
     private void sendTransactionToPublisher(TransactionData transactionData) {
-        log.info("Sending Zero Spend Transaction to DSPs. transaction: {}  channel: {}", transactionData);
+        log.info("Sending Zero Spend Transaction to DSPs. transaction: {}", transactionData);
         propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode));
 
     }

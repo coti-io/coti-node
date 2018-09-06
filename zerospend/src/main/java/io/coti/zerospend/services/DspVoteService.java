@@ -59,7 +59,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
     }
 
     public String receiveDspVote(DspVote dspVote) {
-        log.debug("Received new Dsp Vote: {}", dspVote);
+        log.debug("Received new Dsp Vote: {} for transaction {}", dspVote, dspVote.getTransactionHash());
         Hash transactionHash = dspVote.getTransactionHash();
         synchronized (transactionHash.toHexString()) {
             TransactionVoteData transactionVoteData = transactionVotes.getByHash(transactionHash);

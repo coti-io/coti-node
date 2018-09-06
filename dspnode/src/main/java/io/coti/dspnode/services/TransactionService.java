@@ -81,7 +81,7 @@ public class TransactionService extends BaseNodeTransactionService {
                     transactionData.getHash(),
                     validationService.fullValidation(transactionData));
             dspVoteCrypto.signMessage(dspVote);
-            log.debug("Sending DSP vote to: {}", zerospendReceivingAddress);
+            log.debug("Sending DSP vote to {} for transaction {}", zerospendReceivingAddress, transactionData.getHash());
             sender.send(dspVote, zerospendReceivingAddress);
         }
         isValidatorRunning.set(false);
@@ -96,6 +96,8 @@ public class TransactionService extends BaseNodeTransactionService {
 
     public void continueHandlePropagatedTransaction(TransactionData transactionData) {
         propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
-        transactionsToValidate.add(transactionData);
+        if (!transactionData.isZeroSpend()) {
+            transactionsToValidate.add(transactionData);
+        }
     }
 }

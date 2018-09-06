@@ -5,7 +5,7 @@ import io.coti.basenode.services.interfaces.IClusterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
 import java.util.Collection;
@@ -14,8 +14,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Component
 @Slf4j
+@Service
 public class SourceStarvationService {
     private final long MINIMUM_WAIT_TIME_IN_SECONDS = 300;
     private final long SOURCE_STARVATION_CHECK_TASK_DELAY = 5000;
@@ -27,7 +27,7 @@ public class SourceStarvationService {
 
     @Scheduled(fixedDelay = SOURCE_STARVATION_CHECK_TASK_DELAY)
     public void checkSourcesStarvation() {
-        log.info("Checking...");
+        log.debug("Checking...");
         Date now = new Date();
         List<List<TransactionData>> sourceListsByTrustScore = Collections.unmodifiableList(clusterService.getSourceListsByTrustScore());
 
@@ -38,7 +38,7 @@ public class SourceStarvationService {
                 .collect(Collectors.toList()).forEach(transactionData -> {
             long minimumWaitingTimeInMilliseconds = (long) ((100 - transactionData.getSenderTrustScore()) * 15 + MINIMUM_WAIT_TIME_IN_SECONDS) * 1000;
             long actualWaitingTimeInMilliseconds = now.getTime() - transactionData.getAttachmentTime().getTime();
-            log.info("Waiting transaction: {}. Time without attachment: {}, Minimum wait time: {}", transactionData.getHash(), millisecondsToMinutes(actualWaitingTimeInMilliseconds), millisecondsToMinutes(minimumWaitingTimeInMilliseconds));
+            log.debug("Waiting transaction: {}. Time without attachment: {}, Minimum wait time: {}", transactionData.getHash(), millisecondsToMinutes(actualWaitingTimeInMilliseconds), millisecondsToMinutes(minimumWaitingTimeInMilliseconds));
             if (actualWaitingTimeInMilliseconds > minimumWaitingTimeInMilliseconds) {
                 transactionCreationService.createNewStarvationZeroSpendTransaction(transactionData);
             }
