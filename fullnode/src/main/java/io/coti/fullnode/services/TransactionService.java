@@ -116,6 +116,7 @@ public class TransactionService extends BaseNodeTransactionService {
                                 STATUS_ERROR,
                                 INSUFFICIENT_FUNDS_MESSAGE));
             }
+
             selectSources(transactionData);
             while (transactionData.getLeftParentHash() == null && transactionData.getRightParentHash() == null) {
                 log.debug("Could not find sources for transaction: {}. Sending to Zero Spend and retrying in 5 seconds.", transactionData.getHash().toHexString());
