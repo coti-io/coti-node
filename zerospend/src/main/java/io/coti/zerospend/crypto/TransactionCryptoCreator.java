@@ -2,11 +2,8 @@ package io.coti.zerospend.crypto;
 
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.crypto.TransactionCryptoWrapper;
-import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.TransactionData;
-import io.coti.zerospend.crypto.Interfaces.IPrivateKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
