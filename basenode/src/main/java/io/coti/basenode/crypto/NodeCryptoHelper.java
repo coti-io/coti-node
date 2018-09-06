@@ -28,4 +28,8 @@ public class NodeCryptoHelper {
     public static Hash getNodeHash() {
         return new Hash(nodePublicKey);
     }
+
+    public Hash getNodeAddress() {
+        return CryptoHelper.getAddressFromPrivateKey(nodePrivateKey);
+    }
 }

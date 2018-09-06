@@ -147,19 +147,23 @@ public class DspVoteService extends BaseNodeDspVoteService {
 
     private void publishDecision(Hash transactionHash, Map<Hash, DspVote> mapHashToDspVote, boolean isLegalTransaction) {
         TransactionData transactionData = transactions.getByHash(transactionHash);
-        DspConsensusResult dspConsensusResult = new DspConsensusResult(transactionHash);
-        dspConsensusResult.setIndex(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
+        DspConsensusResult dspConsensusResult = new DspConsensusResult(transactionData.getHash());
         dspConsensusResult.setDspConsensus(isLegalTransaction);
-        dspConsensusResult.setIndexingTime(new Date());
         List<DspVote> dspVotes = new LinkedList<>();
         mapHashToDspVote.forEach((hash, dspVote) -> dspVotes.add(dspVote));
         dspConsensusResult.setDspVotes(dspVotes);
-        dspConsensusCrypto.signMessage(dspConsensusResult);
-        propagationPublisher.propagate(dspConsensusResult, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode));
+        setIndexForDspResult(transactionData, dspConsensusResult);
         balanceService.setDspcToTrue(dspConsensusResult);
+        propagationPublisher.propagate(dspConsensusResult, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode));
+        transactionHashToVotesListMapping.remove(transactionHash);
+    }
+
+    public synchronized void setIndexForDspResult(TransactionData transactionData, DspConsensusResult dspConsensusResult) {
+        dspConsensusResult.setIndex(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
+        dspConsensusResult.setIndexingTime(new Date());
+        dspConsensusCrypto.signMessage(dspConsensusResult);
         transactionData.setDspConsensusResult(dspConsensusResult);
         transactionIndexService.insertNewTransactionIndex(transactionData);
-        transactionHashToVotesListMapping.remove(transactionHash);
     }
 
     private boolean isPositiveMajorityAchieved(TransactionVoteData currentVotes) {

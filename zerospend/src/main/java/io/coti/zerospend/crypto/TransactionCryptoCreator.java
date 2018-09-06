@@ -1,38 +1,31 @@
 package io.coti.zerospend.crypto;
 
-import io.coti.basenode.crypto.CryptoHelper;
-import io.coti.basenode.crypto.Interfaces.IPrivateKey;
+import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.crypto.TransactionCryptoWrapper;
 import io.coti.basenode.data.BaseTransactionData;
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.TransactionData;
-import lombok.Data;
+import io.coti.zerospend.crypto.Interfaces.IPrivateKey;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-
-@Data
+@Service
 public class TransactionCryptoCreator {
+    @Autowired
+    private NodeCryptoHelper nodeCryptoHelper;
 
-    private TransactionData transactionData;
-    private TransactionCryptoWrapper transactionCryptoWrapper;
+    public void signBaseTransactions(TransactionData transactionData) {
 
-    public TransactionCryptoCreator(TransactionData transactionData) {
-        this.transactionData = transactionData;
-        this.transactionCryptoWrapper = new TransactionCryptoWrapper(transactionData);
+        if (transactionData.getHash() == null) {
+            TransactionCryptoWrapper transactionCryptoWrapper = new TransactionCryptoWrapper(transactionData);
+            transactionCryptoWrapper.setTransactionHash();
+        }
+        transactionData.getBaseTransactions().forEach(baseTransactionData -> baseTransactionData.setSignatureData(nodeCryptoHelper.signMessage(transactionData.getHash().getBytes())));
+
     }
 
-    public void signTransaction() {
-
-        if (transactionData.getHash() == null)
-            transactionCryptoWrapper.setTransactionHash();
-
-        for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
-
-            if (baseTransactionData instanceof IPrivateKey) {
-                String privateKey = ((IPrivateKey) baseTransactionData).getPrivateKey();
-
-                SignatureData signatureData = CryptoHelper.SignBytes(this.transactionData.getHash().getBytes(), privateKey);
-                baseTransactionData.setSignatureData(signatureData);
-            }
-        }
+    public Hash getAddress() {
+        return nodeCryptoHelper.getNodeAddress();
     }
 }

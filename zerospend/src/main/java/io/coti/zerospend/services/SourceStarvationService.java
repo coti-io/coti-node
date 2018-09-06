@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -35,8 +36,8 @@ public class SourceStarvationService {
                 .flatMap(Collection::stream)
                 .filter(transactionData -> !(transactionData.isGenesis()))
                 .collect(Collectors.toList()).forEach(transactionData -> {
-            double minimumWaitingTimeInMilliseconds = ((100 - transactionData.getSenderTrustScore()) * 15 + MINIMUM_WAIT_TIME_IN_SECONDS) * 1000;
-            double actualWaitingTimeInMilliseconds = now.getTime() - transactionData.getAttachmentTime().getTime();
+            long minimumWaitingTimeInMilliseconds = (long) ((100 - transactionData.getSenderTrustScore()) * 15 + MINIMUM_WAIT_TIME_IN_SECONDS) * 1000;
+            long actualWaitingTimeInMilliseconds = now.getTime() - transactionData.getAttachmentTime().getTime();
             log.info("Waiting transaction: {}. Time without attachment: {}, Minimum wait time: {}", transactionData.getHash(), millisecondsToMinutes(actualWaitingTimeInMilliseconds), millisecondsToMinutes(minimumWaitingTimeInMilliseconds));
             if (actualWaitingTimeInMilliseconds > minimumWaitingTimeInMilliseconds) {
                 transactionCreationService.createNewStarvationZeroSpendTransaction(transactionData);
@@ -44,7 +45,7 @@ public class SourceStarvationService {
         });
     }
 
-    String millisecondsToMinutes(double milliseconds) {
-        return "" + (int) (milliseconds / 60000) + ":" + (int) ((milliseconds % 60000) / 1000);
+    String millisecondsToMinutes(long milliseconds) {
+        return new SimpleDateFormat("mm:ss").format(new Date(milliseconds));
     }
 }

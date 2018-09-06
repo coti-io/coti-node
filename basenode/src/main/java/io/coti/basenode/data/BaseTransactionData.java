@@ -23,11 +23,11 @@ public class BaseTransactionData implements Serializable {
     private BaseTransactionData() {
     }
 
-    public BaseTransactionData(Hash addressHash, BigDecimal amount, Hash baseTransactionhash, SignatureData signature, Date createTime) {
+    public BaseTransactionData(Hash addressHash, BigDecimal amount, Hash baseTransactionHash, SignatureData signature, Date createTime) {
         this.addressHash = addressHash;
 
         this.amount = amount;
-        this.hash = baseTransactionhash;
+        this.hash = baseTransactionHash;
         this.signatureData = signature;
         this.createTime = createTime;
     }
