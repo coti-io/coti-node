@@ -32,7 +32,7 @@ public class LiveViewService {
         NodeData nodeData = new NodeData();
         nodeData.setId(transactionData.getHash().toHexString());
         nodeData.setTrustScore(transactionData.getSenderTrustScore());
-        nodeData.setGenesis(transactionData.isZeroSpend());
+        nodeData.setGenesis(transactionData.isGenesis());
 
         if (transactionData.isSource()) {
             nodeData.setStatus(0);
