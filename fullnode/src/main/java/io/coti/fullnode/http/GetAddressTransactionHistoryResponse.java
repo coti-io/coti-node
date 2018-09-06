@@ -17,7 +17,7 @@ public class GetAddressTransactionHistoryResponse extends BaseResponse {
         super();
         this.transactionsData = new Vector<>();
         for (TransactionData transactionData : transactionsData
-        ) {
+                ) {
             this.transactionsData.add(new TransactionResponseData(transactionData));
         }
 

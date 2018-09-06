@@ -30,7 +30,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         ZeroMQUtils.bindToRandomPort(propagationReceiver);
         for (String serverAddress :
                 propagationServerAddresses
-        ) {
+                ) {
             propagationReceiver.connect(serverAddress);
             for (String channel : channelsToSubscribe) {
                 propagationReceiver.subscribe(channel);

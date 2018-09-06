@@ -8,6 +8,7 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.exceptions.TransactionException;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
+import io.coti.basenode.http.data.TransactionResponseData;
 import io.coti.basenode.http.data.TransactionStatus;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.Transactions;
@@ -19,6 +20,7 @@ import io.coti.basenode.services.interfaces.IZeroSpendService;
 import io.coti.fullnode.http.AddTransactionRequest;
 import io.coti.fullnode.http.AddTransactionResponse;
 import io.coti.fullnode.http.GetAddressTransactionHistoryResponse;
+import io.coti.fullnode.http.GetTransactionResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -204,6 +206,19 @@ public class TransactionService extends BaseNodeTransactionService {
 
         }
         return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistoryResponse(transactionsDataList));
+    }
+
+    public ResponseEntity<BaseResponse> getTransactionDetails(Hash transactionHash) {
+        TransactionData transactionData = transactions.getByHash(transactionHash);
+        if (transactionData == null)
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new GetTransactionResponse(
+                            STATUS_ERROR,
+                            TRANSACTION_DOESNT_EXIST_MESSAGE));
+        TransactionResponseData transactionResponseData = new TransactionResponseData(transactionData);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new GetTransactionResponse(transactionResponseData));
     }
 
     @Override

@@ -2,7 +2,6 @@ package io.coti.fullnode.controllers;
 
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
-import io.coti.basenode.services.TransactionHelper;
 import io.coti.basenode.services.TransactionIndexService;
 import io.coti.fullnode.http.AddTransactionRequest;
 import io.coti.fullnode.http.AddressRequest;
@@ -25,8 +24,6 @@ import static org.springframework.web.bind.annotation.RequestMethod.*;
 public class TransactionController {
 
     @Autowired
-    private TransactionHelper transactionHelper;
-    @Autowired
     private TransactionService transactionService;
 
     @Autowired
@@ -39,7 +36,7 @@ public class TransactionController {
 
     @RequestMapping(method = POST)
     public ResponseEntity<BaseResponse> getTransactionDetails(@Valid @RequestBody GetTransactionRequest getTransactionRequest) {
-        return transactionHelper.getTransactionDetails(getTransactionRequest.transactionHash);
+        return transactionService.getTransactionDetails(getTransactionRequest.transactionHash);
     }
 
     @RequestMapping(value = "/addressTransactions", method = POST)

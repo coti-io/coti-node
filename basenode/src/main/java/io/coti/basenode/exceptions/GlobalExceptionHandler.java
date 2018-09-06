@@ -27,7 +27,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NullPointerException.class)
     public ResponseEntity handleNullPointerException(NullPointerException e) {
         log.error("NullPointer exception for a request.");
-        log.error("Exception: " , e);
+        log.error("Exception: ", e);
         ResponseEntity responseEntity = new ResponseEntity(
                 new ExceptionResponse(GENERAL_EXCEPTION_ERROR, API_SERVER_ERROR), HttpStatus.INTERNAL_SERVER_ERROR);
         return responseEntity;

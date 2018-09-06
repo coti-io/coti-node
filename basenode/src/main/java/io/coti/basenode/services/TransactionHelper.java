@@ -5,10 +5,7 @@ import io.coti.basenode.crypto.DspConsensusCrypto;
 import io.coti.basenode.crypto.TransactionCryptoWrapper;
 import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
 import io.coti.basenode.data.*;
-import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.GetTransactionBatchResponse;
-import io.coti.basenode.http.GetTransactionResponse;
-import io.coti.basenode.http.data.TransactionResponseData;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
@@ -17,8 +14,6 @@ import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -29,8 +24,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static io.coti.basenode.data.TransactionState.*;
-import static io.coti.basenode.http.HttpStringConstants.STATUS_ERROR;
-import static io.coti.basenode.http.HttpStringConstants.TRANSACTION_DOESNT_EXIST_MESSAGE;
 
 @Slf4j
 @Service
@@ -171,19 +164,6 @@ public class TransactionHelper implements ITransactionHelper {
     private void revertPreBalance(TransactionData transactionData) {
         log.error("Reverting pre balance...");
         balanceService.rollbackBaseTransactions(transactionData);
-    }
-
-    public ResponseEntity<BaseResponse> getTransactionDetails(Hash transactionHash) {
-        TransactionData transactionData = transactions.getByHash(transactionHash);
-        if (transactionData == null)
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new GetTransactionResponse(
-                            STATUS_ERROR,
-                            TRANSACTION_DOESNT_EXIST_MESSAGE));
-        TransactionResponseData transactionResponseData = new TransactionResponseData(transactionData);
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(new GetTransactionResponse(transactionResponseData));
     }
 
     public boolean checkBalancesAndAddToPreBalance(TransactionData transactionData) {
