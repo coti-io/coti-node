@@ -55,6 +55,7 @@ public class TrustScoreService {
     }
 
     public ResponseEntity<BaseResponse> getTransactionTrustScore(Hash userHash, Hash transactionHash) {
+
         TrustScoreData trustScoreData = trustScores.getByHash(userHash);
         if (trustScoreData == null) {
             return ResponseEntity
