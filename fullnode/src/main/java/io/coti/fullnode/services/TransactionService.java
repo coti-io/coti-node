@@ -68,7 +68,7 @@ public class TransactionService extends BaseNodeTransactionService {
                         request.createTime,
                         request.senderHash);
         try {
-            log.debug("New transaction request is being processed. Transaction Hash={}", request.hash);
+            log.debug("New transaction request is being processed. Transaction Hash= {}", request.hash);
             transactionCrypto.signMessage(transactionData);
             if (!transactionHelper.startHandleTransaction(transactionData)) {
                 log.debug("Received existing transaction: {}", transactionData.getHash().toHexString());
@@ -114,8 +114,11 @@ public class TransactionService extends BaseNodeTransactionService {
                                 INSUFFICIENT_FUNDS_MESSAGE));
             }
             selectSources(transactionData);
-            log.debug("Could not find sources for transaction: {}. Sending to Zero Spend and retrying in 5 seconds.");
-            selectSources(transactionData);
+            while (transactionData.getLeftParentHash() == null && transactionData.getRightParentHash() == null) {
+                log.debug("Could not find sources for transaction: {}. Sending to Zero Spend and retrying in 5 seconds.", transactionData.getHash().toHexString());
+                TimeUnit.SECONDS.sleep(5);
+                selectSources(transactionData);
+            }
 
             if (!validationService.validateSource(transactionData.getLeftParentHash()) ||
                     !validationService.validateSource(transactionData.getRightParentHash())) {

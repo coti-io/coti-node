@@ -14,7 +14,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 
 import static io.coti.zerospend.data.ZeroSpendTransactionType.GENESIS;
 import static io.coti.zerospend.data.ZeroSpendTransactionType.STARVATION;
@@ -82,7 +85,6 @@ public class TransactionCreationService {
 
     public void createGenesisTransactions() {
         log.info("Creating genesis transactions");
-        List<TransactionData> genesisTransactions = new LinkedList<>();
         for (int trustScore = 0; trustScore <= 100; trustScore = trustScore + 10) {
             TransactionData transactionData = createZeroSpendTransactionData(trustScore, GENESIS);
 
@@ -91,9 +93,7 @@ public class TransactionCreationService {
             dspVoteService.setIndexForDspResult(transactionData, dspConsensusResult);
             transactionData.setGenesis(true);
 
-            genesisTransactions.add(transactionData);
             transactionHelper.attachTransactionToCluster(transactionData);
-            transactionIndexService.insertNewTransactionIndex(transactionData);
         }
     }
 
