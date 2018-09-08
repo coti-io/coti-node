@@ -15,7 +15,7 @@ public class BaseNodePotService implements IPotService {
     @Value("${network.difficulty}")
     protected String difficulty;
     protected static byte[] targetDifficulty;
-    
+
     public void init() {
         targetDifficulty = parseHexBinary(difficulty);
         log.info("{} is up", this.getClass().getSimpleName());

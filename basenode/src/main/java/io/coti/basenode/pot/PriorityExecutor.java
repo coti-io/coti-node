@@ -23,9 +23,9 @@ public class PriorityExecutor extends ThreadPoolExecutor {
     }
 
     public synchronized void changeCorePoolSize() {
-        if(getQueue().size() > maximumQueueSize && getCorePoolSize() < getMaximumPoolSize()) {
+        if (getQueue().size() > maximumQueueSize && getCorePoolSize() < getMaximumPoolSize()) {
             setCorePoolSize(getPoolSize() + 1);
-        } else if(getQueue().size() == 0 ) {
+        } else if (getQueue().size() == 0) {
             setCorePoolSize(initialCorePoolSize);
         }
     }

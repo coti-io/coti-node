@@ -5,7 +5,6 @@ import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.AddressTransactionsHistory;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.ZeroSpendTransactionRequest;
 import io.coti.basenode.exceptions.TransactionException;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
@@ -118,7 +117,7 @@ public class TransactionService extends BaseNodeTransactionService {
             }
 
             selectSources(transactionData);
-            if(!transactionData.hasSources()) {
+            if (!transactionData.hasSources()) {
                 int selectSourceRetryCount = 0;
                 while (!transactionData.hasSources() && selectSourceRetryCount <= 20) {
                     log.debug("Could not find sources for transaction: {}. Retrying in 5 seconds.", transactionData.getHash());
@@ -126,7 +125,7 @@ public class TransactionService extends BaseNodeTransactionService {
                     selectSources(transactionData);
                     selectSourceRetryCount++;
                 }
-                if(!transactionData.hasSources()) {
+                if (!transactionData.hasSources()) {
                     log.info("No source found for transaction {} with trust score {}", transactionData.getHash(), transactionData.getSenderTrustScore());
                     return ResponseEntity
                             .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -175,7 +174,7 @@ public class TransactionService extends BaseNodeTransactionService {
             return;
         }
 
-        log.info("No source found for transaction {} with trust score {}. Retrying ...", transactionData.getHash(), transactionData.getSenderTrustScore());
+        log.debug("No source found for transaction {} with trust score {}. Retrying ...", transactionData.getHash(), transactionData.getSenderTrustScore());
         int retryTimes = 200 / (transactionData.getRoundedSenderTrustScore() + 1);
         while (!transactionData.hasSources() && retryTimes > 0) {
             try {

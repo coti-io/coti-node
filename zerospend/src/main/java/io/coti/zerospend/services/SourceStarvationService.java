@@ -27,7 +27,7 @@ public class SourceStarvationService {
 
     @Scheduled(fixedDelay = SOURCE_STARVATION_CHECK_TASK_DELAY)
     public void checkSourcesStarvation() {
-        log.debug("Checking...");
+        log.debug("Checking Source Starvation");
         Date now = new Date();
         List<List<TransactionData>> sourceListsByTrustScore = Collections.unmodifiableList(clusterService.getSourceListsByTrustScore());
 
