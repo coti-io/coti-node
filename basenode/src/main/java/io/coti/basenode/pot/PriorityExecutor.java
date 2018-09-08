@@ -1,17 +1,15 @@
-package io.coti.common.pot;
+package io.coti.basenode.pot;
 
 import java.util.concurrent.*;
 
 public class PriorityExecutor extends ThreadPoolExecutor {
+    private int maximumQueueSize;
+    private int initialCorePoolSize;
 
-    public PriorityExecutor(int corePoolSize, int maximumPoolSize,
-                            long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue) {
-        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
-    }
-
-    public static ExecutorService newFixedThreadPool(int nThreads, int maxPoolSize) {
-        return new PriorityExecutor(nThreads, maxPoolSize, 0L,
-                TimeUnit.MILLISECONDS, new PriorityBlockingQueue<>());
+    public PriorityExecutor(int corePoolSize, int maximumPoolSize, int maximumQueueSize) {
+        super(corePoolSize, maximumPoolSize, 0L, TimeUnit.MILLISECONDS, new PriorityBlockingQueue<>());
+        initialCorePoolSize = corePoolSize;
+        this.maximumQueueSize = maximumQueueSize;
     }
 
     @Override
@@ -22,5 +20,13 @@ public class PriorityExecutor extends ThreadPoolExecutor {
     @Override
     protected <T> RunnableFuture<T> newTaskFor(Runnable runnable, T value) {
         return (RunnableFuture<T>) runnable;
+    }
+
+    public synchronized void changeCorePoolSize() {
+        if(getQueue().size() > maximumQueueSize && getCorePoolSize() < getMaximumPoolSize()) {
+            setCorePoolSize(getPoolSize() + 1);
+        } else if(getQueue().size() == 0 ) {
+            setCorePoolSize(initialCorePoolSize);
+        }
     }
 }

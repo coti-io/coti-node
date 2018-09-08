@@ -59,7 +59,7 @@ public class TransactionService extends BaseNodeTransactionService {
     private WebSocketSender webSocketSender;
 
     @Autowired
-    private PotWorkerService potService;
+    private PotService potService;
 
     public ResponseEntity<Response> addNewTransaction(AddTransactionRequest request) {
         TransactionData transactionData =

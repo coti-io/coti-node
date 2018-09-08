@@ -15,7 +15,7 @@ import java.util.Arrays;
 @Slf4j
 public class PotDurationAspect {
 
-    @Around("execution(* io.coti.basenode.services.PotService.*(..))")
+    @Around("execution(* io.coti.basenode.services.BaseNodePotService.*(..))")
     public Object timerAspect(ProceedingJoinPoint joinPoint) throws Throwable {
         long startTimeMs = System.currentTimeMillis();
 

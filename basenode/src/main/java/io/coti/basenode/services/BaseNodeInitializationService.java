@@ -41,6 +41,8 @@ public class BaseNodeInitializationService {
     private IAddressService addressService;
     @Autowired
     private IDspVoteService dspVoteService;
+    @Autowired
+    private IPotService potService;
 
     public void init() {
         try {
@@ -48,6 +50,7 @@ public class BaseNodeInitializationService {
             balanceService.init();
             dspVoteService.init();
             transactionService.init();
+            potService.init();
             AtomicLong maxTransactionIndex = new AtomicLong(-1);
             transactions.forEach(transactionData -> handleExistingTransaction(maxTransactionIndex, transactionData));
             transactionIndexService.init(maxTransactionIndex);

@@ -3,11 +3,11 @@ package io.coti.fullnode.services;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.pot.ComparableFutureTask;
 import io.coti.basenode.pot.PotRunnableTask;
-import io.coti.basenode.services.PotService;
+import io.coti.basenode.pot.PriorityExecutor;
+import io.coti.basenode.services.BaseNodePotService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
@@ -16,18 +16,17 @@ import java.util.concurrent.ExecutorService;
 
 @Slf4j
 @Service
-public class PotWorkerService extends PotService {
+public class PotService extends BaseNodePotService {
 
     private static HashMap<Integer, ExecutorService> queuesPot = new HashMap<>();
     public static HashMap<Integer, MonitorBucketStatistics> monitorStatistics = new LinkedHashMap<>();
 
-    @PostConstruct
     public void init() {
-
         for (int i = 10; i <= 100; i = i + 10) {
             monitorStatistics.put(i, new MonitorBucketStatistics());
-            queuesPot.put(i, io.coti.common.pot.PriorityExecutor.newFixedThreadPool((int) Math.floor(i / 20), i / 10));
+            queuesPot.put(i, new PriorityExecutor(i / 10, i / 5, 5 + (100 - i) / 2));
         }
+        super.init();
     }
 
     public void potAction(TransactionData transactionData) throws InterruptedException {
@@ -35,6 +34,7 @@ public class PotWorkerService extends PotService {
         int trustScore = transactionData.getRoundedSenderTrustScore();
 
         int bucketChoice = (int) (Math.ceil(trustScore / 10) * 10);
+        ((PriorityExecutor) queuesPot.get(bucketChoice)).changeCorePoolSize();
         queuesPot.get(bucketChoice).submit(new ComparableFutureTask(new PotRunnableTask(transactionData, targetDifficulty)));
         Instant starts = Instant.now();
         synchronized (transactionData) {
@@ -42,6 +42,15 @@ public class PotWorkerService extends PotService {
         }
         Instant ends = Instant.now();
         monitorStatistics.get(bucketChoice).addTransactionStatistics(Duration.between(starts, ends));
+    }
+
+    public HashMap<String, Integer> executorSizes(int bucketNumber) {
+        PriorityExecutor executor = (PriorityExecutor) queuesPot.get(bucketNumber);
+        HashMap<String, Integer> executorSizes = new HashMap<>();
+        executorSizes.put("ActiveThreads", executor.getActiveCount());
+        executorSizes.put("MaximumPoolSize", executor.getMaximumPoolSize());
+        executorSizes.put("QueueSize", executor.getQueue().size());
+        return executorSizes;
     }
 
 
