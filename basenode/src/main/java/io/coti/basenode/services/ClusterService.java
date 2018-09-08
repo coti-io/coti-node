@@ -138,7 +138,6 @@ public class ClusterService implements IClusterService {
                         transactionData.getSenderTrustScore());
 
         if (selectedSourcesForAttachment.size() == 0) {
-            log.info("No sources were found for transaction:{} ", transactionData.getHash());
             return;
         }
         if (selectedSourcesForAttachment.size() > 0) {
@@ -150,7 +149,7 @@ public class ClusterService implements IClusterService {
 
         List<Hash> selectedSourceHashes = new LinkedList<>();
         selectedSourcesForAttachment.forEach(source -> selectedSourceHashes.add(source.getHash()));
-        log.debug("For transaction with hash:{} we found the following sources:{}", transactionData.getHash(), selectedSourceHashes);
+        log.debug("For transaction with hash: {} we found the following sources: {}", transactionData.getHash(), selectedSourceHashes);
 
         return;
     }

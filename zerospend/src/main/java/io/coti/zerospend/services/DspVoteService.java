@@ -59,7 +59,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
     }
 
     public String receiveDspVote(DspVote dspVote) {
-        log.debug("Received new Dsp Vote: {} for transaction {}", dspVote, dspVote.getTransactionHash());
+        log.debug("Received new Dsp Vote: Sender = {} , Transaction = {}", dspVote.getVoterDspHash(), dspVote.getTransactionHash());
         Hash transactionHash = dspVote.getTransactionHash();
         synchronized (transactionHash.toHexString()) {
             TransactionVoteData transactionVoteData = transactionVotes.getByHash(transactionHash);
@@ -76,14 +76,14 @@ public class DspVoteService extends BaseNodeDspVoteService {
             }
 
             if (!transactionVoteData.getLegalVoterDspHashes().contains(dspVote.getVoterDspHash())) {
-                log.error("Unauthorized Dsp vote received. Dsp hash: {}, Transaction hash: {}", dspVote.getVoterDspHash(), dspVote.getTransactionHash());
+                log.error("Unauthorized Dsp vote received. Sender =  {}, Transaction =  {}", dspVote.getVoterDspHash(), dspVote.getTransactionHash());
                 log.error("Keyset count: " + transactionVoteData.getDspHashToVoteMapping().keySet().size());
                 transactionVoteData.getDspHashToVoteMapping().keySet().forEach(hash -> log.info(hash.toHexString()));
                 return "Unauthorized";
             }
 
             if (!dspVoteCrypto.verifySignature(dspVote)) {
-                log.error("Invalid vote signature. Dsp hash: {}, Transaction hash: {}", dspVote.getVoterDspHash(), dspVote.getTransactionHash());
+                log.error("Invalid vote signature. Sender =  {}, Transaction = {}", dspVote.getVoterDspHash(), dspVote.getTransactionHash());
                 return "Invalid Signature";
             }
             if (transactionHashToVotesListMapping.get(transactionHash) == null) {

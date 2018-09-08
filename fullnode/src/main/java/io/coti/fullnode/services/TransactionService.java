@@ -71,10 +71,10 @@ public class TransactionService extends BaseNodeTransactionService {
                         request.createTime,
                         request.senderHash);
         try {
-            log.debug("New transaction request is being processed. Transaction Hash= {}", request.hash);
+            log.debug("New transaction request is being processed. Transaction Hash = {}", request.hash);
             transactionCrypto.signMessage(transactionData);
             if (!transactionHelper.startHandleTransaction(transactionData)) {
-                log.debug("Received existing transaction: {}", transactionData.getHash().toHexString());
+                log.debug("Received existing transaction: {}", transactionData.getHash());
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new AddTransactionResponse(
@@ -83,7 +83,7 @@ public class TransactionService extends BaseNodeTransactionService {
             }
 
             if (!transactionHelper.validateTransaction(transactionData)) {
-                log.error("Data Integrity validation failed: {}", transactionData.getHash().toHexString());
+                log.error("Data Integrity validation failed: {}", transactionData.getHash());
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new AddTransactionResponse(
@@ -92,7 +92,7 @@ public class TransactionService extends BaseNodeTransactionService {
             }
 
             if (!transactionHelper.isLegalBalance(transactionData.getBaseTransactions())) {
-                log.error("Illegal transaction balance: {}", transactionData.getHash().toHexString());
+                log.error("Illegal transaction balance: {}", transactionData.getHash());
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new AddTransactionResponse(
@@ -100,7 +100,7 @@ public class TransactionService extends BaseNodeTransactionService {
                                 ILLEGAL_TRANSACTION_MESSAGE));
             }
             if (!transactionHelper.validateTrustScore(transactionData)) {
-                log.error("Invalid sender trust score: {}", transactionData.getHash().toHexString());
+                log.error("Invalid sender trust score: {}", transactionData.getHash());
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new AddTransactionResponse(
@@ -109,7 +109,7 @@ public class TransactionService extends BaseNodeTransactionService {
             }
 
             if (!transactionHelper.checkBalancesAndAddToPreBalance(transactionData)) {
-                log.error("Balance and Pre balance check failed: {}", transactionData.getHash().toHexString());
+                log.error("Balance and Pre balance check failed: {}", transactionData.getHash());
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new AddTransactionResponse(
@@ -118,12 +118,23 @@ public class TransactionService extends BaseNodeTransactionService {
             }
 
             selectSources(transactionData);
-            while (transactionData.getLeftParentHash() == null && transactionData.getRightParentHash() == null) {
-                log.debug("Could not find sources for transaction: {}. Sending to Zero Spend and retrying in 5 seconds.", transactionData.getHash().toHexString());
-                TimeUnit.SECONDS.sleep(5);
-                selectSources(transactionData);
+            if(!transactionData.hasSources()) {
+                int selectSourceRetryCount = 0;
+                while (!transactionData.hasSources() && selectSourceRetryCount <= 20) {
+                    log.debug("Could not find sources for transaction: {}. Retrying in 5 seconds.", transactionData.getHash());
+                    TimeUnit.SECONDS.sleep(5);
+                    selectSources(transactionData);
+                    selectSourceRetryCount++;
+                }
+                if(!transactionData.hasSources()) {
+                    log.info("No source found for transaction {} with trust score {}", transactionData.getHash(), transactionData.getSenderTrustScore());
+                    return ResponseEntity
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body(new AddTransactionResponse(
+                                    STATUS_ERROR,
+                                    TRANSACTION_SOURCE_NOT_FOUND));
+                }
             }
-
             if (!validationService.validateSource(transactionData.getLeftParentHash()) ||
                     !validationService.validateSource(transactionData.getRightParentHash())) {
                 log.debug("Could not validate transaction source");
@@ -151,7 +162,7 @@ public class TransactionService extends BaseNodeTransactionService {
                             TRANSACTION_CREATED_MESSAGE));
 
         } catch (Exception ex) {
-            log.error("Exception while adding transaction: {}", transactionData.getHash().toHexString(), ex);
+            log.error("Exception while adding transaction: {}", transactionData.getHash(), ex);
             throw new TransactionException(ex);
         } finally {
             transactionHelper.endHandleTransaction(transactionData);
@@ -164,7 +175,7 @@ public class TransactionService extends BaseNodeTransactionService {
             return;
         }
 
-        log.debug("No sources found for transaction {} with trust score {}", transactionData.getHash().toHexString(), transactionData.getSenderTrustScore());
+        log.info("No source found for transaction {} with trust score {}. Retrying ...", transactionData.getHash(), transactionData.getSenderTrustScore());
         int retryTimes = 200 / (transactionData.getRoundedSenderTrustScore() + 1);
         while (!transactionData.hasSources() && retryTimes > 0) {
             try {
@@ -179,18 +190,17 @@ public class TransactionService extends BaseNodeTransactionService {
                 return;
             }
         }
-
-        ZeroSpendTransactionRequest zeroSpendTransactionRequest = new ZeroSpendTransactionRequest();
+        //TODO: ZeroSpend source starvation already implemented. ZeroSpend source creation by request will be implemented for TestNet.
+/*      ZeroSpendTransactionRequest zeroSpendTransactionRequest = new ZeroSpendTransactionRequest();
         zeroSpendTransactionRequest.setTransactionData(transactionData);
-        receivingServerAddresses.forEach(address -> sender.send(zeroSpendTransactionRequest, address));
-        clusterService.selectSources(transactionData);
+        receivingServerAddresses.forEach(address -> sender.send(zeroSpendTransactionRequest, address)); */
 
         while (!transactionData.hasSources()) {
-            log.debug("Waiting 2 seconds for new zero spend transaction to be added to available sources for transaction {}", transactionData.getHash().toHexString());
+            log.debug("Waiting 2 seconds for new zero spend transaction to be added to available sources for transaction {}", transactionData.getHash());
             try {
                 TimeUnit.SECONDS.sleep(2);
             } catch (InterruptedException e) {
-                log.error("Errors when sleeping: {}", e);
+                log.error("Errors when sleeping: ", e);
             }
             clusterService.selectSources(transactionData);
         }
