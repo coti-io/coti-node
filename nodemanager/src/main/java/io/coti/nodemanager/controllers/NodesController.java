@@ -18,7 +18,7 @@ public class NodesController {
     @Autowired
     private NodesService nodesService;
 
-    @RequestMapping(path = "/newZeroSpend", method = RequestMethod.POST)
+    @RequestMapping(path = "/newZerospend", method = RequestMethod.POST)
     public void newZeroSpend(@Valid @RequestBody String zeroSpendAddress) {
         nodesService.newZeroSpendServer(zeroSpendAddress);
     }
