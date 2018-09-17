@@ -16,6 +16,7 @@ public class NodePropertiesController {
     public NodeProperties getNodeProperties() {
         NodeProperties nodeProperties = new NodeProperties();
         nodeProperties.setPropagationAddress("tcp://localhost:5002");
+        nodeProperties.setReceivingAddress("tcp://localhost:5001");
         return nodeProperties;
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -31,5 +32,10 @@ public class NodesController {
     @RequestMapping(path = "/zerospend", method = RequestMethod.GET)
     public String getZeroSpendAddress(){
         return nodesService.getZeroSpendAddress();
+    }
+
+    @RequestMapping(path = "/dsps", method = RequestMethod.GET)
+    public List<String> getDsps() {
+        return nodesService.getDsps();
     }
 }

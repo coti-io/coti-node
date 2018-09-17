@@ -60,6 +60,6 @@ public class InitializationService {
         RestTemplate restTemplate = new RestTemplate();
         String address = nodeManagerAddress + "/nodes/newZerospend";
 
-        restTemplate.postForObject(address, "localhost:7020", String.class);
+        restTemplate.postForObject(address, "http://localhost:7020", String.class);
     }
 }
