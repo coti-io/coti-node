@@ -1,5 +1,6 @@
 package io.coti.nodemanager.controllers;
 
+import io.coti.basenode.data.Network;
 import io.coti.nodemanager.services.NodesService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,8 +35,8 @@ public class NodesController {
         return nodesService.getZeroSpendAddress();
     }
 
-    @RequestMapping(path = "/dsps", method = RequestMethod.GET)
-    public List<String> getDsps() {
+    @RequestMapping(path = "/all", method = RequestMethod.GET)
+    public Network getAllNodes() {
         return nodesService.getDsps();
     }
 }
