@@ -3,6 +3,7 @@ package io.coti.trustscore.services;
 import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
 import io.coti.basenode.crypto.TrustScoreCrypto;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionTrustScoreData;
 import io.coti.basenode.data.TrustScoreData;
 import io.coti.basenode.http.BaseResponse;
@@ -52,6 +53,11 @@ public class TrustScoreService {
 
         GetUserTrustScoreResponse getUserTrustScoreResponse = new GetUserTrustScoreResponse(userHash.toHexString(), trustScoreData.getTrustScore());
         return ResponseEntity.status(HttpStatus.OK).body(getUserTrustScoreResponse);
+    }
+
+    public void addTransactionToTsCalculation(TransactionData transactionData){
+
+
     }
 
     public ResponseEntity<BaseResponse> getTransactionTrustScore(Hash userHash, Hash transactionHash) {
