@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.zeromq.ZMQ;
 
+import javax.annotation.PreDestroy;
 import java.util.List;
 
 @Slf4j
@@ -36,5 +37,11 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
                 propagator.send(message);
             });
         }
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        log.info("Shutting down ZeroMQ publisher");
+        propagator.close();
     }
 }

@@ -36,13 +36,13 @@ public class BaseNodeTransactionService implements ITransactionService {
     @Override
     public void handlePropagatedTransaction(TransactionData transactionData) {
         if (!transactionHelper.startHandleTransaction(transactionData)) {
-            log.debug("Transaction already exists: {}", transactionData.getHash().toHexString());
+            log.debug("Transaction already exists: {}", transactionData.getHash());
             return;
         }
         if (!transactionHelper.validateTransaction(transactionData) ||
                 !transactionCrypto.verifySignature(transactionData) ||
                 !validationService.validatePot(transactionData)) {
-            log.error("Data Integrity validation failed: {}", transactionData.getHash().toHexString());
+            log.error("Data Integrity validation failed: {}", transactionData.getHash());
             return;
         }
         if (hasOneOfParentsMissing(transactionData)) {
@@ -50,7 +50,7 @@ public class BaseNodeTransactionService implements ITransactionService {
             return;
         }
         if (!transactionHelper.checkBalancesAndAddToPreBalance(transactionData)) {
-            log.error("Balance check failed: {}", transactionData.getHash().toHexString());
+            log.error("Balance check failed: {}", transactionData.getHash());
             return;
         }
         transactionHelper.attachTransactionToCluster(transactionData);
@@ -60,9 +60,9 @@ public class BaseNodeTransactionService implements ITransactionService {
 
         List<TransactionData> postponedParentTransactions = postponedTransactions.stream().filter(
                 postponedTransactionData ->
-                        postponedTransactionData.getRightParentHash().equals(transactionData.getHash()) ||
-                                postponedTransactionData.getLeftParentHash().equals(transactionData.getHash()))
-                .collect(Collectors.toList());
+                        (postponedTransactionData.getRightParentHash() != null && postponedTransactionData.getRightParentHash().equals(transactionData.getHash())) ||
+                                (postponedTransactionData.getLeftParentHash() != null && postponedTransactionData.getLeftParentHash().equals(transactionData.getHash())))
+                                        .collect(Collectors.toList());
         postponedParentTransactions.forEach(postponedTransaction -> {
             postponedTransactions.remove(postponedTransaction);
             handlePropagatedTransaction(postponedTransaction);

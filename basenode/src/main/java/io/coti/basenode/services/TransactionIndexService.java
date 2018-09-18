@@ -52,7 +52,7 @@ public class TransactionIndexService {
 
     public synchronized boolean insertNewTransactionIndex(TransactionData transactionData) {
         if (transactionData.getDspConsensusResult() == null) {
-            log.error("Invalid transaction index");
+            log.error("Invalid transaction index for transaction {}", transactionData.getHash());
             return false;
         }
         if (transactionData.getDspConsensusResult().getIndex() == lastTransactionIndexData.getIndex() + 1) {

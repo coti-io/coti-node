@@ -128,7 +128,7 @@ public class TransactionHelper implements ITransactionHelper {
             return;
         }
         if (transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).peek() == FINISHED) {
-            log.debug("Transaction handled successfully...");
+            log.debug("Transaction {} handled successfully", transactionData.getHash());
         } else {
             rollbackTransaction(transactionData);
         }
