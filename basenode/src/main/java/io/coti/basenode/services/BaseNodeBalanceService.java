@@ -224,13 +224,13 @@ public class BaseNodeBalanceService implements IBalanceService {
         boolean isConfirmed = transactionHelper.isConfirmed(transactionData);
         boolean isDspConfirmed = transactionHelper.isDspConfirmed(transactionData);
         transactionData.getBaseTransactions().forEach(baseTransactionData -> {
-            preBalanceMap.putIfAbsent(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
             preBalanceMap.computeIfPresent(baseTransactionData.getAddressHash(), (currentHash, currentAmount) ->
                     currentAmount.add(baseTransactionData.getAmount()));
+            preBalanceMap.putIfAbsent(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
             if (isConfirmed) {
-                balanceMap.putIfAbsent(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
                 balanceMap.computeIfPresent(baseTransactionData.getAddressHash(), (currentHash, currentAmount) ->
                         currentAmount.add(baseTransactionData.getAmount()));
+                balanceMap.putIfAbsent(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
             }
         });
         if (isDspConfirmed) {

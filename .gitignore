@@ -53,3 +53,4 @@ MANIFEST.MF
 fullnode/FullNoderocksDB
 /.vscode
 /configs
+nohup.out
