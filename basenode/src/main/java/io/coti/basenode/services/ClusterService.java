@@ -51,8 +51,8 @@ public class ClusterService implements IClusterService {
     @Override
     public void addUnconfirmedTransaction(TransactionData transactionData) {
         hashToUnconfirmedTransactionsMapping.put(transactionData.getHash(), transactionData);
-        sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionData);
-        if (transactionData.getChildrenTransactions() == null || transactionData.getChildrenTransactions().isEmpty()) {
+        if (transactionData.isSource()) {
+            sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionData);
             totalSources.incrementAndGet();
         }
     }

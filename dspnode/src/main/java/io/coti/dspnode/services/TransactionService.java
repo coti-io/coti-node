@@ -45,8 +45,7 @@ public class TransactionService extends BaseNodeTransactionService {
     public String handleNewTransactionFromFullNode(TransactionData transactionData) {
         try {
             log.debug("Running new transactions from full node handler");
-            transactionHelper.startHandleTransaction(transactionData);
-            if (!transactionHelper.isTransactionExists(transactionData)) {
+            if (!transactionHelper.startHandleTransaction(transactionData)) {
                 log.debug("Transaction already exists");
                 return "Transaction Exists: " + transactionData.getHash();
             }

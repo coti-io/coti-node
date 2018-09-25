@@ -19,8 +19,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static java.lang.Math.min;
-
 @Slf4j
 @Service
 public class BaseNodeInitializationService {
@@ -94,11 +92,7 @@ public class BaseNodeInitializationService {
 
         @Override
         public void run() {
-            try {
-                transactionService.handlePropagatedTransaction(transactionData);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            transactionService.handlePropagatedTransaction(transactionData);
         }
 
     }

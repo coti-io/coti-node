@@ -99,13 +99,6 @@ public class TransactionHelper implements ITransactionHelper {
         return false;
     }
 
-    public boolean isTransactionProcessing(Hash transactionHash) {
-        if (transactionHashToTransactionStateStackMapping.containsKey(transactionHash)) {
-            return true;
-        }
-        return false;
-    }
-
     public boolean validateTrustScore(TransactionData transactionData) {
         Hash transactionHash = transactionData.getHash();
         List<TransactionTrustScoreData> transactionTrustScores = transactionData.getTrustScoreResults();
@@ -126,9 +119,15 @@ public class TransactionHelper implements ITransactionHelper {
         return true;
     }
 
-    public synchronized void  startHandleTransaction(TransactionData transactionData) {
-            transactionHashToTransactionStateStackMapping.put(transactionData.getHash(), new Stack());
-            transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(RECEIVED);
+    public boolean startHandleTransaction(TransactionData transactionData) {
+        synchronized (transactionData) {
+            if (isTransactionExists(transactionData)) {
+                return false;
+            }
+        }
+        transactionHashToTransactionStateStackMapping.put(transactionData.getHash(), new Stack());
+        transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(RECEIVED);
+        return true;
     }
 
     public void endHandleTransaction(TransactionData transactionData) {

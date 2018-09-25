@@ -167,7 +167,7 @@ public class BaseNodeBalanceService implements IBalanceService {
 
     protected boolean insertNewTransactionIndex(TransactionData transactionData) {
         DspConsensusResult dspConsensusResult = transactionData.getDspConsensusResult();
-        if(dspConsensusResult == null) {
+        if (dspConsensusResult == null) {
             return false;
         }
         if (!transactionIndexService.insertNewTransactionIndex(transactionData)) {

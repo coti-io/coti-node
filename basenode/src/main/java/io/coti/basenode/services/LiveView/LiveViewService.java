@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedList;
 import java.util.Vector;
 
 @Slf4j
@@ -60,7 +59,7 @@ public class LiveViewService {
         nodeData.setStatus(newStatus);
         setNodeDataDatesFromTransactionData(transactionData, nodeData);
         int index = graphData.nodes.indexOf(nodeData);
-        if(index == -1) {
+        if (index == -1) {
             graphData.nodes.add(nodeData);
         } else {
             graphData.nodes.set(index, nodeData);

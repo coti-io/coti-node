@@ -72,8 +72,7 @@ public class TransactionService extends BaseNodeTransactionService {
         try {
             log.debug("New transaction request is being processed. Transaction Hash = {}", request.hash);
             transactionCrypto.signMessage(transactionData);
-            transactionHelper.startHandleTransaction(transactionData);
-            if (!transactionHelper.isTransactionExists(transactionData)) {
+            if (!transactionHelper.startHandleTransaction(transactionData)) {
                 log.debug("Received existing transaction: {}", transactionData.getHash());
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)

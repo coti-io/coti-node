@@ -16,7 +16,7 @@ public interface ITransactionHelper {
 
     boolean validateTrustScore(TransactionData transactionData);
 
-    void startHandleTransaction(TransactionData transactionData);
+    boolean startHandleTransaction(TransactionData transactionData);
 
     void endHandleTransaction(TransactionData transactionData);
 
@@ -37,8 +37,6 @@ public interface ITransactionHelper {
     boolean isTransactionExists(TransactionData transactionData);
 
     boolean isTransactionHashExists(Hash transactionHash);
-
-    boolean isTransactionProcessing(Hash transactionHash);
 
     long getTotalTransactions();
 
