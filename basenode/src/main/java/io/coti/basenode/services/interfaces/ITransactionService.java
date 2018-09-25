@@ -6,5 +6,7 @@ public interface ITransactionService {
 
     void init();
 
-    void handlePropagatedTransaction(TransactionData transactionData);
+    void handlePropagatedTransaction(TransactionData transactionData) throws InterruptedException;
+
+    int totalPostponedTransactions();
 }

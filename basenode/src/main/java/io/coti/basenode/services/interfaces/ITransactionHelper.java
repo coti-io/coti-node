@@ -2,6 +2,7 @@ package io.coti.basenode.services.interfaces;
 
 import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.DspConsensusResult;
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.GetTransactionBatchResponse;
 
@@ -15,7 +16,7 @@ public interface ITransactionHelper {
 
     boolean validateTrustScore(TransactionData transactionData);
 
-    boolean startHandleTransaction(TransactionData transactionData);
+    void startHandleTransaction(TransactionData transactionData);
 
     void endHandleTransaction(TransactionData transactionData);
 
@@ -32,6 +33,12 @@ public interface ITransactionHelper {
     boolean isConfirmed(TransactionData transactionData);
 
     boolean isDspConfirmed(TransactionData transactionData);
+
+    boolean isTransactionExists(TransactionData transactionData);
+
+    boolean isTransactionHashExists(Hash transactionHash);
+
+    boolean isTransactionProcessing(Hash transactionHash);
 
     long getTotalTransactions();
 

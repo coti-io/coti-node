@@ -40,8 +40,13 @@ public class CommunicationService {
 
     public void initSubscriber(List<String> propagationServerAddresses, NodeType nodeType) {
         HashMap<String, Consumer<Object>> classNameToSubscriberHandlerMapping = new HashMap<>();
-        classNameToSubscriberHandlerMapping.put(Channel.getChannelString(TransactionData.class, nodeType), data ->
-                transactionService.handlePropagatedTransaction((TransactionData) data));
+        classNameToSubscriberHandlerMapping.put(Channel.getChannelString(TransactionData.class, nodeType), data -> {
+             try {
+                 transactionService.handlePropagatedTransaction((TransactionData) data);
+             } catch(InterruptedException e){
+                 e.printStackTrace();
+             }
+        });
         classNameToSubscriberHandlerMapping.put(Channel.getChannelString(AddressData.class, nodeType), data ->
                 addressService.handlePropagatedAddress((AddressData) data));
         classNameToSubscriberHandlerMapping.put(Channel.getChannelString(DspConsensusResult.class, nodeType), data ->

@@ -43,30 +43,35 @@ public class TransactionService extends BaseNodeTransactionService {
     private DspVoteCrypto dspVoteCrypto;
 
     public String handleNewTransactionFromFullNode(TransactionData transactionData) {
-        log.debug("Running new transactions from full node handler");
-        if (!transactionHelper.startHandleTransaction(transactionData)) {
-            log.debug("Transaction already exists");
-            return "Transaction Exists: " + transactionData.getHash();
+        try {
+            log.debug("Running new transactions from full node handler");
+            transactionHelper.startHandleTransaction(transactionData);
+            if (!transactionHelper.isTransactionExists(transactionData)) {
+                log.debug("Transaction already exists");
+                return "Transaction Exists: " + transactionData.getHash();
+            }
+            if (!transactionHelper.validateTransaction(transactionData) ||
+                    !transactionCrypto.verifySignature(transactionData) ||
+                    !validationService.validatePot(transactionData) ||
+                    !transactionHelper.checkBalancesAndAddToPreBalance(transactionData)) {
+                log.info("Invalid Transaction Received!");
+                return "Invalid Transaction Received: " + transactionData.getHash();
+            }
+            transactionHelper.attachTransactionToCluster(transactionData);
+            transactionHelper.setTransactionStateToSaved(transactionData);
+            propagationPublisher.propagate(transactionData, Arrays.asList(
+                    NodeType.FullNode,
+                    NodeType.TrustScoreNode,
+                    NodeType.DspNode,
+                    NodeType.ZeroSpendServer));
+            transactionHelper.setTransactionStateToFinished(transactionData);
+            transactionsToValidate.add(transactionData);
+            return "Received Transaction: " + transactionData.getHash();
+        } finally {
+            transactionHelper.endHandleTransaction(transactionData);
         }
-        if (!transactionHelper.validateTransaction(transactionData) ||
-                !transactionCrypto.verifySignature(transactionData) ||
-                !validationService.validatePot(transactionData) ||
-                !transactionHelper.checkBalancesAndAddToPreBalance(transactionData)) {
-            log.info("Invalid Transaction Received!");
-            return "Invalid Transaction Received: " + transactionData.getHash();
-        }
-        transactionHelper.attachTransactionToCluster(transactionData);
-        transactionHelper.setTransactionStateToSaved(transactionData);
-        propagationPublisher.propagate(transactionData, Arrays.asList(
-                NodeType.FullNode,
-                NodeType.TrustScoreNode,
-                NodeType.DspNode,
-                NodeType.ZeroSpendServer));
-        transactionHelper.setTransactionStateToFinished(transactionData);
-        transactionsToValidate.add(transactionData);
 
-        transactionHelper.endHandleTransaction(transactionData);
-        return "Received Transaction: " + transactionData.getHash();
+
     }
 
     @Scheduled(fixedRate = 1000)

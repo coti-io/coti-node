@@ -91,7 +91,6 @@ public class ClusterService implements IClusterService {
         sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionData);
         totalSources.incrementAndGet();
         log.debug("Added New Transaction with hash:{}", transactionData.getHash());
-        liveViewService.addNode(transactionData);
         return;
     }
 

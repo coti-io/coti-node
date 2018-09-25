@@ -1,9 +1,6 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.services.interfaces.IBalanceService;
-import io.coti.basenode.services.interfaces.IClusterService;
-import io.coti.basenode.services.interfaces.IMonitorService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -20,6 +17,8 @@ public class BaseNodeMonitorService implements IMonitorService {
     private TransactionIndexService transactionIndexService;
     @Autowired
     private IClusterService clusterService;
+    @Autowired
+    private ITransactionService transactionService;
 
     public void init() {
         log.info("{} is up", this.getClass().getSimpleName());
@@ -27,12 +26,13 @@ public class BaseNodeMonitorService implements IMonitorService {
 
     @Scheduled(initialDelay = 1000, fixedDelay = 5000)
     public void lastState() {
-        log.info("Transactions = {}, TccConfirmed = {}, DspConfirmed = {}, Confirmed = {}, LastIndex = {}, Sources = {}",
+        log.info("Transactions = {}, TccConfirmed = {}, DspConfirmed = {}, Confirmed = {}, LastIndex = {}, Sources = {}, PostponedTransactions = {}",
                 transactionHelper.getTotalTransactions(),
                 balanceService.getTccConfirmed(),
                 balanceService.getDspConfirmed(),
                 balanceService.getTotalConfirmed(),
                 transactionIndexService.getLastTransactionIndexData().getIndex(),
-                clusterService.getTotalSources());
+                clusterService.getTotalSources(),
+                transactionService.totalPostponedTransactions());
     }
 }
