@@ -5,13 +5,20 @@ import io.coti.basenode.data.interfaces.IEntity;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Data
-public class EventData implements IEntity {
-    private Date eventDate;
-    private Hash uniqueIdentifier;
-    private EventType eventType;
-    private double magnitude;
+public abstract class EventData implements IEntity {
+
+    protected Date eventDate;
+    protected Hash uniqueIdentifier;
+    protected EventType eventType;
+    protected double magnitude;
+
+    public EventData(){
+        this.eventDate = new Date();
+    }
 
     @Override
     public Hash getHash() {
@@ -23,3 +30,5 @@ public class EventData implements IEntity {
         this.uniqueIdentifier = hash;
     }
 }
+
+

@@ -10,10 +10,13 @@ import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.TransactionTrustScoreResponseData;
 import io.coti.basenode.model.TrustScores;
+import io.coti.trustscore.data.TrustScoreUserData;
 import io.coti.trustscore.http.GetTransactionTrustScoreResponse;
 import io.coti.trustscore.http.GetUserTrustScoreResponse;
 import io.coti.trustscore.http.SetKycTrustScoreRequest;
 import io.coti.trustscore.http.SetKycTrustScoreResponse;
+import io.coti.trustscore.model.LastTransactions;
+import io.coti.trustscore.model.TrustScoresUsers;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +25,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 
 import static io.coti.basenode.http.HttpStringConstants.*;
@@ -37,6 +42,12 @@ public class TrustScoreService {
     private TrustScores trustScores;
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
+
+
+    @Autowired
+    private TrustScoresUsers trustScoresUsers;
+    @Autowired
+    private LastTransactions lastTransactions;
 
     @PostConstruct
     private void init() {
@@ -57,6 +68,26 @@ public class TrustScoreService {
 
     public void addTransactionToTsCalculation(TransactionData transactionData){
 
+        LocalDate transactionConsensusDate = transactionData.getTransactionConsensusUpdateTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate currentDate = new Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+
+        if (transactionData.getDspConsensusResult().isDspConsensus()) {
+            TrustScoreUserData trustScoreUserData =  trustScoresUsers.getByHash(transactionData.getSenderHash());
+
+
+            //TODO: case if transaction belong to the day before but only received now.
+
+            if (currentDate.equals(transactionConsensusDate)) {
+
+                if (lastTransactions.getByHash(transactionData.getHash()) != null)
+                    return;
+
+                trustScoreUserData.addTransactionEvent(transactionData);
+                lastTransactions.put(new TransactionEventData(transactionData));
+            }
+
+        }
 
     }
 
