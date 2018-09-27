@@ -26,9 +26,9 @@ public abstract class BucketEventData<T extends EventData>  {
     }
 
     public void addEventToBucket(T eventData){
-        if (bucketEvents.containsKey(eventData.getUniqueIdentifier())) return;
+        if (bucketEvents.containsKey(eventData.getHash())) return;
 
-        //TODO:
+        //TODO: if we have a problem here, event can be added without calculated
         bucketEvents.put(eventData.getUniqueIdentifier(),eventData);
 
         addEventToCalculations(eventData);
@@ -41,6 +41,8 @@ public abstract class BucketEventData<T extends EventData>  {
         return CalculatedDelta;
     }
 
+
+    public abstract void ShiftCalculatedTsContribution();
 }
 
 

@@ -4,21 +4,14 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import lombok.Data;
 
-import java.math.BigDecimal;
-
 @Data
 public class TransactionEventData extends EventData {
-    private int numberOfTransactions;
-    private BigDecimal turnOver;
-    private BigDecimal balance;
+
     private TransactionData transactionData;
 
-    public TransactionEventData(TransactionData transactionData, int numberOfTransactions, BigDecimal turnOver, BigDecimal balance) {
+    public TransactionEventData(TransactionData transactionData) {
 
-        this.numberOfTransactions = numberOfTransactions;
-        this.turnOver = turnOver;
         this.transactionData = transactionData;
-        this.balance = balance;
     }
 
     @Override

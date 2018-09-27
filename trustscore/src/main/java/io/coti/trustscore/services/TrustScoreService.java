@@ -10,12 +10,13 @@ import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.TransactionTrustScoreResponseData;
 import io.coti.basenode.model.TrustScores;
+import io.coti.trustscore.data.TransactionEventData;
 import io.coti.trustscore.data.TrustScoreUserData;
 import io.coti.trustscore.http.GetTransactionTrustScoreResponse;
 import io.coti.trustscore.http.GetUserTrustScoreResponse;
 import io.coti.trustscore.http.SetKycTrustScoreRequest;
 import io.coti.trustscore.http.SetKycTrustScoreResponse;
-import io.coti.trustscore.model.LastTransactions;
+import io.coti.trustscore.model.TransactionEvents;
 import io.coti.trustscore.model.TrustScoresUsers;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +48,7 @@ public class TrustScoreService {
     @Autowired
     private TrustScoresUsers trustScoresUsers;
     @Autowired
-    private LastTransactions lastTransactions;
+    private TransactionEvents transactionEvents;
 
     @PostConstruct
     private void init() {
@@ -80,11 +81,11 @@ public class TrustScoreService {
 
             if (currentDate.equals(transactionConsensusDate)) {
 
-                if (lastTransactions.getByHash(transactionData.getHash()) != null)
+                if (transactionEvents.getByHash(transactionData.getHash()) != null)
                     return;
 
-                trustScoreUserData.addTransactionEvent(transactionData);
-                lastTransactions.put(new TransactionEventData(transactionData));
+                trustScoreUserData.addTransactionEvent(new TransactionEventData(transactionData));
+                transactionEvents.put(transactionData);
             }
 
         }

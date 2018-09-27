@@ -11,6 +11,9 @@ public class HistoryBucketEvents implements IEntity {
     private Hash userHash;
     private Map<EventType,List<BucketEventData>> historyBucketsEvents;
 
+
+
+
     @Override
     public Hash getHash() {
         return userHash;

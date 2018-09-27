@@ -17,4 +17,9 @@ public class BucketDisputeEventsData extends BucketEventData<DisputeEventData>{
     protected void addEventToCalculations(DisputeEventData eventData) {
 
     }
+
+    @Override
+    public void ShiftCalculatedTsContribution() {
+
+    }
 }

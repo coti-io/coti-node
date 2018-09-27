@@ -11,11 +11,15 @@ import java.math.BigDecimal;
 @Data
 public class BucketTransactionEventsData extends BucketEventData<TransactionEventData>{
 
+    private double constantK = 1.098612289;
 
+    private double periodTransactionContribution;
     private static final int periodTime = 60;
-    private int lastNumberOfTransactions;
-    private BigDecimal lastTurnOver;
-    private BigDecimal lastBalance;
+
+
+    private int currentDateNumberOfTransactions;
+    private BigDecimal currentDateTurnOver;
+    private BigDecimal currentDateBalance;
 
 
 
@@ -24,23 +28,34 @@ public class BucketTransactionEventsData extends BucketEventData<TransactionEven
         return periodTime;
     }
 
-    public BucketTransactionEventsData(){
 
-    }
 
     @Override
     @Synchronized
     protected void addEventToCalculations(TransactionEventData eventData) {
+
         TransactionData transactionData = eventData.getTransactionData();
         BaseTransactionData transferTransaction =  transactionData.getBaseTransactions().get(transactionData.getBaseTransactions().size()-1);
 
-        lastNumberOfTransactions = lastNumberOfTransactions+1;
-        lastTurnOver = lastTurnOver.add(transferTransaction.getAmount());
-        lastBalance =lastBalance.subtract(transferTransaction.getAmount());
+        currentDateNumberOfTransactions = currentDateNumberOfTransactions +1;
+        currentDateTurnOver = currentDateTurnOver.add(transferTransaction.getAmount().abs());
+        currentDateBalance = currentDateBalance.subtract(transferTransaction.getAmount());
 
         //TODO: make calculation here
         CalculatedDelta = CalculatedDelta + 0.01;
     }
+
+    @Override
+    public void ShiftCalculatedTsContribution() {
+        periodTransactionContribution = periodTransactionContribution * 0.8 + 0.1;
+
+
+        currentDateNumberOfTransactions = 0;
+        currentDateTurnOver = new BigDecimal(0);
+        currentDateBalance = new  BigDecimal(0);
+    }
+
+
 }
 
 

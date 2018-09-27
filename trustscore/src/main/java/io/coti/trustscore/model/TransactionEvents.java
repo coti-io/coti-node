@@ -7,9 +7,9 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 
 @Service
-public class LastTransactions extends Collection<TransactionEventData> {
+public class TransactionEvents extends Collection<TransactionEventData> {
 
-    public LastTransactions() {
+    public TransactionEvents() {
     }
 
     @PostConstruct
