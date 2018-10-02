@@ -1,12 +1,13 @@
 package io.coti.basenode.data;
 
+import io.coti.basenode.data.interfaces.IEntity;
 import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class Network {
+public class Network implements IEntity {
     public List<Node> dspNodes;
     public List<Node> fullNodes;
     public List<Node> trustScoreNodes;
@@ -33,5 +34,14 @@ public class Network {
                 zerospendServer = node;
                 break;
         }
+    }
+
+    @Override
+    public Hash getHash() {
+        return this.getHash();
+    }
+
+    @Override
+    public void setHash(Hash hash) {
     }
 }

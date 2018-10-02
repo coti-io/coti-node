@@ -1,5 +1,10 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.communication.Channel;
+import io.coti.basenode.communication.interfaces.IPropagationPublisher;
+import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
+import io.coti.basenode.data.Network;
+import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.GetTransactionBatchRequest;
 import io.coti.basenode.http.GetTransactionBatchResponse;
@@ -12,8 +17,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 @Slf4j
 @Service
@@ -43,6 +51,10 @@ public class BaseNodeInitializationService {
     private IDspVoteService dspVoteService;
     @Autowired
     private IPotService potService;
+    @Autowired
+    private IPropagationSubscriber propagationSubscriber;
+    @Autowired
+    private NetworkService networkService;
 
     public void init() {
         try {
@@ -68,6 +80,13 @@ public class BaseNodeInitializationService {
 
             balanceService.finalizeInit();
             clusterService.finalizeInit();
+
+            HashMap<String, Consumer<Object>> classNameToSubscriberHandlerMapping = new HashMap<>();
+            classNameToSubscriberHandlerMapping.put(Channel.getChannelString(Network.class, NodeType.FullNode), network ->
+                    networkService.handleNetworkChanges((Network)network));
+
+            propagationSubscriber.init(Arrays.asList("tcp://localhost:11111"), classNameToSubscriberHandlerMapping);
+
         } catch (Exception e) {
             log.error("Errors at {} : ", this.getClass().getSimpleName(), e);
             System.exit(-1);

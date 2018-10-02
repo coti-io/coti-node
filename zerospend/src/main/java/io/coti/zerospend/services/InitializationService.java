@@ -64,6 +64,6 @@ public class InitializationService {
         Node node = new Node(NodeType.ZeroSpendServer, "localhost", "7020");
         node.setPropagationPort("5002");
         node.setReceivingPort("5001");
-        restTemplate.postForObject(address, node, String.class);
+        restTemplate.postForEntity(address, node, Void.class);
     }
 }
