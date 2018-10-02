@@ -11,7 +11,7 @@ public class NodesService {
     private Network network;
     private String zeroSpendServerAddress;
 
-    public NodesService(){
+    public NodesService() {
         network = new Network();
     }
 

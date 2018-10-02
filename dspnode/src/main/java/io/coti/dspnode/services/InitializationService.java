@@ -1,7 +1,6 @@
 package io.coti.dspnode.services;
 
 import io.coti.basenode.data.*;
-import io.coti.basenode.http.NodeProperties;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
 import lombok.extern.slf4j.Slf4j;
@@ -21,8 +20,6 @@ import java.util.function.Consumer;
 public class InitializationService {
     @Value("${receiving.port}")
     private String receivingPort;
-    @Value("#{'${propagation.server.addresses}'.split(',')}")
-    private List<String> propagationServerAddresses;
     @Value("${propagation.port}")
     private String propagationPort;
     @Value("${node.manager.address}")
@@ -49,9 +46,10 @@ public class InitializationService {
                 addressService.handleNewAddressFromFullNode((AddressData) data));
 
         communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
-//        communicationService.initSender(Arrays.asList(zeroSpendNodeProperties.getReceivingAddress()));
+        communicationService.initSender(
+                Arrays.asList("tcp://" + network.getZerospendServer().getAddress() + ":" + network.getZerospendServer().getPropagationPort()));
         communicationService.initSubscriber(
-                Arrays.asList(network.getZerospendServer().getAddress() + network.getZerospendServer().getPropagationPort()),
+                Arrays.asList("tcp://" + network.getZerospendServer().getAddress() + ":" + network.getZerospendServer().getPropagationPort()),
                 NodeType.DspNode);
         communicationService.initPropagator(propagationPort);
 
@@ -67,5 +65,4 @@ public class InitializationService {
         RestTemplate restTemplate = new RestTemplate();
         return restTemplate.getForObject(nodeManagerAddress + "/nodes/all", Network.class);
     }
-
 }
