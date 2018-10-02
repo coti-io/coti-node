@@ -1,26 +1,23 @@
 package io.coti.nodemanager.services;
 
 import io.coti.basenode.data.Network;
+import io.coti.basenode.data.Node;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Slf4j
 @Service
 public class NodesService {
     private Network network;
     private String zeroSpendServerAddress;
-    private List<String> dspNodeAddresses = new ArrayList<>();
 
     public NodesService(){
         network = new Network();
     }
 
-    public void newDspNode(String dspNodeAddress) {
-        log.info("Dsp Node address received: {}", dspNodeAddress);
-        this.network.dspNodes.add(dspNodeAddress);
+    public void newNode(Node node) {
+        log.info("New node received: {}", node);
+        this.network.addNode(node);
     }
 
     public void newZeroSpendServer(String zeroSpendServerAddress) {
@@ -29,7 +26,7 @@ public class NodesService {
     }
 
     public Network getAllNodes() {
-        return dspNodeAddresses;
+        return network;
     }
 
     public String getZeroSpendAddress() {

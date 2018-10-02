@@ -1,8 +1,6 @@
 package io.coti.dspnode.services;
 
-import io.coti.basenode.data.AddressData;
-import io.coti.basenode.data.NodeType;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.http.NodeProperties;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
@@ -41,10 +39,8 @@ public class InitializationService {
 
     @PostConstruct
     public void init() {
-        String zerospendServerAddress = getAllNodes();
-        List<String> dspNodeAddresses = getDspNodeAddresses();
         RegisterToNodeManager();
-        NodeProperties zeroSpendNodeProperties = getNodeProperties(zerospendServerAddress);
+        Network network = getNetwork();
 
         HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping = new HashMap<>();
         classNameToReceiverHandlerMapping.put(TransactionData.class.getName(), data ->
@@ -53,30 +49,23 @@ public class InitializationService {
                 addressService.handleNewAddressFromFullNode((AddressData) data));
 
         communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
-        communicationService.initSender(Arrays.asList(zeroSpendNodeProperties.getReceivingAddress()));
-        communicationService.initSubscriber(propagationServerAddresses, NodeType.DspNode);
+//        communicationService.initSender(Arrays.asList(zeroSpendNodeProperties.getReceivingAddress()));
+        communicationService.initSubscriber(
+                Arrays.asList(network.getZerospendServer().getAddress() + network.getZerospendServer().getPropagationPort()),
+                NodeType.DspNode);
         communicationService.initPropagator(propagationPort);
 
         baseNodeInitializationService.init();
     }
 
-    private NodeProperties getNodeProperties(String zerospendServerAddress) {
-        RestTemplate restTemplate = new RestTemplate();
-        return restTemplate.getForObject(zerospendServerAddress + "/nodeProperties", NodeProperties.class);
-    }
-
     private void RegisterToNodeManager() {
         RestTemplate restTemplate = new RestTemplate();
-        restTemplate.postForObject(nodeManagerAddress + "/nodes/newDsp", "http://localhost:8060", String.class);
+        restTemplate.postForObject(nodeManagerAddress + "/nodes/newNode", new Node(NodeType.DspNode, "localhost", "8020"), String.class);
     }
 
-    private String getAllNodes() {
+    private Network getNetwork() {
         RestTemplate restTemplate = new RestTemplate();
-        return restTemplate.getForObject(nodeManagerAddress + "/nodes/all", String.class);
+        return restTemplate.getForObject(nodeManagerAddress + "/nodes/all", Network.class);
     }
 
-    private List<String> getDspNodeAddresses() {
-        RestTemplate restTemplate = new RestTemplate();
-        return restTemplate.getForObject(nodeManagerAddress + "/nodes/dsps", List.class);
-    }
 }

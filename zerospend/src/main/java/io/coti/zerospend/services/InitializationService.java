@@ -1,6 +1,8 @@
 package io.coti.zerospend.services;
 
 import io.coti.basenode.data.DspVote;
+import io.coti.basenode.data.Network;
+import io.coti.basenode.data.Node;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeInitializationService;
@@ -58,8 +60,10 @@ public class InitializationService {
 
     private void connectToNodeManager() {
         RestTemplate restTemplate = new RestTemplate();
-        String address = nodeManagerAddress + "/nodes/newZerospend";
-
-        restTemplate.postForObject(address, "http://localhost:7020", String.class);
+        String address = nodeManagerAddress + "/nodes/newNode";
+        Node node = new Node(NodeType.ZeroSpendServer, "localhost", "7020");
+        node.setPropagationPort("5002");
+        node.setReceivingPort("5001");
+        restTemplate.postForObject(address, node, String.class);
     }
 }
