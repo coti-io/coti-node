@@ -69,6 +69,9 @@ public class TrustScoreService {
 
     public void addTransactionToTsCalculation(TransactionData transactionData){
 
+        if (transactionData.isZeroSpend() || transactionData.getTransactionConsensusUpdateTime() == null) return;
+
+
         LocalDate transactionConsensusDate = transactionData.getTransactionConsensusUpdateTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate currentDate = new Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
