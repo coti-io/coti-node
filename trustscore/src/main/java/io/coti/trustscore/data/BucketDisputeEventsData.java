@@ -9,6 +9,11 @@ public class BucketDisputeEventsData extends BucketEventData<DisputeEventData>{
 
 
     @Override
+    protected double getMagnitude() {
+        return 0;
+    }
+
+    @Override
     public int bucketPeriodTime() {
         return periodTime;
     }

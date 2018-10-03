@@ -14,7 +14,7 @@ public abstract class EventData implements IEntity {
     protected Date eventDate;
     protected Hash uniqueIdentifier;
     protected EventType eventType;
-    protected double magnitude;
+
 
     public EventData(){
         this.eventDate = new Date();

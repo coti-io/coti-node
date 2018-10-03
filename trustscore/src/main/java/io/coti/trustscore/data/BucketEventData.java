@@ -11,6 +11,8 @@ public abstract class BucketEventData<T extends EventData>  {
     protected Date StartPeriodTime;
     protected double CalculatedDelta;
     protected Date LastDateCalculated;
+
+    protected abstract double getMagnitude();
     protected abstract int bucketPeriodTime();
 
 
@@ -28,11 +30,15 @@ public abstract class BucketEventData<T extends EventData>  {
     public void addEventToBucket(T eventData){
         if (bucketEvents.containsKey(eventData.getHash())) return;
 
+
+        //TODO: when adding check if last added date0 is as current
+        addEventToCalculations(eventData);
+
+
         //TODO: if we have a problem here, event can be added without calculated
         bucketEvents.put(eventData.getUniqueIdentifier(),eventData);
 
-        addEventToCalculations(eventData);
-        //TODO: when adding check if last added date0 is as current
+
     }
 
     protected abstract void addEventToCalculations(T eventData);

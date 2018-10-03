@@ -87,7 +87,7 @@ public class TrustScoreService {
                 if (transactionEvents.getByHash(transactionData.getHash()) != null)
                     return;
 
-                trustScoreUserData.addTransactionEvent(new TransactionEventData(transactionData));
+                trustScoreUserData.addEvent(new TransactionEventData(transactionData));
                 transactionEvents.put(transactionData);
             }
 

@@ -22,6 +22,10 @@ public class BucketTransactionEventsData extends BucketEventData<TransactionEven
     private BigDecimal currentDateBalance;
 
 
+    @Override
+    protected double getMagnitude() {
+        return 1;
+    }
 
     @Override
     public int bucketPeriodTime() {
