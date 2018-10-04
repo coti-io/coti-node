@@ -22,7 +22,7 @@ public class TrustScoreRulesInitService{
     void init() throws JAXBException {
         JAXBContext jaxbContext = JAXBContext.newInstance(UsersScoresByType.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-        usersScoresByType = (UsersScoresByType) jaxbUnmarshaller.unmarshal(new File("trustScoreScores.xml"));
+        usersScoresByType = (UsersScoresByType) jaxbUnmarshaller.unmarshal(new File("trustScoreRules.xml"));
     }
 
 }

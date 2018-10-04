@@ -41,6 +41,8 @@ public class TrustScoreService {
     private TrustScoreCrypto trustScoreCrypto;
     @Autowired
     private TrustScores trustScores;
+    @Autowired
+    private TrustScoreRulesInitService trustScoreRulesInitService;
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
 
