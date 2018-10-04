@@ -3,7 +3,6 @@ package io.coti.pot;
 import io.coti.pot.interfaces.IAlgorithm;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import sun.security.provider.Sun;
 
 import java.lang.reflect.InvocationTargetException;
 import java.security.MessageDigest;
@@ -24,7 +23,6 @@ public class Algorithm implements IAlgorithm {
     static {
 
         Security.addProvider(new BouncyCastleProvider());
-        Security.addProvider(new Sun());
         Algorithm.bouncyCastleAlgorithms = Arrays.asList(AlgorithmTypes.SHA_512,
                 AlgorithmTypes.BLAKE2B_512, AlgorithmTypes.KECCAK_512, AlgorithmTypes.Skein_512_512, AlgorithmTypes.WHIRLPOOL);
 
