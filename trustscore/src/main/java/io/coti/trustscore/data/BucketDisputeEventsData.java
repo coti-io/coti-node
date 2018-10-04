@@ -9,7 +9,12 @@ public class BucketDisputeEventsData extends BucketEventData<DisputeEventData>{
 
 
     @Override
-    protected double getMagnitude() {
+    protected double getWeight() {
+        return 0;
+    }
+
+    @Override
+    protected double getDecay() {
         return 0;
     }
 

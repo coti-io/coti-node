@@ -12,7 +12,8 @@ public abstract class BucketEventData<T extends EventData>  {
     protected double CalculatedDelta;
     protected Date LastDateCalculated;
 
-    protected abstract double getMagnitude();
+    protected abstract double getWeight();
+    protected abstract double getDecay();
     protected abstract int bucketPeriodTime();
 
 

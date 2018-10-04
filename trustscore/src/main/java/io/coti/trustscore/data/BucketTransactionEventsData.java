@@ -23,8 +23,13 @@ public class BucketTransactionEventsData extends BucketEventData<TransactionEven
 
 
     @Override
-    protected double getMagnitude() {
+    protected double getWeight() {
         return 1;
+    }
+
+    @Override
+    protected double getDecay() {
+        return 0;
     }
 
     @Override
