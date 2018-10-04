@@ -12,6 +12,7 @@ import io.coti.basenode.http.data.TransactionTrustScoreResponseData;
 import io.coti.basenode.model.TrustScores;
 import io.coti.trustscore.data.TransactionEventData;
 import io.coti.trustscore.data.TrustScoreUserData;
+import io.coti.trustscore.data.UserType;
 import io.coti.trustscore.http.GetTransactionTrustScoreResponse;
 import io.coti.trustscore.http.GetUserTrustScoreResponse;
 import io.coti.trustscore.http.SetKycTrustScoreRequest;
@@ -73,28 +74,25 @@ public class TrustScoreService {
         if (transactionData.isZeroSpend() || transactionData.getDspConsensusResult() == null ||
                 !transactionData.getDspConsensusResult().isDspConsensus()) return;
 
-        //TODO: Test here.
-        trustScoresUsers.put(new TrustScoreUserData(transactionData.getSenderHash()));
-
         LocalDate transactionConsensusDate = transactionData.getDspConsensusResult().getIndexingTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate currentDate = new Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
 
-            TrustScoreUserData trustScoreUserData =  trustScoresUsers.getByHash(transactionData.getSenderHash());
+        TrustScoreUserData trustScoreUserData =  trustScoresUsers.getByHash(transactionData.getSenderHash());
 
-            if (trustScoreUserData == null)
-                trustScoreUserData = new TrustScoreUserData(transactionData.getSenderHash());
-            //TODO: case if transaction belong to the day before but only received now.
+        if (trustScoreUserData == null)
+            trustScoreUserData = new TrustScoreUserData(transactionData.getSenderHash(), UserType.WALLET);
+        //TODO: case if transaction belong to the day before but only received now.
 
-            if (currentDate.equals(transactionConsensusDate)) {
+        if (currentDate.equals(transactionConsensusDate)) {
 
-                if (transactionEvents.getByHash(transactionData.getHash()) != null)
-                    return;
+            if (transactionEvents.getByHash(transactionData.getHash()) != null)
+                return;
 
-                trustScoreUserData.addEvent(new TransactionEventData(transactionData));
-                transactionEvents.put(transactionData);
-                trustScoresUsers.put(trustScoreUserData);
-            }
+            trustScoreUserData.addEvent(new TransactionEventData(transactionData));
+            transactionEvents.put(transactionData);
+            trustScoresUsers.put(trustScoreUserData);
+        }
     }
 
     public ResponseEntity<BaseResponse> getTransactionTrustScore(Hash userHash, Hash transactionHash) {

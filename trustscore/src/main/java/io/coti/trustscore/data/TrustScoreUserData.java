@@ -20,8 +20,9 @@ public class TrustScoreUserData implements IEntity {
 
     private TrustScoreUserData(){};
 
-    public TrustScoreUserData(Hash userHash){
+    public TrustScoreUserData(Hash userHash, UserType userType){
         init();
+        this.userType = userType;
         this.userHash = userHash;
     }
 
@@ -57,9 +58,7 @@ public class TrustScoreUserData implements IEntity {
         currentTS = currentTsValue;
     }
 
-    public TrustScoreUserData(UserType userType){
-        this.userType = userType;
-    }
+
 
     public void addEvent(EventData event){
 

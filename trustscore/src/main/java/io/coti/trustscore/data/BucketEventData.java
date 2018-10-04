@@ -1,12 +1,14 @@
 package io.coti.trustscore.data;
 import io.coti.basenode.data.Hash;
 import lombok.Data;
+
+import java.io.Serializable;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Data
-public abstract class BucketEventData<T extends EventData>  {
+public abstract class BucketEventData<T extends EventData> implements Serializable {
 
     protected Date StartPeriodTime;
     protected double CalculatedDelta;
