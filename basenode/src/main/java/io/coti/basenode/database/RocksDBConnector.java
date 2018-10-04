@@ -22,7 +22,7 @@ public class RocksDBConnector implements IDatabaseConnector {
     @Value("${database.folder.name}")
     private String databaseFolderName;
     private final String initialDBPath = "initialDatabase";
-    private final List<String> columnFamilyClassNames = Arrays.asList(
+    protected List<String> columnFamilyClassNames = new ArrayList<>(Arrays.asList(
             "DefaultColumnClassName",
             Transactions.class.getName(),
             Addresses.class.getName(),
@@ -30,7 +30,7 @@ public class RocksDBConnector implements IDatabaseConnector {
             TrustScores.class.getName(),
             TransactionIndexes.class.getName(),
             TransactionVotes.class.getName()
-    );
+    ));
 
     @Value("${application.name}")
     private String applicationName;

@@ -70,18 +70,20 @@ public class TrustScoreService {
     }
 
     public void addTransactionToTsCalculation(TransactionData transactionData){
+        if (transactionData.isZeroSpend() || transactionData.getDspConsensusResult() == null ||
+                !transactionData.getDspConsensusResult().isDspConsensus()) return;
 
-        if (transactionData.isZeroSpend() || transactionData.getTransactionConsensusUpdateTime() == null) return;
+        //TODO: Test here.
+        trustScoresUsers.put(new TrustScoreUserData(transactionData.getSenderHash()));
 
-
-        LocalDate transactionConsensusDate = transactionData.getTransactionConsensusUpdateTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate transactionConsensusDate = transactionData.getDspConsensusResult().getIndexingTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate currentDate = new Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
 
-        if (transactionData.getDspConsensusResult().isDspConsensus()) {
             TrustScoreUserData trustScoreUserData =  trustScoresUsers.getByHash(transactionData.getSenderHash());
 
-
+            if (trustScoreUserData == null)
+                trustScoreUserData = new TrustScoreUserData(transactionData.getSenderHash());
             //TODO: case if transaction belong to the day before but only received now.
 
             if (currentDate.equals(transactionConsensusDate)) {
@@ -91,10 +93,8 @@ public class TrustScoreService {
 
                 trustScoreUserData.addEvent(new TransactionEventData(transactionData));
                 transactionEvents.put(transactionData);
+                trustScoresUsers.put(trustScoreUserData);
             }
-
-        }
-
     }
 
     public ResponseEntity<BaseResponse> getTransactionTrustScore(Hash userHash, Hash transactionHash) {

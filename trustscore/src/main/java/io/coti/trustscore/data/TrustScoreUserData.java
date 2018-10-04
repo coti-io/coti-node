@@ -15,13 +15,24 @@ public class TrustScoreUserData implements IEntity {
     private double currentTS;
     private Date calculatedTsDateTime;
     private UserType userType;
-    private Map<EventType,BucketEventData> lastBucketEventData;
-    private Map<EventType, Double> bucketsHistoryCalculations;
+    private HashMap<EventType,BucketEventData> lastBucketEventData;
+    private HashMap<EventType, List<Double>> bucketsHistoryCalculations;
 
-    public TrustScoreUserData(){
-        lastBucketEventData.put(EventType.TRANSACTION, new BucketTransactionEventsData());
+    private TrustScoreUserData(){};
+
+    public TrustScoreUserData(Hash userHash){
+        init();
+        this.userHash = userHash;
     }
 
+
+    private void init(){
+
+        this.bucketsHistoryCalculations= new HashMap<>();
+        this.lastBucketEventData= new HashMap<>();
+        this.lastBucketEventData.put(EventType.TRANSACTION, new BucketTransactionEventsData());
+        this.lastBucketEventData.put(EventType.DISPUTE, new BucketDisputeEventsData());
+    }
 
     public double getCurrentTs(){
         if (shouldRecalculate())
@@ -41,7 +52,7 @@ public class TrustScoreUserData implements IEntity {
         DoShiftToBuckets();
         double currentTsValue = initialTS;
         for (Map.Entry<EventType,BucketEventData> entry : lastBucketEventData.entrySet()) {
-            currentTsValue += bucketsHistoryCalculations.get(entry.getKey()) + entry.getValue().CalculatedDelta;
+            currentTsValue += calculateBucketTypeMagnitude(bucketsHistoryCalculations.get(entry.getKey())) + entry.getValue().CalculatedDelta;
         }
         currentTS = currentTsValue;
     }
@@ -74,6 +85,12 @@ public class TrustScoreUserData implements IEntity {
     @Override
     public void setHash(Hash hash) {
         this.userHash = hash;
+    }
+
+    private double calculateBucketTypeMagnitude(List<Double> listOfEvents){
+        int length = listOfEvents.size();
+        double sumValue = listOfEvents.stream().mapToDouble(Double::doubleValue).sum();
+        return sumValue / length;
     }
 
     public void DoShiftToBuckets(){

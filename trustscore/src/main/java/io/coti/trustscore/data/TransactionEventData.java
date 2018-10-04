@@ -12,6 +12,7 @@ public class TransactionEventData extends EventData {
     public TransactionEventData(TransactionData transactionData) {
 
         this.transactionData = transactionData;
+        super.eventType = EventType.TRANSACTION;
     }
 
     @Override

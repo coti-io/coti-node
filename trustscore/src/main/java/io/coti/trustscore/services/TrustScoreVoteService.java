@@ -28,6 +28,7 @@ public class TrustScoreVoteService extends BaseNodeDspVoteService {
         
 
         TransactionData transactionData = transactions.getByHash(dspConsensusResult.getTransactionHash());
+        transactionData.setDspConsensusResult(dspConsensusResult);
         trustScoreService.addTransactionToTsCalculation(transactionData);
     }
 }

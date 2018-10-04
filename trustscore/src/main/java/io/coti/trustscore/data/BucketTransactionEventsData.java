@@ -15,7 +15,7 @@ public class BucketTransactionEventsData extends BucketEventData<TransactionEven
 
     private double periodTransactionContribution;
     private static final int periodTime = 60;
-
+    private static final double decay = 0.2;
 
     private int currentDateNumberOfTransactions;
     private BigDecimal currentDateTurnOver;
@@ -48,7 +48,7 @@ public class BucketTransactionEventsData extends BucketEventData<TransactionEven
 
         currentDateNumberOfTransactions = currentDateNumberOfTransactions +1;
         currentDateTurnOver = currentDateTurnOver.add(transferTransaction.getAmount().abs());
-        currentDateBalance = currentDateBalance.subtract(transferTransaction.getAmount());
+        //currentDateBalance = currentDateBalance.subtract(transferTransaction.getAmount());
 
         //TODO: make calculation here
         CalculatedDelta = CalculatedDelta + 0.01;
@@ -56,7 +56,7 @@ public class BucketTransactionEventsData extends BucketEventData<TransactionEven
 
     @Override
     public void ShiftCalculatedTsContribution() {
-        periodTransactionContribution = periodTransactionContribution * 0.8 + 0.1;
+        periodTransactionContribution = periodTransactionContribution * decay;
 
 
         currentDateNumberOfTransactions = 0;
