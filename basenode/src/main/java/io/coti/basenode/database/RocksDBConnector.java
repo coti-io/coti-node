@@ -5,12 +5,13 @@ import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.database.Interfaces.IDatabaseConnector;
 import io.coti.basenode.model.*;
 import lombok.extern.slf4j.Slf4j;
+
 import org.rocksdb.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
 
-import javax.annotation.PostConstruct;
+
 import javax.annotation.PreDestroy;
 import java.io.File;
 import java.nio.file.Paths;
@@ -42,8 +43,7 @@ public class RocksDBConnector implements IDatabaseConnector {
     private Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
     private List<ColumnFamilyHandle> columnFamilyHandles = new ArrayList<>();
 
-    public RocksDBConnector() {
-        log.info("{} is up", this.getClass().getSimpleName());
+    public RocksDBConnector() { log.info("{} is up", this.getClass().getSimpleName());
     }
 
     private void deleteDatabaseFolder() {
@@ -59,7 +59,7 @@ public class RocksDBConnector implements IDatabaseConnector {
         index.delete();
     }
 
-    @PostConstruct
+
     public void init() {
         init(applicationName + databaseFolderName);
     }
