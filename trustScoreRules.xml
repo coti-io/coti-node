@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <users>
-    <user type="merchanat">
+    <user type="merchant">
         <initialTrustScore>
             <component name="KYC">
                 <definition>"Calculated from the KYC identification data (very thin data)"</definition>
