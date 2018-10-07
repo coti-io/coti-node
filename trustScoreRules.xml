@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <users>
-    
     <user type="wallet">
-            <component name="KYC">
+    	<userID>userHash</userID>
+    	<addressMapping>address -> userHash</addressMapping>
+        <initialTrustScore>
+            <initialTrustScoreComponent name="KYC">
                 <definition>"Calculated from the KYC identification data (very thin data)"</definition>
                 <range>
                     <from>0</from>
@@ -10,8 +12,8 @@
                 </range>
                 <weight>1.0</weight>
                 <decay>ln(2)/1095 = 0.000633011124</decay>
-            </component>
-            <component name="Questionnaire1">
+            </initialTrustScoreComponent>
+            <initialTrustScoreComponent name="Questionnaire1">
                 <definition>"Main questionnaire, not mandatory, but important for arbitrators (no way to have high
                     enough TS from the beginning without it)"
                 </definition>
@@ -21,43 +23,66 @@
                 </range>
                 <weight>1.0</weight>
                 <decay>ln(2)/1095 = 0.000633011124</decay>
-            </component>
+            </initialTrustScoreComponent>
         </initialTrustScore>
-        <transactionEventsScore>
-            <transactionEventScore name="TransactionFrequency">
-                <idea>"Maximum contribution is 10 80% of max contribution corresponds to 10,000 Txs per month or
+        <behaviorCumulativeScores>
+            <transactionScore name="TransactionFrequency">
+            	<idea>More transactions - more TS</idea>
+            	<algorithm>Day-by-day calculation</algorithm>
+                <valueAdjusting>"Maximum contribution is 15, 80% of max contribution corresponds to 10,000 Txs per month or
                     N0.8 = 10,000 or rxN0.8 = 400 for day-by day"
-                </idea>
-                <nonlinearFunction>tan(N*1.098612289/10000)</nonlinearFunction>
-                <weight>10.0</weight>
-                <decay>ln(2)/30</decay>
-            </transactionEventScore>
-            <transactionEventScore name="Turnover">
-                <idea>"Maximum contribution is 30 80% of max contribution corresponds to 100,000 COTI per month or
+                </valueAdjusting>
+				<calculating>N = count(outcomingTxForAllAddressesForTheUser) within a day</calculating>
+                <nonlinearFunction>tan(N/400*1.098612289) (for day-by-day)</nonlinearFunction>
+                <weight>0.75 (for day-by-day)</weight>
+                <decay>ln(2)/30 = 0.023104906019</decay>
+                <valueToStore>TStnum</valueToStore>
+                <currentValue>TStnum + tan(N/400*1.098612289)</currentValue>
+                <dayShift>TStnum = TStnum * exp(-decay) + currentValue</dayShift>
+                <issue>When the day changes? It should be different for different locations?</issue>
+            </transactionScore>
+            <transactionScore name="Turnover">
+            	<idea>More turnover - more TS</idea>
+            	<algorithm>Day-by-day calculation</algorithm>
+                <valueAdjusting>"Maximum contribution is 15, 80% of max contribution corresponds to 100,000 COTI per month or
                     T0.8 = 100,000 or rxT0.8 = 4,000 for day-by day calculation"
-                </idea>
-                <nonlinearFunction>tan(T*1.098612289/100000)</nonlinearFunction>
-                <weight>15.0</weight>
-                <decay>ln(2)/30</decay>
-            </transactionEventScore>
-            <transactionEventScore name="AverageBalance">
-                <idea>"Maximum contribution is 30 80% of max contribution corresponds to 10,000 COTI avg balance in
+                </valueAdjusting>
+				<calculating>T = sum(outcomingTxForAllAddressesForTheUser) within a day</calculating>
+                <nonlinearFunction>tan(T/4000*1.098612289) (for day-by-day)</nonlinearFunction>
+                <weight>0.75 (for day-by-day)</weight>
+                <decay>ln(2)/30 = 0.023104906019</decay>
+                <valueToStore>TStsum</valueToStore>
+                <currentValue>TStsum + tan(T/4000*1.098612289)</currentValue>
+                <dayShift>TStnum = TStsum * exp(-decay) + currentValue</dayShift>
+                <issue>When the day changes? It should be different for different locations?</issue>
+            </transactionScore>
+            <transactionScore name="AverageBalance">
+            	<idea>More turnover - more TS</idea>
+            	<algorithm>30 day deep day-by-day calculation</algorithm>
+                <valueAdjusting>"Maximum contribution is 15, 80% of max contribution corresponds to 10,000 COTI avg balance in
                     month or B0.8 = 10,000 or rxB0.8 = 400 for day-by day calculation"
-                </idea>
-                <nonlinearFunction>tan(B*1.098612289/10000)</nonlinearFunction>
-                <weight>15.0</weight>
-                <decay>ln(2)/90</decay>
-            </transactionEventScore>
-            <transactionEventScoret name="DepositedBalance">
-                <idea>"Maximum contribution is 30 80% of max contribution corresponds to 10,000 COTI avg balance in
+                </valueAdjusting>
+                <valueToStore>TSbalmonth</valueToStore>
+                <valueToStore>TSbal[0:29]</valueToStore>
+                <nonlinearFunction>tan(B/400*1.098612289)</nonlinearFunction>
+                <decay>ln(2)/30 = 0.023104906019</decay>
+                <movingSum>sum(exp(-decay*i)*nonlinearFunction(sum(T[i] for all addresses)) for all stored days)</movingSum>
+                <currentValue>TSbalmonth + movingSum</currentValue>
+                <dayShift>TSbalmonth = TSbalmonth * exp(-decay) + TSbal[29]</dayShift>
+                <dayShift>TSbal[i+1] = TSbal[i] * exp(-decay) for i in 0:28</dayShift>
+                <weight>0.75</weight>
+                <issue>When the day changes? It should be different for different locations?</issue>
+            </transactionScore>
+        </behaviorCumulativeScores>
+        <behaviorEventsScore>
+            <transactionScore name="DepositedBalance">
+                <idea>--- not correct "Maximum contribution is 30 80% of max contribution corresponds to 10,000 COTI avg balance in
                     month or D0.8 = 10,000 or rxD0.8 = 400 for day-by day calculation"
                 </idea>
                 <nonlinearFunction>tan(D*1.098612289/10000)</nonlinearFunction>
                 <weight>15.0</weight>
                 <decay>ln(2)/90</decay>
-            </transactionEventScoret>
-        </transactionEventsScore>
-        <badEventsScore>
+            </transactionScore>
             <badEventScore name="FillingTheQuestionnaire">
                 <definition>"A person filling questionnaire too frequent is probably cheating"</definition>
                 <term>90</term>
@@ -76,8 +101,8 @@
                 <weight>-10.0</weight>
                 <decay>ln(2)/90</decay>
             </badEventScore>
-        </badEventsScore>
-        <disputedEventsScore>
+        </behaviorEventsScore>
+        <behaviorHighFrequencyEventsScore>
             <disputedEventScore name="NonFulfillment">
                 <idea>"Not fulfilling a jury decision to pay or settle in other way"</idea>
                 <term>360</term>
@@ -102,10 +127,12 @@
                 <weight>0</weight>
                 <decay>ln(2)/90</decay>
             </disputedEventScore>
-        </disputedEventsScore>
+        </behaviorHighFrequencyEventsScore>
     </user><user type="merchant">
+    	<userID>userHash</userID>
+    	<addressMapping>address -> userHash</addressMapping>
         <initialTrustScore>
-            <component name="KYC">
+            <initialTrustScoreComponent name="KYC">
                 <definition>"Calculated from the KYC identification data (very thin data)"</definition>
                 <range>
                     <from>0</from>
@@ -113,8 +140,8 @@
                 </range>
                 <weight>1.0</weight>
                 <decay>ln(2)/365 = 0.001899033371</decay>
-            </component>
-            <component name="Questionnaire1">
+            </initialTrustScoreComponent>
+            <initialTrustScoreComponent name="Questionnaire1">
                 <definition>"Main questionnaire, not mandatory, but important for arbitrators (no way to have high
                     enough TS from the beginning without it)"
                 </definition>
@@ -124,8 +151,8 @@
                 </range>
                 <weight>0.6</weight>
                 <decay>ln(2)/365 = 0.001899033371</decay>
-            </component>
-            <component name="Questionnaire2">
+            </initialTrustScoreComponent>
+            <initialTrustScoreComponent name="Questionnaire2">
                 <definition>"Questionnaire for merchants, not mandatory but important to have a good TS and low RR from the beginning. It consists of business-related questions."</definition>
                 <range>
                     <from>0</from>
@@ -133,43 +160,66 @@
                 </range>
                 <weight>1.0</weight>
                 <decay>ln(2)/365 = 0.001899033371</decay>
-            </component>
+            </initialTrustScoreComponent>
         </initialTrustScore>
-        <transactionEventsScore>
-            <transactionEventScore name="TransactionFrequency">
-                <idea>"Maximum contribution is 10 80% of max contribution corresponds to 10,000 Txs per month or
+        <behaviorCumulativeScores>
+            <transactionScore name="TransactionFrequency">
+            	<idea>More transactions - more TS</idea>
+            	<algorithm>Day-by-day calculation</algorithm>
+                <valueAdjusting>"Maximum contribution is 15, 80% of max contribution corresponds to 10,000 Txs per month or
                     N0.8 = 10,000 or rxN0.8 = 400 for day-by day"
-                </idea>
-                <nonlinearFunction>tan(N*1.098612289/10000)</nonlinearFunction>
-                <weight>10.0</weight>
-                <decay>ln(2)/30</decay>
-            </transactionEventScore>
-            <transactionEventScore name="Turnover">
-                <idea>"Maximum contribution is 30 80% of max contribution corresponds to 100,000 COTI per month or
+                </valueAdjusting>
+				<calculating>N = count(outcomingTxForAllAddressesForTheUser) within a day</calculating>
+                <nonlinearFunction>tan(N/400*1.098612289) (for day-by-day)</nonlinearFunction>
+                <weight>0.75 (for day-by-day)</weight>
+                <decay>ln(2)/30 = 0.023104906019</decay>
+                <valueToStore>TStnum</valueToStore>
+                <currentValue>TStnum + tan(N/400*1.098612289)</currentValue>
+                <dayShift>TStnum = TStnum * exp(-decay) + currentValue</dayShift>
+                <issue>When the day changes? It should be different for different locations?</issue>
+            </transactionScore>
+            <transactionScore name="Turnover">
+            	<idea>More turnover - more TS</idea>
+            	<algorithm>Day-by-day calculation</algorithm>
+                <valueAdjusting>"Maximum contribution is 15, 80% of max contribution corresponds to 100,000 COTI per month or
                     T0.8 = 100,000 or rxT0.8 = 4,000 for day-by day calculation"
-                </idea>
-                <nonlinearFunction>tan(T*1.098612289/100000)</nonlinearFunction>
-                <weight>15.0</weight>
-                <decay>ln(2)/30</decay>
-            </transactionEventScore>
-            <transactionEventScore name="AverageBalance">
-                <idea>"Maximum contribution is 30 80% of max contribution corresponds to 10,000 COTI avg balance in
+                </valueAdjusting>
+				<calculating>T = sum(outcomingTxForAllAddressesForTheUser) within a day</calculating>
+                <nonlinearFunction>tan(T/4000*1.098612289) (for day-by-day)</nonlinearFunction>
+                <weight>0.75 (for day-by-day)</weight>
+                <decay>ln(2)/30 = 0.023104906019</decay>
+                <valueToStore>TStsum</valueToStore>
+                <currentValue>TStsum + tan(T/4000*1.098612289)</currentValue>
+                <dayShift>TStnum = TStsum * exp(-decay) + currentValue</dayShift>
+                <issue>When the day changes? It should be different for different locations?</issue>
+            </transactionScore>
+            <transactionScore name="AverageBalance">
+            	<idea>More turnover - more TS</idea>
+            	<algorithm>30 day deep day-by-day calculation</algorithm>
+                <valueAdjusting>"Maximum contribution is 15, 80% of max contribution corresponds to 10,000 COTI avg balance in
                     month or B0.8 = 10,000 or rxB0.8 = 400 for day-by day calculation"
-                </idea>
-                <nonlinearFunction>tan(B*1.098612289/10000)</nonlinearFunction>
-                <weight>15.0</weight>
-                <decay>ln(2)/90</decay>
-            </transactionEventScore>
-            <transactionEventScoret name="DepositedBalance">
-                <idea>"Maximum contribution is 30 80% of max contribution corresponds to 10,000 COTI avg balance in
+                </valueAdjusting>
+                <valueToStore>TSbalmonth</valueToStore>
+                <valueToStore>TSbal[0:29]</valueToStore>
+                <nonlinearFunction>tan(B/400*1.098612289)</nonlinearFunction>
+                <decay>ln(2)/30 = 0.023104906019</decay>
+                <movingSum>sum(exp(-decay*i)*nonlinearFunction(sum(T[i] for all addresses)) for all stored days)</movingSum>
+                <currentValue>TSbalmonth + movingSum</currentValue>
+                <dayShift>TSbalmonth = TSbalmonth * exp(-decay) + TSbal[29]</dayShift>
+                <dayShift>TSbal[i+1] = TSbal[i] * exp(-decay) for i in 0:28</dayShift>
+                <weight>0.75</weight>
+                <issue>When the day changes? It should be different for different locations?</issue>
+            </transactionScore>
+        </behaviorCumulativeScores>
+        <behaviorEventsScore>
+            <transactionScore name="DepositedBalance">
+                <idea>"--- not correct Maximum contribution is 30 80% of max contribution corresponds to 10,000 COTI avg balance in
                     month or D0.8 = 10,000 or rxD0.8 = 400 for day-by day calculation"
                 </idea>
                 <nonlinearFunction>tan(D*1.098612289/10000)</nonlinearFunction>
                 <weight>15.0</weight>
                 <decay>ln(2)/90</decay>
-            </transactionEventScoret>
-        </transactionEventsScore>
-        <badEventsScore>
+            </transactionScore>
             <badEventScore name="FillingTheQuestionnaire">
                 <definition>"A person filling questionnaire too frequent is probably cheating"</definition>
                 <term>90</term>
@@ -188,8 +238,8 @@
                 <weight>-10.0</weight>
                 <decay>ln(2)/90</decay>
             </badEventScore>
-        </badEventsScore>
-        <disputedEventsScore>
+        </behaviorEventsScore>
+        <behaviorHighFrequencyEventsScore>
             <disputedEventScore name="NonFulfillment">
                 <idea>"Not fulfilling a jury decision to pay or settle in other way"</idea>
                 <term>360</term>
@@ -214,11 +264,13 @@
                 <weight>0</weight>
                 <decay>ln(2)/90</decay>
             </disputedEventScore>
-        </disputedEventsScore>
+        </behaviorHighFrequencyEventsScore>
     </user>
     <user type="node">
+    	<userID>userHash</userID>
+    	<addressMapping>address -> userHash</addressMapping>
         <initialTrustScore>
-            <component name="OwnersTS">
+            <initialTrustScoreComponent name="OwnersTS">
                 <definition>"Borrow the TS from the owner"</definition>
                 <range>
                     <from>0</from>
@@ -226,27 +278,41 @@
                 </range>
                 <weight>0.4</weight>
                 <decay>ln(2)/365 = 0.001899033371</decay>
-            </component>
+            </initialTrustScoreComponent>
         </initialTrustScore>
-        <transactionEventsScore>
-            <transactionEventScore name="TransactionFrequency">
-                <idea>"Maximum contribution is 30 80% of max contribution corresponds to 1,000,000 Txs per month or N0.8
-                    = 1,000,000"
-                </idea>
-                <nonlinearFunction>tan(N*1.098612289/1000000)</nonlinearFunction>
-                <weight>30.0</weight>
-                <decay>ln(2)/30</decay>
-            </transactionEventScore>
-            <transactionEventScore name="Turnover">
-                <idea>"Maximum contribution is 20 80% of max contribution corresponds to 10,000,000 COTI per month or
-                    T0.8 = 10,000,000"
-                </idea>
-                <nonlinearFunction>tan(T*1.098612289/10000000)</nonlinearFunction>
-                <weight>20.0</weight>
-                <decay>ln(2)/30</decay>
-            </transactionEventScore>
-        </transactionEventsScore>
-        <badEventsScore>
+        <behaviorCumulativeScores>
+            <transactionScore name="TransactionFrequency">
+            	<idea>More transactions - more TS</idea>
+            	<algorithm>Day-by-day calculation</algorithm>
+                <valueAdjusting>""Maximum contribution is 30 80% of max contribution corresponds to 1,000,000 Txs per month or N0.8
+                    = 1,000,000" or rxN0.8 = 40,000 for day-by day"
+                </valueAdjusting>
+				<calculating>N = count(outcomingTxForAllAddressesForTheUser) within a day</calculating>
+                <nonlinearFunction>tan(N/40000*1.098612289) (for day-by-day)</nonlinearFunction>
+                <weight>1.5 (for day-by-day)</weight>
+                <decay>ln(2)/30 = 0.023104906019</decay>
+                <valueToStore>TStnum</valueToStore>
+                <currentValue>TStnum + tan(N/40000*1.098612289)</currentValue>
+                <dayShift>TStnum = TStnum * exp(-decay) + currentValue</dayShift>
+                <issue>When the day changes? It should be different for different locations?</issue>
+            </transactionScore>
+            <transactionScore name="Turnover">
+            	<idea>More turnover - more TS</idea>
+            	<algorithm>Day-by-day calculation</algorithm>
+                <valueAdjusting>"Maximum contribution is 30 80% of max contribution corresponds to 100,000 COTI per month or
+                    T0.8 = 10,000,000 or rxT0.8 = 400,000 for day-by day calculation"
+                </valueAdjusting>
+				<calculating>T = sum(outcomingTxForAllAddressesForTheUser) within a day</calculating>
+                <nonlinearFunction>tan(T/400000*1.098612289) (for day-by-day)</nonlinearFunction>
+                <weight>1.0 (for day-by-day)</weight>
+                <decay>ln(2)/30 = 0.023104906019</decay>
+                <valueToStore>TStsum</valueToStore>
+                <currentValue>TStsum + tan(T/400000*1.098612289)</currentValue>
+                <dayShift>TStnum = TStsum * exp(-decay) + currentValue</dayShift>
+                <issue>When the day changes? It should be different for different locations?</issue>
+            </transactionScore>
+        </behaviorCumulativeScores>
+        <behaviorEventsScore>
             <badEventScore name="IncorrectTransaction">
                 <definition>"It is to be defined, how to catch it"</definition>
                 <term>360</term>
@@ -259,6 +325,8 @@
                 <weight>-10.0</weight>
                 <decay>ln(2)/90</decay>
             </badEventScore>
-        </badEventsScore>
+        </behaviorEventsScore>
+        <behaviorHighFrequencyEventsScore>
+        </behaviorHighFrequencyEventsScore>
     </user>
 </users>
