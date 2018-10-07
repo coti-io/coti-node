@@ -57,19 +57,26 @@
                 <issue>When the day changes? It should be different for different locations?</issue>
             </transactionScore>
             <transactionScore name="AverageBalance">
-            	<idea>More turnover - more TS</idea>
+            	<idea>Higher balance - higher TS</idea>
             	<algorithm>30 day deep day-by-day calculation</algorithm>
                 <valueAdjusting>"Maximum contribution is 15, 80% of max contribution corresponds to 10,000 COTI avg balance in
                     month or B0.8 = 10,000 or rxB0.8 = 400 for day-by day calculation"
                 </valueAdjusting>
                 <valueToStore>TSbalmonth</valueToStore>
-                <valueToStore>TSbal[0:29]</valueToStore>
+                <valueToStore>TSbal[0:29] 30 values</valueToStore>
+                <newaddress>Calculate TSbal_new_a[0:29] for the new address starting from the current balance backward</newaddress>
+                <newaddress>New address is an unknown before address which is first time debited wothin a day</newaddress>
+                <newaddress>There can be several TSbal_new_a within a day</newaddress>
                 <nonlinearFunction>tan(B/400*1.098612289)</nonlinearFunction>
                 <decay>ln(2)/30 = 0.023104906019</decay>
-                <movingSum>sum(exp(-decay*i)*nonlinearFunction(sum(T[i] for all addresses)) for all stored days)</movingSum>
+                <movingSum>
+                	sum(exp(-decay*i) * nonlinearFunction(TSbal[i] + sum(TSbal_new_a[i] for all new addresses)) for all stored days)
+                </movingSum>
                 <currentValue>TSbalmonth + movingSum</currentValue>
                 <dayShift>TSbalmonth = TSbalmonth * exp(-decay) + TSbal[29]</dayShift>
-                <dayShift>TSbal[i+1] = TSbal[i] * exp(-decay) for i in 0:28</dayShift>
+                <dayShift>TSbal[i+1] = TSbal[i] * exp(-decay) for i in 1:28</dayShift>
+                <dayShift>TSbal[1] = (TSbal[0] + sum(TSbal_new_a[0] for all new addresses) )* exp(-decay)
+                <dayShift>TSbal[0] = sum(Today balance for all addresses)</dayShift>
                 <weight>0.75</weight>
                 <issue>When the day changes? It should be different for different locations?</issue>
             </transactionScore>
@@ -194,19 +201,26 @@
                 <issue>When the day changes? It should be different for different locations?</issue>
             </transactionScore>
             <transactionScore name="AverageBalance">
-            	<idea>More turnover - more TS</idea>
+            	<idea>Higher balance - higher TS</idea>
             	<algorithm>30 day deep day-by-day calculation</algorithm>
                 <valueAdjusting>"Maximum contribution is 15, 80% of max contribution corresponds to 10,000 COTI avg balance in
                     month or B0.8 = 10,000 or rxB0.8 = 400 for day-by day calculation"
                 </valueAdjusting>
                 <valueToStore>TSbalmonth</valueToStore>
-                <valueToStore>TSbal[0:29]</valueToStore>
+                <valueToStore>TSbal[0:29] 30 values</valueToStore>
+                <newaddress>Calculate TSbal_new_a[0:29] for the new address starting from the current balance backward</newaddress>
+                <newaddress>New address is an unknown before address which is first time debited wothin a day</newaddress>
+                <newaddress>There can be several TSbal_new_a within a day</newaddress>
                 <nonlinearFunction>tan(B/400*1.098612289)</nonlinearFunction>
                 <decay>ln(2)/30 = 0.023104906019</decay>
-                <movingSum>sum(exp(-decay*i)*nonlinearFunction(sum(T[i] for all addresses)) for all stored days)</movingSum>
+                <movingSum>
+                	sum(exp(-decay*i) * nonlinearFunction(TSbal[i] + sum(TSbal_new_a[i] for all new addresses)) for all stored days)
+                </movingSum>
                 <currentValue>TSbalmonth + movingSum</currentValue>
                 <dayShift>TSbalmonth = TSbalmonth * exp(-decay) + TSbal[29]</dayShift>
-                <dayShift>TSbal[i+1] = TSbal[i] * exp(-decay) for i in 0:28</dayShift>
+                <dayShift>TSbal[i+1] = TSbal[i] * exp(-decay) for i in 1:28</dayShift>
+                <dayShift>TSbal[1] = (TSbal[0] + sum(TSbal_new_a[0] for all new addresses) )* exp(-decay)
+                <dayShift>TSbal[0] = sum(Today balance for all addresses)</dayShift>
                 <weight>0.75</weight>
                 <issue>When the day changes? It should be different for different locations?</issue>
             </transactionScore>
