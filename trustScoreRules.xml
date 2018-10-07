@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <users>
-    <user type="merchant">
-        <initialTrustScore>
+    
+    <user type="wallet">
             <component name="KYC">
                 <definition>"Calculated from the KYC identification data (very thin data)"</definition>
                 <range>
@@ -9,7 +9,7 @@
                     <to>5</to>
                 </range>
                 <weight>1.0</weight>
-                <decay>ln(2)/365 = 0.001899033371</decay>
+                <decay>ln(2)/1095 = 0.000633011124</decay>
             </component>
             <component name="Questionnaire1">
                 <definition>"Main questionnaire, not mandatory, but important for arbitrators (no way to have high
@@ -19,17 +19,8 @@
                     <from>0</from>
                     <to>25</to>
                 </range>
-                <weight>0.6</weight>
-                <decay>ln(2)/365 = 0.001899033371</decay>
-            </component>
-            <component name="Questionnaire2">
-                <definition>"Questionnaire for merchants, not mandatory but important to have a good TS and low RR from the beginning. It consists of business-related questions."</definition>
-                <range>
-                    <from>0</from>
-                    <to>20</to>
-                </range>
                 <weight>1.0</weight>
-                <decay>ln(2)/365 = 0.001899033371</decay>
+                <decay>ln(2)/1095 = 0.000633011124</decay>
             </component>
         </initialTrustScore>
         <transactionEventsScore>
@@ -112,8 +103,8 @@
                 <decay>ln(2)/90</decay>
             </disputedEventScore>
         </disputedEventsScore>
-    </user>
-    <user type="wallet">
+    </user><user type="merchant">
+        <initialTrustScore>
             <component name="KYC">
                 <definition>"Calculated from the KYC identification data (very thin data)"</definition>
                 <range>
@@ -121,7 +112,7 @@
                     <to>5</to>
                 </range>
                 <weight>1.0</weight>
-                <decay>ln(2)/1095 = 0.000633011124</decay>
+                <decay>ln(2)/365 = 0.001899033371</decay>
             </component>
             <component name="Questionnaire1">
                 <definition>"Main questionnaire, not mandatory, but important for arbitrators (no way to have high
@@ -131,8 +122,17 @@
                     <from>0</from>
                     <to>25</to>
                 </range>
+                <weight>0.6</weight>
+                <decay>ln(2)/365 = 0.001899033371</decay>
+            </component>
+            <component name="Questionnaire2">
+                <definition>"Questionnaire for merchants, not mandatory but important to have a good TS and low RR from the beginning. It consists of business-related questions."</definition>
+                <range>
+                    <from>0</from>
+                    <to>20</to>
+                </range>
                 <weight>1.0</weight>
-                <decay>ln(2)/1095 = 0.000633011124</decay>
+                <decay>ln(2)/365 = 0.001899033371</decay>
             </component>
         </initialTrustScore>
         <transactionEventsScore>
