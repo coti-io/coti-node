@@ -1,30 +1,103 @@
-version: "3"
-services:
-  zerospend:
-    image: coti/coti-node
-    build: .
-    command: ["java", "-jar", "zerospend/target/zerospend-0.0.1-SNAPSHOT.jar", "--spring.config.additional-location=/configs/zerospend.properties"]
-    ports:
-      - "7040:7040"
-      - "5001:5001"
-      - "5002:5002"
-    volumes:
-      - "./configs:/configs"
+version: '3.4'
 
-  fullnode1:
-    image: coti/coti-node
-    command: ["java", "-jar", "fullnode/target/fullnode-0.0.1-SNAPSHOT.jar", "--spring.config.additional-location=/configs/fullnode1.properties"]
+services:
+  fullnode1_service:
+    image: fullnode
+    build:
+      context: .
+      dockerfile: Dockerfile.fullnode
     ports:
       - "7070:7070"
     volumes:
-      - "./configs:/configs"
+      - "./properties/fullnode:/app/config"
 
-  dsp1:
-    image: coti/coti-node
-    command: ["java", "-jar", "dspnode/target/dspnode-0.0.1-SNAPSHOT.jar", "--spring.config.additional-location=/configs/dsp1.properties"]
+    command: ["sh","./bashFiles/fullnode-executor.sh","tcp://dsp1:7001","tcp://dsp1:7002","http://dsp1:8040"]
+    container_name: fullnode1
+    restart: on-failure
+    depends_on:
+      - trustscore_service
+
+  dsp1_service:
+    image: dspnode
+    build: 
+      context: .
+      dockerfile: Dockerfile.dsp
     ports:
-      - "8060:8060"
-      - "8001:8001"
-      - "8002:8002"
+      - "8060:8040"
+      - "8001:7001"
+      - "8002:7002"
     volumes:
-      - "./configs:/configs"
+      - "./properties/dsp:/app/config"
+
+    command: ["sh","./bashFiles/dsp-executor.sh","tcp://dsp3:7002,tcp://dsp2:7002,tcp://zerospend1:5002"]
+    container_name: dsp1
+    restart: on-failure
+
+  dsp2_service:
+    image: dspnode
+    ports:
+      - "8050:8040"
+      - "6001:7001"
+      - "6002:7002"
+    volumes:
+      - "./properties/dsp:/app/config"
+
+    depends_on:
+      - dsp1_service
+
+    command: ["sh","./bashFiles/dsp-executor.sh","tcp://dsp1:7002,tcp://zerospend1:5002,tcp://dsp3:7002"]
+    container_name: dsp2
+    restart: on-failure
+
+  dsp3_service:
+    image: dspnode
+    ports:
+      - "8040:8040"
+      - "7001:7001"
+      - "7002:7002"
+    volumes:
+      - "./properties/dsp:/app/config"
+
+    depends_on:
+      - dsp2_service
+
+    command: ["sh","./bashFiles/dsp-executor.sh","tcp://dsp1:7002,tcp://dsp2:7002,tcp://zerospend1:5002"]
+    container_name: dsp3
+    restart: on-failure
+
+  zerospend_service:
+    image: zerospend
+    build:
+      context: .
+      dockerfile: Dockerfile.zerospend
+    ports:
+      - "7040:7040"
+      - "5002:5002"
+      - "5001:5001"
+    volumes:
+      - "./properties/zerospend:/app/config"
+
+    command: ["java","-jar","/app/zerospend.jar","--spring.config.additional-location=/app/config/zerospend.properties"]
+    container_name: zerospend1
+    restart: on-failure
+    depends_on:
+      - dsp3_service
+
+  trustscore_service:
+    image: trustscore
+    build:
+      context: .
+      dockerfile: Dockerfile.trustscore
+    ports:
+      - "7030:7030"
+    volumes:
+      - "./properties/trustscore:/app/config"
+
+    depends_on:
+      - dsp3_service
+
+    command: ["sh","./bashFiles/trustscore-executor.sh"]
+    container_name: trustscore1
+
+    restart: on-failure
+    

@@ -7,10 +7,6 @@ tools/target/
 trustscore/target/
 logs/
 !.mvn/wrapper/maven-wrapper.jar
-dsp*.properties
-fullnode*.properties
-trustscore*.properties
-zerospend*.properties
 
 ### STS ###
 .apt_generated

@@ -48,6 +48,7 @@
     </dependencies>
 
     <build>
+        <finalName>fullnode</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
