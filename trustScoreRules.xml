@@ -82,58 +82,82 @@
             </transactionScore>
         </behaviorCumulativeScores>
         <behaviorEventsScore>
-            <transactionScore name="DepositedBalance">
-                <idea>--- not correct "Maximum contribution is 30 80% of max contribution corresponds to 10,000 COTI avg balance in
-                    month or D0.8 = 10,000 or rxD0.8 = 400 for day-by day calculation"
-                </idea>
-                <nonlinearFunction>tan(D*1.098612289/10000)</nonlinearFunction>
+            <standardEventScore name="IncorrectTransaction">
+                <idea>"It is to be defined, how to catch it"</idea>
+                <algorithm>Go through all events, apply weight and decay and summarize</algorithm>
+                <algorithm>After a limitation term, move events from actual table to archive</algorithm>
+                <term>360</term>
+                <weight>-2.0</weight>
+                <decay>ln(2)/90 = 0.007701635340</decay>
+                <calculation>TSevent = exp(-ln(2)/90 * (Dtoday - Devent))</calculation>
+                <issue>When the day changes? It should be different for different locations?</issue>
+            </standardEventScore>
+            <standardEventScore name="DoubleSpending">
+                <idea>"It is to be defined, how to catch it"</idea>
+                <algorithm>Go through all events, apply weight and decay and summarize</algorithm>
+                <algorithm>After a limitation term, move events from actual table to archive</algorithm>
+                <term>360</term>
+                <weight>-10.0</weight>
+                <decay>ln(2)/90 = 0.007701635340</decay>
+                <calculation>TSevent = exp(-ln(2)/90 * (Dtoday - Devent))</calculation>
+                <issue>When the day changes? It should be different for different locations?</issue>
+            </standardEventScore>
+            <compensableEventScore name="DepositedBalance">
+                <idea>Deposited money should increase TS for the depositor</idea>
+                <valueAdjusting>"Maximum contribution is 15 80% of max contribution corresponds to 1,000 deposited COTI"</valueAdjusting>
+                <algorithm>Go through all "DepositedBalance" and "ClosedDeposits" events and summarize. D=sum(amounts)</algorithm>
+                <comment>The algorithm will be changed to take into account how long deposits are kept and decay for old ones</comment>
+                <amount>The value of depositing transaction</amount>
+                <nonlinearFunction>tan(D*1.098612289/1000)</nonlinearFunction>
                 <weight>15.0</weight>
-                <decay>ln(2)/90</decay>
-            </transactionScore>
-            <badEventScore name="FillingTheQuestionnaire">
+                <decay>ln(2)/90 = 0.007701635340</decay>
+                <calculation>TSdeposits = tan(D*1.098612289/1000)</calculation>
+            </compensableEventScore>
+            <compensatingEventScore name="ClosedDeposits">
+                <idea>"It is event of returning a deposit in all or in part, all description is in the parent event DepositedBalance"</idea>
+                <amount>Value of the repaying transaction</amount>
+                <parent>link to a DepositedBalance event</parent>
+            </compensatingEventScore>
+            <compensableEventScore name="NonFulfillment">
+                <idea>"Not fulfilling a jury decision to pay or settle in other way"</idea>
+                <algorithm>Go through all "NonFulfillment" and "LateFulfillment" events, apply weights and summarize related</algorithm>
+                <term>720</term>
+                <amount>The value of the debt</amount>
+                <weight1>-50.0</weight1>
+                <weight2>-10.0</weight2>
+                <decay>ln(2)/90 = 0.007701635340</decay>
+                <calculation>TSnfevent = weight1 + weight2*amount/10^6</calculation>
+                <calculation>TSnf = TSnfevent + TSnfcompensation</calculation>
+            </compensableEventScore>
+            <compensatingEventScore name="LateFulfillment">
+                <idea>"Fulfilling a jury decision after compensated TS in part"</idea>
+                <calculation>TSnfcompensation = weight1 + weight2*sum(amount for the same parent)/10^6</calculation>
+                <amount>The value of the repayment</amount>
+                <weight1>49.0</weight1>
+                <weight2>10.0</weight2>
+                <parent>link to a DepositedBalance event</parent>
+            </compensatingEventScore>
+        </behaviorEventsScore>
+        <behaviorHighFrequencyEventsScore>
+        	<comment>It is not always real high frequency, but the processing for these events is frequency-based</comment>
+            <highFrequencyEventsScore name="FillingTheQuestionnaire">
                 <definition>"A person filling questionnaire too frequent is probably cheating"</definition>
                 <term>90</term>
                 <weight>-10.0</weight>
                 <decay>ln(2)/30</decay>
-            </badEventScore>
-            <badEventScore name="IncorrectTransaction">
-                <definition>"It is to be defined, how to catch it"</definition>
-                <term>360</term>
-                <weight>-2.0</weight>
-                <decay>ln(2)/30</decay>
-            </badEventScore>
-            <badEventScore name="DoubleSpending">
-                <definition>"It is to be defined, how to catch it"</definition>
-                <term>360</term>
-                <weight>-10.0</weight>
-                <decay>ln(2)/90</decay>
-            </badEventScore>
-        </behaviorEventsScore>
-        <behaviorHighFrequencyEventsScore>
-            <disputedEventScore name="NonFulfillment">
-                <idea>"Not fulfilling a jury decision to pay or settle in other way"</idea>
-                <term>360</term>
-                <weight>0</weight>
-                <decay>ln(2)/90</decay>
-            </disputedEventScore>
-            <disputedEventScore name="LateFulfillment">
-                <idea>"Fulfilling a jury decision after"</idea>
-                <term>360</term>
-                <weight>0</weight>
-                <decay>ln(2)/90</decay>
-            </disputedEventScore>
-            <disputedEventScore name="Claim">
+            </highFrequencyEventsScore>
+            <highFrequencyEventsScore name="Claim">
                 <idea>"A person sending too much claims to the arbitration "</idea>
                 <term>90</term>
                 <weight>0</weight>
                 <decay>ln(2)/90</decay>
-            </disputedEventScore>
-            <disputedEventScore name="ChargeBack">
+            </highFrequencyEventsScore>
+            <highFrequencyEventsScore name="ChargeBack">
                 <idea>"Calculate chargeback rate for a month, apply the fine if it is larger than the standard(~2%)"</idea>
                 <term>90</term>
                 <weight>0</weight>
                 <decay>ln(2)/90</decay>
-            </disputedEventScore>
+            </highFrequencyEventsScore>
         </behaviorHighFrequencyEventsScore>
     </user><user type="merchant">
     	<userID>userHash</userID>
@@ -226,32 +250,61 @@
             </transactionScore>
         </behaviorCumulativeScores>
         <behaviorEventsScore>
-            <transactionScore name="DepositedBalance">
-                <idea>"--- not correct Maximum contribution is 30 80% of max contribution corresponds to 10,000 COTI avg balance in
-                    month or D0.8 = 10,000 or rxD0.8 = 400 for day-by day calculation"
-                </idea>
-                <nonlinearFunction>tan(D*1.098612289/10000)</nonlinearFunction>
-                <weight>15.0</weight>
-                <decay>ln(2)/90</decay>
-            </transactionScore>
-            <badEventScore name="FillingTheQuestionnaire">
-                <definition>"A person filling questionnaire too frequent is probably cheating"</definition>
-                <term>90</term>
-                <weight>-10.0</weight>
-                <decay>ln(2)/30</decay>
-            </badEventScore>
-            <badEventScore name="IncorrectTransaction">
-                <definition>"It is to be defined, how to catch it"</definition>
+            <standardEventScore name="IncorrectTransaction">
+                <idea>"It is to be defined, how to catch it"</idea>
+                <algorithm>Go through all events, apply weight and decay and summarize</algorithm>
+                <algorithm>After a limitation term, move events from actual table to archive</algorithm>
                 <term>360</term>
                 <weight>-2.0</weight>
-                <decay>ln(2)/30</decay>
-            </badEventScore>
-            <badEventScore name="DoubleSpending">
-                <definition>"It is to be defined, how to catch it"</definition>
+                <decay>ln(2)/90 = 0.007701635340</decay>
+                <calculation>TSevent = exp(-ln(2)/90 * (Dtoday - Devent))</calculation>
+                <issue>When the day changes? It should be different for different locations?</issue>
+            </standardEventScore>
+            <standardEventScore name="DoubleSpending">
+                <idea>"It is to be defined, how to catch it"</idea>
+                <algorithm>Go through all events, apply weight and decay and summarize</algorithm>
+                <algorithm>After a limitation term, move events from actual table to archive</algorithm>
                 <term>360</term>
                 <weight>-10.0</weight>
-                <decay>ln(2)/90</decay>
-            </badEventScore>
+                <decay>ln(2)/90 = 0.007701635340</decay>
+                <calculation>TSevent = exp(-ln(2)/90 * (Dtoday - Devent))</calculation>
+                <issue>When the day changes? It should be different for different locations?</issue>
+            </standardEventScore>
+            <compensableEventScore name="DepositedBalance">
+                <idea>Deposited money should increase TS for the depositor</idea>
+                <valueAdjusting>"Maximum contribution is 15 80% of max contribution corresponds to 1,000 deposited COTI"</valueAdjusting>
+                <algorithm>Go through all "DepositedBalance" and "ClosedDeposits" events and summarize. D=sum(amounts)</algorithm>
+                <comment>The algorithm will be changed to take into account how long deposits are kept and decay for old ones</comment>
+                <amount>The value of depositing transaction</amount>
+                <nonlinearFunction>tan(D*1.098612289/1000)</nonlinearFunction>
+                <weight>15.0</weight>
+                <decay>ln(2)/90 = 0.007701635340</decay>
+                <calculation>TSdeposits = tan(D*1.098612289/1000)</calculation>
+            </compensableEventScore>
+            <compensatingEventScore name="ClosedDeposits">
+                <idea>"It is event of returning a deposit in all or in part, all description is in the parent event DepositedBalance"</idea>
+                <amount>Value of the repaying transaction</amount>
+                <parent>link to a DepositedBalance event</parent>
+            </compensatingEventScore>
+            <compensableEventScore name="NonFulfillment">
+                <idea>"Not fulfilling a jury decision to pay or settle in other way"</idea>
+                <algorithm>Go through all "NonFulfillment" and "LateFulfillment" events, apply weights and summarize related</algorithm>
+                <term>720</term>
+                <amount>The value of the debt</amount>
+                <weight1>-50.0</weight1>
+                <weight2>-10.0</weight2>
+                <decay>ln(2)/90 = 0.007701635340</decay>
+                <calculation>TSnfevent = weight1 + weight2*amount/10^6</calculation>
+                <calculation>TSnf = TSnfevent + TSnfcompensation</calculation>
+            </compensableEventScore>
+            <compensatingEventScore name="LateFulfillment">
+                <idea>"Fulfilling a jury decision after compensated TS in part"</idea>
+                <calculation>TSnfcompensation = weight1 + weight2*sum(amount for the same parent)/10^6</calculation>
+                <amount>The value of the repayment</amount>
+                <weight1>49.0</weight1>
+                <weight2>10.0</weight2>
+                <parent>link to a DepositedBalance event</parent>
+            </compensatingEventScore>
         </behaviorEventsScore>
         <behaviorHighFrequencyEventsScore>
             <disputedEventScore name="NonFulfillment">
@@ -327,18 +380,26 @@
             </transactionScore>
         </behaviorCumulativeScores>
         <behaviorEventsScore>
-            <badEventScore name="IncorrectTransaction">
-                <definition>"It is to be defined, how to catch it"</definition>
+            <standardEventScore name="IncorrectTransaction">
+                <idea>"It is to be defined, how to catch it"</idea>
+                <algorithm>Go through all events, apply weight and decay and summarize</algorithm>
+                <algorithm>After a limitation term, move events from actual table to archive</algorithm>
                 <term>360</term>
                 <weight>-2.0</weight>
-                <decay>ln(2)/30</decay>
-            </badEventScore>
-            <badEventScore name="DoubleSpending">
-                <definition>"It is to be defined, how to catch it"</definition>
+                <decay>ln(2)/90 = 0.007701635340</decay>
+                <calculation>TSevent = exp(-ln(2)/90 * (Dtoday - Devent))</calculation>
+                <issue>When the day changes? It should be different for different locations?</issue>
+            </standardEventScore>
+            <standardEventScore name="DoubleSpending">
+                <idea>"It is to be defined, how to catch it"</idea>
+                <algorithm>Go through all events, apply weight and decay and summarize</algorithm>
+                <algorithm>After a limitation term, move events from actual table to archive</algorithm>
                 <term>360</term>
                 <weight>-10.0</weight>
-                <decay>ln(2)/90</decay>
-            </badEventScore>
+                <decay>ln(2)/90 = 0.007701635340</decay>
+                <calculation>TSevent = exp(-ln(2)/90 * (Dtoday - Devent))</calculation>
+                <issue>When the day changes? It should be different for different locations?</issue>
+            </standardEventScore>
         </behaviorEventsScore>
         <behaviorHighFrequencyEventsScore>
         </behaviorHighFrequencyEventsScore>
