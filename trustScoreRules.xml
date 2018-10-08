@@ -27,45 +27,45 @@
         </initialTrustScore>
         <behaviorCumulativeScores>
             <transactionScore name="TransactionFrequency">
-            	<idea>More transactions - more TS</idea>
-            	<algorithm>Day-by-day calculation</algorithm>
+            	<idea>"More transactions - more TS"</idea>
+            	<algorithm>"Day-by-day calculation"</algorithm>
                 <valueAdjusting>"Maximum contribution is 15, 80% of max contribution corresponds to 10,000 Txs per month or
                     N0.8 = 10,000 or rxN0.8 = 400 for day-by day"
                 </valueAdjusting>
 				<calculating>N = count(outcomingTxForAllAddressesForTheUser) within a day</calculating>
-                <nonlinearFunction>tanh(N/400*1.098612289) (for day-by-day)</nonlinearFunction>
-                <weight>0.75 (for day-by-day)</weight>
+                <nonlinearFunction>tanh(N/400*1.098612289)</nonlinearFunction>
+                <weight>0.75</weight>
                 <decay>ln(2)/30</decay>
                 <valueToStore>TStnum</valueToStore>
                 <currentValue>TStnum + tanh(N/400*1.098612289)</currentValue>
                 <dayShift>TStnum = TStnum * exp(-decay) + currentValue</dayShift>
-                <issue>When the day changes? It should be different for different locations?</issue>
+                <issue>"When the day changes? It should be different for different locations?"</issue>
             </transactionScore>
             <transactionScore name="Turnover">
-            	<idea>More turnover - more TS</idea>
-            	<algorithm>Day-by-day calculation</algorithm>
+            	<idea>"More turnover - more TS"</idea>
+            	<algorithm>"Day-by-day calculation"</algorithm>
                 <valueAdjusting>"Maximum contribution is 15, 80% of max contribution corresponds to 100,000 COTI per month or
                     T0.8 = 100,000 or rxT0.8 = 4,000 for day-by day calculation"
                 </valueAdjusting>
 				<calculating>T = sum(outcomingTxForAllAddressesForTheUser) within a day</calculating>
-                <nonlinearFunction>tanh(T/4000*1.098612289) (for day-by-day)</nonlinearFunction>
-                <weight>0.75 (for day-by-day)</weight>
+                <nonlinearFunction>tanh(T/4000*1.098612289)</nonlinearFunction>
+                <weight>0.75</weight>
                 <decay>ln(2)/30</decay>
                 <valueToStore>TStsum</valueToStore>
                 <currentValue>TStsum + tanh(T/4000*1.098612289)</currentValue>
                 <dayShift>TStnum = TStsum * exp(-decay) + currentValue</dayShift>
-                <issue>When the day changes? It should be different for different locations?</issue>
+                <issue>"When the day changes? It should be different for different locations?"</issue>
             </transactionScore>
             <transactionScore name="AverageBalance">
-            	<idea>Higher balance - higher TS</idea>
-            	<algorithm>30 day deep day-by-day calculation</algorithm>
+            	<idea>"Higher balance - higher TS"</idea>
+            	<algorithm>"30 day deep day-by-day calculation"</algorithm>
                 <valueAdjusting>"Maximum contribution is 15, 80% of max contribution corresponds to 10,000 COTI avg balance in
                     month or B0.8 = 10,000 or rxB0.8 = 400 for day-by day calculation"
                 </valueAdjusting>
                 <valueToStore>TSbalmonth</valueToStore>
                 <valueToStore>TSbal[0:29] 30 values</valueToStore>
                 <newaddress>Calculate TSbal_new_a[0:29] for the new address starting from the current balance backward</newaddress>
-                <newaddress>New address is an unknown before address which is first time debited wothin a day</newaddress>
+                <newaddress>New address is unknown before address which is first time debited</newaddress>
                 <newaddress>There can be several TSbal_new_a within a day</newaddress>
                 <nonlinearFunction>tanh(B/400*1.098612289)</nonlinearFunction>
                 <decay>ln(2)/30</decay>
@@ -78,33 +78,33 @@
                 <dayShift>TSbal[1] = (TSbal[0] + sum(TSbal_new_a[0] for all new addresses) )* exp(-decay)</dayShift>
                 <dayShift>TSbal[0] = sum(Today balance for all addresses)</dayShift>
                 <weight>0.75</weight>
-                <issue>When the day changes? It should be different for different locations?</issue>
+                <issue>"When the day changes? It should be different for different locations?"</issue>
             </transactionScore>
         </behaviorCumulativeScores>
         <behaviorEventsScore>
             <standardEventScore name="IncorrectTransaction">
                 <idea>"It is to be defined, how to catch it"</idea>
-                <algorithm>Go through all events, apply weight and decay and summarize</algorithm>
-                <algorithm>After a limitation term, move events from actual table to archive</algorithm>
+                <algorithm>"Go through all events, apply weight and decay and summarize"</algorithm>
+                <algorithm>"After a limitation term, move events from actual table to archive"</algorithm>
                 <term>360</term>
                 <weight>-2.0</weight>
                 <decay>ln(2)/90</decay>
-                <issue>When the day changes? It should be different for different locations?</issue>
+                <issue>"When the day changes? It should be different for different locations?"</issue>
             </standardEventScore>
             <standardEventScore name="DoubleSpending">
                 <idea>"It is to be defined, how to catch it"</idea>
-                <algorithm>Go through all events, apply weight and decay and summarize</algorithm>
-                <algorithm>After a limitation term, move events from actual table to archive</algorithm>
+                <algorithm>"Go through all events, apply weight and decay and summarize"</algorithm>
+                <algorithm>"After a limitation term, move events from actual table to archive"</algorithm>
                 <term>360</term>
                 <weight>-10.0</weight>
                 <decay>ln(2)/90</decay>
-                <issue>When the day changes? It should be different for different locations?</issue>
+                <issue>"When the day changes? It should be different for different locations?"</issue>
             </standardEventScore>
             <compensableEventScore name="DepositedBalance">
-                <idea>Deposited money should increase TS for the depositor</idea>
+                <idea>"Deposited money should increase TS for the depositor"</idea>
                 <valueAdjusting>"Maximum contribution is 15 80% of max contribution corresponds to 1,000 deposited COTI"</valueAdjusting>
-                <algorithm>Go through all "DepositedBalance" and "ClosedDeposits" events and summarize. D=sum(amounts)</algorithm>
-                <comment>The algorithm will be changed to take into account how long deposits are kept and decay for old ones</comment>
+                <algorithm>"Go through all "DepositedBalance" and "ClosedDeposits" events and summarize. D=sum(amounts)"</algorithm>
+                <comment>"The algorithm will be changed to take into account how long deposits are kept and decay for old ones"</comment>
                 <amount>The value of depositing transaction</amount>
                 <nonlinearFunction>tanh(D*1.098612289/1000)</nonlinearFunction>
                 <weight>15.0</weight>
@@ -118,7 +118,7 @@
             </compensatingEventScore>
             <compensableEventScore name="NonFulfillment">
                 <idea>"Not fulfilling a jury decision to pay or settle in other way"</idea>
-                <algorithm>Go through all "NonFulfillment" and "LateFulfillment" events, apply weights and summarize related</algorithm>
+                <algorithm>"Go through all "NonFulfillment" and "LateFulfillment" events, apply weights and summarize related"</algorithm>
                 <term>720</term>
                 <amount>The value of the debt</amount>
                 <weight1>-50.0</weight1>
@@ -137,24 +137,36 @@
             </compensatingEventScore>
         </behaviorEventsScore>
         <behaviorHighFrequencyEventsScore>
-        	<comment>It is not always real high frequency, but the processing for these events is frequency-based</comment>
+        	<comment>"It is not always real high frequency, but the processing for these events is frequency-based"</comment>
             <highFrequencyEventsScore name="FillingTheQuestionnaire">
-                <definition>"A person filling questionnaire too frequent is probably cheating"</definition>
-                <term>90</term>
+                <idea>"A person filling questionnaire too frequent is probably cheating"</idea>
+                <term>No term, just high decay</term>
+                <valueToStore>TSquestfreq</valueToStore>
+                <algorithm>"Apply penalty if there are 3 events per current day, double if 6, triple if 9"</algorithm>
                 <weight>-10.0</weight>
-                <decay>ln(2)/30</decay>
+                <decay>ln(2)/3</decay>
+                <dayShift>Standard day-by-day decay</dayShift>
             </highFrequencyEventsScore>
             <highFrequencyEventsScore name="Claim">
-                <idea>"A person sending too much claims to the arbitration "</idea>
-                <term>90</term>
-                <weight>0</weight>
-                <decay>ln(2)/90</decay>
+                <idea>"A person sending too much claims to the arbitration should be deprived"</idea>
+                <term>No term, just decay</term>
+                <valueToStore>TSclaims</valueToStore>
+                <nonlinearFunction>tanh(C/30*1.098612289)</nonlinearFunction>
+                <algorithm>"Count the number of claims for the last month, after apply nonlinear function, after add the stored value"</algorithm>
+                <weight>-0.25</weight>
+                <decay>ln(2)/30</decay>
+                <dayShift>Standard day-by-day decay</dayShift>
             </highFrequencyEventsScore>
             <highFrequencyEventsScore name="ChargeBack">
                 <idea>"Calculate chargeback rate for a month, apply the fine if it is larger than the standard(~2%)"</idea>
-                <term>90</term>
-                <weight>0</weight>
-                <decay>ln(2)/90</decay>
+                <term>No term, just decay</term>
+                <valueToStore>TSchargebacks</valueToStore>
+                <standardChargebackRate>0.02</standardChargebackRate>
+                <linearFunction>Nchargebacks/Ncredits-standardChargebackRate</linearFunction>
+                <algorithm>"Count the rate of charge for the last month, after apply linear function, after add the stored value"</algorithm>
+                <weight>-5</weight>
+                <decay>ln(2)/30</decay>
+                <dayShift>Standard day-by-day decay</dayShift>
             </highFrequencyEventsScore>
         </behaviorHighFrequencyEventsScore>
     </user><user type="merchant">
@@ -193,45 +205,45 @@
         </initialTrustScore>
         <behaviorCumulativeScores>
             <transactionScore name="TransactionFrequency">
-            	<idea>More transactions - more TS</idea>
-            	<algorithm>Day-by-day calculation</algorithm>
+            	<idea>"More transactions - more TS"</idea>
+            	<algorithm>"Day-by-day calculation"</algorithm>
                 <valueAdjusting>"Maximum contribution is 15, 80% of max contribution corresponds to 10,000 Txs per month or
                     N0.8 = 10,000 or rxN0.8 = 400 for day-by day"
                 </valueAdjusting>
 				<calculating>N = count(outcomingTxForAllAddressesForTheUser) within a day</calculating>
-                <nonlinearFunction>tanh(N/400*1.098612289) (for day-by-day)</nonlinearFunction>
-                <weight>0.75 (for day-by-day)</weight>
+                <nonlinearFunction>tanh(N/400*1.098612289)</nonlinearFunction>
+                <weight>0.75</weight>
                 <decay>ln(2)/30</decay>
                 <valueToStore>TStnum</valueToStore>
                 <currentValue>TStnum + tanh(N/400*1.098612289)</currentValue>
                 <dayShift>TStnum = TStnum * exp(-decay) + currentValue</dayShift>
-                <issue>When the day changes? It should be different for different locations?</issue>
+                <issue>"When the day changes? It should be different for different locations?"</issue>
             </transactionScore>
             <transactionScore name="Turnover">
-            	<idea>More turnover - more TS</idea>
-            	<algorithm>Day-by-day calculation</algorithm>
+            	<idea>"More turnover - more TS"</idea>
+            	<algorithm>"Day-by-day calculation"</algorithm>
                 <valueAdjusting>"Maximum contribution is 15, 80% of max contribution corresponds to 100,000 COTI per month or
                     T0.8 = 100,000 or rxT0.8 = 4,000 for day-by day calculation"
                 </valueAdjusting>
 				<calculating>T = sum(outcomingTxForAllAddressesForTheUser) within a day</calculating>
-                <nonlinearFunction>tanh(T/4000*1.098612289) (for day-by-day)</nonlinearFunction>
-                <weight>0.75 (for day-by-day)</weight>
+                <nonlinearFunction>tanh(T/4000*1.098612289)</nonlinearFunction>
+                <weight>0.75</weight>
                 <decay>ln(2)/30</decay>
                 <valueToStore>TStsum</valueToStore>
                 <currentValue>TStsum + tanh(T/4000*1.098612289)</currentValue>
                 <dayShift>TStnum = TStsum * exp(-decay) + currentValue</dayShift>
-                <issue>When the day changes? It should be different for different locations?</issue>
+                <issue>"When the day changes? It should be different for different locations?"</issue>
             </transactionScore>
             <transactionScore name="AverageBalance">
-            	<idea>Higher balance - higher TS</idea>
-            	<algorithm>30 day deep day-by-day calculation</algorithm>
+            	<idea>"Higher balance - higher TS"</idea>
+            	<algorithm>"30 day deep day-by-day calculation"</algorithm>
                 <valueAdjusting>"Maximum contribution is 15, 80% of max contribution corresponds to 10,000 COTI avg balance in
                     month or B0.8 = 10,000 or rxB0.8 = 400 for day-by day calculation"
                 </valueAdjusting>
                 <valueToStore>TSbalmonth</valueToStore>
                 <valueToStore>TSbal[0:29] 30 values</valueToStore>
                 <newaddress>Calculate TSbal_new_a[0:29] for the new address starting from the current balance backward</newaddress>
-                <newaddress>New address is an unknown before address which is first time debited wothin a day</newaddress>
+                <newaddress>New address is unknown before address which is first time debited</newaddress>
                 <newaddress>There can be several TSbal_new_a within a day</newaddress>
                 <nonlinearFunction>tanh(B/400*1.098612289)</nonlinearFunction>
                 <decay>ln(2)/30</decay>
@@ -244,33 +256,33 @@
                 <dayShift>TSbal[1] = (TSbal[0] + sum(TSbal_new_a[0] for all new addresses) )* exp(-decay)</dayShift>
                 <dayShift>TSbal[0] = sum(Today balance for all addresses)</dayShift>
                 <weight>0.75</weight>
-                <issue>When the day changes? It should be different for different locations?</issue>
+                <issue>"When the day changes? It should be different for different locations?"</issue>
             </transactionScore>
         </behaviorCumulativeScores>
         <behaviorEventsScore>
             <standardEventScore name="IncorrectTransaction">
                 <idea>"It is to be defined, how to catch it"</idea>
-                <algorithm>Go through all events, apply weight and decay and summarize</algorithm>
-                <algorithm>After a limitation term, move events from actual table to archive</algorithm>
+                <algorithm>"Go through all events, apply weight and decay and summarize"</algorithm>
+                <algorithm>"After a limitation term, move events from actual table to archive"</algorithm>
                 <term>360</term>
                 <weight>-2.0</weight>
                 <decay>ln(2)/90</decay>
-                <issue>When the day changes? It should be different for different locations?</issue>
+                <issue>"When the day changes? It should be different for different locations?"</issue>
             </standardEventScore>
             <standardEventScore name="DoubleSpending">
                 <idea>"It is to be defined, how to catch it"</idea>
-                <algorithm>Go through all events, apply weight and decay and summarize</algorithm>
-                <algorithm>After a limitation term, move events from actual table to archive</algorithm>
+                <algorithm>"Go through all events, apply weight and decay and summarize"</algorithm>
+                <algorithm>"After a limitation term, move events from actual table to archive"</algorithm>
                 <term>360</term>
                 <weight>-10.0</weight>
                 <decay>ln(2)/90</decay>
-                <issue>When the day changes? It should be different for different locations?</issue>
+                <issue>"When the day changes? It should be different for different locations?"</issue>
             </standardEventScore>
             <compensableEventScore name="DepositedBalance">
-                <idea>Deposited money should increase TS for the depositor</idea>
+                <idea>"Deposited money should increase TS for the depositor"</idea>
                 <valueAdjusting>"Maximum contribution is 15 80% of max contribution corresponds to 1,000 deposited COTI"</valueAdjusting>
-                <algorithm>Go through all "DepositedBalance" and "ClosedDeposits" events and summarize. D=sum(amounts)</algorithm>
-                <comment>The algorithm will be changed to take into account how long deposits are kept and decay for old ones</comment>
+                <algorithm>"Go through all "DepositedBalance" and "ClosedDeposits" events and summarize. D=sum(amounts)"</algorithm>
+                <comment>"The algorithm will be changed to take into account how long deposits are kept and decay for old ones"</comment>
                 <amount>The value of depositing transaction</amount>
                 <nonlinearFunction>tanh(D*1.098612289/1000)</nonlinearFunction>
                 <weight>15.0</weight>
@@ -284,7 +296,7 @@
             </compensatingEventScore>
             <compensableEventScore name="NonFulfillment">
                 <idea>"Not fulfilling a jury decision to pay or settle in other way"</idea>
-                <algorithm>Go through all "NonFulfillment" and "LateFulfillment" events, apply weights and summarize related</algorithm>
+                <algorithm>"Go through all "NonFulfillment" and "LateFulfillment" events, apply weights and summarize related"</algorithm>
                 <term>720</term>
                 <amount>The value of the debt</amount>
                 <weight1>-50.0</weight1>
@@ -303,30 +315,37 @@
             </compensatingEventScore>
         </behaviorEventsScore>
         <behaviorHighFrequencyEventsScore>
-            <disputedEventScore name="NonFulfillment">
-                <idea>"Not fulfilling a jury decision to pay or settle in other way"</idea>
-                <term>360</term>
-                <weight>0</weight>
-                <decay>ln(2)/90</decay>
-            </disputedEventScore>
-            <disputedEventScore name="LateFulfillment">
-                <idea>"Fulfilling a jury decision after"</idea>
-                <term>360</term>
-                <weight>0</weight>
-                <decay>ln(2)/90</decay>
-            </disputedEventScore>
-            <disputedEventScore name="Claim">
-                <idea>"A person sending too much claims to the arbitration "</idea>
-                <term>90</term>
-                <weight>0</weight>
-                <decay>ln(2)/90</decay>
-            </disputedEventScore>
-            <disputedEventScore name="ChargeBack">
+        	<comment>"It is not always real high frequency, but the processing for these events is frequency-based"</comment>
+            <highFrequencyEventsScore name="FillingTheQuestionnaire">
+                <idea>"A person filling questionnaire too frequent is probably cheating"</idea>
+                <term>No term, just high decay</term>
+                <valueToStore>TSquestfreq</valueToStore>
+                <algorithm>"Apply penalty if there are 3 events per current day, double if 6, triple if 9"</algorithm>
+                <weight>-10.0</weight>
+                <decay>ln(2)/3</decay>
+                <dayShift>Standard day-by-day decay</dayShift>
+            </highFrequencyEventsScore>
+            <highFrequencyEventsScore name="Claim">
+                <idea>"A person sending too much claims to the arbitration should be deprived"</idea>
+                <term>No term, just decay</term>
+                <valueToStore>TSclaims</valueToStore>
+                <nonlinearFunction>tanh(C/30*1.098612289)</nonlinearFunction>
+                <algorithm>"Count the number of claims for the last month, after apply nonlinear function, after add the stored value"</algorithm>
+                <weight>-0.25</weight>
+                <decay>ln(2)/30</decay>
+                <dayShift>Standard day-by-day decay</dayShift>
+            </highFrequencyEventsScore>
+            <highFrequencyEventsScore name="ChargeBack">
                 <idea>"Calculate chargeback rate for a month, apply the fine if it is larger than the standard(~2%)"</idea>
-                <term>90</term>
-                <weight>0</weight>
-                <decay>ln(2)/90</decay>
-            </disputedEventScore>
+                <term>No term, just decay</term>
+                <valueToStore>TSchargebacks</valueToStore>
+                <standardChargebackRate>0.02</standardChargebackRate>
+                <linearFunction>Nchargebacks/Ncredits-standardChargebackRate</linearFunction>
+                <algorithm>"Count the rate of charge for the last month, after apply linear function, after add the stored value"</algorithm>
+                <weight>-5</weight>
+                <decay>ln(2)/30</decay>
+                <dayShift>Standard day-by-day decay</dayShift>
+            </highFrequencyEventsScore>
         </behaviorHighFrequencyEventsScore>
     </user>
     <user type="node">
@@ -345,54 +364,60 @@
         </initialTrustScore>
         <behaviorCumulativeScores>
             <transactionScore name="TransactionFrequency">
-            	<idea>More transactions - more TS</idea>
-            	<algorithm>Day-by-day calculation</algorithm>
-                <valueAdjusting>""Maximum contribution is 30 80% of max contribution corresponds to 1,000,000 Txs per month or N0.8
+            	<idea>"More transactions - more TS"</idea>
+            	<algorithm>"Day-by-day calculation"</algorithm>
+                <valueAdjusting>"Maximum contribution is 30 80% of max contribution corresponds to 1,000,000 Txs per month or N0.8
                     = 1,000,000" or rxN0.8 = 40,000 for day-by day"
                 </valueAdjusting>
 				<calculating>N = count(outcomingTxForAllAddressesForTheUser) within a day</calculating>
-                <nonlinearFunction>tanh(N/40000*1.098612289) (for day-by-day)</nonlinearFunction>
-                <weight>1.5 (for day-by-day)</weight>
+                <nonlinearFunction>tanh(N/40000*1.098612289)</nonlinearFunction>
+                <weight>1.5</weight>
                 <decay>ln(2)/30</decay>
                 <valueToStore>TStnum</valueToStore>
                 <currentValue>TStnum + tanh(N/40000*1.098612289)</currentValue>
                 <dayShift>TStnum = TStnum * exp(-decay) + currentValue</dayShift>
-                <issue>When the day changes? It should be different for different locations?</issue>
+                <issue>"When the day changes? It should be different for different locations?"</issue>
             </transactionScore>
             <transactionScore name="Turnover">
-            	<idea>More turnover - more TS</idea>
-            	<algorithm>Day-by-day calculation</algorithm>
+            	<idea>"More turnover - more TS"</idea>
+            	<algorithm>"Day-by-day calculation"</algorithm>
                 <valueAdjusting>"Maximum contribution is 30 80% of max contribution corresponds to 100,000 COTI per month or
                     T0.8 = 10,000,000 or rxT0.8 = 400,000 for day-by day calculation"
                 </valueAdjusting>
 				<calculating>T = sum(outcomingTxForAllAddressesForTheUser) within a day</calculating>
-                <nonlinearFunction>tanh(T/400000*1.098612289) (for day-by-day)</nonlinearFunction>
-                <weight>1.0 (for day-by-day)</weight>
+                <nonlinearFunction>tanh(T/400000*1.098612289)</nonlinearFunction>
+                <weight>1.0</weight>
                 <decay>ln(2)/30</decay>
                 <valueToStore>TStsum</valueToStore>
                 <currentValue>TStsum + tanh(T/400000*1.098612289)</currentValue>
                 <dayShift>TStnum = TStsum * exp(-decay) + currentValue</dayShift>
-                <issue>When the day changes? It should be different for different locations?</issue>
+                <issue>"When the day changes? It should be different for different locations?"</issue>
             </transactionScore>
         </behaviorCumulativeScores>
         <behaviorEventsScore>
             <standardEventScore name="IncorrectTransaction">
                 <idea>"It is to be defined, how to catch it"</idea>
-                <algorithm>Go through all events, apply weight and decay and summarize</algorithm>
-                <algorithm>After a limitation term, move events from actual table to archive</algorithm>
+                <algorithm>"Go through all events, apply weight and decay and summarize"</algorithm>
+                <algorithm>"After a limitation term, move events from actual table to archive"</algorithm>
                 <term>360</term>
                 <weight>-2.0</weight>
                 <decay>ln(2)/90</decay>
-                <issue>When the day changes? It should be different for different locations?</issue>
+                <issue>"When the day changes? It should be different for different locations?"</issue>
             </standardEventScore>
             <standardEventScore name="DoubleSpending">
                 <idea>"It is to be defined, how to catch it"</idea>
-                <algorithm>Go through all events, apply weight and decay and summarize</algorithm>
-                <algorithm>After a limitation term, move events from actual table to archive</algorithm>
+                <algorithm>"Go through all events, apply weight and decay and summarize"</algorithm>
+                <algorithm>"After a limitation term, move events from actual table to archive"</algorithm>
                 <term>360</term>
                 <weight>-10.0</weight>
                 <decay>ln(2)/90</decay>
-                <issue>When the day changes? It should be different for different locations?</issue>
+                <issue>"When the day changes? It should be different for different locations?"</issue>
+            </standardEventScore>
+            <standardEventScore name="ConfiramationEvading">
+            	<comment>TBD</comment>
+            </standardEventScore>
+            <standardEventScore name="SmartContractExecutionEvading">
+            	<comment>TBD</comment>
             </standardEventScore>
         </behaviorEventsScore>
         <behaviorHighFrequencyEventsScore>
