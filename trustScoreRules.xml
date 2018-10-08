@@ -89,7 +89,6 @@
                 <term>360</term>
                 <weight>-2.0</weight>
                 <decay>ln(2)/90</decay>
-                <calculation>TSevent = exp(-ln(2)/90 * (Dtoday - Devent))</calculation>
                 <issue>When the day changes? It should be different for different locations?</issue>
             </standardEventScore>
             <standardEventScore name="DoubleSpending">
@@ -99,7 +98,6 @@
                 <term>360</term>
                 <weight>-10.0</weight>
                 <decay>ln(2)/90</decay>
-                <calculation>TSevent = exp(-ln(2)/90 * (Dtoday - Devent))</calculation>
                 <issue>When the day changes? It should be different for different locations?</issue>
             </standardEventScore>
             <compensableEventScore name="DepositedBalance">
@@ -257,7 +255,6 @@
                 <term>360</term>
                 <weight>-2.0</weight>
                 <decay>ln(2)/90</decay>
-                <calculation>TSevent = exp(-ln(2)/90 * (Dtoday - Devent))</calculation>
                 <issue>When the day changes? It should be different for different locations?</issue>
             </standardEventScore>
             <standardEventScore name="DoubleSpending">
@@ -267,7 +264,6 @@
                 <term>360</term>
                 <weight>-10.0</weight>
                 <decay>ln(2)/90</decay>
-                <calculation>TSevent = exp(-ln(2)/90 * (Dtoday - Devent))</calculation>
                 <issue>When the day changes? It should be different for different locations?</issue>
             </standardEventScore>
             <compensableEventScore name="DepositedBalance">
@@ -387,7 +383,6 @@
                 <term>360</term>
                 <weight>-2.0</weight>
                 <decay>ln(2)/90</decay>
-                <calculation>TSevent = exp(-ln(2)/90 * (Dtoday - Devent))</calculation>
                 <issue>When the day changes? It should be different for different locations?</issue>
             </standardEventScore>
             <standardEventScore name="DoubleSpending">
@@ -397,7 +392,6 @@
                 <term>360</term>
                 <weight>-10.0</weight>
                 <decay>ln(2)/90</decay>
-                <calculation>TSevent = exp(-ln(2)/90 * (Dtoday - Devent))</calculation>
                 <issue>When the day changes? It should be different for different locations?</issue>
             </standardEventScore>
         </behaviorEventsScore>
