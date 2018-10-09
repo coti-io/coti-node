@@ -1,5 +1,6 @@
 package io.coti.trustscore.services;
 
+import io.coti.basenode.data.Node;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
@@ -11,22 +12,23 @@ import javax.annotation.PostConstruct;
 import java.util.List;
 
 @Service
-public class InitializationService {
+public class InitializationService extends BaseNodeInitializationService{
     @Value("#{'${propagation.server.addresses}'.split(',')}")
     private List<String> propagationServerAddresses;
-
-
-    @Autowired
-    private BaseNodeInitializationService baseNodeInitializationService;
     @Autowired
     private CommunicationService communicationService;
 
     @PostConstruct
     public void init() {
+        super.connectToNetwork();
+        communicationService.initSubscriber(NodeType.TrustScoreNode);
 
-        communicationService.initSubscriber(propagationServerAddresses, NodeType.TrustScoreNode);
+        super.init();
+    }
 
-        baseNodeInitializationService.init();
+    @Override
+    protected Node getNodeProperties() {
+        return new Node(NodeType.TrustScoreNode, "localhost", "8020");
 
     }
 }

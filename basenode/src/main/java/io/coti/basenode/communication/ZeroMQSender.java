@@ -25,13 +25,13 @@ public class ZeroMQSender implements ISender {
 
     @PostConstruct
     private void init() {
+        zeroMQContext = ZMQ.context(1);
+        receivingAddressToSenderSocketMapping = new ConcurrentHashMap<>();
     }
 
     @Override
-    public void init(List<String> receivingServerAddresses) {
-        zeroMQContext = ZMQ.context(1);
-        receivingAddressToSenderSocketMapping = new ConcurrentHashMap<>();
-        receivingServerAddresses.forEach(this::initializeSenderSocket);
+    public void addAddress(String receivingServerAddress, String receivingServerPort) {
+        initializeSenderSocket(receivingServerAddress, receivingServerPort);
     }
 
     @Override
@@ -47,10 +47,10 @@ public class ZeroMQSender implements ISender {
         }
     }
 
-    private void initializeSenderSocket(String address) {
+    private void initializeSenderSocket(String address, String port) {
         ZMQ.Socket sender = zeroMQContext.socket(ZMQ.DEALER);
         ZeroMQUtils.bindToRandomPort(sender);
-        sender.connect(address);
+        sender.connect("tcp://" + address + ":" + port);
         receivingAddressToSenderSocketMapping.putIfAbsent(address, sender);
     }
 }

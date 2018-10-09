@@ -1,32 +1,30 @@
 package io.coti.dspnode.services;
 
-import io.coti.basenode.data.AddressData;
-import io.coti.basenode.data.NodeType;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.Consumer;
 
+@Slf4j
 @Service
-public class InitializationService {
+public class InitializationService extends BaseNodeInitializationService{
     @Value("${receiving.port}")
     private String receivingPort;
-    @Value("#{'${propagation.server.addresses}'.split(',')}")
-    private List<String> propagationServerAddresses;
     @Value("${propagation.port}")
     private String propagationPort;
-    @Value("#{'${zerospend.receiving.address}'.split(',')}")
-    private List<String> receivingServerAddresses;
+    @Value("${node.manager.address}")
+    private String nodeManagerAddress;
 
-    @Autowired
-    private BaseNodeInitializationService baseNodeInitializationService;
     @Autowired
     private TransactionService transactionService;
     @Autowired
@@ -36,7 +34,7 @@ public class InitializationService {
 
     @PostConstruct
     public void init() {
-
+        super.connectToNetwork();
         HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping = new HashMap<>();
         classNameToReceiverHandlerMapping.put(TransactionData.class.getName(), data ->
                 transactionService.handleNewTransactionFromFullNode((TransactionData) data));
@@ -44,11 +42,17 @@ public class InitializationService {
                 addressService.handleNewAddressFromFullNode((AddressData) data));
 
         communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
-        communicationService.initSender(receivingServerAddresses);
-        communicationService.initSubscriber(propagationServerAddresses, NodeType.DspNode);
+        communicationService.initSubscriber(NodeType.DspNode);
         communicationService.initPropagator(propagationPort);
 
-        baseNodeInitializationService.init();
+        super.init();
+    }
 
+    @Override
+    protected Node getNodeProperties() {
+        Node node = new Node(NodeType.DspNode, "localhost", "8020");
+        node.setPropagationPort(propagationPort);
+        node.setReceivingPort(receivingPort);
+        return node;
     }
 }

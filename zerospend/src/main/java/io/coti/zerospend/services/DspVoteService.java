@@ -24,9 +24,6 @@ import java.util.concurrent.ConcurrentMap;
 @Slf4j
 @Service
 public class DspVoteService extends BaseNodeDspVoteService {
-    @Value("#{'${dsp.server.addresses}'.split(',')}")
-    private List<String> dspServerAddresses;
-
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
@@ -95,29 +92,29 @@ public class DspVoteService extends BaseNodeDspVoteService {
         }
         return "Ok";
     }
-
-    @Scheduled(fixedDelay = 10000, initialDelay = 5000)
-    private void updateLiveDspNodesList() {
-        List<Hash> onlineDspHashes = new LinkedList<>();
-        RestTemplate restTemplate = new RestTemplate();
-        for (String dspServerAddress : dspServerAddresses) {
-            try {
-                Hash voterHash = restTemplate.getForObject(dspServerAddress + NODE_HASH_ENDPOINT, Hash.class);
-                if (voterHash == null) {
-                    log.error("Voter hash received is null: {}", dspServerAddress);
-                } else {
-                    onlineDspHashes.add(voterHash);
-                }
-            } catch (RestClientException e) {
-                log.error("Unresponsive Dsp Node: {}", dspServerAddress);
-            }
-        }
-        if (onlineDspHashes.isEmpty()) {
-            log.error("No Dsp Nodes are online...");
-        }
-        currentLiveDspNodes = onlineDspHashes;
-        log.info("Updated live dsp nodes list. Count: {}", currentLiveDspNodes.size());
-    }
+//
+//    @Scheduled(fixedDelay = 10000, initialDelay = 5000)
+//    private void updateLiveDspNodesList() {
+//        List<Hash> onlineDspHashes = new LinkedList<>();
+//        RestTemplate restTemplate = new RestTemplate();
+//        for (String dspServerAddress : dspServerAddresses) {
+//            try {
+//                Hash voterHash = restTemplate.getForObject(dspServerAddress + NODE_HASH_ENDPOINT, Hash.class);
+//                if (voterHash == null) {
+//                    log.error("Voter hash received is null: {}", dspServerAddress);
+//                } else {
+//                    onlineDspHashes.add(voterHash);
+//                }
+//            } catch (RestClientException e) {
+//                log.error("Unresponsive Dsp Node: {}", dspServerAddress);
+//            }
+//        }
+//        if (onlineDspHashes.isEmpty()) {
+//            log.error("No Dsp Nodes are online...");
+//        }
+//        currentLiveDspNodes = onlineDspHashes;
+//        log.info("Updated live dsp nodes list. Count: {}", currentLiveDspNodes.size());
+//    }
 
     @Scheduled(fixedDelay = 1000)
     private void sumAndSaveVotes() {
@@ -139,7 +136,6 @@ public class DspVoteService extends BaseNodeDspVoteService {
                         log.debug("Undecided majority: {}", currentVotes.getHash());
                     }
                     transactionVotes.put(currentVotes);
-
                 }
             }
         }
