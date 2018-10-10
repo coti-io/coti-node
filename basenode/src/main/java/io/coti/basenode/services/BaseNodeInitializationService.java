@@ -1,5 +1,6 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.communication.ZeroMQSubscriber;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.GetTransactionBatchRequest;
 import io.coti.basenode.http.GetTransactionBatchResponse;
@@ -47,6 +48,8 @@ public class BaseNodeInitializationService {
     private IDspVoteService dspVoteService;
     @Autowired
     private IPotService potService;
+    @Autowired
+    private ZeroMQSubscriber zeroMQSubscriber;
 
     public void init() {
         try {
@@ -70,31 +73,18 @@ public class BaseNodeInitializationService {
                     ExecutorService executorService = Executors.newFixedThreadPool(threadPoolSize);
                     List<Callable<Object>> missingTransactionsTasks = new ArrayList<>(missingTransactions.size());
                     missingTransactions.forEach(transactionData ->
-                            missingTransactionsTasks.add(Executors.callable(new addMissingTransaction(transactionData))));
+                            missingTransactionsTasks.add(Executors.callable(() -> transactionService.handlePropagatedTransaction(transactionData))));
                     executorService.invokeAll(missingTransactionsTasks);
                 }
             }
 
             balanceService.finalizeInit();
             clusterService.finalizeInit();
+            zeroMQSubscriber.initPropagationHandler();
         } catch (Exception e) {
             log.error("Errors at {} : ", this.getClass().getSimpleName(), e);
             System.exit(-1);
         }
-    }
-
-    private class addMissingTransaction implements Runnable {
-        TransactionData transactionData;
-
-        private addMissingTransaction(TransactionData transactionData) {
-            this.transactionData = transactionData;
-        }
-
-        @Override
-        public void run() {
-            transactionService.handlePropagatedTransaction(transactionData);
-        }
-
     }
 
     private void handleExistingTransaction(AtomicLong maxTransactionIndex, TransactionData transactionData) {
