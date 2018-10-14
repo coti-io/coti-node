@@ -5,12 +5,13 @@ import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.database.Interfaces.IDatabaseConnector;
 import io.coti.basenode.model.*;
 import lombok.extern.slf4j.Slf4j;
+
 import org.rocksdb.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
 
-import javax.annotation.PostConstruct;
+
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.*;
@@ -21,15 +22,14 @@ public class RocksDBConnector implements IDatabaseConnector {
     @Value("${database.folder.name}")
     private String databaseFolderName;
     private final String initialDBPath = "initialDatabase";
-    private final List<String> columnFamilyClassNames = Arrays.asList(
+    protected List<String> columnFamilyClassNames = new ArrayList<>(Arrays.asList(
             "DefaultColumnClassName",
             Transactions.class.getName(),
             Addresses.class.getName(),
             AddressTransactionsHistories.class.getName(),
-            TrustScores.class.getName(),
             TransactionIndexes.class.getName(),
             TransactionVotes.class.getName()
-    );
+    ));
 
     @Value("${application.name}")
     private String applicationName;
@@ -41,8 +41,7 @@ public class RocksDBConnector implements IDatabaseConnector {
     private Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
     private List<ColumnFamilyHandle> columnFamilyHandles = new ArrayList<>();
 
-    public RocksDBConnector() {
-        log.info("{} is up", this.getClass().getSimpleName());
+    public RocksDBConnector() { log.info("{} is up", this.getClass().getSimpleName());
     }
 
     private void deleteDatabaseFolder() {
@@ -58,7 +57,7 @@ public class RocksDBConnector implements IDatabaseConnector {
         index.delete();
     }
 
-    @PostConstruct
+
     public void init() {
         init(applicationName + databaseFolderName);
     }

@@ -13,6 +13,6 @@ public interface IDatabaseConnector {
     RocksIterator getIterator(String columnFamilyName);
 
     boolean isEmpty(String columnFamilyName);
-
+    void init();
     void shutdown();
 }

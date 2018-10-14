@@ -16,6 +16,10 @@ public class InitializationService {
     private List<String> propagationServerAddresses;
 
 
+    @Value("#{'${trustscore.server.addresses}'.split(',')}")
+    private List<String> trustscoreServerAddresses;
+
+
     @Autowired
     private BaseNodeInitializationService baseNodeInitializationService;
     @Autowired
@@ -25,7 +29,7 @@ public class InitializationService {
     public void init() {
 
         communicationService.initSubscriber(propagationServerAddresses, NodeType.TrustScoreNode);
-
+        communicationService.initSender(trustscoreServerAddresses);
         baseNodeInitializationService.init();
 
     }

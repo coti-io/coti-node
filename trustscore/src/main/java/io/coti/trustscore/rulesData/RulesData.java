@@ -1,0 +1,45 @@
+package io.coti.trustscore.rulesData;
+
+import io.coti.trustscore.data.Enums.UserType;
+
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import java.util.HashMap;
+
+@XmlRootElement(name = "rules")
+public class RulesData {
+    @XmlElement
+    @XmlJavaTypeAdapter(UserAdapter.class)
+    private HashMap<UserType, UserScoresByType> users;
+
+    public RulesData() {
+    }
+
+    public RulesData(HashMap<UserType, UserScoresByType> users) {
+        this.users = users;
+    }
+
+    public HashMap<UserType, UserScoresByType> getUsersRules() {
+        return users;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

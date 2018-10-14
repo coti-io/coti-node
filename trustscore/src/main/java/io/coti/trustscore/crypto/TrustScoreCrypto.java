@@ -1,6 +1,8 @@
-package io.coti.basenode.crypto;
+package io.coti.trustscore.crypto;
 
-import io.coti.basenode.data.TrustScoreData;
+import io.coti.basenode.crypto.CryptoHelper;
+import io.coti.basenode.crypto.SignatureValidationCrypto;
+import io.coti.trustscore.data.TrustScoreData;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
@@ -12,11 +14,8 @@ public class TrustScoreCrypto extends SignatureValidationCrypto<TrustScoreData> 
     public byte[] getMessageInBytes(TrustScoreData trustScoreData) {
         byte[] userHashInBytes = trustScoreData.getUserHash().getBytes();
 
-        ByteBuffer trustScoreBuffer = ByteBuffer.allocate(8);
-        trustScoreBuffer.putDouble(trustScoreData.getKycTrustScore());
-
-        ByteBuffer trustScoreMessageBuffer = ByteBuffer.allocate(userHashInBytes.length + 8).
-                put(userHashInBytes).put(trustScoreBuffer.array());
+        ByteBuffer trustScoreMessageBuffer = ByteBuffer.allocate(userHashInBytes.length + Double.BYTES).
+                put(userHashInBytes).putDouble(trustScoreData.getKycTrustScore());
 
         byte[] trustScoreMessageInBytes = trustScoreMessageBuffer.array();
         byte[] cryptoHashedMessage = CryptoHelper.cryptoHash(trustScoreMessageInBytes).getBytes();
