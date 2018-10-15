@@ -1,4 +1,4 @@
-package io.coti.basenode.controllers;
+package io.coti.basenode.config;
 
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.ControllerAdvice;

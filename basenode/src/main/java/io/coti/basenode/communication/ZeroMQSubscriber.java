@@ -147,7 +147,9 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
 
     @PreDestroy
     public void shutdown() {
-        log.info("Shutting down ZeroMQ subscriber");
-        propagationReceiver.unbind("tcp://*:" + port);
+        if(zeroMQContext != null) {
+            log.info("Shutting down ZeroMQ subscriber");
+            propagationReceiver.unbind("tcp://*:" + port);
+        }
     }
 }

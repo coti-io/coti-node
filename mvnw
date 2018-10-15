@@ -68,7 +68,7 @@ esac
 
 if [ -z "$JAVA_HOME" ] ; then
   if [ -r /etc/gentoo-release ] ; then
-    JAVA_HOME=`java-io.coti.fullnode.config --jre-home`
+    JAVA_HOME=`java-io.coti.basenode.config --jre-home`
   fi
 fi
 
@@ -202,7 +202,7 @@ fi
 
 export MAVEN_PROJECTBASEDIR=${MAVEN_BASEDIR:-"$BASE_DIR"}
 echo $MAVEN_PROJECTBASEDIR
-MAVEN_OPTS="$(concat_lines "$MAVEN_PROJECTBASEDIR/.mvn/jvm.io.coti.fullnode.config") $MAVEN_OPTS"
+MAVEN_OPTS="$(concat_lines "$MAVEN_PROJECTBASEDIR/.mvn/jvm.io.coti.basenode.config") $MAVEN_OPTS"
 
 # For Cygwin, switch paths to Windows format before running java
 if $cygwin; then

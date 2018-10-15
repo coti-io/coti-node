@@ -1,4 +1,4 @@
-package io.coti.fullnode.config;
+package io.coti.basenode.config;
 
 
 import org.springframework.context.annotation.Configuration;
