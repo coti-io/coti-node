@@ -18,10 +18,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -47,6 +44,7 @@ public class BaseNodeBalanceService implements IBalanceService {
     private AtomicLong totalConfirmed = new AtomicLong(0);
     private AtomicLong tccConfirmed = new AtomicLong(0);
     private AtomicLong dspConfirmed = new AtomicLong(0);
+    private Thread confirmedTransactionsThread;
 
 
     public void init() throws Exception {
@@ -54,36 +52,47 @@ public class BaseNodeBalanceService implements IBalanceService {
         balanceMap = new ConcurrentHashMap<>();
         preBalanceMap = new ConcurrentHashMap<>();
         loadBalanceFromSnapshot();
-        new Thread(() -> updateConfirmedTransactions()).start();
+        confirmedTransactionsThread = new Thread(() -> updateConfirmedTransactions());
+        confirmedTransactionsThread.start();
     }
 
     private void updateConfirmedTransactions() {
-        while (true) {
+        while (!Thread.currentThread().isInterrupted()) {
             try {
                 ConfirmationData confirmationData = confirmationQueue.take();
-                TransactionData transactionData = transactions.getByHash(confirmationData.getHash());
-                if (confirmationData instanceof TccInfo) {
-                    transactionData.setTrustChainConsensus(true);
-                    transactionData.setTrustChainTrustScore(((TccInfo) confirmationData).getTrustChainTrustScore());
-                    transactionData.setTrustChainTransactionHashes(((TccInfo) confirmationData).getTrustChainTransactionHashes());
-                    tccConfirmed.incrementAndGet();
-                } else if (confirmationData instanceof DspConsensusResult) {
-                    transactionData.setDspConsensusResult((DspConsensusResult) confirmationData);
-                    if (!insertNewTransactionIndex(transactionData)) {
-                        continue;
-                    }
-                    if (transactionHelper.isDspConfirmed(transactionData)) {
-                        dspConfirmed.incrementAndGet();
-                    }
-                }
-                if (transactionHelper.isConfirmed(transactionData)) {
-                    processConfirmedTransaction(transactionData);
-                }
-                transactions.put(transactionData);
+                updateConfirmedTransactionHandler(confirmationData);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Thread.currentThread().interrupt();
             }
         }
+        LinkedList<ConfirmationData> remainingConfirmedTransactions = new LinkedList<>();
+        confirmationQueue.drainTo(remainingConfirmedTransactions);
+        if (remainingConfirmedTransactions.size() != 0) {
+            log.info("Please wait to process {} remaining confirmed transaction(s)", remainingConfirmedTransactions.size());
+            remainingConfirmedTransactions.forEach(confirmationData -> updateConfirmedTransactionHandler(confirmationData));
+        }
+    }
+
+    private void updateConfirmedTransactionHandler(ConfirmationData confirmationData) {
+        TransactionData transactionData = transactions.getByHash(confirmationData.getHash());
+        if (confirmationData instanceof TccInfo) {
+            transactionData.setTrustChainConsensus(true);
+            transactionData.setTrustChainTrustScore(((TccInfo) confirmationData).getTrustChainTrustScore());
+            transactionData.setTrustChainTransactionHashes(((TccInfo) confirmationData).getTrustChainTransactionHashes());
+            tccConfirmed.incrementAndGet();
+        } else if (confirmationData instanceof DspConsensusResult) {
+            transactionData.setDspConsensusResult((DspConsensusResult) confirmationData);
+            if (!insertNewTransactionIndex(transactionData)) {
+                return;
+            }
+            if (transactionHelper.isDspConfirmed(transactionData)) {
+                dspConfirmed.incrementAndGet();
+            }
+        }
+        if (transactionHelper.isConfirmed(transactionData)) {
+            processConfirmedTransaction(transactionData);
+        }
+        transactions.put(transactionData);
     }
 
     private void processConfirmedTransaction(TransactionData transactionData) {
@@ -298,5 +307,16 @@ public class BaseNodeBalanceService implements IBalanceService {
     @Override
     public long getDspConfirmed() {
         return dspConfirmed.get();
+    }
+
+    public void shutdown() {
+        log.info("Shutting down {}", this.getClass().getSimpleName());
+        confirmedTransactionsThread.interrupt();
+        try {
+            confirmedTransactionsThread.join();
+        } catch (InterruptedException e) {
+            log.error("Interrupted shutdown {}", this.getClass().getSimpleName());
+        }
+
     }
 }

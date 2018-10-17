@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class WebShutDown implements TomcatConnectorCustomizer {
-    private static final int TIMEOUT = 120;
+    private static final int TIMEOUT = 360;
 
     private volatile Connector connector;
 
@@ -32,9 +32,7 @@ public class WebShutDown implements TomcatConnectorCustomizer {
                 ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) executor;
                 threadPoolExecutor.shutdown();
                 if (!threadPoolExecutor.awaitTermination(TIMEOUT, TimeUnit.SECONDS)) {
-                    log.info("WebServer thread pool did not shut down gracefully within "
-                            + TIMEOUT + " seconds. Proceeding with forceful shutdown");
-
+                    log.info("WebServer thread pool did not shut down gracefully within {} seconds. Proceeding with forceful shutdown", TIMEOUT);
                     threadPoolExecutor.shutdownNow();
 
                     if (!threadPoolExecutor.awaitTermination(TIMEOUT, TimeUnit.SECONDS)) {

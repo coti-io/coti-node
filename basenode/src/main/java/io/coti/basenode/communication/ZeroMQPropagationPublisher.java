@@ -34,6 +34,7 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
         propagator.setHWM(10000);
         this.propagationPort = propagationPort;
         propagator.bind("tcp://*:" + propagationPort);
+        log.info("ZeroMQ Publisher is up");
     }
 
     public <T extends IEntity> void propagate(T toPropagate, List<NodeType> subscriberNodeTypes) {
@@ -58,10 +59,9 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
         }
     }
 
-    @PreDestroy
     public void shutdown() {
-        log.info("Shutting down ZeroMQ publisher");
         if (propagator != null) {
+            log.info("Shutting down {}", this.getClass().getSimpleName());
             propagator.unbind("tcp://*:" + propagationPort);
             propagator.close();
             zeroMQContext.close();

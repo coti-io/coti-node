@@ -90,13 +90,37 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     public boolean isTransactionHashExists(Hash transactionHash) {
-        if (transactionHashToTransactionStateStackMapping.containsKey(transactionHash)) {
+        if (isTransactionHashProcessing(transactionHash)) {
             return true;
         }
+        if (isTransactionHashInDB(transactionHash)) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isTransactionHashInDB(Hash transactionHash) {
         if (transactions.getByHash(transactionHash) != null) {
             return true;
         }
         return false;
+    }
+
+    private boolean isTransactionHashProcessing(Hash transactionHash) {
+        if (transactionHashToTransactionStateStackMapping.containsKey(transactionHash)) {
+            return true;
+        }
+        return false;
+    }
+
+    private void addDspResultToDb(DspConsensusResult dspConsensusResult) {
+        if(dspConsensusResult == null) {
+            return;
+        }
+        if(transactionIndexes.getByHash(new Hash(dspConsensusResult.getIndex())) == null) {
+            balanceService.setDspcToTrue(dspConsensusResult);
+        }
+
     }
 
     public boolean validateTrustScore(TransactionData transactionData) {
@@ -121,7 +145,10 @@ public class TransactionHelper implements ITransactionHelper {
 
     public boolean startHandleTransaction(TransactionData transactionData) {
         synchronized (transactionData) {
-            if (isTransactionExists(transactionData)) {
+            if(isTransactionExists(transactionData)) {
+                if (!isTransactionHashProcessing(transactionData.getHash())){
+                    addDspResultToDb(transactionData.getDspConsensusResult());
+                }
                 return false;
             }
         }

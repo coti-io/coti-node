@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.zeromq.ZMQ;
+import org.zeromq.ZMQException;
 
 import javax.annotation.PreDestroy;
 import java.util.*;
@@ -36,6 +37,8 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     private final int FIXED_DELAY = 5000;
     @Autowired
     private ISerializer serializer;
+    private Thread receiverThread;
+    private Thread propagationThread;
 
     @Override
     public void init(List<String> propagationServerAddresses, HashMap<String, Consumer<Object>> messagesHandler) {
@@ -44,19 +47,28 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         this.messagesHandler = messagesHandler;
         initSockets(propagationServerAddresses);
         messageQueue = new LinkedBlockingQueue<>();
-        Thread receiverThread = new Thread(() -> {
-            while (!Thread.interrupted()) {
-                String channel = propagationReceiver.recvStr();
-                log.debug("Received a new message on channel: {}", channel);
-                byte[] message = propagationReceiver.recv();
+        receiverThread = new Thread(() -> {
+            boolean contextTerminated = false;
+            while (!contextTerminated && !Thread.currentThread().isInterrupted()) {
                 try {
+                    String channel = propagationReceiver.recvStr();
+                    log.debug("Received a new message on channel: {}", channel);
+                    byte[] message = propagationReceiver.recv();
                     messageQueue.put(new ZeroMQMessageData(channel, message));
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    Thread.currentThread().interrupt();
+                } catch (ZMQException e) {
+                    if (e.getErrorCode() == ZMQ.Error.ETERM.getCode()) {
+                        contextTerminated = true;
+                    } else {
+                        log.error("ZeroMQ exception at receiver thread", e);
+                    }
                 }
             }
+            propagationReceiver.close();
         });
         receiverThread.start();
+        log.info("ZeroMQ Subscriber is up");
     }
 
     private void handleMessageData(byte[] message, String channel) {
@@ -69,30 +81,43 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     }
 
     public void initPropagationHandler() {
-        new Thread(() -> propagationHandler()).start();
+
+        propagationThread = new Thread(() -> propagationHandler());
+        propagationThread.start();
     }
 
     private void propagationHandler() {
-        while (true) {
+        while (!Thread.currentThread().isInterrupted()) {
             try {
                 ZeroMQMessageData zeroMQMessageData = messageQueue.take();
-                String channel = zeroMQMessageData.getChannel();
-                byte[] message = zeroMQMessageData.getMessage();
-                if (channel.contains("HeartBeat")) {
-                    String serverAddress = new String(message);
-                    connectedServerAddresses.put(serverAddress, new Date());
-                } else {
-                    messageTypes.forEach(messageData -> {
-
-                        if (channel.contains(messageData.getName()) &&
-                                messagesHandler.containsKey(channel)) {
-                            handleMessageData(message, channel);
-                        }
-                    });
-                }
+                propagationProcess(zeroMQMessageData);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Thread.currentThread().interrupt();
             }
+        }
+        LinkedList<ZeroMQMessageData> remainingMessages = new LinkedList<>();
+        messageQueue.drainTo(remainingMessages);
+        if(remainingMessages.size() != 0) {
+            log.info("Please wait to process {} remaining messages", remainingMessages.size());
+            remainingMessages.forEach(zeroMQMessageData -> propagationProcess(zeroMQMessageData));
+        }
+
+    }
+
+    private void propagationProcess(ZeroMQMessageData zeroMQMessageData) {
+        String channel = zeroMQMessageData.getChannel();
+        byte[] message = zeroMQMessageData.getMessage();
+        if (channel.contains("HeartBeat")) {
+            String serverAddress = new String(message);
+            connectedServerAddresses.put(serverAddress, new Date());
+        } else {
+            messageTypes.forEach(messageData -> {
+
+                if (channel.contains(messageData.getName()) &&
+                        messagesHandler.containsKey(channel)) {
+                    handleMessageData(message, channel);
+                }
+            });
         }
     }
 
@@ -145,11 +170,19 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         });
     }
 
-    @PreDestroy
     public void shutdown() {
-        if(zeroMQContext != null) {
-            log.info("Shutting down ZeroMQ subscriber");
-            propagationReceiver.unbind("tcp://*:" + port);
+        try {
+            if (propagationReceiver != null) {
+                log.info("Shutting down {}", this.getClass().getSimpleName());
+                //  propagationReceiver.unbind("tcp://*:" + port);
+                zeroMQContext.term();
+                receiverThread.interrupt();
+                receiverThread.join();
+                propagationThread.interrupt();
+                propagationThread.join();
+            }
+        } catch (InterruptedException e) {
+            log.error("Interrupted shutdown ZeroMQ subscriber");
         }
     }
 }

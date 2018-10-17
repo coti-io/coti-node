@@ -56,7 +56,7 @@ public class TransactionIndexService {
             return false;
         }
         if (transactionData.getDspConsensusResult().getIndex() == lastTransactionIndexData.getIndex() + 1) {
-            log.debug("Inserting new transaction with index: {}", lastTransactionIndexData.getIndex() + 1);
+            log.debug("Inserting new transaction {} with index: {}", transactionData.getHash(), lastTransactionIndexData.getIndex() + 1);
             lastTransactionIndexData = getNextIndexData(lastTransactionIndexData, transactionData);
             transactionIndexes.put(lastTransactionIndexData);
             transactionHelper.removeNoneIndexedTransaction(transactionData);

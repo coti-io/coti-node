@@ -155,9 +155,8 @@ public class RocksDBConnector implements IDatabaseConnector {
         }
     }
 
-    @PreDestroy
     public void shutdown() {
-        log.info("Shutting down rocksDB");
+        log.info("Shutting down {}", this.getClass().getSimpleName());
         for (ColumnFamilyHandle columnFamilyHandle :
                 columnFamilyHandles) {
             columnFamilyHandle.close();
