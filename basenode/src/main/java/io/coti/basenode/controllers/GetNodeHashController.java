@@ -1,4 +1,4 @@
-package io.coti.dspnode.controllers;
+package io.coti.basenode.controllers;
 
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.Hash;
@@ -15,6 +15,8 @@ public class GetNodeHashController {
 
     @RequestMapping(method = GET)
     public Hash getNodeHash() {
-        return NodeCryptoHelper.getNodeHash();
+        Hash nodeHash = NodeCryptoHelper.getNodeHash();
+        log.info("Hash {} was sent", nodeHash);
+        return nodeHash;
     }
 }

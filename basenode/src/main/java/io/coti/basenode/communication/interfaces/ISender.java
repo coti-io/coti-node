@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface ISender {
 
-    void init(List<String> receivingServerAddresses);
+    void addAddress(String receivingServerAddress, String receivingServerPort);
 
     <T extends IEntity> void send(T toSend, String address);
 }

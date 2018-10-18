@@ -38,7 +38,7 @@ public class CommunicationService {
     @Autowired
     private IDspVoteService dspVoteService;
 
-    public void initSubscriber(List<String> propagationServerAddresses, NodeType nodeType) {
+    public void initSubscriber(NodeType nodeType) {
         HashMap<String, Consumer<Object>> classNameToSubscriberHandlerMapping = new HashMap<>();
         classNameToSubscriberHandlerMapping.put(Channel.getChannelString(TransactionData.class, nodeType), data ->
                 transactionService.handlePropagatedTransaction((TransactionData) data));
@@ -46,15 +46,18 @@ public class CommunicationService {
                 addressService.handlePropagatedAddress((AddressData) data));
         classNameToSubscriberHandlerMapping.put(Channel.getChannelString(DspConsensusResult.class, nodeType), data ->
                 dspVoteService.handleVoteConclusion((DspConsensusResult) data));
-        propagationSubscriber.init(propagationServerAddresses, classNameToSubscriberHandlerMapping);
+    }
+
+    public void addSubscription(String propagationServerAddress, String propagationServerPort){
+        propagationSubscriber.addAddress(propagationServerAddress, propagationServerPort);
     }
 
     public void initReceiver(String receivingPort, HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping) {
         receiver.init(receivingPort, classNameToReceiverHandlerMapping);
     }
 
-    public void initSender(List<String> receivingServerAddresses) {
-        sender.init(receivingServerAddresses);
+    public void addSender(String receivingServerAddress, String receivingServerPort) {
+        sender.addAddress(receivingServerAddress, receivingServerPort);
     }
 
     public void initPropagator(String propagationPort) {

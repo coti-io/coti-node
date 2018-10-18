@@ -94,6 +94,7 @@ public class TransactionCreationService {
             transactionData.setGenesis(true);
 
             transactionHelper.attachTransactionToCluster(transactionData);
+            propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode));
         }
     }
 
