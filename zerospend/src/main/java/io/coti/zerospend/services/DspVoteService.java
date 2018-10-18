@@ -9,9 +9,9 @@ import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeDspVoteService;
 import io.coti.basenode.services.TransactionIndexService;
 import io.coti.basenode.services.interfaces.IBalanceService;
+import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
@@ -24,9 +24,7 @@ import java.util.concurrent.ConcurrentMap;
 @Slf4j
 @Service
 public class DspVoteService extends BaseNodeDspVoteService {
-    @Value("#{'${dsp.server.addresses}'.split(',')}")
-    private List<String> dspServerAddresses;
-
+    private static final String NODE_HASH_ENDPOINT = "/nodeHash";
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
@@ -41,8 +39,11 @@ public class DspVoteService extends BaseNodeDspVoteService {
     private DspConsensusCrypto dspConsensusCrypto;
     @Autowired
     private IBalanceService balanceService;
+    @Autowired
+    private INetworkService networkService;
+
+
     private ConcurrentMap<Hash, List<DspVote>> transactionHashToVotesListMapping;
-    private static final String NODE_HASH_ENDPOINT = "/nodeHash";
     private List<Hash> currentLiveDspNodes;
 
     @Override
@@ -98,25 +99,32 @@ public class DspVoteService extends BaseNodeDspVoteService {
 
     @Scheduled(fixedDelay = 10000, initialDelay = 5000)
     private void updateLiveDspNodesList() {
-        List<Hash> onlineDspHashes = new LinkedList<>();
-        RestTemplate restTemplate = new RestTemplate();
-        for (String dspServerAddress : dspServerAddresses) {
-            try {
-                Hash voterHash = restTemplate.getForObject(dspServerAddress + NODE_HASH_ENDPOINT, Hash.class);
-                if (voterHash == null) {
-                    log.error("Voter hash received is null: {}", dspServerAddress);
-                } else {
-                    onlineDspHashes.add(voterHash);
+        if (!networkService.getNetwork().getDspNodes().isEmpty()) {
+            List<Node> dspsList = networkService.getNetwork().getDspNodes();
+            List<Hash> onlineDspHashes = new LinkedList<>();
+            RestTemplate restTemplate = new RestTemplate();
+            for (Node dspServerNode : dspsList) {
+                try {
+
+                    Hash voterHash = restTemplate.getForObject(dspServerNode.getHttpFullAddress() + NODE_HASH_ENDPOINT, Hash.class);
+                    if (voterHash == null) {
+                        log.error("Voter hash received is null: {}", dspServerNode.getHttpFullAddress());
+                    } else {
+                        onlineDspHashes.add(voterHash);
+                    }
+                } catch (RestClientException e) {
+                    log.error("Unresponsive Dsp Node: {}", dspServerNode.getHttpFullAddress());
                 }
-            } catch (RestClientException e) {
-                log.error("Unresponsive Dsp Node: {}", dspServerAddress);
             }
+            if (onlineDspHashes.isEmpty()) {
+                log.error("No Dsp Nodes are online...");
+            }
+            currentLiveDspNodes = onlineDspHashes;
+            log.info("Updated live dsp nodes list. Count: {}", currentLiveDspNodes.size());
         }
-        if (onlineDspHashes.isEmpty()) {
-            log.error("No Dsp Nodes are online...");
+        else{
+            log.info("Dsp server addresses list didn't arrive by the node manager ");
         }
-        currentLiveDspNodes = onlineDspHashes;
-        log.info("Updated live dsp nodes list. Count: {}", currentLiveDspNodes.size());
     }
 
     @Scheduled(fixedDelay = 1000)
@@ -139,7 +147,6 @@ public class DspVoteService extends BaseNodeDspVoteService {
                         log.debug("Undecided majority: {}", currentVotes.getHash());
                     }
                     transactionVotes.put(currentVotes);
-
                 }
             }
         }
@@ -198,5 +205,8 @@ public class DspVoteService extends BaseNodeDspVoteService {
 
     @Override
     public void continueHandleVoteConclusion(DspConsensusResult dspConsensusResult) {
+
     }
+
+   
 }

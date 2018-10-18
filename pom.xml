@@ -16,6 +16,7 @@
         <module>zerospend</module>
         <module>tools</module>
         <module>trustscore</module>
+        <module>nodemanager</module>
     </modules>
 
     <name>coti-node</name>

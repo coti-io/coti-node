@@ -6,7 +6,15 @@ import java.util.function.Consumer;
 
 public interface IPropagationSubscriber {
 
-    void init(List<String> propagationServerAddresses, HashMap<String, Consumer<Object>> messagesHandler);
+    void init(HashMap<String, Consumer<Object>> messagesHandler);
+
 
     void shutdown();
+
+    void addAddress(String propagationServerAddress, String propagationServerPort);
+        
+    void addAddress(String propagationServerAddressAndPort);
+
+
+    void subscribeToChannels();
 }
