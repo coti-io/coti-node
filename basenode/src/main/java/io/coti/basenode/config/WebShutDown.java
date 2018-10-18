@@ -28,7 +28,7 @@ public class WebShutDown implements TomcatConnectorCustomizer {
         if (executor instanceof ThreadPoolExecutor) {
             try {
                 log.info("Shutting down WebServer. Please wait until all transactions are processed.");
-                log.info("{}",contextClosedEvent);
+                log.info("{}", contextClosedEvent);
                 ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) executor;
                 threadPoolExecutor.shutdown();
                 if (!threadPoolExecutor.awaitTermination(TIMEOUT, TimeUnit.SECONDS)) {

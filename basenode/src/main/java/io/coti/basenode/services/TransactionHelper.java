@@ -114,10 +114,10 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     private void addDspResultToDb(DspConsensusResult dspConsensusResult) {
-        if(dspConsensusResult == null) {
+        if (dspConsensusResult == null) {
             return;
         }
-        if(transactionIndexes.getByHash(new Hash(dspConsensusResult.getIndex())) == null) {
+        if (transactionIndexes.getByHash(new Hash(dspConsensusResult.getIndex())) == null) {
             balanceService.setDspcToTrue(dspConsensusResult);
         }
 
@@ -145,8 +145,8 @@ public class TransactionHelper implements ITransactionHelper {
 
     public boolean startHandleTransaction(TransactionData transactionData) {
         synchronized (transactionData) {
-            if(isTransactionExists(transactionData)) {
-                if (!isTransactionHashProcessing(transactionData.getHash())){
+            if (isTransactionExists(transactionData)) {
+                if (!isTransactionHashProcessing(transactionData.getHash())) {
                     addDspResultToDb(transactionData.getDspConsensusResult());
                 }
                 return false;

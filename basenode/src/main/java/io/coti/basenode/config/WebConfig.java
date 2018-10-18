@@ -16,10 +16,12 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/**").allowedMethods("GET", "POST", "PUT", "DELETE").allowedOrigins("*")
                 .allowedHeaders("*");
     }
+
     @Bean
     public WebShutDown webShutDown() {
         return new WebShutDown();
     }
+
     @Bean
     public ConfigurableServletWebServerFactory webServerFactory(final WebShutDown webShutdown) {
         TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory();

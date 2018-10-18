@@ -11,7 +11,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.zeromq.ZMQ;
 
-import javax.annotation.PreDestroy;
 import java.util.List;
 
 @Slf4j

@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
 
-import javax.annotation.PreDestroy;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -97,7 +96,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         }
         LinkedList<ZeroMQMessageData> remainingMessages = new LinkedList<>();
         messageQueue.drainTo(remainingMessages);
-        if(remainingMessages.size() != 0) {
+        if (remainingMessages.size() != 0) {
             log.info("Please wait to process {} remaining messages", remainingMessages.size());
             remainingMessages.forEach(zeroMQMessageData -> propagationProcess(zeroMQMessageData));
         }
