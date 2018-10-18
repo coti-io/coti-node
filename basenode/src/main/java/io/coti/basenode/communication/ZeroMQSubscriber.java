@@ -14,6 +14,7 @@ import org.zeromq.ZMQ;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -21,8 +22,8 @@ import java.util.function.Consumer;
 public class ZeroMQSubscriber implements IPropagationSubscriber {
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket propagationReceiver;
-    List<String> channelsToSubscribe;
-    Thread receiverThread;
+    private List<String> channelsToSubscribe;
+    private Thread receiverThread;
 
     @Autowired
     private ISerializer serializer;
@@ -89,7 +90,14 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
 
     public void addAddress(String propagationAddressAndPort){
         log.info("ZeroMQ subscriber connecting to address {}", propagationAddressAndPort);
+        try {
+            TimeUnit.SECONDS.sleep(1);
+        } catch (InterruptedException e) {
+            log.error("Exception in sleep",e);
+        }
         propagationReceiver.connect(propagationAddressAndPort);
+        log.info("address added");
+
     }
 
     public void subscribeToChannels(){

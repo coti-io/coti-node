@@ -51,6 +51,6 @@ public class ZeroMQSender implements ISender {
         ZMQ.Socket sender = zeroMQContext.socket(ZMQ.DEALER);
         ZeroMQUtils.bindToRandomPort(sender);
         sender.connect("tcp://" + address + ":" + port);
-        receivingAddressToSenderSocketMapping.putIfAbsent(address, sender);
+        receivingAddressToSenderSocketMapping.putIfAbsent("tcp://" + address + ":" + port, sender);
     }
 }

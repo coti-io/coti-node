@@ -30,9 +30,10 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
     public <T extends IEntity> void propagate(T toPropagate, List<NodeType> subscriberNodeTypes) {
         synchronized (propagator) {
             subscriberNodeTypes.forEach(nodeType -> {
-                log.debug("Propagating {} to {}", toPropagate.getHash().toHexString(), Channel.getChannelString(toPropagate.getClass(), nodeType));
+                String channelString = Channel.getChannelString(toPropagate.getClass(), nodeType);
+                log.debug("Propagating {} to {}", toPropagate.getHash().toHexString(), channelString );
                 byte[] message = serializer.serialize(toPropagate);
-                propagator.sendMore(Channel.getChannelString(toPropagate.getClass(), nodeType).getBytes());
+                propagator.sendMore(channelString.getBytes());
                 propagator.send(message);
             });
         }

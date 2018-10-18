@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -28,9 +29,9 @@ public class NodesService {
     public void updateNetworkChanges() {
         log.info("Propagating network changes...");
         try {
-            Thread.sleep(2000);
+            TimeUnit.SECONDS.sleep(2);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+           log.error("An error was thrown",e);
         }
         propagationPublisher.propagate(network, Arrays.asList(NodeType.FullNode, NodeType.ZeroSpendServer, NodeType.DspNode));
     }
@@ -57,4 +58,6 @@ public class NodesService {
     public Network getAllNodes() {
         return network;
     }
+
+
 }
