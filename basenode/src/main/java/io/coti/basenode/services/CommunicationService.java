@@ -46,6 +46,7 @@ public class CommunicationService {
                 addressService.handlePropagatedAddress((AddressData) data));
         classNameToSubscriberHandlerMapping.put(Channel.getChannelString(DspConsensusResult.class, nodeType), data ->
                 dspVoteService.handleVoteConclusion((DspConsensusResult) data));
+        propagationSubscriber.addMessageHandler(classNameToSubscriberHandlerMapping);
     }
 
     public void addSubscription(String propagationServerAddress, String propagationServerPort){

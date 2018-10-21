@@ -44,8 +44,8 @@ public class NetworkService implements INetworkService {
     @Override
     public void handleNetworkChanges(Network newNetwork) {
         log.info("New newNetwork structure received: {}", newNetwork);
-        Node zerospendNode = newNetwork.getZerospendServer();
-        if (zerospendNode != null && zerospendNode != this.network.getZerospendServer() ) {
+            Node zerospendNode = newNetwork.getZerospendServer();
+        if (zerospendNode != null && recoveryServerAddress.isEmpty() ) {
             log.info("Zero spend server {} is about to be added", zerospendNode.getHttpFullAddress());
             recoveryServerAddress = zerospendNode.getHttpFullAddress();
             communicationService.addSender(zerospendNode.getAddress(), zerospendNode.getReceivingPort());

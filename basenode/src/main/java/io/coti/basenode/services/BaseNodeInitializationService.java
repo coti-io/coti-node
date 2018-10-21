@@ -1,7 +1,7 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.communication.ZeroMQSubscriber;
 import io.coti.basenode.communication.Channel;
+import io.coti.basenode.communication.ZeroMQSubscriber;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.data.Network;
 import io.coti.basenode.data.Node;
@@ -17,8 +17,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -31,9 +31,11 @@ import java.util.function.Consumer;
 @Service
 public abstract class BaseNodeInitializationService {
 
+    @Autowired
+    protected INetworkService networkService;
+    protected Node node;
     @Value("${node.manager.address}")
     private String nodeManagerAddress;
-
     @Autowired
     private Transactions transactions;
     @Autowired
@@ -60,9 +62,6 @@ public abstract class BaseNodeInitializationService {
     private ZeroMQSubscriber zeroMQSubscriber;
     @Autowired
     private IPropagationSubscriber propagationSubscriber;
-    @Autowired
-    protected INetworkService networkService;
-    protected Node node;
 
     @PostConstruct
     public void init() {
@@ -90,37 +89,36 @@ public abstract class BaseNodeInitializationService {
         if (!networkService.getRecoveryServerAddress().isEmpty()) {
             List<TransactionData> missingTransactions = requestMissingTransactions(maxTransactionIndex.get() + 1);
             if (missingTransactions != null) {
-                    int threadPoolSize = 1;
-                    log.info("{} threads running for missing transactions", threadPoolSize);
-                    ExecutorService executorService = Executors.newFixedThreadPool(threadPoolSize);
-                    List<Callable<Object>> missingTransactionsTasks = new ArrayList<>(missingTransactions.size());
+                int threadPoolSize = 1;
+                log.info("{} threads running for missing transactions", threadPoolSize);
+                ExecutorService executorService = Executors.newFixedThreadPool(threadPoolSize);
+                List<Callable<Object>> missingTransactionsTasks = new ArrayList<>(missingTransactions.size());
                 missingTransactions.forEach(transactionData ->
-                            missingTransactionsTasks.add(Executors.callable(() -> transactionService.handlePropagatedTransaction(transactionData))));
-                    executorService.invokeAll(missingTransactionsTasks);
+                        missingTransactionsTasks.add(Executors.callable(() -> transactionService.handlePropagatedTransaction(transactionData))));
+                executorService.invokeAll(missingTransactionsTasks);
             }
         }
         balanceService.finalizeInit();
         clusterService.finalizeInit();
-            zeroMQSubscriber.initPropagationHandler();
         log.info("Transactions Load completed");
     }
 
     private void initCommunication() {
         HashMap<String, Consumer<Object>> classNameToSubscriberHandlerMapping = new HashMap<>();
         classNameToSubscriberHandlerMapping.put(Channel.getChannelString(Network.class, getNodeProperties().getNodeType()), newNetwork ->
-                {
-                    networkService.handleNetworkChanges((Network) newNetwork);
-                });
+        {
+            networkService.handleNetworkChanges((Network) newNetwork);
+        });
 
         monitorService.init();
 
-        propagationSubscriber.init(classNameToSubscriberHandlerMapping);
+        propagationSubscriber.startListeneing();
+        propagationSubscriber.addMessageHandler(classNameToSubscriberHandlerMapping);
         propagationSubscriber.addAddress(networkService.getNetwork().nodeManagerPropagationAddress);
-        propagationSubscriber.subscribeToChannels();
         networkService.connectToCurrentNetwork();
     }
 
-    private void initSubscriber(){
+    private void initSubscriber() {
 
     }
 
@@ -155,7 +153,7 @@ public abstract class BaseNodeInitializationService {
         }
     }
 
-    public void connectToNetwork(){
+    public void connectToNetwork() {
         node = getNodeProperties();
         Network network = connectToNodeManager(node);
         networkService.saveNetwork(network);
