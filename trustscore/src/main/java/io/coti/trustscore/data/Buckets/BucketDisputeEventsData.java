@@ -10,9 +10,5 @@ public class BucketDisputeEventsData extends BucketEventData<DisputeEventData> {
 
 
 
-    @Override
-    protected void addEventToCalculations(DisputeEventData eventData) {
-
-    }
 
 }

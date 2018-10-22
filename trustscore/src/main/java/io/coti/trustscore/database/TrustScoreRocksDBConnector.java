@@ -2,6 +2,7 @@ package io.coti.trustscore.database;
 
 import io.coti.basenode.database.RocksDBConnector;
 import io.coti.trustscore.model.BucketTransactionEvents;
+import io.coti.trustscore.model.TransactionEvents;
 import io.coti.trustscore.model.TrustScores;
 import io.coti.trustscore.model.UserBehaviourEvents;
 import lombok.extern.slf4j.Slf4j;
@@ -20,9 +21,11 @@ public class TrustScoreRocksDBConnector extends RocksDBConnector {
 
 
     private void addTrustScoreColumnFamilies() {
+        columnFamilyClassNames.add(BucketTransactionEvents.class.getName());
         columnFamilyClassNames.add(UserBehaviourEvents.class.getName());
         columnFamilyClassNames.add(TrustScores.class.getName());
-        columnFamilyClassNames.add(BucketTransactionEvents.class.getName());
+        columnFamilyClassNames.add(TransactionEvents.class.getName());
+
     }
 
 }

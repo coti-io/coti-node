@@ -171,7 +171,7 @@ public class BucketTransactionServiceTest {
     public void decayDays(int numOfDays) {
         // simulation of moving to a new day
         bucketTransactionEventsData.setLastUpdate(decreaseTodayDateByDays(numOfDays));
-        Map<Long, Pair<Double, Double>> CurrentMonthBalanceWithDateChangedEntry = new HashMap<>();
+        HashMap<Long, Pair<Double, Double>> CurrentMonthBalanceWithDateChangedEntry = new HashMap<>();
         for (Map.Entry<Long, Pair<Double, Double>> currentMonthBalanceEntry : bucketTransactionEventsData.getCurrentMonthBalance().entrySet()) {
             long dateBeforeDEcayed = currentMonthBalanceEntry.getKey();
             long oldTime = addToDateByDays(dateBeforeDEcayed, -numOfDays).getTime();

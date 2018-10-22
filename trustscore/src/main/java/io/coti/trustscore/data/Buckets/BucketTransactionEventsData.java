@@ -10,7 +10,6 @@ import lombok.Synchronized;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Map;
 
 import static io.coti.trustscore.utils.DatesCalculation.setDateOnBeginningOfDay;
 
@@ -29,7 +28,7 @@ public class BucketTransactionEventsData extends BucketEventData<TransactionEven
     private double currentDateTurnOverContribution;
     private double oldDateTurnOverContribution;
 
-    private Map<Long, Pair<Double, Double>> currentMonthBalance;
+    private HashMap<Long, Pair<Double, Double>> currentMonthBalance;
     private double currentMonthBalanceContribution;
     private double oldMonthBalanceContribution;
 
@@ -41,12 +40,6 @@ public class BucketTransactionEventsData extends BucketEventData<TransactionEven
         currentDateNumberOfTransactions++;
     }
 
-
-
-    @Override
-    @Synchronized
-    protected void addEventToCalculations(TransactionEventData eventData) {
-    }
 
     @Override
     public Hash getHash() {

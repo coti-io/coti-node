@@ -34,15 +34,11 @@ public abstract class BucketEventData<T extends EventData> implements Serializab
 
     public void addEventToBucket(T eventData) {
         if (isEventExistsInBucket(eventData)) return;
-        addEventToCalculations(eventData);
-
         //TODO: if we have a problem here, event can be added without calculated
         bucketEvents.put(eventData.getUniqueIdentifier(), eventData);
-
-
     }
 
-    protected abstract void addEventToCalculations(T eventData);
+
 
 
 

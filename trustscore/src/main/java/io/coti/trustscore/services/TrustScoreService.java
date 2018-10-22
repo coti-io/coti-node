@@ -69,8 +69,7 @@ public class TrustScoreService {
     @Autowired
     private TransactionEvents transactionEvents;
 
-    @Autowired
-    private BucketTransactionEvents bucketTransactionEvents;
+
 
     private List<BucketEventService> bucketEventServiceList;
 
@@ -115,7 +114,7 @@ public class TrustScoreService {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    public void addTransactionToTsCalculation(TransactionData transactionData) {
+    public synchronized void addTransactionToTsCalculation(TransactionData transactionData) {
         if (transactionData.isZeroSpend() || transactionData.getDspConsensusResult() == null ||
                 !transactionData.getDspConsensusResult().isDspConsensus()) return;
 
@@ -136,11 +135,10 @@ public class TrustScoreService {
             trustScoreData.addEvent(transactionEventData);
 
             transactionEvents.put(transactionData);
-            trustScores.put(trustScoreData);
 
-            BucketTransactionEventsData bucketTransactionEventsData = bucketTransactionService.addEventToCalculations(transactionEventData,
+            bucketTransactionService.addEventToCalculations(transactionEventData,
                     (BucketTransactionEventsData) trustScoreData.getLastBucketEventData().get(transactionEventData.getEventType()));
-            bucketTransactionEvents.put(bucketTransactionEventsData);
+            trustScores.put(trustScoreData);
         }
     }
 
@@ -152,12 +150,7 @@ public class TrustScoreService {
                     .body(new Response(NON_EXISTING_USER_MESSAGE, STATUS_ERROR));
         }
 
-
-
         double currentTrustScore = calculateUserTrustScore(trustScores.getByHash(userHash));
-
-
-
         GetUserTrustScoreResponse getUserTrustScoreResponse = new GetUserTrustScoreResponse(userHash.toHexString(), currentTrustScore);
         return ResponseEntity.status(HttpStatus.OK).body(getUserTrustScoreResponse);
     }

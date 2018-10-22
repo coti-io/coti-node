@@ -82,7 +82,7 @@ public class BucketTransactionsCalculatorTest {
         BucketTransactionsCalculator bucketTransactionsCalculator = new BucketTransactionsCalculator(bucketTransactionEventsData);
         bucketTransactionEventsData.setLastUpdate(decreaseTodayDateByDays(3));
         bucketTransactionEventsData.setOldMonthBalanceContribution(7);
-        Map<Long, Pair<Double, Double>> currentMonthBalance = new HashMap<>();
+        HashMap<Long, Pair<Double, Double>> currentMonthBalance = new HashMap<>();
         currentMonthBalance.put(setDateOnBeginningOfDay(decreaseTodayDateByDays(0)).getTime(), new Pair<>(60.0, 8.5));
 
         bucketTransactionEventsData.setCurrentMonthBalance(currentMonthBalance);
