@@ -1,9 +1,9 @@
 package io.coti.trustscore.rulesData;
 
-public enum TransactionEventScoreType {
-    TRANSACTION_FREQUENCY("TransactionFrequency"),
-    TURNOVER("Turnover"),
-    AVERAGE_BALANCE("AverageBalance");
+public class TransactionEventScoreType {
+    public static String TRANSACTION_FREQUENCY = "TransactionFrequency";
+    public static  String TURNOVER = "Turnover";
+    public static String AVERAGE_BALANCE = "AverageBalance";
 
     private String transactionEventScoreType;
 

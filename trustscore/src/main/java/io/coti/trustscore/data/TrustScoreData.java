@@ -6,6 +6,7 @@ import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.trustscore.data.Buckets.BucketEventData;
 import io.coti.trustscore.data.Enums.EventType;
+import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.Events.EventData;
 import io.coti.trustscore.utils.BucketBuilder;
 import lombok.Data;
@@ -14,61 +15,46 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Stream;
+
 @Slf4j
 @Data
 public class TrustScoreData implements IEntity, ISignValidatable {
     private Hash userHash;
-    private Double trustScore;
     private Double kycTrustScore;
     private SignatureData signature;
     private Hash kycServerPublicKey;
     private Date createTime;
-    private Date lastUpdateTime;
     private HashMap<EventType, BucketEventData> lastBucketEventData;
     private HashMap<EventType, List<Double>> bucketsHistoryCalculations;
+    private UserType userType;
 
-    public TrustScoreData(Hash userHash, double trustScore) {
+    public TrustScoreData(Hash userHash, double kycTrustScore, SignatureData signature, Hash kycServerPublicKey, UserType userType) {
         this.userHash = userHash;
-        this.trustScore = trustScore;
-        this.lastUpdateTime = new Date();
-    }
+        this.kycTrustScore = kycTrustScore;
+        this.signature = signature;
+        this.kycServerPublicKey = kycServerPublicKey;
+        this.userType = userType;
+        this.createTime = new Date();
 
-    public double getCurrentTs() {
-        if (shouldRecalculate())
-            calculateTsOnNewDate();
-        return trustScore;
-    }
-
-    private boolean shouldRecalculate() {
-
-        //TODO: need to change here to check date
-        return true;
-    }
-
-    private void calculateTsOnNewDate() {
-        DoShiftToBuckets();
-        double currentTsValue = trustScore;
-        for (Map.Entry<EventType, BucketEventData> entry : lastBucketEventData.entrySet()) {
-            currentTsValue += calculateBucketTypeMagnitude(bucketsHistoryCalculations.get(entry.getKey())) + entry.getValue().getCalculatedDelta();
+        lastBucketEventData = new HashMap<>();
+        bucketsHistoryCalculations = new HashMap<>();
+        for (EventType event: EventType.values()) {
+            try {
+                lastBucketEventData.put(event,BucketBuilder.CreateBucket(event,userType));
+            }
+            catch (IllegalAccessException  | InstantiationException e) {
+                    e.printStackTrace();
+            }
         }
-        trustScore = currentTsValue;
-    }
-
-    private double calculateBucketTypeMagnitude(List<Double> listOfEvents) {
-        int length = listOfEvents.size();
-        double sumValue = listOfEvents.stream().mapToDouble(Double::doubleValue).sum();
-        return sumValue / length;
-    }
-
-    public void DoShiftToBuckets() {
 
     }
+
     public void addEvent(EventData event) {
 
         if (!lastBucketEventData.containsKey(event.getEventType())) {
             try {
-                lastBucketEventData.put(event.getEventType(), BucketBuilder.CreateBucket(event.getEventType()));
+                lastBucketEventData.put(event.getEventType(), BucketBuilder.CreateBucket(event.getEventType(), this.userType));
             } catch (IllegalAccessException | InstantiationException e) {
                 log.error("error while trying create a bucket", e);
             }
@@ -76,14 +62,6 @@ public class TrustScoreData implements IEntity, ISignValidatable {
         BucketEventData lastBucket = lastBucketEventData.get(event.getEventType());
         lastBucket.addEventToBucket(event);
     }
-
-    public TrustScoreData(Hash userHash, double kycTrustScore, SignatureData signature, Hash kycServerPublicKey) {
-        this.userHash = userHash;
-        this.kycTrustScore = kycTrustScore;
-        this.signature = signature;
-        this.kycServerPublicKey = kycServerPublicKey;
-    }
-
 
     @Override
     public Hash getHash() {

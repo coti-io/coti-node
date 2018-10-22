@@ -1,6 +1,8 @@
 package io.coti.trustscore.rulesData;
 
 
+import lombok.Data;
+
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -17,4 +19,18 @@ public class Component {
     private double weight;
     @XmlElement(name = "decay")
     private String decay;
+
+    public String getDecay()
+    {
+        return decay;
+    }
+
+
+    public double getWeight()
+    {
+        return weight;
+    }
+
+    public String getName(){return  name;}
+
 }

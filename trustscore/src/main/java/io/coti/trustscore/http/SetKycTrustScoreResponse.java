@@ -13,7 +13,6 @@ public class SetKycTrustScoreResponse extends BaseResponse {
     public SetKycTrustScoreResponse(TrustScoreData trustScoreData) {
         super();
         this.userHash = trustScoreData.getUserHash().toHexString();
-        this.trustScore = trustScoreData.getTrustScore();
         this.kycTrustScore = trustScoreData.getKycTrustScore();
 
     }

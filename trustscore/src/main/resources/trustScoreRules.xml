@@ -37,7 +37,7 @@
                     <calculating>N = count(outcomingTxForAllAddressesForTheUser) within a day</calculating>
                     <nonlinearFunction>tanh(N/400*1.098612289)</nonlinearFunction>
                     <weight>0.75</weight>
-                    <decay>ln(2)/30</decay>
+                    <decay>exp(-ln(2)/30*T)</decay>
                     <valueToStore>TStnum</valueToStore>
                     <currentValue>TStnum + tanh(N/400*1.098612289)</currentValue>
                     <dayShift>TStnum = TStnum * exp(-decay) + currentValue</dayShift>
@@ -53,7 +53,7 @@
                     <calculating>T = sum(outcomingTxForAllAddressesForTheUser) within a day</calculating>
                     <nonlinearFunction>tanh(T/4000*1.098612289)</nonlinearFunction>
                     <weight>0.75</weight>
-                    <decay>ln(2)/30</decay>
+                    <decay>exp(-ln(2)/30*T)</decay>
                     <valueToStore>TStsum</valueToStore>
                     <currentValue>TStsum + tanh(T/4000*1.098612289)</currentValue>
                     <dayShift>TStnum = TStsum * exp(-decay) + currentValue</dayShift>
@@ -74,7 +74,7 @@
                     <newaddress>New address is unknown before address which is first time debited</newaddress>
                     <newaddress>There can be several TSbal_new_a within a day</newaddress>
                     <nonlinearFunction>tanh(B/400*1.098612289)</nonlinearFunction>
-                    <decay>ln(2)/30</decay>
+                    <decay>exp(-ln(2)/30*T)</decay>
                     <movingSum>
                         sum(exp(-decay*i) * nonlinearFunction(TSbal[i] + sum(TSbal_new_a[i] for all new addresses)) for
                         all stored days)
@@ -243,7 +243,7 @@
                     <calculating>N = count(outcomingTxForAllAddressesForTheUser) within a day</calculating>
                     <nonlinearFunction>tanh(N/400*1.098612289)</nonlinearFunction>
                     <weight>0.75</weight>
-                    <decay>ln(2)/30</decay>
+                    <decay>exp(-ln(2)/30*T)</decay>
                     <valueToStore>TStnum</valueToStore>
                     <currentValue>TStnum + tanh(N/400*1.098612289)</currentValue>
                     <dayShift>TStnum = TStnum * exp(-decay) + currentValue</dayShift>
@@ -259,7 +259,7 @@
                     <calculating>T = sum(outcomingTxForAllAddressesForTheUser) within a day</calculating>
                     <nonlinearFunction>tanh(T/4000*1.098612289)</nonlinearFunction>
                     <weight>0.75</weight>
-                    <decay>ln(2)/30</decay>
+                    <decay>exp(-ln(2)/30*T)</decay>
                     <valueToStore>TStsum</valueToStore>
                     <currentValue>TStsum + tanh(T/4000*1.098612289)</currentValue>
                     <dayShift>TStnum = TStsum * exp(-decay) + currentValue</dayShift>
@@ -280,7 +280,7 @@
                     <newaddress>New address is unknown before address which is first time debited</newaddress>
                     <newaddress>There can be several TSbal_new_a within a day</newaddress>
                     <nonlinearFunction>tanh(B/400*1.098612289)</nonlinearFunction>
-                    <decay>ln(2)/30</decay>
+                    <decay>exp(-ln(2)/30*T)</decay>
                     <movingSum>
                         sum(exp(-decay*i) * nonlinearFunction(TSbal[i] + sum(TSbal_new_a[i] for all new addresses)) for
                         all stored days)
@@ -427,7 +427,7 @@
                     <calculating>N = count(outcomingTxForAllAddressesForTheUser) within a day</calculating>
                     <nonlinearFunction>tanh(N/40000*1.098612289)</nonlinearFunction>
                     <weight>1.5</weight>
-                    <decay>ln(2)/30</decay>
+                    <decay>exp(-ln(2)/30*T)</decay>
                     <valueToStore>TStnum</valueToStore>
                     <currentValue>TStnum + tanh(N/40000*1.098612289)</currentValue>
                     <dayShift>TStnum = TStnum * exp(-decay) + currentValue</dayShift>
@@ -443,7 +443,7 @@
                     <calculating>T = sum(outcomingTxForAllAddressesForTheUser) within a day</calculating>
                     <nonlinearFunction>tanh(T/400000*1.098612289)</nonlinearFunction>
                     <weight>1.0</weight>
-                    <decay>ln(2)/30</decay>
+                    <decay>exp(-ln(2)/30*T)</decay>
                     <valueToStore>TStsum</valueToStore>
                     <currentValue>TStsum + tanh(T/400000*1.098612289)</currentValue>
                     <dayShift>TStnum = TStsum * exp(-decay) + currentValue</dayShift>

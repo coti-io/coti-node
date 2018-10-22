@@ -1,6 +1,5 @@
 package io.coti.trustscore.services;
 
-import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
@@ -10,14 +9,21 @@ import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.TransactionTrustScoreResponseData;
 import io.coti.trustscore.crypto.TrustScoreCrypto;
 import io.coti.trustscore.crypto.TrustScoreEventCrypto;
+import io.coti.trustscore.data.Buckets.BucketEventData;
 import io.coti.trustscore.data.Buckets.BucketTransactionEventsData;
+import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.Events.CentralEventData;
-import io.coti.trustscore.data.Events.EventData;
 import io.coti.trustscore.data.Events.TransactionEventData;
 import io.coti.trustscore.data.TrustScoreData;
 import io.coti.trustscore.http.*;
+import io.coti.trustscore.model.BucketTransactionEvents;
 import io.coti.trustscore.model.TransactionEvents;
 import io.coti.trustscore.model.TrustScores;
+import io.coti.trustscore.rulesData.Component;
+import io.coti.trustscore.rulesData.InitialTrustType;
+import io.coti.trustscore.rulesData.RulesData;
+import io.coti.trustscore.utils.DatesCalculation;
+import io.coti.trustscore.utils.MathCalculation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,10 +32,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import java.io.File;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+import java.util.Vector;
 
 import static io.coti.basenode.http.HttpStringConstants.*;
 
@@ -44,51 +55,54 @@ public class TrustScoreService {
 
     @Autowired
     private TrustScoreEventCrypto trustScoreEventCrypto;
+
     @Autowired
     private TrustScores trustScores;
-    @Autowired
-    private TrustScoreRulesInitService trustScoreRulesInitService;
+
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
 
     @Autowired
     private BucketTransactionService bucketTransactionService;
 
-    @Value("#{'${trustscore.server.addresses}'.split(',')}")
-    private List<String> trustscoreServerAddresses;
 
-    @Autowired
-    private ISender sender;
-
-//    @Autowired
-//    private TrustScores trustScoresUsers;
     @Autowired
     private TransactionEvents transactionEvents;
+
+    @Autowired
+    private BucketTransactionEvents bucketTransactionEvents;
+
+    private List<BucketEventService> bucketEventServiceList;
 
     @PostConstruct
     private void init() {
         log.info("{} is up", this.getClass().getSimpleName());
+        bucketEventServiceList = new Vector<>();
+        bucketEventServiceList.add(bucketTransactionService);
+        RulesData rulesData = loadRulesFromFile();
+        bucketTransactionService.init(rulesData);
     }
 
-    public ResponseEntity<BaseResponse> getUserTrustScore(Hash userHash) {
-        TrustScoreData trustScoreData = trustScores.getByHash(userHash);
-        if (trustScoreData == null) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new Response(NON_EXISTING_USER_MESSAGE, STATUS_ERROR));
+    private RulesData loadRulesFromFile() {
+        RulesData rulesData = null;
+        try {
+            ClassLoader classLoader = getClass().getClassLoader();
+            File file = new File(classLoader.getResource("trustScoreRules.xml").getFile());
+            JAXBContext jaxbContext = JAXBContext.newInstance(RulesData.class);
+            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+            rulesData = (RulesData) jaxbUnmarshaller.unmarshal(file);
+        } catch (JAXBException e) {
+            log.error("Error reading from XML file", e);
+            log.error("Shutting down!");
+            System.exit(1);
         }
-
-        GetUserTrustScoreResponse getUserTrustScoreResponse = new GetUserTrustScoreResponse(userHash.toHexString(), trustScoreData.getTrustScore());
-        return ResponseEntity.status(HttpStatus.OK).body(getUserTrustScoreResponse);
+        return rulesData;
     }
 
-    public void sendEventToTrustScoreNodes(EventData eventData) {
-        trustscoreServerAddresses.forEach(address -> sender.send(eventData, address));
-    }
 
     public ResponseEntity<BaseResponse> addCentralServerEvent(InsertTrustScoreEventRequest request) {
 
-        CentralEventData centralEventData = request.convertToCentralEvent(new Hash(kycServerPublicKey));
+        CentralEventData centralEventData = request.convertToCentralEvent();
         if (!trustScoreEventCrypto.verifySignature(centralEventData)) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
@@ -98,7 +112,6 @@ public class TrustScoreService {
 
         //TODO: here we need to add event to the appropiate bucket
 
-        sendEventToTrustScoreNodes(centralEventData);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
@@ -112,9 +125,7 @@ public class TrustScoreService {
 
         TrustScoreData trustScoreData = trustScores.getByHash(transactionData.getSenderHash());
 
-//        if (trustScoreData == null)
-//            trustScoreData = new TrustScoreData(transactionData.getSenderHash(), UserType.WALLET);
-//        //TODO: case if transaction belong to the day before but only received now.
+        //TODO: case if transaction belong to the day before but only received now.
 
         if (currentDate.equals(transactionConsensusDate)) {
 
@@ -123,12 +134,32 @@ public class TrustScoreService {
 
             TransactionEventData transactionEventData = new TransactionEventData(transactionData);
             trustScoreData.addEvent(transactionEventData);
-            transactionEvents.put(transactionData);
-            //trustScores.put(trustScoreData);
 
-            bucketTransactionService.addEventToCalculations(transactionEventData,
+            transactionEvents.put(transactionData);
+            trustScores.put(trustScoreData);
+
+            BucketTransactionEventsData bucketTransactionEventsData = bucketTransactionService.addEventToCalculations(transactionEventData,
                     (BucketTransactionEventsData) trustScoreData.getLastBucketEventData().get(transactionEventData.getEventType()));
+            bucketTransactionEvents.put(bucketTransactionEventsData);
         }
+    }
+
+    public ResponseEntity<BaseResponse> getUserTrustScore(Hash userHash) {
+        TrustScoreData trustScoreData = trustScores.getByHash(userHash);
+        if (trustScoreData == null) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new Response(NON_EXISTING_USER_MESSAGE, STATUS_ERROR));
+        }
+
+
+
+        double currentTrustScore = calculateUserTrustScore(trustScores.getByHash(userHash));
+
+
+
+        GetUserTrustScoreResponse getUserTrustScoreResponse = new GetUserTrustScoreResponse(userHash.toHexString(), currentTrustScore);
+        return ResponseEntity.status(HttpStatus.OK).body(getUserTrustScoreResponse);
     }
 
     public ResponseEntity<BaseResponse> getTransactionTrustScore(Hash userHash, Hash transactionHash) {
@@ -139,35 +170,37 @@ public class TrustScoreService {
                     .body(new Response(NON_EXISTING_USER_MESSAGE, STATUS_ERROR));
         }
 
-        TransactionTrustScoreData transactionTrustScoreData = new TransactionTrustScoreData(userHash, transactionHash, trustScoreData.getTrustScore());
+        double currentTransactionsTrustScore = calculateUserTrustScore(trustScoreData);
+        TransactionTrustScoreData transactionTrustScoreData = new TransactionTrustScoreData(userHash, transactionHash, currentTransactionsTrustScore);
         transactionTrustScoreCrypto.signMessage(transactionTrustScoreData);
         TransactionTrustScoreResponseData transactionTrustScoreResponseData = new TransactionTrustScoreResponseData(transactionTrustScoreData);
         GetTransactionTrustScoreResponse getTransactionTrustScoreResponse = new GetTransactionTrustScoreResponse(transactionTrustScoreResponseData);
         return ResponseEntity.status(HttpStatus.OK).body(getTransactionTrustScoreResponse);
     }
 
+    private double calculateUserTrustScore(TrustScoreData trustScoreData){
+        double currentTrustScore = 0;
+        for (BucketEventService bucketEventService : bucketEventServiceList) {
+            BucketEventData bucketEventData = trustScoreData.getLastBucketEventData().get(bucketEventService.getBucketEventType());
+            currentTrustScore += bucketEventService.getBucketSumScore(bucketEventData);
+        }
+
+        Component kycComponent =  bucketTransactionService.getRulesData().getUsersRules(trustScoreData.getUserType()).getInitialTrustScore().getComponentByType(InitialTrustType.KYC);
+        int daysDifference =  DatesCalculation.calculateDaysDiffBetweenDates(new Date(),trustScoreData.getCreateTime());
+        currentTrustScore = currentTrustScore + Math.exp(-MathCalculation.evaluteExpression(kycComponent.getDecay())*daysDifference ) * trustScoreData.getKycTrustScore() * kycComponent.getWeight();
+        return currentTrustScore;
+    }
+
     public ResponseEntity<BaseResponse> setKycTrustScore(SetKycTrustScoreRequest request) {
         try {
             log.info("Setting KYC trust score: " + request.userHash + "=" + request.kycTrustScore);
-            TrustScoreData trustScoreData = new TrustScoreData(request.userHash, request.kycTrustScore, request.signature, new Hash(kycServerPublicKey));
+            TrustScoreData trustScoreData = new TrustScoreData(request.userHash, request.kycTrustScore, request.signature, new Hash(kycServerPublicKey), UserType.WALLET);
             if (!trustScoreCrypto.verifySignature(trustScoreData)) {
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new Response(KYC_TRUST_SCORE_AUTHENTICATION_ERROR, STATUS_ERROR));
             }
-            TrustScoreData dbTrustScoreData = trustScores.getByHash(trustScoreData.getUserHash());
 
-            Date date = new Date();
-            if (dbTrustScoreData != null) {
-                double updatedTrustScore = trustScoreData.getKycTrustScore() + (dbTrustScoreData.getTrustScore() - dbTrustScoreData.getKycTrustScore());
-                trustScoreData.setTrustScore(updatedTrustScore);
-                trustScoreData.setCreateTime(dbTrustScoreData.getCreateTime());
-                trustScoreData.setLastUpdateTime(date);
-            } else {
-                trustScoreData.setTrustScore(trustScoreData.getKycTrustScore());
-                trustScoreData.setCreateTime(date);
-                trustScoreData.setLastUpdateTime(date);
-            }
             trustScores.put(trustScoreData);
             SetKycTrustScoreResponse kycTrustScoreResponse = new SetKycTrustScoreResponse(trustScoreData);
             return ResponseEntity.status(HttpStatus.OK)

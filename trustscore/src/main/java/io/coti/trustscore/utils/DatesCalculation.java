@@ -5,8 +5,8 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 public class DatesCalculation {
-    public static int calculateDaysdiffBetweenDates(Date dateBefore, Date dateAfter) {
-        long difference = dateAfter.getTime() - dateBefore.getTime();
+    public static int calculateDaysDiffBetweenDates(Date firstDate, Date secondDate) {
+        long difference = Math.abs(secondDate.getTime() - firstDate.getTime());
         float daysBetween = (difference / (1000 * 60 * 60 * 24));
         return (int) daysBetween;
     }
@@ -19,5 +19,17 @@ public class DatesCalculation {
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
         return cal.getTime();
+    }
+
+    public static Date getYesterday() {
+        return decreaseTodayDateByDays(1);
+    }
+
+    public static Date decreaseTodayDateByDays(int numberOfDays) {
+        return new Date(System.currentTimeMillis() - 24 * (long) numberOfDays * 60 * 60 * 1000);
+    }
+
+    public static Date addToDateByDays(long milliSecondsDate, int numberOfDays) {
+        return new Date(milliSecondsDate + 24 * (long) numberOfDays * 60 * 60 * 1000);
     }
 }

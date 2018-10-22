@@ -12,7 +12,7 @@ public class UserScoresByType {
 
     private InitialTrustScore initialTrustScore;
     private TransactionEventsScore transactionEventScoreList;
-    private BadEventsScore badEventScoreList;
+    private BehaviorEventsScore behaviorEventsScoreList;
     private DisputedEventsScore disputedEventScoreList;
 
     public InitialTrustScore getInitialTrustScore() {
@@ -33,13 +33,13 @@ public class UserScoresByType {
         this.transactionEventScoreList = transactionEventScoreList;
     }
 
-    public BadEventsScore getBadEventsScore() {
-        return badEventScoreList;
+    public BehaviorEventsScore getBehaviorEventsScore() {
+        return behaviorEventsScoreList;
     }
 
     @XmlElement(name = "behaviorEventsScore")
-    public void setBadEventsScore(BadEventsScore badEventScoreList) {
-        this.badEventScoreList = badEventScoreList;
+    public void setBadEventsScore(BehaviorEventsScore badEventScoreList) {
+        this.behaviorEventsScoreList = badEventScoreList;
     }
 
     public DisputedEventsScore getDisputedEventsScore() {

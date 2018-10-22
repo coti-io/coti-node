@@ -79,6 +79,9 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
         this.initTransactionData();
     }
 
+    public BigDecimal getSendingAmount(){
+        return baseTransactions.get(baseTransactions.size() -1).getAmount();
+    }
 
     private void initTransactionData() {
         this.trustChainTransactionHashes = new Vector<>();

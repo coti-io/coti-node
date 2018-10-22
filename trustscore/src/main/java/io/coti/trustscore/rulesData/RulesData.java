@@ -23,6 +23,10 @@ public class RulesData {
     public HashMap<UserType, UserScoresByType> getUsersRules() {
         return users;
     }
+
+    public UserScoresByType getUsersRules(UserType userType) {
+        return users.get(userType);
+    }
 }
 
 

@@ -5,7 +5,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
 @XmlRootElement(name = "behaviorEventsScore")
-public class BadEventsScore {
+public class BehaviorEventsScore {
     @XmlElement(name = "standardEventScore")
-    private List<BadEventScore> badEventScoreList;
+    private List<BaseEventScore> baseEventScoreList;
+
+
+    public List<BaseEventScore> getBaseEventScoreList(){
+        return baseEventScoreList;
+    }
 }

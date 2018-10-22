@@ -11,13 +11,14 @@ public class MathCalculation {
 
     public static double evaluteExpression(String stringFormula) {
         Expression expression = new Expression(stringFormula);
-        return expression.calculate();
+        double result =  expression.calculate();
+        return result;
     }
 
-    public static double evaluteExpression(String stringFormula, List<FormaleArgument> parameters) {
+    public static double evaluteExpression(String stringFormula, List<FormulaArgument> parameters) {
 
         ArrayList<Argument> arguments = new ArrayList<>();
-        for (FormaleArgument argument : parameters) {
+        for (FormulaArgument argument : parameters) {
             arguments.add(new Argument(argument.getArgument(), argument.getValue()));
         }
         Expression expression = new Expression(stringFormula);
@@ -25,5 +26,19 @@ public class MathCalculation {
         if (parameters != null && parameters.size() > 0)
             expression.addArguments((Argument[]) arguments.toArray());
         return expression.calculate();
+    }
+
+    public static double evaluteExpression(String stringFormula, Argument argument) {
+        Argument arguments = argument;
+        Expression expression = new Expression(stringFormula);
+        expression.addArguments(arguments);
+        return expression.calculate();
+    }
+
+
+    public static boolean ifTwoNumbersAreEqualOrAlmostEqual(double x , double y) {
+        if (Math.abs(x - y) <= 0.000001)
+            return true;
+        return false;
     }
 }

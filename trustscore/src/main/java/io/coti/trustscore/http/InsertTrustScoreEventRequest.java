@@ -24,7 +24,7 @@ public class InsertTrustScoreEventRequest extends Request {
     @NotNull
     public @Valid SignatureData signature;
 
-    public CentralEventData convertToCentralEvent(Hash kycPublicHash) {
+    public CentralEventData convertToCentralEvent() {
         return new CentralEventData(userHash, eventDate, eventType, signature);
     }
 
