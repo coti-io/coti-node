@@ -13,6 +13,7 @@ import org.zeromq.ZMQ;
 
 import javax.annotation.PreDestroy;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -43,10 +44,11 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
                 String channelString = Channel.getChannelString(toPropagate.getClass(), nodeType);
                 log.debug("Propagating {} to {}", toPropagate.getHash().toHexString(), channelString );
                 byte[] message = serializer.serialize(toPropagate);
+
                 try {
-                    Thread.sleep(1000);
+                    TimeUnit.SECONDS.sleep(1);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    log.error("Error on sleep",e);
                 }
                 propagator.sendMore(channelString.getBytes());
                 propagator.send(message);

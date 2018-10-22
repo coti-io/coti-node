@@ -33,7 +33,8 @@ public class NodesService {
         } catch (InterruptedException e) {
            log.error("An error was thrown",e);
         }
-        propagationPublisher.propagate(network, Arrays.asList(NodeType.FullNode, NodeType.ZeroSpendServer, NodeType.DspNode));
+        propagationPublisher.propagate(network, Arrays.asList(NodeType.FullNode, NodeType.ZeroSpendServer, NodeType.DspNode
+        ,NodeType.TrustScoreNode));
     }
 
     public NodesService() {

@@ -1,7 +1,6 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.communication.Channel;
-import io.coti.basenode.communication.ZeroMQSubscriber;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.data.Network;
 import io.coti.basenode.data.Node;
@@ -17,7 +16,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -58,64 +56,68 @@ public abstract class BaseNodeInitializationService {
     private IDspVoteService dspVoteService;
     @Autowired
     private IPotService potService;
-    @Autowired
-    private ZeroMQSubscriber zeroMQSubscriber;
+
     @Autowired
     private IPropagationSubscriber propagationSubscriber;
 
-    @PostConstruct
     public void init() {
         try {
-            initCommunication();
-            log.info("The communication initialization is done");
             initTransactionSync();
             log.info("The transaction sync initialization is done");
+            initCommunication();
+            log.info("The communication initialization is done");
         } catch (Exception e) {
             log.error("Errors at {} : ", this.getClass().getSimpleName(), e);
             System.exit(-1);
         }
     }
 
-    private void initTransactionSync() throws Exception {
-        addressService.init();
-        balanceService.init();
-        dspVoteService.init();
-        transactionService.init();
-        potService.init();
-        AtomicLong maxTransactionIndex = new AtomicLong(-1);
-        transactions.forEach(transactionData -> handleExistingTransaction(maxTransactionIndex, transactionData));
-        transactionIndexService.init(maxTransactionIndex);
+    private void initTransactionSync()  {
+        try {
+            addressService.init();
+            balanceService.init();
+            dspVoteService.init();
+            transactionService.init();
+            potService.init();
+            AtomicLong maxTransactionIndex = new AtomicLong(-1);
+            transactions.forEach(transactionData -> handleExistingTransaction(maxTransactionIndex, transactionData));
+            transactionIndexService.init(maxTransactionIndex);
 
-        if (!networkService.getRecoveryServerAddress().isEmpty()) {
-            List<TransactionData> missingTransactions = requestMissingTransactions(maxTransactionIndex.get() + 1);
-            if (missingTransactions != null) {
-                int threadPoolSize = 1;
-                log.info("{} threads running for missing transactions", threadPoolSize);
-                ExecutorService executorService = Executors.newFixedThreadPool(threadPoolSize);
-                List<Callable<Object>> missingTransactionsTasks = new ArrayList<>(missingTransactions.size());
-                missingTransactions.forEach(transactionData ->
-                        missingTransactionsTasks.add(Executors.callable(() -> transactionService.handlePropagatedTransaction(transactionData))));
-                executorService.invokeAll(missingTransactionsTasks);
+            if (networkService.getRecoveryServerAddress() != null) {
+                List<TransactionData> missingTransactions = requestMissingTransactions(maxTransactionIndex.get() + 1);
+                if (missingTransactions != null) {
+                    int threadPoolSize = 1;
+                    log.info("{} threads running for missing transactions", threadPoolSize);
+                    ExecutorService executorService = Executors.newFixedThreadPool(threadPoolSize);
+                    List<Callable<Object>> missingTransactionsTasks = new ArrayList<>(missingTransactions.size());
+                    missingTransactions.forEach(transactionData ->
+                            missingTransactionsTasks.add(Executors.callable(() -> transactionService.handlePropagatedTransaction(transactionData))));
+                    executorService.invokeAll(missingTransactionsTasks);
+                }
             }
+            propagationSubscriber.startListeneing();
+            balanceService.finalizeInit();
+            clusterService.finalizeInit();
+            log.info("Transactions Load completed");
         }
-        balanceService.finalizeInit();
-        clusterService.finalizeInit();
-        log.info("Transactions Load completed");
+        catch (Exception e){
+            log.error("Fatal error in initialization", e);
+            System.exit(-1);
+        }
     }
 
     private void initCommunication() {
         HashMap<String, Consumer<Object>> classNameToSubscriberHandlerMapping = new HashMap<>();
-        classNameToSubscriberHandlerMapping.put(Channel.getChannelString(Network.class, getNodeProperties().getNodeType()), newNetwork ->
-        {
-            networkService.handleNetworkChanges((Network) newNetwork);
-        });
+        classNameToSubscriberHandlerMapping.put(Channel.getChannelString(Network.class, getNodeProperties().getNodeType()),
+                newNetwork -> networkService.handleNetworkChanges((Network) newNetwork));
 
         monitorService.init();
-
-        propagationSubscriber.startListeneing();
-        propagationSubscriber.addMessageHandler(classNameToSubscriberHandlerMapping);
-        propagationSubscriber.addAddress(networkService.getNetwork().nodeManagerPropagationAddress);
         networkService.connectToCurrentNetwork();
+        propagationSubscriber.addMessageHandler(classNameToSubscriberHandlerMapping);
+        propagationSubscriber.connectAndSubscribeToServer(networkService.getNetwork().nodeManagerPropagationAddress);
+
+        propagationSubscriber.initPropagationHandler();
+
     }
 
     private void initSubscriber() {

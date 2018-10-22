@@ -1,5 +1,6 @@
 package io.coti.dspnode.services;
 
+import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.data.*;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
@@ -39,6 +40,8 @@ public class InitializationService extends BaseNodeInitializationService{
     private CommunicationService communicationService;
     @Autowired
     private INetworkService networkService;
+    @Autowired
+    private IPropagationSubscriber subscriber;
 
     @PostConstruct
     public void init() {
@@ -63,15 +66,21 @@ public class InitializationService extends BaseNodeInitializationService{
         else{
             networkService.setRecoveryServerAddress("");
         }
-        super.init();
         if(zerospendNode != null ){
             communicationService.addSender(zerospendNode.getAddress(), zerospendNode.getReceivingPort());
-            communicationService.addSubscription(zerospendNode.getAddress(), zerospendNode.getPropagationPort());
+            subscriber.connectAndSubscribeToServer(zerospendNode.getPropagationFullAddress());
+       //     communicationService.addSubscription(zerospendNode.getAddress(), zerospendNode.getPropagationPort());
         }
         dspNodes.removeIf(dsp -> dsp.getAddress().equals(serverIp) && dsp.getHttpPort().equals(serverPort) );
         if(dspNodes.size() > 0){
-                dspNodes.forEach(dspnode -> communicationService.addSubscription(dspnode.getAddress(), dspnode.getPropagationPort()));
+                dspNodes.forEach(dspnode -> subscriber.connectAndSubscribeToServer(dspnode.getPropagationFullAddress()));
         }
+        super.init();
+//        subscriber.subscribeAll(this.networkService.getNetwork().getNodeManagerPropagationAddress());
+//        subscriber.subscribeAll(zerospendNode.getPropagationFullAddress());
+//        if(dspNodes.size() > 0){
+//            dspNodes.forEach(dspnode ->  subscriber.subscribeAll(dspnode.getPropagationFullAddress()));
+//        }
 
     }
 

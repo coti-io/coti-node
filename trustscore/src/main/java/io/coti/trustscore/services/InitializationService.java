@@ -1,5 +1,6 @@
 package io.coti.trustscore.services;
 
+import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.data.Node;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.BaseNodeInitializationService;
@@ -26,6 +27,9 @@ public class InitializationService extends BaseNodeInitializationService{
     @Value("${server.ip}")
     private String nodeIp;
 
+    @Autowired
+    private IPropagationSubscriber subscriber;
+
     @PostConstruct
     public void init() {
         super.connectToNetwork();
@@ -36,13 +40,19 @@ public class InitializationService extends BaseNodeInitializationService{
         if(zerospendNode != null ) {
             networkService.setRecoveryServerAddress(zerospendNode.getHttpFullAddress());
         }
-        super.init();
-            if(dspNodes.size() > 0){
-            dspNodes.forEach(dspnode -> communicationService.addSubscription(dspnode.getAddress(), dspnode.getPropagationPort()));
+        if(dspNodes.size() > 0){
+                dspNodes.forEach(dspnode -> subscriber.connectAndSubscribeToServer(dspnode.getPropagationFullAddress()));//communicationService.addSubscription(dspnode.getAddress(), dspnode.getPropagationPort()));
         }
         if(zerospendNode != null ) {
-            communicationService.addSubscription(zerospendNode.getAddress(), zerospendNode.getPropagationPort());
+            subscriber.connectAndSubscribeToServer(zerospendNode.getPropagationFullAddress());//communicationService.addSubscription(zerospendNode.getAddress(), zerospendNode.getPropagationPort());
         }
+        super.init();
+//        subscriber.subscribeAll(this.networkService.getNetwork().getNodeManagerPropagationAddress());
+//        subscriber.subscribeAll(zerospendNode.getPropagationFullAddress());
+//        if(dspNodes.size() > 0){
+//            dspNodes.forEach(dspnode ->  subscriber.subscribeAll(dspnode.getPropagationFullAddress()));
+//        }
+
     }
 
     @Override

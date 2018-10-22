@@ -12,7 +12,9 @@ public interface IPropagationSubscriber {
 
     void shutdown();
 
-    void addAddress(String propagationServerAddress, String propagationServerPort);
+    void connectAndSubscribeToServer(String propagationServerAddressAndPort);
 
-    void addAddress(String propagationServerAddressAndPort);
+    void initPropagationHandler();
+
+    void subscribeAll(String serverAddress);
 }

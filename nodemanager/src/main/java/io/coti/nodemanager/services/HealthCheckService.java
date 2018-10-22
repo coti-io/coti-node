@@ -24,17 +24,17 @@ public class HealthCheckService {
 
     @Scheduled(fixedDelay = 10000, initialDelay = 5000)
     public void healthCheckNeighbors() {
-        boolean[] networkChanged = {false};
-        checkNodesList(nodesService.getAllNodes().dspNodes, networkChanged);
-        checkNodesList(nodesService.getAllNodes().trustScoreNodes, networkChanged);
-        checkNodesList(nodesService.getAllNodes().fullNodes, networkChanged);
+        boolean networkChanged = false;
+        networkChanged = checkNodesList(nodesService.getAllNodes().dspNodes, networkChanged);
+        networkChanged = checkNodesList(nodesService.getAllNodes().trustScoreNodes, networkChanged);
+        networkChanged = checkNodesList(nodesService.getAllNodes().fullNodes, networkChanged);
         Node zerospendNode = nodesService.getAllNodes().getZerospendServer();
         if (!checkNode(zerospendNode)) {
             log.error("{} of address {} and port {}  is about to be deleted", zerospendNode.getNodeType(), zerospendNode.getAddress(), zerospendNode.getHttpPort());
             nodesService.getAllNodes().setZerospendServer(null);
-            networkChanged[0] = true;
+            networkChanged = true;
         }
-        if (networkChanged[0]) {
+        if (networkChanged) {
             nodesService.updateNetworkChanges();
         }
     }
@@ -46,7 +46,7 @@ public class HealthCheckService {
             while (tries < 3) {
                 try {
                     if (tries > 0) {
-                        TimeUnit.SECONDS.sleep(3);
+                        TimeUnit.SECONDS.sleep(30);
                         log.info("Waiting for {} retry for {} of address {} and port {} healthcheck", tries,
                                 nodeToCheck.getNodeType(), nodeToCheck.getAddress(), nodeToCheck.getHttpPort());
                     }
@@ -71,18 +71,21 @@ public class HealthCheckService {
         return true;
     }
 
-    private synchronized void checkNodesList(List<Node> nodesList, boolean[] networkChanged) {
+    private synchronized boolean checkNodesList(List<Node> nodesList, boolean networkChanged) {
         List<String> nodesToRemove = new LinkedList<>();
         if (nodesList.size() > 0) {
-            nodesList.forEach(node -> {
+            for(Node node : nodesList){
                 if (!checkNode(node)) {
                     log.error("{} of address {} and port {}  is about to be deleted", node.getNodeType(), node.getAddress(), node.getHttpPort());
-                    nodesToRemove.add(node.getAddress() + ":" + node.getHttpPort());
-                    networkChanged[0] = true;
+                    nodesToRemove.add(node.getHttpFullAddress());
+                    networkChanged = true;
                 }
-            });
+            }
         }
-        nodesList.removeIf(node -> nodesToRemove.contains(node.getAddress()+ ":" + node.getHttpPort()));
+        nodesList.removeIf(node -> nodesToRemove.contains(node.getHttpFullAddress()));
+        return networkChanged;
 
     }
+
+
 }

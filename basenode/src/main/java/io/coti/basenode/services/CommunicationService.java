@@ -17,7 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -49,9 +48,9 @@ public class CommunicationService {
         propagationSubscriber.addMessageHandler(classNameToSubscriberHandlerMapping);
     }
 
-    public void addSubscription(String propagationServerAddress, String propagationServerPort){
-        propagationSubscriber.addAddress(propagationServerAddress, propagationServerPort);
-    }
+//    public void addSubscription(String fullPropagationAddress){
+//        propagationSubscriber.connectAndSubscribeToServer(fullPropagationAddress);
+//    }
 
     public void initReceiver(String receivingPort, HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping) {
         receiver.init(receivingPort, classNameToReceiverHandlerMapping);

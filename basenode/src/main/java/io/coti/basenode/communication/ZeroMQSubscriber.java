@@ -43,6 +43,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     private ISerializer serializer;
 
     public void initSockets() {
+        zeroMQContext = ZMQ.context(1);
         propagationReceiver = zeroMQContext.socket(ZMQ.SUB);
         propagationReceiver.setHWM(10000);
         ZeroMQUtils.bindToRandomPort(propagationReceiver);
@@ -52,13 +53,13 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     private void init(){
         messagesHandler = new ConcurrentHashMap<>();
         channelsToSubscribe = new LinkedList<>();
+        initSockets();
+        messageQueue = new LinkedBlockingQueue<>();
     }
 
     @Override
     public void startListeneing() {
-        zeroMQContext = ZMQ.context(1);
-        initSockets();
-        messageQueue = new LinkedBlockingQueue<>();
+   //     initSockets();
         propagationReceiverThread = new Thread(() -> {
             boolean contextTerminated = false;
             while (!contextTerminated && !Thread.currentThread().isInterrupted()) {
@@ -81,6 +82,10 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         });
         propagationReceiverThread.start();
 
+
+    }
+
+    public void initPropagationHandler(){
         messagesQueueHandlerThread = new Thread(() -> handleMessagesQueueTask());
         messagesQueueHandlerThread.start();
     }
@@ -135,7 +140,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         }
     }
 
-    public void addAddress(String propagationAddressAndPort) {
+    public void connectAndSubscribeToServer(String propagationAddressAndPort) {
         log.info("ZeroMQ subscriber connecting to address {}", propagationAddressAndPort);
         try {
             TimeUnit.SECONDS.sleep(1);
@@ -144,13 +149,13 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         }
         if (propagationReceiver.connect(propagationAddressAndPort)) {
             subscribeAll(propagationAddressAndPort);
-            log.info("address added");
+            log.info("address {} added", propagationAddressAndPort);
         } else {
             log.error("Unable to connect to server {}", propagationAddressAndPort);
         }
     }
 
-    private void subscribeAll(String serverAddress) {
+    public void subscribeAll(String serverAddress) {
         propagationReceiver.subscribe("HeartBeat " + serverAddress);
         channelsToSubscribe.forEach(channel ->
         {
@@ -172,9 +177,6 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         });
     }
 
-    public void addAddress(String propagationServerAddress, String propagationServerPort) {
-        addAddress("tcp://" + propagationServerAddress + ":" + propagationServerPort);
-    }
 
     @Scheduled(initialDelay = INITIAL_DELAY, fixedDelay = FIXED_DELAY)
     public void reconnectToPublisher() {

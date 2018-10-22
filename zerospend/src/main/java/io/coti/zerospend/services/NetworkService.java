@@ -1,5 +1,6 @@
 package io.coti.zerospend.services;
 
+import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.data.Network;
 import io.coti.basenode.data.Node;
 import io.coti.basenode.services.interfaces.INetworkService;
@@ -20,6 +21,8 @@ public class NetworkService implements INetworkService {
 
     @Autowired
     private CommunicationService communicationService;
+    @Autowired
+    private IPropagationSubscriber subscriber;
 
     @PostConstruct
     private void init(){
@@ -34,7 +37,8 @@ public class NetworkService implements INetworkService {
             dspNodesToConnect.forEach(dspNode -> {
                 log.info("Dsp {} is about to be added", dspNode.getHttpFullAddress());
                 network.addNode(dspNode);
-                communicationService.addSubscription(dspNode.getAddress(), dspNode.getPropagationPort());
+                subscriber.connectAndSubscribeToServer(dspNode.getPropagationFullAddress());//communicationService.addSubscription(dspNode.getAddress(), dspNode.getPropagationPort());
+//                subscriber.subscribeAll(dspNode.getPropagationFullAddress());
             });
         }
         this.network = newNetwork;

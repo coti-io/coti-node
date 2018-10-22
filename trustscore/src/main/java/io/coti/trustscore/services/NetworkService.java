@@ -1,5 +1,6 @@
 package io.coti.trustscore.services;
 
+import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.data.Network;
 import io.coti.basenode.data.Node;
 import io.coti.basenode.services.CommunicationService;
@@ -32,6 +33,9 @@ public class NetworkService implements INetworkService {
     @Autowired
     private CommunicationService communicationService;
 
+    @Autowired
+    private IPropagationSubscriber subscriber;
+
     @PostConstruct
     private void init(){
         network = new Network();
@@ -49,7 +53,8 @@ public class NetworkService implements INetworkService {
         if (zerospendNode != null && zerospendNode != this.network.getZerospendServer()) {
             log.info("Zero spend server {} is about to be added", zerospendNode.getHttpFullAddress());
             recoveryServerAddress = zerospendNode.getHttpFullAddress();
-            communicationService.addSubscription(zerospendNode.getAddress(), zerospendNode.getPropagationPort());
+            subscriber.connectAndSubscribeToServer(zerospendNode.getPropagationFullAddress());//communicationService.addSubscription(zerospendNode.getAddress(), zerospendNode.getPropagationPort());
+//            subscriber.subscribeAll(zerospendNode.getPropagationFullAddress());
         }
         List<Node> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetwork.dspNodes, this.network.getDspNodes()));
         dspNodesToConnect.removeIf(dsp -> dsp.getAddress().equals(nodeIp) && dsp.getHttpPort().equals(serverPort));
@@ -57,7 +62,8 @@ public class NetworkService implements INetworkService {
             Collections.shuffle(dspNodesToConnect);
             dspNodesToConnect.forEach(dspnode -> {
                         log.info("Dsp {} is about to be added", "http://" + dspnode.getAddress() + ":" + dspnode.getHttpPort());
-                        communicationService.addSubscription(dspnode.getAddress(), dspnode.getPropagationPort());
+                        subscriber.connectAndSubscribeToServer(dspnode.getPropagationFullAddress());//communicationService.addSubscription(dspnode.getAddress(), dspnode.getPropagationPort());
+//                        subscriber.subscribeAll(dspnode.getPropagationFullAddress());
                     }
             );
         }

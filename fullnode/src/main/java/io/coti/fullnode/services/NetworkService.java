@@ -1,5 +1,6 @@
 package io.coti.fullnode.services;
 
+import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.data.Network;
 import io.coti.basenode.data.Node;
 import io.coti.basenode.services.CommunicationService;
@@ -24,6 +25,9 @@ public class NetworkService implements INetworkService {
     private CommunicationService communicationService;
 
     private String recoveryServerAddress;
+    @Autowired
+    private IPropagationSubscriber subscriber;
+
 
     @PostConstruct
     private void init(){
@@ -41,6 +45,7 @@ public class NetworkService implements INetworkService {
         List<Node> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetwork.dspNodes, this.network.getDspNodes()));
         Collections.shuffle(dspNodesToConnect);
         if (dspNodesToConnect.size() > 0) {
+            recoveryServerAddress = dspNodesToConnect.get(0).getHttpFullAddress();
             if (this.network.getDspNodes().size() == 1){
                 addDsp(dspNodesToConnect.get(0));
             }
@@ -50,7 +55,6 @@ public class NetworkService implements INetworkService {
                     addDsp(dspNodesToConnect.get(1));
                 }
             }
-            recoveryServerAddress = dspNodesToConnect.get(0).getHttpFullAddress();
         }
         this.network = newNetwork;
     }
@@ -78,7 +82,9 @@ public class NetworkService implements INetworkService {
     private void addDsp(Node dspNode){
             log.info("Dsp {} is about to be added",dspNode.getHttpFullAddress());
             network.addNode(dspNode);
-            communicationService.addSubscription(dspNode.getAddress(), dspNode.getPropagationPort());
+            subscriber.connectAndSubscribeToServer(dspNode.getPropagationFullAddress());//communicationService.addSubscription(dspNode.getAddress(), dspNode.getPropagationPort());
+            //subscriber.subscribeAll(dspNode.getPropagationFullAddress());
+
             communicationService.addSender(dspNode.getAddress(), dspNode.getPropagationPort());
     }
 

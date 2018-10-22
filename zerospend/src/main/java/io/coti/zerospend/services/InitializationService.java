@@ -1,5 +1,6 @@
 package io.coti.zerospend.services;
 
+import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.data.DspVote;
 import io.coti.basenode.data.Node;
 import io.coti.basenode.data.NodeType;
@@ -36,6 +37,8 @@ public class InitializationService extends BaseNodeInitializationService {
     private Transactions transactions;
     @Autowired
     private INetworkService networkService;
+    @Autowired
+    private IPropagationSubscriber subscriber;
 
     @PostConstruct
     public void init() {
@@ -47,16 +50,21 @@ public class InitializationService extends BaseNodeInitializationService {
         communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
         communicationService.initSubscriber(NodeType.ZeroSpendServer);
         communicationService.initPropagator(propagationPort);
-        super.init();
         if (networkService.getNetwork().dspNodes.size() > 0) {
             networkService.getNetwork().dspNodes.forEach(dspNode -> {
-                communicationService.addSubscription(dspNode.getAddress(), dspNode.getPropagationPort());
+                subscriber.connectAndSubscribeToServer(dspNode.getPropagationFullAddress());
                 networkService.getNetwork().addNode(dspNode);
             });
         }
+        super.init();
         if (transactions.isEmpty()) {
             transactionCreationService.createGenesisTransactions();
         }
+//        subscriber.subscribeAll(networkService.getNetwork().getNodeManagerPropagationAddress());
+//        if (networkService.getNetwork().dspNodes.size() > 0) {
+//            networkService.getNetwork().dspNodes.forEach(dspNode ->
+//                subscriber.subscribeAll(dspNode.getPropagationFullAddress()));
+//        }
     }
 
     protected Node getNodeProperties() {
