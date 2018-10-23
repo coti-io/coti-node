@@ -1,6 +1,5 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
@@ -21,8 +20,6 @@ public class BaseNodeTransactionService implements ITransactionService {
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
-    private TransactionCrypto transactionCrypto;
-    @Autowired
     private IValidationService validationService;
     @Autowired
     private Transactions transactions;
@@ -36,13 +33,12 @@ public class BaseNodeTransactionService implements ITransactionService {
     @Override
     public void handlePropagatedTransaction(TransactionData transactionData) {
         try {
-            if (!transactionHelper.startHandleTransaction(transactionData)) {
+            if (transactionHelper.isTransactionAlreadyPropagated(transactionData)) {
                 log.debug("Transaction already exists: {}", transactionData.getHash());
                 return;
             }
-            if (!transactionHelper.validateTransaction(transactionData) ||
-                    !transactionCrypto.verifySignature(transactionData) ||
-                    !validationService.validatePot(transactionData)) {
+            transactionHelper.startHandleTransaction(transactionData);
+            if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
                 log.error("Data Integrity validation failed: {}", transactionData.getHash());
                 return;
             }
@@ -50,7 +46,7 @@ public class BaseNodeTransactionService implements ITransactionService {
                 postponedTransactions.add(transactionData);
                 return;
             }
-            if (!transactionHelper.checkBalancesAndAddToPreBalance(transactionData)) {
+            if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
                 log.error("Balance check failed: {}", transactionData.getHash());
                 return;
             }

@@ -3,7 +3,6 @@ package io.coti.dspnode.services;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.crypto.DspVoteCrypto;
-import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.DspVote;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
@@ -32,8 +31,6 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
-    private TransactionCrypto transactionCrypto;
-    @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired
     private IValidationService validationService;
@@ -45,14 +42,13 @@ public class TransactionService extends BaseNodeTransactionService {
     public String handleNewTransactionFromFullNode(TransactionData transactionData) {
         try {
             log.debug("Running new transactions from full node handler");
-            if (!transactionHelper.startHandleTransaction(transactionData)) {
-                log.debug("Transaction already exists");
+            if (transactionHelper.isTransactionAlreadyPropagated(transactionData)) {
+                log.debug("Transaction already exists: {}", transactionData.getHash());
                 return "Transaction Exists: " + transactionData.getHash();
             }
-            if (!transactionHelper.validateTransaction(transactionData) ||
-                    !transactionCrypto.verifySignature(transactionData) ||
-                    !validationService.validatePot(transactionData) ||
-                    !transactionHelper.checkBalancesAndAddToPreBalance(transactionData)) {
+            transactionHelper.startHandleTransaction(transactionData);
+            if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData) ||
+                    !validationService.validateBalancesAndAddToPreBalance(transactionData)) {
                 log.info("Invalid Transaction Received!");
                 return "Invalid Transaction Received: " + transactionData.getHash();
             }

@@ -12,7 +12,7 @@ public class BaseNodeMonitorService implements IMonitorService {
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
-    private IBalanceService balanceService;
+    private IConfirmationService confirmationService;
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
@@ -28,9 +28,9 @@ public class BaseNodeMonitorService implements IMonitorService {
     public void lastState() {
         log.info("Transactions = {}, TccConfirmed = {}, DspConfirmed = {}, Confirmed = {}, LastIndex = {}, Sources = {}, PostponedTransactions = {}",
                 transactionHelper.getTotalTransactions(),
-                balanceService.getTccConfirmed(),
-                balanceService.getDspConfirmed(),
-                balanceService.getTotalConfirmed(),
+                confirmationService.getTccConfirmed(),
+                confirmationService.getDspConfirmed(),
+                confirmationService.getTotalConfirmed(),
                 transactionIndexService.getLastTransactionIndexData().getIndex(),
                 clusterService.getTotalSources(),
                 transactionService.totalPostponedTransactions());

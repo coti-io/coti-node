@@ -5,8 +5,8 @@ import io.coti.basenode.data.TccInfo;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.LiveView.LiveViewService;
-import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IClusterService;
+import io.coti.basenode.services.interfaces.IConfirmationService;
 import io.coti.basenode.services.interfaces.ISourceSelector;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +29,7 @@ public class ClusterService implements IClusterService {
     @Autowired
     private Transactions transactions;
     @Autowired
-    private IBalanceService balanceService;
+    private IConfirmationService confirmationService;
     @Autowired
     private ISourceSelector sourceSelector;
     @Autowired
@@ -74,7 +74,7 @@ public class ClusterService implements IClusterService {
 
         transactionConsensusConfirmed.forEach(tccInfo -> {
             hashToUnconfirmedTransactionsMapping.remove(tccInfo.getHash());
-            balanceService.setTccToTrue(tccInfo);
+            confirmationService.setTccToTrue(tccInfo);
             log.debug("TCC has been reached for transaction {}!!", tccInfo.getHash());
         });
     }

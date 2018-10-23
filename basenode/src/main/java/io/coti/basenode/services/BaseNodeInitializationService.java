@@ -33,6 +33,8 @@ public class BaseNodeInitializationService {
     @Autowired
     private IBalanceService balanceService;
     @Autowired
+    private IConfirmationService confirmationService;
+    @Autowired
     private IClusterService clusterService;
     @Autowired
     private IMonitorService monitorService;
@@ -55,6 +57,7 @@ public class BaseNodeInitializationService {
         try {
             addressService.init();
             balanceService.init();
+            confirmationService.init();
             dspVoteService.init();
             transactionService.init();
             potService.init();
@@ -92,7 +95,7 @@ public class BaseNodeInitializationService {
             clusterService.addUnconfirmedTransaction(transactionData);
         }
         liveViewService.addNode(transactionData);
-        balanceService.insertSavedTransaction(transactionData);
+        confirmationService.insertSavedTransaction(transactionData);
         if (transactionData.getDspConsensusResult() != null) {
             maxTransactionIndex.set(Math.max(maxTransactionIndex.get(), transactionData.getDspConsensusResult().getIndex()));
         } else {

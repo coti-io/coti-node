@@ -39,8 +39,6 @@ public class DspVoteService extends BaseNodeDspVoteService {
     private DspVoteCrypto dspVoteCrypto;
     @Autowired
     private DspConsensusCrypto dspConsensusCrypto;
-    @Autowired
-    private IBalanceService balanceService;
     private ConcurrentMap<Hash, List<DspVote>> transactionHashToVotesListMapping;
     private static final String NODE_HASH_ENDPOINT = "/nodeHash";
     private List<Hash> currentLiveDspNodes;
@@ -153,7 +151,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
         mapHashToDspVote.forEach((hash, dspVote) -> dspVotes.add(dspVote));
         dspConsensusResult.setDspVotes(dspVotes);
         setIndexForDspResult(transactionData, dspConsensusResult);
-        balanceService.setDspcToTrue(dspConsensusResult);
+        confirmationService.setDspcToTrue(dspConsensusResult);
         propagationPublisher.propagate(dspConsensusResult, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode));
         transactionHashToVotesListMapping.remove(transactionHash);
     }

@@ -72,7 +72,7 @@ public class TransactionService extends BaseNodeTransactionService {
         try {
             log.debug("New transaction request is being processed. Transaction Hash = {}", request.hash);
             transactionCrypto.signMessage(transactionData);
-            if (!transactionHelper.startHandleTransaction(transactionData)) {
+            if (transactionHelper.isTransactionExists(transactionData)) {
                 log.debug("Received existing transaction: {}", transactionData.getHash());
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
@@ -80,8 +80,8 @@ public class TransactionService extends BaseNodeTransactionService {
                                 STATUS_ERROR,
                                 TRANSACTION_ALREADY_EXIST_MESSAGE));
             }
-
-            if (!transactionHelper.validateTransaction(transactionData)) {
+            transactionHelper.startHandleTransaction(transactionData);
+            if (!validationService.validateTransactionDataIntegrity(transactionData)) {
                 log.error("Data Integrity validation failed: {}", transactionData.getHash());
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
@@ -90,15 +90,15 @@ public class TransactionService extends BaseNodeTransactionService {
                                 AUTHENTICATION_FAILED_MESSAGE));
             }
 
-            if (!transactionHelper.isLegalBalance(transactionData.getBaseTransactions())) {
-                log.error("Illegal transaction balance: {}", transactionData.getHash());
+            if (!validationService.validateBaseTransactionAmounts(transactionData)) {
+                log.error("Illegal base transaction amounts: {}", transactionData.getHash());
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new AddTransactionResponse(
                                 STATUS_ERROR,
                                 ILLEGAL_TRANSACTION_MESSAGE));
             }
-            if (!transactionHelper.validateTrustScore(transactionData)) {
+            if (!validationService.validateTransactionTrustScore(transactionData)) {
                 log.error("Invalid sender trust score: {}", transactionData.getHash());
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
@@ -107,7 +107,7 @@ public class TransactionService extends BaseNodeTransactionService {
                                 INVALID_TRUST_SCORE_MESSAGE));
             }
 
-            if (!transactionHelper.checkBalancesAndAddToPreBalance(transactionData)) {
+            if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
                 log.error("Balance and Pre balance check failed: {}", transactionData.getHash());
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)

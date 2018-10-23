@@ -10,13 +10,13 @@ import java.util.List;
 
 public interface ITransactionHelper {
 
-    boolean isLegalBalance(List<BaseTransactionData> baseTransactions);
+    boolean validateBaseTransactionAmounts(List<BaseTransactionData> baseTransactions);
 
-    boolean validateTransaction(TransactionData transactionData);
+    boolean validateTransactionCrypto(TransactionData transactionData);
 
     boolean validateTrustScore(TransactionData transactionData);
 
-    boolean startHandleTransaction(TransactionData transactionData);
+    void startHandleTransaction(TransactionData transactionData);
 
     void endHandleTransaction(TransactionData transactionData);
 
@@ -37,6 +37,8 @@ public interface ITransactionHelper {
     boolean isTransactionExists(TransactionData transactionData);
 
     boolean isTransactionHashExists(Hash transactionHash);
+
+    boolean isTransactionAlreadyPropagated(TransactionData transactionData);
 
     long getTotalTransactions();
 

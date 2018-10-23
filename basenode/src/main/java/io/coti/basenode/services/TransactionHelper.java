@@ -12,6 +12,7 @@ import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.LiveView.LiveViewService;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IClusterService;
+import io.coti.basenode.services.interfaces.IConfirmationService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,8 @@ public class TransactionHelper implements ITransactionHelper {
     private AddressTransactionsHistories addressTransactionsHistories;
     @Autowired
     private IBalanceService balanceService;
+    @Autowired
+    private IConfirmationService confirmationService;
     @Autowired
     private IClusterService clusterService;
     @Autowired
@@ -59,7 +62,7 @@ public class TransactionHelper implements ITransactionHelper {
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
-    public boolean isLegalBalance(List<BaseTransactionData> baseTransactions) {
+    public boolean validateBaseTransactionAmounts(List<BaseTransactionData> baseTransactions) {
         BigDecimal totalTransactionSum = BigDecimal.ZERO;
         for (BaseTransactionData baseTransactionData :
                 baseTransactions) {
@@ -80,7 +83,7 @@ public class TransactionHelper implements ITransactionHelper {
         }
     }
 
-    public boolean validateTransaction(TransactionData transactionData) {
+    public boolean validateTransactionCrypto(TransactionData transactionData) {
         TransactionCryptoWrapper verifyTransaction = new TransactionCryptoWrapper(transactionData);
         return verifyTransaction.isTransactionValid();
     }
@@ -113,12 +116,24 @@ public class TransactionHelper implements ITransactionHelper {
         return false;
     }
 
+    public boolean isTransactionAlreadyPropagated(TransactionData transactionData) {
+        synchronized (transactionData) {
+            if (isTransactionExists(transactionData)) {
+                if (!isTransactionHashProcessing(transactionData.getHash())) {
+                    addDspResultToDb(transactionData.getDspConsensusResult());
+                }
+                return true;
+            }
+            return false;
+        }
+    }
+
     private void addDspResultToDb(DspConsensusResult dspConsensusResult) {
         if (dspConsensusResult == null) {
             return;
         }
         if (transactionIndexes.getByHash(new Hash(dspConsensusResult.getIndex())) == null) {
-            balanceService.setDspcToTrue(dspConsensusResult);
+            confirmationService.setDspcToTrue(dspConsensusResult);
         }
 
     }
@@ -143,18 +158,10 @@ public class TransactionHelper implements ITransactionHelper {
         return true;
     }
 
-    public boolean startHandleTransaction(TransactionData transactionData) {
-        synchronized (transactionData) {
-            if (isTransactionExists(transactionData)) {
-                if (!isTransactionHashProcessing(transactionData.getHash())) {
-                    addDspResultToDb(transactionData.getDspConsensusResult());
-                }
-                return false;
-            }
-        }
+    public void startHandleTransaction(TransactionData transactionData) {
+
         transactionHashToTransactionStateStackMapping.put(transactionData.getHash(), new Stack());
         transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(RECEIVED);
-        return true;
     }
 
     public void endHandleTransaction(TransactionData transactionData) {
@@ -222,7 +229,7 @@ public class TransactionHelper implements ITransactionHelper {
         if (transactionData.getDspConsensusResult() == null) {
             addNoneIndexedTransaction(transactionData);
         } else {
-            balanceService.setDspcToTrue(transactionData.getDspConsensusResult());
+            confirmationService.setDspcToTrue(transactionData.getDspConsensusResult());
         }
         updateAddressTransactionHistory(transactionData);
         liveViewService.addNode(transactionData);

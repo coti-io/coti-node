@@ -2,7 +2,7 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.data.DspConsensusResult;
-import io.coti.basenode.services.interfaces.IBalanceService;
+import io.coti.basenode.services.interfaces.IConfirmationService;
 import io.coti.basenode.services.interfaces.IDspVoteService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +15,7 @@ public class BaseNodeDspVoteService implements IDspVoteService {
     @Autowired
     protected ITransactionHelper transactionHelper;
     @Autowired
-    protected IBalanceService balanceService;
+    protected IConfirmationService confirmationService;
     @Autowired
     protected IPropagationPublisher propagationPublisher;
 
@@ -28,7 +28,7 @@ public class BaseNodeDspVoteService implements IDspVoteService {
         if (!transactionHelper.handleVoteConclusionResult(dspConsensusResult)) {
             log.error("Illegal Dsp consensus result for transaction: {}", dspConsensusResult.getHash());
         } else {
-            balanceService.setDspcToTrue(dspConsensusResult);
+            confirmationService.setDspcToTrue(dspConsensusResult);
             continueHandleVoteConclusion(dspConsensusResult);
         }
     }
