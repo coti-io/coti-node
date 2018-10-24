@@ -81,7 +81,7 @@ public class BaseNodeInitializationService {
                 }
             }
 
-            balanceService.finalizeInit();
+            balanceService.validateBalances();
             clusterService.finalizeInit();
             zeroMQSubscriber.initPropagationHandler();
         } catch (Exception e) {

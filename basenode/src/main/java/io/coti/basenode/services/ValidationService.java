@@ -57,7 +57,8 @@ public class ValidationService implements IValidationService {
     @Override
     public boolean validatePropagatedTransactionDataIntegrity(TransactionData transactionData) {
         return validateTransactionDataIntegrity(transactionData) && validateTransactionNodeSignature(transactionData) &&
-                validateTransactionTrustScore(transactionData) && validateBaseTransactionAmounts(transactionData) && validatePot(transactionData);
+                //validateTransactionTrustScore(transactionData) &&
+                validateBaseTransactionAmounts(transactionData) && validatePot(transactionData);
     }
 
     @Override

@@ -1,7 +1,6 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.data.*;
-import io.coti.basenode.http.data.TransactionStatus;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.LiveView.LiveViewService;
 import io.coti.basenode.services.interfaces.IBalanceService;
@@ -43,6 +42,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         confirmationQueue = new LinkedBlockingQueue<>();
         confirmedTransactionsThread = new Thread(() -> updateConfirmedTransactions());
         confirmedTransactionsThread.start();
+        log.info("{} is up", this.getClass().getSimpleName());
     }
 
     private void updateConfirmedTransactions() {

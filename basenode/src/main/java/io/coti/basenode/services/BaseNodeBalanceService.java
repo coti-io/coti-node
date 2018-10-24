@@ -30,6 +30,7 @@ public class BaseNodeBalanceService implements IBalanceService {
         balanceMap = new ConcurrentHashMap<>();
         preBalanceMap = new ConcurrentHashMap<>();
         loadBalanceFromSnapshot();
+        log.info("{} is up", this.getClass().getSimpleName());
     }
 
     private void loadBalanceFromSnapshot() throws Exception {
@@ -119,12 +120,7 @@ public class BaseNodeBalanceService implements IBalanceService {
     }
 
     @Override
-    public void finalizeInit() {
-        validateBalances();
-        log.info("{} is up", this.getClass().getSimpleName());
-    }
-
-    private void validateBalances() {
+    public void validateBalances() {
         preBalanceMap.forEach((hash, bigDecimal) -> {
             if (bigDecimal.signum() == -1) {
                 log.error("PreBalance Validation failed!");
