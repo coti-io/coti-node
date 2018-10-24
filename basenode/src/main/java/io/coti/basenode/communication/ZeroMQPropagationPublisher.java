@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.zeromq.ZMQ;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -39,9 +40,16 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
     public <T extends IEntity> void propagate(T toPropagate, List<NodeType> subscriberNodeTypes) {
         synchronized (propagator) {
             subscriberNodeTypes.forEach(nodeType -> {
-                log.debug("Propagating {} to {}", toPropagate.getHash(), Channel.getChannelString(toPropagate.getClass(), nodeType));
+                String channelString = Channel.getChannelString(toPropagate.getClass(), nodeType);
+                log.debug("Propagating {} to {}", toPropagate.getHash().toHexString(), channelString );
                 byte[] message = serializer.serialize(toPropagate);
-                propagator.sendMore(Channel.getChannelString(toPropagate.getClass(), nodeType).getBytes());
+
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (InterruptedException e) {
+                    log.error("Error on sleep",e);
+                }
+                propagator.sendMore(channelString.getBytes());
                 propagator.send(message);
             });
         }

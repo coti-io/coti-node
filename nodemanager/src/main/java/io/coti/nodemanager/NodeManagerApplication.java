@@ -1,4 +1,4 @@
-package io.coti.fullnode;
+package io.coti.nodemanager;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
@@ -8,13 +8,13 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @Slf4j
 @SpringBootApplication
 @EnableAsync
-public class FullNodeApplication {
+public class NodeManagerApplication {
 
     public static void main(String[] args) {
 
-        SpringApplication.run(FullNodeApplication.class, args);
+        SpringApplication.run(NodeManagerApplication.class, args);
         log.info("############################################################");
-        log.info("#############     COTI FULL NODE IS UP      ################");
+        log.info("#############     NODE Manager IS UP        ################");
         log.info("############################################################");
     }
 }

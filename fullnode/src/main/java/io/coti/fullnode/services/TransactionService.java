@@ -14,6 +14,7 @@ import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.IClusterService;
+import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.fullnode.http.AddTransactionRequest;
@@ -22,12 +23,12 @@ import io.coti.fullnode.http.GetAddressTransactionHistoryResponse;
 import io.coti.fullnode.http.GetTransactionResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
@@ -37,8 +38,7 @@ import static io.coti.basenode.http.HttpStringConstants.*;
 @Slf4j
 @Service
 public class TransactionService extends BaseNodeTransactionService {
-    @Value("#{'${receiving.server.addresses}'.split(',')}")
-    private List<String> receivingServerAddresses;
+
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -56,6 +56,8 @@ public class TransactionService extends BaseNodeTransactionService {
     private Transactions transactions;
     @Autowired
     private WebSocketSender webSocketSender;
+    @Autowired
+    private INetworkService networkService;
 
     @Autowired
     private PotService potService;
@@ -152,6 +154,8 @@ public class TransactionService extends BaseNodeTransactionService {
             transactionHelper.setTransactionStateToSaved(transactionData);
             webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
             final TransactionData finalTransactionData = transactionData;
+            List<String> receivingServerAddresses = new LinkedList<>();
+            receivingServerAddresses.add(networkService.getNetwork().getDspNodes().get(0).getReceivingFullAddress());
             receivingServerAddresses.forEach(address -> sender.send(finalTransactionData, address));
             transactionHelper.setTransactionStateToFinished(transactionData);
             return ResponseEntity
