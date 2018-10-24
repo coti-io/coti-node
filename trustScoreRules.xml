@@ -156,17 +156,6 @@
                 <decay>ln(2)/30</decay>
                 <dayShift>Standard day-by-day decay</dayShift>
             </highFrequencyEventsScore>
-            <highFrequencyEventsScore name="ChargeBack">
-                <idea>"Calculate chargeback rate for a month, apply the fine if it is larger than the standard(~2%)"</idea>
-                <term>No term, just decay</term>
-                <valueToStore>TSchargebacks</valueToStore>
-                <standardChargebackRate>0.02</standardChargebackRate>
-                <linearFunction>Nchargebacks/Ncredits-standardChargebackRate</linearFunction>
-                <algorithm>"Count the rate of charge for the last month, after apply linear function, after add the stored value"</algorithm>
-                <weight>-5</weight>
-                <decay>ln(2)/30</decay>
-                <dayShift>Standard day-by-day decay</dayShift>
-            </highFrequencyEventsScore>
         </behaviorHighFrequencyEventsScore>
     </user><user type="merchant">
     	<userID>userHash</userID>
@@ -338,7 +327,7 @@
                 <term>No term, just decay</term>
                 <valueToStore>TSchargebacks</valueToStore>
                 <standardChargebackRate>0.02</standardChargebackRate>
-                <linearFunction>Nchargebacks/Ncredits-standardChargebackRate</linearFunction>
+                <linearFunction>max(Nchargebacks/Ncredits - standardChargebackRate, 0)</linearFunction>
                 <algorithm>"Count the rate of charge for the last month, after apply linear function, after add the stored value"</algorithm>
                 <weight>-5</weight>
                 <decay>ln(2)/30</decay>
