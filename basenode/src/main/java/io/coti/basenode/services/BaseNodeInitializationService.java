@@ -1,6 +1,9 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.communication.ZeroMQSubscriber;
+import io.coti.basenode.communication.Channel;
+import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
+import io.coti.basenode.data.Network;
+import io.coti.basenode.data.Node;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.GetTransactionBatchRequest;
 import io.coti.basenode.http.GetTransactionBatchResponse;
@@ -14,18 +17,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 @Slf4j
 @Service
-public class BaseNodeInitializationService {
-    @Value("${recovery.server.address}")
-    private String recoveryServerAddress;
+public abstract class BaseNodeInitializationService {
 
+    @Autowired
+    protected INetworkService networkService;
+    protected Node node;
+    @Value("${node.manager.address}")
+    private String nodeManagerAddress;
     @Autowired
     private Transactions transactions;
     @Autowired
@@ -50,11 +59,25 @@ public class BaseNodeInitializationService {
     private IDspVoteService dspVoteService;
     @Autowired
     private IPotService potService;
+
     @Autowired
-    private ZeroMQSubscriber zeroMQSubscriber;
+    private IPropagationSubscriber propagationSubscriber;
 
     public void init() {
         try {
+            initTransactionSync();
+            log.info("The transaction sync initialization is done");
+            initCommunication();
+            log.info("The communication initialization is done");
+        } catch (Exception e) {
+            log.error("Errors at {} : ", this.getClass().getSimpleName(), e);
+            System.exit(-1);
+        }
+    }
+
+    private void initTransactionSync()  {
+        try {
+            propagationSubscriber.startListeneing();
             addressService.init();
             balanceService.init();
             confirmationService.init();
@@ -64,11 +87,8 @@ public class BaseNodeInitializationService {
             AtomicLong maxTransactionIndex = new AtomicLong(-1);
             transactions.forEach(transactionData -> handleExistingTransaction(maxTransactionIndex, transactionData));
             transactionIndexService.init(maxTransactionIndex);
-            log.info("Transactions Load completed");
 
-            monitorService.init();
-
-            if (!recoveryServerAddress.isEmpty()) {
+            if (networkService.getRecoveryServerAddress() != null) {
                 List<TransactionData> missingTransactions = requestMissingTransactions(maxTransactionIndex.get() + 1);
                 if (missingTransactions != null) {
                     int threadPoolSize = 1;
@@ -80,14 +100,32 @@ public class BaseNodeInitializationService {
                     executorService.invokeAll(missingTransactionsTasks);
                 }
             }
-
             balanceService.validateBalances();
             clusterService.finalizeInit();
-            zeroMQSubscriber.initPropagationHandler();
-        } catch (Exception e) {
-            log.error("Errors at {} : ", this.getClass().getSimpleName(), e);
+            log.info("Transactions Load completed");
+        }
+        catch (Exception e){
+            log.error("Fatal error in initialization", e);
             System.exit(-1);
         }
+    }
+
+    private void initCommunication() {
+        HashMap<String, Consumer<Object>> classNameToSubscriberHandlerMapping = new HashMap<>();
+        classNameToSubscriberHandlerMapping.put(Channel.getChannelString(Network.class, getNodeProperties().getNodeType()),
+                newNetwork -> networkService.handleNetworkChanges((Network) newNetwork));
+
+        monitorService.init();
+      //  networkService.connectToCurrentNetwork();
+        propagationSubscriber.addMessageHandler(classNameToSubscriberHandlerMapping);
+        propagationSubscriber.connectAndSubscribeToServer(networkService.getNetwork().nodeManagerPropagationAddress);
+
+        propagationSubscriber.initPropagationHandler();
+
+    }
+
+    private void initSubscriber() {
+
     }
 
     private void handleExistingTransaction(AtomicLong maxTransactionIndex, TransactionData transactionData) {
@@ -109,15 +147,30 @@ public class BaseNodeInitializationService {
         try {
             GetTransactionBatchResponse getTransactionBatchResponse =
                     restTemplate.postForObject(
-                            recoveryServerAddress + "/getTransactionBatch",
+                            networkService.getRecoveryServerAddress() + "/getTransactionBatch",
                             new GetTransactionBatchRequest(firstMissingTransactionIndex),
                             GetTransactionBatchResponse.class);
             log.info("Received transaction batch of size: {}", getTransactionBatchResponse.getTransactions().size());
             return getTransactionBatchResponse.getTransactions();
         } catch (Exception e) {
-            log.error("Unresponsive recovery Node: {}", recoveryServerAddress);
+            log.error("Unresponsive recovery Node: {}", networkService.getRecoveryServerAddress());
             log.error(e.getMessage());
             return null;
         }
     }
+
+    public void connectToNetwork() {
+        node = getNodeProperties();
+        Network network = connectToNodeManager(node);
+        networkService.saveNetwork(network);
+    }
+
+    private Network connectToNodeManager(Node node) {
+        RestTemplate restTemplate = new RestTemplate();
+        String newNodeURL = nodeManagerAddress + "/nodes/newNode";
+        return restTemplate.postForEntity(newNodeURL, node, Network.class).getBody();
+    }
+
+    protected abstract Node getNodeProperties();
+
 }

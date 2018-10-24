@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static io.coti.zerospend.data.ZeroSpendTransactionType.GENESIS;
 import static io.coti.zerospend.data.ZeroSpendTransactionType.STARVATION;
@@ -92,8 +93,13 @@ public class TransactionCreationService {
             dspConsensusResult.setDspConsensus(true);
             dspVoteService.setIndexForDspResult(transactionData, dspConsensusResult);
             transactionData.setGenesis(true);
-
             transactionHelper.attachTransactionToCluster(transactionData);
+            propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode));
+            try {
+                TimeUnit.MILLISECONDS.sleep(150);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
