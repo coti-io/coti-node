@@ -1,7 +1,6 @@
 package io.coti.fullnode.services;
 
-import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
-import io.coti.basenode.data.Node;
+import io.coti.basenode.data.NetworkNode;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
@@ -25,33 +24,33 @@ public class InitializationService extends BaseNodeInitializationService {
     @Autowired
     private INetworkService networkService;
 
-    @Autowired
-    private IPropagationSubscriber subscriber;
     @PostConstruct
     public void init() {
         super.connectToNetwork();
         communicationService.initSubscriber(NodeType.FullNode);
-        List<Node> dspNodes = this.networkService.getNetwork().dspNodes;
-        Collections.shuffle(dspNodes);
-        Node firstDspNode = null;
-        if (dspNodes.size() > 0) {
-            firstDspNode = dspNodes.get(0);
-            networkService.setRecoveryServerAddress(firstDspNode.getHttpFullAddress());
+        List<NetworkNode> dspNetworkNodes = this.networkService.getNetworkData().getDspNetworkNodes();
+        Collections.shuffle(dspNetworkNodes);
+        NetworkNode firstDspNetworkNode = null;
+        if (dspNetworkNodes.size() > 0) {
+            firstDspNetworkNode = dspNetworkNodes.get(0);
+            networkService.setRecoveryServerAddress(firstDspNetworkNode.getHttpFullAddress());
         }
 
-        if (firstDspNode != null) {
-            communicationService.addSender(firstDspNode.getReceivingFullAddress());
-            subscriber.connectAndSubscribeToServer(firstDspNode.getPropagationFullAddress());
-            networkService.getNetwork().addNode(firstDspNode);
+        if (firstDspNetworkNode != null) {
+            communicationService.addSender(firstDspNetworkNode.getReceivingFullAddress());
+            communicationService.addSubscription(firstDspNetworkNode.getPropagationFullAddress());
+            networkService.getNetworkData().addNode(firstDspNetworkNode);
         }
-        if (dspNodes.size() > 1) { //TODO: subscribing only to one dsp ?
-            communicationService.addSender(dspNodes.get(1).getReceivingFullAddress());
-         //   subscriber.connectAndSubscribeToServer(dspNodes.get(1).getPropagationFullAddress());
+        if (dspNetworkNodes.size() > 1) { //TODO: subscribing only to one dsp ?
+            communicationService.addSender(dspNetworkNodes.get(1).getReceivingFullAddress());
+            communicationService.addSubscription(dspNetworkNodes.get(1).getPropagationFullAddress());
+            networkService.getNetworkData().addNode(dspNetworkNodes.get(1));
+
         }
         super.init();
     }
 
-    protected Node getNodeProperties(){
-        return new Node(NodeType.FullNode, nodeIp, serverPort);
+    protected NetworkNode getNodeProperties() {
+        return new NetworkNode(NodeType.FullNode, nodeIp, serverPort);
     }
 }

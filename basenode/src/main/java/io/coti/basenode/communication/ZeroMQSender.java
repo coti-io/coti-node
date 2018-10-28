@@ -54,7 +54,7 @@ public class ZeroMQSender implements ISender {
         ZMQ.Socket sender = receivingAddressToSenderSocketMapping.get(receivingFullAddress);
         if(sender != null){
             log.error("{} with address  {} is about to be removed from sending to zmq", nodeType, receivingFullAddress);
-            if(!sender.unsubscribe(receivingFullAddress)) {
+            if(!sender.disconnect(receivingFullAddress)) {
                 log.error("{} with address  {} sender failed to be removed from zmq", nodeType, receivingFullAddress);
             }
             receivingAddressToSenderSocketMapping.remove(receivingFullAddress);

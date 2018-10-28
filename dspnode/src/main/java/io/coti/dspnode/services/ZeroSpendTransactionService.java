@@ -19,7 +19,7 @@ public class ZeroSpendTransactionService {
 
     public String handleReceivedZeroSpendTransactionRequest(ZeroSpendTransactionRequest zeroSpendTransactionRequest) {
         log.info("New ZeroSpend transaction request received");
-        String zerospendReceivingAddress = networkService.getNetwork().getZerospendServer().getReceivingFullAddress();
+        String zerospendReceivingAddress = networkService.getNetworkData().getZerospendServer().getReceivingFullAddress();
         sender.send(zeroSpendTransactionRequest, zerospendReceivingAddress);
         return "Ok";
     }

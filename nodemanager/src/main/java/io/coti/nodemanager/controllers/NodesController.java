@@ -1,7 +1,7 @@
 package io.coti.nodemanager.controllers;
 
-import io.coti.basenode.data.Network;
-import io.coti.basenode.data.Node;
+import io.coti.basenode.data.NetworkData;
+import io.coti.basenode.data.NetworkNode;
 import io.coti.nodemanager.services.NodesService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,13 +22,13 @@ public class NodesController {
     private NodesService nodesService;
 
     @RequestMapping(path = "/newNode", method = RequestMethod.POST)
-    public ResponseEntity<Network> newNode(@Valid @RequestBody Node node) {
-        nodesService.newNode(node);
-        return ResponseEntity.ok(nodesService.getAllNodes());
+    public ResponseEntity<NetworkData> newNode(@Valid @RequestBody NetworkNode networkNode) {
+        nodesService.newNode(networkNode);
+        return ResponseEntity.ok(nodesService.getAllNetworkData());
     }
 
     @RequestMapping(path = "/all", method = RequestMethod.GET)
-    public Network getAllNodes() {
-        return nodesService.getAllNodes();
+    public NetworkData getAllNodes() {
+        return nodesService.getAllNetworkData();
     }
 }

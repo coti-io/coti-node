@@ -1,11 +1,12 @@
 package io.coti.basenode.data;
 
+import io.coti.basenode.crypto.NodeCryptoHelper;
 import lombok.Data;
 
 import java.util.Objects;
 
 @Data
-public class Node {
+public class NetworkNode {
     private NodeType nodeType;
     private String address;
     private String httpPort;
@@ -14,20 +15,21 @@ public class Node {
     private Hash hash;
     private String recoveryServerAddress;
 
-    public Node(NodeType nodeType, String address, String httpPort) {
+    public NetworkNode(NodeType nodeType, String address, String httpPort) {
         this.nodeType = nodeType;
         this.address = address;
         this.httpPort = httpPort;
+        this.hash = NodeCryptoHelper.getNodeHash();
     }
 
-    public Node() {
+    public NetworkNode() {
     }
 
     @Override
     public boolean equals(Object a) {
-        if (a instanceof Node) {
-            Node aNode = (Node) a;
-            return nodeType.equals(aNode.nodeType) && address.equals(aNode.address) && httpPort.equals(aNode.httpPort);
+        if (a instanceof NetworkNode) {
+            NetworkNode aNetworkNode = (NetworkNode) a;
+            return nodeType.equals(aNetworkNode.nodeType) && hash.equals(aNetworkNode.getHash());
         } else {
             return false;
         }
@@ -35,7 +37,6 @@ public class Node {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(nodeType, address, httpPort);
     }
 

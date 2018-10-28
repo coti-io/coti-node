@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
 
-import javax.annotation.PreDestroy;
 import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
@@ -33,7 +32,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     private Map<String, Consumer<Object>> messagesHandler;
     private Map<String, Date> connectedServerAddresses = new ConcurrentHashMap<>();
     private BlockingQueue<ZeroMQMessageData> messageQueue;
-    private List<Class<? extends IEntity>> messageTypes = new ArrayList<>(Arrays.asList(TransactionData.class, AddressData.class, DspConsensusResult.class, Network.class));
+    private List<Class<? extends IEntity>> messageTypes = new ArrayList<>(Arrays.asList(TransactionData.class, AddressData.class, DspConsensusResult.class, NetworkData.class));
     private List<String> channelsToSubscribe;
     private Thread propagationReceiverThread;
     private Thread messagesQueueHandlerThread;

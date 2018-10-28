@@ -119,9 +119,8 @@ public class TransactionHelper implements ITransactionHelper {
     public boolean isTransactionAlreadyPropagated(TransactionData transactionData) {
         synchronized (transactionData) {
             if (isTransactionExists(transactionData)) {
-                if (!isTransactionHashProcessing(transactionData.getHash())) {
+                if (!isTransactionHashProcessing(transactionData.getHash()))
                     addDspResultToDb(transactionData.getDspConsensusResult());
-                }
                 return true;
             }
             return false;

@@ -155,7 +155,7 @@ public class TransactionService extends BaseNodeTransactionService {
             webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
             final TransactionData finalTransactionData = transactionData;
             List<String> receivingServerAddresses = new LinkedList<>();
-            receivingServerAddresses.add(networkService.getNetwork().getDspNodes().get(0).getReceivingFullAddress());
+            receivingServerAddresses.add(networkService.getNetworkData().getDspNetworkNodes().get(0).getReceivingFullAddress());
             receivingServerAddresses.forEach(address -> sender.send(finalTransactionData, address));
             transactionHelper.setTransactionStateToFinished(transactionData);
             return ResponseEntity

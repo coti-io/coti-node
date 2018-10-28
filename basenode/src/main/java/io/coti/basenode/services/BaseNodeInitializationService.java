@@ -2,8 +2,8 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.communication.Channel;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
-import io.coti.basenode.data.Network;
-import io.coti.basenode.data.Node;
+import io.coti.basenode.data.NetworkData;
+import io.coti.basenode.data.NetworkNode;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.GetTransactionBatchRequest;
 import io.coti.basenode.http.GetTransactionBatchResponse;
@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
@@ -32,7 +31,7 @@ public abstract class BaseNodeInitializationService {
 
     @Autowired
     protected INetworkService networkService;
-    protected Node node;
+    protected NetworkNode networkNode;
     @Value("${node.manager.address}")
     private String nodeManagerAddress;
     @Autowired
@@ -112,13 +111,13 @@ public abstract class BaseNodeInitializationService {
 
     private void initCommunication() {
         HashMap<String, Consumer<Object>> classNameToSubscriberHandlerMapping = new HashMap<>();
-        classNameToSubscriberHandlerMapping.put(Channel.getChannelString(Network.class, getNodeProperties().getNodeType()),
-                newNetwork -> networkService.handleNetworkChanges((Network) newNetwork));
+        classNameToSubscriberHandlerMapping.put(Channel.getChannelString(NetworkData.class, getNodeProperties().getNodeType()),
+                newNetwork -> networkService.handleNetworkChanges((NetworkData) newNetwork));
 
         monitorService.init();
       //  networkService.connectToCurrentNetwork();
         propagationSubscriber.addMessageHandler(classNameToSubscriberHandlerMapping);
-        propagationSubscriber.connectAndSubscribeToServer(networkService.getNetwork().nodeManagerPropagationAddress);
+        propagationSubscriber.connectAndSubscribeToServer(networkService.getNetworkData().getNodeManagerPropagationAddress());
 
         propagationSubscriber.initPropagationHandler();
 
@@ -153,24 +152,24 @@ public abstract class BaseNodeInitializationService {
             log.info("Received transaction batch of size: {}", getTransactionBatchResponse.getTransactions().size());
             return getTransactionBatchResponse.getTransactions();
         } catch (Exception e) {
-            log.error("Unresponsive recovery Node: {}", networkService.getRecoveryServerAddress());
+            log.error("Unresponsive recovery NetworkNode: {}", networkService.getRecoveryServerAddress());
             log.error(e.getMessage());
             return null;
         }
     }
 
     public void connectToNetwork() {
-        node = getNodeProperties();
-        Network network = connectToNodeManager(node);
-        networkService.saveNetwork(network);
+        networkNode = getNodeProperties();
+        NetworkData networkData = connectToNodeManager(networkNode);
+        networkService.saveNetwork(networkData);
     }
 
-    private Network connectToNodeManager(Node node) {
+    private NetworkData connectToNodeManager(NetworkNode networkNode) {
         RestTemplate restTemplate = new RestTemplate();
         String newNodeURL = nodeManagerAddress + "/nodes/newNode";
-        return restTemplate.postForEntity(newNodeURL, node, Network.class).getBody();
+        return restTemplate.postForEntity(newNodeURL, networkNode, NetworkData.class).getBody();
     }
 
-    protected abstract Node getNodeProperties();
+    protected abstract NetworkNode getNodeProperties();
 
 }

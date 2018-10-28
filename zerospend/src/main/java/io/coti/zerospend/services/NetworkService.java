@@ -1,10 +1,9 @@
 package io.coti.zerospend.services;
 
-import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
-import io.coti.basenode.data.Network;
-import io.coti.basenode.data.Node;
-import io.coti.basenode.services.interfaces.INetworkService;
+import io.coti.basenode.data.NetworkData;
+import io.coti.basenode.data.NetworkNode;
 import io.coti.basenode.services.CommunicationService;
+import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,40 +16,39 @@ import java.util.List;
 @Slf4j
 @Service
 public class NetworkService implements INetworkService {
-    private Network network;
+    private NetworkData networkData;
 
     @Autowired
     private CommunicationService communicationService;
-    @Autowired
-    private IPropagationSubscriber subscriber;
+
 
     @PostConstruct
-    private void init(){
-        network = new Network();
+    private void init() {
+        networkData = new NetworkData();
     }
 
     @Override
-    public void handleNetworkChanges(Network newNetwork) {
-        log.info("New newNetwork structure received: {}", newNetwork);
-        List<Node> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetwork.dspNodes, this.network.getDspNodes()));
-        if(dspNodesToConnect.size() > 0){
+    public void handleNetworkChanges(NetworkData newNetworkData) {
+        log.info("New newNetworkData structure received: {}", newNetworkData);
+        List<NetworkNode> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetworkData.getDspNetworkNodes(), this.networkData.getDspNetworkNodes()));
+        if (dspNodesToConnect.size() > 0) {
             dspNodesToConnect.forEach(dspNode -> {
                 log.info("Dsp {} is about to be added", dspNode.getHttpFullAddress());
-                network.addNode(dspNode);
-                subscriber.connectAndSubscribeToServer(dspNode.getPropagationFullAddress());
+                networkData.addNode(dspNode);
+                communicationService.addSubscription(dspNode.getPropagationFullAddress());
             });
         }
-        this.network = newNetwork;
+        this.networkData = newNetworkData;
     }
 
     @Override
-    public Network getNetwork() {
-        return network;
+    public NetworkData getNetworkData() {
+        return networkData;
     }
 
     @Override
-    public void saveNetwork(Network network) {
-        this.network = network;
+    public void saveNetwork(NetworkData networkData) {
+        this.networkData = networkData;
     }
 
     @Override
@@ -64,7 +62,7 @@ public class NetworkService implements INetworkService {
 
     @Override
     public void connectToCurrentNetwork() {
-        handleNetworkChanges(network);
+        handleNetworkChanges(networkData);
     }
 
 
