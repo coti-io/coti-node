@@ -43,12 +43,6 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
                 String channelString = Channel.getChannelString(toPropagate.getClass(), nodeType);
                 log.debug("Propagating {} to {}", toPropagate.getHash().toHexString(), channelString );
                 byte[] message = serializer.serialize(toPropagate);
-
-                try {
-                    TimeUnit.SECONDS.sleep(1);
-                } catch (InterruptedException e) {
-                    log.error("Error on sleep",e);
-                }
                 propagator.sendMore(channelString.getBytes());
                 propagator.send(message);
             });

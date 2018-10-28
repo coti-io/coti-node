@@ -1,8 +1,8 @@
 package io.coti.trustscore.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
-import io.coti.basenode.data.Network;
-import io.coti.basenode.data.Node;
+import io.coti.basenode.data.NetworkData;
+import io.coti.basenode.data.NetworkNode;
 import io.coti.basenode.services.CommunicationService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +21,7 @@ import java.util.List;
 @Slf4j
 public class NetworkService implements INetworkService {
 
-    private Network network;
+    private NetworkData networkData;
 
     private String recoveryServerAddress;
 
@@ -33,49 +33,47 @@ public class NetworkService implements INetworkService {
     @Autowired
     private CommunicationService communicationService;
 
-    @Autowired
-    private IPropagationSubscriber subscriber;
-
     @PostConstruct
     private void init(){
-        network = new Network();
+        networkData = new NetworkData();
     }
 
     @Override
     public void connectToCurrentNetwork() {
-        handleNetworkChanges(network);
+        handleNetworkChanges(networkData);
     }
 
     @Override
-    public void handleNetworkChanges(Network newNetwork) {
-        log.info("New newNetwork structure received: {}", newNetwork);
-        Node zerospendNode = newNetwork.getZerospendServer();
-        if (zerospendNode != null && zerospendNode != this.network.getZerospendServer()) {
-            log.info("Zero spend server {} is about to be added", zerospendNode.getHttpFullAddress());
-            recoveryServerAddress = zerospendNode.getHttpFullAddress();
-            subscriber.connectAndSubscribeToServer(zerospendNode.getPropagationFullAddress());
+    public void handleNetworkChanges(NetworkData newNetworkData) {
+        log.info("New newNetworkData structure received: {}", newNetworkData);
+        NetworkNode zerospendNetworkNode = newNetworkData.getZerospendServer();
+        if (zerospendNetworkNode != null && zerospendNetworkNode != this.networkData.getZerospendServer()) {
+            log.info("Zero spend server {} is about to be added", zerospendNetworkNode.getHttpFullAddress());
+            recoveryServerAddress = zerospendNetworkNode.getHttpFullAddress();
+            communicationService.addSubscription(zerospendNetworkNode.getPropagationFullAddress());
         }
-        List<Node> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetwork.dspNodes, this.network.getDspNodes()));
+        List<NetworkNode> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetworkData.getDspNetworkNodes(),
+                this.networkData.getDspNetworkNodes()));
         dspNodesToConnect.removeIf(dsp -> dsp.getAddress().equals(nodeIp) && dsp.getHttpPort().equals(serverPort));
         if (dspNodesToConnect.size() > 0) {
             Collections.shuffle(dspNodesToConnect);
             dspNodesToConnect.forEach(dspnode -> {
                         log.info("Dsp {} is about to be added", "http://" + dspnode.getAddress() + ":" + dspnode.getHttpPort());
-                        subscriber.connectAndSubscribeToServer(dspnode.getPropagationFullAddress());
+                communicationService.addSubscription(dspnode.getPropagationFullAddress());
                     }
             );
         }
-        this.network = newNetwork;
+        this.networkData = newNetworkData;
     }
 
     @Override
-    public Network getNetwork() {
-        return network;
+    public NetworkData getNetworkData() {
+        return networkData;
     }
 
     @Override
-    public void saveNetwork(Network network) {
-        this.network = network;
+    public void saveNetwork(NetworkData networkData) {
+        this.networkData = networkData;
 
     }
 

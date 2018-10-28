@@ -29,8 +29,6 @@ public class InitializationService extends BaseNodeInitializationService{
     private String serverIp;
     @Value("${server.port}")
     private String serverPort;
-    @Value("${server.ip}")
-    private String nodeIp;
 
     @Autowired
     private TransactionService transactionService;
@@ -56,33 +54,34 @@ public class InitializationService extends BaseNodeInitializationService{
         communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
         communicationService.initSubscriber(NodeType.DspNode);
         communicationService.initPropagator(propagationPort);
-        List<Node> dspNodes = this.networkService.getNetwork().dspNodes;
-        Collections.shuffle(dspNodes);
-        Node zerospendNode = this.networkService.getNetwork().getZerospendServer();
+        List<NetworkNode> dspNetworkNodes = this.networkService.getNetworkData().getDspNetworkNodes();
+        Collections.shuffle(dspNetworkNodes);
+        NetworkNode zerospendNetworkNode = this.networkService.getNetworkData().getZerospendServer();
 
-        if(zerospendNode != null ) {
-            networkService.setRecoveryServerAddress(zerospendNode.getHttpFullAddress());
+        if(zerospendNetworkNode != null ) {
+            networkService.setRecoveryServerAddress(zerospendNetworkNode.getHttpFullAddress());
         }
         else{
+            log.error("No zerospend server exists in the network got from the node manager");
             networkService.setRecoveryServerAddress("");
+            System.exit(-1);
         }
-        if(zerospendNode != null ){
-            communicationService.addSender(zerospendNode.getReceivingFullAddress());
-            subscriber.connectAndSubscribeToServer(zerospendNode.getPropagationFullAddress());
-        }
-        dspNodes.removeIf(dsp -> dsp.getAddress().equals(serverIp) && dsp.getHttpPort().equals(serverPort) );
-        if(dspNodes.size() > 0){
-                dspNodes.forEach(dspnode -> subscriber.connectAndSubscribeToServer(dspnode.getPropagationFullAddress()));
+
+        communicationService.addSender(zerospendNetworkNode.getReceivingFullAddress());
+        subscriber.connectAndSubscribeToServer(zerospendNetworkNode.getPropagationFullAddress());
+
+        dspNetworkNodes.removeIf(dsp -> dsp.getAddress().equals(serverIp) && dsp.getHttpPort().equals(serverPort) );
+        if(dspNetworkNodes.size() > 0){
+                dspNetworkNodes.forEach(dspnode -> subscriber.connectAndSubscribeToServer(dspnode.getPropagationFullAddress()));
         }
         super.init();
-
     }
 
     @Override
-    protected Node getNodeProperties() {
-        Node node = new Node(NodeType.DspNode, nodeIp, serverPort);
-        node.setPropagationPort(propagationPort);
-        node.setReceivingPort(receivingPort);
-        return node;
+    protected NetworkNode getNodeProperties() {
+        NetworkNode networkNode = new NetworkNode(NodeType.DspNode, serverIp, serverPort);
+        networkNode.setPropagationPort(propagationPort);
+        networkNode.setReceivingPort(receivingPort);
+        return networkNode;
     }
 }

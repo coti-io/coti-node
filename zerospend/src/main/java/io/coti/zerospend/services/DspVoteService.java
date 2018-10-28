@@ -8,7 +8,6 @@ import io.coti.basenode.model.TransactionVotes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeDspVoteService;
 import io.coti.basenode.services.TransactionIndexService;
-import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,21 +96,21 @@ public class DspVoteService extends BaseNodeDspVoteService {
 
     @Scheduled(fixedDelay = 10000, initialDelay = 5000)
     private void updateLiveDspNodesList() {
-        if (!networkService.getNetwork().getDspNodes().isEmpty()) {
-            List<Node> dspsList = networkService.getNetwork().getDspNodes();
+        if (!networkService.getNetworkData().getDspNetworkNodes().isEmpty()) {
+            List<NetworkNode> dspsList = networkService.getNetworkData().getDspNetworkNodes();
             List<Hash> onlineDspHashes = new LinkedList<>();
             RestTemplate restTemplate = new RestTemplate();
-            for (Node dspServerNode : dspsList) {
+            for (NetworkNode dspServerNetworkNode : dspsList) {
                 try {
 
-                    Hash voterHash = restTemplate.getForObject(dspServerNode.getHttpFullAddress() + NODE_HASH_ENDPOINT, Hash.class);
+                    Hash voterHash = restTemplate.getForObject(dspServerNetworkNode.getHttpFullAddress() + NODE_HASH_ENDPOINT, Hash.class);
                     if (voterHash == null) {
-                        log.error("Voter hash received is null: {}", dspServerNode.getHttpFullAddress());
+                        log.error("Voter hash received is null: {}", dspServerNetworkNode.getHttpFullAddress());
                     } else {
                         onlineDspHashes.add(voterHash);
                     }
                 } catch (RestClientException e) {
-                    log.error("Unresponsive Dsp Node: {}", dspServerNode.getHttpFullAddress());
+                    log.error("Unresponsive Dsp NetworkNode: {}", dspServerNetworkNode.getHttpFullAddress());
                 }
             }
             if (onlineDspHashes.isEmpty()) {
@@ -121,7 +120,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
             log.info("Updated live dsp nodes list. Count: {}", currentLiveDspNodes.size());
         }
         else{
-            log.info("Dsp server addresses list didn't arrive by the node manager ");
+            log.info("Dsp server addresses list didn't arrive by the networkNode manager ");
         }
     }
 

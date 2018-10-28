@@ -1,11 +1,12 @@
 package io.coti.nodemanager.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
-import io.coti.basenode.data.Network;
-import io.coti.basenode.data.Node;
+import io.coti.basenode.data.NetworkData;
+import io.coti.basenode.data.NetworkNode;
 import io.coti.basenode.data.NodeType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -15,49 +16,50 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
 public class NodesService {
-    private Network network;
+
+    private NetworkData networkData;
+
     @Autowired
     private IPropagationPublisher propagationPublisher;
 
-    private String PROPAGATION_PORT = "1234";
+    @Value("${propagation.port}")
+    private String propagationPort;
+
 
     @PostConstruct
     public void init() {
-        propagationPublisher.init(PROPAGATION_PORT);
+        networkData = new NetworkData();
+        networkData.setNodeManagerPropagationAddress("tcp://localhost:" + propagationPort);
+        propagationPublisher.init(propagationPort);
     }
 
     public void updateNetworkChanges() {
-        log.info("Propagating network changes...");
+        log.info("Propagating networkData changes...");
         try {
             TimeUnit.SECONDS.sleep(1);
         } catch (InterruptedException e) {
-           log.error("An error was thrown",e);
+            log.error("An error was thrown", e);
         }
-        propagationPublisher.propagate(network, Arrays.asList(NodeType.FullNode, NodeType.ZeroSpendServer,
+        propagationPublisher.propagate(networkData, Arrays.asList(NodeType.FullNode, NodeType.ZeroSpendServer,
                 NodeType.DspNode, NodeType.TrustScoreNode));
     }
 
-    public NodesService() {
-        network = new Network();
-        network.nodeManagerPropagationAddress = "tcp://localhost:" + PROPAGATION_PORT;
-    }
-
-    public Network newNode(Node node) {
-        log.info("New node received: {}", node);
-        if (!validateNodeProperties(node)) {
-            log.info("Illegal node properties received: {}", node);
+    public NetworkData newNode(NetworkNode networkNode) {
+        log.info("New networkNode received: {}", networkNode);
+        if (!validateNodeProperties(networkNode)) {
+            log.info("Illegal networkNode properties received: {}", networkNode);
         }
-        this.network.addNode(node);
+        this.networkData.addNode(networkNode);
         updateNetworkChanges();
-        return network;
+        return networkData;
     }
 
-    private boolean validateNodeProperties(Node node) {
+    private boolean validateNodeProperties(NetworkNode networkNode) {
         return true;
     }
 
-    public Network getAllNodes() {
-        return network;
+    public NetworkData getAllNetworkData() {
+        return networkData;
     }
 
 

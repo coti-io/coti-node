@@ -2,7 +2,7 @@ package io.coti.zerospend.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.data.DspVote;
-import io.coti.basenode.data.Node;
+import io.coti.basenode.data.NetworkNode;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeInitializationService;
@@ -50,10 +50,10 @@ public class InitializationService extends BaseNodeInitializationService {
         communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
         communicationService.initSubscriber(NodeType.ZeroSpendServer);
         communicationService.initPropagator(propagationPort);
-        if (networkService.getNetwork().dspNodes.size() > 0) {
-            networkService.getNetwork().dspNodes.forEach(dspNode -> {
+        if (networkService.getNetworkData().getDspNetworkNodes().size() > 0) {
+            networkService.getNetworkData().getDspNetworkNodes().forEach(dspNode -> {
                 subscriber.connectAndSubscribeToServer(dspNode.getPropagationFullAddress());
-                networkService.getNetwork().addNode(dspNode);
+                networkService.getNetworkData().addNode(dspNode);
             });
         }
         super.init();
@@ -62,10 +62,10 @@ public class InitializationService extends BaseNodeInitializationService {
         }
     }
 
-    protected Node getNodeProperties() {
-        node = new Node(NodeType.ZeroSpendServer, nodeIp, serverPort);
-        node.setPropagationPort(propagationPort);
-        node.setReceivingPort(receivingPort);
-        return node;
+    protected NetworkNode getNodeProperties() {
+        networkNode = new NetworkNode(NodeType.ZeroSpendServer, nodeIp, serverPort);
+        networkNode.setPropagationPort(propagationPort);
+        networkNode.setReceivingPort(receivingPort);
+        return networkNode;
     }
 }

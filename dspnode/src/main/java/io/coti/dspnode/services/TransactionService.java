@@ -41,7 +41,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
     public String handleNewTransactionFromFullNode(TransactionData transactionData) {
         try {
-            log.debug("Running new transactions from full node handler");
+            log.debug("Running new transactions from full networkNode handler");
             if (transactionHelper.isTransactionAlreadyPropagated(transactionData)) {
                 log.debug("Transaction already exists: {}", transactionData.getHash());
                 return "Transaction Exists: " + transactionData.getHash();
@@ -81,7 +81,7 @@ public class TransactionService extends BaseNodeTransactionService {
                     transactionData.getHash(),
                     validationService.fullValidation(transactionData));
             dspVoteCrypto.signMessage(dspVote);
-            String zerospendReceivingAddress = networkService.getNetwork().getZerospendServer().getReceivingFullAddress();
+            String zerospendReceivingAddress = networkService.getNetworkData().getZerospendServer().getReceivingFullAddress();
             log.debug("Sending DSP vote to {} for transaction {}", zerospendReceivingAddress, transactionData.getHash());
             sender.send(dspVote, zerospendReceivingAddress);
         }

@@ -1,7 +1,7 @@
 package io.coti.trustscore.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
-import io.coti.basenode.data.Node;
+import io.coti.basenode.data.NetworkNode;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
@@ -34,25 +34,25 @@ public class InitializationService extends BaseNodeInitializationService{
     public void init() {
         super.connectToNetwork();
         communicationService.initSubscriber(NodeType.TrustScoreNode);
-        List<Node> dspNodes = this.networkService.getNetwork().dspNodes;
-        Collections.shuffle(dspNodes);
-        Node zerospendNode = this.networkService.getNetwork().getZerospendServer();
-        if(zerospendNode != null ) {
-            networkService.setRecoveryServerAddress(zerospendNode.getHttpFullAddress());
+        List<NetworkNode> dspNetworkNodes = this.networkService.getNetworkData().getDspNetworkNodes();
+        Collections.shuffle(dspNetworkNodes);
+        NetworkNode zerospendNetworkNode = this.networkService.getNetworkData().getZerospendServer();
+        if(zerospendNetworkNode != null ) {
+            networkService.setRecoveryServerAddress(zerospendNetworkNode.getHttpFullAddress());
         }
-        if(dspNodes.size() > 0){
-                dspNodes.forEach(dspnode -> subscriber.connectAndSubscribeToServer(dspnode.getPropagationFullAddress()));
+        if(dspNetworkNodes.size() > 0){
+                dspNetworkNodes.forEach(dspnode -> subscriber.connectAndSubscribeToServer(dspnode.getPropagationFullAddress()));
         }
-        if(zerospendNode != null ) {
-            subscriber.connectAndSubscribeToServer(zerospendNode.getPropagationFullAddress());
+        if(zerospendNetworkNode != null ) {
+            subscriber.connectAndSubscribeToServer(zerospendNetworkNode.getPropagationFullAddress());
         }
         super.init();
 
     }
 
     @Override
-    protected Node getNodeProperties() {
-        return new Node(NodeType.TrustScoreNode, nodeIp, serverPort);
+    protected NetworkNode getNodeProperties() {
+        return new NetworkNode(NodeType.TrustScoreNode, nodeIp, serverPort);
 
     }
 }

@@ -1,14 +1,14 @@
 package io.coti.basenode.services.interfaces;
 
-import io.coti.basenode.data.Network;
+import io.coti.basenode.data.NetworkData;
 
 public interface INetworkService {
 
-    void handleNetworkChanges(Network network);
+    void handleNetworkChanges(NetworkData networkData);
 
-    Network getNetwork();
+    NetworkData getNetworkData();
 
-    void saveNetwork(Network network);
+    void saveNetwork(NetworkData networkData);
 
     String getRecoveryServerAddress();
 
