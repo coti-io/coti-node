@@ -31,7 +31,6 @@ public abstract class BaseNodeInitializationService {
 
     @Autowired
     protected INetworkService networkService;
-    protected NetworkNode networkNode;
     @Value("${node.manager.address}")
     private String nodeManagerAddress;
     @Autowired
@@ -159,7 +158,7 @@ public abstract class BaseNodeInitializationService {
     }
 
     public void connectToNetwork() {
-        networkNode = getNodeProperties();
+        NetworkNode networkNode = getNodeProperties();
         NetworkData networkData = connectToNodeManager(networkNode);
         networkService.saveNetwork(networkData);
     }

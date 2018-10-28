@@ -1,5 +1,7 @@
 package io.coti.fullnode.services;
 
+import io.coti.basenode.crypto.NetworkNodeCrypto;
+import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.NetworkNode;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.BaseNodeInitializationService;
@@ -23,6 +25,8 @@ public class InitializationService extends BaseNodeInitializationService {
     private String nodeIp;
     @Autowired
     private INetworkService networkService;
+    @Autowired
+    private NetworkNodeCrypto networkNodeCrypto;
 
     @PostConstruct
     public void init() {
@@ -51,6 +55,8 @@ public class InitializationService extends BaseNodeInitializationService {
     }
 
     protected NetworkNode getNodeProperties() {
-        return new NetworkNode(NodeType.FullNode, nodeIp, serverPort);
+        NetworkNode networkNode = new NetworkNode(NodeType.FullNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash());
+        networkNodeCrypto.signMessage(networkNode);
+        return networkNode;
     }
 }

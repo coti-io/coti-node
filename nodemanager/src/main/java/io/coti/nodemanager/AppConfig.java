@@ -12,6 +12,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
 @EnableScheduling
+@ComponentScan(
+        basePackages = {"io.coti.nodemanager", "io.coti.basenode"}
+)
 public class AppConfig {
     @Bean
     public IPropagationPublisher propagationPublisher() {

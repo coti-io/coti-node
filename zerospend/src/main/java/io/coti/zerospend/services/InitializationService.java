@@ -1,6 +1,8 @@
 package io.coti.zerospend.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
+import io.coti.basenode.crypto.NetworkNodeCrypto;
+import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.DspVote;
 import io.coti.basenode.data.NetworkNode;
 import io.coti.basenode.data.NodeType;
@@ -27,6 +29,8 @@ public class InitializationService extends BaseNodeInitializationService {
     @Value("${server.ip}")
     private String nodeIp;
 
+    @Autowired
+    private NetworkNodeCrypto networkNodeCrypto;
     @Autowired
     private CommunicationService communicationService;
     @Autowired
@@ -63,9 +67,10 @@ public class InitializationService extends BaseNodeInitializationService {
     }
 
     protected NetworkNode getNodeProperties() {
-        networkNode = new NetworkNode(NodeType.ZeroSpendServer, nodeIp, serverPort);
+        NetworkNode networkNode = new NetworkNode(NodeType.ZeroSpendServer, nodeIp, serverPort, NodeCryptoHelper.getNodeHash());
         networkNode.setPropagationPort(propagationPort);
         networkNode.setReceivingPort(receivingPort);
+        networkNodeCrypto.signMessage(networkNode);
         return networkNode;
     }
 }

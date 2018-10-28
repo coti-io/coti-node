@@ -1,6 +1,8 @@
 package io.coti.dspnode.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
+import io.coti.basenode.crypto.NetworkNodeCrypto;
+import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
@@ -30,6 +32,8 @@ public class InitializationService extends BaseNodeInitializationService{
     @Value("${server.port}")
     private String serverPort;
 
+    @Autowired
+    private NetworkNodeCrypto networkNodeCrypto;
     @Autowired
     private TransactionService transactionService;
     @Autowired
@@ -79,9 +83,11 @@ public class InitializationService extends BaseNodeInitializationService{
 
     @Override
     protected NetworkNode getNodeProperties() {
-        NetworkNode networkNode = new NetworkNode(NodeType.DspNode, serverIp, serverPort);
+        NetworkNode networkNode = new NetworkNode(NodeType.DspNode, serverIp, serverPort, NodeCryptoHelper.getNodeHash());
         networkNode.setPropagationPort(propagationPort);
         networkNode.setReceivingPort(receivingPort);
+        networkNodeCrypto.signMessage(networkNode);
+
         return networkNode;
     }
 }

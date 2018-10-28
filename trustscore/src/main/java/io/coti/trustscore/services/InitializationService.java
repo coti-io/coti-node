@@ -1,6 +1,8 @@
 package io.coti.trustscore.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
+import io.coti.basenode.crypto.NetworkNodeCrypto;
+import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.NetworkNode;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.BaseNodeInitializationService;
@@ -30,6 +32,9 @@ public class InitializationService extends BaseNodeInitializationService{
     @Autowired
     private IPropagationSubscriber subscriber;
 
+    @Autowired
+    private NetworkNodeCrypto networkNodeCrypto;
+
     @PostConstruct
     public void init() {
         super.connectToNetwork();
@@ -52,7 +57,10 @@ public class InitializationService extends BaseNodeInitializationService{
 
     @Override
     protected NetworkNode getNodeProperties() {
-        return new NetworkNode(NodeType.TrustScoreNode, nodeIp, serverPort);
+        NetworkNode networkNode = new NetworkNode(NodeType.TrustScoreNode, nodeIp, serverPort,
+                NodeCryptoHelper.getNodeHash());
+        networkNodeCrypto.signMessage(networkNode);
+        return networkNode;
 
     }
 }

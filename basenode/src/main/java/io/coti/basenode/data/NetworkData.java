@@ -10,7 +10,7 @@ import java.util.List;
 
 @Data
 @Slf4j
-public class NetworkData implements IEntity {
+public class NetworkData implements IEntity  {
     private List<NetworkNode> dspNetworkNodes;
     private List<NetworkNode> fullNetworkNodes;
     private List<NetworkNode> trustScoreNetworkNodes;

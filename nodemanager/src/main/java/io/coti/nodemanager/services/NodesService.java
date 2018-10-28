@@ -1,6 +1,7 @@
 package io.coti.nodemanager.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
+import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.data.NetworkData;
 import io.coti.basenode.data.NetworkNode;
 import io.coti.basenode.data.NodeType;
@@ -21,6 +22,9 @@ public class NodesService {
 
     @Autowired
     private IPropagationPublisher propagationPublisher;
+
+    @Autowired
+    private NetworkNodeCrypto networkNodeCrypto;
 
     @Value("${propagation.port}")
     private String propagationPort;
@@ -55,7 +59,12 @@ public class NodesService {
     }
 
     private boolean validateNodeProperties(NetworkNode networkNode) {
-        return true;
+        boolean isNodeSignatureValid = networkNodeCrypto.verifySignature(networkNode);
+
+        if( !isNodeSignatureValid) {
+            log.error("Invalid networkNode. NetworkNode =  {}", networkNode);
+        }
+        return isNodeSignatureValid;
     }
 
     public NetworkData getAllNetworkData() {
