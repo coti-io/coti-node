@@ -109,7 +109,8 @@ public class TransactionHelper implements ITransactionHelper {
         return false;
     }
 
-    private boolean isTransactionHashProcessing(Hash transactionHash) {
+    @Override
+    public boolean isTransactionHashProcessing(Hash transactionHash) {
         if (transactionHashToTransactionStateStackMapping.containsKey(transactionHash)) {
             return true;
         }
@@ -277,7 +278,7 @@ public class TransactionHelper implements ITransactionHelper {
 
     @Override
     public boolean isDspConfirmed(TransactionData transactionData) {
-        return transactionData.getDspConsensusResult() != null && transactionData.getDspConsensusResult().isDspConsensus();
+        return transactionData.getDspConsensusResult() != null && transactionData.getDspConsensusResult().isDspConsensus() && transactionIndexes.getByHash(new Hash(transactionData.getDspConsensusResult().getIndex())) != null;
     }
 
     @Override

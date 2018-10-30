@@ -29,25 +29,30 @@ public class TransactionIndexService {
     public void init(AtomicLong maxTransactionIndex) throws Exception {
         byte[] accumulatedHash = "GENESIS".getBytes();
         TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash(-1), -1, "GENESIS".getBytes());
-        for (long i = 0; i <= maxTransactionIndex.get(); i++) {
-            transactionIndexData = transactionIndexes.getByHash(new Hash(i));
-            if (transactionIndexData == null) {
-                log.error("Null transaction index data found for index: {}", i);
-                throw new Exception(String.format("Null transaction index data found for index: {}", i));
-            }
+        TransactionIndexData nextTransactionIndexData;
+        try {
+            for (long i = 0; i <= maxTransactionIndex.get(); i++) {
+                nextTransactionIndexData = transactionIndexes.getByHash(new Hash(i));
+                if (nextTransactionIndexData == null) {
+                    log.error("Null transaction index data found for index: {}", i);
+                    return;
+                }
 
-            TransactionData transactionData = transactions.getByHash(transactionIndexData.getTransactionHash());
-            if (transactionIndexData == null || transactionData == null) {
-                log.error("Null transaction data found for index: {}", i);
-                throw new Exception(String.format("Null transaction data found for index: {}", i));
+                TransactionData transactionData = transactions.getByHash(nextTransactionIndexData.getTransactionHash());
+                if (transactionData == null) {
+                    log.error("Null transaction data found for index: {}", i);
+                    return;
+                }
+                accumulatedHash = getAccumulatedHash(accumulatedHash, transactionData.getHash(), transactionData.getDspConsensusResult().getIndex());
+                if (!Arrays.equals(accumulatedHash, nextTransactionIndexData.getAccumulatedHash())) {
+                    log.error("Incorrect accumulated hash");
+                    return;
+                }
+                transactionIndexData = nextTransactionIndexData;
             }
-            accumulatedHash = getAccumulatedHash(accumulatedHash, transactionData.getHash(), transactionData.getDspConsensusResult().getIndex());
-            if (!Arrays.equals(accumulatedHash, transactionIndexData.getAccumulatedHash())) {
-                log.error("Incorrect accumulated hash");
-                throw new Exception("Incorrect accumulated hash");
-            }
+        } finally {
+            lastTransactionIndexData = transactionIndexData;
         }
-        lastTransactionIndexData = transactionIndexData;
     }
 
     public synchronized boolean insertNewTransactionIndex(TransactionData transactionData) {

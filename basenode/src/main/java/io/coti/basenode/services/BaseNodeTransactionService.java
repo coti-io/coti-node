@@ -1,5 +1,6 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -23,6 +26,7 @@ public class BaseNodeTransactionService implements ITransactionService {
     private IValidationService validationService;
     @Autowired
     private Transactions transactions;
+    private Map<Hash, TransactionData> parentProcessingTransactions = new ConcurrentHashMap<>();
     private List<TransactionData> postponedTransactions = new LinkedList<>();
 
     @Override
@@ -32,12 +36,19 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     @Override
     public void handlePropagatedTransaction(TransactionData transactionData) {
+        if (transactionHelper.isTransactionAlreadyPropagated(transactionData)) {
+            log.debug("Transaction already exists: {}", transactionData.getHash());
+            return;
+        }
+        List<Hash> childrenTransactions = transactionData.getChildrenTransactions();
         try {
-            if (transactionHelper.isTransactionAlreadyPropagated(transactionData)) {
-                log.debug("Transaction already exists: {}", transactionData.getHash());
-                return;
-            }
             transactionHelper.startHandleTransaction(transactionData);
+            while (hasOneOfParentsProcessing(transactionData)) {
+                parentProcessingTransactions.put(transactionData.getHash(), transactionData);
+                synchronized (transactionData) {
+                    transactionData.wait();
+                }
+            }
             if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
                 log.error("Data Integrity validation failed: {}", transactionData.getHash());
                 return;
@@ -50,7 +61,6 @@ public class BaseNodeTransactionService implements ITransactionService {
                 log.error("Balance check failed: {}", transactionData.getHash());
                 return;
             }
-
             transactionHelper.attachTransactionToCluster(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
 
@@ -66,13 +76,28 @@ public class BaseNodeTransactionService implements ITransactionService {
                 postponedTransactions.remove(postponedTransaction);
                 handlePropagatedTransaction(postponedTransaction);
             });
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         } finally {
             transactionHelper.endHandleTransaction(transactionData);
+            for (Hash childrenTransactionHash : childrenTransactions) {
+                TransactionData childrenTransaction = parentProcessingTransactions.get(childrenTransactionHash);
+                if (childrenTransaction != null)
+                    synchronized (childrenTransaction) {
+                        childrenTransaction.notify();
+                        parentProcessingTransactions.remove(childrenTransactionHash);
+                    }
+            }
         }
 
     }
 
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
+    }
+
+    private boolean hasOneOfParentsProcessing(TransactionData transactionData) {
+        return (transactionData.getLeftParentHash() != null && transactionHelper.isTransactionHashProcessing(transactionData.getLeftParentHash())) ||
+                (transactionData.getRightParentHash() != null && transactionHelper.isTransactionHashProcessing(transactionData.getRightParentHash()));
     }
 
     private boolean hasOneOfParentsMissing(TransactionData transactionData) {

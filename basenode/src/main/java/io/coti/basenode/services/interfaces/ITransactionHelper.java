@@ -38,6 +38,8 @@ public interface ITransactionHelper {
 
     boolean isTransactionHashExists(Hash transactionHash);
 
+    boolean isTransactionHashProcessing(Hash transactionHash);
+
     boolean isTransactionAlreadyPropagated(TransactionData transactionData);
 
     long getTotalTransactions();

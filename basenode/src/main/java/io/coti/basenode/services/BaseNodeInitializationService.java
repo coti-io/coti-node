@@ -69,9 +69,9 @@ public class BaseNodeInitializationService {
             monitorService.init();
 
             if (!recoveryServerAddress.isEmpty()) {
-                List<TransactionData> missingTransactions = requestMissingTransactions(maxTransactionIndex.get() + 1);
+                List<TransactionData> missingTransactions = requestMissingTransactions(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
                 if (missingTransactions != null) {
-                    int threadPoolSize = 1;
+                    int threadPoolSize = 20;
                     log.info("{} threads running for missing transactions", threadPoolSize);
                     ExecutorService executorService = Executors.newFixedThreadPool(threadPoolSize);
                     List<Callable<Object>> missingTransactionsTasks = new ArrayList<>(missingTransactions.size());
