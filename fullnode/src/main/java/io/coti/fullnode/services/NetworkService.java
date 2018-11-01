@@ -1,7 +1,7 @@
 package io.coti.fullnode.services;
 
-import io.coti.basenode.data.NetworkData;
-import io.coti.basenode.data.NetworkNode;
+import io.coti.basenode.data.NetworkDetails;
+import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.services.CommunicationService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +18,7 @@ import java.util.List;
 @Slf4j
 public class NetworkService implements INetworkService {
 
-    private NetworkData networkData;
+    private NetworkDetails networkDetails;
 
     @Autowired
     private CommunicationService communicationService;
@@ -27,19 +27,19 @@ public class NetworkService implements INetworkService {
 
     @PostConstruct
     private void init() {
-        networkData = new NetworkData();
+        networkDetails = new NetworkDetails();
     }
 
     @Override
     public void connectToCurrentNetwork() {
-        handleNetworkChanges(networkData);
+        handleNetworkChanges(networkDetails);
     }
 
     @Override
-    public void handleNetworkChanges(NetworkData newNetworkData) {
-        log.info("New newNetworkData structure received: {}", newNetworkData);
-        this.networkData.getDspNetworkNodes().forEach(dsp -> {
-            if (!newNetworkData.getDspNetworkNodes().contains(dsp)) {
+    public void handleNetworkChanges(NetworkDetails newNetworkDetails) {
+        log.info("New newNetworkDetails structure received: {}", newNetworkDetails);
+        this.networkDetails.getDspNetworkNodesList().forEach(dsp -> {
+            if (!newNetworkDetails.getDspNetworkNodesList().contains(dsp)) {
                 log.info("dsp {} is about disconnect from subscribing and receiving ", dsp.getHttpFullAddress());
                 communicationService.removeSubscription(dsp.getPropagationFullAddress(), dsp.getNodeType());
                 communicationService.removeSender(dsp.getReceivingFullAddress(), dsp.getNodeType());
@@ -47,30 +47,31 @@ public class NetworkService implements INetworkService {
         });
 
 
-        List<NetworkNode> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetworkData.getDspNetworkNodes(), this.networkData.getDspNetworkNodes()));
+        List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetworkDetails.getDspNetworkNodesList(),
+                this.networkDetails.getDspNetworkNodesList()));
         Collections.shuffle(dspNodesToConnect);
-        if (!dspNodesToConnect.isEmpty()){//(this.networkData.getDspNetworkNodes().size() > 0) {
+        if (!dspNodesToConnect.isEmpty()){//(this.networkDetails.getDspNetworkNodesList().size() > 0) {
             recoveryServerAddress = dspNodesToConnect.get(0).getHttpFullAddress();
-            if (networkData.getDspNetworkNodes().size() == 1) {
+            if (networkDetails.getDspNetworkNodesList().size() == 1) {
                 addDsp(dspNodesToConnect.get(0));
-            } else if (networkData.getDspNetworkNodes().isEmpty()) {
+            } else if (networkDetails.getDspNetworkNodesList().isEmpty()) {
                 addDsp(dspNodesToConnect.get(0));
                 if (dspNodesToConnect.size() > 1) {
                     addDsp(dspNodesToConnect.get(1));
                 }
             }
         }
-        this.networkData = newNetworkData;
+        this.networkDetails = newNetworkDetails;
     }
 
     @Override
-    public NetworkData getNetworkData() {
-        return networkData;
+    public NetworkDetails getNetworkDetails() {
+        return networkDetails;
     }
 
     @Override
-    public void saveNetwork(NetworkData networkData) {
-        this.networkData = networkData;
+    public void saveNetwork(NetworkDetails networkDetails) {
+        this.networkDetails = networkDetails;
     }
 
     @Override
@@ -83,11 +84,11 @@ public class NetworkService implements INetworkService {
         this.recoveryServerAddress = recoveryServerAddress;
     }
 
-    private void addDsp(NetworkNode dspNetworkNode) {
-        log.info("Dsp {} is about to be added", dspNetworkNode.getHttpFullAddress());
-        networkData.addNode(dspNetworkNode);
-        communicationService.addSubscription(dspNetworkNode.getPropagationFullAddress());
-        communicationService.addSender(dspNetworkNode.getReceivingFullAddress());
+    private void addDsp(NetworkNodeData dspNetworkNodeData) {
+        log.info("Dsp {} is about to be added", dspNetworkNodeData.getHttpFullAddress());
+        networkDetails.addNode(dspNetworkNodeData);
+        communicationService.addSubscription(dspNetworkNodeData.getPropagationFullAddress());
+        communicationService.addSender(dspNetworkNodeData.getReceivingFullAddress());
     }
 
 }

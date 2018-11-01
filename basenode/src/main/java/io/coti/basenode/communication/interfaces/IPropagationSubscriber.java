@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 public interface IPropagationSubscriber {
 
 
-    void startListeneing();
+    void startListening();
 
     void addMessageHandler(HashMap<String, Consumer<Object>> messagesHandler);
 

@@ -17,6 +17,7 @@ import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
+
 import io.coti.fullnode.http.AddTransactionRequest;
 import io.coti.fullnode.http.AddTransactionResponse;
 import io.coti.fullnode.http.GetAddressTransactionHistoryResponse;
@@ -155,7 +156,7 @@ public class TransactionService extends BaseNodeTransactionService {
             webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
             final TransactionData finalTransactionData = transactionData;
             List<String> receivingServerAddresses = new LinkedList<>();
-            receivingServerAddresses.add(networkService.getNetworkData().getDspNetworkNodes().get(0).getReceivingFullAddress());
+            receivingServerAddresses.add(networkService.getNetworkDetails().getDspNetworkNodesList().get(0).getReceivingFullAddress());
             receivingServerAddresses.forEach(address -> sender.send(finalTransactionData, address));
             transactionHelper.setTransactionStateToFinished(transactionData);
             return ResponseEntity

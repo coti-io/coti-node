@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
 
-import javax.annotation.PostConstruct;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.*;
@@ -21,16 +20,7 @@ public class RocksDBConnector implements IDatabaseConnector {
     @Value("${database.folder.name}")
     private String databaseFolderName;
     private final String initialDBPath = "initialDatabase";
-    private final List<String> columnFamilyClassNames = Arrays.asList(
-            "DefaultColumnClassName",
-            Transactions.class.getName(),
-            Addresses.class.getName(),
-            AddressTransactionsHistories.class.getName(),
-            TrustScores.class.getName(),
-            TransactionIndexes.class.getName(),
-            TransactionVotes.class.getName()
-    );
-
+    protected List<String> columnFamilyClassNames;
     @Value("${application.name}")
     private String applicationName;
     @Value("${resetDatabase}")
@@ -58,8 +48,8 @@ public class RocksDBConnector implements IDatabaseConnector {
         index.delete();
     }
 
-    @PostConstruct
     public void init() {
+        setColumnFamily();
         init(applicationName + databaseFolderName);
     }
 
@@ -161,6 +151,19 @@ public class RocksDBConnector implements IDatabaseConnector {
             columnFamilyHandle.close();
         }
         db.close();
+    }
+
+    @Override
+    public void setColumnFamily() {
+        columnFamilyClassNames = Arrays.asList(
+                "DefaultColumnClassName",
+                Transactions.class.getName(),
+                Addresses.class.getName(),
+                AddressTransactionsHistories.class.getName(),
+                TrustScores.class.getName(),
+                TransactionIndexes.class.getName(),
+                TransactionVotes.class.getName()
+        );
     }
 
     private IEntity get(Class<?> entityClass, Hash key) {

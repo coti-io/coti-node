@@ -31,4 +31,10 @@ public class HttpStringConstants {
     public static final String INVALID_PARAMETERS_MESSAGE = "Invalid request parameters.";
 
     public static final String GENERAL_EXCEPTION_ERROR = "Error In Service";
+
+    public static final String VALIDATION_EXCEPTION_MESSAGE =
+            "We are sorry, this node didn't pass validation, please contact our customer service for more details";
+
+
+
 }

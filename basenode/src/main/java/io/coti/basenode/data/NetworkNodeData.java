@@ -8,33 +8,34 @@ import lombok.Data;
 import java.util.Objects;
 
 @Data
-public class NetworkNode implements ISignable, ISignValidatable {
+public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
     private NodeType nodeType;
     private String address;
     private String httpPort;
     private String propagationPort;
     private String receivingPort;
     private String recoveryServerAddress;
+    private Double trustScore;
 
     private Hash nodeHash;
     private SignatureData signature;
 
 
-    public NetworkNode(NodeType nodeType, String address, String httpPort, Hash nodeHash) {
+    public NetworkNodeData(NodeType nodeType, String address, String httpPort, Hash nodeHash) {
         this.nodeType = nodeType;
         this.address = address;
         this.httpPort = httpPort;
         this.nodeHash = nodeHash;
     }
 
-    public NetworkNode() {
+    public NetworkNodeData() {
     }
 
     @Override
     public boolean equals(Object a) {
-        if (a instanceof NetworkNode) {
-            NetworkNode aNetworkNode = (NetworkNode) a;
-            return nodeType.equals(aNetworkNode.nodeType) && nodeHash.equals(aNetworkNode.getHash());
+        if (a instanceof NetworkNodeData) {
+            NetworkNodeData aNetworkNodeData = (NetworkNodeData) a;
+            return nodeType.equals(aNetworkNodeData.nodeType) && nodeHash.equals(aNetworkNodeData.getHash());
         } else {
             return false;
         }

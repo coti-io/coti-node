@@ -32,7 +32,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     private Map<String, Consumer<Object>> messagesHandler;
     private Map<String, Date> connectedServerAddresses = new ConcurrentHashMap<>();
     private BlockingQueue<ZeroMQMessageData> messageQueue;
-    private List<Class<? extends IEntity>> messageTypes = new ArrayList<>(Arrays.asList(TransactionData.class, AddressData.class, DspConsensusResult.class, NetworkData.class));
+    private List<Class<? extends IEntity>> messageTypes = new ArrayList<>(Arrays.asList(TransactionData.class, AddressData.class, DspConsensusResult.class, NetworkDetails.class));
     private List<String> channelsToSubscribe;
     private Thread propagationReceiverThread;
     private Thread messagesQueueHandlerThread;
@@ -56,7 +56,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     }
 
     @Override
-    public void startListeneing() {
+    public void startListening() {
         propagationReceiverThread = new Thread(() -> {
             boolean contextTerminated = false;
             while (!contextTerminated && !Thread.currentThread().isInterrupted()) {
@@ -180,7 +180,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         channelsToSubscribe.forEach(channel ->
         {
             if (propagationReceiver.unsubscribe(channel)) {
-                log.debug("Unsubscribed from server {} and channel {}", serverAddress, channel);
+                log.debug("Unsubscribe from {}", serverAddress);
             }
         });
     }

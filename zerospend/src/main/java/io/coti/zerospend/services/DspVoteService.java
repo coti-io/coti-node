@@ -96,21 +96,21 @@ public class DspVoteService extends BaseNodeDspVoteService {
 
     @Scheduled(fixedDelay = 10000, initialDelay = 5000)
     private void updateLiveDspNodesList() {
-        if (!networkService.getNetworkData().getDspNetworkNodes().isEmpty()) {
-            List<NetworkNode> dspsList = networkService.getNetworkData().getDspNetworkNodes();
+        if (!networkService.getNetworkDetails().getDspNetworkNodesList().isEmpty()) {
+            List<NetworkNodeData> dspsList = networkService.getNetworkDetails().getDspNetworkNodesList();
             List<Hash> onlineDspHashes = new LinkedList<>();
             RestTemplate restTemplate = new RestTemplate();
-            for (NetworkNode dspServerNetworkNode : dspsList) {
+            for (NetworkNodeData dspServerNetworkNodeData : dspsList) {
                 try {
 
-                    Hash voterHash = restTemplate.getForObject(dspServerNetworkNode.getHttpFullAddress() + NODE_HASH_ENDPOINT, Hash.class);
+                    Hash voterHash = restTemplate.getForObject(dspServerNetworkNodeData.getHttpFullAddress() + NODE_HASH_ENDPOINT, Hash.class);
                     if (voterHash == null) {
-                        log.error("Voter hash received is null: {}", dspServerNetworkNode.getHttpFullAddress());
+                        log.error("Voter hash received is null: {}", dspServerNetworkNodeData.getHttpFullAddress());
                     } else {
                         onlineDspHashes.add(voterHash);
                     }
                 } catch (RestClientException e) {
-                    log.error("Unresponsive Dsp NetworkNode: {}", dspServerNetworkNode.getHttpFullAddress());
+                    log.error("Unresponsive Dsp NetworkNodeData: {}", dspServerNetworkNodeData.getHttpFullAddress());
                 }
             }
             if (onlineDspHashes.isEmpty()) {

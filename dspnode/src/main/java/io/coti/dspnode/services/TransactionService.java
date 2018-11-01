@@ -81,7 +81,7 @@ public class TransactionService extends BaseNodeTransactionService {
                     transactionData.getHash(),
                     validationService.fullValidation(transactionData));
             dspVoteCrypto.signMessage(dspVote);
-            String zerospendReceivingAddress = networkService.getNetworkData().getZerospendServer().getReceivingFullAddress();
+            String zerospendReceivingAddress = networkService.getNetworkDetails().getZerospendServer().getReceivingFullAddress();
             log.debug("Sending DSP vote to {} for transaction {}", zerospendReceivingAddress, transactionData.getHash());
             sender.send(dspVote, zerospendReceivingAddress);
         }

@@ -27,8 +27,8 @@ public class AddressService extends BaseNodeAddressService {
 
     public boolean addAddress(Hash addressHash) {
         List<String> receivingServerAddresses = new LinkedList<>();
-        Collections.shuffle(networkService.getNetworkData().getDspNetworkNodes());
-        receivingServerAddresses.add(networkService.getNetworkData().getDspNetworkNodes().get(0).getReceivingFullAddress());
+        Collections.shuffle(networkService.getNetworkDetails().getDspNetworkNodesList());
+        receivingServerAddresses.add(networkService.getNetworkDetails().getDspNetworkNodesList().get(0).getReceivingFullAddress());
         if (!super.addNewAddress(addressHash)) {
             return false;
         }

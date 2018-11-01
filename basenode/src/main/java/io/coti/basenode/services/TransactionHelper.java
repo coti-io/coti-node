@@ -256,13 +256,13 @@ public class TransactionHelper implements ITransactionHelper {
             return false;
         }
         if (transactionData.getDspConsensusResult() != null) {
-            log.error("DspConsensus result already exists for transaction: {}", dspConsensusResult.getHash());
-            return false;
+            log.debug("DspConsensus result already exists for transaction: {}", dspConsensusResult.getHash());
         }
         if (dspConsensusResult.isDspConsensus()) {
             log.debug("Valid vote conclusion received for transaction: {}", dspConsensusResult.getHash());
         } else {
-            log.debug("Invalid vote conclusion received for transaction: {}", dspConsensusResult.getHash());
+            log.debug("Vote conclusion received for transaction {} is false!", dspConsensusResult.getHash());
+            return  false;
         }
 
         log.debug("DspConsensus result for transaction: Hash= {}, DspVoteResult= {}, Index= {}", dspConsensusResult.getHash(), dspConsensusResult.isDspConsensus(), dspConsensusResult.getIndex());

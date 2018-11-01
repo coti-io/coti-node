@@ -3,7 +3,7 @@ package io.coti.trustscore.services;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
-import io.coti.basenode.data.NetworkNode;
+import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
@@ -39,28 +39,28 @@ public class InitializationService extends BaseNodeInitializationService{
     public void init() {
         super.connectToNetwork();
         communicationService.initSubscriber(NodeType.TrustScoreNode);
-        List<NetworkNode> dspNetworkNodes = this.networkService.getNetworkData().getDspNetworkNodes();
-        Collections.shuffle(dspNetworkNodes);
-        NetworkNode zerospendNetworkNode = this.networkService.getNetworkData().getZerospendServer();
-        if(zerospendNetworkNode != null ) {
-            networkService.setRecoveryServerAddress(zerospendNetworkNode.getHttpFullAddress());
+        List<NetworkNodeData> dspNetworkNodeData = this.networkService.getNetworkDetails().getDspNetworkNodesList();
+        Collections.shuffle(dspNetworkNodeData);
+        NetworkNodeData zerospendNetworkNodeData = this.networkService.getNetworkDetails().getZerospendServer();
+        if(zerospendNetworkNodeData != null ) {
+            networkService.setRecoveryServerAddress(zerospendNetworkNodeData.getHttpFullAddress());
         }
-        if(dspNetworkNodes.size() > 0){
-                dspNetworkNodes.forEach(dspnode -> subscriber.connectAndSubscribeToServer(dspnode.getPropagationFullAddress()));
+        if(dspNetworkNodeData.size() > 0){
+                dspNetworkNodeData.forEach(dspnode -> subscriber.connectAndSubscribeToServer(dspnode.getPropagationFullAddress()));
         }
-        if(zerospendNetworkNode != null ) {
-            subscriber.connectAndSubscribeToServer(zerospendNetworkNode.getPropagationFullAddress());
+        if(zerospendNetworkNodeData != null ) {
+            subscriber.connectAndSubscribeToServer(zerospendNetworkNodeData.getPropagationFullAddress());
         }
         super.init();
 
     }
 
     @Override
-    protected NetworkNode getNodeProperties() {
-        NetworkNode networkNode = new NetworkNode(NodeType.TrustScoreNode, nodeIp, serverPort,
+    protected NetworkNodeData getNodeProperties() {
+        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.TrustScoreNode, nodeIp, serverPort,
                 NodeCryptoHelper.getNodeHash());
-        networkNodeCrypto.signMessage(networkNode);
-        return networkNode;
+        networkNodeCrypto.signMessage(networkNodeData);
+        return networkNodeData;
 
     }
 }

@@ -2,7 +2,7 @@ package io.coti.fullnode.services;
 
 import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
-import io.coti.basenode.data.NetworkNode;
+import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
@@ -32,31 +32,31 @@ public class InitializationService extends BaseNodeInitializationService {
     public void init() {
         super.connectToNetwork();
         communicationService.initSubscriber(NodeType.FullNode);
-        List<NetworkNode> dspNetworkNodes = this.networkService.getNetworkData().getDspNetworkNodes();
-        Collections.shuffle(dspNetworkNodes);
-        NetworkNode firstDspNetworkNode = null;
-        if (dspNetworkNodes.size() > 0) {
-            firstDspNetworkNode = dspNetworkNodes.get(0);
-            networkService.setRecoveryServerAddress(firstDspNetworkNode.getHttpFullAddress());
+        List<NetworkNodeData> dspNetworkNodeData = this.networkService.getNetworkDetails().getDspNetworkNodesList();
+        Collections.shuffle(dspNetworkNodeData);
+        NetworkNodeData firstDspNetworkNodeData = null;
+        if (dspNetworkNodeData.size() > 0) {
+            firstDspNetworkNodeData = dspNetworkNodeData.get(0);
+            networkService.setRecoveryServerAddress(firstDspNetworkNodeData.getHttpFullAddress());
         }
 
-        if (firstDspNetworkNode != null) {
-            communicationService.addSender(firstDspNetworkNode.getReceivingFullAddress());
-            communicationService.addSubscription(firstDspNetworkNode.getPropagationFullAddress());
-            networkService.getNetworkData().addNode(firstDspNetworkNode);
+        if (firstDspNetworkNodeData != null) {
+            communicationService.addSender(firstDspNetworkNodeData.getReceivingFullAddress());
+            communicationService.addSubscription(firstDspNetworkNodeData.getPropagationFullAddress());
+            networkService.getNetworkDetails().addNode(firstDspNetworkNodeData);
         }
-        if (dspNetworkNodes.size() > 1) { //TODO: subscribing only to one dsp ?
-            communicationService.addSender(dspNetworkNodes.get(1).getReceivingFullAddress());
-            communicationService.addSubscription(dspNetworkNodes.get(1).getPropagationFullAddress());
-            networkService.getNetworkData().addNode(dspNetworkNodes.get(1));
+        if (dspNetworkNodeData.size() > 1) {
+            communicationService.addSender(dspNetworkNodeData.get(1).getReceivingFullAddress());
+            communicationService.addSubscription(dspNetworkNodeData.get(1).getPropagationFullAddress());
+            networkService.getNetworkDetails().addNode(dspNetworkNodeData.get(1));
 
         }
         super.init();
     }
 
-    protected NetworkNode getNodeProperties() {
-        NetworkNode networkNode = new NetworkNode(NodeType.FullNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash());
-        networkNodeCrypto.signMessage(networkNode);
-        return networkNode;
+    protected NetworkNodeData getNodeProperties() {
+        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash());
+        networkNodeCrypto.signMessage(networkNodeData);
+        return networkNodeData;
     }
 }

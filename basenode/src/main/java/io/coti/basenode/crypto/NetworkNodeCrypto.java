@@ -1,26 +1,26 @@
 package io.coti.basenode.crypto;
 
-import io.coti.basenode.data.NetworkNode;
+import io.coti.basenode.data.NetworkNodeData;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
 
 @Service
-public class NetworkNodeCrypto extends SignatureCrypto<NetworkNode> {
+public class NetworkNodeCrypto extends SignatureCrypto<NetworkNodeData> {
     @Override
-    public byte[] getMessageInBytes(NetworkNode networkNode) {
-        byte[] networkNodeInBytes = networkNode.getHash().getBytes();
+    public byte[] getMessageInBytes(NetworkNodeData networkNodeData) {
+        byte[] networkNodeInBytes = networkNodeData.getHash().getBytes();
 
         ByteBuffer networknodeinbytesByteBuffer = ByteBuffer.allocate(networkNodeInBytes.length);
         networknodeinbytesByteBuffer.put(networkNodeInBytes);
 
         ByteBuffer nodeTypeBuffer = ByteBuffer.allocate(4);
-        nodeTypeBuffer.putInt(networkNode.getNodeType().ordinal());
+        nodeTypeBuffer.putInt(networkNodeData.getNodeType().ordinal());
 
-        ByteBuffer httpFullAddressBuffer = ByteBuffer.allocate(networkNode.getHttpFullAddress().getBytes().length);
-        httpFullAddressBuffer.put(networkNode.getHttpFullAddress().getBytes());
+        ByteBuffer httpFullAddressBuffer = ByteBuffer.allocate(networkNodeData.getHttpFullAddress().getBytes().length);
+        httpFullAddressBuffer.put(networkNodeData.getHttpFullAddress().getBytes());
 
-        ByteBuffer finalNetworkNodeBuffer = ByteBuffer.allocate(4 + networkNode.getHttpFullAddress().getBytes().length
+        ByteBuffer finalNetworkNodeBuffer = ByteBuffer.allocate(4 + networkNodeData.getHttpFullAddress().getBytes().length
         + networkNodeInBytes.length).put(nodeTypeBuffer.array())
                 .put(networknodeinbytesByteBuffer.array()).put(httpFullAddressBuffer.array());
 

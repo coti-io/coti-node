@@ -2,9 +2,10 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.communication.Channel;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
-import io.coti.basenode.data.NetworkData;
-import io.coti.basenode.data.NetworkNode;
+import io.coti.basenode.data.NetworkDetails;
+import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.database.Interfaces.IDatabaseConnector;
 import io.coti.basenode.http.GetTransactionBatchRequest;
 import io.coti.basenode.http.GetTransactionBatchResponse;
 import io.coti.basenode.model.Transactions;
@@ -13,6 +14,8 @@ import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -57,9 +60,17 @@ public abstract class BaseNodeInitializationService {
     private IDspVoteService dspVoteService;
     @Autowired
     private IPotService potService;
+    @Autowired
+    private IDatabaseConnector dataBaseConnector;
 
     @Autowired
     private IPropagationSubscriber propagationSubscriber;
+
+    private final static String NODE_MANAGER_ADD_NODE_ENDPOINT = "/nodes/new_node";
+
+    private final static String NODE_MANAGER_GET_NETWORK_DETAILS_ENDPOINT = "/nodes/all";
+
+    private final static String RECOVERY_NODE_GET_BATCH_ENDPOINT = "/getTransactionBatch";
 
     public void init() {
         try {
@@ -75,7 +86,8 @@ public abstract class BaseNodeInitializationService {
 
     private void initTransactionSync()  {
         try {
-            propagationSubscriber.startListeneing();
+            dataBaseConnector.init();
+            propagationSubscriber.startListening();
             addressService.init();
             balanceService.init();
             confirmationService.init();
@@ -110,13 +122,13 @@ public abstract class BaseNodeInitializationService {
 
     private void initCommunication() {
         HashMap<String, Consumer<Object>> classNameToSubscriberHandlerMapping = new HashMap<>();
-        classNameToSubscriberHandlerMapping.put(Channel.getChannelString(NetworkData.class, getNodeProperties().getNodeType()),
-                newNetwork -> networkService.handleNetworkChanges((NetworkData) newNetwork));
+        classNameToSubscriberHandlerMapping.put(Channel.getChannelString(NetworkDetails.class, getNodeProperties().getNodeType()),
+                newNetwork -> networkService.handleNetworkChanges((NetworkDetails) newNetwork));
 
         monitorService.init();
       //  networkService.connectToCurrentNetwork();
         propagationSubscriber.addMessageHandler(classNameToSubscriberHandlerMapping);
-        propagationSubscriber.connectAndSubscribeToServer(networkService.getNetworkData().getNodeManagerPropagationAddress());
+        propagationSubscriber.connectAndSubscribeToServer(networkService.getNetworkDetails().getNodeManagerPropagationAddress());
 
         propagationSubscriber.initPropagationHandler();
 
@@ -145,30 +157,42 @@ public abstract class BaseNodeInitializationService {
         try {
             GetTransactionBatchResponse getTransactionBatchResponse =
                     restTemplate.postForObject(
-                            networkService.getRecoveryServerAddress() + "/getTransactionBatch",
+                            networkService.getRecoveryServerAddress() + RECOVERY_NODE_GET_BATCH_ENDPOINT,
                             new GetTransactionBatchRequest(firstMissingTransactionIndex),
                             GetTransactionBatchResponse.class);
             log.info("Received transaction batch of size: {}", getTransactionBatchResponse.getTransactions().size());
             return getTransactionBatchResponse.getTransactions();
         } catch (Exception e) {
-            log.error("Unresponsive recovery NetworkNode: {}", networkService.getRecoveryServerAddress());
+            log.error("Unresponsive recovery NetworkNodeData: {}", networkService.getRecoveryServerAddress());
             log.error(e.getMessage());
             return null;
         }
     }
 
     public void connectToNetwork() {
-        NetworkNode networkNode = getNodeProperties();
-        NetworkData networkData = connectToNodeManager(networkNode);
-        networkService.saveNetwork(networkData);
+        NetworkNodeData networkNodeData = getNodeProperties();
+        ResponseEntity<String> addNewNodeResponse = addNewNodeToNodeManager(networkNodeData);
+        if(!addNewNodeResponse.getStatusCode().equals(HttpStatus.OK)){
+            log.error("Couldn't add node to node manager. Message from NodeManager: {}", addNewNodeResponse);
+            System.exit(-1);
+        }
+        networkService.saveNetwork(getNetworkDetailsFromNodeManager());
     }
 
-    private NetworkData connectToNodeManager(NetworkNode networkNode) {
+    private ResponseEntity<String> addNewNodeToNodeManager(NetworkNodeData networkNodeData) {
         RestTemplate restTemplate = new RestTemplate();
-        String newNodeURL = nodeManagerAddress + "/nodes/newNode";
-        return restTemplate.postForEntity(newNodeURL, networkNode, NetworkData.class).getBody();
+        String newNodeURL = nodeManagerAddress + NODE_MANAGER_ADD_NODE_ENDPOINT;
+        return restTemplate.postForEntity(newNodeURL, networkNodeData, String.class);
     }
 
-    protected abstract NetworkNode getNodeProperties();
+    private NetworkDetails getNetworkDetailsFromNodeManager(){
+        RestTemplate restTemplate = new RestTemplate();
+        String newNodeURL = nodeManagerAddress + NODE_MANAGER_GET_NETWORK_DETAILS_ENDPOINT;
+        return restTemplate.getForEntity(newNodeURL, NetworkDetails.class).getBody();
+    }
+
+
+
+    protected abstract NetworkNodeData getNodeProperties();
 
 }

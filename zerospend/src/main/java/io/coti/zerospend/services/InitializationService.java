@@ -4,7 +4,7 @@ import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.DspVote;
-import io.coti.basenode.data.NetworkNode;
+import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeInitializationService;
@@ -54,10 +54,10 @@ public class InitializationService extends BaseNodeInitializationService {
         communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
         communicationService.initSubscriber(NodeType.ZeroSpendServer);
         communicationService.initPropagator(propagationPort);
-        if (networkService.getNetworkData().getDspNetworkNodes().size() > 0) {
-            networkService.getNetworkData().getDspNetworkNodes().forEach(dspNode -> {
+        if (networkService.getNetworkDetails().getDspNetworkNodesList().size() > 0) {
+            networkService.getNetworkDetails().getDspNetworkNodesList().forEach(dspNode -> {
                 subscriber.connectAndSubscribeToServer(dspNode.getPropagationFullAddress());
-                networkService.getNetworkData().addNode(dspNode);
+                networkService.getNetworkDetails().addNode(dspNode);
             });
         }
         super.init();
@@ -66,11 +66,11 @@ public class InitializationService extends BaseNodeInitializationService {
         }
     }
 
-    protected NetworkNode getNodeProperties() {
-        NetworkNode networkNode = new NetworkNode(NodeType.ZeroSpendServer, nodeIp, serverPort, NodeCryptoHelper.getNodeHash());
-        networkNode.setPropagationPort(propagationPort);
-        networkNode.setReceivingPort(receivingPort);
-        networkNodeCrypto.signMessage(networkNode);
-        return networkNode;
+    protected NetworkNodeData getNodeProperties() {
+        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.ZeroSpendServer, nodeIp, serverPort, NodeCryptoHelper.getNodeHash());
+        networkNodeData.setPropagationPort(propagationPort);
+        networkNodeData.setReceivingPort(receivingPort);
+        networkNodeCrypto.signMessage(networkNodeData);
+        return networkNodeData;
     }
 }

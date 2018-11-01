@@ -1,7 +1,7 @@
 package io.coti.zerospend.services;
 
-import io.coti.basenode.data.NetworkData;
-import io.coti.basenode.data.NetworkNode;
+import io.coti.basenode.data.NetworkDetails;
+import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.services.CommunicationService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +16,7 @@ import java.util.List;
 @Slf4j
 @Service
 public class NetworkService implements INetworkService {
-    private NetworkData networkData;
+    private NetworkDetails networkDetails;
 
     @Autowired
     private CommunicationService communicationService;
@@ -24,31 +24,31 @@ public class NetworkService implements INetworkService {
 
     @PostConstruct
     private void init() {
-        networkData = new NetworkData();
+        networkDetails = new NetworkDetails();
     }
 
     @Override
-    public void handleNetworkChanges(NetworkData newNetworkData) {
-        log.info("New newNetworkData structure received: {}", newNetworkData);
-        List<NetworkNode> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetworkData.getDspNetworkNodes(), this.networkData.getDspNetworkNodes()));
+    public void handleNetworkChanges(NetworkDetails newNetworkDetails) {
+        log.info("New newNetworkDetails structure received: {}", newNetworkDetails);
+        List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetworkDetails.getDspNetworkNodesList(), this.networkDetails.getDspNetworkNodesList()));
         if (dspNodesToConnect.size() > 0) {
             dspNodesToConnect.forEach(dspNode -> {
                 log.info("Dsp {} is about to be added", dspNode.getHttpFullAddress());
-                networkData.addNode(dspNode);
+                networkDetails.addNode(dspNode);
                 communicationService.addSubscription(dspNode.getPropagationFullAddress());
             });
         }
-        this.networkData = newNetworkData;
+        this.networkDetails = newNetworkDetails;
     }
 
     @Override
-    public NetworkData getNetworkData() {
-        return networkData;
+    public NetworkDetails getNetworkDetails() {
+        return networkDetails;
     }
 
     @Override
-    public void saveNetwork(NetworkData networkData) {
-        this.networkData = networkData;
+    public void saveNetwork(NetworkDetails networkDetails) {
+        this.networkDetails = networkDetails;
     }
 
     @Override
@@ -62,7 +62,7 @@ public class NetworkService implements INetworkService {
 
     @Override
     public void connectToCurrentNetwork() {
-        handleNetworkChanges(networkData);
+        handleNetworkChanges(networkDetails);
     }
 
 
