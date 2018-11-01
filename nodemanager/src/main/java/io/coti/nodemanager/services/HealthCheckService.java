@@ -34,6 +34,7 @@ public class HealthCheckService {
         if (!checkNode(zerospendNetworkNodeData)) {
             log.info("{} of address is about to be deleted", zerospendNetworkNodeData.getNodeType(),
                     zerospendNetworkNodeData.getHttpFullAddress());
+            nodesService.insertDeletedNodeRecord(zerospendNetworkNodeData);
             nodesService.getAllNetworkData().setZerospendServer(null);
             networkChanged = true;
         }
