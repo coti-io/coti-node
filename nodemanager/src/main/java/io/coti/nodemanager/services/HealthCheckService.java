@@ -2,6 +2,7 @@ package io.coti.nodemanager.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkNodeData;
+import io.coti.basenode.services.interfaces.IIpService;
 import io.coti.nodemanager.services.interfaces.INodesManagementService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,9 @@ public class HealthCheckService {
     private static final int NUM_OF_RETRIES = 3;
     @Autowired
     private INodesManagementService nodesService;
+
+    @Autowired
+    private IIpService ipService;
 
     @Scheduled(fixedDelay = 5000, initialDelay = 5000)
     public void healthCheckNeighbors() {
@@ -52,13 +56,13 @@ public class HealthCheckService {
         while (tries < NUM_OF_RETRIES) {
             try {
                 if (tries != 0) {
-                    TimeUnit.SECONDS.sleep(RETRY_INTERVAL_IN_SECONDS);
                     log.info("Waiting {} seconds for # {} retry to {} of address {} healthcheck",
                             RETRY_INTERVAL_IN_SECONDS, tries, networkNodeDataToCheck.getNodeType(),
                             networkNodeDataToCheck.getHttpFullAddress());
+                    TimeUnit.SECONDS.sleep(RETRY_INTERVAL_IN_SECONDS);
                 }
-                Hash nodeHash = restTemplate.getForObject(networkNodeDataToCheck.getHttpFullAddress() +
-                        NODE_HASH_END_POINT, Hash.class);
+                Hash nodeHash = restTemplate.getForObject( "http://" + getModifiedFullAddressIfNeeded(networkNodeDataToCheck.getAddress())
+                        + ":" + networkNodeDataToCheck.getHttpPort() + NODE_HASH_END_POINT, Hash.class);
                 if (nodeHash != null) {
                     log.debug("{} of address {} and port {} is responding to healthcheck.",
                             networkNodeDataToCheck.getNodeType(), networkNodeDataToCheck.getAddress(), networkNodeDataToCheck.getHttpPort());
@@ -73,6 +77,11 @@ public class HealthCheckService {
         }
         return false;
     }
+
+    private String getModifiedFullAddressIfNeeded(String externalServerAddress){
+        return ipService.getIpOfRemoteServer(externalServerAddress);
+    }
+
 
     private synchronized boolean checkNodesList(List<NetworkNodeData> nodesList, boolean networkChanged) {
         List<NetworkNodeData> nodesToRemove = new LinkedList<>();

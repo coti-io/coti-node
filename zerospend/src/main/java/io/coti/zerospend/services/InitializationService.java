@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.HashMap;
+import java.util.List;
 import java.util.function.Consumer;
 
 @Service
@@ -26,8 +27,6 @@ public class InitializationService extends BaseNodeInitializationService {
     private String propagationPort;
     @Value("${server.port}")
     private String serverPort;
-    @Value("${server.ip}")
-    private String nodeIp;
 
     @Autowired
     private NetworkNodeCrypto networkNodeCrypto;
@@ -46,6 +45,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @PostConstruct
     public void init() {
+        nodeIp = ipService.getIp();
         super.connectToNetwork();
         HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping = new HashMap<>();
         classNameToReceiverHandlerMapping.put(
@@ -54,8 +54,9 @@ public class InitializationService extends BaseNodeInitializationService {
         communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
         communicationService.initSubscriber(NodeType.ZeroSpendServer);
         communicationService.initPropagator(propagationPort);
-        if (networkService.getNetworkDetails().getDspNetworkNodesList().size() > 0) {
-            networkService.getNetworkDetails().getDspNetworkNodesList().forEach(dspNode -> {
+        List<NetworkNodeData> dspList = networkService.getNetworkDetails().getDspNetworkNodesList();
+        if (!dspList.isEmpty()) {
+            dspList.forEach(dspNode -> {
                 subscriber.connectAndSubscribeToServer(dspNode.getPropagationFullAddress());
                 networkService.getNetworkDetails().addNode(dspNode);
             });

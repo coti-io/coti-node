@@ -13,11 +13,9 @@ public class NodeManagerRocksDBConnector extends RocksDBConnector {
 
 
     @Override
-    public void setColumnFamily() {
+    protected void setColumnFamily() {
         columnFamilyClassNames = Arrays.asList(
                 "DefaultColumnClassName",
                 NodeHistory.class.getName());
     }
-
-
 }

@@ -13,6 +13,4 @@ public interface INetworkService {
     String getRecoveryServerAddress();
 
     void setRecoveryServerAddress(String recoveryServerAddress);
-
-    void connectToCurrentNetwork();
 }

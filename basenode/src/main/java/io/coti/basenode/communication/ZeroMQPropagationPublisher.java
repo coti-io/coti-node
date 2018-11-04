@@ -4,6 +4,7 @@ import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.ISerializer;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.interfaces.IEntity;
+import io.coti.basenode.services.interfaces.IIpService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,10 +21,11 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket propagator;
     private String propagationPort;
-    @Value("${server.ip}")
-    private String publisherIp;
     private final int HEARTBEAT_INTERVAL = 5000;
     private final int INITIAL_DELAY = 1000;
+
+    @Autowired
+    private IIpService ipService;
 
     @Autowired
     private ISerializer serializer;
@@ -53,7 +55,7 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
     public void propagateHeartBeatMessage() {
         if (propagator != null) {
             synchronized (propagator) {
-                String serverAddress = "tcp://" + publisherIp + ":" + propagationPort;
+                String serverAddress = "tcp://" + ipService.getIp() + ":" + propagationPort;
                 propagator.sendMore(new String("HeartBeat " + serverAddress).getBytes());
                 propagator.send(serverAddress.getBytes());
             }

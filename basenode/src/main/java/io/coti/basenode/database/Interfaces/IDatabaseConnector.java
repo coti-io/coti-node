@@ -16,7 +16,5 @@ public interface IDatabaseConnector {
 
     void shutdown();
 
-    void setColumnFamily();
-
     void init();
 }

@@ -21,8 +21,7 @@ public class InitializationService extends BaseNodeInitializationService {
     private CommunicationService communicationService;
     @Value("${server.port}")
     private String serverPort;
-    @Value("${server.ip}")
-    private String nodeIp;
+
     @Autowired
     private INetworkService networkService;
     @Autowired
@@ -30,25 +29,23 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @PostConstruct
     public void init() {
+        nodeIp = ipService.getIp();
         super.connectToNetwork();
         communicationService.initSubscriber(NodeType.FullNode);
         List<NetworkNodeData> dspNetworkNodeData = this.networkService.getNetworkDetails().getDspNetworkNodesList();
         Collections.shuffle(dspNetworkNodeData);
-        NetworkNodeData firstDspNetworkNodeData = null;
-        if (dspNetworkNodeData.size() > 0) {
-            firstDspNetworkNodeData = dspNetworkNodeData.get(0);
+        if (!dspNetworkNodeData.isEmpty()) {
+            NetworkNodeData firstDspNetworkNodeData = dspNetworkNodeData.get(0);
             networkService.setRecoveryServerAddress(firstDspNetworkNodeData.getHttpFullAddress());
-        }
-
-        if (firstDspNetworkNodeData != null) {
             communicationService.addSender(firstDspNetworkNodeData.getReceivingFullAddress());
             communicationService.addSubscription(firstDspNetworkNodeData.getPropagationFullAddress());
             networkService.getNetworkDetails().addNode(firstDspNetworkNodeData);
         }
         if (dspNetworkNodeData.size() > 1) {
-            communicationService.addSender(dspNetworkNodeData.get(1).getReceivingFullAddress());
-            communicationService.addSubscription(dspNetworkNodeData.get(1).getPropagationFullAddress());
-            networkService.getNetworkDetails().addNode(dspNetworkNodeData.get(1));
+            NetworkNodeData secondDspNetworkNodeData = dspNetworkNodeData.get(1);
+            communicationService.addSender(secondDspNetworkNodeData.getReceivingFullAddress());
+            communicationService.addSubscription(secondDspNetworkNodeData.getPropagationFullAddress());
+            networkService.getNetworkDetails().addNode(secondDspNetworkNodeData);
 
         }
         super.init();

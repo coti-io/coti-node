@@ -153,8 +153,7 @@ public class RocksDBConnector implements IDatabaseConnector {
         db.close();
     }
 
-    @Override
-    public void setColumnFamily() {
+    protected void setColumnFamily() {
         columnFamilyClassNames = Arrays.asList(
                 "DefaultColumnClassName",
                 Transactions.class.getName(),

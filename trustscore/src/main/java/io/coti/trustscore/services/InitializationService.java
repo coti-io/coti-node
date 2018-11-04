@@ -17,42 +17,35 @@ import java.util.Collections;
 import java.util.List;
 
 @Service
-public class InitializationService extends BaseNodeInitializationService{
+public class InitializationService extends BaseNodeInitializationService {
 
     @Autowired
     private CommunicationService communicationService;
     @Autowired
     private INetworkService networkService;
-
     @Value("${server.port}")
     private String serverPort;
-    @Value("${server.ip}")
-    private String nodeIp;
-
     @Autowired
     private IPropagationSubscriber subscriber;
-
     @Autowired
     private NetworkNodeCrypto networkNodeCrypto;
 
     @PostConstruct
     public void init() {
+        nodeIp = ipService.getIp();
         super.connectToNetwork();
         communicationService.initSubscriber(NodeType.TrustScoreNode);
         List<NetworkNodeData> dspNetworkNodeData = this.networkService.getNetworkDetails().getDspNetworkNodesList();
-        Collections.shuffle(dspNetworkNodeData);
         NetworkNodeData zerospendNetworkNodeData = this.networkService.getNetworkDetails().getZerospendServer();
-        if(zerospendNetworkNodeData != null ) {
+        if (zerospendNetworkNodeData != null) {
             networkService.setRecoveryServerAddress(zerospendNetworkNodeData.getHttpFullAddress());
-        }
-        if(dspNetworkNodeData.size() > 0){
-                dspNetworkNodeData.forEach(dspnode -> subscriber.connectAndSubscribeToServer(dspnode.getPropagationFullAddress()));
-        }
-        if(zerospendNetworkNodeData != null ) {
             subscriber.connectAndSubscribeToServer(zerospendNetworkNodeData.getPropagationFullAddress());
         }
+        if (!dspNetworkNodeData.isEmpty()) {
+            Collections.shuffle(dspNetworkNodeData);
+            dspNetworkNodeData.forEach(dspnode -> subscriber.connectAndSubscribeToServer(dspnode.getPropagationFullAddress()));
+        }
         super.init();
-
     }
 
     @Override

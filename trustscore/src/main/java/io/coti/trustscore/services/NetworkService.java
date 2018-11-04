@@ -3,6 +3,7 @@ package io.coti.trustscore.services;
 import io.coti.basenode.data.NetworkDetails;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.services.CommunicationService;
+import io.coti.basenode.services.interfaces.IIpService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -26,25 +27,22 @@ public class NetworkService implements INetworkService {
 
     @Value("${server.port}")
     private String serverPort;
-    @Value("${server.ip}")
-    private String nodeIp;
+
 
     @Autowired
     private CommunicationService communicationService;
+    @Autowired
+    private IIpService ipService;
 
     @PostConstruct
-    private void init(){
+    private void init() {
         networkDetails = new NetworkDetails();
-    }
-
-    @Override
-    public void connectToCurrentNetwork() {
-        handleNetworkChanges(networkDetails);
     }
 
     @Override
     public void handleNetworkChanges(NetworkDetails newNetworkDetails) {
         log.info("New newNetworkDetails structure received: {}", newNetworkDetails);
+        ipService.modifyNetworkDetailsIfNeeded(newNetworkDetails);
         NetworkNodeData zerospendNetworkNodeData = newNetworkDetails.getZerospendServer();
         if (zerospendNetworkNodeData != null && zerospendNetworkNodeData != this.networkDetails.getZerospendServer()) {
             log.info("Zero spend server {} is about to be added", zerospendNetworkNodeData.getHttpFullAddress());
@@ -53,12 +51,12 @@ public class NetworkService implements INetworkService {
         }
         List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetworkDetails.getDspNetworkNodesList(),
                 this.networkDetails.getDspNetworkNodesList()));
-        dspNodesToConnect.removeIf(dsp -> dsp.getAddress().equals(nodeIp) && dsp.getHttpPort().equals(serverPort));
-        if (dspNodesToConnect.size() > 0) {
+        if (!dspNodesToConnect.isEmpty()) {
+            dspNodesToConnect.removeIf(dsp -> dsp.getAddress().equals(ipService.getIp()) && dsp.getHttpPort().equals(serverPort));
             Collections.shuffle(dspNodesToConnect);
             dspNodesToConnect.forEach(dspnode -> {
                         log.info("Dsp {} is about to be added", "http://" + dspnode.getAddress() + ":" + dspnode.getHttpPort());
-                communicationService.addSubscription(dspnode.getPropagationFullAddress());
+                        communicationService.addSubscription(dspnode.getPropagationFullAddress());
                     }
             );
         }
@@ -72,6 +70,7 @@ public class NetworkService implements INetworkService {
 
     @Override
     public void saveNetwork(NetworkDetails networkDetails) {
+        ipService.modifyNetworkDetailsIfNeeded(networkDetails);
         this.networkDetails = networkDetails;
 
     }

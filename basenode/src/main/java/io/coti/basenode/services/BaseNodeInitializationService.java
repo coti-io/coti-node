@@ -66,6 +66,11 @@ public abstract class BaseNodeInitializationService {
     @Autowired
     private IPropagationSubscriber propagationSubscriber;
 
+    @Autowired
+    protected IIpService ipService;
+
+    protected String nodeIp;
+
     private final static String NODE_MANAGER_ADD_NODE_ENDPOINT = "/nodes/new_node";
 
     private final static String NODE_MANAGER_GET_NETWORK_DETAILS_ENDPOINT = "/nodes/all";
@@ -126,10 +131,8 @@ public abstract class BaseNodeInitializationService {
                 newNetwork -> networkService.handleNetworkChanges((NetworkDetails) newNetwork));
 
         monitorService.init();
-      //  networkService.connectToCurrentNetwork();
         propagationSubscriber.addMessageHandler(classNameToSubscriberHandlerMapping);
         propagationSubscriber.connectAndSubscribeToServer(networkService.getNetworkDetails().getNodeManagerPropagationAddress());
-
         propagationSubscriber.initPropagationHandler();
 
     }

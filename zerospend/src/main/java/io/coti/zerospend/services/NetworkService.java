@@ -3,6 +3,7 @@ package io.coti.zerospend.services;
 import io.coti.basenode.data.NetworkDetails;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.services.CommunicationService;
+import io.coti.basenode.services.interfaces.IIpService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -20,7 +21,8 @@ public class NetworkService implements INetworkService {
 
     @Autowired
     private CommunicationService communicationService;
-
+    @Autowired
+    private IIpService ipService;
 
     @PostConstruct
     private void init() {
@@ -30,8 +32,9 @@ public class NetworkService implements INetworkService {
     @Override
     public void handleNetworkChanges(NetworkDetails newNetworkDetails) {
         log.info("New newNetworkDetails structure received: {}", newNetworkDetails);
+        ipService.modifyNetworkDetailsIfNeeded(newNetworkDetails);
         List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetworkDetails.getDspNetworkNodesList(), this.networkDetails.getDspNetworkNodesList()));
-        if (dspNodesToConnect.size() > 0) {
+        if (!dspNodesToConnect.isEmpty()) {
             dspNodesToConnect.forEach(dspNode -> {
                 log.info("Dsp {} is about to be added", dspNode.getHttpFullAddress());
                 networkDetails.addNode(dspNode);
@@ -48,6 +51,7 @@ public class NetworkService implements INetworkService {
 
     @Override
     public void saveNetwork(NetworkDetails networkDetails) {
+        ipService.modifyNetworkDetailsIfNeeded(networkDetails);
         this.networkDetails = networkDetails;
     }
 
@@ -59,11 +63,5 @@ public class NetworkService implements INetworkService {
     @Override
     public void setRecoveryServerAddress(String recoveryServerAddress) {
     }
-
-    @Override
-    public void connectToCurrentNetwork() {
-        handleNetworkChanges(networkDetails);
-    }
-
 
 }

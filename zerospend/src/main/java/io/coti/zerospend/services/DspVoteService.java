@@ -100,7 +100,9 @@ public class DspVoteService extends BaseNodeDspVoteService {
             List<NetworkNodeData> dspsList = networkService.getNetworkDetails().getDspNetworkNodesList();
             List<Hash> onlineDspHashes = new LinkedList<>();
             RestTemplate restTemplate = new RestTemplate();
-            for (NetworkNodeData dspServerNetworkNodeData : dspsList) {
+            Iterator<NetworkNodeData> dspListIterator = dspsList.iterator();
+            while(dspListIterator.hasNext()){
+                NetworkNodeData dspServerNetworkNodeData = dspListIterator.next();
                 try {
 
                     Hash voterHash = restTemplate.getForObject(dspServerNetworkNodeData.getHttpFullAddress() + NODE_HASH_ENDPOINT, Hash.class);
@@ -113,6 +115,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
                     log.error("Unresponsive Dsp NetworkNodeData: {}", dspServerNetworkNodeData.getHttpFullAddress());
                 }
             }
+
             if (onlineDspHashes.isEmpty()) {
                 log.error("No Dsp Nodes are online...");
             }
