@@ -168,12 +168,11 @@ public class TransactionHelper implements ITransactionHelper {
         if (!transactionHashToTransactionStateStackMapping.containsKey(transactionData.getHash())) {
             return;
         }
-        if (transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).peek() == FINISHED) {
+        if (FINISHED.equals(transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).peek())) {
             log.debug("Transaction {} handled successfully", transactionData.getHash());
         } else {
             rollbackTransaction(transactionData);
         }
-
         synchronized (transactionData) {
             transactionHashToTransactionStateStackMapping.remove(transactionData.getHash());
         }
@@ -193,9 +192,6 @@ public class TransactionHelper implements ITransactionHelper {
                 case RECEIVED:
                     transactionHashToTransactionStateStackMapping.remove(transactionData.getHash());
                     break;
-//                case FINISHED:
-//                    // TODO: what happens here
-//                    return;
                 default: {
                     log.error("Transaction {} has a state {} which is illegal in rollback scenario", transactionData, transactionState);
                     throw new IllegalArgumentException("Invalid transaction state");

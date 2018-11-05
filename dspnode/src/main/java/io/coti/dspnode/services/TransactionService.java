@@ -13,7 +13,6 @@ import io.coti.basenode.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -40,18 +39,18 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private INetworkService networkService;
 
-    public String handleNewTransactionFromFullNode(TransactionData transactionData) {
+    public void handleNewTransactionFromFullNode(TransactionData transactionData) {
         try {
             log.debug("Running new transactions from full networkNode handler");
             if (transactionHelper.isTransactionAlreadyPropagated(transactionData)) {
                 log.debug("Transaction already exists: {}", transactionData.getHash());
-                return "Transaction Exists: " + transactionData.getHash();
+                return;
             }
             transactionHelper.startHandleTransaction(transactionData);
             if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData) ||
                     !validationService.validateBalancesAndAddToPreBalance(transactionData)) {
                 log.info("Invalid Transaction Received!");
-                return "Invalid Transaction Received: " + transactionData.getHash();
+                return;
             }
             transactionHelper.attachTransactionToCluster(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
@@ -62,15 +61,11 @@ public class TransactionService extends BaseNodeTransactionService {
                     NodeType.ZeroSpendServer));
             transactionHelper.setTransactionStateToFinished(transactionData);
             transactionsToValidate.add(transactionData);
-            return "Received Transaction: " + transactionData.getHash();
-        }
-        catch (Exception ex){
+        } catch (Exception ex) {
             log.error("Exception while handling transaction {}", transactionData, ex);
-        }
-        finally {
+        } finally {
             transactionHelper.endHandleTransaction(transactionData);
         }
-        return "error in trx: " + transactionData.getHash();
     }
 
     @Scheduled(fixedRate = 1000)
