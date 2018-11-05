@@ -103,18 +103,12 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     private boolean isTransactionHashInDB(Hash transactionHash) {
-        if (transactions.getByHash(transactionHash) != null) {
-            return true;
-        }
-        return false;
+        return transactions.getByHash(transactionHash) != null;
     }
 
     @Override
     public boolean isTransactionHashProcessing(Hash transactionHash) {
-        if (transactionHashToTransactionStateStackMapping.containsKey(transactionHash)) {
-            return true;
-        }
-        return false;
+        return transactionHashToTransactionStateStackMapping.containsKey(transactionHash);
     }
 
     public boolean isTransactionAlreadyPropagated(TransactionData transactionData) {

@@ -10,12 +10,12 @@ import java.util.ArrayList;
 public class TransactionCryptoWrapper {
     final static int baseTransactionHashSize = 32;
     ArrayList<BaseTransactionCryptoWrapper> baseTransactions = new ArrayList<>();
-    TransactionData txData;
+    TransactionData transactionData;
 
-    public TransactionCryptoWrapper(TransactionData txData) {
-        this.txData = txData;
-        for (BaseTransactionData bxData : txData.getBaseTransactions()) {
-            baseTransactions.add(new BaseTransactionCryptoWrapper(bxData));
+    public TransactionCryptoWrapper(TransactionData transactionData) {
+        this.transactionData = transactionData;
+        for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
+            baseTransactions.add(new BaseTransactionCryptoWrapper(baseTransactionData));
         }
     }
 
@@ -43,7 +43,7 @@ public class TransactionCryptoWrapper {
 
         }
         Hash transactionHash = getHashFromBaseTransactionHashesData();
-        txData.setHash(transactionHash);
+        transactionData.setHash(transactionHash);
 
 
     }
@@ -51,7 +51,7 @@ public class TransactionCryptoWrapper {
     private boolean IsTransactionHashCorrect() {
 
         Hash generatedTxHashFromBaseTransactions = getHashFromBaseTransactionHashesData();
-        Hash txHashFromData = this.txData.getHash();
+        Hash txHashFromData = this.transactionData.getHash();
 
         return generatedTxHashFromBaseTransactions.equals(txHashFromData);
     }
@@ -61,7 +61,7 @@ public class TransactionCryptoWrapper {
         if (!this.IsTransactionHashCorrect())
             return false;
         for (BaseTransactionCryptoWrapper bxCrypto : this.baseTransactions) {
-            if (bxCrypto.IsBaseTransactionValid(txData.getHash()) == false)
+            if (bxCrypto.IsBaseTransactionValid(transactionData.getHash()) == false)
                 return false;
         }
         return true;

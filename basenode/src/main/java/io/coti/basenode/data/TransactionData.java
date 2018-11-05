@@ -1,5 +1,6 @@
 package io.coti.basenode.data;
 
+import io.coti.basenode.data.interfaces.IBaseTransactionData;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
@@ -8,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Data
@@ -15,6 +17,7 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
     private List<BaseTransactionData> baseTransactions;
     private Hash hash;
     private BigDecimal amount;
+    private TransactionType type;
     private Hash leftParentHash;
     private Hash rightParentHash;
     private List<Hash> trustChainTransactionHashes;
@@ -57,9 +60,9 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
         this.createTime = createTime;
         this.senderTrustScore = senderTrustScore;
         BigDecimal amount = BigDecimal.ZERO;
-        for (BaseTransactionData baseTransaction : baseTransactions) {
+     /*   for (BaseTransactionData baseTransaction : baseTransactions) {
             amount = amount.add(baseTransaction.getAmount().signum() > 0 ? baseTransaction.getAmount() : BigDecimal.ZERO);
-        }
+        }  */
         this.amount = amount;
         this.initTransactionData();
     }
@@ -72,7 +75,7 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
         this.senderHash = senderHash;
         this.trustScoreResults = trustScoreResults;
         BigDecimal amount = BigDecimal.ZERO;
-        for (BaseTransactionData baseTransaction : baseTransactions) {
+       for (BaseTransactionData baseTransaction : baseTransactions) {
             amount = amount.add(baseTransaction.getAmount().signum() > 0 ? baseTransaction.getAmount() : BigDecimal.ZERO);
         }
         this.amount = amount;
@@ -131,6 +134,14 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
     public Boolean isValid() {
         return valid;
     }
+
+  /*  public List<IBaseTransactionData> getOutputBaseTransactions() {
+        return this.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData.getAmount().signum() > 0 ).collect(Collectors.toList());
+    }
+
+    public List<IBaseTransactionData> getInputBaseTransactions() {
+        return this.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData.getAmount().signum() <= 0 ).collect(Collectors.toList());
+    } */
 
     @Override
     public int compareTo(TransactionData other) {

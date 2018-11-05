@@ -1,6 +1,10 @@
 package io.coti.basenode.data;
 
+import io.coti.basenode.data.interfaces.IBaseTransactionData;
+import io.coti.basenode.data.interfaces.IBaseTransactionType;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -8,26 +12,27 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 
+@Slf4j
 @Data
-public class BaseTransactionData implements Serializable {
+@NoArgsConstructor
+public class BaseTransactionData implements Serializable, IBaseTransactionData {
     @NotNull
-    private Hash hash;
+    protected Hash hash;
+    protected OutputBaseTransactionType type;
     @NotNull
-    private Hash addressHash;
+    protected Hash addressHash;
     @NotNull
-    private BigDecimal amount;
+    protected BigDecimal amount;
     @NotNull
-    private Date createTime;
-    private @Valid SignatureData signatureData;
-
-    private BaseTransactionData() {
-    }
+    protected Date createTime;
+    protected @Valid SignatureData signatureData;
 
     public BaseTransactionData(Hash addressHash, BigDecimal amount, Hash baseTransactionHash, SignatureData signature, Date createTime) {
         this.addressHash = addressHash;
-
         this.amount = amount;
+        //    this.type = OutputBaseTransactionType.valueOf(type);
         this.hash = baseTransactionHash;
+        log.info("Construct {}", baseTransactionHash);
         this.signatureData = signature;
         this.createTime = createTime;
     }
