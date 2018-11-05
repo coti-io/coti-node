@@ -1,19 +1,19 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.data.FullNodeFeeData;
-import io.coti.basenode.data.interfaces.IBaseTransactionData;
+import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.services.interfaces.IOutputBaseTransactionValidation;
 
 public enum OutputBaseTransactionTypeValidation implements IOutputBaseTransactionValidation {
     FullNodeFee(FullNodeFeeData.class);
-    private Class<? extends IBaseTransactionData> baseTransactionClass;
+    private Class<? extends BaseTransactionData> baseTransactionClass;
 
-    <T extends IBaseTransactionData> OutputBaseTransactionTypeValidation(Class<T> baseTransactionClass) {
+    <T extends BaseTransactionData> OutputBaseTransactionTypeValidation(Class<T> baseTransactionClass) {
         this.baseTransactionClass = baseTransactionClass;
     }
 
     @Override
-    public Class<? extends IBaseTransactionData> getBaseTransactionClass() {
+    public Class<? extends BaseTransactionData> getBaseTransactionClass() {
         return baseTransactionClass;
     }
 }

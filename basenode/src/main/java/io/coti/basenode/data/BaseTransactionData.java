@@ -1,6 +1,8 @@
 package io.coti.basenode.data;
 
-import io.coti.basenode.data.interfaces.IBaseTransactionData;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.coti.basenode.data.interfaces.IBaseTransactionType;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,14 +17,20 @@ import java.util.Date;
 @Slf4j
 @Data
 @NoArgsConstructor
-public class BaseTransactionData implements Serializable, IBaseTransactionData {
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS,
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = InputBaseTransactionType.class),
+})
+public abstract class BaseTransactionData implements Serializable {
     @NotNull
     protected Hash hash;
-    protected OutputBaseTransactionType type;
     @NotNull
     protected Hash addressHash;
+    private BigDecimal amount;
     @NotNull
-    protected BigDecimal amount;
+    protected IBaseTransactionType type;
     @NotNull
     protected Date createTime;
     protected @Valid SignatureData signatureData;
@@ -30,17 +38,16 @@ public class BaseTransactionData implements Serializable, IBaseTransactionData {
     public BaseTransactionData(Hash addressHash, BigDecimal amount, Hash baseTransactionHash, SignatureData signature, Date createTime) {
         this.addressHash = addressHash;
         this.amount = amount;
-        //    this.type = OutputBaseTransactionType.valueOf(type);
         this.hash = baseTransactionHash;
-        log.info("Construct {}", baseTransactionHash);
         this.signatureData = signature;
         this.createTime = createTime;
     }
 
-    public BaseTransactionData(Hash addressHash, BigDecimal amount, Date createTime) {
+    public BaseTransactionData(Hash addressHash, BigDecimal amount, String type,Date createTime) {
         this.addressHash = addressHash;
-        this.amount = amount;
         this.createTime = createTime;
+        this.setAmount(amount);
+        this.setType(type);
     }
 
     @Override
@@ -53,5 +60,17 @@ public class BaseTransactionData implements Serializable, IBaseTransactionData {
             return false;
         }
         return hash.equals(((BaseTransactionData) other).hash);
+    }
+
+    public boolean isInput() {
+        return this.getAmount().signum() <= 0;
+    }
+
+    public IBaseTransactionType getType(String type) {
+        return isInput() ? InputBaseTransactionType.valueOf(type) : OutputBaseTransactionType.valueOf(type);
+    }
+
+    public void setType(String type) {
+        this.type = isInput() ? InputBaseTransactionType.valueOf(type) : OutputBaseTransactionType.valueOf(type);
     }
 }

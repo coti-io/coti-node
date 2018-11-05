@@ -1,4 +1,6 @@
 package io.coti.basenode.data.interfaces;
 
-public interface IBaseTransactionType {
+import java.io.Serializable;
+
+public interface IBaseTransactionType extends Serializable {
 }

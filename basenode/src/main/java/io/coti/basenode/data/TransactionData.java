@@ -1,6 +1,5 @@
 package io.coti.basenode.data;
 
-import io.coti.basenode.data.interfaces.IBaseTransactionData;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
@@ -60,9 +59,9 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
         this.createTime = createTime;
         this.senderTrustScore = senderTrustScore;
         BigDecimal amount = BigDecimal.ZERO;
-     /*   for (BaseTransactionData baseTransaction : baseTransactions) {
+        for (BaseTransactionData baseTransaction : baseTransactions) {
             amount = amount.add(baseTransaction.getAmount().signum() > 0 ? baseTransaction.getAmount() : BigDecimal.ZERO);
-        }  */
+        }
         this.amount = amount;
         this.initTransactionData();
     }
@@ -135,13 +134,13 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
         return valid;
     }
 
-  /*  public List<IBaseTransactionData> getOutputBaseTransactions() {
+    public List<BaseTransactionData> getOutputBaseTransactions() {
         return this.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData.getAmount().signum() > 0 ).collect(Collectors.toList());
     }
 
-    public List<IBaseTransactionData> getInputBaseTransactions() {
+    public List<BaseTransactionData> getInputBaseTransactions() {
         return this.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData.getAmount().signum() <= 0 ).collect(Collectors.toList());
-    } */
+    }
 
     @Override
     public int compareTo(TransactionData other) {
