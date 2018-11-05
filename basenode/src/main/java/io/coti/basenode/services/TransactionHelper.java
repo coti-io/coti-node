@@ -182,7 +182,8 @@ public class TransactionHelper implements ITransactionHelper {
     private void rollbackTransaction(TransactionData transactionData) {
         Stack<TransactionState> currentTransactionStateStack = transactionHashToTransactionStateStackMapping.get(transactionData.getHash());
         while (!currentTransactionStateStack.isEmpty()) {
-            switch (currentTransactionStateStack.pop()) {
+            TransactionState transactionState = currentTransactionStateStack.pop();
+            switch (transactionState) {
                 case PRE_BALANCE_CHANGED:
                     revertPreBalance(transactionData);
                     break;
@@ -192,8 +193,13 @@ public class TransactionHelper implements ITransactionHelper {
                 case RECEIVED:
                     transactionHashToTransactionStateStackMapping.remove(transactionData.getHash());
                     break;
-                default:
+//                case FINISHED:
+//                    // TODO: what happens here
+//                    return;
+                default: {
+                    log.error("Transaction {} has a state {} which is illegal in rollback scenario", transactionData, transactionState);
                     throw new IllegalArgumentException("Invalid transaction state");
+                }
             }
         }
     }
@@ -262,7 +268,7 @@ public class TransactionHelper implements ITransactionHelper {
             log.debug("Valid vote conclusion received for transaction: {}", dspConsensusResult.getHash());
         } else {
             log.debug("Vote conclusion received for transaction {} is false!", dspConsensusResult.getHash());
-            return  false;
+            return false;
         }
 
         log.debug("DspConsensus result for transaction: Hash= {}, DspVoteResult= {}, Index= {}", dspConsensusResult.getHash(), dspConsensusResult.isDspConsensus(), dspConsensusResult.getIndex());

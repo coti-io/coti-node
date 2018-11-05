@@ -13,6 +13,7 @@ import io.coti.basenode.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -62,11 +63,14 @@ public class TransactionService extends BaseNodeTransactionService {
             transactionHelper.setTransactionStateToFinished(transactionData);
             transactionsToValidate.add(transactionData);
             return "Received Transaction: " + transactionData.getHash();
-        } finally {
+        }
+        catch (Exception ex){
+            log.error("Exception while handling transaction {}", transactionData, ex);
+        }
+        finally {
             transactionHelper.endHandleTransaction(transactionData);
         }
-
-
+        return "error in trx: " + transactionData.getHash();
     }
 
     @Scheduled(fixedRate = 1000)

@@ -10,10 +10,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 @Service
 @Slf4j
@@ -35,7 +36,7 @@ public class HealthCheckService {
         networkChanged = checkNodesList(nodesService.getAllNetworkData().getTrustScoreNetworkNodesList(), networkChanged);
         networkChanged = checkNodesList(nodesService.getAllNetworkData().getFullNetworkNodesList(), networkChanged);
         NetworkNodeData zerospendNetworkNodeData = nodesService.getAllNetworkData().getZerospendServer();
-        if (!checkNode(zerospendNetworkNodeData)) {
+        if (!isNodeConnected(zerospendNetworkNodeData)) {
             log.info("{} of address is about to be deleted", zerospendNetworkNodeData.getNodeType(),
                     zerospendNetworkNodeData.getHttpFullAddress());
             nodesService.insertDeletedNodeRecord(zerospendNetworkNodeData);
@@ -47,7 +48,7 @@ public class HealthCheckService {
         }
     }
 
-    private boolean checkNode(NetworkNodeData networkNodeDataToCheck) {
+    private boolean isNodeConnected(NetworkNodeData networkNodeDataToCheck) {
         if (networkNodeDataToCheck == null) {
             return true;
         }
@@ -56,12 +57,12 @@ public class HealthCheckService {
         while (tries < NUM_OF_RETRIES) {
             try {
                 if (tries != 0) {
-                    log.info("Waiting {} seconds for # {} retry to {} of address {} healthcheck",
+                    log.info("Waiting {} seconds for #{} retry to {} of address {} healthcheck",
                             RETRY_INTERVAL_IN_SECONDS, tries, networkNodeDataToCheck.getNodeType(),
                             networkNodeDataToCheck.getHttpFullAddress());
                     TimeUnit.SECONDS.sleep(RETRY_INTERVAL_IN_SECONDS);
                 }
-                Hash nodeHash = restTemplate.getForObject( "http://" + getModifiedFullAddressIfNeeded(networkNodeDataToCheck.getAddress())
+                Hash nodeHash = restTemplate.getForObject("http://" + getModifiedFullAddressIfNeeded(networkNodeDataToCheck.getAddress())
                         + ":" + networkNodeDataToCheck.getHttpPort() + NODE_HASH_END_POINT, Hash.class);
                 if (nodeHash != null) {
                     log.debug("{} of address {} and port {} is responding to healthcheck.",
@@ -78,27 +79,50 @@ public class HealthCheckService {
         return false;
     }
 
-    private String getModifiedFullAddressIfNeeded(String externalServerAddress){
+    private boolean checkAndDeleteNodeIfNeeded(NetworkNodeData networkNodeData, List<NetworkNodeData> nodesToRemove){
+        if(!isNodeConnected(networkNodeData)) {
+            deleteNode(nodesToRemove, networkNodeData);
+            return true;
+        }
+        return false;
+    }
+
+    private String getModifiedFullAddressIfNeeded(String externalServerAddress) {
         return ipService.getIpOfRemoteServer(externalServerAddress);
     }
 
 
     private synchronized boolean checkNodesList(List<NetworkNodeData> nodesList, boolean networkChanged) {
-        List<NetworkNodeData> nodesToRemove = new LinkedList<>();
-        if (nodesList.size() > 0) {
-            Iterator<NetworkNodeData> iterator = nodesList.iterator();
-            while (iterator.hasNext()) {
-                NetworkNodeData networkNodeData = iterator.next();
-                if (!checkNode(networkNodeData)) {
-                    log.info("{} of address {} and port {}  is about to be deleted", networkNodeData.getNodeType(), networkNodeData.getAddress(), networkNodeData.getHttpPort());
-                    nodesService.insertDeletedNodeRecord(networkNodeData);
-                    nodesToRemove.add(networkNodeData);
-                    networkChanged = true;
+        try {
+            List<NetworkNodeData> nodesToRemove = new LinkedList<>();
+            if (!nodesList.isEmpty()) {
+                ExecutorService executorService = Executors.newFixedThreadPool(10);
+                List<Callable<Boolean>> missingTransactionsTasks = new ArrayList<>(nodesList.size());
+                Iterator<NetworkNodeData> iterator = nodesList.iterator();
+                while (iterator.hasNext()) {
+                    NetworkNodeData networkNodeData = iterator.next();
+                    missingTransactionsTasks.add(() -> checkAndDeleteNodeIfNeeded(networkNodeData, nodesToRemove));
+                }
+                List<Future<Boolean>> checkNodeFutures = executorService.invokeAll(missingTransactionsTasks);
+                for (Future<Boolean> future : checkNodeFutures) {
+                    if (future.get() == true) {
+                        networkChanged = true;
+                    }
                 }
             }
+            nodesToRemove.forEach(networkNode -> nodesService.getAllNetworkData().removeNode(networkNode));
         }
-        nodesToRemove.forEach(networkNode -> nodesService.getAllNetworkData().removeNode(networkNode));
+        catch (Exception ex){
+            log.error("Error while checking nodeList", ex);
+        }
         return networkChanged;
+    }
+
+
+    private void deleteNode(List<NetworkNodeData> nodesToRemove, NetworkNodeData networkNodeData) {
+        log.info("{} of address {} and port {}  is about to be deleted", networkNodeData.getNodeType(), networkNodeData.getAddress(), networkNodeData.getHttpPort());
+        nodesService.insertDeletedNodeRecord(networkNodeData);
+        nodesToRemove.add(networkNodeData);
     }
 
 
