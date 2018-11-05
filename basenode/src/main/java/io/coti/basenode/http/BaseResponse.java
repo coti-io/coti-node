@@ -8,7 +8,7 @@ public abstract class BaseResponse implements IResponse {
     public String status;
 
     public BaseResponse() {
-        this.status = HttpStringConstants.STATUS_SUCCESS;
+        this.status = BaseNodeHttpStringConstants.STATUS_SUCCESS;
     }
 
     public BaseResponse(String status) {

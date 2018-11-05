@@ -1,27 +1,29 @@
 package io.coti.trustscore.services;
 
+import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionTrustScoreData;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.TransactionTrustScoreResponseData;
+import io.coti.trustscore.services.calculationServices.interfaces.IBucketEventService;
 import io.coti.trustscore.crypto.TrustScoreCrypto;
 import io.coti.trustscore.crypto.TrustScoreEventCrypto;
 import io.coti.trustscore.data.Buckets.BucketEventData;
 import io.coti.trustscore.data.Buckets.BucketTransactionEventsData;
 import io.coti.trustscore.data.Enums.UserType;
-import io.coti.trustscore.data.Events.CentralEventData;
+import io.coti.trustscore.data.Events.KycEventData;
 import io.coti.trustscore.data.Events.TransactionEventData;
 import io.coti.trustscore.data.TrustScoreData;
 import io.coti.trustscore.http.*;
-import io.coti.trustscore.model.BucketTransactionEvents;
 import io.coti.trustscore.model.TransactionEvents;
 import io.coti.trustscore.model.TrustScores;
-import io.coti.trustscore.rulesData.Component;
-import io.coti.trustscore.rulesData.InitialTrustType;
-import io.coti.trustscore.rulesData.RulesData;
+import io.coti.trustscore.config.rules.Component;
+import io.coti.trustscore.config.rules.InitialTrustType;
+import io.coti.trustscore.config.rules.RulesData;
 import io.coti.trustscore.utils.DatesCalculation;
 import io.coti.trustscore.utils.MathCalculation;
 import lombok.extern.slf4j.Slf4j;
@@ -36,13 +38,18 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.File;
+import java.nio.ByteBuffer;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 
-import static io.coti.basenode.http.HttpStringConstants.*;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
+import static io.coti.trustscore.http.HttpStringConstants.*;
 
 @Slf4j
 @Service
@@ -71,7 +78,7 @@ public class TrustScoreService {
 
 
 
-    private List<BucketEventService> bucketEventServiceList;
+    private List<IBucketEventService> bucketEventServiceList;
 
     @PostConstruct
     private void init() {
@@ -101,7 +108,7 @@ public class TrustScoreService {
 
     public ResponseEntity<BaseResponse> addCentralServerEvent(InsertTrustScoreEventRequest request) {
 
-        CentralEventData centralEventData = request.convertToCentralEvent();
+        KycEventData centralEventData = request.convertToCentralEvent();
         if (!trustScoreEventCrypto.verifySignature(centralEventData)) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
@@ -155,7 +162,24 @@ public class TrustScoreService {
         return ResponseEntity.status(HttpStatus.OK).body(getUserTrustScoreResponse);
     }
 
-    public ResponseEntity<BaseResponse> getTransactionTrustScore(Hash userHash, Hash transactionHash) {
+    public ResponseEntity<BaseResponse> getTransactionTrustScore(Hash userHash, Hash transactionHash, SignatureData signatureData) {
+
+        try {
+            PublicKey publicKey = CryptoHelper.getPublicKeyFromHexString(userHash.toHexString());
+            ByteBuffer originalValue = ByteBuffer.wrap(transactionHash.getBytes());
+            if (!CryptoHelper.VerifyByPublicKey(originalValue.array() ,signatureData.getR(),signatureData.getS(), publicKey))
+            {
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST).body(new Response(BAD_SIGNATURE_ON_TRUST_SCORE_FOR_TRANSACTION));
+            }
+
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            log.error("Exception happened while trying to get public key user hash {}", e);
+
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST).body(new Response(BAD_SIGNATURE_ON_TRUST_SCORE_FOR_TRANSACTION));
+        }
+
         TrustScoreData trustScoreData = trustScores.getByHash(userHash);
         if (trustScoreData == null) {
             return ResponseEntity
@@ -173,7 +197,7 @@ public class TrustScoreService {
 
     private double calculateUserTrustScore(TrustScoreData trustScoreData){
         double currentTrustScore = 0;
-        for (BucketEventService bucketEventService : bucketEventServiceList) {
+        for (IBucketEventService bucketEventService : bucketEventServiceList) {
             BucketEventData bucketEventData = trustScoreData.getLastBucketEventData().get(bucketEventService.getBucketEventType());
             currentTrustScore += bucketEventService.getBucketSumScore(bucketEventData);
         }

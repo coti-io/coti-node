@@ -5,27 +5,25 @@ import io.coti.trustscore.model.BucketTransactionEvents;
 import io.coti.trustscore.model.TransactionEvents;
 import io.coti.trustscore.model.TrustScores;
 import io.coti.trustscore.model.UserBehaviourEvents;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+
 @Primary
 @Service
-@Slf4j
 public class TrustScoreRocksDBConnector extends RocksDBConnector {
 
+    @Override
+    public void setColumnFamily() {
+        super.setColumnFamily();
+        columnFamilyClassNames.addAll(Arrays.asList(
+                BucketTransactionEvents.class.getName(),
+            UserBehaviourEvents.class.getName(),
+            TrustScores.class.getName(),
+            TransactionEvents.class.getName()
+        ));
 
-    public TrustScoreRocksDBConnector() {
-        addTrustScoreColumnFamilies();
+
     }
-
-
-    private void addTrustScoreColumnFamilies() {
-        columnFamilyClassNames.add(BucketTransactionEvents.class.getName());
-        columnFamilyClassNames.add(UserBehaviourEvents.class.getName());
-        columnFamilyClassNames.add(TrustScores.class.getName());
-        columnFamilyClassNames.add(TransactionEvents.class.getName());
-
-    }
-
 }

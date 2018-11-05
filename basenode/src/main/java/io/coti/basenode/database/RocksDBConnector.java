@@ -21,15 +21,7 @@ import java.util.*;
 public class RocksDBConnector implements IDatabaseConnector {
     @Value("${database.folder.name}")
     private String databaseFolderName;
-    private final String initialDBPath = "initialDatabase";
-    protected List<String> columnFamilyClassNames = new ArrayList<>(Arrays.asList(
-            "DefaultColumnClassName",
-            Transactions.class.getName(),
-            Addresses.class.getName(),
-            AddressTransactionsHistories.class.getName(),
-            TransactionIndexes.class.getName(),
-            TransactionVotes.class.getName()
-    ));
+    protected List<String> columnFamilyClassNames;
 
     @Value("${application.name}")
     private String applicationName;
@@ -41,8 +33,7 @@ public class RocksDBConnector implements IDatabaseConnector {
     private Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
     private List<ColumnFamilyHandle> columnFamilyHandles = new ArrayList<>();
 
-    public RocksDBConnector() { log.info("{} is up", this.getClass().getSimpleName());
-    }
+
 
     private void deleteDatabaseFolder() {
         File index = new File(dbPath);
@@ -59,7 +50,22 @@ public class RocksDBConnector implements IDatabaseConnector {
 
 
     public void init() {
+        setColumnFamily();
         init(applicationName + databaseFolderName);
+        log.info("{} is up", this.getClass().getSimpleName());
+    }
+
+
+    protected void setColumnFamily(){
+        columnFamilyClassNames = new ArrayList<>(Arrays.asList(
+                "DefaultColumnClassName",
+                Transactions.class.getName(),
+                Addresses.class.getName(),
+                AddressTransactionsHistories.class.getName(),
+                TransactionIndexes.class.getName(),
+                TransactionVotes.class.getName()
+        ));
+
     }
 
     public void init(String dbPath) {

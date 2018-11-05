@@ -9,7 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import static io.coti.basenode.http.HttpStringConstants.*;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 
 @Slf4j
 @ControllerAdvice
