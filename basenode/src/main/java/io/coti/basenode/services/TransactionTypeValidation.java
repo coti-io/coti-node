@@ -1,14 +1,9 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.data.BaseTransactionData;
-import io.coti.basenode.data.OutputBaseTransactionType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
-import io.coti.basenode.data.interfaces.IBaseTransactionData;
 import io.coti.basenode.services.interfaces.ITransactionTypeValidation;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
 
 @Slf4j
 public enum TransactionTypeValidation implements ITransactionTypeValidation {

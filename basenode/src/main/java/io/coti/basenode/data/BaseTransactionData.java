@@ -2,7 +2,7 @@ package io.coti.basenode.data;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver;
 import io.coti.basenode.data.interfaces.IBaseTransactionType;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,19 +17,18 @@ import java.util.Date;
 @Slf4j
 @Data
 @NoArgsConstructor
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS,
+@JsonTypeInfo(use = JsonTypeInfo.Id.CUSTOM,
         include = JsonTypeInfo.As.PROPERTY,
-        property = "type")
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = InputBaseTransactionType.class),
-})
+        property = "command")
+@JsonTypeIdResolver(CommandTypeIdResolver.class)
 public abstract class BaseTransactionData implements Serializable {
     @NotNull
     protected Hash hash;
     @NotNull
     protected Hash addressHash;
-    private BigDecimal amount;
     @NotNull
+    private BigDecimal amount;
+    private boolean
     protected IBaseTransactionType type;
     @NotNull
     protected Date createTime;
@@ -43,7 +42,7 @@ public abstract class BaseTransactionData implements Serializable {
         this.createTime = createTime;
     }
 
-    public BaseTransactionData(Hash addressHash, BigDecimal amount, String type,Date createTime) {
+    public BaseTransactionData(Hash addressHash, BigDecimal amount, String type, Date createTime) {
         this.addressHash = addressHash;
         this.createTime = createTime;
         this.setAmount(amount);
@@ -66,8 +65,8 @@ public abstract class BaseTransactionData implements Serializable {
         return this.getAmount().signum() <= 0;
     }
 
-    public IBaseTransactionType getType(String type) {
-        return isInput() ? InputBaseTransactionType.valueOf(type) : OutputBaseTransactionType.valueOf(type);
+    public IBaseTransactionType getType() {
+        return type;
     }
 
     public void setType(String type) {
