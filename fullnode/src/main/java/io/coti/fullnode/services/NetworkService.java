@@ -36,7 +36,7 @@ public class NetworkService implements INetworkService {
 
     @Override
     public void handleNetworkChanges(NetworkDetails newNetworkDetails) {
-        log.info("New newNetworkDetails structure received: {}", newNetworkDetails);
+        log.info("New newNetworkDetails structure received: {}", newNetworkDetails.getNetWorkSummary());
         ipService.modifyNetworkDetailsIfNeeded(newNetworkDetails);
         this.networkDetails.getDspNetworkNodesList().forEach(dsp -> {
             if (!newNetworkDetails.getDspNetworkNodesList().contains(dsp)) {

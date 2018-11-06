@@ -12,6 +12,7 @@ import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.LiveView.LiveViewService;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.digester.ArrayStack;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -21,8 +22,10 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
@@ -176,9 +179,16 @@ public abstract class BaseNodeInitializationService {
     }
 
     private ResponseEntity<String> addNewNodeToNodeManager(NetworkNodeData networkNodeData) {
-        RestTemplate restTemplate = new RestTemplate();
-        String newNodeURL = nodeManagerAddress + NODE_MANAGER_ADD_NODE_ENDPOINT;
-        return restTemplate.postForEntity(newNodeURL, networkNodeData, String.class);
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            String newNodeURL = nodeManagerAddress + NODE_MANAGER_ADD_NODE_ENDPOINT;
+            return restTemplate.postForEntity(newNodeURL, networkNodeData, String.class);
+        }
+        catch (Exception ex){
+            log.error("Error connecting node manager, please check node's address / contact COTI");
+            System.exit(-1);
+        }
+        return ResponseEntity.noContent().build();
     }
 
     private NetworkDetails getNetworkDetailsFromNodeManager() {

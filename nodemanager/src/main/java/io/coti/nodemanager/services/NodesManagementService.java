@@ -69,11 +69,14 @@ public class NodesManagementService implements INodesManagementService {
             log.error("Illegal networkNodeData properties received: {}", networkNodeData);
             throw new IllegalAccessException("The node " + networkNodeData + "didn't pass validation");
         }
-        if(networkDetails.nodeExists(networkNodeData)){
+        if(networkDetails.isNodeExistsOnMemory(networkNodeData)){
             networkDetails.updateNetworkNode(networkNodeData);
         }
-        insertToDB(networkNodeData);
-        this.networkDetails.addNode(networkNodeData);
+        else{
+            this.networkDetails.addNode(networkNodeData);
+
+        }
+        insertToDB(networkNodeData, NetworkNodeStatus.CHANGED);
         updateNetworkChanges();
         return networkDetails;
     }
@@ -92,8 +95,8 @@ public class NodesManagementService implements INodesManagementService {
     }
 
 
-    private void insertToDB(NetworkNodeData networkNodeData) {
-        modifyNode(networkNodeData, NetworkNodeStatus.CHANGED);
+    private void insertToDB(NetworkNodeData networkNodeData, NetworkNodeStatus nodeStatus) {
+        modifyNode(networkNodeData, nodeStatus);
     }
 
     public void insertDeletedNodeRecord(NetworkNodeData networkNodeData) {

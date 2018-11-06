@@ -31,7 +31,7 @@ public class NetworkService implements INetworkService {
 
     @Override
     public void handleNetworkChanges(NetworkDetails newNetworkDetails) {
-        log.info("New newNetworkDetails structure received: {}", newNetworkDetails);
+        log.info("New newNetworkDetails structure received: {}", newNetworkDetails.getNetWorkSummary());
         ipService.modifyNetworkDetailsIfNeeded(newNetworkDetails);
         List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetworkDetails.getDspNetworkNodesList(), this.networkDetails.getDspNetworkNodesList()));
         if (!dspNodesToConnect.isEmpty()) {

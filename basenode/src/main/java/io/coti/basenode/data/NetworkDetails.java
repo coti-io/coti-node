@@ -42,7 +42,7 @@ public class NetworkDetails implements IEntity {
         log.info("networkNode {} was deleted", networkNodeData);
     }
 
-    public boolean nodeExists(NetworkNodeData networkNodeData) {
+    public boolean isNodeExistsOnMemory(NetworkNodeData networkNodeData) {
         if (NodeType.ZeroSpendServer.equals(networkNodeData.getNodeType())) {
             if (zerospendServer != null && zerospendServer.equals(networkNodeData)) {
                 return true;

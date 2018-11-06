@@ -41,7 +41,7 @@ public class NetworkService implements INetworkService {
 
     @Override
     public void handleNetworkChanges(NetworkDetails newNetworkDetails) {
-        log.info("New newNetworkDetails structure received: {}", newNetworkDetails);
+        log.info("New newNetworkDetails structure received: {}", newNetworkDetails.getNetWorkSummary());
         ipService.modifyNetworkDetailsIfNeeded(newNetworkDetails);
         NetworkNodeData zerospendNetworkNodeData = newNetworkDetails.getZerospendServer();
         if (zerospendNetworkNodeData != null && zerospendNetworkNodeData != this.networkDetails.getZerospendServer()) {
