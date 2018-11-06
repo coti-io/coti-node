@@ -2,7 +2,10 @@ package io.coti.nodemanager.services.interfaces;
 
 import io.coti.basenode.data.NetworkDetails;
 import io.coti.basenode.data.NetworkNodeData;
-import io.coti.nodemanager.data.NetworkDetailsForWallet;
+import io.coti.nodemanager.data.SingleNodeDetailsForWallet;
+
+import java.util.List;
+import java.util.Map;
 
 public interface INodesManagementService {
 
@@ -14,5 +17,5 @@ public interface INodesManagementService {
 
     void insertDeletedNodeRecord(NetworkNodeData networkNodeData);
 
-    NetworkDetailsForWallet createNetworkDetailsForWallet();
+    Map<String, List<SingleNodeDetailsForWallet>> createNetworkDetailsForWallet();
 }

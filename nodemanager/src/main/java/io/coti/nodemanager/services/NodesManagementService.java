@@ -6,13 +6,14 @@ import io.coti.basenode.data.NetworkDetails;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.database.Interfaces.IDatabaseConnector;
-import io.coti.nodemanager.data.NetworkDetailsForWallet;
 import io.coti.nodemanager.data.NodeHistoryData;
 import io.coti.nodemanager.data.NodeNetworkDataTimestamp;
+import io.coti.nodemanager.data.SingleNodeDetailsForWallet;
 import io.coti.nodemanager.database.NetworkNodeStatus;
 import io.coti.nodemanager.model.NodeHistory;
 import io.coti.nodemanager.services.interfaces.INodesManagementService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.map.HashedMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,9 @@ import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -69,10 +73,9 @@ public class NodesManagementService implements INodesManagementService {
             log.error("Illegal networkNodeData properties received: {}", networkNodeData);
             throw new IllegalAccessException("The node " + networkNodeData + "didn't pass validation");
         }
-        if(networkDetails.isNodeExistsOnMemory(networkNodeData)){
+        if (networkDetails.isNodeExistsOnMemory(networkNodeData)) {
             networkDetails.updateNetworkNode(networkNodeData);
-        }
-        else{
+        } else {
             this.networkDetails.addNode(networkNodeData);
 
         }
@@ -103,7 +106,7 @@ public class NodesManagementService implements INodesManagementService {
         modifyNode(networkNodeData, NetworkNodeStatus.REMOVED);
     }
 
-    private void modifyNode(NetworkNodeData networkNodeData, NetworkNodeStatus status){
+    private void modifyNode(NetworkNodeData networkNodeData, NetworkNodeStatus status) {
         NodeHistoryData dbNode = nodeHistory.getByHash(networkNodeData.getHash());
         if (dbNode != null) {
             dbNode.setNodeStatus(status);
@@ -112,9 +115,9 @@ public class NodesManagementService implements INodesManagementService {
             dbNode.getNodeHistory().add(nodeNetworkDataTimestamp);
             log.debug("Node was updated in the db. node: {}", dbNode);
         } else {
-            if(NetworkNodeStatus.REMOVED.equals(status)){
+            if (NetworkNodeStatus.REMOVED.equals(status)) {
                 dbNode = new NodeHistoryData(NetworkNodeStatus.REMOVED, networkNodeData.getNodeHash(), networkNodeData.getNodeType());
-            }else{
+            } else {
                 dbNode = new NodeHistoryData(NetworkNodeStatus.NEW, networkNodeData.getNodeHash(), networkNodeData.getNodeType());
             }
             dbNode.getNodeHistory().add(new NodeNetworkDataTimestamp(getUTCnow(), networkNodeData));
@@ -128,11 +131,22 @@ public class NodesManagementService implements INodesManagementService {
         return LocalDateTime.now(ZoneOffset.UTC);
     }
 
-    public NetworkDetailsForWallet createNetworkDetailsForWallet() {
-        NetworkDetailsForWallet networkDetailsForWallet = new NetworkDetailsForWallet();
-        networkDetailsForWallet.setDsps(networkDetails.getDspNetworkNodesList());
-        networkDetailsForWallet.setTrustScores(networkDetails.getTrustScoreNetworkNodesList());
+    public Map<String, List<SingleNodeDetailsForWallet>> createNetworkDetailsForWallet() {
+        Map<String, List<SingleNodeDetailsForWallet>> networkDetailsForWallet = new HashedMap<>();
+        List<SingleNodeDetailsForWallet> fullNodesDetailsForWallet = new LinkedList<>();
+        List<SingleNodeDetailsForWallet> trustScoreNodesDetailsForWallet = new LinkedList<>();
+        fillNetworkDetailsListForWallet(fullNodesDetailsForWallet, networkDetails.getFullNetworkNodesList());
+        fillNetworkDetailsListForWallet(trustScoreNodesDetailsForWallet, networkDetails.getTrustScoreNetworkNodesList());
+        networkDetailsForWallet.put("FullNodes", fullNodesDetailsForWallet);
+        networkDetailsForWallet.put("TrustScoreNodes", trustScoreNodesDetailsForWallet);
         return networkDetailsForWallet;
     }
 
+    private void fillNetworkDetailsListForWallet(List<SingleNodeDetailsForWallet> detailsForWalletList, List<NetworkNodeData> nodeData) {
+        nodeData.forEach(node -> {
+                    SingleNodeDetailsForWallet nodeDetails = new SingleNodeDetailsForWallet(node.getHttpFullAddress(), node.getFee(), node.getTrustScore());
+                    detailsForWalletList.add(nodeDetails);
+                }
+        );
+    }
 }

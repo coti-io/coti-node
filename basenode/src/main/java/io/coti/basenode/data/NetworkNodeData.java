@@ -16,6 +16,7 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
     private String receivingPort;
     private String recoveryServerAddress;
     private Double trustScore;
+    private Double fee;
 
     private Hash nodeHash;
     private SignatureData signature;
@@ -26,6 +27,8 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
         this.address = address;
         this.httpPort = httpPort;
         this.nodeHash = nodeHash;
+        trustScore = 50.0;
+        fee = 5.55;
     }
 
     public NetworkNodeData() {

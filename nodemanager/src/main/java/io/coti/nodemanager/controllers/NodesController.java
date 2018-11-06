@@ -39,17 +39,5 @@ public class NodesController {
         return nodesService.getAllNetworkData();
     }
 
-    public ResponseEntity<String>  getNumOfFullNodeFromDsp(int numOfFullNodes){
-        if(numOfFullNodes == 0){
-
-        }
-        else{
-
-        }
-
-        return ResponseEntity.ok("");
-    }
-
-
 
 }

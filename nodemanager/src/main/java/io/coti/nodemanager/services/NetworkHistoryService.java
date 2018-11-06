@@ -6,7 +6,6 @@ import io.coti.nodemanager.services.interfaces.INetworkHistoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -19,7 +18,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
     @Override
     public List<NodeHistoryData> getNodesHistory() {
         List<NodeHistoryData> nodeHistoryDataList = new LinkedList<>();
-        nodeHistory.forEach(nodeHistoryData-> nodeHistoryDataList.add(nodeHistoryData));
+        nodeHistory.forEach(nodeHistoryData -> nodeHistoryDataList.add(nodeHistoryData));
         return nodeHistoryDataList;
     }
 }
