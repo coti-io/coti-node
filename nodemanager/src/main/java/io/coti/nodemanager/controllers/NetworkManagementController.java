@@ -19,6 +19,9 @@ import java.util.Map;
 @RequestMapping("/management")
 @Slf4j
 public class NetworkManagementController {
+    private int exp;
+
+    private int exp2;
 
     @Autowired
     private INetworkHistoryService networkHistoryService;
