@@ -9,20 +9,12 @@ import java.time.format.DateTimeFormatter;
 
 @Data
 public class NodeNetworkDataTimestamp implements Serializable {
-    private LocalDateTime date;
+    private String date;
     private NetworkNodeData networkNodeData;
-
-    @Override
-    public String toString() {
-        return "NodeNetworkDataTimestamp{" +
-                "date=" + date.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) +
-                ", networkNodeData=" + networkNodeData +
-                '}';
-    }
 
 
     public NodeNetworkDataTimestamp(LocalDateTime date, NetworkNodeData networkNodeData) {
-        this.date = date;
+        this.date = date.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         this.networkNodeData = networkNodeData;
     }
 }

@@ -32,8 +32,14 @@ import java.util.function.Consumer;
 @Service
 public abstract class BaseNodeInitializationService {
 
+    private final static String NODE_MANAGER_ADD_NODE_ENDPOINT = "/nodes/new_node";
+    private final static String NODE_MANAGER_GET_NETWORK_DETAILS_ENDPOINT = "/nodes/all";
+    private final static String RECOVERY_NODE_GET_BATCH_ENDPOINT = "/getTransactionBatch";
     @Autowired
     protected INetworkService networkService;
+    @Autowired
+    protected IIpService ipService;
+    protected String nodeIp;
     @Value("${node.manager.address}")
     private String nodeManagerAddress;
     @Autowired
@@ -62,20 +68,8 @@ public abstract class BaseNodeInitializationService {
     private IPotService potService;
     @Autowired
     private IDatabaseConnector dataBaseConnector;
-
     @Autowired
     private IPropagationSubscriber propagationSubscriber;
-
-    @Autowired
-    protected IIpService ipService;
-
-    protected String nodeIp;
-
-    private final static String NODE_MANAGER_ADD_NODE_ENDPOINT = "/nodes/new_node";
-
-    private final static String NODE_MANAGER_GET_NETWORK_DETAILS_ENDPOINT = "/nodes/all";
-
-    private final static String RECOVERY_NODE_GET_BATCH_ENDPOINT = "/getTransactionBatch";
 
     public void init() {
         try {
@@ -89,7 +83,7 @@ public abstract class BaseNodeInitializationService {
         }
     }
 
-    private void initTransactionSync()  {
+    private void initTransactionSync() {
         try {
             dataBaseConnector.init();
             propagationSubscriber.startListening();
@@ -106,7 +100,7 @@ public abstract class BaseNodeInitializationService {
             if (networkService.getRecoveryServerAddress() != null) {
                 List<TransactionData> missingTransactions = requestMissingTransactions(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
                 if (missingTransactions != null) {
-                    int threadPoolSize = 20;
+                    int threadPoolSize = 1;
                     log.info("{} threads running for missing transactions", threadPoolSize);
                     ExecutorService executorService = Executors.newFixedThreadPool(threadPoolSize);
                     List<Callable<Object>> missingTransactionsTasks = new ArrayList<>(missingTransactions.size());
@@ -118,8 +112,7 @@ public abstract class BaseNodeInitializationService {
             balanceService.validateBalances();
             clusterService.finalizeInit();
             log.info("Transactions Load completed");
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             log.error("Fatal error in initialization", e);
             System.exit(-1);
         }
@@ -175,7 +168,7 @@ public abstract class BaseNodeInitializationService {
     public void connectToNetwork() {
         NetworkNodeData networkNodeData = getNodeProperties();
         ResponseEntity<String> addNewNodeResponse = addNewNodeToNodeManager(networkNodeData);
-        if(!addNewNodeResponse.getStatusCode().equals(HttpStatus.OK)){
+        if (!addNewNodeResponse.getStatusCode().equals(HttpStatus.OK)) {
             log.error("Couldn't add node to node manager. Message from NodeManager: {}", addNewNodeResponse);
             System.exit(-1);
         }
@@ -188,12 +181,11 @@ public abstract class BaseNodeInitializationService {
         return restTemplate.postForEntity(newNodeURL, networkNodeData, String.class);
     }
 
-    private NetworkDetails getNetworkDetailsFromNodeManager(){
+    private NetworkDetails getNetworkDetailsFromNodeManager() {
         RestTemplate restTemplate = new RestTemplate();
         String newNodeURL = nodeManagerAddress + NODE_MANAGER_GET_NETWORK_DETAILS_ENDPOINT;
         return restTemplate.getForEntity(newNodeURL, NetworkDetails.class).getBody();
     }
-
 
 
     protected abstract NetworkNodeData getNodeProperties();

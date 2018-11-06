@@ -1,15 +1,10 @@
 package io.coti.basenode.data;
 
-import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.interfaces.IEntity;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.omg.CORBA.portable.IDLEntity;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Data
 @Slf4j
@@ -98,33 +93,26 @@ public class NetworkDetails implements IEntity {
     }
 
 
-    public String getNetWorkSummaryString(){
-        String ans = "";
-        ans += createSummaryStringFromNodeList(fullNetworkNodesList);
-        ans += createSummaryStringFromNodeList(dspNetworkNodesList);
-        ans += createSummaryStringFromNodeList(trustScoreNetworkNodesList);
-        if(zerospendServer != null) {
-            ans += zerospendServer.getNodeType() + ": " + System.lineSeparator();
-            ans += zerospendServer.getHttpFullAddress();
+    public Map<String, List<String>> getNetWorkSummary() {
+        Map<String, List<String>> summaryMap = new HashMap<>();
+        createSummaryStringFromNodeList(fullNetworkNodesList, summaryMap);
+        createSummaryStringFromNodeList(dspNetworkNodesList, summaryMap);
+        createSummaryStringFromNodeList(trustScoreNetworkNodesList, summaryMap);
+        if (zerospendServer != null) {
+            summaryMap.put(zerospendServer.getNodeType().name(), new LinkedList<>());
+            summaryMap.get(zerospendServer.getNodeType().name()).add(zerospendServer.getHttpFullAddress());
         }
-        return  ans;
+        return summaryMap;
     }
 
-    private String createSummaryStringFromNodeList(List<NetworkNodeData> networkNodeDataList){
-        String ans = "";
-        if(!networkNodeDataList.isEmpty()) {
-            ans += networkNodeDataList.get(0).getNodeType() + ", num of nodes(" + networkNodeDataList.size() +"):"
-                    + System.lineSeparator();
-
+    private void createSummaryStringFromNodeList(List<NetworkNodeData> networkNodeDataList, Map<String, List<String>> summaryMap) {
+        if (!networkNodeDataList.isEmpty()) {
+            String nodeTypeAsString = networkNodeDataList.get(0).getNodeType().name();
+            summaryMap.put(nodeTypeAsString, new LinkedList<String>());
             for (NetworkNodeData nodeData : networkNodeDataList) {
-                ans += nodeData.getHttpFullAddress() + System.lineSeparator();
+                summaryMap.get(nodeTypeAsString).add(nodeData.getHttpFullAddress());
             }
-
         }
-        return ans;
-
-
-
     }
 
 

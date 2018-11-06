@@ -50,7 +50,7 @@ public class TransactionService extends BaseNodeTransactionService {
             if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData) ||
                     !validationService.validateBalancesAndAddToPreBalance(transactionData)) {
                 log.info("Invalid Transaction Received!");
-                return; 
+                return;
             }
             transactionHelper.attachTransactionToCluster(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
