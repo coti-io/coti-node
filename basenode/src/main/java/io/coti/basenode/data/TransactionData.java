@@ -74,7 +74,7 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
         this.senderHash = senderHash;
         this.trustScoreResults = trustScoreResults;
         BigDecimal amount = BigDecimal.ZERO;
-       for (BaseTransactionData baseTransaction : baseTransactions) {
+        for (BaseTransactionData baseTransaction : baseTransactions) {
             amount = amount.add(baseTransaction.getAmount().signum() > 0 ? baseTransaction.getAmount() : BigDecimal.ZERO);
         }
         this.amount = amount;
@@ -134,11 +134,11 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
     }
 
     public List<BaseTransactionData> getOutputBaseTransactions() {
-        return this.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData.getAmount().signum() > 0 ).collect(Collectors.toList());
+        return this.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData.getAmount().signum() > 0).collect(Collectors.toList());
     }
 
     public List<BaseTransactionData> getInputBaseTransactions() {
-        return this.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData.getAmount().signum() <= 0 ).collect(Collectors.toList());
+        return this.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData.getAmount().signum() <= 0).collect(Collectors.toList());
     }
 
     @Override

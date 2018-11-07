@@ -1,24 +1,23 @@
 package io.coti.trustscore.services.calculationServices;
 
-import io.coti.trustscore.services.calculationServices.interfaces.IBucketCalculator;
-import io.coti.trustscore.services.calculationServices.interfaces.IEventFormulaCalculator;
-import io.coti.trustscore.data.Buckets.BucketTransactionEventsData;
-import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.config.rules.RulesData;
 import io.coti.trustscore.config.rules.TransactionEventScore;
 import io.coti.trustscore.config.rules.TransactionEventScoreType;
 import io.coti.trustscore.config.rules.TransactionEventsScore;
+import io.coti.trustscore.data.Buckets.BucketTransactionEventsData;
+import io.coti.trustscore.data.Enums.UserType;
+import io.coti.trustscore.services.calculationServices.interfaces.IBucketCalculator;
+import io.coti.trustscore.services.calculationServices.interfaces.IEventFormulaCalculator;
 import javafx.util.Pair;
 import lombok.Data;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static io.coti.trustscore.utils.DatesCalculation.addToDateByDays;
-import static io.coti.trustscore.utils.DatesCalculation.calculateDaysDiffBetweenDates;
-import static io.coti.trustscore.utils.DatesCalculation.setDateOnBeginningOfDay;
+import static io.coti.trustscore.utils.DatesCalculation.*;
 
 
 @Data
@@ -34,7 +33,7 @@ public class BucketTransactionsCalculator implements IBucketCalculator {
                 collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getTransactionEventsScore()));
     }
 
-    public BucketTransactionsCalculator(BucketTransactionEventsData bucketTransactionEventsData){
+    public BucketTransactionsCalculator(BucketTransactionEventsData bucketTransactionEventsData) {
         this.bucketTransactionEventsData = bucketTransactionEventsData;
         userToTransactionEventsScoreMapping.get(bucketTransactionEventsData.getUserType());
         transactionEventsScore = userToTransactionEventsScoreMapping.get(bucketTransactionEventsData.getUserType());
@@ -85,9 +84,8 @@ public class BucketTransactionsCalculator implements IBucketCalculator {
     }
 
 
-
-    public void decayAndUpdateOldMonthlyEventScores(TransactionEventScore transactionEventScore,int daysDiff) {
-        TransactionEventDecay transactionEventDecay = new TransactionEventDecay(transactionEventScore,bucketTransactionEventsData.getOldMonthBalanceContribution());
+    public void decayAndUpdateOldMonthlyEventScores(TransactionEventScore transactionEventScore, int daysDiff) {
+        TransactionEventDecay transactionEventDecay = new TransactionEventDecay(transactionEventScore, bucketTransactionEventsData.getOldMonthBalanceContribution());
 
         bucketTransactionEventsData.setOldMonthBalanceContribution(new DecayTransactionCalculator().calculateEntry(transactionEventDecay, daysDiff)
                 .getValue());
@@ -137,7 +135,6 @@ public class BucketTransactionsCalculator implements IBucketCalculator {
                                                      Map<TransactionEventScore, Double> currentMonthEventsAfterDecayedMap) {
 
 
-
         bucketTransactionEventsData.setOldMonthBalanceContribution(bucketTransactionEventsData.getOldMonthBalanceContribution()
                 + currentMonthEventsToTailAfterDecayedMap.get(transactionEventsScore.getTransactionEventScoreMap()
                 .get(TransactionEventScoreType.AVERAGE_BALANCE)));
@@ -179,7 +176,7 @@ public class BucketTransactionsCalculator implements IBucketCalculator {
         Map<Long, Double> latestBalanceTransactionEventScoreToCalculationFormulaMap =
                 latestTransactionEventScoreToCalculationFormulaMap.get(transactionEventsScore.getTransactionEventScoreMap()
                         .get(TransactionEventScoreType.AVERAGE_BALANCE));
-        updateCurrentMonthBalance(bucketTransactionEventsData,latestBalanceTransactionEventScoreToCalculationFormulaMap);
+        updateCurrentMonthBalance(bucketTransactionEventsData, latestBalanceTransactionEventScoreToCalculationFormulaMap);
         updateCurrentMonthBalanceContribution();
     }
 
@@ -204,7 +201,6 @@ public class BucketTransactionsCalculator implements IBucketCalculator {
             }
         }
     }
-
 
 
     public Map<Long, String> createLastDaysAverageBalanceScoreFormula() {

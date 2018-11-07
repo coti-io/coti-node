@@ -5,12 +5,10 @@ import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.database.Interfaces.IDatabaseConnector;
 import io.coti.basenode.model.*;
 import lombok.extern.slf4j.Slf4j;
-
 import org.rocksdb.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
-
 
 import java.io.File;
 import java.nio.file.Paths;
@@ -34,7 +32,6 @@ public class RocksDBConnector implements IDatabaseConnector {
     private List<ColumnFamilyHandle> columnFamilyHandles = new ArrayList<>();
 
 
-
     private void deleteDatabaseFolder() {
         File index = new File(dbPath);
         if (!index.exists()) {
@@ -56,7 +53,7 @@ public class RocksDBConnector implements IDatabaseConnector {
     }
 
 
-    protected void setColumnFamily(){
+    protected void setColumnFamily() {
         columnFamilyClassNames = new ArrayList<>(Arrays.asList(
                 "DefaultColumnClassName",
                 Transactions.class.getName(),

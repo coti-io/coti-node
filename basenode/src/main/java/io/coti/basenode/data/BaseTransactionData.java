@@ -2,7 +2,6 @@ package io.coti.basenode.data;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver;
-import io.coti.basenode.data.interfaces.IBaseTransactionType;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -6,18 +6,17 @@ import io.coti.basenode.data.TransactionData;
 import lombok.Data;
 
 @Data
-public class DoubleSpendEvent  extends EventData {
+public class DoubleSpendEvent extends EventData {
 
     private TransactionData transactionData;
     private Hash TransactionHash;
     private SignatureData eventSignature;
 
-    public DoubleSpendEvent(TransactionData transactionData,SignatureData eventSignature){
+    public DoubleSpendEvent(TransactionData transactionData, SignatureData eventSignature) {
         this.uniqueIdentifier = transactionData.getHash();
         this.transactionData = transactionData;
         this.eventSignature = eventSignature;
     }
-
 
 
 }

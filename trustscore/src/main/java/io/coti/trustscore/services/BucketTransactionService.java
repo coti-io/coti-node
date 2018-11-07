@@ -2,12 +2,12 @@ package io.coti.trustscore.services;
 
 import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.TransactionData;
-import io.coti.trustscore.services.calculationServices.BucketTransactionsCalculator;
-import io.coti.trustscore.services.calculationServices.interfaces.IBucketEventService;
+import io.coti.trustscore.config.rules.RulesData;
 import io.coti.trustscore.data.Buckets.BucketTransactionEventsData;
 import io.coti.trustscore.data.Enums.EventType;
 import io.coti.trustscore.data.Events.TransactionEventData;
-import io.coti.trustscore.config.rules.RulesData;
+import io.coti.trustscore.services.calculationServices.BucketTransactionsCalculator;
+import io.coti.trustscore.services.calculationServices.interfaces.IBucketEventService;
 import javafx.util.Pair;
 import lombok.Data;
 import org.springframework.stereotype.Service;

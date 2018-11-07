@@ -29,7 +29,7 @@ public class VectorDecaysTransactionCalculator {
                 double currentDailyScore = dayToScoreMapEntry.getValue().getValue();
 
 
-                double decayedCurrentDailyScore = decayTransactionCalculator.calculateEntry(new TransactionEventDecay(transactionEventScore,currentDailyScore), numberOfDecays).getValue();
+                double decayedCurrentDailyScore = decayTransactionCalculator.calculateEntry(new TransactionEventDecay(transactionEventScore, currentDailyScore), numberOfDecays).getValue();
                 dayToScoreMapEntry.setValue(new Pair<>(dayToScoreMapEntry.getValue().getKey(), decayedCurrentDailyScore));
                 SumEventScore += decayedCurrentDailyScore;
             }

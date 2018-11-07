@@ -1,11 +1,11 @@
 package io.coti.basenode.data;
 
 public enum BaseTransactionName {
-    IBT (InputBaseTransactionData.class) ,
-    FFBT (FullNodeFeeData.class),
-    NFBT (NetworkFeeData.class),
-    RRBT (RollingReserveData.class),
-    RBT (ReceiverBaseTransactionData.class);
+    IBT(InputBaseTransactionData.class),
+    FFBT(FullNodeFeeData.class),
+    NFBT(NetworkFeeData.class),
+    RRBT(RollingReserveData.class),
+    RBT(ReceiverBaseTransactionData.class);
 
 
     private Class<? extends BaseTransactionData> baseTransactionClass;

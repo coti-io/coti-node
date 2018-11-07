@@ -13,9 +13,9 @@ import java.util.Map;
 @Data
 public class NetworkFeeData extends OutputBaseTransactionData {
     @NotNull
-    private Map<Hash,SignatureData> networkFeeTrustScoreNodeResult;
+    private Map<Hash, SignatureData> networkFeeTrustScoreNodeResult;
 
-    public NetworkFeeData(Hash addressHash, BigDecimal amount, BigDecimal originalAmount,Hash baseTransactionHash, SignatureData signature, Date createTime) {
+    public NetworkFeeData(Hash addressHash, BigDecimal amount, BigDecimal originalAmount, Hash baseTransactionHash, SignatureData signature, Date createTime) {
         super(addressHash, amount, originalAmount, baseTransactionHash, signature, createTime);
     }
 }

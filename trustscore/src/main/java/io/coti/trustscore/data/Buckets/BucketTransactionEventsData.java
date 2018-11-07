@@ -6,7 +6,6 @@ import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.Events.TransactionEventData;
 import javafx.util.Pair;
 import lombok.Data;
-import lombok.Synchronized;
 
 import java.util.Date;
 import java.util.HashMap;

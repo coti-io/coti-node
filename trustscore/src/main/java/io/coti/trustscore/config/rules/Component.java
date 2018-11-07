@@ -18,17 +18,17 @@ public class Component {
     @XmlElement(name = "decay")
     private String decay;
 
-    public String getDecay()
-    {
+    public String getDecay() {
         return decay;
     }
 
 
-    public double getWeight()
-    {
+    public double getWeight() {
         return weight;
     }
 
-    public String getName(){return  name;}
+    public String getName() {
+        return name;
+    }
 
 }

@@ -1,9 +1,10 @@
-import io.coti.basenode.crypto.*;
+import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
 import org.junit.Assert;
 import org.junit.Test;
+
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
@@ -122,8 +123,6 @@ public class CryptoHelperTests {
         String publicKey = CryptoHelper.GetPublicKeyFromPrivateKey(hexPrivateKey);
         Assert.assertTrue("a053a4ddfd9c4e27b919a26ccb2d99a55f679c13fec197efc48fc887661a626db19a99660f8ae3babddebf924923afb22c7d4fe251f96f1880c4b8f89106d139".equals(publicKey));
     }
-
-
 
 
 }

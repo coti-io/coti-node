@@ -16,7 +16,6 @@ public class InitializationService {
     private List<String> propagationServerAddresses;
 
 
-
     @Autowired
     private BaseNodeInitializationService baseNodeInitializationService;
     @Autowired

@@ -4,13 +4,13 @@ import io.coti.trustscore.config.rules.TransactionEventScore;
 import lombok.Data;
 
 @Data
-public class TransactionEventDecay{
+public class TransactionEventDecay {
 
 
     private TransactionEventScore transactionEventScore;
-    private double  eventContributionValue;
+    private double eventContributionValue;
 
-    public TransactionEventDecay(TransactionEventScore transactionEventScore, double eventContributionValue){
+    public TransactionEventDecay(TransactionEventScore transactionEventScore, double eventContributionValue) {
 
         this.transactionEventScore = transactionEventScore;
         this.eventContributionValue = eventContributionValue;

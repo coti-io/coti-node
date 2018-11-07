@@ -1,7 +1,7 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.data.FullNodeFeeData;
 import io.coti.basenode.data.BaseTransactionData;
+import io.coti.basenode.data.FullNodeFeeData;
 import io.coti.basenode.services.interfaces.IOutputBaseTransactionValidation;
 
 public enum OutputBaseTransactionTypeValidation implements IOutputBaseTransactionValidation {

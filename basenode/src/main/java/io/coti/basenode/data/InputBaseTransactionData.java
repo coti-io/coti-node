@@ -20,7 +20,7 @@ public class InputBaseTransactionData extends BaseTransactionData {
     }
 
     public void setAmount(BigDecimal amount) {
-        if(amount == null || amount.signum() > 0 ){
+        if (amount == null || amount.signum() > 0) {
             throw new IllegalStateException("Input transaction can not have positive amount");
         }
         this.amount = amount;

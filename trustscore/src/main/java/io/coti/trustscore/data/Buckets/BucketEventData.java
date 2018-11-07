@@ -22,10 +22,9 @@ public abstract class BucketEventData<T extends EventData> implements Serializab
     public BucketEventData() {
         bucketEvents = new LinkedHashMap<>();
         StartPeriodTime = new Date();
-        LastUpdate =  new Date();
+        LastUpdate = new Date();
         CalculatedDelta = 0;
     }
-
 
 
     public boolean isEventExistsInBucket(T eventData) {
@@ -37,10 +36,6 @@ public abstract class BucketEventData<T extends EventData> implements Serializab
         //TODO: if we have a problem here, event can be added without calculated
         bucketEvents.put(eventData.getUniqueIdentifier(), eventData);
     }
-
-
-
-
 
 
 }

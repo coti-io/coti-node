@@ -10,28 +10,29 @@ import java.util.List;
 
 @Slf4j
 public enum TransactionTypeValidation implements ITransactionTypeValidation {
-    Payment (TransactionType.Payment){
+    Payment(TransactionType.Payment) {
         @Override
         public boolean validateOutputBaseTransactions(TransactionData transactionData) {
             List<BaseTransactionData> outputBaseTransactions = transactionData.getOutputBaseTransactions();
             OutputBaseTransactionTypeValidation validation = OutputBaseTransactionTypeValidation.FullNodeFee;
             Class<? extends IBaseTransactionData> clazz = validation.getBaseTransactionClass();
-            if(OutputBaseTransactionTypeValidation.FullNodeFee.getBaseTransactionClass().isInstance(outputBaseTransactions.get(0))){
+            if (OutputBaseTransactionTypeValidation.FullNodeFee.getBaseTransactionClass().isInstance(outputBaseTransactions.get(0))) {
                 return true;
             }
             return true;
         }
     },
-    Transfer (TransactionType.Transfer) {
+    Transfer(TransactionType.Transfer) {
         @Override
         public boolean validateOutputBaseTransactions(TransactionData transactionData) {
-       //     List<BaseTransactionData> outputBaseTransactions = transactionData.getOutputBaseTransactions();
+            //     List<BaseTransactionData> outputBaseTransactions = transactionData.getOutputBaseTransactions();
 
             return true;
         }
 
     };
     private TransactionType type;
+
     TransactionTypeValidation(TransactionType type) {
         this.type = type;
     }

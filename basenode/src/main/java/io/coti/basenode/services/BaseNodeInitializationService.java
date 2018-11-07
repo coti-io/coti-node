@@ -55,7 +55,6 @@ public class BaseNodeInitializationService {
     private ZeroMQSubscriber zeroMQSubscriber;
 
 
-
     @Autowired
     private IDatabaseConnector rocksDbConnector;
 

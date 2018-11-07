@@ -10,7 +10,7 @@ public class BehaviorEventsScore {
     private List<BaseEventScore> baseEventScoreList;
 
 
-    public List<BaseEventScore> getBaseEventScoreList(){
+    public List<BaseEventScore> getBaseEventScoreList() {
         return baseEventScoreList;
     }
 }

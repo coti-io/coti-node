@@ -18,7 +18,7 @@ public class BucketBuilder {
 
 
     public static BucketEventData CreateBucket(EventType bucketType, UserType userType) throws IllegalAccessException, InstantiationException {
-        BucketEventData bucket =  (BucketEventData) bucketMapper.get(bucketType).newInstance();
+        BucketEventData bucket = (BucketEventData) bucketMapper.get(bucketType).newInstance();
         bucket.setUserType(userType);
         return bucket;
     }

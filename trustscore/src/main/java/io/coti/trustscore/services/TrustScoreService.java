@@ -9,7 +9,9 @@ import io.coti.basenode.data.TransactionTrustScoreData;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.TransactionTrustScoreResponseData;
-import io.coti.trustscore.services.calculationServices.interfaces.IBucketEventService;
+import io.coti.trustscore.config.rules.Component;
+import io.coti.trustscore.config.rules.InitialTrustType;
+import io.coti.trustscore.config.rules.RulesData;
 import io.coti.trustscore.crypto.TrustScoreCrypto;
 import io.coti.trustscore.crypto.TrustScoreEventCrypto;
 import io.coti.trustscore.data.Buckets.BucketEventData;
@@ -21,9 +23,7 @@ import io.coti.trustscore.data.TrustScoreData;
 import io.coti.trustscore.http.*;
 import io.coti.trustscore.model.TransactionEvents;
 import io.coti.trustscore.model.TrustScores;
-import io.coti.trustscore.config.rules.Component;
-import io.coti.trustscore.config.rules.InitialTrustType;
-import io.coti.trustscore.config.rules.RulesData;
+import io.coti.trustscore.services.calculationServices.interfaces.IBucketEventService;
 import io.coti.trustscore.utils.DatesCalculation;
 import io.coti.trustscore.utils.MathCalculation;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +48,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.trustscore.http.HttpStringConstants.*;
 
 @Slf4j
@@ -75,7 +75,6 @@ public class TrustScoreService {
 
     @Autowired
     private TransactionEvents transactionEvents;
-
 
 
     private List<IBucketEventService> bucketEventServiceList;
@@ -167,8 +166,7 @@ public class TrustScoreService {
         try {
             PublicKey publicKey = CryptoHelper.getPublicKeyFromHexString(userHash.toHexString());
             ByteBuffer originalValue = ByteBuffer.wrap(transactionHash.getBytes());
-            if (!CryptoHelper.VerifyByPublicKey(originalValue.array() ,signatureData.getR(),signatureData.getS(), publicKey))
-            {
+            if (!CryptoHelper.VerifyByPublicKey(originalValue.array(), signatureData.getR(), signatureData.getS(), publicKey)) {
                 return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST).body(new Response(BAD_SIGNATURE_ON_TRUST_SCORE_FOR_TRANSACTION));
             }
@@ -195,16 +193,16 @@ public class TrustScoreService {
         return ResponseEntity.status(HttpStatus.OK).body(getTransactionTrustScoreResponse);
     }
 
-    private double calculateUserTrustScore(TrustScoreData trustScoreData){
+    private double calculateUserTrustScore(TrustScoreData trustScoreData) {
         double currentTrustScore = 0;
         for (IBucketEventService bucketEventService : bucketEventServiceList) {
             BucketEventData bucketEventData = trustScoreData.getLastBucketEventData().get(bucketEventService.getBucketEventType());
             currentTrustScore += bucketEventService.getBucketSumScore(bucketEventData);
         }
 
-        Component kycComponent =  bucketTransactionService.getRulesData().getUsersRules(trustScoreData.getUserType()).getInitialTrustScore().getComponentByType(InitialTrustType.KYC);
-        int daysDifference =  DatesCalculation.calculateDaysDiffBetweenDates(new Date(),trustScoreData.getCreateTime());
-        currentTrustScore = currentTrustScore + Math.exp(-MathCalculation.evaluteExpression(kycComponent.getDecay())*daysDifference ) * trustScoreData.getKycTrustScore() * kycComponent.getWeight();
+        Component kycComponent = bucketTransactionService.getRulesData().getUsersRules(trustScoreData.getUserType()).getInitialTrustScore().getComponentByType(InitialTrustType.KYC);
+        int daysDifference = DatesCalculation.calculateDaysDiffBetweenDates(new Date(), trustScoreData.getCreateTime());
+        currentTrustScore = currentTrustScore + Math.exp(-MathCalculation.evaluteExpression(kycComponent.getDecay()) * daysDifference) * trustScoreData.getKycTrustScore() * kycComponent.getWeight();
         return currentTrustScore;
     }
 

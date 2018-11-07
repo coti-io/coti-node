@@ -11,7 +11,7 @@ public class MathCalculation {
 
     public static double evaluteExpression(String stringFormula) {
         Expression expression = new Expression(stringFormula);
-        double result =  expression.calculate();
+        double result = expression.calculate();
         return result;
     }
 
@@ -36,7 +36,7 @@ public class MathCalculation {
     }
 
 
-    public static boolean ifTwoNumbersAreEqualOrAlmostEqual(double x , double y) {
+    public static boolean ifTwoNumbersAreEqualOrAlmostEqual(double x, double y) {
         if (Math.abs(x - y) <= 0.000001)
             return true;
         return false;

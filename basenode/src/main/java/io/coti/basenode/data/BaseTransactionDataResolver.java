@@ -14,7 +14,7 @@ public class BaseTransactionDataResolver extends TypeIdResolverBase {
     @Override
     public String idFromValueAndType(Object value, Class<?> suggestedType) {
         BaseTransactionName baseTransactionName = BaseTransactionName.getName(suggestedType);
-        if(baseTransactionName == null) {
+        if (baseTransactionName == null) {
             throw new IllegalStateException("Invalid base transaction class " + suggestedType.getClass());
         }
         return baseTransactionName.name();
@@ -28,7 +28,7 @@ public class BaseTransactionDataResolver extends TypeIdResolverBase {
     @Override
     public JavaType typeFromId(DatabindContext context, String id) {
         BaseTransactionName baseTransactionName = BaseTransactionName.valueOf(id);
-        if(baseTransactionName != null) {
+        if (baseTransactionName != null) {
             return context.constructType(baseTransactionName.getBaseTransactionClass());
         }
         throw new IllegalStateException("Invalid base transaction name " + id);

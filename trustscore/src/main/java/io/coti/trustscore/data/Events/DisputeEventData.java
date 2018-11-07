@@ -11,7 +11,7 @@ public class DisputeEventData extends EventData {
     private TransactionData transactionData;
     private SignatureData eventSignature;
 
-    public DisputeEventData(TransactionData transactionData,SignatureData eventSignature){
+    public DisputeEventData(TransactionData transactionData, SignatureData eventSignature) {
         this.uniqueIdentifier = transactionData.getHash();
         this.transactionData = transactionData;
         this.eventSignature = eventSignature;

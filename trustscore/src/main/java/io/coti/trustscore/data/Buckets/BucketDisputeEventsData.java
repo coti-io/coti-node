@@ -9,6 +9,4 @@ public class BucketDisputeEventsData extends BucketEventData<DisputeEventData> {
     private static final int periodTime = 60;
 
 
-
-
 }

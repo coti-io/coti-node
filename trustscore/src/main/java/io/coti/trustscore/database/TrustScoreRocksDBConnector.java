@@ -19,9 +19,9 @@ public class TrustScoreRocksDBConnector extends RocksDBConnector {
         super.setColumnFamily();
         columnFamilyClassNames.addAll(Arrays.asList(
                 BucketTransactionEvents.class.getName(),
-            UserBehaviourEvents.class.getName(),
-            TrustScores.class.getName(),
-            TransactionEvents.class.getName()
+                UserBehaviourEvents.class.getName(),
+                TrustScores.class.getName(),
+                TransactionEvents.class.getName()
         ));
 
 

@@ -5,8 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
-import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -16,8 +14,8 @@ public class FullNodeFeeData extends OutputBaseTransactionData {
     @NotNull
     private Hash fullNodeHash;
 
-    public FullNodeFeeData(Hash addressHash, BigDecimal amount, BigDecimal originalAmount,Hash baseTransactionHash, SignatureData signature, Date createTime) {
-        super(addressHash, amount, baseTransactionHash, signature, createTime);
+    public FullNodeFeeData(Hash addressHash, BigDecimal amount, BigDecimal originalAmount, Hash baseTransactionHash, SignatureData signature, Date createTime) {
+        super(addressHash, amount, originalAmount, baseTransactionHash, signature, createTime);
 
     }
 }

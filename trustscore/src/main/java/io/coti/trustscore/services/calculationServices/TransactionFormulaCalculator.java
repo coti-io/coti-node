@@ -13,7 +13,8 @@ public class TransactionFormulaCalculator implements IEventFormulaCalculator {
     private Map<TransactionEventScore, String> eventScoresToScoreFunctionStringMap;
 
 
-    public TransactionFormulaCalculator(){}
+    public TransactionFormulaCalculator() {
+    }
 
     public TransactionFormulaCalculator(Map<TransactionEventScore, String> eventScoresToScoreFunctionStringMap) {
         this.eventScoresToScoreFunctionStringMap = eventScoresToScoreFunctionStringMap;

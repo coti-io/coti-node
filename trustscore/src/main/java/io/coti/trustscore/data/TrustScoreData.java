@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Stream;
 
 @Slf4j
 @Data
@@ -39,12 +38,11 @@ public class TrustScoreData implements IEntity, ISignValidatable {
 
         lastBucketEventData = new HashMap<>();
         bucketsHistoryCalculations = new HashMap<>();
-        for (EventType event: EventType.values()) {
+        for (EventType event : EventType.values()) {
             try {
-                lastBucketEventData.put(event,BucketBuilder.CreateBucket(event,userType));
-            }
-            catch (IllegalAccessException  | InstantiationException e) {
-                    e.printStackTrace();
+                lastBucketEventData.put(event, BucketBuilder.CreateBucket(event, userType));
+            } catch (IllegalAccessException | InstantiationException e) {
+                e.printStackTrace();
             }
         }
 
