@@ -7,7 +7,7 @@ import javax.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.util.Date;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class OutputBaseTransactionData extends BaseTransactionData {
     @Positive
     protected BigDecimal amount;

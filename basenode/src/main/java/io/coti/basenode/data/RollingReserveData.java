@@ -9,8 +9,8 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Map;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Data
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class RollingReserveData extends OutputBaseTransactionData {
     @NotNull
     private Map<Hash, SignatureData> rollingreserveTrustScoreNodeResult;

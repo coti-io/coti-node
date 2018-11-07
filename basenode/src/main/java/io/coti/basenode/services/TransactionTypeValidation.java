@@ -15,7 +15,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
         public boolean validateOutputBaseTransactions(TransactionData transactionData) {
             List<BaseTransactionData> outputBaseTransactions = transactionData.getOutputBaseTransactions();
             OutputBaseTransactionTypeValidation validation = OutputBaseTransactionTypeValidation.FullNodeFee;
-            Class<? extends IBaseTransactionData> clazz = validation.getBaseTransactionClass();
+            Class<? extends BaseTransactionData> clazz = validation.getBaseTransactionClass();
             if (OutputBaseTransactionTypeValidation.FullNodeFee.getBaseTransactionClass().isInstance(outputBaseTransactions.get(0))) {
                 return true;
             }
