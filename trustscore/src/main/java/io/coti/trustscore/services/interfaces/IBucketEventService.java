@@ -1,4 +1,4 @@
-package io.coti.trustscore.services.calculationServices.interfaces;
+package io.coti.trustscore.services.interfaces;
 
 import io.coti.trustscore.data.Buckets.BucketEventData;
 import io.coti.trustscore.data.Enums.EventType;

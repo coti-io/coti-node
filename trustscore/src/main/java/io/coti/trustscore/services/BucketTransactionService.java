@@ -1,22 +1,21 @@
 package io.coti.trustscore.services;
 
-import io.coti.basenode.data.BaseTransactionData;
-import io.coti.basenode.data.TransactionData;
+import io.coti.trustscore.services.calculationServices.BucketTransactionsCalculator;
 import io.coti.trustscore.services.calculationServices.BucketTransactionsCalculator;
 import io.coti.trustscore.services.calculationServices.interfaces.IBucketEventService;
 import io.coti.trustscore.data.Buckets.BucketTransactionEventsData;
 import io.coti.trustscore.data.Enums.EventType;
+import io.coti.trustscore.data.Events.BalanceCountAndContribution;
 import io.coti.trustscore.data.Events.TransactionEventData;
 import io.coti.trustscore.config.rules.RulesData;
-import javafx.util.Pair;
+import io.coti.trustscore.services.interfaces.IBucketEventService;
+import io.coti.trustscore.utils.DatesCalculation;
 import lombok.Data;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
-
-import static io.coti.trustscore.utils.DatesCalculation.setDateOnBeginningOfDay;
-
 
 @Data
 @Service
@@ -27,42 +26,45 @@ public class BucketTransactionService implements IBucketEventService<Transaction
 
     @Override
     public BucketTransactionEventsData addEventToCalculations(TransactionEventData transactionEventData, BucketTransactionEventsData bucketTransactionEventsData) {
-        TransactionData transactionData = transactionEventData.getTransactionData();
-        BaseTransactionData transferTransaction = transactionData.getBaseTransactions().get(transactionData.getBaseTransactions().size() - 1);
+      //  TransactionData transactionData = transactionEventData.getTransactionData();
+//        BaseTransactionData transferTransaction = transactionData.getBaseTransactions().get(transactionData.getBaseTransactions().size() - 1);
 
         // Decay on case that this is the first transaction today
         BucketTransactionsCalculator bucketCalculator = new BucketTransactionsCalculator(bucketTransactionEventsData);
-        bucketCalculator.decayScores();
+        bucketCalculator.decayScores(bucketTransactionEventsData);
 
-        addToBucket(transactionEventData, bucketTransactionEventsData, transferTransaction);
+        addToBucket(transactionEventData, bucketTransactionEventsData);
         bucketCalculator.setCurrentScores();
         return bucketTransactionEventsData;
     }
 
-    private void addToBucket(TransactionEventData transactionEventData, BucketTransactionEventsData bucketTransactionEventsData, BaseTransactionData transferTransaction) {
+    private void addToBucket(TransactionEventData transactionEventData,
+                             BucketTransactionEventsData bucketTransactionEventsData) {
+
         bucketTransactionEventsData.addEventToBucket(transactionEventData);
 
-        if (transferTransaction.getAmount().doubleValue() < 0) {
+        // Add dailyEvents to calculations
+        double transactionAmount = transactionEventData.getTransactionData().getAmount().doubleValue();
+        if (transactionAmount < 0) {
             bucketTransactionEventsData.increaseCurrentDateNumberOfTransactionsByOne();
-            bucketTransactionEventsData.setCurrentDateTurnOver(bucketTransactionEventsData.getCurrentDateTurnOver() + Math.abs(transferTransaction.getAmount().doubleValue()));
+            bucketTransactionEventsData.setCurrentDateTurnOver(bucketTransactionEventsData.getCurrentDateTurnOver() + Math.abs(transactionAmount));
         }
 
-        Map<Long, Pair<Double, Double>> currentMonthBalanceMap = bucketTransactionEventsData.getCurrentMonthBalance();
-        long beginningOfToday = setDateOnBeginningOfDay(new Date()).getTime();
+        // Add monthlyEvents to calculations
+        Map<Date, BalanceCountAndContribution> currentMonthBalanceMap
+                = bucketTransactionEventsData.getCurrentMonthDayToBalanceCountAndContribution();
+        Date beginningOfToday = DatesCalculation.setDateOnBeginningOfDay(new Date());
         if (currentMonthBalanceMap.containsKey(beginningOfToday)) {
             currentMonthBalanceMap.put(beginningOfToday,
-                    new Pair<>(currentMonthBalanceMap.get(beginningOfToday).getKey() + transferTransaction.getAmount().doubleValue(), 0.0));
+                    new BalanceCountAndContribution(currentMonthBalanceMap.get(beginningOfToday).getCount() + transactionAmount, 0));
         } else {
             double previousBalance = 0;
-            if (currentMonthBalanceMap.size() > 0) {
-                long lastDayWithChangeInBalance = currentMonthBalanceMap.keySet().stream()
-                        .reduce((i, j) -> i > j ? i : j).get();
-
-                previousBalance = currentMonthBalanceMap.get(lastDayWithChangeInBalance).getKey();
+            if (!currentMonthBalanceMap.isEmpty()) {
+                Date lastDayWithChangeInBalance = Collections.max(currentMonthBalanceMap.keySet());;
+                previousBalance = currentMonthBalanceMap.get(lastDayWithChangeInBalance).getCount();
             }
-            currentMonthBalanceMap.put(beginningOfToday, new Pair<>(transferTransaction.getAmount().doubleValue() + previousBalance, 0.0));
+            currentMonthBalanceMap.put(beginningOfToday, new BalanceCountAndContribution(transactionAmount + previousBalance, 0));
         }
-
     }
 
     @Override
@@ -73,7 +75,7 @@ public class BucketTransactionService implements IBucketEventService<Transaction
     @Override
     public double getBucketSumScore(BucketTransactionEventsData bucketTransactionEventsData) {
         BucketTransactionsCalculator bucketCalculator = new BucketTransactionsCalculator(bucketTransactionEventsData);
-        bucketCalculator.decayScores();
+        bucketCalculator.decayScores(bucketTransactionEventsData);
         return bucketCalculator.getBucketSumScore(bucketTransactionEventsData);
     }
 

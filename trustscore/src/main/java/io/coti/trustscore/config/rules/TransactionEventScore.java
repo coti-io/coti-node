@@ -27,6 +27,4 @@ public class TransactionEventScore extends EventScore {
     public void setNonlinearFunction(String nonlinearFunction) {
         this.nonlinearFunction = nonlinearFunction;
     }
-
-
 }

@@ -1,10 +1,7 @@
 package io.coti.trustscore.database;
 
 import io.coti.basenode.database.RocksDBConnector;
-import io.coti.trustscore.model.BucketTransactionEvents;
-import io.coti.trustscore.model.TransactionEvents;
-import io.coti.trustscore.model.TrustScores;
-import io.coti.trustscore.model.UserBehaviourEvents;
+import io.coti.trustscore.model.*;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +21,6 @@ public class TrustScoreRocksDBConnector extends RocksDBConnector {
             TransactionEvents.class.getName()
         ));
 
-
+        columnFamilyClassNames.add(BucketChargeBackEvents.class.getName());
     }
 }

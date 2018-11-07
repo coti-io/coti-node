@@ -11,24 +11,17 @@ import java.util.Date;
 
 @Data
 public class KycEventData extends EventData implements ISignValidatable {
-
-    public Hash userHash;
-    public EventType eventType;
-    public SignatureData signature;
+    private Hash userHash;
+    private EventType eventType;
+    private SignatureData signature;
     private Hash kycServerPublicKey;
 
     public KycEventData(Hash userHash, Date eventDate, EventType eventType, SignatureData signature) {
-        super.eventDate = eventDate;
+        super.setEventDate(eventDate);
         this.userHash = userHash;
         this.eventType = eventType;
         this.signature = signature;
     }
-
-    @Override
-    public Hash getHash() {
-        return super.getHash();
-    }
-
 
     @Override
     public Hash getSignerHash() {

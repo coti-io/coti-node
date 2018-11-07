@@ -12,12 +12,12 @@ public class InitialTrustScore {
     private List<Component> componentList;
 
 
-    public  List<Component> getComponentList(){
+    public List<Component> getComponentList() {
         return componentList;
     }
 
 
-    public Component getComponentByType(InitialTrustType initialTrustType){
-        return componentList.stream().filter(e->  e.getName().equals(initialTrustType.name())).findFirst().get();
+    public Component getComponentByType(InitialTrustType initialTrustType) {
+        return componentList.stream().filter(e -> e.getName().equals(initialTrustType.name())).findFirst().get();
     }
 }

@@ -24,6 +24,7 @@ import io.coti.trustscore.model.TrustScores;
 import io.coti.trustscore.config.rules.Component;
 import io.coti.trustscore.config.rules.InitialTrustType;
 import io.coti.trustscore.config.rules.RulesData;
+import io.coti.trustscore.services.interfaces.IBucketEventService;
 import io.coti.trustscore.utils.DatesCalculation;
 import io.coti.trustscore.utils.MathCalculation;
 import lombok.extern.slf4j.Slf4j;
@@ -44,9 +45,9 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Vector;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 import static io.coti.trustscore.http.HttpStringConstants.*;
@@ -77,13 +78,12 @@ public class TrustScoreService {
     private TransactionEvents transactionEvents;
 
 
-
     private List<IBucketEventService> bucketEventServiceList;
 
     @PostConstruct
     private void init() {
         log.info("{} is up", this.getClass().getSimpleName());
-        bucketEventServiceList = new Vector<>();
+        bucketEventServiceList = new ArrayList<>();
         bucketEventServiceList.add(bucketTransactionService);
         RulesData rulesData = loadRulesFromFile();
         bucketTransactionService.init(rulesData);
@@ -123,7 +123,9 @@ public class TrustScoreService {
 
     public synchronized void addTransactionToTsCalculation(TransactionData transactionData) {
         if (transactionData.isZeroSpend() || transactionData.getDspConsensusResult() == null ||
-                !transactionData.getDspConsensusResult().isDspConsensus()) return;
+                !transactionData.getDspConsensusResult().isDspConsensus()) {
+            return;
+        }
 
         LocalDate transactionConsensusDate = transactionData.getDspConsensusResult().getIndexingTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate currentDate = new Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
@@ -135,8 +137,9 @@ public class TrustScoreService {
 
         if (currentDate.equals(transactionConsensusDate)) {
 
-            if (transactionEvents.getByHash(transactionData.getHash()) != null)
+            if (transactionEvents.getByHash(transactionData.getHash()) != null) {
                 return;
+            }
 
             TransactionEventData transactionEventData = new TransactionEventData(transactionData);
             trustScoreData.addEvent(transactionEventData);
@@ -195,16 +198,16 @@ public class TrustScoreService {
         return ResponseEntity.status(HttpStatus.OK).body(getTransactionTrustScoreResponse);
     }
 
-    private double calculateUserTrustScore(TrustScoreData trustScoreData){
+    private double calculateUserTrustScore(TrustScoreData trustScoreData) {
         double currentTrustScore = 0;
         for (IBucketEventService bucketEventService : bucketEventServiceList) {
             BucketEventData bucketEventData = trustScoreData.getLastBucketEventData().get(bucketEventService.getBucketEventType());
             currentTrustScore += bucketEventService.getBucketSumScore(bucketEventData);
         }
 
-        Component kycComponent =  bucketTransactionService.getRulesData().getUsersRules(trustScoreData.getUserType()).getInitialTrustScore().getComponentByType(InitialTrustType.KYC);
-        int daysDifference =  DatesCalculation.calculateDaysDiffBetweenDates(new Date(),trustScoreData.getCreateTime());
-        currentTrustScore = currentTrustScore + Math.exp(-MathCalculation.evaluteExpression(kycComponent.getDecay())*daysDifference ) * trustScoreData.getKycTrustScore() * kycComponent.getWeight();
+        Component kycComponent = bucketTransactionService.getRulesData().getUsersRules(trustScoreData.getUserType()).getInitialTrustScore().getComponentByType(InitialTrustType.KYC);
+        int daysDifference = DatesCalculation.calculateDaysDiffBetweenDates(new Date(), trustScoreData.getCreateTime());
+        currentTrustScore = currentTrustScore + Math.exp(-MathCalculation.evaluteExpression(kycComponent.getDecay()) * daysDifference) * trustScoreData.getKycTrustScore() * kycComponent.getWeight();
         return currentTrustScore;
     }
 

@@ -3,9 +3,9 @@ package io.coti.trustscore.data.Enums;
 
 public enum EventType {
     TRANSACTION(0),
-    DISPUTE(1),
+    HIGH_FREQUENCY_EVENTS(1),
+    BEHAVIOR_EVENT(2)
     /*INSUFFICIENT_FUNDS(2),
-    CHARGEBACK(3),
     Dispute_LOST(4),
     Dispute_WON(5),
     CLAIM(6),
@@ -25,3 +25,4 @@ public enum EventType {
         return value;
     }
 }
+

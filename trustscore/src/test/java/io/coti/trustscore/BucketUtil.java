@@ -23,7 +23,7 @@ public class BucketUtil {
             File file = new File(classLoader.getResource("trustScoreRules.xml").getFile());
             JAXBContext jaxbContext = JAXBContext.newInstance(RulesData.class);
             Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-            rulesData = (RulesData)jaxbUnmarshaller.unmarshal(file);
+            rulesData = (RulesData) jaxbUnmarshaller.unmarshal(file);
         } catch (JAXBException e) {
             log.error("Exception when reading from trustScoreRules.xml file: ", e);
         }
@@ -38,15 +38,14 @@ public class BucketUtil {
                                 transactionHash,
                                 new SignatureData("", ""),
                                 new Date())));
-        TransactionData tx = new TransactionData(baseTransactions,
+        return new TransactionData(baseTransactions,
                 transactionHash,
                 "test",
                 Arrays.asList(new TransactionTrustScoreData(
                         userHash,
                         transactionHash,
                         trustScore)),
-                        new Date(),
-                        userHash);
-        return tx;
+                new Date(),
+                userHash);
     }
 }

@@ -1,14 +1,16 @@
 package io.coti.trustscore.utils;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+@Slf4j
 public class DatesCalculation {
     public static int calculateDaysDiffBetweenDates(Date firstDate, Date secondDate) {
         long difference = Math.abs(secondDate.getTime() - firstDate.getTime());
-        float daysBetween = (difference / (1000 * 60 * 60 * 24));
-        return (int) daysBetween;
+        return (int) (difference / (1000 * 60 * 60 * 24));
     }
 
     public static Date setDateOnBeginningOfDay(Date date) {
@@ -26,10 +28,11 @@ public class DatesCalculation {
     }
 
     public static Date decreaseTodayDateByDays(int numberOfDays) {
-        return new Date(System.currentTimeMillis() - 24 * (long) numberOfDays * 60 * 60 * 1000);
+        return new Date(setDateOnBeginningOfDay(new Date()).getTime() - 24 * (long) numberOfDays * 60 * 60 * 1000);
     }
 
     public static Date addToDateByDays(long milliSecondsDate, int numberOfDays) {
         return new Date(milliSecondsDate + 24 * (long) numberOfDays * 60 * 60 * 1000);
     }
+
 }

@@ -13,9 +13,8 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Data
@@ -25,8 +24,8 @@ public class TrustScoreData implements IEntity, ISignValidatable {
     private SignatureData signature;
     private Hash kycServerPublicKey;
     private Date createTime;
-    private HashMap<EventType, BucketEventData> lastBucketEventData;
-    private HashMap<EventType, List<Double>> bucketsHistoryCalculations;
+    private ConcurrentHashMap<EventType, BucketEventData> lastBucketEventData;
+    private ConcurrentHashMap<EventType, List<Double>> bucketsHistoryCalculations;
     private UserType userType;
 
     public TrustScoreData(Hash userHash, double kycTrustScore, SignatureData signature, Hash kycServerPublicKey, UserType userType) {
@@ -37,14 +36,13 @@ public class TrustScoreData implements IEntity, ISignValidatable {
         this.userType = userType;
         this.createTime = new Date();
 
-        lastBucketEventData = new HashMap<>();
-        bucketsHistoryCalculations = new HashMap<>();
-        for (EventType event: EventType.values()) {
+        lastBucketEventData = new ConcurrentHashMap<>();
+        bucketsHistoryCalculations = new ConcurrentHashMap<>();
+        for (EventType event : EventType.values()) {
             try {
-                lastBucketEventData.put(event,BucketBuilder.CreateBucket(event,userType));
-            }
-            catch (IllegalAccessException  | InstantiationException e) {
-                    e.printStackTrace();
+                lastBucketEventData.put(event, BucketBuilder.createBucket(event, userType));
+            } catch (IllegalAccessException | InstantiationException e) {
+                log.error(e.toString());
             }
         }
 
@@ -54,7 +52,7 @@ public class TrustScoreData implements IEntity, ISignValidatable {
 
         if (!lastBucketEventData.containsKey(event.getEventType())) {
             try {
-                lastBucketEventData.put(event.getEventType(), BucketBuilder.CreateBucket(event.getEventType(), this.userType));
+                lastBucketEventData.put(event.getEventType(), BucketBuilder.createBucket(event.getEventType(), this.userType));
             } catch (IllegalAccessException | InstantiationException e) {
                 log.error("error while trying create a bucket", e);
             }

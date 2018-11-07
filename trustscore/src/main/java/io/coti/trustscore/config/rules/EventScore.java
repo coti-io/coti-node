@@ -9,7 +9,7 @@ public abstract class EventScore {
 
     private double weight;
 
-    private String decay;
+    private String decayFormula;
 
     @XmlAttribute(name = "name")
     public String getName() {
@@ -30,12 +30,12 @@ public abstract class EventScore {
     }
 
     @XmlElement(name = "decay")
-    public String getDecay() {
-        return decay;
+    public String getDecayFormula() {
+        return decayFormula;
     }
 
-    public void setDecay(String decay) {
-        this.decay = decay;
+    public void setDecayFormula(String decay) {
+        this.decayFormula = decay;
     }
 
 

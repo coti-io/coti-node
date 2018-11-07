@@ -10,9 +10,9 @@ import java.util.Date;
 @Data
 public abstract class EventData implements IEntity {
 
-    protected Date eventDate;
-    protected Hash uniqueIdentifier;
-    protected EventType eventType;
+    private Date eventDate;
+    private Hash uniqueIdentifier;
+    private EventType eventType;
 
 
     public EventData() {

@@ -1,22 +1,27 @@
 package io.coti.trustscore.config.rules;
 
-import io.coti.trustscore.data.Enums.UserType;
-
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
+@XmlRootElement(name = "user")
 public class UserScoresByType {
 
     @XmlAttribute(name = "type")
-    public UserType type;
+    private String type;
 
     private InitialTrustScore initialTrustScore;
     private TransactionEventsScore transactionEventScoreList;
     private BehaviorEventsScore behaviorEventsScoreList;
-    private DisputedEventsScore disputedEventScoreList;
+    private BehaviorHighFrequencyEventsScore behaviorHighFrequencyEventsScore;
 
     public InitialTrustScore getInitialTrustScore() {
         return initialTrustScore;
+    }
+
+
+    public String getType() {
+        return type;
     }
 
     @XmlElement(name = "initialTrustScore")
@@ -42,13 +47,13 @@ public class UserScoresByType {
         this.behaviorEventsScoreList = badEventScoreList;
     }
 
-    public DisputedEventsScore getDisputedEventsScore() {
-        return disputedEventScoreList;
+    public BehaviorHighFrequencyEventsScore getHighFrequencyEventScore() {
+        return behaviorHighFrequencyEventsScore;
     }
 
     @XmlElement(name = "behaviorHighFrequencyEventsScore")
-    public void setDisputedEventsScore(DisputedEventsScore disputedEventScoreList) {
-        this.disputedEventScoreList = disputedEventScoreList;
+    public void setDisputedEventsScore(BehaviorHighFrequencyEventsScore behaviorHighFrequencyEventsScore) {
+        this.behaviorHighFrequencyEventsScore = behaviorHighFrequencyEventsScore;
     }
 
 }
