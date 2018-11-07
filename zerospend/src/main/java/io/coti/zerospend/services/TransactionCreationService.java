@@ -99,7 +99,7 @@ public class TransactionCreationService {
 
     private TransactionData createZeroSpendTransactionData(double trustScore, ZeroSpendTransactionType description) {
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
-        BaseTransactionData baseTransactionData = new BaseTransactionData(transactionCryptoCreator.getAddress(), BigDecimal.ZERO, new Date());
+        BaseTransactionData baseTransactionData = new InputBaseTransactionData(transactionCryptoCreator.getAddress(), BigDecimal.ZERO, new Date());
         baseTransactions.add(baseTransactionData);
         TransactionData transactionData = new TransactionData(baseTransactions, description.name(), trustScore, new Date());
         transactionData.setAttachmentTime(new Date());

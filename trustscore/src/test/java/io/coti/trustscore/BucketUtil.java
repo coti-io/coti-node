@@ -30,7 +30,7 @@ public class BucketUtil {
         return rulesData;
     }
 
-    public static TransactionData createTransactionWithSpecificHash(Hash transactionHash, Hash userHash, Double trustScore) {
+  /*  public static TransactionData createTransactionWithSpecificHash(Hash transactionHash, Hash userHash, Double trustScore) {
         ArrayList<BaseTransactionData> baseTransactions = new ArrayList<>(
                 Arrays.asList(new BaseTransactionData
                         (new Hash("caba14b7fe219b3da5dee0c29389c88e4d134333a2ee104152d6e9f7b673be9e0e28ca511d1ac749f46bea7f1ab25818f335ab9111a6c5eebe2f650974e12d1b7dccd4d7"),
@@ -48,5 +48,5 @@ public class BucketUtil {
                         new Date(),
                         userHash);
         return tx;
-    }
+    } */
 }

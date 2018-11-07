@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Data
@@ -15,6 +16,7 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
     private List<BaseTransactionData> baseTransactions;
     private Hash hash;
     private BigDecimal amount;
+    private TransactionType type;
     private Hash leftParentHash;
     private Hash rightParentHash;
     private List<Hash> trustChainTransactionHashes;
@@ -72,7 +74,7 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
         this.senderHash = senderHash;
         this.trustScoreResults = trustScoreResults;
         BigDecimal amount = BigDecimal.ZERO;
-        for (BaseTransactionData baseTransaction : baseTransactions) {
+       for (BaseTransactionData baseTransaction : baseTransactions) {
             amount = amount.add(baseTransaction.getAmount().signum() > 0 ? baseTransaction.getAmount() : BigDecimal.ZERO);
         }
         this.amount = amount;
@@ -129,6 +131,14 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
 
     public Boolean isValid() {
         return valid;
+    }
+
+    public List<BaseTransactionData> getOutputBaseTransactions() {
+        return this.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData.getAmount().signum() > 0 ).collect(Collectors.toList());
+    }
+
+    public List<BaseTransactionData> getInputBaseTransactions() {
+        return this.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData.getAmount().signum() <= 0 ).collect(Collectors.toList());
     }
 
     @Override

@@ -1,6 +1,12 @@
 package io.coti.basenode.data;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver;
+import io.coti.basenode.data.interfaces.IBaseTransactionType;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -8,25 +14,26 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 
+@Slf4j
 @Data
-public class BaseTransactionData implements Serializable {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CUSTOM,
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "name")
+@JsonTypeIdResolver(BaseTransactionDataResolver.class)
+public abstract class BaseTransactionData implements Serializable {
     @NotNull
-    private Hash hash;
+    protected Hash hash;
     @NotNull
-    private Hash addressHash;
-    @NotNull
+    protected Hash addressHash;
     private BigDecimal amount;
     @NotNull
-    private Date createTime;
-    private @Valid SignatureData signatureData;
-
-    private BaseTransactionData() {
-    }
+    protected Date createTime;
+    protected @Valid SignatureData signatureData;
 
     public BaseTransactionData(Hash addressHash, BigDecimal amount, Hash baseTransactionHash, SignatureData signature, Date createTime) {
         this.addressHash = addressHash;
-
-        this.amount = amount;
+        this.setAmount(amount);
         this.hash = baseTransactionHash;
         this.signatureData = signature;
         this.createTime = createTime;
@@ -34,8 +41,8 @@ public class BaseTransactionData implements Serializable {
 
     public BaseTransactionData(Hash addressHash, BigDecimal amount, Date createTime) {
         this.addressHash = addressHash;
-        this.amount = amount;
         this.createTime = createTime;
+        this.setAmount(amount);
     }
 
     @Override

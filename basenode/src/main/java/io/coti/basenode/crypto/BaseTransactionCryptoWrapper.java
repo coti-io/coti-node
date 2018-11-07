@@ -15,20 +15,20 @@ import java.util.Date;
 @Data
 public class BaseTransactionCryptoWrapper {
 
-    private BaseTransactionData baseTxData;
+    private BaseTransactionData baseTransactionData;
     private static CryptoHelper cryptoHelper = new CryptoHelper();
 
-    public BaseTransactionCryptoWrapper(BaseTransactionData baseTxData) {
-        this.baseTxData = baseTxData;
+    public BaseTransactionCryptoWrapper(BaseTransactionData baseTransactionData) {
+        this.baseTransactionData = baseTransactionData;
     }
 
 
     public byte[] getMessageInBytes() {
-        byte[] addressBytes = baseTxData.getAddressHash().getBytes();
-        String decimalStringRepresentation = baseTxData.getAmount().toString();
+        byte[] addressBytes = baseTransactionData.getAddressHash().getBytes();
+        String decimalStringRepresentation = baseTransactionData.getAmount().toString();
         byte[] bytesOfAmount = decimalStringRepresentation.getBytes(StandardCharsets.UTF_8);
 
-        Date baseTransactionDate = baseTxData.getCreateTime();
+        Date baseTransactionDate = baseTransactionData.getCreateTime();
         int timestamp = (int) (baseTransactionDate.getTime());
 
         ByteBuffer dateBuffer = ByteBuffer.allocate(4);
@@ -48,11 +48,11 @@ public class BaseTransactionCryptoWrapper {
 
 
     public void setBaseTransactionHash() {
-        baseTxData.setHash(createBaseTransactionHashFromData());
+        baseTransactionData.setHash(createBaseTransactionHashFromData());
     }
 
     public Hash getBaseTransactionHash() {
-        return baseTxData.getHash();
+        return baseTransactionData.getHash();
     }
 
 
@@ -61,16 +61,16 @@ public class BaseTransactionCryptoWrapper {
             if (!this.createBaseTransactionHashFromData().equals(getBaseTransactionHash()))
                 return false;
 
-            if (!CryptoHelper.IsAddressValid(baseTxData.getAddressHash()))
+            if (!CryptoHelper.IsAddressValid(baseTransactionData.getAddressHash()))
                 return false;
 
 
-            if (baseTxData.getAmount().signum() > 0)
+            if (baseTransactionData.getAmount().signum() > 0)
                 return true;
 
 
-            String addressWithoutCRC = baseTxData.getAddressHash().toString().substring(0, 128);
-            boolean checkSigning = cryptoHelper.VerifyByPublicKey(transactionHash.getBytes(), baseTxData.getSignatureData().getR(), baseTxData.getSignatureData().getS(), addressWithoutCRC);
+            String addressWithoutCRC = baseTransactionData.getAddressHash().toString().substring(0, 128);
+            boolean checkSigning = cryptoHelper.VerifyByPublicKey(transactionHash.getBytes(), baseTransactionData.getSignatureData().getR(), baseTransactionData.getSignatureData().getS(), addressWithoutCRC);
             return checkSigning;
 
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
