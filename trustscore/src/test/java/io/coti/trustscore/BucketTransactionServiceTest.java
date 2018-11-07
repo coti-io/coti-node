@@ -3,13 +3,12 @@ package io.coti.trustscore;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.database.RocksDBConnector;
-import io.coti.trustscore.services.calculationServices.BucketTransactionsCalculator;
 import io.coti.trustscore.data.Buckets.BucketTransactionEventsData;
 import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.Events.BalanceCountAndContribution;
 import io.coti.trustscore.data.Events.TransactionEventData;
 import io.coti.trustscore.model.BucketTransactionEvents;
-import io.coti.trustscore.util.BucketUtil;
+import io.coti.trustscore.services.BucketTransactionService;
 import io.coti.trustscore.services.calculationServices.BucketTransactionsCalculator;
 import org.junit.After;
 import org.junit.Assert;
@@ -27,7 +26,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static io.coti.trustscore.util.BucketUtil.generateRulesDataObject;
+import static io.coti.trustscore.BucketUtil.generateRulesDataObject;
 import static io.coti.trustscore.utils.DatesCalculation.*;
 import static io.coti.trustscore.utils.MathCalculation.ifTwoNumbersAreEqualOrAlmostEqual;
 

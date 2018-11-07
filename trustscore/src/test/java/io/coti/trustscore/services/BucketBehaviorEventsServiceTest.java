@@ -19,7 +19,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static io.coti.trustscore.util.BucketUtil.generateRulesDataObject;
+import static io.coti.trustscore.BucketUtil.generateRulesDataObject;
 import static io.coti.trustscore.utils.DatesCalculation.addToDateByDays;
 import static io.coti.trustscore.utils.DatesCalculation.decreaseTodayDateByDays;
 import static io.coti.trustscore.utils.MathCalculation.ifTwoNumbersAreEqualOrAlmostEqual;

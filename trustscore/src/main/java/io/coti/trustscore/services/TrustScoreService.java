@@ -9,7 +9,6 @@ import io.coti.basenode.data.TransactionTrustScoreData;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.TransactionTrustScoreResponseData;
-import io.coti.trustscore.services.calculationServices.interfaces.IBucketEventService;
 import io.coti.trustscore.crypto.TrustScoreCrypto;
 import io.coti.trustscore.crypto.TrustScoreEventCrypto;
 import io.coti.trustscore.data.Buckets.BucketEventData;

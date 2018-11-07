@@ -3,10 +3,10 @@ package io.coti.trustscore.services;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.database.RocksDBConnector;
+import io.coti.trustscore.BucketUtil;
 import io.coti.trustscore.data.Buckets.BucketChargeBackEventsData;
 import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.Events.ChargeBackEventsData;
-import io.coti.trustscore.util.BucketUtil;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,7 +20,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.math.BigDecimal;
 import java.util.Date;
 
-import static io.coti.trustscore.util.BucketUtil.generateRulesDataObject;
+import static io.coti.trustscore.BucketUtil.generateRulesDataObject;
 import static io.coti.trustscore.utils.DatesCalculation.decreaseTodayDateByDays;
 import static io.coti.trustscore.utils.MathCalculation.ifTwoNumbersAreEqualOrAlmostEqual;
 

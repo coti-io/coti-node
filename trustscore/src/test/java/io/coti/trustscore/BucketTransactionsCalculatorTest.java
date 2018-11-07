@@ -1,15 +1,13 @@
 package io.coti.trustscore;
 
 import io.coti.basenode.database.RocksDBConnector;
-import io.coti.trustscore.services.calculationServices.BucketTransactionsCalculator;
+import io.coti.trustscore.config.rules.RulesData;
+import io.coti.trustscore.config.rules.TransactionEventsScore;
 import io.coti.trustscore.data.Buckets.BucketTransactionEventsData;
 import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.Events.BalanceCountAndContribution;
-import io.coti.trustscore.config.rules.RulesData;
-import io.coti.trustscore.config.rules.TransactionEventsScore;
 import io.coti.trustscore.services.BucketTransactionService;
 import io.coti.trustscore.services.calculationServices.BucketTransactionsCalculator;
-import io.coti.trustscore.util.BucketUtil;
 import io.coti.trustscore.utils.DatesCalculation;
 import org.junit.Assert;
 import org.junit.Before;
@@ -21,6 +19,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.coti.trustscore.utils.MathCalculation.ifTwoNumbersAreEqualOrAlmostEqual;

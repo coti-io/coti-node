@@ -5,8 +5,18 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "standardEventScore")
 public class BaseEventScore extends EventScore {
-    @XmlElement(name = "definition")
-    private String definition;
+    @XmlElement(name = "contribution")
+    private String contributionFormula;
+
     @XmlElement(name = "term")
     private int term;
+
+    public String getContributionFormula() {
+        return contributionFormula;
+    }
+
+    public int getTerm() {
+        return term;
+    }
+
 }
