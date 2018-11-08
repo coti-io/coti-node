@@ -13,7 +13,7 @@ import java.util.Map;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class RollingReserveData extends OutputBaseTransactionData {
     @NotNull
-    private Map<Hash, SignatureData> rollingreserveTrustScoreNodeResult;
+    private Map<Hash, SignatureData> rollingReserveTrustScoreNodeResult;
 
     public RollingReserveData(Hash addressHash, BigDecimal amount, BigDecimal originalAmount, Hash baseTransactionHash, SignatureData signature, Date createTime) {
         super(addressHash, amount, originalAmount, baseTransactionHash, signature, createTime);
