@@ -36,32 +36,31 @@ public class TransactionCrypto extends SignatureCrypto<TransactionData> {
 
     public void setTransactionHash(TransactionData transactionData) {
 
-
-        for (BaseTransactionCryptoWrapper bxDataCrypto : transactionData.getBaseTransactions()) {
-            if (bxDataCrypto.getBaseTransactionHash() == null)
-                bxDataCrypto.setBaseTransactionHash();
-
+        for(BaseTransactionData baseTransactionData :  transactionData.getBaseTransactions()) {
+             if(baseTransactionData.getHash() == null) {
+                 BaseTransactionCrypto.valueOf(baseTransactionData.getClass().getSimpleName()).setBaseTransactionHash(baseTransactionData);
+             }
         }
+
         Hash transactionHash = getHashFromBaseTransactionHashesData(transactionData);
         transactionData.setHash(transactionHash);
-
 
     }
 
     private boolean isTransactionHashCorrect(TransactionData transactionData) {
 
-        Hash generatedTxHashFromBaseTransactions = getHashFromBaseTransactionHashesData(transactionData);
-        Hash txHashFromData = transactionData.getHash();
+        Hash generatedTransactionHashFromBaseTransactions = getHashFromBaseTransactionHashesData(transactionData);
+        Hash transactionHashFromData = transactionData.getHash();
 
-        return generatedTxHashFromBaseTransactions.equals(txHashFromData);
+        return generatedTransactionHashFromBaseTransactions.equals(transactionHashFromData);
     }
 
     public boolean isTransactionValid(TransactionData transactionData) {
 
         if (!this.isTransactionHashCorrect(transactionData))
             return false;
-        for (BaseTransactionCryptoWrapper bxCrypto : transactionData.getBaseTransactions()) {
-            if (bxCrypto.IsBaseTransactionValid(transactionData.getHash()) == false)
+        for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
+            if (BaseTransactionCrypto.valueOf(baseTransactionData.getClass().getSimpleName()).isBaseTransactionValid(transactionData,baseTransactionData) == false)
                 return false;
         }
         return true;

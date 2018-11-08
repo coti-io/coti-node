@@ -88,7 +88,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
         @Override
         public boolean verifySignature(TransactionData transactionData, BaseTransactionData baseTransactionData) {
-            if(TransactionType.Transfer.equals(transactionData.getType())){
+            if (TransactionType.Transfer.equals(transactionData.getType())) {
                 return true;
             }
             try {
