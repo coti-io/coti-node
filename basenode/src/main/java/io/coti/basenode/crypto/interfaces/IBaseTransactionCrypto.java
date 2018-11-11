@@ -12,6 +12,8 @@ public interface IBaseTransactionCrypto {
 
     byte[] getSignatureMessage(TransactionData transactionData) throws ClassNotFoundException;
 
+    void signMessage(BaseTransactionData baseTransactionData);
+
     String getPublicKey(BaseTransactionData receiverBaseTransactionData);
 
     String getPublicKey(TrustScoreNodeResultData trustScoreNodeResultData);

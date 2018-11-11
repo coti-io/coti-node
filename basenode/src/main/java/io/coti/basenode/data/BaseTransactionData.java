@@ -15,7 +15,6 @@ import java.util.Date;
 
 @Slf4j
 @Data
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CUSTOM,
         include = JsonTypeInfo.As.PROPERTY,
         property = "name")
@@ -29,6 +28,10 @@ public abstract class BaseTransactionData implements Serializable {
     @NotNull
     protected Date createTime;
     protected @Valid SignatureData signatureData;
+
+    protected BaseTransactionData() {
+
+    }
 
     public BaseTransactionData(Hash addressHash, BigDecimal amount, Hash baseTransactionHash, SignatureData signature, Date createTime) {
         this.addressHash = addressHash;
@@ -54,5 +57,9 @@ public abstract class BaseTransactionData implements Serializable {
             return false;
         }
         return hash.equals(((BaseTransactionData) other).hash);
+    }
+
+    public void setSignature(SignatureData signatureData) {
+        this.signatureData = signatureData;
     }
 }

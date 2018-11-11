@@ -1,14 +1,11 @@
 package io.coti.basenode.data;
 
-import lombok.AccessLevel;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.util.Date;
 
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Data
 public abstract class OutputBaseTransactionData extends BaseTransactionData {
     @Positive
@@ -16,8 +13,17 @@ public abstract class OutputBaseTransactionData extends BaseTransactionData {
     @Positive
     protected BigDecimal originalAmount;
 
+    protected OutputBaseTransactionData() {
+        super();
+    }
+
     public OutputBaseTransactionData(Hash addressHash, BigDecimal amount, BigDecimal originalAmount, Hash baseTransactionHash, SignatureData signature, Date createTime) {
         super(addressHash, amount, baseTransactionHash, signature, createTime);
+        this.setOriginalAmount(originalAmount);
+    }
+
+    protected OutputBaseTransactionData(Hash addressHash, BigDecimal amount, BigDecimal originalAmount, Date createTime) {
+        super(addressHash, amount, createTime);
         this.setOriginalAmount(originalAmount);
     }
 
