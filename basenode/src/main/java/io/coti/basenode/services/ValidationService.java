@@ -1,9 +1,7 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.crypto.BaseTransactionCryptoWrapper;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.TransactionCrypto;
-import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.model.Transactions;
@@ -24,12 +22,6 @@ public class ValidationService implements IValidationService {
     private TransactionCrypto transactionCrypto;
     @Autowired
     private IPotService potService;
-
-    @Override
-    public boolean validateBaseTransaction(BaseTransactionData baseTransactionData, Hash transactionHash) {
-        BaseTransactionCryptoWrapper baseTransactionCrypto = new BaseTransactionCryptoWrapper(baseTransactionData);
-        return baseTransactionCrypto.IsBaseTransactionValid(transactionHash);
-    }
 
     @Override
     public boolean validateSource(Hash transactionHash) {

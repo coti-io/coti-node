@@ -2,7 +2,7 @@ package io.coti.basenode.services;
 
 import com.google.common.collect.Sets;
 import io.coti.basenode.crypto.DspConsensusCrypto;
-import io.coti.basenode.crypto.TransactionCryptoWrapper;
+import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.GetTransactionBatchResponse;
@@ -33,6 +33,8 @@ public class TransactionHelper implements ITransactionHelper {
 
     @Autowired
     private AddressTransactionsHistories addressTransactionsHistories;
+    @Autowired
+    private TransactionCrypto transactionCrypto;
     @Autowired
     private IBalanceService balanceService;
     @Autowired
@@ -84,8 +86,8 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     public boolean validateTransactionCrypto(TransactionData transactionData) {
-        TransactionCryptoWrapper verifyTransaction = new TransactionCryptoWrapper(transactionData);
-        return verifyTransaction.isTransactionValid();
+        return transactionCrypto.isTransactionValid(transactionData);
+
     }
 
     public boolean isTransactionExists(TransactionData transactionData) {

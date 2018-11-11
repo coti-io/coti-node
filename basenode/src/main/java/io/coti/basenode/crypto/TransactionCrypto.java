@@ -3,7 +3,6 @@ package io.coti.basenode.crypto;
 import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.TransactionType;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
@@ -36,10 +35,10 @@ public class TransactionCrypto extends SignatureCrypto<TransactionData> {
 
     public void setTransactionHash(TransactionData transactionData) {
 
-        for(BaseTransactionData baseTransactionData :  transactionData.getBaseTransactions()) {
-             if(baseTransactionData.getHash() == null) {
-                 BaseTransactionCrypto.valueOf(baseTransactionData.getClass().getSimpleName()).setBaseTransactionHash(baseTransactionData);
-             }
+        for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
+            if (baseTransactionData.getHash() == null) {
+                BaseTransactionCrypto.valueOf(baseTransactionData.getClass().getSimpleName()).setBaseTransactionHash(baseTransactionData);
+            }
         }
 
         Hash transactionHash = getHashFromBaseTransactionHashesData(transactionData);
@@ -60,7 +59,7 @@ public class TransactionCrypto extends SignatureCrypto<TransactionData> {
         if (!this.isTransactionHashCorrect(transactionData))
             return false;
         for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
-            if (BaseTransactionCrypto.valueOf(baseTransactionData.getClass().getSimpleName()).isBaseTransactionValid(transactionData,baseTransactionData) == false)
+            if (BaseTransactionCrypto.valueOf(baseTransactionData.getClass().getSimpleName()).isBaseTransactionValid(transactionData, baseTransactionData) == false)
                 return false;
         }
         return true;

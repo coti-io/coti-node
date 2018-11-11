@@ -1,6 +1,7 @@
 package io.coti.basenode.data;
 
 import lombok.AccessLevel;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.Positive;
@@ -8,6 +9,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Data
 public abstract class OutputBaseTransactionData extends BaseTransactionData {
     @Positive
     protected BigDecimal amount;
