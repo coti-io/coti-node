@@ -8,5 +8,14 @@ import java.io.Serializable;
 public class TrustScoreNodeResultData implements Serializable {
     private Hash trustScoreNodeHash;
     private SignatureData trustScoreNodeSignature;
+    private boolean valid;
+
+    public void setSignature(SignatureData signatureData) {
+        this.trustScoreNodeSignature = signatureData;
+    }
+
+    public SignatureData getSignature() {
+        return trustScoreNodeSignature;
+    }
 
 }

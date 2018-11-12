@@ -2,6 +2,7 @@ package io.coti.basenode.crypto;
 
 import io.coti.basenode.crypto.interfaces.IBaseTransactionCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.List;
 
 @Slf4j
 public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
@@ -61,23 +63,6 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
         }
 
-        @Override
-        public boolean verifySignature(TransactionData transactionData, BaseTransactionData baseTransactionData) {
-            try {
-                NetworkFeeData networkFeeData = (NetworkFeeData) baseTransactionData;
-                for (TrustScoreNodeResultData trustScoreNodeResultData : networkFeeData.getNetworkFeeTrustScoreNodeResult()) {
-                    if (!CryptoHelper.VerifyByPublicKey(getSignatureMessage(transactionData), trustScoreNodeResultData.getTrustScoreNodeSignature().getR(), trustScoreNodeResultData.getTrustScoreNodeSignature().getS(), getPublicKey(trustScoreNodeResultData))) {
-                        return false;
-                    }
-                }
-                return true;
-
-            } catch (ClassNotFoundException | NoSuchAlgorithmException | InvalidKeySpecException e) {
-                e.printStackTrace();
-                return false;
-            }
-        }
-
     },
     RollingReserveData {
         @Override
@@ -94,22 +79,6 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
             }
         }
 
-        @Override
-        public boolean verifySignature(TransactionData transactionData, BaseTransactionData baseTransactionData) {
-            try {
-                RollingReserveData rollingReserveData = (RollingReserveData) baseTransactionData;
-                for (TrustScoreNodeResultData trustScoreNodeResultData : rollingReserveData.getRollingReserveTrustScoreNodeResult()) {
-                    if (!CryptoHelper.VerifyByPublicKey(getSignatureMessage(transactionData), trustScoreNodeResultData.getTrustScoreNodeSignature().getR(), trustScoreNodeResultData.getTrustScoreNodeSignature().getS(), getPublicKey(trustScoreNodeResultData))) {
-                        return false;
-                    }
-                }
-                return true;
-
-            } catch (ClassNotFoundException | NoSuchAlgorithmException | InvalidKeySpecException e) {
-                e.printStackTrace();
-                return false;
-            }
-        }
     },
     ReceiverBaseTransactionData {
         @Override
@@ -174,34 +143,46 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     @Override
     public boolean isBaseTransactionValid(TransactionData transactionData, BaseTransactionData baseTransactionData) {
         try {
-            if (!this.createBaseTransactionHashFromData(baseTransactionData).equals(baseTransactionData.getHash()))
-                return false;
+            return Class.forName(packagePath + name()).isInstance(baseTransactionData) && this.createBaseTransactionHashFromData(baseTransactionData).equals(baseTransactionData.getHash())
+                    && CryptoHelper.IsAddressValid(baseTransactionData.getAddressHash()) && verifySignature(transactionData, baseTransactionData);
 
-            if (!CryptoHelper.IsAddressValid(baseTransactionData.getAddressHash()))
-                return false;
-
-            return verifySignature(transactionData, baseTransactionData);
-
-        } catch (Exception e) {
-            log.error("error", e);
-            return false;
-
-        }
-    }
-
-    @Override
-    public void signMessage(BaseTransactionData baseTransactionData) {
-        baseTransactionData.setSignature(nodeCryptoHelper.signMessage(this.getMessageInBytes(baseTransactionData)));
-    }
-
-    @Override
-    public boolean verifySignature(TransactionData transactionData, BaseTransactionData baseTransactionData) {
-        try {
-            return CryptoHelper.VerifyByPublicKey(getSignatureMessage(transactionData), baseTransactionData.getSignatureData().getR(), baseTransactionData.getSignatureData().getS(), getPublicKey(baseTransactionData));
-        } catch (ClassNotFoundException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+        } catch (ClassNotFoundException | InvalidKeySpecException | NoSuchAlgorithmException e) {
             e.printStackTrace();
             return false;
+
         }
+    }
+
+    @Override
+    public void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData) throws ClassNotFoundException {
+        baseTransactionData.setSignature(nodeCryptoHelper.signMessage(this.getSignatureMessage(transactionData)));
+
+    }
+
+    @Override
+    public <T extends BaseTransactionData & ITrustScoreNodeValidatable> void signMessage(TransactionData transactionData, T baseTransactionData, TrustScoreNodeResultData trustScoreNodeResultData) throws ClassNotFoundException {
+
+        List<TrustScoreNodeResultData> trustScoreNodeResult = baseTransactionData.getTrustScoreNodeResult();
+        trustScoreNodeResultData.setSignature(nodeCryptoHelper.signMessage(this.getSignatureMessage(transactionData, trustScoreNodeResultData)));
+        trustScoreNodeResult.add(trustScoreNodeResultData);
+        baseTransactionData.setTrustScoreNodeResult(trustScoreNodeResult);
+
+    }
+
+    @Override
+    public boolean verifySignature(TransactionData transactionData, BaseTransactionData baseTransactionData) throws ClassNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException {
+
+        if (ITrustScoreNodeValidatable.class.isAssignableFrom(Class.forName(packagePath + name()))) {
+            ITrustScoreNodeValidatable trustScoreNodeValidatable = (ITrustScoreNodeValidatable) baseTransactionData;
+            for (TrustScoreNodeResultData trustScoreNodeResultData : trustScoreNodeValidatable.getTrustScoreNodeResult()) {
+                if (!CryptoHelper.VerifyByPublicKey(getSignatureMessage(transactionData, trustScoreNodeResultData), trustScoreNodeResultData.getSignature().getR(), trustScoreNodeResultData.getSignature().getS(), getPublicKey(trustScoreNodeResultData))) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return CryptoHelper.VerifyByPublicKey(getSignatureMessage(transactionData), baseTransactionData.getSignatureData().getR(), baseTransactionData.getSignatureData().getS(), getPublicKey(baseTransactionData));
+
     }
 
     @Override
@@ -219,6 +200,26 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
             if (Class.forName(packagePath + name()).isInstance(baseTransactionData)) {
                 return baseTransactionData.getHash().getBytes();
+            }
+        }
+        return new byte[0];
+    }
+
+    @Override
+    public byte[] getSignatureMessage(TransactionData transactionData, TrustScoreNodeResultData trustScoreNodeResultData) throws ClassNotFoundException {
+        for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
+            if (Class.forName(packagePath + name()).isInstance(baseTransactionData)) {
+                byte[] baseTransactionHashInBytes = baseTransactionData.getHash().getBytes();
+
+                ByteBuffer validBaseTransactionBuffer = ByteBuffer.allocate(1);
+                validBaseTransactionBuffer.put(trustScoreNodeResultData.isValid() ? (byte) 1 : (byte) 0);
+
+                ByteBuffer signatureMessageBuffer = ByteBuffer.allocate(baseTransactionHashInBytes.length + 1).
+                        put(baseTransactionHashInBytes).put(validBaseTransactionBuffer.array());
+
+                byte[] signatureMessageInBytes = signatureMessageBuffer.array();
+                byte[] cryptoHashedMessage = CryptoHelper.cryptoHash(signatureMessageInBytes).getBytes();
+                return cryptoHashedMessage;
             }
         }
         return new byte[0];
