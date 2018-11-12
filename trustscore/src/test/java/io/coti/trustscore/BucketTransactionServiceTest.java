@@ -2,7 +2,7 @@ package io.coti.trustscore;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.database.RocksDBConnector;
+import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.trustscore.data.Buckets.BucketTransactionEventsData;
 import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.Events.TransactionEventData;
@@ -34,7 +34,7 @@ import static io.coti.trustscore.utils.MathCalculation.ifTwoNumbersAreEqualOrAlm
 @SpringBootTest
 @ContextConfiguration(classes = {BucketTransactionService.class,
         BucketTransactionsCalculator.class,
-        RocksDBConnector.class,
+        BaseNodeRocksDBConnector.class,
         BucketTransactionService.class,
         BucketTransactionEvents.class
 })

@@ -1,4 +1,4 @@
-package io.coti.trustscore.http;
+package io.coti.basenode.http;
 
 import io.coti.basenode.http.BaseResponse;
 import lombok.Data;
