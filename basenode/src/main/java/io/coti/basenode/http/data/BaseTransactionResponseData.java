@@ -10,10 +10,14 @@ import java.util.Date;
 @Data
 public class BaseTransactionResponseData {
 
-    private String hash;
-    private String addressHash;
-    private BigDecimal amount;
-    private Date createTime;
+    protected String hash;
+    protected String addressHash;
+    protected BigDecimal amount;
+    protected Date createTime;
+
+    protected BaseTransactionResponseData(){
+
+    }
 
     public BaseTransactionResponseData(BaseTransactionData baseTransactionData) {
         this.hash = baseTransactionData.getHash() == null ? null : baseTransactionData.getHash().toHexString();
