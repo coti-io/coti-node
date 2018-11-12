@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 @Slf4j
 @RestController
 public class TransactionBatchController {
@@ -18,7 +21,7 @@ public class TransactionBatchController {
 
 
     @GetMapping(value = "/transaction_batch")
-    public ResponseEntity<GetTransactionBatchResponse> getTransactionBatch(@RequestParam long starting_index) {
+    public ResponseEntity<GetTransactionBatchResponse> getTransactionBatch(@RequestParam @Valid @NotNull Long starting_index) {
         return ResponseEntity.ok(transactionHelper.getTransactionBatch(starting_index));
     }
 }

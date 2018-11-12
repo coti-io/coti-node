@@ -22,7 +22,7 @@ import java.util.List;
 @Slf4j
 public class NetworkService extends BaseNodeNetworkService implements INetworkService {
 
-    @Value("${public.ip}")
+    @Value("${server.ip}")
     protected String nodeIp;
     @Value("${server.port}")
     private String serverPort;

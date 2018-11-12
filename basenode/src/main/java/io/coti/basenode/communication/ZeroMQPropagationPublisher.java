@@ -21,7 +21,7 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
     private String propagationPort;
     private final int HEARTBEAT_INTERVAL = 5000;
     private final int INITIAL_DELAY = 1000;
-    @Value("${public.ip}")
+    @Value("${server.ip}")
     protected String nodeIp;
 
     @Autowired

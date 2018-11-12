@@ -38,7 +38,7 @@ public abstract class BaseNodeInitializationService {
     private final static String STARTING_INDEX_URL_PARAM_ENDPOINT = "?starting_index=";
     @Autowired
     protected INetworkService networkService;
-    @Value("${public.ip}")
+    @Value("${server.ip}")
     protected String nodeIp;
     private NetworkNodeData nodeData;
     @Value("${node.manager.address}")
