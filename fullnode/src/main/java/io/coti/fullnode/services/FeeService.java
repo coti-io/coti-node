@@ -33,14 +33,14 @@ public class FeeService {
     public ResponseEntity<BaseResponse> createFullNodeFee(FullNodeFeeRequest fullNodeFeeRequest) {
         BigDecimal originalAmount = fullNodeFeeRequest.originalAmount;
         Hash address = this.getAddress();
-        BigDecimal amount = originalAmount.compareTo(minimumFee) <= 0 ? minimumFee : originalAmount.compareTo(maximumFee) >= 0 ? maximumFee : originalAmount.multiply(feePercentage).divide(new BigDecimal(100));
+        BigDecimal fee = originalAmount.multiply(feePercentage).divide(new BigDecimal(100));
+        BigDecimal amount = fee.compareTo(minimumFee) <= 0 ? minimumFee : fee.compareTo(maximumFee) >= 0 ? maximumFee : fee;
         FullNodeFeeData fullNodeFeeData = new FullNodeFeeData(address, amount, originalAmount, new Date());
         setFullNodeFeeHash(fullNodeFeeData);
         signFullNodeFee(fullNodeFeeData);
         FullNodeFeeResponseData fullNodeFeeResponseData = new FullNodeFeeResponseData(fullNodeFeeData);
-        FullNodeFeeResponse fullNodeFeeResponse = new FullNodeFeeResponse(fullNodeFeeResponseData);
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(fullNodeFeeResponse);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new FullNodeFeeResponse(fullNodeFeeResponseData));
     }
 
     public Hash getAddress() {

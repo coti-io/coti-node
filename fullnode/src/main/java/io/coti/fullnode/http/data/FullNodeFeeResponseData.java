@@ -3,10 +3,12 @@ package io.coti.fullnode.http.data;
 import io.coti.basenode.data.BaseTransactionName;
 import io.coti.basenode.data.FullNodeFeeData;
 import io.coti.basenode.data.SignatureData;
+import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.Date;
 
+@Data
 public class FullNodeFeeResponseData {
     private String hash;
     private BigDecimal amount;
