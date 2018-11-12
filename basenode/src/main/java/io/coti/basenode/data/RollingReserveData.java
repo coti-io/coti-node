@@ -21,6 +21,14 @@ public class RollingReserveData extends OutputBaseTransactionData implements ITr
         super(addressHash, amount, originalAmount, baseTransactionHash, signature, createTime);
     }
 
+    public RollingReserveData(Hash addressHash, BigDecimal amount, BigDecimal originalAmount, Date createTime) {
+        super(addressHash, amount, originalAmount, createTime);
+    }
+
+    public Hash getHash(){
+        return super.hash;
+    }
+
     @Override
     public List<TrustScoreNodeResultData> getTrustScoreNodeResult() {
         return rollingReserveTrustScoreNodeResult;

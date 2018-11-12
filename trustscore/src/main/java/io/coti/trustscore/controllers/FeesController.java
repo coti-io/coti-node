@@ -1,7 +1,7 @@
 package io.coti.trustscore.controllers;
 
 import io.coti.basenode.http.BaseResponse;
-import io.coti.trustscore.http.GetFeesBaseTransactionRequest;
+import io.coti.trustscore.http.*;
 import io.coti.trustscore.services.FeesService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,23 +19,27 @@ public class FeesController {
     @Autowired
     FeesService feesService;
 
-    @RequestMapping(path = "/networkFeesBaseTransaction", method = RequestMethod.POST)
-    public ResponseEntity<BaseResponse> getNetworkFeeBaseTransaction(@Valid @RequestBody GetFeesBaseTransactionRequest request) {
-        return feesService.getFeesBaseTransactions(request.getFullNodeFeeBaseTransactionData());
+
+
+
+    @RequestMapping(path = "/rollingReservesFee", method = RequestMethod.PUT)
+    public ResponseEntity<BaseResponse> createRollingReserveFee(@Valid @RequestBody RollingReserveRequest request) {
+        return feesService.createRollingReserveFee(request);
     }
 
-    @RequestMapping(path = "/rollingReservesFeeBaseTransaction", method = RequestMethod.POST)
-    public ResponseEntity<BaseResponse> getRollingReserveBaseTransaction(@Valid @RequestBody GetFeesBaseTransactionRequest request) {
-        return feesService.getFeesBaseTransactions(request.getFullNodeFeeBaseTransactionData());
+    @RequestMapping(path = "/networkFee", method = RequestMethod.PUT)
+    public ResponseEntity<BaseResponse> createNetworkFeeConfirmation(@Valid @RequestBody NetworkFeeRequest request) {
+        return feesService.createNetworkFee(request);
     }
 
-    @RequestMapping(path = "/rollingReservesFeeConfirmation", method = RequestMethod.POST)
-    public ResponseEntity<BaseResponse> getRollingReserveFeeConfirmation(@Valid @RequestBody GetFeesBaseTransactionRequest request) {
-        return  null;
+
+    @RequestMapping(path = "/rollingReservesFee", method = RequestMethod.POST)
+    public ResponseEntity<BaseResponse> validateRollingReserveFee(@Valid @RequestBody RollingReserveValidateRequest request) {
+        return feesService.validateRollingReserve(request);
     }
 
-    @RequestMapping(path = "/networkFeeConfirmation", method = RequestMethod.POST)
-    public ResponseEntity<BaseResponse> getNetworkFeeConfirmation(@Valid @RequestBody GetFeesBaseTransactionRequest request) {
-        return  null;
+    @RequestMapping(path = "/networkFee", method = RequestMethod.POST)
+    public ResponseEntity<BaseResponse> validateNetworkFeeConfirmation(@Valid @RequestBody NetworkFeeValidateRequest request) {
+        return feesService.validateNetworkFee(request);
     }
 }
