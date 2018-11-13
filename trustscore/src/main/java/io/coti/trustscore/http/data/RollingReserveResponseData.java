@@ -6,6 +6,7 @@ import io.coti.basenode.data.TrustScoreNodeResultData;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -18,7 +19,7 @@ public class RollingReserveResponseData {
     private String addressHash;
     private Date createTime;
     private String name;
-    private List<TrustScoreNodeResultData> trustScoreNodeResultData;
+    private List<TrustScoreNodeResultResponseData> rollingReserveTrustScoreNodeResult;
 
     public RollingReserveResponseData(RollingReserveData rollingReserveData) {
         this.hash = rollingReserveData.getHash().toString();
@@ -27,7 +28,11 @@ public class RollingReserveResponseData {
         this.addressHash = rollingReserveData.getAddressHash().toString();
         this.createTime = rollingReserveData.getCreateTime();
         this.name = BaseTransactionName.getName(RollingReserveData.class).name();
-        this.trustScoreNodeResultData = rollingReserveData.getRollingReserveTrustScoreNodeResult();
+        this.rollingReserveTrustScoreNodeResult = new ArrayList<>();
+
+        for (TrustScoreNodeResultData trustScoreNodeResultData : rollingReserveData.getTrustScoreNodeResult()) {
+            rollingReserveTrustScoreNodeResult.add(new TrustScoreNodeResultResponseData(trustScoreNodeResultData));
+        }
     }
 
 }

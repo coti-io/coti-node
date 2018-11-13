@@ -1,20 +1,13 @@
 package io.coti.trustscore.http;
 
-import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkFeeData;
-import io.coti.trustscore.http.data.NetworkFeeResponseData;
 import lombok.Data;
+
+import javax.validation.constraints.NotNull;
 
 @Data
 public class NetworkFeeValidateRequest {
+    @NotNull
+    NetworkFeeData networkFeeData;
 
-    NetworkFeeResponseData rollingReserveResponseData;
-
-
-    public NetworkFeeData getNetworkFeeData(){
-        NetworkFeeData networkFeeData = new NetworkFeeData(new Hash(rollingReserveResponseData.getAddressHash()), rollingReserveResponseData.getAmount(), rollingReserveResponseData.getOriginalAmount(),
-               rollingReserveResponseData.getCreateTime());
-        networkFeeData.setHash(new Hash(rollingReserveResponseData.getHash()));
-        return networkFeeData;
-    }
 }

@@ -1,21 +1,13 @@
 package io.coti.trustscore.http;
 
-import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.RollingReserveData;
-import io.coti.trustscore.http.data.RollingReserveResponseData;
 import lombok.Data;
+
+import javax.validation.constraints.NotNull;
 
 @Data
 public class RollingReserveValidateRequest {
+    @NotNull
+    RollingReserveData rollingReserveData;
 
-    RollingReserveResponseData rollingReserveResponseData;
-
-
-    public RollingReserveData getRollingReserveData(){
-
-        RollingReserveData rollingReserveData = new RollingReserveData(new Hash(rollingReserveResponseData.getAddressHash()), rollingReserveResponseData.getAmount(),
-                rollingReserveResponseData.getOriginalAmount() ,rollingReserveResponseData.getCreateTime());
-        rollingReserveData.setHash(new Hash(rollingReserveResponseData.getHash()));
-        return rollingReserveData;
-    }
 }

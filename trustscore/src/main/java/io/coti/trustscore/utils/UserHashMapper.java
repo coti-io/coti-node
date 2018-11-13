@@ -8,12 +8,12 @@ import java.util.Map;
 
 public class UserHashMapper {
     private static Map<Byte, UserType> byteToUserType = new HashMap<Byte, UserType>() {{
-        put((byte)1,UserType.WALLET);
-        put((byte)2,UserType.MERCHANT);
-        put((byte)3,UserType.FULL_NODE);
+        put((byte) 1, UserType.WALLET);
+        put((byte) 2, UserType.MERCHANT);
+        put((byte) 3, UserType.FULL_NODE);
     }};
-    
-    public static UserType getUserType(Hash userHash){
+
+    public static UserType getUserType(Hash userHash) {
         return byteToUserType.get(userHash.getBytes()[0]);
     }
 }

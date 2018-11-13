@@ -1,15 +1,22 @@
 package io.coti.trustscore.http;
 
 
-import io.coti.basenode.http.BaseResponse;
+import io.coti.basenode.http.Response;
 import io.coti.trustscore.http.data.RollingReserveResponseData;
+import lombok.Data;
 
-public class RollingReserveResponse extends BaseResponse {
+@Data
+public class RollingReserveResponse extends Response {
 
-    private RollingReserveResponseData rollingReserveResponseData;
+    private RollingReserveResponseData rollingReserveData;
 
-    public RollingReserveResponse(RollingReserveResponseData fullNodeFeeResponseData) {
+    public RollingReserveResponse(RollingReserveResponseData rollingReserveResponseData) {
         super();
-        this.rollingReserveResponseData = fullNodeFeeResponseData;
+        this.rollingReserveData = rollingReserveResponseData;
+    }
+
+    public RollingReserveResponse(String status, String message) {
+        super(message);
+        this.status = status;
     }
 }

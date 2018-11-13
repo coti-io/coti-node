@@ -15,7 +15,7 @@ public class BaseTransactionResponseData {
     protected BigDecimal amount;
     protected Date createTime;
 
-    protected BaseTransactionResponseData(){
+    protected BaseTransactionResponseData() {
 
     }
 

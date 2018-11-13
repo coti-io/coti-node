@@ -12,7 +12,7 @@ import java.security.spec.InvalidKeySpecException;
 public interface IBaseTransactionCrypto {
     byte[] getMessageInBytes(BaseTransactionData baseTransactionData);
 
-    void setBaseTransactionHash(BaseTransactionData baseTransactionData);
+    void setBaseTransactionHash(BaseTransactionData baseTransactionData) throws ClassNotFoundException;
 
     byte[] getSignatureMessage(TransactionData transactionData) throws ClassNotFoundException;
 

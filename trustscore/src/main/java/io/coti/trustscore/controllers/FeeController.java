@@ -1,0 +1,46 @@
+package io.coti.trustscore.controllers;
+
+import io.coti.basenode.http.BaseResponse;
+import io.coti.basenode.http.Response;
+import io.coti.trustscore.http.NetworkFeeRequest;
+import io.coti.trustscore.http.NetworkFeeValidateRequest;
+import io.coti.trustscore.http.RollingReserveRequest;
+import io.coti.trustscore.http.RollingReserveValidateRequest;
+import io.coti.trustscore.services.FeeService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.Valid;
+
+@Slf4j
+@RestController
+public class FeeController {
+    @Autowired
+    FeeService feeService;
+
+    @RequestMapping(path = "/rollingReservesFee", method = RequestMethod.PUT)
+    public ResponseEntity<Response> createRollingReserveFee(@Valid @RequestBody RollingReserveRequest request) {
+        return feeService.createRollingReserveFee(request);
+    }
+
+    @RequestMapping(path = "/networkFee", method = RequestMethod.PUT)
+    public ResponseEntity<Response> createNetworkFeeConfirmation(@Valid @RequestBody NetworkFeeRequest request) {
+        return feeService.createNetworkFee(request);
+    }
+
+
+    @RequestMapping(path = "/rollingReservesFee", method = RequestMethod.POST)
+    public ResponseEntity<BaseResponse> validateRollingReserveFee(@Valid @RequestBody RollingReserveValidateRequest request) {
+        return feeService.validateRollingReserve(request);
+    }
+
+    @RequestMapping(path = "/networkFee", method = RequestMethod.POST)
+    public ResponseEntity<BaseResponse> validateNetworkFeeConfirmation(@Valid @RequestBody NetworkFeeValidateRequest request) {
+        return feeService.validateNetworkFee(request);
+    }
+}

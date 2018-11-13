@@ -6,6 +6,7 @@ import io.coti.basenode.data.TrustScoreNodeResultData;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -18,8 +19,7 @@ public class NetworkFeeResponseData {
     private String addressHash;
     private Date createTime;
     private String name;
-    private BigDecimal networkFee;
-    private List<TrustScoreNodeResultData> trustScoreNodeResultData;
+    private List<TrustScoreNodeResultResponseData> networkFeeTrustScoreNodeResult;
 
     public NetworkFeeResponseData(NetworkFeeData networkFeeData) {
         this.hash = networkFeeData.getHash().toString();
@@ -28,7 +28,11 @@ public class NetworkFeeResponseData {
         this.addressHash = networkFeeData.getAddressHash().toString();
         this.createTime = networkFeeData.getCreateTime();
         this.name = BaseTransactionName.getName(NetworkFeeData.class).name();
-        this.trustScoreNodeResultData = networkFeeData.getNetworkFeeTrustScoreNodeResult();
+        this.networkFeeTrustScoreNodeResult = new ArrayList<>();
+
+        for (TrustScoreNodeResultData trustScoreNodeResultData : networkFeeData.getTrustScoreNodeResult()) {
+            networkFeeTrustScoreNodeResult.add(new TrustScoreNodeResultResponseData(trustScoreNodeResultData));
+        }
     }
 }
 

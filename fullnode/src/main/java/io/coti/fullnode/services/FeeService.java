@@ -56,7 +56,7 @@ public class FeeService {
         return nodeCryptoHelper.getNodeAddress();
     }
 
-    public void setFullNodeFeeHash(FullNodeFeeData fullNodeFeeData) {
+    public void setFullNodeFeeHash(FullNodeFeeData fullNodeFeeData) throws ClassNotFoundException {
         BaseTransactionCrypto.FullNodeFeeData.setBaseTransactionHash(fullNodeFeeData);
     }
 

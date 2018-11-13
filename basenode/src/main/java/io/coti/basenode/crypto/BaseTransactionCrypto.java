@@ -12,6 +12,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
@@ -89,7 +90,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
             try {
                 ReceiverBaseTransactionData receiverBaseTransactionData = (ReceiverBaseTransactionData) baseTransactionData;
-                byte[] outputMessageInBytes =  getOutputMessageInBytes(receiverBaseTransactionData);
+                byte[] outputMessageInBytes = getOutputMessageInBytes(receiverBaseTransactionData);
                 byte[] receiverDescriptionInBytes = receiverBaseTransactionData.getReceiverDescription().getBytes();
                 ByteBuffer receiverBaseTransactionBuffer = ByteBuffer.allocate(outputMessageInBytes.length + receiverDescriptionInBytes.length).
                         put(outputMessageInBytes).put(receiverDescriptionInBytes);
@@ -146,8 +147,12 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     }
 
     @Override
-    public void setBaseTransactionHash(BaseTransactionData baseTransactionData) {
+    public void setBaseTransactionHash(BaseTransactionData baseTransactionData) throws ClassNotFoundException {
+        if (!Class.forName(packagePath + name()).isInstance(baseTransactionData)) {
+            throw new IllegalArgumentException("");
+        }
         baseTransactionData.setHash(createBaseTransactionHashFromData(baseTransactionData));
+
     }
 
     @Override
@@ -178,7 +183,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     @Override
     public <T extends BaseTransactionData & ITrustScoreNodeValidatable> void signMessage(TransactionData transactionData, T baseTransactionData, TrustScoreNodeResultData trustScoreNodeResultData) throws ClassNotFoundException {
 
-        List<TrustScoreNodeResultData> trustScoreNodeResult = baseTransactionData.getTrustScoreNodeResult();
+        List<TrustScoreNodeResultData> trustScoreNodeResult = baseTransactionData.getTrustScoreNodeResult() != null ? baseTransactionData.getTrustScoreNodeResult() : new ArrayList<>();
         trustScoreNodeResultData.setSignature(nodeCryptoHelper.signMessage(this.getSignatureMessage(transactionData, trustScoreNodeResultData)));
         trustScoreNodeResult.add(trustScoreNodeResultData);
         baseTransactionData.setTrustScoreNodeResult(trustScoreNodeResult);

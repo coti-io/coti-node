@@ -34,15 +34,20 @@ public class TransactionCrypto extends SignatureCrypto<TransactionData> {
 
 
     public void setTransactionHash(TransactionData transactionData) {
-
-        for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
-            if (baseTransactionData.getHash() == null) {
-                BaseTransactionCrypto.valueOf(baseTransactionData.getClass().getSimpleName()).setBaseTransactionHash(baseTransactionData);
+        try {
+            for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
+                if (baseTransactionData.getHash() == null) {
+                    String className = baseTransactionData.getClass().getSimpleName();
+                    BaseTransactionCrypto baseTransactionCrypto = BaseTransactionCrypto.valueOf(baseTransactionData.getClass().getSimpleName());
+                    baseTransactionCrypto.setBaseTransactionHash(baseTransactionData);
+                }
             }
-        }
 
-        Hash transactionHash = getHashFromBaseTransactionHashesData(transactionData);
-        transactionData.setHash(transactionHash);
+            Hash transactionHash = getHashFromBaseTransactionHashesData(transactionData);
+            transactionData.setHash(transactionHash);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
 
     }
 
