@@ -8,6 +8,8 @@ import java.util.Date;
 @Data
 public class ReceiverBaseTransactionData extends OutputBaseTransactionData {
 
+    private Hash receiverDescription;
+
     private ReceiverBaseTransactionData() {
         super();
     }
