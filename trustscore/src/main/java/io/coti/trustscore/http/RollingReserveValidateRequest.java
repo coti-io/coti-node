@@ -12,7 +12,10 @@ public class RollingReserveValidateRequest {
 
 
     public RollingReserveData getRollingReserveData(){
-        return new RollingReserveData(new Hash(rollingReserveResponseData.getAddressHash()), rollingReserveResponseData.getAmount(), rollingReserveResponseData.getOriginalAmount(),
-                new Hash(rollingReserveResponseData.getHash()),rollingReserveResponseData.getSignatureData(),rollingReserveResponseData.getCreateTime());
+
+        RollingReserveData rollingReserveData = new RollingReserveData(new Hash(rollingReserveResponseData.getAddressHash()), rollingReserveResponseData.getAmount(),
+                rollingReserveResponseData.getOriginalAmount() ,rollingReserveResponseData.getCreateTime());
+        rollingReserveData.setHash(new Hash(rollingReserveResponseData.getHash()));
+        return rollingReserveData;
     }
 }

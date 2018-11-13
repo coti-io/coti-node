@@ -25,10 +25,6 @@ public class NetworkFeeData extends OutputBaseTransactionData implements ITrustS
         super(addressHash, amount, originalAmount, createTime);
     }
 
-    public Hash getHash(){
-        return super.hash;
-    }
-
     @Override
     public List<TrustScoreNodeResultData> getTrustScoreNodeResult() {
         return networkFeeTrustScoreNodeResult;

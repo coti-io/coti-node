@@ -10,9 +10,8 @@ public class TrustScoreNodeResultData implements Serializable {
     private SignatureData trustScoreNodeSignature;
     private boolean valid;
 
-    public TrustScoreNodeResultData(Hash trustScoreNodeHash, SignatureData trustScoreNodeSignature, boolean valid){
+    public TrustScoreNodeResultData(Hash trustScoreNodeHash, boolean valid){
         this.trustScoreNodeHash = trustScoreNodeHash;
-        this.trustScoreNodeSignature = trustScoreNodeSignature;
         this.valid = valid;
     }
 

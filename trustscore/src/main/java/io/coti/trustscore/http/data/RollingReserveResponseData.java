@@ -2,11 +2,12 @@ package io.coti.trustscore.http.data;
 
 import io.coti.basenode.data.BaseTransactionName;
 import io.coti.basenode.data.RollingReserveData;
-import io.coti.basenode.data.SignatureData;
+import io.coti.basenode.data.TrustScoreNodeResultData;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 @Data
 public class RollingReserveResponseData {
@@ -17,7 +18,7 @@ public class RollingReserveResponseData {
     private String addressHash;
     private Date createTime;
     private String name;
-    private SignatureData signatureData;
+    private List<TrustScoreNodeResultData> trustScoreNodeResultData;
 
     public RollingReserveResponseData(RollingReserveData rollingReserveData) {
         this.hash = rollingReserveData.getHash().toString();
@@ -26,7 +27,7 @@ public class RollingReserveResponseData {
         this.addressHash = rollingReserveData.getAddressHash().toString();
         this.createTime = rollingReserveData.getCreateTime();
         this.name = BaseTransactionName.getName(RollingReserveData.class).name();
-        this.signatureData = rollingReserveData.getSignatureData();
+        this.trustScoreNodeResultData = rollingReserveData.getRollingReserveTrustScoreNodeResult();
     }
 
 }

@@ -34,12 +34,12 @@ public class FeesController {
 
 
     @RequestMapping(path = "/rollingReservesFee", method = RequestMethod.POST)
-    public ResponseEntity<BaseResponse> validateRollingReserveFee(@Valid @RequestBody RollingReserveValidateRequest request) {
+    public ResponseEntity<BaseResponse> validateRollingReserveFee(@Valid @RequestBody RollingReserveValidateRequest request) throws ClassNotFoundException {
         return feesService.validateRollingReserve(request);
     }
 
     @RequestMapping(path = "/networkFee", method = RequestMethod.POST)
-    public ResponseEntity<BaseResponse> validateNetworkFeeConfirmation(@Valid @RequestBody NetworkFeeValidateRequest request) {
+    public ResponseEntity<BaseResponse> validateNetworkFeeConfirmation(@Valid @RequestBody NetworkFeeValidateRequest request) throws ClassNotFoundException {
         return feesService.validateNetworkFee(request);
     }
 }

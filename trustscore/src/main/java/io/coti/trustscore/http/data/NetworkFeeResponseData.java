@@ -2,11 +2,12 @@ package io.coti.trustscore.http.data;
 
 import io.coti.basenode.data.BaseTransactionName;
 import io.coti.basenode.data.NetworkFeeData;
-import io.coti.basenode.data.SignatureData;
+import io.coti.basenode.data.TrustScoreNodeResultData;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 @Data
 public class NetworkFeeResponseData {
@@ -17,7 +18,8 @@ public class NetworkFeeResponseData {
     private String addressHash;
     private Date createTime;
     private String name;
-    private SignatureData signatureData;
+    private BigDecimal networkFee;
+    private List<TrustScoreNodeResultData> trustScoreNodeResultData;
 
     public NetworkFeeResponseData(NetworkFeeData networkFeeData) {
         this.hash = networkFeeData.getHash().toString();
@@ -26,9 +28,8 @@ public class NetworkFeeResponseData {
         this.addressHash = networkFeeData.getAddressHash().toString();
         this.createTime = networkFeeData.getCreateTime();
         this.name = BaseTransactionName.getName(NetworkFeeData.class).name();
-        this.signatureData = networkFeeData.getSignatureData();
+        this.trustScoreNodeResultData = networkFeeData.getNetworkFeeTrustScoreNodeResult();
     }
-
 }
 
 

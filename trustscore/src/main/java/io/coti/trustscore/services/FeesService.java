@@ -94,36 +94,24 @@ public class FeesService {
 
 
 
-    public ResponseEntity<BaseResponse> validateNetworkFee(NetworkFeeValidateRequest networkFeeValidateRequest) {
+    public ResponseEntity<BaseResponse> validateNetworkFee(NetworkFeeValidateRequest networkFeeValidateRequest) throws ClassNotFoundException {
         NetworkFeeData networkFeeData =  networkFeeValidateRequest.getNetworkFeeData();
-
         boolean isValid = isNetworkFeeValid(networkFeeData);
-
-        ByteBuffer signBuffer = ByteBuffer.allocate(networkFeeData.getHash().getBytes().length + 1);
-        signBuffer.put(networkFeeData.getHash().getBytes());
-        signBuffer.put((byte) (isValid ? 1 : 0));
-
-        networkFeeData.getTrustScoreNodeResult().add(new TrustScoreNodeResultData(NodeCryptoHelper.getNodeHash(),
-                NodeCryptoHelper.signMessage(signBuffer.array()),isValid ));
-
+        List<BaseTransactionData> baseTransactions = new ArrayList<>();
+        baseTransactions.add(networkFeeData);
+        BaseTransactionCrypto.NetworkFeeData.signMessage(new TransactionData(baseTransactions),networkFeeData, new TrustScoreNodeResultData(NodeCryptoHelper.getNodeHash(), isValid));
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new NetworkFeeResponse(new NetworkFeeResponseData(networkFeeData)));
     }
 
 
-    public ResponseEntity<BaseResponse> validateRollingReserve(RollingReserveValidateRequest rollingReserveValidateRequest) {
-
+    public ResponseEntity<BaseResponse> validateRollingReserve(RollingReserveValidateRequest rollingReserveValidateRequest) throws ClassNotFoundException {
         RollingReserveData rollingReserveData =  rollingReserveValidateRequest.getRollingReserveData();
-
         boolean isValid = isRollingReserveValid(rollingReserveData);
 
-        ByteBuffer signBuffer = ByteBuffer.allocate(rollingReserveData.getHash().getBytes().length + 1);
-        signBuffer.put(rollingReserveData.getHash().getBytes());
-        signBuffer.put((byte) (isValid ? 1 : 0));
-
-        rollingReserveData.getTrustScoreNodeResult().add(new TrustScoreNodeResultData(NodeCryptoHelper.getNodeHash(),
-                NodeCryptoHelper.signMessage(signBuffer.array()),isValid ));
-
+        List<BaseTransactionData> baseTransactions = new ArrayList<>();
+        baseTransactions.add(rollingReserveData);
+        BaseTransactionCrypto.NetworkFeeData.signMessage(new TransactionData(baseTransactions),rollingReserveData, new TrustScoreNodeResultData(NodeCryptoHelper.getNodeHash(), isValid));
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new RollingReserveResponse(new RollingReserveResponseData(rollingReserveData)));
     }

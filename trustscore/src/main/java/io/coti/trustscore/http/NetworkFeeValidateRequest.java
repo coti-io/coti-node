@@ -12,7 +12,9 @@ public class NetworkFeeValidateRequest {
 
 
     public NetworkFeeData getNetworkFeeData(){
-        return new NetworkFeeData(new Hash(rollingReserveResponseData.getAddressHash()), rollingReserveResponseData.getAmount(), rollingReserveResponseData.getOriginalAmount(),
-                new Hash(rollingReserveResponseData.getHash()),rollingReserveResponseData.getSignatureData(),rollingReserveResponseData.getCreateTime());
+        NetworkFeeData networkFeeData = new NetworkFeeData(new Hash(rollingReserveResponseData.getAddressHash()), rollingReserveResponseData.getAmount(), rollingReserveResponseData.getOriginalAmount(),
+               rollingReserveResponseData.getCreateTime());
+        networkFeeData.setHash(new Hash(rollingReserveResponseData.getHash()));
+        return networkFeeData;
     }
 }
