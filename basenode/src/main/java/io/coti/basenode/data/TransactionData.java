@@ -31,7 +31,7 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
     private Date powEndTime;
     private double senderTrustScore;
     private Hash senderHash;
-    private String nodeIpAddress;
+    private SignatureData senderSignature;
     private Hash nodeHash;
     private SignatureData nodeSignature;
     private List<Hash> childrenTransactions;
