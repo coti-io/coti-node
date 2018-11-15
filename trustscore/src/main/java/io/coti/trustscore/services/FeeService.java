@@ -38,7 +38,7 @@ public class FeeService {
     private BigDecimal rollingReserveDifferenceValidation;
 
 
-    public ResponseEntity<Response> createNetworkFee(NetworkFeeRequest networkFeeRequest) {
+    public ResponseEntity<BaseResponse> createNetworkFee(NetworkFeeRequest networkFeeRequest) {
         try {
             FullNodeFeeData fullNodeFeeData = networkFeeRequest.getFullNodeFeeData();
             if (!validateFullNodeFee(fullNodeFeeData)) {
@@ -63,7 +63,7 @@ public class FeeService {
     }
 
 
-    public ResponseEntity<Response> createRollingReserveFee(RollingReserveRequest rollingReserveRequest) {
+    public ResponseEntity<BaseResponse> createRollingReserveFee(RollingReserveRequest rollingReserveRequest) {
         try {
             FullNodeFeeData fullNodeFeeData = rollingReserveRequest.getFullNodeFeeData();
             if (!validateFullNodeFee(fullNodeFeeData)) {

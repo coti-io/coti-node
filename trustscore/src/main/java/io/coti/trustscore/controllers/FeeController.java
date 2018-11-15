@@ -24,15 +24,14 @@ public class FeeController {
     FeeService feeService;
 
     @RequestMapping(path = "/rollingReservesFee", method = RequestMethod.PUT)
-    public ResponseEntity<Response> createRollingReserveFee(@Valid @RequestBody RollingReserveRequest request) {
+    public ResponseEntity<BaseResponse> createRollingReserveFee(@Valid @RequestBody RollingReserveRequest request) {
         return feeService.createRollingReserveFee(request);
     }
 
     @RequestMapping(path = "/networkFee", method = RequestMethod.PUT)
-    public ResponseEntity<Response> createNetworkFeeConfirmation(@Valid @RequestBody NetworkFeeRequest request) {
+    public ResponseEntity<BaseResponse> createNetworkFeeConfirmation(@Valid @RequestBody NetworkFeeRequest request) {
         return feeService.createNetworkFee(request);
     }
-
 
     @RequestMapping(path = "/rollingReservesFee", method = RequestMethod.POST)
     public ResponseEntity<BaseResponse> validateRollingReserveFee(@Valid @RequestBody RollingReserveValidateRequest request) {
