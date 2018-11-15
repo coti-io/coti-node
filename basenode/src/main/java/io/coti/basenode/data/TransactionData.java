@@ -137,11 +137,11 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
         return valid;
     }
 
-    public List<BaseTransactionData> getOutputBaseTransactions() {
+    public List<OutputBaseTransactionData> getOutputBaseTransactions() {
         return this.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData.getAmount().signum() > 0).collect(Collectors.toList());
     }
 
-    public List<BaseTransactionData> getInputBaseTransactions() {
+    public List<InputBaseTransactionData> getInputBaseTransactions() {
         return this.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData.getAmount().signum() <= 0).collect(Collectors.toList());
     }
 
