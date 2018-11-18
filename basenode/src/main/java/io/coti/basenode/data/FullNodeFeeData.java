@@ -12,11 +12,6 @@ public class FullNodeFeeData extends OutputBaseTransactionData {
         super();
     }
 
-    public FullNodeFeeData(Hash addressHash, BigDecimal amount, BigDecimal originalAmount, Hash baseTransactionHash, SignatureData signature, Date createTime) {
-        super(addressHash, amount, originalAmount, baseTransactionHash, signature, createTime);
-
-    }
-
     public FullNodeFeeData(Hash addressHash, BigDecimal amount, BigDecimal originalAmount, Date createTime) {
         super(addressHash, amount, originalAmount, createTime);
 

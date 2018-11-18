@@ -31,14 +31,6 @@ public abstract class BaseTransactionData implements Serializable {
 
     }
 
-    public BaseTransactionData(Hash addressHash, BigDecimal amount, Hash baseTransactionHash, SignatureData signature, Date createTime) {
-        this.addressHash = addressHash;
-        this.setAmount(amount);
-        this.hash = baseTransactionHash;
-        this.signatureData = signature;
-        this.createTime = createTime;
-    }
-
     public BaseTransactionData(Hash addressHash, BigDecimal amount, Date createTime) {
         this.addressHash = addressHash;
         this.createTime = createTime;

@@ -90,6 +90,21 @@ public class TransactionHelper implements ITransactionHelper {
 
     }
 
+    public boolean validateTransactionType(TransactionData transactionData) {
+        try {
+            TransactionType transactionType = transactionData.getType();
+            if (transactionType == null) {
+                log.error("Transaction {} has null type", transactionData.getHash());
+                return false;
+            }
+
+            return TransactionTypeValidation.valueOf(transactionType.toString()).validateBaseTransactions(transactionData);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public boolean isTransactionExists(TransactionData transactionData) {
         return isTransactionHashExists(transactionData.getHash());
     }

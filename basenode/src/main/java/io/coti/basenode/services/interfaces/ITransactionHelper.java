@@ -14,6 +14,8 @@ public interface ITransactionHelper {
 
     boolean validateTransactionCrypto(TransactionData transactionData);
 
+    boolean validateTransactionType(TransactionData transactionData);
+
     boolean validateTrustScore(TransactionData transactionData);
 
     void startHandleTransaction(TransactionData transactionData);

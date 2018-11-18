@@ -43,7 +43,7 @@ public class ValidationService implements IValidationService {
 
     @Override
     public boolean validateTransactionDataIntegrity(TransactionData transactionData) {
-        return transactionHelper.validateTransactionCrypto(transactionData);
+        return transactionHelper.validateTransactionType(transactionData) && transactionHelper.validateTransactionCrypto(transactionData);
     }
 
     @Override

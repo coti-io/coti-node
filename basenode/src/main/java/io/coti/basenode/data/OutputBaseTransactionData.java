@@ -17,11 +17,6 @@ public abstract class OutputBaseTransactionData extends BaseTransactionData {
         super();
     }
 
-    public OutputBaseTransactionData(Hash addressHash, BigDecimal amount, BigDecimal originalAmount, Hash baseTransactionHash, SignatureData signature, Date createTime) {
-        super(addressHash, amount, baseTransactionHash, signature, createTime);
-        this.setOriginalAmount(originalAmount);
-    }
-
     protected OutputBaseTransactionData(Hash addressHash, BigDecimal amount, BigDecimal originalAmount, Date createTime) {
         super(addressHash, amount, createTime);
         this.setOriginalAmount(originalAmount);

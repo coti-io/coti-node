@@ -52,15 +52,16 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
         this.baseTransactions = baseTransactions;
     }
 
-    public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, double senderTrustScore, Date createTime) {
-        this(baseTransactions, transactionDescription, senderTrustScore, createTime);
+    public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, double senderTrustScore, Date createTime, TransactionType type) {
+        this(baseTransactions, transactionDescription, senderTrustScore, createTime, type);
         this.hash = transactionHash;
     }
 
-    public TransactionData(List<BaseTransactionData> baseTransactions, String transactionDescription, double senderTrustScore, Date createTime) {
+    public TransactionData(List<BaseTransactionData> baseTransactions, String transactionDescription, double senderTrustScore, Date createTime, TransactionType type) {
         this.transactionDescription = transactionDescription;
         this.baseTransactions = baseTransactions;
         this.createTime = createTime;
+        this.type = type;
         this.senderTrustScore = senderTrustScore;
         BigDecimal amount = BigDecimal.ZERO;
         for (BaseTransactionData baseTransaction : baseTransactions) {
@@ -137,11 +138,11 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
         return valid;
     }
 
-    public List<OutputBaseTransactionData> getOutputBaseTransactions() {
+    public List<BaseTransactionData> getOutputBaseTransactions() {
         return this.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData.getAmount().signum() > 0).collect(Collectors.toList());
     }
 
-    public List<InputBaseTransactionData> getInputBaseTransactions() {
+    public List<BaseTransactionData> getInputBaseTransactions() {
         return this.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData.getAmount().signum() <= 0).collect(Collectors.toList());
     }
 
