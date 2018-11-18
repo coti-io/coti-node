@@ -123,9 +123,8 @@ public class BaseNodeInitializationService {
             log.info("Received transaction batch of size: {}", getTransactionBatchResponse.getTransactions().size());
             return getTransactionBatchResponse.getTransactions();
         } catch (Exception e) {
-            log.error("Unresponsive recovery Node: {}", recoveryServerAddress);
-            log.error(e.getMessage());
-            return null;
+            log.error("Error at missing transactions from recovery Node: {}", recoveryServerAddress);
+            throw new RuntimeException(e);
         }
     }
 }

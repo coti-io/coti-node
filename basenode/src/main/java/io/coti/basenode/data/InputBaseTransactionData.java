@@ -3,14 +3,11 @@ package io.coti.basenode.data;
 
 import lombok.Data;
 
-import javax.validation.constraints.NegativeOrZero;
 import java.math.BigDecimal;
 import java.util.Date;
 
 @Data
 public class InputBaseTransactionData extends BaseTransactionData {
-    @NegativeOrZero
-    private BigDecimal amount;
 
     private InputBaseTransactionData() {
         super();

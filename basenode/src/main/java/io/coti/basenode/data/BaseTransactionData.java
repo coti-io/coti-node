@@ -22,7 +22,7 @@ public abstract class BaseTransactionData implements Serializable {
     protected Hash hash;
     @NotNull
     protected Hash addressHash;
-    private BigDecimal amount;
+    protected BigDecimal amount;
     @NotNull
     protected Date createTime;
     protected @Valid SignatureData signatureData;

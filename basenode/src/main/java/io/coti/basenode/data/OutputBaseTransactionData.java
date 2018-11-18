@@ -9,8 +9,6 @@ import java.util.Date;
 @Data
 public abstract class OutputBaseTransactionData extends BaseTransactionData {
     @Positive
-    protected BigDecimal amount;
-    @Positive
     protected BigDecimal originalAmount;
 
     protected OutputBaseTransactionData() {
