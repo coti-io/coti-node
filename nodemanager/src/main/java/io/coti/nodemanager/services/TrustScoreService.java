@@ -21,17 +21,15 @@ public class TrustScoreService implements ITrustScoreService {
 
     private static final String GET_TRUSTSCORE_ENDPOINT = "/usertrustscore";
 
-
     @Autowired
-    private NodeManagementService nodeManagementService;
+    private RestTemplate getRequest;
 
     @Override
-    public Double getTrustScore(NetworkNodeData networkNodeData) {
+    public Double getTrustScore(NetworkNodeData networkNodeData, List<NetworkNodeData> trustScoreNodeList) {
         GetTrustScoreRequest getTrustScoreRequest = new GetTrustScoreRequest();
         getTrustScoreRequest.userHash = networkNodeData.getNodeHash();
-        RestTemplate getRequest = new RestTemplate();
         ResponseEntity<Object> trustScoreResponse = null;
-        for(NetworkNodeData trustScoreNode : nodeManagementService.getAllNetworkData().getTrustScoreNetworkNodesList()){
+        for(NetworkNodeData trustScoreNode : trustScoreNodeList){
             try {
                 trustScoreResponse = getRequest.postForEntity
                         (trustScoreNode.getHttpFullAddress() + GET_TRUSTSCORE_ENDPOINT, getTrustScoreRequest, Object.class);
@@ -67,10 +65,9 @@ public class TrustScoreService implements ITrustScoreService {
 
     }
 
-    private NetworkNodeData chooseTrustScoreNode() { // ATM not in use
+    private NetworkNodeData chooseTrustScoreNode(List<NetworkNodeData> trustScroeNodeList) { // ATM not in use
         Random rand = new Random();
-        List<NetworkNodeData> nodeDataList = nodeManagementService.getAllNetworkData().getTrustScoreNetworkNodesList();
-        return nodeDataList.get(rand.nextInt(nodeDataList.size()));
+        return trustScroeNodeList.get(rand.nextInt(trustScroeNodeList.size()));
     }
 }
 

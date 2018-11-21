@@ -71,6 +71,8 @@ public abstract class BaseNodeInitializationService {
     private IRocksDBConnector dataBaseConnector;
     @Autowired
     private IPropagationSubscriber propagationSubscriber;
+    @Autowired
+    private RestTemplate restTemplate;
 
     public void init() {
         try {
@@ -151,7 +153,6 @@ public abstract class BaseNodeInitializationService {
     }
 
     private List<TransactionData> requestMissingTransactions(long firstMissingTransactionIndex) {
-        RestTemplate restTemplate = new RestTemplate();
         try {
             GetTransactionBatchResponse getTransactionBatchResponse =
                     restTemplate.getForObject(
@@ -179,7 +180,6 @@ public abstract class BaseNodeInitializationService {
 
     private ResponseEntity<String> addNewNodeToNodeManager(NetworkNodeData networkNodeData) {
         try {
-            RestTemplate restTemplate = new RestTemplate();
             String newNodeURL = nodeManagerAddress + NODE_MANAGER_NODES_ENDPOINT;
             HttpEntity<NetworkNodeData> entity = new HttpEntity<>(networkNodeData);
             return restTemplate.exchange(newNodeURL, HttpMethod.PUT, entity, String.class);
@@ -191,7 +191,6 @@ public abstract class BaseNodeInitializationService {
     }
 
     private NetworkDetails getNetworkDetailsFromNodeManager() {
-        RestTemplate restTemplate = new RestTemplate();
         String newNodeURL = nodeManagerAddress + NODE_MANAGER_NODES_ENDPOINT;
         return restTemplate.getForEntity(newNodeURL, NetworkDetails.class).getBody();
     }

@@ -24,10 +24,16 @@ public class HealthCheckService {
     private static final String NODE_HASH_END_POINT = "/nodeHash";
     private static final int RETRY_INTERVAL_IN_SECONDS = 20;
     private static final int MAX_NUM_OF_TRIES = 3;
+    private final INodeManagementService nodesService;
+    private final ActiveNode activeNode;
+    private final RestTemplate restTemplate;
+
     @Autowired
-    private INodeManagementService nodesService;
-    @Autowired
-    private ActiveNode activeNode;
+    public HealthCheckService(INodeManagementService nodesService, ActiveNode activeNode, RestTemplate restTemplate) {
+        this.nodesService = nodesService;
+        this.activeNode = activeNode;
+        this.restTemplate = restTemplate;
+    }
 
     @Scheduled(fixedDelay = 5000, initialDelay = 5000)
     public void neighborsHealthCheck() {
@@ -38,7 +44,6 @@ public class HealthCheckService {
             checkNodesListTasks.add((() -> checkNodesList(nodesService.getAllNetworkData().getDspNetworkNodesList())));
             checkNodesListTasks.add((() -> checkNodesList(nodesService.getAllNetworkData().getTrustScoreNetworkNodesList())));
             checkNodesListTasks.add((() -> checkNodesList(nodesService.getAllNetworkData().getFullNetworkNodesList())));
-
             List<Future<Boolean>> checkNodesListFutures = executorService.invokeAll(checkNodesListTasks);
             for (Future<Boolean> future : checkNodesListFutures) {
                 if (future.get() == true) {
@@ -67,7 +72,6 @@ public class HealthCheckService {
         if (networkNodeDataToCheck == null) {
             return true;
         }
-        RestTemplate restTemplate = new RestTemplate();
         int tries = 0;
         while (tries < MAX_NUM_OF_TRIES) {
             try {

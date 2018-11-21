@@ -18,8 +18,12 @@ import javax.validation.Valid;
 @RequestMapping("/nodes")
 public class NodeController {
 
+    private final INodeManagementService nodesService;
+
     @Autowired
-    private INodeManagementService nodesService;
+    public NodeController(INodeManagementService nodesService) {
+        this.nodesService = nodesService;
+    }
 
     @PutMapping
     public ResponseEntity<String> newNode(@Valid @RequestBody NetworkNodeData networkNodeData) {
@@ -33,8 +37,8 @@ public class NodeController {
     }
 
     @GetMapping
-    public NetworkDetails getAllNodes() {
-        return nodesService.getAllNetworkData();
+    public ResponseEntity<NetworkDetails> getAllNodes() {
+        return ResponseEntity.ok(nodesService.getAllNetworkData());
     }
 
 
