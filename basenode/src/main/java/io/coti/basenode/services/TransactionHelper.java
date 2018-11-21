@@ -5,6 +5,7 @@ import io.coti.basenode.crypto.DspConsensusCrypto;
 import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 import io.coti.basenode.http.GetTransactionBatchResponse;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.TransactionIndexes;
@@ -64,6 +65,7 @@ public class TransactionHelper implements ITransactionHelper {
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
+    @Override
     public boolean validateBaseTransactionAmounts(List<BaseTransactionData> baseTransactions) {
         BigDecimal totalTransactionSum = BigDecimal.ZERO;
         for (BaseTransactionData baseTransactionData :
@@ -71,6 +73,11 @@ public class TransactionHelper implements ITransactionHelper {
             totalTransactionSum = totalTransactionSum.add(baseTransactionData.getAmount());
         }
         return totalTransactionSum.compareTo(BigDecimal.ZERO) == 0;
+    }
+
+    public boolean validateBaseTransactionsDataIntegrity(TransactionData transactionData) {
+        List<BaseTransactionData> baseTransactions = transactionData.getBaseTransactions();
+        return validateBaseTransactionAmounts(baseTransactions) && validateBaseTransactionTrustScoreNodeResults(transactionData);
     }
 
     private void updateAddressTransactionHistory(TransactionData transactionData) {
@@ -103,6 +110,38 @@ public class TransactionHelper implements ITransactionHelper {
             e.printStackTrace();
             return false;
         }
+    }
+
+    @Override
+    public boolean validateBaseTransactionTrustScoreNodeResults(TransactionData transactionData) {
+        for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
+            if (ITrustScoreNodeValidatable.class.isAssignableFrom(baseTransactionData.getClass()) && validateBaseTransactionTrustScoreNodeResult((ITrustScoreNodeValidatable) baseTransactionData) == false) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean validateBaseTransactionTrustScoreNodeResult(ITrustScoreNodeValidatable trustScoreNodeValidatable) {
+        try {
+            return isTrustScoreNodeResultValid(trustScoreNodeValidatable.getTrustScoreNodeResult());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private boolean isTrustScoreNodeResultValid(List<TrustScoreNodeResultData> trustScoreNodeResult) {
+        if (trustScoreNodeResult.size() != 3) {
+            return false;
+        }
+        int validNumber = 0;
+        for (TrustScoreNodeResultData trustScoreNodeResultData : trustScoreNodeResult) {
+            validNumber += trustScoreNodeResultData.isValid() ? 1 : 0;
+        }
+        return validNumber >= 2;
     }
 
     public boolean isTransactionExists(TransactionData transactionData) {

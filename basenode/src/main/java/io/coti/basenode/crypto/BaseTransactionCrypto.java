@@ -41,7 +41,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
             }
 
             try {
-                return getOutputMessageInBytes(fullNodeFeeData);
+                return getOutputMessageInBytes((FullNodeFeeData) fullNodeFeeData);
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
                 return new byte[0];
@@ -50,13 +50,20 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     },
     NetworkFeeData {
         @Override
-        public byte[] getMessageInBytes(BaseTransactionData networkFeeData) {
-            if (!NetworkFeeData.class.isInstance(networkFeeData)) {
+        public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
+            if (!NetworkFeeData.class.isInstance(baseTransactionData)) {
                 throw new IllegalArgumentException("");
             }
 
             try {
-                return getOutputMessageInBytes(networkFeeData);
+                NetworkFeeData networkFeeData = (NetworkFeeData) baseTransactionData;
+                byte[] outputMessageInBytes = getOutputMessageInBytes(networkFeeData);
+                String decimalReducedAmountRepresentation = networkFeeData.getReducedAmount().toString();
+                byte[] bytesOfReducedAmount = decimalReducedAmountRepresentation.getBytes(StandardCharsets.UTF_8);
+
+                ByteBuffer baseTransactionBuffer = ByteBuffer.allocate(outputMessageInBytes.length + bytesOfReducedAmount.length).
+                        put(outputMessageInBytes).put(bytesOfReducedAmount);
+                return baseTransactionBuffer.array();
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
                 return new byte[0];
@@ -67,13 +74,20 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     },
     RollingReserveData {
         @Override
-        public byte[] getMessageInBytes(BaseTransactionData rollingReserveData) {
-            if (!RollingReserveData.class.isInstance(rollingReserveData)) {
+        public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
+            if (!RollingReserveData.class.isInstance(baseTransactionData)) {
                 throw new IllegalArgumentException("");
             }
 
             try {
-                return getOutputMessageInBytes(rollingReserveData);
+                RollingReserveData rollingReserveData = (RollingReserveData) baseTransactionData;
+                byte[] outputMessageInBytes = getOutputMessageInBytes(rollingReserveData);
+                String decimalReducedAmountRepresentation = rollingReserveData.getReducedAmount().toString();
+                byte[] bytesOfReducedAmount = decimalReducedAmountRepresentation.getBytes(StandardCharsets.UTF_8);
+
+                ByteBuffer baseTransactionBuffer = ByteBuffer.allocate(outputMessageInBytes.length + bytesOfReducedAmount.length).
+                        put(outputMessageInBytes).put(bytesOfReducedAmount);
+                return baseTransactionBuffer.array();
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
                 return new byte[0];
@@ -95,8 +109,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
                 ByteBuffer receiverBaseTransactionBuffer = ByteBuffer.allocate(outputMessageInBytes.length + receiverDescriptionInBytes.length).
                         put(outputMessageInBytes).put(receiverDescriptionInBytes);
 
-                byte[] arrToReturn = receiverBaseTransactionBuffer.array();
-                return arrToReturn;
+                return receiverBaseTransactionBuffer.array();
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
                 return new byte[0];
@@ -239,14 +252,14 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
                         put(baseTransactionHashInBytes).put(validBaseTransactionBuffer.array());
 
                 byte[] signatureMessageInBytes = signatureMessageBuffer.array();
-                byte[] cryptoHashedMessage = CryptoHelper.cryptoHash(signatureMessageInBytes).getBytes();
-                return cryptoHashedMessage;
+                return CryptoHelper.cryptoHash(signatureMessageInBytes).getBytes();
             }
         }
         return new byte[0];
     }
 
-    public byte[] getBaseMessageInBytes(BaseTransactionData baseTransactionData) {
+
+    protected byte[] getBaseMessageInBytes(BaseTransactionData baseTransactionData) {
         byte[] addressBytes = baseTransactionData.getAddressHash().getBytes();
         String decimalStringRepresentation = baseTransactionData.getAmount().toString();
         byte[] bytesOfAmount = decimalStringRepresentation.getBytes(StandardCharsets.UTF_8);
@@ -260,15 +273,14 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         ByteBuffer baseTransactionBuffer = ByteBuffer.allocate(addressBytes.length + bytesOfAmount.length + dateBuffer.array().length).
                 put(addressBytes).put(bytesOfAmount).put(dateBuffer.array());
 
-        byte[] baseTransactionMessageInBytes = baseTransactionBuffer.array();
-        return baseTransactionMessageInBytes;
+        return baseTransactionBuffer.array();
     }
 
-    public byte[] getOutputMessageInBytes(BaseTransactionData baseTransactionData) throws ClassNotFoundException {
+
+    protected <T extends OutputBaseTransactionData> byte[] getOutputMessageInBytes(T outputBaseTransactionData) throws ClassNotFoundException {
         if (!OutputBaseTransactionData.class.isAssignableFrom(Class.forName(packagePath + name()))) {
             throw new IllegalArgumentException("");
         }
-        OutputBaseTransactionData outputBaseTransactionData = (OutputBaseTransactionData) baseTransactionData;
         byte[] baseMessageInBytes = getBaseMessageInBytes(outputBaseTransactionData);
 
         String decimalOriginalAmountRepresentation = outputBaseTransactionData.getOriginalAmount().toString();
@@ -277,7 +289,6 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         ByteBuffer outputBaseTransactionBuffer = ByteBuffer.allocate(baseMessageInBytes.length + bytesOfOriginalAmount.length).
                 put(baseMessageInBytes).put(bytesOfOriginalAmount);
 
-        byte[] outputBaseTransactionMessageInBytes = outputBaseTransactionBuffer.array();
-        return outputBaseTransactionMessageInBytes;
+        return outputBaseTransactionBuffer.array();
     }
 }

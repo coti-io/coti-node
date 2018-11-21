@@ -1,9 +1,6 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.data.BaseTransactionData;
-import io.coti.basenode.data.OutputBaseTransactionName;
-import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.TransactionType;
+import io.coti.basenode.data.*;
 import io.coti.basenode.services.interfaces.ITransactionTypeValidation;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,9 +17,10 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
             if (!type.equals(transactionData.getType())) {
                 throw new IllegalArgumentException("Invalid transaction type");
             }
-            List<BaseTransactionData> inputBaseTransactions = transactionData.getInputBaseTransactions();
+            List<InputBaseTransactionData> inputBaseTransactions = transactionData.getInputBaseTransactions();
             return inputBaseTransactions.size() == 1 && inputBaseTransactions.get(0).getAmount().equals(BigDecimal.ZERO);
         }
+
     };
 
     protected TransactionType type;
@@ -34,7 +32,12 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
 
     @Override
     public boolean validateBaseTransactions(TransactionData transactionData) {
-        return validateInputBaseTransactions(transactionData) && validateOutputBaseTransactions(transactionData);
+        try {
+            return validateInputBaseTransactions(transactionData) && validateOutputBaseTransactions(transactionData);
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     @Override
@@ -44,6 +47,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
         }
         return true;
     }
+
     @Override
     public boolean validateOutputBaseTransactions(TransactionData transactionData) {
         try {
@@ -51,21 +55,47 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
                 throw new IllegalArgumentException("Invalid transaction type");
             }
 
-            List<BaseTransactionData> outputBaseTransactions = transactionData.getOutputBaseTransactions();
+            List<OutputBaseTransactionData> outputBaseTransactions = transactionData.getOutputBaseTransactions();
             List<String> outputBaseTransactionNames = OutputBaseTransactionName.getOutputBaseTransactionsByType(type);
             if (outputBaseTransactionNames.size() != outputBaseTransactions.size()) {
                 return false;
             }
+
+            BigDecimal originalAmount = BigDecimal.ZERO;
+
             for (int i = 0; i < outputBaseTransactions.size(); i++) {
-                if (!Class.forName(outputBaseTransactionNames.get(i)).equals(outputBaseTransactions.get(i))) {
+                OutputBaseTransactionData outputBaseTransactionData = outputBaseTransactions.get(i);
+                if (!Class.forName(outputBaseTransactionNames.get(i)).equals(outputBaseTransactionData)) {
                     return false;
                 }
+                if (!originalAmount.equals(BigDecimal.ZERO) && !originalAmount.equals((outputBaseTransactionData.getOriginalAmount()))) {
+                    return false;
+                }
+                originalAmount = outputBaseTransactionData.getOriginalAmount();
+
             }
-            return true;
+
+            return validateReducedAmount(outputBaseTransactions);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
             return false;
         }
+    }
+
+    @Override
+    public boolean validateReducedAmount(List<OutputBaseTransactionData> outputBaseTransactions) {
+        BigDecimal reducedAmount = BigDecimal.ZERO;
+        BigDecimal reducedTotalOutputTransactionAmount = BigDecimal.ZERO;
+
+        for (OutputBaseTransactionData outputBaseTransactionData : outputBaseTransactions) {
+            if (NetworkFeeData.class.isInstance(outputBaseTransactionData)) {
+                reducedAmount = ((NetworkFeeData) outputBaseTransactionData).getReducedAmount();
+            }
+            if (!FullNodeFeeData.class.isInstance(outputBaseTransactionData)) {
+                reducedTotalOutputTransactionAmount = reducedTotalOutputTransactionAmount.add(outputBaseTransactionData.getOriginalAmount());
+            }
+        }
+        return reducedAmount.equals(reducedTotalOutputTransactionAmount);
     }
 
 }

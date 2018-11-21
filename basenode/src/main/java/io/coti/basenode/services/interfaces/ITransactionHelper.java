@@ -4,6 +4,7 @@ import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.DspConsensusResult;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 import io.coti.basenode.http.GetTransactionBatchResponse;
 
 import java.util.List;
@@ -11,6 +12,8 @@ import java.util.List;
 public interface ITransactionHelper {
 
     boolean validateBaseTransactionAmounts(List<BaseTransactionData> baseTransactions);
+
+    boolean validateBaseTransactionsDataIntegrity(TransactionData transactionData);
 
     boolean validateTransactionCrypto(TransactionData transactionData);
 
@@ -39,6 +42,10 @@ public interface ITransactionHelper {
     boolean isTransactionExists(TransactionData transactionData);
 
     boolean isTransactionHashExists(Hash transactionHash);
+
+    boolean validateBaseTransactionTrustScoreNodeResults(TransactionData transactionData);
+
+    boolean validateBaseTransactionTrustScoreNodeResult(ITrustScoreNodeValidatable baseTransactionData);
 
     boolean isTransactionHashProcessing(Hash transactionHash);
 

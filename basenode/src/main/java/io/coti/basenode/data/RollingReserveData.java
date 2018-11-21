@@ -12,6 +12,7 @@ import java.util.List;
 public class RollingReserveData extends OutputBaseTransactionData implements ITrustScoreNodeValidatable {
     @NotNull
     private List<TrustScoreNodeResultData> rollingReserveTrustScoreNodeResult;
+    private BigDecimal reducedAmount;
 
     private RollingReserveData() {
         super();
@@ -29,5 +30,12 @@ public class RollingReserveData extends OutputBaseTransactionData implements ITr
     @Override
     public void setTrustScoreNodeResult(List<TrustScoreNodeResultData> trustScoreNodeResult) {
         this.rollingReserveTrustScoreNodeResult = trustScoreNodeResult;
+    }
+
+    public void setReducedAmount(BigDecimal reducedAmount) {
+        if (reducedAmount == null || reducedAmount.signum() <= 0) {
+            throw new IllegalStateException("Reduced amount can not have non positive amount");
+        }
+        this.reducedAmount = reducedAmount;
     }
 }

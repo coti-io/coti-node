@@ -2,14 +2,19 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.TransactionCrypto;
+import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.TrustScoreNodeResultData;
+import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IPotService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 
 @Service
@@ -43,7 +48,8 @@ public class ValidationService implements IValidationService {
 
     @Override
     public boolean validateTransactionDataIntegrity(TransactionData transactionData) {
-        return transactionHelper.validateTransactionType(transactionData) && transactionHelper.validateTransactionCrypto(transactionData);
+        return transactionHelper.validateTransactionType(transactionData) && transactionHelper.validateTransactionCrypto(transactionData)
+                && transactionHelper.validateBaseTransactionsDataIntegrity(transactionData);
     }
 
     @Override
@@ -71,6 +77,11 @@ public class ValidationService implements IValidationService {
     @Override
     public boolean validateBalancesAndAddToPreBalance(TransactionData transactionData) {
         return transactionHelper.checkBalancesAndAddToPreBalance(transactionData);
+    }
+
+    @Override
+    public <T extends BaseTransactionData & ITrustScoreNodeValidatable> boolean validateBaseTransactionTrustScoreNodeResult(T baseTransactionData) {
+        return transactionHelper.validateBaseTransactionTrustScoreNodeResult(baseTransactionData);
     }
 
     @Override
