@@ -11,6 +11,7 @@ import io.coti.nodemanager.data.NodeHistoryData;
 import io.coti.nodemanager.data.NodeNetworkDataTimestamp;
 import io.coti.nodemanager.data.SingleNodeDetailsForWallet;
 import io.coti.nodemanager.database.NetworkNodeStatus;
+import io.coti.nodemanager.database.RocksDBConnector;
 import io.coti.nodemanager.model.ActiveNode;
 import io.coti.nodemanager.model.NodeHistory;
 import io.coti.nodemanager.services.interfaces.INodeManagementService;
@@ -29,36 +30,44 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class NodeManagementService implements INodeManagementService {
 
-    private NetworkDetails networkDetails;
+    private NetworkDetails networkDetails = new NetworkDetails();
 
-    @Autowired
-    private IPropagationPublisher propagationPublisher;
+    private final IPropagationPublisher propagationPublisher;
 
-    @Autowired
-    private NetworkNodeCrypto networkNodeCrypto;
+    private final NetworkNodeCrypto networkNodeCrypto;
 
-    @Autowired
-    private NodeHistory nodeHistory;
+    private final NodeHistory nodeHistory;
+
+    public static final String FULL_NODES_FORWALLET_KEY = "FullNodes";
+    public static final String TRUST_SCORE_NODES_FORWALLET_KEY = "TrustScoreNodes";
+
 
     @Value("${propagation.port}")
     private String propagationPort;
-    @Autowired
-    private IRocksDBConnector dataBaseConnector;
-    @Autowired
-    private ITrustScoreService trustScoreService;
+    private final IRocksDBConnector dataBaseConnector;
+
+    private final ITrustScoreService trustScoreService;
+
+    private final ActiveNode activeNode;
 
     @Autowired
-    private ActiveNode activeNode;
-
+    public NodeManagementService(IPropagationPublisher propagationPublisher, NetworkNodeCrypto networkNodeCrypto, NodeHistory nodeHistory, IRocksDBConnector dataBaseConnector, ITrustScoreService trustScoreService, ActiveNode activeNode) {
+        this.propagationPublisher = propagationPublisher;
+        this.networkNodeCrypto = networkNodeCrypto;
+        this.nodeHistory = nodeHistory;
+        this.dataBaseConnector = dataBaseConnector;
+        this.trustScoreService = trustScoreService;
+        this.activeNode = activeNode;
+    }
 
     @PostConstruct
-    public void init() {
-        networkDetails = new NetworkDetails();
+    private void init() {
         dataBaseConnector.init();
         networkDetails.setNodeManagerPropagationAddress("tcp://localhost:" + propagationPort);
         propagationPublisher.init(propagationPort);
@@ -81,7 +90,7 @@ public class NodeManagementService implements INodeManagementService {
             throw new IllegalAccessException("The node " + networkNodeData + "didn't pass validation");
         }
         if(NodeType.FullNode.equals(networkNodeData.getNodeType())){
-            networkNodeData.setTrustScore(trustScoreService.getTrustScore(networkNodeData));
+            networkNodeData.setTrustScore(trustScoreService.getTrustScore(networkNodeData, networkDetails.getTrustScoreNetworkNodesList()));
         }
         if (networkDetails.isNodeExistsOnMemory(networkNodeData)) {
             boolean isUpdated = networkDetails.updateNetworkNode(networkNodeData);
@@ -116,54 +125,50 @@ public class NodeManagementService implements INodeManagementService {
 
 
     private void insertToDB(NetworkNodeData networkNodeData, NetworkNodeStatus nodeStatus) {
-        modifyNode(networkNodeData, nodeStatus);
+        modifyNodeInNodeHistory(networkNodeData, nodeStatus);
     }
 
     public void insertDeletedNodeRecord(NetworkNodeData networkNodeData) {
-        modifyNode(networkNodeData, NetworkNodeStatus.INACTIVE);
+        modifyNodeInNodeHistory(networkNodeData, NetworkNodeStatus.INACTIVE);
     }
 
-    private void modifyNode(NetworkNodeData networkNodeData, NetworkNodeStatus status) {
+    private void modifyNodeInNodeHistory(NetworkNodeData networkNodeData, NetworkNodeStatus status) {
         NodeHistoryData dbNode = nodeHistory.getByHash(networkNodeData.getHash());
+        NodeNetworkDataTimestamp nodeNetworkDataTimestamp =
+                new NodeNetworkDataTimestamp(getUTCnow(), networkNodeData);
         if (dbNode != null) {
             dbNode.setNodeStatus(status);
-            NodeNetworkDataTimestamp nodeNetworkDataTimestamp =
-                    new NodeNetworkDataTimestamp(getUTCnow(), networkNodeData);
-            dbNode.getNodeHistory().add(nodeNetworkDataTimestamp);
             log.debug("Node was updated in the db. node: {}", dbNode);
         } else {
-            if (NetworkNodeStatus.INACTIVE.equals(status)) {
-                dbNode = new NodeHistoryData(NetworkNodeStatus.INACTIVE, networkNodeData.getNodeHash(), networkNodeData.getNodeType());
-            } else {
-                dbNode = new NodeHistoryData(NetworkNodeStatus.ACTIVE, networkNodeData.getNodeHash(), networkNodeData.getNodeType());
-            }
-            dbNode.getNodeHistory().add(new NodeNetworkDataTimestamp(getUTCnow(), networkNodeData));
+            dbNode = new NodeHistoryData(status, networkNodeData.getNodeHash(), networkNodeData.getNodeType());
             log.debug("New node was inserted the db. node: {}", dbNode);
         }
+        dbNode.getNodeHistory().add(nodeNetworkDataTimestamp);
         nodeHistory.put(dbNode);
     }
 
 
-    private LocalDateTime getUTCnow() {
+    public LocalDateTime getUTCnow() {
         return LocalDateTime.now(ZoneOffset.UTC);
     }
 
     public Map<String, List<SingleNodeDetailsForWallet>> createNetworkDetailsForWallet() {
         Map<String, List<SingleNodeDetailsForWallet>> networkDetailsForWallet = new HashedMap<>();
-        List<SingleNodeDetailsForWallet> fullNodesDetailsForWallet = new LinkedList<>();
-        List<SingleNodeDetailsForWallet> trustScoreNodesDetailsForWallet = new LinkedList<>();
-        fillNetworkDetailsListForWallet(fullNodesDetailsForWallet, networkDetails.getFullNetworkNodesList());
-        fillNetworkDetailsListForWallet(trustScoreNodesDetailsForWallet, networkDetails.getTrustScoreNetworkNodesList());
-        networkDetailsForWallet.put("FullNodes", fullNodesDetailsForWallet);
-        networkDetailsForWallet.put("TrustScoreNodes", trustScoreNodesDetailsForWallet);
+        List<SingleNodeDetailsForWallet> fullNodesDetailsForWallet = networkDetails.getFullNetworkNodesList().stream()
+                .map(this::createSingleNodeDetailsForWallet)
+                .collect(Collectors.toList());
+        List<SingleNodeDetailsForWallet> trustScoreNodesDetailsForWallet = networkDetails.getTrustScoreNetworkNodesList().stream()
+                .map(this::createSingleNodeDetailsForWallet)
+                .collect(Collectors.toList());
+        networkDetailsForWallet.put(FULL_NODES_FORWALLET_KEY, fullNodesDetailsForWallet);
+        networkDetailsForWallet.put(TRUST_SCORE_NODES_FORWALLET_KEY, trustScoreNodesDetailsForWallet);
         return networkDetailsForWallet;
     }
 
-    private void fillNetworkDetailsListForWallet(List<SingleNodeDetailsForWallet> detailsForWalletList, List<NetworkNodeData> nodeData) {
-        nodeData.forEach(node -> {
-                    SingleNodeDetailsForWallet nodeDetails = new SingleNodeDetailsForWallet(node.getHttpFullAddress(), node.getFeePercentage(), node.getTrustScore());
-                    detailsForWalletList.add(nodeDetails);
-                }
-        );
+    private SingleNodeDetailsForWallet createSingleNodeDetailsForWallet(NetworkNodeData node) {
+        if(NodeType.FullNode.equals(node.getNodeType())) {
+            return new SingleNodeDetailsForWallet(node.getHash(), node.getHttpFullAddress(), node.getFeePercentage(), node.getTrustScore());
+        }
+        return new SingleNodeDetailsForWallet(node.getHash(), node.getHttpFullAddress(),null, null);
     }
 }

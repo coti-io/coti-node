@@ -34,18 +34,14 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
         this.feePercentage = DEFAULT_FEE_PERCENTAGE;
     }
 
-    public NetworkNodeData(NodeType nodeType, String address, String httpPort, Hash nodeHash, double feePercentage, double trustScore) {
+    public NetworkNodeData(NodeType nodeType, String address, String httpPort, Hash nodeHash, double feePercentage) {
         this(nodeType, address, httpPort, nodeHash);
-        if (feePercentage < 0.0 || feePercentage > 100.0) {
-            log.error("FEE is invalid! feePercentage: {} ", feePercentage);
-            return;
-        }
+
         if (trustScore < 0.0 || trustScore > 100.0) {
             log.error("Trust score is invalid! trustScore: {} ", trustScore);
             return;
         }
         this.feePercentage = feePercentage;
-        this.trustScore = trustScore;
         this.nodeType = nodeType;
         this.address = address;
         this.httpPort = httpPort;

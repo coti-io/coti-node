@@ -27,6 +27,9 @@ public class InitializationService extends BaseNodeInitializationService {
     @Autowired
     private NetworkNodeCrypto networkNodeCrypto;
 
+    @Value("5.0")
+    private double nodeFee;
+
     @PostConstruct
     public void init() {
         super.connectToNetwork();
@@ -47,7 +50,7 @@ public class InitializationService extends BaseNodeInitializationService {
     }
 
     protected NetworkNodeData createNodeProperties() {
-        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash());
+        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), nodeFee);
         networkNodeCrypto.signMessage(networkNodeData);
         return networkNodeData;
     }
