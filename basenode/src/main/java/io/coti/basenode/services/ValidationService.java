@@ -5,7 +5,6 @@ import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.TrustScoreNodeResultData;
 import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IPotService;
@@ -13,8 +12,6 @@ import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 
 @Service

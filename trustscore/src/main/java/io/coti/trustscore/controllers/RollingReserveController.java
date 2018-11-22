@@ -2,11 +2,9 @@ package io.coti.trustscore.controllers;
 
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
-import io.coti.trustscore.http.NetworkFeeRequest;
-import io.coti.trustscore.http.NetworkFeeValidateRequest;
 import io.coti.trustscore.http.RollingReserveRequest;
 import io.coti.trustscore.http.RollingReserveValidateRequest;
-import io.coti.trustscore.services.FeeService;
+import io.coti.trustscore.services.RollingReserveService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,17 +17,18 @@ import javax.validation.Valid;
 
 @Slf4j
 @RestController
-public class FeeController {
+@RequestMapping("/rollingReserve")
+public class RollingReserveController {
     @Autowired
-    FeeService feeService;
+    RollingReserveService rollingReserveService;
 
-    @RequestMapping(path = "/networkFee", method = RequestMethod.PUT)
-    public ResponseEntity<Response> createNetworkFeeConfirmation(@Valid @RequestBody NetworkFeeRequest request) {
-        return feeService.createNetworkFee(request);
+    @RequestMapping(method = RequestMethod.PUT)
+    public ResponseEntity<Response> createRollingReserveFee(@Valid @RequestBody RollingReserveRequest request) {
+        return rollingReserveService.createRollingReserveFee(request);
     }
 
-    @RequestMapping(path = "/networkFee", method = RequestMethod.POST)
-    public ResponseEntity<BaseResponse> validateNetworkFeeConfirmation(@Valid @RequestBody NetworkFeeValidateRequest request) {
-        return feeService.validateNetworkFee(request);
+    @RequestMapping(method = RequestMethod.POST)
+    public ResponseEntity<BaseResponse> validateRollingReserveFee(@Valid @RequestBody RollingReserveValidateRequest request) {
+        return rollingReserveService.validateRollingReserve(request);
     }
 }
