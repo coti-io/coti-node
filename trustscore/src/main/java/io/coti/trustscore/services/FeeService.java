@@ -5,9 +5,12 @@ import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
-import io.coti.trustscore.http.*;
+import io.coti.basenode.services.TransactionHelper;
+import io.coti.trustscore.http.NetworkFeeRequest;
+import io.coti.trustscore.http.NetworkFeeResponse;
+import io.coti.trustscore.http.NetworkFeeValidateRequest;
 import io.coti.trustscore.http.data.NetworkFeeResponseData;
-import io.coti.trustscore.http.data.RollingReserveResponseData;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,19 +27,12 @@ import static io.coti.trustscore.http.HttpStringConstants.FULL_NODE_FEE_VALIDATI
 @Service
 public class FeeService {
 
-    @Value("${rolling.reserve.address}")
-    private Hash rollingReserveAddress;
-
     @Value("${network.fee.address}")
     private Hash networkFeeAddress;
-
-
     @Value("${network.fee.difference.validation}")
     private BigDecimal networkFeeDifferenceValidation;
-
-    @Value("${rolling.reserve.difference.validation}")
-    private BigDecimal rollingReserveDifferenceValidation;
-
+    @Autowired
+    private TransactionHelper transactionHelper;
 
     public ResponseEntity<Response> createNetworkFee(NetworkFeeRequest networkFeeRequest) {
         try {
@@ -49,8 +45,9 @@ public class FeeService {
                                 FULL_NODE_FEE_VALIDATION_ERROR));
             }
             BigDecimal originalAmount = fullNodeFeeData.getOriginalAmount();
-            BigDecimal fee = calculateNetworkFee(originalAmount);
-            NetworkFeeData networkFeeData = new NetworkFeeData(networkFeeAddress, fee, originalAmount, new Date());
+            BigDecimal reducedAmount = originalAmount.subtract(fullNodeFeeData.getAmount());
+            BigDecimal fee = calculateNetworkFee(reducedAmount);
+            NetworkFeeData networkFeeData = new NetworkFeeData(networkFeeAddress, fee, originalAmount, reducedAmount, new Date());
             setNetworkFeeHash(networkFeeData);
             signNetworkFee(networkFeeData, true);
             NetworkFeeResponseData networkFeeResponseData = new NetworkFeeResponseData(networkFeeData);
@@ -62,39 +59,53 @@ public class FeeService {
         }
     }
 
-
-    public ResponseEntity<Response> createRollingReserveFee(RollingReserveRequest rollingReserveRequest) {
+    public ResponseEntity<BaseResponse> validateNetworkFee(NetworkFeeValidateRequest networkFeeValidateRequest) {
         try {
-            FullNodeFeeData fullNodeFeeData = rollingReserveRequest.getFullNodeFeeData();
+            FullNodeFeeData fullNodeFeeData = networkFeeValidateRequest.getFullNodeFeeData();
             if (!validateFullNodeFee(fullNodeFeeData)) {
                 return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST)
-                        .body(new RollingReserveResponse(
+                        .body(new NetworkFeeResponse(
                                 STATUS_ERROR,
                                 FULL_NODE_FEE_VALIDATION_ERROR));
             }
-            BigDecimal originalAmount = fullNodeFeeData.getOriginalAmount();
-            BigDecimal fee = calculateRollingReserveFee(rollingReserveRequest.getFullNodeFeeData().getOriginalAmount());
-            RollingReserveData rollingReserveData = new RollingReserveData(rollingReserveAddress, fee, originalAmount, new Date());
-            setRollingReserveNodeFeeHash(rollingReserveData);
-            signRollingReserveFee(rollingReserveData, true);
-            RollingReserveResponseData rollingReserveResponseData = new RollingReserveResponseData(rollingReserveData);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(new RollingReserveResponse(rollingReserveResponseData));
+            NetworkFeeData networkFeeData = networkFeeValidateRequest.getNetworkFeeData();
+            boolean isValid = isNetworkFeeValid(networkFeeData, fullNodeFeeData.getAmount());
+            signNetworkFee(networkFeeData, isValid);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(new NetworkFeeResponse(new NetworkFeeResponseData(networkFeeData)));
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
 
-    public boolean validateFullNodeFee(FullNodeFeeData fullNodeFeeData) {
+    private boolean validateFullNodeFee(FullNodeFeeData fullNodeFeeData) {
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
         baseTransactions.add(fullNodeFeeData);
         return BaseTransactionCrypto.FullNodeFeeData.isBaseTransactionValid(new TransactionData(baseTransactions), fullNodeFeeData);
     }
 
-    public void setRollingReserveNodeFeeHash(RollingReserveData rollingReserveData) throws ClassNotFoundException {
-        BaseTransactionCrypto.RollingReserveData.setBaseTransactionHash(rollingReserveData);
+    private boolean isNetworkFeeValid(NetworkFeeData networkFeeData, BigDecimal fullNodeFeeAmount) {
+
+        return networkFeeData.getReducedAmount().equals(networkFeeData.getOriginalAmount().subtract(fullNodeFeeAmount))
+                && isNetworkFeeValid(networkFeeData);
+    }
+
+    public boolean isNetworkFeeValid(NetworkFeeData networkFeeData) {
+        BigDecimal calculatedNetworkFee = calculateNetworkFee(networkFeeData.getReducedAmount());
+        int compareResult = networkFeeDifferenceValidation.compareTo(calculatedNetworkFee.subtract(networkFeeData.getAmount()).abs());
+        return compareResult >= 0 && validateNetworkFeeCrypto(networkFeeData);
+    }
+
+    private boolean validateNetworkFeeCrypto(NetworkFeeData networkFeeData) {
+        List<BaseTransactionData> baseTransactions = new ArrayList<>();
+        baseTransactions.add(networkFeeData);
+        return BaseTransactionCrypto.NetworkFeeData.isBaseTransactionValid(new TransactionData(baseTransactions), networkFeeData);
+    }
+
+    public boolean validateNetworkFee(NetworkFeeData networkFeeData) {
+        return validateNetworkFeeCrypto(networkFeeData) && transactionHelper.validateBaseTransactionTrustScoreNodeResult(networkFeeData);
     }
 
     public void setNetworkFeeHash(NetworkFeeData networkFeeData) throws ClassNotFoundException {
@@ -108,63 +119,9 @@ public class FeeService {
         BaseTransactionCrypto.NetworkFeeData.signMessage(new TransactionData(baseTransactions), networkFeeData, new TrustScoreNodeResultData(NodeCryptoHelper.getNodeHash(), isValid));
     }
 
-
-    public void signRollingReserveFee(RollingReserveData rollingReserveData, boolean isValid) throws ClassNotFoundException {
-        List<BaseTransactionData> baseTransactions = new ArrayList<>();
-        baseTransactions.add(rollingReserveData);
-        BaseTransactionCrypto.RollingReserveData.signMessage(new TransactionData(baseTransactions), rollingReserveData, new TrustScoreNodeResultData(NodeCryptoHelper.getNodeHash(), isValid));
-    }
-
-
-    public ResponseEntity<BaseResponse> validateNetworkFee(NetworkFeeValidateRequest networkFeeValidateRequest) {
-        try {
-            NetworkFeeData networkFeeData = networkFeeValidateRequest.getNetworkFeeData();
-            boolean isValid = isNetworkFeeValid(networkFeeData);
-            signNetworkFee(networkFeeData, isValid);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(new NetworkFeeResponse(new NetworkFeeResponseData(networkFeeData)));
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
-
-
-    public ResponseEntity<BaseResponse> validateRollingReserve(RollingReserveValidateRequest rollingReserveValidateRequest) {
-        try {
-            RollingReserveData rollingReserveData = rollingReserveValidateRequest.getRollingReserveData();
-            boolean isValid = isRollingReserveValid(rollingReserveData);
-            signRollingReserveFee(rollingReserveData, isValid);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(new RollingReserveResponse(new RollingReserveResponseData(rollingReserveData)));
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
-
-
-    private boolean isNetworkFeeValid(NetworkFeeData networkFeeData) {
-        BigDecimal calculatedReserve = calculateNetworkFee(networkFeeData.getOriginalAmount());
-        int compareResult = networkFeeDifferenceValidation.compareTo(calculatedReserve.subtract(networkFeeData.getAmount()).abs());
-        return compareResult >= 0;
-    }
-
-
-    private boolean isRollingReserveValid(RollingReserveData rollingReserveData) {
-        BigDecimal calculatedReserve = calculateRollingReserveFee(rollingReserveData.getOriginalAmount());
-        int compareResult = rollingReserveDifferenceValidation.compareTo(calculatedReserve.subtract(rollingReserveData.getAmount()).abs());
-        return compareResult >= 0;
-    }
-
-
     //TODO: temp implementation in calculating fees
-    private BigDecimal calculateNetworkFee(BigDecimal originalAmount) {
-        return originalAmount.multiply(new BigDecimal("0.01"));
+    private BigDecimal calculateNetworkFee(BigDecimal reducedAmount) {
+        return reducedAmount.multiply(new BigDecimal("0.01"));
     }
 
-
-    private BigDecimal calculateRollingReserveFee(BigDecimal originalAmount) {
-        return originalAmount.multiply(new BigDecimal("0.02"));
-    }
 }

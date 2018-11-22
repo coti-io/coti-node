@@ -18,8 +18,9 @@ public class NetworkFeeData extends OutputBaseTransactionData implements ITrustS
         super();
     }
 
-    public NetworkFeeData(Hash addressHash, BigDecimal amount, BigDecimal originalAmount, Date createTime) {
+    public NetworkFeeData(Hash addressHash, BigDecimal amount, BigDecimal originalAmount, BigDecimal reducedAmount,Date createTime) {
         super(addressHash, amount, originalAmount, createTime);
+        this.setReducedAmount(reducedAmount);
     }
 
     @Override
