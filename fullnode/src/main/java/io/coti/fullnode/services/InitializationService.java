@@ -7,6 +7,7 @@ import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
 import io.coti.basenode.services.interfaces.INetworkService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 @Service
+@Slf4j
 public class InitializationService extends BaseNodeInitializationService {
     @Autowired
     private CommunicationService communicationService;
@@ -27,8 +29,8 @@ public class InitializationService extends BaseNodeInitializationService {
     @Autowired
     private NetworkNodeCrypto networkNodeCrypto;
 
-    @Value("5.0")
-    private double nodeFee;
+    @Value("${fee.percentage}")
+    private Double nodeFee;
 
     @PostConstruct
     public void init() {
@@ -50,8 +52,22 @@ public class InitializationService extends BaseNodeInitializationService {
     }
 
     protected NetworkNodeData createNodeProperties() {
-        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), nodeFee);
-        networkNodeCrypto.signMessage(networkNodeData);
-        return networkNodeData;
+        if(validateFeePercentage(nodeFee)){
+            NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), nodeFee);
+            networkNodeCrypto.signMessage(networkNodeData);
+            return networkNodeData;
+        }
+        return new NetworkNodeData();
     }
+
+    private boolean validateFeePercentage(Double feePercentage){
+        if (feePercentage < 0.0 || feePercentage > 100.0) {
+            log.error("Fee Percentage is invalid, please fix fee.percentage property by following coti instructions. " +
+                    "Shutting down the server! feePercentage: {} ", feePercentage);
+            System.exit(-1);
+            return false;
+        }
+        return true;
+    }
+
 }

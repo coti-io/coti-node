@@ -6,16 +6,15 @@ import io.coti.basenode.data.NetworkDetails;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.database.Interfaces.IRocksDBConnector;
+import io.coti.nodemanager.crypto.CCAApprovementResponseCrypto;
 import io.coti.nodemanager.data.ActiveNodeData;
 import io.coti.nodemanager.data.NodeHistoryData;
 import io.coti.nodemanager.data.NodeNetworkDataTimestamp;
 import io.coti.nodemanager.data.SingleNodeDetailsForWallet;
 import io.coti.nodemanager.database.NetworkNodeStatus;
-import io.coti.nodemanager.database.RocksDBConnector;
 import io.coti.nodemanager.model.ActiveNode;
 import io.coti.nodemanager.model.NodeHistory;
 import io.coti.nodemanager.services.interfaces.INodeManagementService;
-import io.coti.nodemanager.services.interfaces.ITrustScoreService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.map.HashedMap;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +25,6 @@ import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -36,34 +34,30 @@ import java.util.stream.Collectors;
 @Service
 public class NodeManagementService implements INodeManagementService {
 
-    private NetworkDetails networkDetails = new NetworkDetails();
-
-    private final IPropagationPublisher propagationPublisher;
-
-    private final NetworkNodeCrypto networkNodeCrypto;
-
-    private final NodeHistory nodeHistory;
-
     public static final String FULL_NODES_FORWALLET_KEY = "FullNodes";
     public static final String TRUST_SCORE_NODES_FORWALLET_KEY = "TrustScoreNodes";
-
-
+    private final IPropagationPublisher propagationPublisher;
+    private final NetworkNodeCrypto networkNodeCrypto;
+    private final CCAApprovementResponseCrypto ccaApprovementResponseCrypto;
+    private final NodeHistory nodeHistory;
+    private final IRocksDBConnector dataBaseConnector;
+    private final ActiveNode activeNode;
+    private NetworkDetails networkDetails = new NetworkDetails();
+    @Value("${cca.public.key}")
+    private String ccaPublicKey;
     @Value("${propagation.port}")
     private String propagationPort;
-    private final IRocksDBConnector dataBaseConnector;
-
-    private final ITrustScoreService trustScoreService;
-
-    private final ActiveNode activeNode;
 
     @Autowired
-    public NodeManagementService(IPropagationPublisher propagationPublisher, NetworkNodeCrypto networkNodeCrypto, NodeHistory nodeHistory, IRocksDBConnector dataBaseConnector, ITrustScoreService trustScoreService, ActiveNode activeNode) {
+    public NodeManagementService(IPropagationPublisher propagationPublisher, NetworkNodeCrypto networkNodeCrypto,
+                                 NodeHistory nodeHistory, IRocksDBConnector dataBaseConnector, ActiveNode activeNode,
+                                 CCAApprovementResponseCrypto ccaApprovementResponseCrypto) {
         this.propagationPublisher = propagationPublisher;
         this.networkNodeCrypto = networkNodeCrypto;
         this.nodeHistory = nodeHistory;
         this.dataBaseConnector = dataBaseConnector;
-        this.trustScoreService = trustScoreService;
         this.activeNode = activeNode;
+        this.ccaApprovementResponseCrypto = ccaApprovementResponseCrypto;
     }
 
     @PostConstruct
@@ -85,18 +79,12 @@ public class NodeManagementService implements INodeManagementService {
     }
 
     public NetworkDetails newNode(NetworkNodeData networkNodeData) throws IllegalAccessException {
-        if (!validateNodeProperties(networkNodeData)) {
-            log.error("Illegal networkNodeData properties received: {}", networkNodeData);
-            throw new IllegalAccessException("The node " + networkNodeData + "didn't pass validation");
-        }
-        if(NodeType.FullNode.equals(networkNodeData.getNodeType())){
-            networkNodeData.setTrustScore(trustScoreService.getTrustScore(networkNodeData, networkDetails.getTrustScoreNetworkNodesList()));
-        }
+        validateNetworkNodeData(networkNodeData);
         if (networkDetails.isNodeExistsOnMemory(networkNodeData)) {
             boolean isUpdated = networkDetails.updateNetworkNode(networkNodeData);
-            if(isUpdated){
+            if (isUpdated) {
                 ActiveNodeData activeNodeData = activeNode.getByHash(networkNodeData.getHash());
-                if(activeNodeData == null){
+                if (activeNodeData == null) {
                     log.error("Node {} wasn't found in activeNode table but was found in memory!");
                 }
             }
@@ -108,6 +96,24 @@ public class NodeManagementService implements INodeManagementService {
         insertToDB(networkNodeData, NetworkNodeStatus.ACTIVE);
         updateNetworkChanges();
         return networkDetails;
+    }
+
+    private void validateNetworkNodeData(NetworkNodeData networkNodeData) throws IllegalAccessException {
+        if (!validateNodeProperties(networkNodeData)) {
+            log.error("Illegal networkNodeData properties received: {}", networkNodeData);
+            throw new IllegalAccessException("The node " + networkNodeData + "didn't pass validation");
+        }
+        if (!validateCCAApprovement(networkNodeData)) {
+            log.error("Illegal ccaApprovement: {}", networkNodeData);
+            throw new IllegalAccessException("The node " + networkNodeData + "didn't pass cca validation");
+        }
+    }
+
+    private boolean validateCCAApprovement(NetworkNodeData networkNodeData) {
+//        CCAApprovementResponse ccaApprovementResponse = networkNodeData.getCcaApprovementResponse();
+//        ccaApprovementResponse.setSignerHash(new Hash(ccaPublicKey));
+//        return ccaApprovementResponseCrypto.verifySignature(ccaApprovementResponse);
+        return true;
     }
 
     private boolean validateNodeProperties(NetworkNodeData networkNodeData) {
@@ -166,9 +172,9 @@ public class NodeManagementService implements INodeManagementService {
     }
 
     private SingleNodeDetailsForWallet createSingleNodeDetailsForWallet(NetworkNodeData node) {
-        if(NodeType.FullNode.equals(node.getNodeType())) {
+        if (NodeType.FullNode.equals(node.getNodeType())) {
             return new SingleNodeDetailsForWallet(node.getHash(), node.getHttpFullAddress(), node.getFeePercentage(), node.getTrustScore());
         }
-        return new SingleNodeDetailsForWallet(node.getHash(), node.getHttpFullAddress(),null, null);
+        return new SingleNodeDetailsForWallet(node.getHash(), node.getHttpFullAddress(), null, null);
     }
 }

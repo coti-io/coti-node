@@ -7,6 +7,8 @@ import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.database.Interfaces.IRocksDBConnector;
 import io.coti.basenode.http.GetTransactionBatchResponse;
+import io.coti.basenode.http.data.CCAApprovementResponse;
+import io.coti.basenode.http.data.CCAApprovmentRequest;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.LiveView.LiveViewService;
 import io.coti.basenode.services.interfaces.*;
@@ -73,6 +75,8 @@ public abstract class BaseNodeInitializationService {
     private IPropagationSubscriber propagationSubscriber;
     @Autowired
     private RestTemplate restTemplate;
+    @Autowired
+    private CCAApprovementService ccaApprovementService;
 
     public void init() {
         try {
@@ -180,6 +184,8 @@ public abstract class BaseNodeInitializationService {
 
     private ResponseEntity<String> addNewNodeToNodeManager(NetworkNodeData networkNodeData) {
         try {
+            handleCCAApprovement(networkNodeData);
+            networkNodeData.setTrustScore(networkNodeData.getCcaApprovementResponse().getTrustScore());
             String newNodeURL = nodeManagerAddress + NODE_MANAGER_NODES_ENDPOINT;
             HttpEntity<NetworkNodeData> entity = new HttpEntity<>(networkNodeData);
             return restTemplate.exchange(newNodeURL, HttpMethod.PUT, entity, String.class);
@@ -193,6 +199,24 @@ public abstract class BaseNodeInitializationService {
     private NetworkDetails getNetworkDetailsFromNodeManager() {
         String newNodeURL = nodeManagerAddress + NODE_MANAGER_NODES_ENDPOINT;
         return restTemplate.getForEntity(newNodeURL, NetworkDetails.class).getBody();
+    }
+
+    private CCAApprovmentRequest createCCAApprovementRequest(NetworkNodeData networkNodeData){
+        return new CCAApprovmentRequest(networkNodeData.getNodeHash(), networkNodeData.getSignature());
+    }
+
+    private void handleCCAApprovement(NetworkNodeData networkNodeData){
+        CCAApprovmentRequest ccaApprovmentRequest = createCCAApprovementRequest(networkNodeData);
+        ResponseEntity<CCAApprovementResponse> ccaApprovementResponseEntity = ccaApprovementService.sendCCAApprovment(ccaApprovmentRequest);
+        log.info("Response has returned from cca: {}", ccaApprovementResponseEntity);
+        CCAApprovementResponse approvementResponse = ccaApprovementResponseEntity.getBody();
+        if(approvementResponse != null){
+            networkNodeData.setCcaApprovementResponse(approvementResponse);
+        }
+        else{
+            log.error("cca returned a null object: {} . closing server", ccaApprovementResponseEntity);
+            System.exit(-1);
+        }
     }
 
 

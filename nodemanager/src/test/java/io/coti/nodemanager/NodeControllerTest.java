@@ -8,11 +8,11 @@ import io.coti.basenode.data.NodeType;
 import io.coti.basenode.database.Interfaces.IRocksDBConnector;
 import io.coti.basenode.http.BaseNodeHttpStringConstants;
 import io.coti.nodemanager.controllers.NodeController;
+import io.coti.nodemanager.crypto.CCAApprovementResponseCrypto;
 import io.coti.nodemanager.database.RocksDBConnector;
 import io.coti.nodemanager.model.ActiveNode;
 import io.coti.nodemanager.model.NodeHistory;
 import io.coti.nodemanager.services.NodeManagementService;
-import io.coti.nodemanager.services.interfaces.ITrustScoreService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,10 +57,10 @@ public class NodeControllerTest {
     private RocksDBConnector dataBaseConnector;
 
     @MockBean
-    private ITrustScoreService trustScoreService;
+    private ActiveNode activeNode;
 
     @MockBean
-    private ActiveNode activeNode;
+    private CCAApprovementResponseCrypto ccaApprovementResponseCrypto;
 
     @Autowired
     private NodeManagementService nodeManagerServiceMock;
@@ -89,17 +89,18 @@ public class NodeControllerTest {
     }
 
     @Test
-    public void testInvalidSignature() {
+    public void testInvalidNodeSignature() {
         when(networkNodeCrypto.verifySignature(any())).thenReturn(false);
+        when(ccaApprovementResponseCrypto.verifySignature(any())).thenReturn(false);
         Hash nodeHash = new Hash("1");
         NodeManagementService nodeManagerServiceMock = new NodeManagementService(propagationPublisher, networkNodeCrypto,
-                nodeHistory, dataBaseConnector, trustScoreService, activeNode);
+                nodeHistory, dataBaseConnector, activeNode, ccaApprovementResponseCrypto);
         NodeController nodeController = new NodeController(nodeManagerServiceMock);
 
         NetworkNodeData nodeToTest = new NetworkNodeData(NodeType.FullNode, nodeManagerIp, nodeManagerHttpPort, nodeHash);
         ResponseEntity<String> responseEntity = nodeController.newNode(nodeToTest);
-        Assert.assertTrue(" Http status wasn't correct ", HttpStatus.CONFLICT.equals(responseEntity.getStatusCode()));
-        Assert.assertTrue("Http body wasn't correct",
+        Assert.assertTrue("Http status wasn't correct ", HttpStatus.CONFLICT.equals(responseEntity.getStatusCode()));
+        Assert.assertTrue("Http body wasn't correct ",
                 BaseNodeHttpStringConstants.VALIDATION_EXCEPTION_MESSAGE.equals(responseEntity.getBody()));
     }
 
