@@ -1,6 +1,5 @@
 package io.coti.trustscore.services;
 
-import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.NetworkNodeData;
@@ -45,8 +44,7 @@ public class InitializationService extends BaseNodeInitializationService {
         networkService.setRecoveryServerAddress(zerospendNetworkNodeData.getHttpFullAddress());
         super.init();
         communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress());
-        List<NetworkNodeData> dspNetworkNodeData = networkDetailsService.getNetworkDetails().getDspNetworkNodesList();
-        Collections.shuffle(dspNetworkNodeData);
+        List<NetworkNodeData> dspNetworkNodeData = networkDetailsService.getShuffledNetworkNodeDataListFromMapValues(networkDetailsService.getNetworkDetails().getDspNetworkNodesMap());
         dspNetworkNodeData.forEach(node -> communicationService.addSubscription(node.getPropagationFullAddress()));
     }
 

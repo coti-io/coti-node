@@ -2,6 +2,7 @@ package io.coti.fullnode.services;
 
 import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.BaseNodeInitializationService;
@@ -15,8 +16,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -40,13 +41,12 @@ public class InitializationService extends BaseNodeInitializationService {
         super.connectToNetwork();
         communicationService.initSubscriber(NodeType.FullNode);
 
-        List<NetworkNodeData> dspNetworkNodeData = networkDetailsService.getNetworkDetails().getDspNetworkNodesList();
+        List<NetworkNodeData> dspNetworkNodeData = networkDetailsService.getShuffledNetworkNodeDataListFromMapValues(networkDetailsService.getNetworkDetails().getDspNetworkNodesMap()) ;
         if(!dspNetworkNodeData.isEmpty()){
             networkService.setRecoveryServerAddress(dspNetworkNodeData.get(0).getHttpFullAddress());
         }
         super.init();
 
-        Collections.shuffle(dspNetworkNodeData);
         for (int i = 0; i < dspNetworkNodeData.size() && i < 2; i++) {
             communicationService.addSubscription(dspNetworkNodeData.get(i).getPropagationFullAddress());
             communicationService.addSender(dspNetworkNodeData.get(i).getReceivingFullAddress());

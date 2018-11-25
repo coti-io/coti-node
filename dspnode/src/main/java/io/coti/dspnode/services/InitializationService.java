@@ -1,6 +1,5 @@
 package io.coti.dspnode.services;
 
-import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.AddressData;
@@ -69,9 +68,9 @@ public class InitializationService extends BaseNodeInitializationService {
         communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
         communicationService.addSender(zerospendNetworkNodeData.getReceivingFullAddress());
         communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress());
-        List<NetworkNodeData> dspNetworkNodeDataList = networkDetailsService.getNetworkDetails().getDspNetworkNodesList();
+        List<NetworkNodeData> dspNetworkNodeDataList = networkDetailsService
+                .getShuffledNetworkNodeDataListFromMapValues(networkDetailsService.getNetworkDetails().getDspNetworkNodesMap());
         dspNetworkNodeDataList.removeIf(dsp -> dsp.getAddress().equals(nodeIp) && dsp.getHttpPort().equals(serverPort));
-        Collections.shuffle(dspNetworkNodeDataList);
         dspNetworkNodeDataList.forEach(node -> communicationService.addSubscription(node.getPropagationFullAddress()));
 
     }

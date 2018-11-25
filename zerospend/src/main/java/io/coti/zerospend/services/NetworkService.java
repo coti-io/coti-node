@@ -18,7 +18,7 @@ public class NetworkService extends BaseNodeNetworkService {
     public void handleNetworkChanges(NetworkDetails newNetworkDetails) {
         log.info("New newNetworkDetails structure received: {}", networkDetailsService.getNetWorkSummary(newNetworkDetails));
         List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(
-                newNetworkDetails.getDspNetworkNodesList(), networkDetailsService.getNetworkDetails().getDspNetworkNodesList()
+                newNetworkDetails.getDspNetworkNodesMap().values(), networkDetailsService.getNetworkDetails().getDspNetworkNodesMap().values()
         ));
         addListToSubscriptionAndNetwork(dspNodesToConnect);
         networkDetailsService.setNetworkDetails(newNetworkDetails);

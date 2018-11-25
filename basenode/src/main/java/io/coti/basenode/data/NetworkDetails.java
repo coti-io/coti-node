@@ -4,41 +4,41 @@ import io.coti.basenode.data.interfaces.IEntity;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.xml.soap.Node;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Data
 @Slf4j
 public class NetworkDetails implements IEntity {
-    private List<NetworkNodeData> dspNetworkNodesList;
-    private List<NetworkNodeData> fullNetworkNodesList;
-    private List<NetworkNodeData> trustScoreNetworkNodesList;
+    private Map<Hash, NetworkNodeData> dspNetworkNodesMap;
+    private Map<Hash, NetworkNodeData> fullNodeNetworkNodesMap;
+    private Map<Hash, NetworkNodeData> trustScoreNetworkNodesMap;
     private String nodeManagerPropagationAddress;
     private NetworkNodeData zerospendServer;
 
-    private Map<NodeType, List<NetworkNodeData>> nodeMapsFactory;
+    private Map<NodeType, Map<Hash, NetworkNodeData>> nodeMapsFactory;
 
 
 
     public NetworkDetails() {
-        dspNetworkNodesList = Collections.synchronizedList(new ArrayList<>());
-        fullNetworkNodesList = Collections.synchronizedList(new ArrayList<>());
-        trustScoreNetworkNodesList = Collections.synchronizedList(new ArrayList<>());
+        dspNetworkNodesMap = new ConcurrentHashMap<>();
+        fullNodeNetworkNodesMap = new ConcurrentHashMap<>();
+        trustScoreNetworkNodesMap = new ConcurrentHashMap<>();
 
         nodeMapsFactory = new EnumMap<>(NodeType.class);
-        nodeMapsFactory.put(NodeType.FullNode, fullNetworkNodesList);
-        nodeMapsFactory.put(NodeType.DspNode, dspNetworkNodesList);
-        nodeMapsFactory.put(NodeType.TrustScoreNode, trustScoreNetworkNodesList);
+        nodeMapsFactory.put(NodeType.FullNode, fullNodeNetworkNodesMap);
+        nodeMapsFactory.put(NodeType.DspNode, dspNetworkNodesMap);
+        nodeMapsFactory.put(NodeType.TrustScoreNode, trustScoreNetworkNodesMap);
 
     }
 
-    public List<NetworkNodeData> getListFromFactory(NodeType nodeType) {
-        List<NetworkNodeData> listToGet = nodeMapsFactory.get(nodeType);
-        if(listToGet == null){
+    public Map<Hash, NetworkNodeData>  getListFromFactory(NodeType nodeType) {
+        Map<Hash, NetworkNodeData> mapToGet = nodeMapsFactory.get(nodeType);
+        if(mapToGet == null){
             log.error("Unsupported networkNodeData type ( {} ) is not deleted", nodeType);
-            return Collections.emptyList();
+            return Collections.emptyMap();
         }
-        return listToGet;
+        return mapToGet;
     }
     
 

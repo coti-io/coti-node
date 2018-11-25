@@ -1,5 +1,6 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkDetails;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.services.interfaces.INetworkDetailsService;
@@ -8,8 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -33,7 +36,7 @@ public class BaseNodeNetworkService implements INetworkService {
         this.recoveryServerAddress = recoveryServerAddress;
     }
 
-    public void addListToSubscriptionAndNetwork(List<NetworkNodeData> nodeDataList) {
+    public void addListToSubscriptionAndNetwork(Collection< NetworkNodeData> nodeDataList) {
         Iterator<NetworkNodeData> nodeDataIterator = nodeDataList.iterator();
         while (nodeDataIterator.hasNext()) {
             NetworkNodeData node = nodeDataIterator.next();

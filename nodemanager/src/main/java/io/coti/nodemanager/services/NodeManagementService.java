@@ -158,10 +158,10 @@ public class NodeManagementService implements INodeManagementService {
 
     public Map<String, List<SingleNodeDetailsForWallet>> createNetworkDetailsForWallet() {
         Map<String, List<SingleNodeDetailsForWallet>> networkDetailsForWallet = new HashedMap<>();
-        List<SingleNodeDetailsForWallet> fullNodesDetailsForWallet = networkDetailsService.getNetworkDetails().getFullNetworkNodesList().stream()
+        List<SingleNodeDetailsForWallet> fullNodesDetailsForWallet = networkDetailsService.getNetworkDetails().getFullNodeNetworkNodesMap().values().stream()
                 .map(this::createSingleNodeDetailsForWallet)
                 .collect(Collectors.toList());
-        List<SingleNodeDetailsForWallet> trustScoreNodesDetailsForWallet = networkDetailsService.getNetworkDetails().getTrustScoreNetworkNodesList().stream()
+        List<SingleNodeDetailsForWallet> trustScoreNodesDetailsForWallet = networkDetailsService.getNetworkDetails().getTrustScoreNetworkNodesMap().values().stream()
                 .map(this::createSingleNodeDetailsForWallet)
                 .collect(Collectors.toList());
         networkDetailsForWallet.put(FULL_NODES_FORWALLET_KEY, fullNodesDetailsForWallet);

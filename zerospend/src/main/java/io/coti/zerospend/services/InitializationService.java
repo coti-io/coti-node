@@ -1,6 +1,5 @@
 package io.coti.zerospend.services;
 
-import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.DspVote;
@@ -17,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.function.Consumer;
 
 @Service
@@ -57,7 +57,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
 
         communicationService.initPropagator(propagationPort);
-        networkService.addListToSubscriptionAndNetwork(networkDetailsService.getNetworkDetails().getDspNetworkNodesList());
+        networkService.addListToSubscriptionAndNetwork(networkDetailsService.getNetworkDetails().getDspNetworkNodesMap().values());
         if (transactions.isEmpty()) {
             transactionCreationService.createGenesisTransactions();
         }

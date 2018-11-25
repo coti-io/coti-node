@@ -1,6 +1,5 @@
 package io.coti.zerospend.services;
 
-import afu.org.checkerframework.checker.units.qual.A;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.crypto.DspConsensusCrypto;
 import io.coti.basenode.crypto.DspVoteCrypto;
@@ -15,8 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,7 +50,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
 
     public void preparePropagatedTransactionForVoting(TransactionData transactionData) {
         List<Hash> dspHashList = new LinkedList<>();
-        networkDetailsService.getNetworkDetails().getDspNetworkNodesList().forEach(node->
+        networkDetailsService.getNetworkDetails().getDspNetworkNodesMap().forEach((hash,node)->
             dspHashList.add(node.getHash())
         );
         log.debug("Received new transaction. Live DSP Nodes: {}", dspHashList);

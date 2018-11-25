@@ -24,15 +24,15 @@ public class NetworkService extends BaseNodeNetworkService {
     @Override
     public void handleNetworkChanges(NetworkDetails newNetworkDetails) {
         log.info("New newNetworkDetails structure received: {}", networkDetailsService.getNetWorkSummary(newNetworkDetails));
-        networkDetailsService.getNetworkDetails().getDspNetworkNodesList().forEach(dsp -> {
-            if (!newNetworkDetails.getDspNetworkNodesList().contains(dsp)) {
-                log.info("dsp {} is about disconnect from subscribing and receiving ", dsp.getHttpFullAddress());
-                communicationService.removeSubscription(dsp.getPropagationFullAddress(), dsp.getNodeType());
-                communicationService.removeSender(dsp.getReceivingFullAddress(), dsp.getNodeType());
+        networkDetailsService.getNetworkDetails().getDspNetworkNodesMap().forEach((hash, dspNode) -> {
+            if (!newNetworkDetails.getDspNetworkNodesMap().containsKey(hash)) {
+                log.info("dsp {} is about disconnect from subscribing and receiving ", dspNode.getHttpFullAddress());
+                communicationService.removeSubscription(dspNode.getPropagationFullAddress(), dspNode.getNodeType());
+                communicationService.removeSender(dspNode.getReceivingFullAddress(), dspNode.getNodeType());
             }
         });
-        List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetworkDetails.getDspNetworkNodesList(),
-                networkDetailsService.getNetworkDetails().getDspNetworkNodesList()));
+        List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetworkDetails.getDspNetworkNodesMap().values(),
+                networkDetailsService.getNetworkDetails().getDspNetworkNodesMap().values()));
 
         List<NetworkNodeData> twoDspNodes = new LinkedList<>();
         Collections.shuffle(dspNodesToConnect);

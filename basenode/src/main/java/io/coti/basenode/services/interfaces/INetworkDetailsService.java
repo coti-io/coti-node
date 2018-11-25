@@ -1,5 +1,6 @@
 package io.coti.basenode.services.interfaces;
 
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkDetails;
 import io.coti.basenode.data.NetworkNodeData;
 
@@ -27,5 +28,6 @@ public interface INetworkDetailsService {
 
     void setNetworkDetails(NetworkDetails networkDetails);
 
+    List<NetworkNodeData> getShuffledNetworkNodeDataListFromMapValues(Map<Hash, NetworkNodeData> dataMap);
 
 }

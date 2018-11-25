@@ -12,10 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.*;
 
 @Service
@@ -44,9 +41,9 @@ public class HealthCheckService {
             boolean networkChanged = false;
             ExecutorService executorService = Executors.newFixedThreadPool(10);
             List<Callable<Boolean>> checkNodesListTasks = new ArrayList<>(3);
-            checkNodesListTasks.add((() -> checkNodesList(networkDetailsService.getNetworkDetails().getDspNetworkNodesList())));
-            checkNodesListTasks.add((() -> checkNodesList(networkDetailsService.getNetworkDetails().getTrustScoreNetworkNodesList())));
-            checkNodesListTasks.add((() -> checkNodesList(networkDetailsService.getNetworkDetails().getFullNetworkNodesList())));
+            checkNodesListTasks.add((() -> checkNodesList(networkDetailsService.getNetworkDetails().getDspNetworkNodesMap().values())));
+            checkNodesListTasks.add((() -> checkNodesList(networkDetailsService.getNetworkDetails().getTrustScoreNetworkNodesMap().values())));
+            checkNodesListTasks.add((() -> checkNodesList(networkDetailsService.getNetworkDetails().getFullNodeNetworkNodesMap().values())));
             List<Future<Boolean>> checkNodesListFutures = executorService.invokeAll(checkNodesListTasks);
             for (Future<Boolean> future : checkNodesListFutures) {
                 if (future.get() == true) {
@@ -110,7 +107,7 @@ public class HealthCheckService {
     }
 
 
-    private synchronized boolean checkNodesList(List<NetworkNodeData> nodesList) {
+    private synchronized boolean checkNodesList(Collection<NetworkNodeData> nodesList) {
         boolean networkChanged = false;
         try {
             List<NetworkNodeData> nodesToRemove = new LinkedList<>();

@@ -26,7 +26,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
@@ -152,8 +151,8 @@ public class TransactionService extends BaseNodeTransactionService {
             transactionHelper.setTransactionStateToSaved(transactionData);
             webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
             final TransactionData finalTransactionData = transactionData;
-            networkDetailsService.getNetworkDetails().getDspNetworkNodesList().forEach(address ->
-                    sender.send(finalTransactionData, address.getReceivingFullAddress())
+            networkDetailsService.getNetworkDetails().getDspNetworkNodesMap().forEach ((hash, networkNode) ->
+                    sender.send(finalTransactionData, networkNode.getReceivingFullAddress())
             );
             transactionHelper.setTransactionStateToFinished(transactionData);
             return ResponseEntity

@@ -1,9 +1,12 @@
 package io.coti.basenode.services.interfaces;
 
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkDetails;
 import io.coti.basenode.data.NetworkNodeData;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public interface INetworkService {
 
@@ -13,6 +16,6 @@ public interface INetworkService {
 
     void setRecoveryServerAddress(String recoveryServerAddress);
 
-    void addListToSubscriptionAndNetwork(List<NetworkNodeData> nodeDataList);
+    void addListToSubscriptionAndNetwork(Collection<NetworkNodeData> nodeDataList);
 
 }

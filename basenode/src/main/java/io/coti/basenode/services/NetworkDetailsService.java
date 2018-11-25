@@ -1,5 +1,6 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkDetails;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
@@ -8,10 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -20,7 +18,7 @@ public class NetworkDetailsService implements INetworkDetailsService {
     private NetworkDetails networkDetails;
 
     @PostConstruct
-    public void init(){
+    public void init() {
         networkDetails = new NetworkDetails();
     }
 
@@ -29,15 +27,22 @@ public class NetworkDetailsService implements INetworkDetailsService {
         return networkDetails;
     }
 
-    public void setNetworkDetails(NetworkDetails networkDetails){
+    public void setNetworkDetails(NetworkDetails networkDetails) {
         this.networkDetails = networkDetails;
+    }
+
+    @Override
+    public List<NetworkNodeData> getShuffledNetworkNodeDataListFromMapValues(Map<Hash, NetworkNodeData> dataMap) {
+        List<NetworkNodeData> nodeDataList = new LinkedList<>(dataMap.values());
+        Collections.shuffle(nodeDataList);
+        return nodeDataList;
     }
 
     public void addNode(NetworkNodeData networkNodeData) {
         if (NodeType.ZeroSpendServer.equals(networkNodeData.getNodeType())) {
             networkDetails.setZerospendServer(networkNodeData);
         } else {
-            networkDetails.getListFromFactory(networkNodeData.getNodeType()).add(networkNodeData);
+            networkDetails.getListFromFactory(networkNodeData.getNodeType()).put(networkNodeData.getHash(), networkNodeData);
         }
     }
 
@@ -45,7 +50,7 @@ public class NetworkDetailsService implements INetworkDetailsService {
         if (NodeType.ZeroSpendServer.equals(networkNodeData.getNodeType())) {
             networkDetails.setZerospendServer(new NetworkNodeData());
         } else {
-            if (!networkDetails.getListFromFactory(networkNodeData.getNodeType()).remove(networkNodeData)) {
+            if (networkDetails.getListFromFactory(networkNodeData.getNodeType()).remove(networkNodeData.getHash()) == null) {
                 log.info("networkNode {} wasn't found", networkNodeData);
                 return;
             }
@@ -59,7 +64,7 @@ public class NetworkDetailsService implements INetworkDetailsService {
                 return true;
             }
         } else {
-            if (networkDetails.getListFromFactory(networkNodeData.getNodeType()).contains(networkNodeData)) {
+            if (networkDetails.getListFromFactory(networkNodeData.getNodeType()).containsKey(networkNodeData.getHash())) {
                 return true;
             }
         }
@@ -72,8 +77,8 @@ public class NetworkDetailsService implements INetworkDetailsService {
         if (NodeType.ZeroSpendServer.equals(networkNodeData.getNodeType())) {
             node = networkDetails.getZerospendServer();
         } else {
-            List<NetworkNodeData> networkListToChange = networkDetails.getListFromFactory(networkNodeData.getNodeType());
-            for (NetworkNodeData iteratedNode : networkListToChange) {
+            Map<Hash, NetworkNodeData> networkMapToChange = networkDetails.getListFromFactory(networkNodeData.getNodeType());
+            for (NetworkNodeData iteratedNode : networkMapToChange.values()) {
                 if (iteratedNode.getHash().equals(networkNodeData.getHash())) {
                     node = iteratedNode;
                 }
@@ -93,12 +98,11 @@ public class NetworkDetailsService implements INetworkDetailsService {
     }
 
 
-
     public Map<String, List<String>> getNetWorkSummary(NetworkDetails networkDetails) {
         Map<String, List<String>> summaryMap = new HashMap<>();
-        createSummaryStringFromNodeList(networkDetails.getFullNetworkNodesList(), summaryMap);
-        createSummaryStringFromNodeList(networkDetails.getDspNetworkNodesList(), summaryMap);
-        createSummaryStringFromNodeList(networkDetails.getTrustScoreNetworkNodesList(), summaryMap);
+        createSummaryStringFromNodeList(networkDetails.getFullNodeNetworkNodesMap(), summaryMap);
+        createSummaryStringFromNodeList(networkDetails.getDspNetworkNodesMap(), summaryMap);
+        createSummaryStringFromNodeList(networkDetails.getTrustScoreNetworkNodesMap(), summaryMap);
         if (networkDetails.getZerospendServer() != null) {
             summaryMap.put(networkDetails.getZerospendServer().getNodeType().name(), new LinkedList<>());
             summaryMap.get(networkDetails.getZerospendServer().getNodeType().name()).add(networkDetails.getZerospendServer().getHttpFullAddress());
@@ -106,11 +110,11 @@ public class NetworkDetailsService implements INetworkDetailsService {
         return summaryMap;
     }
 
-    private void createSummaryStringFromNodeList(List<NetworkNodeData> networkNodeDataList, Map<String, List<String>> summaryMap) {
-        if (!networkNodeDataList.isEmpty()) {
-            String nodeTypeAsString = networkNodeDataList.get(0).getNodeType().name();
+    private void createSummaryStringFromNodeList(Map<Hash, NetworkNodeData> networkNodeDataMap, Map<String, List<String>> summaryMap) {
+        if (!networkNodeDataMap.isEmpty()) {
+            String nodeTypeAsString = networkNodeDataMap.entrySet().iterator().next().getValue().getNodeType().name();
             summaryMap.put(nodeTypeAsString, new LinkedList<String>());
-            for (NetworkNodeData nodeData : networkNodeDataList) {
+            for (NetworkNodeData nodeData : networkNodeDataMap.values()) {
                 summaryMap.get(nodeTypeAsString).add(nodeData.getHttpFullAddress());
             }
         }
