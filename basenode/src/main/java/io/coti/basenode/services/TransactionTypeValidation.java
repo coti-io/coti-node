@@ -10,7 +10,23 @@ import java.util.List;
 @Slf4j
 public enum TransactionTypeValidation implements ITransactionTypeValidation {
     Payment(TransactionType.Payment),
-    Transfer(TransactionType.Transfer),
+    Transfer(TransactionType.Transfer) {
+        @Override
+        public boolean validateReducedAmount(List<OutputBaseTransactionData> outputBaseTransactions) {
+            BigDecimal reducedAmount = BigDecimal.ZERO;
+            BigDecimal networkFeeAmount = BigDecimal.ZERO;
+
+            for (OutputBaseTransactionData outputBaseTransactionData : outputBaseTransactions) {
+                if (NetworkFeeData.class.isInstance(outputBaseTransactionData)) {
+                    reducedAmount = ((NetworkFeeData) outputBaseTransactionData).getReducedAmount();
+                    networkFeeAmount = outputBaseTransactionData.getAmount();
+                } else if(ReceiverBaseTransactionData.class.isInstance(outputBaseTransactionData)) {
+                    return outputBaseTransactionData.getAmount().equals(reducedAmount.add(networkFeeAmount));
+                }
+            }
+            return false;
+        }
+    },
     ZeroSpend(TransactionType.ZeroSpend) {
         @Override
         public boolean validateInputBaseTransactions(TransactionData transactionData) {
@@ -65,7 +81,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
 
             for (int i = 0; i < outputBaseTransactions.size(); i++) {
                 OutputBaseTransactionData outputBaseTransactionData = outputBaseTransactions.get(i);
-                if (!Class.forName(outputBaseTransactionNames.get(i)).equals(outputBaseTransactionData)) {
+                if (!Class.forName(packagePath + outputBaseTransactionNames.get(i)).equals(outputBaseTransactionData.getClass())) {
                     return false;
                 }
                 if (!originalAmount.equals(BigDecimal.ZERO) && !originalAmount.equals((outputBaseTransactionData.getOriginalAmount()))) {

@@ -68,7 +68,8 @@ public class TransactionService extends BaseNodeTransactionService {
                         request.transactionDescription,
                         request.trustScoreResults,
                         request.createTime,
-                        request.senderHash);
+                        request.senderHash,
+                        request.type);
         try {
             log.debug("New transaction request is being processed. Transaction Hash = {}", request.hash);
             transactionCrypto.signMessage(transactionData);
