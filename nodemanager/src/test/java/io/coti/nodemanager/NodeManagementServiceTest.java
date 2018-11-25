@@ -5,6 +5,7 @@ import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
+import io.coti.basenode.services.interfaces.INetworkDetailsService;
 import io.coti.nodemanager.data.ActiveNodeData;
 import io.coti.nodemanager.data.NodeHistoryData;
 import io.coti.nodemanager.data.NodeNetworkDataTimestamp;
@@ -59,13 +60,17 @@ public class NodeManagementServiceTest {
     @Autowired
     private INodeManagementService nodeManagementService;
 
+    @Autowired
+    private INetworkDetailsService networkDetailsService;
+
     @Test
     public void testUpdateNetworkChanges() {
         NetworkNodeData nodeToTest = new NetworkNodeData(NodeType.FullNode, nodeManagerIp, nodeManagerHttpPort, new Hash("1"));
-        nodeManagementService.getAllNetworkData().addNode(nodeToTest);
+        networkDetailsService.addNode(nodeToTest);
         nodeManagementService.updateNetworkChanges();
-        verify(propagationPublisher).propagate(Mockito.eq(nodeManagementService.getAllNetworkData()), any(List.class));
-        nodeManagementService.getAllNetworkData().removeNode(nodeToTest);
+        verify(propagationPublisher).propagate(Mockito.eq(networkDetailsService.getNetworkDetails()), any(List.class));
+        networkDetailsService.removeNode(nodeToTest);
+        networkDetailsService.removeNode(nodeToTest);
     }
 
     @Test
@@ -76,7 +81,7 @@ public class NodeManagementServiceTest {
         INodeManagementService nodeManagementServiceMock = spy(nodeManagementService);
         LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
         when(nodeManagementServiceMock.getUTCnow()).thenReturn(localDateTime);
-        nodeManagementServiceMock.getAllNetworkData().addNode(nodeToTest);
+        networkDetailsService.addNode(nodeToTest);
         nodeManagementServiceMock.insertDeletedNodeRecord(nodeToTest);
         NodeNetworkDataTimestamp nodeNetworkDataTimestamp = new NodeNetworkDataTimestamp(localDateTime, nodeToTest);
         NodeHistoryData inactiveDbNode = new NodeHistoryData(NetworkNodeStatus.INACTIVE, nodeHash, nodeType);
@@ -120,8 +125,8 @@ public class NodeManagementServiceTest {
         verify(activeNodeHistorySpy).setNodeStatus(nodeStatus);
         verify(nodeHistory).put(activeNodeHistorySpy);
         Assert.assertTrue(activeNodeHistorySpy.getNodeHistory().size() == 2);
-        Assert.assertTrue(nodeManagementService.getAllNetworkData().isNodeExistsOnMemory(nodeToTest));
-        verify(propagationPublisher).propagate(Mockito.eq(nodeManagementService.getAllNetworkData()), any(List.class));
+        Assert.assertTrue(networkDetailsService.isNodeExistsOnMemory(nodeToTest));
+        verify(propagationPublisher).propagate(Mockito.eq(networkDetailsService.getNetworkDetails()), any(List.class));
     }
 
     @Test
@@ -136,12 +141,12 @@ public class NodeManagementServiceTest {
 
         NetworkNodeData zeroSpendNode = new NetworkNodeData(NodeType.ZeroSpendServer, nodeManagerIp, nodeManagerHttpPort, createDummyHash());
 
-        nodeManagementService.getAllNetworkData().addNode(dspNode);
-        nodeManagementService.getAllNetworkData().addNode(fullNode);
-        nodeManagementService.getAllNetworkData().addNode(fullNode2);
-        nodeManagementService.getAllNetworkData().addNode(trustScoreNode);
-        nodeManagementService.getAllNetworkData().addNode(trustScoreNode2);
-        nodeManagementService.getAllNetworkData().addNode(zeroSpendNode);
+        networkDetailsService.addNode(dspNode);
+        networkDetailsService.addNode(fullNode);
+        networkDetailsService.addNode(fullNode2);
+        networkDetailsService.addNode(trustScoreNode);
+        networkDetailsService.addNode(trustScoreNode2);
+        networkDetailsService.addNode(zeroSpendNode);
 
         Map<String, List<SingleNodeDetailsForWallet>> walletInfoMap = nodeManagementService.createNetworkDetailsForWallet();
         Assert.assertTrue(walletInfoMap.keySet().size() == 2);

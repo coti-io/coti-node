@@ -7,8 +7,9 @@ import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.database.Interfaces.IRocksDBConnector;
 import io.coti.basenode.http.BaseNodeHttpStringConstants;
+import io.coti.basenode.services.interfaces.INetworkDetailsService;
 import io.coti.nodemanager.controllers.NodeController;
-import io.coti.nodemanager.crypto.CCAApprovementResponseCrypto;
+import io.coti.nodemanager.crypto.KYCApprovementResponseCrypto;
 import io.coti.nodemanager.database.RocksDBConnector;
 import io.coti.nodemanager.model.ActiveNode;
 import io.coti.nodemanager.model.NodeHistory;
@@ -60,10 +61,12 @@ public class NodeControllerTest {
     private ActiveNode activeNode;
 
     @MockBean
-    private CCAApprovementResponseCrypto ccaApprovementResponseCrypto;
+    private KYCApprovementResponseCrypto kycApprovementResponseCrypto;
 
     @Autowired
     private NodeManagementService nodeManagerServiceMock;
+    @Autowired
+    private INetworkDetailsService networkDetailsService;
 
     @Bean
     public IRocksDBConnector getDataBaseConnector() {
@@ -78,24 +81,24 @@ public class NodeControllerTest {
     @Test
     public void testAddingNode() {
         when(networkNodeCrypto.verifySignature(any())).thenReturn(true);
-        NodeController nodeController = new NodeController(nodeManagerServiceMock);
+        NodeController nodeController = new NodeController(nodeManagerServiceMock, networkDetailsService);
         Stream.of(NodeType.values()).forEach(nodeType -> {
             Hash nodeHash = new Hash(String.valueOf(nodeType.ordinal()));
             NetworkNodeData nodeToTest = new NetworkNodeData(nodeType, nodeManagerIp, nodeManagerHttpPort, nodeHash);
             nodeController.newNode(nodeToTest);
-            Assert.assertTrue(" Node was not entered properly ", nodeManagerServiceMock.getAllNetworkData().isNodeExistsOnMemory(nodeToTest));
-            nodeManagerServiceMock.getAllNetworkData().removeNode(nodeToTest);
+            Assert.assertTrue(" Node was not entered properly ", networkDetailsService.isNodeExistsOnMemory(nodeToTest));
+            networkDetailsService.removeNode(nodeToTest);
         });
     }
 
     @Test
     public void testInvalidNodeSignature() {
         when(networkNodeCrypto.verifySignature(any())).thenReturn(false);
-        when(ccaApprovementResponseCrypto.verifySignature(any())).thenReturn(false);
+        when(kycApprovementResponseCrypto.verifySignature(any())).thenReturn(false);
         Hash nodeHash = new Hash("1");
         NodeManagementService nodeManagerServiceMock = new NodeManagementService(propagationPublisher, networkNodeCrypto,
-                nodeHistory, dataBaseConnector, activeNode, ccaApprovementResponseCrypto);
-        NodeController nodeController = new NodeController(nodeManagerServiceMock);
+                nodeHistory, dataBaseConnector, activeNode, kycApprovementResponseCrypto, networkDetailsService);
+        NodeController nodeController = new NodeController(nodeManagerServiceMock, networkDetailsService);
 
         NetworkNodeData nodeToTest = new NetworkNodeData(NodeType.FullNode, nodeManagerIp, nodeManagerHttpPort, nodeHash);
         ResponseEntity<String> responseEntity = nodeController.newNode(nodeToTest);

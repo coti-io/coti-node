@@ -11,7 +11,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Data
-public class CCAApprovementResponse extends Response implements ISignable, ISignValidatable {
+public class KYCApprovementResponse extends Response implements ISignable, ISignValidatable {
     @NotNull
     private Hash userHash;
     @NotNull

@@ -6,7 +6,8 @@ import io.coti.basenode.data.NetworkDetails;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.database.Interfaces.IRocksDBConnector;
-import io.coti.nodemanager.crypto.CCAApprovementResponseCrypto;
+import io.coti.basenode.services.interfaces.INetworkDetailsService;
+import io.coti.nodemanager.crypto.KYCApprovementResponseCrypto;
 import io.coti.nodemanager.data.ActiveNodeData;
 import io.coti.nodemanager.data.NodeHistoryData;
 import io.coti.nodemanager.data.NodeNetworkDataTimestamp;
@@ -38,32 +39,34 @@ public class NodeManagementService implements INodeManagementService {
     public static final String TRUST_SCORE_NODES_FORWALLET_KEY = "TrustScoreNodes";
     private final IPropagationPublisher propagationPublisher;
     private final NetworkNodeCrypto networkNodeCrypto;
-    private final CCAApprovementResponseCrypto ccaApprovementResponseCrypto;
+    private final KYCApprovementResponseCrypto kycApprovementResponseCrypto;
     private final NodeHistory nodeHistory;
     private final IRocksDBConnector dataBaseConnector;
     private final ActiveNode activeNode;
-    private NetworkDetails networkDetails = new NetworkDetails();
+    private final INetworkDetailsService networkDetailsService;
     @Value("${cca.public.key}")
     private String ccaPublicKey;
     @Value("${propagation.port}")
     private String propagationPort;
 
+
     @Autowired
     public NodeManagementService(IPropagationPublisher propagationPublisher, NetworkNodeCrypto networkNodeCrypto,
                                  NodeHistory nodeHistory, IRocksDBConnector dataBaseConnector, ActiveNode activeNode,
-                                 CCAApprovementResponseCrypto ccaApprovementResponseCrypto) {
+                                 KYCApprovementResponseCrypto kycApprovementResponseCrypto, INetworkDetailsService networkDetailsService) {
         this.propagationPublisher = propagationPublisher;
         this.networkNodeCrypto = networkNodeCrypto;
         this.nodeHistory = nodeHistory;
         this.dataBaseConnector = dataBaseConnector;
         this.activeNode = activeNode;
-        this.ccaApprovementResponseCrypto = ccaApprovementResponseCrypto;
+        this.kycApprovementResponseCrypto = kycApprovementResponseCrypto;
+        this.networkDetailsService = networkDetailsService;
     }
 
     @PostConstruct
     private void init() {
         dataBaseConnector.init();
-        networkDetails.setNodeManagerPropagationAddress("tcp://localhost:" + propagationPort);
+        networkDetailsService.getNetworkDetails().setNodeManagerPropagationAddress("tcp://localhost:" + propagationPort);
         propagationPublisher.init(propagationPort);
     }
 
@@ -73,15 +76,15 @@ public class NodeManagementService implements INodeManagementService {
         } catch (InterruptedException e) {
             log.error("An error was thrown", e);
         }
-        log.info("Propagating networkDetails after a change: {}", networkDetails);
-        propagationPublisher.propagate(networkDetails, Arrays.asList(NodeType.FullNode, NodeType.ZeroSpendServer,
+        log.info("Propagating networkDetails after a change: {}", networkDetailsService.getNetworkDetails());
+        propagationPublisher.propagate(networkDetailsService.getNetworkDetails(), Arrays.asList(NodeType.FullNode, NodeType.ZeroSpendServer,
                 NodeType.DspNode, NodeType.TrustScoreNode));
     }
 
     public NetworkDetails newNode(NetworkNodeData networkNodeData) throws IllegalAccessException {
         validateNetworkNodeData(networkNodeData);
-        if (networkDetails.isNodeExistsOnMemory(networkNodeData)) {
-            boolean isUpdated = networkDetails.updateNetworkNode(networkNodeData);
+        if (networkDetailsService.isNodeExistsOnMemory(networkNodeData)) {
+            boolean isUpdated = networkDetailsService.updateNetworkNode(networkNodeData);
             if (isUpdated) {
                 ActiveNodeData activeNodeData = activeNode.getByHash(networkNodeData.getHash());
                 if (activeNodeData == null) {
@@ -89,13 +92,13 @@ public class NodeManagementService implements INodeManagementService {
                 }
             }
         } else {
-            this.networkDetails.addNode(networkNodeData);
+            networkDetailsService.addNode(networkNodeData);
         }
         ActiveNodeData activeNodeData = new ActiveNodeData(networkNodeData.getHash(), networkNodeData);
         activeNode.put(activeNodeData);
         insertToDB(networkNodeData, NetworkNodeStatus.ACTIVE);
         updateNetworkChanges();
-        return networkDetails;
+        return networkDetailsService.getNetworkDetails();
     }
 
     private void validateNetworkNodeData(NetworkNodeData networkNodeData) throws IllegalAccessException {
@@ -110,9 +113,9 @@ public class NodeManagementService implements INodeManagementService {
     }
 
     private boolean validateCCAApprovement(NetworkNodeData networkNodeData) {
-//        CCAApprovementResponse ccaApprovementResponse = networkNodeData.getCcaApprovementResponse();
-//        ccaApprovementResponse.setSignerHash(new Hash(ccaPublicKey));
-//        return ccaApprovementResponseCrypto.verifySignature(ccaApprovementResponse);
+//        KYCApprovementResponse kycApprovementResponse = networkNodeData.getKycApprovementResponse();
+//        kycApprovementResponse.setSignerHash(new Hash(ccaPublicKey));
+//        return ccaApprovementResponseCrypto.verifySignature(kycApprovementResponse);
         return true;
     }
 
@@ -124,11 +127,6 @@ public class NodeManagementService implements INodeManagementService {
         }
         return isNodeSignatureValid;
     }
-
-    public NetworkDetails getAllNetworkData() {
-        return networkDetails;
-    }
-
 
     private void insertToDB(NetworkNodeData networkNodeData, NetworkNodeStatus nodeStatus) {
         modifyNodeInNodeHistory(networkNodeData, nodeStatus);
@@ -160,10 +158,10 @@ public class NodeManagementService implements INodeManagementService {
 
     public Map<String, List<SingleNodeDetailsForWallet>> createNetworkDetailsForWallet() {
         Map<String, List<SingleNodeDetailsForWallet>> networkDetailsForWallet = new HashedMap<>();
-        List<SingleNodeDetailsForWallet> fullNodesDetailsForWallet = networkDetails.getFullNetworkNodesList().stream()
+        List<SingleNodeDetailsForWallet> fullNodesDetailsForWallet = networkDetailsService.getNetworkDetails().getFullNetworkNodesList().stream()
                 .map(this::createSingleNodeDetailsForWallet)
                 .collect(Collectors.toList());
-        List<SingleNodeDetailsForWallet> trustScoreNodesDetailsForWallet = networkDetails.getTrustScoreNetworkNodesList().stream()
+        List<SingleNodeDetailsForWallet> trustScoreNodesDetailsForWallet = networkDetailsService.getNetworkDetails().getTrustScoreNetworkNodesList().stream()
                 .map(this::createSingleNodeDetailsForWallet)
                 .collect(Collectors.toList());
         networkDetailsForWallet.put(FULL_NODES_FORWALLET_KEY, fullNodesDetailsForWallet);

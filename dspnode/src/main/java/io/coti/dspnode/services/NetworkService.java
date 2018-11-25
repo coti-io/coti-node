@@ -4,22 +4,19 @@ import io.coti.basenode.data.NetworkDetails;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.services.BaseNodeNetworkService;
 import io.coti.basenode.services.CommunicationService;
-import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 @Service
 @Slf4j
-public class NetworkService extends BaseNodeNetworkService implements INetworkService {
+public class NetworkService extends BaseNodeNetworkService {
 
     @Value("${server.ip}")
     protected String nodeIp;
@@ -29,20 +26,12 @@ public class NetworkService extends BaseNodeNetworkService implements INetworkSe
     @Autowired
     private CommunicationService communicationService;
 
-    @Autowired
-    private ApplicationContext applicationContext;
-
-    @PostConstruct
-    protected void init() {
-        super.init(applicationContext);
-    }
-
     @Override
     public void handleNetworkChanges(NetworkDetails newNetworkDetails) {
-        log.info("New newNetworkDetails structure received: {}", newNetworkDetails.getNetWorkSummary());
+        log.info("New newNetworkDetails structure received: {}", networkDetailsService.getNetWorkSummary(newNetworkDetails));
         NetworkNodeData zerospendNetworkNodeData = newNetworkDetails.getZerospendServer();
         List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetworkDetails.getDspNetworkNodesList()
-                , this.networkDetails.getDspNetworkNodesList()));
+                , networkDetailsService.getNetworkDetails().getDspNetworkNodesList()));
         dspNodesToConnect.removeIf(dsp -> dsp.getAddress().equals(nodeIp) && dsp.getHttpPort().equals(serverPort));
         if (dspNodesToConnect.size() > 0) {
             Collections.shuffle(dspNodesToConnect);
@@ -54,7 +43,7 @@ public class NetworkService extends BaseNodeNetworkService implements INetworkSe
             communicationService.addSender(zerospendNetworkNodeData.getReceivingFullAddress());
             communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress());
         }
-        saveNetwork(newNetworkDetails);
+        networkDetailsService.setNetworkDetails(newNetworkDetails);
     }
 
 

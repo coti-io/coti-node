@@ -4,6 +4,7 @@ import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.services.BaseNodeAddressService;
+import io.coti.basenode.services.interfaces.INetworkDetailsService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,12 +24,12 @@ public class AddressService extends BaseNodeAddressService {
     @Autowired
     private ISender sender;
     @Autowired
-    private INetworkService networkService;
+    private INetworkDetailsService networkDetailsService;
 
     public boolean addAddress(Hash addressHash) {
         List<String> receivingServerAddresses = new LinkedList<>();
-        Collections.shuffle(networkService.getNetworkDetails().getDspNetworkNodesList());
-        receivingServerAddresses.add(networkService.getNetworkDetails().getDspNetworkNodesList().get(0).getReceivingFullAddress());
+        Collections.shuffle(networkDetailsService.getNetworkDetails().getDspNetworkNodesList());
+        receivingServerAddresses.add(networkDetailsService.getNetworkDetails().getDspNetworkNodesList().get(0).getReceivingFullAddress());
         if (!super.addNewAddress(addressHash)) {
             return false;
         }

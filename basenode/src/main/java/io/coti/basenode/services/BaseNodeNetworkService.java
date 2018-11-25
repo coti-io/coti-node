@@ -2,32 +2,27 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.data.NetworkDetails;
 import io.coti.basenode.data.NetworkNodeData;
+import io.coti.basenode.services.interfaces.INetworkDetailsService;
+import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.Iterator;
 import java.util.List;
 
 @Slf4j
-public abstract class BaseNodeNetworkService {
+@Service
+public class BaseNodeNetworkService implements INetworkService {
 
     protected String recoveryServerAddress;
 
-    protected NetworkDetails networkDetails;
-
+    @Autowired
+    protected INetworkDetailsService networkDetailsService;
+    @Autowired
     private CommunicationService communicationService;
 
-
-    private void initiateContext(ApplicationContext applicationContext) {
-        communicationService = applicationContext.getBean(CommunicationService.class);
-    }
-
-    public NetworkDetails getNetworkDetails() {
-        return networkDetails;
-    }
-
-    public void saveNetwork(NetworkDetails networkDetails) {
-        this.networkDetails = networkDetails;
+    public void handleNetworkChanges(NetworkDetails networkDetails) {
     }
 
     public String getRecoveryServerAddress() {
@@ -43,13 +38,9 @@ public abstract class BaseNodeNetworkService {
         while (nodeDataIterator.hasNext()) {
             NetworkNodeData node = nodeDataIterator.next();
             log.info("{} {} is about to be added to subscription and network", node.getNodeType(), node.getHttpFullAddress());
-            networkDetails.addNode(node);
+            networkDetailsService.addNode(node);
             communicationService.addSubscription(node.getPropagationFullAddress());
         }
     }
 
-    protected void init(ApplicationContext applicationContext) {
-        networkDetails = new NetworkDetails();
-        initiateContext(applicationContext);
-    }
 }

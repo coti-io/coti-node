@@ -9,6 +9,7 @@ import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
+import io.coti.basenode.services.interfaces.INetworkDetailsService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,8 @@ public class InitializationService extends BaseNodeInitializationService {
     private CommunicationService communicationService;
     @Autowired
     private INetworkService networkService;
+    @Autowired
+    private INetworkDetailsService networkDetailsService;
 
     @PostConstruct
     public void init() {
@@ -54,7 +57,7 @@ public class InitializationService extends BaseNodeInitializationService {
                 addressService.handleNewAddressFromFullNode((AddressData) data));
 
         communicationService.initSubscriber(NodeType.DspNode);
-        NetworkNodeData zerospendNetworkNodeData = this.networkService.getNetworkDetails().getZerospendServer();
+        NetworkNodeData zerospendNetworkNodeData = networkDetailsService.getNetworkDetails().getZerospendServer();
         if (zerospendNetworkNodeData == null) {
             log.error("No zerospend server exists in the network got from the node manager, about to exit application");
             System.exit(-1);
@@ -66,7 +69,7 @@ public class InitializationService extends BaseNodeInitializationService {
         communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
         communicationService.addSender(zerospendNetworkNodeData.getReceivingFullAddress());
         communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress());
-        List<NetworkNodeData> dspNetworkNodeDataList = this.networkService.getNetworkDetails().getDspNetworkNodesList();
+        List<NetworkNodeData> dspNetworkNodeDataList = networkDetailsService.getNetworkDetails().getDspNetworkNodesList();
         dspNetworkNodeDataList.removeIf(dsp -> dsp.getAddress().equals(nodeIp) && dsp.getHttpPort().equals(serverPort));
         Collections.shuffle(dspNetworkNodeDataList);
         dspNetworkNodeDataList.forEach(node -> communicationService.addSubscription(node.getPropagationFullAddress()));

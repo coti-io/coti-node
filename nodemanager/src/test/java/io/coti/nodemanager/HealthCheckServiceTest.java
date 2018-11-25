@@ -3,6 +3,7 @@ package io.coti.nodemanager;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
+import io.coti.basenode.services.interfaces.INetworkDetailsService;
 import io.coti.nodemanager.model.ActiveNode;
 import io.coti.nodemanager.services.HealthCheckService;
 import io.coti.nodemanager.services.NodeManagementService;
@@ -58,6 +59,9 @@ public class HealthCheckServiceTest {
     @MockBean
     private ActiveNode activeNode;
 
+    @Autowired
+    private INetworkDetailsService networkDetailsService;
+
     @Before
     public void init() {
         MockitoAnnotations.initMocks(this);
@@ -73,10 +77,10 @@ public class HealthCheckServiceTest {
         Hash nodeHash = new Hash("1");
         when(restTemplate.getForObject(NODE_HASH_URL, Hash.class)).thenReturn(nodeHash);
         doNothing().when(nodeManagerServiceMock).insertDeletedNodeRecord(any());
-        nodeManagementService.getAllNetworkData().addNode(nodeToTest);
-        healthCheckService = new HealthCheckService(nodeManagerServiceMock, activeNode, restTemplate);
+        networkDetailsService.addNode(nodeToTest);
+        healthCheckService = new HealthCheckService(nodeManagerServiceMock, activeNode, restTemplate, networkDetailsService);
         healthCheckService.neighborsHealthCheck();
-        Assert.assertTrue("Node was deleted from memory", nodeManagerServiceMock.getAllNetworkData().isNodeExistsOnMemory(nodeToTest));
+        Assert.assertTrue("Node was deleted from memory", networkDetailsService.isNodeExistsOnMemory(nodeToTest));
 
     }
 
@@ -87,10 +91,10 @@ public class HealthCheckServiceTest {
         NetworkNodeData nodeToTest = new NetworkNodeData(NodeType.FullNode, nodeManagerIp, nodeManagerHttpPort, nodeHash);
         when(restTemplate.getForObject(NODE_HASH_URL, Hash.class)).thenReturn(null);
         doNothing().when(nodeManagerServiceMock).insertDeletedNodeRecord(any());
-        nodeManagerServiceMock.getAllNetworkData().addNode(nodeToTest);
-        healthCheckService = new HealthCheckService(nodeManagerServiceMock, activeNode, restTemplate);
+        networkDetailsService.addNode(nodeToTest);
+        healthCheckService = new HealthCheckService(nodeManagerServiceMock, activeNode, restTemplate, networkDetailsService);
         healthCheckService.neighborsHealthCheck();
-        Assert.assertTrue("Node was deleted from memory", !nodeManagerServiceMock.getAllNetworkData().isNodeExistsOnMemory(nodeToTest));
+        Assert.assertTrue("Node was deleted from memory", !networkDetailsService.isNodeExistsOnMemory(nodeToTest));
 
     }
 

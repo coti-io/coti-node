@@ -9,6 +9,7 @@ import io.coti.basenode.data.NodeType;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
+import io.coti.basenode.services.interfaces.INetworkDetailsService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,7 +40,8 @@ public class InitializationService extends BaseNodeInitializationService {
     private Transactions transactions;
     @Autowired
     private INetworkService networkService;
-
+    @Autowired
+    private INetworkDetailsService networkDetailsService;
 
     @PostConstruct
     public void init() {
@@ -55,7 +57,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
 
         communicationService.initPropagator(propagationPort);
-        networkService.addListToSubscriptionAndNetwork(networkService.getNetworkDetails().getDspNetworkNodesList());
+        networkService.addListToSubscriptionAndNetwork(networkDetailsService.getNetworkDetails().getDspNetworkNodesList());
         if (transactions.isEmpty()) {
             transactionCreationService.createGenesisTransactions();
         }

@@ -6,6 +6,7 @@ import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
+import io.coti.basenode.services.interfaces.INetworkDetailsService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,8 @@ public class InitializationService extends BaseNodeInitializationService {
     private INetworkService networkService;
     @Autowired
     private NetworkNodeCrypto networkNodeCrypto;
+    @Autowired
+    private INetworkDetailsService networkDetailsService;
 
     @Value("${fee.percentage}")
     private Double nodeFee;
@@ -37,7 +40,7 @@ public class InitializationService extends BaseNodeInitializationService {
         super.connectToNetwork();
         communicationService.initSubscriber(NodeType.FullNode);
 
-        List<NetworkNodeData> dspNetworkNodeData = this.networkService.getNetworkDetails().getDspNetworkNodesList();
+        List<NetworkNodeData> dspNetworkNodeData = networkDetailsService.getNetworkDetails().getDspNetworkNodesList();
         if(!dspNetworkNodeData.isEmpty()){
             networkService.setRecoveryServerAddress(dspNetworkNodeData.get(0).getHttpFullAddress());
         }

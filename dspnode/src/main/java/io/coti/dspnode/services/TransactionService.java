@@ -7,6 +7,7 @@ import io.coti.basenode.data.DspVote;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.services.BaseNodeTransactionService;
+import io.coti.basenode.services.interfaces.INetworkDetailsService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
@@ -37,7 +38,7 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private DspVoteCrypto dspVoteCrypto;
     @Autowired
-    private INetworkService networkService;
+    private INetworkDetailsService networkDetailsService;
 
     public void handleNewTransactionFromFullNode(TransactionData transactionData) {
         try {
@@ -80,7 +81,7 @@ public class TransactionService extends BaseNodeTransactionService {
                     transactionData.getHash(),
                     validationService.fullValidation(transactionData));
             dspVoteCrypto.signMessage(dspVote);
-            String zerospendReceivingAddress = networkService.getNetworkDetails().getZerospendServer().getReceivingFullAddress();
+            String zerospendReceivingAddress = networkDetailsService.getNetworkDetails().getZerospendServer().getReceivingFullAddress();
             log.debug("Sending DSP vote to {} for transaction {}", zerospendReceivingAddress, transactionData.getHash());
             sender.send(dspVote, zerospendReceivingAddress);
         }

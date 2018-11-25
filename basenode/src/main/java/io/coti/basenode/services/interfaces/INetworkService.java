@@ -9,10 +9,6 @@ public interface INetworkService {
 
     void handleNetworkChanges(NetworkDetails networkDetails);
 
-    NetworkDetails getNetworkDetails();
-
-    void saveNetwork(NetworkDetails networkDetails);
-
     String getRecoveryServerAddress();
 
     void setRecoveryServerAddress(String recoveryServerAddress);

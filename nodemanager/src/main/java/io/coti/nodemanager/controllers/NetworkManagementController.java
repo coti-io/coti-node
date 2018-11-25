@@ -1,5 +1,6 @@
 package io.coti.nodemanager.controllers;
 
+import io.coti.basenode.services.interfaces.INetworkDetailsService;
 import io.coti.nodemanager.http.GetFullNetworkResponse;
 import io.coti.nodemanager.http.GetFullNetworkSummaryVerboseResponse;
 import io.coti.nodemanager.http.GetNetworkHistoryResponse;
@@ -20,8 +21,9 @@ public class NetworkManagementController {
 
     @Autowired
     private INetworkHistoryService networkHistoryService;
+
     @Autowired
-    private INodeManagementService managementService;
+    private INetworkDetailsService networkDetailsService;
 
     @GetMapping(path = "/network_history")
     public ResponseEntity<GetNetworkHistoryResponse> getNetworkHistory() {
@@ -31,14 +33,14 @@ public class NetworkManagementController {
 
     @GetMapping(path = "/full_network")
     public ResponseEntity<GetFullNetworkResponse> getFullNetworkSummary() {
-        GetFullNetworkResponse getFullNetworkResponse = new GetFullNetworkResponse(managementService.getAllNetworkData().getNetWorkSummary());
+        GetFullNetworkResponse getFullNetworkResponse = new GetFullNetworkResponse(networkDetailsService.getNetWorkSummary(networkDetailsService.getNetworkDetails()));
         return ResponseEntity.ok(getFullNetworkResponse);
     }
 
     @GetMapping(path = "/full_network/verbose")
     public ResponseEntity<GetFullNetworkSummaryVerboseResponse> getFullNetworkSummaryVerbose() {
         GetFullNetworkSummaryVerboseResponse summaryVerboseResponse =
-                new GetFullNetworkSummaryVerboseResponse(managementService.getAllNetworkData());
+                new GetFullNetworkSummaryVerboseResponse(networkDetailsService.getNetworkDetails());
         return ResponseEntity.ok(summaryVerboseResponse);
     }
 

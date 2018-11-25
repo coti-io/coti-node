@@ -1,21 +1,20 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.crypto.CCAApprovementRequestCrypto;
+import io.coti.basenode.crypto.KYCApprovementRequestCrypto;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
-import io.coti.basenode.http.data.CCAApprovementResponse;
-import io.coti.basenode.http.data.CCAApprovmentRequest;
+import io.coti.basenode.http.data.KYCApprovementResponse;
+import io.coti.basenode.http.data.KYCApprovmentRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 @Component
 @Slf4j
-public class CCAApprovementService {
+public class KYCApprovementService {
 
     @Value("${cca.server.address}")
     private String ccaAddress ;
@@ -24,18 +23,18 @@ public class CCAApprovementService {
     private RestTemplate restTemplate;
 
     @Autowired
-    private CCAApprovementRequestCrypto ccaApprovementCrypto;
+    private KYCApprovementRequestCrypto ccaApprovementCrypto;
 
-    public ResponseEntity<CCAApprovementResponse> sendCCAApprovment(CCAApprovmentRequest ccaApprovmentRequest){
-        CCAApprovementResponse dummyCcaApprovementResponse = new CCAApprovementResponse();
-        dummyCcaApprovementResponse.setSignerHash(new Hash("abc"));
-        dummyCcaApprovementResponse.setSignature(new SignatureData());
-        dummyCcaApprovementResponse.setTrustScore(5.0);
-        return ResponseEntity.ok(dummyCcaApprovementResponse);
+    public ResponseEntity<KYCApprovementResponse> sendCCAApprovment(KYCApprovmentRequest KYCApprovmentRequest){
+        KYCApprovementResponse dummyKYCApprovementResponse = new KYCApprovementResponse();
+        dummyKYCApprovementResponse.setSignerHash(new Hash("abc"));
+        dummyKYCApprovementResponse.setSignature(new SignatureData());
+        dummyKYCApprovementResponse.setTrustScore(5.0);
+        return ResponseEntity.ok(dummyKYCApprovementResponse);
 //        try {
-//            ccaApprovementCrypto.signMessage(ccaApprovmentRequest);
+//            ccaApprovementCrypto.signMessage(KYCApprovmentRequest);
 //
-//            ResponseEntity<CCAApprovementResponse> approvementResponseEntity = restTemplate.postForEntity(ccaAddress, ccaApprovmentRequest, CCAApprovementResponse.class);
+//            ResponseEntity<KYCApprovementResponse> approvementResponseEntity = restTemplate.postForEntity(ccaAddress, KYCApprovmentRequest, KYCApprovementResponse.class);
 //
 //            if (approvementResponseEntity.getStatusCode() != HttpStatus.OK) {
 //                log.error("cca returned an error. response: {} . closing server", approvementResponseEntity);

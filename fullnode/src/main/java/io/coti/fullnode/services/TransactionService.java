@@ -13,10 +13,7 @@ import io.coti.basenode.http.data.TransactionStatus;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
-import io.coti.basenode.services.interfaces.IClusterService;
-import io.coti.basenode.services.interfaces.INetworkService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
-import io.coti.basenode.services.interfaces.IValidationService;
+import io.coti.basenode.services.interfaces.*;
 
 import io.coti.fullnode.http.AddTransactionRequest;
 import io.coti.fullnode.http.AddTransactionResponse;
@@ -58,7 +55,7 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private WebSocketSender webSocketSender;
     @Autowired
-    private INetworkService networkService;
+    private INetworkDetailsService networkDetailsService;
 
     @Autowired
     private PotService potService;
@@ -155,7 +152,7 @@ public class TransactionService extends BaseNodeTransactionService {
             transactionHelper.setTransactionStateToSaved(transactionData);
             webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
             final TransactionData finalTransactionData = transactionData;
-            networkService.getNetworkDetails().getDspNetworkNodesList().forEach(address ->
+            networkDetailsService.getNetworkDetails().getDspNetworkNodesList().forEach(address ->
                     sender.send(finalTransactionData, address.getReceivingFullAddress())
             );
             transactionHelper.setTransactionStateToFinished(transactionData);

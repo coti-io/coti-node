@@ -2,6 +2,7 @@ package io.coti.nodemanager.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkNodeData;
+import io.coti.basenode.services.interfaces.INetworkDetailsService;
 import io.coti.nodemanager.data.ActiveNodeData;
 import io.coti.nodemanager.model.ActiveNode;
 import io.coti.nodemanager.services.interfaces.INodeManagementService;
@@ -27,12 +28,14 @@ public class HealthCheckService {
     private final INodeManagementService nodesService;
     private final ActiveNode activeNode;
     private final RestTemplate restTemplate;
+    private final INetworkDetailsService networkDetailsService;
 
     @Autowired
-    public HealthCheckService(INodeManagementService nodesService, ActiveNode activeNode, RestTemplate restTemplate) {
+    public HealthCheckService(INodeManagementService nodesService, ActiveNode activeNode, RestTemplate restTemplate, INetworkDetailsService networkDetailsService) {
         this.nodesService = nodesService;
         this.activeNode = activeNode;
         this.restTemplate = restTemplate;
+        this.networkDetailsService = networkDetailsService;
     }
 
     @Scheduled(fixedDelay = 5000, initialDelay = 5000)
@@ -41,9 +44,9 @@ public class HealthCheckService {
             boolean networkChanged = false;
             ExecutorService executorService = Executors.newFixedThreadPool(10);
             List<Callable<Boolean>> checkNodesListTasks = new ArrayList<>(3);
-            checkNodesListTasks.add((() -> checkNodesList(nodesService.getAllNetworkData().getDspNetworkNodesList())));
-            checkNodesListTasks.add((() -> checkNodesList(nodesService.getAllNetworkData().getTrustScoreNetworkNodesList())));
-            checkNodesListTasks.add((() -> checkNodesList(nodesService.getAllNetworkData().getFullNetworkNodesList())));
+            checkNodesListTasks.add((() -> checkNodesList(networkDetailsService.getNetworkDetails().getDspNetworkNodesList())));
+            checkNodesListTasks.add((() -> checkNodesList(networkDetailsService.getNetworkDetails().getTrustScoreNetworkNodesList())));
+            checkNodesListTasks.add((() -> checkNodesList(networkDetailsService.getNetworkDetails().getFullNetworkNodesList())));
             List<Future<Boolean>> checkNodesListFutures = executorService.invokeAll(checkNodesListTasks);
             for (Future<Boolean> future : checkNodesListFutures) {
                 if (future.get() == true) {
@@ -52,12 +55,12 @@ public class HealthCheckService {
             }
             executorService.shutdown();
 
-            NetworkNodeData zerospendNetworkNodeData = nodesService.getAllNetworkData().getZerospendServer();
+            NetworkNodeData zerospendNetworkNodeData = networkDetailsService.getNetworkDetails().getZerospendServer();
             if (!isNodeConnected(zerospendNetworkNodeData)) {
                 log.info("{} of address is about to be deleted", zerospendNetworkNodeData.getNodeType(),
                         zerospendNetworkNodeData.getHttpFullAddress());
                 deleteNodeRecord(zerospendNetworkNodeData);
-                nodesService.getAllNetworkData().setZerospendServer(null);
+                networkDetailsService.getNetworkDetails().setZerospendServer(null);
                 networkChanged = true;
             }
             if (networkChanged) {
@@ -127,7 +130,7 @@ public class HealthCheckService {
                 }
                 executorService.shutdown();
             }
-            nodesToRemove.forEach(networkNode -> nodesService.getAllNetworkData().removeNode(networkNode));
+            nodesToRemove.forEach(networkNode -> networkDetailsService.removeNode(networkNode));
         } catch (Exception ex) {
             log.error("Error while checking nodeList", ex);
         }

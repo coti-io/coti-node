@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
 @Data
-public class CCAApprovmentRequest extends Request implements ISignable, ISignValidatable {
+public class KYCApprovmentRequest extends Request implements ISignable, ISignValidatable {
 
     @NotNull
     private Hash userHash;
@@ -23,7 +23,7 @@ public class CCAApprovmentRequest extends Request implements ISignable, ISignVal
     @NotNull
     private LocalDateTime creationTime;
 
-    public CCAApprovmentRequest(@NotNull Hash userHash, @NotNull @Valid SignatureData signature) {
+    public KYCApprovmentRequest(@NotNull Hash userHash, @NotNull @Valid SignatureData signature) {
         this.userHash = userHash;
         this.signature = signature;
         this.creationTime = LocalDateTime.now(ZoneOffset.UTC);

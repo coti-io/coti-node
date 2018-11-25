@@ -3,6 +3,7 @@ package io.coti.nodemanager.controllers;
 import io.coti.basenode.data.NetworkDetails;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.http.BaseNodeHttpStringConstants;
+import io.coti.basenode.services.interfaces.INetworkDetailsService;
 import io.coti.nodemanager.services.interfaces.INodeManagementService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +20,12 @@ import javax.validation.Valid;
 public class NodeController {
 
     private final INodeManagementService nodesService;
+    private final INetworkDetailsService networkDetailsService;
 
     @Autowired
-    public NodeController(INodeManagementService nodesService) {
+    public NodeController(INodeManagementService nodesService, INetworkDetailsService networkDetailsService) {
         this.nodesService = nodesService;
+        this.networkDetailsService = networkDetailsService;
     }
 
     @PutMapping
@@ -38,7 +41,7 @@ public class NodeController {
 
     @GetMapping
     public ResponseEntity<NetworkDetails> getAllNodes() {
-        return ResponseEntity.ok(nodesService.getAllNetworkData());
+        return ResponseEntity.ok(networkDetailsService.getNetworkDetails());
     }
 
 

@@ -7,6 +7,7 @@ import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
+import io.coti.basenode.services.interfaces.INetworkDetailsService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,12 +30,14 @@ public class InitializationService extends BaseNodeInitializationService {
     private String serverPort;
     @Autowired
     private NetworkNodeCrypto networkNodeCrypto;
+    @Autowired
+    private INetworkDetailsService networkDetailsService;
 
     @PostConstruct
     public void init() {
         super.connectToNetwork();
         communicationService.initSubscriber(NodeType.TrustScoreNode);
-        NetworkNodeData zerospendNetworkNodeData = this.networkService.getNetworkDetails().getZerospendServer();
+        NetworkNodeData zerospendNetworkNodeData = networkDetailsService.getNetworkDetails().getZerospendServer();
         if (zerospendNetworkNodeData == null) {
             log.error("Zero Spend server is down, info came from node manager");
             System.exit(-1);
@@ -42,7 +45,7 @@ public class InitializationService extends BaseNodeInitializationService {
         networkService.setRecoveryServerAddress(zerospendNetworkNodeData.getHttpFullAddress());
         super.init();
         communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress());
-        List<NetworkNodeData> dspNetworkNodeData = this.networkService.getNetworkDetails().getDspNetworkNodesList();
+        List<NetworkNodeData> dspNetworkNodeData = networkDetailsService.getNetworkDetails().getDspNetworkNodesList();
         Collections.shuffle(dspNetworkNodeData);
         dspNetworkNodeData.forEach(node -> communicationService.addSubscription(node.getPropagationFullAddress()));
     }

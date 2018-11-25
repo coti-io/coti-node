@@ -7,8 +7,8 @@ import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.database.Interfaces.IRocksDBConnector;
 import io.coti.basenode.http.GetTransactionBatchResponse;
-import io.coti.basenode.http.data.CCAApprovementResponse;
-import io.coti.basenode.http.data.CCAApprovmentRequest;
+import io.coti.basenode.http.data.KYCApprovementResponse;
+import io.coti.basenode.http.data.KYCApprovmentRequest;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.LiveView.LiveViewService;
 import io.coti.basenode.services.interfaces.*;
@@ -76,7 +76,9 @@ public abstract class BaseNodeInitializationService {
     @Autowired
     private RestTemplate restTemplate;
     @Autowired
-    private CCAApprovementService ccaApprovementService;
+    private KYCApprovementService kycApprovementService;
+    @Autowired
+    private INetworkDetailsService networkDetailsService;
 
     public void init() {
         try {
@@ -133,7 +135,7 @@ public abstract class BaseNodeInitializationService {
 
         monitorService.init();
         propagationSubscriber.addMessageHandler(classNameToSubscriberHandlerMapping);
-        propagationSubscriber.connectAndSubscribeToServer(networkService.getNetworkDetails().getNodeManagerPropagationAddress());
+        propagationSubscriber.connectAndSubscribeToServer(networkDetailsService.getNetworkDetails().getNodeManagerPropagationAddress());
         propagationSubscriber.initPropagationHandler();
 
     }
@@ -179,13 +181,13 @@ public abstract class BaseNodeInitializationService {
             log.error("Couldn't add node to node manager. Message from NodeManager: {}", addNewNodeResponse);
             System.exit(-1);
         }
-        networkService.saveNetwork(getNetworkDetailsFromNodeManager());
+        networkDetailsService.setNetworkDetails(getNetworkDetailsFromNodeManager());
     }
 
     private ResponseEntity<String> addNewNodeToNodeManager(NetworkNodeData networkNodeData) {
         try {
             handleCCAApprovement(networkNodeData);
-            networkNodeData.setTrustScore(networkNodeData.getCcaApprovementResponse().getTrustScore());
+            networkNodeData.setTrustScore(networkNodeData.getKycApprovementResponse().getTrustScore());
             String newNodeURL = nodeManagerAddress + NODE_MANAGER_NODES_ENDPOINT;
             HttpEntity<NetworkNodeData> entity = new HttpEntity<>(networkNodeData);
             return restTemplate.exchange(newNodeURL, HttpMethod.PUT, entity, String.class);
@@ -201,17 +203,17 @@ public abstract class BaseNodeInitializationService {
         return restTemplate.getForEntity(newNodeURL, NetworkDetails.class).getBody();
     }
 
-    private CCAApprovmentRequest createCCAApprovementRequest(NetworkNodeData networkNodeData){
-        return new CCAApprovmentRequest(networkNodeData.getNodeHash(), networkNodeData.getSignature());
+    private KYCApprovmentRequest createCCAApprovementRequest(NetworkNodeData networkNodeData){
+        return new KYCApprovmentRequest(networkNodeData.getNodeHash(), networkNodeData.getSignature());
     }
 
     private void handleCCAApprovement(NetworkNodeData networkNodeData){
-        CCAApprovmentRequest ccaApprovmentRequest = createCCAApprovementRequest(networkNodeData);
-        ResponseEntity<CCAApprovementResponse> ccaApprovementResponseEntity = ccaApprovementService.sendCCAApprovment(ccaApprovmentRequest);
+        KYCApprovmentRequest KYCApprovmentRequest = createCCAApprovementRequest(networkNodeData);
+        ResponseEntity<KYCApprovementResponse> ccaApprovementResponseEntity = kycApprovementService.sendCCAApprovment(KYCApprovmentRequest);
         log.info("Response has returned from cca: {}", ccaApprovementResponseEntity);
-        CCAApprovementResponse approvementResponse = ccaApprovementResponseEntity.getBody();
+        KYCApprovementResponse approvementResponse = ccaApprovementResponseEntity.getBody();
         if(approvementResponse != null){
-            networkNodeData.setCcaApprovementResponse(approvementResponse);
+            networkNodeData.setKycApprovementResponse(approvementResponse);
         }
         else{
             log.error("cca returned a null object: {} . closing server", ccaApprovementResponseEntity);

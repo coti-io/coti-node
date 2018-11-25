@@ -1,5 +1,6 @@
 package io.coti.nodemanager.services;
 
+import io.coti.basenode.services.interfaces.INetworkDetailsService;
 import io.coti.nodemanager.model.ActiveNode;
 import io.coti.nodemanager.services.interfaces.INodeManagementService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,9 @@ public class InitializationService {
     @Autowired
     private ActiveNode activeNode;
 
+    @Autowired
+    private INetworkDetailsService networkDetailsService;
+
 
     @PostConstruct
     private void init() {
@@ -25,7 +29,7 @@ public class InitializationService {
     private void insertActiveNodesToMemory() {
         activeNode.forEach(activeNodeData -> {
             if(activeNodeData.getNetworkNodeData() != null) {
-                nodeManagementService.getAllNetworkData().addNode(activeNodeData.getNetworkNodeData());
+                networkDetailsService.addNode(activeNodeData.getNetworkNodeData());
             }
         }
     );

@@ -14,8 +14,6 @@ public interface INodeManagementService {
 
     NetworkDetails newNode(NetworkNodeData networkNodeData) throws IllegalAccessException;
 
-    NetworkDetails getAllNetworkData();
-
     void insertDeletedNodeRecord(NetworkNodeData networkNodeData);
 
     Map<String, List<SingleNodeDetailsForWallet>> createNetworkDetailsForWallet();
