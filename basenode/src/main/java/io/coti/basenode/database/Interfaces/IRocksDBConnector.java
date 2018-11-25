@@ -2,7 +2,7 @@ package io.coti.basenode.database.Interfaces;
 
 import org.rocksdb.RocksIterator;
 
-public interface IDatabaseConnector {
+public interface IRocksDBConnector {
 
     boolean put(String columnFamilyName, byte[] key, byte[] value);
 

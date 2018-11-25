@@ -2,6 +2,7 @@ package io.coti.basenode.communication;
 
 import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.communication.interfaces.ISerializer;
+import io.coti.basenode.data.interfaces.IEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,9 +39,10 @@ public class ZeroMQReceiver implements IReceiver {
         while (true) {
             String classType = receiver.recvStr();
             if (classNameToHandlerMapping.containsKey(classType)) {
-                log.debug("Received a new {}", classType);
+                log.debug("Received a new message with type: {} ", classType);
                 byte[] message = receiver.recv();
                 try {
+
                     classNameToHandlerMapping.get(classType).
                             accept(serializer.deserialize(message));
                 } catch (ClassCastException e) {

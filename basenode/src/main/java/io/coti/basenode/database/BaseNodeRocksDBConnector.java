@@ -2,15 +2,13 @@ package io.coti.basenode.database;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
-import io.coti.basenode.database.Interfaces.IDatabaseConnector;
+import io.coti.basenode.database.Interfaces.IRocksDBConnector;
 import io.coti.basenode.model.*;
 import lombok.extern.slf4j.Slf4j;
-
 import org.rocksdb.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
-
 
 import java.io.File;
 import java.nio.file.Paths;
@@ -18,11 +16,10 @@ import java.util.*;
 
 @Slf4j
 @Service
-public class RocksDBConnector implements IDatabaseConnector {
+public class BaseNodeRocksDBConnector implements IRocksDBConnector {
+    protected List<String> columnFamilyClassNames;
     @Value("${database.folder.name}")
     private String databaseFolderName;
-    protected List<String> columnFamilyClassNames;
-
     @Value("${application.name}")
     private String applicationName;
     @Value("${resetDatabase}")
@@ -32,7 +29,6 @@ public class RocksDBConnector implements IDatabaseConnector {
     private RocksDB db;
     private Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
     private List<ColumnFamilyHandle> columnFamilyHandles = new ArrayList<>();
-
 
 
     private void deleteDatabaseFolder() {
@@ -56,7 +52,7 @@ public class RocksDBConnector implements IDatabaseConnector {
     }
 
 
-    protected void setColumnFamily(){
+    protected void setColumnFamily() {
         columnFamilyClassNames = new ArrayList<>(Arrays.asList(
                 "DefaultColumnClassName",
                 Transactions.class.getName(),
@@ -106,9 +102,9 @@ public class RocksDBConnector implements IDatabaseConnector {
     public byte[] getByKey(String columnFamilyName, byte[] key) {
         try {
             return db.get(classNameToColumnFamilyHandleMapping.get(columnFamilyName), key);
-        } catch (RocksDBException e) {
-            e.printStackTrace();
-            return null;
+        } catch (Exception e) {
+            log.error("Exception in getByKey. columnFamilyName = {} , key = {}", columnFamilyName, key, e);
+            return new byte[0];
         }
     }
 
