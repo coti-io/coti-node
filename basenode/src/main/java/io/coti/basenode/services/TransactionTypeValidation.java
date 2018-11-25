@@ -14,14 +14,15 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
         @Override
         public boolean validateReducedAmount(List<OutputBaseTransactionData> outputBaseTransactions) {
             BigDecimal reducedAmount = BigDecimal.ZERO;
-            BigDecimal networkFeeAmount = BigDecimal.ZERO;
+            BigDecimal fullNodeFeeAmount = BigDecimal.ZERO;
 
             for (OutputBaseTransactionData outputBaseTransactionData : outputBaseTransactions) {
-                if (NetworkFeeData.class.isInstance(outputBaseTransactionData)) {
+                if(FullNodeFeeData.class.isInstance(outputBaseTransactionData)) {
+                    fullNodeFeeAmount = outputBaseTransactionData.getAmount();
+                } else if (NetworkFeeData.class.isInstance(outputBaseTransactionData)) {
                     reducedAmount = ((NetworkFeeData) outputBaseTransactionData).getReducedAmount();
-                    networkFeeAmount = outputBaseTransactionData.getAmount();
                 } else if(ReceiverBaseTransactionData.class.isInstance(outputBaseTransactionData)) {
-                    return outputBaseTransactionData.getAmount().equals(reducedAmount.add(networkFeeAmount));
+                    return outputBaseTransactionData.getAmount().compareTo(reducedAmount.add(fullNodeFeeAmount)) == 0;
                 }
             }
             return false;
