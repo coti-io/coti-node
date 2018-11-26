@@ -23,6 +23,7 @@ import java.util.List;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.trustscore.http.HttpStringConstants.FULL_NODE_FEE_VALIDATION_ERROR;
+import static io.coti.trustscore.http.HttpStringConstants.ROLLING_RESERVE_VALIDATION_ERROR;
 
 @Slf4j
 @Service
@@ -59,7 +60,7 @@ public class RollingReserveService {
         }
     }
 
-    public ResponseEntity<BaseResponse> validateRollingReserve(RollingReserveValidateRequest rollingReserveValidateRequest) {
+    public ResponseEntity<Response> validateRollingReserve(RollingReserveValidateRequest rollingReserveValidateRequest) {
         try {
             NetworkFeeData networkFeeData = rollingReserveValidateRequest.getNetworkFeeData();
             if (!feeService.validateNetworkFee(networkFeeData)) {
@@ -67,7 +68,7 @@ public class RollingReserveService {
                         .status(HttpStatus.BAD_REQUEST)
                         .body(new RollingReserveResponse(
                                 STATUS_ERROR,
-                                FULL_NODE_FEE_VALIDATION_ERROR));
+                                ROLLING_RESERVE_VALIDATION_ERROR));
             }
             RollingReserveData rollingReserveData = rollingReserveValidateRequest.getRollingReserveData();
             boolean isValid = isRollingReserveValid(rollingReserveData, networkFeeData);

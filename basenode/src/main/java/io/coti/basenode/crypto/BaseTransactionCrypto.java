@@ -58,7 +58,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
             try {
                 NetworkFeeData networkFeeData = (NetworkFeeData) baseTransactionData;
                 byte[] outputMessageInBytes = getOutputMessageInBytes(networkFeeData);
-                String decimalReducedAmountRepresentation = networkFeeData.getReducedAmount().toString();
+                String decimalReducedAmountRepresentation = networkFeeData.getReducedAmount().stripTrailingZeros().toString();
                 byte[] bytesOfReducedAmount = decimalReducedAmountRepresentation.getBytes(StandardCharsets.UTF_8);
 
                 ByteBuffer baseTransactionBuffer = ByteBuffer.allocate(outputMessageInBytes.length + bytesOfReducedAmount.length).
@@ -82,7 +82,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
             try {
                 RollingReserveData rollingReserveData = (RollingReserveData) baseTransactionData;
                 byte[] outputMessageInBytes = getOutputMessageInBytes(rollingReserveData);
-                String decimalReducedAmountRepresentation = rollingReserveData.getReducedAmount().toString();
+                String decimalReducedAmountRepresentation = rollingReserveData.getReducedAmount().stripTrailingZeros().toString();
                 byte[] bytesOfReducedAmount = decimalReducedAmountRepresentation.getBytes(StandardCharsets.UTF_8);
 
                 ByteBuffer baseTransactionBuffer = ByteBuffer.allocate(outputMessageInBytes.length + bytesOfReducedAmount.length).
@@ -261,7 +261,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
     protected byte[] getBaseMessageInBytes(BaseTransactionData baseTransactionData) {
         byte[] addressBytes = baseTransactionData.getAddressHash().getBytes();
-        String decimalStringRepresentation = baseTransactionData.getAmount().toString();
+        String decimalStringRepresentation = baseTransactionData.getAmount().stripTrailingZeros().toString();
         byte[] bytesOfAmount = decimalStringRepresentation.getBytes(StandardCharsets.UTF_8);
 
         Date baseTransactionDate = baseTransactionData.getCreateTime();
@@ -283,7 +283,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         }
         byte[] baseMessageInBytes = getBaseMessageInBytes(outputBaseTransactionData);
 
-        String decimalOriginalAmountRepresentation = outputBaseTransactionData.getOriginalAmount().toString();
+        String decimalOriginalAmountRepresentation = outputBaseTransactionData.getOriginalAmount().stripTrailingZeros().toString();
         byte[] bytesOfOriginalAmount = decimalOriginalAmountRepresentation.getBytes(StandardCharsets.UTF_8);
 
         ByteBuffer outputBaseTransactionBuffer = ByteBuffer.allocate(baseMessageInBytes.length + bytesOfOriginalAmount.length).

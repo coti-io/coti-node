@@ -28,7 +28,7 @@ public class RollingReserveController {
     }
 
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<BaseResponse> validateRollingReserveFee(@Valid @RequestBody RollingReserveValidateRequest request) {
+    public ResponseEntity<Response> validateRollingReserveFee(@Valid @RequestBody RollingReserveValidateRequest request) {
         return rollingReserveService.validateRollingReserve(request);
     }
 }
