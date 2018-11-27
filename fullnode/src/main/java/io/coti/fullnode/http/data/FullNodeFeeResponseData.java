@@ -11,8 +11,8 @@ import java.util.Date;
 @Data
 public class FullNodeFeeResponseData {
     private String hash;
-    private BigDecimal amount;
-    private BigDecimal originalAmount;
+    private String amount;
+    private String originalAmount;
     private String addressHash;
     private Date createTime;
     private String name;
@@ -20,8 +20,8 @@ public class FullNodeFeeResponseData {
 
     public FullNodeFeeResponseData(FullNodeFeeData fullNodeFeeData) {
         this.hash = fullNodeFeeData.getHash().toString();
-        this.amount = fullNodeFeeData.getAmount();
-        this.originalAmount = fullNodeFeeData.getOriginalAmount();
+        this.amount = fullNodeFeeData.getAmount().toString();
+        this.originalAmount = fullNodeFeeData.getOriginalAmount().toString();
         this.addressHash = fullNodeFeeData.getAddressHash().toString();
         this.createTime = fullNodeFeeData.getCreateTime();
         this.name = BaseTransactionName.getName(FullNodeFeeData.class).name();

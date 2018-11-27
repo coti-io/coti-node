@@ -14,9 +14,9 @@ import java.util.List;
 public class NetworkFeeResponseData {
 
     private String hash;
-    private BigDecimal amount;
-    private BigDecimal originalAmount;
-    private BigDecimal reducedAmount;
+    private String amount;
+    private String originalAmount;
+    private String reducedAmount;
     private String addressHash;
     private Date createTime;
     private String name;
@@ -24,9 +24,9 @@ public class NetworkFeeResponseData {
 
     public NetworkFeeResponseData(NetworkFeeData networkFeeData) {
         this.hash = networkFeeData.getHash().toString();
-        this.amount = networkFeeData.getAmount();
-        this.originalAmount = networkFeeData.getOriginalAmount();
-        this.reducedAmount = networkFeeData.getReducedAmount();
+        this.amount = networkFeeData.getAmount().toString();
+        this.originalAmount = networkFeeData.getOriginalAmount().toString();
+        this.reducedAmount = networkFeeData.getReducedAmount().toString();
         this.addressHash = networkFeeData.getAddressHash().toString();
         this.createTime = networkFeeData.getCreateTime();
         this.name = BaseTransactionName.getName(NetworkFeeData.class).name();

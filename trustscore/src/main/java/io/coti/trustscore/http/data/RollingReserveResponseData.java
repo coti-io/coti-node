@@ -14,9 +14,9 @@ import java.util.List;
 public class RollingReserveResponseData {
 
     private String hash;
-    private BigDecimal amount;
-    private BigDecimal originalAmount;
-    private BigDecimal reducedAmount;
+    private String amount;
+    private String originalAmount;
+    private String reducedAmount;
     private String addressHash;
     private Date createTime;
     private String name;
@@ -24,9 +24,9 @@ public class RollingReserveResponseData {
 
     public RollingReserveResponseData(RollingReserveData rollingReserveData) {
         this.hash = rollingReserveData.getHash().toString();
-        this.amount = rollingReserveData.getAmount();
-        this.originalAmount = rollingReserveData.getOriginalAmount();
-        this.reducedAmount = rollingReserveData.getReducedAmount();
+        this.amount = rollingReserveData.getAmount().toString();
+        this.originalAmount = rollingReserveData.getOriginalAmount().toString();
+        this.reducedAmount = rollingReserveData.getReducedAmount().toString();
         this.addressHash = rollingReserveData.getAddressHash().toString();
         this.createTime = rollingReserveData.getCreateTime();
         this.name = BaseTransactionName.getName(RollingReserveData.class).name();

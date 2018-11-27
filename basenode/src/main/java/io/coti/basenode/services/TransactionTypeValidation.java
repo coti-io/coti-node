@@ -85,7 +85,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
                 if (!Class.forName(packagePath + outputBaseTransactionNames.get(i)).equals(outputBaseTransactionData.getClass())) {
                     return false;
                 }
-                if (!originalAmount.equals(BigDecimal.ZERO) && !originalAmount.equals((outputBaseTransactionData.getOriginalAmount()))) {
+                if (!originalAmount.equals(BigDecimal.ZERO) && originalAmount.compareTo(outputBaseTransactionData.getOriginalAmount()) != 0 ) {
                     return false;
                 }
                 originalAmount = outputBaseTransactionData.getOriginalAmount();
