@@ -9,10 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PreDestroy;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+
 
 @Slf4j
 @Service
@@ -45,5 +45,12 @@ public class BaseNodeNetworkService implements INetworkService {
             communicationService.addSubscription(node.getPropagationFullAddress());
         }
     }
+
+    @PreDestroy
+    private void shutdown() {
+        log.error("Shutdown All Resources");
+    }
+
+
 
 }

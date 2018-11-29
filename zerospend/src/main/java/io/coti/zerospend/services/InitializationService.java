@@ -45,6 +45,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @PostConstruct
     public void init() {
+        super.initDB();
         super.connectToNetwork();
         HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping = new HashMap<>();
         classNameToReceiverHandlerMapping.put(
@@ -67,7 +68,6 @@ public class InitializationService extends BaseNodeInitializationService {
         NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.ZeroSpendServer, nodeIp, serverPort, NodeCryptoHelper.getNodeHash());
         networkNodeData.setPropagationPort(propagationPort);
         networkNodeData.setReceivingPort(receivingPort);
-        networkNodeCrypto.signMessage(networkNodeData);
         return networkNodeData;
     }
 }

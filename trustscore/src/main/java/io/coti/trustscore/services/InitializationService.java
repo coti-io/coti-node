@@ -34,6 +34,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @PostConstruct
     public void init() {
+        super.initDB();
         super.connectToNetwork();
         communicationService.initSubscriber(NodeType.TrustScoreNode);
         NetworkNodeData zerospendNetworkNodeData = networkDetailsService.getNetworkDetails().getZerospendServer();
@@ -52,7 +53,6 @@ public class InitializationService extends BaseNodeInitializationService {
     protected NetworkNodeData createNodeProperties() {
         NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.TrustScoreNode, nodeIp, serverPort,
                 NodeCryptoHelper.getNodeHash());
-        networkNodeCrypto.signMessage(networkNodeData);
         return networkNodeData;
 
     }

@@ -20,9 +20,14 @@ public class NetworkNodeCrypto extends SignatureCrypto<NetworkNodeData> {
         ByteBuffer httpFullAddressBuffer = ByteBuffer.allocate(networkNodeData.getHttpFullAddress().getBytes().length);
         httpFullAddressBuffer.put(networkNodeData.getHttpFullAddress().getBytes());
 
+        ByteBuffer registrationHashBuffer = ByteBuffer.allocate(networkNodeData.getKycApprovementResponse()
+                .getRegistrationHash().getBytes().length);
+        registrationHashBuffer.put(networkNodeData.getKycApprovementResponse().getRegistrationHash().getBytes());
+
         ByteBuffer finalNetworkNodeBuffer = ByteBuffer.allocate(4 + networkNodeData.getHttpFullAddress().getBytes().length
-        + networkNodeInBytes.length).put(nodeTypeBuffer.array())
-                .put(networknodeinbytesByteBuffer.array()).put(httpFullAddressBuffer.array());
+        + networkNodeInBytes.length + networkNodeData.getKycApprovementResponse()
+                .getRegistrationHash().getBytes().length).put(nodeTypeBuffer.array())
+                .put(networknodeinbytesByteBuffer.array()).put(httpFullAddressBuffer.array()).put(registrationHashBuffer.array());
 
         byte[] networkNodeBufferInBytes = finalNetworkNodeBuffer.array();
         byte[] cryptoHashedMessage = CryptoHelper.cryptoHash(networkNodeBufferInBytes).getBytes();

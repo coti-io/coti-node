@@ -33,8 +33,6 @@ public class InitializationService extends BaseNodeInitializationService {
     @Value("${server.port}")
     private String serverPort;
     @Autowired
-    private NetworkNodeCrypto networkNodeCrypto;
-    @Autowired
     private TransactionService transactionService;
     @Autowired
     private AddressService addressService;
@@ -47,6 +45,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @PostConstruct
     public void init() {
+        super.initDB();
         super.connectToNetwork();
         HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping = new HashMap<>();
         classNameToReceiverHandlerMapping.put(TransactionData.class.getName(), data ->
@@ -80,7 +79,6 @@ public class InitializationService extends BaseNodeInitializationService {
         NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.DspNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash());
         networkNodeData.setPropagationPort(propagationPort);
         networkNodeData.setReceivingPort(receivingPort);
-        networkNodeCrypto.signMessage(networkNodeData);
         return networkNodeData;
     }
 }

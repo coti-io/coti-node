@@ -38,6 +38,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @PostConstruct
     public void init() {
+        super.initDB();
         super.connectToNetwork();
         communicationService.initSubscriber(NodeType.FullNode);
 
@@ -57,7 +58,6 @@ public class InitializationService extends BaseNodeInitializationService {
     protected NetworkNodeData createNodeProperties() {
         if(validateFeePercentage(nodeFee)){
             NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), nodeFee);
-            networkNodeCrypto.signMessage(networkNodeData);
             return networkNodeData;
         }
         return new NetworkNodeData();

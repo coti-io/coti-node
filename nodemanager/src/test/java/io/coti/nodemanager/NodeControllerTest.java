@@ -9,7 +9,7 @@ import io.coti.basenode.database.Interfaces.IRocksDBConnector;
 import io.coti.basenode.http.BaseNodeHttpStringConstants;
 import io.coti.basenode.services.interfaces.INetworkDetailsService;
 import io.coti.nodemanager.controllers.NodeController;
-import io.coti.nodemanager.crypto.KYCApprovementResponseCrypto;
+import io.coti.basenode.crypto.KYCApprovementResponseCrypto;
 import io.coti.nodemanager.database.RocksDBConnector;
 import io.coti.nodemanager.model.ActiveNode;
 import io.coti.nodemanager.model.NodeHistory;

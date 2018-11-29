@@ -2,13 +2,17 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.communication.Channel;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
+import io.coti.basenode.crypto.KYCApprovementResponseCrypto;
+import io.coti.basenode.crypto.NetworkNodeCrypto;
+import io.coti.basenode.data.KYCResponseRecordData;
 import io.coti.basenode.data.NetworkDetails;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.database.Interfaces.IRocksDBConnector;
 import io.coti.basenode.http.GetTransactionBatchResponse;
 import io.coti.basenode.http.data.KYCApprovementResponse;
-import io.coti.basenode.http.data.KYCApprovmentRequest;
+import io.coti.basenode.http.data.KYCApprovementRequest;
+import io.coti.basenode.model.KYCResponseRecords;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.LiveView.LiveViewService;
 import io.coti.basenode.services.interfaces.*;
@@ -79,6 +83,12 @@ public abstract class BaseNodeInitializationService {
     private KYCApprovementService kycApprovementService;
     @Autowired
     private INetworkDetailsService networkDetailsService;
+    @Autowired
+    private KYCApprovementResponseCrypto kycApprovementResponseCrypto;
+    @Autowired
+    private NetworkNodeCrypto networkNodeCrypto;
+    @Autowired
+    private KYCResponseRecords kycResponseRecords;
 
     public void init() {
         try {
@@ -94,7 +104,6 @@ public abstract class BaseNodeInitializationService {
 
     private void initTransactionSync() {
         try {
-            dataBaseConnector.init();
             propagationSubscriber.startListening();
             addressService.init();
             balanceService.init();
@@ -102,7 +111,6 @@ public abstract class BaseNodeInitializationService {
             dspVoteService.init();
             transactionService.init();
             potService.init();
-
             AtomicLong maxTransactionIndex = new AtomicLong(-1);
             transactions.forEach(transactionData -> handleExistingTransaction(maxTransactionIndex, transactionData));
             transactionIndexService.init(maxTransactionIndex);
@@ -140,8 +148,8 @@ public abstract class BaseNodeInitializationService {
 
     }
 
-    private void initSubscriber() {
-
+    public void initDB() {
+        dataBaseConnector.init();
     }
 
     private void handleExistingTransaction(AtomicLong maxTransactionIndex, TransactionData transactionData) {
@@ -186,13 +194,19 @@ public abstract class BaseNodeInitializationService {
 
     private ResponseEntity<String> addNewNodeToNodeManager(NetworkNodeData networkNodeData) {
         try {
-            handleCCAApprovement(networkNodeData);
-            networkNodeData.setTrustScore(networkNodeData.getKycApprovementResponse().getTrustScore());
+            KYCResponseRecordData kycResponseRecordData = kycResponseRecords.getByHash(networkNodeData.getHash());
+            if(kycResponseRecordData != null && kycResponseRecordData.isValid()){
+                networkNodeData.setKycApprovementResponse(kycResponseRecordData.getKycApprovementResponse());
+            }
+            else {
+                handleCCAApprovement(networkNodeData);
+            }
+            networkNodeCrypto.signMessage(networkNodeData);
             String newNodeURL = nodeManagerAddress + NODE_MANAGER_NODES_ENDPOINT;
             HttpEntity<NetworkNodeData> entity = new HttpEntity<>(networkNodeData);
             return restTemplate.exchange(newNodeURL, HttpMethod.PUT, entity, String.class);
         } catch (Exception ex) {
-            log.error("Error connecting node manager, please check node's address / contact COTI");
+            log.error("Error connecting node manager, please check node's address / contact COTI ex:", ex);
             System.exit(-1);
         }
         return ResponseEntity.noContent().build();
@@ -203,22 +217,54 @@ public abstract class BaseNodeInitializationService {
         return restTemplate.getForEntity(newNodeURL, NetworkDetails.class).getBody();
     }
 
-    private KYCApprovmentRequest createCCAApprovementRequest(NetworkNodeData networkNodeData){
-        return new KYCApprovmentRequest(networkNodeData.getNodeHash(), networkNodeData.getSignature());
+    private KYCApprovementRequest createCCAApprovementRequest(NetworkNodeData networkNodeData){
+        return new KYCApprovementRequest(networkNodeData.getNodeHash(), networkNodeData.getSignature(), networkNodeData.getNodeType());
     }
 
     private void handleCCAApprovement(NetworkNodeData networkNodeData){
-        KYCApprovmentRequest KYCApprovmentRequest = createCCAApprovementRequest(networkNodeData);
-        ResponseEntity<KYCApprovementResponse> ccaApprovementResponseEntity = kycApprovementService.sendCCAApprovment(KYCApprovmentRequest);
+        KYCApprovementRequest kycApprovementRequest = createCCAApprovementRequest(networkNodeData);
+        ResponseEntity<KYCApprovementResponse> ccaApprovementResponseEntity = kycApprovementService.sendCCAApprovement(kycApprovementRequest);
         log.info("Response has returned from cca: {}", ccaApprovementResponseEntity);
         KYCApprovementResponse approvementResponse = ccaApprovementResponseEntity.getBody();
         if(approvementResponse != null){
-            networkNodeData.setKycApprovementResponse(approvementResponse);
+           if(validateCCAApprovementResponse(networkNodeData, approvementResponse)) {
+               networkNodeData.setKycApprovementResponse(approvementResponse);
+               saveKYCResponseRecord(networkNodeData, approvementResponse, true);
+           }
         }
         else{
             log.error("cca returned a null object: {} . closing server", ccaApprovementResponseEntity);
+            saveKYCResponseRecord(networkNodeData, approvementResponse, false);
             System.exit(-1);
         }
+    }
+
+    protected boolean validateCCAApprovementResponse(NetworkNodeData networkNodeData, KYCApprovementResponse approvementResponse){
+        if(!networkNodeData.getNodeType().equals(approvementResponse.getNodeType())){
+            log.error("KYCApprovementResponse has different node type than the request! response: {} wanted nodeType: {}" +
+                    " . shutting down server", approvementResponse, networkNodeData.getNodeType());
+            saveKYCResponseRecord(networkNodeData, approvementResponse, false);
+            System.exit(-1);
+            return false;
+        }
+        /*
+        if(!kycApprovementResponseCrypto.verifySignature(approvementResponse)){
+            log.error("KYCApprovementResponse failed signature validation! response: {} " +
+                    " . node type {}. shutting down server", approvementResponse, networkNodeData.getNodeType());
+            saveKYCResponseRecord(networkNodeData, approvementResponse, false);
+            System.exit(-1);
+            return false;
+        }
+        */
+        return true;
+    }
+
+    private void saveKYCResponseRecord(NetworkNodeData networkNodeData, KYCApprovementResponse kycApprovementResponse, boolean valid){
+        KYCResponseRecordData kycResponseRecordData = new KYCResponseRecordData();
+        kycResponseRecordData.setHash(networkNodeData.getHash());
+        kycResponseRecordData.setKycApprovementResponse(kycApprovementResponse);
+        kycResponseRecordData.setValid(valid);
+        kycResponseRecords.put(kycResponseRecordData);
     }
 
 

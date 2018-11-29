@@ -1,6 +1,7 @@
 package io.coti.basenode.http.data;
 
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
 @Data
-public class KYCApprovmentRequest extends Request implements ISignable, ISignValidatable {
+public class KYCApprovementRequest extends Request implements ISignable, ISignValidatable {
 
     @NotNull
     private Hash userHash;
@@ -22,11 +23,14 @@ public class KYCApprovmentRequest extends Request implements ISignable, ISignVal
     private SignatureData signature;
     @NotNull
     private LocalDateTime creationTime;
+    @NotNull
+    private NodeType nodeType;
 
-    public KYCApprovmentRequest(@NotNull Hash userHash, @NotNull @Valid SignatureData signature) {
+    public KYCApprovementRequest(@NotNull Hash userHash, @NotNull @Valid SignatureData signature, @NotNull NodeType nodeType) {
         this.userHash = userHash;
         this.signature = signature;
         this.creationTime = LocalDateTime.now(ZoneOffset.UTC);
+        this.nodeType = nodeType;
     }
 
     @Override

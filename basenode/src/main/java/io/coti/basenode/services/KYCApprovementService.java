@@ -4,13 +4,16 @@ import io.coti.basenode.crypto.KYCApprovementRequestCrypto;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.http.data.KYCApprovementResponse;
-import io.coti.basenode.http.data.KYCApprovmentRequest;
+import io.coti.basenode.http.data.KYCApprovementRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Component
 @Slf4j
@@ -25,16 +28,18 @@ public class KYCApprovementService {
     @Autowired
     private KYCApprovementRequestCrypto ccaApprovementCrypto;
 
-    public ResponseEntity<KYCApprovementResponse> sendCCAApprovment(KYCApprovmentRequest KYCApprovmentRequest){
+    public ResponseEntity<KYCApprovementResponse> sendCCAApprovement(KYCApprovementRequest kycApprovementRequest){
         KYCApprovementResponse dummyKYCApprovementResponse = new KYCApprovementResponse();
         dummyKYCApprovementResponse.setSignerHash(new Hash("abc"));
         dummyKYCApprovementResponse.setSignature(new SignatureData());
-        dummyKYCApprovementResponse.setTrustScore(5.0);
+        dummyKYCApprovementResponse.setRegistrationHash(new Hash("abc"));
+        dummyKYCApprovementResponse.setNodeType(kycApprovementRequest.getNodeType());
+        dummyKYCApprovementResponse.setCreationTime(LocalDateTime.now(ZoneOffset.UTC));
         return ResponseEntity.ok(dummyKYCApprovementResponse);
 //        try {
-//            ccaApprovementCrypto.signMessage(KYCApprovmentRequest);
+//            ccaApprovementCrypto.signMessage(KYCApprovementRequest);
 //
-//            ResponseEntity<KYCApprovementResponse> approvementResponseEntity = restTemplate.postForEntity(ccaAddress, KYCApprovmentRequest, KYCApprovementResponse.class);
+//            ResponseEntity<KYCApprovementResponse> approvementResponseEntity = restTemplate.postForEntity(ccaAddress, KYCApprovementRequest, KYCApprovementResponse.class);
 //
 //            if (approvementResponseEntity.getStatusCode() != HttpStatus.OK) {
 //                log.error("cca returned an error. response: {} . closing server", approvementResponseEntity);

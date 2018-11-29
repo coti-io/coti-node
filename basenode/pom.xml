@@ -104,6 +104,16 @@
             <artifactId>commons-collections4</artifactId>
             <version>4.2</version>
         </dependency>
+        <!--
+         don't remove jsr310 dependency (and don't try changing it's version)! it seemed to be unused explicitly in coti's code
+         but this dependency makes LocalDateTime be deserialized by jackson
+         -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>2.6.4</version>
+        </dependency>
+
     </dependencies>
     <repositories>
         <repository>

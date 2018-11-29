@@ -59,7 +59,8 @@ public class BaseNodeRocksDBConnector implements IRocksDBConnector {
                 Addresses.class.getName(),
                 AddressTransactionsHistories.class.getName(),
                 TransactionIndexes.class.getName(),
-                TransactionVotes.class.getName()
+                TransactionVotes.class.getName(),
+                KYCResponseRecords.class.getName()
         ));
 
     }
