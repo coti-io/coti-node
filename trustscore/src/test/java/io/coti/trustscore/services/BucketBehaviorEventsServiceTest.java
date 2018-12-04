@@ -1,10 +1,13 @@
 package io.coti.trustscore.services;
 
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.database.RocksDBConnector;
 import io.coti.trustscore.data.Buckets.BucketBehaviorEventsData;
 import io.coti.trustscore.data.Enums.BehaviorEventsScoreType;
+import io.coti.trustscore.data.Enums.EventType;
 import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.Events.BehaviorEventsData;
+import io.coti.trustscore.http.InsertEventRequest;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,6 +21,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static io.coti.trustscore.BucketUtil.generateRulesDataObject;
 import static io.coti.trustscore.utils.DatesCalculation.addToDateByDays;
@@ -41,6 +45,7 @@ public class BucketBehaviorEventsServiceTest {
     public void setUp() {
         bucketBehaviorEventsService.init(generateRulesDataObject());
         bucketBehaviorEventsData = new BucketBehaviorEventsData();
+        bucketBehaviorEventsData.setUserType(UserType.MERCHANT);
     }
 
     @Test
@@ -57,8 +62,7 @@ public class BucketBehaviorEventsServiceTest {
         bucketSumScore = bucketBehaviorEventsService.getBucketSumScore(bucketBehaviorEventsData);
         Assert.assertTrue(ifTwoNumbersAreEqualOrAlmostEqual(bucketSumScore, -23.0933720855));
 
-        BehaviorEventsData behaviorEventsData = new BehaviorEventsData(BehaviorEventsScoreType.INCORRECT_TRANSACTION, null);
-        bucketBehaviorEventsData.setUserType(UserType.MERCHANT);
+        BehaviorEventsData behaviorEventsData = new BehaviorEventsData(buildBehaviorEventsDataRequest(BehaviorEventsScoreType.INCORRECT_TRANSACTION));
         bucketBehaviorEventsService.addEventToCalculations(behaviorEventsData, bucketBehaviorEventsData);
         bucketSumScore = bucketBehaviorEventsService.getBucketSumScore(bucketBehaviorEventsData);
         Assert.assertTrue(ifTwoNumbersAreEqualOrAlmostEqual(bucketSumScore, -25.0933720855));
@@ -68,11 +72,11 @@ public class BucketBehaviorEventsServiceTest {
         bucketSumScore = bucketBehaviorEventsService.getBucketSumScore(bucketBehaviorEventsData);
         Assert.assertTrue(ifTwoNumbersAreEqualOrAlmostEqual(bucketSumScore, -24.7098136935));
 
-        BehaviorEventsData behaviorEventsData1 = new BehaviorEventsData(BehaviorEventsScoreType.INCORRECT_TRANSACTION, null);
-        bucketBehaviorEventsData.setUserType(UserType.MERCHANT);
+        BehaviorEventsData behaviorEventsData1 = new BehaviorEventsData(buildBehaviorEventsDataRequest(BehaviorEventsScoreType.INCORRECT_TRANSACTION));
+
         bucketBehaviorEventsService.addEventToCalculations(behaviorEventsData1, bucketBehaviorEventsData);
-        BehaviorEventsData behaviorEventsData2 = new BehaviorEventsData(BehaviorEventsScoreType.DOUBLE_SPENDING, null);
-        bucketBehaviorEventsData.setUserType(UserType.MERCHANT);
+        BehaviorEventsData behaviorEventsData2 = new BehaviorEventsData(buildBehaviorEventsDataRequest(BehaviorEventsScoreType.DOUBLE_SPENDING));
+
         bucketBehaviorEventsService.addEventToCalculations(behaviorEventsData2, bucketBehaviorEventsData);
 
         for (int i = 0; i < 5; i++) {
@@ -109,9 +113,7 @@ public class BucketBehaviorEventsServiceTest {
     @Test
     public void BucketBehaviorEventsService_withLargeDecayTest() {
         addBehaviorEvents();
-//        for (int i = 0; i < 8; i++) {
-//            addFillingTheQuestionnaireEvent(UserType.MERCHANT);
-//        }
+
         double bucketSumScore = bucketBehaviorEventsService.getBucketSumScore(bucketBehaviorEventsData);
         performSimulationOfDecay(400);
         bucketSumScore = bucketBehaviorEventsService.getBucketSumScore(bucketBehaviorEventsData);
@@ -161,26 +163,31 @@ public class BucketBehaviorEventsServiceTest {
     }
 
     private void addBehaviorEvents() {
-        BehaviorEventsData behaviorEventsData = new BehaviorEventsData(BehaviorEventsScoreType.DOUBLE_SPENDING, null);
-        bucketBehaviorEventsData.setUserType(UserType.MERCHANT);
+        BehaviorEventsData behaviorEventsData = new BehaviorEventsData(buildBehaviorEventsDataRequest(BehaviorEventsScoreType.DOUBLE_SPENDING));
         bucketBehaviorEventsService.addEventToCalculations(behaviorEventsData, bucketBehaviorEventsData);
 
-        BehaviorEventsData behaviorEventsData1 = new BehaviorEventsData(BehaviorEventsScoreType.DOUBLE_SPENDING, null);
-        bucketBehaviorEventsData.setUserType(UserType.MERCHANT);
+        BehaviorEventsData behaviorEventsData1 = new BehaviorEventsData(buildBehaviorEventsDataRequest(BehaviorEventsScoreType.DOUBLE_SPENDING));
         bucketBehaviorEventsService.addEventToCalculations(behaviorEventsData1, bucketBehaviorEventsData);
 
-        BehaviorEventsData behaviorEventsData2 = new BehaviorEventsData(BehaviorEventsScoreType.INCORRECT_TRANSACTION, null);
-        bucketBehaviorEventsData.setUserType(UserType.MERCHANT);
+        BehaviorEventsData behaviorEventsData2 = new BehaviorEventsData(buildBehaviorEventsDataRequest(BehaviorEventsScoreType.INCORRECT_TRANSACTION));
         bucketBehaviorEventsService.addEventToCalculations(behaviorEventsData2, bucketBehaviorEventsData);
 
-        BehaviorEventsData behaviorEventsData3 = new BehaviorEventsData(BehaviorEventsScoreType.INCORRECT_TRANSACTION, null);
-        bucketBehaviorEventsData.setUserType(UserType.MERCHANT);
+        BehaviorEventsData behaviorEventsData3 = new BehaviorEventsData(buildBehaviorEventsDataRequest(BehaviorEventsScoreType.INCORRECT_TRANSACTION));
         bucketBehaviorEventsService.addEventToCalculations(behaviorEventsData3, bucketBehaviorEventsData);
     }
 
     private void addFillingTheQuestionnaireEvent(UserType userType) {
-        BehaviorEventsData behaviorEventsData = new BehaviorEventsData(BehaviorEventsScoreType.FILLING_QUESTIONNAIRE, null);
+        BehaviorEventsData behaviorEventsData = new BehaviorEventsData(buildBehaviorEventsDataRequest(BehaviorEventsScoreType.FILLING_QUESTIONNAIRE));
         bucketBehaviorEventsData.setUserType(userType);
         bucketBehaviorEventsService.addEventToCalculations(behaviorEventsData, bucketBehaviorEventsData);
+    }
+
+    private InsertEventRequest buildBehaviorEventsDataRequest(BehaviorEventsScoreType behaviorEventsScoreType) {
+        InsertEventRequest insertEventRequest = new InsertEventRequest();
+        insertEventRequest.setUserHash(new Hash("1234"));
+        insertEventRequest.eventType = EventType.BEHAVIOR_EVENT;
+        insertEventRequest.setBehaviorEventsScoreType(behaviorEventsScoreType);
+        insertEventRequest.uniqueIdentifier = new Hash("" + ThreadLocalRandom.current().nextLong(10000000, 99999999));
+        return insertEventRequest;
     }
 }

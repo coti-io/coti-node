@@ -1,27 +1,26 @@
 package io.coti.trustscore.config.rules;
 
+import io.coti.trustscore.data.Enums.TrustScoreRangeType;
 import io.coti.trustscore.data.Enums.UserType;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@XmlRootElement(name = "rules")
 public class RulesData {
+
+    private List<UserScoresByType> userScoresByTypeList;
+
+    private List<UserNetworkFeeByTrustScoreRange> userNetworkFeeByTrustScoreRangeList;
 
     public RulesData() {
     }
 
-    private List<UserScoresByType> userScoresByTypeList;
-
-    @XmlElement(name = "user")
     public List<UserScoresByType> getUserScoresByTypeList() {
         return userScoresByTypeList;
     }
 
-    public void setUserScoresByTypeList( List<UserScoresByType> userScoresByTypeList) {
+    public void setUser(List<UserScoresByType> userScoresByTypeList) {
         this.userScoresByTypeList = userScoresByTypeList;
     }
 
@@ -33,14 +32,20 @@ public class RulesData {
         return userScoresByTypeList.stream().collect(
                 Collectors.toMap(t -> UserType.enumFromString(t.getType()), t -> t));
     }
+
+    public List<UserNetworkFeeByTrustScoreRange> getUserNetworkFeeByTrustScoreRangeList() {
+        return userNetworkFeeByTrustScoreRangeList;
+    }
+
+    public void setNetworkFee(List<UserNetworkFeeByTrustScoreRange> userNetworkFeeByTrustScoreRangeList) {
+        this.userNetworkFeeByTrustScoreRangeList = userNetworkFeeByTrustScoreRangeList;
+    }
+
+    public Map<TrustScoreRangeType, UserNetworkFeeByTrustScoreRange> getTrustScoreRangeTypeToUserScoreMap() {
+        return userNetworkFeeByTrustScoreRangeList.stream().collect(
+                Collectors.toMap(t -> TrustScoreRangeType.enumFromString(t.getType()), t -> t));
+    }
 }
-
-
-
-
-
-
-
 
 
 

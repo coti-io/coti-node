@@ -1,8 +1,9 @@
 package io.coti.trustscore.services.calculationServices;
 
-import io.coti.trustscore.data.Events.BalanceCountAndContribution;
 import io.coti.trustscore.config.rules.EventScore;
 import io.coti.trustscore.config.rules.TransactionEventScore;
+import io.coti.trustscore.data.Events.BalanceCountAndContribution;
+import io.coti.trustscore.utils.DatesCalculation;
 import javafx.util.Pair;
 
 import java.util.Date;
@@ -32,7 +33,8 @@ public class VectorDecaysCalculator<T extends EventScore> {
 
             // Iterate on every date
             for (Map.Entry<Date, BalanceCountAndContribution> dayToScoreMapEntry : dayToScoreMap.entrySet()) {
-                int numberOfDecays = calculateDaysDiffBetweenDates(lastUpdate, new Date());
+                int numberOfDecays = calculateDaysDiffBetweenDates(DatesCalculation.setDateOnBeginningOfDay(lastUpdate),
+                        DatesCalculation.setDateOnBeginningOfDay(new Date()));
                 double currentDailyScore = dayToScoreMapEntry.getValue().getContribution();
 
                 Pair<TransactionEventScore, Double> scoreAfterDecay =

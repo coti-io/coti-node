@@ -8,9 +8,11 @@ import java.util.GregorianCalendar;
 
 @Slf4j
 public class DatesCalculation {
+    public static final int MILLI_SECONDS_PER_SECOND = 1000;
+
     public static int calculateDaysDiffBetweenDates(Date firstDate, Date secondDate) {
         long difference = Math.abs(secondDate.getTime() - firstDate.getTime());
-        return (int) (difference / (1000 * 60 * 60 * 24));
+        return (int) (difference / (MILLI_SECONDS_PER_SECOND * 60 * 60 * 24));
     }
 
     public static Date setDateOnBeginningOfDay(Date date) {
@@ -28,11 +30,11 @@ public class DatesCalculation {
     }
 
     public static Date decreaseTodayDateByDays(int numberOfDays) {
-        return new Date(setDateOnBeginningOfDay(new Date()).getTime() - 24 * (long) numberOfDays * 60 * 60 * 1000);
+        return new Date(setDateOnBeginningOfDay(new Date()).getTime() - 24 * (long) numberOfDays * 60 * 60 * MILLI_SECONDS_PER_SECOND);
     }
 
     public static Date addToDateByDays(long milliSecondsDate, int numberOfDays) {
-        return new Date(milliSecondsDate + 24 * (long) numberOfDays * 60 * 60 * 1000);
+        return new Date(milliSecondsDate + 24 * (long) numberOfDays * 60 * 60 * MILLI_SECONDS_PER_SECOND);
     }
 
 }

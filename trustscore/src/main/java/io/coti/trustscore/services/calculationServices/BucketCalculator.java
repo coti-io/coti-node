@@ -3,9 +3,11 @@ package io.coti.trustscore.services.calculationServices;
 
 import io.coti.trustscore.data.Buckets.BucketEventData;
 import io.coti.trustscore.utils.DatesCalculation;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 
+@Slf4j
 public abstract class BucketCalculator {
     //abstract boolean decayScores();
 
@@ -15,9 +17,11 @@ public abstract class BucketCalculator {
         if (!bucketEventData.lastUpdateBeforeToday()) {
             return false;
         }
-        int daysDiff = DatesCalculation.calculateDaysDiffBetweenDates(bucketEventData.getLastUpdate(), new Date());
+        Date beginningOfDay = DatesCalculation.setDateOnBeginningOfDay(new Date());
+        Date beginningOfLastUpdateDay = DatesCalculation.setDateOnBeginningOfDay(bucketEventData.getLastUpdate());
+        int daysDiff = DatesCalculation.calculateDaysDiffBetweenDates(beginningOfLastUpdateDay, beginningOfDay);
         decayDailyEventScoresType(daysDiff);
-        bucketEventData.setLastUpdate(DatesCalculation.setDateOnBeginningOfDay(new Date()));
+        bucketEventData.setLastUpdate(beginningOfDay);
         return true;
     }
 

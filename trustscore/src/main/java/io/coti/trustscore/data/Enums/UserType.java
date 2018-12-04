@@ -12,12 +12,12 @@ public enum UserType {
     }
 
     public static UserType enumFromString(String text) {
-        for (UserType value: UserType.values()) {
+        for (UserType value : UserType.values()) {
             if (value.text.equalsIgnoreCase(text)) {
                 return value;
             }
         }
-        return null;
+        throw new IllegalArgumentException(String.format("got user type name {}, which not exists", text));
     }
 
     @Override

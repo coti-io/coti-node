@@ -1,12 +1,12 @@
 package io.coti.trustscore.services.calculationServices;
 
+import io.coti.trustscore.config.rules.BaseEventScore;
+import io.coti.trustscore.config.rules.BehaviorEventsScore;
+import io.coti.trustscore.config.rules.RulesData;
 import io.coti.trustscore.data.Buckets.BucketBehaviorEventsData;
 import io.coti.trustscore.data.Enums.BehaviorEventsScoreType;
 import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.Events.EventCountAndContributionData;
-import io.coti.trustscore.config.rules.BaseEventScore;
-import io.coti.trustscore.config.rules.BehaviorEventsScore;
-import io.coti.trustscore.config.rules.RulesData;
 import io.coti.trustscore.utils.DatesCalculation;
 import javafx.util.Pair;
 
@@ -53,7 +53,7 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
     private void updateBucketScoresAfterCalculation(Map<BaseEventScore, Double> baseEventScoreToCalculatedScoreMap) {
         for (Map.Entry<BaseEventScore, Double> baseEventScoreToCalculatedScoreEntry : baseEventScoreToCalculatedScoreMap.entrySet()) {
 
-            BehaviorEventsScoreType behaviorEventName =  BehaviorEventsScoreType.enumFromString(baseEventScoreToCalculatedScoreEntry.getKey().getName());
+            BehaviorEventsScoreType behaviorEventName = BehaviorEventsScoreType.enumFromString(baseEventScoreToCalculatedScoreEntry.getKey().getName());
             double score = baseEventScoreToCalculatedScoreEntry.getValue();
 
             // if the there is this behavior event today
@@ -64,7 +64,7 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
                         .put(behaviorEventName, new EventCountAndContributionData(numberOfBehaviorEvent, score));
             }
 
-            double tailContribution = 0.0;
+            double tailContribution = 0;
             // if the there is this behavior event in the tail events
             if (bucketBehaviorEventsData.getBehaviorEventTypeToOldEventsContributionMap().get(behaviorEventName) != null) {
                 tailContribution = bucketBehaviorEventsData.getBehaviorEventTypeToOldEventsContributionMap().get(behaviorEventName).values().stream()
@@ -130,7 +130,7 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
                     oldEventDateToContributionMap =
                             oldEventDateToContributionMap.entrySet()
                                     .stream()
-                                    .filter(p -> DatesCalculation.calculateDaysDiffBetweenDates(p.getKey(),
+                                    .filter(p -> DatesCalculation.calculateDaysDiffBetweenDates(DatesCalculation.setDateOnBeginningOfDay(p.getKey()),
                                             DatesCalculation.setDateOnBeginningOfDay(new Date())) <= event.getTerm())
                                     .collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
                     behaviorEventTypeToOldEventsContributionMap.put(eventsScoreType, oldEventDateToContributionMap);
@@ -140,6 +140,7 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
         return !behaviorEventTypeToOldEventsContributionMap.isEmpty() || !behaviorEventTypeToCurrentEventsNumberAndContributionMap.isEmpty();
     }
 
+    @Override
     protected void decayDailyEventScoresType(int daysDiff) {
         if (isEventsExistAfterDeletingVeryOldEvents(daysDiff)) {
             Map<BehaviorEventsScoreType, Map<Date, Double>> behaviorEventTypeToOldEventsContributionMap = bucketBehaviorEventsData.getBehaviorEventTypeToOldEventsContributionMap();
@@ -167,6 +168,9 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
     }
 
     private double getWeightByEventScore(BehaviorEventsScoreType eventScoreType) {
+        if (behaviorEventsScore.getBaseEventScoreMap().get(eventScoreType) == null) {
+            return 0;
+        }
         return behaviorEventsScore.getBaseEventScoreMap().get(eventScoreType).getWeight();
     }
 
@@ -175,7 +179,7 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
     }
 
     public double getBucketSumScore(BucketBehaviorEventsData bucketBehaviorEventsData) {
-        double sumScore = 0.0;
+        double sumScore = 0;
         for (Map.Entry<BehaviorEventsScoreType, Double> eventScoresToFunctionalScoreMapEntry : bucketBehaviorEventsData.getBehaviorEventTypeToTotalEventsContributionMap().entrySet()) {
             sumScore += eventScoresToFunctionalScoreMapEntry.getValue() * getWeightByEventScore(eventScoresToFunctionalScoreMapEntry.getKey());
         }

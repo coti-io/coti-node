@@ -1,59 +1,70 @@
 package io.coti.trustscore.config.rules;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-
-@XmlRootElement(name = "user")
 public class UserScoresByType {
 
-    @XmlAttribute(name = "type")
     private String type;
-
-    private InitialTrustScore initialTrustScore;
-    private TransactionEventsScore transactionEventScoreList;
-    private BehaviorEventsScore behaviorEventsScoreList;
+    private String userID;
+    private String addressMapping;
+    private InitialTrustScoreEventsScore initialTrustScoreEventsScore;
+    private TransactionEventsScore transactionEventScore;
+    private BehaviorEventsScore behaviorEventsScore;
     private BehaviorHighFrequencyEventsScore behaviorHighFrequencyEventsScore;
-
-    public InitialTrustScore getInitialTrustScore() {
-        return initialTrustScore;
-    }
+    private CompensableEventsScore compensableEventsScore;
 
 
     public String getType() {
         return type;
     }
 
-    @XmlElement(name = "initialTrustScore")
-    public void setInitialTrustScore(InitialTrustScore initialTrustScore) {
-        this.initialTrustScore = initialTrustScore;
+    public void setType(String type) {
+        this.type = type;
     }
 
-    public TransactionEventsScore getTransactionEventsScore() {
-        return transactionEventScoreList;
+    public void setUserID(String userID) {
+        this.userID = userID;
     }
 
-    @XmlElement(name = "behaviorCumulativeScores")
-    public void setTransactionEventsScore(TransactionEventsScore transactionEventScoreList) {
-        this.transactionEventScoreList = transactionEventScoreList;
+    public void setAddressMapping(String addressMapping) {
+        this.addressMapping = addressMapping;
     }
 
-    public BehaviorEventsScore getBehaviorEventsScore() {
-        return behaviorEventsScoreList;
+    public InitialTrustScoreEventsScore getInitialTrustScoreEventsScore() {
+        return initialTrustScoreEventsScore;
     }
 
-    @XmlElement(name = "behaviorEventsScore")
-    public void setBadEventsScore(BehaviorEventsScore badEventScoreList) {
-        this.behaviorEventsScoreList = badEventScoreList;
+    public void setInitialTrustScore(InitialTrustScoreEventsScore initialTrustScoreEventsScoreList) {
+        this.initialTrustScoreEventsScore = initialTrustScoreEventsScoreList;
+    }
+
+    public TransactionEventsScore getBehaviorCumulativeScores() {
+        return transactionEventScore;
+    }
+
+    public void setBehaviorCumulativeScores(TransactionEventsScore transactionEventScoreList) {
+        this.transactionEventScore = transactionEventScoreList;
     }
 
     public BehaviorHighFrequencyEventsScore getHighFrequencyEventScore() {
         return behaviorHighFrequencyEventsScore;
     }
 
-    @XmlElement(name = "behaviorHighFrequencyEventsScore")
-    public void setDisputedEventsScore(BehaviorHighFrequencyEventsScore behaviorHighFrequencyEventsScore) {
+    public void setBehaviorHighFrequencyEventsScore(BehaviorHighFrequencyEventsScore behaviorHighFrequencyEventsScore) {
         this.behaviorHighFrequencyEventsScore = behaviorHighFrequencyEventsScore;
     }
 
+    public BehaviorEventsScore getBehaviorEventsScore() {
+        return behaviorEventsScore;
+    }
+
+    public void setBehaviorEventsScore(BehaviorEventsScore behaviorEventsScoreList) {
+        this.behaviorEventsScore = behaviorEventsScoreList;
+    }
+
+    public CompensableEventsScore getCompensableEventsScore() {
+        return compensableEventsScore;
+    }
+
+    public void setCompensableEventsScore(CompensableEventsScore compensableEventsScore) {
+        this.compensableEventsScore = compensableEventsScore;
+    }
 }

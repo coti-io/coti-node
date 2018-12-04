@@ -1,21 +1,23 @@
 package io.coti.trustscore.config.rules;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.coti.trustscore.data.Enums.HighFrequencyEventScoreType;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@XmlRootElement(name = "behaviorHighFrequencyEventsScore")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class BehaviorHighFrequencyEventsScore {
 
-    @XmlElement(name = "highFrequencyEventsScore")
     private List<HighFrequencyEventScore> highFrequencyEventsScoreList;
 
-    public List<HighFrequencyEventScore> getHighFrequencyEventScoreList() {
+    public List<HighFrequencyEventScore> getHighFrequencyEventsScoreList() {
         return highFrequencyEventsScoreList;
+    }
+
+    public void setHighFrequencyEventsScoreList(List<HighFrequencyEventScore> highFrequencyEventsScoreList) {
+        this.highFrequencyEventsScoreList = highFrequencyEventsScoreList;
     }
 
     public Map<HighFrequencyEventScoreType, HighFrequencyEventScore> getHighFrequencyEventScoreMap() {

@@ -1,15 +1,17 @@
 package io.coti.trustscore.config.rules;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-@XmlRootElement(name = "standardEventScore")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class BaseEventScore extends EventScore {
-    @XmlElement(name = "contribution")
+
+    private int term;
+
     private String contributionFormula;
 
-    @XmlElement(name = "term")
-    private int term;
+    public void setContribution(String contributionFormula) {
+        this.contributionFormula = contributionFormula;
+    }
 
     public String getContributionFormula() {
         return contributionFormula;
@@ -17,6 +19,10 @@ public class BaseEventScore extends EventScore {
 
     public int getTerm() {
         return term;
+    }
+
+    public void setTerm(int term) {
+        this.term = term;
     }
 
 }

@@ -3,6 +3,7 @@ package io.coti.trustscore.data.Enums;
 public enum HighFrequencyEventScoreType {
 
     CLAIM("Claim"),
+    CHARGE_BACK("ChargeBack"),
     CHARGE_BACK_AMOUNT("ChargeBackAmount"),
     CHARGE_BACK_NUMBER("ChargeBackNumber");
 
@@ -13,12 +14,12 @@ public enum HighFrequencyEventScoreType {
     }
 
     public static HighFrequencyEventScoreType enumFromString(String text) {
-        for (HighFrequencyEventScoreType value: HighFrequencyEventScoreType.values()) {
+        for (HighFrequencyEventScoreType value : HighFrequencyEventScoreType.values()) {
             if (value.text.equalsIgnoreCase(text)) {
                 return value;
             }
         }
-        return null;
+        throw new IllegalArgumentException(String.format("got event name {}, which not exists", text));
     }
 
     @Override

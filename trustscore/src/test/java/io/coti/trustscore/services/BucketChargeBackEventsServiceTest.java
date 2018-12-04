@@ -5,8 +5,12 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.database.RocksDBConnector;
 import io.coti.trustscore.BucketUtil;
 import io.coti.trustscore.data.Buckets.BucketChargeBackEventsData;
+import io.coti.trustscore.data.Enums.EventType;
+import io.coti.trustscore.data.Enums.HighFrequencyEventScoreType;
 import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.Events.ChargeBackEventsData;
+import io.coti.trustscore.http.InsertEventRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,6 +23,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static io.coti.trustscore.BucketUtil.generateRulesDataObject;
 import static io.coti.trustscore.utils.DatesCalculation.decreaseTodayDateByDays;
@@ -30,6 +35,8 @@ import static io.coti.trustscore.utils.MathCalculation.ifTwoNumbersAreEqualOrAlm
 @ContextConfiguration(classes = {BucketChargeBackEventsService.class,
         RocksDBConnector.class
 })
+
+@Slf4j
 public class BucketChargeBackEventsServiceTest {
 
     @Autowired
@@ -47,10 +54,10 @@ public class BucketChargeBackEventsServiceTest {
     @Test
     public void BehaviorHighFrequencyEventsService_simpleScenarioTest() {
         addPaymentTransactionsAndChargeBacks();
-
+        double score = bucketChargeBackEventsService.getBucketSumScore(bucketChargeBackEventsData);
         // Score: ((0.0+9.0)/(0.0+12.0) - 0.02) *(-5) + ((0.0+2)/(0.0+3) - 0.02 ) *(-5)
         Assert.assertTrue(
-                (ifTwoNumbersAreEqualOrAlmostEqual(bucketChargeBackEventsService.getBucketSumScore(bucketChargeBackEventsData), -3.65 - 3.23333333)));
+                (ifTwoNumbersAreEqualOrAlmostEqual(score, -3.65 - 3.23333333)));
     }
 
     @Test
@@ -65,10 +72,12 @@ public class BucketChargeBackEventsServiceTest {
 
         // ChargeBack amount Score: ((exp(-ln(2)/30) * 9) )/(((exp(-ln(2)/30)* 12)+7.0)) - 0.02) * (-5) = ((8.794439715908213 )/(18.72591962121095) - 0.02) * (-5) =  -2.24819968625
         // ChargeBack number Score: ((exp(-ln(2)/30) * 2) )/(((exp(-ln(2)/30)* 3)+1)) - 0.02) * (-5) = ((1.95431993687 )/(3.9314799053) - 0.02) * (-5) = -2.38547618701
-        Assert.assertTrue(
-                (ifTwoNumbersAreEqualOrAlmostEqual(bucketChargeBackEventsService.getBucketSumScore(bucketChargeBackEventsData),
-                        -2.24819968625 - 2.38547618701)));
 
+        double score = bucketChargeBackEventsService.getBucketSumScore(bucketChargeBackEventsData);
+
+        Assert.assertTrue(
+                (ifTwoNumbersAreEqualOrAlmostEqual(score,
+                        -2.24819968625 - 2.38547618701)));
 
         bucketChargeBackEventsData.setLastUpdate(yesterday);
         double bucketSumScore = bucketChargeBackEventsService.getBucketSumScore(bucketChargeBackEventsData);
@@ -93,11 +102,11 @@ public class BucketChargeBackEventsServiceTest {
         TransactionData transactionData5 = BucketUtil.createTransactionWithSpecificHash(new Hash("5555"), new Hash("aeed"), 70.45);
         transactionData5.setAmount(new BigDecimal(7.2));
 
-        bucketChargeBackEventsService.addEventToCalculations(new ChargeBackEventsData(transactionData5, null), bucketChargeBackEventsData);
+        bucketChargeBackEventsService.addEventToCalculations(new ChargeBackEventsData(buildChargeBackDataRequest(transactionData5)), bucketChargeBackEventsData);
         TransactionData transactionData6 = BucketUtil.createTransactionWithSpecificHash(new Hash("6666"), new Hash("accd"), 70.45);
         transactionData6.setAmount(new BigDecimal(5));
 
-        bucketChargeBackEventsService.addEventToCalculations(new ChargeBackEventsData(transactionData6, null), bucketChargeBackEventsData);
+        bucketChargeBackEventsService.addEventToCalculations(new ChargeBackEventsData(buildChargeBackDataRequest(transactionData6)), bucketChargeBackEventsData);
         bucketSumScore = bucketChargeBackEventsService.getBucketSumScore(bucketChargeBackEventsData);
 
         //((8.59357443519 +12.2)/(31.798219026) - 0.02) * (-5) =  ((20.7935744352)/(31.798219026) - 0.02) * (-5) = -3.16961305886
@@ -119,8 +128,19 @@ public class BucketChargeBackEventsServiceTest {
         transactionData2.setAmount(new BigDecimal(5));
         bucketChargeBackEventsService.addPaymentTransactionToCalculations(transactionData2, bucketChargeBackEventsData);
 
-        bucketChargeBackEventsService.addEventToCalculations(new ChargeBackEventsData(transactionData1, null), bucketChargeBackEventsData);
-        bucketChargeBackEventsService.addEventToCalculations(new ChargeBackEventsData(transactionData2, null), bucketChargeBackEventsData);
+        bucketChargeBackEventsService.addEventToCalculations(new ChargeBackEventsData(buildChargeBackDataRequest(transactionData1)), bucketChargeBackEventsData);
+        bucketChargeBackEventsService.addEventToCalculations(new ChargeBackEventsData(buildChargeBackDataRequest(transactionData2)), bucketChargeBackEventsData);
     }
+
+    private InsertEventRequest buildChargeBackDataRequest(TransactionData transactionData) {
+        InsertEventRequest insertEventRequest = new InsertEventRequest();
+        insertEventRequest.setUserHash(transactionData.getSenderHash());
+        insertEventRequest.eventType = EventType.HIGH_FREQUENCY_EVENTS;
+        insertEventRequest.setHighFrequencyEventScoreType(HighFrequencyEventScoreType.CHARGE_BACK);
+        insertEventRequest.setTransactionData(transactionData);
+        insertEventRequest.uniqueIdentifier = new Hash("" + ThreadLocalRandom.current().nextLong(10000000, 99999999));
+        return insertEventRequest;
+    }
+
 
 }

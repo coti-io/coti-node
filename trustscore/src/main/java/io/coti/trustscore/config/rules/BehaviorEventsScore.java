@@ -1,16 +1,15 @@
 package io.coti.trustscore.config.rules;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.coti.trustscore.data.Enums.BehaviorEventsScoreType;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@XmlRootElement(name = "behaviorEventsScore")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class BehaviorEventsScore {
-    @XmlElement(name = "standardEventScore")
+
     private List<BaseEventScore> baseEventScoreList;
 
 
@@ -18,8 +17,15 @@ public class BehaviorEventsScore {
         return baseEventScoreList;
     }
 
+    public void setBaseEventScoreList(List<BaseEventScore> baseEventScoreList) {
+        this.baseEventScoreList = baseEventScoreList;
+    }
+
     public Map<BehaviorEventsScoreType, BaseEventScore> getBaseEventScoreMap() {
         return getBaseEventScoreList().stream().collect(
                 Collectors.toMap(t -> BehaviorEventsScoreType.enumFromString(t.getName()), t -> t));
     }
+
+
 }
+

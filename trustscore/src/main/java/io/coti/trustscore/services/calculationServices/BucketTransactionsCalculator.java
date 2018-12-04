@@ -1,4 +1,5 @@
 package io.coti.trustscore.services.calculationServices;
+
 import io.coti.trustscore.config.rules.RulesData;
 import io.coti.trustscore.config.rules.TransactionEventScore;
 import io.coti.trustscore.config.rules.TransactionEventsScore;
@@ -23,10 +24,10 @@ import java.util.stream.Collectors;
 @Data
 public class BucketTransactionsCalculator extends BucketCalculator {
 
+    private static final int MONTH_LENGTH = 30;
     private static Map<UserType, TransactionEventsScore> userToTransactionEventsScoreMapping;
     private BucketTransactionEventsData bucketTransactionEventsData;
     private TransactionEventsScore transactionEventsScore;
-    private static final int MONTH_LENGTH = 30;
 
 
     public BucketTransactionsCalculator(BucketTransactionEventsData bucketTransactionEventsData) {
@@ -36,7 +37,7 @@ public class BucketTransactionsCalculator extends BucketCalculator {
 
     public static void init(RulesData rulesData) {
         userToTransactionEventsScoreMapping = rulesData.getUserTypeToUserScoreMap().entrySet().stream().
-                collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getTransactionEventsScore()));
+                collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getBehaviorCumulativeScores()));
     }
 
 
@@ -45,7 +46,8 @@ public class BucketTransactionsCalculator extends BucketCalculator {
             return false;
         }
 
-        int daysDiff = DatesCalculation.calculateDaysDiffBetweenDates(bucketTransactionEventsData.getLastUpdate(), new Date());
+        int daysDiff = DatesCalculation.calculateDaysDiffBetweenDates(DatesCalculation.setDateOnBeginningOfDay(bucketTransactionEventsData.getLastUpdate()),
+                DatesCalculation.setDateOnBeginningOfDay(new Date()));
         decayDailyTransactionsEventScoresType(daysDiff);
 
         // add Balances In The Gap Between Last Update To Now
@@ -109,7 +111,8 @@ public class BucketTransactionsCalculator extends BucketCalculator {
         for (Iterator<Map.Entry<Date, BalanceCountAndContribution>> currentMonthBalanceIterator
              = currentMonthBalanceMap.entrySet().iterator(); currentMonthBalanceIterator.hasNext(); ) {
             Map.Entry<Date, BalanceCountAndContribution> entry = currentMonthBalanceIterator.next();
-            daysDiff = DatesCalculation.calculateDaysDiffBetweenDates(entry.getKey(), new Date());
+            daysDiff = DatesCalculation.calculateDaysDiffBetweenDates(DatesCalculation.setDateOnBeginningOfDay(entry.getKey()),
+                    DatesCalculation.setDateOnBeginningOfDay(new Date()));
             if (daysDiff >= MONTH_LENGTH) {
                 currentMonthDayToTailBalanceMap.put(entry.getKey(), entry.getValue());
                 currentMonthBalanceIterator.remove();
@@ -251,10 +254,10 @@ public class BucketTransactionsCalculator extends BucketCalculator {
 
 
     private double getWeightByEventScore(TransactionEventScoreType eventScoreType) {
-        if (transactionEventsScore.getTransactionEventScoreMap().get(eventScoreType) != null) {
-            return transactionEventsScore.getTransactionEventScoreMap().get(eventScoreType).getWeight();
+        if (transactionEventsScore.getTransactionEventScoreMap().get(eventScoreType) == null) {
+            return 0;
         }
-        return 0;
+        return transactionEventsScore.getTransactionEventScoreMap().get(eventScoreType).getWeight();
     }
 
     private TransactionEventScore getEventScoreByEventScoreType(TransactionEventScoreType eventScoreType) {

@@ -13,12 +13,12 @@ public enum TransactionEventScoreType {
     }
 
     public static TransactionEventScoreType enumFromString(String text) {
-        for (TransactionEventScoreType value: TransactionEventScoreType.values()) {
+        for (TransactionEventScoreType value : TransactionEventScoreType.values()) {
             if (value.text.equalsIgnoreCase(text)) {
                 return value;
             }
         }
-        return null;
+        throw new IllegalArgumentException(String.format("got event name {}, which not exists", text));
     }
 
     @Override

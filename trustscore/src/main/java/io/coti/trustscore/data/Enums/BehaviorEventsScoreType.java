@@ -20,7 +20,7 @@ public enum BehaviorEventsScoreType {
                 return value;
             }
         }
-        return null;
+        throw new IllegalArgumentException(String.format("got event name {}, which not exists", text));
     }
 
     @Override

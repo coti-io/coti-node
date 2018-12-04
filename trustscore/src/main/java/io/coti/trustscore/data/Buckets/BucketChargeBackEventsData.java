@@ -2,7 +2,7 @@ package io.coti.trustscore.data.Buckets;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
-import io.coti.trustscore.data.Enums.UserType;
+import io.coti.trustscore.data.Enums.EventType;
 import io.coti.trustscore.data.Events.ChargeBackEventsData;
 import lombok.Data;
 
@@ -12,8 +12,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Data
 public class BucketChargeBackEventsData extends BucketEventData<ChargeBackEventsData> implements IEntity {
-    private UserType userType;
-    private Hash bucketHash;
 
     private Map<Hash, Double> currentDateChargeBacks;
     private Map<Hash, Double> currentDatePaymentTransactions;
@@ -31,20 +29,11 @@ public class BucketChargeBackEventsData extends BucketEventData<ChargeBackEvents
     private Map<Hash, Date> oldDatePaymentTransactions;
 
     public BucketChargeBackEventsData() {
+        super.setEventType(EventType.HIGH_FREQUENCY_EVENTS);
         currentDateChargeBacks = new ConcurrentHashMap<>();
         currentDatePaymentTransactions = new ConcurrentHashMap<>();
         oldDateChargeBacks = new ConcurrentHashMap<>();
         oldDatePaymentTransactions = new ConcurrentHashMap<>();
-    }
-
-    @Override
-    public Hash getHash() {
-        return this.bucketHash;
-    }
-
-    @Override
-    public void setHash(Hash hash) {
-        this.bucketHash = hash;
     }
 
 }

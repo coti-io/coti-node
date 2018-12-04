@@ -1,18 +1,20 @@
 package io.coti.trustscore.services.calculationServices;
 
-import io.coti.trustscore.data.Buckets.BucketChargeBackEventsData;
-import io.coti.trustscore.data.Enums.HighFrequencyEventScoreType;
-import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.config.rules.BehaviorHighFrequencyEventsScore;
 import io.coti.trustscore.config.rules.HighFrequencyEventScore;
 import io.coti.trustscore.config.rules.RulesData;
+import io.coti.trustscore.data.Buckets.BucketChargeBackEventsData;
+import io.coti.trustscore.data.Enums.HighFrequencyEventScoreType;
+import io.coti.trustscore.data.Enums.UserType;
+import io.coti.trustscore.utils.DatesCalculation;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-
+@Slf4j
 public class BucketChargeBackEventsCalculator extends BucketCalculator {
     private static Map<UserType, BehaviorHighFrequencyEventsScore> userTypeToBehaviorHighFrequencyEventsScoreMapping;
     private BucketChargeBackEventsData bucketChargeBackEventsData;
@@ -117,7 +119,7 @@ public class BucketChargeBackEventsCalculator extends BucketCalculator {
     }
 
     private void copyDailyEventsToOldDateChargeBacksMap(BucketChargeBackEventsData bucketChargeBackEventsData) {
-        Date lastUpdate = bucketChargeBackEventsData.getLastUpdate();
+        Date lastUpdate = DatesCalculation.setDateOnBeginningOfDay(bucketChargeBackEventsData.getLastUpdate());
 
         bucketChargeBackEventsData.getCurrentDateChargeBacks().forEach((hash, amount) ->
                 bucketChargeBackEventsData.getOldDateChargeBacks().put(hash, lastUpdate));
@@ -179,13 +181,18 @@ public class BucketChargeBackEventsCalculator extends BucketCalculator {
     }
 
     private double getWeightByEventScore(HighFrequencyEventScoreType eventScoreType) {
+        if (behaviorHighFrequencyEventsScore.getHighFrequencyEventScoreMap().get(eventScoreType) == null) {
+            return 0;
+        }
         return behaviorHighFrequencyEventsScore.getHighFrequencyEventScoreMap().get(eventScoreType).getWeight();
     }
 
     public double getBucketSumScore(BucketChargeBackEventsData bucketChargeBackEventsData) {
-        return bucketChargeBackEventsData.getTotalContributionOfChargeBacksAndCreditsAmountContribution()
-                * getWeightByEventScore(HighFrequencyEventScoreType.CHARGE_BACK_AMOUNT) +
-                bucketChargeBackEventsData.getTotalContributionOfChargeBacksAndCreditsNumberContribution()
-                        * getWeightByEventScore(HighFrequencyEventScoreType.CHARGE_BACK_NUMBER);
+        double amountCalculationScore = bucketChargeBackEventsData.getTotalContributionOfChargeBacksAndCreditsAmountContribution()
+                * getWeightByEventScore(HighFrequencyEventScoreType.CHARGE_BACK_AMOUNT);
+        double numberCalculationScore = bucketChargeBackEventsData.getTotalContributionOfChargeBacksAndCreditsNumberContribution()
+                * getWeightByEventScore(HighFrequencyEventScoreType.CHARGE_BACK_NUMBER);
+
+        return amountCalculationScore + numberCalculationScore;
     }
 }

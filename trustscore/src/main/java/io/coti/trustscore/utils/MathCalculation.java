@@ -6,6 +6,8 @@ import org.mariuszgromada.math.mxparser.Expression;
 
 public class MathCalculation {
 
+    private static final double differenceEqualityCompare = 0.000001;
+
     public static double evaluteExpression(String stringFormula) {
         Expression expression = new Expression(stringFormula);
         return expression.calculate();
@@ -19,6 +21,6 @@ public class MathCalculation {
 
 
     public static boolean ifTwoNumbersAreEqualOrAlmostEqual(double x, double y) {
-        return Math.abs(x - y) <= 0.000001;
+        return Math.abs(x - y) <= differenceEqualityCompare;
     }
 }

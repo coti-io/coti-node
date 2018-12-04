@@ -1,25 +1,22 @@
 package io.coti.trustscore.config.rules;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-@XmlRootElement(name = "transactionScore")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TransactionEventScore extends EventScore {
 
-    private String idea;
+    // private String idea;
 
     private String nonlinearFunction;
 
-    @XmlElement(name = "idea")
-    public String getIdea() {
-        return idea;
-    }
+//    public String getIdea() {
+//        return idea;
+//    }
+//
+//    public void setIdea(String idea) {
+//        this.idea = idea;
+//    }
 
-    public void setIdea(String idea) {
-        this.idea = idea;
-    }
-
-    @XmlElement(name = "nonlinearFunction")
     public String getNonlinearFunction() {
         return nonlinearFunction;
     }

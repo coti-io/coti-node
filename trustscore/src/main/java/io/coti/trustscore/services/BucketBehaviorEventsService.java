@@ -1,14 +1,15 @@
 package io.coti.trustscore.services;
 
-import io.coti.trustscore.services.calculationServices.BucketBehaviorEventsCalculator;
-import io.coti.trustscore.services.calculationServices.BucketCalculator;
+import io.coti.trustscore.config.rules.RulesData;
 import io.coti.trustscore.data.Buckets.BucketBehaviorEventsData;
 import io.coti.trustscore.data.Enums.EventType;
 import io.coti.trustscore.data.Events.BehaviorEventsData;
 import io.coti.trustscore.data.Events.EventCountAndContributionData;
-import io.coti.trustscore.config.rules.RulesData;
+import io.coti.trustscore.services.calculationServices.BucketBehaviorEventsCalculator;
 import io.coti.trustscore.services.interfaces.IBucketEventService;
+import org.springframework.stereotype.Service;
 
+@Service
 public class BucketBehaviorEventsService implements IBucketEventService<BehaviorEventsData, BucketBehaviorEventsData> {
 
     @Override
@@ -28,7 +29,6 @@ public class BucketBehaviorEventsService implements IBucketEventService<Behavior
 
     private void addToBucket(BehaviorEventsData behaviorEventsData, BucketBehaviorEventsData bucketBehaviorEventsData) {
         bucketBehaviorEventsData.addEventToBucket(behaviorEventsData);
-
         // Adding to calculation
         EventCountAndContributionData eventCountAndContributionData
                 = bucketBehaviorEventsData.getBehaviorEventTypeToCurrentEventCountAndContributionDataMap().get(behaviorEventsData.getBehaviorEventsScoreType());
@@ -49,12 +49,12 @@ public class BucketBehaviorEventsService implements IBucketEventService<Behavior
 
     @Override
     public double getBucketSumScore(BucketBehaviorEventsData bucketBehaviorEventsData) {
-        BucketCalculator bucketCalculator = new BucketBehaviorEventsCalculator(bucketBehaviorEventsData);
+        BucketBehaviorEventsCalculator bucketCalculator = new BucketBehaviorEventsCalculator(bucketBehaviorEventsData);
         // Decay on case that this is the first event, or first access to data today
         if (bucketCalculator.decayScores(bucketBehaviorEventsData)) {
             bucketCalculator.setCurrentScores();
         }
-        return ((BucketBehaviorEventsCalculator) bucketCalculator).getBucketSumScore(bucketBehaviorEventsData);
+        return bucketCalculator.getBucketSumScore(bucketBehaviorEventsData);
     }
 
     public void init(RulesData rulesData) {
