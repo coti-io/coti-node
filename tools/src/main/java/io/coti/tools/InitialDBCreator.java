@@ -1,6 +1,6 @@
 package io.coti.tools;
 
-import io.coti.basenode.database.RocksDBConnector;
+import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 
@@ -10,7 +10,7 @@ public class InitialDBCreator {
     public static void main(String[] args) {
         System.out.println("Deleting initialDB folder...");
         deleteInitialDatabaseFolder();
-        RocksDBConnector connector = new RocksDBConnector();
+        BaseNodeRocksDBConnector connector = new BaseNodeRocksDBConnector();
         connector.init("initialDatabase");
 
         Transactions transactions = new Transactions();
