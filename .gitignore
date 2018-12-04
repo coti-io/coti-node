@@ -11,6 +11,7 @@ dsp*.properties
 fullnode*.properties
 trustscore*.properties
 zerospend*.properties
+financialserver.properties
 
 ### STS ###
 .apt_generated
@@ -44,6 +45,7 @@ TrustScorerocksDB*/
 ZeroSpendrocksDB*/
 initialDatabase/
 ZeroSpendServerrocksDB*/
+FinancialServerrocksDB*/
 
 *.jar
 *.class

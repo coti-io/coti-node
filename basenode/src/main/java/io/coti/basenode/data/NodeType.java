@@ -4,5 +4,6 @@ public enum NodeType {
     FullNode,
     DspNode,
     TrustScoreNode,
-    ZeroSpendServer
+    ZeroSpendServer,
+    FinancialServer,
 }
