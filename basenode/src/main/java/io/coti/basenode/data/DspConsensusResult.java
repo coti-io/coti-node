@@ -1,5 +1,6 @@
 package io.coti.basenode.data;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
@@ -17,6 +18,8 @@ public class DspConsensusResult extends ConfirmationData implements Serializable
     private Date indexingTime;
     private SignatureData zeroSpendSignature;
     private List<DspVote> dspVotes;
+
+    @JsonProperty
     private boolean isDspConsensus;
 
     public DspConsensusResult(Hash transactionHash) {

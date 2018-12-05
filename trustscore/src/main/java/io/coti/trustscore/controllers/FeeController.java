@@ -4,7 +4,7 @@ import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
 import io.coti.trustscore.http.NetworkFeeRequest;
 import io.coti.trustscore.http.NetworkFeeValidateRequest;
-import io.coti.trustscore.services.FeeService;
+import io.coti.trustscore.services.NetworkFeeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +19,7 @@ import javax.validation.Valid;
 @RestController
 public class FeeController {
     @Autowired
-    FeeService feeService;
+    NetworkFeeService feeService;
 
     @RequestMapping(path = "/networkFee", method = RequestMethod.PUT)
     public ResponseEntity<Response> createNetworkFeeConfirmation(@Valid @RequestBody NetworkFeeRequest request) {

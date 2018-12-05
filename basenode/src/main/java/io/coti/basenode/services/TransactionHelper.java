@@ -167,6 +167,8 @@ public class TransactionHelper implements ITransactionHelper {
         return transactionHashToTransactionStateStackMapping.containsKey(transactionHash);
     }
 
+
+
     public boolean isTransactionAlreadyPropagated(TransactionData transactionData) {
         synchronized (transactionData) {
             if (isTransactionExists(transactionData)) {

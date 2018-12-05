@@ -19,7 +19,15 @@ import java.util.*;
 public class RocksDBConnector implements IDatabaseConnector {
     @Value("${database.folder.name}")
     private String databaseFolderName;
-    protected List<String> columnFamilyClassNames;
+    private final String initialDBPath = "initialDatabase";
+    protected List<String> columnFamilyClassNames = new ArrayList<>(Arrays.asList(
+            "DefaultColumnClassName",
+            Transactions.class.getName(),
+            Addresses.class.getName(),
+            AddressTransactionsHistories.class.getName(),
+            TransactionIndexes.class.getName(),
+            TransactionVotes.class.getName()
+    ));
 
     @Value("${application.name}")
     private String applicationName;
@@ -30,6 +38,7 @@ public class RocksDBConnector implements IDatabaseConnector {
     private RocksDB db;
     private Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
     private List<ColumnFamilyHandle> columnFamilyHandles = new ArrayList<>();
+
 
 
     private void deleteDatabaseFolder() {

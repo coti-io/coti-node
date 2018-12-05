@@ -1,40 +1,51 @@
 package io.coti.trustscore.config.rules;
 
+import io.coti.trustscore.data.Enums.TrustScoreRangeType;
 import io.coti.trustscore.data.Enums.UserType;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-@XmlRootElement(name = "rules")
 public class RulesData {
-    @XmlElement
-    @XmlJavaTypeAdapter(UserAdapter.class)
-    private HashMap<UserType, UserScoresByType> users;
+
+    private List<UserScoresByType> userScoresByTypeList;
+
+    private List<UserNetworkFeeByTrustScoreRange> userNetworkFeeByTrustScoreRangeList;
 
     public RulesData() {
     }
 
-    public RulesData(HashMap<UserType, UserScoresByType> users) {
-        this.users = users;
+    public List<UserScoresByType> getUserScoresByTypeList() {
+        return userScoresByTypeList;
     }
 
-    public HashMap<UserType, UserScoresByType> getUsersRules() {
-        return users;
+    public void setUser(List<UserScoresByType> userScoresByTypeList) {
+        this.userScoresByTypeList = userScoresByTypeList;
     }
 
     public UserScoresByType getUsersRules(UserType userType) {
-        return users.get(userType);
+        return getUserTypeToUserScoreMap().get(userType);
+    }
+
+    public Map<UserType, UserScoresByType> getUserTypeToUserScoreMap() {
+        return userScoresByTypeList.stream().collect(
+                Collectors.toMap(t -> UserType.enumFromString(t.getType()), t -> t));
+    }
+
+    public List<UserNetworkFeeByTrustScoreRange> getUserNetworkFeeByTrustScoreRangeList() {
+        return userNetworkFeeByTrustScoreRangeList;
+    }
+
+    public void setNetworkFee(List<UserNetworkFeeByTrustScoreRange> userNetworkFeeByTrustScoreRangeList) {
+        this.userNetworkFeeByTrustScoreRangeList = userNetworkFeeByTrustScoreRangeList;
+    }
+
+    public Map<TrustScoreRangeType, UserNetworkFeeByTrustScoreRange> getTrustScoreRangeTypeToUserScoreMap() {
+        return userNetworkFeeByTrustScoreRangeList.stream().collect(
+                Collectors.toMap(t -> TrustScoreRangeType.enumFromString(t.getType()), t -> t));
     }
 }
-
-
-
-
-
-
-
 
 
 

@@ -1,17 +1,15 @@
 package io.coti.trustscore.config.rules;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import io.coti.trustscore.data.Enums.TransactionEventScoreType;
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@XmlRootElement(name = "behaviorCumulativeScores")
 public class TransactionEventsScore {
 
     private List<TransactionEventScore> transactionEventScoreList;
 
-    @XmlElement(name = "transactionScore")
     public List<TransactionEventScore> getTransactionEventScoreList() {
         return transactionEventScoreList;
     }
@@ -20,9 +18,9 @@ public class TransactionEventsScore {
         this.transactionEventScoreList = transactionEventScoreList;
     }
 
-    public Map<String, TransactionEventScore> getTransactionEventScoreMap() {
+    public Map<TransactionEventScoreType, TransactionEventScore> getTransactionEventScoreMap() {
         return transactionEventScoreList.stream().collect(
-                Collectors.toMap(t -> t.getName(), t -> t));
+                Collectors.toMap(t -> TransactionEventScoreType.enumFromString(t.getName()), t -> t));
     }
 
 }

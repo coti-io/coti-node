@@ -11,9 +11,6 @@ import javax.annotation.PostConstruct;
 @Service
 public class TrustScores extends Collection<TrustScoreData> {
 
-    public TrustScores() {
-    }
-
     @PostConstruct
     public void init() {
         super.init();
