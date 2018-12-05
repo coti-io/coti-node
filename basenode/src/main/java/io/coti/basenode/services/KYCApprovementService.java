@@ -1,6 +1,8 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.KYCApprovementRequestCrypto;
+import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.http.data.KYCApprovementResponse;
@@ -26,7 +28,15 @@ public class KYCApprovementService {
     private RestTemplate restTemplate;
 
     @Autowired
-    private KYCApprovementRequestCrypto ccaApprovementCrypto;
+    private KYCApprovementRequestCrypto kycApprovementCrypto;
+
+    @Value("${cca.public.key}")
+    private String ccaPublicKey;
+    @Value("${global.private.key}")
+    private String globalPrivateKey;
+    @Autowired
+    private NodeCryptoHelper nodeCryptoHelper;
+
 
     public ResponseEntity<KYCApprovementResponse> sendCCAApprovement(KYCApprovementRequest kycApprovementRequest){
         KYCApprovementResponse dummyKYCApprovementResponse = new KYCApprovementResponse();
@@ -37,14 +47,16 @@ public class KYCApprovementService {
         dummyKYCApprovementResponse.setCreationTime(LocalDateTime.now(ZoneOffset.UTC));
         return ResponseEntity.ok(dummyKYCApprovementResponse);
 //        try {
-//            ccaApprovementCrypto.signMessage(KYCApprovementRequest);
-//
+//            kycApprovementCrypto.signMessage(KYCApprovementRequest);
+//              kycApprovementRequest.setSignature(nodeCryptoHelper.signMessage(kycApprovementRequest.getUserHash().getBytes()));
 //            ResponseEntity<KYCApprovementResponse> approvementResponseEntity = restTemplate.postForEntity(ccaAddress, KYCApprovementRequest, KYCApprovementResponse.class);
-//
+
 //            if (approvementResponseEntity.getStatusCode() != HttpStatus.OK) {
 //                log.error("cca returned an error. response: {} . closing server", approvementResponseEntity);
 //                System.exit(-1);
 //            }
+//                approvmentResponseEntity.setSignerHash(new Hash(ccaPublicKey));
+
 //            return approvementResponseEntity;
 //        }
 //        catch (Exception ex){

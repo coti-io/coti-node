@@ -4,10 +4,7 @@ import io.coti.basenode.communication.Channel;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.crypto.KYCApprovementResponseCrypto;
 import io.coti.basenode.crypto.NetworkNodeCrypto;
-import io.coti.basenode.data.KYCResponseRecordData;
-import io.coti.basenode.data.NetworkDetails;
-import io.coti.basenode.data.NetworkNodeData;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.database.Interfaces.IRocksDBConnector;
 import io.coti.basenode.http.GetTransactionBatchResponse;
 import io.coti.basenode.http.data.KYCApprovementResponse;
@@ -227,6 +224,7 @@ public abstract class BaseNodeInitializationService {
         log.info("Response has returned from cca: {}", ccaApprovementResponseEntity);
         KYCApprovementResponse approvementResponse = ccaApprovementResponseEntity.getBody();
         if(approvementResponse != null){
+
            if(validateCCAApprovementResponse(networkNodeData, approvementResponse)) {
                networkNodeData.setKycApprovementResponse(approvementResponse);
                saveKYCResponseRecord(networkNodeData, approvementResponse, true);

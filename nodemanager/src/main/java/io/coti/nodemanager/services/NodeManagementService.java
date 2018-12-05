@@ -44,8 +44,6 @@ public class NodeManagementService implements INodeManagementService {
     private final IRocksDBConnector dataBaseConnector;
     private final ActiveNode activeNode;
     private final INetworkDetailsService networkDetailsService;
-    @Value("${cca.public.key}")
-    private String ccaPublicKey;
     @Value("${propagation.port}")
     private String propagationPort;
 
@@ -105,10 +103,6 @@ public class NodeManagementService implements INodeManagementService {
         if (!validateNodeProperties(networkNodeData)) {
             log.error("Illegal networkNodeData properties received: {}", networkNodeData);
             throw new IllegalAccessException("The node " + networkNodeData + "didn't pass validation");
-        }
-        if (!validateCCAApprovement(networkNodeData)) {
-            log.error("Illegal ccaApprovement: {}", networkNodeData);
-            throw new IllegalAccessException("The node " + networkNodeData + "didn't pass cca validation");
         }
     }
 
