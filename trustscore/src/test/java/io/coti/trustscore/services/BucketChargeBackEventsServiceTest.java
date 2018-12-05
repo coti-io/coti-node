@@ -2,6 +2,7 @@ package io.coti.trustscore.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.database.RocksDBConnector;
 import io.coti.trustscore.BucketUtil;
 import io.coti.trustscore.data.Buckets.BucketChargeBackEventsData;
@@ -25,7 +26,6 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.concurrent.ThreadLocalRandom;
 
-/*
 import static io.coti.trustscore.BucketUtil.generateRulesDataObject;
 import static io.coti.trustscore.utils.DatesCalculation.decreaseTodayDateByDays;
 import static io.coti.trustscore.utils.MathCalculation.ifTwoNumbersAreEqualOrAlmostEqual;
@@ -67,7 +67,7 @@ public class BucketChargeBackEventsServiceTest {
         Date yesterday = decreaseTodayDateByDays(1);
 
         bucketChargeBackEventsData.setLastUpdate(yesterday);
-        TransactionData transactionData3 = BucketUtil.createTransactionWithSpecificHash(new Hash("3333"), new Hash("abcd"), 70.45);
+        TransactionData transactionData3 = BucketUtil.createTransactionWithSpecificHash(new Hash("3333"), new Hash("abcd"), 70.45, TransactionType.Payment);
         transactionData3.setAmount(new BigDecimal(7));
         bucketChargeBackEventsService.addPaymentTransactionToCalculations(transactionData3, bucketChargeBackEventsData);
 
@@ -88,7 +88,7 @@ public class BucketChargeBackEventsServiceTest {
         Assert.assertTrue(
                 (ifTwoNumbersAreEqualOrAlmostEqual(bucketSumScore, -2.248199686264461 - 2.38547618701)));
 
-        TransactionData transactionData4 = BucketUtil.createTransactionWithSpecificHash(new Hash("4444"), new Hash("abcd"), 70.45);
+        TransactionData transactionData4 = BucketUtil.createTransactionWithSpecificHash(new Hash("4444"), new Hash("abcd"), 70.45, TransactionType.Payment);
         transactionData4.setAmount(new BigDecimal(13.5));
 
         bucketChargeBackEventsService.addPaymentTransactionToCalculations(transactionData4, bucketChargeBackEventsData);
@@ -100,11 +100,11 @@ public class BucketChargeBackEventsServiceTest {
                 (ifTwoNumbersAreEqualOrAlmostEqual(bucketSumScore, -1.25126662725 - 1.87212674361)));
 
 
-        TransactionData transactionData5 = BucketUtil.createTransactionWithSpecificHash(new Hash("5555"), new Hash("aeed"), 70.45);
+        TransactionData transactionData5 = BucketUtil.createTransactionWithSpecificHash(new Hash("5555"), new Hash("aeed"), 70.45, TransactionType.Payment);
         transactionData5.setAmount(new BigDecimal(7.2));
 
         bucketChargeBackEventsService.addEventToCalculations(new ChargeBackEventsData(buildChargeBackDataRequest(transactionData5)), bucketChargeBackEventsData);
-        TransactionData transactionData6 = BucketUtil.createTransactionWithSpecificHash(new Hash("6666"), new Hash("accd"), 70.45);
+        TransactionData transactionData6 = BucketUtil.createTransactionWithSpecificHash(new Hash("6666"), new Hash("accd"), 70.45, TransactionType.Payment);
         transactionData6.setAmount(new BigDecimal(5));
 
         bucketChargeBackEventsService.addEventToCalculations(new ChargeBackEventsData(buildChargeBackDataRequest(transactionData6)), bucketChargeBackEventsData);
@@ -117,15 +117,15 @@ public class BucketChargeBackEventsServiceTest {
     }
 
     public void addPaymentTransactionsAndChargeBacks() {
-        TransactionData transactionData = BucketUtil.createTransactionWithSpecificHash(new Hash("0000"), new Hash("abcd"), 70.45);
+        TransactionData transactionData = BucketUtil.createTransactionWithSpecificHash(new Hash("0000"), new Hash("abcd"), 70.45, TransactionType.Payment);
         transactionData.setAmount(new BigDecimal(3));
         bucketChargeBackEventsService.addPaymentTransactionToCalculations(transactionData, bucketChargeBackEventsData);
 
-        TransactionData transactionData1 = BucketUtil.createTransactionWithSpecificHash(new Hash("1111"), new Hash("abcd"), 70.45);
+        TransactionData transactionData1 = BucketUtil.createTransactionWithSpecificHash(new Hash("1111"), new Hash("abcd"), 70.45, TransactionType.Payment);
         transactionData1.setAmount(new BigDecimal(4));
         bucketChargeBackEventsService.addPaymentTransactionToCalculations(transactionData1, bucketChargeBackEventsData);
 
-        TransactionData transactionData2 = BucketUtil.createTransactionWithSpecificHash(new Hash("2222"), new Hash("abcd"), 70.45);
+        TransactionData transactionData2 = BucketUtil.createTransactionWithSpecificHash(new Hash("2222"), new Hash("abcd"), 70.45, TransactionType.Payment);
         transactionData2.setAmount(new BigDecimal(5));
         bucketChargeBackEventsService.addPaymentTransactionToCalculations(transactionData2, bucketChargeBackEventsData);
 
@@ -142,6 +142,4 @@ public class BucketChargeBackEventsServiceTest {
         insertEventRequest.uniqueIdentifier = new Hash("" + ThreadLocalRandom.current().nextLong(10000000, 99999999));
         return insertEventRequest;
     }
-
-
-}*/
+}

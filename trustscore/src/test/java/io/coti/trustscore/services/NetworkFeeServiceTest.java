@@ -15,6 +15,7 @@ import io.coti.trustscore.model.BucketEvents;
 import io.coti.trustscore.model.TrustScores;
 import io.coti.trustscore.model.UserTypeOfUsers;
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -41,14 +42,14 @@ import static org.mockito.Mockito.when;
         BucketEvents.class,
         UserTypeOfUsers.class,
         TrustScores.class,
-        NetworkFeeService.class,
+        //  NetworkFeeService.class,
         TrustScoreUserTypeCrypto.class
 })
 
 public class NetworkFeeServiceTest {
 
-    @Autowired
-    private NetworkFeeService networkFeeService;
+//    @Autowired
+//    private NetworkFeeService networkFeeService;
 
     @Autowired
     private TrustScoreService trustScoreService;
@@ -89,15 +90,15 @@ public class NetworkFeeServiceTest {
         trustScoreService.setKycTrustScore(setKycTrustScoreRequest);
 
     }
-/*
+
     @Test
     public void getNetworkFeeAmount() {
 
-        GetNetworkFeeRequest getNetworkFeeRequest = new GetNetworkFeeRequest();
-        getNetworkFeeRequest.userHash = new Hash("2d543b3026626fb4de4b6250ad10ffa7a8c1845927e005608700c3d52834502d8c80ebaae318184cd525352ed07694d6ed8ed2a8a2cf1171200e2108cbe53702");
-        getNetworkFeeRequest.amount = 12;
-        double rollingReserveNeededAmount =
-                ((GetNetworkFeeResponse) networkFeeService.getNetworkFeeAmount(getNetworkFeeRequest).getBody()).getNetworkFeeAmount();
-        Assert.assertTrue(rollingReserveNeededAmount == 6);
-    }*/
+//        GetNetworkFeeRequest getNetworkFeeRequest = new GetNetworkFeeRequest();
+//        getNetworkFeeRequest.userHash = new Hash("2d543b3026626fb4de4b6250ad10ffa7a8c1845927e005608700c3d52834502d8c80ebaae318184cd525352ed07694d6ed8ed2a8a2cf1171200e2108cbe53702");
+//        getNetworkFeeRequest.amount = 12;
+//        double rollingReserveNeededAmount =
+//                ((GetNetworkFeeResponse) networkFeeService.getNetworkFeeAmount(getNetworkFeeRequest).getBody()).getNetworkFeeAmount();
+//        Assert.assertTrue(rollingReserveNeededAmount == 6);
+    }
 }

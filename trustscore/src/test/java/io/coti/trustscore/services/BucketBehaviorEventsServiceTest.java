@@ -22,7 +22,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
-/*
+
 import static io.coti.trustscore.BucketUtil.generateRulesDataObject;
 import static io.coti.trustscore.utils.DatesCalculation.addToDateByDays;
 import static io.coti.trustscore.utils.DatesCalculation.decreaseTodayDateByDays;
@@ -190,4 +190,4 @@ public class BucketBehaviorEventsServiceTest {
         insertEventRequest.uniqueIdentifier = new Hash("" + ThreadLocalRandom.current().nextLong(10000000, 99999999));
         return insertEventRequest;
     }
-}*/
+}

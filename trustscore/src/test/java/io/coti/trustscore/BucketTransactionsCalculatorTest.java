@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.coti.trustscore.utils.MathCalculation.ifTwoNumbersAreEqualOrAlmostEqual;
-/*
+
 @ContextConfiguration(classes = {
         BucketTransactionsCalculator.class,
         RocksDBConnector.class,
@@ -117,4 +117,4 @@ public class BucketTransactionsCalculatorTest {
         Assert.assertTrue((ifTwoNumbersAreEqualOrAlmostEqual(bucketTransactionEventsData.getCurrentDateNumberOfTransactionsContribution(), 0.00021972245))
                 && (ifTwoNumbersAreEqualOrAlmostEqual(bucketTransactionEventsData.getCurrentDateTurnOverContribution(), 0.00001373265)));
     }
-}*/
+}

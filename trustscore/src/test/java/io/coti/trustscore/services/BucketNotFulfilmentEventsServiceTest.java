@@ -19,7 +19,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.concurrent.ThreadLocalRandom;
-/*
+
 import static io.coti.trustscore.BucketUtil.generateRulesDataObject;
 import static io.coti.trustscore.utils.MathCalculation.ifTwoNumbersAreEqualOrAlmostEqual;
 
@@ -68,4 +68,4 @@ public class BucketNotFulfilmentEventsServiceTest {
         insertEventRequest.setOtherUserHash(new Hash("4567"));
         return insertEventRequest;
     }
-}*/
+}
