@@ -23,7 +23,7 @@
   ],
   "user": [
     {
-      "type": "wallet",
+      "type": "consumer",
       "userID": "userHash",
       "addressMapping": "address -> userHash",
       "initialTrustScore": {

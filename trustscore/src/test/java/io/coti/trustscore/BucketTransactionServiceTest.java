@@ -1,32 +1,5 @@
 package io.coti.trustscore;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.database.RocksDBConnector;
-import io.coti.trustscore.data.Buckets.BucketTransactionEventsData;
-import io.coti.trustscore.data.Enums.UserType;
-import io.coti.trustscore.data.Events.BalanceCountAndContribution;
-import io.coti.trustscore.data.Events.TransactionEventData;
-import io.coti.trustscore.model.BucketTransactionEvents;
-import io.coti.trustscore.services.BucketTransactionService;
-import io.coti.trustscore.services.calculationServices.BucketTransactionsCalculator;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
-
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 /*
 import static io.coti.trustscore.BucketUtil.generateRulesDataObject;
 import static io.coti.trustscore.utils.BucketBuilder.buildTransactionDataRequest;
@@ -78,7 +51,7 @@ public class BucketTransactionServiceTest {
 
     private void initialBucketTransactionEventsDataForWallet() {
         bucketTransactionEventsDataForWallet = new BucketTransactionEventsData();
-        bucketTransactionEventsDataForWallet.setUserType(UserType.WALLET);
+        bucketTransactionEventsDataForWallet.setUserType(UserType.CONSUMER);
 
         TransactionData transactionData = BucketUtil.createTransactionWithSpecificHash(new Hash("1234"), new Hash("abcd"), 70.45);
         transactionData.setAmount(new BigDecimal(8));

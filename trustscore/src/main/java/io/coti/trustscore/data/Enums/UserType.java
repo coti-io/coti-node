@@ -2,7 +2,7 @@ package io.coti.trustscore.data.Enums;
 
 public enum UserType {
     MERCHANT("merchant"),
-    WALLET("wallet"),
+    CONSUMER("consumer"),
     FULL_NODE("node");
 
     private String text;

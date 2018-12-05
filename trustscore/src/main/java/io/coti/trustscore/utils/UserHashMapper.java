@@ -8,7 +8,7 @@ import java.util.Map;
 
 public class UserHashMapper {
     private static Map<Byte, UserType> byteToUserType = new HashMap<Byte, UserType>() {{
-        put((byte) 1, UserType.WALLET);
+        put((byte) 1, UserType.CONSUMER);
         put((byte) 2, UserType.MERCHANT);
         put((byte) 3, UserType.FULL_NODE);
     }};

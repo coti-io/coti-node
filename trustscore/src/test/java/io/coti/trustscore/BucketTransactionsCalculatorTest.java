@@ -45,7 +45,7 @@ public class BucketTransactionsCalculatorTest {
     @Test
     public void setBucketTransactionEventsDataTest() {
         BucketTransactionEventsData bucketTransactionEventsData = new BucketTransactionEventsData();
-        bucketTransactionEventsData.setUserType(UserType.WALLET);
+        bucketTransactionEventsData.setUserType(UserType.CONSUMER);
         BucketTransactionsCalculator bucketTransactionsCalculator = new BucketTransactionsCalculator(bucketTransactionEventsData);
 
         TransactionEventsScore transactionEventsScore = bucketTransactionsCalculator.getTransactionEventsScore();
@@ -55,7 +55,7 @@ public class BucketTransactionsCalculatorTest {
     @Test
     public void decayScoresTest_whenDecayDayEvents() {
         BucketTransactionEventsData bucketTransactionEventsData = new BucketTransactionEventsData();
-        bucketTransactionEventsData.setUserType(UserType.WALLET);
+        bucketTransactionEventsData.setUserType(UserType.CONSUMER);
         BucketTransactionsCalculator bucketTransactionsCalculator = new BucketTransactionsCalculator(bucketTransactionEventsData);
         bucketTransactionEventsData.setLastUpdate(DatesCalculation.decreaseTodayDateByDays(3));
         bucketTransactionEventsData.setCurrentDateNumberOfTransactionsContribution(8);
@@ -72,7 +72,7 @@ public class BucketTransactionsCalculatorTest {
     @Test
     public void decayScoresTest_whenDecayMonthEvents() {
         BucketTransactionEventsData bucketTransactionEventsData = new BucketTransactionEventsData();
-        bucketTransactionEventsData.setUserType(UserType.WALLET);
+        bucketTransactionEventsData.setUserType(UserType.CONSUMER);
         BucketTransactionsCalculator bucketTransactionsCalculator = new BucketTransactionsCalculator(bucketTransactionEventsData);
         bucketTransactionEventsData.setLastUpdate(DatesCalculation.decreaseTodayDateByDays(3));
         bucketTransactionEventsData.setOldMonthBalanceContribution(7);
@@ -93,7 +93,7 @@ public class BucketTransactionsCalculatorTest {
     @Test
     public void setCurrentDayTransactionsScoresTest() {
         BucketTransactionEventsData bucketTransactionEventsData = new BucketTransactionEventsData();
-        bucketTransactionEventsData.setUserType(UserType.WALLET);
+        bucketTransactionEventsData.setUserType(UserType.CONSUMER);
         bucketTransactionEventsData.setCurrentDateNumberOfTransactions(8);
         bucketTransactionEventsData.setCurrentDateTurnOver(5);
         BucketTransactionsCalculator bucketTransactionsCalculator = new BucketTransactionsCalculator(bucketTransactionEventsData);

@@ -10,15 +10,11 @@ import io.coti.trustscore.crypto.TrustScoreUserTypeCrypto;
 import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.TrustScoreData;
 import io.coti.trustscore.database.TrustScoreRocksDBConnector;
-import io.coti.trustscore.http.GetNetworkFeeRequest;
-import io.coti.trustscore.http.GetNetworkFeeResponse;
 import io.coti.trustscore.http.SetKycTrustScoreRequest;
 import io.coti.trustscore.model.BucketEvents;
 import io.coti.trustscore.model.TrustScores;
 import io.coti.trustscore.model.UserTypeOfUsers;
-import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -89,7 +85,7 @@ public class NetworkFeeServiceTest {
         setKycTrustScoreRequest.userHash = new Hash("2d543b3026626fb4de4b6250ad10ffa7a8c1845927e005608700c3d52834502d8c80ebaae318184cd525352ed07694d6ed8ed2a8a2cf1171200e2108cbe53702");
         setKycTrustScoreRequest.signature = new SignatureData("r1", "s1");
         setKycTrustScoreRequest.kycTrustScore = 4;
-        setKycTrustScoreRequest.userType = UserType.WALLET.toString();
+        setKycTrustScoreRequest.userType = UserType.CONSUMER.toString();
         trustScoreService.setKycTrustScore(setKycTrustScoreRequest);
 
     }
