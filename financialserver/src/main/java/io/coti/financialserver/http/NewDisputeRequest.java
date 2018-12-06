@@ -4,51 +4,57 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
-import io.coti.basenode.http.Request;
+import io.coti.financialserver.data.DisputeItemData;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
+import java.util.List;
 
 @Data
-public class GetDocumentRequest extends Request implements ISignable, ISignValidatable {
+public class NewDisputeRequest implements ISignable, ISignValidatable {
+
     @NotNull
     private Hash userHash;
 
     @NotNull
-    private Hash disputeHash;
+    private Hash transactionHash;
 
     @NotNull
-    private Long ItemId;
+    private BigDecimal amount; // TODO: should be calculated
 
     @NotNull
-    private Hash documentHash;
+    private List<DisputeItemData> disputeItems;
 
     @NotNull
     private SignatureData signature;
-
-
-    public Hash getDisputeHash() {
-        return disputeHash;
-    }
-
-    public Long getItemId() {
-        return ItemId;
-    }
 
     public Hash getUserHash() {
         return userHash;
     }
 
-    public Hash getDocumentHash() {
-        return documentHash;
+    public Hash getTransactionHash() {
+        return transactionHash;
     }
 
     public SignatureData getSignature() {
         return signature;
     }
 
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public List<DisputeItemData> getDisputeItems() {
+        return disputeItems;
+    }
+
     public Hash getSignerHash() {
         return userHash;
+    }
+
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
     }
 
     public void setSignerHash(Hash signerHash) {

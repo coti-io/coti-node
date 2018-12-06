@@ -10,6 +10,7 @@ import javax.annotation.PostConstruct;
 public class Disputes extends Collection<DisputeData> {
 
     public Disputes() {
+
     }
 
     @PostConstruct
