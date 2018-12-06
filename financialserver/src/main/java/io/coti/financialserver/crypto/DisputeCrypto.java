@@ -2,16 +2,17 @@ package io.coti.financialserver.crypto;
 
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.SignatureCrypto;
+import io.coti.financialserver.data.DisputeData;
 import io.coti.financialserver.http.NewDisputeRequest;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
 
 @Service
-public class NewDisputeCrypto extends SignatureCrypto<NewDisputeRequest> {
+public class DisputeCrypto extends SignatureCrypto<DisputeData> {
 
     @Override
-    public byte[] getMessageInBytes(NewDisputeRequest disputeData) {
+    public byte[] getMessageInBytes(DisputeData disputeData) {
 
         byte[] signerHashInBytes = disputeData.getSignerHash().getBytes();
         byte[] transactionHashInBytes = disputeData.getTransactionHash().getBytes();

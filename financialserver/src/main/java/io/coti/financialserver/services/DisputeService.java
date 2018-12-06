@@ -1,52 +1,57 @@
 package io.coti.financialserver.services;
 
 import io.coti.basenode.data.Hash;
-import io.coti.financialserver.data.DisputeItemData;
-import io.coti.financialserver.database.RocksDBConnector;
+import io.coti.basenode.http.Response;
+import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.financialserver.crypto.DisputeCrypto;
 import io.coti.financialserver.data.DisputeData;
+import io.coti.financialserver.http.NewDisputeRequest;
+import io.coti.financialserver.http.NewDisputeResponse;
+import io.coti.financialserver.model.Disputes;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import io.coti.financialserver.model.Disputes;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.util.List;
+import static io.coti.financialserver.http.HttpStringConstants.*;
 
 @Slf4j
 @Service
 public class DisputeService {
 
-    private static final String ALREADY_EXIST = "Dispute with this hash already exist";
-    private static final String NOT_FOUND = "Not found";
-    private static final String NOT_YOURS = "Dispute doesn't belong to you";
-
+    @Autowired
+    private DisputeCrypto disputeCrypto;
     @Autowired
     Disputes disputes;
 
-    public ResponseEntity newDispute(Hash consumerHash, Hash transactionHash, List<DisputeItemData> disputeItems, BigDecimal amount) {
+    public ResponseEntity<IResponse> createDispute(NewDisputeRequest newDisputeRequest) {
+        DisputeData disputeData = newDisputeRequest.getDisputeData();
 
-        DisputeData disputeData = new DisputeData(consumerHash, transactionHash, disputeItems, amount);
+        disputeCrypto.signMessage(disputeData);
 
-        if(isDisputeExist(disputeData.getHash())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ALREADY_EXIST);
+        if (!disputeCrypto.verifySignature(disputeData)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_UNAUTHORIZED, STATUS_ERROR));
+        }
+
+        if (isDisputeExist(disputeData.getHash())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ALREADY_EXISTS, STATUS_ERROR));
         }
 
         disputes.put(disputeData);
 
-        return ResponseEntity.status(HttpStatus.OK).body(disputeData.getHash().toString());
+        return ResponseEntity.status(HttpStatus.OK).body(new NewDisputeResponse(disputeData.getHash().toString(), STATUS_SUCCESS));
     }
 
     public ResponseEntity getDispute(Hash userHash, Hash disputeHash) {
         DisputeData disputeData = disputes.getByHash(disputeHash);
 
-        if(disputeData == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(NOT_FOUND);
+        if (disputeData == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(DISPUTE_NOT_FOUND);
         }
 
-        if( ! disputeData.getConsumerHash().toString().equals(userHash.toString()) ) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(NOT_YOURS);
+        if (!disputeData.getConsumerHash().toString().equals(userHash.toString())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(DISPUTE_UNAUTHORIZED);
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(disputeData);
