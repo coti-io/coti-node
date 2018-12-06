@@ -1,14 +1,19 @@
 package io.coti.financialserver.controllers;
 
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.financialserver.crypto.GetDisputeCrypto;
-import io.coti.financialserver.crypto.NewDisputeCrypto;
-import io.coti.financialserver.http.NewDisputeRequest;
 import io.coti.financialserver.http.GetDisputeRequest;
+import io.coti.financialserver.http.NewDisputeRequest;
 import io.coti.financialserver.services.DisputeService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
 import javax.validation.Valid;
 
 @Slf4j
@@ -17,24 +22,13 @@ import javax.validation.Valid;
 public class DisputeController {
 
     private static final String UNAUTHORIZED = "Unauthorized";
-
+    @Autowired
     private DisputeService disputeService;
 
-    public DisputeController() {
-        disputeService = new DisputeService();
-    }
+    @RequestMapping(method = RequestMethod.PUT)
+    public ResponseEntity<IResponse> createDispute(@Valid @RequestBody NewDisputeRequest newDisputeRequest) {
 
-    @RequestMapping(path = "/new", method = RequestMethod.POST)
-    public ResponseEntity newDispute(@Valid @RequestBody NewDisputeRequest request) {
-
-        NewDisputeCrypto disputeCrypto = new NewDisputeCrypto();
-        disputeCrypto.signMessage(request);
-
-        if ( !disputeCrypto.verifySignature(request) ) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UNAUTHORIZED);
-        }
-
-        return disputeService.newDispute(request.getUserHash(), request.getTransactionHash(), request.getDisputeItems(), request.getAmount());
+        return disputeService.createDispute(newDisputeRequest);
     }
 
     @RequestMapping(path = "/get", method = RequestMethod.POST)
@@ -43,7 +37,7 @@ public class DisputeController {
         GetDisputeCrypto disputeCrypto = new GetDisputeCrypto();
         disputeCrypto.signMessage(request);
 
-        if ( !disputeCrypto.verifySignature(request) ) {
+        if (!disputeCrypto.verifySignature(request)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UNAUTHORIZED);
         }
 

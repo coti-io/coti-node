@@ -1,6 +1,8 @@
 package io.coti.trustscore.http;
 
-public class HttpStringConstants {
+import io.coti.basenode.http.BaseNodeHttpStringConstants;
+
+public class HttpStringConstants extends BaseNodeHttpStringConstants {
 
     public static final String NON_EXISTING_USER_MESSAGE = "User does not exist!";
     public static final String KYC_TRUST_SCORE_AUTHENTICATION_ERROR = "Kyc Trust Score Authentication Failed";

@@ -6,22 +6,30 @@ import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
+import lombok.Data;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+@Data
 public class DisputeData implements IEntity, ISignable, ISignValidatable {
     private Hash hash;
+    @NotNull
     private Hash transactionHash;
+    @NotNull
     private Hash consumerHash;
+    @NotNull
+    private @Valid SignatureData consumerSignature;
     private Hash merchantHash;
     private List<Hash> arbitratorHashes;
-    private List<DisputeItemData> disputeItems;
+    private List<@Valid DisputeItemData> disputeItems;
     private DisputeStatus disputeStatus;
     private BigDecimal amount;
     private BigDecimal chargeBackAmount;
@@ -31,7 +39,6 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
     private Hash recourseClaimTransactionHash;
     private Date creationTime;
     private Date closedTime;
-    private SignatureData signature;
 
     public DisputeData(Hash consumerHash, Hash transactionHash, List<DisputeItemData> disputeItems, BigDecimal amount) {
 
@@ -60,26 +67,6 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
         return null;
     }
 
-    public Hash getTransactionHash() {
-        return transactionHash;
-    }
-
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public Hash getConsumerHash() {
-        return consumerHash;
-    }
-
-    public Hash getMerchantHash() {
-        return merchantHash;
-    }
-
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
-    }
-
     @Override
     public Hash getHash() {
         return hash;
@@ -92,7 +79,7 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
 
     @Override
     public SignatureData getSignature() {
-        return signature;
+        return consumerSignature;
     }
 
     @Override
@@ -107,6 +94,6 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
 
     @Override
     public void setSignature(SignatureData signature) {
-        this.signature = signature;
+        this.consumerSignature = signature;
     }
 }
