@@ -42,20 +42,26 @@ public class NetworkDetailsService implements INetworkDetailsService {
         if (NodeType.ZeroSpendServer.equals(networkNodeData.getNodeType())) {
             networkDetails.setZerospendServer(networkNodeData);
         } else {
-            networkDetails.getListFromFactory(networkNodeData.getNodeType()).put(networkNodeData.getHash(), networkNodeData);
+            Map<Hash, NetworkNodeData> nodesMap = networkDetails.getMapByEnum(networkNodeData.getNodeType());
+            nodesMap.put(networkNodeData.getHash(), networkNodeData);
+
         }
     }
 
     public void removeNode(NetworkNodeData networkNodeData) {
+        NetworkNodeData deleted = null;
         if (NodeType.ZeroSpendServer.equals(networkNodeData.getNodeType())) {
             networkDetails.setZerospendServer(new NetworkNodeData());
+            deleted = networkNodeData;
         } else {
-            if (networkDetails.getListFromFactory(networkNodeData.getNodeType()).remove(networkNodeData.getHash()) == null) {
-                log.info("networkNode {} wasn't found", networkNodeData);
+            Map<Hash, NetworkNodeData> nodesMap = networkDetails.getMapByEnum(networkNodeData.getNodeType());
+            deleted = nodesMap.remove(networkNodeData.getHash());
+            if (deleted == null) {
+                log.info("networkNode {} wasn't found in {}", networkNodeData,networkDetails.getMapByEnum(networkNodeData.getNodeType()) );
                 return;
             }
         }
-        log.info("networkNode {} was deleted", networkNodeData);
+        log.info("networkNode {} was deleted", deleted);
     }
 
     public boolean isNodeExistsOnMemory(NetworkNodeData networkNodeData) {
@@ -64,7 +70,7 @@ public class NetworkDetailsService implements INetworkDetailsService {
                 return true;
             }
         } else {
-            if (networkDetails.getListFromFactory(networkNodeData.getNodeType()).containsKey(networkNodeData.getHash())) {
+            if (networkDetails.getMapByEnum(networkNodeData.getNodeType()).containsKey(networkNodeData.getHash())) {
                 return true;
             }
         }
@@ -77,7 +83,7 @@ public class NetworkDetailsService implements INetworkDetailsService {
         if (NodeType.ZeroSpendServer.equals(networkNodeData.getNodeType())) {
             node = networkDetails.getZerospendServer();
         } else {
-            Map<Hash, NetworkNodeData> networkMapToChange = networkDetails.getListFromFactory(networkNodeData.getNodeType());
+            Map<Hash, NetworkNodeData> networkMapToChange = networkDetails.getMapByEnum(networkNodeData.getNodeType());
             for (NetworkNodeData iteratedNode : networkMapToChange.values()) {
                 if (iteratedNode.getHash().equals(networkNodeData.getHash())) {
                     node = iteratedNode;

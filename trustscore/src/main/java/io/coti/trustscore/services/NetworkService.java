@@ -37,8 +37,14 @@ public class NetworkService extends BaseNodeNetworkService {
         }
         List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetworkDetails.getDspNetworkNodesMap().values(),
                 networkDetailsService.getNetworkDetails().getDspNetworkNodesMap().values()));
+        networkDetailsService.getNetworkDetails().getDspNetworkNodesMap().forEach((hash, dspNode) -> {
+            if (!newNetworkDetails.getDspNetworkNodesMap().containsKey(hash)) {
+                log.info("dsp {} is about disconnect from subscribing and receiving ", dspNode.getHttpFullAddress());
+                communicationService.removeSubscription(dspNode.getPropagationFullAddress(), dspNode.getNodeType());
+                networkDetailsService.removeNode(dspNode);
+            }
+        });
         if (!dspNodesToConnect.isEmpty()) {
-            dspNodesToConnect.removeIf(dsp -> dsp.getAddress().equals(nodeIp) && dsp.getHttpPort().equals(serverPort));
             Collections.shuffle(dspNodesToConnect);
             addListToSubscriptionAndNetwork(dspNodesToConnect);
         }

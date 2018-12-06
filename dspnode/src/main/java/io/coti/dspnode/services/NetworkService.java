@@ -29,10 +29,11 @@ public class NetworkService extends BaseNodeNetworkService {
     @Override
     public void handleNetworkChanges(NetworkDetails newNetworkDetails) {
         log.info("New newNetworkDetails structure received: {}", networkDetailsService.getNetWorkSummary(newNetworkDetails));
+        newNetworkDetails.getDspNetworkNodesMap().entrySet().removeIf(entry -> entry.getValue().getAddress().equals(nodeIp) && entry.getValue().getHttpPort().equals(serverPort));
+        removeNodeFromSelfNetwork(newNetworkDetails);
         NetworkNodeData zerospendNetworkNodeData = newNetworkDetails.getZerospendServer();
-        List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetworkDetails.getDspNetworkNodesMap().values()
-                , networkDetailsService.getNetworkDetails().getDspNetworkNodesMap().values()));
-        dspNodesToConnect.removeIf(dsp -> dsp.getAddress().equals(nodeIp) && dsp.getHttpPort().equals(serverPort));
+        List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetworkDetails.getDspNetworkNodesMap().values(),
+                networkDetailsService.getNetworkDetails().getDspNetworkNodesMap().values()));
         if (dspNodesToConnect.size() > 0) {
             Collections.shuffle(dspNodesToConnect);
             addListToSubscriptionAndNetwork(dspNodesToConnect);

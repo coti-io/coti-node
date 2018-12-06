@@ -9,10 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -40,10 +37,28 @@ public class BaseNodeNetworkService implements INetworkService {
         Iterator<NetworkNodeData> nodeDataIterator = nodeDataList.iterator();
         while (nodeDataIterator.hasNext()) {
             NetworkNodeData node = nodeDataIterator.next();
-            log.info("{} {} is about to be added to subscription and network", node.getNodeType(), node.getHttpFullAddress());
-            networkDetailsService.addNode(node);
-            communicationService.addSubscription(node.getPropagationFullAddress());
+            addAndSubscribeSingleNode(node);
         }
     }
+
+    protected void addAndSubscribeSingleNode(NetworkNodeData node) {
+        log.info("{} {} is about to be added to subscription and network", node.getNodeType(), node.getHttpFullAddress());
+        networkDetailsService.addNode(node);
+        communicationService.addSubscription(node.getPropagationFullAddress());
+    }
+
+    protected void removeNodeFromSelfNetwork(NetworkDetails newNetworkDetails) {
+        List<NetworkNodeData> nodesToRemove = new LinkedList<>();
+        networkDetailsService.getNetworkDetails().getDspNetworkNodesMap().forEach((hash, node) -> {
+            if (!newNetworkDetails.getDspNetworkNodesMap().containsKey(hash)) {
+                log.info("dsp {} is about disconnect from subscribing and receiving ", node.getHttpFullAddress());
+                communicationService.removeSubscription(node.getPropagationFullAddress(), node.getNodeType());
+                communicationService.removeSender(node.getReceivingFullAddress(), node.getNodeType());
+                nodesToRemove.add(node);
+            }
+        });
+        nodesToRemove.forEach(dspNode -> networkDetailsService.removeNode(dspNode));
+    }
+
 
 }

@@ -3,6 +3,8 @@ package io.coti.basenode.data;
 import io.coti.basenode.data.interfaces.IEntity;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.map.HashedMap;
+import org.springframework.security.core.parameters.P;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,7 +18,6 @@ public class NetworkDetails implements IEntity {
     private String nodeManagerPropagationAddress;
     private NetworkNodeData zerospendServer;
 
-    private Map<NodeType, Map<Hash, NetworkNodeData>> nodeMapsFactory;
 
 
 
@@ -24,21 +25,24 @@ public class NetworkDetails implements IEntity {
         dspNetworkNodesMap = new ConcurrentHashMap<>();
         fullNodeNetworkNodesMap = new ConcurrentHashMap<>();
         trustScoreNetworkNodesMap = new ConcurrentHashMap<>();
-
-        nodeMapsFactory = new EnumMap<>(NodeType.class);
-        nodeMapsFactory.put(NodeType.FullNode, fullNodeNetworkNodesMap);
-        nodeMapsFactory.put(NodeType.DspNode, dspNetworkNodesMap);
-        nodeMapsFactory.put(NodeType.TrustScoreNode, trustScoreNetworkNodesMap);
-
     }
 
-    public Map<Hash, NetworkNodeData>  getListFromFactory(NodeType nodeType) {
-        Map<Hash, NetworkNodeData> mapToGet = nodeMapsFactory.get(nodeType);
-        if(mapToGet == null){
-            log.error("Unsupported networkNodeData type ( {} ) is not deleted", nodeType);
-            return Collections.emptyMap();
+    public Map<Hash, NetworkNodeData> getMapByEnum(NodeType nodeType) {
+        switch (nodeType){
+            case DspNode: {
+                return dspNetworkNodesMap;
+            }
+            case TrustScoreNode:{
+                return trustScoreNetworkNodesMap;
+            }
+            case FullNode:{
+                return fullNodeNetworkNodesMap;
+            }
+            default:{
+                log.error("Unsupported networkNodeData type ( {} ) is not deleted", nodeType);
+                return Collections.emptyMap();
+            }
         }
-        return mapToGet;
     }
     
 

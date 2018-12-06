@@ -35,10 +35,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
 @TestPropertySource(locations = "classpath:test.properties")
 @Slf4j
 @AutoConfigureMockMvc(secure = false)
-
 public class HealthCheckServiceTest {
-
-
     private static final String NODE_HASH_URL = "http://localhost:8888/nodeHash";
 
     @Value("localhost")
@@ -72,7 +69,6 @@ public class HealthCheckServiceTest {
     @Test
     public void testPositiveHealthCheck() {
         NetworkNodeData nodeToTest = new NetworkNodeData(NodeType.FullNode, nodeManagerIp, nodeManagerHttpPort, new Hash("1"));
-
         NodeManagementService nodeManagerServiceMock = spy(nodeManagementService);
         Hash nodeHash = new Hash("1");
         when(restTemplate.getForObject(NODE_HASH_URL, Hash.class)).thenReturn(nodeHash);
@@ -81,7 +77,6 @@ public class HealthCheckServiceTest {
         healthCheckService = new HealthCheckService(nodeManagerServiceMock, activeNode, restTemplate, networkDetailsService);
         healthCheckService.neighborsHealthCheck();
         Assert.assertTrue("Node was deleted from memory", networkDetailsService.isNodeExistsOnMemory(nodeToTest));
-
     }
 
     @Test

@@ -3,7 +3,6 @@ package io.coti.basenode.data;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
-import io.coti.basenode.http.data.KYCApprovementResponse;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,7 +23,6 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
     private transient Double feePercentage;
     private Hash nodeHash;
     private SignatureData signature;
-    private KYCApprovementResponse kycApprovementResponse;
 
 
     public NetworkNodeData(NodeType nodeType, String address, String httpPort, Hash nodeHash) {

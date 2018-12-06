@@ -59,7 +59,8 @@ public class ZeroMQSender implements ISender {
             }
             receivingAddressToSenderSocketMapping.remove(receivingFullAddress);
         } else {
-            log.error("{} with address  {} was about to be removed but doesn't exit in receivingAddressToSenderSocketMapping ",
+            log.error("{} with address  {} was about to be removed but doesn't exit in receivingAddressToSenderSocketMapping" +
+                            "please check if heartbeat job removed it ",
                     nodeType, receivingFullAddress);
         }
 

@@ -9,7 +9,6 @@ import io.coti.basenode.database.Interfaces.IRocksDBConnector;
 import io.coti.basenode.http.BaseNodeHttpStringConstants;
 import io.coti.basenode.services.interfaces.INetworkDetailsService;
 import io.coti.nodemanager.controllers.NodeController;
-import io.coti.nodemanager.crypto.KYCApprovementResponseCrypto;
 import io.coti.nodemanager.database.RocksDBConnector;
 import io.coti.nodemanager.model.ActiveNode;
 import io.coti.nodemanager.model.NodeHistory;
@@ -60,9 +59,6 @@ public class NodeControllerTest {
     @MockBean
     private ActiveNode activeNode;
 
-    @MockBean
-    private KYCApprovementResponseCrypto kycApprovementResponseCrypto;
-
     @Autowired
     private NodeManagementService nodeManagerServiceMock;
     @Autowired
@@ -94,10 +90,9 @@ public class NodeControllerTest {
     @Test
     public void testInvalidNodeSignature() {
         when(networkNodeCrypto.verifySignature(any())).thenReturn(false);
-        when(kycApprovementResponseCrypto.verifySignature(any())).thenReturn(false);
         Hash nodeHash = new Hash("1");
         NodeManagementService nodeManagerServiceMock = new NodeManagementService(propagationPublisher, networkNodeCrypto,
-                nodeHistory, dataBaseConnector, activeNode, kycApprovementResponseCrypto, networkDetailsService);
+                nodeHistory, dataBaseConnector, activeNode, networkDetailsService);
         NodeController nodeController = new NodeController(nodeManagerServiceMock, networkDetailsService);
 
         NetworkNodeData nodeToTest = new NetworkNodeData(NodeType.FullNode, nodeManagerIp, nodeManagerHttpPort, nodeHash);

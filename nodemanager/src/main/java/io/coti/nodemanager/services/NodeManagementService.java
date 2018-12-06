@@ -7,7 +7,6 @@ import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.database.Interfaces.IRocksDBConnector;
 import io.coti.basenode.services.interfaces.INetworkDetailsService;
-import io.coti.nodemanager.crypto.KYCApprovementResponseCrypto;
 import io.coti.nodemanager.data.ActiveNodeData;
 import io.coti.nodemanager.data.NodeHistoryData;
 import io.coti.nodemanager.data.NodeNetworkDataTimestamp;
@@ -39,13 +38,10 @@ public class NodeManagementService implements INodeManagementService {
     public static final String TRUST_SCORE_NODES_FORWALLET_KEY = "TrustScoreNodes";
     private final IPropagationPublisher propagationPublisher;
     private final NetworkNodeCrypto networkNodeCrypto;
-    private final KYCApprovementResponseCrypto kycApprovementResponseCrypto;
     private final NodeHistory nodeHistory;
     private final IRocksDBConnector dataBaseConnector;
     private final ActiveNode activeNode;
     private final INetworkDetailsService networkDetailsService;
-    @Value("${cca.public.key}")
-    private String ccaPublicKey;
     @Value("${propagation.port}")
     private String propagationPort;
 
@@ -53,13 +49,12 @@ public class NodeManagementService implements INodeManagementService {
     @Autowired
     public NodeManagementService(IPropagationPublisher propagationPublisher, NetworkNodeCrypto networkNodeCrypto,
                                  NodeHistory nodeHistory, IRocksDBConnector dataBaseConnector, ActiveNode activeNode,
-                                 KYCApprovementResponseCrypto kycApprovementResponseCrypto, INetworkDetailsService networkDetailsService) {
+                                 INetworkDetailsService networkDetailsService) {
         this.propagationPublisher = propagationPublisher;
         this.networkNodeCrypto = networkNodeCrypto;
         this.nodeHistory = nodeHistory;
         this.dataBaseConnector = dataBaseConnector;
         this.activeNode = activeNode;
-        this.kycApprovementResponseCrypto = kycApprovementResponseCrypto;
         this.networkDetailsService = networkDetailsService;
     }
 
@@ -106,17 +101,6 @@ public class NodeManagementService implements INodeManagementService {
             log.error("Illegal networkNodeData properties received: {}", networkNodeData);
             throw new IllegalAccessException("The node " + networkNodeData + "didn't pass validation");
         }
-        if (!validateCCAApprovement(networkNodeData)) {
-            log.error("Illegal ccaApprovement: {}", networkNodeData);
-            throw new IllegalAccessException("The node " + networkNodeData + "didn't pass cca validation");
-        }
-    }
-
-    private boolean validateCCAApprovement(NetworkNodeData networkNodeData) {
-//        KYCApprovementResponse kycApprovementResponse = networkNodeData.getKycApprovementResponse();
-//        kycApprovementResponse.setSignerHash(new Hash(ccaPublicKey));
-//        return ccaApprovementResponseCrypto.verifySignature(kycApprovementResponse);
-        return true;
     }
 
     private boolean validateNodeProperties(NetworkNodeData networkNodeData) {
