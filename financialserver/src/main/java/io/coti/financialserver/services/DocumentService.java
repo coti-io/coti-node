@@ -3,16 +3,19 @@ package io.coti.financialserver.services;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.SignatureData;
-import io.coti.financialserver.crypto.GetDocumentCrypto;
-import io.coti.financialserver.crypto.NewDocumentCrypto;
+import io.coti.financialserver.data.DisputeData;
+import io.coti.financialserver.data.DisputeItemData;
+import io.coti.financialserver.database.RocksDBConnector;
+import io.coti.financialserver.data.DisputeDocumentData;
+import io.coti.financialserver.data.ActionSide;
+import io.coti.financialserver.model.Disputes;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.multipart.MultipartFile;
-import io.coti.financialserver.data.GetDocumentData;
-import io.coti.financialserver.data.NewDocumentData;
+import io.coti.financialserver.model.DisputeDocuments;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
@@ -23,27 +26,57 @@ import java.io.IOException;
 public class DocumentService {
 
     private static final String OK = "OK";
-    private static final String NOT_FOUND_BODY = "Document not found";
     private static final String HEADER_CONTENT_DISPOSITION = "Content-Disposition";
     private static final String HEADER_ATTACHMENT_PREFIX = "attachment; filename=";
     private static final String UNAUTHORIZED = "Unauthorized";
+    private static final String DOCUMENT_NOT_FOUND = "Document not found";
+    private static final String DISPUTE_NOT_FOUND = "Dispute not found";
+    private static final String ITEM_NOT_FOUND = "Item not found";
     private AwsService awsService;
+
+    @Autowired
+    DisputeDocuments disputeDocuments;
+
+    @Autowired
+    Disputes disputes;
 
     public DocumentService() {
         awsService = new AwsService();
+
+        disputeDocuments = new DisputeDocuments();
+        disputeDocuments.init();
+        disputeDocuments.databaseConnector = RocksDBConnector.getConnector();
+
+        disputes = new Disputes();
+        disputes.init();
+        disputes.databaseConnector = RocksDBConnector.getConnector();
     }
 
-    public ResponseEntity newDocument(Hash userHash, Integer disputeId, Integer documentId, MultipartFile multiPartFile, SignatureData signature) {
+    public ResponseEntity newDocument(Hash userHash, Hash disputeHash, Long itemId, String name, String desciption, MultipartFile multiPartFile) {
 
-        NewDocumentData documentData = new NewDocumentData(userHash, disputeId, documentId, signature);
-        NewDocumentCrypto documentCrypto = new NewDocumentCrypto();
-        documentCrypto.signMessage(documentData);
+        DisputeData disputeData = disputes.getByHash(disputeHash);
 
-        if ( !documentCrypto.verifySignature(documentData) ) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UNAUTHORIZED);
+        if (disputeData == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(DISPUTE_NOT_FOUND);
         }
 
-        File file = new File(awsService.getFileName(disputeId, documentId));
+        ActionSide documentSide = disputeData.getConsumerHash() == userHash ? ActionSide.Consumer : ActionSide.Merchant;
+
+        DisputeDocumentData disputeDocumentData = new DisputeDocumentData(userHash, documentSide, name, desciption);
+        DisputeItemData disputeItemData = disputeData.getDisputeItem(itemId);
+
+        if (disputeItemData == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ITEM_NOT_FOUND);
+        }
+
+        String documentHashString = disputeDocumentData.getHash().toString();
+
+        disputeItemData.addDocumentHash(disputeDocumentData.getHash());
+
+        disputes.put(disputeData);
+        disputeDocuments.put(disputeDocumentData);
+
+        File file = new File(documentHashString);
 
         try {
             if(file.createNewFile()) {
@@ -57,41 +90,76 @@ public class DocumentService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(OK);
         }
 
-        if( !awsService.uploadDisputeDocument(disputeId, documentId, file, multiPartFile.getOriginalFilename())) {
+        if ( !awsService.uploadDisputeDocument(disputeDocumentData.getHash(), file, multiPartFile.getOriginalFilename())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(awsService.getError());
         }
-        if( !file.delete() ) {
-            log.error("Couldn't delete file: " + awsService.getFileName(disputeId, documentId));
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(OK);
+
+        if ( !file.delete() ) {
+            log.error("Couldn't delete file: " + documentHashString);
         }
 
-        return ResponseEntity.status(HttpStatus.OK).body(OK);
+        return ResponseEntity.status(HttpStatus.OK).body(documentHashString);
     }
 
-    public void getDocument(Hash userHash, Integer disputeId, Integer documentId, SignatureData signature, HttpServletResponse response) throws IOException {
+    public void getDocument(Hash userHash, Hash disputeHash, Long itemId, Hash documentHash, HttpServletResponse response) throws IOException {
 
-        GetDocumentData documentData = new GetDocumentData(userHash, signature);
-        GetDocumentCrypto documentCrypto = new GetDocumentCrypto();
-        documentCrypto.signMessage(documentData);
+        DisputeDocumentData disputeDocument = disputeDocuments.getByHash(documentHash);
 
-        if ( !documentCrypto.verifySignature(documentData) ) {
+        if (disputeDocument == null) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            response.getWriter().write(DOCUMENT_NOT_FOUND);
+        }
+        else if ( !isAuthorized(userHash, disputeHash, itemId, documentHash) ) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write(UNAUTHORIZED);
+        }
+        else {
+            response.getWriter().write(disputeDocument.toString());
+        }
+    }
+
+    public void getDocumentFile(Hash userHash, Hash disputeHash, Long itemId, Hash documentHash, HttpServletResponse response) throws IOException {
+
+        DisputeDocumentData disputeDocument = disputeDocuments.getByHash(documentHash);
+        if (disputeDocument == null) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            response.getWriter().write(DOCUMENT_NOT_FOUND);
+        }
+        else if ( !isAuthorized(userHash, disputeHash, itemId, documentHash) ) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write(UNAUTHORIZED);
         }
         else {
             try {
-                S3ObjectInputStream dis = awsService.getDisputeDocumentInputStream(disputeId, documentId);
+                S3ObjectInputStream dis = awsService.getDisputeDocumentInputStream(documentHash.toString());
 
-                response.setHeader(HEADER_CONTENT_DISPOSITION, HEADER_ATTACHMENT_PREFIX + awsService.getFileName(disputeId, documentId) + awsService.getSuffix());
+                response.setHeader(HEADER_CONTENT_DISPOSITION, HEADER_ATTACHMENT_PREFIX + documentHash.toString() + awsService.getSuffix());
                 FileCopyUtils.copy(dis, response.getOutputStream());
                 dis.close();
             }
             catch (AmazonS3Exception e) {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                response.getWriter().write(NOT_FOUND_BODY);
+                response.getWriter().write(DOCUMENT_NOT_FOUND);
             }
         }
+    }
 
-        response.flushBuffer();
+    private Boolean isAuthorized(Hash userHash, Hash disputeHash, Long itemId, Hash documentHash) {
+
+        DisputeData disputeData = disputes.getByHash(disputeHash);
+        if ( disputeData == null ) {
+            return false;
+        }
+
+        DisputeItemData disputeItemData = disputeData.getDisputeItem(itemId);
+        if ( disputeItemData == null ) {
+            return false;
+        }
+
+        if( !disputeItemData.getDisputeDocumentHashes().contains(documentHash) ) {
+            return false;
+        }
+
+        return userHash.equals(disputeData.getConsumerHash()) || userHash.equals(disputeData.getMerchantHash());
     }
 }

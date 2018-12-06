@@ -1,6 +1,7 @@
 package io.coti.financialserver.services;
 
 import lombok.extern.slf4j.Slf4j;
+import io.coti.basenode.data.Hash;
 import org.springframework.stereotype.Service;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
@@ -34,8 +35,8 @@ public class AwsService {
                 .build();
     }
 
-    public boolean uploadDisputeDocument(Integer disputeId, Integer documentId, File file, String originalName) {
-        String fileName = getFileName(disputeId, documentId);
+    public boolean uploadDisputeDocument(Hash documentHash, File file, String originalName) {
+        String fileName = documentHash.toString();
 
         if(s3.doesObjectExist(BUCKET_NAME, fileName)) {
             error = ERROR_OBJECT_EXIST;
@@ -56,9 +57,7 @@ public class AwsService {
         return true;
     }
 
-    public S3ObjectInputStream getDisputeDocumentInputStream(Integer disputeId, Integer documentId) {
-        String fileName = getFileName(disputeId, documentId);
-
+    public S3ObjectInputStream getDisputeDocumentInputStream(String fileName) {
         S3Object o = s3.getObject(BUCKET_NAME, fileName);
         suffix = o.getObjectMetadata().getUserMetadata().get(SUFFIX_METADATA_KEY);
         return o.getObjectContent();
@@ -70,10 +69,6 @@ public class AwsService {
 
     public String getError() {
         return error;
-    }
-
-    public String getFileName(Integer disputeId, Integer documentId) {
-        return DOCUMENT_PREFIX + disputeId + SEPARATOR + documentId;
     }
 
     private String getUserDocumentSuffix(String fileName) {
