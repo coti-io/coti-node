@@ -1,6 +1,6 @@
 package io.coti.trustscore.database;
 
-import io.coti.basenode.database.RocksDBConnector;
+import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.trustscore.model.BucketTransactionEvents;
 import io.coti.trustscore.model.TransactionEvents;
 import io.coti.trustscore.model.TrustScores;
@@ -12,7 +12,7 @@ import java.util.Arrays;
 
 @Primary
 @Service
-public class TrustScoreRocksDBConnector extends RocksDBConnector {
+public class TrustScoreRocksDBConnector extends BaseNodeRocksDBConnector {
 
     @Override
     public void setColumnFamily() {
