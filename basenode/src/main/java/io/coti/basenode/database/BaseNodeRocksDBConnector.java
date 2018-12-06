@@ -70,7 +70,6 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         if (resetDatabase) {
             deleteDatabaseFolder();
         }
-        setColumnFamily();
         initiateColumnFamilyDescriptors();
         try {
             loadLibrary();

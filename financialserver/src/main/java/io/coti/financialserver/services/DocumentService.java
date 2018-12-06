@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.multipart.MultipartFile;
 import io.coti.financialserver.model.DisputeDocuments;
@@ -23,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 @Slf4j
+@Service
 public class DocumentService {
 
     private static final String OK = "OK";
@@ -39,18 +41,6 @@ public class DocumentService {
 
     @Autowired
     Disputes disputes;
-
-    public DocumentService() {
-        awsService = new AwsService();
-
-        disputeDocuments = new DisputeDocuments();
-        disputeDocuments.init();
-        disputeDocuments.databaseConnector = RocksDBConnector.getConnector();
-
-        disputes = new Disputes();
-        disputes.init();
-        disputes.databaseConnector = RocksDBConnector.getConnector();
-    }
 
     public ResponseEntity newDocument(Hash userHash, Hash disputeHash, Long itemId, String name, String desciption, MultipartFile multiPartFile) {
 

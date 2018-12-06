@@ -11,7 +11,7 @@ dsp*.properties
 fullnode*.properties
 trustscore*.properties
 zerospend*.properties
-financialserver.properties
+financialserver*.properties
 
 ### STS ###
 .apt_generated
