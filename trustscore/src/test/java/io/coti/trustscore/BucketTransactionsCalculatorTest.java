@@ -1,6 +1,6 @@
 package io.coti.trustscore;
 
-import io.coti.basenode.database.RocksDBConnector;
+import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.trustscore.services.calculationServices.BucketTransactionsCalculator;
 import io.coti.trustscore.data.Buckets.BucketTransactionEventsData;
 import io.coti.trustscore.data.Enums.UserType;
@@ -25,7 +25,7 @@ import static io.coti.trustscore.utils.MathCalculation.ifTwoNumbersAreEqualOrAlm
 
 @ContextConfiguration(classes = {
         BucketTransactionsCalculator.class,
-        RocksDBConnector.class,
+        BaseNodeRocksDBConnector.class,
         BucketTransactionService.class,
 })
 @TestPropertySource(locations = "classpath:test.properties")
