@@ -9,11 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import io.coti.financialserver.model.Disputes;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Slf4j
+@Service
 public class DisputeService {
 
     private static final String ALREADY_EXIST = "Dispute with this hash already exist";
@@ -22,12 +24,6 @@ public class DisputeService {
 
     @Autowired
     Disputes disputes;
-
-    public DisputeService() {
-        disputes = new Disputes();
-        disputes.init();
-        disputes.databaseConnector = RocksDBConnector.getConnector();
-    }
 
     public ResponseEntity newDispute(Hash consumerHash, Hash transactionHash, List<DisputeItemData> disputeItems, BigDecimal amount) {
 
