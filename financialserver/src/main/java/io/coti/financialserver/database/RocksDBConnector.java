@@ -7,6 +7,21 @@ import java.util.Arrays;
 
 public class RocksDBConnector extends BaseNodeRocksDBConnector {
 
+    private static BaseNodeRocksDBConnector connector;
+
+    private RocksDBConnector() {
+
+    }
+
+    public static BaseNodeRocksDBConnector getConnector() {
+        if( connector == null ) {
+            connector = new RocksDBConnector();
+            connector.init("initialDatabase");
+        }
+
+        return connector;
+    }
+
     @Override
     public void setColumnFamily() {
         super.setColumnFamily();
@@ -19,7 +34,5 @@ public class RocksDBConnector extends BaseNodeRocksDBConnector {
                 RollingReserveAddresses.class.getName(),
                 RollingReserveReleaseDates.class.getName()
         ));
-
-
     }
 }

@@ -8,15 +8,18 @@ import io.coti.basenode.data.interfaces.ISignable;
 public class NewDocumentData implements ISignable, ISignValidatable {
 
     private Hash userHash;
-    private Integer disputeId;
-    private Integer documentId;
+    private Hash disputeHash;
+    private long itemId;
+    private String name;
+    private String description;
     private SignatureData signature;
 
-
-    public NewDocumentData(Hash userHash, Integer disputeId, Integer documentId, SignatureData signature) {
+    public NewDocumentData(Hash userHash, Hash disputeHash, long itemId, String name, String description, SignatureData signature) {
         this.userHash = userHash;
-        this.disputeId = disputeId;
-        this.documentId = documentId;
+        this.disputeHash = disputeHash;
+        this.itemId = itemId;
+        this.name = name;
+        this.description = description;
         this.signature = signature;
     }
 
@@ -25,12 +28,20 @@ public class NewDocumentData implements ISignable, ISignValidatable {
         return userHash;
     }
 
-    public Integer getDisputeId() {
-        return disputeId;
+    public Hash getDisputeHash() {
+        return disputeHash;
     }
 
-    public Integer getDocumentId() {
-        return documentId;
+    public String getName() {
+        return name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public long getItemId() {
+        return itemId;
     }
 
     @Override

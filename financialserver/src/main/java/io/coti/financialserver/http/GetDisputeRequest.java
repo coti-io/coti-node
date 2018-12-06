@@ -4,13 +4,13 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
-import io.coti.basenode.http.Request;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 
 @Data
-public class GetDocumentRequest extends Request implements ISignable, ISignValidatable {
+public class GetDisputeRequest implements ISignable, ISignValidatable {
+
     @NotNull
     private Hash userHash;
 
@@ -18,29 +18,15 @@ public class GetDocumentRequest extends Request implements ISignable, ISignValid
     private Hash disputeHash;
 
     @NotNull
-    private Long ItemId;
-
-    @NotNull
-    private Hash documentHash;
-
-    @NotNull
     private SignatureData signature;
-
-
-    public Hash getDisputeHash() {
-        return disputeHash;
-    }
-
-    public Long getItemId() {
-        return ItemId;
-    }
 
     public Hash getUserHash() {
         return userHash;
     }
 
-    public Hash getDocumentHash() {
-        return documentHash;
+
+    public Hash getDisputeHash() {
+        return disputeHash;
     }
 
     public SignatureData getSignature() {
