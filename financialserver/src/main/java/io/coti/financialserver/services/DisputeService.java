@@ -1,10 +1,14 @@
 package io.coti.financialserver.services;
 
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.http.GetBalancesResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.financialserver.crypto.DisputeCrypto;
+import io.coti.financialserver.crypto.GetDisputeCrypto;
 import io.coti.financialserver.data.DisputeData;
+import io.coti.financialserver.http.GetDisputeRequest;
+import io.coti.financialserver.http.GetDisputeResponse;
 import io.coti.financialserver.http.NewDisputeRequest;
 import io.coti.financialserver.http.NewDisputeResponse;
 import io.coti.financialserver.model.Disputes;
@@ -22,6 +26,8 @@ public class DisputeService {
 
     @Autowired
     private DisputeCrypto disputeCrypto;
+    @Autowired
+    private GetDisputeCrypto getDisputeCrypto;
     @Autowired
     Disputes disputes;
 
@@ -43,18 +49,25 @@ public class DisputeService {
         return ResponseEntity.status(HttpStatus.OK).body(new NewDisputeResponse(disputeData.getHash().toString(), STATUS_SUCCESS));
     }
 
-    public ResponseEntity getDispute(Hash userHash, Hash disputeHash) {
+    public ResponseEntity<IResponse> getDispute(GetDisputeRequest getDisputeRequest) {
+        getDisputeCrypto.signMessage(getDisputeRequest);
+
+        if (!getDisputeCrypto.verifySignature(getDisputeRequest)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_UNAUTHORIZED, STATUS_ERROR));
+        }
+        Hash disputeHash = getDisputeRequest.getDisputeHash();
         DisputeData disputeData = disputes.getByHash(disputeHash);
 
         if (disputeData == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(DISPUTE_NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_NOT_FOUND, STATUS_ERROR));
         }
 
-        if (!disputeData.getConsumerHash().toString().equals(userHash.toString())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(DISPUTE_UNAUTHORIZED);
+        Hash userHash = getDisputeRequest.getUserHash();
+        if (!disputeData.getConsumerHash().equals(userHash)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_UNAUTHORIZED, STATUS_ERROR));
         }
 
-        return ResponseEntity.status(HttpStatus.OK).body(disputeData);
+        return ResponseEntity.status(HttpStatus.OK).body(new GetDisputeResponse(disputeData));
     }
 
     private Boolean isDisputeExist(Hash disputeHash) {

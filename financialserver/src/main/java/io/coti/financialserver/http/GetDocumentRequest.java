@@ -18,30 +18,13 @@ public class GetDocumentRequest extends Request implements ISignable, ISignValid
     private Hash disputeHash;
 
     @NotNull
-    private Long ItemId;
+    private Long itemId;
 
     @NotNull
     private Hash documentHash;
 
     @NotNull
     private SignatureData signature;
-
-
-    public Hash getDisputeHash() {
-        return disputeHash;
-    }
-
-    public Long getItemId() {
-        return ItemId;
-    }
-
-    public Hash getUserHash() {
-        return userHash;
-    }
-
-    public Hash getDocumentHash() {
-        return documentHash;
-    }
 
     public SignatureData getSignature() {
         return signature;
