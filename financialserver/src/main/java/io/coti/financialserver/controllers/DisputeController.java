@@ -21,7 +21,6 @@ import javax.validation.Valid;
 @RequestMapping("/dispute")
 public class DisputeController {
 
-    private static final String UNAUTHORIZED = "Unauthorized";
     @Autowired
     private DisputeService disputeService;
 
@@ -31,16 +30,9 @@ public class DisputeController {
         return disputeService.createDispute(newDisputeRequest);
     }
 
-    @RequestMapping(path = "/get", method = RequestMethod.POST)
-    public ResponseEntity getDispute(@Valid @RequestBody GetDisputeRequest request) {
+    @RequestMapping(method = RequestMethod.POST)
+    public ResponseEntity<IResponse> getDispute(@Valid @RequestBody GetDisputeRequest getDisputeRequest) {
 
-        GetDisputeCrypto disputeCrypto = new GetDisputeCrypto();
-        disputeCrypto.signMessage(request);
-
-        if (!disputeCrypto.verifySignature(request)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UNAUTHORIZED);
-        }
-
-        return disputeService.getDispute(request.getUserHash(), request.getDisputeHash());
+        return disputeService.getDispute(getDisputeRequest);
     }
 }

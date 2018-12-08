@@ -20,15 +20,6 @@ public class GetDisputeRequest implements ISignable, ISignValidatable {
     @NotNull
     private SignatureData signature;
 
-    public Hash getUserHash() {
-        return userHash;
-    }
-
-
-    public Hash getDisputeHash() {
-        return disputeHash;
-    }
-
     public SignatureData getSignature() {
         return signature;
     }
