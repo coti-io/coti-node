@@ -83,6 +83,30 @@ public class ValidationService implements IValidationService {
 
     @Override
     public boolean partialValidation(TransactionData transactionData) {
+
+        if (transactionHelper.isTransactionHashExists(transactionData.getHash())) {
+            return false;
+        }
+
+        if (!validatePot(transactionData))
+        {
+            //TODO: //report invalid pot
+            return false;
+
+        }
+
+        if (!validatePropagatedTransactionDataIntegrity(transactionData))
+        {
+            //TODO: //report invalid data ontegrity
+            return false;
+        }
+
+        if (!validateBalancesAndAddToPreBalance(transactionData))
+        {
+            //TODO: if dsp, vote "no" for this, and also need to check if got from full node or dsp propagation
+
+        }
+
         return true;
     }
 
