@@ -79,7 +79,7 @@ public class TransactionService extends BaseNodeTransactionService {
             log.debug("DSP Fully Checking transaction: {}", transactionData.getHash());
             DspVote dspVote = new DspVote(
                     transactionData.getHash(),
-                    validationService.fullValidation(transactionData));
+                    transactionData.getPreBalanceValid() && validationService.fullValidation(transactionData));
             dspVoteCrypto.signMessage(dspVote);
             log.debug("Sending DSP vote to {} for transaction {}", zerospendReceivingAddress, transactionData.getHash());
             sender.send(dspVote, zerospendReceivingAddress);
@@ -92,6 +92,18 @@ public class TransactionService extends BaseNodeTransactionService {
         transactionsToValidate = new PriorityQueue<>();
         isValidatorRunning = new AtomicBoolean(false);
         super.init();
+    }
+
+    @Override
+    protected boolean preBalanceValidationResult(TransactionData transactionData) {
+        if (validationService.validateBalancesAndAddToPreBalance(transactionData)) {
+            transactionData.setPreBalanceValid(true);
+        }
+        else{
+            log.error("Balance check failed: {}", transactionData.getHash());
+            transactionData.setPreBalanceValid(false);
+        }
+        return true;
     }
 
     public void continueHandlePropagatedTransaction(TransactionData transactionData) {

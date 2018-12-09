@@ -57,10 +57,10 @@ public class BaseNodeTransactionService implements ITransactionService {
                 postponedTransactions.add(transactionData);
                 return;
             }
-            if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
-                log.error("Balance check failed: {}", transactionData.getHash());
+            if (!preBalanceValidationResult(transactionData)) {
                 return;
             }
+
             transactionHelper.attachTransactionToCluster(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
 
@@ -90,6 +90,14 @@ public class BaseNodeTransactionService implements ITransactionService {
             }
         }
 
+    }
+    protected boolean preBalanceValidationResult(TransactionData transactionData) {
+        if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
+            log.error("Balance check failed: {}", transactionData.getHash());
+            return false;
+        }
+        transactionData.setPreBalanceValid(true);
+        return true;
     }
 
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
