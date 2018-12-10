@@ -8,6 +8,7 @@ import io.coti.basenode.services.interfaces.ITransactionService;
 import io.coti.basenode.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.LinkedList;
@@ -19,6 +20,9 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class BaseNodeTransactionService implements ITransactionService {
+
+    @Value("${zerospend.server.address}")
+    private String zeroSpendServerAddress;
 
     @Autowired
     private ITransactionHelper transactionHelper;
@@ -43,23 +47,33 @@ public class BaseNodeTransactionService implements ITransactionService {
         List<Hash> childrenTransactions = transactionData.getChildrenTransactions();
         try {
             transactionHelper.startHandleTransaction(transactionData);
-            while (hasOneOfParentsProcessing(transactionData)) {
-                parentProcessingTransactions.put(transactionData.getHash(), transactionData);
-                synchronized (transactionData) {
-                    transactionData.wait();
+            if (transactionData.getNodeHash().toString().equals(zeroSpendServerAddress)) {
+                if (!validationService.validateTransactionDataIntegrity(transactionData)
+                || !validationService.validateTransactionNodeSignature(transactionData)
+                || transactionData.getAmount().doubleValue() !=0) {
+                    log.error("Data Integrity validation failed: {}", transactionData.getHash());
+                    return;
+                }
+            } else {
+                while (hasOneOfParentsProcessing(transactionData)) {
+                    parentProcessingTransactions.put(transactionData.getHash(), transactionData);
+                    synchronized (transactionData) {
+                        transactionData.wait();
+                    }
+                }
+                if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
+                    log.error("Data Integrity validation failed: {}", transactionData.getHash());
+                    return;
+                }
+                if (hasOneOfParentsMissing(transactionData)) {
+                    postponedTransactions.add(transactionData);
+                    return;
+                }
+                if (!returnAfterBalanceValidation(transactionData)) {
+                    return;
                 }
             }
-            if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
-                log.error("Data Integrity validation failed: {}", transactionData.getHash());
-                return;
-            }
-            if (hasOneOfParentsMissing(transactionData)) {
-                postponedTransactions.add(transactionData);
-                return;
-            }
-            if (!preBalanceValidationResult(transactionData)) {
-                return;
-            }
+
 
             transactionHelper.attachTransactionToCluster(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
@@ -91,7 +105,8 @@ public class BaseNodeTransactionService implements ITransactionService {
         }
 
     }
-    protected boolean preBalanceValidationResult(TransactionData transactionData) {
+
+    protected boolean returnAfterBalanceValidation(TransactionData transactionData) {
         if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
             log.error("Balance check failed: {}", transactionData.getHash());
             return false;

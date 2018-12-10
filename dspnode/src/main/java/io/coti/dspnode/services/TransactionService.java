@@ -95,7 +95,7 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     @Override
-    protected boolean preBalanceValidationResult(TransactionData transactionData) {
+    protected boolean returnAfterBalanceValidation(TransactionData transactionData) {
         if (validationService.validateBalancesAndAddToPreBalance(transactionData)) {
             transactionData.setPreBalanceValid(true);
         }
