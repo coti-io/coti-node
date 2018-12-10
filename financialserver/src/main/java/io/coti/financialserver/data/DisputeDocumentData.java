@@ -1,25 +1,41 @@
 package io.coti.financialserver.data;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.IEntity;
+import io.coti.basenode.data.interfaces.ISignValidatable;
+import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 import org.apache.commons.lang3.ArrayUtils;
 
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 
 @Data
-public class DisputeDocumentData implements IEntity {
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "type")
+public class DisputeDocumentData implements IEntity, ISignable, ISignValidatable {
+
+    @NotNull
+    private Hash userHash;
+
+    @NotNull
+    private Long itemId;
+
+    @NotNull
+    private SignatureData userSignature;
+
+    @NotNull
+    private Hash disputeHash;
+
     private Hash hash;
     private ActionSide uploadSide;
     private String name;
     private String description;
     private Date creationTime;
 
-    public DisputeDocumentData(Hash userHash, ActionSide uploadSide, String name, String description) {
-        this.uploadSide = uploadSide;
-        this.name = name;
-        this.description = description;
+    public void init() {
         this.creationTime = new Date();
         byte[] concatDateAndUserHashBytes = ArrayUtils.addAll(userHash.getBytes(),creationTime.toString().getBytes());
         this.hash = CryptoHelper.cryptoHash( concatDateAndUserHashBytes );
@@ -32,5 +48,26 @@ public class DisputeDocumentData implements IEntity {
 
     @Override
     public void setHash(Hash hash) {
+        this.hash = hash;
+    }
+
+    @Override
+    public SignatureData getSignature() {
+        return userSignature;
+    }
+
+    @Override
+    public Hash getSignerHash() {
+        return userHash;
+    }
+
+    @Override
+    public void setSignerHash(Hash hash) {
+        userHash = hash;
+    }
+
+    @Override
+    public void setSignature(SignatureData signature) {
+        this.userSignature = signature;
     }
 }

@@ -1,13 +1,10 @@
 package io.coti.financialserver.controllers;
 
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.financialserver.crypto.GetDisputeCrypto;
-import io.coti.financialserver.http.GetDisputeRequest;
-import io.coti.financialserver.http.NewDisputeRequest;
+import io.coti.financialserver.http.DisputeRequest;
 import io.coti.financialserver.services.DisputeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,14 +22,26 @@ public class DisputeController {
     private DisputeService disputeService;
 
     @RequestMapping(method = RequestMethod.PUT)
-    public ResponseEntity<IResponse> createDispute(@Valid @RequestBody NewDisputeRequest newDisputeRequest) {
+    public ResponseEntity<IResponse> createDispute(@Valid @RequestBody DisputeRequest disputeRequest) {
 
-        return disputeService.createDispute(newDisputeRequest);
+        return disputeService.createDispute(disputeRequest);
+    }
+
+    @RequestMapping(path = "/getDisputeHashesOpenedByMe", method = RequestMethod.POST)
+    public ResponseEntity<IResponse> getDisputeHashesOpenedByMe(@Valid @RequestBody DisputeRequest disputeRequest) {
+
+        return disputeService.getDisputeHashesOpenedByMe(disputeRequest);
+    }
+
+    @RequestMapping(path = "/getDisputeHashesOpenedOnMe", method = RequestMethod.POST)
+    public ResponseEntity<IResponse> getDisputeHashesOpenedOnMe(@Valid @RequestBody DisputeRequest disputeRequest) {
+
+        return disputeService.getDisputeHashesOpenedOnMe(disputeRequest);
     }
 
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<IResponse> getDispute(@Valid @RequestBody GetDisputeRequest getDisputeRequest) {
+    public ResponseEntity<IResponse> getDispute(@Valid @RequestBody DisputeRequest disputeRequest) {
 
-        return disputeService.getDispute(getDisputeRequest);
+        return disputeService.getDispute(disputeRequest);
     }
 }

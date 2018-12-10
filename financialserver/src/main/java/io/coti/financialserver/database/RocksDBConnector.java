@@ -2,9 +2,13 @@ package io.coti.financialserver.database;
 
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.financialserver.model.*;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 
+@Primary
+@Service
 public class RocksDBConnector extends BaseNodeRocksDBConnector {
 
     private static BaseNodeRocksDBConnector connector;
@@ -16,7 +20,7 @@ public class RocksDBConnector extends BaseNodeRocksDBConnector {
     public static BaseNodeRocksDBConnector getConnector() {
         if( connector == null ) {
             connector = new RocksDBConnector();
-            connector.init("initialDatabase");
+            connector.init("financialServerDatabase");
         }
 
         return connector;
@@ -27,6 +31,8 @@ public class RocksDBConnector extends BaseNodeRocksDBConnector {
         super.setColumnFamily();
         columnFamilyClassNames.addAll(Arrays.asList(
                 Disputes.class.getName(),
+                ConsumerDisputes.class.getName(),
+                MerchantDisputes.class.getName(),
                 DisputeComments.class.getName(),
                 DisputeDocuments.class.getName(),
                 ReceiverBaseTransactionOwners.class.getName(),

@@ -4,12 +4,9 @@ import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.SignatureCrypto;
 import io.coti.financialserver.data.DisputeData;
 import io.coti.financialserver.data.DisputeItemData;
-import io.coti.financialserver.http.NewDisputeRequest;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Service
@@ -18,21 +15,41 @@ public class DisputeCrypto extends SignatureCrypto<DisputeData> {
     @Override
     public byte[] getMessageInBytes(DisputeData disputeData) {
 
-        byte[] transactionHashInBytes = disputeData.getTransactionHash().getBytes();
+        int byteBufferLength;
+        byte[] userHashInBytes;
+        byte[] transactionHashInBytes = null;
+        byte[] disputeItemIdsInBytes = null;
 
-        List<DisputeItemData> disputeItems = disputeData.getDisputeItems();
-        ByteBuffer disputeItemIdsBuffer = ByteBuffer.allocate(disputeItems.size()*Long.BYTES);
-        for(DisputeItemData disputeItemData: disputeItems){
-            disputeItemIdsBuffer.putLong(disputeItemData.getId());
+        userHashInBytes = disputeData.getUserHash().getBytes();
+        byteBufferLength = userHashInBytes.length;
+
+        if(disputeData.getReceiverBaseTransactionHash() != null) {
+            transactionHashInBytes = disputeData.getReceiverBaseTransactionHash().getBytes();
+            byteBufferLength += transactionHashInBytes.length;
         }
 
-        byte[] disputeItemIdsInBytes = disputeItemIdsBuffer.array();
+        List<DisputeItemData> disputeItems = disputeData.getDisputeItems();
+        if(disputeItems != null && disputeItems.size() > 0) {
+            ByteBuffer disputeItemIdsBuffer = ByteBuffer.allocate(disputeItems.size()*Long.BYTES);
+            for(DisputeItemData disputeItemData: disputeItems){
+                disputeItemIdsBuffer.putLong(disputeItemData.getId());
+            }
 
-        Integer byteBufferLength = transactionHashInBytes.length + disputeItemIdsInBytes.length;
+            disputeItemIdsInBytes = disputeItemIdsBuffer.array();
+            byteBufferLength += disputeItemIdsInBytes.length;
+        }
 
-        ByteBuffer disputeDataBuffer = ByteBuffer.allocate(byteBufferLength)
-                                                  .put(transactionHashInBytes)
-                                                  .put(disputeItemIdsInBytes);
+        ByteBuffer disputeDataBuffer = ByteBuffer.allocate(byteBufferLength);
+
+        disputeDataBuffer.put(userHashInBytes);
+
+        if(transactionHashInBytes != null) {
+            disputeDataBuffer.put(transactionHashInBytes);
+        }
+
+        if(disputeItemIdsInBytes != null) {
+            disputeDataBuffer.put(disputeItemIdsInBytes);
+        }
 
         byte[] disputeDataInBytes = disputeDataBuffer.array();
         return CryptoHelper.cryptoHash(disputeDataInBytes).getBytes();
