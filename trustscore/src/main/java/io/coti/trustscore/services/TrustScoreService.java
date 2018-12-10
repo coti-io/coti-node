@@ -32,12 +32,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
+import org.springframework.core.io.ClassPathResource;
 import javax.annotation.PostConstruct;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -91,12 +93,11 @@ public class TrustScoreService {
     private RulesData loadRulesFromFile() {
         RulesData rulesData = null;
         try {
-            ClassLoader classLoader = getClass().getClassLoader();
-            File file = new File(classLoader.getResource("trustScoreRules.xml").getFile());
+            InputStream in = new ClassPathResource("trustScoreRules.xml").getInputStream();
             JAXBContext jaxbContext = JAXBContext.newInstance(RulesData.class);
             Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-            rulesData = (RulesData) jaxbUnmarshaller.unmarshal(file);
-        } catch (JAXBException e) {
+            rulesData = (RulesData) jaxbUnmarshaller.unmarshal(in);
+        } catch (JAXBException  | IOException e) {
             log.error("Error reading from XML file", e);
             log.error("Shutting down!");
             System.exit(1);
