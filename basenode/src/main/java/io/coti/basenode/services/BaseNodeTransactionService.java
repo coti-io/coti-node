@@ -47,20 +47,24 @@ public class BaseNodeTransactionService implements ITransactionService {
         List<Hash> childrenTransactions = transactionData.getChildrenTransactions();
         try {
             transactionHelper.startHandleTransaction(transactionData);
+            while (hasOneOfParentsProcessing(transactionData)) {
+                parentProcessingTransactions.put(transactionData.getHash(), transactionData);
+                synchronized (transactionData) {
+                    transactionData.wait();
+                }
+            }
             if (transactionData.getNodeHash().toString().equals(zeroSpendServerAddress)) {
                 if (!validationService.validateTransactionDataIntegrity(transactionData)
-                || !validationService.validateTransactionNodeSignature(transactionData)
-                || transactionData.getAmount().doubleValue() !=0) {
+                        || !validationService.validateTransactionNodeSignature(transactionData)
+                        || transactionData.getAmount().doubleValue() != 0) {
                     log.error("Data Integrity validation failed: {}", transactionData.getHash());
                     return;
                 }
-            } else {
-                while (hasOneOfParentsProcessing(transactionData)) {
-                    parentProcessingTransactions.put(transactionData.getHash(), transactionData);
-                    synchronized (transactionData) {
-                        transactionData.wait();
-                    }
+                if (hasOneOfParentsMissing(transactionData)) {
+                    postponedTransactions.add(transactionData);
+                    return;
                 }
+            } else {
                 if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
                     log.error("Data Integrity validation failed: {}", transactionData.getHash());
                     return;
