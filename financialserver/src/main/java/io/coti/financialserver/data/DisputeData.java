@@ -1,5 +1,6 @@
 package io.coti.financialserver.data;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
@@ -8,25 +9,22 @@ import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 import org.apache.commons.lang3.ArrayUtils;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 @Data
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "type")
 public class DisputeData implements IEntity, ISignable, ISignValidatable {
     private Hash hash;
-    @NotNull
-    private Hash transactionHash;
-    @NotNull
+    private Hash receiverBaseTransactionHash;
+    private Hash userHash;
     private Hash consumerHash;
     @NotNull
-    private @Valid SignatureData consumerSignature;
+    private @Valid SignatureData userSignature;
     private Hash merchantHash;
     private List<Hash> arbitratorHashes;
     private List<@Valid DisputeItemData> disputeItems;
@@ -40,13 +38,9 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
     private Date creationTime;
     private Date closedTime;
 
-    public DisputeData(Hash consumerHash, Hash transactionHash, List<DisputeItemData> disputeItems, BigDecimal amount) {
+    public void init() {
 
-        this.transactionHash = transactionHash;
-        this.consumerHash = consumerHash;
         this.disputeStatus = DisputeStatus.Recall;
-        this.disputeItems = disputeItems;
-        this.amount = amount;
         this.creationTime = new Date();
 
         byte[] concatDateAndUserHashBytes = ArrayUtils.addAll(consumerHash.getBytes(),creationTime.toString().getBytes());
@@ -59,7 +53,7 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
 
     public DisputeItemData getDisputeItem(Long itemId) {
         for (DisputeItemData disputeItem : disputeItems) {
-            if(disputeItem.getId() == itemId) {
+            if(disputeItem.getId().equals(itemId)) {
                 return disputeItem;
             }
         }
@@ -79,21 +73,21 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
 
     @Override
     public SignatureData getSignature() {
-        return consumerSignature;
+        return userSignature;
     }
 
     @Override
     public Hash getSignerHash() {
-        return consumerHash;
+        return userHash;
     }
 
     @Override
     public void setSignerHash(Hash hash) {
-        consumerHash = hash;
+        userHash = hash;
     }
 
     @Override
     public void setSignature(SignatureData signature) {
-        this.consumerSignature = signature;
+        this.userSignature = signature;
     }
 }
