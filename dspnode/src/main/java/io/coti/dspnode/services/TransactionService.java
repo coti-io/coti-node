@@ -79,7 +79,7 @@ public class TransactionService extends BaseNodeTransactionService {
             log.debug("DSP Fully Checking transaction: {}", transactionData.getHash());
             DspVote dspVote = new DspVote(
                     transactionData.getHash(),
-                    transactionData.getPreBalanceValid() && validationService.fullValidation(transactionData));
+                    transactionData.getPreBalanceValid());
             dspVoteCrypto.signMessage(dspVote);
             log.debug("Sending DSP vote to {} for transaction {}", zerospendReceivingAddress, transactionData.getHash());
             sender.send(dspVote, zerospendReceivingAddress);

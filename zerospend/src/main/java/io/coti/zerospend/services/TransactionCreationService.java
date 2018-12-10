@@ -86,6 +86,11 @@ public class TransactionCreationService {
     public void createGenesisTransactions() {
         log.info("Creating genesis transactions");
         for (int trustScore = 0; trustScore <= 100; trustScore = trustScore + 10) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                log.error(e.toString());
+            }
             TransactionData transactionData = createZeroSpendTransactionData(trustScore, GENESIS);
 
             DspConsensusResult dspConsensusResult = new DspConsensusResult(transactionData.getHash());
