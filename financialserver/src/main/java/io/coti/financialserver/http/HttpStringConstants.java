@@ -4,6 +4,7 @@ import io.coti.basenode.http.BaseNodeHttpStringConstants;
 
 public class HttpStringConstants extends BaseNodeHttpStringConstants {
 
+    public static final String SUCCESS = "Success";
 
     public static final String DISPUTE_NOT_FOUND = "Dispute not found";
     public static final String DISPUTE_NOT_YOURS = "Dispute isn't yours";

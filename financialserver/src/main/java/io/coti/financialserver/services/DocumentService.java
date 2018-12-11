@@ -27,7 +27,6 @@ import io.coti.financialserver.model.Disputes;
 import io.coti.financialserver.model.DisputeDocuments;
 import static io.coti.financialserver.http.HttpStringConstants.*;
 
-
 @Slf4j
 @Service
 public class DocumentService {
@@ -63,7 +62,17 @@ public class DocumentService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ITEM_NOT_FOUND);
         }
 
-        ActionSide uploadSide = disputeData.getConsumerHash() == disputeDocumentData.getUserHash() ? ActionSide.Consumer : ActionSide.Merchant;
+        ActionSide uploadSide;
+        if(disputeData.getConsumerHash().equals(disputeDocumentData.getUserHash())) {
+            uploadSide = ActionSide.Consumer;
+        }
+        else if(disputeData.getMerchantHash().equals(disputeDocumentData.getUserHash())) {
+            uploadSide = ActionSide.Merchant;
+        }
+        else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UNAUTHORIZED);
+        }
+
         disputeDocumentData.setUploadSide(uploadSide);
         disputeDocumentData.init();
 
@@ -189,7 +198,7 @@ public class DocumentService {
             return false;
         }
 
-        if( !disputeItemData.getDisputeDocumentHashes().contains(documentHash) ) {
+        if ( !disputeItemData.getDisputeDocumentHashes().contains(documentHash) ) {
             return false;
         }
 

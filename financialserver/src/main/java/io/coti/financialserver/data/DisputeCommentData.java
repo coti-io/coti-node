@@ -13,7 +13,6 @@ import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 
-
 @Data
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "type")
 public class DisputeCommentData implements IEntity, ISignable, ISignValidatable {
