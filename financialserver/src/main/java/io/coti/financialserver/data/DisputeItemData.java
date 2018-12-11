@@ -28,4 +28,8 @@ public class DisputeItemData implements Serializable {
      public void addDocumentHash(Hash documentHash) {
          disputeDocumentHashes.add(documentHash);
      }
+
+     public void addCommentHash(Hash commentHash) {
+        disputeCommentHashes.add(commentHash);
+    }
 }
