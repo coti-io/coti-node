@@ -1,7 +1,7 @@
 package io.coti.financialserver.services;
 
 import lombok.extern.slf4j.Slf4j;
-import io.coti.basenode.data.Hash;
+import java.io.File;
 import org.springframework.stereotype.Service;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
@@ -11,7 +11,8 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import java.io.File;
+
+import io.coti.basenode.data.Hash;
 
 @Slf4j
 @Service

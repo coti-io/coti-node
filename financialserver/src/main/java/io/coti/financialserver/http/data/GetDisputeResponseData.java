@@ -1,14 +1,14 @@
 package io.coti.financialserver.http.data;
 
-import io.coti.basenode.data.SignatureData;
-import io.coti.financialserver.data.DisputeData;
-import io.coti.financialserver.data.DisputeStatus;
 import lombok.Data;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import io.coti.basenode.data.SignatureData;
+import io.coti.financialserver.data.DisputeData;
+import io.coti.financialserver.data.DisputeStatus;
 
 @Data
 public class GetDisputeResponseData {

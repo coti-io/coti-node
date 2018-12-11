@@ -1,5 +1,11 @@
 package io.coti.financialserver.services;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.financialserver.crypto.ReceiverBaseTransactionOwnerCrypto;
@@ -8,12 +14,6 @@ import io.coti.financialserver.data.ReceiverBaseTransactionOwnerData;
 import io.coti.financialserver.model.ConsumerDisputes;
 import io.coti.financialserver.model.Disputes;
 import io.coti.financialserver.model.ReceiverBaseTransactionOwners;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-
 import static io.coti.financialserver.http.HttpStringConstants.*;
 
 @Slf4j

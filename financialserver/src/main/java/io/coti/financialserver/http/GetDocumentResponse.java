@@ -1,9 +1,9 @@
 package io.coti.financialserver.http;
 
-import io.coti.basenode.http.BaseResponse;
-import io.coti.financialserver.data.DisputeData;
-import io.coti.financialserver.data.DisputeDocumentData;
 import lombok.Data;
+
+import io.coti.basenode.http.BaseResponse;
+import io.coti.financialserver.data.DisputeDocumentData;
 
 @Data
 public class GetDocumentResponse extends BaseResponse {

@@ -1,11 +1,11 @@
 package io.coti.financialserver.crypto;
 
-import io.coti.basenode.crypto.CryptoHelper;
-import io.coti.financialserver.data.ReceiverBaseTransactionOwnerData;
-import io.coti.basenode.crypto.SignatureCrypto;
+import java.nio.ByteBuffer;
 import org.springframework.stereotype.Service;
 
-import java.nio.ByteBuffer;
+import io.coti.basenode.crypto.CryptoHelper;
+import io.coti.basenode.crypto.SignatureCrypto;
+import io.coti.financialserver.data.ReceiverBaseTransactionOwnerData;
 
 @Service
 public class ReceiverBaseTransactionOwnerCrypto extends SignatureCrypto<ReceiverBaseTransactionOwnerData> {

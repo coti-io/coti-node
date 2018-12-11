@@ -1,8 +1,9 @@
 package io.coti.financialserver.data;
 
+import lombok.Data;
+
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
-import lombok.Data;
 
 @Data
 public class RollingReserveAddressData implements IEntity {

@@ -1,12 +1,11 @@
 package io.coti.financialserver.http;
 
-import io.coti.basenode.http.Request;
-import io.coti.financialserver.data.DisputeData;
 import lombok.Data;
-
-
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+
+import io.coti.basenode.http.Request;
+import io.coti.financialserver.data.DisputeData;
 
 @Data
 public class DisputeRequest extends Request {

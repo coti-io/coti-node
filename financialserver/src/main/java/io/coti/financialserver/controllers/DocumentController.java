@@ -1,19 +1,18 @@
 package io.coti.financialserver.controllers;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.http.ResponseEntity;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.SignatureData;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.IOException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.SignatureData;
 import io.coti.financialserver.services.DocumentService;
 import io.coti.financialserver.http.DocumentRequest;
-import org.springframework.web.multipart.MultipartFile;
-import org.web3j.crypto.Sign;
-
 
 @Slf4j
 @RestController
