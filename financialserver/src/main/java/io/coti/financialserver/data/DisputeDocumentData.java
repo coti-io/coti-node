@@ -33,6 +33,7 @@ public class DisputeDocumentData implements IEntity, ISignable, ISignValidatable
     private ActionSide uploadSide;
     private String name;
     private String description;
+    private String fileName;
     private Date creationTime;
 
     public void init() {

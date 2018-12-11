@@ -19,6 +19,9 @@ public class DisputeItemResponseData {
     private List<String> disputeCommentHashes;
 
     public DisputeItemResponseData(DisputeItemData disputeItemData) {
+        disputeDocumentHashes = new ArrayList<>();
+        disputeCommentHashes = new ArrayList<>();
+
         this.id = disputeItemData.getId();
         this.price = disputeItemData.getPrice();
         this.reason = disputeItemData.getReason();

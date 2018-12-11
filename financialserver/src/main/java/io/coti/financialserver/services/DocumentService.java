@@ -1,5 +1,6 @@
 package io.coti.financialserver.services;
 
+import com.amazonaws.services.s3.model.S3Object;
 import lombok.extern.slf4j.Slf4j;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
@@ -24,19 +25,12 @@ import io.coti.financialserver.http.NewDocumentResponse;
 import io.coti.financialserver.http.GetDocumentResponse;
 import io.coti.financialserver.model.Disputes;
 import io.coti.financialserver.model.DisputeDocuments;
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.financialserver.http.HttpStringConstants.*;
 
 
 @Slf4j
 @Service
 public class DocumentService {
-
-    private static final String HEADER_CONTENT_DISPOSITION = "Content-Disposition";
-    private static final String HEADER_ATTACHMENT_PREFIX = "attachment; filename=";
-    private static final String UNAUTHORIZED = "Unauthorized";
-    private static final String DOCUMENT_NOT_FOUND = "Document not found";
-    private static final String DISPUTE_NOT_FOUND = "Dispute not found";
-    private static final String ITEM_NOT_FOUND = "Item not found";
 
     @Autowired
     AwsService awsService;
@@ -73,8 +67,6 @@ public class DocumentService {
         disputeDocumentData.setUploadSide(uploadSide);
         disputeDocumentData.init();
 
-        String documentHashString = disputeDocumentData.getHash().toString();
-
         disputeItemData.addDocumentHash(disputeDocumentData.getHash());
 
         disputes.put(disputeData);
@@ -108,10 +100,10 @@ public class DocumentService {
         }
         catch(IOException e) {
             log.error("Can't save file on disk.", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("OK");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("");
         }
 
-        if ( !awsService.uploadDisputeDocument(disputeDocumentData.getHash(), file, multiPartFile.getOriginalFilename())) {
+        if ( !awsService.uploadDisputeDocument(disputeDocumentData.getHash(), file, multiPartFile.getContentType())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(awsService.getError());
         }
 
@@ -119,6 +111,9 @@ public class DocumentService {
             log.error("Couldn't delete file: " + documentHash.toString());
         }
 
+        disputeDocumentData = disputeDocuments.getByHash(disputeDocumentData.getHash());
+        disputeDocumentData.setFileName(multiPartFile.getOriginalFilename());
+        disputeDocuments.put(disputeDocumentData);
         return ResponseEntity.status(HttpStatus.OK).body(new NewDocumentResponse(disputeDocumentData.getHash()));
     }
 
@@ -168,9 +163,10 @@ public class DocumentService {
                 response.getWriter().write(UNAUTHORIZED);
             } else {
                 try {
-                    S3ObjectInputStream dis = awsService.getDisputeDocumentInputStream(request.getDisputeDocumentData().getHash().toString());
-
-                    response.setHeader(HEADER_CONTENT_DISPOSITION, HEADER_ATTACHMENT_PREFIX + request.getDisputeDocumentData().getHash().toString() + awsService.getSuffix());
+                    S3Object s3Object = awsService.getS3Object(request.getDisputeDocumentData().getHash().toString());
+                    S3ObjectInputStream dis = s3Object.getObjectContent();
+                    response.setHeader(HEADER_CONTENT_DISPOSITION, HEADER_ATTACHMENT_PREFIX + request.getDisputeDocumentData().getHash().toString());
+                    response.setHeader(HEADER_CONTENT_TYPE, s3Object.getObjectMetadata().getUserMetadata().get(S3_SUFFIX_METADATA_KEY));
                     FileCopyUtils.copy(dis, response.getOutputStream());
                     dis.close();
                 } catch (AmazonS3Exception e) {

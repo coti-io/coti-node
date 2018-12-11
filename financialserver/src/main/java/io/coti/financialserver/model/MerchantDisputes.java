@@ -10,7 +10,6 @@ import io.coti.financialserver.data.MerchantDisputesData;
 public class MerchantDisputes extends Collection<MerchantDisputesData> {
 
     public MerchantDisputes() {
-
     }
 
     @PostConstruct
