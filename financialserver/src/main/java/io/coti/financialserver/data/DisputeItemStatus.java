@@ -6,6 +6,5 @@ public enum DisputeItemStatus {
     RejectedByMerchant,
     CanceledByConsumer,
     AcceptedByArbitrators,
-    RejectedByArbitrators;
-
+    RejectedByArbitrators
 }

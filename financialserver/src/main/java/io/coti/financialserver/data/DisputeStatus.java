@@ -5,5 +5,5 @@ public enum DisputeStatus {
     AcceptedByMerchant,
     CanceledByConsumer,
     Claim,
-    Closed;
+    Closed
 }

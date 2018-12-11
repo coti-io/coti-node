@@ -1,10 +1,10 @@
 package io.coti.financialserver.model;
 
-import io.coti.basenode.model.Collection;
-import io.coti.financialserver.data.ReceiverBaseTransactionOwnerData;
+import javax.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
+import io.coti.basenode.model.Collection;
+import io.coti.financialserver.data.ReceiverBaseTransactionOwnerData;
 
 @Service
 public class ReceiverBaseTransactionOwners extends Collection<ReceiverBaseTransactionOwnerData> {

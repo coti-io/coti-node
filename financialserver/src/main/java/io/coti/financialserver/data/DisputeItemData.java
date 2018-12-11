@@ -1,13 +1,13 @@
 package io.coti.financialserver.data;
 
-import io.coti.basenode.data.Hash;
 import lombok.Data;
-
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+
+import io.coti.basenode.data.Hash;
 
 @Data
 public class DisputeItemData implements Serializable {

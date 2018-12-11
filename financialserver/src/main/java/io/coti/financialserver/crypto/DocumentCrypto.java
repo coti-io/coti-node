@@ -1,12 +1,11 @@
 package io.coti.financialserver.crypto;
 
+import java.nio.ByteBuffer;
+import org.springframework.stereotype.Service;
+
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.SignatureCrypto;
 import io.coti.financialserver.data.DisputeDocumentData;
-import io.coti.financialserver.http.DocumentRequest;
-import org.springframework.stereotype.Service;
-
-import java.nio.ByteBuffer;
 
 @Service
 public class DocumentCrypto extends SignatureCrypto<DisputeDocumentData> {

@@ -1,11 +1,11 @@
 package io.coti.financialserver.database;
 
-import io.coti.basenode.database.BaseNodeRocksDBConnector;
-import io.coti.financialserver.model.*;
+import java.util.Arrays;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
+import io.coti.basenode.database.BaseNodeRocksDBConnector;
+import io.coti.financialserver.model.*;
 
 @Primary
 @Service

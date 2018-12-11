@@ -1,11 +1,11 @@
 package io.coti.financialserver.data;
 
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.interfaces.IEntity;
-
+import lombok.Data;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.Data;
+
+import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.interfaces.IEntity;
 
 @Data
 public class ConsumerDisputesData implements IEntity {

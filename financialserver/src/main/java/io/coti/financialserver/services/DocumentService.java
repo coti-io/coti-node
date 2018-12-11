@@ -1,7 +1,19 @@
 package io.coti.financialserver.services;
 
+import lombok.extern.slf4j.Slf4j;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.util.FileCopyUtils;
+import org.springframework.web.multipart.MultipartFile;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
+
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.http.Response;
@@ -11,21 +23,7 @@ import io.coti.financialserver.http.DocumentRequest;
 import io.coti.financialserver.http.NewDocumentResponse;
 import io.coti.financialserver.http.GetDocumentResponse;
 import io.coti.financialserver.model.Disputes;
-import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.util.FileCopyUtils;
 import io.coti.financialserver.model.DisputeDocuments;
-import org.springframework.web.multipart.MultipartFile;
-
-import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 
 

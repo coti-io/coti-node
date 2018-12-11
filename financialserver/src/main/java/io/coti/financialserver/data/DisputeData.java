@@ -1,20 +1,20 @@
 package io.coti.financialserver.data;
 
+import lombok.Data;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+import org.apache.commons.lang3.ArrayUtils;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
-import lombok.Data;
-import org.apache.commons.lang3.ArrayUtils;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
 
 @Data
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "type")
