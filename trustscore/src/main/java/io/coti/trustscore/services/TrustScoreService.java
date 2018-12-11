@@ -147,7 +147,9 @@ public class TrustScoreService {
                         .body(new Response(USER_HASH_IS_NOT_IN_DB, STATUS_ERROR));
             }
 
-            if (trustScoreUserTypeCrypto.verifySignature(request)) {
+            request.setSignerHash(new Hash(kycServerPublicKey));
+            if (!trustScoreUserTypeCrypto.verifySignature(request)) {
+
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new Response(KYC_TRUST_SCORE_AUTHENTICATION_ERROR, STATUS_ERROR));

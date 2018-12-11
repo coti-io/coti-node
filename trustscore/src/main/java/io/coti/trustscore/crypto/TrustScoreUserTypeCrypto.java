@@ -13,9 +13,10 @@ public class TrustScoreUserTypeCrypto extends SignatureValidationCrypto<SetUserT
 
     @Override
     public byte[] getMessageInBytes(SetUserTypeRequest setUserTypeRequest) {
-        byte[] userType = setUserTypeRequest.getUserHash().getBytes();
+        byte[] userHashBytes = setUserTypeRequest.getUserHash().getBytes();
         byte[] userTypeBytes = setUserTypeRequest.getUserType().getBytes(StandardCharsets.UTF_8);
-        ByteBuffer trustScoreMessageBuffer = ByteBuffer.allocate(userType.length + userTypeBytes.length);
+        ByteBuffer trustScoreMessageBuffer = ByteBuffer.allocate(userHashBytes.length + userTypeBytes.length);
+        trustScoreMessageBuffer.put(userHashBytes).put(userTypeBytes);
         byte[] cryptoHashedMessage = CryptoHelper.cryptoHash(trustScoreMessageBuffer.array()).getBytes();
         return cryptoHashedMessage;
     }
