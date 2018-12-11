@@ -52,7 +52,17 @@ public class CommentService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ITEM_NOT_FOUND);
         }
 
-        ActionSide uploadSide = disputeData.getConsumerHash() == disputeCommentData.getUserHash() ? ActionSide.Consumer : ActionSide.Merchant;
+        ActionSide uploadSide;
+        if(disputeData.getConsumerHash().equals(disputeCommentData.getUserHash())) {
+            uploadSide = ActionSide.Consumer;
+        }
+        else if(disputeData.getMerchantHash().equals(disputeCommentData.getUserHash())) {
+            uploadSide = ActionSide.Merchant;
+        }
+        else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UNAUTHORIZED);
+        }
+
         disputeCommentData.setCommentSide(uploadSide);
         disputeCommentData.init();
 
