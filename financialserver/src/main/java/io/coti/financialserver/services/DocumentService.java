@@ -6,6 +6,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -56,9 +58,9 @@ public class DocumentService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_NOT_FOUND, STATUS_ERROR));
         }
 
-        DisputeItemData disputeItemData = disputeData.getDisputeItem(disputeDocumentData.getItemId());
+        List<DisputeItemData> disputeItemsData = disputeData.getDisputeItems(disputeDocumentData.getItemIds());
 
-        if (disputeItemData == null) {
+        if (disputeItemsData.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(ITEM_NOT_FOUND, STATUS_ERROR));
         }
 
@@ -76,7 +78,9 @@ public class DocumentService {
         disputeDocumentData.setUploadSide(uploadSide);
         disputeDocumentData.init();
 
-        disputeItemData.addDocumentHash(disputeDocumentData.getHash());
+        for(DisputeItemData disputeItemData : disputeItemsData) {
+            disputeItemData.addDocumentHash(disputeDocumentData.getHash());
+        }
 
         disputes.put(disputeData);
         disputeDocuments.put(disputeDocumentData);
@@ -141,7 +145,7 @@ public class DocumentService {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Response(DOCUMENT_NOT_FOUND, STATUS_ERROR));
             } else if (!isAuthorized(request.getDisputeDocumentData().getUserHash(),
                     request.getDisputeDocumentData().getDisputeHash(),
-                    request.getDisputeDocumentData().getItemId(),
+                    request.getDisputeDocumentData().getItemIds().iterator().next(),
                     request.getDisputeDocumentData().getHash())) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
             }
@@ -166,7 +170,7 @@ public class DocumentService {
                 response.getWriter().write(DOCUMENT_NOT_FOUND);
             } else if (!isAuthorized(request.getDisputeDocumentData().getUserHash(),
                     request.getDisputeDocumentData().getDisputeHash(),
-                    request.getDisputeDocumentData().getItemId(),
+                    request.getDisputeDocumentData().getItemIds().iterator().next(),
                     request.getDisputeDocumentData().getHash())) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write(UNAUTHORIZED);

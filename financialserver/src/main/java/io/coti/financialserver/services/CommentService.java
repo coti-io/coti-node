@@ -18,6 +18,9 @@ import io.coti.financialserver.http.GetCommentResponse;
 import io.coti.financialserver.http.NewCommentResponse;
 import io.coti.financialserver.model.DisputeComments;
 import io.coti.financialserver.model.Disputes;
+
+import java.util.List;
+
 import static io.coti.financialserver.http.HttpStringConstants.*;
 
 @Slf4j
@@ -46,9 +49,9 @@ public class CommentService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_NOT_FOUND, STATUS_ERROR));
         }
 
-        DisputeItemData disputeItemData = disputeData.getDisputeItem(disputeCommentData.getItemId());
+        List<DisputeItemData> disputeItemsData = disputeData.getDisputeItems(disputeCommentData.getItemIds());
 
-        if (disputeItemData == null) {
+        if (disputeItemsData.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(ITEM_NOT_FOUND, STATUS_ERROR));
         }
 
@@ -66,7 +69,9 @@ public class CommentService {
         disputeCommentData.setCommentSide(uploadSide);
         disputeCommentData.init();
 
-        disputeItemData.addCommentHash(disputeCommentData.getHash());
+        for(DisputeItemData disputeItemData : disputeItemsData) {
+            disputeItemData.addCommentHash(disputeCommentData.getHash());
+        }
 
         disputes.put(disputeData);
         disputeComments.put(disputeCommentData);
@@ -89,7 +94,7 @@ public class CommentService {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Response(COMMENT_NOT_FOUND, STATUS_ERROR));
             } else if (!isAuthorized(request.getDisputeCommentData().getUserHash(),
                     request.getDisputeCommentData().getDisputeHash(),
-                    request.getDisputeCommentData().getItemId(),
+                    request.getDisputeCommentData().getItemIds().iterator().next(),
                     request.getDisputeCommentData().getHash())) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
             }
