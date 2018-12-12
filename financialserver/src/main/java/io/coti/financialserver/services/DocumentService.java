@@ -47,19 +47,19 @@ public class DocumentService {
         documentCrypto.signMessage(disputeDocumentData);
 
         if ( !documentCrypto.verifySignature(disputeDocumentData) ) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UNAUTHORIZED);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
         }
 
         DisputeData disputeData = disputes.getByHash(disputeDocumentData.getDisputeHash());
 
         if (disputeData == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(DISPUTE_NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_NOT_FOUND, STATUS_ERROR));
         }
 
         DisputeItemData disputeItemData = disputeData.getDisputeItem(disputeDocumentData.getItemId());
 
         if (disputeItemData == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ITEM_NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(ITEM_NOT_FOUND, STATUS_ERROR));
         }
 
         ActionSide uploadSide;
@@ -70,7 +70,7 @@ public class DocumentService {
             uploadSide = ActionSide.Merchant;
         }
         else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UNAUTHORIZED);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
         }
 
         disputeDocumentData.setUploadSide(uploadSide);
@@ -95,7 +95,7 @@ public class DocumentService {
         documentCrypto.signMessage(disputeDocumentData);
 
         if ( !documentCrypto.verifySignature(disputeDocumentData) ) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UNAUTHORIZED);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
         }
 
         File file = new File(disputeDocumentData.getHash().toString());
@@ -109,11 +109,11 @@ public class DocumentService {
         }
         catch(IOException e) {
             log.error("Can't save file on disk.", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(INTERNAL_ERROR, STATUS_ERROR));
         }
 
         if ( !awsService.uploadDisputeDocument(disputeDocumentData.getHash(), file, multiPartFile.getContentType())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(awsService.getError());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(awsService.getError(), STATUS_ERROR));
         }
 
         if ( !file.delete() ) {
