@@ -115,7 +115,7 @@ public class BaseNodeTransactionService implements ITransactionService {
             log.error("Balance check failed: {}", transactionData.getHash());
             return false;
         }
-        transactionData.setPreBalanceValid(true);
+        transactionData.setValid(true);
         return true;
     }
 

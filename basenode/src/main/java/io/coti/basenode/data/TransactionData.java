@@ -36,7 +36,6 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
     private SignatureData nodeSignature;
     private List<Hash> childrenTransactions;
     private Boolean valid;
-    private Boolean preBalanceValid;
     private Map<String, Boolean> validByNodes;
     private transient boolean isVisit;
     private boolean isZeroSpend;
