@@ -3,6 +3,8 @@ package io.coti.financialserver.data;
 import lombok.Data;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
+import java.util.List;
+
 import org.apache.commons.lang3.ArrayUtils;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
@@ -21,7 +23,7 @@ public class DisputeDocumentData implements IEntity, ISignable, ISignValidatable
     private Hash userHash;
 
     @NotNull
-    private Long itemId;
+    private List<Long> itemIds;
 
     @NotNull
     private SignatureData userSignature;

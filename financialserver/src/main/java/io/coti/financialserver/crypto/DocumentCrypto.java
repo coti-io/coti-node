@@ -19,13 +19,15 @@ public class DocumentCrypto extends SignatureCrypto<DisputeDocumentData> {
         byte[] documentHashInBytes;
         byte[] nameInBytes = null;
         byte[] descriptionInBytes = null;
+        byte[] itemIdsInBytes = null;
 
         userHashInBytes = documentData.getUserHash().getBytes();
         byteBufferLength = userHashInBytes.length;
         disputeHashInBytes = documentData.getDisputeHash().getBytes();
         byteBufferLength += disputeHashInBytes.length;
-        if(documentData.getItemId() != null) {
-            byteBufferLength += Long.BYTES;
+        if(documentData.getItemIds() != null) {
+            itemIdsInBytes = documentData.getItemIds().toString().getBytes();
+            byteBufferLength += itemIdsInBytes.length;
         }
 
         if(documentData.getName() != null) {
@@ -47,8 +49,8 @@ public class DocumentCrypto extends SignatureCrypto<DisputeDocumentData> {
                                                     .put(userHashInBytes)
                                                     .put(disputeHashInBytes);
 
-        if(documentData.getItemId() != null) {
-            documentDataBuffer.putLong(documentData.getItemId());
+        if(itemIdsInBytes != null) {
+            documentDataBuffer.put(itemIdsInBytes);
         }
 
         if(nameInBytes != null) {

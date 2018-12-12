@@ -3,6 +3,7 @@ package io.coti.financialserver.data;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
 import java.util.Date;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -21,7 +22,7 @@ public class DisputeCommentData implements IEntity, ISignable, ISignValidatable 
     private Hash userHash;
 
     @NotNull
-    private Long itemId;
+    private List<Long> itemIds;
 
     @NotNull
     private Hash disputeHash;

@@ -4,6 +4,7 @@ import lombok.Data;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import org.apache.commons.lang3.ArrayUtils;
@@ -59,6 +60,17 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
         }
 
         return null;
+    }
+
+    public List<DisputeItemData> getDisputeItems(List<Long> itemIds) {
+        List<DisputeItemData> disputeItems = new ArrayList<>();
+        for (DisputeItemData disputeItem : this.disputeItems) {
+            if(itemIds.contains(disputeItem.getId())) {
+                disputeItems.add(disputeItem);
+            }
+        }
+
+        return disputeItems;
     }
 
     @Override
