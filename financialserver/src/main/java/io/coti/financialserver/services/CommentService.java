@@ -37,19 +37,19 @@ public class CommentService {
         commentCrypto.signMessage(disputeCommentData);
 
         if ( !commentCrypto.verifySignature(disputeCommentData) ) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UNAUTHORIZED);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
         }
 
         DisputeData disputeData = disputes.getByHash(disputeCommentData.getDisputeHash());
 
         if (disputeData == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(DISPUTE_NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_NOT_FOUND, STATUS_ERROR));
         }
 
         DisputeItemData disputeItemData = disputeData.getDisputeItem(disputeCommentData.getItemId());
 
         if (disputeItemData == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ITEM_NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(ITEM_NOT_FOUND, STATUS_ERROR));
         }
 
         ActionSide uploadSide;
@@ -60,7 +60,7 @@ public class CommentService {
             uploadSide = ActionSide.Merchant;
         }
         else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UNAUTHORIZED);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
         }
 
         disputeCommentData.setCommentSide(uploadSide);

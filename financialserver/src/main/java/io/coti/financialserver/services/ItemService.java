@@ -1,5 +1,6 @@
 package io.coti.financialserver.services;
 
+import io.coti.basenode.http.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -29,19 +30,19 @@ public class ItemService {
         itemCrypto.signMessage(disputeItemDataNew);
 
         if ( !itemCrypto.verifySignature(disputeItemDataNew) ) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UNAUTHORIZED);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
         }
 
         DisputeData disputeData = disputes.getByHash(disputeItemDataNew.getDisputeHash());
 
         if (disputeData == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(DISPUTE_NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_NOT_FOUND, STATUS_ERROR));
         }
 
         DisputeItemData disputeItemData = disputeData.getDisputeItem(disputeItemDataNew.getId());
 
         if (disputeData.getDisputeItem(disputeItemDataNew.getId()) == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ITEM_NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(ITEM_NOT_FOUND, STATUS_ERROR));
         }
 
         ActionSide actionSide;
@@ -52,7 +53,7 @@ public class ItemService {
             actionSide = ActionSide.Merchant;
         }
         else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UNAUTHORIZED);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
         }
 
         if(actionSide == ActionSide.Consumer && disputeItemDataNew.getStatus() == DisputeItemStatus.CanceledByConsumer) {
@@ -69,6 +70,6 @@ public class ItemService {
 
         disputes.put(disputeData);
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(SUCCESS);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(SUCCESS, STATUS_ERROR));
     }
 }
