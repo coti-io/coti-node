@@ -49,10 +49,10 @@ public class TransactionCreationService {
     }
 
     public String createNewZeroSpendTransaction(TransactionData incomingTransactionData, ZeroSpendTransactionType zeroSpendTransactionType) {
-        if (!validationService.fullValidation(incomingTransactionData)) {
-            log.error("Validation for waiting source  failed! requesting transaction {}", incomingTransactionData);
-            return "Invalid";
-        }
+//        if (!validationService.fullValidation(incomingTransactionData)) {
+//            log.error("Validation for waiting source  failed! requesting transaction {}", incomingTransactionData);
+//            return "Invalid";
+//        }
         TransactionData zeroSpendTransaction = createZeroSpendTransaction(incomingTransactionData, zeroSpendTransactionType);
         sendTransactionToPublisher(zeroSpendTransaction);
         return "Ok";
@@ -86,11 +86,11 @@ public class TransactionCreationService {
     public void createGenesisTransactions() {
         log.info("Creating genesis transactions");
         for (int trustScore = 0; trustScore <= 100; trustScore = trustScore + 10) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                log.error(e.toString());
-            }
+//            try {
+//                Thread.sleep(1000);
+//            } catch (InterruptedException e) {
+//                log.error(e.toString());
+//            }
             TransactionData transactionData = createZeroSpendTransactionData(trustScore, GENESIS);
 
             DspConsensusResult dspConsensusResult = new DspConsensusResult(transactionData.getHash());

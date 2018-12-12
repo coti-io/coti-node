@@ -54,30 +54,15 @@ public class BaseNodeTransactionService implements ITransactionService {
                 }
             }
             if (transactionData.getNodeHash().toString().equals(zeroSpendServerAddress)) {
-                if (!validationService.validateTransactionDataIntegrity(transactionData)
-                        || !validationService.validateTransactionNodeSignature(transactionData)
-                        || transactionData.getAmount().doubleValue() != 0) {
-                    log.error("Data Integrity validation failed: {}", transactionData.getHash());
+                if(!validateZeroSpendTransaction(transactionData)) {
                     return;
                 }
-                if (hasOneOfParentsMissing(transactionData)) {
-                    postponedTransactions.add(transactionData);
-                    return;
-                }
+
             } else {
-                if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
-                    log.error("Data Integrity validation failed: {}", transactionData.getHash());
-                    return;
-                }
-                if (hasOneOfParentsMissing(transactionData)) {
-                    postponedTransactions.add(transactionData);
-                    return;
-                }
-                if (!returnAfterBalanceValidation(transactionData)) {
+                if(!validateNonZeroSpendTransaction(transactionData)) {
                     return;
                 }
             }
-
 
             transactionHelper.attachTransactionToCluster(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
@@ -108,6 +93,34 @@ public class BaseNodeTransactionService implements ITransactionService {
             }
         }
 
+    }
+
+    private boolean validateNonZeroSpendTransaction(TransactionData transactionData) {
+        if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
+            log.error("Data Integrity validation failed: {}", transactionData.getHash());
+            return false;
+        }
+        if (hasOneOfParentsMissing(transactionData)) {
+            postponedTransactions.add(transactionData);
+            return false;
+        }
+        if (!returnAfterBalanceValidation(transactionData)) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validateZeroSpendTransaction(TransactionData transactionData) {
+        if (!validationService.validateTransactionDataIntegrity(transactionData)
+                || !validationService.validateTransactionNodeSignature(transactionData)) {
+            log.error("Data Integrity validation failed: {}", transactionData.getHash());
+            return false;
+        }
+        if (hasOneOfParentsMissing(transactionData)) {
+            postponedTransactions.add(transactionData);
+            return false;
+        }
+        return true;
     }
 
     protected boolean returnAfterBalanceValidation(TransactionData transactionData) {

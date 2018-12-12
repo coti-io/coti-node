@@ -52,7 +52,7 @@ public class ValidationService implements IValidationService {
     @Override
     public boolean validatePropagatedTransactionDataIntegrity(TransactionData transactionData) {
         return validateTransactionDataIntegrity(transactionData) && validateTransactionNodeSignature(transactionData) &&
-                //validateTransactionTrustScore(transactionData) &&
+                validateTransactionTrustScore(transactionData) &&
                 validateBaseTransactionAmounts(transactionData) && validatePot(transactionData);
     }
 
@@ -80,41 +80,6 @@ public class ValidationService implements IValidationService {
     public <T extends BaseTransactionData & ITrustScoreNodeValidatable> boolean validateBaseTransactionTrustScoreNodeResult(T baseTransactionData) {
         return transactionHelper.validateBaseTransactionTrustScoreNodeResult(baseTransactionData);
     }
-
-    @Override
-    public boolean partialValidation(TransactionData transactionData) {
-
-        if (transactionHelper.isTransactionHashExists(transactionData.getHash())) {
-            return false;
-        }
-
-        if (!validatePot(transactionData))
-        {
-            //TODO: //report invalid pot
-            return false;
-
-        }
-
-        if (!validatePropagatedTransactionDataIntegrity(transactionData))
-        {
-            //TODO: //report invalid data ontegrity
-            return false;
-        }
-
-        if (!validateBalancesAndAddToPreBalance(transactionData))
-        {
-            //TODO: if dsp, vote "no" for this, and also need to check if got from full node or dsp propagation
-
-        }
-
-        return true;
-    }
-
-    @Override
-    public boolean fullValidation(TransactionData transactionData) {
-        return true;
-    }
-
 
     @Override
     public boolean validatePot(TransactionData transactionData) {
