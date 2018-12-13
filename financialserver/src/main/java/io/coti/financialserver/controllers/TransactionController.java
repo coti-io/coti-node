@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.financialserver.http.TransactionRequest;
 import io.coti.financialserver.services.TransactionService;
@@ -21,9 +22,11 @@ public class TransactionController {
     @Autowired
     private TransactionService transactionService;
 
-    @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<IResponse> newTransaction(@Valid @RequestBody TransactionRequest transactionRequest) {
+    @RequestMapping(path= "/setReceiverBaseTransactionOwner", method = RequestMethod.POST)
+    public ResponseEntity<IResponse> setReceiverBaseTransactionOwner(@Valid @RequestBody TransactionRequest transactionRequest) {
 
-        return transactionService.newTransaction(transactionRequest);
+       // TransactionData t = new TransactionData();
+
+        return transactionService.setReceiverBaseTransactionOwner(transactionRequest);
     }
 }

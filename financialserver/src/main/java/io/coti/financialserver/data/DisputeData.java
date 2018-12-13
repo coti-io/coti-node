@@ -73,6 +73,10 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
         return disputeItems;
     }
 
+    public void updateStatus() {
+
+    }
+
     @Override
     public Hash getHash() {
         return hash;

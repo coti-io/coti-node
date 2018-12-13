@@ -44,6 +44,7 @@ public class DisputeService {
         Hash merchantHash;
         DisputeData disputeData = disputeRequest.getDisputeData();
 
+        disputeCrypto.signMessage(disputeData);
         if (!disputeCrypto.verifySignature(disputeData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
