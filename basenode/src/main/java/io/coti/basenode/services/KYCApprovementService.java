@@ -40,11 +40,17 @@ public class KYCApprovementService {
 
     public ResponseEntity<KYCApprovementResponse> sendCCAApprovement(KYCApprovementRequest kycApprovementRequest){
         KYCApprovementResponse dummyKYCApprovementResponse = new KYCApprovementResponse();
-        dummyKYCApprovementResponse.setSignerHash(new Hash("abc"));
+
+
+        kycApprovementRequest.setSignerHash(new Hash(ccaPublicKey));
+
+        /*dummyKYCApprovementResponse.setSignerHash(new Hash("abc"));
         dummyKYCApprovementResponse.setSignature(new SignatureData());
         dummyKYCApprovementResponse.setRegistrationHash(new Hash("abc"));
         dummyKYCApprovementResponse.setNodeType(kycApprovementRequest.getNodeType());
-        dummyKYCApprovementResponse.setCreationTime(LocalDateTime.now(ZoneOffset.UTC));
+        dummyKYCApprovementResponse.setCreationTime(LocalDateTime.now(ZoneOffset.UTC));*/
+
+
         return ResponseEntity.ok(dummyKYCApprovementResponse);
 //        try {
 //            kycApprovementCrypto.signMessage(KYCApprovementRequest);
