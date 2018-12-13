@@ -1,5 +1,10 @@
 package io.coti.financialserver.services;
 
+import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.services.BaseNodeTransactionService;
+import io.coti.financialserver.data.FinancialServerTransactionData;
+import io.coti.financialserver.model.FinancialServerTransactions;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,7 +23,7 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 
 @Slf4j
 @Service
-public class TransactionService {
+public class TransactionService extends BaseNodeTransactionService {
 
     @Autowired
     private ReceiverBaseTransactionOwnerCrypto receiverBaseTransactionOwnerCrypto;
@@ -28,17 +33,36 @@ public class TransactionService {
     ConsumerDisputes consumerDisputes;
     @Autowired
     ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
+    @Autowired
+    FinancialServerTransactions financialServerTransactions;
 
-    public ResponseEntity<IResponse> newTransaction(TransactionRequest transactionRequest) {
+    public ResponseEntity<IResponse> setReceiverBaseTransactionOwner(TransactionRequest transactionRequest) {
 
         ReceiverBaseTransactionOwnerData receiverBaseTransactionOwnerData = transactionRequest.getReceiverBaseTransactionOwnerData();
 
+        receiverBaseTransactionOwnerCrypto.signMessage(receiverBaseTransactionOwnerData);
         if (!receiverBaseTransactionOwnerCrypto.verifySignature(receiverBaseTransactionOwnerData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
+        }
+
+        FinancialServerTransactionData financialServerTransactionData = financialServerTransactions.getByHash(receiverBaseTransactionOwnerData.getReceiverBaseTransactionHash());
+        if(financialServerTransactionData == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(TRANSACTION_NOT_FOUND, STATUS_ERROR));
         }
 
         receiverBaseTransactionOwners.put(receiverBaseTransactionOwnerData);
 
         return ResponseEntity.status(HttpStatus.OK).body(new TransactionResponse(STATUS_SUCCESS));
+    }
+
+    @Override
+    protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
+
+        Hash receiverBaseTransactionAddress = transactionData.getReceiverBaseTransactionAddress();
+
+        if(receiverBaseTransactionAddress != null) {
+            FinancialServerTransactionData financialServerTransactionAddress = new FinancialServerTransactionData(receiverBaseTransactionAddress);
+            financialServerTransactions.put(financialServerTransactionAddress);
+        }
     }
 }

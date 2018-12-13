@@ -12,9 +12,8 @@ import io.coti.basenode.data.interfaces.ISignable;
 @Data
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "type")
 public class ReceiverBaseTransactionOwnerData implements IEntity, ISignable, ISignValidatable {
-    private Hash userHash;
-    private Hash receiverBaseTransactionHash;
     private Hash merchantHash;
+    private Hash receiverBaseTransactionHash;
     private SignatureData userSignature;
 
     @Override
@@ -34,12 +33,12 @@ public class ReceiverBaseTransactionOwnerData implements IEntity, ISignable, ISi
 
     @Override
     public Hash getSignerHash() {
-        return userHash;
+        return merchantHash;
     }
 
     @Override
     public void setSignerHash(Hash hash) {
-        userHash = hash;
+        merchantHash = hash;
     }
 
     @Override

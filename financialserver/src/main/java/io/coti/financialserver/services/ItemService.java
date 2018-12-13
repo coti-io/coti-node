@@ -59,6 +59,7 @@ public class ItemService {
         if(actionSide == ActionSide.Consumer && disputeItemDataNew.getStatus() == DisputeItemStatus.CanceledByConsumer) {
             disputeData.getDisputeItem(disputeItemDataNew.getId()).setStatus(disputeItemDataNew.getStatus());
         }
+
         if(actionSide == ActionSide.Consumer && disputeItemDataNew.getReason() != null) {
             disputeData.getDisputeItem(disputeItemDataNew.getId()).setReason(disputeItemDataNew.getReason());
         }
@@ -68,6 +69,7 @@ public class ItemService {
             disputeItemData.setStatus(disputeItemDataNew.getStatus());
         }
 
+        disputeData.updateStatus();
         disputes.put(disputeData);
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(SUCCESS, STATUS_ERROR));
