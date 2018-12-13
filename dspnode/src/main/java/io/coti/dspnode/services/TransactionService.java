@@ -79,7 +79,7 @@ public class TransactionService extends BaseNodeTransactionService {
             log.debug("DSP Fully Checking transaction: {}", transactionData.getHash());
             DspVote dspVote = new DspVote(
                     transactionData.getHash(),
-                    transactionData.isValid());
+                    (transactionData.isValid() == null || transactionData.isValid()));
             dspVoteCrypto.signMessage(dspVote);
             log.debug("Sending DSP vote to {} for transaction {}", zerospendReceivingAddress, transactionData.getHash());
             sender.send(dspVote, zerospendReceivingAddress);
@@ -98,8 +98,7 @@ public class TransactionService extends BaseNodeTransactionService {
     protected boolean returnAfterBalanceValidation(TransactionData transactionData) {
         if (validationService.validateBalancesAndAddToPreBalance(transactionData)) {
             transactionData.setValid(true);
-        }
-        else{
+        } else {
             log.error("Balance check failed: {}", transactionData.getHash());
             transactionData.setValid(false);
         }
