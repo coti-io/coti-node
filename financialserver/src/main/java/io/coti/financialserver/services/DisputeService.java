@@ -1,9 +1,12 @@
 package io.coti.financialserver.services;
 
+import io.coti.financialserver.data.*;
 import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -12,21 +15,22 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.financialserver.crypto.DisputeCrypto;
-import io.coti.financialserver.data.MerchantDisputesData;
-import io.coti.financialserver.data.ConsumerDisputesData;
-import io.coti.financialserver.data.DisputeData;
-import io.coti.financialserver.data.DisputeItemData;
 import io.coti.financialserver.http.*;
 import io.coti.financialserver.model.ConsumerDisputes;
 import io.coti.financialserver.model.MerchantDisputes;
 import io.coti.financialserver.model.Disputes;
 import io.coti.financialserver.model.ReceiverBaseTransactionOwners;
-import io.coti.financialserver.data.ReceiverBaseTransactionOwnerData;
+
 import static io.coti.financialserver.http.HttpStringConstants.*;
 
 @Slf4j
 @Service
 public class DisputeService {
+
+    private static final int COUNT_ARBITRATORS_PER_DISPUTE = 2;
+
+    @Value("#{'${arbitrators.userHashes}'.split(',')}")
+    private List<String> ARBITRATOR_USER_HASHES;
 
     @Autowired
     private DisputeCrypto disputeCrypto;
@@ -140,6 +144,69 @@ public class DisputeService {
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(new GetDisputeResponse(disputeData));
+    }
+
+    public void update(DisputeData dispute) {
+        dispute.setUpdateTime(new Date());
+
+        boolean noRecallItems = true;
+        boolean allItemsAcceptedByMerchant = true;
+        boolean allItemsCancelledByConsumer = true;
+        boolean atLeastOneItemRejectedByMerchant = false;
+
+        for (DisputeItemData disputeItem : dispute.getDisputeItems()) {
+
+            if( disputeItem.getStatus() == DisputeItemStatus.Recall ) {
+                noRecallItems = false;
+                allItemsAcceptedByMerchant = false;
+                allItemsCancelledByConsumer = false;
+                break;
+            }
+
+            if( disputeItem.getStatus() == DisputeItemStatus.AcceptedByMerchant ) {
+                allItemsCancelledByConsumer = false;
+            }
+
+            if( disputeItem.getStatus() == DisputeItemStatus.CanceledByConsumer ) {
+                allItemsAcceptedByMerchant = false;
+            }
+
+            if( disputeItem.getStatus() == DisputeItemStatus.RejectedByMerchant ) {
+                allItemsAcceptedByMerchant = false;
+                allItemsCancelledByConsumer = false;
+                atLeastOneItemRejectedByMerchant = true;
+            }
+        }
+
+        if(noRecallItems && atLeastOneItemRejectedByMerchant) {
+            dispute.setDisputeStatus(DisputeStatus.Claim);
+            assignToArbitrators(dispute);
+        }
+
+        else if(noRecallItems) {
+            dispute.setDisputeStatus(DisputeStatus.Closed);
+        }
+
+        if(allItemsAcceptedByMerchant) {
+            dispute.setDisputeStatus(DisputeStatus.AcceptedByMerchant);
+        }
+
+        if(allItemsCancelledByConsumer) {
+            dispute.setDisputeStatus(DisputeStatus.CanceledByConsumer);
+        }
+
+        disputes.put(dispute);
+    }
+
+    private void assignToArbitrators(DisputeData dispute) {
+
+        int random;
+        for(int i=0; i < COUNT_ARBITRATORS_PER_DISPUTE; i++) {
+
+            random = (int)((Math.random()*ARBITRATOR_USER_HASHES.size()));
+            dispute.getArbitratorHashes().add(new Hash(ARBITRATOR_USER_HASHES.get(random)));
+            ARBITRATOR_USER_HASHES.remove(random);
+        }
     }
 
     private Hash getMerchantHash(Hash transactionHash) {

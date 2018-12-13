@@ -21,7 +21,7 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 public class AwsService {
 
     @Value("${aws.s3.bucket.name}")
-    private  String BUCKET_NAME;
+    private String BUCKET_NAME;
 
     @Value("${aws.s3.bucket.region}")
     private String REGION;
@@ -30,7 +30,6 @@ public class AwsService {
     private static final String ERROR_UPLOAD_TO_S3 = "Some error occurred during upload.";
 
     private String error = "";
-    private Object suffix = "";
 
     private AmazonS3 getS3Client() {
         return AmazonS3ClientBuilder.standard().withRegion(REGION)

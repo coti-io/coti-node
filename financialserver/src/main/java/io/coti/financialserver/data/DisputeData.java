@@ -20,6 +20,7 @@ import io.coti.basenode.data.interfaces.ISignable;
 @Data
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "type")
 public class DisputeData implements IEntity, ISignable, ISignValidatable {
+
     private Hash hash;
     private Hash receiverBaseTransactionHash;
     private Hash userHash;
@@ -37,15 +38,18 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
     private Boolean recourseClaimOpen;
     private Hash recourseClaimTransactionHash;
     private Date creationTime;
+    private Date updateTime;
     private Date closedTime;
 
     public void init() {
 
-        this.disputeStatus = DisputeStatus.Recall;
-        this.creationTime = new Date();
+        disputeStatus = DisputeStatus.Recall;
+        creationTime = new Date();
+        updateTime = new Date();
+        arbitratorHashes = new ArrayList<>();
 
         byte[] concatDateAndUserHashBytes = ArrayUtils.addAll(consumerHash.getBytes(),creationTime.toString().getBytes());
-        this.hash = CryptoHelper.cryptoHash( concatDateAndUserHashBytes );
+        hash = CryptoHelper.cryptoHash( concatDateAndUserHashBytes );
     }
 
     public List<DisputeItemData> getDisputeItems() {
@@ -71,10 +75,6 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
         }
 
         return disputeItems;
-    }
-
-    public void updateStatus() {
-
     }
 
     @Override
