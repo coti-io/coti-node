@@ -2,6 +2,7 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.ITransactionService;
@@ -20,9 +21,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class BaseNodeTransactionService implements ITransactionService {
-
-    @Value("${zerospend.server.address}")
-    private String zeroSpendServerAddress;
 
     @Autowired
     private ITransactionHelper transactionHelper;
@@ -53,7 +51,7 @@ public class BaseNodeTransactionService implements ITransactionService {
                     transactionData.wait();
                 }
             }
-            if (transactionData.getNodeHash().toString().equals(zeroSpendServerAddress)) {
+            if (transactionData.getType().equals(TransactionType.ZeroSpend)) {
                 if(!validateZeroSpendTransaction(transactionData)) {
                     return;
                 }
