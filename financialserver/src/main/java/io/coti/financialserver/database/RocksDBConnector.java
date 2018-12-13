@@ -11,19 +11,8 @@ import io.coti.financialserver.model.*;
 @Service
 public class RocksDBConnector extends BaseNodeRocksDBConnector {
 
-    private static BaseNodeRocksDBConnector connector;
-
     private RocksDBConnector() {
 
-    }
-
-    public static BaseNodeRocksDBConnector getConnector() {
-        if( connector == null ) {
-            connector = new RocksDBConnector();
-            connector.init("financialServerDatabase");
-        }
-
-        return connector;
     }
 
     @Override

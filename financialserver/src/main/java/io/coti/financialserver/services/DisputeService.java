@@ -178,24 +178,28 @@ public class DisputeService {
             }
         }
 
-        if(noRecallItems && atLeastOneItemRejectedByMerchant) {
+        if( noRecallItems && atLeastOneItemRejectedByMerchant ) {
             dispute.setDisputeStatus(DisputeStatus.Claim);
             assignToArbitrators(dispute);
         }
 
-        else if(noRecallItems) {
-            dispute.setDisputeStatus(DisputeStatus.Closed);
-        }
-
-        if(allItemsAcceptedByMerchant) {
+        else if( allItemsAcceptedByMerchant ) {
             dispute.setDisputeStatus(DisputeStatus.AcceptedByMerchant);
         }
 
-        if(allItemsCancelledByConsumer) {
+        else if( allItemsCancelledByConsumer ) {
             dispute.setDisputeStatus(DisputeStatus.CanceledByConsumer);
         }
 
+        else if( noRecallItems ) {
+            dispute.setDisputeStatus(DisputeStatus.AcceptedByMerchantCanceledByConsumer);
+        }
+
         disputes.put(dispute);
+    }
+
+    public void updateAfterVote(DisputeData dispute) {
+        dispute.setUpdateTime(new Date());
     }
 
     private void assignToArbitrators(DisputeData dispute) {
