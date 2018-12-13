@@ -32,6 +32,7 @@ public class DisputeItemData implements Serializable, ISignable, ISignValidatabl
     public DisputeItemData() {
      disputeDocumentHashes = new ArrayList<>();
      disputeCommentHashes = new ArrayList<>();
+     status = DisputeItemStatus.Recall;
     }
 
     public void addDocumentHash(Hash documentHash) {

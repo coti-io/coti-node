@@ -60,6 +60,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
         Hash receiverBaseTransactionAddress = transactionData.getReceiverBaseTransactionAddress();
 
+        // TODO: Check if transaction is of type payment
         if(receiverBaseTransactionAddress != null) {
             FinancialServerTransactionData financialServerTransactionAddress = new FinancialServerTransactionData(receiverBaseTransactionAddress);
             financialServerTransactions.put(financialServerTransactionAddress);
