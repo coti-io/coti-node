@@ -1,22 +1,19 @@
 package io.coti.financialserver.services;
 
 import io.coti.basenode.http.Response;
+import io.coti.financialserver.data.*;
+import io.coti.financialserver.model.DisputeItemVotes;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import io.coti.financialserver.data.ActionSide;
-import io.coti.financialserver.data.DisputeData;
-import io.coti.financialserver.data.DisputeItemStatus;
 import io.coti.financialserver.crypto.ItemCrypto;
-import io.coti.financialserver.data.DisputeItemData;
+import io.coti.financialserver.crypto.ItemVoteCrypto;
 import io.coti.financialserver.http.ItemRequest;
+import io.coti.financialserver.http.VoteRequest;
 import io.coti.financialserver.model.Disputes;
-
-import java.util.List;
 
 import static io.coti.financialserver.http.HttpStringConstants.*;
 
@@ -26,6 +23,9 @@ public class ItemService {
 
     @Autowired
     Disputes disputes;
+
+    @Autowired
+    DisputeItemVotes disputeItemVotes;
 
     @Autowired
     DisputeService disputeService;
@@ -53,7 +53,7 @@ public class ItemService {
         }
 
         if (disputeItemData.getStatus() != DisputeItemStatus.Recall) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_PASSED_RECALL_STATUS, STATUS_ERROR));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ITEM_PASSED_RECALL_STATUS, STATUS_ERROR));
         }
 
         ActionSide actionSide;
@@ -66,7 +66,6 @@ public class ItemService {
         else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
         }
-        // TODO: remove this line
         actionSide = ActionSide.Merchant;
 
         if(actionSide == ActionSide.Consumer && disputeItemDataNew.getStatus() == DisputeItemStatus.CanceledByConsumer) {
@@ -84,6 +83,51 @@ public class ItemService {
 
         disputeService.update(disputeData);
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(SUCCESS, STATUS_SUCCESS));
+        return ResponseEntity.status(HttpStatus.OK).body(new Response(SUCCESS, STATUS_SUCCESS));
+    }
+
+    public ResponseEntity vote(VoteRequest request) {
+
+        DisputeItemVoteData disputeItemVoteData = request.getDisputeItemVoteData();
+        ItemVoteCrypto itemVoteCrypto = new ItemVoteCrypto();
+        itemVoteCrypto.signMessage(disputeItemVoteData);
+
+        if ( !itemVoteCrypto.verifySignature(disputeItemVoteData) ) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
+        }
+
+        DisputeData disputeData = disputes.getByHash(disputeItemVoteData.getDisputeHash());
+
+        if (disputeData == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_NOT_FOUND, STATUS_ERROR));
+        }
+
+        if( ! disputeData.getArbitratorHashes().contains(disputeItemVoteData.getUserHash()) ) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
+        }
+
+        if (disputeData.getDisputeStatus() != DisputeStatus.Claim) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_NOT_IN_CLAIM_STATUS, STATUS_ERROR));
+        }
+
+        DisputeItemData disputeItemData = disputeData.getDisputeItem(disputeItemVoteData.getItemId());
+
+        if (disputeItemData.getStatus() != DisputeItemStatus.RejectedByMerchant) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(ITEM_NOT_REJECTED_BY_MERCHANT, STATUS_ERROR));
+        }
+
+        if(disputeItemVoteData.getStatus() != DisputeItemStatus.AcceptedByArbitrators && disputeItemVoteData.getStatus() != DisputeItemStatus.RejectedByArbitrators) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(STATUS_NOT_VALID, STATUS_ERROR));
+        }
+
+        disputeItemVoteData.init();
+
+        disputeItemData.getDisputeItemVoteHashes().add(disputeItemVoteData.getHash());
+
+        disputeService.updateAfterVote(disputeData);
+        disputeItemVotes.put(disputeItemVoteData);
+        disputes.put(disputeData);
+
+        return ResponseEntity.status(HttpStatus.OK).body(new Response(SUCCESS, STATUS_SUCCESS));
     }
 }

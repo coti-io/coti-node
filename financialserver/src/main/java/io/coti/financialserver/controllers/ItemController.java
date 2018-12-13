@@ -1,6 +1,7 @@
 package io.coti.financialserver.controllers;
 
 import io.coti.financialserver.http.ItemRequest;
+import io.coti.financialserver.http.VoteRequest;
 import io.coti.financialserver.services.ItemService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,5 +29,11 @@ public class ItemController {
     public ResponseEntity updated(@Valid @RequestBody ItemRequest request) {
 
         return itemService.updated(request);
+    }
+
+    @RequestMapping(path = "/vote", method = RequestMethod.PUT)
+    public ResponseEntity vote(@Valid @RequestBody VoteRequest request) {
+
+        return itemService.vote(request);
     }
 }
