@@ -1,14 +1,14 @@
 package io.coti.financialserver.http.data;
 
+import io.coti.basenode.data.SignatureData;
+import io.coti.financialserver.data.DisputeData;
+import io.coti.financialserver.data.DisputeStatus;
 import lombok.Data;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import io.coti.basenode.data.SignatureData;
-import io.coti.financialserver.data.DisputeData;
-import io.coti.financialserver.data.DisputeStatus;
 
 @Data
 public class GetDisputeResponseData {
@@ -26,6 +26,7 @@ public class GetDisputeResponseData {
     private Boolean recourseClaimOpen;
     private String recourseClaimTransactionHash;
     private Date creationTime;
+    private Date updateTime;
     private Date closedTime;
 
     public GetDisputeResponseData(DisputeData disputeData) {
@@ -41,6 +42,7 @@ public class GetDisputeResponseData {
         this.chargeBackAmount = disputeData.getChargeBackAmount();
         this.chargeBackTransactionHash = disputeData.getChargeBackTransactionHash() != null ? disputeData.getChargeBackTransactionHash().toString() : null;
         this.creationTime = disputeData.getCreationTime();
+        this.updateTime = disputeData.getUpdateTime();
         this.closedTime = disputeData.getClosedTime();
     }
 }

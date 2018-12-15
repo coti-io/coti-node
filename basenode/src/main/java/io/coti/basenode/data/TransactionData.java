@@ -147,11 +147,11 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
         return this.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData.isInput()).map(InputBaseTransactionData.class::cast).collect(Collectors.toList());
     }
 
-    public Hash getReceiverBaseTransactionAddress() {
+    public Hash getReceiverBaseTransactionHash() {
 
         for (BaseTransactionData baseTransactionData : baseTransactions) {
             if (baseTransactionData instanceof ReceiverBaseTransactionData) {
-                return baseTransactionData.getAddressHash();
+                return baseTransactionData.getHash();
             }
         }
         return null;
