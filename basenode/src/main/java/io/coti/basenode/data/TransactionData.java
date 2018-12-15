@@ -3,7 +3,6 @@ package io.coti.basenode.data;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
-import io.coti.basenode.data.interfaces.IReceiverBaseTransactionData;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -150,9 +149,9 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
 
     public Hash getReceiverBaseTransactionAddress() {
 
-        for(BaseTransactionData baseTransaction : baseTransactions) {
-            if(baseTransaction instanceof IReceiverBaseTransactionData) {
-               return ((IReceiverBaseTransactionData) baseTransaction).getReceiverBaseTransactionAddress();
+        for (BaseTransactionData baseTransactionData : baseTransactions) {
+            if (baseTransactionData instanceof ReceiverBaseTransactionData) {
+                return baseTransactionData.getAddressHash();
             }
         }
         return null;
