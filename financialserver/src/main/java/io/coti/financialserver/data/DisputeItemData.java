@@ -14,7 +14,6 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 
 @Data
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "type")
 public class DisputeItemData implements Serializable, ISignable, ISignValidatable {
 
     private Hash userHash;

@@ -10,11 +10,10 @@ import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 
 @Data
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "type")
 public class ReceiverBaseTransactionOwnerData implements IEntity, ISignable, ISignValidatable {
     private Hash merchantHash;
     private Hash receiverBaseTransactionHash;
-    private SignatureData userSignature;
+    private SignatureData merchantSignature;
 
     @Override
     public Hash getHash() {
@@ -28,7 +27,7 @@ public class ReceiverBaseTransactionOwnerData implements IEntity, ISignable, ISi
 
     @Override
     public SignatureData getSignature() {
-        return userSignature;
+        return merchantSignature;
     }
 
     @Override
@@ -43,6 +42,6 @@ public class ReceiverBaseTransactionOwnerData implements IEntity, ISignable, ISi
 
     @Override
     public void setSignature(SignatureData signature) {
-        this.userSignature = signature;
+        this.merchantSignature = signature;
     }
 }
