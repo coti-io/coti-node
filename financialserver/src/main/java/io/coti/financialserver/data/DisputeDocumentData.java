@@ -1,46 +1,44 @@
 package io.coti.financialserver.data;
 
-import lombok.Data;
-import javax.validation.constraints.NotNull;
-import java.util.Date;
-import java.util.List;
-
-import org.apache.commons.lang3.ArrayUtils;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
+import lombok.Data;
+import org.apache.commons.lang3.ArrayUtils;
+
+import javax.validation.constraints.NotNull;
+import java.util.Date;
+import java.util.List;
 
 @Data
 public class DisputeDocumentData implements IEntity, ISignable, ISignValidatable {
 
+    private Hash hash;
     @NotNull
     private Hash userHash;
-
     @NotNull
     private List<Long> itemIds;
-
     @NotNull
     private SignatureData userSignature;
-
     @NotNull
     private Hash disputeHash;
-
-    private Hash hash;
     private ActionSide uploadSide;
     private String name;
     private String description;
     private String fileName;
     private Date creationTime;
 
+    private DisputeDocumentData() {
+
+    }
+
     public void init() {
         this.creationTime = new Date();
-        byte[] concatDateAndUserHashBytes = ArrayUtils.addAll(userHash.getBytes(),creationTime.toString().getBytes());
-        this.hash = CryptoHelper.cryptoHash( concatDateAndUserHashBytes );
+        byte[] concatDateAndUserHashBytes = ArrayUtils.addAll(userHash.getBytes(), creationTime.toString().getBytes());
+        this.hash = CryptoHelper.cryptoHash(concatDateAndUserHashBytes);
     }
 
     @Override

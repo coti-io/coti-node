@@ -1,25 +1,30 @@
 package io.coti.financialserver.services;
 
+import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.http.Response;
+import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.basenode.model.Transactions;
+import io.coti.financialserver.crypto.DisputeCrypto;
 import io.coti.financialserver.data.*;
+import io.coti.financialserver.http.DisputeRequest;
+import io.coti.financialserver.http.GetDisputeHashesResponse;
+import io.coti.financialserver.http.GetDisputeResponse;
+import io.coti.financialserver.http.NewDisputeResponse;
+import io.coti.financialserver.model.ConsumerDisputes;
+import io.coti.financialserver.model.Disputes;
+import io.coti.financialserver.model.MerchantDisputes;
+import io.coti.financialserver.model.ReceiverBaseTransactionOwners;
 import lombok.extern.slf4j.Slf4j;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.Response;
-import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.financialserver.crypto.DisputeCrypto;
-import io.coti.financialserver.http.*;
-import io.coti.financialserver.model.ConsumerDisputes;
-import io.coti.financialserver.model.MerchantDisputes;
-import io.coti.financialserver.model.Disputes;
-import io.coti.financialserver.model.ReceiverBaseTransactionOwners;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 import static io.coti.financialserver.http.HttpStringConstants.*;
 
@@ -35,17 +40,18 @@ public class DisputeService {
     @Autowired
     private DisputeCrypto disputeCrypto;
     @Autowired
-    Disputes disputes;
+    private Transactions transactions;
     @Autowired
-    ConsumerDisputes consumerDisputes;
+    private Disputes disputes;
     @Autowired
-    MerchantDisputes merchantDisputes;
+    private ConsumerDisputes consumerDisputes;
     @Autowired
-    ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
+    private MerchantDisputes merchantDisputes;
+    @Autowired
+    private ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
 
     public ResponseEntity<IResponse> createDispute(DisputeRequest disputeRequest) {
 
-        Hash merchantHash;
         DisputeData disputeData = disputeRequest.getDisputeData();
 
         disputeCrypto.signMessage(disputeData);
@@ -53,21 +59,28 @@ public class DisputeService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
 
-        merchantHash = getMerchantHash(disputeData.getReceiverBaseTransactionHash());
-        if(merchantHash == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(TRANSACTION_NOT_FOUND, STATUS_ERROR));
+        TransactionData transactionData = transactions.getByHash(disputeData.getTransactionHash());
+
+        if (transactionData == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_TRANSACTION_NOT_FOUND, STATUS_ERROR));
         }
 
-        disputeData.setConsumerHash(disputeData.getUserHash());
+        if (!disputeData.getConsumerHash().equals(transactionData.getUserHash())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_CONSUMER_INVALID, STATUS_ERROR));
+        }
+        Hash merchantHash = getMerchantHash(transactionData.getReceiverBaseTransactionHash());
+        if (merchantHash == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_MERCHANT_NOT_FOUND, STATUS_ERROR));
+        }
         disputeData.setMerchantHash(merchantHash);
         disputeData.init();
 
-        if( !isDisputeItemsValid(disputeData.getConsumerHash(), disputeData.getDisputeItems()) ) {
+        if (!isDisputeItemsValid(disputeData.getConsumerHash(), disputeData.getDisputeItems())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ITEMS_EXIST_ALREADY, STATUS_ERROR));
         }
 
-        ConsumerDisputesData consumerDisputesData = consumerDisputes.getByHash(disputeData.getUserHash());
-        if(consumerDisputesData == null) {
+        ConsumerDisputesData consumerDisputesData = consumerDisputes.getByHash(disputeData.getConsumerHash());
+        if (consumerDisputesData == null) {
             consumerDisputesData = new ConsumerDisputesData();
             consumerDisputesData.setHash(disputeData.getConsumerHash());
         }
@@ -76,7 +89,7 @@ public class DisputeService {
         consumerDisputes.put(consumerDisputesData);
 
         MerchantDisputesData merchantDisputesData = merchantDisputes.getByHash(merchantHash);
-        if(merchantDisputesData == null) {
+        if (merchantDisputesData == null) {
             merchantDisputesData = new MerchantDisputesData();
             merchantDisputesData.setHash(disputeData.getMerchantHash());
         }
@@ -97,7 +110,7 @@ public class DisputeService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
 
-        if(disputeRequest.getDisputeData().getUserHash() == null) {
+        if (disputeRequest.getDisputeData().getUserHash() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(NO_CONSUMER_HASH, STATUS_ERROR));
         }
 
@@ -115,7 +128,7 @@ public class DisputeService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
 
-        if(disputeRequest.getDisputeData().getUserHash() == null) {
+        if (disputeRequest.getDisputeData().getUserHash() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(NO_MERCHANT_HASH, STATUS_ERROR));
         }
 
@@ -139,7 +152,7 @@ public class DisputeService {
         }
 
         Hash userHash = disputeRequest.getDisputeData().getUserHash();
-        if ( !disputeData.getConsumerHash().equals(userHash) && !disputeData.getMerchantHash().equals(userHash) ) {
+        if (!disputeData.getConsumerHash().equals(userHash) && !disputeData.getMerchantHash().equals(userHash)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_NOT_YOURS, STATUS_ERROR));
         }
 
@@ -156,42 +169,36 @@ public class DisputeService {
 
         for (DisputeItemData disputeItem : dispute.getDisputeItems()) {
 
-            if( disputeItem.getStatus() == DisputeItemStatus.Recall ) {
+            if (disputeItem.getStatus() == DisputeItemStatus.Recall) {
                 noRecallItems = false;
                 allItemsAcceptedByMerchant = false;
                 allItemsCancelledByConsumer = false;
                 break;
             }
 
-            if( disputeItem.getStatus() == DisputeItemStatus.AcceptedByMerchant ) {
+            if (disputeItem.getStatus() == DisputeItemStatus.AcceptedByMerchant) {
                 allItemsCancelledByConsumer = false;
             }
 
-            if( disputeItem.getStatus() == DisputeItemStatus.CanceledByConsumer ) {
+            if (disputeItem.getStatus() == DisputeItemStatus.CanceledByConsumer) {
                 allItemsAcceptedByMerchant = false;
             }
 
-            if( disputeItem.getStatus() == DisputeItemStatus.RejectedByMerchant ) {
+            if (disputeItem.getStatus() == DisputeItemStatus.RejectedByMerchant) {
                 allItemsAcceptedByMerchant = false;
                 allItemsCancelledByConsumer = false;
                 atLeastOneItemRejectedByMerchant = true;
             }
         }
 
-        if( noRecallItems && atLeastOneItemRejectedByMerchant ) {
+        if (noRecallItems && atLeastOneItemRejectedByMerchant) {
             dispute.setDisputeStatus(DisputeStatus.Claim);
             assignToArbitrators(dispute);
-        }
-
-        else if( allItemsAcceptedByMerchant ) {
+        } else if (allItemsAcceptedByMerchant) {
             dispute.setDisputeStatus(DisputeStatus.AcceptedByMerchant);
-        }
-
-        else if( allItemsCancelledByConsumer ) {
+        } else if (allItemsCancelledByConsumer) {
             dispute.setDisputeStatus(DisputeStatus.CanceledByConsumer);
-        }
-
-        else if( noRecallItems ) {
+        } else if (noRecallItems) {
             dispute.setDisputeStatus(DisputeStatus.AcceptedByMerchantCanceledByConsumer);
         }
 
@@ -205,19 +212,18 @@ public class DisputeService {
     private void assignToArbitrators(DisputeData dispute) {
 
         int random;
-        for(int i=0; i < COUNT_ARBITRATORS_PER_DISPUTE; i++) {
+        for (int i = 0; i < COUNT_ARBITRATORS_PER_DISPUTE; i++) {
 
-            random = (int)((Math.random()*ARBITRATOR_USER_HASHES.size()));
+            random = (int) ((Math.random() * ARBITRATOR_USER_HASHES.size()));
             dispute.getArbitratorHashes().add(new Hash(ARBITRATOR_USER_HASHES.get(random)));
             ARBITRATOR_USER_HASHES.remove(random);
         }
     }
 
-    private Hash getMerchantHash(Hash transactionHash) {
+    private Hash getMerchantHash(Hash receiverBaseTransactionHash) {
+        ReceiverBaseTransactionOwnerData receiverBaseTransactionOwnerData = receiverBaseTransactionOwners.getByHash(receiverBaseTransactionHash);
 
-        ReceiverBaseTransactionOwnerData receiverBaseTransactionOwnerData = receiverBaseTransactionOwners.getByHash(transactionHash);
-
-        if(receiverBaseTransactionOwnerData != null) {
+        if (receiverBaseTransactionOwnerData != null) {
             return receiverBaseTransactionOwnerData.getMerchantHash();
         }
 
@@ -229,15 +235,15 @@ public class DisputeService {
         DisputeData disputeData;
         ConsumerDisputesData consumerDisputesData = consumerDisputes.getByHash(consumerHash);
 
-        if(consumerDisputesData == null || consumerDisputesData.getDisputeHashes() == null) {
+        if (consumerDisputesData == null || consumerDisputesData.getDisputeHashes() == null) {
             return true;
         }
 
-        for(Hash disputeHash: consumerDisputesData.getDisputeHashes()){
+        for (Hash disputeHash : consumerDisputesData.getDisputeHashes()) {
             disputeData = disputes.getByHash(disputeHash);
 
-            for(DisputeItemData item: items) {
-                if(disputeData.getDisputeItem(item.getId()) != null) {
+            for (DisputeItemData item : items) {
+                if (disputeData.getDisputeItem(item.getId()) != null) {
                     return false;
                 }
             }

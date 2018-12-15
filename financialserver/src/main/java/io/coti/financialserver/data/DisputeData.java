@@ -1,31 +1,31 @@
 package io.coti.financialserver.data;
 
-import lombok.Data;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import org.apache.commons.lang3.ArrayUtils;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
+import lombok.Data;
+import org.apache.commons.lang3.ArrayUtils;
+
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 @Data
 public class DisputeData implements IEntity, ISignable, ISignValidatable {
 
     private Hash hash;
-    private Hash receiverBaseTransactionHash;
-    private Hash userHash;
+    @NotNull
+    private Hash transactionHash;
+    @NotNull
     private Hash consumerHash;
     @NotNull
-    private @Valid SignatureData userSignature;
+    private @Valid SignatureData consumerSignature;
     private Hash merchantHash;
     private List<Hash> arbitratorHashes;
     private List<@Valid DisputeItemData> disputeItems;
@@ -40,6 +40,10 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
     private Date updateTime;
     private Date closedTime;
 
+    private DisputeData() {
+
+    }
+
     public void init() {
 
         disputeStatus = DisputeStatus.Recall;
@@ -47,8 +51,8 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
         updateTime = new Date();
         arbitratorHashes = new ArrayList<>();
 
-        byte[] concatDateAndUserHashBytes = ArrayUtils.addAll(consumerHash.getBytes(),creationTime.toString().getBytes());
-        hash = CryptoHelper.cryptoHash( concatDateAndUserHashBytes );
+        byte[] concatDateAndUserHashBytes = ArrayUtils.addAll(consumerHash.getBytes(), creationTime.toString().getBytes());
+        hash = CryptoHelper.cryptoHash(concatDateAndUserHashBytes);
     }
 
     public List<DisputeItemData> getDisputeItems() {
@@ -57,7 +61,7 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
 
     public DisputeItemData getDisputeItem(Long itemId) {
         for (DisputeItemData disputeItem : disputeItems) {
-            if(disputeItem.getId().equals(itemId)) {
+            if (disputeItem.getId().equals(itemId)) {
                 return disputeItem;
             }
         }
@@ -68,7 +72,7 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
     public List<DisputeItemData> getDisputeItems(List<Long> itemIds) {
         List<DisputeItemData> disputeItems = new ArrayList<>();
         for (DisputeItemData disputeItem : this.disputeItems) {
-            if(itemIds.contains(disputeItem.getId())) {
+            if (itemIds.contains(disputeItem.getId())) {
                 disputeItems.add(disputeItem);
             }
         }
@@ -88,21 +92,21 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
 
     @Override
     public SignatureData getSignature() {
-        return userSignature;
+        return consumerSignature;
     }
 
     @Override
     public Hash getSignerHash() {
-        return userHash;
+        return consumerHash;
     }
 
     @Override
     public void setSignerHash(Hash hash) {
-        userHash = hash;
+        consumerHash = hash;
     }
 
     @Override
     public void setSignature(SignatureData signature) {
-        this.userSignature = signature;
+        this.consumerSignature = signature;
     }
 }
