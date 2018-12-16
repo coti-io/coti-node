@@ -16,15 +16,21 @@ public class DisputeCrypto extends SignatureCrypto<DisputeData> {
     public byte[] getMessageInBytes(DisputeData disputeData) {
 
         int byteBufferLength;
-        byte[] userHashInBytes;
+        byte[] consumerHashInBytes;
+        byte[] merchantHashInBytes = null;
         byte[] transactionHashInBytes = null;
         byte[] disputeItemIdsInBytes = null;
 
-        userHashInBytes = disputeData.getUserHash().getBytes();
-        byteBufferLength = userHashInBytes.length;
+        consumerHashInBytes = disputeData.getConsumerHash().getBytes();
+        byteBufferLength = consumerHashInBytes.length;
 
-        if(disputeData.getReceiverBaseTransactionHash() != null) {
-            transactionHashInBytes = disputeData.getReceiverBaseTransactionHash().getBytes();
+        if(disputeData.getMerchantHash() != null) {
+            merchantHashInBytes = disputeData.getMerchantHash().getBytes();
+            byteBufferLength += merchantHashInBytes.length;
+        }
+
+        if(disputeData.getTransactionHash() != null) {
+            transactionHashInBytes = disputeData.getTransactionHash().getBytes();
             byteBufferLength += transactionHashInBytes.length;
         }
 
@@ -41,7 +47,11 @@ public class DisputeCrypto extends SignatureCrypto<DisputeData> {
 
         ByteBuffer disputeDataBuffer = ByteBuffer.allocate(byteBufferLength);
 
-        disputeDataBuffer.put(userHashInBytes);
+        disputeDataBuffer.put(consumerHashInBytes);
+
+        if(merchantHashInBytes != null) {
+            disputeDataBuffer.put(merchantHashInBytes);
+        }
 
         if(transactionHashInBytes != null) {
             disputeDataBuffer.put(transactionHashInBytes);
