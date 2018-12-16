@@ -20,7 +20,9 @@ public class RocksDBConnector extends BaseNodeRocksDBConnector {
         super.setColumnFamily();
         columnFamilyClassNames.addAll(Arrays.asList(
                 Disputes.class.getName(),
-                UserDisputes.class.getName(),
+                ConsumerDisputes.class.getName(),
+                MerchantDisputes.class.getName(),
+                ArbitratorDisputes.class.getName(),
                 DisputeComments.class.getName(),
                 DisputeDocuments.class.getName(),
                 FinancialServerTransactions.class.getName(),

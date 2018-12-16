@@ -7,9 +7,9 @@ import io.coti.basenode.model.Collection;
 import io.coti.financialserver.data.UserDisputesData;
 
 @Service
-public class UserDisputes extends Collection<UserDisputesData> {
+public class ConsumerDisputes extends Collection<UserDisputesData> {
 
-    public UserDisputes() {
+    public ConsumerDisputes() {
     }
 
     @PostConstruct
