@@ -1,19 +1,17 @@
 package io.coti.financialserver.services;
 
-import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.financialserver.crypto.ReceiverBaseTransactionOwnerCrypto;
-import io.coti.financialserver.data.FinancialServerTransactionData;
 import io.coti.financialserver.data.ReceiverBaseTransactionOwnerData;
 import io.coti.financialserver.http.TransactionRequest;
 import io.coti.financialserver.http.TransactionResponse;
-import io.coti.financialserver.model.ConsumerDisputes;
 import io.coti.financialserver.model.Disputes;
 import io.coti.financialserver.model.FinancialServerTransactions;
 import io.coti.financialserver.model.ReceiverBaseTransactionOwners;
+import io.coti.financialserver.model.UserDisputes;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -31,7 +29,7 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     Disputes disputes;
     @Autowired
-    ConsumerDisputes consumerDisputes;
+    UserDisputes userDisputes;
     @Autowired
     ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
     @Autowired

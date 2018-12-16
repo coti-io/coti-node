@@ -30,8 +30,9 @@ public class GetDisputeResponseData {
     private Date closedTime;
 
     public GetDisputeResponseData(DisputeData disputeData) {
+
         this.hash = disputeData.getHash().toString();
-        this.transactionHash = disputeData.getReceiverBaseTransactionHash().toString();
+        this.transactionHash = disputeData.getTransactionHash().toString();
         this.consumerHash = disputeData.getConsumerHash().toString();
         this.consumerSignature = disputeData.getSignature();
         this.merchantHash = disputeData.getMerchantHash().toString();

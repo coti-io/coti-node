@@ -31,9 +31,12 @@ public class DisputeDocumentData implements IEntity, ISignable, ISignValidatable
     private String fileName;
     private Date creationTime;
 
-    private DisputeDocumentData() {
+    /**
+     * why this is private?
+     */
+    /*private DisputeDocumentData() {
 
-    }
+    }*/
 
     public void init() {
         this.creationTime = new Date();
