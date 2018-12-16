@@ -66,7 +66,7 @@ public class ItemService {
         else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
         }
-        actionSide = ActionSide.Merchant;
+        actionSide = ActionSide.Merchant; // TODO: remove this line
 
         if(actionSide == ActionSide.Consumer && disputeItemDataNew.getStatus() == DisputeItemStatus.CanceledByConsumer) {
             disputeData.getDisputeItem(disputeItemDataNew.getId()).setStatus(disputeItemDataNew.getStatus());
@@ -111,6 +111,10 @@ public class ItemService {
         }
 
         DisputeItemData disputeItemData = disputeData.getDisputeItem(disputeItemVoteData.getItemId());
+
+        if (disputeItemData == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(ITEM_NOT_FOUND, STATUS_ERROR));
+        }
 
         if (disputeItemData.getStatus() != DisputeItemStatus.RejectedByMerchant) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(ITEM_NOT_REJECTED_BY_MERCHANT, STATUS_ERROR));

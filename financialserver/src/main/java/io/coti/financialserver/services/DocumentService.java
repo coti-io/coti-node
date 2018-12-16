@@ -64,6 +64,14 @@ public class DocumentService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(ITEM_NOT_FOUND, STATUS_ERROR));
         }
 
+        for(DisputeItemData disputeItemData : disputeItemsData) {
+            if (disputeItemData.getStatus() != DisputeItemStatus.Recall) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ITEM_PASSED_RECALL_STATUS, STATUS_ERROR));
+            }
+
+            disputeItemData.addDocumentHash(disputeDocumentData.getHash());
+        }
+
         ActionSide uploadSide;
         if(disputeData.getConsumerHash().equals(disputeDocumentData.getUserHash())) {
             uploadSide = ActionSide.Consumer;
@@ -77,10 +85,6 @@ public class DocumentService {
 
         disputeDocumentData.setUploadSide(uploadSide);
         disputeDocumentData.init();
-
-        for(DisputeItemData disputeItemData : disputeItemsData) {
-            disputeItemData.addDocumentHash(disputeDocumentData.getHash());
-        }
 
         disputes.put(disputeData);
         disputeDocuments.put(disputeDocumentData);

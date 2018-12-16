@@ -14,11 +14,22 @@ public class GetDisputeCrypto extends SignatureCrypto<GetDisputeData> {
     public byte[] getMessageInBytes(GetDisputeData getDisputeData) {
 
         byte [] userHashInBytes = getDisputeData.getUserHash().getBytes();
-        byte [] disputeHashesInBytes = getDisputeData.getDisputeHashes().toString().getBytes();
         byte [] disputeSideInBytes = getDisputeData.getDisputeSide().toString().getBytes();
-        int byteBufferLength = userHashInBytes.length + disputeHashesInBytes.length + disputeSideInBytes.length;
+        byte [] disputeHashesInBytes = null;
+        int byteBufferLength = 0;
 
-        ByteBuffer disputeDataBuffer = ByteBuffer.allocate(byteBufferLength).put(userHashInBytes).put(disputeHashesInBytes).put(disputeSideInBytes);
+        if(getDisputeData.getDisputeHashes() != null) {
+            disputeHashesInBytes = getDisputeData.getDisputeHashes().toString().getBytes();
+            byteBufferLength += disputeHashesInBytes.length;
+        }
+
+        byteBufferLength += userHashInBytes.length + disputeSideInBytes.length;
+
+        ByteBuffer disputeDataBuffer = ByteBuffer.allocate(byteBufferLength).put(userHashInBytes).put(disputeSideInBytes);
+
+        if(disputeHashesInBytes != null) {
+            disputeDataBuffer.put(disputeHashesInBytes);
+        }
 
         byte[] disputeDataInBytes = disputeDataBuffer.array();
         return CryptoHelper.cryptoHash(disputeDataInBytes).getBytes();

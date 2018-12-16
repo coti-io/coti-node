@@ -1,5 +1,6 @@
 package io.coti.financialserver.services;
 
+import io.coti.financialserver.data.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -9,10 +10,6 @@ import org.springframework.stereotype.Service;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
 import io.coti.financialserver.crypto.CommentCrypto;
-import io.coti.financialserver.data.ActionSide;
-import io.coti.financialserver.data.DisputeData;
-import io.coti.financialserver.data.DisputeCommentData;
-import io.coti.financialserver.data.DisputeItemData;
 import io.coti.financialserver.http.CommentRequest;
 import io.coti.financialserver.http.GetCommentResponse;
 import io.coti.financialserver.http.NewCommentResponse;
@@ -55,6 +52,14 @@ public class CommentService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(ITEM_NOT_FOUND, STATUS_ERROR));
         }
 
+        for(DisputeItemData disputeItemData : disputeItemsData) {
+            if (disputeItemData.getStatus() != DisputeItemStatus.Recall) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ITEM_PASSED_RECALL_STATUS, STATUS_ERROR));
+            }
+
+            disputeItemData.addCommentHash(disputeCommentData.getHash());
+        }
+
         ActionSide uploadSide;
         if(disputeData.getConsumerHash().equals(disputeCommentData.getUserHash())) {
             uploadSide = ActionSide.Consumer;
@@ -68,10 +73,6 @@ public class CommentService {
 
         disputeCommentData.setCommentSide(uploadSide);
         disputeCommentData.init();
-
-        for(DisputeItemData disputeItemData : disputeItemsData) {
-            disputeItemData.addCommentHash(disputeCommentData.getHash());
-        }
 
         disputes.put(disputeData);
         disputeComments.put(disputeCommentData);
