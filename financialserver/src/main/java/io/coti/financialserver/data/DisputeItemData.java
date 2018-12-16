@@ -26,6 +26,7 @@ public class DisputeItemData implements Serializable, ISignable, ISignValidatabl
     private List<Hash> disputeDocumentHashes;
     private List<Hash> disputeCommentHashes;
     private List<Hash> disputeItemVoteHashes;
+    private List<DisputeItemVoteData> disputeItemVotesData;
     private SignatureData userSignature;
 
     public DisputeItemData() {

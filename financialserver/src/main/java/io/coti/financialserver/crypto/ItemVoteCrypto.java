@@ -17,7 +17,7 @@ public class ItemVoteCrypto extends SignatureCrypto<DisputeItemVoteData> {
         byte[] userHashInBytes;
         byte[] disputeHashInBytes;
         Long itemIdInBytes;
-        byte[] statusInBytes = null;
+        byte[] statusInBytes;
 
         userHashInBytes = itemVoteData.getUserHash().getBytes();
         byteBufferLength = userHashInBytes.length;

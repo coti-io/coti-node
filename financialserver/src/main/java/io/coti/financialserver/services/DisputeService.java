@@ -53,8 +53,6 @@ public class DisputeService {
     private TransactionDisputes transactionDisputes;
     @Autowired
     private ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
-    @Autowired
-    private DisputeItemVotes disputeItemVotes;
 
     public ResponseEntity<IResponse> createDispute(NewDisputeRequest newDisputeRequest) {
 
@@ -223,19 +221,18 @@ public class DisputeService {
         int arbitratorsCount = dispute.getArbitratorHashes().size();
         int votesForConsumer;
         int votesForMerchant;
-        DisputeItemVoteData disputeItemVoteData;
 
         for (DisputeItemData disputeItem : dispute.getDisputeItems()) {
 
-            if(disputeItem.getDisputeItemVoteHashes().size() < arbitratorsCount) {
+            if(disputeItem.getDisputeItemVotesData().size() < arbitratorsCount) {
                 continue;
             }
 
             votesForConsumer = 0;
             votesForMerchant = 0;
 
-            for(Hash voteHash : disputeItem.getDisputeItemVoteHashes()) {
-                disputeItemVoteData = disputeItemVotes.getByHash(voteHash);
+            for(DisputeItemVoteData disputeItemVoteData : disputeItem.getDisputeItemVotesData()) {
+
                 if(disputeItemVoteData.getStatus() != DisputeItemStatus.AcceptedByArbitrators) {
                     votesForConsumer++;
                 }
@@ -261,6 +258,7 @@ public class DisputeService {
 
             if(disputeItem.getStatus() != DisputeItemStatus.AcceptedByArbitrators && disputeItem.getStatus() != DisputeItemStatus.RejectedByArbitrators) {
                 arbitratorsVotedOnAllItems = false;
+                break;
             }
         }
 

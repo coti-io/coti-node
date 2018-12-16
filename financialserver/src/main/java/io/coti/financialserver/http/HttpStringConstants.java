@@ -30,8 +30,6 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
 
 
     public static final String UNAUTHORIZED = "Unauthorized";
-    public static final String NO_CONSUMER_HASH = "Consumer hash field is required";
-    public static final String NO_MERCHANT_HASH = "Merchant hash field is required";
     public static final String INVALID_SIGNATURE = "Invalid signature";
 
     public static final String INTERNAL_ERROR = "Internal error";

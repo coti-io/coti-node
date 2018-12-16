@@ -2,7 +2,6 @@ package io.coti.financialserver.services;
 
 import io.coti.basenode.http.Response;
 import io.coti.financialserver.data.*;
-import io.coti.financialserver.model.DisputeItemVotes;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,9 +22,6 @@ public class ItemService {
 
     @Autowired
     Disputes disputes;
-
-    @Autowired
-    DisputeItemVotes disputeItemVotes;
 
     @Autowired
     DisputeService disputeService;
@@ -124,12 +120,9 @@ public class ItemService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(STATUS_NOT_VALID, STATUS_ERROR));
         }
 
-        disputeItemVoteData.init();
-
-        disputeItemData.getDisputeItemVoteHashes().add(disputeItemVoteData.getHash());
+        disputeItemData.getDisputeItemVotesData().add(disputeItemVoteData);
 
         disputeService.updateAfterVote(disputeData);
-        disputeItemVotes.put(disputeItemVoteData);
         disputes.put(disputeData);
 
         return ResponseEntity.status(HttpStatus.OK).body(new Response(SUCCESS, STATUS_SUCCESS));

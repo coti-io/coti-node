@@ -17,10 +17,6 @@ public class CommentController {
     @Autowired
     CommentService commentService;
 
-    public CommentController() {
-        commentService = new CommentService();
-    }
-
     @RequestMapping(path = "/new", method = RequestMethod.POST)
     public ResponseEntity newComment(@Valid @RequestBody CommentRequest request) {
 
