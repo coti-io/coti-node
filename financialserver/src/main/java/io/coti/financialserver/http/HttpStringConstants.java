@@ -10,6 +10,7 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String DISPUTE_MERCHANT_NOT_FOUND = "Merchant not found";
     public static final String DISPUTE_NOT_FOUND = "Dispute not found";
     public static final String DISPUTE_NOT_YOURS = "Dispute isn't yours";
+    public static final String DISPUTE_SIDE_NOT_CORRECT = "Dispute isn't correct";
     public static final String DISPUTE_ITEMS_EXIST_ALREADY = "At least one of the dispute items is already in process";
     public static final String DISPUTE_TRANSACTION_NOT_FOUND = "Transaction hash not found";
 

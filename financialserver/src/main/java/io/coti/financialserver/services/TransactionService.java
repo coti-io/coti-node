@@ -11,7 +11,7 @@ import io.coti.financialserver.http.TransactionResponse;
 import io.coti.financialserver.model.Disputes;
 import io.coti.financialserver.model.FinancialServerTransactions;
 import io.coti.financialserver.model.ReceiverBaseTransactionOwners;
-import io.coti.financialserver.model.UserDisputes;
+import io.coti.financialserver.model.ConsumerDisputes;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -29,7 +29,7 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     Disputes disputes;
     @Autowired
-    UserDisputes userDisputes;
+    ConsumerDisputes consumerDisputes;
     @Autowired
     ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
     @Autowired
