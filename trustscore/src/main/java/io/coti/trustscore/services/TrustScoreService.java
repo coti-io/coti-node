@@ -34,6 +34,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -41,6 +42,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -147,7 +149,9 @@ public class TrustScoreService {
                         .body(new Response(USER_HASH_IS_NOT_IN_DB, STATUS_ERROR));
             }
 
-            if (trustScoreUserTypeCrypto.verifySignature(request)) {
+            request.setSignerHash(new Hash(kycServerPublicKey));
+            if (!trustScoreUserTypeCrypto.verifySignature(request)) {
+
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new Response(KYC_TRUST_SCORE_AUTHENTICATION_ERROR, STATUS_ERROR));
@@ -369,8 +373,8 @@ public class TrustScoreService {
     private RulesData loadRulesFromJsonFile() {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
-            ClassLoader classLoader = getClass().getClassLoader();
-            rulesData = objectMapper.readValue(new File(classLoader.getResource("trustScoreRules.json").getFile()), RulesData.class);
+            InputStream jsonConfigStream = new ClassPathResource("trustScoreRules.json").getInputStream();
+            rulesData = objectMapper.readValue(jsonConfigStream, RulesData.class);
             log.info(rulesData.toString());
         } catch (IOException e) {
             log.error("Error reading from JSON file", e);
