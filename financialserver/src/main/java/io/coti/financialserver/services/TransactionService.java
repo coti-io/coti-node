@@ -48,12 +48,7 @@ public class TransactionService extends BaseNodeTransactionService {
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
 
-     /*   Hash receiverBaseTransactionAddress = transactionData.getReceiverBaseTransactionAddress();
+        // TODO: Check if transaction is of type payment, and that this RBT exist in RBT owners table, if not we should do something.
 
-        // TODO: Check if transaction is of type payment
-        if (receiverBaseTransactionAddress != null) {
-            FinancialServerTransactionData financialServerTransactionAddress = new FinancialServerTransactionData(receiverBaseTransactionAddress);
-            financialServerTransactions.put(financialServerTransactionAddress);
-        } */
     }
 }

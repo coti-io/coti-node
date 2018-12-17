@@ -2,7 +2,6 @@ package io.coti.financialserver.services;
 
 import io.coti.basenode.http.Response;
 import io.coti.financialserver.data.*;
-import io.coti.financialserver.model.DisputeItemVotes;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,9 +22,6 @@ public class ItemService {
 
     @Autowired
     Disputes disputes;
-
-    @Autowired
-    DisputeItemVotes disputeItemVotes;
 
     @Autowired
     DisputeService disputeService;
@@ -66,7 +62,7 @@ public class ItemService {
         else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
         }
-        actionSide = ActionSide.Merchant;
+        actionSide = ActionSide.Merchant; // TODO: remove this line
 
         if(actionSide == ActionSide.Consumer && disputeItemDataNew.getStatus() == DisputeItemStatus.CanceledByConsumer) {
             disputeData.getDisputeItem(disputeItemDataNew.getId()).setStatus(disputeItemDataNew.getStatus());
@@ -112,6 +108,10 @@ public class ItemService {
 
         DisputeItemData disputeItemData = disputeData.getDisputeItem(disputeItemVoteData.getItemId());
 
+        if (disputeItemData == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(ITEM_NOT_FOUND, STATUS_ERROR));
+        }
+
         if (disputeItemData.getStatus() != DisputeItemStatus.RejectedByMerchant) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(ITEM_NOT_REJECTED_BY_MERCHANT, STATUS_ERROR));
         }
@@ -120,12 +120,9 @@ public class ItemService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(STATUS_NOT_VALID, STATUS_ERROR));
         }
 
-        disputeItemVoteData.init();
-
-        disputeItemData.getDisputeItemVoteHashes().add(disputeItemVoteData.getHash());
+        disputeItemData.getDisputeItemVotesData().add(disputeItemVoteData);
 
         disputeService.updateAfterVote(disputeData);
-        disputeItemVotes.put(disputeItemVoteData);
         disputes.put(disputeData);
 
         return ResponseEntity.status(HttpStatus.OK).body(new Response(SUCCESS, STATUS_SUCCESS));

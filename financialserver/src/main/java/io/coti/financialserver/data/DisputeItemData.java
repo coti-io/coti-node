@@ -6,7 +6,6 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
@@ -27,6 +26,7 @@ public class DisputeItemData implements Serializable, ISignable, ISignValidatabl
     private List<Hash> disputeDocumentHashes;
     private List<Hash> disputeCommentHashes;
     private List<Hash> disputeItemVoteHashes;
+    private List<DisputeItemVoteData> disputeItemVotesData;
     private SignatureData userSignature;
 
     public DisputeItemData() {

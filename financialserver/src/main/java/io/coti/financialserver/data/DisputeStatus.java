@@ -4,7 +4,7 @@ public enum DisputeStatus {
     Recall,
     AcceptedByMerchant,
     CanceledByConsumer,
-    AcceptedByMerchantCanceledByConsumer,
+    PartlyAcceptedByMerchant,
     Claim,
     Closed
 }
