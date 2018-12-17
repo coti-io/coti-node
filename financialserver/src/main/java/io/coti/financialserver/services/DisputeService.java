@@ -92,25 +92,24 @@ public class DisputeService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ITEMS_EXIST_ALREADY, STATUS_ERROR));
         }
 
-        UserDisputesData consumerDisputesData = consumerDisputes.getByHash(disputeData.getConsumerHash());
-        if (consumerDisputesData == null) {
-            consumerDisputesData = new UserDisputesData();
-            consumerDisputesData.setHash(disputeData.getConsumerHash());
-        }
+        addUserDisputeHash(ActionSide.Consumer, disputeData.getConsumerHash(), disputeData.getHash());
+        addUserDisputeHash(ActionSide.Merchant, merchantHash, disputeData.getHash());
 
-        UserDisputesData merchantDisputesData = merchantDisputes.getByHash(merchantHash);
-        if (merchantDisputesData == null) {
-            merchantDisputesData = new UserDisputesData();
-            merchantDisputesData.setHash(merchantHash);
-        }
-
-        consumerDisputesData.appendDisputeHash(disputeData.getHash());
-        merchantDisputesData.appendDisputeHash(disputeData.getHash());
-        consumerDisputes.put(consumerDisputesData);
-        merchantDisputes.put(merchantDisputesData);
         disputes.put(disputeData);
 
         return ResponseEntity.status(HttpStatus.OK).body(new NewDisputeResponse(disputeData.getHash().toString(), STATUS_SUCCESS));
+    }
+
+    private void addUserDisputeHash(ActionSide actionSide, Hash userHash, Hash disputeHash) {
+        Collection<UserDisputesData> userDisputesCollection = userDisputesCollectionMap.get(actionSide);
+        UserDisputesData userDisputesData = userDisputesCollection.getByHash(userHash);
+        if (userDisputesData == null) {
+            userDisputesData = new UserDisputesData();
+            userDisputesData.setHash(userHash);
+        }
+        userDisputesData.appendDisputeHash(disputeHash);
+        userDisputesCollection.put(userDisputesData);
+
     }
 
     public ResponseEntity<IResponse> getDisputes(GetDisputesRequest getDisputesRequest) {

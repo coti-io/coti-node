@@ -19,12 +19,6 @@ public class ReceiverBaseTransactionOwnerData implements IEntity, ISignable, ISi
 
     }
 
-    public ReceiverBaseTransactionOwnerData(Hash merchantHash, Hash receiverBaseTransactionHash, SignatureData merchantSignature){
-        this.merchantHash = merchantHash;
-        this.receiverBaseTransactionHash = receiverBaseTransactionHash;
-        this.merchantSignature = merchantSignature;
-    }
-
     @Override
     public Hash getHash() {
         return receiverBaseTransactionHash;
