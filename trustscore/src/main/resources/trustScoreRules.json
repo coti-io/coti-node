@@ -440,7 +440,7 @@
       }
     },
     {
-      "type": "node",
+      "type": "fullnode",
       "userID": "userHash",
       "addressMapping": "address -> userHash",
       "initialTrustScore": {
