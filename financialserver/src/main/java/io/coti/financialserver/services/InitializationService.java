@@ -19,12 +19,16 @@ public class InitializationService {
     private BaseNodeInitializationService baseNodeInitializationService;
     @Autowired
     private CommunicationService communicationService;
+    @Autowired
+    RollingReserveService rollingReserveService;
 
     @PostConstruct
     public void init() {
         communicationService.initSubscriber(propagationServerAddresses, NodeType.FinancialServer);
 
         baseNodeInitializationService.init();
+
+        rollingReserveService.init();
     }
 }
 
