@@ -22,10 +22,6 @@ public class DocumentController {
     @Autowired
     DocumentService documentService;
 
-    public DocumentController() {
-        documentService = new DocumentService();
-    }
-
     @RequestMapping(path = "/new", method = RequestMethod.POST)
     public ResponseEntity newDocument(@Valid @RequestBody DocumentRequest request) {
 

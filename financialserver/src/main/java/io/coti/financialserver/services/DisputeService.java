@@ -31,7 +31,7 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 @Service
 public class DisputeService {
 
-    private static final int COUNT_ARBITRATORS_PER_DISPUTE = 2;
+    private static final int COUNT_ARBITRATORS_PER_DISPUTE = 1;
 
     @Value("#{'${arbitrators.userHashes}'.split(',')}")
     private List<String> ARBITRATOR_USER_HASHES;
@@ -75,9 +75,9 @@ public class DisputeService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_TRANSACTION_NOT_FOUND, STATUS_ERROR));
         }
 
-     /*   if (!disputeData.getConsumerHash().equals(transactionData.getSenderHash())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_CONSUMER_INVALID, STATUS_ERROR));
-        } */
+        if (!disputeData.getConsumerHash().equals(transactionData.getSenderHash())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_TRANSACTION_SENDER_INVALID, STATUS_ERROR));
+        }
 
         if(isDisputeInProcessForTransactionHash(disputeData.getTransactionHash())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(OPEN_DISPUTE_IN_PROCESS_FOR_THIS_TRANSACTION, STATUS_ERROR));
@@ -233,7 +233,7 @@ public class DisputeService {
 
             for(DisputeItemVoteData disputeItemVoteData : disputeItem.getDisputeItemVotesData()) {
 
-                if(disputeItemVoteData.getStatus() != DisputeItemStatus.AcceptedByArbitrators) {
+                if(disputeItemVoteData.getStatus() == DisputeItemStatus.AcceptedByArbitrators) {
                     votesForConsumer++;
                 }
                 else {
@@ -309,7 +309,7 @@ public class DisputeService {
         return false;
     }
 
-    private Boolean isDisputeItemsValid(Hash consumerHash, List<DisputeItemData> items, Hash transactionHash) {
+    public Boolean isDisputeItemsValid(Hash consumerHash, List<DisputeItemData> items, Hash transactionHash) {
 
         DisputeData disputeData;
         UserDisputesData userDisputesData = consumerDisputes.getByHash(consumerHash);

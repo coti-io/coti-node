@@ -14,6 +14,9 @@ import io.coti.financialserver.http.ItemRequest;
 import io.coti.financialserver.http.VoteRequest;
 import io.coti.financialserver.model.Disputes;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static io.coti.financialserver.http.HttpStringConstants.*;
 
 @Slf4j
@@ -26,7 +29,39 @@ public class ItemService {
     @Autowired
     DisputeService disputeService;
 
-    public ResponseEntity updated(ItemRequest request) {
+    public ResponseEntity itemNew(ItemRequest request) {
+
+        DisputeItemData disputeItemData = request.getDisputeItemData();
+        ItemCrypto itemCrypto = new ItemCrypto();
+        itemCrypto.signMessage(disputeItemData);
+
+        if ( !itemCrypto.verifySignature(disputeItemData) ) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
+        }
+
+        DisputeData disputeData = disputes.getByHash(disputeItemData.getDisputeHash());
+
+        if (disputeData == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_NOT_FOUND, STATUS_ERROR));
+        }
+
+        if( !disputeData.getConsumerHash().equals(disputeItemData.getUserHash()) ) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
+        }
+
+        List<DisputeItemData> disputeItems = new ArrayList<>();
+        disputeItems.add(disputeItemData);
+        if ( !disputeService.isDisputeItemsValid(disputeData.getConsumerHash(), disputeItems, disputeData.getTransactionHash()) ) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ITEMS_EXIST_ALREADY, STATUS_ERROR));
+        }
+
+        disputeData.getDisputeItems().add(disputeItemData);
+        disputeService.update(disputeData);
+
+        return ResponseEntity.status(HttpStatus.OK).body(new Response(SUCCESS, STATUS_SUCCESS));
+    }
+
+    public ResponseEntity itemUpdate(ItemRequest request) {
 
         DisputeItemData disputeItemDataNew = request.getDisputeItemData();
         ItemCrypto itemCrypto = new ItemCrypto();
@@ -120,7 +155,11 @@ public class ItemService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(STATUS_NOT_VALID, STATUS_ERROR));
         }
 
-        disputeItemData.getDisputeItemVotesData().add(disputeItemVoteData);
+        if(disputeItemData.arbitratorAlreadyVoted(disputeItemVoteData.getUserHash())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(ALREADY_GOT_YOUR_VOTE, STATUS_ERROR));
+        }
+
+        disputeItemData.addItemVoteData(disputeItemVoteData);
 
         disputeService.updateAfterVote(disputeData);
         disputes.put(disputeData);

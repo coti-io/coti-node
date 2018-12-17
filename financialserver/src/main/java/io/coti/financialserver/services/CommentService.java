@@ -33,6 +33,7 @@ public class CommentService {
     public ResponseEntity newComment(NewCommentRequest request) {
 
         DisputeCommentData disputeCommentData = request.getDisputeCommentData();
+        disputeCommentData.init();
         CommentCrypto commentCrypto = new CommentCrypto();
         commentCrypto.signMessage(disputeCommentData);
 
@@ -72,7 +73,6 @@ public class CommentService {
         }
 
         disputeCommentData.setCommentSide(uploadSide);
-        disputeCommentData.init();
 
         disputes.put(disputeData);
         disputeComments.put(disputeCommentData);

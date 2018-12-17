@@ -45,6 +45,7 @@ public class DocumentService {
     public ResponseEntity newDocument(DocumentRequest request) {
 
         DisputeDocumentData disputeDocumentData = request.getDisputeDocumentData();
+        disputeDocumentData.init();
         DocumentCrypto documentCrypto = new DocumentCrypto();
         documentCrypto.signMessage(disputeDocumentData);
 
@@ -84,7 +85,6 @@ public class DocumentService {
         }
 
         disputeDocumentData.setUploadSide(uploadSide);
-        disputeDocumentData.init();
 
         disputes.put(disputeData);
         disputeDocuments.put(disputeDocumentData);

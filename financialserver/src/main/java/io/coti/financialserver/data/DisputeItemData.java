@@ -27,14 +27,13 @@ public class DisputeItemData implements Serializable, ISignable, ISignValidatabl
     private DisputeItemStatus status;
     private List<Hash> disputeDocumentHashes;
     private List<Hash> disputeCommentHashes;
-    private List<Hash> disputeItemVoteHashes;
     private List<DisputeItemVoteData> disputeItemVotesData;
     private SignatureData userSignature;
 
     public DisputeItemData() {
      disputeDocumentHashes = new ArrayList<>();
      disputeCommentHashes = new ArrayList<>();
-     disputeItemVoteHashes = new ArrayList<>();
+     disputeItemVotesData = new ArrayList<>();
      status = DisputeItemStatus.Recall;
     }
 
@@ -44,6 +43,19 @@ public class DisputeItemData implements Serializable, ISignable, ISignValidatabl
 
     public void addCommentHash(Hash commentHash) {
         disputeCommentHashes.add(commentHash);
+    }
+
+    public void addItemVoteData(DisputeItemVoteData disputeItemVoteData) {
+        disputeItemVotesData.add(disputeItemVoteData);
+    }
+
+    public Boolean arbitratorAlreadyVoted(Hash arbitratorHash) {
+        for(DisputeItemVoteData disputeItemVoteData : disputeItemVotesData) {
+            if(disputeItemVoteData.getUserHash().equals(arbitratorHash)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
