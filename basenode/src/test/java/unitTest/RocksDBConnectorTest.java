@@ -4,6 +4,7 @@ import io.coti.basenode.database.RocksDBConnector;
 import io.coti.basenode.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +18,9 @@ import java.util.Arrays;
 @ContextConfiguration(classes = {Transactions.class,
         Addresses.class,
         RocksDBConnector.class,
-        AddressesTransactionsHistory.class,
-        TrustScores.class,
         TransactionIndexes.class,
-        TransactionVotes.class
+        TransactionVotes.class,
+        Transactions.class
 })
 @RunWith(SpringRunner.class)
 
@@ -29,6 +29,10 @@ import java.util.Arrays;
 public class RocksDBConnectorTest {
     @Autowired
     private RocksDBConnector rocksDBConnector;
+
+    @Before public void init(){
+        rocksDBConnector.init();
+    }
 
     @Test
     public void TestInsertAndGet_AssertEquals() {

@@ -2,12 +2,12 @@ package unitTest;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.BalanceService;
 import io.coti.basenode.services.ClusterService;
-import io.coti.basenode.services.InitializationService;
 import io.coti.basenode.services.LiveView.LiveViewService;
 import io.coti.basenode.services.TccConfirmationService;
+import io.coti.basenode.services.interfaces.IConfirmationService;
 import io.coti.basenode.services.interfaces.ISourceSelector;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
@@ -31,14 +31,12 @@ import static org.mockito.Mockito.when;
 @ContextConfiguration(classes = ClusterService.class)
 @Slf4j
 public class ClusterServiceTest {
-    @MockBean
-    InitializationService initializationService;
+
     @Autowired
     private ClusterService cluster;
+
     @MockBean
     private Transactions transactions;
-    @MockBean
-    private BalanceService balanceService;
 
     @MockBean
     private ISourceSelector sourceSelector;
@@ -49,12 +47,15 @@ public class ClusterServiceTest {
     @MockBean
     private LiveViewService liveViewService;
 
+    @MockBean
+    private IConfirmationService confirmationService;
+
     private TransactionData transactionData0, transactionData1;
 
     @Before
     public void setUpTransactions() {
 
-        transactionData0 = new TransactionData(new ArrayList<>(), new Hash("00"), "test", 70, new Date());
+        transactionData0 = new TransactionData(new ArrayList<>(), new Hash("00"), "test", 70, new Date(), TransactionType.Payment);
         // TransactionData0.setSenderTrustScore(70);
         List<Hash> hashChildren = new Vector<>();
         //hashChildren.add(new Hash("11"));
@@ -62,7 +63,7 @@ public class ClusterServiceTest {
         transactionData0.setProcessStartTime(new Date());
         transactionData0.setAttachmentTime(new Date());
 
-        transactionData1 = new TransactionData(new ArrayList<>(), new Hash("11"), "test", 83, new Date());
+        transactionData1 = new TransactionData(new ArrayList<>(), new Hash("11"), "test", 83, new Date(), TransactionType.Payment);
         // TransactionData1.setSenderTrustScore(83);
         transactionData1.setRightParentHash(transactionData0.getHash());
         //  TransactionData1.setCreateTime(new Date());
@@ -79,7 +80,7 @@ public class ClusterServiceTest {
     @Test
     public void attachToCluster_noExceptionIsThrown() {
         try {
-            TransactionData TransactionData2 = new TransactionData(new ArrayList<>(), new Hash("22"), "test", 50, new Date());
+            TransactionData TransactionData2 = new TransactionData(new ArrayList<>(), new Hash("22"), "test", 50, new Date(), TransactionType.Payment);
             TransactionData2.setSenderTrustScore(92);
             TransactionData2.setLeftParentHash(new Hash("00"));
             when(transactions.getByHash(new Hash("00"))).thenReturn(transactionData0);
@@ -91,7 +92,7 @@ public class ClusterServiceTest {
 
     @Test
     public void selectSources_onlyTransactionData1SourceAvailable_transactionData1AsLeftParent() {
-        TransactionData TransactionData = new TransactionData(new ArrayList<>(), new Hash("22"), "test", 92, new Date());
+        TransactionData TransactionData = new TransactionData(new ArrayList<>(), new Hash("22"), "test", 92, new Date(), TransactionType.Payment);
         //  TransactionData2.setCreateTime(new Date());
         when(sourceSelector.selectSourcesForAttachment(any(List.class),
                 any(double.class)))
@@ -102,7 +103,7 @@ public class ClusterServiceTest {
 
     @Test
     public void selectSources_twoSourcesAvailable_twoSourcesAsParents() {
-        TransactionData TransactionData = new TransactionData(new ArrayList<>(), new Hash("22"), "test", 92, new Date());
+        TransactionData TransactionData = new TransactionData(new ArrayList<>(), new Hash("22"), "test", 92, new Date(), TransactionType.Payment);
         //  TransactionData2.setCreateTime(new Date());
         when(sourceSelector.selectSourcesForAttachment(any(List.class),
                 any(double.class)))
@@ -125,7 +126,7 @@ public class ClusterServiceTest {
     @Test
     public void addUnconfirmedTransaction_noExceptionIsThrown() {
         try {
-            TransactionData TransactionData = new TransactionData(new ArrayList<>(), new Hash("22"), "test", 50, new Date());
+            TransactionData TransactionData = new TransactionData(new ArrayList<>(), new Hash("22"), "test", 50, new Date(), TransactionType.Payment);
             cluster.addUnconfirmedTransaction(TransactionData);
         } catch (Exception e) {
             assertNull(e);

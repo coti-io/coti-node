@@ -1,10 +1,7 @@
-package unitTest;
-
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.NodeData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.data.TransactionStatus;
-import io.coti.basenode.services.LiveView.WebSocketSender;
+import io.coti.fullnode.services.WebSocketSender;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +9,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
-import testUtils.TestUtils;
 
 import java.math.BigDecimal;
 
@@ -59,12 +55,5 @@ public class WebSocketSenderTest {
         }
     }
 
-    @Test
-    public void sendNode_noExceptionIsThrown() {
-        try {
-            webSocketSender.sendNode(new NodeData());
-        } catch (Exception e) {
-            assertNull(e);
-        }
-    }
+
 }

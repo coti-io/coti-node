@@ -57,7 +57,7 @@ public class TransactionData implements IEntity, Comparable<TransactionData>, IS
         this.hash = transactionHash;
     }
 
-    public ransactionData(List<BaseTransactionData> baseTransactions, String transactionDescription, double senderTrustScore, Date createTime, TransactionType type) {
+    public TransactionData(List<BaseTransactionData> baseTransactions, String transactionDescription, double senderTrustScore, Date createTime, TransactionType type) {
         this.transactionDescription = transactionDescription;
         this.baseTransactions = baseTransactions;
         this.createTime = createTime;

@@ -3,6 +3,7 @@ package unitTest;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TccInfo;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.services.TccConfirmationService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
@@ -37,13 +38,13 @@ public class TccConfirmationServiceTest {
 
     @Before
     public void init() {
-        transactionData0 = new TransactionData(new ArrayList<>(), new Hash("00"), "test", 20, new Date());
-        transactionData1 = new TransactionData(new ArrayList<>(), new Hash("11"), "test", 70, new Date());
-        transactionData2 = new TransactionData(new ArrayList<>(), new Hash("22"), "test", 100, new Date());
-        transactionData3 = new TransactionData(new ArrayList<>(), new Hash("33"), "test", 90, new Date());
-        transactionData4 = new TransactionData(new ArrayList<>(), new Hash("44"), "test", 50, new Date());
-        TransactionData5 = new TransactionData(new ArrayList<>(), new Hash("55"), "test", 70, new Date());
-        transactionData6 = new TransactionData(new ArrayList<>(), new Hash("66"), "test", 60, new Date());
+        transactionData0 = new TransactionData(new ArrayList<>(), new Hash("00"), "test", 20, new Date(), TransactionType.Payment);
+        transactionData1 = new TransactionData(new ArrayList<>(), new Hash("11"), "test", 70, new Date(), TransactionType.Payment);
+        transactionData2 = new TransactionData(new ArrayList<>(), new Hash("22"), "test", 100, new Date(), TransactionType.Payment);
+        transactionData3 = new TransactionData(new ArrayList<>(), new Hash("33"), "test", 90, new Date(), TransactionType.Payment);
+        transactionData4 = new TransactionData(new ArrayList<>(), new Hash("44"), "test", 50, new Date(), TransactionType.Payment);
+        TransactionData5 = new TransactionData(new ArrayList<>(), new Hash("55"), "test", 70, new Date(), TransactionType.Payment);
+        transactionData6 = new TransactionData(new ArrayList<>(), new Hash("66"), "test", 60, new Date(), TransactionType.Payment);
 
         transactionData0.setLeftParentHash(transactionData1.getHash());
         transactionData0.setRightParentHash(transactionData2.getHash());

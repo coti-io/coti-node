@@ -5,12 +5,13 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NodeData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.services.LiveView.LiveViewService;
-import io.coti.basenode.services.LiveView.WebSocketSender;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import testUtils.TestUtils;
@@ -20,14 +21,14 @@ import java.util.Date;
 import static org.junit.Assert.assertNull;
 
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = {WebSocketSender.class, LiveViewService.class})
+@ContextConfiguration(classes = {LiveViewService.class})
 public class LiveViewServiceTest {
 
     @Autowired
     private LiveViewService liveViewService;
 
     @MockBean
-    private WebSocketSender webSocketSender;
+    private SimpMessagingTemplate messagingSender;
 
     @Test
     public void getFullGraph_noExceptionIsThrown() {

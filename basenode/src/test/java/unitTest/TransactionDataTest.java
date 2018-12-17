@@ -2,6 +2,7 @@ package unitTest;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.TransactionType;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
@@ -22,21 +23,21 @@ public class TransactionDataTest {
 
     @Test
     public void isSource_NullChildrenList_returnTrue() {
-        TransactionData transactionData = new TransactionData(new ArrayList<>(), new Hash("11"), "test", 83, new Date());
+        TransactionData transactionData = new TransactionData(new ArrayList<>(), new Hash("11"), "test", 83, new Date(), TransactionType.Payment);
         Assert.assertTrue(transactionData.isSource());
     }
 
     //
     @Test
     public void isSource_EmptyChildrenList_returnTrue() {
-        TransactionData transactionData = new TransactionData(new ArrayList<>(), new Hash("22"), "test", 83, new Date());
+        TransactionData transactionData = new TransactionData(new ArrayList<>(), new Hash("22"), "test", 83, new Date(), TransactionType.Payment);
         transactionData.setChildrenTransactions(new LinkedList<>());
         Assert.assertTrue(transactionData.isSource());
     }
 
     @Test
     public void isSource_NonEmptyChildrenList_returnFalse() {
-        TransactionData transactionData = new TransactionData(new ArrayList<>(), new Hash("33"), "test", 83, new Date());
+        TransactionData transactionData = new TransactionData(new ArrayList<>(), new Hash("33"), "test", 83, new Date(), TransactionType.Payment);
         transactionData.setChildrenTransactions(
                 Collections.singletonList(new Hash("TransactionData 1".getBytes())));
         Assert.assertFalse(transactionData.isSource());

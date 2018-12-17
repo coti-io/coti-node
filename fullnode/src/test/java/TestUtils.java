@@ -1,17 +1,16 @@
-package testUtils;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.*;
-import io.coti.basenode.http.Request;
+import io.coti.fullnode.http.AddTransactionRequest;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
+
 @Slf4j
 public class TestUtils {
 
@@ -73,22 +72,5 @@ public class TestUtils {
                         new Date());
     }
 
-}
-
-class AddTransactionRequest extends Request {
-    @NotEmpty
-    public List<@Valid BaseTransactionData> baseTransactions;
-    @NotNull
-    public Hash hash;
-    @NotEmpty
-    public String transactionDescription;
-    @NotNull
-    public Date createTime;
-    @NotEmpty
-    public List<@Valid TransactionTrustScoreData> trustScoreResults;
-    @NotNull
-    public Hash senderHash;
-    @NotNull
-    public TransactionType type;
 }
 
