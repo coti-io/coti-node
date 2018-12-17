@@ -4,6 +4,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TccInfo;
 import io.coti.basenode.data.TransactionData;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 @Configurable
 public class TccConfirmationService {
+
+    @Autowired
+    private TransactionHelper transactionHelper;
+
     @Value("${cluster.trust.chain.threshold}")
     private int threshold;
     private ConcurrentHashMap<Hash, TransactionData> hashToTccUnConfirmTransactionsMapping;
@@ -48,7 +53,9 @@ public class TccConfirmationService {
         for (Hash hash : parent.getChildrenTransactions()) {
             try {
                 TransactionData child = hashToTccUnConfirmTransactionsMapping.get(hash);
-                if (child != null && child.getTrustChainTrustScore()
+                if (child != null
+                        && transactionHelper.isDspConfirmed(child)
+                        && child.getTrustChainTrustScore()
                         > maxSonsTotalTrustScore) {
                     maxSonsTotalTrustScore = hashToTccUnConfirmTransactionsMapping.get(hash).getTrustChainTrustScore();
                     maxSonsTotalTrustScoreHash = hash;
@@ -89,6 +96,9 @@ public class TccConfirmationService {
     public List<TccInfo> getTccConfirmedTransactions() {
         List<TccInfo> transactionConsensusConfirmed = new LinkedList<>();
         for (TransactionData transaction : topologicalOrderedGraph) {
+            if (!transactionHelper.isDspConfirmed(transaction)) {
+                continue;
+            }
             setTotalTrustScore(transaction);
             if (transaction.getTrustChainTrustScore() >= threshold) {
                 transaction.setTrustChainConsensus(true);

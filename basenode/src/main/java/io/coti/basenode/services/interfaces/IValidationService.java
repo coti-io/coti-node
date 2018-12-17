@@ -7,8 +7,6 @@ import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 
 public interface IValidationService {
 
-    boolean validateSource(Hash hash);
-
     boolean validateAddress(Hash address);
 
     boolean validateTransactionDataIntegrity(TransactionData transactionData);

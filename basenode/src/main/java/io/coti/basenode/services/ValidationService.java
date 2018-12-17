@@ -26,18 +26,6 @@ public class ValidationService implements IValidationService {
     private IPotService potService;
 
     @Override
-    public boolean validateSource(Hash transactionHash) {
-        if (transactionHash != null) {
-            TransactionData transactionData = transactions.getByHash(transactionHash);
-            if (transactionData != null) {
-                transactionData.setValid(true);
-                transactions.put(transactionData);
-            }
-        }
-        return true;
-    }
-
-    @Override
     public boolean validateAddress(Hash address) {
 
         return CryptoHelper.IsAddressValid(address);

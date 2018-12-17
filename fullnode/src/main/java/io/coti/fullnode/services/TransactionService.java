@@ -135,11 +135,6 @@ public class TransactionService extends BaseNodeTransactionService {
                                     TRANSACTION_SOURCE_NOT_FOUND));
                 }
             }
-            if (!validationService.validateSource(transactionData.getLeftParentHash()) ||
-                    !validationService.validateSource(transactionData.getRightParentHash())) {
-                log.debug("Could not validate transaction source");
-                //TODO: Implement an invalidation mechanism for TestNet.
-            }
 
             transactionData.setPowStartTime(new Date());
             // ############   POT   ###########

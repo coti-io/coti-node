@@ -68,7 +68,7 @@ public class ClusterService implements IClusterService {
         if (!isStarted) {
             return;
         }
-
+        updateDspConsensusFromDb();
         tccConfirmationService.init(hashToUnconfirmedTransactionsMapping);
         List<TccInfo> transactionConsensusConfirmed = tccConfirmationService.getTccConfirmedTransactions();
 
@@ -76,6 +76,14 @@ public class ClusterService implements IClusterService {
             hashToUnconfirmedTransactionsMapping.remove(tccInfo.getHash());
             confirmationService.setTccToTrue(tccInfo);
             log.debug("TCC has been reached for transaction {}!!", tccInfo.getHash());
+        });
+    }
+
+    private void updateDspConsensusFromDb() {
+        hashToUnconfirmedTransactionsMapping.forEach((hash, transactionData) -> {
+            if (transactionData.getDspConsensusResult() == null) {
+                transactionData.setDspConsensusResult(transactions.getByHash(hash).getDspConsensusResult());
+            }
         });
     }
 
