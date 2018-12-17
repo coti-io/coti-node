@@ -1,16 +1,15 @@
 package io.coti.basenode.data;
 
-import io.coti.basenode.data.interfaces.IEntity;
+import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 
-import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
 @Data
-public class DspConsensusResult extends ConfirmationData implements Serializable, IEntity, ISignable, ISignValidatable {
+public class DspConsensusResult extends ConfirmationData implements IPropagatable, ISignable, ISignValidatable {
     private Hash transactionHash;
     private Hash zeroSpendServerHash;
     private long index;

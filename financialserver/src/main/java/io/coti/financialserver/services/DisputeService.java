@@ -4,14 +4,16 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.basenode.model.Collection;
 import io.coti.basenode.model.Transactions;
 import io.coti.financialserver.crypto.DisputeCrypto;
-import io.coti.financialserver.crypto.GetDisputeCrypto;
+import io.coti.financialserver.crypto.GetDisputesCrypto;
 import io.coti.financialserver.data.*;
 import io.coti.financialserver.http.GetDisputesRequest;
 import io.coti.financialserver.http.GetDisputesResponse;
 import io.coti.financialserver.http.NewDisputeRequest;
 import io.coti.financialserver.http.NewDisputeResponse;
+import io.coti.financialserver.http.data.GetDisputesData;
 import io.coti.financialserver.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,9 +22,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import javax.annotation.PostConstruct;
+import java.util.*;
 
 import static io.coti.financialserver.http.HttpStringConstants.*;
 
@@ -36,7 +37,7 @@ public class DisputeService {
     private List<String> ARBITRATOR_USER_HASHES;
 
     @Autowired
-    private GetDisputeCrypto getDisputeCrypto;
+    private GetDisputesCrypto getDisputesCrypto;
     @Autowired
     private DisputeCrypto disputeCrypto;
     @Autowired
@@ -51,6 +52,14 @@ public class DisputeService {
     private ArbitratorDisputes arbitratorDisputes;
     @Autowired
     private ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
+    private Map<ActionSide, Collection<UserDisputesData>> userDisputesCollectionMap = new EnumMap<>(ActionSide.class);
+
+    @PostConstruct
+    public void init() {
+        userDisputesCollectionMap.put(ActionSide.Consumer, consumerDisputes);
+        userDisputesCollectionMap.put(ActionSide.Merchant, merchantDisputes);
+        userDisputesCollectionMap.put(ActionSide.Arbitrator, arbitratorDisputes);
+    }
 
     public ResponseEntity<IResponse> createDispute(NewDisputeRequest newDisputeRequest) {
 
@@ -67,9 +76,9 @@ public class DisputeService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_TRANSACTION_NOT_FOUND, STATUS_ERROR));
         }
 
-        if (!disputeData.getConsumerHash().equals(transactionData.getSenderHash())) {
+     /*   if (!disputeData.getConsumerHash().equals(transactionData.getSenderHash())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_CONSUMER_INVALID, STATUS_ERROR));
-        }
+        } */
 
         Hash merchantHash = getMerchantHash(transactionData.getReceiverBaseTransactionHash());
         if (merchantHash == null) {
@@ -106,44 +115,36 @@ public class DisputeService {
 
     public ResponseEntity<IResponse> getDisputes(GetDisputesRequest getDisputesRequest) {
 
-        GetDisputeData getDisputesData = getDisputesRequest.getGetDisputeData();
+        GetDisputesData getDisputesData = getDisputesRequest.getGetDisputesData();
 
-        getDisputeCrypto.signMessage(getDisputesData);
-        if (!getDisputeCrypto.verifySignature(getDisputesData)) {
+        getDisputesCrypto.signMessage(getDisputesData);
+        if (!getDisputesCrypto.verifySignature(getDisputesData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
+        }
+
+        Collection<UserDisputesData> userDisputesCollection = userDisputesCollectionMap.get(getDisputesData.getDisputeSide());
+        if (userDisputesCollection == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_SIDE_INVALID, STATUS_ERROR));
+        }
+        UserDisputesData userDisputesData = userDisputesCollection.getByHash(getDisputesData.getUserHash());
+
+        List<Hash> userDisputeHashes = userDisputesData.getDisputeHashes();
+
+        if (getDisputesData.getDisputeHashes() == null) {
+            getDisputesData.setDisputeHashes(userDisputesData.getDisputeHashes());
         }
 
         List<DisputeData> disputesData = new ArrayList<>();
 
-        UserDisputesData userDisputesData;
-        if(getDisputesData.getDisputeSide() == ActionSide.Consumer) {
-            userDisputesData = consumerDisputes.getByHash(getDisputesRequest.getGetDisputeData().getUserHash());
-        }
-        else if(getDisputesData.getDisputeSide() == ActionSide.Merchant) {
-            userDisputesData = merchantDisputes.getByHash(getDisputesRequest.getGetDisputeData().getUserHash());
-        }
-        else if(getDisputesData.getDisputeSide() == ActionSide.Arbitrator) {
-            userDisputesData = arbitratorDisputes.getByHash(getDisputesRequest.getGetDisputeData().getUserHash());
-        }
-        else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_SIDE_NOT_CORRECT, STATUS_ERROR));
-        }
-
-        List<Hash> userDisputeHashes = userDisputesData.getDisputeHashes();
-
-        if(getDisputesData.getDisputeHashes() == null) {
-            getDisputesData.setDisputeHashes(userDisputesData.getDisputeHashes());
-        }
-
-        for(Hash disputeHash : getDisputesData.getDisputeHashes()) {
+        for (Hash disputeHash : getDisputesData.getDisputeHashes()) {
             DisputeData disputeData = disputes.getByHash(disputeHash);
 
             if (disputeData == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(disputeHash + DISPUTE_NOT_FOUND, STATUS_ERROR));
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(disputeHash + " " + DISPUTE_NOT_FOUND, STATUS_ERROR));
             }
 
-            if(!userDisputeHashes.contains(disputeHash)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_NOT_YOURS, STATUS_ERROR));
+            if (!userDisputeHashes.contains(disputeHash)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_UNAUTHORIZED, STATUS_ERROR));
             }
 
             disputesData.add(disputeData);

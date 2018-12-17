@@ -1,6 +1,6 @@
 package io.coti.basenode.data;
 
-import io.coti.basenode.data.interfaces.IEntity;
+import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Data
-public class TransactionData implements IEntity, Comparable<TransactionData>, ISignable, ISignValidatable {
+public class TransactionData implements IPropagatable, Comparable<TransactionData>, ISignable, ISignValidatable {
     private List<BaseTransactionData> baseTransactions;
     private Hash hash;
     private BigDecimal amount;

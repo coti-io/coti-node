@@ -1,11 +1,11 @@
 package io.coti.basenode.communication.interfaces;
 
-import io.coti.basenode.data.interfaces.IEntity;
+import io.coti.basenode.data.interfaces.IPropagatable;
 
 public interface ISerializer {
 
-    byte[] serialize(IEntity entity);
+    byte[] serialize(IPropagatable entity);
 
-    <T extends IEntity> T deserialize(byte[] bytes);
+    <T extends IPropagatable> T deserialize(byte[] bytes);
 
 }

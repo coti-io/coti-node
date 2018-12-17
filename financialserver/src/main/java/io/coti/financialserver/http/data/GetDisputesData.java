@@ -1,9 +1,10 @@
-package io.coti.financialserver.data;
+package io.coti.financialserver.http.data;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
+import io.coti.financialserver.data.ActionSide;
 import lombok.Data;
 
 import javax.validation.Valid;
@@ -11,7 +12,7 @@ import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Data
-public class GetDisputeData implements ISignable, ISignValidatable {
+public class GetDisputesData implements ISignable, ISignValidatable {
 
     @NotNull
     private Hash userHash;
@@ -21,7 +22,7 @@ public class GetDisputeData implements ISignable, ISignValidatable {
     @NotNull
     private @Valid SignatureData userSignature;
 
-    private GetDisputeData() {
+    private GetDisputesData() {
 
     }
 

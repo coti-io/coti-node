@@ -4,6 +4,7 @@ import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.ISerializer;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.interfaces.IEntity;
+import io.coti.basenode.data.interfaces.IPropagatable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,7 +37,7 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
         log.info("ZeroMQ Publisher is up");
     }
 
-    public <T extends IEntity> void propagate(T toPropagate, List<NodeType> subscriberNodeTypes) {
+    public <T extends IPropagatable> void propagate(T toPropagate, List<NodeType> subscriberNodeTypes) {
         synchronized (propagator) {
             subscriberNodeTypes.forEach(nodeType -> {
                 log.debug("Propagating {} to {}", toPropagate.getHash(), Channel.getChannelString(toPropagate.getClass(), nodeType));

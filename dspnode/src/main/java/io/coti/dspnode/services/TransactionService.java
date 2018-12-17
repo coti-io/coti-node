@@ -58,7 +58,8 @@ public class TransactionService extends BaseNodeTransactionService {
                     NodeType.FullNode,
                     NodeType.TrustScoreNode,
                     NodeType.DspNode,
-                    NodeType.ZeroSpendServer));
+                    NodeType.ZeroSpendServer,
+                    NodeType.FinancialServer));
             transactionHelper.setTransactionStateToFinished(transactionData);
             transactionsToValidate.add(transactionData);
             return "Received Transaction: " + transactionData.getHash();

@@ -6,6 +6,6 @@ import io.coti.basenode.http.Request;
 import javax.validation.constraints.NotNull;
 
 public class GetTransactionRequest extends Request {
-    @NotNull(message = "Addresses must not be blank")
+    @NotNull(message = "Transaction hash must not be blank")
     public Hash transactionHash;
 }

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.communication.interfaces.ISerializer;
-import io.coti.basenode.data.interfaces.IEntity;
+import io.coti.basenode.data.interfaces.IPropagatable;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -21,7 +21,7 @@ public class JacksonSerializer implements ISerializer {
     }
 
     @Override
-    public byte[] serialize(IEntity entity) {
+    public byte[] serialize(IPropagatable entity) {
         try {
             return serializer.writeValueAsBytes(entity);
         } catch (JsonProcessingException e) {
@@ -30,9 +30,9 @@ public class JacksonSerializer implements ISerializer {
         }
     }
 
-    public <T extends IEntity> T deserialize(byte[] bytes) {
+    public <T extends IPropagatable> T deserialize(byte[] bytes) {
         try {
-            return (T) serializer.readValue(bytes, IEntity.class);
+            return (T) serializer.readValue(bytes, IPropagatable.class);
         } catch (IOException e) {
             e.printStackTrace();
             return null;

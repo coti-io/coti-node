@@ -27,7 +27,8 @@ public class AddressService extends BaseNodeAddressService {
                 NodeType.FullNode,
                 NodeType.TrustScoreNode,
                 NodeType.DspNode,
-                NodeType.ZeroSpendServer));
+                NodeType.ZeroSpendServer,
+                NodeType.FinancialServer));
         log.debug("Address {} is added", addressData.getHash().toHexString());
         return "OK";
     }

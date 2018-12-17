@@ -1,11 +1,11 @@
 package io.coti.basenode.data;
 
 
-import io.coti.basenode.data.interfaces.IEntity;
+import io.coti.basenode.data.interfaces.IPropagatable;
 import lombok.Data;
 
 @Data
-public class ZeroSpendTransactionRequest implements IEntity {
+public class ZeroSpendTransactionRequest implements IPropagatable {
 
     private Hash hash;
     private TransactionData transactionData;

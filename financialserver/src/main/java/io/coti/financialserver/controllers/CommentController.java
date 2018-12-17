@@ -21,13 +21,13 @@ public class CommentController {
         commentService = new CommentService();
     }
 
-    @RequestMapping(path = "/new", method = RequestMethod.POST)
+    @RequestMapping(method = RequestMethod.PUT)
     public ResponseEntity newComment(@Valid @RequestBody CommentRequest request) {
 
         return commentService.newComment(request);
     }
 
-    @RequestMapping(path = "/get", method = RequestMethod.POST)
+    @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity getComment(@Valid @RequestBody CommentRequest request) {
 
         return commentService.getComment(request);

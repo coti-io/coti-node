@@ -1,12 +1,12 @@
 package io.coti.basenode.data;
 
-import io.coti.basenode.data.interfaces.IEntity;
+import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 
 @Data
-public class DspVote implements IEntity, ISignable, ISignValidatable {
+public class DspVote implements IPropagatable, ISignable, ISignValidatable {
     public Hash voterDspHash;
     public Hash transactionHash;
     public boolean validTransaction;

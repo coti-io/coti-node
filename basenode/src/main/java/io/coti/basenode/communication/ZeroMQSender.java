@@ -2,7 +2,7 @@ package io.coti.basenode.communication;
 
 import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.communication.interfaces.ISerializer;
-import io.coti.basenode.data.interfaces.IEntity;
+import io.coti.basenode.data.interfaces.IPropagatable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,7 +35,7 @@ public class ZeroMQSender implements ISender {
     }
 
     @Override
-    public <T extends IEntity> void send(T toSend, String address) {
+    public <T extends IPropagatable> void send(T toSend, String address) {
         byte[] message = serializer.serialize(toSend);
         synchronized (zeroMQContext) {
             try {

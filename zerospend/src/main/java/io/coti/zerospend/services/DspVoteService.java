@@ -151,7 +151,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
         dspConsensusResult.setDspVotes(dspVotes);
         setIndexForDspResult(transactionData, dspConsensusResult);
         confirmationService.setDspcToTrue(dspConsensusResult);
-        propagationPublisher.propagate(dspConsensusResult, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode));
+        propagationPublisher.propagate(dspConsensusResult, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer));
         transactionHashToVotesListMapping.remove(transactionHash);
     }
 
