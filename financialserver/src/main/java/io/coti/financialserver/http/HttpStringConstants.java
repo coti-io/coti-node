@@ -13,11 +13,12 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String DISPUTE_SIDE_INVALID = "Invalid dispute side";
     public static final String DISPUTE_ITEMS_EXIST_ALREADY = "At least one of the dispute items is already in process";
     public static final String DISPUTE_TRANSACTION_NOT_FOUND = "Transaction hash not found";
+    public static final String OPEN_DISPUTE_IN_PROCESS_FOR_THIS_TRANSACTION = "Open dispute already in process for this transaction";
 
     public static final String DOCUMENT_NOT_FOUND = "Document not found";
     public static final String COMMENT_NOT_FOUND = "Comment not found";
     public static final String ITEM_NOT_FOUND = "Item not found";
-    public static final String DISPUTE_ITEM_PASSED_RECALL_STATUS = "Dispute passed recall status";
+    public static final String DISPUTE_ITEM_PASSED_RECALL_STATUS = "Dispute item passed recall status";
     public static final String DISPUTE_NOT_IN_CLAIM_STATUS = "Dispute not in claim status";
     public static final String ITEM_NOT_REJECTED_BY_MERCHANT = "Item not rejected by merchant";
     public static final String STATUS_NOT_VALID = "Status not valid";
@@ -29,8 +30,6 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
 
 
     public static final String UNAUTHORIZED = "Unauthorized";
-    public static final String NO_CONSUMER_HASH = "Consumer hash field is required";
-    public static final String NO_MERCHANT_HASH = "Merchant hash field is required";
     public static final String INVALID_SIGNATURE = "Invalid signature";
 
     public static final String INTERNAL_ERROR = "Internal error";

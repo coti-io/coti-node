@@ -192,7 +192,7 @@ public class DisputeService {
         } else if (allItemsCancelledByConsumer) {
             dispute.setDisputeStatus(DisputeStatus.CanceledByConsumer);
         } else if (noRecallItems) {
-            dispute.setDisputeStatus(DisputeStatus.AcceptedByMerchantCanceledByConsumer);
+            dispute.setDisputeStatus(DisputeStatus.PartlyAcceptedByMerchant);
         }
 
         disputes.put(dispute);

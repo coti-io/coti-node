@@ -1,15 +1,15 @@
 package io.coti.financialserver.model;
 
 import io.coti.basenode.model.Collection;
-import io.coti.financialserver.data.DisputeItemVoteData;
+import io.coti.financialserver.data.TransactionDisputesData;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 
 @Service
-public class DisputeItemVotes extends Collection<DisputeItemVoteData> {
+public class TransactionDisputes extends Collection<TransactionDisputesData> {
 
-    public DisputeItemVotes() {
+    public TransactionDisputes() {
     }
 
     @PostConstruct
