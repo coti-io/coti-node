@@ -161,6 +161,21 @@ public class CryptoHelper {
         return new Hash(publicKey + DatatypeConverter.printHexBinary(crc32ToAdd));
     }
 
+    public static Hash generatePrivateKey(String seed, Integer addressIndex) {
+
+        byte[] seedInBytes = seed.getBytes();
+
+        int byteBufferLength = 4 + seedInBytes.length;
+
+        byte[] addressWithIndexInBytes = ByteBuffer.allocate(byteBufferLength).put(seedInBytes).putInt(addressIndex).array();
+        return cryptoHash(addressWithIndexInBytes);
+    }
+
+    public static Hash generateAddress(String seed, Integer addressIndex) {
+        Hash privateKey = generatePrivateKey(seed, addressIndex);
+        return (getAddressFromPrivateKey(privateKey.toString()));
+    }
+
     public static Hash cryptoHash(byte[] input) {
         Keccak.Digest256 digest = new Keccak.Digest256();
         digest.update(input);
