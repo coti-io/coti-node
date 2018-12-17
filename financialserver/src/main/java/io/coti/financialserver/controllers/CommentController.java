@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import io.coti.financialserver.http.CommentRequest;
+import io.coti.financialserver.http.NewCommentRequest;
 import io.coti.financialserver.services.CommentService;
 
 @Slf4j
@@ -18,13 +18,13 @@ public class CommentController {
     CommentService commentService;
 
     @RequestMapping(method = RequestMethod.PUT)
-    public ResponseEntity newComment(@Valid @RequestBody CommentRequest request) {
+    public ResponseEntity newComment(@Valid @RequestBody NewCommentRequest request) {
 
         return commentService.newComment(request);
     }
 
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity getComment(@Valid @RequestBody CommentRequest request) {
+    public ResponseEntity getComment(@Valid @RequestBody NewCommentRequest request) {
 
         return commentService.getComment(request);
     }

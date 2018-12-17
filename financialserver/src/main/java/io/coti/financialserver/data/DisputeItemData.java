@@ -20,6 +20,8 @@ public class DisputeItemData implements Serializable, ISignable, ISignValidatabl
     private Long id;
     private BigDecimal price;
     @NotNull
+    private int quantity;
+    @NotNull
     private DisputeReason reason;
     private Hash disputeHash;
     private DisputeItemStatus status;

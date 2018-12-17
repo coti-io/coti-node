@@ -49,7 +49,7 @@ public class DisputeService {
     @Autowired
     private MerchantDisputes merchantDisputes;
     @Autowired
-    private ArbitratorDisputes arbitratorDisputes;
+    private TransactionDisputes transactionDisputes;
     @Autowired
     private ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
     private Map<ActionSide, Collection<UserDisputesData>> userDisputesCollectionMap = new EnumMap<>(ActionSide.class);
@@ -58,7 +58,6 @@ public class DisputeService {
     public void init() {
         userDisputesCollectionMap.put(ActionSide.Consumer, consumerDisputes);
         userDisputesCollectionMap.put(ActionSide.Merchant, merchantDisputes);
-        userDisputesCollectionMap.put(ActionSide.Arbitrator, arbitratorDisputes);
     }
 
     public ResponseEntity<IResponse> createDispute(NewDisputeRequest newDisputeRequest) {
@@ -80,6 +79,10 @@ public class DisputeService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_CONSUMER_INVALID, STATUS_ERROR));
         } */
 
+        if(isDisputeInProcessForTransactionHash(disputeData.getTransactionHash())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(OPEN_DISPUTE_IN_PROCESS_FOR_THIS_TRANSACTION, STATUS_ERROR));
+        }
+
         Hash merchantHash = getMerchantHash(transactionData.getReceiverBaseTransactionHash());
         if (merchantHash == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_MERCHANT_NOT_FOUND, STATUS_ERROR));
@@ -92,6 +95,14 @@ public class DisputeService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ITEMS_EXIST_ALREADY, STATUS_ERROR));
         }
 
+        TransactionDisputesData transactionDisputesData = transactionDisputes.getByHash(disputeData.getTransactionHash());
+        if (transactionDisputesData == null) {
+            transactionDisputesData = new TransactionDisputesData();
+            transactionDisputesData.setHash(disputeData.getTransactionHash());
+        }
+        transactionDisputesData.appendDisputeHash(disputeData.getHash());
+        transactionDisputes.put(transactionDisputesData);
+
         addUserDisputeHash(ActionSide.Consumer, disputeData.getConsumerHash(), disputeData.getHash());
         addUserDisputeHash(ActionSide.Merchant, merchantHash, disputeData.getHash());
 
@@ -101,15 +112,17 @@ public class DisputeService {
     }
 
     private void addUserDisputeHash(ActionSide actionSide, Hash userHash, Hash disputeHash) {
+
         Collection<UserDisputesData> userDisputesCollection = userDisputesCollectionMap.get(actionSide);
         UserDisputesData userDisputesData = userDisputesCollection.getByHash(userHash);
+
         if (userDisputesData == null) {
             userDisputesData = new UserDisputesData();
             userDisputesData.setHash(userHash);
         }
+
         userDisputesData.appendDisputeHash(disputeHash);
         userDisputesCollection.put(userDisputesData);
-
     }
 
     public ResponseEntity<IResponse> getDisputes(GetDisputesRequest getDisputesRequest) {
@@ -123,9 +136,13 @@ public class DisputeService {
 
         Collection<UserDisputesData> userDisputesCollection = userDisputesCollectionMap.get(getDisputesData.getDisputeSide());
         if (userDisputesCollection == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_SIDE_INVALID, STATUS_ERROR));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_UNAUTHORIZED, STATUS_ERROR));
         }
         UserDisputesData userDisputesData = userDisputesCollection.getByHash(getDisputesData.getUserHash());
+
+        if(userDisputesData == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_UNAUTHORIZED, STATUS_ERROR));
+        }
 
         List<Hash> userDisputeHashes = userDisputesData.getDisputeHashes();
 
@@ -200,6 +217,56 @@ public class DisputeService {
 
     public void updateAfterVote(DisputeData dispute) {
         dispute.setUpdateTime(new Date());
+
+        int arbitratorsCount = dispute.getArbitratorHashes().size();
+        int votesForConsumer;
+        int votesForMerchant;
+
+        for (DisputeItemData disputeItem : dispute.getDisputeItems()) {
+
+            if(disputeItem.getDisputeItemVotesData().size() < arbitratorsCount) {
+                continue;
+            }
+
+            votesForConsumer = 0;
+            votesForMerchant = 0;
+
+            for(DisputeItemVoteData disputeItemVoteData : disputeItem.getDisputeItemVotesData()) {
+
+                if(disputeItemVoteData.getStatus() != DisputeItemStatus.AcceptedByArbitrators) {
+                    votesForConsumer++;
+                }
+                else {
+                    votesForMerchant++;
+                }
+            }
+
+            if(votesForConsumer >= votesForMerchant) {
+                disputeItem.setStatus(DisputeItemStatus.AcceptedByArbitrators);
+            }
+            else {
+                disputeItem.setStatus(DisputeItemStatus.RejectedByArbitrators);
+            }
+        }
+
+        boolean arbitratorsVotedOnAllItems = true;
+
+        for(DisputeItemData disputeItem : dispute.getDisputeItems()) {
+            if(disputeItem.getStatus() == DisputeItemStatus.CanceledByConsumer) {
+                continue;
+            }
+
+            if(disputeItem.getStatus() != DisputeItemStatus.AcceptedByArbitrators && disputeItem.getStatus() != DisputeItemStatus.RejectedByArbitrators) {
+                arbitratorsVotedOnAllItems = false;
+                break;
+            }
+        }
+
+        if(arbitratorsVotedOnAllItems) {
+            dispute.setDisputeStatus(DisputeStatus.Closed);
+        }
+
+        disputes.put(dispute);
     }
 
     private void assignToArbitrators(DisputeData dispute) {
@@ -221,6 +288,25 @@ public class DisputeService {
         }
 
         return null;
+    }
+
+    private Boolean isDisputeInProcessForTransactionHash(Hash transactionHash) {
+        TransactionDisputesData transactionDisputesData = transactionDisputes.getByHash(transactionHash);
+
+        if(transactionDisputesData == null) {
+            return false;
+        }
+
+        DisputeData disputeData;
+
+        for(Hash disputeHash : transactionDisputesData.getDisputeHashes()) {
+            disputeData = disputes.getByHash(disputeHash);
+            if(disputeData.getDisputeStatus() == DisputeStatus.Recall) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private Boolean isDisputeItemsValid(Hash consumerHash, List<DisputeItemData> items, Hash transactionHash) {

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
 import io.coti.financialserver.crypto.CommentCrypto;
-import io.coti.financialserver.http.CommentRequest;
+import io.coti.financialserver.http.NewCommentRequest;
 import io.coti.financialserver.http.GetCommentResponse;
 import io.coti.financialserver.http.NewCommentResponse;
 import io.coti.financialserver.model.DisputeComments;
@@ -30,7 +30,7 @@ public class CommentService {
     @Autowired
     Disputes disputes;
 
-    public ResponseEntity newComment(CommentRequest request) {
+    public ResponseEntity newComment(NewCommentRequest request) {
 
         DisputeCommentData disputeCommentData = request.getDisputeCommentData();
         CommentCrypto commentCrypto = new CommentCrypto();
@@ -80,7 +80,7 @@ public class CommentService {
         return ResponseEntity.status(HttpStatus.OK).body(new NewCommentResponse(disputeCommentData.getHash()));
     }
 
-    public ResponseEntity getComment(CommentRequest request) {
+    public ResponseEntity getComment(NewCommentRequest request) {
 
         CommentCrypto disputeCrypto = new CommentCrypto();
         disputeCrypto.signMessage(request.getDisputeCommentData());
