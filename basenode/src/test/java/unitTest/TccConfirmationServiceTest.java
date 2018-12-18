@@ -23,11 +23,15 @@ import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import static testUtils.TestUtils.generateRandomHash;
+
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = TccConfirmationService.class)
 @TestPropertySource(locations = "../test.properties")
 @Slf4j
 public class TccConfirmationServiceTest {
+    public static final String TRANSACTION_DESCRIPTION = "test";
+    public static final int SIZE_OF_HASH = 64;
 
     @Autowired
     TccConfirmationService tccConfirmationService;
@@ -38,13 +42,13 @@ public class TccConfirmationServiceTest {
 
     @Before
     public void init() {
-        transactionData0 = new TransactionData(new ArrayList<>(), new Hash("00"), "test", 20, new Date(), TransactionType.Payment);
-        transactionData1 = new TransactionData(new ArrayList<>(), new Hash("11"), "test", 70, new Date(), TransactionType.Payment);
-        transactionData2 = new TransactionData(new ArrayList<>(), new Hash("22"), "test", 100, new Date(), TransactionType.Payment);
-        transactionData3 = new TransactionData(new ArrayList<>(), new Hash("33"), "test", 90, new Date(), TransactionType.Payment);
-        transactionData4 = new TransactionData(new ArrayList<>(), new Hash("44"), "test", 50, new Date(), TransactionType.Payment);
-        TransactionData5 = new TransactionData(new ArrayList<>(), new Hash("55"), "test", 70, new Date(), TransactionType.Payment);
-        transactionData6 = new TransactionData(new ArrayList<>(), new Hash("66"), "test", 60, new Date(), TransactionType.Payment);
+        transactionData0 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 20, new Date(), TransactionType.Payment);
+        transactionData1 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 70, new Date(), TransactionType.Payment);
+        transactionData2 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 100, new Date(), TransactionType.Payment);
+        transactionData3 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 90, new Date(), TransactionType.Payment);
+        transactionData4 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 50, new Date(), TransactionType.Payment);
+        TransactionData5 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 70, new Date(), TransactionType.Payment);
+        transactionData6 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 60, new Date(), TransactionType.Payment);
 
         transactionData0.setLeftParentHash(transactionData1.getHash());
         transactionData0.setRightParentHash(transactionData2.getHash());

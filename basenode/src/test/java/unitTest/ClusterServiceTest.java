@@ -25,6 +25,7 @@ import java.util.*;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static testUtils.TestUtils.generateRandomHash;
 
 @TestPropertySource(locations = "../test.properties")
 @RunWith(SpringRunner.class)
@@ -50,67 +51,75 @@ public class ClusterServiceTest {
     @MockBean
     private IConfirmationService confirmationService;
 
-    private TransactionData transactionData0, transactionData1;
+    private TransactionData transactionData1, transactionData2, transactionData3;
+
+    public static final int SIZE_OF_HASH = 64;
+
+    public static final Hash TRANSACTION_ONE_HASH = generateRandomHash(SIZE_OF_HASH);
+    public static final double TRANSACTION_ONE_TRUSTSCORE = 70;
+
+    public static final Hash TRANSACTION_TWO_HASH = generateRandomHash(SIZE_OF_HASH);
+    public static final double TRANSACTION_TWO_TRUSTSCORE = 83;
+
+    public static final Hash TRANSACTION_THREE_HASH = generateRandomHash(SIZE_OF_HASH);
+    public static final double TRANSACTION_THREE_TRUSTSCORE = 92;
+
+    public static final String TRANSACTION_DESCRIPTION = "test";
+
 
     @Before
     public void setUpTransactions() {
 
-        transactionData0 = new TransactionData(new ArrayList<>(), new Hash("00"), "test", 70, new Date(), TransactionType.Payment);
-        // TransactionData0.setSenderTrustScore(70);
+        transactionData1 = new TransactionData(new ArrayList<>(), TRANSACTION_ONE_HASH, TRANSACTION_DESCRIPTION, TRANSACTION_ONE_TRUSTSCORE, new Date(), TransactionType.Payment);
         List<Hash> hashChildren = new Vector<>();
-        //hashChildren.add(new Hash("11"));
-        transactionData0.setChildrenTransactions(hashChildren);
-        transactionData0.setProcessStartTime(new Date());
-        transactionData0.setAttachmentTime(new Date());
-
-        transactionData1 = new TransactionData(new ArrayList<>(), new Hash("11"), "test", 83, new Date(), TransactionType.Payment);
-        // TransactionData1.setSenderTrustScore(83);
-        transactionData1.setRightParentHash(transactionData0.getHash());
-        //  TransactionData1.setCreateTime(new Date());
+        transactionData1.setChildrenTransactions(hashChildren);
         transactionData1.setProcessStartTime(new Date());
         transactionData1.setAttachmentTime(new Date());
 
-        transactions.put(transactionData0);
-        transactions.put(transactionData1);
+        transactionData2 = new TransactionData(new ArrayList<>(), TRANSACTION_TWO_HASH, TRANSACTION_DESCRIPTION, TRANSACTION_TWO_TRUSTSCORE, new Date(), TransactionType.Payment);
+        transactionData2.setRightParentHash(transactionData1.getHash());
+        transactionData2.setProcessStartTime(new Date());
+        transactionData2.setAttachmentTime(new Date());
 
-        cluster.addUnconfirmedTransaction(transactionData0);
+        transactions.put(transactionData1);
+        transactions.put(transactionData2);
+
         cluster.addUnconfirmedTransaction(transactionData1);
+        cluster.addUnconfirmedTransaction(transactionData2);
     }
 
     @Test
     public void attachToCluster_noExceptionIsThrown() {
         try {
-            TransactionData TransactionData2 = new TransactionData(new ArrayList<>(), new Hash("22"), "test", 50, new Date(), TransactionType.Payment);
-            TransactionData2.setSenderTrustScore(92);
-            TransactionData2.setLeftParentHash(new Hash("00"));
-            when(transactions.getByHash(new Hash("00"))).thenReturn(transactionData0);
-            cluster.attachToCluster(TransactionData2);
+            transactionData3 = new TransactionData(new ArrayList<>(), TRANSACTION_THREE_HASH, TRANSACTION_DESCRIPTION, TRANSACTION_THREE_TRUSTSCORE, new Date(), TransactionType.Payment);
+            transactionData3.setLeftParentHash(TRANSACTION_ONE_HASH);
+            when(transactions.getByHash(TRANSACTION_ONE_HASH)).thenReturn(transactionData1);
+            cluster.attachToCluster(transactionData3);
         } catch (Exception e) {
             assertNull(e);
         }
     }
 
     @Test
-    public void selectSources_onlyTransactionData1SourceAvailable_transactionData1AsLeftParent() {
-        TransactionData TransactionData = new TransactionData(new ArrayList<>(), new Hash("22"), "test", 92, new Date(), TransactionType.Payment);
-        //  TransactionData2.setCreateTime(new Date());
+    public void selectSources_onlyOneSourceAvailable_transactionDataAttachedAsLeftParent() {
+        TransactionData TransactionData = new TransactionData(new ArrayList<>(), TRANSACTION_THREE_HASH, TRANSACTION_DESCRIPTION, TRANSACTION_THREE_TRUSTSCORE, new Date(), TransactionType.Payment);
         when(sourceSelector.selectSourcesForAttachment(any(List.class),
                 any(double.class)))
-                .thenReturn(new Vector<>(Arrays.asList(transactionData1)));
+                .thenReturn(new Vector<>(Arrays.asList(transactionData2)));
         cluster.selectSources(TransactionData);
-        Assert.assertEquals(TransactionData.getLeftParentHash(), new Hash("11"));
+        Assert.assertEquals(TransactionData.getLeftParentHash(), TRANSACTION_TWO_HASH);
     }
 
     @Test
     public void selectSources_twoSourcesAvailable_twoSourcesAsParents() {
-        TransactionData TransactionData = new TransactionData(new ArrayList<>(), new Hash("22"), "test", 92, new Date(), TransactionType.Payment);
-        //  TransactionData2.setCreateTime(new Date());
+        TransactionData TransactionData = new TransactionData(new ArrayList<>(), TRANSACTION_THREE_HASH, TRANSACTION_DESCRIPTION, TRANSACTION_THREE_TRUSTSCORE, new Date(), TransactionType.Payment);
+        //  transactionData3.setCreateTime(new Date());
         when(sourceSelector.selectSourcesForAttachment(any(List.class),
                 any(double.class)))
-                .thenReturn(new Vector<>(Arrays.asList(transactionData0, transactionData1)));
+                .thenReturn(new Vector<>(Arrays.asList(transactionData1, transactionData2)));
         cluster.selectSources(TransactionData);
-        Assert.assertTrue(TransactionData.getLeftParentHash().equals(new Hash("00")) &&
-                TransactionData.getRightParentHash().equals(new Hash("11")));
+        Assert.assertTrue(TransactionData.getLeftParentHash().equals(TRANSACTION_ONE_HASH) &&
+                TransactionData.getRightParentHash().equals(TRANSACTION_TWO_HASH));
 
     }
 
@@ -126,8 +135,8 @@ public class ClusterServiceTest {
     @Test
     public void addUnconfirmedTransaction_noExceptionIsThrown() {
         try {
-            TransactionData TransactionData = new TransactionData(new ArrayList<>(), new Hash("22"), "test", 50, new Date(), TransactionType.Payment);
-            cluster.addUnconfirmedTransaction(TransactionData);
+            transactionData3 = new TransactionData(new ArrayList<>(), TRANSACTION_THREE_HASH, TRANSACTION_DESCRIPTION, 50, new Date(), TransactionType.Payment);
+            cluster.addUnconfirmedTransaction(transactionData3);
         } catch (Exception e) {
             assertNull(e);
         }

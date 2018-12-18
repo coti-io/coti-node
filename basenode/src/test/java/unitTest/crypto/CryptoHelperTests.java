@@ -1,3 +1,5 @@
+package unitTest.crypto;
+
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;

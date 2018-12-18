@@ -1,6 +1,5 @@
 package unitTest;
 
-import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
@@ -19,12 +18,18 @@ import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 
+import static testUtils.TestUtils.generateRandomHash;
+
 @RunWith(SpringRunner.class)
 @SpringBootTest(
         classes = SourceSelector.class
 )
 @TestPropertySource(locations = "../test.properties")
 public class SourceSelectorTest {
+    public static final String TRANSACTION_DESCRIPTION = "test";
+    public static final int SECOND_IN_MILLISECOND = 1000;
+    public static final int SIZE_OF_HASH = 64;
+
     @Autowired
     private SourceSelector sourceSelector;
     private Date now;
@@ -34,47 +39,38 @@ public class SourceSelectorTest {
     public void init() {
         now = new Date();
         newTransactions = new Vector();
-        TransactionData TransactionData2 = new TransactionData(new ArrayList<BaseTransactionData>(), new Hash("22"), "test", 22, new Date(), TransactionType.Payment);
-        TransactionData2.setSenderTrustScore(92);
-        TransactionData2.setAttachmentTime(new Date(now.getTime() - 2000));
-        //now.setTime(now.getTime() + 5000)
+        TransactionData transactionData0 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 92, new Date(), TransactionType.Payment);
+        transactionData0.setAttachmentTime(new Date(now.getTime() - SECOND_IN_MILLISECOND));
 
-        TransactionData TransactionData3 = new TransactionData(new ArrayList<>(), new Hash("33"), "test", 33, new Date(), TransactionType.Payment);
-        TransactionData3.setSenderTrustScore(84);
-        TransactionData3.setAttachmentTime(new Date(now.getTime() - 3000));
+        TransactionData transactionData1 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 84, new Date(), TransactionType.Payment);
+        transactionData1.setAttachmentTime(new Date(now.getTime() - SECOND_IN_MILLISECOND));
 
-        TransactionData TransactionData4 = new TransactionData(new ArrayList<>(), new Hash("44"), "test", 44, new Date(), TransactionType.Payment);
-        TransactionData4.setSenderTrustScore(86);
-        TransactionData4.setAttachmentTime(new Date(now.getTime() - 4000));
+        TransactionData transactionData2 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 86, new Date(), TransactionType.Payment);
+        transactionData2.setAttachmentTime(new Date(now.getTime() - SECOND_IN_MILLISECOND));
 
-        TransactionData TransactionData5 = new TransactionData(new ArrayList<>(), new Hash("55"), "test", 55, new Date(), TransactionType.Payment);
-        TransactionData5.setSenderTrustScore(76);
-        TransactionData5.setAttachmentTime(new Date(now.getTime() - 5000));
+        TransactionData transactionData3 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 76, new Date(), TransactionType.Payment);
+        transactionData3.setAttachmentTime(new Date(now.getTime() - SECOND_IN_MILLISECOND));
 
-        TransactionData TransactionData6 = new TransactionData(new ArrayList<>(), new Hash("66"), "test", 66, new Date(), TransactionType.Payment);
-        TransactionData6.setSenderTrustScore(60);
-        TransactionData6.setAttachmentTime(new Date(now.getTime() - 6000));
+        TransactionData transactionData4 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 60, new Date(), TransactionType.Payment);
+        transactionData4.setAttachmentTime(new Date(now.getTime() - SECOND_IN_MILLISECOND));
 
-        TransactionData TransactionData7 = new TransactionData(new ArrayList<>(), new Hash("77"), "test", 77, new Date(), TransactionType.Payment);
-        TransactionData7.setSenderTrustScore(86);
-        TransactionData7.setAttachmentTime(new Date(now.getTime() - 7000));
+        TransactionData transactionData5 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 86, new Date(), TransactionType.Payment);
+        transactionData5.setAttachmentTime(new Date(now.getTime() - SECOND_IN_MILLISECOND));
 
-        TransactionData TransactionData8 = new TransactionData(new ArrayList<>(), new Hash("88"), "test", 88, new Date(), TransactionType.Payment);
-        TransactionData8.setSenderTrustScore(80);
-        TransactionData8.setAttachmentTime(new Date(now.getTime() - 8000));
+        TransactionData transactionData6 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 80, new Date(), TransactionType.Payment);
+        transactionData6.setAttachmentTime(new Date(now.getTime() - SECOND_IN_MILLISECOND));
 
-        TransactionData TransactionData9 = new TransactionData(new ArrayList<>(), new Hash("99"), "test", 99, new Date(), TransactionType.Payment);
-        TransactionData9.setSenderTrustScore(72);
-        TransactionData9.setAttachmentTime(new Date(now.getTime() - 9000));
+        TransactionData transactionData7 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 72, new Date(), TransactionType.Payment);
+        transactionData7.setAttachmentTime(new Date(now.getTime() - SECOND_IN_MILLISECOND));
 
-        newTransactions.add(TransactionData2);
-        newTransactions.add(TransactionData3);
-        newTransactions.add(TransactionData4);
-        newTransactions.add(TransactionData5);
-        newTransactions.add(TransactionData6);
-        newTransactions.add(TransactionData7);
-        newTransactions.add(TransactionData8);
-        newTransactions.add(TransactionData9);
+        newTransactions.add(transactionData0);
+        newTransactions.add(transactionData2);
+        newTransactions.add(transactionData2);
+        newTransactions.add(transactionData3);
+        newTransactions.add(transactionData4);
+        newTransactions.add(transactionData5);
+        newTransactions.add(transactionData6);
+        newTransactions.add(transactionData7);
     }
 
     @Test
@@ -101,18 +97,18 @@ public class SourceSelectorTest {
         List<TransactionData> sources2 = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 92);
         Assert.assertTrue(sources2.size() == 1);
 
-        TransactionData TransactionData10 = new TransactionData(new ArrayList<>(), new Hash("10"), "test", 100, new Date(), TransactionType.Payment);
-        TransactionData10.setSenderTrustScore(80);
-        TransactionData10.setAttachmentTime(new Date(now.getTime() - 8000));
+        TransactionData transactionData8 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 100, new Date(), TransactionType.Payment);
+        transactionData8.setSenderTrustScore(80);
+        transactionData8.setAttachmentTime(new Date(now.getTime() - SECOND_IN_MILLISECOND));
 
-        TransactionData TransactionData11 = new TransactionData(new ArrayList<>(), new Hash("1111"), "test", 100, new Date(), TransactionType.Payment);
-        TransactionData11.setSenderTrustScore(72);
-        TransactionData11.setAttachmentTime(new Date(now.getTime() - 9000));
+        TransactionData transactionData9 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 100, new Date(), TransactionType.Payment);
+        transactionData9.setSenderTrustScore(72);
+        transactionData9.setAttachmentTime(new Date(now.getTime() - SECOND_IN_MILLISECOND));
 
-        newTransactions.add(TransactionData10);
-        trustScoreToSourceListMapping.get(TransactionData10.getRoundedSenderTrustScore()).add(TransactionData10);
-        newTransactions.add(TransactionData11);
-        trustScoreToSourceListMapping.get(TransactionData11.getRoundedSenderTrustScore()).add(TransactionData11);
+        newTransactions.add(transactionData8);
+        trustScoreToSourceListMapping.get(transactionData8.getRoundedSenderTrustScore()).add(transactionData8);
+        newTransactions.add(transactionData9);
+        trustScoreToSourceListMapping.get(transactionData9.getRoundedSenderTrustScore()).add(transactionData9);
 
         List<TransactionData> sources3 = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 92);
         Assert.assertTrue(sources3.size() == 2);

@@ -28,25 +28,7 @@ import java.util.Date;
 
 public class CryptoHelperTest {
 
-    @Test
-    public void deserializeBaseTransaction() throws IOException {
 
-
-        String jsonOfTransaction = "{\n" +
-                "\t\t\t'addressHash': '54e43a7b3485e1dca039888b4cf1951caa737c01219f71db01fa31c73afa745645137e4473db82e1986b7c590d093eb32d613924f5a5187e5f2ff4395bbe5eb55203282c',\n" +
-                "\t\t\t'amount': '-30.000000000000000000',\n" +
-                "\t\t\t'hash': 'b9e54ac5619b7b4f0c6726482690f66dff06d07f7462643174d4aae0bef77708',\n" +
-                "\t\t\t'createTime': 1533118612404,\n" +
-                "\t\t\t'signatureData': {\n" +
-                "\t\t\t\t'r': '5854c891faa14df54fd1e9a7b7d32984c649342e75fe434f028b225f820d9053',\n" +
-                "\t\t\t\t's': 'ac8f70d37234d675fc8511435dfd0454101cdf43a8277bde98a4914e850e557c'\n" +
-                "\t\t\t}}\n";
-
-
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
-        BaseTransactionData bxData = mapper.readValue(jsonOfTransaction, BaseTransactionData.class);
-    }
 
 //    @Test
 //    public void CreateAndSignTransaction() {
