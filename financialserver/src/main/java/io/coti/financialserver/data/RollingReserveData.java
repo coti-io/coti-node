@@ -8,13 +8,22 @@ import lombok.Data;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
 @Data
-public class RollingReserveAddressData implements IEntity, ISignable, ISignValidatable {
+public class RollingReserveData implements IEntity, ISignable, ISignValidatable {
 
     Hash merchantHash;
     Hash rollingReserveAddress;
     Integer addressIndex;
+    List<Date> releaseDates;
     private SignatureData merchantSignature;
+
+    public RollingReserveData() {
+        releaseDates = new ArrayList<>();
+    }
 
     @Override
     public Hash getHash() {
