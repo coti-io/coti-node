@@ -22,11 +22,11 @@ public class ScoreCalculator<T extends EventScore> implements IScoreCalculator {
 
     public Map<T, Double> calculate() {
         return eventScoresToScoreCalculationFormulaMap.entrySet().stream().map(e ->
-                new AbstractMap.SimpleEntry<>(e.getKey(), MathCalculation.evaluteExpression(e.getValue())))
+                new AbstractMap.SimpleEntry<>(e.getKey(), MathCalculation.evaluateExpression(e.getValue())))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     public Pair<T, Double> calculateEntry(Pair<T, String> eventScoresToScoreCalculationFormulaPair) {
-        return new Pair<>(eventScoresToScoreCalculationFormulaPair.getKey(), MathCalculation.evaluteExpression(eventScoresToScoreCalculationFormulaPair.getValue()));
+        return new Pair<>(eventScoresToScoreCalculationFormulaPair.getKey(), MathCalculation.evaluateExpression(eventScoresToScoreCalculationFormulaPair.getValue()));
     }
 }

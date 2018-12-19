@@ -8,12 +8,12 @@ public class MathCalculation {
 
     private static final double differenceEqualityCompare = 0.000001;
 
-    public static double evaluteExpression(String stringFormula) {
+    public static double evaluateExpression(String stringFormula) {
         Expression expression = new Expression(stringFormula);
         return expression.calculate();
     }
 
-    public static double evaluteExpression(String stringFormula, Argument argument) {
+    public static double evaluateExpression(String stringFormula, Argument argument) {
         Expression expression = new Expression(stringFormula);
         expression.addArguments(argument);
         return expression.calculate();

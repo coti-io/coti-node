@@ -71,7 +71,7 @@ public class RollingReserveService {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new RollingReserveResponse(rollingReserveResponseData));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
             throw new RuntimeException(e);
         }
     }
@@ -96,7 +96,7 @@ public class RollingReserveService {
             return ResponseEntity.status(HttpStatus.OK)
                     .body(new RollingReserveResponse(new RollingReserveResponseData(rollingReserveData)));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
             throw new RuntimeException(e);
         }
 

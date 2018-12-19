@@ -40,7 +40,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -360,7 +359,7 @@ public class TrustScoreService {
         Date beginningDayOfCreateDate = DatesCalculation.setDateOnBeginningOfDay(trustScoreData.getCreateTime());
         int daysDifference = DatesCalculation.calculateDaysDiffBetweenDates(beginningOfToday, beginningDayOfCreateDate);
 
-        return MathCalculation.evaluteExpression(kycInitialTrustScoreEventScore.getDecayFormula().replace("T", String.valueOf(daysDifference)))
+        return MathCalculation.evaluateExpression(kycInitialTrustScoreEventScore.getDecayFormula().replace("T", String.valueOf(daysDifference)))
                 * trustScoreData.getKycTrustScore() * kycInitialTrustScoreEventScore.getWeight();
     }
 

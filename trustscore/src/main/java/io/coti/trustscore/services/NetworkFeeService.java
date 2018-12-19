@@ -14,6 +14,7 @@ import io.coti.trustscore.http.NetworkFeeResponse;
 import io.coti.trustscore.http.NetworkFeeValidateRequest;
 import io.coti.trustscore.http.data.NetworkFeeResponseData;
 import io.coti.trustscore.model.TrustScores;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -28,7 +29,7 @@ import java.util.Map;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.trustscore.http.HttpStringConstants.FULL_NODE_FEE_VALIDATION_ERROR;
-
+@Slf4j
 @Service
 public class NetworkFeeService {
 
@@ -74,7 +75,7 @@ public class NetworkFeeService {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new NetworkFeeResponse(networkFeeResponseData));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
             throw new RuntimeException(e);
         }
     }
@@ -96,7 +97,7 @@ public class NetworkFeeService {
             return ResponseEntity.status(HttpStatus.OK)
                     .body(new NetworkFeeResponse(new NetworkFeeResponseData(networkFeeData)));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
             throw new RuntimeException(e);
         }
     }
