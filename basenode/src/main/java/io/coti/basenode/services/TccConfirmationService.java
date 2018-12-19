@@ -54,7 +54,6 @@ public class TccConfirmationService {
             try {
                 TransactionData child = hashToTccUnConfirmTransactionsMapping.get(hash);
                 if (child != null
-                        && transactionHelper.isDspConfirmed(child)
                         && child.getTrustChainTrustScore()
                         > maxSonsTotalTrustScore) {
                     maxSonsTotalTrustScore = hashToTccUnConfirmTransactionsMapping.get(hash).getTrustChainTrustScore();
@@ -67,7 +66,12 @@ public class TccConfirmationService {
         }
 
         // updating parent trustChainTrustScore
-        parent.setTrustChainTrustScore(parent.getSenderTrustScore() + maxSonsTotalTrustScore);
+        if (transactionHelper.isDspConfirmed(parent)) {
+            parent.setTrustChainTrustScore(parent.getSenderTrustScore() + maxSonsTotalTrustScore);
+        } else {
+            parent.setTrustChainTrustScore(maxSonsTotalTrustScore);
+        }
+
 
         //updating parent trustChainTransactionHashes
         if (maxSonsTotalTrustScoreHash != null) { // not a source
@@ -96,11 +100,8 @@ public class TccConfirmationService {
     public List<TccInfo> getTccConfirmedTransactions() {
         List<TccInfo> transactionConsensusConfirmed = new LinkedList<>();
         for (TransactionData transaction : topologicalOrderedGraph) {
-            if (!transactionHelper.isDspConfirmed(transaction)) {
-                continue;
-            }
             setTotalTrustScore(transaction);
-            if (transaction.getTrustChainTrustScore() >= threshold) {
+            if (transaction.getTrustChainTrustScore() >= threshold && transactionHelper.isDspConfirmed(transaction)) {
                 transaction.setTrustChainConsensus(true);
                 transaction.setTransactionConsensusUpdateTime(new Date());
                 TccInfo tccInfo = new TccInfo(transaction.getHash(), transaction.getTrustChainTransactionHashes()
