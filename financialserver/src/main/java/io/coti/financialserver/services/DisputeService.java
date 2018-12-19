@@ -283,7 +283,7 @@ public class DisputeService {
         }
     }
 
-    private Hash getMerchantHash(Hash receiverBaseTransactionHash) {
+    public Hash getMerchantHash(Hash receiverBaseTransactionHash) {
         ReceiverBaseTransactionOwnerData receiverBaseTransactionOwnerData = receiverBaseTransactionOwners.getByHash(receiverBaseTransactionHash);
 
         if (receiverBaseTransactionOwnerData != null) {

@@ -4,16 +4,21 @@ import lombok.Data;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
 
 @Data
 public class RollingReserveReleaseDateData implements IEntity {
+
     private Date date;
-    private Map<Hash,Set<Hash>> merchantTransactionHashes;
+    private Map<Hash, RollingReserveReleaseStatus> rollingReserveReleaseStatusByMerchant;
+
+    public RollingReserveReleaseDateData() {
+        rollingReserveReleaseStatusByMerchant = new HashMap<>();
+    }
 
     public void setDate(Date date) {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
@@ -23,6 +28,7 @@ public class RollingReserveReleaseDateData implements IEntity {
             e.printStackTrace();
         }
     }
+
     @Override
     public Hash getHash() {
         return new Hash(date.getTime());

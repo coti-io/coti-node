@@ -1,8 +1,7 @@
 package io.coti.financialserver.http;
 
 import io.coti.basenode.http.Request;
-import io.coti.financialserver.data.DisputeCommentData;
-import io.coti.financialserver.data.RollingReserveAddressData;
+import io.coti.financialserver.data.RollingReserveData;
 import lombok.Data;
 
 import javax.validation.Valid;
@@ -12,5 +11,5 @@ import javax.validation.constraints.NotNull;
 public class GetRollingReserveMerchantAddressRequest extends Request {
 
     @NotNull
-    private @Valid RollingReserveAddressData rollingReserveAddressData;
+    private @Valid RollingReserveData rollingReserveData;
 }

@@ -30,6 +30,8 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private ConsumerDisputes consumerDisputes;
     @Autowired
+    private RollingReserveService rollingReserveService;
+    @Autowired
     private ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
 
     public ResponseEntity<IResponse> setReceiverBaseTransactionOwner(TransactionRequest transactionRequest) {
@@ -49,6 +51,6 @@ public class TransactionService extends BaseNodeTransactionService {
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
 
         // TODO: Check if transaction is of type payment, and that this RBT exist in RBT owners table, if not we should do something.
-
+        rollingReserveService.setRollingReserveReleaseDate(transactionData);
     }
 }

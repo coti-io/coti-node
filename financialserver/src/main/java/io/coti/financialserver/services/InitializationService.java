@@ -27,8 +27,6 @@ public class InitializationService {
         communicationService.initSubscriber(propagationServerAddresses, NodeType.FinancialServer);
 
         baseNodeInitializationService.init();
-
-        rollingReserveService.init();
     }
 }
 
