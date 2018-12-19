@@ -149,30 +149,37 @@ public class TrustScoreService {
                         .body(new Response(USER_HASH_IS_NOT_IN_DB, STATUS_ERROR));
             }
 
-            request.setSignerHash(new Hash(kycServerPublicKey));
             if (!trustScoreUserTypeCrypto.verifySignature(request)) {
-
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new Response(KYC_TRUST_SCORE_AUTHENTICATION_ERROR, STATUS_ERROR));
             }
+            if (!changingIsLegal(trustScoreData)) {
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body(new Response(CANT_CHANGE_FROM_NOT_CUSOMER_TYPE_MESSAGE, STATUS_ERROR));
+            }
+                UserType userType = UserType.enumFromString(request.userType);
+                trustScoreData.setUserType(userType);
+                trustScores.put(trustScoreData);
+                userTypeOfUsers.put(new UserTypeOfUserData(request.userHash, userType));
 
-            UserType userType = UserType.enumFromString(request.userType);
-            trustScoreData.setUserType(userType);
-            trustScores.put(trustScoreData);
-            userTypeOfUsers.put(new UserTypeOfUserData(request.userHash, userType));
+                updateUserTypeInBuckets(request);
 
-            updateUserTypeInBuckets(request);
+                SetUserTypeResponse setUserTypeResponse = new SetUserTypeResponse(userType, request.userHash);
+                return ResponseEntity.status(HttpStatus.OK)
+                        .body(setUserTypeResponse);
+            } catch(Exception e){
+                log.error(e.getMessage());
+                return ResponseEntity
+                        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new Response(USER_TYPE_SET_ERROR, STATUS_ERROR));
+            }
 
-            SetUserTypeResponse setUserTypeResponse = new SetUserTypeResponse(userType, request.userHash);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(setUserTypeResponse);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new Response(USER_TYPE_SET_ERROR, STATUS_ERROR));
-        }
+    }
+
+    private boolean changingIsLegal(TrustScoreData trustScoreData) {
+        return trustScoreData.getUserType() == UserType.CONSUMER;
     }
 
     public ResponseEntity<BaseResponse> getUserTrustScore(Hash userHash) {
