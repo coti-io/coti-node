@@ -19,9 +19,15 @@ public class RollingReserveReleaseStatus implements Serializable {
 
     public RollingReserveReleaseStatus() {
         paymentTransactions = new ArrayList<>();
+        initialAmount = new BigDecimal(0);
+        returnedAmount = new BigDecimal(0);
     }
 
     public void addToInitialAmount(BigDecimal amount) {
         initialAmount = initialAmount.add(amount);
+    }
+
+    public BigDecimal getRemainingAmount() {
+        return (initialAmount.subtract(returnedAmount));
     }
 }

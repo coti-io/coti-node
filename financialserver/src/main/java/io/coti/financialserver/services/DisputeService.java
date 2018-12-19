@@ -23,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.math.BigDecimal;
 import java.util.*;
 
 import static io.coti.financialserver.http.HttpStringConstants.*;
@@ -52,6 +53,8 @@ public class DisputeService {
     private TransactionDisputes transactionDisputes;
     @Autowired
     private ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
+    @Autowired
+    private RollingReserveService rollingReserveService;
     private Map<ActionSide, Collection<UserDisputesData>> userDisputesCollectionMap = new EnumMap<>(ActionSide.class);
 
     @PostConstruct
@@ -266,6 +269,17 @@ public class DisputeService {
         }
 
         if(arbitratorsVotedOnAllItems) {
+
+            BigDecimal chargebackAmount = new BigDecimal(0);
+            for(DisputeItemData disputeItem : dispute.getDisputeItems()) {
+                if(disputeItem.getStatus() == DisputeItemStatus.AcceptedByArbitrators) {
+                    chargebackAmount = chargebackAmount.add(disputeItem.getPrice());
+                }
+            }
+
+            TransactionData transactionData = transactions.getByHash(dispute.getTransactionHash());
+
+            rollingReserveService.chargebackConsumer(dispute.getMerchantHash(), transactionData.getSenderHash(), chargebackAmount);
             dispute.setDisputeStatus(DisputeStatus.Closed);
         }
 
@@ -275,11 +289,13 @@ public class DisputeService {
     private void assignToArbitrators(DisputeData dispute) {
 
         int random;
+
+        List<String> arbitratorUserHashes = ARBITRATOR_USER_HASHES;
         for (int i = 0; i < COUNT_ARBITRATORS_PER_DISPUTE; i++) {
 
-            random = (int) ((Math.random() * ARBITRATOR_USER_HASHES.size()));
-            dispute.getArbitratorHashes().add(new Hash(ARBITRATOR_USER_HASHES.get(random)));
-            ARBITRATOR_USER_HASHES.remove(random);
+            random = (int) ((Math.random() * arbitratorUserHashes.size()));
+            dispute.getArbitratorHashes().add(new Hash(arbitratorUserHashes.get(random)));
+            arbitratorUserHashes.remove(random);
         }
     }
 

@@ -10,8 +10,6 @@ import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 
 @Service
@@ -33,7 +31,5 @@ public class GetRollingReserveReleaseDatesResponse extends BaseResponse {
         Hash merchantHash = rollingReserveData.getMerchantHash();
         merchantHashString = merchantHash.toString();
         rollingReserveAddress = rollingReserveData.getRollingReserveAddress().toString();
-
-
     }
 }
