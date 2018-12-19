@@ -23,16 +23,16 @@ import static testUtils.TestUtils.generateRandomHash;
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = {LiveViewService.class})
 public class LiveViewServiceTest {
-    public static final int SIZE_OF_HASH = 64;
+    private static final int SIZE_OF_HASH = 64;
 
-    public static final Hash TRANSACTION_ONE_HASH = generateRandomHash(SIZE_OF_HASH);
-    public static final Hash TRANSACTION_TWO_HASH = generateRandomHash(SIZE_OF_HASH);
-    public static final Hash TRANSACTION_THREE_HASH = generateRandomHash(SIZE_OF_HASH);
+    private static final Hash TRANSACTION_ONE_HASH = generateRandomHash(SIZE_OF_HASH);
+    private static final Hash TRANSACTION_TWO_HASH = generateRandomHash(SIZE_OF_HASH);
+    private static final Hash TRANSACTION_THREE_HASH = generateRandomHash(SIZE_OF_HASH);
 
-    public static final int HUNDRED_SECONDS = 100;
-    public static final int HUNDRED_SECONDS_IN_MILLISECONDS = 100000;
+    private static final int HUNDRED_SECONDS = 100;
+    private static final int HUNDRED_SECONDS_IN_MILLISECONDS = 100000;
 
-    public static int TCC_CONFIRMED_STATUS = 2;
+    private static int TCC_CONFIRMED_STATUS = 2;
 
     @Autowired
     private LiveViewService liveViewService;

@@ -18,13 +18,14 @@ import java.util.LinkedList;
 
 import static org.junit.Assert.assertNull;
 import static testUtils.TestUtils.generateRandomHash;
+import static testUtils.TestUtils.generateRandomTrustScore;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = TransactionData.class)
 @Slf4j
 public class TransactionDataTest {
-    public static final String TRANSACTION_DESCRIPTION = "test";
-    public static final int SIZE_OF_HASH = 64;
+    private static final String TRANSACTION_DESCRIPTION = "test";
+    private static final int SIZE_OF_HASH = 64;
 
     @Test
     public void testGetRoundedSenderTrustScore() {
@@ -33,9 +34,9 @@ public class TransactionDataTest {
     }
 
     @Test
-    public void testAddToChildrenTransactions__noExceptionIsThrown()  {
+    public void testAddToChildrenTransactions__noExceptionIsThrown() {
         try {
-            TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 82.666, new Date(), TransactionType.Payment);
+            TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Payment);
             transactionData.addToChildrenTransactions(generateRandomHash(SIZE_OF_HASH));
         } catch (Exception e) {
             assertNull(e);
@@ -44,21 +45,21 @@ public class TransactionDataTest {
 
     @Test
     public void isSource_NullChildrenList_returnTrue() {
-        TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 83, new Date(), TransactionType.Payment);
+        TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Payment);
         Assert.assertTrue(transactionData.isSource());
     }
 
 
     @Test
     public void isSource_EmptyChildrenList_returnTrue() {
-        TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 83, new Date(), TransactionType.Payment);
+        TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Payment);
         transactionData.setChildrenTransactions(new LinkedList<>());
         Assert.assertTrue(transactionData.isSource());
     }
 
     @Test
     public void isSource_NonEmptyChildrenList_returnFalse() {
-        TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 83, new Date(), TransactionType.Payment);
+        TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Payment);
         transactionData.setChildrenTransactions(
                 Collections.singletonList(new Hash("TransactionData 1".getBytes())));
         Assert.assertFalse(transactionData.isSource());

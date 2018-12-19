@@ -1,6 +1,5 @@
 package unitTest;
 
-import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.services.SourceSelector;
@@ -26,9 +25,9 @@ import static testUtils.TestUtils.generateRandomHash;
 )
 @TestPropertySource(locations = "../test.properties")
 public class SourceSelectorTest {
-    public static final String TRANSACTION_DESCRIPTION = "test";
-    public static final int SECOND_IN_MILLISECOND = 1000;
-    public static final int SIZE_OF_HASH = 64;
+    private static final String TRANSACTION_DESCRIPTION = "test";
+    private static final int SECOND_IN_MILLISECOND = 1000;
+    private static final int SIZE_OF_HASH = 64;
 
     @Autowired
     private SourceSelector sourceSelector;

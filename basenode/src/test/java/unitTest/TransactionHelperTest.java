@@ -1,7 +1,9 @@
 package unitTest;
 
+import io.coti.basenode.crypto.DspConsensusCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.crypto.TransactionCrypto;
+import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.TransactionIndexes;
@@ -21,8 +23,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import testUtils.TestUtils;
-import io.coti.basenode.crypto.DspConsensusCrypto;
-import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -45,11 +45,13 @@ import static testUtils.TestUtils.*;
 )
 public class TransactionHelperTest {
 
-    public static final int SIZE_OF_HASH = 64;
-    
+    public static final String TRANSACTION_DESCRIPTION = "test";
+    private static final int SIZE_OF_HASH = 64;
+    private static final int TRUSTSCORE_NODE_RESULT_VALID_SIZE = 3;
+    private static final int TRUSTSCORE_NODE_RESULT_NOT_VALID_SIZE = 4;
+
     @Autowired
     private TransactionHelper transactionHelper;
-
     @MockBean
     private IBalanceService balanceService;
     @MockBean
@@ -75,13 +77,11 @@ public class TransactionHelperTest {
     @MockBean
     private LiveViewService LiveViewService;
 
-    public static final String TRANSACTION_DESCRIPTION = "test";
-
     @Test
     public void testStartHandleTransaction_noExceptionIsThrown() {
         try {
-            TransactionData transactionData1 = TestUtils.createTransactionWithSpecificHash(generateRandomHash(SIZE_OF_HASH));
-            TransactionData transactionData2 = TestUtils.createTransactionWithSpecificHash(generateRandomHash(SIZE_OF_HASH));
+            TransactionData transactionData1 = TestUtils.generateRandomTransaction();
+            TransactionData transactionData2 = TestUtils.generateRandomTransaction();
             transactionHelper.startHandleTransaction(transactionData1);
             transactionHelper.startHandleTransaction(transactionData2);
         } catch (Exception e) {
@@ -92,7 +92,7 @@ public class TransactionHelperTest {
     @Test
     public void testEndHandleTransaction_noExceptionIsThrown() {
         try {
-            TransactionData transactionData1 = TestUtils.createTransactionWithSpecificHash(generateRandomHash(SIZE_OF_HASH));
+            TransactionData transactionData1 = TestUtils.generateRandomTransaction();
             transactionHelper.startHandleTransaction(transactionData1);
             transactionHelper.endHandleTransaction(transactionData1);
             transactionHelper.endHandleTransaction(transactionData1);
@@ -103,7 +103,7 @@ public class TransactionHelperTest {
 
     @Test
     public void testValidateBaseTransactionAmounts_WhenAmountsEqual() {
-        List<BaseTransactionData> baseTransactions =  generateValidateBaseTransactionData();
+        List<BaseTransactionData> baseTransactions = generateValidateBaseTransactionData();
         Assert.assertTrue(transactionHelper.validateBaseTransactionAmounts(baseTransactions));
     }
 
@@ -118,13 +118,21 @@ public class TransactionHelperTest {
     }
 
     @Test
-    public void testValidateTransactionType() {
-        List<BaseTransactionData> baseTransactions =  generateValidateBaseTransactionData();
-        TransactionData TransactionData = new TransactionData(baseTransactions, generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 63, new Date(), TransactionType.Payment);
+    public void testValidateTransactionType_isValid() {
+        List<BaseTransactionData> baseTransactions = generateValidateBaseTransactionData();
+        TransactionData TransactionData = new TransactionData(baseTransactions, generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Payment);
         Assert.assertTrue(transactionHelper.validateTransactionType(TransactionData));
     }
 
-    private List<BaseTransactionData> generateValidateBaseTransactionData(){
+
+    @Test
+    public void testValidateTransactionType_isNotValid() {
+        List<BaseTransactionData> baseTransactions = generateValidateBaseTransactionData();
+        TransactionData TransactionData = new TransactionData(baseTransactions, generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Transfer);
+        Assert.assertFalse(transactionHelper.validateTransactionType(TransactionData));
+    }
+
+    private List<BaseTransactionData> generateValidateBaseTransactionData() {
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
         baseTransactions.add(generateFullNodeFeeData(generateRandomHash(SIZE_OF_HASH), 7));
         baseTransactions.add(generateNetworkFeeData(generateRandomHash(SIZE_OF_HASH), 5));
@@ -134,15 +142,64 @@ public class TransactionHelperTest {
         return baseTransactions;
     }
 
-    // no index
-//    @Test
-//    public void isConfirmed_whenTccConfirmedAndDspConfirmed_returnsTrue() {
-//        TransactionData tx = createTransaction();
-//        tx.setTrustChainConsensus(true);
-//        tx.setDspConsensusResult(new DspConsensusResult(new Hash("55")));
-//        tx.getDspConsensusResult().setDspConsensus(true);
-//        Assert.assertTrue(transactionHelper.isConfirmed(tx));
-//    }
+    //
+    @Test
+    public void testValidateBaseTransactionTrustScoreNodeResult_isValid() {
+        NetworkFeeData networkFeeData = (NetworkFeeData) generateNetworkFeeData(generateRandomHash(SIZE_OF_HASH), generateRandomCount());
+        networkFeeData.setNetworkFeeTrustScoreNodeResult(new ArrayList());
+        for (int i = 0; i < TRUSTSCORE_NODE_RESULT_VALID_SIZE; i++) {
+            networkFeeData.getNetworkFeeTrustScoreNodeResult().add(new TrustScoreNodeResultData(generateRandomHash(SIZE_OF_HASH), true));
+        }
+        Assert.assertTrue(transactionHelper.validateBaseTransactionTrustScoreNodeResult(networkFeeData));
+    }
+
+
+    @Test
+    public void testValidateBaseTransactionTrustScoreNodeResult_isNotValid() {
+        NetworkFeeData networkFeeData1 = (NetworkFeeData) generateNetworkFeeData(generateRandomHash(SIZE_OF_HASH), generateRandomCount());
+        networkFeeData1.setNetworkFeeTrustScoreNodeResult(new ArrayList());
+        for (int i = 0; i < TRUSTSCORE_NODE_RESULT_VALID_SIZE; i++) {
+            networkFeeData1.getNetworkFeeTrustScoreNodeResult().add(new TrustScoreNodeResultData(generateRandomHash(SIZE_OF_HASH), false));
+        }
+
+        NetworkFeeData networkFeeData2 = (NetworkFeeData) generateNetworkFeeData(generateRandomHash(SIZE_OF_HASH), generateRandomCount());
+        networkFeeData2.setNetworkFeeTrustScoreNodeResult(new ArrayList());
+        for (int i = 0; i < TRUSTSCORE_NODE_RESULT_NOT_VALID_SIZE; i++) {
+            networkFeeData2.getNetworkFeeTrustScoreNodeResult().add(new TrustScoreNodeResultData(generateRandomHash(SIZE_OF_HASH), true));
+        }
+
+        Assert.assertTrue(!transactionHelper.validateBaseTransactionTrustScoreNodeResult(networkFeeData1) &&
+                !transactionHelper.validateBaseTransactionTrustScoreNodeResult(networkFeeData2));
+    }
+
+    @Test
+    public void testIsTransactionHashProcessing() {
+        TransactionData transactionData = TestUtils.generateRandomTransaction();
+        transactionHelper.startHandleTransaction(transactionData);
+        transactionHelper.isTransactionHashProcessing(transactionData.getHash());
+    }
+
+    @Test
+    public void testSetTransactionStateToSaved_noExceptionIsThrown() {
+        try {
+            TransactionData transactionData = TestUtils.generateRandomTransaction();
+            transactionHelper.startHandleTransaction(transactionData);
+            transactionHelper.setTransactionStateToSaved(transactionData);
+        } catch (Exception e) {
+            assertNull(e);
+        }
+    }
+
+    @Test
+    public void testSetTransactionStateToFinished_noExceptionIsThrown() {
+        try {
+            TransactionData transactionData = TestUtils.generateRandomTransaction();
+            transactionHelper.startHandleTransaction(transactionData);
+            transactionHelper.setTransactionStateToFinished(transactionData);
+        } catch (Exception e) {
+            assertNull(e);
+        }
+    }
 
     @Test
     public void isConfirmed_whenTccConfirmedAndNotDspConfirmed_returnsFalse() {
@@ -163,7 +220,7 @@ public class TransactionHelperTest {
     }
 
     private TransactionData createTransaction() {
-        return TestUtils.createTransactionWithSpecificHash(generateRandomHash(SIZE_OF_HASH));
+        return TestUtils.generateRandomTransaction();
     }
 
 
@@ -175,5 +232,32 @@ public class TransactionHelperTest {
         long totalTransactionsAfterIncrement = transactionHelper.getTotalTransactions();
         Assert.assertTrue(totalTransactionsBeforeIncrement + 2 ==
                 totalTransactionsAfterIncrement);
+    }
+
+    @Test
+    public void testIncrementTotalTransactions() {
+        transactionHelper.incrementTotalTransactions();
+        Assert.assertTrue(transactionHelper.incrementTotalTransactions() == 2);
+    }
+
+    @Test
+    public void testAddNoneIndexedTransaction_noExceptionIsThrown() {
+        try {
+            TransactionData transactionData = TestUtils.generateRandomTransaction();
+            transactionHelper.addNoneIndexedTransaction(transactionData);
+        } catch (Exception e) {
+            assertNull(e);
+        }
+    }
+
+    @Test
+    public void testRemoveNoneIndexedTransaction_noExceptionIsThrown() {
+        try {
+            TransactionData transactionData = TestUtils.generateRandomTransaction();
+            transactionHelper.addNoneIndexedTransaction(transactionData);
+            transactionHelper.removeNoneIndexedTransaction(transactionData);
+        } catch (Exception e) {
+            assertNull(e);
+        }
     }
 }

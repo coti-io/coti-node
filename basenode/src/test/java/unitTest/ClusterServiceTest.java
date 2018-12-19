@@ -33,39 +33,27 @@ import static testUtils.TestUtils.generateRandomHash;
 @Slf4j
 public class ClusterServiceTest {
 
+    private static final int SIZE_OF_HASH = 64;
+    private static final Hash TRANSACTION_ONE_HASH = generateRandomHash(SIZE_OF_HASH);
+    private static final double TRANSACTION_ONE_TRUSTSCORE = 70;
+    private static final Hash TRANSACTION_TWO_HASH = generateRandomHash(SIZE_OF_HASH);
+    private static final double TRANSACTION_TWO_TRUSTSCORE = 83;
+    private static final Hash TRANSACTION_THREE_HASH = generateRandomHash(SIZE_OF_HASH);
+    private static final double TRANSACTION_THREE_TRUSTSCORE = 92;
+    private static final String TRANSACTION_DESCRIPTION = "test";
     @Autowired
     private ClusterService cluster;
-
     @MockBean
     private Transactions transactions;
-
     @MockBean
     private ISourceSelector sourceSelector;
-
     @MockBean
     private TccConfirmationService tccConfirmationService;
-
     @MockBean
     private LiveViewService liveViewService;
-
     @MockBean
     private IConfirmationService confirmationService;
-
     private TransactionData transactionData1, transactionData2, transactionData3;
-
-    public static final int SIZE_OF_HASH = 64;
-
-    public static final Hash TRANSACTION_ONE_HASH = generateRandomHash(SIZE_OF_HASH);
-    public static final double TRANSACTION_ONE_TRUSTSCORE = 70;
-
-    public static final Hash TRANSACTION_TWO_HASH = generateRandomHash(SIZE_OF_HASH);
-    public static final double TRANSACTION_TWO_TRUSTSCORE = 83;
-
-    public static final Hash TRANSACTION_THREE_HASH = generateRandomHash(SIZE_OF_HASH);
-    public static final double TRANSACTION_THREE_TRUSTSCORE = 92;
-
-    public static final String TRANSACTION_DESCRIPTION = "test";
-
 
     @Before
     public void setUpTransactions() {

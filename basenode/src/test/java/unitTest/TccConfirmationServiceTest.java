@@ -30,8 +30,8 @@ import static testUtils.TestUtils.generateRandomHash;
 @TestPropertySource(locations = "../test.properties")
 @Slf4j
 public class TccConfirmationServiceTest {
-    public static final String TRANSACTION_DESCRIPTION = "test";
-    public static final int SIZE_OF_HASH = 64;
+    private static final String TRANSACTION_DESCRIPTION = "test";
+    private static final int SIZE_OF_HASH = 64;
 
     @Autowired
     TccConfirmationService tccConfirmationService;
@@ -72,7 +72,6 @@ public class TccConfirmationServiceTest {
         }});
         transactionData4.setChildrenTransactions(new Vector<Hash>() {{
             add(transactionData1.getHash());
-            // add(TransactionData5.getHash()); //?
         }});
 
         this.hashToUnConfirmationTransactionsMapping = new ConcurrentHashMap<Hash, TransactionData>() {{

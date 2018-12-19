@@ -10,7 +10,10 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
@@ -27,24 +30,31 @@ public class TestUtils {
         return new Hash(hexa);
     }
 
-    public static Double getRandomDouble() {
-        Random r = new Random();
-        return 1 + (100 - 1) * r.nextDouble();
+    public static Double generateRandomTrustScore() {
+        return Math.random() * 100;
+    }
+
+    public static Double generateRandomCount() {
+        return Math.random() * Double.MAX_VALUE;
     }
 
     public static TransactionData createTransactionWithSpecificHash(Hash hash) {
         ArrayList<BaseTransactionData> baseTransactions = new ArrayList<BaseTransactionData>(
-                Arrays.asList(new InputBaseTransactionData
-                        (new Hash("caba14b7fe219b3da5dee0c29389c88e4d134333a2ee104152d6e9f7b673be9e0e28ca511d1ac749f46bea7f1ab25818f335ab9111a6c5eebe2f650974e12d1b7dccd4d7"),
-                                new BigDecimal(0),
-                                new Date())));
+                Arrays.asList(new InputBaseTransactionData(
+                        generateRandomHash(136),
+                        new BigDecimal(0),
+                        new Date())));
         TransactionData tx = new TransactionData(baseTransactions,
                 hash,
                 "test",
-                80.53,
+                generateRandomTrustScore(),
                 new Date(),
                 TransactionType.Payment);
         return tx;
+    }
+
+    public static TransactionData generateRandomTransaction() {
+        return createTransactionWithSpecificHash(generateRandomHash(64));
     }
 
     public static TransactionData createTransactionFromJson(String transactionJson) {
@@ -68,10 +78,10 @@ public class TestUtils {
 
 
     public static BaseTransactionData createInputBaseTransactionDataWithSpecificHashAndCount(Hash hash, double count) {
-            return new InputBaseTransactionData
-                    (hash,
-                            new BigDecimal(count),
-                            new Date());
+        return new InputBaseTransactionData
+                (hash,
+                        new BigDecimal(count),
+                        new Date());
     }
 
     public static OutputBaseTransactionData generateNetworkFeeData(Hash hash, double count) {
@@ -81,6 +91,7 @@ public class TestUtils {
                 new BigDecimal(3),
                 new Date());
     }
+
     public static BaseTransactionData generateFullNodeFeeData(Hash hash, double count) {
         return new FullNodeFeeData(hash,
                 new BigDecimal(count),
@@ -94,6 +105,7 @@ public class TestUtils {
                 new BigDecimal(1),
                 new Date());
     }
+
     public static BaseTransactionData generateRollingReserveData(Hash hash, double count) {
         return new RollingReserveData(hash,
                 new BigDecimal(count),
