@@ -4,12 +4,12 @@ import javax.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 
 import io.coti.basenode.model.Collection;
-import io.coti.financialserver.data.RollingReserveAddressData;
+import io.coti.financialserver.data.RollingReserveData;
 
 @Service
-public class RollingReserveAddresses extends Collection<RollingReserveAddressData> {
+public class RollingReserves extends Collection<RollingReserveData> {
 
-    public RollingReserveAddresses() {
+    public RollingReserves() {
     }
 
     @PostConstruct

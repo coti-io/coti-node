@@ -2,26 +2,26 @@ package io.coti.financialserver.crypto;
 
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.SignatureCrypto;
-import io.coti.financialserver.data.RollingReserveAddressData;
+import io.coti.financialserver.data.RollingReserveData;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
 
 @Service
-public class RollingReserveCrypto extends SignatureCrypto<RollingReserveAddressData> {
+public class RollingReserveCrypto extends SignatureCrypto<RollingReserveData> {
 
     @Override
-    public byte[] getMessageInBytes(RollingReserveAddressData rollingReserveAddressData) {
+    public byte[] getMessageInBytes(RollingReserveData rollingReserveData) {
 
         int byteBufferLength;
         byte[] merchantHashInBytes;
         byte[] rollingReserveAddressInBytes = null;
 
-        merchantHashInBytes = rollingReserveAddressData.getMerchantHash().getBytes();
+        merchantHashInBytes = rollingReserveData.getMerchantHash().getBytes();
         byteBufferLength = merchantHashInBytes.length;
 
-        if(rollingReserveAddressData.getRollingReserveAddress() != null) {
-            rollingReserveAddressInBytes = rollingReserveAddressData.getRollingReserveAddress().getBytes();
+        if(rollingReserveData.getRollingReserveAddress() != null) {
+            rollingReserveAddressInBytes = rollingReserveData.getRollingReserveAddress().getBytes();
             byteBufferLength += rollingReserveAddressInBytes.length;
         }
 
