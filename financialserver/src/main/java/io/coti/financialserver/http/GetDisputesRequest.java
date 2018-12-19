@@ -11,5 +11,5 @@ import javax.validation.constraints.NotNull;
 public class GetDisputesRequest extends Request {
 
     @NotNull
-    private @Valid GetDisputesData getDisputesData;
+    private @Valid GetDisputesData disputesData;
 }

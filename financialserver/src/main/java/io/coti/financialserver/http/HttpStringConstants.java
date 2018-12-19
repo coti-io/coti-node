@@ -6,12 +6,15 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
 
     public static final String SUCCESS = "Success";
 
+    public static final String DISPUTE_COMMENT_CREATE_UNAUTHORIZED = "Unauthorized dispute comment creation request";
+    public static final String DISPUTE_COMMENT_UNAUTHORIZED = "Unauthorized dispute comment request";
     public static final String DISPUTE_MERCHANT_NOT_FOUND = "Merchant not found";
     public static final String DISPUTE_NOT_FOUND = "Dispute not found";
     public static final String DISPUTE_UNAUTHORIZED = "Unauthorized dispute request";
+    public static final String DISPUTE_ITEM_NOT_FOUND = "Dispute item not found";
     public static final String DISPUTE_ITEMS_EXIST_ALREADY = "At least one of the dispute items is already was(or right now) in dispute";
     public static final String DISPUTE_TRANSACTION_NOT_FOUND = "Transaction hash not found";
-    public static final String DISPUTE_TRANSACTION_SENDER_INVALID = "Transaction doesn't belong to you";
+    public static final String DISPUTE_TRANSACTION_SENDER_INVALID = "Invalid transaction sender";
     public static final String OPEN_DISPUTE_IN_PROCESS_FOR_THIS_TRANSACTION = "Open dispute already in process for this transaction";
 
     public static final String DOCUMENT_NOT_FOUND = "Document not found";

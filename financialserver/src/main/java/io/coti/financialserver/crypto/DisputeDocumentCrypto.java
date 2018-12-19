@@ -8,7 +8,7 @@ import io.coti.basenode.crypto.SignatureCrypto;
 import io.coti.financialserver.data.DisputeDocumentData;
 
 @Service
-public class DocumentCrypto extends SignatureCrypto<DisputeDocumentData> {
+public class DisputeDocumentCrypto extends SignatureCrypto<DisputeDocumentData> {
 
     @Override
     public byte[] getMessageInBytes(DisputeDocumentData documentData) {

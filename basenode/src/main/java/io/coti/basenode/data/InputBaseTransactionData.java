@@ -9,7 +9,7 @@ import java.util.Date;
 @Data
 public class InputBaseTransactionData extends BaseTransactionData {
 
-    private InputBaseTransactionData() {
+    protected InputBaseTransactionData() {
         super();
     }
 

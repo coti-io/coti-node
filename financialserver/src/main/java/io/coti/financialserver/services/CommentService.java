@@ -1,21 +1,25 @@
 package io.coti.financialserver.services;
 
+import io.coti.basenode.data.Hash;
+import io.coti.basenode.http.Response;
+import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.financialserver.crypto.DisputeCommentCrypto;
+import io.coti.financialserver.crypto.GetDisputeItemDetailCrypto;
 import io.coti.financialserver.data.*;
+import io.coti.financialserver.http.GetCommentsRequest;
+import io.coti.financialserver.http.GetCommentsResponse;
+import io.coti.financialserver.http.NewCommentRequest;
+import io.coti.financialserver.http.NewCommentResponse;
+import io.coti.financialserver.http.data.GetDisputeItemDetailData;
+import io.coti.financialserver.model.DisputeComments;
+import io.coti.financialserver.model.Disputes;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.Response;
-import io.coti.financialserver.crypto.CommentCrypto;
-import io.coti.financialserver.http.NewCommentRequest;
-import io.coti.financialserver.http.GetCommentResponse;
-import io.coti.financialserver.http.NewCommentResponse;
-import io.coti.financialserver.model.DisputeComments;
-import io.coti.financialserver.model.Disputes;
-
+import java.util.ArrayList;
 import java.util.List;
 
 import static io.coti.financialserver.http.HttpStringConstants.*;
@@ -25,20 +29,22 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 public class CommentService {
 
     @Autowired
-    DisputeComments disputeComments;
-
+    private DisputeComments disputeComments;
     @Autowired
-    Disputes disputes;
+    private DisputeCommentCrypto disputeCommentCrypto;
+    @Autowired
+    private GetDisputeItemDetailCrypto getDisputeCommentsCrypto;
+    @Autowired
+    private Disputes disputes;
 
-    public ResponseEntity newComment(NewCommentRequest request) {
+    public ResponseEntity<IResponse> newComment(NewCommentRequest request) {
 
         DisputeCommentData disputeCommentData = request.getDisputeCommentData();
         disputeCommentData.init();
-        CommentCrypto commentCrypto = new CommentCrypto();
-        commentCrypto.signMessage(disputeCommentData);
+        disputeCommentCrypto.signMessage(disputeCommentData);
 
-        if ( !commentCrypto.verifySignature(disputeCommentData) ) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
+        if (!disputeCommentCrypto.verifySignature(disputeCommentData)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
 
         DisputeData disputeData = disputes.getByHash(disputeCommentData.getDisputeHash());
@@ -53,7 +59,7 @@ public class CommentService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(ITEM_NOT_FOUND, STATUS_ERROR));
         }
 
-        for(DisputeItemData disputeItemData : disputeItemsData) {
+        for (DisputeItemData disputeItemData : disputeItemsData) {
             if (disputeItemData.getStatus() != DisputeItemStatus.Recall) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ITEM_PASSED_RECALL_STATUS, STATUS_ERROR));
             }
@@ -62,14 +68,12 @@ public class CommentService {
         }
 
         ActionSide uploadSide;
-        if(disputeData.getConsumerHash().equals(disputeCommentData.getUserHash())) {
+        if (disputeData.getConsumerHash().equals(disputeCommentData.getUserHash())) {
             uploadSide = ActionSide.Consumer;
-        }
-        else if(disputeData.getMerchantHash().equals(disputeCommentData.getUserHash())) {
+        } else if (disputeData.getMerchantHash().equals(disputeCommentData.getUserHash())) {
             uploadSide = ActionSide.Merchant;
-        }
-        else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_COMMENT_CREATE_UNAUTHORIZED, STATUS_ERROR));
         }
 
         disputeCommentData.setCommentSide(uploadSide);
@@ -80,46 +84,35 @@ public class CommentService {
         return ResponseEntity.status(HttpStatus.OK).body(new NewCommentResponse(disputeCommentData.getHash()));
     }
 
-    public ResponseEntity getComment(NewCommentRequest request) {
+    public ResponseEntity<IResponse> getComments(GetCommentsRequest request) {
+        GetDisputeItemDetailData getDisputeCommentsData = request.getDisputeCommentsData();
+        getDisputeCommentsCrypto.signMessage(getDisputeCommentsData);
 
-        CommentCrypto disputeCrypto = new CommentCrypto();
-        disputeCrypto.signMessage(request.getDisputeCommentData());
-
-        if ( !disputeCrypto.verifySignature(request.getDisputeCommentData()) ) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
+        if (!getDisputeCommentsCrypto.verifySignature(getDisputeCommentsData)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
-        else {
-            DisputeCommentData disputeComment = disputeComments.getByHash(request.getDisputeCommentData().getHash());
 
-            if (disputeComment == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Response(COMMENT_NOT_FOUND, STATUS_ERROR));
-            } else if (!isAuthorized(request.getDisputeCommentData().getUserHash(),
-                    request.getDisputeCommentData().getDisputeHash(),
-                    request.getDisputeCommentData().getItemIds().iterator().next(),
-                    request.getDisputeCommentData().getHash())) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
-            }
-
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new GetCommentResponse(disputeComment));
+        DisputeData disputeData = disputes.getByHash(getDisputeCommentsData.getDisputeHash());
+        if (disputeData == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_NOT_FOUND, STATUS_ERROR));
         }
+        if (!isAuthorized(disputeData, getDisputeCommentsData.getUserHash())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_COMMENT_UNAUTHORIZED, STATUS_ERROR));
+        }
+        DisputeItemData disputeItemData = disputeData.getDisputeItems().stream().filter(disputeItem -> disputeItem.getId() == getDisputeCommentsData.getItemId()).findFirst().get();
+        if (disputeItemData == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ITEM_NOT_FOUND, STATUS_ERROR));
+        }
+        List<Hash> disputeCommentHashes = disputeItemData.getDisputeCommentHashes() != null ? disputeItemData.getDisputeCommentHashes() : new ArrayList<>();
+        List<DisputeCommentData> disputeCommentDataList = new ArrayList<>();
+        disputeCommentHashes.forEach(disputeCommentHash -> disputeCommentDataList.add(disputeComments.getByHash(disputeCommentHash)));
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new GetCommentsResponse(disputeCommentDataList));
+
     }
 
-    private Boolean isAuthorized(Hash userHash, Hash disputeHash, Long itemId, Hash commentHash) {
+    private Boolean isAuthorized(DisputeData disputeData, Hash userHash) {
 
-        DisputeData disputeData = disputes.getByHash(disputeHash);
-        if ( disputeData == null ) {
-            return false;
-        }
-
-        DisputeItemData disputeItemData = disputeData.getDisputeItem(itemId);
-        if ( disputeItemData == null ) {
-            return false;
-        }
-
-        if( !disputeItemData.getDisputeCommentHashes().contains(commentHash) ) {
-            return false;
-        }
-
-        return userHash.equals(disputeData.getConsumerHash()) || userHash.equals(disputeData.getMerchantHash());
+        return userHash.equals(disputeData.getConsumerHash()) || userHash.equals(disputeData.getMerchantHash()) || disputeData.getArbitratorHashes().contains(userHash);
     }
 }

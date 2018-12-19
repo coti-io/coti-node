@@ -1,5 +1,7 @@
 package io.coti.financialserver.controllers;
 
+import io.coti.financialserver.http.GetCommentsRequest;
+import io.coti.financialserver.http.data.GetDisputeItemDetailData;
 import lombok.extern.slf4j.Slf4j;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +26,8 @@ public class CommentController {
     }
 
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity getComment(@Valid @RequestBody NewCommentRequest request) {
+    public ResponseEntity getComments(@Valid @RequestBody GetCommentsRequest request) {
 
-        return commentService.getComment(request);
+        return commentService.getComments(request);
     }
 }

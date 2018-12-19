@@ -20,7 +20,7 @@ import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.http.Response;
-import io.coti.financialserver.crypto.DocumentCrypto;
+import io.coti.financialserver.crypto.DisputeDocumentCrypto;
 import io.coti.financialserver.data.*;
 import io.coti.financialserver.http.DocumentRequest;
 import io.coti.financialserver.http.NewDocumentResponse;
@@ -46,10 +46,10 @@ public class DocumentService {
 
         DisputeDocumentData disputeDocumentData = request.getDisputeDocumentData();
         disputeDocumentData.init();
-        DocumentCrypto documentCrypto = new DocumentCrypto();
-        documentCrypto.signMessage(disputeDocumentData);
+        DisputeDocumentCrypto disputeDocumentCrypto = new DisputeDocumentCrypto();
+        disputeDocumentCrypto.signMessage(disputeDocumentData);
 
-        if ( !documentCrypto.verifySignature(disputeDocumentData) ) {
+        if ( !disputeDocumentCrypto.verifySignature(disputeDocumentData) ) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
         }
 
@@ -99,10 +99,10 @@ public class DocumentService {
         disputeDocumentData.setUserHash(userHash);
         disputeDocumentData.setDisputeHash(disputeHash);
         disputeDocumentData.setSignature(userSignature);
-        DocumentCrypto documentCrypto = new DocumentCrypto();
-        documentCrypto.signMessage(disputeDocumentData);
+        DisputeDocumentCrypto disputeDocumentCrypto = new DisputeDocumentCrypto();
+        disputeDocumentCrypto.signMessage(disputeDocumentData);
 
-        if ( !documentCrypto.verifySignature(disputeDocumentData) ) {
+        if ( !disputeDocumentCrypto.verifySignature(disputeDocumentData) ) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
         }
 
@@ -136,7 +136,7 @@ public class DocumentService {
 
     public ResponseEntity getDocument(DocumentRequest request) {
 
-        DocumentCrypto disputeCrypto = new DocumentCrypto();
+        DisputeDocumentCrypto disputeCrypto = new DisputeDocumentCrypto();
         disputeCrypto.signMessage(request.getDisputeDocumentData());
 
         if ( !disputeCrypto.verifySignature(request.getDisputeDocumentData()) ) {
@@ -160,7 +160,7 @@ public class DocumentService {
 
     public void getDocumentFile(DocumentRequest request, HttpServletResponse response) throws IOException {
 
-        DocumentCrypto disputeCrypto = new DocumentCrypto();
+        DisputeDocumentCrypto disputeCrypto = new DisputeDocumentCrypto();
         disputeCrypto.signMessage(request.getDisputeDocumentData());
 
         if ( !disputeCrypto.verifySignature(request.getDisputeDocumentData()) ) {
