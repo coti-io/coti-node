@@ -16,7 +16,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 
-import static org.junit.Assert.assertNull;
 import static testUtils.TestUtils.generateRandomHash;
 import static testUtils.TestUtils.generateRandomTrustScore;
 
@@ -39,7 +38,7 @@ public class TransactionDataTest {
             TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Payment);
             transactionData.addToChildrenTransactions(generateRandomHash(SIZE_OF_HASH));
         } catch (Exception e) {
-            assertNull(e);
+            Assert.fail(e.getMessage());
         }
     }
 

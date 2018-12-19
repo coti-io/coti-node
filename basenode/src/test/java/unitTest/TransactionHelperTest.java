@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static org.junit.Assert.assertNull;
 import static testUtils.TestUtils.*;
 
 @TestPropertySource(locations = "../test.properties")
@@ -85,7 +84,7 @@ public class TransactionHelperTest {
             transactionHelper.startHandleTransaction(transactionData1);
             transactionHelper.startHandleTransaction(transactionData2);
         } catch (Exception e) {
-            assertNull(e);
+            Assert.fail(e.getMessage());
         }
     }
 
@@ -97,7 +96,7 @@ public class TransactionHelperTest {
             transactionHelper.endHandleTransaction(transactionData1);
             transactionHelper.endHandleTransaction(transactionData1);
         } catch (Exception e) {
-            assertNull(e);
+            Assert.fail(e.getMessage());
         }
     }
 
@@ -186,7 +185,7 @@ public class TransactionHelperTest {
             transactionHelper.startHandleTransaction(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
         } catch (Exception e) {
-            assertNull(e);
+            Assert.fail(e.getMessage());
         }
     }
 
@@ -197,7 +196,7 @@ public class TransactionHelperTest {
             transactionHelper.startHandleTransaction(transactionData);
             transactionHelper.setTransactionStateToFinished(transactionData);
         } catch (Exception e) {
-            assertNull(e);
+            Assert.fail(e.getMessage());
         }
     }
 
@@ -246,7 +245,7 @@ public class TransactionHelperTest {
             TransactionData transactionData = TestUtils.generateRandomTransaction();
             transactionHelper.addNoneIndexedTransaction(transactionData);
         } catch (Exception e) {
-            assertNull(e);
+            Assert.fail(e.getMessage());
         }
     }
 
@@ -257,7 +256,7 @@ public class TransactionHelperTest {
             transactionHelper.addNoneIndexedTransaction(transactionData);
             transactionHelper.removeNoneIndexedTransaction(transactionData);
         } catch (Exception e) {
-            assertNull(e);
+            Assert.fail(e.getMessage());
         }
     }
 }

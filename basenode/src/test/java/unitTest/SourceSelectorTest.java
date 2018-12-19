@@ -38,38 +38,12 @@ public class SourceSelectorTest {
     public void init() {
         now = new Date();
         newTransactions = new Vector();
-        TransactionData transactionData0 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 92, new Date(), TransactionType.Payment);
-        transactionData0.setAttachmentTime(new Date(now.getTime() - SECOND_IN_MILLISECOND));
-
-        TransactionData transactionData1 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 84, new Date(), TransactionType.Payment);
-        transactionData1.setAttachmentTime(new Date(now.getTime() - SECOND_IN_MILLISECOND));
-
-        TransactionData transactionData2 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 86, new Date(), TransactionType.Payment);
-        transactionData2.setAttachmentTime(new Date(now.getTime() - SECOND_IN_MILLISECOND));
-
-        TransactionData transactionData3 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 76, new Date(), TransactionType.Payment);
-        transactionData3.setAttachmentTime(new Date(now.getTime() - SECOND_IN_MILLISECOND));
-
-        TransactionData transactionData4 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 60, new Date(), TransactionType.Payment);
-        transactionData4.setAttachmentTime(new Date(now.getTime() - SECOND_IN_MILLISECOND));
-
-        TransactionData transactionData5 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 86, new Date(), TransactionType.Payment);
-        transactionData5.setAttachmentTime(new Date(now.getTime() - SECOND_IN_MILLISECOND));
-
-        TransactionData transactionData6 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 80, new Date(), TransactionType.Payment);
-        transactionData6.setAttachmentTime(new Date(now.getTime() - SECOND_IN_MILLISECOND));
-
-        TransactionData transactionData7 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 72, new Date(), TransactionType.Payment);
-        transactionData7.setAttachmentTime(new Date(now.getTime() - SECOND_IN_MILLISECOND));
-
-        newTransactions.add(transactionData0);
-        newTransactions.add(transactionData2);
-        newTransactions.add(transactionData2);
-        newTransactions.add(transactionData3);
-        newTransactions.add(transactionData4);
-        newTransactions.add(transactionData5);
-        newTransactions.add(transactionData6);
-        newTransactions.add(transactionData7);
+        double[] trustScores = new double[]{92, 84, 86, 76, 60, 86, 80, 72};
+        for (int i = 0; i < 8; i++) {
+            TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, trustScores[i], new Date(), TransactionType.Payment);
+            transactionData.setAttachmentTime(new Date(now.getTime() - SECOND_IN_MILLISECOND * i));
+            newTransactions.add(transactionData);
+        }
     }
 
     @Test

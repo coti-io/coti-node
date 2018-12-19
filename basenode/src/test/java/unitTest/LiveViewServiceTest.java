@@ -17,7 +17,6 @@ import testUtils.TestUtils;
 
 import java.util.Date;
 
-import static org.junit.Assert.assertNull;
 import static testUtils.TestUtils.generateRandomHash;
 
 @RunWith(SpringRunner.class)
@@ -45,7 +44,7 @@ public class LiveViewServiceTest {
         try {
             liveViewService.getFullGraph();
         } catch (Exception e) {
-            assertNull(e);
+            Assert.fail(e.getMessage());
         }
 
     }
@@ -55,7 +54,7 @@ public class LiveViewServiceTest {
         try {
             liveViewService.addNode(TestUtils.createTransactionWithSpecificHash(TRANSACTION_ONE_HASH));
         } catch (Exception e) {
-            assertNull(e);
+            Assert.fail(e.getMessage());
         }
     }
 

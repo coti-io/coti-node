@@ -32,56 +32,55 @@ import static testUtils.TestUtils.generateRandomHash;
 public class TccConfirmationServiceTest {
     private static final String TRANSACTION_DESCRIPTION = "test";
     private static final int SIZE_OF_HASH = 64;
-
     @Autowired
     TccConfirmationService tccConfirmationService;
+    private List<TransactionData> newTransactions;
     private ConcurrentHashMap<Hash, TransactionData> hashToUnConfirmationTransactionsMapping;
-    private TransactionData transactionData0, transactionData1, transactionData2, transactionData3, transactionData4, TransactionData5, transactionData6;
+
     @Value("${cluster.trust.chain.threshold}")
     private int threshold;
 
     @Before
     public void init() {
-        transactionData0 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 20, new Date(), TransactionType.Payment);
-        transactionData1 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 70, new Date(), TransactionType.Payment);
-        transactionData2 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 100, new Date(), TransactionType.Payment);
-        transactionData3 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 90, new Date(), TransactionType.Payment);
-        transactionData4 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 50, new Date(), TransactionType.Payment);
-        TransactionData5 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 70, new Date(), TransactionType.Payment);
-        transactionData6 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 60, new Date(), TransactionType.Payment);
+        newTransactions = new Vector();
+        double[] trustScores = new double[]{20, 70, 100, 90, 50, 70, 60};
+        for (int i = 0; i < 7; i++) {
+            TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, trustScores[i], new Date(), TransactionType.Payment);
+            newTransactions.add(transactionData);
+        }
 
-        transactionData0.setLeftParentHash(transactionData1.getHash());
-        transactionData0.setRightParentHash(transactionData2.getHash());
-        transactionData1.setLeftParentHash(transactionData3.getHash());
-        transactionData1.setRightParentHash(transactionData4.getHash());
-        transactionData2.setRightParentHash(TransactionData5.getHash());
-        transactionData6.setLeftParentHash(transactionData1.getHash());
+        newTransactions.get(0).setLeftParentHash(newTransactions.get(1).getHash());
+        newTransactions.get(0).setRightParentHash(newTransactions.get(2).getHash());
+        newTransactions.get(1).setLeftParentHash(newTransactions.get(3).getHash());
+        newTransactions.get(1).setRightParentHash(newTransactions.get(4).getHash());
+        newTransactions.get(2).setRightParentHash(newTransactions.get(5).getHash());
+        newTransactions.get(6).setLeftParentHash(newTransactions.get(1).getHash());
 
-        TransactionData5.setChildrenTransactions(new Vector<Hash>() {{
-            add(transactionData2.getHash());
+        newTransactions.get(5).setChildrenTransactions(new Vector<Hash>() {{
+            add(newTransactions.get(2).getHash());
         }});
-        transactionData2.setChildrenTransactions(new Vector<Hash>() {{
-            add(transactionData0.getHash());
+        newTransactions.get(2).setChildrenTransactions(new Vector<Hash>() {{
+            add(newTransactions.get(0).getHash());
         }});
-        transactionData1.setChildrenTransactions(new Vector<Hash>() {{
-            add(transactionData6.getHash());
-            add(transactionData0.getHash());
+        newTransactions.get(1).setChildrenTransactions(new Vector<Hash>() {{
+            add(newTransactions.get(6).getHash());
+            add(newTransactions.get(0).getHash());
         }});
-        transactionData3.setChildrenTransactions(new Vector<Hash>() {{
-            add(transactionData1.getHash());
+        newTransactions.get(3).setChildrenTransactions(new Vector<Hash>() {{
+            add(newTransactions.get(1).getHash());
         }});
-        transactionData4.setChildrenTransactions(new Vector<Hash>() {{
-            add(transactionData1.getHash());
+        newTransactions.get(4).setChildrenTransactions(new Vector<Hash>() {{
+            add(newTransactions.get(1).getHash());
         }});
 
         this.hashToUnConfirmationTransactionsMapping = new ConcurrentHashMap<Hash, TransactionData>() {{
-            put(transactionData0.getHash(), transactionData0);
-            put(transactionData1.getHash(), transactionData1);
-            put(transactionData2.getHash(), transactionData2);
-            put(transactionData3.getHash(), transactionData3);
-            put(transactionData4.getHash(), transactionData4);
-            put(TransactionData5.getHash(), TransactionData5);
-            put(transactionData6.getHash(), transactionData6);
+            put(newTransactions.get(0).getHash(), newTransactions.get(0));
+            put(newTransactions.get(1).getHash(), newTransactions.get(1));
+            put(newTransactions.get(2).getHash(), newTransactions.get(2));
+            put(newTransactions.get(3).getHash(), newTransactions.get(3));
+            put(newTransactions.get(4).getHash(), newTransactions.get(4));
+            put(newTransactions.get(5).getHash(), newTransactions.get(5));
+            put(newTransactions.get(6).getHash(), newTransactions.get(6));
         }};
 
         tccConfirmationService = new TccConfirmationService();
@@ -101,7 +100,7 @@ public class TccConfirmationServiceTest {
 
     @Test
     public void getTccConfirmedTransactions_whenTwoTransactionPassesTheThreshold() {
-        transactionData4.setSenderTrustScore(85);
+        newTransactions.get(4).setSenderTrustScore(85);
         List<TccInfo> allTransactions = tccConfirmationService.getTccConfirmedTransactions();
         // Because it's a test, the TccConfirmationService class sets threshold=0, so we will filter it here
         List<TccInfo> transactionConsensusConfirmed = allTransactions.stream()

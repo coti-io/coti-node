@@ -22,7 +22,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.*;
 
-import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static testUtils.TestUtils.generateRandomHash;
@@ -84,7 +83,7 @@ public class ClusterServiceTest {
             when(transactions.getByHash(TRANSACTION_ONE_HASH)).thenReturn(transactionData1);
             cluster.attachToCluster(transactionData3);
         } catch (Exception e) {
-            assertNull(e);
+            Assert.fail(e.getMessage());
         }
     }
 
@@ -116,7 +115,7 @@ public class ClusterServiceTest {
         try {
             cluster.finalizeInit();
         } catch (Exception e) {
-            assertNull(e);
+            Assert.fail(e.getMessage());
         }
     }
 
@@ -126,7 +125,7 @@ public class ClusterServiceTest {
             transactionData3 = new TransactionData(new ArrayList<>(), TRANSACTION_THREE_HASH, TRANSACTION_DESCRIPTION, 50, new Date(), TransactionType.Payment);
             cluster.addUnconfirmedTransaction(transactionData3);
         } catch (Exception e) {
-            assertNull(e);
+            Assert.fail(e.getMessage());
         }
     }
 
