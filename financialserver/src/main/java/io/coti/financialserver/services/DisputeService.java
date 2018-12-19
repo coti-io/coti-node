@@ -61,6 +61,8 @@ public class DisputeService {
     private ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
     @Autowired
     private ITransactionHelper transactionHelper;
+    @Autowired
+    private RollingReserveService rollingReserveService;
     private Map<ActionSide, Collection<UserDisputesData>> userDisputesCollectionMap = new EnumMap<>(ActionSide.class);
 
     @PostConstruct
@@ -292,7 +294,18 @@ public class DisputeService {
             }
         }
 
-        if (arbitratorsVotedOnAllItems) {
+        if(arbitratorsVotedOnAllItems) {
+
+            BigDecimal chargebackAmount = new BigDecimal(0);
+            for(DisputeItemData disputeItem : dispute.getDisputeItems()) {
+                if(disputeItem.getStatus() == DisputeItemStatus.AcceptedByArbitrators) {
+                    chargebackAmount = chargebackAmount.add(disputeItem.getPrice());
+                }
+            }
+
+            TransactionData transactionData = transactions.getByHash(dispute.getTransactionHash());
+
+            rollingReserveService.chargebackConsumer(dispute.getMerchantHash(), transactionData.getSenderHash(), chargebackAmount);
             dispute.setDisputeStatus(DisputeStatus.Closed);
         }
 
@@ -302,11 +315,13 @@ public class DisputeService {
     private void assignToArbitrators(DisputeData dispute) {
 
         int random;
+
+        List<String> arbitratorUserHashes = ARBITRATOR_USER_HASHES;
         for (int i = 0; i < COUNT_ARBITRATORS_PER_DISPUTE; i++) {
 
-            random = (int) ((Math.random() * ARBITRATOR_USER_HASHES.size()));
-            dispute.getArbitratorHashes().add(new Hash(ARBITRATOR_USER_HASHES.get(random)));
-            ARBITRATOR_USER_HASHES.remove(random);
+            random = (int) ((Math.random() * arbitratorUserHashes.size()));
+            dispute.getArbitratorHashes().add(new Hash(arbitratorUserHashes.get(random)));
+            arbitratorUserHashes.remove(random);
         }
     }
 

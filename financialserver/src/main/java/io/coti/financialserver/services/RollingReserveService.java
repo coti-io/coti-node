@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -157,5 +158,58 @@ public class RollingReserveService {
         rollingReserves.put(rollingReserveData);
 
         lastAddressIndex.incrementAndGet();
+    }
+
+    public Boolean chargebackConsumer(Hash merchantHash, Hash consumerAddress, BigDecimal amount) {
+
+        Hash dateHash;
+        RollingReserveReleaseDateData rollingReserveReleaseDateData;
+
+
+        RollingReserveData rollingReserveData = rollingReserves.getByHash(merchantHash);
+        List<Date> releaseDates = rollingReserveData.getReleaseDates();
+
+        BigDecimal remainingChargebackAmount = amount;
+        for(Date releaseDate : releaseDates) {
+            dateHash = new Hash(releaseDate.getTime());
+            rollingReserveReleaseDateData = rollingReserveReleaseDates.getByHash(dateHash);
+            RollingReserveReleaseStatus rollingReserveReleaseStatus = rollingReserveReleaseDateData.getRollingReserveReleaseStatusByMerchant().get(merchantHash);
+
+            if( rollingReserveReleaseStatus.getRemainingAmount().compareTo(remainingChargebackAmount) < 0 ) {
+
+                remainingChargebackAmount = remainingChargebackAmount.subtract(rollingReserveReleaseStatus.getRemainingAmount());
+                rollingReserveReleaseStatus.setReturnedAmount(rollingReserveReleaseStatus.getInitialAmount());
+                addConsumerToReceiver(rollingReserveReleaseStatus);
+
+                rollingReserveReleaseDateData.getRollingReserveReleaseStatusByMerchant().put(merchantHash, rollingReserveReleaseStatus);
+                rollingReserveReleaseDates.put(rollingReserveReleaseDateData);
+            }
+            else {
+
+                rollingReserveReleaseStatus.setReturnedAmount(rollingReserveReleaseStatus.getReturnedAmount().add(remainingChargebackAmount));
+                if(rollingReserveReleaseStatus.getInitialAmount().equals(rollingReserveReleaseStatus.getReturnedAmount())) {
+                    addConsumerToReceiver(rollingReserveReleaseStatus);
+                    rollingReserveData.getReleaseDates().remove(releaseDate);
+                }
+
+                rollingReserveReleaseDates.put(rollingReserveReleaseDateData);
+                break;
+
+            }
+        }
+
+        rollingReserves.put(rollingReserveData);
+        return true;
+    }
+
+    private void addConsumerToReceiver(RollingReserveReleaseStatus rollingReserveReleaseStatus) {
+
+        if(rollingReserveReleaseStatus.getRollingReserveReceiver() == RollingReserveReceiver.Merchant) {
+            rollingReserveReleaseStatus.setRollingReserveReceiver(RollingReserveReceiver.MerchantAndConsumer);
+        }
+
+        else {
+            rollingReserveReleaseStatus.setRollingReserveReceiver(RollingReserveReceiver.Consumer);
+        }
     }
 }
