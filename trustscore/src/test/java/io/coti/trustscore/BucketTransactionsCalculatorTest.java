@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.coti.trustscore.testUtils.GeneralUtilsFunctions.isTrustScoreValueValid;
-import static io.coti.trustscore.utils.MathCalculation.ifTwoNumbersAreEqualOrAlmostEqual;
 
 @ContextConfiguration(classes = {
         BucketTransactionsCalculator.class,

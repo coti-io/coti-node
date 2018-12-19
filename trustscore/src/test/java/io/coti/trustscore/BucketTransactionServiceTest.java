@@ -14,7 +14,6 @@ import io.coti.trustscore.model.BucketTransactionEvents;
 import io.coti.trustscore.services.BucketTransactionService;
 import io.coti.trustscore.services.calculationServices.BucketTransactionsCalculator;
 import io.coti.trustscore.testUtils.BucketUtil;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,9 +30,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.coti.trustscore.testUtils.BucketUtil.generateRulesDataObject;
-import static io.coti.trustscore.testUtils.GeneralUtilsFunctions.generateRandomHash;
-import static io.coti.trustscore.testUtils.GeneralUtilsFunctions.generateRandomTrustScore;
-import static io.coti.trustscore.testUtils.GeneralUtilsFunctions.isTrustScoreValueValid;
+import static io.coti.trustscore.testUtils.GeneralUtilsFunctions.*;
 import static io.coti.trustscore.utils.BucketBuilder.buildTransactionDataRequest;
 import static io.coti.trustscore.utils.DatesCalculation.*;
 import static io.coti.trustscore.utils.MathCalculation.ifTwoNumbersAreEqualOrAlmostEqual;
@@ -59,8 +56,8 @@ public class BucketTransactionServiceTest {
 
     @Before
     public void setUp() {
-        walletHash =  generateRandomHash(64);
-        nodeHash =  generateRandomHash(64);
+        walletHash = generateRandomHash(64);
+        nodeHash = generateRandomHash(64);
 
         BucketTransactionService.init(generateRulesDataObject());
         initialBucketTransactionEventsDataForWallet();
@@ -244,6 +241,4 @@ public class BucketTransactionServiceTest {
         // simulation of moving to a new day
         bucketTransactionEventsDataForNode.setLastUpdate(decreaseTodayDateByDays(numOfDays));
     }
-
-
 }

@@ -142,7 +142,7 @@ public class BucketBehaviorEventsServiceTest {
 
     private InsertEventRequest buildBehaviorEventsDataRequest(BehaviorEventsScoreType behaviorEventsScoreType) {
         InsertEventRequest insertEventRequest = new InsertEventRequest();
-        insertEventRequest.setUserHash( generateRandomHash(64));
+        insertEventRequest.setUserHash(generateRandomHash(64));
         insertEventRequest.eventType = EventType.BEHAVIOR_EVENT;
         insertEventRequest.setBehaviorEventsScoreType(behaviorEventsScoreType);
         insertEventRequest.uniqueIdentifier = generateRandomHash(72);
