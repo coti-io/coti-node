@@ -1,7 +1,6 @@
 package io.coti.trustscore.services;
 
 import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
-import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.database.RocksDBConnector;
 import io.coti.trustscore.crypto.TrustScoreCrypto;
@@ -14,8 +13,8 @@ import io.coti.trustscore.http.SetKycTrustScoreRequest;
 import io.coti.trustscore.model.BucketEvents;
 import io.coti.trustscore.model.TrustScores;
 import io.coti.trustscore.model.UserTypeOfUsers;
+import io.coti.trustscore.testUtils.DBInitializerService;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,6 +23,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import static io.coti.trustscore.testUtils.GeneralUtilsFunctions.generateRandomHash;
+import static io.coti.trustscore.testUtils.GeneralUtilsFunctions.generateRandomTrustScore;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -48,8 +49,8 @@ import static org.mockito.Mockito.when;
 
 public class NetworkFeeServiceTest {
 
-//    @Autowired
-//    private NetworkFeeService networkFeeService;
+    @Autowired
+    private NetworkFeeService networkFeeService;
 
     @Autowired
     private TrustScoreService trustScoreService;
@@ -83,22 +84,10 @@ public class NetworkFeeServiceTest {
                 )
         ).thenReturn(true);
         SetKycTrustScoreRequest setKycTrustScoreRequest = new SetKycTrustScoreRequest();
-        setKycTrustScoreRequest.userHash = new Hash("2d543b3026626fb4de4b6250ad10ffa7a8c1845927e005608700c3d52834502d8c80ebaae318184cd525352ed07694d6ed8ed2a8a2cf1171200e2108cbe53702");
+        setKycTrustScoreRequest.userHash = generateRandomHash(64);
         setKycTrustScoreRequest.signature = new SignatureData("r1", "s1");
-        setKycTrustScoreRequest.kycTrustScore = 4;
+        setKycTrustScoreRequest.kycTrustScore = generateRandomTrustScore();
         setKycTrustScoreRequest.userType = UserType.CONSUMER.toString();
         trustScoreService.setKycTrustScore(setKycTrustScoreRequest);
-
-    }
-
-    @Test
-    public void getNetworkFeeAmount() {
-
-//        GetNetworkFeeRequest getNetworkFeeRequest = new GetNetworkFeeRequest();
-//        getNetworkFeeRequest.userHash = new Hash("2d543b3026626fb4de4b6250ad10ffa7a8c1845927e005608700c3d52834502d8c80ebaae318184cd525352ed07694d6ed8ed2a8a2cf1171200e2108cbe53702");
-//        getNetworkFeeRequest.amount = 12;
-//        double rollingReserveNeededAmount =
-//                ((GetNetworkFeeResponse) networkFeeService.getNetworkFeeAmount(getNetworkFeeRequest).getBody()).getNetworkFeeAmount();
-//        Assert.assertTrue(rollingReserveNeededAmount == 6);
     }
 }

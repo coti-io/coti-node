@@ -1,4 +1,4 @@
-package io.coti.trustscore;
+package io.coti.trustscore.testUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.*;

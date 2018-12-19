@@ -1,4 +1,4 @@
-package io.coti.trustscore.services;
+package io.coti.trustscore.testUtils;
 
 import io.coti.trustscore.database.TrustScoreRocksDBConnector;
 import org.springframework.beans.factory.annotation.Autowired;

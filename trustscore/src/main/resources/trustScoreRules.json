@@ -4,21 +4,21 @@
       "type": "low",
       "limit": "10",
       "feeRate": "0.5",
-      "minRate": "0.01",
-      "maxRate": "40"
+      "minRate": "0.001",
+      "maxRate": "50"
     },
     {
       "type": "standard",
-      "feeRate": "0.4",
+      "feeRate": "0.1",
       "minRate": "0.001",
-      "maxRate": "20"
+      "maxRate": "10"
     },
     {
       "type": "high",
       "limit": "50",
-      "feeRate": "0.3",
-      "minRate": "0.0001",
-      "maxRate": "10"
+      "feeRate": "0.03",
+      "minRate": "0.001",
+      "maxRate": "3"
     }
   ],
   "user": [
@@ -120,7 +120,7 @@
             "contribution": "eventsNumber",
             "term": "360",
             "weight": "-2.0",
-            "decay": "exp(-ln(2)/90*T)",
+            "decay": "exp(-ln(2)/30*T)",
             "issue": "When the day changes? It should be different for different locations?",
             "name": "IncorrectTransaction"
           },
@@ -374,7 +374,7 @@
             "contribution": "eventsNumber",
             "term": "360",
             "weight": "-2.0",
-            "decay": "exp(-ln(2)/90*T)",
+            "decay": "exp(-ln(2)/30*T)",
             "issue": "When the day changes? It should be different for different locations?",
             "name": "IncorrectTransaction"
           },
@@ -500,7 +500,7 @@
             "contribution": "tailContribution + eventsNumber",
             "term": "360",
             "weight": "-2.0",
-            "decay": "exp(-ln(2)/90*T)",
+            "decay": "exp(-ln(2)/30*T)",
             "issue": "When the day changes? It should be different for different locations?",
             "name": "IncorrectTransaction"
           },

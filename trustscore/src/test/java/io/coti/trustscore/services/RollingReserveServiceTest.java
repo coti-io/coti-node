@@ -1,5 +1,6 @@
 package io.coti.trustscore.services;
 
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.database.RocksDBConnector;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,9 +19,6 @@ import org.springframework.test.context.junit4.SpringRunner;
         RocksDBConnector.class
 })
 public class RollingReserveServiceTest {
-
-//    @Autowired
-//    private RollingReserveService rollingReserveService;
 
     @MockBean
     private TrustScoreService trustScoreService;

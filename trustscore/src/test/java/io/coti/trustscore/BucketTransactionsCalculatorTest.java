@@ -8,6 +8,7 @@ import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.Events.BalanceCountAndContribution;
 import io.coti.trustscore.services.BucketTransactionService;
 import io.coti.trustscore.services.calculationServices.BucketTransactionsCalculator;
+import io.coti.trustscore.testUtils.BucketUtil;
 import io.coti.trustscore.utils.DatesCalculation;
 import org.junit.Assert;
 import org.junit.Before;
@@ -22,6 +23,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.coti.trustscore.testUtils.GeneralUtilsFunctions.isTrustScoreValueValid;
 import static io.coti.trustscore.utils.MathCalculation.ifTwoNumbersAreEqualOrAlmostEqual;
 
 @ContextConfiguration(classes = {
@@ -40,7 +42,6 @@ public class BucketTransactionsCalculatorTest {
         RulesData rulesData = BucketUtil.generateRulesDataObject();
         BucketTransactionsCalculator.init(rulesData);
     }
-
 
     @Test
     public void setBucketTransactionEventsDataTest() {
@@ -63,10 +64,10 @@ public class BucketTransactionsCalculatorTest {
 
         bucketTransactionsCalculator.decayScores(bucketTransactionEventsData);
 
-        Assert.assertTrue((ifTwoNumbersAreEqualOrAlmostEqual(bucketTransactionEventsData.getOldDateNumberOfTransactionsContribution(), 7.464263932294459)
-                && (ifTwoNumbersAreEqualOrAlmostEqual(bucketTransactionEventsData.getOldDateTurnOverContribution(), 4.665164957684037)))
+        Assert.assertTrue((isTrustScoreValueValid(bucketTransactionEventsData.getOldDateNumberOfTransactionsContribution())
+                && (isTrustScoreValueValid(bucketTransactionEventsData.getOldDateTurnOverContribution()))
                 && (bucketTransactionEventsData.getCurrentDateTurnOverContribution() == 0)
-                && (bucketTransactionEventsData.getCurrentDateTurnOver() == 0));
+                && (bucketTransactionEventsData.getCurrentDateTurnOver() == 0)));
     }
 
     @Test
@@ -84,9 +85,9 @@ public class BucketTransactionsCalculatorTest {
 
         bucketTransactionsCalculator.decayScores(bucketTransactionEventsData);
 
-        Assert.assertTrue((ifTwoNumbersAreEqualOrAlmostEqual(bucketTransactionEventsData.getOldMonthBalanceContribution(), 6.531230940757652))
-                && (ifTwoNumbersAreEqualOrAlmostEqual(bucketTransactionEventsData.getCurrentMonthDayToBalanceCountAndContribution()
-                .get(DatesCalculation.setDateOnBeginningOfDay(DatesCalculation.decreaseTodayDateByDays(0))).getContribution(), 7.930780428062863))
+        Assert.assertTrue((isTrustScoreValueValid(bucketTransactionEventsData.getOldMonthBalanceContribution()))
+                && (isTrustScoreValueValid(bucketTransactionEventsData.getCurrentMonthDayToBalanceCountAndContribution()
+                .get(DatesCalculation.setDateOnBeginningOfDay(DatesCalculation.decreaseTodayDateByDays(0))).getContribution()))
         );
     }
 
@@ -99,8 +100,8 @@ public class BucketTransactionsCalculatorTest {
         BucketTransactionsCalculator bucketTransactionsCalculator = new BucketTransactionsCalculator(bucketTransactionEventsData);
         bucketTransactionsCalculator.setCurrentDayTransactionsScores();
 
-        Assert.assertTrue((ifTwoNumbersAreEqualOrAlmostEqual(bucketTransactionEventsData.getCurrentDateNumberOfTransactionsContribution(), 0.021968710545463798))
-                && (ifTwoNumbersAreEqualOrAlmostEqual(bucketTransactionEventsData.getCurrentDateTurnOverContribution(), 0.0013732644979896087)));
+        Assert.assertTrue((isTrustScoreValueValid(bucketTransactionEventsData.getCurrentDateNumberOfTransactionsContribution()))
+                && (isTrustScoreValueValid(bucketTransactionEventsData.getCurrentDateTurnOverContribution())));
     }
 
     @Test
@@ -114,7 +115,7 @@ public class BucketTransactionsCalculatorTest {
         BucketTransactionsCalculator bucketTransactionsCalculator = new BucketTransactionsCalculator(bucketTransactionEventsData);
         bucketTransactionsCalculator.setCurrentDayTransactionsScores();
 
-        Assert.assertTrue((ifTwoNumbersAreEqualOrAlmostEqual(bucketTransactionEventsData.getCurrentDateNumberOfTransactionsContribution(), 0.00021972245))
-                && (ifTwoNumbersAreEqualOrAlmostEqual(bucketTransactionEventsData.getCurrentDateTurnOverContribution(), 0.00001373265)));
+        Assert.assertTrue((isTrustScoreValueValid(bucketTransactionEventsData.getCurrentDateNumberOfTransactionsContribution()))
+                && (isTrustScoreValueValid(bucketTransactionEventsData.getCurrentDateTurnOverContribution())));
     }
 }
