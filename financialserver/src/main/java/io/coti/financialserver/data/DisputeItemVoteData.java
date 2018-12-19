@@ -11,7 +11,6 @@ import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 @Data
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "type")
 public class DisputeItemVoteData implements Serializable, ISignable, ISignValidatable {
 
     private Hash userHash;
