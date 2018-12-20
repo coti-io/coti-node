@@ -14,6 +14,8 @@ import io.coti.basenode.services.CommunicationService;
 public class InitializationService {
     @Value("#{'${propagation.server.addresses}'.split(',')}")
     private List<String> propagationServerAddresses;
+    @Value("${propagation.port}")
+    private String propagationPort;
 
     @Autowired
     private BaseNodeInitializationService baseNodeInitializationService;
@@ -26,6 +28,7 @@ public class InitializationService {
     public void init() {
         communicationService.initSubscriber(propagationServerAddresses, NodeType.FinancialServer);
 
+        communicationService.initPropagator(propagationPort);
         baseNodeInitializationService.init();
     }
 }

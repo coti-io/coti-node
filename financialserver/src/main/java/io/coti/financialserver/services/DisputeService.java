@@ -165,7 +165,7 @@ public class DisputeService {
 
         Collection<UserDisputesData> userDisputesCollection = userDisputesCollectionMap.get(getDisputesData.getDisputeSide());
         if (userDisputesCollection == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_UNAUTHORIZED, STATUS_ERROR));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_UNAUTHORIZED, STATUS_ERROR));
         }
         UserDisputesData userDisputesData = userDisputesCollection.getByHash(getDisputesData.getUserHash());
 
@@ -305,7 +305,7 @@ public class DisputeService {
 
             TransactionData transactionData = transactions.getByHash(dispute.getTransactionHash());
 
-            rollingReserveService.chargebackConsumer(dispute.getMerchantHash(), transactionData.getSenderHash(), chargebackAmount);
+            rollingReserveService.chargebackConsumer(dispute, transactionData.getSenderHash(), chargebackAmount);
             dispute.setDisputeStatus(DisputeStatus.Closed);
         }
 

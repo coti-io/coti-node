@@ -35,6 +35,10 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String HEADER_CONTENT_TYPE = "Content-Type";
     public static final String S3_SUFFIX_METADATA_KEY = "x-amz-meta-suffix";
 
+    public static final String NOT_COTI_POOL = "Transaction receiver isn't Coti pool";
+    public static final String ALREADY_GOT_THIS_RECOURSE_CLAIM = "Recourse claim transaction already processed";
+    public static final String NOT_ENOUGH_MONEY_IN_TRANSACTION = "Not enough money in transaction";
+
     public static final String UNAUTHORIZED = "Unauthorized";
     public static final String INVALID_SIGNATURE = "Invalid signature";
     public static final String INTERNAL_ERROR = "Internal error";

@@ -1,6 +1,7 @@
 package io.coti.financialserver.http;
 
 import io.coti.basenode.data.Hash;
+import io.coti.financialserver.data.RecourseClaimData;
 import io.coti.financialserver.data.RollingReserveData;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.financialserver.data.RollingReserveReleaseDateData;
@@ -19,11 +20,12 @@ public class GetRollingReserveReleaseDatesResponse extends BaseResponse {
     String merchantHashString;
     String rollingReserveAddress;
     Map<String, RollingReserveReleaseStatus> rollingReserveReleases;
+    RecourseClaimData recourseClaimData;
 
     @Autowired
     RollingReserveReleaseDates rollingReserveReleaseDates;
 
-    public GetRollingReserveReleaseDatesResponse(RollingReserveData rollingReserveData, Map<String, RollingReserveReleaseStatus> rollingReserveReleases) {
+    public GetRollingReserveReleaseDatesResponse(RollingReserveData rollingReserveData, Map<String, RollingReserveReleaseStatus> rollingReserveReleases, RecourseClaimData recourseClaimData) {
         super();
 
         this.rollingReserveReleases = rollingReserveReleases;
@@ -31,5 +33,6 @@ public class GetRollingReserveReleaseDatesResponse extends BaseResponse {
         Hash merchantHash = rollingReserveData.getMerchantHash();
         merchantHashString = merchantHash.toString();
         rollingReserveAddress = rollingReserveData.getRollingReserveAddress().toString();
+        this.recourseClaimData = recourseClaimData;
     }
 }
