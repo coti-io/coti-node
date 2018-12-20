@@ -1,6 +1,5 @@
 package io.coti.financialserver.data;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.ISignValidatable;

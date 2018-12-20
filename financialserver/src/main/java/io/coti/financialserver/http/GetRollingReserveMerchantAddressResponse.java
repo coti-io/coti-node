@@ -7,10 +7,10 @@ import lombok.Data;
 @Data
 public class GetRollingReserveMerchantAddressResponse extends BaseResponse {
 
-    private String adressHash;
+    private String addressHash;
 
-    public GetRollingReserveMerchantAddressResponse(Hash adressHash) {
+    public GetRollingReserveMerchantAddressResponse(Hash addressHash) {
         super();
-        this.adressHash = adressHash.toString();
+        this.addressHash = addressHash.toString();
     }
 }

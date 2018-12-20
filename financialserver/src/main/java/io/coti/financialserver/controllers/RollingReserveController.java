@@ -1,6 +1,7 @@
 package io.coti.financialserver.controllers;
 
 import io.coti.financialserver.http.GetRollingReserveMerchantAddressRequest;
+import io.coti.financialserver.http.RecourseClaimRequest;
 import io.coti.financialserver.services.RollingReserveService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,5 +31,11 @@ public class RollingReserveController {
     public ResponseEntity getRollingReserveRelease(@Valid @RequestBody GetRollingReserveMerchantAddressRequest request) {
 
         return rollingReserveService.getRollingReserveRelease(request);
+    }
+
+    @RequestMapping(path = "/recourseClaim", method = RequestMethod.POST)
+    public ResponseEntity recourseClaim(@Valid @RequestBody RecourseClaimRequest request) {
+
+        return rollingReserveService.recourseClaim(request);
     }
 }
