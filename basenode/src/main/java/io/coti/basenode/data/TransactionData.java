@@ -157,6 +157,16 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
         return null;
     }
 
+    public Hash getReceiverBaseTransactionAddressHash() {
+
+        for (BaseTransactionData baseTransactionData : baseTransactions) {
+            if (baseTransactionData instanceof ReceiverBaseTransactionData) {
+                return baseTransactionData.getAddressHash();
+            }
+        }
+        return null;
+    }
+
     @Override
     public int compareTo(TransactionData other) {
         return Double.compare(this.senderTrustScore, other.senderTrustScore);
