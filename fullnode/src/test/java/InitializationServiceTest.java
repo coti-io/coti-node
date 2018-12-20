@@ -1,5 +1,3 @@
-package fullnode.unitTests;
-
 import io.coti.basenode.crypto.DspConsensusCrypto;
 import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
 import io.coti.basenode.model.TransactionIndexes;
