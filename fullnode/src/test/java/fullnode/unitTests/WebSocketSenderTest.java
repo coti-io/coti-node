@@ -1,3 +1,5 @@
+package fullnode.unitTests;
+
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.data.TransactionStatus;

@@ -1,3 +1,5 @@
+package fullnode.unitTests;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.*;
 import io.coti.fullnode.http.AddTransactionRequest;
@@ -73,4 +75,3 @@ public class TestUtils {
     }
 
 }
-
