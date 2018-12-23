@@ -17,10 +17,11 @@ public class RollingReserveReleaseStatus implements Serializable {
     private List<Hash> returnTransactions;
     private RollingReserveReceiver rollingReserveReceiver;
 
-    public RollingReserveReleaseStatus() {
-        paymentTransactions = new ArrayList<>();
-        initialAmount = new BigDecimal(0);
-        returnedAmount = new BigDecimal(0);
+    public RollingReserveReleaseStatus(BigDecimal initialAmount, Hash paymentTransaction) {
+        this.paymentTransactions = new ArrayList<>();
+        this.initialAmount = initialAmount;
+        this.returnedAmount = new BigDecimal(0);
+        this.paymentTransactions.add(paymentTransaction);
     }
 
     public void addToInitialAmount(BigDecimal amount) {

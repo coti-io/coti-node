@@ -16,8 +16,9 @@ public class RollingReserveReleaseDateData implements IEntity {
     private Date date;
     private Map<Hash, RollingReserveReleaseStatus> rollingReserveReleaseStatusByMerchant;
 
-    public RollingReserveReleaseDateData() {
+    public RollingReserveReleaseDateData(Date date) {
         rollingReserveReleaseStatusByMerchant = new HashMap<>();
+        this.date = date;
     }
 
     public void setDate(Date date) {

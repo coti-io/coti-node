@@ -121,7 +121,7 @@ public class DocumentService {
         return ResponseEntity.status(HttpStatus.OK).body(new NewDocumentResponse(disputeDocumentData.getHash()));
     }
 
-    public ResponseEntity getDocumentNames(GetDocumentNamesRequest request) {
+    public ResponseEntity<IResponse> getDocumentNames(GetDocumentNamesRequest request) {
         GetDisputeItemDetailData getDisputeDocumentNamesData = request.getDisputeDocumentNamesData();
 
         if (!getDisputeDocumentNamesCrypto.verifySignature(getDisputeDocumentNamesData)) {
@@ -139,6 +139,7 @@ public class DocumentService {
         if (disputeItemData == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ITEM_NOT_FOUND, STATUS_ERROR));
         }
+
         List<Hash> disputeDocumentHashes = disputeItemData.getDisputeDocumentHashes() != null ? disputeItemData.getDisputeDocumentHashes() : new ArrayList<>();
         List<DisputeDocumentData> disputeDocumentDataList = new ArrayList<>();
         disputeDocumentHashes.forEach(disputeDocumentHash -> disputeDocumentDataList.add(disputeDocuments.getByHash(disputeDocumentHash)));
@@ -184,7 +185,5 @@ public class DocumentService {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.getWriter().write(DOCUMENT_NOT_FOUND);
         }
-
-
     }
 }
