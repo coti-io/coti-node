@@ -259,7 +259,16 @@ public class TrustScoreService {
     }
 
     public synchronized void addTransactionToTsCalculation(TransactionData transactionData) {
-        TrustScoreData trustScoreData = trustScores.getByHash(transactionData.getSenderHash());
+        TrustScoreData trustScoreData;
+
+        try
+        {
+            trustScoreData = trustScores.getByHash(transactionData.getSenderHash());
+        }
+        catch (Exception e){
+            return;
+        }
+
         BucketEventData bucketEventData
                 = (BucketEventData) bucketEvents.getByHash(getBucketHashByUserHashAndEventType(transactionData.getSenderHash(), EventType.TRANSACTION));
         if (bucketEventData.getEventDataHashToEventDataMap().get(transactionData.getHash()) != null) {
