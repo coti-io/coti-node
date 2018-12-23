@@ -14,7 +14,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
-        if (transactionData.getDspConsensusResult() != null && transactionData.getDspConsensusResult().isDspConsensus()) {
+        if (transactionData.getDspConsensusResult() != null && transactionData.getDspConsensusResult().isDspConsensus() && !transactionData.isZeroSpend()) {
             trustScoreService.addTransactionToTsCalculation(transactionData);
         }
     }
