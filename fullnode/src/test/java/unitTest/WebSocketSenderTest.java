@@ -1,3 +1,5 @@
+package unitTest;
+
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.data.TransactionStatus;
@@ -8,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import testUtils.TestUtils;
 
@@ -15,6 +18,7 @@ import java.math.BigDecimal;
 
 import static org.junit.Assert.assertNull;
 
+@TestPropertySource(locations = "../test.properties")
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = {WebSocketSender.class})
 public class WebSocketSenderTest {

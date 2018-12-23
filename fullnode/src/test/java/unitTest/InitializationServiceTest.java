@@ -1,3 +1,5 @@
+package unitTest;
+
 import io.coti.basenode.crypto.DspConsensusCrypto;
 import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
 import io.coti.basenode.model.TransactionIndexes;
@@ -23,7 +25,7 @@ import org.springframework.test.context.junit4.SpringRunner;
         WebSocketSender.class
 })
 @RunWith(SpringRunner.class)
-@TestPropertySource(locations = "../../test.properties")
+@TestPropertySource(locations = "../test.properties")
 @Slf4j
 public class InitializationServiceTest {
 
@@ -67,7 +69,7 @@ public class InitializationServiceTest {
 
     @Test
     public void testInit() {
-        // calls InitializationService  @PostConstruct function - init()
+        initializationService.init();
     }
 
 }

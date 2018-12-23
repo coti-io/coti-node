@@ -57,25 +57,6 @@ public class TestUtils {
         return createTransactionWithSpecificHash(generateRandomHash(64));
     }
 
-    public static TransactionData createTransactionFromJson(String transactionJson) {
-        AddTransactionRequest addTransactionRequest = null;
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            addTransactionRequest =
-                    mapper.readValue(transactionJson, AddTransactionRequest.class);
-        } catch (IOException e) {
-            log.error("Error when create trx from JSON" + e);
-        }
-        return
-                new TransactionData(
-                        addTransactionRequest.baseTransactions,
-                        addTransactionRequest.hash,
-                        addTransactionRequest.transactionDescription,
-                        addTransactionRequest.trustScoreResults.get(0).getTrustScore(),
-                        addTransactionRequest.createTime,
-                        TransactionType.Payment);
-    }
-
 
     public static BaseTransactionData createInputBaseTransactionDataWithSpecificHashAndCount(Hash hash, double count) {
         return new InputBaseTransactionData
@@ -116,20 +97,4 @@ public class TestUtils {
 
 }
 
-class AddTransactionRequest extends Request {
-    @NotEmpty
-    public List<@Valid BaseTransactionData> baseTransactions;
-    @NotNull
-    public Hash hash;
-    @NotEmpty
-    public String transactionDescription;
-    @NotNull
-    public Date createTime;
-    @NotEmpty
-    public List<@Valid TransactionTrustScoreData> trustScoreResults;
-    @NotNull
-    public Hash senderHash;
-    @NotNull
-    public TransactionType type;
-}
 

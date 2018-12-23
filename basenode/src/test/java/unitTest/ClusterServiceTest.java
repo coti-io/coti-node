@@ -56,7 +56,7 @@ public class ClusterServiceTest {
 
     @Before
     public void setUpTransactions() {
-
+        log.info("Starting  - " + this.getClass().getSimpleName());
         transactionData1 = new TransactionData(new ArrayList<>(), TRANSACTION_ONE_HASH, TRANSACTION_DESCRIPTION, TRANSACTION_ONE_TRUSTSCORE, new Date(), TransactionType.Payment);
         List<Hash> hashChildren = new Vector<>();
         transactionData1.setChildrenTransactions(hashChildren);

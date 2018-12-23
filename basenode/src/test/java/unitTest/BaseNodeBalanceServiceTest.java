@@ -15,30 +15,33 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @TestPropertySource(locations = "../test.properties")
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = {BaseNodeBalanceService.class,
-        RocksDBConnector.class}
-)
+//@ContextConfiguration(classes = {BaseNodeBalanceService.class,
+//        RocksDBConnector.class}
+//)
 @Slf4j
 public class BaseNodeBalanceServiceTest {
     private static boolean setUpIsDone = false;
+//
+//    @Autowired
+//    private BaseNodeBalanceService baseNodeBalanceService;
 
-    @Autowired
-    private BaseNodeBalanceService baseNodeBalanceService;
-
-    @Autowired
-    private IDatabaseConnector rocksDBConnector;
+//    @Autowired
+//    private IDatabaseConnector rocksDBConnector;
+//
+//    @Before
+//    public void setUp() throws Exception {
+//        if (setUpIsDone) {
+//            return;
+//        }
+//        rocksDBConnector.init();
+//        baseNodeBalanceService.init();
+//        setUpIsDone = true;
+//    }
 
     @Before
-    public void setUp() throws Exception {
-        if (setUpIsDone) {
-            return;
-        }
-        rocksDBConnector.init();
-        baseNodeBalanceService.init();
-        setUpIsDone = true;
+    public void init(){
+        log.info("Starting  - " + this.getClass().getSimpleName());
     }
-
-
     @Test
     public void checkBalancesAndAddToPreBalance() {
     }

@@ -2,7 +2,6 @@ package testUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.*;
-import io.coti.fullnode.http.AddTransactionRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -10,7 +9,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
@@ -23,7 +21,7 @@ public class TestUtils {
     public static TransactionData createTransactionWithSpecificHash(Hash hash) {
         ArrayList<BaseTransactionData> baseTransactions = new ArrayList<BaseTransactionData>(
                 Arrays.asList(new InputBaseTransactionData
-                        (new Hash("caba14b7fe219b3da5dee0c29389c88e4d134333a2ee104152d6e9f7b673be9e0e28ca511d1ac749f46bea7f1ab25818f335ab9111a6c5eebe2f650974e12d1b7dccd4d7"),
+                        (generateRandomHash(64),
                                 new BigDecimal(0),
                                 new Date())));
         TransactionData tx = new TransactionData(baseTransactions,
@@ -45,24 +43,6 @@ public class TestUtils {
         return new Hash(hexa);
     }
 
-    public static TransactionData createTransactionFromJson(String transactionJson)  {
-        AddTransactionRequest addTransactionRequest = null;
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            addTransactionRequest =
-                    mapper.readValue(transactionJson, AddTransactionRequest.class);
-        } catch (IOException e) {
-            log.error("Error when create trx from JSON" +e);
-        }
-        return
-                new TransactionData(
-                        addTransactionRequest.baseTransactions,
-                        addTransactionRequest.hash,
-                        addTransactionRequest.transactionDescription,
-                        addTransactionRequest.trustScoreResults.get(0).getTrustScore(),
-                        addTransactionRequest.createTime,
-                        TransactionType.Payment);
-    }
 
     public static BaseTransactionData createBaseTransactionDataWithSpecificHash(Hash hash){
         return new InputBaseTransactionData

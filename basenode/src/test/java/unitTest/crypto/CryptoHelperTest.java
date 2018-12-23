@@ -3,8 +3,10 @@ package unitTest.crypto;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
+import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.security.NoSuchAlgorithmException;
@@ -12,10 +14,13 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 
-
+@Slf4j
 public class CryptoHelperTest {
 
-
+    @Before
+   public void init(){
+        log.info("Starting  - " + this.getClass().getSimpleName());
+    }
 //    @Test
 //    public void CreateAndSignTransaction() {
 //

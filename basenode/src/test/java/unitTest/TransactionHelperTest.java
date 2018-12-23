@@ -14,7 +14,9 @@ import io.coti.basenode.services.TransactionIndexService;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.basenode.services.interfaces.IConfirmationService;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +44,7 @@ import static testUtils.TestUtils.*;
                 TransactionIndexService.class,
         }
 )
+@Slf4j
 public class TransactionHelperTest {
 
     public static final String TRANSACTION_DESCRIPTION = "test";
@@ -75,6 +78,11 @@ public class TransactionHelperTest {
     private NodeCryptoHelper nodeCryptoHelper;
     @MockBean
     private LiveViewService LiveViewService;
+
+    @Before
+    public void init(){
+        log.info("Starting  - " + this.getClass().getSimpleName());
+    }
 
     @Test
     public void testStartHandleTransaction_noExceptionIsThrown() {

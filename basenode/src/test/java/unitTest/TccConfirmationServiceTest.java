@@ -42,6 +42,7 @@ public class TccConfirmationServiceTest {
 
     @Before
     public void init() {
+        log.info("Starting  - " + this.getClass().getSimpleName());
         newTransactions = new Vector();
         double[] trustScores = new double[]{20, 70, 100, 90, 50, 70, 60};
         for (int i = 0; i < 7; i++) {

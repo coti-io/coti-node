@@ -1,17 +1,13 @@
+package unitTest;
+
+import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.ISender;
+import io.coti.basenode.data.AddressData;
 import io.coti.basenode.database.Interfaces.IDatabaseConnector;
 import io.coti.basenode.database.RocksDBConnector;
 import io.coti.basenode.model.Addresses;
-import io.coti.basenode.services.BaseNodeAddressService;
-import io.coti.fullnode.services.AddressService;
-import io.coti.fullnode.services.WebSocketSender;
+import io.coti.dspnode.services.AddressService;
 import lombok.extern.slf4j.Slf4j;
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.asset.EmptyAsset;
-import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,7 +17,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.junit.Assert.*;
+import java.util.Date;
+
 import static testUtils.TestUtils.generateRandomHash;
 
 @TestPropertySource(locations = "../test.properties")
@@ -32,6 +29,7 @@ import static testUtils.TestUtils.generateRandomHash;
 )
 @Slf4j
 public class AddressServiceTest {
+
     private static boolean setUpIsDone = false;
 
     @Autowired
@@ -41,27 +39,28 @@ public class AddressServiceTest {
     private IDatabaseConnector rocksDBConnector;
 
     @MockBean
-    private WebSocketSender webSocketSender;
+    private ISender sender;
 
     @MockBean
-    private ISender sender;
+    private IPropagationPublisher propagationPublisher;
 
     @Before
     public void init() {
         if (setUpIsDone) {
             return;
         }
+
         try {
-            setUpIsDone = true;
             rocksDBConnector.init();
         } catch (Exception e) {
             e.printStackTrace();
         }
+        setUpIsDone = true;
     }
+
     @Test
-    public void addNewAddress() {
-        boolean isAddressNewInDb = addressService.addNewAddress(generateRandomHash(64));
-        Assert.assertTrue(isAddressNewInDb );
+    public void handleNewAddressFromFullNode() {
+        addressService.handleNewAddressFromFullNode(new AddressData(generateRandomHash(64)));
     }
 
 }

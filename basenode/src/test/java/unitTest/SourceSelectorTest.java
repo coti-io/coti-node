@@ -3,6 +3,7 @@ package unitTest;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.services.SourceSelector;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,6 +25,7 @@ import static testUtils.TestUtils.generateRandomHash;
         classes = SourceSelector.class
 )
 @TestPropertySource(locations = "../test.properties")
+@Slf4j
 public class SourceSelectorTest {
     private static final String TRANSACTION_DESCRIPTION = "test";
     private static final int SECOND_IN_MILLISECOND = 1000;
@@ -36,6 +38,8 @@ public class SourceSelectorTest {
 
     @Before
     public void init() {
+        log.info("Starting  - " + this.getClass().getSimpleName());
+
         now = new Date();
         newTransactions = new Vector();
         double[] trustScores = new double[]{92, 84, 86, 76, 60, 86, 80, 72};

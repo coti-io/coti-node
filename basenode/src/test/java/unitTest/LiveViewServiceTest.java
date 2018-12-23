@@ -5,7 +5,9 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NodeData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.services.LiveView.LiveViewService;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,7 @@ import static testUtils.TestUtils.generateRandomHash;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = {LiveViewService.class})
+@Slf4j
 public class LiveViewServiceTest {
     private static final int SIZE_OF_HASH = 64;
 
@@ -38,6 +41,11 @@ public class LiveViewServiceTest {
 
     @MockBean
     private SimpMessagingTemplate messagingSender;
+
+    @Before
+    public void init(){
+        log.info("Starting  - " + this.getClass().getSimpleName());
+    }
 
     @Test
     public void getFullGraph_noExceptionIsThrown() {

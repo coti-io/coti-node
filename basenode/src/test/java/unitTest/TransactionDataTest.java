@@ -5,6 +5,7 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
@@ -25,6 +26,12 @@ import static testUtils.TestUtils.generateRandomTrustScore;
 public class TransactionDataTest {
     private static final String TRANSACTION_DESCRIPTION = "test";
     private static final int SIZE_OF_HASH = 64;
+
+    @Before
+    public void init(){
+        log.info("Starting  - " + this.getClass().getSimpleName());
+    }
+
 
     @Test
     public void testGetRoundedSenderTrustScore() {
