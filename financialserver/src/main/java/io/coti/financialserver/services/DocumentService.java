@@ -137,7 +137,7 @@ public class DocumentService {
         if (!disputeService.isAuthorizedDisputeDetailDisplay(disputeData, getDisputeDocumentNamesData.getUserHash())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_DOCUMENT_UNAUTHORIZED, STATUS_ERROR));
         }
-        DisputeItemData disputeItemData = disputeData.getDisputeItems().stream().filter(disputeItem -> disputeItem.getId() == getDisputeDocumentNamesData.getItemId()).findFirst().get();
+        DisputeItemData disputeItemData = disputeData.getDisputeItems().stream().filter(disputeItem -> disputeItem.getId().equals(getDisputeDocumentNamesData.getItemId())).findFirst().get();
         if (disputeItemData == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ITEM_NOT_FOUND, STATUS_ERROR));
         }

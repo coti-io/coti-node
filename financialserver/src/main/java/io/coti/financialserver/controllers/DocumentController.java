@@ -28,13 +28,13 @@ public class DocumentController {
     }
 
     @RequestMapping(path = "/names",method = RequestMethod.POST)
-    public ResponseEntity<IResponse> getDocumentNames(@Valid GetDocumentNamesRequest request) {
+    public ResponseEntity<IResponse> getDocumentNames(@RequestBody @Valid GetDocumentNamesRequest request) {
 
         return documentService.getDocumentNames(request);
     }
 
     @RequestMapping(path= "/download", method = RequestMethod.POST)
-    public void getDocumentFile(@Valid @RequestBody GetDocumentFileRequest request, HttpServletResponse response) throws IOException {
+    public void getDocumentFile(@RequestBody @Valid GetDocumentFileRequest request, HttpServletResponse response) throws IOException {
 
         documentService.getDocumentFile(request, response);
         response.flushBuffer();

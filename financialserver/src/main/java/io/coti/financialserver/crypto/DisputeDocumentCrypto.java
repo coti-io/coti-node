@@ -1,11 +1,12 @@
 package io.coti.financialserver.crypto;
 
-import java.nio.ByteBuffer;
-import org.springframework.stereotype.Service;
-
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.SignatureCrypto;
 import io.coti.financialserver.data.DisputeDocumentData;
+import org.springframework.stereotype.Service;
+
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 @Service
 public class DisputeDocumentCrypto extends SignatureCrypto<DisputeDocumentData> {
@@ -13,43 +14,20 @@ public class DisputeDocumentCrypto extends SignatureCrypto<DisputeDocumentData> 
     @Override
     public byte[] getMessageInBytes(DisputeDocumentData documentData) {
 
-        int byteBufferLength;
-        byte[] userHashInBytes;
-        byte[] disputeHashInBytes;
-        byte[] documentHashInBytes;
-        byte[] descriptionInBytes = null;
-        byte[] itemIdsInBytes = null;
-
-        userHashInBytes = documentData.getUserHash().getBytes();
-        byteBufferLength = userHashInBytes.length;
-        disputeHashInBytes = documentData.getDisputeHash().getBytes();
-        byteBufferLength += disputeHashInBytes.length;
-        if(documentData.getItemIds() != null) {
-            itemIdsInBytes = documentData.getItemIds().toString().getBytes();
-            byteBufferLength += itemIdsInBytes.length;
+        byte[] disputeHashInBytes = documentData.getDisputeHash().getBytes();
+        byte[] itemIdsInBytes = new byte[0];
+        if (documentData.getItemIds() != null) {
+            ByteBuffer itemIdsBuffer = ByteBuffer.allocate(documentData.getItemIds().size() * Long.BYTES);
+            documentData.getItemIds().forEach(itemId -> itemIdsBuffer.putLong(itemId));
+            itemIdsInBytes = itemIdsBuffer.array();
         }
+        byte[] descriptionInBytes = documentData.getDescription() != null ? documentData.getDescription().getBytes(StandardCharsets.UTF_8) : new byte[0];
 
-        if(documentData.getDescription() != null) {
-            descriptionInBytes = documentData.getDescription().getBytes();
-            byteBufferLength += descriptionInBytes.length;
-        }
-
-        if(documentData.getHash() != null) {
-            documentHashInBytes = documentData.getHash().getBytes();
-            byteBufferLength += documentHashInBytes.length;
-        }
-
+        int byteBufferLength = disputeHashInBytes.length + itemIdsInBytes.length + descriptionInBytes.length;
         ByteBuffer documentDataBuffer = ByteBuffer.allocate(byteBufferLength)
-                                                    .put(userHashInBytes)
-                                                    .put(disputeHashInBytes);
-
-        if(itemIdsInBytes != null) {
-            documentDataBuffer.put(itemIdsInBytes);
-        }
-
-        if(descriptionInBytes != null) {
-            documentDataBuffer.put(descriptionInBytes);
-        }
+                .put(disputeHashInBytes)
+                .put(itemIdsInBytes)
+                .put(descriptionInBytes);
 
         byte[] documentDataInBytes = documentDataBuffer.array();
         return CryptoHelper.cryptoHash(documentDataInBytes).getBytes();
