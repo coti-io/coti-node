@@ -11,20 +11,20 @@ import java.nio.ByteBuffer;
 public class ReceiverBaseTransactionOwnerCrypto extends SignatureValidationCrypto<ReceiverBaseTransactionOwnerData> {
 
     @Override
-    public byte[] getMessageInBytes(ReceiverBaseTransactionOwnerData receiverBaseTransactionOwnerData) {
+    public byte[] getMessageInBytes(ReceiverBaseTransactionOwnerData rbtOwnerData) {
 
         int byteBufferLength;
-        byte[] userHashInBytes = receiverBaseTransactionOwnerData.getReceiverBaseTransactionHash().getBytes();
-        byte[] merchantHashInBytes = receiverBaseTransactionOwnerData.getMerchantHash().getBytes();
 
-        byteBufferLength = userHashInBytes.length + merchantHashInBytes.length;
+        byte[] rbtHashInBytes = rbtOwnerData.getReceiverBaseTransactionHash().getBytes();
+        byte[] merchantHashInBytes = rbtOwnerData.getMerchantHash().getBytes();
 
+        byteBufferLength = rbtHashInBytes.length + merchantHashInBytes.length;
         ByteBuffer disputeDataBuffer = ByteBuffer.allocate(byteBufferLength);
 
-        disputeDataBuffer.put(userHashInBytes);
+        disputeDataBuffer.put(rbtHashInBytes);
         disputeDataBuffer.put(merchantHashInBytes);
 
-        byte[] disputeDataInBytes = disputeDataBuffer.array();
-        return CryptoHelper.cryptoHash(disputeDataInBytes).getBytes();
+        byte[] rbtOwnerDataInBytes = disputeDataBuffer.array();
+        return CryptoHelper.cryptoHash(rbtOwnerDataInBytes).getBytes();
     }
 }

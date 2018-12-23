@@ -1,6 +1,7 @@
 package io.coti.financialserver.services;
 
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeTransactionService;
@@ -8,8 +9,6 @@ import io.coti.financialserver.crypto.ReceiverBaseTransactionOwnerCrypto;
 import io.coti.financialserver.data.ReceiverBaseTransactionOwnerData;
 import io.coti.financialserver.http.TransactionRequest;
 import io.coti.financialserver.http.TransactionResponse;
-import io.coti.financialserver.model.ConsumerDisputes;
-import io.coti.financialserver.model.Disputes;
 import io.coti.financialserver.model.ReceiverBaseTransactionOwners;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,23 +25,20 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private ReceiverBaseTransactionOwnerCrypto receiverBaseTransactionOwnerCrypto;
     @Autowired
-    private Disputes disputes;
-    @Autowired
-    private ConsumerDisputes consumerDisputes;
-    @Autowired
     private RollingReserveService rollingReserveService;
     @Autowired
     private ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
 
     public ResponseEntity<IResponse> setReceiverBaseTransactionOwner(TransactionRequest transactionRequest) {
 
-        ReceiverBaseTransactionOwnerData receiverBaseTransactionOwnerData = transactionRequest.getReceiverBaseTransactionOwnerData();
+        ReceiverBaseTransactionOwnerData rbtOwnerData = transactionRequest.getReceiverBaseTransactionOwnerData();
 
-        if (!receiverBaseTransactionOwnerCrypto.verifySignature(receiverBaseTransactionOwnerData)) {
-            log.error("ReceiverBaseTransactionOwner invalid signature for merchant {}", receiverBaseTransactionOwnerData.getMerchantHash());
+        if (!receiverBaseTransactionOwnerCrypto.verifySignature(rbtOwnerData)) {
+            log.error("ReceiverBaseTransactionOwner invalid signature for merchant {}", rbtOwnerData.getMerchantHash());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
-        receiverBaseTransactionOwners.put(receiverBaseTransactionOwnerData);
+
+        receiverBaseTransactionOwners.put(rbtOwnerData);
 
         return ResponseEntity.status(HttpStatus.OK).body(new TransactionResponse(STATUS_SUCCESS));
     }
@@ -50,7 +46,15 @@ public class TransactionService extends BaseNodeTransactionService {
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
 
-        // TODO: Check if transaction is of type payment, and that this RBT exist in RBT owners table, if not we should do something.
-        rollingReserveService.setRollingReserveReleaseDate(transactionData);
+        if(transactionData.getType() == TransactionType.Payment) {
+
+            ReceiverBaseTransactionOwnerData rbtOwnerData = receiverBaseTransactionOwners.getByHash(transactionData.getReceiverBaseTransactionHash());
+            if(rbtOwnerData == null) {
+                log.error("Owner(merchant) not found for RBT hash in received transaction.", transactionData);
+            }
+            else {
+                rollingReserveService.setRollingReserveReleaseDate(transactionData, rbtOwnerData.getMerchantHash());
+            }
+        }
     }
 }
