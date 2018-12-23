@@ -9,7 +9,6 @@ import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 import org.apache.commons.lang3.ArrayUtils;
 
-import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
@@ -17,26 +16,22 @@ import java.util.List;
 public class DisputeDocumentData implements IEntity, ISignable, ISignValidatable {
 
     private Hash hash;
-    @NotNull
     private Hash userHash;
-    @NotNull
     private List<Long> itemIds;
-    @NotNull
     private SignatureData userSignature;
-    @NotNull
     private Hash disputeHash;
     private ActionSide uploadSide;
-    private String name;
     private String description;
     private String fileName;
     private Date creationTime;
 
-    /**
-     * why this is private?
-     */
-    /*private DisputeDocumentData() {
-
-    }*/
+    public DisputeDocumentData(Hash userHash, Hash disputeHash, List<Long> itemIds, SignatureData userSignature) {
+        this.userHash = userHash;
+        this.disputeHash = disputeHash;
+        this.itemIds = itemIds;
+        this.userSignature = userSignature;
+        init();
+    }
 
     public void init() {
         this.creationTime = new Date();

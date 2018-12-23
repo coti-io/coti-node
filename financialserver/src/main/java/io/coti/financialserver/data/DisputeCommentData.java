@@ -25,7 +25,6 @@ public class DisputeCommentData implements IEntity, ISignable, ISignValidatable 
     private Hash disputeHash;
     @NotNull
     private SignatureData userSignature;
-    @NotNull
     private ActionSide commentSide;
     @NotNull
     private String comment;

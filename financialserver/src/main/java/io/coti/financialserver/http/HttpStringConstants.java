@@ -8,6 +8,8 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
 
     public static final String DISPUTE_COMMENT_CREATE_UNAUTHORIZED = "Unauthorized dispute comment creation request";
     public static final String DISPUTE_COMMENT_UNAUTHORIZED = "Unauthorized dispute comment request";
+    public static final String DISPUTE_DOCUMENT_CREATE_UNAUTHORIZED = "Unauthorized dispute document creation request";
+    public static final String DISPUTE_DOCUMENT_UNAUTHORIZED = "Unauthorized dispute document request";
     public static final String DISPUTE_MERCHANT_NOT_FOUND = "Merchant not found";
     public static final String DISPUTE_NOT_FOUND = "Dispute not found";
     public static final String DISPUTE_UNAUTHORIZED = "Unauthorized dispute request";

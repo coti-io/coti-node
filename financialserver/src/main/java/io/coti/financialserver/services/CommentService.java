@@ -36,6 +36,8 @@ public class CommentService {
     private GetDisputeItemDetailCrypto getDisputeCommentsCrypto;
     @Autowired
     private Disputes disputes;
+    @Autowired
+    private DisputeService disputeService;
 
     public ResponseEntity<IResponse> newComment(NewCommentRequest request) {
 
@@ -96,7 +98,7 @@ public class CommentService {
         if (disputeData == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_NOT_FOUND, STATUS_ERROR));
         }
-        if (!isAuthorized(disputeData, getDisputeCommentsData.getUserHash())) {
+        if (!disputeService.isAuthorizedDisputeDetailDisplay(disputeData, getDisputeCommentsData.getUserHash())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_COMMENT_UNAUTHORIZED, STATUS_ERROR));
         }
         DisputeItemData disputeItemData = disputeData.getDisputeItems().stream().filter(disputeItem -> disputeItem.getId() == getDisputeCommentsData.getItemId()).findFirst().get();
@@ -109,10 +111,5 @@ public class CommentService {
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new GetCommentsResponse(disputeCommentDataList));
 
-    }
-
-    private Boolean isAuthorized(DisputeData disputeData, Hash userHash) {
-
-        return userHash.equals(disputeData.getConsumerHash()) || userHash.equals(disputeData.getMerchantHash()) || disputeData.getArbitratorHashes().contains(userHash);
     }
 }

@@ -36,8 +36,8 @@ public class TransactionService extends BaseNodeTransactionService {
 
         ReceiverBaseTransactionOwnerData receiverBaseTransactionOwnerData = transactionRequest.getReceiverBaseTransactionOwnerData();
 
-        receiverBaseTransactionOwnerCrypto.signMessage(receiverBaseTransactionOwnerData);
         if (!receiverBaseTransactionOwnerCrypto.verifySignature(receiverBaseTransactionOwnerData)) {
+            log.error("ReceiverBaseTransactionOwner invalid signature for merchant {}", receiverBaseTransactionOwnerData.getMerchantHash());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
         receiverBaseTransactionOwners.put(receiverBaseTransactionOwnerData);

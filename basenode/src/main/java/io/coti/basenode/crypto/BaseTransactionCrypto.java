@@ -33,6 +33,27 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
             return transactionData.getHash().getBytes();
         }
     },
+    PaymentInputBaseTransactionData {
+        @Override
+        public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
+            if (!PaymentInputBaseTransactionData.class.isInstance(baseTransactionData)) {
+                throw new IllegalArgumentException("");
+            }
+            PaymentInputBaseTransactionData paymentInputBaseTransactionData = (PaymentInputBaseTransactionData) baseTransactionData;
+            byte[] inputMessageInBytes = BaseTransactionCrypto.InputBaseTransactionData.getMessageInBytes((InputBaseTransactionData) baseTransactionData);
+            byte[] merchantNameInBytes = paymentInputBaseTransactionData.getEncryptedMerchantName().getBytes(StandardCharsets.UTF_8);
+
+            ByteBuffer baseTransactionBuffer = ByteBuffer.allocate(inputMessageInBytes.length + merchantNameInBytes.length).
+                    put(inputMessageInBytes).put(merchantNameInBytes);
+
+            return baseTransactionBuffer.array();
+        }
+
+        @Override
+        public byte[] getSignatureMessage(TransactionData transactionData) {
+            return transactionData.getHash().getBytes();
+        }
+    },
     FullNodeFeeData {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData fullNodeFeeData) {
@@ -105,7 +126,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
             try {
                 ReceiverBaseTransactionData receiverBaseTransactionData = (ReceiverBaseTransactionData) baseTransactionData;
                 byte[] outputMessageInBytes = getOutputMessageInBytes(receiverBaseTransactionData);
-                byte[] receiverDescriptionInBytes = receiverBaseTransactionData.getReceiverDescription()!= null ? receiverBaseTransactionData.getReceiverDescription().getBytes() : new byte[0];
+                byte[] receiverDescriptionInBytes = receiverBaseTransactionData.getReceiverDescription() != null ? receiverBaseTransactionData.getReceiverDescription().getBytes() : new byte[0];
                 ByteBuffer receiverBaseTransactionBuffer = ByteBuffer.allocate(outputMessageInBytes.length + receiverDescriptionInBytes.length).
                         put(outputMessageInBytes).put(receiverDescriptionInBytes);
 

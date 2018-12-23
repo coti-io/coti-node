@@ -8,11 +8,17 @@ import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 @Data
-public class ReceiverBaseTransactionOwnerData implements IEntity, ISignable, ISignValidatable {
+public class ReceiverBaseTransactionOwnerData implements IEntity, ISignValidatable {
+    @NotNull
     private Hash merchantHash;
+    @NotNull
     private Hash receiverBaseTransactionHash;
-    private SignatureData merchantSignature;
+    @NotNull
+    private @Valid SignatureData merchantSignature;
 
     private ReceiverBaseTransactionOwnerData() {
 
@@ -38,13 +44,4 @@ public class ReceiverBaseTransactionOwnerData implements IEntity, ISignable, ISi
         return merchantHash;
     }
 
-    @Override
-    public void setSignerHash(Hash hash) {
-        merchantHash = hash;
-    }
-
-    @Override
-    public void setSignature(SignatureData signature) {
-        this.merchantSignature = signature;
-    }
 }

@@ -18,8 +18,6 @@ public class GetDisputesResponse extends BaseResponse {
         super();
 
         this.disputesData = new ArrayList<>();
-        for(DisputeData disputeData : disputesData) {
-            this.disputesData.add(new GetDisputeResponseData(disputeData));
-        }
+        disputesData.forEach(disputeData -> this.disputesData.add(new GetDisputeResponseData(disputeData)));
     }
 }

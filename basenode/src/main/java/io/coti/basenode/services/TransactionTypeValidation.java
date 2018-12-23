@@ -9,7 +9,17 @@ import java.util.List;
 
 @Slf4j
 public enum TransactionTypeValidation implements ITransactionTypeValidation {
-    Payment(TransactionType.Payment),
+    Payment(TransactionType.Payment) {
+        @Override
+        public boolean validateInputBaseTransactions(TransactionData transactionData) {
+            if (!type.equals(transactionData.getType())) {
+                throw new IllegalArgumentException("Invalid transaction type");
+            }
+            List<InputBaseTransactionData> inputBaseTransactions = transactionData.getInputBaseTransactions();
+            return inputBaseTransactions.stream().filter(inputBaseTransactionData -> PaymentInputBaseTransactionData.class.isInstance(inputBaseTransactionData)).count() == 1
+                    && PaymentInputBaseTransactionData.class.isInstance(inputBaseTransactions.get(0));
+        }
+    },
     Transfer(TransactionType.Transfer) {
         @Override
         public boolean validateReducedAmount(List<OutputBaseTransactionData> outputBaseTransactions) {
