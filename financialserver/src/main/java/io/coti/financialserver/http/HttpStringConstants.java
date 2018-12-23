@@ -30,7 +30,7 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
 
     public static final String HEADER_CONTENT_DISPOSITION = "Content-Disposition";
     public static final String HEADER_ATTACHMENT_PREFIX = "attachment; filename=";
-    public static final String HEADER_CONTENT_TYPE = "Content-Disposition";
+    public static final String HEADER_CONTENT_TYPE = "Content-Type";
     public static final String S3_SUFFIX_METADATA_KEY = "x-amz-meta-suffix";
 
     public static final String UNAUTHORIZED = "Unauthorized";
