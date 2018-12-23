@@ -67,6 +67,8 @@ public class DisputeService {
 
         DisputeData disputeData = newDisputeRequest.getDisputeData();
 
+        disputeCrypto.signMessage(disputeData);
+
         if (!disputeCrypto.verifySignature(disputeData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
@@ -299,7 +301,7 @@ public class DisputeService {
         }
     }
 
-    public Hash getMerchantHash(Hash receiverBaseTransactionHash) {
+    private Hash getMerchantHash(Hash receiverBaseTransactionHash) {
         ReceiverBaseTransactionOwnerData receiverBaseTransactionOwnerData = receiverBaseTransactionOwners.getByHash(receiverBaseTransactionHash);
 
         if (receiverBaseTransactionOwnerData != null) {

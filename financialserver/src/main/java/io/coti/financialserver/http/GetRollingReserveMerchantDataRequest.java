@@ -8,7 +8,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Data
-public class GetRollingReserveMerchantAddressRequest extends Request {
+public class GetRollingReserveMerchantDataRequest extends Request {
 
     @NotNull
     private @Valid RollingReserveData rollingReserveData;

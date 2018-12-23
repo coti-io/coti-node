@@ -1,6 +1,6 @@
 package io.coti.financialserver.controllers;
 
-import io.coti.financialserver.http.GetRollingReserveMerchantAddressRequest;
+import io.coti.financialserver.http.GetRollingReserveMerchantDataRequest;
 import io.coti.financialserver.http.RecourseClaimRequest;
 import io.coti.financialserver.services.RollingReserveService;
 import lombok.extern.slf4j.Slf4j;
@@ -22,15 +22,9 @@ public class RollingReserveController {
     RollingReserveService rollingReserveService;
 
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity getRollingReserveMerchantAddress(@Valid @RequestBody GetRollingReserveMerchantAddressRequest request) {
+    public ResponseEntity getRollingReserveData(@Valid @RequestBody GetRollingReserveMerchantDataRequest request) {
 
-        return rollingReserveService.geMerchantAddress(request);
-    }
-
-    @RequestMapping(path = "/release", method = RequestMethod.POST)
-    public ResponseEntity getRollingReserveRelease(@Valid @RequestBody GetRollingReserveMerchantAddressRequest request) {
-
-        return rollingReserveService.getRollingReserveRelease(request);
+        return rollingReserveService.getRollingReserveData(request);
     }
 
     @RequestMapping(path = "/recourseClaim", method = RequestMethod.POST)

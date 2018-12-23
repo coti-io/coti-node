@@ -167,6 +167,15 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
         return null;
     }
 
+    public BigDecimal getRollingReserveAmount() {
+        for (BaseTransactionData baseTransactionData : baseTransactions) {
+            if (baseTransactionData instanceof RollingReserveData) {
+                return baseTransactionData.getAmount();
+            }
+        }
+        return null;
+    }
+
     @Override
     public int compareTo(TransactionData other) {
         return Double.compare(this.senderTrustScore, other.senderTrustScore);

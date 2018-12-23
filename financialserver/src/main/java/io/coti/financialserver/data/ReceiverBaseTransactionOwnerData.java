@@ -13,10 +13,13 @@ import javax.validation.constraints.NotNull;
 
 @Data
 public class ReceiverBaseTransactionOwnerData implements IEntity, ISignValidatable {
+
     @NotNull
     private Hash merchantHash;
+
     @NotNull
     private Hash receiverBaseTransactionHash;
+
     @NotNull
     private @Valid SignatureData merchantSignature;
 
