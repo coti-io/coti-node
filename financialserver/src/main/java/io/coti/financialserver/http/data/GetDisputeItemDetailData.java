@@ -6,12 +6,19 @@ import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 @Data
 public class GetDisputeItemDetailData implements ISignable, ISignValidatable {
+    @NotNull
     private Hash disputeHash;
+    @NotNull
     private Long itemId;
+    @NotNull
     private Hash userHash;
-    private SignatureData userSignature;
+    @NotNull
+    private @Valid SignatureData userSignature;
 
     @Override
     public SignatureData getSignature() {

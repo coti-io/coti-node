@@ -1,5 +1,6 @@
 package io.coti.financialserver.controllers;
 
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.financialserver.http.GetCommentsRequest;
 import io.coti.financialserver.http.data.GetDisputeItemDetailData;
 import lombok.extern.slf4j.Slf4j;
@@ -20,13 +21,13 @@ public class CommentController {
     CommentService commentService;
 
     @RequestMapping(method = RequestMethod.PUT)
-    public ResponseEntity newComment(@Valid @RequestBody NewCommentRequest request) {
+    public ResponseEntity<IResponse> newComment(@Valid @RequestBody NewCommentRequest request) {
 
         return commentService.newComment(request);
     }
 
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity getComments(@Valid @RequestBody GetCommentsRequest request) {
+    public ResponseEntity<IResponse> getComments(@Valid @RequestBody GetCommentsRequest request) {
 
         return commentService.getComments(request);
     }

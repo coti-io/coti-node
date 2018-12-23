@@ -11,7 +11,6 @@ public class GetTransactionTrustScoreRequest extends Request {
     public Hash userHash;
     @NotNull
     public Hash transactionHash;
-
     @NotNull
-    public SignatureData transactionTrustScoreSignature;
+    public SignatureData userSignature;
 }

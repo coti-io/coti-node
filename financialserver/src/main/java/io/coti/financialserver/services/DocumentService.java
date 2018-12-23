@@ -114,7 +114,6 @@ public class DocumentService {
             log.error("Couldn't delete file: {}", disputeDocumentData.getHash());
         }
 
-        disputeDocumentData = disputeDocuments.getByHash(disputeDocumentData.getHash());
         disputeDocumentData.setFileName(multiPartFile.getOriginalFilename());
 
         disputes.put(disputeData);

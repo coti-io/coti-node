@@ -1,6 +1,7 @@
 package io.coti.trustscore.controllers;
 
 import io.coti.basenode.http.BaseResponse;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.trustscore.http.GetTransactionTrustScoreRequest;
 import io.coti.trustscore.http.GetTrustScoreRequest;
 import io.coti.trustscore.http.InsertTrustScoreEventRequest;
@@ -35,8 +36,8 @@ public class TrustScoreController {
     }
 
     @RequestMapping(path = "/transactiontrustscore", method = RequestMethod.POST)
-    public ResponseEntity<BaseResponse> getTransactionTrustScore(@Valid @RequestBody GetTransactionTrustScoreRequest request) {
-        return trustScoreService.getTransactionTrustScore(request.userHash, request.transactionHash, request.transactionTrustScoreSignature);
+    public ResponseEntity<IResponse> getTransactionTrustScore(@Valid @RequestBody GetTransactionTrustScoreRequest request) {
+        return trustScoreService.getTransactionTrustScore(request.userHash, request.transactionHash, request.userSignature);
     }
 
 

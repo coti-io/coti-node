@@ -9,6 +9,7 @@ import io.coti.basenode.data.TransactionTrustScoreData;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.TransactionTrustScoreResponseData;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.trustscore.config.rules.Component;
 import io.coti.trustscore.config.rules.InitialTrustType;
 import io.coti.trustscore.config.rules.RulesData;
@@ -162,12 +163,12 @@ public class TrustScoreService {
         return ResponseEntity.status(HttpStatus.OK).body(getUserTrustScoreResponse);
     }
 
-    public ResponseEntity<BaseResponse> getTransactionTrustScore(Hash userHash, Hash transactionHash, SignatureData signatureData) {
+    public ResponseEntity<IResponse> getTransactionTrustScore(Hash userHash, Hash transactionHash, SignatureData signatureData) {
 
         try {
             PublicKey publicKey = CryptoHelper.getPublicKeyFromHexString(userHash.toHexString());
-            ByteBuffer originalValue = ByteBuffer.wrap(transactionHash.getBytes());
-            if (!CryptoHelper.VerifyByPublicKey(originalValue.array(), signatureData.getR(), signatureData.getS(), publicKey)) {
+
+            if (!CryptoHelper.VerifyByPublicKey(transactionHash.getBytes(), signatureData.getR(), signatureData.getS(), publicKey)) {
                 return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST).body(new Response(BAD_SIGNATURE_ON_TRUST_SCORE_FOR_TRANSACTION));
             }

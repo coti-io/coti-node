@@ -101,7 +101,7 @@ public class CommentService {
         if (!disputeService.isAuthorizedDisputeDetailDisplay(disputeData, getDisputeCommentsData.getUserHash())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_COMMENT_UNAUTHORIZED, STATUS_ERROR));
         }
-        DisputeItemData disputeItemData = disputeData.getDisputeItems().stream().filter(disputeItem -> disputeItem.getId() == getDisputeCommentsData.getItemId()).findFirst().get();
+        DisputeItemData disputeItemData = disputeData.getDisputeItems().stream().filter(disputeItem -> disputeItem.getId().equals(getDisputeCommentsData.getItemId())).findFirst().get();
         if (disputeItemData == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ITEM_NOT_FOUND, STATUS_ERROR));
         }
@@ -109,7 +109,7 @@ public class CommentService {
         List<DisputeCommentData> disputeCommentDataList = new ArrayList<>();
         disputeCommentHashes.forEach(disputeCommentHash -> disputeCommentDataList.add(disputeComments.getByHash(disputeCommentHash)));
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new GetCommentsResponse(disputeCommentDataList));
+        return ResponseEntity.status(HttpStatus.OK).body(new GetCommentsResponse(disputeCommentDataList));
 
     }
 }

@@ -13,12 +13,9 @@ public class GetDisputeItemDetailCrypto extends SignatureCrypto<GetDisputeItemDe
     @Override
     public byte[] getMessageInBytes(GetDisputeItemDetailData getDisputeItemDetailData) {
         byte[] disputeHashInBytes = getDisputeItemDetailData.getDisputeHash().getBytes();
-        byte[] itemIdInBytes = getDisputeItemDetailData.getItemId().toString().getBytes();
 
-        int byteBufferLength = disputeHashInBytes.length + itemIdInBytes.length;
-
-        ByteBuffer commentDataBuffer = ByteBuffer.allocate(byteBufferLength)
-                .put(disputeHashInBytes).put(itemIdInBytes);
+        ByteBuffer commentDataBuffer = ByteBuffer.allocate(disputeHashInBytes.length + Long.BYTES)
+                .put(disputeHashInBytes).putLong(getDisputeItemDetailData.getItemId());
 
         byte[] commentDataInBytes = commentDataBuffer.array();
         return CryptoHelper.cryptoHash(commentDataInBytes).getBytes();
