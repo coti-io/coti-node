@@ -10,14 +10,19 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 public class TestUtils {
 
+    private static final String[] hexaOptions = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
+
     public static Double generateRandomTrustScore() {
         return Math.random() * 100;
+    }
+
+    public static Double generateRandomCount() {
+        return Math.random() * Double.MAX_VALUE;
     }
 
     public static TransactionData createTransactionWithSpecificHash(Hash hash) {
@@ -34,7 +39,6 @@ public class TestUtils {
                 TransactionType.Payment);
         return tx;
     }
-    private static final String[] hexaOptions = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
 
     public static Hash generateRandomHash(int lengthOfHash) {
         String hexa = "";
@@ -45,14 +49,14 @@ public class TestUtils {
         return new Hash(hexa);
     }
 
-    public static TransactionData createTransactionFromJson(String transactionJson)  {
+    public static TransactionData createTransactionFromJson(String transactionJson) {
         AddTransactionRequest addTransactionRequest = null;
         ObjectMapper mapper = new ObjectMapper();
         try {
             addTransactionRequest =
                     mapper.readValue(transactionJson, AddTransactionRequest.class);
         } catch (IOException e) {
-            log.error("Error when create trx from JSON" +e);
+            log.error("Error when create trx from JSON" + e);
         }
         return
                 new TransactionData(
@@ -64,7 +68,7 @@ public class TestUtils {
                         TransactionType.Payment);
     }
 
-    public static BaseTransactionData createBaseTransactionDataWithSpecificHash(Hash hash){
+    public static BaseTransactionData createBaseTransactionDataWithSpecificHash(Hash hash) {
         return new InputBaseTransactionData
                 (hash,
                         new BigDecimal(0),

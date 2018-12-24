@@ -63,10 +63,9 @@ import org.springframework.test.context.junit4.SpringRunner;
         )
 @Slf4j
 public class BaseNodeInitializationServiceTest {
+    BaseNodeMonitorService baseNodeMonitorService;
     @Value("${recovery.server.address}")
     private String recoveryServerAddress;
-
-    BaseNodeMonitorService baseNodeMonitorService;
     @Autowired
     private JacksonSerializer jacksonSerializer;
     @Autowired

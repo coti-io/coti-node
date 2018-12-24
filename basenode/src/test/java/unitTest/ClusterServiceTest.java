@@ -107,7 +107,6 @@ public class ClusterServiceTest {
         cluster.selectSources(TransactionData);
         Assert.assertTrue(TransactionData.getLeftParentHash().equals(TRANSACTION_ONE_HASH) &&
                 TransactionData.getRightParentHash().equals(TRANSACTION_TWO_HASH));
-
     }
 
     @Test

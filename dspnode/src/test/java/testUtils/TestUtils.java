@@ -1,10 +1,8 @@
 package testUtils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.*;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,6 +11,8 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 public class TestUtils {
+
+    private static final String[] hexaOptions = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
 
     public static Double generateRandomTrustScore() {
         return Math.random() * 100;
@@ -32,7 +32,6 @@ public class TestUtils {
                 TransactionType.Payment);
         return tx;
     }
-    private static final String[] hexaOptions = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
 
     public static Hash generateRandomHash(int lengthOfHash) {
         String hexa = "";
@@ -44,7 +43,7 @@ public class TestUtils {
     }
 
 
-    public static BaseTransactionData createBaseTransactionDataWithSpecificHash(Hash hash){
+    public static BaseTransactionData createBaseTransactionDataWithSpecificHash(Hash hash) {
         return new InputBaseTransactionData
                 (hash,
                         new BigDecimal(0),

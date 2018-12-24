@@ -15,58 +15,64 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @TestPropertySource(locations = "../test.properties")
 @RunWith(SpringRunner.class)
-//@ContextConfiguration(classes = {BaseNodeBalanceService.class,
-//        RocksDBConnector.class}
-//)
+@ContextConfiguration(classes = {BaseNodeBalanceService.class,
+        RocksDBConnector.class}
+)
 @Slf4j
 public class BaseNodeBalanceServiceTest {
     private static boolean setUpIsDone = false;
-//
-//    @Autowired
-//    private BaseNodeBalanceService baseNodeBalanceService;
 
-//    @Autowired
-//    private IDatabaseConnector rocksDBConnector;
-//
-//    @Before
-//    public void setUp() throws Exception {
-//        if (setUpIsDone) {
-//            return;
-//        }
-//        rocksDBConnector.init();
-//        baseNodeBalanceService.init();
-//        setUpIsDone = true;
-//    }
+    @Autowired
+    private BaseNodeBalanceService baseNodeBalanceService;
+
+    @Autowired
+    private IDatabaseConnector rocksDBConnector;
 
     @Before
-    public void init(){
+    public void init() throws Exception {
         log.info("Starting  - " + this.getClass().getSimpleName());
+        if (setUpIsDone) {
+            return;
+        }
+        String old = System.getProperty("user.dir");
+        System.setProperty("user.dir", "C:\\Projects\\alphanet");
+        // rocksDBConnector.init();
+        // baseNodeBalanceService.init();
+        setUpIsDone = true;
+
     }
+
     @Test
     public void checkBalancesAndAddToPreBalance() {
     }
 
-    @Test
-    public void continueHandleBalanceChanges() {
-    }
+//    @After
+//    public void tearDown() {
+//
+//    }
+//
+//    @Test
+//    public void continueHandleBalanceChanges() {
+//    }
+//
+//    @Test
+//    public void getBalances() {
+//    }
+//
+//    @Test
+//    public void rollbackBaseTransactions() {
+//    }
+//
+//    @Test
+//    public void validateBalances() {
+//    }
+//
+//    @Test
+//    public void updateBalance() {
+//    }
+//
+//    @Test
+//    public void updatePreBalance() {
+//    }
 
-    @Test
-    public void getBalances() {
-    }
-
-    @Test
-    public void rollbackBaseTransactions() {
-    }
-
-    @Test
-    public void validateBalances() {
-    }
-
-    @Test
-    public void updateBalance() {
-    }
-
-    @Test
-    public void updatePreBalance() {
-    }
 }

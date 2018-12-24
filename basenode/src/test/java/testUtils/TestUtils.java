@@ -1,19 +1,13 @@
 package testUtils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.*;
-import io.coti.basenode.http.Request;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import java.io.IOException;
+import java.io.File;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
@@ -95,6 +89,17 @@ public class TestUtils {
                 new Date());
     }
 
+    public static boolean setCurrentDirectory(String directory_name) {
+        boolean result = false;  // Boolean indicating whether directory was set
+        File directory;       // Desired current working directory
+
+        directory = new File(directory_name).getAbsoluteFile();
+        if (directory.exists() || directory.mkdirs()) {
+            result = (System.setProperty(directory_name, directory.getAbsolutePath()) != null);
+        }
+
+        return result;
+    }
 }
 
 

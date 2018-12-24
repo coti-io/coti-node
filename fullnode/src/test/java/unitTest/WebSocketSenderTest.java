@@ -1,6 +1,5 @@
 package unitTest;
 
-import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.data.TransactionStatus;
 import io.coti.fullnode.services.WebSocketSender;
@@ -17,6 +16,8 @@ import testUtils.TestUtils;
 import java.math.BigDecimal;
 
 import static org.junit.Assert.assertNull;
+import static testUtils.TestUtils.generateRandomCount;
+import static testUtils.TestUtils.generateRandomHash;
 
 @TestPropertySource(locations = "../test.properties")
 @RunWith(SpringRunner.class)
@@ -31,9 +32,9 @@ public class WebSocketSenderTest {
     @Test
     public void notifyBalanceChange_noExceptionIsThrown() {
         try {
-            webSocketSender.notifyBalanceChange(new Hash("AB"),
-                    new BigDecimal("56.345"),
-                    new BigDecimal("60.12345"));
+            webSocketSender.notifyBalanceChange(generateRandomHash(64),
+                    new BigDecimal(generateRandomCount()),
+                    new BigDecimal(generateRandomCount()));
         } catch (Exception e) {
             assertNull(e);
         }
@@ -43,7 +44,7 @@ public class WebSocketSenderTest {
     public void notifyTransactionHistoryChange_noExceptionIsThrown() {
         try {
             TransactionData transactionData =
-                    TestUtils.createTransactionWithSpecificHash(new Hash("CD"));
+                    TestUtils.createTransactionWithSpecificHash(generateRandomHash(64));
             webSocketSender.notifyTransactionHistoryChange(transactionData,
                     TransactionStatus.CONFIRMED);
         } catch (Exception e) {
@@ -54,7 +55,7 @@ public class WebSocketSenderTest {
     @Test
     public void notifyGeneratedAddress_noExceptionIsThrown() {
         try {
-            webSocketSender.notifyGeneratedAddress(new Hash("EF"));
+            webSocketSender.notifyGeneratedAddress(generateRandomHash(64));
         } catch (Exception e) {
             assertNull(e);
         }

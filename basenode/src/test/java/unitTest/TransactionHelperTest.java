@@ -80,7 +80,7 @@ public class TransactionHelperTest {
     private LiveViewService LiveViewService;
 
     @Before
-    public void init(){
+    public void init() {
         log.info("Starting  - " + this.getClass().getSimpleName());
     }
 

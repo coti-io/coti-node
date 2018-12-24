@@ -10,7 +10,6 @@ import io.coti.fullnode.services.BalanceService;
 import io.coti.fullnode.services.InitializationService;
 import io.coti.fullnode.services.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.mock.mockito.MockBean;

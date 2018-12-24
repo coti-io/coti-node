@@ -4,7 +4,6 @@ import io.coti.basenode.data.DspConsensusResult;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TccInfo;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.database.Interfaces.IDatabaseConnector;
 import io.coti.basenode.database.RocksDBConnector;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.Transactions;
@@ -27,6 +26,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static testUtils.TestUtils.*;
 
@@ -46,16 +46,13 @@ import static testUtils.TestUtils.*;
 )
 @Slf4j
 public class BaseNodeConfirmationServiceTest {
-    private static boolean setUpIsDone = false;
     private static final int SIZE_OF_HASH = 64;
 
     @Autowired
-    private IDatabaseConnector rocksDBConnector;
-    @Autowired
-    private Transactions transactions;
-    @Autowired
     private BaseNodeConfirmationService baseNodeConfirmationService;
 
+    @MockBean
+    private Transactions transactions;
     @MockBean
     private LiveViewService liveViewService;
     @MockBean
@@ -67,15 +64,8 @@ public class BaseNodeConfirmationServiceTest {
 
     @Before
     public void init() {
-        if (setUpIsDone) {
-            return;
-        }
         log.info("Starting  - " + this.getClass().getSimpleName());
-
-        rocksDBConnector.init();
         baseNodeConfirmationService.init();
-        setUpIsDone = true;
-
     }
 
     @Test
@@ -93,6 +83,7 @@ public class BaseNodeConfirmationServiceTest {
     public void testSetDspcToTrue_noExceptionIsThrown() {
         try {
             Hash hash = generateRandomHash(SIZE_OF_HASH);
+            when(transactions.getByHash(any(Hash.class))).thenReturn(createTransactionWithSpecificHash(hash));
             transactions.put(createTransactionWithSpecificHash(hash));
             baseNodeConfirmationService.setDspcToTrue(new DspConsensusResult(hash));
         } catch (Exception e) {
@@ -111,13 +102,17 @@ public class BaseNodeConfirmationServiceTest {
 
 
     private void insertSavedTransaction() {
-        TransactionData transactionData = generateRandomTransaction();
-        transactionData.setDspConsensusResult(new DspConsensusResult(generateRandomHash(SIZE_OF_HASH)));
-        when(transactionIndexService.insertNewTransactionIndex(transactionData)).thenReturn(true);
-        when(transactionHelper.isConfirmed(transactionData)).thenReturn(true);
-        when(transactionHelper.isDspConfirmed(transactionData)).thenReturn(true);
-        when(transactionHelper.isDspConfirmed(transactionData)).thenReturn(true);
-        baseNodeConfirmationService.insertSavedTransaction(transactionData);
+        try {
+            TransactionData transactionData = generateRandomTransaction();
+            transactionData.setDspConsensusResult(new DspConsensusResult(generateRandomHash(SIZE_OF_HASH)));
+            when(transactionIndexService.insertNewTransactionIndex(transactionData)).thenReturn(true);
+            when(transactionHelper.isConfirmed(transactionData)).thenReturn(true);
+            when(transactionHelper.isDspConfirmed(transactionData)).thenReturn(true);
+            when(transactionHelper.isDspConfirmed(transactionData)).thenReturn(true);
+            baseNodeConfirmationService.insertSavedTransaction(transactionData);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @After

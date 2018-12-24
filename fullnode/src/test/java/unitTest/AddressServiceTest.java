@@ -7,7 +7,6 @@ import io.coti.basenode.model.Addresses;
 import io.coti.fullnode.services.AddressService;
 import io.coti.fullnode.services.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,10 +53,11 @@ public class AddressServiceTest {
             e.printStackTrace();
         }
     }
+
     @Test
     public void addNewAddress() {
         boolean isAddressNewInDb = addressService.addNewAddress(generateRandomHash(64));
-        Assert.assertTrue(isAddressNewInDb );
+        Assert.assertTrue(isAddressNewInDb);
     }
 
 }

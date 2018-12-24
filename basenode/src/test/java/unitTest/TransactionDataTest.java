@@ -28,7 +28,7 @@ public class TransactionDataTest {
     private static final int SIZE_OF_HASH = 64;
 
     @Before
-    public void init(){
+    public void init() {
         log.info("Starting  - " + this.getClass().getSimpleName());
     }
 

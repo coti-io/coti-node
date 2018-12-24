@@ -19,7 +19,6 @@ import io.coti.basenode.services.LiveView.LiveViewService;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +29,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.concurrent.atomic.AtomicLong;
-
-import static jdk.nashorn.internal.runtime.regexp.joni.Config.log;
 
 @TestPropertySource(locations = "../test.properties")
 @RunWith(SpringRunner.class)

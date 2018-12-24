@@ -18,7 +18,7 @@ import java.util.Arrays;
 public class CryptoHelperTests {
 
     @Before
-    public void init(){
+    public void init() {
         log.info("Starting  - " + this.getClass().getSimpleName());
     }
 
