@@ -1,4 +1,4 @@
-package unitTest;
+package io.coti.basenode.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
@@ -15,6 +15,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -25,10 +26,14 @@ import java.util.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static testUtils.TestUtils.generateRandomHash;
-
-@TestPropertySource(locations = "../test.properties")
-@RunWith(SpringRunner.class)
+//
+//@TestPropertySource(locations = "classpath:test.properties")
+//@RunWith(SpringRunner.class)
 @ContextConfiguration(classes = ClusterService.class)
+//@Slf4j
+@TestPropertySource(locations = "classpath:test.properties")
+@SpringBootTest
+@RunWith(SpringRunner.class)
 @Slf4j
 public class ClusterServiceTest {
 

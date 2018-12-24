@@ -1,4 +1,4 @@
-package unitTest;
+package io.coti.basenode.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
@@ -8,7 +8,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import testUtils.TestUtils;
 
@@ -20,8 +22,12 @@ import java.util.LinkedList;
 import static testUtils.TestUtils.generateRandomHash;
 import static testUtils.TestUtils.generateRandomTrustScore;
 
+//@RunWith(SpringRunner.class)
+//@ContextConfiguration(classes = TransactionData.class)
+//@Slf4j
+@TestPropertySource(locations = "classpath:test.properties")
+@SpringBootTest(classes = TransactionData.class)
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = TransactionData.class)
 @Slf4j
 public class TransactionDataTest {
     private static final String TRANSACTION_DESCRIPTION = "test";

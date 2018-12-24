@@ -1,4 +1,4 @@
-package unitTest;
+package io.coti.basenode.services;
 
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
@@ -20,11 +20,14 @@ import java.util.Vector;
 
 import static testUtils.TestUtils.generateRandomHash;
 
-@RunWith(SpringRunner.class)
+//@RunWith(SpringRunner.class)
 @SpringBootTest(
         classes = SourceSelector.class
 )
-@TestPropertySource(locations = "../test.properties")
+//@TestPropertySource(locations = "classpath:test.properties")
+//@Slf4j
+@TestPropertySource(locations = "classpath:test.properties")
+@RunWith(SpringRunner.class)
 @Slf4j
 public class SourceSelectorTest {
     private static final String TRANSACTION_DESCRIPTION = "test";
@@ -33,6 +36,7 @@ public class SourceSelectorTest {
 
     @Autowired
     private SourceSelector sourceSelector;
+
     private Date now;
     private List<TransactionData> newTransactions;
 

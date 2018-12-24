@@ -1,4 +1,4 @@
-package unitTest;
+package io.coti.basenode.services;
 
 import io.coti.basenode.crypto.DspConsensusCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
@@ -32,18 +32,22 @@ import java.util.List;
 
 import static testUtils.TestUtils.*;
 
-@TestPropertySource(locations = "../test.properties")
+//@TestPropertySource(locations = "classpath:test.properties")
+//@RunWith(SpringRunner.class)
+//@SpringBootTest(
+//        classes = {TransactionHelper.class,
+//                IBalanceService.class,
+//                IClusterService.class,
+//                Transactions.class,
+//                DspConsensusCrypto.class,
+//                TransactionTrustScoreCrypto.class,
+//                TransactionIndexService.class,
+//        }
+//)
+//@Slf4j
+@TestPropertySource(locations = "classpath:test.properties")
+@SpringBootTest(classes = {TransactionHelper.class})
 @RunWith(SpringRunner.class)
-@SpringBootTest(
-        classes = {TransactionHelper.class,
-                IBalanceService.class,
-                IClusterService.class,
-                Transactions.class,
-                DspConsensusCrypto.class,
-                TransactionTrustScoreCrypto.class,
-                TransactionIndexService.class,
-        }
-)
 @Slf4j
 public class TransactionHelperTest {
 

@@ -1,4 +1,4 @@
-package unitTest;
+package io.coti.basenode.services;
 
 import io.coti.basenode.data.GraphData;
 import io.coti.basenode.data.Hash;
@@ -11,9 +11,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import testUtils.TestUtils;
 
@@ -21,8 +23,12 @@ import java.util.Date;
 
 import static testUtils.TestUtils.generateRandomHash;
 
-@RunWith(SpringRunner.class)
+//@RunWith(SpringRunner.class)
 @ContextConfiguration(classes = {LiveViewService.class})
+//@Slf4j
+@TestPropertySource(locations = "classpath:test.properties")
+@SpringBootTest
+@RunWith(SpringRunner.class)
 @Slf4j
 public class LiveViewServiceTest {
     private static final int SIZE_OF_HASH = 64;

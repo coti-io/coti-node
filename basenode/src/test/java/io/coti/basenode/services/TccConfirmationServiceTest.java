@@ -1,4 +1,4 @@
-package unitTest;
+package io.coti.basenode.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TccInfo;
@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -25,9 +26,13 @@ import java.util.stream.Collectors;
 
 import static testUtils.TestUtils.generateRandomHash;
 
-@RunWith(SpringRunner.class)
+//@RunWith(SpringRunner.class)
 @ContextConfiguration(classes = TccConfirmationService.class)
-@TestPropertySource(locations = "../test.properties")
+//@TestPropertySource(locations = "classpath:test.properties")
+//@Slf4j
+@TestPropertySource(locations = "classpath:test.properties")
+@SpringBootTest
+@RunWith(SpringRunner.class)
 @Slf4j
 public class TccConfirmationServiceTest {
     private static final String TRANSACTION_DESCRIPTION = "test";

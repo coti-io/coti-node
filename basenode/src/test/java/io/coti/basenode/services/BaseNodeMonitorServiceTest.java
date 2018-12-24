@@ -30,7 +30,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-@TestPropertySource(locations = "../test.properties")
+@TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
 @ContextConfiguration
         (classes = {

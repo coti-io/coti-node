@@ -1,4 +1,4 @@
-package unitTest;
+package io.coti.basenode.services;
 
 import io.coti.basenode.data.DspConsensusResult;
 import io.coti.basenode.data.Hash;
@@ -21,6 +21,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -31,19 +32,34 @@ import static org.mockito.Mockito.when;
 import static testUtils.TestUtils.*;
 
 
-@TestPropertySource(locations = "../test.properties")
-@RunWith(SpringRunner.class)
+//@TestPropertySource(locations = "classpath:test.properties")
+//@RunWith(SpringRunner.class)
+//@ContextConfiguration(classes = {
+//        // Addresses.class,
+//        RocksDBConnector.class,
+//        BaseNodeConfirmationService.class,
+//        LiveViewService.class,
+//        BaseNodeBalanceService.class,
+//        TransactionHelper.class,
+//        TransactionIndexService.class,
+//        Transactions.class,
+//        AddressTransactionsHistories.class}
+//)
+//@Slf4j
 @ContextConfiguration(classes = {
         // Addresses.class,
-        RocksDBConnector.class,
-        BaseNodeConfirmationService.class,
-        LiveViewService.class,
-        BaseNodeBalanceService.class,
-        TransactionHelper.class,
-        TransactionIndexService.class,
-        Transactions.class,
-        AddressTransactionsHistories.class}
+        //RocksDBConnector.class,
+        BaseNodeConfirmationService.class}
+        //LiveViewService.class,
+        //BaseNodeBalanceService.class,
+       // TransactionHelper.class,
+       // TransactionIndexService.class,
+       // Transactions.class,
+       // AddressTransactionsHistories.class}
 )
+@TestPropertySource(locations = "classpath:test.properties")
+@SpringBootTest
+@RunWith(SpringRunner.class)
 @Slf4j
 public class BaseNodeConfirmationServiceTest {
     private static final int SIZE_OF_HASH = 64;

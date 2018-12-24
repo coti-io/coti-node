@@ -1,5 +1,6 @@
-package unitTest;
+package io.coti.basenode.services;
 
+import io.coti.basenode.data.AddressData;
 import io.coti.basenode.database.Interfaces.IDatabaseConnector;
 import io.coti.basenode.database.RocksDBConnector;
 import io.coti.basenode.model.Addresses;
@@ -10,19 +11,22 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static testUtils.TestUtils.generateRandomHash;
 
-@TestPropertySource(locations = "../test.properties")
-@RunWith(SpringRunner.class)
+//@TestPropertySource(locations = "classpath:test.properties")
+//@RunWith(SpringRunner.class)
 @ContextConfiguration(classes = {BaseNodeAddressService.class,
         Addresses.class,
         RocksDBConnector.class}
 )
-
+@TestPropertySource(locations = "classpath:test.properties")
+@SpringBootTest
+@RunWith(SpringRunner.class)
 @Slf4j
 public class BaseNodeAddressServiceTest {
     private static boolean setUpIsDone = false;
@@ -49,8 +53,8 @@ public class BaseNodeAddressServiceTest {
 
     @Test
     public void testAddNewAddress() {
-//        boolean isAddressNewInDb = baseNodeAddressService.addNewAddress(generateRandomHash(64));
-//        Assert.assertTrue(isAddressNewInDb);
+        boolean isAddressNewInDb = baseNodeAddressService.addNewAddress(generateRandomHash(64));
+        Assert.assertTrue(isAddressNewInDb);
     }
 
     @Test
@@ -61,12 +65,12 @@ public class BaseNodeAddressServiceTest {
 
     @Test
     public void handlePropagatedAddress_noExceptionIsThrown() {
-//        try {
-//            baseNodeAddressService.handlePropagatedAddress(new AddressData(generateRandomHash(64)));
-//        } catch (Exception e) {
-//            Assert.fail(e.getMessage());
-//        } finally {
-//
-//        }
+        try {
+            baseNodeAddressService.handlePropagatedAddress(new AddressData(generateRandomHash(64)));
+        } catch (Exception e) {
+            Assert.fail(e.getMessage());
+        } finally {
+
+        }
     }
 }
