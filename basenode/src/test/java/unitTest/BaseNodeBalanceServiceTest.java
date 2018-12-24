@@ -29,7 +29,7 @@ public class BaseNodeBalanceServiceTest {
     private IDatabaseConnector rocksDBConnector;
 
     @Before
-    public void init() throws Exception {
+    public void setUp() throws Exception {
         log.info("Starting  - " + this.getClass().getSimpleName());
         if (setUpIsDone) {
             return;

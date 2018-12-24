@@ -34,7 +34,7 @@ public class BaseNodeAddressServiceTest {
     private IDatabaseConnector rocksDBConnector;
 
     @Before
-    public void init() {
+    public void setUp() {
         if (setUpIsDone) {
             return;
         }

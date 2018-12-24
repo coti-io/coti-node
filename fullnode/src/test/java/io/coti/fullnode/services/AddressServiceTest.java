@@ -1,13 +1,11 @@
-package unitTest;
+package io.coti.fullnode.services;
 
-import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.ISender;
-import io.coti.basenode.data.AddressData;
 import io.coti.basenode.database.Interfaces.IDatabaseConnector;
 import io.coti.basenode.database.RocksDBConnector;
 import io.coti.basenode.model.Addresses;
-import io.coti.dspnode.services.AddressService;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,7 +17,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import static testUtils.TestUtils.generateRandomHash;
 
-@TestPropertySource(locations = "../test.properties")
+@TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = {AddressService.class,
         Addresses.class,
@@ -27,7 +25,6 @@ import static testUtils.TestUtils.generateRandomHash;
 )
 @Slf4j
 public class AddressServiceTest {
-
     private static boolean setUpIsDone = false;
 
     @Autowired
@@ -37,28 +34,28 @@ public class AddressServiceTest {
     private IDatabaseConnector rocksDBConnector;
 
     @MockBean
-    private ISender sender;
+    private WebSocketSender webSocketSender;
 
     @MockBean
-    private IPropagationPublisher propagationPublisher;
+    private ISender sender;
 
     @Before
-    public void init() {
+    public void setUp() {
         if (setUpIsDone) {
             return;
         }
-
         try {
+            setUpIsDone = true;
             rocksDBConnector.init();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        setUpIsDone = true;
     }
 
     @Test
-    public void handleNewAddressFromFullNode() {
-        addressService.handleNewAddressFromFullNode(new AddressData(generateRandomHash(64)));
+    public void addNewAddress() {
+        boolean isAddressNewInDb = addressService.addNewAddress(generateRandomHash(64));
+        Assert.assertTrue(isAddressNewInDb);
     }
 
 }

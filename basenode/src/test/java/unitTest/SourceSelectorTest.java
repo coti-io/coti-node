@@ -37,7 +37,7 @@ public class SourceSelectorTest {
     private List<TransactionData> newTransactions;
 
     @Before
-    public void init() {
+    public void setUp() {
         log.info("Starting  - " + this.getClass().getSimpleName());
 
         now = new Date();

@@ -18,6 +18,10 @@ public class TestUtils {
         return Math.random() * 100;
     }
 
+    public static TransactionData generateRandomTransaction() {
+        return createTransactionWithSpecificHash(generateRandomHash(64));
+    }
+
     public static TransactionData createTransactionWithSpecificHash(Hash hash) {
         ArrayList<BaseTransactionData> baseTransactions = new ArrayList<BaseTransactionData>(
                 Arrays.asList(new InputBaseTransactionData

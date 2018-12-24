@@ -6,6 +6,7 @@ import io.coti.basenode.database.RocksDBConnector;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.interfaces.ITransactionService;
 import io.coti.basenode.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
@@ -37,7 +38,7 @@ public class BaseNodeTransactionServiceTest {
     @Autowired
     private Transactions transactions;
     @Autowired
-    private BaseNodeTransactionService baseNodeTransactionService;
+    private ITransactionService baseNodeTransactionService;
 
     @Test
     public void handlePropagatedTransaction_noExceptionIsThrown() {

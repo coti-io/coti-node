@@ -17,12 +17,16 @@ public class TestUtils {
 
     private static final String[] hexaOptions = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
 
-    public static Double generateRandomTrustScore() {
+    public static double generateRandomTrustScore() {
         return Math.random() * 100;
     }
 
-    public static Double generateRandomCount() {
+    public static double generateRandomCount() {
         return Math.random() * Double.MAX_VALUE;
+    }
+
+    public static long generateRandomLongNumber() {
+        return (long) (Math.random() * Long.MAX_VALUE);
     }
 
     public static TransactionData createTransactionWithSpecificHash(Hash hash) {
@@ -49,6 +53,10 @@ public class TestUtils {
         return new Hash(hexa);
     }
 
+    public static TransactionData generateRandomTransaction() {
+        return createTransactionWithSpecificHash(generateRandomHash(64));
+    }
+
     public static TransactionData createTransactionFromJson(String transactionJson) {
         AddTransactionRequest addTransactionRequest = null;
         ObjectMapper mapper = new ObjectMapper();
@@ -66,6 +74,13 @@ public class TestUtils {
                         addTransactionRequest.trustScoreResults.get(0).getTrustScore(),
                         addTransactionRequest.createTime,
                         TransactionType.Payment);
+    }
+
+    public static AddTransactionRequest generateAddTransactionRequest() {
+        AddTransactionRequest addTransactionRequest = new AddTransactionRequest();
+        addTransactionRequest.hash = generateRandomHash(64);
+        addTransactionRequest.baseTransactions = new ArrayList<>();
+        return addTransactionRequest;
     }
 
     public static BaseTransactionData createBaseTransactionDataWithSpecificHash(Hash hash) {

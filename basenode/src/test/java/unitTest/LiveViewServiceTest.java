@@ -43,7 +43,7 @@ public class LiveViewServiceTest {
     private SimpMessagingTemplate messagingSender;
 
     @Before
-    public void init() {
+    public void setUp() {
         log.info("Starting  - " + this.getClass().getSimpleName());
     }
 

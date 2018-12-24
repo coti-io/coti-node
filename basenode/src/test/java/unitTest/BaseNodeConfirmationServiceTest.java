@@ -63,8 +63,10 @@ public class BaseNodeConfirmationServiceTest {
     private TransactionIndexService transactionIndexService;
 
     @Before
-    public void init() {
+    public void setUp() {
         log.info("Starting  - " + this.getClass().getSimpleName());
+        Hash hash = generateRandomHash(SIZE_OF_HASH);
+        when(transactions.getByHash(any(Hash.class))).thenReturn(createTransactionWithSpecificHash(hash));
         baseNodeConfirmationService.init();
     }
 

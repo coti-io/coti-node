@@ -1,8 +1,7 @@
-package unitTest;
+package io.coti.fullnode.services;
 
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.data.TransactionStatus;
-import io.coti.fullnode.services.WebSocketSender;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +18,7 @@ import static org.junit.Assert.assertNull;
 import static testUtils.TestUtils.generateRandomCount;
 import static testUtils.TestUtils.generateRandomHash;
 
-@TestPropertySource(locations = "../test.properties")
+@TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = {WebSocketSender.class})
 public class WebSocketSenderTest {

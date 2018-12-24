@@ -1,4 +1,4 @@
-package unitTest;
+package io.coti.fullnode.services;
 
 import io.coti.basenode.crypto.DspConsensusCrypto;
 import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
@@ -6,9 +6,6 @@ import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.TransactionHelper;
 import io.coti.basenode.services.TransactionIndexService;
-import io.coti.fullnode.services.BalanceService;
-import io.coti.fullnode.services.InitializationService;
-import io.coti.fullnode.services.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,7 +21,7 @@ import org.springframework.test.context.junit4.SpringRunner;
         WebSocketSender.class
 })
 @RunWith(SpringRunner.class)
-@TestPropertySource(locations = "../test.properties")
+@TestPropertySource(locations = "classpath:test.properties")
 @Slf4j
 public class InitializationServiceTest {
 
