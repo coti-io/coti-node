@@ -1,6 +1,6 @@
 package io.coti.trustscore.services.calculationServices;
 
-import io.coti.trustscore.config.rules.BaseEventScore;
+import io.coti.trustscore.config.rules.SuspiciousEventScore;
 import io.coti.trustscore.config.rules.BehaviorEventsScore;
 import io.coti.trustscore.config.rules.RulesData;
 import io.coti.trustscore.data.Buckets.BucketBehaviorEventsData;
@@ -34,24 +34,24 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
 
     @Override
     public void setCurrentScores() {
-        Map<BaseEventScore, String> baseEventScoreToCalculationFormulaMap = new ConcurrentHashMap<>();
+        Map<SuspiciousEventScore, String> baseEventScoreToCalculationFormulaMap = new ConcurrentHashMap<>();
 
-        for (Map.Entry<BehaviorEventsScoreType, BaseEventScore> baseEventTypeToBaseEventScoreEntry : behaviorEventsScore.getBaseEventScoreMap().entrySet()) {
+        for (Map.Entry<BehaviorEventsScoreType, SuspiciousEventScore> baseEventTypeToBaseEventScoreEntry : behaviorEventsScore.getBaseEventScoreMap().entrySet()) {
 
-            BaseEventScore baseEventScore = baseEventTypeToBaseEventScoreEntry.getValue();
+            SuspiciousEventScore suspiciousEventScore = baseEventTypeToBaseEventScoreEntry.getValue();
             String scoreFormulaCalculation = createBaseEventScoreFormula(baseEventTypeToBaseEventScoreEntry.getKey());
 
-            baseEventScoreToCalculationFormulaMap.put(baseEventScore, scoreFormulaCalculation);
+            baseEventScoreToCalculationFormulaMap.put(suspiciousEventScore, scoreFormulaCalculation);
         }
 
         ScoreCalculator scoreCalculator = new ScoreCalculator(baseEventScoreToCalculationFormulaMap);
-        Map<BaseEventScore, Double> baseEventScoreToCalculatedScoreMap = scoreCalculator.calculate();
+        Map<SuspiciousEventScore, Double> baseEventScoreToCalculatedScoreMap = scoreCalculator.calculate();
         updateBucketScoresAfterCalculation(baseEventScoreToCalculatedScoreMap);
 
     }
 
-    private void updateBucketScoresAfterCalculation(Map<BaseEventScore, Double> baseEventScoreToCalculatedScoreMap) {
-        for (Map.Entry<BaseEventScore, Double> baseEventScoreToCalculatedScoreEntry : baseEventScoreToCalculatedScoreMap.entrySet()) {
+    private void updateBucketScoresAfterCalculation(Map<SuspiciousEventScore, Double> baseEventScoreToCalculatedScoreMap) {
+        for (Map.Entry<SuspiciousEventScore, Double> baseEventScoreToCalculatedScoreEntry : baseEventScoreToCalculatedScoreMap.entrySet()) {
 
             BehaviorEventsScoreType behaviorEventName = BehaviorEventsScoreType.enumFromString(baseEventScoreToCalculatedScoreEntry.getKey().getName());
             double score = baseEventScoreToCalculatedScoreEntry.getValue();
@@ -78,8 +78,8 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
     }
 
     private String createBaseEventScoreFormula(BehaviorEventsScoreType baseEventScoreType) {
-        BaseEventScore baseEventScore = behaviorEventsScore.getBaseEventScoreMap().get(baseEventScoreType);
-        String contributionFunctionString = baseEventScore.getContribution();
+        SuspiciousEventScore suspiciousEventScore = behaviorEventsScore.getBaseEventScoreMap().get(baseEventScoreType);
+        String contributionFunctionString = suspiciousEventScore.getContribution();
 
         int eventsCount = 0;
         if (bucketBehaviorEventsData.getBehaviorEventTypeToCurrentEventCountAndContributionDataMap().get(baseEventScoreType) != null) {
@@ -113,7 +113,7 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
                 bucketBehaviorEventsData.getBehaviorEventTypeToCurrentEventCountAndContributionDataMap();
         Map<BehaviorEventsScoreType, Map<Date, Double>> behaviorEventTypeToOldEventsContributionMap = bucketBehaviorEventsData.getBehaviorEventTypeToOldEventsContributionMap();
 
-        List<BaseEventScore> behaviorEventsScoreList = userTypeToBehaviorEventsScoreMap.get(bucketBehaviorEventsData.getUserType()).getBaseEventScoreList();
+        List<SuspiciousEventScore> behaviorEventsScoreList = userTypeToBehaviorEventsScoreMap.get(bucketBehaviorEventsData.getUserType()).getSuspiciousEventScoreList();
         behaviorEventsScoreList.forEach(event -> {
             if (event.getTerm() > 0) {
                 BehaviorEventsScoreType eventsScoreType = BehaviorEventsScoreType.enumFromString(event.getName());
@@ -151,16 +151,16 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
 
             // loop on every behaviorEvent
             for (Map.Entry<BehaviorEventsScoreType, Map<Date, Double>> behaviorEventTypeToOldEventsContributionEntry : behaviorEventTypeToOldEventsContributionMap.entrySet()) {
-                BaseEventScore baseEventScore = getBaseEventScoreByEventScoreType(behaviorEventTypeToOldEventsContributionEntry.getKey());
+                SuspiciousEventScore suspiciousEventScore = getBaseEventScoreByEventScoreType(behaviorEventTypeToOldEventsContributionEntry.getKey());
                 Map<Date, Double> dayToScoreMap = new ConcurrentHashMap<>();
 
                 // loop on every date
                 for (Map.Entry<Date, Double> dateToOldEventsContributionEntry : behaviorEventTypeToOldEventsContributionEntry.getValue().entrySet()) {
-                    EventDecay behaviorEventDecay = new EventDecay(baseEventScore, dateToOldEventsContributionEntry.getValue());
-                    Pair<BaseEventScore, Double> decayedScores = new DecayCalculator().calculateEntry(behaviorEventDecay, daysDiff);
+                    EventDecay behaviorEventDecay = new EventDecay(suspiciousEventScore, dateToOldEventsContributionEntry.getValue());
+                    Pair<SuspiciousEventScore, Double> decayedScores = new DecayCalculator().calculateEntry(behaviorEventDecay, daysDiff);
                     dayToScoreMap.put(dateToOldEventsContributionEntry.getKey(), decayedScores.getValue());
                 }
-                behaviorEventTypeToOldEventsContributionMapAfterDecayed.put(BehaviorEventsScoreType.enumFromString(baseEventScore.getName()), dayToScoreMap);
+                behaviorEventTypeToOldEventsContributionMapAfterDecayed.put(BehaviorEventsScoreType.enumFromString(suspiciousEventScore.getName()), dayToScoreMap);
             }
             bucketBehaviorEventsData.setBehaviorEventTypeToOldEventsContributionMap(behaviorEventTypeToOldEventsContributionMapAfterDecayed);
         }
@@ -174,7 +174,7 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
         return behaviorEventsScore.getBaseEventScoreMap().get(eventScoreType).getWeight();
     }
 
-    private BaseEventScore getBaseEventScoreByEventScoreType(BehaviorEventsScoreType behaviorEventScore) {
+    private SuspiciousEventScore getBaseEventScoreByEventScoreType(BehaviorEventsScoreType behaviorEventScore) {
         return behaviorEventsScore.getBaseEventScoreMap().get(behaviorEventScore);
     }
 

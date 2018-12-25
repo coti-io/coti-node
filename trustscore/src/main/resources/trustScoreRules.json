@@ -110,7 +110,7 @@
         ]
       },
       "behaviorEventsScore": {
-        "baseEventScoreList": [
+        "suspiciousEventScoreList": [
           {
             "idea": "It is to be defined, how to catch it",
             "algorithm": [
@@ -305,7 +305,7 @@
         ]
       },
       "behaviorEventsScore": {
-        "baseEventScoreList": [
+        "suspiciousEventScoreList": [
           {
             "idea": "It is to be defined, how to catch it",
             "algorithm": [
@@ -559,7 +559,7 @@
         ]
       },
       "behaviorEventsScore": {
-        "baseEventScoreList": [
+        "suspiciousEventScoreList": [
           {
             "idea": "It is to be defined, how to catch it",
             "algorithm": [
@@ -685,7 +685,7 @@
         ]
       },
       "behaviorEventsScore": {
-        "baseEventScoreList": [
+        "suspiciousEventScoreList": [
           {
             "idea": "It is to be defined, how to catch it",
             "algorithm": [

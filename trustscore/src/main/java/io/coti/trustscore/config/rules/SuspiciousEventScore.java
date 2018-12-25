@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class BaseEventScore extends EventScore {
+public class SuspiciousEventScore extends EventScore {
 
     private int term;
 

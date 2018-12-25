@@ -12,10 +12,10 @@ import java.util.stream.Collectors;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BehaviorEventsScore {
 
-    private List<BaseEventScore> baseEventScoreList;
+    private List<SuspiciousEventScore> suspiciousEventScoreList;
 
-    public Map<BehaviorEventsScoreType, BaseEventScore> getBaseEventScoreMap() {
-        return getBaseEventScoreList().stream().collect(
+    public Map<BehaviorEventsScoreType, SuspiciousEventScore> getBaseEventScoreMap() {
+        return this.getSuspiciousEventScoreList().stream().collect(
                 Collectors.toMap(t -> BehaviorEventsScoreType.enumFromString(t.getName()), t -> t));
     }
 
