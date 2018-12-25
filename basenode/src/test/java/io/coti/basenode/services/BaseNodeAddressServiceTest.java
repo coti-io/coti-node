@@ -29,6 +29,7 @@ import static testUtils.TestUtils.generateRandomHash;
 @RunWith(SpringRunner.class)
 @Slf4j
 public class BaseNodeAddressServiceTest {
+    private static final int SIZE_OF_HASH = 64;
     private static boolean setUpIsDone = false;
 
     @Autowired
@@ -53,20 +54,19 @@ public class BaseNodeAddressServiceTest {
 
     @Test
     public void testAddNewAddress() {
-        boolean isAddressNewInDb = baseNodeAddressService.addNewAddress(generateRandomHash(64));
+        boolean isAddressNewInDb = baseNodeAddressService.addNewAddress(generateRandomHash(SIZE_OF_HASH ));
         Assert.assertTrue(isAddressNewInDb);
     }
 
     @Test
-
     public void testAddressExists() {
-        Assert.assertFalse(baseNodeAddressService.addressExists(generateRandomHash(64)));
+        Assert.assertFalse(baseNodeAddressService.addressExists(generateRandomHash(SIZE_OF_HASH )));
     }
 
     @Test
     public void handlePropagatedAddress_noExceptionIsThrown() {
         try {
-            baseNodeAddressService.handlePropagatedAddress(new AddressData(generateRandomHash(64)));
+            baseNodeAddressService.handlePropagatedAddress(new AddressData(generateRandomHash(SIZE_OF_HASH )));
         } catch (Exception e) {
             Assert.fail(e.getMessage());
         } finally {

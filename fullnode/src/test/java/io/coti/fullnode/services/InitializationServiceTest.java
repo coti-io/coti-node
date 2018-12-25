@@ -20,15 +20,12 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
-//
 @ContextConfiguration(classes = {InitializationService.class,
         BalanceService.class,
         TransactionHelper.class,
         WebSocketSender.class
 })
-//@RunWith(SpringRunner.class)
-//@TestPropertySource(locations = "classpath:test.properties")
-//@Slf4j
+
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -44,19 +41,16 @@ public class InitializationServiceTest {
 
     @MockBean
     private BaseNodeConfirmationService baseNodeConfirmationService;
-    //@Autowired
+
     @MockBean
     private InitializationService initializationService;
 
-    //@Autowired
     @MockBean
     private BalanceService balanceService;
 
-    //@Autowired
     @MockBean
     private TransactionHelper transactionHelper;
 
-    //@Autowired
     @MockBean
     private WebSocketSender webSocketSender;
 

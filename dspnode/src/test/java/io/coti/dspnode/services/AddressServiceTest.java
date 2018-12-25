@@ -6,7 +6,6 @@ import io.coti.basenode.data.AddressData;
 import io.coti.basenode.database.Interfaces.IDatabaseConnector;
 import io.coti.basenode.model.Addresses;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +21,7 @@ import static testUtils.TestUtils.generateRandomHash;
 @RunWith(SpringRunner.class)
 @Slf4j
 public class AddressServiceTest {
-
-    // private static boolean setUpIsDone = false;
+    private static final int SIZE_OF_HASH = 64;
 
     @Autowired
     private AddressService addressService;
@@ -39,31 +37,18 @@ public class AddressServiceTest {
 
     @MockBean
     private WebShutDown webShutDown;
-    //
+
     @MockBean
     private Addresses addresses;
 
     @MockBean
     private IPropagationPublisher propagationPublisher;
 
-    @Before
-    public void init() {
-//        if (setUpIsDone) {
-//            return;
-//        }
-//
-//        try {
-//            rocksDBConnector.init();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        setUpIsDone = true;
-    }
 
     @Test
     public void handleNewAddressFromFullNode() {
         log.info("Starting  - " + this.getClass().getSimpleName());
-        addressService.handleNewAddressFromFullNode(new AddressData(generateRandomHash(64)));
+        addressService.handleNewAddressFromFullNode(new AddressData(generateRandomHash(SIZE_OF_HASH )));
     }
 
 }

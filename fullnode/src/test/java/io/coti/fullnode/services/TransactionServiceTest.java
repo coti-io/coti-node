@@ -41,6 +41,8 @@ import static testUtils.TestUtils.*;
 @Slf4j
 public class TransactionServiceTest {
 
+    private static final int SIZE_OF_HASH = 64;
+
     @Autowired
     TransactionService transactionService;
 
@@ -92,10 +94,6 @@ public class TransactionServiceTest {
         when(validationService.validateTransactionDataIntegrity(any(TransactionData.class))).thenReturn(true);
         when(validationService.validateBaseTransactionAmounts(any(TransactionData.class))).thenReturn(true);
         when(validationService.validateTransactionTrustScore(any(TransactionData.class))).thenReturn(true);
-//        when(validationService.validateBalancesAndAddToPreBalance(any(TransactionData.class))).thenReturn(true);
-//        when(transactionIndexService.getLastTransactionIndexData()).thenReturn(new TransactionIndexData(generateRandomHash(64), generateRandomLongNumber(), null));
-//        when(clusterService.selectSources(any(TransactionData.class))).then()
-
         ResponseEntity<Response> response = transactionService.addNewTransaction(generateAddTransactionRequest());
 
         Assert.assertTrue(response.getBody().getMessage().equals("Balance for address is insufficient!"));
@@ -103,7 +101,7 @@ public class TransactionServiceTest {
 
     @Test
     public void testGetAddressTransactions() {
-        Hash addressHash = generateRandomHash(64);
+        Hash addressHash = generateRandomHash(SIZE_OF_HASH);
         when(addressTransactionHistories.getByHash(addressHash)).thenReturn(new AddressTransactionsHistory(addressHash));
 
         ResponseEntity<BaseResponse> response = transactionService.getAddressTransactions(addressHash);
@@ -113,7 +111,7 @@ public class TransactionServiceTest {
 
     @Test
     public void testGetTransactionDetails() {
-        Hash transactionHash = generateRandomHash(64);
+        Hash transactionHash = generateRandomHash(SIZE_OF_HASH );
         when(transactions.getByHash(transactionHash)).thenReturn(createTransactionWithSpecificHash(transactionHash));
 
         ResponseEntity<BaseResponse> response = transactionService.getTransactionDetails(transactionHash);
