@@ -79,7 +79,7 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
 
     private String createBaseEventScoreFormula(BehaviorEventsScoreType baseEventScoreType) {
         BaseEventScore baseEventScore = behaviorEventsScore.getBaseEventScoreMap().get(baseEventScoreType);
-        String contributionFunctionString = baseEventScore.getContributionFormula();
+        String contributionFunctionString = baseEventScore.getContribution();
 
         int eventsCount = 0;
         if (bucketBehaviorEventsData.getBehaviorEventTypeToCurrentEventCountAndContributionDataMap().get(baseEventScoreType) != null) {

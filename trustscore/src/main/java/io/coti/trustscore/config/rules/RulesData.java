@@ -2,39 +2,33 @@ package io.coti.trustscore.config.rules;
 
 import io.coti.trustscore.data.Enums.TrustScoreRangeType;
 import io.coti.trustscore.data.Enums.UserType;
+import lombok.Data;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Data
 public class RulesData {
 
-    private List<UserScoresByType> userScoresByTypeList;
+    private List<User> userList;
 
     private List<UserNetworkFeeByTrustScoreRange> userNetworkFeeByTrustScoreRangeList;
 
     public RulesData() {
     }
 
-    public List<UserScoresByType> getUserScoresByTypeList() {
-        return userScoresByTypeList;
+    public void setUser(List<User> userList) {
+        this.userList = userList;
     }
 
-    public void setUser(List<UserScoresByType> userScoresByTypeList) {
-        this.userScoresByTypeList = userScoresByTypeList;
-    }
-
-    public UserScoresByType getUsersRules(UserType userType) {
+    public User getUsersRules(UserType userType) {
         return getUserTypeToUserScoreMap().get(userType);
     }
 
-    public Map<UserType, UserScoresByType> getUserTypeToUserScoreMap() {
-        return userScoresByTypeList.stream().collect(
+    public Map<UserType, User> getUserTypeToUserScoreMap() {
+        return userList.stream().collect(
                 Collectors.toMap(t -> UserType.enumFromString(t.getType()), t -> t));
-    }
-
-    public List<UserNetworkFeeByTrustScoreRange> getUserNetworkFeeByTrustScoreRangeList() {
-        return userNetworkFeeByTrustScoreRangeList;
     }
 
     public void setNetworkFee(List<UserNetworkFeeByTrustScoreRange> userNetworkFeeByTrustScoreRangeList) {

@@ -37,7 +37,7 @@ public class BucketTransactionsCalculator extends BucketCalculator {
 
     public static void init(RulesData rulesData) {
         userToTransactionEventsScoreMapping = rulesData.getUserTypeToUserScoreMap().entrySet().stream().
-                collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getBehaviorCumulativeScores()));
+                collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getTransactionEventScore()));
     }
 
 

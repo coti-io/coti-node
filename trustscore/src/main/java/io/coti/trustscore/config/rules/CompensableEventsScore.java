@@ -2,22 +2,17 @@ package io.coti.trustscore.config.rules;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.coti.trustscore.data.Enums.CompensableEventScoreType;
+import lombok.Data;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+
+@Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CompensableEventsScore {
     private List<CompensableEventScore> compensableEventScoreList;
-
-    public List<CompensableEventScore> getCompensableEventScoreList() {
-        return compensableEventScoreList;
-    }
-
-    public void setCompensableEventScoreList(List<CompensableEventScore> compensableEventScoreList) {
-        this.compensableEventScoreList = compensableEventScoreList;
-    }
 
     public Map<CompensableEventScoreType, CompensableEventScore> getCompensableEventScoreMap() {
         return getCompensableEventScoreList().stream().collect(

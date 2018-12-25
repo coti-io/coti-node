@@ -28,7 +28,7 @@ public class BucketChargeBackEventsCalculator extends BucketCalculator {
 
     public static void init(RulesData rulesData) {
         userTypeToBehaviorHighFrequencyEventsScoreMapping = rulesData.getUserTypeToUserScoreMap().entrySet().stream().
-                collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getHighFrequencyEventScore()));
+                collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getBehaviorHighFrequencyEventsScore()));
     }
 
     @Override

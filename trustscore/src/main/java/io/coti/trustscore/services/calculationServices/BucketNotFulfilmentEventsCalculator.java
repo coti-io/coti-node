@@ -54,7 +54,7 @@ public class BucketNotFulfilmentEventsCalculator extends BucketCalculator {
     }
 
     private double calculateFine(NotFulfilmentToClientContributionData notFulfilmentToClientContributionData) {
-        String fineFormula = createFineFormula(notFulfilmentToClientContributionData, compensableEventScore.getFineFormula());
+        String fineFormula = createFineFormula(notFulfilmentToClientContributionData, compensableEventScore.getFine());
         return (double) (new ScoreCalculator().calculateEntry(new Pair<>(compensableEventScore, fineFormula)).getValue());
     }
 

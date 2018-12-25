@@ -363,12 +363,12 @@ public class TrustScoreService {
 
         InitialTrustScoreEventScore kycInitialTrustScoreEventScore
                 = BucketTransactionService.getRulesData().getUsersRules(trustScoreData.getUserType())
-                .getInitialTrustScoreEventsScore().getComponentByType(InitialTrustScoreType.KYC);
+                .getInitialTrustScore().getComponentByType(InitialTrustScoreType.KYC);
         Date beginningOfToday = DatesCalculation.setDateOnBeginningOfDay(new Date());
         Date beginningDayOfCreateDate = DatesCalculation.setDateOnBeginningOfDay(trustScoreData.getCreateTime());
         int daysDifference = DatesCalculation.calculateDaysDiffBetweenDates(beginningOfToday, beginningDayOfCreateDate);
 
-        return MathCalculation.evaluateExpression(kycInitialTrustScoreEventScore.getDecayFormula().replace("T", String.valueOf(daysDifference)))
+        return MathCalculation.evaluateExpression(kycInitialTrustScoreEventScore.getDecay().replace("T", String.valueOf(daysDifference)))
                 * trustScoreData.getKycTrustScore() * kycInitialTrustScoreEventScore.getWeight();
     }
 
