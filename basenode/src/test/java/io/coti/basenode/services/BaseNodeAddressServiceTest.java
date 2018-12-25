@@ -69,8 +69,6 @@ public class BaseNodeAddressServiceTest {
             baseNodeAddressService.handlePropagatedAddress(new AddressData(generateRandomHash(SIZE_OF_HASH )));
         } catch (Exception e) {
             Assert.fail(e.getMessage());
-        } finally {
-
         }
     }
 }

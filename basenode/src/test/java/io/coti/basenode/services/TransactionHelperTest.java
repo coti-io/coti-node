@@ -32,19 +32,6 @@ import java.util.List;
 
 import static testUtils.TestUtils.*;
 
-//@TestPropertySource(locations = "classpath:test.properties")
-//@RunWith(SpringRunner.class)
-//@SpringBootTest(
-//        classes = {TransactionHelper.class,
-//                IBalanceService.class,
-//                IClusterService.class,
-//                Transactions.class,
-//                DspConsensusCrypto.class,
-//                TransactionTrustScoreCrypto.class,
-//                TransactionIndexService.class,
-//        }
-//)
-//@Slf4j
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest(classes = {TransactionHelper.class})
 @RunWith(SpringRunner.class)

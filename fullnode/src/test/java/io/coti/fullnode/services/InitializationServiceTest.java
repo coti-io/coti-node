@@ -25,7 +25,6 @@ import org.springframework.test.context.junit4.SpringRunner;
         TransactionHelper.class,
         WebSocketSender.class
 })
-
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @RunWith(SpringRunner.class)

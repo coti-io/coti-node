@@ -23,9 +23,7 @@ import java.util.Date;
 
 import static testUtils.TestUtils.generateRandomHash;
 
-//@RunWith(SpringRunner.class)
 @ContextConfiguration(classes = {LiveViewService.class})
-//@Slf4j
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @RunWith(SpringRunner.class)

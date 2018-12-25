@@ -22,9 +22,6 @@ import java.util.LinkedList;
 import static testUtils.TestUtils.generateRandomHash;
 import static testUtils.TestUtils.generateRandomTrustScore;
 
-//@RunWith(SpringRunner.class)
-//@ContextConfiguration(classes = TransactionData.class)
-//@Slf4j
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest(classes = TransactionData.class)
 @RunWith(SpringRunner.class)

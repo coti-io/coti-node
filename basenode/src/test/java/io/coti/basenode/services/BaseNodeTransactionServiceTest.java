@@ -1,6 +1,5 @@
 package io.coti.basenode.services;
 
-
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.database.RocksDBConnector;
 import io.coti.basenode.model.Transactions;
@@ -22,14 +21,12 @@ import org.springframework.test.context.junit4.SpringRunner;
 import static org.mockito.Mockito.when;
 import static testUtils.TestUtils.generateRandomTransaction;
 
-//@TestPropertySource(locations = "classpath:test.properties")
-//@RunWith(SpringRunner.class)
 @ContextConfiguration(classes =
         {BaseNodeTransactionService.class,
                 RocksDBConnector.class,
                 Transactions.class}
 )
-//@Slf4j
+
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @RunWith(SpringRunner.class)

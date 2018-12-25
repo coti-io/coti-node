@@ -105,7 +105,6 @@ public class ClusterServiceTest {
     @Test
     public void selectSources_twoSourcesAvailable_twoSourcesAsParents() {
         TransactionData TransactionData = new TransactionData(new ArrayList<>(), TRANSACTION_THREE_HASH, TRANSACTION_DESCRIPTION, TRANSACTION_THREE_TRUSTSCORE, new Date(), TransactionType.Payment);
-        //  transactionData3.setCreateTime(new Date());
         when(sourceSelector.selectSourcesForAttachment(any(List.class),
                 any(double.class)))
                 .thenReturn(new Vector<>(Arrays.asList(transactionData1, transactionData2)));
