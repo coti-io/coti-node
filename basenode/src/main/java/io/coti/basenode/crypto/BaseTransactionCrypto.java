@@ -40,7 +40,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
                 throw new IllegalArgumentException("");
             }
             PaymentInputBaseTransactionData paymentInputBaseTransactionData = (PaymentInputBaseTransactionData) baseTransactionData;
-            byte[] inputMessageInBytes = BaseTransactionCrypto.InputBaseTransactionData.getMessageInBytes((InputBaseTransactionData) baseTransactionData);
+            byte[] inputMessageInBytes = this.InputBaseTransactionData.getMessageInBytes((InputBaseTransactionData) baseTransactionData);
             byte[] merchantNameInBytes = paymentInputBaseTransactionData.getEncryptedMerchantName().getBytes(StandardCharsets.UTF_8);
 
             ByteBuffer baseTransactionBuffer = ByteBuffer.allocate(inputMessageInBytes.length + merchantNameInBytes.length).

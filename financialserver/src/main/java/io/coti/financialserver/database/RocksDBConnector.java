@@ -1,19 +1,15 @@
 package io.coti.financialserver.database;
 
-import java.util.Arrays;
+import io.coti.basenode.database.BaseNodeRocksDBConnector;
+import io.coti.financialserver.model.*;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-import io.coti.basenode.database.BaseNodeRocksDBConnector;
-import io.coti.financialserver.model.*;
+import java.util.Arrays;
 
 @Primary
 @Service
 public class RocksDBConnector extends BaseNodeRocksDBConnector {
-
-    private RocksDBConnector() {
-
-    }
 
     @Override
     public void setColumnFamily() {

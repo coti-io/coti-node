@@ -1,4 +1,4 @@
-package io.coti.basenode.model;
+package io.coti.basenode.http;
 
 import io.coti.basenode.data.Hash;
 import lombok.Data;
