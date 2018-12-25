@@ -89,7 +89,7 @@ public class TransactionHelperTest {
     }
 
     @Test
-    public void testStartHandleTransaction_noExceptionIsThrown() {
+    public void startHandleTransaction_noExceptionIsThrown() {
         try {
             TransactionData transactionData1 = TestUtils.generateRandomTransaction();
             TransactionData transactionData2 = TestUtils.generateRandomTransaction();
@@ -101,7 +101,7 @@ public class TransactionHelperTest {
     }
 
     @Test
-    public void testEndHandleTransaction_noExceptionIsThrown() {
+    public void endHandleTransaction_noExceptionIsThrown() {
         try {
             TransactionData transactionData1 = TestUtils.generateRandomTransaction();
             transactionHelper.startHandleTransaction(transactionData1);
@@ -113,14 +113,14 @@ public class TransactionHelperTest {
     }
 
     @Test
-    public void testValidateBaseTransactionAmounts_WhenAmountsEqual() {
+    public void validateBaseTransactionAmounts_WhenAmountsEqual() {
         List<BaseTransactionData> baseTransactions = generateValidateBaseTransactionData();
         Assert.assertTrue(transactionHelper.validateBaseTransactionAmounts(baseTransactions));
     }
 
 
     @Test
-    public void testValidateBaseTransactionAmounts_WhenAmountsNotEqual() {
+    public void validateBaseTransactionAmounts_WhenAmountsNotEqual() {
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
         baseTransactions.add(generateFullNodeFeeData(generateRandomHash(SIZE_OF_HASH), 6));
         baseTransactions.add(generateFullNodeFeeData(generateRandomHash(SIZE_OF_HASH), 5));
@@ -129,7 +129,7 @@ public class TransactionHelperTest {
     }
 
     @Test
-    public void testValidateTransactionType_isValid() {
+    public void validateTransactionType_isValid() {
         List<BaseTransactionData> baseTransactions = generateValidateBaseTransactionData();
         TransactionData TransactionData = new TransactionData(baseTransactions, generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Payment);
         Assert.assertTrue(transactionHelper.validateTransactionType(TransactionData));
@@ -137,7 +137,7 @@ public class TransactionHelperTest {
 
 
     @Test
-    public void testValidateTransactionType_isNotValid() {
+    public void validateTransactionType_isNotValid() {
         List<BaseTransactionData> baseTransactions = generateValidateBaseTransactionData();
         TransactionData TransactionData = new TransactionData(baseTransactions, generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Transfer);
         Assert.assertFalse(transactionHelper.validateTransactionType(TransactionData));
@@ -155,7 +155,7 @@ public class TransactionHelperTest {
 
     //
     @Test
-    public void testValidateBaseTransactionTrustScoreNodeResult_isValid() {
+    public void validateBaseTransactionTrustScoreNodeResult_isValid() {
         NetworkFeeData networkFeeData = (NetworkFeeData) generateNetworkFeeData(generateRandomHash(SIZE_OF_HASH), generateRandomCount());
         networkFeeData.setNetworkFeeTrustScoreNodeResult(new ArrayList());
         for (int i = 0; i < TRUSTSCORE_NODE_RESULT_VALID_SIZE; i++) {
@@ -166,7 +166,7 @@ public class TransactionHelperTest {
 
 
     @Test
-    public void testValidateBaseTransactionTrustScoreNodeResult_isNotValid() {
+    public void validateBaseTransactionTrustScoreNodeResult_isNotValid() {
         NetworkFeeData networkFeeData1 = (NetworkFeeData) generateNetworkFeeData(generateRandomHash(SIZE_OF_HASH), generateRandomCount());
         networkFeeData1.setNetworkFeeTrustScoreNodeResult(new ArrayList());
         for (int i = 0; i < TRUSTSCORE_NODE_RESULT_VALID_SIZE; i++) {
@@ -184,7 +184,7 @@ public class TransactionHelperTest {
     }
 
     @Test
-    public void testIsTransactionHashProcessing() {
+    public void isTransactionHashProcessing() {
         TransactionData transactionData = TestUtils.generateRandomTransaction();
         transactionHelper.startHandleTransaction(transactionData);
         transactionHelper.isTransactionHashProcessing(transactionData.getHash());
@@ -202,7 +202,7 @@ public class TransactionHelperTest {
     }
 
     @Test
-    public void testSetTransactionStateToFinished_noExceptionIsThrown() {
+    public void setTransactionStateToFinished_noExceptionIsThrown() {
         try {
             TransactionData transactionData = TestUtils.generateRandomTransaction();
             transactionHelper.startHandleTransaction(transactionData);
@@ -236,7 +236,7 @@ public class TransactionHelperTest {
 
 
     @Test
-    public void testGetTotalTransactions() {
+    public void getTotalTransactions() {
         long totalTransactionsBeforeIncrement = transactionHelper.getTotalTransactions();
         transactionHelper.incrementTotalTransactions();
         transactionHelper.incrementTotalTransactions();
@@ -246,13 +246,13 @@ public class TransactionHelperTest {
     }
 
     @Test
-    public void testIncrementTotalTransactions() {
+    public void incrementTotalTransactions() {
         transactionHelper.incrementTotalTransactions();
         Assert.assertTrue(transactionHelper.incrementTotalTransactions() == 2);
     }
 
     @Test
-    public void testAddNoneIndexedTransaction_noExceptionIsThrown() {
+    public void addNoneIndexedTransaction_noExceptionIsThrown() {
         try {
             TransactionData transactionData = TestUtils.generateRandomTransaction();
             transactionHelper.addNoneIndexedTransaction(transactionData);
@@ -262,7 +262,7 @@ public class TransactionHelperTest {
     }
 
     @Test
-    public void testRemoveNoneIndexedTransaction_noExceptionIsThrown() {
+    public void removeNoneIndexedTransaction_noExceptionIsThrown() {
         try {
             TransactionData transactionData = TestUtils.generateRandomTransaction();
             transactionHelper.addNoneIndexedTransaction(transactionData);

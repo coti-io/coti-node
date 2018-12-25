@@ -56,13 +56,13 @@ public class AddressServiceTest {
     }
 
     @Test
-    public void testAddNewAddress() {
+    public void addNewAddress() {
         boolean isAddressNewInDb = addressService.addNewAddress(generateRandomHash(SIZE_OF_HASH ));
         Assert.assertTrue(isAddressNewInDb);
     }
 
     @Test
-    public void testHandlePropagatedAddress_noExceptionIsThrown(){
+    public void handlePropagatedAddress_noExceptionIsThrown(){
         try {
             addressService.handlePropagatedAddress(new AddressData(generateRandomHash(SIZE_OF_HASH )));
         } catch (Exception e) {

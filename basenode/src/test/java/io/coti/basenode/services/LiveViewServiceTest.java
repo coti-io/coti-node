@@ -64,16 +64,7 @@ public class LiveViewServiceTest {
     }
 
     @Test
-    public void addNode_noExceptionIsThrown() {
-        try {
-            liveViewService.addNode(TestUtils.createTransactionWithSpecificHash(TRANSACTION_ONE_HASH));
-        } catch (Exception e) {
-            Assert.fail(e.getMessage());
-        }
-    }
-
-    @Test
-    public void testSetNodeDataDatesFromTransactionData() {
+    public void setNodeDataDatesFromTransactionData() {
         TransactionData transactionData =
                 TestUtils.createTransactionWithSpecificHash(TRANSACTION_TWO_HASH);
         transactionData.setAttachmentTime(new Date());
@@ -84,7 +75,7 @@ public class LiveViewServiceTest {
     }
 
     @Test
-    public void testUpdateNodeStatus() {
+    public void updateNodeStatus() {
         TransactionData transactionData = TestUtils.createTransactionWithSpecificHash(TRANSACTION_THREE_HASH);
         liveViewService.addNode(transactionData);
         liveViewService.updateNodeStatus(transactionData, TCC_CONFIRMED_STATUS);

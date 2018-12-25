@@ -90,7 +90,7 @@ public class TransactionServiceTest {
     }
 
     @Test
-    public void testAddNewTransaction() {
+    public void addNewTransaction() {
         when(validationService.validateTransactionDataIntegrity(any(TransactionData.class))).thenReturn(true);
         when(validationService.validateBaseTransactionAmounts(any(TransactionData.class))).thenReturn(true);
         when(validationService.validateTransactionTrustScore(any(TransactionData.class))).thenReturn(true);
@@ -100,7 +100,7 @@ public class TransactionServiceTest {
     }
 
     @Test
-    public void testGetAddressTransactions() {
+    public void getAddressTransactions() {
         Hash addressHash = generateRandomHash(SIZE_OF_HASH);
         when(addressTransactionHistories.getByHash(addressHash)).thenReturn(new AddressTransactionsHistory(addressHash));
 
@@ -110,7 +110,7 @@ public class TransactionServiceTest {
     }
 
     @Test
-    public void testGetTransactionDetails() {
+    public void getTransactionDetails() {
         Hash transactionHash = generateRandomHash(SIZE_OF_HASH );
         when(transactions.getByHash(transactionHash)).thenReturn(createTransactionWithSpecificHash(transactionHash));
 
@@ -120,7 +120,7 @@ public class TransactionServiceTest {
     }
 
     @Test
-    public void testContinueHandlePropagatedTransaction_noExceptionIsThrown() {
+    public void continueHandlePropagatedTransaction_noExceptionIsThrown() {
         try {
             transactionService.continueHandlePropagatedTransaction(generateRandomTransaction());
         } catch (Exception e) {

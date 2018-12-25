@@ -87,7 +87,7 @@ public class BaseNodeConfirmationServiceTest {
     }
 
     @Test
-    public void testSetTccToTrue_noExceptionIsThrown() {
+    public void setTccToTrue_noExceptionIsThrown() {
         try {
             Hash hash = generateRandomHash(SIZE_OF_HASH);
             transactions.put(createTransactionWithSpecificHash(hash));
@@ -98,7 +98,7 @@ public class BaseNodeConfirmationServiceTest {
     }
 
     @Test
-    public void testSetDspcToTrue_noExceptionIsThrown() {
+    public void setDspcToTrue_noExceptionIsThrown() {
         try {
             Hash hash = generateRandomHash(SIZE_OF_HASH);
             when(transactions.getByHash(any(Hash.class))).thenReturn(createTransactionWithSpecificHash(hash));

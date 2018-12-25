@@ -53,13 +53,13 @@ public class BaseNodeAddressServiceTest {
     }
 
     @Test
-    public void testAddNewAddress() {
+    public void addNewAddress() {
         boolean isAddressNewInDb = baseNodeAddressService.addNewAddress(generateRandomHash(SIZE_OF_HASH ));
         Assert.assertTrue(isAddressNewInDb);
     }
 
     @Test
-    public void testAddressExists() {
+    public void addressExists() {
         Assert.assertFalse(baseNodeAddressService.addressExists(generateRandomHash(SIZE_OF_HASH )));
     }
 

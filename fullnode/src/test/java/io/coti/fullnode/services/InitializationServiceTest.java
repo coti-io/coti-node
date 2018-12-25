@@ -79,7 +79,7 @@ public class InitializationServiceTest {
     private WebShutDown webShutDown;
 
     @Test
-    public void testInit() {
+    public void init() {
         initializationService.init();
     }
 

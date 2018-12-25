@@ -46,7 +46,7 @@ public class TransactionDataTest {
     }
 
     @Test
-    public void testAddToChildrenTransactions__noExceptionIsThrown() {
+    public void addToChildrenTransactions__noExceptionIsThrown() {
         try {
             TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Payment);
             transactionData.addToChildrenTransactions(generateRandomHash(SIZE_OF_HASH));
