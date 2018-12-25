@@ -31,7 +31,7 @@ public class ItemService {
     @Autowired
     DisputeService disputeService;
 
-    public ResponseEntity itemNew(ItemRequest request) {
+    public ResponseEntity newItem(ItemRequest request) {
 
         DisputeItemData disputeItemData = request.getDisputeItemData();
         ItemCrypto itemCrypto = new ItemCrypto();
@@ -64,7 +64,7 @@ public class ItemService {
         return ResponseEntity.status(HttpStatus.OK).body(new Response(SUCCESS, STATUS_SUCCESS));
     }
 
-    public ResponseEntity itemUpdate(UpdateItemRequest request) {
+    public ResponseEntity updateItem(UpdateItemRequest request) {
 
         DisputeUpdateItemData disputeUpdateItemData = request.getDisputeUpdateItemData();
         UpdateItemCrypto updateItemCrypto = new UpdateItemCrypto();
