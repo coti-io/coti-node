@@ -106,8 +106,9 @@ public class DocumentService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(INTERNAL_ERROR, STATUS_ERROR));
         }
 
-        if (!awsService.uploadDisputeDocument(disputeDocumentData.getHash(), file, multiPartFile.getContentType())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(awsService.getError(), STATUS_ERROR));
+        String upload_error = awsService.uploadDisputeDocument(disputeDocumentData.getHash(), file, multiPartFile.getContentType());
+        if (upload_error != null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(upload_error, STATUS_ERROR));
         }
 
         if (!file.delete()) {

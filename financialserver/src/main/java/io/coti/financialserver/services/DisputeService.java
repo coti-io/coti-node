@@ -32,7 +32,7 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 @Service
 public class DisputeService {
 
-    private static final int COUNT_ARBITRATORS_PER_DISPUTE = 1;
+    private static final int COUNT_ARBITRATORS_PER_DISPUTE = 3;
 
     @Value("#{'${arbitrators.userHashes}'.split(',')}")
     private List<String> ARBITRATOR_USER_HASHES;
@@ -79,9 +79,9 @@ public class DisputeService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_TRANSACTION_NOT_FOUND, STATUS_ERROR));
         }
 
-  /*      if (!disputeData.getConsumerHash().equals(transactionData.getSenderHash())) {
+        if (!disputeData.getConsumerHash().equals(transactionData.getSenderHash())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_TRANSACTION_SENDER_INVALID, STATUS_ERROR));
-        } */
+        }
 
         if(isDisputeInProcessForTransactionHash(disputeData.getTransactionHash())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(OPEN_DISPUTE_IN_PROCESS_FOR_THIS_TRANSACTION, STATUS_ERROR));
@@ -118,6 +118,7 @@ public class DisputeService {
     private void addUserDisputeHash(ActionSide actionSide, Hash userHash, Hash disputeHash) {
 
         Collection<UserDisputesData> userDisputesCollection = userDisputesCollectionMap.get(actionSide);
+
         UserDisputesData userDisputesData = userDisputesCollection.getByHash(userHash);
 
         if (userDisputesData == null) {
@@ -178,6 +179,7 @@ public class DisputeService {
     }
 
     public void update(DisputeData dispute) {
+
         dispute.setUpdateTime(new Date());
 
         boolean noRecallItems = true;
@@ -224,17 +226,15 @@ public class DisputeService {
     }
 
     public void updateAfterVote(DisputeData dispute) {
+
         dispute.setUpdateTime(new Date());
 
         int arbitratorsCount = dispute.getArbitratorHashes().size();
+        int majorityOfVotes = (arbitratorsCount + 1) / 2;
         int votesForConsumer;
         int votesForMerchant;
 
         for (DisputeItemData disputeItem : dispute.getDisputeItems()) {
-
-            if(disputeItem.getDisputeItemVotesData().size() < arbitratorsCount) {
-                continue;
-            }
 
             votesForConsumer = 0;
             votesForMerchant = 0;
@@ -249,10 +249,10 @@ public class DisputeService {
                 }
             }
 
-            if(votesForConsumer >= votesForMerchant) {
+            if(votesForConsumer >= majorityOfVotes) {
                 disputeItem.setStatus(DisputeItemStatus.AcceptedByArbitrators);
             }
-            else {
+            else if(votesForMerchant >= majorityOfVotes) {
                 disputeItem.setStatus(DisputeItemStatus.RejectedByArbitrators);
             }
         }
@@ -281,7 +281,9 @@ public class DisputeService {
 
             TransactionData transactionData = transactions.getByHash(dispute.getTransactionHash());
 
-            rollingReserveService.chargebackConsumer(dispute, transactionData.getSenderHash(), chargebackAmount);
+            if(chargebackAmount.compareTo(BigDecimal.ZERO) > 0) {
+                rollingReserveService.chargebackConsumer(dispute, transactionData.getSenderHash(), chargebackAmount);
+            }
             dispute.setDisputeStatus(DisputeStatus.Closed);
         }
 

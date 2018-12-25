@@ -29,20 +29,18 @@ public class AwsService {
     private static final String ERROR_OBJECT_EXIST = "Document already exist.";
     private static final String ERROR_UPLOAD_TO_S3 = "Some error occurred during upload.";
 
-    private String error = "";
-
     private AmazonS3 getS3Client() {
         return AmazonS3ClientBuilder.standard().withRegion(REGION)
                 .withCredentials(new ProfileCredentialsProvider())
                 .build();
     }
 
-    public boolean uploadDisputeDocument(Hash documentHash, File file, String contentType) {
+    public String uploadDisputeDocument(Hash documentHash, File file, String contentType) {
         String fileName = documentHash.toString();
+        String error = null;
 
         if(getS3Client().doesObjectExist(BUCKET_NAME, fileName)) {
             error = ERROR_OBJECT_EXIST;
-            return false;
         }
 
         try {
@@ -56,14 +54,10 @@ public class AwsService {
             error = ERROR_UPLOAD_TO_S3;
         }
 
-        return true;
+        return error;
     }
 
     public S3Object getS3Object(String fileName) {
         return getS3Client().getObject(BUCKET_NAME, fileName);
-    }
-
-    public String getError() {
-        return error;
     }
 }

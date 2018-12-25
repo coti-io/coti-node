@@ -1,7 +1,9 @@
 package io.coti.financialserver.services;
 
 import io.coti.basenode.http.Response;
+import io.coti.financialserver.crypto.UpdateItemCrypto;
 import io.coti.financialserver.data.*;
+import io.coti.financialserver.http.UpdateItemRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -55,64 +57,67 @@ public class ItemService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ITEMS_EXIST_ALREADY, STATUS_ERROR));
         }
 
+        disputeItemData.setStatus(DisputeItemStatus.Recall);
         disputeData.getDisputeItems().add(disputeItemData);
         disputeService.update(disputeData);
 
         return ResponseEntity.status(HttpStatus.OK).body(new Response(SUCCESS, STATUS_SUCCESS));
     }
 
-    public ResponseEntity itemUpdate(ItemRequest request) {
+    public ResponseEntity itemUpdate(UpdateItemRequest request) {
 
-        DisputeItemData disputeItemDataNew = request.getDisputeItemData();
-        ItemCrypto itemCrypto = new ItemCrypto();
-        itemCrypto.signMessage(disputeItemDataNew);
+        DisputeUpdateItemData disputeUpdateItemData = request.getDisputeUpdateItemData();
+        UpdateItemCrypto updateItemCrypto = new UpdateItemCrypto();
+        updateItemCrypto.signMessage(disputeUpdateItemData);
 
-        if ( !itemCrypto.verifySignature(disputeItemDataNew) ) {
+        if ( !updateItemCrypto.verifySignature(disputeUpdateItemData) ) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
         }
 
-        DisputeData disputeData = disputes.getByHash(disputeItemDataNew.getDisputeHash());
+        DisputeData disputeData = disputes.getByHash(disputeUpdateItemData.getDisputeHash());
 
         if (disputeData == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_NOT_FOUND, STATUS_ERROR));
         }
 
-        DisputeItemData disputeItemData = disputeData.getDisputeItem(disputeItemDataNew.getId());
-
-        if (disputeItemData == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(ITEM_NOT_FOUND, STATUS_ERROR));
-        }
-
-        if (disputeItemData.getStatus() != DisputeItemStatus.Recall) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ITEM_PASSED_RECALL_STATUS, STATUS_ERROR));
-        }
-
         ActionSide actionSide;
-        if(disputeData.getConsumerHash().equals(disputeItemDataNew.getUserHash())) {
+        if(disputeData.getConsumerHash().equals(disputeUpdateItemData.getUserHash())) {
             actionSide = ActionSide.Consumer;
         }
-        else if(disputeData.getMerchantHash().equals(disputeItemDataNew.getUserHash())) {
+        else if(disputeData.getMerchantHash().equals(disputeUpdateItemData.getUserHash())) {
             actionSide = ActionSide.Merchant;
         }
         else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
         }
-        actionSide = ActionSide.Merchant; // TODO: remove this line
 
-        if(actionSide == ActionSide.Consumer && disputeItemDataNew.getStatus() == DisputeItemStatus.CanceledByConsumer) {
-            disputeData.getDisputeItem(disputeItemDataNew.getId()).setStatus(disputeItemDataNew.getStatus());
+        for(Long itemId : disputeUpdateItemData.getIds()) {
+
+            DisputeItemData disputeItemData = disputeData.getDisputeItem(itemId);
+
+            if (disputeItemData == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(ITEM_NOT_FOUND, STATUS_ERROR));
+            }
+
+            if (disputeItemData.getStatus() != DisputeItemStatus.Recall) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ITEM_PASSED_RECALL_STATUS, STATUS_ERROR));
+            }
+
+            if(actionSide == ActionSide.Consumer && disputeUpdateItemData.getStatus() == DisputeItemStatus.CanceledByConsumer) {
+                disputeData.getDisputeItem(disputeItemData.getId()).setStatus(disputeUpdateItemData.getStatus());
+            }
+
+            if(actionSide == ActionSide.Consumer && disputeUpdateItemData.getReason() != null) {
+                disputeData.getDisputeItem(disputeItemData.getId()).setReason(disputeUpdateItemData.getReason());
+            }
+
+            if(actionSide == ActionSide.Merchant && (disputeUpdateItemData.getStatus() == DisputeItemStatus.AcceptedByMerchant ||
+                    disputeUpdateItemData.getStatus() == DisputeItemStatus.RejectedByMerchant)) {
+                disputeItemData.setStatus(disputeUpdateItemData.getStatus());
+            }
+
+            disputeService.update(disputeData);
         }
-
-        if(actionSide == ActionSide.Consumer && disputeItemDataNew.getReason() != null) {
-            disputeData.getDisputeItem(disputeItemDataNew.getId()).setReason(disputeItemDataNew.getReason());
-        }
-
-        if(actionSide == ActionSide.Merchant && (disputeItemDataNew.getStatus() == DisputeItemStatus.AcceptedByMerchant ||
-                                                 disputeItemDataNew.getStatus() == DisputeItemStatus.RejectedByMerchant)) {
-            disputeItemData.setStatus(disputeItemDataNew.getStatus());
-        }
-
-        disputeService.update(disputeData);
 
         return ResponseEntity.status(HttpStatus.OK).body(new Response(SUCCESS, STATUS_SUCCESS));
     }
