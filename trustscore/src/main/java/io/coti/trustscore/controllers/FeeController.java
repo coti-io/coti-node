@@ -1,7 +1,6 @@
 package io.coti.trustscore.controllers;
 
-import io.coti.basenode.http.BaseResponse;
-import io.coti.basenode.http.Response;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.trustscore.http.NetworkFeeRequest;
 import io.coti.trustscore.http.NetworkFeeValidateRequest;
 import io.coti.trustscore.services.FeeService;
@@ -22,12 +21,12 @@ public class FeeController {
     FeeService feeService;
 
     @RequestMapping(path = "/networkFee", method = RequestMethod.PUT)
-    public ResponseEntity<Response> createNetworkFeeConfirmation(@Valid @RequestBody NetworkFeeRequest request) {
+    public ResponseEntity<IResponse> createNetworkFeeConfirmation(@Valid @RequestBody NetworkFeeRequest request) {
         return feeService.createNetworkFee(request);
     }
 
     @RequestMapping(path = "/networkFee", method = RequestMethod.POST)
-    public ResponseEntity<BaseResponse> validateNetworkFeeConfirmation(@Valid @RequestBody NetworkFeeValidateRequest request) {
+    public ResponseEntity<IResponse> validateNetworkFeeConfirmation(@Valid @RequestBody NetworkFeeValidateRequest request) {
         return feeService.validateNetworkFee(request);
     }
 }

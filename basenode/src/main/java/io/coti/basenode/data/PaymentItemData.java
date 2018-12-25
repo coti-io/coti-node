@@ -15,7 +15,7 @@ public class PaymentItemData implements Serializable {
     @NotNull
     private String itemName;
     @NotNull
-    private String itemQuantity;
+    private int itemQuantity;
 
 
 }

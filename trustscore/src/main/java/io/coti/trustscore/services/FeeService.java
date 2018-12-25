@@ -3,8 +3,8 @@ package io.coti.trustscore.services;
 import io.coti.basenode.crypto.BaseTransactionCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
-import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.TransactionHelper;
 import io.coti.trustscore.http.NetworkFeeRequest;
 import io.coti.trustscore.http.NetworkFeeResponse;
@@ -34,15 +34,14 @@ public class FeeService {
     @Autowired
     private TransactionHelper transactionHelper;
 
-    public ResponseEntity<Response> createNetworkFee(NetworkFeeRequest networkFeeRequest) {
+    public ResponseEntity<IResponse> createNetworkFee(NetworkFeeRequest networkFeeRequest) {
         try {
             FullNodeFeeData fullNodeFeeData = networkFeeRequest.getFullNodeFeeData();
             if (!validateFullNodeFee(fullNodeFeeData)) {
                 return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST)
-                        .body(new NetworkFeeResponse(
-                                STATUS_ERROR,
-                                FULL_NODE_FEE_VALIDATION_ERROR));
+                        .body(new Response(FULL_NODE_FEE_VALIDATION_ERROR,
+                                STATUS_ERROR));
             }
             BigDecimal originalAmount = fullNodeFeeData.getOriginalAmount();
             BigDecimal reducedAmount = originalAmount.subtract(fullNodeFeeData.getAmount());
@@ -59,15 +58,14 @@ public class FeeService {
         }
     }
 
-    public ResponseEntity<BaseResponse> validateNetworkFee(NetworkFeeValidateRequest networkFeeValidateRequest) {
+    public ResponseEntity<IResponse> validateNetworkFee(NetworkFeeValidateRequest networkFeeValidateRequest) {
         try {
             FullNodeFeeData fullNodeFeeData = networkFeeValidateRequest.getFullNodeFeeData();
             if (!validateFullNodeFee(fullNodeFeeData)) {
                 return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST)
-                        .body(new NetworkFeeResponse(
-                                STATUS_ERROR,
-                                FULL_NODE_FEE_VALIDATION_ERROR));
+                        .body(new Response(FULL_NODE_FEE_VALIDATION_ERROR,
+                                STATUS_ERROR));
             }
             NetworkFeeData networkFeeData = networkFeeValidateRequest.getNetworkFeeData();
             boolean isValid = isNetworkFeeValid(networkFeeData, fullNodeFeeData.getAmount());
