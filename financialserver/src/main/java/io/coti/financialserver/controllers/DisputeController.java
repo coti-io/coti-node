@@ -1,6 +1,7 @@
 package io.coti.financialserver.controllers;
 
 import io.coti.financialserver.http.ItemRequest;
+import io.coti.financialserver.http.UpdateItemRequest;
 import io.coti.financialserver.http.NewDisputeRequest;
 import io.coti.financialserver.http.VoteRequest;
 import io.coti.financialserver.services.ItemService;
@@ -47,7 +48,7 @@ public class DisputeController {
     }
 
     @RequestMapping(path = "/item/update",method = RequestMethod.PUT)
-    public ResponseEntity itemUpdate(@Valid @RequestBody ItemRequest request) {
+    public ResponseEntity itemUpdate(@Valid @RequestBody UpdateItemRequest request) {
 
         return itemService.itemUpdate(request);
     }
