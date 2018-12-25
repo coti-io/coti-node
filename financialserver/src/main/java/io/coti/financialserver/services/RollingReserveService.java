@@ -87,7 +87,8 @@ public class RollingReserveService {
         if( rollingReserves.getByHash(rollingReserveData.getHash()) == null ) {
             createRollingReserveDataForMerchant(rollingReserveData.getHash());
             rollingReserveData = rollingReserves.getByHash(rollingReserveData.getHash());
-            propagationPublisher.propagate(rollingReserveData, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode));
+            propagationPublisher.propagate(new RollingReserveAddressPropagatable(rollingReserveData.getHash(), rollingReserveData.getRollingReserveAddress()),
+                                            Arrays.asList(NodeType.TrustScoreNode));
         }
         else {
             rollingReserveData = rollingReserves.getByHash(rollingReserveData.getHash());
@@ -198,6 +199,9 @@ public class RollingReserveService {
         RollingReserveReleaseDateData rollingReserveReleaseDateData;
         Hash merchantHash = disputeData.getMerchantHash();
 
+        if(rollingReserves.getByHash(merchantHash) == null) {
+            createRollingReserveDataForMerchant(merchantHash);
+        }
         RollingReserveData rollingReserveData = rollingReserves.getByHash(merchantHash);
         List<Date> releaseDates = rollingReserveData.getReleaseDates();
 
@@ -232,6 +236,7 @@ public class RollingReserveService {
         }
 
         transactionCreationService.createNewChargebackTransaction(amount, rollingReserveData.getRollingReserveAddress(), consumerAddress, remainingChargebackAmount);
+
         if( !remainingChargebackAmount.equals(new BigDecimal(0)) ) {
             RecourseClaimData recourseClaimData = recourseClaims.getByHash(merchantHash);
             if(recourseClaimData == null) {
@@ -242,7 +247,7 @@ public class RollingReserveService {
             recourseClaimData.getDisputeHashes().add(disputeData.getHash());
             recourseClaimData.setAmountToPay(recourseClaimData.getAmountToPay().add(remainingChargebackAmount));
 
-            propagationPublisher.propagate(recourseClaimData, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode));
+            propagationPublisher.propagate(recourseClaimData, Arrays.asList(NodeType.TrustScoreNode));
             recourseClaims.put(recourseClaimData);
         }
 

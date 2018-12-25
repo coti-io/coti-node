@@ -14,7 +14,7 @@ import java.util.Date;
 import java.util.List;
 
 @Data
-public class RollingReserveData implements IEntity, ISignable, ISignValidatable, IPropagatable {
+public class RollingReserveData implements IEntity, ISignable, ISignValidatable {
 
     Hash merchantHash;
     Hash rollingReserveAddress;

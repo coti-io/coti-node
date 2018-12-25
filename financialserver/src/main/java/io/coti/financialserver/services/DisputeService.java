@@ -38,7 +38,7 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 @Service
 public class DisputeService {
 
-    private static final int COUNT_ARBITRATORS_PER_DISPUTE = 1;
+    private static final int COUNT_ARBITRATORS_PER_DISPUTE = 3;
 
     @Value("#{'${arbitrators.userHashes}'.split(',')}")
     private List<String> ARBITRATOR_USER_HASHES;
@@ -146,6 +146,7 @@ public class DisputeService {
     private void addUserDisputeHash(ActionSide actionSide, Hash userHash, Hash disputeHash) {
 
         Collection<UserDisputesData> userDisputesCollection = userDisputesCollectionMap.get(actionSide);
+
         UserDisputesData userDisputesData = userDisputesCollection.getByHash(userHash);
 
         if (userDisputesData == null) {
@@ -206,6 +207,7 @@ public class DisputeService {
     }
 
     public void update(DisputeData dispute) {
+
         dispute.setUpdateTime(new Date());
 
         boolean noRecallItems = true;
@@ -252,9 +254,11 @@ public class DisputeService {
     }
 
     public void updateAfterVote(DisputeData dispute) {
+
         dispute.setUpdateTime(new Date());
 
         int arbitratorsCount = dispute.getArbitratorHashes().size();
+        int majorityOfVotes = (arbitratorsCount + 1) / 2;
         int votesForConsumer;
         int votesForMerchant;
 
@@ -276,9 +280,10 @@ public class DisputeService {
                 }
             }
 
-            if (votesForConsumer >= votesForMerchant) {
+            if(votesForConsumer >= majorityOfVotes) {
                 disputeItem.setStatus(DisputeItemStatus.AcceptedByArbitrators);
-            } else {
+            }
+            else if(votesForMerchant >= majorityOfVotes) {
                 disputeItem.setStatus(DisputeItemStatus.RejectedByArbitrators);
             }
         }
@@ -307,7 +312,9 @@ public class DisputeService {
 
             TransactionData transactionData = transactions.getByHash(dispute.getTransactionHash());
 
-            rollingReserveService.chargebackConsumer(dispute, transactionData.getSenderHash(), chargebackAmount);
+            if(chargebackAmount.compareTo(BigDecimal.ZERO) > 0) {
+                rollingReserveService.chargebackConsumer(dispute, transactionData.getSenderHash(), chargebackAmount);
+            }
             dispute.setDisputeStatus(DisputeStatus.Closed);
         }
 
