@@ -26,9 +26,6 @@ public class AwsService {
     @Value("${aws.s3.bucket.region}")
     private String REGION;
 
-    private static final String ERROR_OBJECT_EXIST = "Document already exist.";
-    private static final String ERROR_UPLOAD_TO_S3 = "Some error occurred during upload.";
-
     private AmazonS3 getS3Client() {
         return AmazonS3ClientBuilder.standard().withRegion(REGION)
                 .withCredentials(new ProfileCredentialsProvider())
@@ -40,7 +37,7 @@ public class AwsService {
         String error = null;
 
         if(getS3Client().doesObjectExist(BUCKET_NAME, fileName)) {
-            error = ERROR_OBJECT_EXIST;
+            error = DOCUMENT_EXISTS_ERROR;
         }
 
         try {
@@ -51,7 +48,7 @@ public class AwsService {
             getS3Client().putObject(request);
         } catch (AmazonServiceException e) {
             log.error(e.getErrorMessage());
-            error = ERROR_UPLOAD_TO_S3;
+            error = DOCUMENT_UPLOAD_ERROR;
         }
 
         return error;

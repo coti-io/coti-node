@@ -41,16 +41,16 @@ public class DisputeController {
         return disputeService.getDisputes(getDisputesRequest);
     }
 
-    @RequestMapping(path = "/item/new",method = RequestMethod.PUT)
-    public ResponseEntity itemNew(@Valid @RequestBody ItemRequest request) {
+    @RequestMapping(path = "/item",method = RequestMethod.PUT)
+    public ResponseEntity newItem(@Valid @RequestBody ItemRequest request) {
 
-        return itemService.itemNew(request);
+        return itemService.newItem(request);
     }
 
     @RequestMapping(path = "/item/update",method = RequestMethod.PUT)
-    public ResponseEntity itemUpdate(@Valid @RequestBody UpdateItemRequest request) {
+    public ResponseEntity updateItem(@Valid @RequestBody UpdateItemRequest request) {
 
-        return itemService.itemUpdate(request);
+        return itemService.updateItem(request);
     }
 
     @RequestMapping(path = "/item/vote", method = RequestMethod.PUT)
