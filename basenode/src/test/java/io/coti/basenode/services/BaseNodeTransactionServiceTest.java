@@ -3,7 +3,6 @@ package io.coti.basenode.services;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.database.RocksDBConnector;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.ITransactionService;
 import io.coti.basenode.services.interfaces.IValidationService;

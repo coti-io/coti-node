@@ -13,13 +13,14 @@ import java.util.concurrent.ThreadLocalRandom;
 public class TestUtils {
 
     private static final String[] hexaOptions = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
+    private static final int SIZE_OF_HASH = 64;
 
     public static Double generateRandomTrustScore() {
         return Math.random() * 100;
     }
 
     public static TransactionData generateRandomTransaction() {
-        return createTransactionWithSpecificHash(generateRandomHash(64));
+        return createTransactionWithSpecificHash(generateRandomHash(SIZE_OF_HASH));
     }
 
     public static TransactionData createTransactionWithSpecificHash(Hash hash) {
@@ -35,6 +36,10 @@ public class TestUtils {
                 new Date(),
                 TransactionType.Payment);
         return tx;
+    }
+
+    public static Hash generateRandomHash() {
+        return generateRandomHash(SIZE_OF_HASH);
     }
 
     public static Hash generateRandomHash(int lengthOfHash) {

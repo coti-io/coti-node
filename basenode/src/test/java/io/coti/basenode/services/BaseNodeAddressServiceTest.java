@@ -4,7 +4,6 @@ import io.coti.basenode.data.AddressData;
 import io.coti.basenode.database.Interfaces.IDatabaseConnector;
 import io.coti.basenode.database.RocksDBConnector;
 import io.coti.basenode.model.Addresses;
-import io.coti.basenode.services.BaseNodeAddressService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Before;

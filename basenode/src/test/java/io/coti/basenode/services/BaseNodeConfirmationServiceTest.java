@@ -4,14 +4,8 @@ import io.coti.basenode.data.DspConsensusResult;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TccInfo;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.database.RocksDBConnector;
-import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.BaseNodeBalanceService;
-import io.coti.basenode.services.BaseNodeConfirmationService;
 import io.coti.basenode.services.LiveView.LiveViewService;
-import io.coti.basenode.services.TransactionHelper;
-import io.coti.basenode.services.TransactionIndexService;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -52,10 +46,10 @@ import static testUtils.TestUtils.*;
         BaseNodeConfirmationService.class}
         //LiveViewService.class,
         //BaseNodeBalanceService.class,
-       // TransactionHelper.class,
-       // TransactionIndexService.class,
-       // Transactions.class,
-       // AddressTransactionsHistories.class}
+        // TransactionHelper.class,
+        // TransactionIndexService.class,
+        // Transactions.class,
+        // AddressTransactionsHistories.class}
 )
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest

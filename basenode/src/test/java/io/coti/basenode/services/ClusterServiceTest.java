@@ -4,9 +4,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.ClusterService;
 import io.coti.basenode.services.LiveView.LiveViewService;
-import io.coti.basenode.services.TccConfirmationService;
 import io.coti.basenode.services.interfaces.IConfirmationService;
 import io.coti.basenode.services.interfaces.ISourceSelector;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +24,7 @@ import java.util.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static testUtils.TestUtils.generateRandomHash;
+
 //
 //@TestPropertySource(locations = "classpath:test.properties")
 //@RunWith(SpringRunner.class)

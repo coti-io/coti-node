@@ -21,7 +21,6 @@ import static testUtils.TestUtils.generateRandomHash;
 @RunWith(SpringRunner.class)
 @Slf4j
 public class AddressServiceTest {
-    private static final int SIZE_OF_HASH = 64;
 
     @Autowired
     private AddressService addressService;
@@ -48,7 +47,7 @@ public class AddressServiceTest {
     @Test
     public void handleNewAddressFromFullNode() {
         log.info("Starting  - " + this.getClass().getSimpleName());
-        addressService.handleNewAddressFromFullNode(new AddressData(generateRandomHash(SIZE_OF_HASH )));
+        addressService.handleNewAddressFromFullNode(new AddressData(generateRandomHash()));
     }
 
 }

@@ -2,7 +2,6 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
-import io.coti.basenode.services.SourceSelector;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Before;
