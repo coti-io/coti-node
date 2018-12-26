@@ -32,7 +32,6 @@ import static testUtils.TestUtils.generateRandomHash;
 public class SourceSelectorTest {
     private static final String TRANSACTION_DESCRIPTION = "test";
     private static final int SECOND_IN_MILLISECOND = 1000;
-    private static final int SIZE_OF_HASH = 64;
 
     @Autowired
     private SourceSelector sourceSelector;
@@ -48,7 +47,7 @@ public class SourceSelectorTest {
         newTransactions = new Vector();
         double[] trustScores = new double[]{92, 84, 86, 76, 60, 86, 80, 72};
         for (int i = 0; i < 8; i++) {
-            TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, trustScores[i], new Date(), TransactionType.Payment);
+            TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(), TRANSACTION_DESCRIPTION, trustScores[i], new Date(), TransactionType.Payment);
             transactionData.setAttachmentTime(new Date(now.getTime() - SECOND_IN_MILLISECOND * i));
             newTransactions.add(transactionData);
         }
@@ -78,11 +77,11 @@ public class SourceSelectorTest {
         List<TransactionData> sources2 = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 92);
         Assert.assertTrue(sources2.size() == 1);
 
-        TransactionData transactionData8 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 100, new Date(), TransactionType.Payment);
+        TransactionData transactionData8 = new TransactionData(new ArrayList<>(), generateRandomHash(), TRANSACTION_DESCRIPTION, 100, new Date(), TransactionType.Payment);
         transactionData8.setSenderTrustScore(80);
         transactionData8.setAttachmentTime(new Date(now.getTime() - SECOND_IN_MILLISECOND));
 
-        TransactionData transactionData9 = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 100, new Date(), TransactionType.Payment);
+        TransactionData transactionData9 = new TransactionData(new ArrayList<>(), generateRandomHash(), TRANSACTION_DESCRIPTION, 100, new Date(), TransactionType.Payment);
         transactionData9.setSenderTrustScore(72);
         transactionData9.setAttachmentTime(new Date(now.getTime() - SECOND_IN_MILLISECOND));
 

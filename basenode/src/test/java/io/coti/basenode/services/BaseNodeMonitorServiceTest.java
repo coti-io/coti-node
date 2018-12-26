@@ -1,4 +1,4 @@
-package integrationTest;
+package io.coti.basenode.services;
 
 
 import io.coti.basenode.communication.JacksonSerializer;

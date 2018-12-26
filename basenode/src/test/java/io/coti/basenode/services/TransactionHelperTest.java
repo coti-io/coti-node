@@ -39,7 +39,6 @@ import static testUtils.TestUtils.*;
 public class TransactionHelperTest {
 
     public static final String TRANSACTION_DESCRIPTION = "test";
-    private static final int SIZE_OF_HASH = 64;
     private static final int TRUSTSCORE_NODE_RESULT_VALID_SIZE = 3;
     private static final int TRUSTSCORE_NODE_RESULT_NOT_VALID_SIZE = 4;
 
@@ -109,16 +108,16 @@ public class TransactionHelperTest {
     @Test
     public void validateBaseTransactionAmounts_WhenAmountsNotEqual() {
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
-        baseTransactions.add(generateFullNodeFeeData(generateRandomHash(SIZE_OF_HASH), 6));
-        baseTransactions.add(generateFullNodeFeeData(generateRandomHash(SIZE_OF_HASH), 5));
-        baseTransactions.add(createInputBaseTransactionDataWithSpecificHashAndCount(generateRandomHash(SIZE_OF_HASH), -10));
+        baseTransactions.add(generateFullNodeFeeData(generateRandomHash(), 6));
+        baseTransactions.add(generateFullNodeFeeData(generateRandomHash(), 5));
+        baseTransactions.add(createInputBaseTransactionDataWithSpecificHashAndCount(generateRandomHash(), -10));
         Assert.assertFalse(transactionHelper.validateBaseTransactionAmounts(baseTransactions));
     }
 
     @Test
     public void validateTransactionType_isValid() {
         List<BaseTransactionData> baseTransactions = generateValidateBaseTransactionData();
-        TransactionData TransactionData = new TransactionData(baseTransactions, generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Payment);
+        TransactionData TransactionData = new TransactionData(baseTransactions, generateRandomHash(), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Payment);
         Assert.assertTrue(transactionHelper.validateTransactionType(TransactionData));
     }
 
@@ -126,27 +125,27 @@ public class TransactionHelperTest {
     @Test
     public void validateTransactionType_isNotValid() {
         List<BaseTransactionData> baseTransactions = generateValidateBaseTransactionData();
-        TransactionData TransactionData = new TransactionData(baseTransactions, generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Transfer);
+        TransactionData TransactionData = new TransactionData(baseTransactions, generateRandomHash(), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Transfer);
         Assert.assertFalse(transactionHelper.validateTransactionType(TransactionData));
     }
 
     private List<BaseTransactionData> generateValidateBaseTransactionData() {
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
-        baseTransactions.add(generateFullNodeFeeData(generateRandomHash(SIZE_OF_HASH), 7));
-        baseTransactions.add(generateNetworkFeeData(generateRandomHash(SIZE_OF_HASH), 5));
-        baseTransactions.add(generateRollingReserveData(generateRandomHash(SIZE_OF_HASH), 4));
-        baseTransactions.add(generateReceiverBaseTransactionData(generateRandomHash(SIZE_OF_HASH), 3));
-        baseTransactions.add(createInputBaseTransactionDataWithSpecificHashAndCount(generateRandomHash(SIZE_OF_HASH), -19));
+        baseTransactions.add(generateFullNodeFeeData(generateRandomHash(), 7));
+        baseTransactions.add(generateNetworkFeeData(generateRandomHash(), 5));
+        baseTransactions.add(generateRollingReserveData(generateRandomHash(), 4));
+        baseTransactions.add(generateReceiverBaseTransactionData(generateRandomHash(), 3));
+        baseTransactions.add(createInputBaseTransactionDataWithSpecificHashAndCount(generateRandomHash(), -19));
         return baseTransactions;
     }
 
     //
     @Test
     public void validateBaseTransactionTrustScoreNodeResult_isValid() {
-        NetworkFeeData networkFeeData = (NetworkFeeData) generateNetworkFeeData(generateRandomHash(SIZE_OF_HASH), generateRandomCount());
+        NetworkFeeData networkFeeData = (NetworkFeeData) generateNetworkFeeData(generateRandomHash(), generateRandomCount());
         networkFeeData.setNetworkFeeTrustScoreNodeResult(new ArrayList());
         for (int i = 0; i < TRUSTSCORE_NODE_RESULT_VALID_SIZE; i++) {
-            networkFeeData.getNetworkFeeTrustScoreNodeResult().add(new TrustScoreNodeResultData(generateRandomHash(SIZE_OF_HASH), true));
+            networkFeeData.getNetworkFeeTrustScoreNodeResult().add(new TrustScoreNodeResultData(generateRandomHash(), true));
         }
         Assert.assertTrue(transactionHelper.validateBaseTransactionTrustScoreNodeResult(networkFeeData));
     }
@@ -154,16 +153,16 @@ public class TransactionHelperTest {
 
     @Test
     public void validateBaseTransactionTrustScoreNodeResult_isNotValid() {
-        NetworkFeeData networkFeeData1 = (NetworkFeeData) generateNetworkFeeData(generateRandomHash(SIZE_OF_HASH), generateRandomCount());
+        NetworkFeeData networkFeeData1 = (NetworkFeeData) generateNetworkFeeData(generateRandomHash(), generateRandomCount());
         networkFeeData1.setNetworkFeeTrustScoreNodeResult(new ArrayList());
         for (int i = 0; i < TRUSTSCORE_NODE_RESULT_VALID_SIZE; i++) {
-            networkFeeData1.getNetworkFeeTrustScoreNodeResult().add(new TrustScoreNodeResultData(generateRandomHash(SIZE_OF_HASH), false));
+            networkFeeData1.getNetworkFeeTrustScoreNodeResult().add(new TrustScoreNodeResultData(generateRandomHash(), false));
         }
 
-        NetworkFeeData networkFeeData2 = (NetworkFeeData) generateNetworkFeeData(generateRandomHash(SIZE_OF_HASH), generateRandomCount());
+        NetworkFeeData networkFeeData2 = (NetworkFeeData) generateNetworkFeeData(generateRandomHash(), generateRandomCount());
         networkFeeData2.setNetworkFeeTrustScoreNodeResult(new ArrayList());
         for (int i = 0; i < TRUSTSCORE_NODE_RESULT_NOT_VALID_SIZE; i++) {
-            networkFeeData2.getNetworkFeeTrustScoreNodeResult().add(new TrustScoreNodeResultData(generateRandomHash(SIZE_OF_HASH), true));
+            networkFeeData2.getNetworkFeeTrustScoreNodeResult().add(new TrustScoreNodeResultData(generateRandomHash(), true));
         }
 
         Assert.assertTrue(!transactionHelper.validateBaseTransactionTrustScoreNodeResult(networkFeeData1) &&
@@ -203,7 +202,7 @@ public class TransactionHelperTest {
     public void isConfirmed_whenTccConfirmedAndNotDspConfirmed_returnsFalse() {
         TransactionData tx = createTransaction();
         tx.setTrustChainConsensus(true);
-        tx.setDspConsensusResult(new DspConsensusResult(generateRandomHash(SIZE_OF_HASH)));
+        tx.setDspConsensusResult(new DspConsensusResult(generateRandomHash()));
         tx.getDspConsensusResult().setDspConsensus(false);
         Assert.assertFalse(transactionHelper.isConfirmed(tx));
     }
@@ -212,7 +211,7 @@ public class TransactionHelperTest {
     public void isConfirmed_whenTccNotConfirmedAndDspConfirmed_returnsFalse() {
         TransactionData tx = createTransaction();
         tx.setTrustChainConsensus(false);
-        tx.setDspConsensusResult(new DspConsensusResult(generateRandomHash(SIZE_OF_HASH)));
+        tx.setDspConsensusResult(new DspConsensusResult(generateRandomHash()));
         tx.getDspConsensusResult().setDspConsensus(true);
         Assert.assertFalse(transactionHelper.isConfirmed(tx));
     }

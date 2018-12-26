@@ -29,11 +29,9 @@ import static testUtils.TestUtils.generateRandomHash;
 @RunWith(SpringRunner.class)
 @Slf4j
 public class LiveViewServiceTest {
-    private static final int SIZE_OF_HASH = 64;
 
-    private static final Hash TRANSACTION_ONE_HASH = generateRandomHash(SIZE_OF_HASH);
-    private static final Hash TRANSACTION_TWO_HASH = generateRandomHash(SIZE_OF_HASH);
-    private static final Hash TRANSACTION_THREE_HASH = generateRandomHash(SIZE_OF_HASH);
+    private static final Hash TRANSACTION_ONE_HASH = generateRandomHash();
+    private static final Hash TRANSACTION_TWO_HASH = generateRandomHash();
 
     private static final int HUNDRED_SECONDS = 100;
     private static final int HUNDRED_SECONDS_IN_MILLISECONDS = 100000;
@@ -64,7 +62,7 @@ public class LiveViewServiceTest {
     @Test
     public void setNodeDataDatesFromTransactionData() {
         TransactionData transactionData =
-                TestUtils.createTransactionWithSpecificHash(TRANSACTION_TWO_HASH);
+                TestUtils.createTransactionWithSpecificHash(TRANSACTION_ONE_HASH);
         transactionData.setAttachmentTime(new Date());
         transactionData.setTransactionConsensusUpdateTime(new Date(transactionData.getAttachmentTime().getTime() + HUNDRED_SECONDS_IN_MILLISECONDS));
         NodeData nodeData = new NodeData();
@@ -74,7 +72,7 @@ public class LiveViewServiceTest {
 
     @Test
     public void updateNodeStatus() {
-        TransactionData transactionData = TestUtils.createTransactionWithSpecificHash(TRANSACTION_THREE_HASH);
+        TransactionData transactionData = TestUtils.createTransactionWithSpecificHash(TRANSACTION_TWO_HASH);
         liveViewService.addNode(transactionData);
         liveViewService.updateNodeStatus(transactionData, TCC_CONFIRMED_STATUS);
         GraphData graphData = liveViewService.getFullGraph();

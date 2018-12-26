@@ -28,25 +28,23 @@ import static testUtils.TestUtils.generateRandomTrustScore;
 @Slf4j
 public class TransactionDataTest {
     private static final String TRANSACTION_DESCRIPTION = "test";
-    private static final int SIZE_OF_HASH = 64;
 
     @Before
     public void setUp() {
         log.info("Starting  - " + this.getClass().getSimpleName());
     }
 
-
     @Test
     public void testGetRoundedSenderTrustScore() {
-        TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, 82.666, new Date(), TransactionType.Payment);
+        TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(), TRANSACTION_DESCRIPTION, 82.666, new Date(), TransactionType.Payment);
         Assert.assertTrue(transactionData.getRoundedSenderTrustScore() == 83);
     }
 
     @Test
     public void addToChildrenTransactions__noExceptionIsThrown() {
         try {
-            TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Payment);
-            transactionData.addToChildrenTransactions(generateRandomHash(SIZE_OF_HASH));
+            TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Payment);
+            transactionData.addToChildrenTransactions(generateRandomHash());
         } catch (Exception e) {
             Assert.fail(e.getMessage());
         }
@@ -54,21 +52,21 @@ public class TransactionDataTest {
 
     @Test
     public void isSource_NullChildrenList_returnTrue() {
-        TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Payment);
+        TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Payment);
         Assert.assertTrue(transactionData.isSource());
     }
 
 
     @Test
     public void isSource_EmptyChildrenList_returnTrue() {
-        TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Payment);
+        TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Payment);
         transactionData.setChildrenTransactions(new LinkedList<>());
         Assert.assertTrue(transactionData.isSource());
     }
 
     @Test
     public void isSource_NonEmptyChildrenList_returnFalse() {
-        TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Payment);
+        TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Payment);
         transactionData.setChildrenTransactions(
                 Collections.singletonList(new Hash("TransactionData 1".getBytes())));
         Assert.assertFalse(transactionData.isSource());
@@ -76,7 +74,7 @@ public class TransactionDataTest {
 
     @Test
     public void equals_whenOtherTransactionHasTheSameHash_returnTrue() {
-        Hash hash = generateRandomHash(SIZE_OF_HASH);
+        Hash hash = generateRandomHash();
         TransactionData transactionData1 = TestUtils.createTransactionWithSpecificHash(hash);
         TransactionData transactionData2 = TestUtils.createTransactionWithSpecificHash(hash);
         Assert.assertTrue(transactionData1.equals(transactionData2));
@@ -84,14 +82,14 @@ public class TransactionDataTest {
 
     @Test
     public void equals_whenOtherTransactionHasDifferentHash_returnFalse() {
-        TransactionData transactionData1 = TestUtils.createTransactionWithSpecificHash(generateRandomHash(SIZE_OF_HASH));
-        TransactionData transactionData2 = TestUtils.createTransactionWithSpecificHash(generateRandomHash(SIZE_OF_HASH));
+        TransactionData transactionData1 = TestUtils.createTransactionWithSpecificHash(generateRandomHash());
+        TransactionData transactionData2 = TestUtils.createTransactionWithSpecificHash(generateRandomHash());
         Assert.assertFalse(transactionData1.equals(transactionData2));
     }
 
     @Test
     public void equals_whenOtherObjectIsNotATransactionData_returnFalse() {
-        Hash hash = generateRandomHash(SIZE_OF_HASH);
+        Hash hash = generateRandomHash();
         TransactionData transactionData = TestUtils.createTransactionWithSpecificHash(hash);
         Assert.assertFalse(transactionData.equals(hash));
     }

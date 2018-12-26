@@ -62,7 +62,6 @@ import static testUtils.TestUtils.*;
 @RunWith(SpringRunner.class)
 @Slf4j
 public class BaseNodeConfirmationServiceTest {
-    private static final int SIZE_OF_HASH = 64;
 
     @Autowired
     private BaseNodeConfirmationService baseNodeConfirmationService;
@@ -81,7 +80,7 @@ public class BaseNodeConfirmationServiceTest {
     @Before
     public void setUp() {
         log.info("Starting  - " + this.getClass().getSimpleName());
-        Hash hash = generateRandomHash(SIZE_OF_HASH);
+        Hash hash = generateRandomHash();
         when(transactions.getByHash(any(Hash.class))).thenReturn(createTransactionWithSpecificHash(hash));
         baseNodeConfirmationService.init();
     }
@@ -89,7 +88,7 @@ public class BaseNodeConfirmationServiceTest {
     @Test
     public void setTccToTrue_noExceptionIsThrown() {
         try {
-            Hash hash = generateRandomHash(SIZE_OF_HASH);
+            Hash hash = generateRandomHash();
             transactions.put(createTransactionWithSpecificHash(hash));
             baseNodeConfirmationService.setTccToTrue(new TccInfo(hash, null, generateRandomTrustScore()));
         } catch (Exception e) {
@@ -100,7 +99,7 @@ public class BaseNodeConfirmationServiceTest {
     @Test
     public void setDspcToTrue_noExceptionIsThrown() {
         try {
-            Hash hash = generateRandomHash(SIZE_OF_HASH);
+            Hash hash = generateRandomHash();
             when(transactions.getByHash(any(Hash.class))).thenReturn(createTransactionWithSpecificHash(hash));
             transactions.put(createTransactionWithSpecificHash(hash));
             baseNodeConfirmationService.setDspcToTrue(new DspConsensusResult(hash));
@@ -122,7 +121,7 @@ public class BaseNodeConfirmationServiceTest {
     private void insertSavedTransaction() {
         try {
             TransactionData transactionData = generateRandomTransaction();
-            transactionData.setDspConsensusResult(new DspConsensusResult(generateRandomHash(SIZE_OF_HASH)));
+            transactionData.setDspConsensusResult(new DspConsensusResult(generateRandomHash()));
             when(transactionIndexService.insertNewTransactionIndex(transactionData)).thenReturn(true);
             when(transactionHelper.isConfirmed(transactionData)).thenReturn(true);
             when(transactionHelper.isDspConfirmed(transactionData)).thenReturn(true);

@@ -37,12 +37,11 @@ import static testUtils.TestUtils.generateRandomHash;
 @Slf4j
 public class ClusterServiceTest {
 
-    private static final int SIZE_OF_HASH = 64;
-    private static final Hash TRANSACTION_ONE_HASH = generateRandomHash(SIZE_OF_HASH);
+    private static final Hash TRANSACTION_ONE_HASH = generateRandomHash();
     private static final double TRANSACTION_ONE_TRUSTSCORE = 70;
-    private static final Hash TRANSACTION_TWO_HASH = generateRandomHash(SIZE_OF_HASH);
+    private static final Hash TRANSACTION_TWO_HASH = generateRandomHash();
     private static final double TRANSACTION_TWO_TRUSTSCORE = 83;
-    private static final Hash TRANSACTION_THREE_HASH = generateRandomHash(SIZE_OF_HASH);
+    private static final Hash TRANSACTION_THREE_HASH = generateRandomHash();
     private static final double TRANSACTION_THREE_TRUSTSCORE = 92;
     private static final String TRANSACTION_DESCRIPTION = "test";
     @Autowired

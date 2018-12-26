@@ -36,7 +36,7 @@ import static testUtils.TestUtils.generateRandomHash;
 @Slf4j
 public class TccConfirmationServiceTest {
     private static final String TRANSACTION_DESCRIPTION = "test";
-    private static final int SIZE_OF_HASH = 64;
+
     @Autowired
     TccConfirmationService tccConfirmationService;
     private List<TransactionData> newTransactions;
@@ -51,7 +51,7 @@ public class TccConfirmationServiceTest {
         newTransactions = new Vector();
         double[] trustScores = new double[]{20, 70, 100, 90, 50, 70, 60};
         for (int i = 0; i < 7; i++) {
-            TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(SIZE_OF_HASH), TRANSACTION_DESCRIPTION, trustScores[i], new Date(), TransactionType.Payment);
+            TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(), TRANSACTION_DESCRIPTION, trustScores[i], new Date(), TransactionType.Payment);
             newTransactions.add(transactionData);
         }
 

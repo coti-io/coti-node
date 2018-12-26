@@ -14,6 +14,12 @@ import java.util.concurrent.ThreadLocalRandom;
 public class TestUtils {
 
     private static final String[] hexaOptions = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
+    private static final int SIZE_OF_HASH = 64;
+    private static final int SIZE_OF_BASE_TRANSACTION_HASH = 136;
+
+    public static Hash generateRandomHash() {
+        return generateRandomHash(SIZE_OF_HASH);
+    }
 
     public static Hash generateRandomHash(int lengthOfHash) {
         String hexa = "";
@@ -35,7 +41,7 @@ public class TestUtils {
     public static TransactionData createTransactionWithSpecificHash(Hash hash) {
         ArrayList<BaseTransactionData> baseTransactions = new ArrayList<BaseTransactionData>(
                 Arrays.asList(new InputBaseTransactionData(
-                        generateRandomHash(136),
+                        generateRandomHash(SIZE_OF_BASE_TRANSACTION_HASH),
                         new BigDecimal(0),
                         new Date())));
         TransactionData tx = new TransactionData(baseTransactions,
@@ -48,7 +54,7 @@ public class TestUtils {
     }
 
     public static TransactionData generateRandomTransaction() {
-        return createTransactionWithSpecificHash(generateRandomHash(64));
+        return createTransactionWithSpecificHash(generateRandomHash(SIZE_OF_HASH));
     }
 
 
