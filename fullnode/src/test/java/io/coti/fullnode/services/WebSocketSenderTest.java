@@ -22,7 +22,6 @@ import static testUtils.TestUtils.generateRandomHash;
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = {WebSocketSender.class})
 public class WebSocketSenderTest {
-    private static final int SIZE_OF_HASH = 64;
 
     @Autowired
     private WebSocketSender webSocketSender;
@@ -33,7 +32,7 @@ public class WebSocketSenderTest {
     @Test
     public void notifyBalanceChange_noExceptionIsThrown() {
         try {
-            webSocketSender.notifyBalanceChange(generateRandomHash(SIZE_OF_HASH),
+            webSocketSender.notifyBalanceChange(generateRandomHash(),
                     new BigDecimal(generateRandomCount()),
                     new BigDecimal(generateRandomCount()));
         } catch (Exception e) {
@@ -45,7 +44,7 @@ public class WebSocketSenderTest {
     public void notifyTransactionHistoryChange_noExceptionIsThrown() {
         try {
             TransactionData transactionData =
-                    TestUtils.createTransactionWithSpecificHash(generateRandomHash(SIZE_OF_HASH));
+                    TestUtils.createTransactionWithSpecificHash(generateRandomHash());
             webSocketSender.notifyTransactionHistoryChange(transactionData,
                     TransactionStatus.CONFIRMED);
         } catch (Exception e) {
@@ -56,7 +55,7 @@ public class WebSocketSenderTest {
     @Test
     public void notifyGeneratedAddress_noExceptionIsThrown() {
         try {
-            webSocketSender.notifyGeneratedAddress(generateRandomHash(SIZE_OF_HASH));
+            webSocketSender.notifyGeneratedAddress(generateRandomHash());
         } catch (Exception e) {
             assertNull(e);
         }

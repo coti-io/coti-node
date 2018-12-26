@@ -26,7 +26,7 @@ public class TestUtils {
     public static TransactionData createTransactionWithSpecificHash(Hash hash) {
         ArrayList<BaseTransactionData> baseTransactions = new ArrayList<BaseTransactionData>(
                 Arrays.asList(new InputBaseTransactionData
-                        (generateRandomHash(64),
+                        (generateRandomHash(SIZE_OF_HASH),
                                 new BigDecimal(0),
                                 new Date())));
         TransactionData tx = new TransactionData(baseTransactions,

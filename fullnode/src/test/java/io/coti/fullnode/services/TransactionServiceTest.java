@@ -40,8 +40,6 @@ import static testUtils.TestUtils.*;
 @Slf4j
 public class TransactionServiceTest {
 
-    private static final int SIZE_OF_HASH = 64;
-
     @Autowired
     TransactionService transactionService;
 
@@ -100,7 +98,7 @@ public class TransactionServiceTest {
 
     @Test
     public void getAddressTransactions() {
-        Hash addressHash = generateRandomHash(SIZE_OF_HASH);
+        Hash addressHash = generateRandomHash();
         when(addressTransactionHistories.getByHash(addressHash)).thenReturn(new AddressTransactionsHistory(addressHash));
 
         ResponseEntity<BaseResponse> response = transactionService.getAddressTransactions(addressHash);
@@ -110,7 +108,7 @@ public class TransactionServiceTest {
 
     @Test
     public void getTransactionDetails() {
-        Hash transactionHash = generateRandomHash(SIZE_OF_HASH );
+        Hash transactionHash = generateRandomHash();
         when(transactions.getByHash(transactionHash)).thenReturn(createTransactionWithSpecificHash(transactionHash));
 
         ResponseEntity<BaseResponse> response = transactionService.getTransactionDetails(transactionHash);

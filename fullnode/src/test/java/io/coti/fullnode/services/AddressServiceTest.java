@@ -2,7 +2,6 @@ package io.coti.fullnode.services;
 
 import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.data.AddressData;
-import io.coti.basenode.data.Hash;
 import io.coti.basenode.database.Interfaces.IDatabaseConnector;
 import io.coti.basenode.database.RocksDBConnector;
 import io.coti.basenode.model.Addresses;
@@ -27,7 +26,6 @@ import static testUtils.TestUtils.generateRandomHash;
 )
 @Slf4j
 public class AddressServiceTest {
-    private static final int SIZE_OF_HASH = 64;
     private static boolean setUpIsDone = false;
 
     @Autowired
@@ -57,14 +55,14 @@ public class AddressServiceTest {
 
     @Test
     public void addNewAddress() {
-        boolean isAddressNewInDb = addressService.addNewAddress(generateRandomHash(SIZE_OF_HASH ));
+        boolean isAddressNewInDb = addressService.addNewAddress(generateRandomHash());
         Assert.assertTrue(isAddressNewInDb);
     }
 
     @Test
-    public void handlePropagatedAddress_noExceptionIsThrown(){
+    public void handlePropagatedAddress_noExceptionIsThrown() {
         try {
-            addressService.handlePropagatedAddress(new AddressData(generateRandomHash(SIZE_OF_HASH )));
+            addressService.handlePropagatedAddress(new AddressData(generateRandomHash()));
         } catch (Exception e) {
             Assert.fail(e.getMessage());
         }
