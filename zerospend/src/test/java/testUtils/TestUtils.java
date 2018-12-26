@@ -18,6 +18,14 @@ public class TestUtils {
         return Math.random() * 100;
     }
 
+    public static double generateRandomCount() {
+        return Math.random() * Double.MAX_VALUE;
+    }
+
+    public static long generateRandomLongNumber() {
+        return (long) (Math.random() * Long.MAX_VALUE);
+    }
+
     public static TransactionData generateRandomTransaction() {
         return createTransactionWithSpecificHash(generateRandomHash(64));
     }
@@ -37,7 +45,7 @@ public class TestUtils {
         return tx;
     }
 
-    public static Hash generateRandom64Hash() {
+    public static Hash generateRandom64CharsHash() {
         return generateRandomHash(64);
     }
 

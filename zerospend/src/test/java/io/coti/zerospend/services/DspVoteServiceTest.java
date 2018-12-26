@@ -25,7 +25,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.util.Arrays;
 
 import static org.mockito.Mockito.when;
-import static testUtils.TestUtils.generateRandom64Hash;
+import static testUtils.TestUtils.generateRandom64CharsHash;
 import static testUtils.TestUtils.generateRandomTransaction;
 
 @TestPropertySource(locations = "classpath:test.properties")
@@ -70,8 +70,8 @@ public class DspVoteServiceTest {
 
     @Test
     public void receiveDspVote() {
-        Hash transactionHash = generateRandom64Hash();
-        Hash voterDspHash = generateRandom64Hash();
+        Hash transactionHash = generateRandom64CharsHash();
+        Hash voterDspHash = generateRandom64CharsHash();
         DspVote dspVote = new DspVote(transactionHash, true);
         dspVote.setVoterDspHash(voterDspHash);
         when(transactionVotes.getByHash(transactionHash))
