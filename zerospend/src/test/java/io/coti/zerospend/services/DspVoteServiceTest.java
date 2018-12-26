@@ -23,6 +23,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.mockito.Mockito.when;
 import static testUtils.TestUtils.generateRandom64CharsHash;
@@ -76,7 +77,7 @@ public class DspVoteServiceTest {
         dspVote.setVoterDspHash(voterDspHash);
         when(transactionVotes.getByHash(transactionHash))
                 .thenReturn(new TransactionVoteData(transactionHash, (
-                        Arrays.asList(voterDspHash))));
+                        Collections.singletonList(voterDspHash))));
         when(dspVoteCrypto.verifySignature(dspVote)).thenReturn(true);
 
         String result = dspVoteService.receiveDspVote(dspVote);

@@ -95,7 +95,7 @@ public class ClusterServiceTest {
         TransactionData TransactionData = new TransactionData(new ArrayList<>(), TRANSACTION_THREE_HASH, TRANSACTION_DESCRIPTION, TRANSACTION_THREE_TRUSTSCORE, new Date(), TransactionType.Payment);
         when(sourceSelector.selectSourcesForAttachment(any(List.class),
                 any(double.class)))
-                .thenReturn(new Vector<>(Arrays.asList(transactionData2)));
+                .thenReturn(new Vector<>(Collections.singletonList(transactionData2)));
         cluster.selectSources(TransactionData);
         Assert.assertEquals(TransactionData.getLeftParentHash(), TRANSACTION_TWO_HASH);
     }

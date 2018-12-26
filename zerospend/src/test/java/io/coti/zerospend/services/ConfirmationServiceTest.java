@@ -1,7 +1,6 @@
 package io.coti.zerospend.services;
 
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.BaseNodeConfirmationService;
 import io.coti.basenode.services.LiveView.LiveViewService;
 import io.coti.basenode.services.TransactionIndexService;
 import io.coti.basenode.services.interfaces.IBalanceService;
@@ -16,7 +15,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.junit.Assert.*;
+
 import static testUtils.TestUtils.generateRandomTransaction;
 
 @TestPropertySource(locations = "classpath:test.properties")

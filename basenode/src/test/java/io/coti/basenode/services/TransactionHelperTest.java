@@ -36,7 +36,7 @@ import static testUtils.TestUtils.*;
 @Slf4j
 public class TransactionHelperTest {
 
-    public static final String TRANSACTION_DESCRIPTION = "test";
+    private static final String TRANSACTION_DESCRIPTION = "test";
     private static final int TRUSTSCORE_NODE_RESULT_VALID_SIZE = 3;
     private static final int TRUSTSCORE_NODE_RESULT_NOT_VALID_SIZE = 4;
 

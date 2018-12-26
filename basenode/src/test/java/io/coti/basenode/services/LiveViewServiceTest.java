@@ -36,7 +36,7 @@ public class LiveViewServiceTest {
     private static final int HUNDRED_SECONDS = 100;
     private static final int HUNDRED_SECONDS_IN_MILLISECONDS = 100000;
 
-    private static int TCC_CONFIRMED_STATUS = 2;
+    private static final int TCC_CONFIRMED_STATUS = 2;
 
     @Autowired
     private LiveViewService liveViewService;
@@ -56,7 +56,6 @@ public class LiveViewServiceTest {
         } catch (Exception e) {
             Assert.fail(e.getMessage());
         }
-
     }
 
     @Test

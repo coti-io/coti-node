@@ -106,7 +106,6 @@ public class BaseNodeConfirmationServiceTest {
     public void getConfirmedNumber() {
         insertSavedTransaction();
         long totalConfirmed = baseNodeConfirmationService.getTotalConfirmed();
-        long tccConfirmed = baseNodeConfirmationService.getTccConfirmed();
         long dspConfirmed = baseNodeConfirmationService.getDspConfirmed();
         Assert.assertTrue(totalConfirmed != 0 && dspConfirmed != 0);
     }

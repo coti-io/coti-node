@@ -39,7 +39,6 @@ public class TccConfirmationServiceTest {
     @Autowired
     TccConfirmationService tccConfirmationService;
     private List<TransactionData> newTransactions;
-    private ConcurrentHashMap<Hash, TransactionData> hashToUnConfirmationTransactionsMapping;
 
     @Value("${cluster.trust.chain.threshold}")
     private int threshold;
@@ -78,7 +77,7 @@ public class TccConfirmationServiceTest {
             add(newTransactions.get(1).getHash());
         }});
 
-        this.hashToUnConfirmationTransactionsMapping = new ConcurrentHashMap<Hash, TransactionData>() {{
+        ConcurrentHashMap<Hash, TransactionData> hashToUnConfirmationTransactionsMapping = new ConcurrentHashMap<Hash, TransactionData>() {{
             put(newTransactions.get(0).getHash(), newTransactions.get(0));
             put(newTransactions.get(1).getHash(), newTransactions.get(1));
             put(newTransactions.get(2).getHash(), newTransactions.get(2));

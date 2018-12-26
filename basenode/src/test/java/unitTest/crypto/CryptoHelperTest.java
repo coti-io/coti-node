@@ -134,7 +134,7 @@ public class CryptoHelperTest {
         SignatureData signatureData = helper.SignBytes(msgToSign, hexPrivateKey);
 
         String publicKey = CryptoHelper.GetPublicKeyFromPrivateKey(hexPrivateKey);
-        boolean resultVerify = CryptoHelper.VerifyByPublicKey(msgToSign, ((SignatureData) signatureData).getR(), signatureData.getS(), publicKey);
+        boolean resultVerify = CryptoHelper.VerifyByPublicKey(msgToSign, signatureData.getR(), signatureData.getS(), publicKey);
         Assert.assertTrue(resultVerify);
     }
 
