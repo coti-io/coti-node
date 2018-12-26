@@ -55,7 +55,7 @@ public class SourceSelectorTest {
     @Test
     public void selectTwoOptimalSources() {
         List<TransactionData> sources = sourceSelector.selectTwoOptimalSources(newTransactions);
-        Assert.assertTrue(sources.size() == 2);
+        Assert.assertEquals(2, sources.size());
     }
 
     @Test
@@ -68,13 +68,13 @@ public class SourceSelectorTest {
             trustScoreToSourceListMapping.get(transaction.getRoundedSenderTrustScore()).add(transaction);
         }
         List<TransactionData> sources0 = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 38);
-        Assert.assertTrue(sources0.size() == 0);
+        Assert.assertEquals(0, sources0.size());
 
         List<TransactionData> sources1 = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 50);
-        Assert.assertTrue(sources1.size() == 1);
+        Assert.assertEquals(1, sources1.size());
 
         List<TransactionData> sources2 = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 92);
-        Assert.assertTrue(sources2.size() == 1);
+        Assert.assertEquals(1, sources2.size());
 
         TransactionData transactionData8 = new TransactionData(new ArrayList<>(), generateRandomHash(), TRANSACTION_DESCRIPTION, 100, new Date(), TransactionType.Payment);
         transactionData8.setSenderTrustScore(80);
@@ -90,7 +90,7 @@ public class SourceSelectorTest {
         trustScoreToSourceListMapping.get(transactionData9.getRoundedSenderTrustScore()).add(transactionData9);
 
         List<TransactionData> sources3 = sourceSelector.selectSourcesForAttachment(trustScoreToSourceListMapping, 92);
-        Assert.assertTrue(sources3.size() == 2);
+        Assert.assertEquals(2, sources3.size());
     }
 
 }

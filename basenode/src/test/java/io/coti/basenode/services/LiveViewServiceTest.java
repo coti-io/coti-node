@@ -66,7 +66,7 @@ public class LiveViewServiceTest {
         transactionData.setTransactionConsensusUpdateTime(new Date(transactionData.getAttachmentTime().getTime() + HUNDRED_SECONDS_IN_MILLISECONDS));
         NodeData nodeData = new NodeData();
         liveViewService.setNodeDataDatesFromTransactionData(transactionData, nodeData);
-        Assert.assertTrue(nodeData.getTccDuration() == HUNDRED_SECONDS);
+        Assert.assertEquals(nodeData.getTccDuration(), HUNDRED_SECONDS);
     }
 
     @Test
@@ -75,6 +75,6 @@ public class LiveViewServiceTest {
         liveViewService.addNode(transactionData);
         liveViewService.updateNodeStatus(transactionData, TCC_CONFIRMED_STATUS);
         GraphData graphData = liveViewService.getFullGraph();
-        Assert.assertTrue(graphData.nodes.get(0).getStatus() == TCC_CONFIRMED_STATUS);
+        Assert.assertEquals((int) graphData.nodes.get(0).getStatus(), TCC_CONFIRMED_STATUS);
     }
 }

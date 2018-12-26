@@ -58,7 +58,7 @@ public class TransactionCreationServiceTest {
     @Test
     public void createNewStarvationZeroSpendTransaction() {
         String result = transactionCreationService.createNewStarvationZeroSpendTransaction(generateRandomTransaction());
-        Assert.assertTrue(result.equals("Ok"));
+        Assert.assertEquals("Ok", result);
     }
 
     @Test
@@ -71,7 +71,7 @@ public class TransactionCreationServiceTest {
 
         String result = transactionCreationService.createNewGenesisZeroSpendTransaction(zeroSpendTransactionRequest);
 
-        Assert.assertTrue(result.equals("Ok"));
+        Assert.assertEquals("Ok", result);
     }
 
 

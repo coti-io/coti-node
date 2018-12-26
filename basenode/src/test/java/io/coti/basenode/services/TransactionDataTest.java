@@ -36,7 +36,7 @@ public class TransactionDataTest {
     @Test
     public void testGetRoundedSenderTrustScore() {
         TransactionData transactionData = new TransactionData(new ArrayList<>(), generateRandomHash(), TRANSACTION_DESCRIPTION, 82.666, new Date(), TransactionType.Payment);
-        Assert.assertTrue(transactionData.getRoundedSenderTrustScore() == 83);
+        Assert.assertEquals(83, transactionData.getRoundedSenderTrustScore());
     }
 
     @Test
@@ -76,20 +76,20 @@ public class TransactionDataTest {
         Hash hash = generateRandomHash();
         TransactionData transactionData1 = TestUtils.createTransactionWithSpecificHash(hash);
         TransactionData transactionData2 = TestUtils.createTransactionWithSpecificHash(hash);
-        Assert.assertTrue(transactionData1.equals(transactionData2));
+        Assert.assertEquals(transactionData1, transactionData2);
     }
 
     @Test
     public void equals_whenOtherTransactionHasDifferentHash_returnFalse() {
         TransactionData transactionData1 = TestUtils.createTransactionWithSpecificHash(generateRandomHash());
         TransactionData transactionData2 = TestUtils.createTransactionWithSpecificHash(generateRandomHash());
-        Assert.assertFalse(transactionData1.equals(transactionData2));
+        Assert.assertNotEquals(transactionData1, transactionData2);
     }
 
     @Test
     public void equals_whenOtherObjectIsNotATransactionData_returnFalse() {
         Hash hash = generateRandomHash();
         TransactionData transactionData = TestUtils.createTransactionWithSpecificHash(hash);
-        Assert.assertFalse(transactionData.equals(hash));
+        Assert.assertNotEquals(transactionData, hash);
     }
 }

@@ -45,6 +45,6 @@ public class SourceStarvationServiceTest {
 
         String millisecondsToMinutes = sourceStarvationService.millisecondsToMinutes(milliseconds);
 
-        Assert.assertTrue(millisecondsToMinutes.equals(new SimpleDateFormat("mm:ss").format(new Date(milliseconds))));
+        Assert.assertEquals(millisecondsToMinutes, new SimpleDateFormat("mm:ss").format(new Date(milliseconds)));
     }
 }

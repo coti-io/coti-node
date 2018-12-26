@@ -41,7 +41,7 @@ public class CryptoHelperTests {
         String rHex = "0af936b4ddb6e33269f63d52586ffa3ce7d9358a2fed7fde9536e19a70723860";
         String sHex = "c3a122626df0b7c9d731a8eb9cd42abce7fdd477c591d9f6569be8561ad27639";
         PublicKey key = helper.getPublicKeyFromHexString("989fc9a6b0829cd4aa83e3d7f2d24322dc6c08db80fcef988f8fba226de8f28f5a624afacb6ac328547c94f4b3407e6012f81ebcd59b1b1883037198f3088770");
-        Assert.assertEquals(helper.VerifyByPublicKey(dataToVerify, rHex, sHex, key), true);
+        Assert.assertTrue(helper.VerifyByPublicKey(dataToVerify, rHex, sHex, key));
     }
 
 
@@ -73,7 +73,7 @@ public class CryptoHelperTests {
         String rHex = "0af936b4ddb6e33269f63d52586ffa3ce7d9358a2fed7fde9536e19a70723849"; //instead of .......60 changed r value to ......49
         String sHex = "c3a122626df0b7c9d731a8eb9cd42abce7fdd477c591d9f6569be8561ad27639";
         PublicKey key = helper.getPublicKeyFromHexString("989fc9a6b0829cd4aa83e3d7f2d24322dc6c08db80fcef988f8fba226de8f28f5a624afacb6ac328547c94f4b3407e6012f81ebcd59b1b1883037198f3088770");
-        Assert.assertEquals(helper.VerifyByPublicKey(dataToVerify, rHex, sHex, key), false);
+        Assert.assertFalse(helper.VerifyByPublicKey(dataToVerify, rHex, sHex, key));
     }
 
 
@@ -98,7 +98,7 @@ public class CryptoHelperTests {
         CryptoHelper helper = new CryptoHelper();
         boolean isVerified = helper.IsAddressValid(new Hash("bc0798cc85e98a8ed4160b8a21e17df7ce86edfd1efabc87c069b345858a49ab3e51540465f175952d19ac877b42cb044c04bb1c624e13b2f73382841ad452c7578da662"));
 
-        Assert.assertEquals(isVerified, true);
+        Assert.assertTrue(isVerified);
     }
 
 
@@ -106,7 +106,7 @@ public class CryptoHelperTests {
     public void WrongAddressCheckSum() {
         CryptoHelper helper = new CryptoHelper();
         boolean isVerified = helper.IsAddressValid(new Hash("cc0798cc85e98a8ed4160b8a21e17df7ce86edfd1efabc87c069b345858a49ab3e51540465f175952d19ac877b42cb044c04bb1c624e13b2f73382841ad452c7578da662"));
-        Assert.assertEquals(isVerified, false);
+        Assert.assertFalse(isVerified);
     }
 
 
@@ -129,7 +129,7 @@ public class CryptoHelperTests {
 
         String hexPrivateKey = "1731ceb7b1d3a9c78d6a3009ca7021569eeb6a4ece86f0b744afbc3fabf82f8e";
         String publicKey = CryptoHelper.GetPublicKeyFromPrivateKey(hexPrivateKey);
-        Assert.assertTrue("a053a4ddfd9c4e27b919a26ccb2d99a55f679c13fec197efc48fc887661a626db19a99660f8ae3babddebf924923afb22c7d4fe251f96f1880c4b8f89106d139".equals(publicKey));
+        Assert.assertEquals("a053a4ddfd9c4e27b919a26ccb2d99a55f679c13fec197efc48fc887661a626db19a99660f8ae3babddebf924923afb22c7d4fe251f96f1880c4b8f89106d139", publicKey);
     }
 
 

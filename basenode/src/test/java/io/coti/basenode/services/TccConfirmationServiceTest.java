@@ -99,7 +99,7 @@ public class TccConfirmationServiceTest {
         List<TccInfo> transactionConsensusConfirmed = allTransactions.stream()
                 .filter(t -> t.getTrustChainTrustScore() > threshold)
                 .collect(Collectors.toList());
-        Assert.assertTrue(transactionConsensusConfirmed.size() == 1);
+        Assert.assertEquals(1, transactionConsensusConfirmed.size());
     }
 
     @Test
@@ -110,6 +110,6 @@ public class TccConfirmationServiceTest {
         List<TccInfo> transactionConsensusConfirmed = allTransactions.stream()
                 .filter(t -> t.getTrustChainTrustScore() > threshold)
                 .collect(Collectors.toList());
-        Assert.assertTrue(transactionConsensusConfirmed.size() == 2);
+        Assert.assertEquals(2, transactionConsensusConfirmed.size());
     }
 }

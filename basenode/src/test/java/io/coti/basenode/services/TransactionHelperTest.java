@@ -225,14 +225,13 @@ public class TransactionHelperTest {
         transactionHelper.incrementTotalTransactions();
         transactionHelper.incrementTotalTransactions();
         long totalTransactionsAfterIncrement = transactionHelper.getTotalTransactions();
-        Assert.assertTrue(totalTransactionsBeforeIncrement + 2 ==
-                totalTransactionsAfterIncrement);
+        Assert.assertEquals(totalTransactionsBeforeIncrement + 2, totalTransactionsAfterIncrement);
     }
 
     @Test
     public void incrementTotalTransactions() {
         transactionHelper.incrementTotalTransactions();
-        Assert.assertTrue(transactionHelper.incrementTotalTransactions() == 2);
+        Assert.assertEquals(2, transactionHelper.incrementTotalTransactions());
     }
 
     @Test

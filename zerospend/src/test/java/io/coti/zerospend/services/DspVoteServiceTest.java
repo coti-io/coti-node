@@ -77,7 +77,7 @@ public class DspVoteServiceTest {
 
         String result = dspVoteService.receiveDspVote(dspVote);
 
-        Assert.assertTrue(result.equals("Vote already processed"));
+        Assert.assertEquals("Vote already processed", result);
     }
 
     @Test

@@ -88,7 +88,7 @@ public class TransactionServiceTest {
         when(validationService.validateTransactionTrustScore(any(TransactionData.class))).thenReturn(true);
         ResponseEntity<Response> response = transactionService.addNewTransaction(generateAddTransactionRequest());
 
-        Assert.assertTrue(response.getBody().getMessage().equals("Balance for address is insufficient!"));
+        Assert.assertEquals("Balance for address is insufficient!", response.getBody().getMessage());
     }
 
     @Test
@@ -98,7 +98,7 @@ public class TransactionServiceTest {
 
         ResponseEntity<BaseResponse> response = transactionService.getAddressTransactions(addressHash);
 
-        Assert.assertTrue(response.getBody().getStatus().equals("Success"));
+        Assert.assertEquals("Success", response.getBody().getStatus());
     }
 
     @Test
@@ -108,7 +108,7 @@ public class TransactionServiceTest {
 
         ResponseEntity<BaseResponse> response = transactionService.getTransactionDetails(transactionHash);
 
-        Assert.assertTrue(response.getBody().getStatus().equals("Success"));
+        Assert.assertEquals("Success", response.getBody().getStatus());
     }
 
     @Test
