@@ -12,15 +12,13 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.junit.Assert.*;
-
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = InitializationService.class)
 @Slf4j
 public class InitializationServiceTest {
     @Autowired
-    private  InitializationService  initializationService;
+    private InitializationService initializationService;
 
     @MockBean
     private CommunicationService communicationService;

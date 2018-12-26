@@ -3,9 +3,7 @@ package io.coti.zerospend.services;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.crypto.DspConsensusCrypto;
 import io.coti.basenode.crypto.DspVoteCrypto;
-import io.coti.basenode.data.DspVote;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.TransactionVoteData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.model.TransactionVotes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.TransactionIndexService;
@@ -22,12 +20,10 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.Arrays;
 import java.util.Collections;
 
 import static org.mockito.Mockito.when;
-import static testUtils.TestUtils.generateRandom64CharsHash;
-import static testUtils.TestUtils.generateRandomTransaction;
+import static testUtils.TestUtils.*;
 
 @TestPropertySource(locations = "classpath:test.properties")
 @ContextConfiguration(classes = DspVoteService.class)
@@ -35,9 +31,12 @@ import static testUtils.TestUtils.generateRandomTransaction;
 @Slf4j
 public class DspVoteServiceTest {
 
+    @MockBean
+    protected ITransactionHelper transactionHelper;
+    @MockBean
+    protected IConfirmationService confirmationService;
     @Autowired
     DspVoteService dspVoteService;
-
     @MockBean
     private TransactionIndexService transactionIndexService;
     @MockBean
@@ -50,10 +49,6 @@ public class DspVoteServiceTest {
     private DspVoteCrypto dspVoteCrypto;
     @MockBean
     private DspConsensusCrypto dspConsensusCrypto;
-    @MockBean
-    protected ITransactionHelper transactionHelper;
-    @MockBean
-    protected IConfirmationService confirmationService;
 
     @Before
     public void init() {
@@ -71,8 +66,8 @@ public class DspVoteServiceTest {
 
     @Test
     public void receiveDspVote() {
-        Hash transactionHash = generateRandom64CharsHash();
-        Hash voterDspHash = generateRandom64CharsHash();
+        Hash transactionHash = generateRandomHash();
+        Hash voterDspHash = generateRandomHash();
         DspVote dspVote = new DspVote(transactionHash, true);
         dspVote.setVoterDspHash(voterDspHash);
         when(transactionVotes.getByHash(transactionHash))
@@ -86,10 +81,14 @@ public class DspVoteServiceTest {
     }
 
     @Test
-    public void setIndexForDspResult() {
-    }
-
-    @Test
-    public void continueHandleVoteConclusion() {
+    public void setIndexForDspResult_noExceptionIsThrown() {
+        try {
+            TransactionIndexData transactionIndexData
+                    = new TransactionIndexData(generateRandomHash(), generateRandomLongNumber(), generateRandomHash().getBytes());
+            when(transactionIndexService.getLastTransactionIndexData()).thenReturn(transactionIndexData);
+            dspVoteService.setIndexForDspResult(generateRandomTransaction(), new DspConsensusResult(generateRandomHash()));
+        } catch (Exception e) {
+            Assert.fail(e.getMessage());
+        }
     }
 }

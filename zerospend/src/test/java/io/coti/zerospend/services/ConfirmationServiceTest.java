@@ -15,7 +15,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
-
 import static testUtils.TestUtils.generateRandomTransaction;
 
 @TestPropertySource(locations = "classpath:test.properties")

@@ -22,7 +22,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static testUtils.TestUtils.generateRandom64CharsHash;
+import static testUtils.TestUtils.generateRandomHash;
 import static testUtils.TestUtils.generateRandomTransaction;
 
 @TestPropertySource(locations = "classpath:test.properties")
@@ -52,7 +52,7 @@ public class TransactionCreationServiceTest {
     @Before
     public void setUp() {
         when(validationService.fullValidation(any(TransactionData.class))).thenReturn(true);
-        when(transactionCryptoCreator.getAddress()).thenReturn(generateRandom64CharsHash());
+        when(transactionCryptoCreator.getAddress()).thenReturn(generateRandomHash());
     }
 
     @Test
@@ -64,7 +64,7 @@ public class TransactionCreationServiceTest {
     @Test
     public void createNewGenesisZeroSpendTransaction() {
         TransactionData transactionData = generateRandomTransaction();
-        Hash zeroSpendTransactionRequestHash = generateRandom64CharsHash();
+        Hash zeroSpendTransactionRequestHash = generateRandomHash();
         ZeroSpendTransactionRequest zeroSpendTransactionRequest = new ZeroSpendTransactionRequest();
         zeroSpendTransactionRequest.setTransactionData(transactionData);
         zeroSpendTransactionRequest.setHash(zeroSpendTransactionRequestHash);
