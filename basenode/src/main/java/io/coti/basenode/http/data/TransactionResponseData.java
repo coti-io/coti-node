@@ -2,6 +2,7 @@ package io.coti.basenode.http.data;
 
 import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.TransactionType;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -13,7 +14,8 @@ import java.util.List;
 public class TransactionResponseData {
     private String hash;
     private BigDecimal amount;
-    private List<BaseTransactionResponseData> baseTransactionResponses;
+    private TransactionType type;
+    private List<BaseTransactionResponseData> baseTransactions;
     private String leftParentHash;
     private String rightParentHash;
     private List<String> trustChainTransactionHashes;
@@ -39,11 +41,12 @@ public class TransactionResponseData {
 
         hash = transactionData.getHash().toHexString();
         amount = transactionData.getAmount();
-        baseTransactionResponses = new LinkedList<>();
+        type = transactionData.getType();
+        baseTransactions = new LinkedList<>();
         if (transactionData.getBaseTransactions() != null) {
             for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()
                     ) {
-                baseTransactionResponses.add(new BaseTransactionResponseData(baseTransactionData));
+                baseTransactions.add(new BaseTransactionResponseData(baseTransactionData));
             }
         }
         leftParentHash = transactionData.getLeftParentHash() == null ? null : transactionData.getLeftParentHash().toHexString();
