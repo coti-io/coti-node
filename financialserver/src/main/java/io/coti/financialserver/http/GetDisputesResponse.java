@@ -1,10 +1,9 @@
 package io.coti.financialserver.http;
 
-import lombok.Data;
-
 import io.coti.basenode.http.BaseResponse;
 import io.coti.financialserver.data.DisputeData;
 import io.coti.financialserver.http.data.GetDisputeResponseData;
+import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;

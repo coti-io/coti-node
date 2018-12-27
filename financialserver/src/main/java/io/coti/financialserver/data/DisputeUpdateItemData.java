@@ -6,30 +6,32 @@ import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.List;
 
 @Data
 public class DisputeUpdateItemData implements Serializable, ISignable, ISignValidatable {
-
+    @NotNull
     private Hash userHash;
     @NotNull
-    private List<Long> ids;
+    private List<Long> itemIds;
     @NotNull
-    private DisputeReason reason;
     private Hash disputeHash;
-    private DisputeItemStatus status;
+    @NotNull
+    private @Valid DisputeItemStatus status;
+    @NotNull
     private SignatureData userSignature;
 
     @Override
     public SignatureData getSignature() {
-    return userSignature;
+        return userSignature;
     }
 
     @Override
     public Hash getSignerHash() {
-    return userHash;
+        return userHash;
     }
 
     @Override
@@ -39,6 +41,6 @@ public class DisputeUpdateItemData implements Serializable, ISignable, ISignVali
 
     @Override
     public void setSignature(SignatureData signature) {
-    this.userSignature = signature;
+        this.userSignature = signature;
     }
 }

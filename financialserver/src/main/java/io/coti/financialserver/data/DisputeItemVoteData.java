@@ -23,21 +23,21 @@ public class DisputeItemVoteData implements Serializable, ISignable, ISignValida
 
     @Override
     public SignatureData getSignature() {
-    return userSignature;
+        return userSignature;
     }
 
     @Override
     public Hash getSignerHash() {
-    return userHash;
+        return userHash;
     }
 
     @Override
     public void setSignerHash(Hash hash) {
-    userHash = hash;
+        userHash = hash;
     }
 
     @Override
     public void setSignature(SignatureData signature) {
-    this.userSignature = signature;
+        this.userSignature = signature;
     }
 }

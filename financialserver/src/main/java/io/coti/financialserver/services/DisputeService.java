@@ -83,7 +83,7 @@ public class DisputeService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_TRANSACTION_SENDER_INVALID, STATUS_ERROR));
         }
 
-        if(isDisputeInProcessForTransactionHash(disputeData.getTransactionHash())) {
+        if (isDisputeInProcessForTransactionHash(disputeData.getTransactionHash())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(OPEN_DISPUTE_IN_PROCESS_FOR_THIS_TRANSACTION, STATUS_ERROR));
         }
 
@@ -144,7 +144,7 @@ public class DisputeService {
         }
         UserDisputesData userDisputesData = userDisputesCollection.getByHash(getDisputesData.getUserHash());
 
-        if(userDisputesData == null) {
+        if (userDisputesData == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_UNAUTHORIZED, STATUS_ERROR));
         }
 
@@ -239,49 +239,47 @@ public class DisputeService {
             votesForConsumer = 0;
             votesForMerchant = 0;
 
-            for(DisputeItemVoteData disputeItemVoteData : disputeItem.getDisputeItemVotesData()) {
+            for (DisputeItemVoteData disputeItemVoteData : disputeItem.getDisputeItemVotesData()) {
 
-                if(disputeItemVoteData.getStatus() == DisputeItemStatus.AcceptedByArbitrators) {
+                if (disputeItemVoteData.getStatus() == DisputeItemStatus.AcceptedByArbitrators) {
                     votesForConsumer++;
-                }
-                else {
+                } else {
                     votesForMerchant++;
                 }
             }
 
-            if(votesForConsumer >= majorityOfVotes) {
+            if (votesForConsumer >= majorityOfVotes) {
                 disputeItem.setStatus(DisputeItemStatus.AcceptedByArbitrators);
-            }
-            else if(votesForMerchant >= majorityOfVotes) {
+            } else if (votesForMerchant >= majorityOfVotes) {
                 disputeItem.setStatus(DisputeItemStatus.RejectedByArbitrators);
             }
         }
 
         boolean arbitratorsVotedOnAllItems = true;
 
-        for(DisputeItemData disputeItem : dispute.getDisputeItems()) {
-            if(disputeItem.getStatus() == DisputeItemStatus.CanceledByConsumer) {
+        for (DisputeItemData disputeItem : dispute.getDisputeItems()) {
+            if (disputeItem.getStatus() == DisputeItemStatus.CanceledByConsumer) {
                 continue;
             }
 
-            if(disputeItem.getStatus() != DisputeItemStatus.AcceptedByArbitrators && disputeItem.getStatus() != DisputeItemStatus.RejectedByArbitrators) {
+            if (disputeItem.getStatus() != DisputeItemStatus.AcceptedByArbitrators && disputeItem.getStatus() != DisputeItemStatus.RejectedByArbitrators) {
                 arbitratorsVotedOnAllItems = false;
                 break;
             }
         }
 
-        if(arbitratorsVotedOnAllItems) {
+        if (arbitratorsVotedOnAllItems) {
 
             BigDecimal chargebackAmount = new BigDecimal(0);
-            for(DisputeItemData disputeItem : dispute.getDisputeItems()) {
-                if(disputeItem.getStatus() == DisputeItemStatus.AcceptedByArbitrators) {
+            for (DisputeItemData disputeItem : dispute.getDisputeItems()) {
+                if (disputeItem.getStatus() == DisputeItemStatus.AcceptedByArbitrators) {
                     chargebackAmount = chargebackAmount.add(disputeItem.getPrice());
                 }
             }
 
             TransactionData transactionData = transactions.getByHash(dispute.getTransactionHash());
 
-            if(chargebackAmount.compareTo(BigDecimal.ZERO) > 0) {
+            if (chargebackAmount.compareTo(BigDecimal.ZERO) > 0) {
                 rollingReserveService.chargebackConsumer(dispute, transactionData.getSenderHash(), chargebackAmount);
             }
             dispute.setDisputeStatus(DisputeStatus.Closed);
@@ -316,15 +314,15 @@ public class DisputeService {
     private Boolean isDisputeInProcessForTransactionHash(Hash transactionHash) {
         TransactionDisputesData transactionDisputesData = transactionDisputes.getByHash(transactionHash);
 
-        if(transactionDisputesData == null) {
+        if (transactionDisputesData == null) {
             return false;
         }
 
         DisputeData disputeData;
 
-        for(Hash disputeHash : transactionDisputesData.getDisputeHashes()) {
+        for (Hash disputeHash : transactionDisputesData.getDisputeHashes()) {
             disputeData = disputes.getByHash(disputeHash);
-            if(disputeData.getDisputeStatus() == DisputeStatus.Recall) {
+            if (disputeData.getDisputeStatus() == DisputeStatus.Recall) {
                 return true;
             }
         }

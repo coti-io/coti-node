@@ -20,15 +20,15 @@ public class RollingReserveCrypto extends SignatureCrypto<RollingReserveData> {
         merchantHashInBytes = rollingReserveData.getMerchantHash().getBytes();
         byteBufferLength = merchantHashInBytes.length;
 
-        if(rollingReserveData.getRollingReserveAddress() != null) {
+        if (rollingReserveData.getRollingReserveAddress() != null) {
             rollingReserveAddressInBytes = rollingReserveData.getRollingReserveAddress().getBytes();
             byteBufferLength += rollingReserveAddressInBytes.length;
         }
 
         ByteBuffer rollingReserveAddressDataBuffer = ByteBuffer.allocate(byteBufferLength)
-                                                    .put(merchantHashInBytes);
+                .put(merchantHashInBytes);
 
-        if(rollingReserveAddressInBytes != null) {
+        if (rollingReserveAddressInBytes != null) {
             rollingReserveAddressDataBuffer.put(rollingReserveAddressInBytes);
         }
 

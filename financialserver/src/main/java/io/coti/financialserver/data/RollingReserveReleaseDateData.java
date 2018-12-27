@@ -1,14 +1,14 @@
 package io.coti.financialserver.data;
 
+import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.interfaces.IEntity;
 import lombok.Data;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.interfaces.IEntity;
 
 @Data
 public class RollingReserveReleaseDateData implements IEntity {

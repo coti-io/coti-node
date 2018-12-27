@@ -1,18 +1,19 @@
 package io.coti.financialserver.services;
 
-import lombok.extern.slf4j.Slf4j;
-import java.io.File;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
 import io.coti.basenode.data.Hash;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.io.File;
+
 import static io.coti.financialserver.http.HttpStringConstants.*;
 
 
@@ -36,7 +37,7 @@ public class AwsService {
         String fileName = documentHash.toString();
         String error = null;
 
-        if(getS3Client().doesObjectExist(BUCKET_NAME, fileName)) {
+        if (getS3Client().doesObjectExist(BUCKET_NAME, fileName)) {
             error = DOCUMENT_EXISTS_ERROR;
         }
 

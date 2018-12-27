@@ -1,12 +1,10 @@
 package io.coti.financialserver.controllers;
 
-import io.coti.financialserver.http.ItemRequest;
-import io.coti.financialserver.http.UpdateItemRequest;
-import io.coti.financialserver.http.NewDisputeRequest;
-import io.coti.financialserver.http.VoteRequest;
+import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.financialserver.http.*;
+import io.coti.financialserver.services.DisputeService;
 import io.coti.financialserver.services.ItemService;
 import lombok.extern.slf4j.Slf4j;
-import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,9 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.financialserver.http.GetDisputesRequest;
-import io.coti.financialserver.services.DisputeService;
+import javax.validation.Valid;
 
 @Slf4j
 @RestController
@@ -41,13 +37,13 @@ public class DisputeController {
         return disputeService.getDisputes(getDisputesRequest);
     }
 
-    @RequestMapping(path = "/item",method = RequestMethod.PUT)
+    @RequestMapping(path = "/item", method = RequestMethod.PUT)
     public ResponseEntity newItem(@Valid @RequestBody ItemRequest request) {
 
         return itemService.newItem(request);
     }
 
-    @RequestMapping(path = "/item/update",method = RequestMethod.PUT)
+    @RequestMapping(path = "/item/update", method = RequestMethod.PUT)
     public ResponseEntity updateItem(@Valid @RequestBody UpdateItemRequest request) {
 
         return itemService.updateItem(request);

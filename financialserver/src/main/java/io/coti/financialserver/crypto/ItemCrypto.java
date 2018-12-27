@@ -27,26 +27,26 @@ public class ItemCrypto extends SignatureCrypto<DisputeItemData> {
         itemIdInBytes = itemData.getId();
         byteBufferLength += Long.BYTES;
 
-        if(itemData.getReason() != null) {
+        if (itemData.getReason() != null) {
             reasonInBytes = itemData.getReason().toString().getBytes();
             byteBufferLength += reasonInBytes.length;
         }
 
-        if(itemData.getStatus() != null) {
+        if (itemData.getStatus() != null) {
             statusInBytes = itemData.getStatus().toString().getBytes();
             byteBufferLength += statusInBytes.length;
         }
 
         ByteBuffer documentDataBuffer = ByteBuffer.allocate(byteBufferLength)
-                                                    .put(userHashInBytes)
-                                                    .put(disputeHashInBytes)
-                                                    .putLong(itemIdInBytes);
+                .put(userHashInBytes)
+                .put(disputeHashInBytes)
+                .putLong(itemIdInBytes);
 
-        if(reasonInBytes != null) {
+        if (reasonInBytes != null) {
             documentDataBuffer.put(reasonInBytes);
         }
 
-        if(statusInBytes != null) {
+        if (statusInBytes != null) {
             documentDataBuffer.put(statusInBytes);
         }
 

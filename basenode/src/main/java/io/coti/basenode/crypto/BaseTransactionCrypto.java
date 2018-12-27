@@ -44,13 +44,13 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
             int itemsByteSize = 0;
             List<PaymentItemData> items = ((PaymentInputBaseTransactionData) baseTransactionData).getItems();
-            for(PaymentItemData paymentItemData : items){
-                    itemsByteSize += Long.BYTES + paymentItemData.getItemPrice().stripTrailingZeros().toString().getBytes(StandardCharsets.UTF_8).length
-                            + paymentItemData.getItemName().getBytes(StandardCharsets.UTF_8).length + Integer.BYTES;
+            for (PaymentItemData paymentItemData : items) {
+                itemsByteSize += Long.BYTES + paymentItemData.getItemPrice().stripTrailingZeros().toString().getBytes(StandardCharsets.UTF_8).length
+                        + paymentItemData.getItemName().getBytes(StandardCharsets.UTF_8).length + Integer.BYTES;
             }
             ByteBuffer itemsBuffer = ByteBuffer.allocate(itemsByteSize);
-            items.forEach(paymentItemData ->  itemsBuffer.putLong(paymentItemData.getItemId()).put(paymentItemData.getItemPrice().stripTrailingZeros().toString().getBytes(StandardCharsets.UTF_8))
-                                                          .put(paymentItemData.getItemName().getBytes(StandardCharsets.UTF_8)).putInt(paymentItemData.getItemQuantity()));
+            items.forEach(paymentItemData -> itemsBuffer.putLong(paymentItemData.getItemId()).put(paymentItemData.getItemPrice().stripTrailingZeros().toString().getBytes(StandardCharsets.UTF_8))
+                    .put(paymentItemData.getItemName().getBytes(StandardCharsets.UTF_8)).putInt(paymentItemData.getItemQuantity()));
             byte[] itemsInBytes = itemsBuffer.array();
 
             byte[] merchantNameInBytes = paymentInputBaseTransactionData.getEncryptedMerchantName().getBytes(StandardCharsets.UTF_8);

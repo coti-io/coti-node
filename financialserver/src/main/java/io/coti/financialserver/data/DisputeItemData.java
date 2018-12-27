@@ -1,16 +1,16 @@
 package io.coti.financialserver.data;
 
+import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.SignatureData;
+import io.coti.basenode.data.interfaces.ISignValidatable;
+import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
+
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-
-import io.coti.basenode.data.interfaces.ISignValidatable;
-import io.coti.basenode.data.interfaces.ISignable;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.SignatureData;
 
 @Data
 public class DisputeItemData implements Serializable, ISignable, ISignValidatable {
@@ -31,14 +31,14 @@ public class DisputeItemData implements Serializable, ISignable, ISignValidatabl
     private SignatureData userSignature;
 
     public DisputeItemData() {
-     disputeDocumentHashes = new ArrayList<>();
-     disputeCommentHashes = new ArrayList<>();
-     disputeItemVotesData = new ArrayList<>();
-     status = DisputeItemStatus.Recall;
+        disputeDocumentHashes = new ArrayList<>();
+        disputeCommentHashes = new ArrayList<>();
+        disputeItemVotesData = new ArrayList<>();
+        status = DisputeItemStatus.Recall;
     }
 
     public void addDocumentHash(Hash documentHash) {
-     disputeDocumentHashes.add(documentHash);
+        disputeDocumentHashes.add(documentHash);
     }
 
     public void addCommentHash(Hash commentHash) {
@@ -50,8 +50,8 @@ public class DisputeItemData implements Serializable, ISignable, ISignValidatabl
     }
 
     public Boolean arbitratorAlreadyVoted(Hash arbitratorHash) {
-        for(DisputeItemVoteData disputeItemVoteData : disputeItemVotesData) {
-            if(disputeItemVoteData.getUserHash().equals(arbitratorHash)) {
+        for (DisputeItemVoteData disputeItemVoteData : disputeItemVotesData) {
+            if (disputeItemVoteData.getUserHash().equals(arbitratorHash)) {
                 return true;
             }
         }
@@ -60,21 +60,21 @@ public class DisputeItemData implements Serializable, ISignable, ISignValidatabl
 
     @Override
     public SignatureData getSignature() {
-    return userSignature;
+        return userSignature;
     }
 
     @Override
     public Hash getSignerHash() {
-    return userHash;
+        return userHash;
     }
 
     @Override
     public void setSignerHash(Hash hash) {
-    userHash = hash;
+        userHash = hash;
     }
 
     @Override
     public void setSignature(SignatureData signature) {
-    this.userSignature = signature;
+        this.userSignature = signature;
     }
 }

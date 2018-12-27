@@ -1,10 +1,10 @@
 package io.coti.financialserver.model;
 
-import javax.annotation.PostConstruct;
-import org.springframework.stereotype.Service;
-
 import io.coti.basenode.model.Collection;
 import io.coti.financialserver.data.DisputeDocumentData;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
 
 @Service
 public class DisputeDocuments extends Collection<DisputeDocumentData> {
