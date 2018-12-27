@@ -19,25 +19,6 @@ public class TestUtils {
         return Math.random() * 100;
     }
 
-    public static TransactionData generateRandomTransaction() {
-        return generateRandomTransaction(generateRandomHash(SIZE_OF_HASH));
-    }
-
-    private static TransactionData generateRandomTransaction(Hash hash) {
-        ArrayList<BaseTransactionData> baseTransactions = new ArrayList<>(
-                Collections.singletonList(new InputBaseTransactionData
-                        (generateRandomHash(SIZE_OF_HASH),
-                                new BigDecimal(0),
-                                new Date())));
-        return new TransactionData(baseTransactions,
-                hash,
-                "test",
-                generateRandomTrustScore(),
-                new Date(),
-                TransactionType.Payment);
-
-    }
-
     public static Hash generateRandomHash() {
         return generateRandomHash(SIZE_OF_HASH);
     }
@@ -50,13 +31,4 @@ public class TestUtils {
         }
         return new Hash(hexa.toString());
     }
-
-
-    public static BaseTransactionData createBaseTransactionDataWithSpecificHash(Hash hash) {
-        return new InputBaseTransactionData
-                (hash,
-                        new BigDecimal(0),
-                        new Date());
-    }
-
 }

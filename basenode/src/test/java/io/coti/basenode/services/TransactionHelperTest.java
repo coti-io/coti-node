@@ -75,8 +75,8 @@ public class TransactionHelperTest {
     @Test
     public void startHandleTransaction_noExceptionIsThrown() {
         try {
-            TransactionData transactionData1 = TestUtils.generateRandomTransaction();
-            TransactionData transactionData2 = TestUtils.generateRandomTransaction();
+            TransactionData transactionData1 = TestUtils.createRandomTransaction();
+            TransactionData transactionData2 = TestUtils.createRandomTransaction();
             transactionHelper.startHandleTransaction(transactionData1);
             transactionHelper.startHandleTransaction(transactionData2);
         } catch (Exception e) {
@@ -87,7 +87,7 @@ public class TransactionHelperTest {
     @Test
     public void endHandleTransaction_noExceptionIsThrown() {
         try {
-            TransactionData transactionData1 = TestUtils.generateRandomTransaction();
+            TransactionData transactionData1 = TestUtils.createRandomTransaction();
             transactionHelper.startHandleTransaction(transactionData1);
             transactionHelper.endHandleTransaction(transactionData1);
             transactionHelper.endHandleTransaction(transactionData1);
@@ -130,7 +130,7 @@ public class TransactionHelperTest {
     private List<BaseTransactionData> generateValidateBaseTransactionData() {
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
         baseTransactions.add(generateFullNodeFeeData(generateRandomHash(), 7));
-        baseTransactions.add(generateNetworkFeeData(generateRandomHash(), 5));
+        baseTransactions.add(generateNetworkFeeData(generateRandomHash(), 5, 1, 3));
         baseTransactions.add(generateRollingReserveData(generateRandomHash(), 4));
         baseTransactions.add(generateReceiverBaseTransactionData(generateRandomHash(), 3));
         baseTransactions.add(TestUtils.generateRandomInputBaseTransactionData(generateRandomHash(), -19));
@@ -169,7 +169,7 @@ public class TransactionHelperTest {
 
     @Test
     public void isTransactionHashProcessing() {
-        TransactionData transactionData = TestUtils.generateRandomTransaction();
+        TransactionData transactionData = TestUtils.createRandomTransaction();
         transactionHelper.startHandleTransaction(transactionData);
         transactionHelper.isTransactionHashProcessing(transactionData.getHash());
     }
@@ -177,7 +177,7 @@ public class TransactionHelperTest {
     @Test
     public void testSetTransactionStateToSaved_noExceptionIsThrown() {
         try {
-            TransactionData transactionData = TestUtils.generateRandomTransaction();
+            TransactionData transactionData = TestUtils.createRandomTransaction();
             transactionHelper.startHandleTransaction(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
         } catch (Exception e) {
@@ -188,7 +188,7 @@ public class TransactionHelperTest {
     @Test
     public void setTransactionStateToFinished_noExceptionIsThrown() {
         try {
-            TransactionData transactionData = TestUtils.generateRandomTransaction();
+            TransactionData transactionData = TestUtils.createRandomTransaction();
             transactionHelper.startHandleTransaction(transactionData);
             transactionHelper.setTransactionStateToFinished(transactionData);
         } catch (Exception e) {
@@ -215,7 +215,7 @@ public class TransactionHelperTest {
     }
 
     private TransactionData createTransaction() {
-        return TestUtils.generateRandomTransaction();
+        return TestUtils.createRandomTransaction();
     }
 
 
@@ -237,7 +237,7 @@ public class TransactionHelperTest {
     @Test
     public void addNoneIndexedTransaction_noExceptionIsThrown() {
         try {
-            TransactionData transactionData = TestUtils.generateRandomTransaction();
+            TransactionData transactionData = TestUtils.createRandomTransaction();
             transactionHelper.addNoneIndexedTransaction(transactionData);
         } catch (Exception e) {
             Assert.fail(e.getMessage());
@@ -247,7 +247,7 @@ public class TransactionHelperTest {
     @Test
     public void removeNoneIndexedTransaction_noExceptionIsThrown() {
         try {
-            TransactionData transactionData = TestUtils.generateRandomTransaction();
+            TransactionData transactionData = TestUtils.createRandomTransaction();
             transactionHelper.addNoneIndexedTransaction(transactionData);
             transactionHelper.removeNoneIndexedTransaction(transactionData);
         } catch (Exception e) {

@@ -15,7 +15,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static testUtils.TestUtils.generateRandomTransaction;
+import static testUtils.TestUtils.createRandomTransaction;
 
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
@@ -38,6 +38,6 @@ public class ConfirmationServiceTest {
 
     @Test
     public void insertNewTransactionIndex() {
-        Assert.assertTrue(confirmationService.insertNewTransactionIndex(generateRandomTransaction()));
+        Assert.assertTrue(confirmationService.insertNewTransactionIndex(createRandomTransaction()));
     }
 }

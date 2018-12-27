@@ -44,7 +44,7 @@ public class WebSocketSenderTest {
     public void notifyTransactionHistoryChange_noExceptionIsThrown() {
         try {
             TransactionData transactionData =
-                    TestUtils.generateRandomTransaction(generateRandomHash());
+                    TestUtils.createRandomTransaction(generateRandomHash());
             webSocketSender.notifyTransactionHistoryChange(transactionData,
                     TransactionStatus.CONFIRMED);
         } catch (Exception e) {

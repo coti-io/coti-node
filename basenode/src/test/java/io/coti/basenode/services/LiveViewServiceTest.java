@@ -55,7 +55,7 @@ public class LiveViewServiceTest {
     @Test
     public void setNodeDataDatesFromTransactionData() {
         TransactionData transactionData =
-                TestUtils.generateRandomTransaction(TRANSACTION_ONE_HASH);
+                TestUtils.createRandomTransaction(TRANSACTION_ONE_HASH);
         transactionData.setAttachmentTime(new Date());
         transactionData.setTransactionConsensusUpdateTime(new Date(transactionData.getAttachmentTime().getTime() + HUNDRED_SECONDS_IN_MILLISECONDS));
         NodeData nodeData = new NodeData();
@@ -65,7 +65,7 @@ public class LiveViewServiceTest {
 
     @Test
     public void updateNodeStatus() {
-        TransactionData transactionData = TestUtils.generateRandomTransaction(TRANSACTION_TWO_HASH);
+        TransactionData transactionData = TestUtils.createRandomTransaction(TRANSACTION_TWO_HASH);
         liveViewService.addNode(transactionData);
         liveViewService.updateNodeStatus(transactionData, TCC_CONFIRMED_STATUS);
         GraphData graphData = liveViewService.getFullGraph();

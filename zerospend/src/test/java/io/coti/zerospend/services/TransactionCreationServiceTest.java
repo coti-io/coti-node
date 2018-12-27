@@ -22,8 +22,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static testUtils.TestUtils.createRandomTransaction;
 import static testUtils.TestUtils.generateRandomHash;
-import static testUtils.TestUtils.generateRandomTransaction;
 
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
@@ -57,13 +57,13 @@ public class TransactionCreationServiceTest {
 
     @Test
     public void createNewStarvationZeroSpendTransaction() {
-        String result = transactionCreationService.createNewStarvationZeroSpendTransaction(generateRandomTransaction());
+        String result = transactionCreationService.createNewStarvationZeroSpendTransaction(createRandomTransaction());
         Assert.assertEquals("Ok", result);
     }
 
     @Test
     public void createNewGenesisZeroSpendTransaction() {
-        TransactionData transactionData = generateRandomTransaction();
+        TransactionData transactionData = createRandomTransaction();
         Hash zeroSpendTransactionRequestHash = generateRandomHash();
         ZeroSpendTransactionRequest zeroSpendTransactionRequest = new ZeroSpendTransactionRequest();
         zeroSpendTransactionRequest.setTransactionData(transactionData);

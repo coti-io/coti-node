@@ -19,8 +19,6 @@ import java.util.Arrays;
 
 import static testUtils.TestUtils.*;
 
-;
-
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = BaseNodeBalanceService.class)

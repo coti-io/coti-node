@@ -54,7 +54,7 @@ public class BaseNodeConfirmationServiceTest {
     public void setUp() {
         log.info("Starting  - " + this.getClass().getSimpleName());
         Hash hash = generateRandomHash();
-        when(transactions.getByHash(any(Hash.class))).thenReturn(TestUtils.generateRandomTransaction(hash));
+        when(transactions.getByHash(any(Hash.class))).thenReturn(TestUtils.createRandomTransaction(hash));
         baseNodeConfirmationService.init();
     }
 
@@ -62,7 +62,7 @@ public class BaseNodeConfirmationServiceTest {
     public void setTccToTrue_noExceptionIsThrown() {
         try {
             Hash hash = generateRandomHash();
-            transactions.put(TestUtils.generateRandomTransaction(hash));
+            transactions.put(TestUtils.createRandomTransaction(hash));
             baseNodeConfirmationService.setTccToTrue(new TccInfo(hash, null, generateRandomTrustScore()));
         } catch (Exception e) {
             Assert.fail(e.getMessage());
@@ -73,8 +73,8 @@ public class BaseNodeConfirmationServiceTest {
     public void setDspcToTrue_noExceptionIsThrown() {
         try {
             Hash hash = generateRandomHash();
-            when(transactions.getByHash(any(Hash.class))).thenReturn(TestUtils.generateRandomTransaction(hash));
-            transactions.put(TestUtils.generateRandomTransaction(hash));
+            when(transactions.getByHash(any(Hash.class))).thenReturn(TestUtils.createRandomTransaction(hash));
+            transactions.put(TestUtils.createRandomTransaction(hash));
             baseNodeConfirmationService.setDspcToTrue(new DspConsensusResult(hash));
         } catch (Exception e) {
             Assert.fail(e.getMessage());
@@ -92,7 +92,7 @@ public class BaseNodeConfirmationServiceTest {
 
     private void insertSavedTransaction() {
         try {
-            TransactionData transactionData = generateRandomTransaction();
+            TransactionData transactionData = createRandomTransaction();
             transactionData.setDspConsensusResult(new DspConsensusResult(generateRandomHash()));
             when(transactionIndexService.insertNewTransactionIndex(transactionData)).thenReturn(true);
             when(transactionHelper.isConfirmed(transactionData)).thenReturn(true);

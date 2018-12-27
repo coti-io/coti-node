@@ -105,7 +105,7 @@ public class TransactionServiceTest {
     @Test
     public void getTransactionDetails() {
         Hash transactionHash = generateRandomHash();
-        when(transactions.getByHash(transactionHash)).thenReturn(TestUtils.generateRandomTransaction(transactionHash));
+        when(transactions.getByHash(transactionHash)).thenReturn(TestUtils.createRandomTransaction(transactionHash));
 
         ResponseEntity<BaseResponse> response = transactionService.getTransactionDetails(transactionHash);
 
@@ -115,7 +115,7 @@ public class TransactionServiceTest {
     @Test
     public void continueHandlePropagatedTransaction_noExceptionIsThrown() {
         try {
-            transactionService.continueHandlePropagatedTransaction(generateRandomTransaction());
+            transactionService.continueHandlePropagatedTransaction(createRandomTransaction());
         } catch (Exception e) {
             Assert.fail(e.getMessage());
         }

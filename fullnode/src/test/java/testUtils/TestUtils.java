@@ -39,7 +39,7 @@ public class TestUtils {
         return (int) (Math.random() * Integer.MAX_VALUE);
     }
 
-    public static TransactionData generateRandomTransaction(Hash hash) {
+    public static TransactionData createRandomTransaction(Hash hash) {
         ArrayList<BaseTransactionData> baseTransactions = new ArrayList<>(
                 Collections.singletonList(new InputBaseTransactionData(generateRandomHash(),
                         new BigDecimal(0),
@@ -64,8 +64,8 @@ public class TestUtils {
         return new Hash(hexa.toString());
     }
 
-    public static TransactionData generateRandomTransaction() {
-        return generateRandomTransaction(generateRandomHash(SIZE_OF_HASH));
+    public static TransactionData createRandomTransaction() {
+        return createRandomTransaction(generateRandomHash(SIZE_OF_HASH));
     }
 
     public static TransactionData createTransactionFromJson(String transactionJson) {

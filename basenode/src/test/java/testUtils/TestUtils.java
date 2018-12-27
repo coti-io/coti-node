@@ -15,7 +15,9 @@ public class TestUtils {
     private static final String[] hexaOptions = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
     private static final int SIZE_OF_HASH = 64;
     private static final int SIZE_OF_BASE_TRANSACTION_HASH = 136;
+    private static final int MAX_TRUST_SCORE = 100;
     private static final int ANY_NUMBER = 10000;
+    private static final String TRANSACTION_DESCRIPTION = "test";
 
     public static Hash generateRandomHash() {
         return generateRandomHash(SIZE_OF_HASH);
@@ -31,7 +33,7 @@ public class TestUtils {
     }
 
     public static Double generateRandomTrustScore() {
-        return Math.random() * 100;
+        return Math.random() * MAX_TRUST_SCORE;
     }
 
     public static Double generateRandomPositiveAmount() {
@@ -42,7 +44,7 @@ public class TestUtils {
         return -generateRandomPositiveAmount();
     }
 
-    public static TransactionData generateRandomTransaction(Hash hash) {
+    public static TransactionData createRandomTransaction(Hash hash) {
         ArrayList<BaseTransactionData> baseTransactions = new ArrayList<>(
                 Collections.singletonList(new InputBaseTransactionData(
                         generateRandomHash(SIZE_OF_BASE_TRANSACTION_HASH),
@@ -50,23 +52,15 @@ public class TestUtils {
                         new Date())));
         return new TransactionData(baseTransactions,
                 hash,
-                "test",
+                TRANSACTION_DESCRIPTION,
                 generateRandomTrustScore(),
                 new Date(),
                 TransactionType.Payment);
     }
 
-    public static TransactionData generateRandomTransaction() {
-        return generateRandomTransaction(generateRandomHash(SIZE_OF_HASH));
+    public static TransactionData createRandomTransaction() {
+        return createRandomTransaction(generateRandomHash(SIZE_OF_HASH));
     }
-
-//    public static BaseTransactionData generateRandomReceiverBaseTransactionData (Hash hash, double count) {
-//        return new ReceiverBaseTransactionData
-//                (hash,
-//                        new BigDecimal(count),
-//                        new BigDecimal(generateRandomPositiveAmount()),
-//                        new Date());
-//    }
 
     public static BaseTransactionData generateRandomInputBaseTransactionData(Hash hash, double count) {
         return new InputBaseTransactionData
@@ -75,11 +69,15 @@ public class TestUtils {
                         new Date());
     }
 
-    public static OutputBaseTransactionData generateNetworkFeeData(Hash hash, double count) {
+    public static OutputBaseTransactionData generateNetworkFeeData(Hash hash, double amount) {
+        return generateNetworkFeeData(hash, amount, generateRandomPositiveAmount(), generateRandomPositiveAmount());
+    }
+
+    public static OutputBaseTransactionData generateNetworkFeeData(Hash hash, double count, double originalAmount, double reducedAmount) {
         return new NetworkFeeData(hash,
                 new BigDecimal(count),
-                new BigDecimal(1),
-                new BigDecimal(3),
+                new BigDecimal(originalAmount),
+                new BigDecimal(reducedAmount),
                 new Date());
     }
 

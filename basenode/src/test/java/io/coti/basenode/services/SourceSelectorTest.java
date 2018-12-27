@@ -31,6 +31,8 @@ import static testUtils.TestUtils.generateRandomHash;
 public class SourceSelectorTest {
     private static final String TRANSACTION_DESCRIPTION = "test";
     private static final int SECOND_IN_MILLISECOND = 1000;
+    private static final int MIN_TRUST_SCORE = 0;
+    private static final int MAX_TRUST_SCORE = 100;
 
     @Autowired
     private SourceSelector sourceSelector;
@@ -61,7 +63,7 @@ public class SourceSelectorTest {
     @Test
     public void selectSourcesForAttachment() {
         List<List<TransactionData>> trustScoreToSourceListMapping = new ArrayList<>();
-        for (int i = 0; i <= 100; i++) {
+        for (int i = MIN_TRUST_SCORE; i <= MAX_TRUST_SCORE; i++) {
             trustScoreToSourceListMapping.add(new ArrayList<>());
         }
         for (TransactionData transaction : newTransactions) {

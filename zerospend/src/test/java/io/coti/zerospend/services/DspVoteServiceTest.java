@@ -58,7 +58,7 @@ public class DspVoteServiceTest {
     @Test
     public void preparePropagatedTransactionForVoting_noExceptionIsThrown() {
         try {
-            dspVoteService.preparePropagatedTransactionForVoting(generateRandomTransaction());
+            dspVoteService.preparePropagatedTransactionForVoting(createRandomTransaction());
         } catch (Exception e) {
             Assert.fail(e.getMessage());
         }
@@ -86,7 +86,7 @@ public class DspVoteServiceTest {
             TransactionIndexData transactionIndexData
                     = new TransactionIndexData(generateRandomHash(), generateRandomLongNumber(), generateRandomHash().getBytes());
             when(transactionIndexService.getLastTransactionIndexData()).thenReturn(transactionIndexData);
-            dspVoteService.setIndexForDspResult(generateRandomTransaction(), new DspConsensusResult(generateRandomHash()));
+            dspVoteService.setIndexForDspResult(createRandomTransaction(), new DspConsensusResult(generateRandomHash()));
         } catch (Exception e) {
             Assert.fail(e.getMessage());
         }

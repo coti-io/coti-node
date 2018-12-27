@@ -18,7 +18,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.mockito.Mockito.when;
-import static testUtils.TestUtils.generateRandomTransaction;
+import static testUtils.TestUtils.createRandomTransaction;
 
 @ContextConfiguration(classes =
         {BaseNodeTransactionService.class,
@@ -46,7 +46,7 @@ public class BaseNodeTransactionServiceTest {
         log.info("Starting  - " + this.getClass().getSimpleName());
 
         try {
-            TransactionData transactionData = generateRandomTransaction();
+            TransactionData transactionData = createRandomTransaction();
             when(validationService.validatePropagatedTransactionDataIntegrity(transactionData)).thenReturn(true);
             when(validationService.validateBalancesAndAddToPreBalance(transactionData)).thenReturn(true);
             baseNodeTransactionService.handlePropagatedTransaction(transactionData);
