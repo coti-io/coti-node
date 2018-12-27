@@ -138,7 +138,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
             try {
                 ReceiverBaseTransactionData receiverBaseTransactionData = (ReceiverBaseTransactionData) baseTransactionData;
                 byte[] outputMessageInBytes = getOutputMessageInBytes(receiverBaseTransactionData);
-                byte[] receiverDescriptionInBytes = receiverBaseTransactionData.getReceiverDescription() != null ? receiverBaseTransactionData.getReceiverDescription().getBytes() : new byte[0];
+                byte[] receiverDescriptionInBytes = receiverBaseTransactionData.getReceiverDescription() != null ? receiverBaseTransactionData.getReceiverDescription().toString().getBytes() : new byte[0];
                 ByteBuffer receiverBaseTransactionBuffer = ByteBuffer.allocate(outputMessageInBytes.length + receiverDescriptionInBytes.length).
                         put(outputMessageInBytes).put(receiverDescriptionInBytes);
 
