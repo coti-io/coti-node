@@ -119,10 +119,10 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
                 reducedAmount = ((NetworkFeeData) outputBaseTransactionData).getReducedAmount();
             }
             if (!FullNodeFeeData.class.isInstance(outputBaseTransactionData)) {
-                reducedTotalOutputTransactionAmount = reducedTotalOutputTransactionAmount.add(outputBaseTransactionData.getOriginalAmount());
+                reducedTotalOutputTransactionAmount = reducedTotalOutputTransactionAmount.add(outputBaseTransactionData.getAmount());
             }
         }
-        return reducedAmount.equals(reducedTotalOutputTransactionAmount);
+        return reducedAmount.stripTrailingZeros().equals(reducedTotalOutputTransactionAmount.stripTrailingZeros());
     }
 
 }
