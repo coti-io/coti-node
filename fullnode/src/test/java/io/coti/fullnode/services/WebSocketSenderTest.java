@@ -15,8 +15,8 @@ import testUtils.TestUtils;
 import java.math.BigDecimal;
 
 import static org.junit.Assert.assertNull;
-import static testUtils.TestUtils.generateRandomCount;
 import static testUtils.TestUtils.generateRandomHash;
+import static testUtils.TestUtils.generateRandomPositiveAmount;
 
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
@@ -33,8 +33,8 @@ public class WebSocketSenderTest {
     public void notifyBalanceChange_noExceptionIsThrown() {
         try {
             webSocketSender.notifyBalanceChange(generateRandomHash(),
-                    new BigDecimal(generateRandomCount()),
-                    new BigDecimal(generateRandomCount()));
+                    new BigDecimal(generateRandomPositiveAmount()),
+                    new BigDecimal(generateRandomPositiveAmount()));
         } catch (Exception e) {
             assertNull(e);
         }
@@ -44,7 +44,7 @@ public class WebSocketSenderTest {
     public void notifyTransactionHistoryChange_noExceptionIsThrown() {
         try {
             TransactionData transactionData =
-                    TestUtils.createTransactionWithSpecificHash(generateRandomHash());
+                    TestUtils.generateRandomTransaction(generateRandomHash());
             webSocketSender.notifyTransactionHistoryChange(transactionData,
                     TransactionStatus.CONFIRMED);
         } catch (Exception e) {

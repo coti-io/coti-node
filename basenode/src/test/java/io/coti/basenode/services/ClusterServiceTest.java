@@ -43,6 +43,7 @@ public class ClusterServiceTest {
     private static final Hash TRANSACTION_THREE_HASH = generateRandomHash();
     private static final double TRANSACTION_THREE_TRUSTSCORE = 92;
     private static final String TRANSACTION_DESCRIPTION = "test";
+
     @Autowired
     private ClusterService cluster;
     @MockBean

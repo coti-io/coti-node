@@ -18,14 +18,14 @@ import java.util.Date;
         property = "name")
 @JsonTypeIdResolver(BaseTransactionDataResolver.class)
 public abstract class BaseTransactionData implements Serializable {
-    @NotNull
-    protected Hash hash;
-    @NotNull
-    protected Hash addressHash;
-    protected BigDecimal amount;
-    @NotNull
-    protected Date createTime;
-    protected @Valid SignatureData signatureData;
+        @NotNull
+        protected Hash hash;
+        @NotNull
+        protected Hash addressHash;
+        protected BigDecimal amount;
+        @NotNull
+        protected Date createTime;
+        protected @Valid SignatureData signatureData;
 
     protected BaseTransactionData() {
 

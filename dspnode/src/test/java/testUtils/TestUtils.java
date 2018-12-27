@@ -20,10 +20,10 @@ public class TestUtils {
     }
 
     public static TransactionData generateRandomTransaction() {
-        return createTransactionWithSpecificHash(generateRandomHash(SIZE_OF_HASH));
+        return generateRandomTransaction(generateRandomHash(SIZE_OF_HASH));
     }
 
-    private static TransactionData createTransactionWithSpecificHash(Hash hash) {
+    private static TransactionData generateRandomTransaction(Hash hash) {
         ArrayList<BaseTransactionData> baseTransactions = new ArrayList<>(
                 Collections.singletonList(new InputBaseTransactionData
                         (generateRandomHash(SIZE_OF_HASH),

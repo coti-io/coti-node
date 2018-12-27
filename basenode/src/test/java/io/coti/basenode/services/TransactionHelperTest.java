@@ -108,7 +108,7 @@ public class TransactionHelperTest {
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
         baseTransactions.add(generateFullNodeFeeData(generateRandomHash(), 6));
         baseTransactions.add(generateFullNodeFeeData(generateRandomHash(), 5));
-        baseTransactions.add(createInputBaseTransactionDataWithSpecificHashAndCount(generateRandomHash(), -10));
+        baseTransactions.add(TestUtils.generateRandomInputBaseTransactionData(generateRandomHash(), -10));
         Assert.assertFalse(transactionHelper.validateBaseTransactionAmounts(baseTransactions));
     }
 
@@ -133,14 +133,14 @@ public class TransactionHelperTest {
         baseTransactions.add(generateNetworkFeeData(generateRandomHash(), 5));
         baseTransactions.add(generateRollingReserveData(generateRandomHash(), 4));
         baseTransactions.add(generateReceiverBaseTransactionData(generateRandomHash(), 3));
-        baseTransactions.add(createInputBaseTransactionDataWithSpecificHashAndCount(generateRandomHash(), -19));
+        baseTransactions.add(TestUtils.generateRandomInputBaseTransactionData(generateRandomHash(), -19));
         return baseTransactions;
     }
 
     //
     @Test
     public void validateBaseTransactionTrustScoreNodeResult_isValid() {
-        NetworkFeeData networkFeeData = (NetworkFeeData) generateNetworkFeeData(generateRandomHash(), generateRandomCount());
+        NetworkFeeData networkFeeData = (NetworkFeeData) generateNetworkFeeData(generateRandomHash(), generateRandomPositiveAmount());
         networkFeeData.setNetworkFeeTrustScoreNodeResult(new ArrayList());
         for (int i = 0; i < TRUSTSCORE_NODE_RESULT_VALID_SIZE; i++) {
             networkFeeData.getNetworkFeeTrustScoreNodeResult().add(new TrustScoreNodeResultData(generateRandomHash(), true));
@@ -151,13 +151,13 @@ public class TransactionHelperTest {
 
     @Test
     public void validateBaseTransactionTrustScoreNodeResult_isNotValid() {
-        NetworkFeeData networkFeeData1 = (NetworkFeeData) generateNetworkFeeData(generateRandomHash(), generateRandomCount());
+        NetworkFeeData networkFeeData1 = (NetworkFeeData) generateNetworkFeeData(generateRandomHash(), generateRandomPositiveAmount());
         networkFeeData1.setNetworkFeeTrustScoreNodeResult(new ArrayList());
         for (int i = 0; i < TRUSTSCORE_NODE_RESULT_VALID_SIZE; i++) {
             networkFeeData1.getNetworkFeeTrustScoreNodeResult().add(new TrustScoreNodeResultData(generateRandomHash(), false));
         }
 
-        NetworkFeeData networkFeeData2 = (NetworkFeeData) generateNetworkFeeData(generateRandomHash(), generateRandomCount());
+        NetworkFeeData networkFeeData2 = (NetworkFeeData) generateNetworkFeeData(generateRandomHash(), generateRandomPositiveAmount());
         networkFeeData2.setNetworkFeeTrustScoreNodeResult(new ArrayList());
         for (int i = 0; i < TRUSTSCORE_NODE_RESULT_NOT_VALID_SIZE; i++) {
             networkFeeData2.getNetworkFeeTrustScoreNodeResult().add(new TrustScoreNodeResultData(generateRandomHash(), true));

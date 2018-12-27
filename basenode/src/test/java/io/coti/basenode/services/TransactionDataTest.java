@@ -74,22 +74,22 @@ public class TransactionDataTest {
     @Test
     public void equals_whenOtherTransactionHasTheSameHash_returnTrue() {
         Hash hash = generateRandomHash();
-        TransactionData transactionData1 = TestUtils.createTransactionWithSpecificHash(hash);
-        TransactionData transactionData2 = TestUtils.createTransactionWithSpecificHash(hash);
+        TransactionData transactionData1 = TestUtils.generateRandomTransaction(hash);
+        TransactionData transactionData2 = TestUtils.generateRandomTransaction(hash);
         Assert.assertEquals(transactionData1, transactionData2);
     }
 
     @Test
     public void equals_whenOtherTransactionHasDifferentHash_returnFalse() {
-        TransactionData transactionData1 = TestUtils.createTransactionWithSpecificHash(generateRandomHash());
-        TransactionData transactionData2 = TestUtils.createTransactionWithSpecificHash(generateRandomHash());
+        TransactionData transactionData1 = TestUtils.generateRandomTransaction(generateRandomHash());
+        TransactionData transactionData2 = TestUtils.generateRandomTransaction(generateRandomHash());
         Assert.assertNotEquals(transactionData1, transactionData2);
     }
 
     @Test
     public void equals_whenOtherObjectIsNotATransactionData_returnFalse() {
         Hash hash = generateRandomHash();
-        TransactionData transactionData = TestUtils.createTransactionWithSpecificHash(hash);
+        TransactionData transactionData = TestUtils.generateRandomTransaction(hash);
         Assert.assertNotEquals(transactionData, hash);
     }
 }

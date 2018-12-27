@@ -17,9 +17,14 @@ public class TestUtils {
 
     private static final String[] hexaOptions = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
     private static final int SIZE_OF_HASH = 64;
+    private static final int ANY_NUMBER = 10000;
 
     private static double generateRandomTrustScore() {
         return Math.random() * 100;
+    }
+
+    public static Double generateRandomPositiveAmount() {
+        return Math.random() * ANY_NUMBER;
     }
 
     public static double generateRandomCount() {
@@ -34,11 +39,10 @@ public class TestUtils {
         return (int) (Math.random() * Integer.MAX_VALUE);
     }
 
-    public static TransactionData createTransactionWithSpecificHash(Hash hash) {
+    public static TransactionData generateRandomTransaction(Hash hash) {
         ArrayList<BaseTransactionData> baseTransactions = new ArrayList<>(
-                Collections.singletonList(new InputBaseTransactionData
-                        (new Hash("caba14b7fe219b3da5dee0c29389c88e4d134333a2ee104152d6e9f7b673be9e0e28ca511d1ac749f46bea7f1ab25818f335ab9111a6c5eebe2f650974e12d1b7dccd4d7"),
-                                new BigDecimal(0),
+                Collections.singletonList(new InputBaseTransactionData(generateRandomHash(),
+                        new BigDecimal(0),
                                 new Date())));
         return new TransactionData(baseTransactions,
                 hash,
@@ -46,9 +50,7 @@ public class TestUtils {
                 generateRandomTrustScore(),
                 new Date(),
                 TransactionType.Payment);
-
     }
-
     public static Hash generateRandomHash() {
         return generateRandomHash(SIZE_OF_HASH);
     }
@@ -63,7 +65,7 @@ public class TestUtils {
     }
 
     public static TransactionData generateRandomTransaction() {
-        return createTransactionWithSpecificHash(generateRandomHash(SIZE_OF_HASH));
+        return generateRandomTransaction(generateRandomHash(SIZE_OF_HASH));
     }
 
     public static TransactionData createTransactionFromJson(String transactionJson) {

@@ -28,6 +28,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
+import testUtils.TestUtils;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -104,7 +105,7 @@ public class TransactionServiceTest {
     @Test
     public void getTransactionDetails() {
         Hash transactionHash = generateRandomHash();
-        when(transactions.getByHash(transactionHash)).thenReturn(createTransactionWithSpecificHash(transactionHash));
+        when(transactions.getByHash(transactionHash)).thenReturn(TestUtils.generateRandomTransaction(transactionHash));
 
         ResponseEntity<BaseResponse> response = transactionService.getTransactionDetails(transactionHash);
 

@@ -7,7 +7,6 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.services.LiveView.LiveViewService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,11 +43,6 @@ public class LiveViewServiceTest {
     @MockBean
     private SimpMessagingTemplate messagingSender;
 
-    @Before
-    public void setUp() {
-        log.info("Starting  - " + this.getClass().getSimpleName());
-    }
-
     @Test
     public void getFullGraph_noExceptionIsThrown() {
         try {
@@ -61,7 +55,7 @@ public class LiveViewServiceTest {
     @Test
     public void setNodeDataDatesFromTransactionData() {
         TransactionData transactionData =
-                TestUtils.createTransactionWithSpecificHash(TRANSACTION_ONE_HASH);
+                TestUtils.generateRandomTransaction(TRANSACTION_ONE_HASH);
         transactionData.setAttachmentTime(new Date());
         transactionData.setTransactionConsensusUpdateTime(new Date(transactionData.getAttachmentTime().getTime() + HUNDRED_SECONDS_IN_MILLISECONDS));
         NodeData nodeData = new NodeData();
@@ -71,7 +65,7 @@ public class LiveViewServiceTest {
 
     @Test
     public void updateNodeStatus() {
-        TransactionData transactionData = TestUtils.createTransactionWithSpecificHash(TRANSACTION_TWO_HASH);
+        TransactionData transactionData = TestUtils.generateRandomTransaction(TRANSACTION_TWO_HASH);
         liveViewService.addNode(transactionData);
         liveViewService.updateNodeStatus(transactionData, TCC_CONFIRMED_STATUS);
         GraphData graphData = liveViewService.getFullGraph();

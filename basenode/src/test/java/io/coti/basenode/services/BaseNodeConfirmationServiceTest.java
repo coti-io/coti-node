@@ -20,36 +20,15 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
+import testUtils.TestUtils;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static testUtils.TestUtils.*;
 
 
-//@TestPropertySource(locations = "classpath:test.properties")
-//@RunWith(SpringRunner.class)
-//@ContextConfiguration(classes = {
-//        // Addresses.class,
-//        RocksDBConnector.class,
-//        BaseNodeConfirmationService.class,
-//        LiveViewService.class,
-//        BaseNodeBalanceService.class,
-//        TransactionHelper.class,
-//        TransactionIndexService.class,
-//        Transactions.class,
-//        AddressTransactionsHistories.class}
-//)
-//@Slf4j
 @ContextConfiguration(classes = {
-        // Addresses.class,
-        //RocksDBConnector.class,
         BaseNodeConfirmationService.class}
-        //LiveViewService.class,
-        //BaseNodeBalanceService.class,
-        // TransactionHelper.class,
-        // TransactionIndexService.class,
-        // Transactions.class,
-        // AddressTransactionsHistories.class}
 )
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
@@ -75,7 +54,7 @@ public class BaseNodeConfirmationServiceTest {
     public void setUp() {
         log.info("Starting  - " + this.getClass().getSimpleName());
         Hash hash = generateRandomHash();
-        when(transactions.getByHash(any(Hash.class))).thenReturn(createTransactionWithSpecificHash(hash));
+        when(transactions.getByHash(any(Hash.class))).thenReturn(TestUtils.generateRandomTransaction(hash));
         baseNodeConfirmationService.init();
     }
 
@@ -83,7 +62,7 @@ public class BaseNodeConfirmationServiceTest {
     public void setTccToTrue_noExceptionIsThrown() {
         try {
             Hash hash = generateRandomHash();
-            transactions.put(createTransactionWithSpecificHash(hash));
+            transactions.put(TestUtils.generateRandomTransaction(hash));
             baseNodeConfirmationService.setTccToTrue(new TccInfo(hash, null, generateRandomTrustScore()));
         } catch (Exception e) {
             Assert.fail(e.getMessage());
@@ -94,8 +73,8 @@ public class BaseNodeConfirmationServiceTest {
     public void setDspcToTrue_noExceptionIsThrown() {
         try {
             Hash hash = generateRandomHash();
-            when(transactions.getByHash(any(Hash.class))).thenReturn(createTransactionWithSpecificHash(hash));
-            transactions.put(createTransactionWithSpecificHash(hash));
+            when(transactions.getByHash(any(Hash.class))).thenReturn(TestUtils.generateRandomTransaction(hash));
+            transactions.put(TestUtils.generateRandomTransaction(hash));
             baseNodeConfirmationService.setDspcToTrue(new DspConsensusResult(hash));
         } catch (Exception e) {
             Assert.fail(e.getMessage());

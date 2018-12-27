@@ -12,23 +12,27 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestContext;
+import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.support.AbstractTestExecutionListener;
+import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 
 import static testUtils.TestUtils.generateRandomHash;
 
-//@TestPropertySource(locations = "classpath:test.properties")
-//@RunWith(SpringRunner.class)
 @ContextConfiguration(classes = {BaseNodeAddressService.class,
         Addresses.class,
         RocksDBConnector.class}
 )
 @TestPropertySource(locations = "classpath:test.properties")
-@SpringBootTest
-@RunWith(SpringRunner.class)
+@RunWith(SpringJUnit4ClassRunner.class)
+@TestExecutionListeners(listeners = {
+        DependencyInjectionTestExecutionListener.class,
+        BaseNodeAddressServiceTest.class})
 @Slf4j
-public class BaseNodeAddressServiceTest {
-    private static boolean setUpIsDone = false;
+public class BaseNodeAddressServiceTest  extends AbstractTestExecutionListener {
 
     @Autowired
     private BaseNodeAddressService baseNodeAddressService;
@@ -36,18 +40,11 @@ public class BaseNodeAddressServiceTest {
     @Autowired
     private IDatabaseConnector rocksDBConnector;
 
-    @Before
-    public void setUp() {
-        if (setUpIsDone) {
-            return;
-        }
-        log.info("Starting  - " + this.getClass().getSimpleName());
-        try {
-            rocksDBConnector.init();
-        } catch (Exception e) {
-            log.error(e.getMessage());
-        }
-        setUpIsDone = true;
+    @Override
+    public void beforeTestClass(TestContext testContext){
+        RocksDBConnector rocksDBConnector =
+                testContext.getApplicationContext().getBean("rocksDBConnector", RocksDBConnector.class);
+        rocksDBConnector.init();
     }
 
     @Test
