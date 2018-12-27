@@ -128,9 +128,9 @@ public class BaseNodeMonitorServiceTest {
         AtomicLong maxTransactionIndex = new AtomicLong(-1);
         try {
             transactionIndexService.init(maxTransactionIndex);
+            baseNodeMonitorService.lastState();
         } catch (Exception e) {
             Assert.fail(e.getMessage());
         }
-        baseNodeMonitorService.lastState();
     }
 }
