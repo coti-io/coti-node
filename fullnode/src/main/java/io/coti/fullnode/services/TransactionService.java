@@ -6,10 +6,10 @@ import io.coti.basenode.data.AddressTransactionsHistory;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.exceptions.TransactionException;
-import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.TransactionResponseData;
 import io.coti.basenode.http.data.TransactionStatus;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
@@ -27,9 +27,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
@@ -206,33 +206,51 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
-    public ResponseEntity<BaseResponse> getAddressTransactions(Hash addressHash) {
-        List<TransactionData> transactionsDataList = new Vector<>();
+    public ResponseEntity<IResponse> getAddressTransactions(Hash addressHash) {
+        List<TransactionData> transactionsDataList = new ArrayList<>();
         AddressTransactionsHistory addressTransactionsHistory = addressTransactionHistories.getByHash(addressHash);
 
-        if (addressTransactionsHistory == null) {
+        try {
+            if (addressTransactionsHistory == null) {
+                return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistoryResponse(transactionsDataList));
+            }
+
+            for (Hash transactionHash : addressTransactionsHistory.getTransactionsHistory()) {
+                TransactionData transactionData = transactions.getByHash(transactionHash);
+                transactionsDataList.add(transactionData);
+
+            }
             return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistoryResponse(transactionsDataList));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response(
+                            ADDRESS_TRANSACTIONS_SERVER_ERROR,
+                            STATUS_ERROR));
         }
-
-        for (Hash transactionHash : addressTransactionsHistory.getTransactionsHistory()) {
-            TransactionData transactionData = transactions.getByHash(transactionHash);
-            transactionsDataList.add(transactionData);
-
-        }
-        return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistoryResponse(transactionsDataList));
     }
 
-    public ResponseEntity<BaseResponse> getTransactionDetails(Hash transactionHash) {
+    public ResponseEntity<IResponse> getTransactionDetails(Hash transactionHash) {
         TransactionData transactionData = transactions.getByHash(transactionHash);
         if (transactionData == null)
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new GetTransactionResponse(
-                            STATUS_ERROR,
-                            TRANSACTION_DOESNT_EXIST_MESSAGE));
-        TransactionResponseData transactionResponseData = new TransactionResponseData(transactionData);
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(new GetTransactionResponse(transactionResponseData));
+                    .body(new Response(
+                            TRANSACTION_DOESNT_EXIST_MESSAGE,
+                            STATUS_ERROR));
+        try {
+            TransactionResponseData transactionResponseData = new TransactionResponseData(transactionData);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(new GetTransactionResponse(transactionResponseData));
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response(
+                            TRANSACTION_DETAILS_SERVER_ERROR,
+                            STATUS_ERROR));
+        }
+
     }
 
     @Override

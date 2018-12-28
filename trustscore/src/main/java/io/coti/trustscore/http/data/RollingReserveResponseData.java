@@ -3,9 +3,9 @@ package io.coti.trustscore.http.data;
 import io.coti.basenode.data.BaseTransactionName;
 import io.coti.basenode.data.RollingReserveData;
 import io.coti.basenode.data.TrustScoreNodeResultData;
+import io.coti.basenode.http.data.TrustScoreNodeResultResponseData;
 import lombok.Data;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;

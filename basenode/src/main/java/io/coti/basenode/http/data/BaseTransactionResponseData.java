@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 @Data
-public class BaseTransactionResponseData {
+public abstract class BaseTransactionResponseData {
 
     private String hash;
     private String addressHash;
@@ -17,9 +17,9 @@ public class BaseTransactionResponseData {
     private Date createTime;
     private String name;
 
-    public BaseTransactionResponseData(BaseTransactionData baseTransactionData) {
-        this.hash = baseTransactionData.getHash() == null ? null : baseTransactionData.getHash().toHexString();
-        this.addressHash = baseTransactionData.getAddressHash().toHexString();
+    protected BaseTransactionResponseData(BaseTransactionData baseTransactionData) {
+        this.hash = baseTransactionData.getHash() == null ? null : baseTransactionData.getHash().toString();
+        this.addressHash = baseTransactionData.getAddressHash().toString();
         this.amount = baseTransactionData.getAmount();
         this.createTime = baseTransactionData.getCreateTime();
         this.name = BaseTransactionName.getName(baseTransactionData.getClass()).name();

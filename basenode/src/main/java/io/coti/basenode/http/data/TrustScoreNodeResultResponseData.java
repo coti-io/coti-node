@@ -1,4 +1,4 @@
-package io.coti.trustscore.http.data;
+package io.coti.basenode.http.data;
 
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.TrustScoreNodeResultData;

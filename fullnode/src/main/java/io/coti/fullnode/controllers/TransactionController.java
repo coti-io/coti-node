@@ -1,7 +1,7 @@
 package io.coti.fullnode.controllers;
 
-import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.TransactionIndexService;
 import io.coti.fullnode.http.AddTransactionRequest;
 import io.coti.fullnode.http.AddressRequest;
@@ -35,12 +35,12 @@ public class TransactionController {
     }
 
     @RequestMapping(method = POST)
-    public ResponseEntity<BaseResponse> getTransactionDetails(@Valid @RequestBody GetTransactionRequest getTransactionRequest) {
+    public ResponseEntity<IResponse> getTransactionDetails(@Valid @RequestBody GetTransactionRequest getTransactionRequest) {
         return transactionService.getTransactionDetails(getTransactionRequest.transactionHash);
     }
 
     @RequestMapping(value = "/addressTransactions", method = POST)
-    public ResponseEntity<BaseResponse> getAddressTransactions(@Valid @RequestBody AddressRequest addressRequest) {
+    public ResponseEntity<IResponse> getAddressTransactions(@Valid @RequestBody AddressRequest addressRequest) {
         return transactionService.getAddressTransactions(addressRequest.getAddress());
     }
 

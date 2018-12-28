@@ -12,10 +12,5 @@ public class GetTransactionResponse extends BaseResponse {
         super();
         this.transactionData = transactionResponseData;
     }
-
-    public GetTransactionResponse(String status, String message) {
-        super(message);
-        this.status = status;
-    }
 }
 

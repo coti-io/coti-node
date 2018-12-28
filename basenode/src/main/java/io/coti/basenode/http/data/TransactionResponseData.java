@@ -1,14 +1,19 @@
 package io.coti.basenode.http.data;
 
 import io.coti.basenode.data.BaseTransactionData;
+import io.coti.basenode.data.BaseTransactionName;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
 import lombok.Data;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.TRANSACTION_RESPONSE_ERROR;
 
 @Data
 public class TransactionResponseData {
@@ -37,7 +42,7 @@ public class TransactionResponseData {
     public TransactionResponseData() {
     }
 
-    public TransactionResponseData(TransactionData transactionData) {
+    public TransactionResponseData(TransactionData transactionData) throws Exception {
 
         hash = transactionData.getHash().toHexString();
         amount = transactionData.getAmount();
@@ -46,7 +51,14 @@ public class TransactionResponseData {
         if (transactionData.getBaseTransactions() != null) {
             for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()
                     ) {
-                baseTransactions.add(new BaseTransactionResponseData(baseTransactionData));
+                try {
+                    Class<? extends BaseTransactionResponseData> baseTransactionResponseDataClass = BaseTransactionResponseClass.valueOf(BaseTransactionName.getName(baseTransactionData.getClass()).name()).getBaseTransactionResponseClass();
+                    Constructor<? extends BaseTransactionResponseData> constructor = baseTransactionResponseDataClass.getConstructor(BaseTransactionData.class);
+                    baseTransactions.add(constructor.newInstance(baseTransactionData));
+                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e ){
+                    e.printStackTrace();
+                    throw new Exception(TRANSACTION_RESPONSE_ERROR);
+                }
             }
         }
         leftParentHash = transactionData.getLeftParentHash() == null ? null : transactionData.getLeftParentHash().toHexString();
