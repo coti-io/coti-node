@@ -1,14 +1,14 @@
 package io.coti.financialserver.crypto;
 
 import io.coti.basenode.crypto.CryptoHelper;
-import io.coti.basenode.crypto.SignatureValidationCrypto;
+import io.coti.basenode.crypto.SignatureCrypto;
 import io.coti.financialserver.data.ReceiverBaseTransactionOwnerData;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
 
 @Service
-public class ReceiverBaseTransactionOwnerCrypto extends SignatureValidationCrypto<ReceiverBaseTransactionOwnerData> {
+public class ReceiverBaseTransactionOwnerCrypto extends SignatureCrypto<ReceiverBaseTransactionOwnerData> {
 
     @Override
     public byte[] getMessageInBytes(ReceiverBaseTransactionOwnerData receiverBaseTransactionOwnerData) {

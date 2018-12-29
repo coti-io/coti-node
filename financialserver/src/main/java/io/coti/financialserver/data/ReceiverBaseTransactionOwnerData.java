@@ -12,7 +12,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Data
-public class ReceiverBaseTransactionOwnerData implements IEntity, ISignValidatable {
+public class ReceiverBaseTransactionOwnerData implements IEntity, ISignable, ISignValidatable {
     @NotNull
     private Hash merchantHash;
     @NotNull
@@ -44,4 +44,13 @@ public class ReceiverBaseTransactionOwnerData implements IEntity, ISignValidatab
         return merchantHash;
     }
 
+    @Override
+    public void setSignerHash(Hash signerHash) {
+        this.merchantHash = signerHash;
+    }
+
+    @Override
+    public void setSignature(SignatureData signature) {
+        this.merchantSignature = signature;
+    }
 }
