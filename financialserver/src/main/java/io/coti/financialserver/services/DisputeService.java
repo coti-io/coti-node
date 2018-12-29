@@ -74,9 +74,9 @@ public class DisputeService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_TRANSACTION_NOT_FOUND, STATUS_ERROR));
         }
 
-  /*      if (!disputeData.getConsumerHash().equals(transactionData.getSenderHash())) {
+        if (!disputeData.getConsumerHash().equals(transactionData.getSenderHash())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_TRANSACTION_SENDER_INVALID, STATUS_ERROR));
-        } */
+        } 
 
         if(isDisputeInProcessForTransactionHash(disputeData.getTransactionHash())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(OPEN_DISPUTE_IN_PROCESS_FOR_THIS_TRANSACTION, STATUS_ERROR));
