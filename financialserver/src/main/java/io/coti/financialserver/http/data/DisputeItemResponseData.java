@@ -13,19 +13,21 @@ import java.util.List;
 public class DisputeItemResponseData {
     private Long id;
     private BigDecimal price;
+    private int quantity;
     private DisputeReason reason;
     private DisputeItemStatus status;
     private List<String> disputeDocumentHashes;
     private List<String> disputeCommentHashes;
 
     public DisputeItemResponseData(DisputeItemData disputeItemData) {
+
+        id = disputeItemData.getId();
+        price = disputeItemData.getPrice();
+        quantity = disputeItemData.getQuantity();
+        reason = disputeItemData.getReason();
+        status = disputeItemData.getStatus();
         disputeDocumentHashes = new ArrayList<>();
         disputeCommentHashes = new ArrayList<>();
-
-        this.id = disputeItemData.getId();
-        this.price = disputeItemData.getPrice();
-        this.reason = disputeItemData.getReason();
-        this.status = disputeItemData.getStatus();
         disputeItemData.getDisputeDocumentHashes().forEach(hash -> disputeDocumentHashes.add(hash.toString()));
         disputeItemData.getDisputeCommentHashes().forEach(hash -> disputeCommentHashes.add(hash.toString()));
     }
