@@ -4,10 +4,8 @@ import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.SignatureCrypto;
 import io.coti.basenode.data.Hash;
 import io.coti.financialserver.data.RecourseClaimData;
-import io.coti.financialserver.data.RollingReserveData;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 
 @Service
@@ -25,22 +23,22 @@ public class RecourseClaimCrypto extends SignatureCrypto<RecourseClaimData> {
         byteBufferLength = merchantHashInBytes.length;
 
         int disputeHashesBufferLength = 0;
-        for(Hash disputeHash : recourseClaimData.getDisputeHashes()) {
+        for (Hash disputeHash : recourseClaimData.getDisputeHashes()) {
             disputeHashesBufferLength += disputeHash.getBytes().length;
         }
         ByteBuffer disputeHashesBuffer = ByteBuffer.allocate(disputeHashesBufferLength);
-        for(Hash disputeHash : recourseClaimData.getDisputeHashes()) {
+        for (Hash disputeHash : recourseClaimData.getDisputeHashes()) {
             disputeHashesBuffer.put(disputeHash.getBytes());
         }
         disputeHashesInBytes = disputeHashesBuffer.array();
         byteBufferLength += merchantHashInBytes.length;
 
         int transactionHashesBufferLength = 0;
-        for(Hash disputeHash : recourseClaimData.getDisputeHashes()) {
+        for (Hash disputeHash : recourseClaimData.getDisputeHashes()) {
             transactionHashesBufferLength += disputeHash.getBytes().length;
         }
         ByteBuffer transactionHashesBuffer = ByteBuffer.allocate(transactionHashesBufferLength);
-        for(Hash transactionHash : recourseClaimData.getTransactionHashes()) {
+        for (Hash transactionHash : recourseClaimData.getTransactionHashes()) {
             transactionHashesBuffer.put(transactionHash.getBytes());
         }
         transactionHashesInBytes = transactionHashesBuffer.array();

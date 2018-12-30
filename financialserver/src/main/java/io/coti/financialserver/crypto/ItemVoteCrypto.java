@@ -29,10 +29,10 @@ public class ItemVoteCrypto extends SignatureCrypto<DisputeItemVoteData> {
         byteBufferLength += statusInBytes.length;
 
         ByteBuffer documentDataBuffer = ByteBuffer.allocate(byteBufferLength)
-                                                    .put(userHashInBytes)
-                                                    .put(disputeHashInBytes)
-                                                    .put(statusInBytes)
-                                                    .putLong(itemIdInBytes);
+                .put(userHashInBytes)
+                .put(disputeHashInBytes)
+                .put(statusInBytes)
+                .putLong(itemIdInBytes);
 
         byte[] documentDataInBytes = documentDataBuffer.array();
         return CryptoHelper.cryptoHash(documentDataInBytes).getBytes();

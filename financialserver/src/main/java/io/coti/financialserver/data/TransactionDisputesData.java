@@ -13,7 +13,7 @@ public class TransactionDisputesData implements IEntity {
     private List<Hash> disputeHashes;
 
     public void appendDisputeHash(Hash disputeHash) {
-        if(disputeHashes == null) {
+        if (disputeHashes == null) {
             disputeHashes = new ArrayList<>();
         }
         disputeHashes.add(disputeHash);

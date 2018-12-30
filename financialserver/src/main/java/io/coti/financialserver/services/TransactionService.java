@@ -46,13 +46,12 @@ public class TransactionService extends BaseNodeTransactionService {
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
 
-        if(transactionData.getType() == TransactionType.Payment) {
+        if (transactionData.getType() == TransactionType.Payment) {
 
             ReceiverBaseTransactionOwnerData rbtOwnerData = receiverBaseTransactionOwners.getByHash(transactionData.getReceiverBaseTransactionHash());
-            if(rbtOwnerData == null) {
+            if (rbtOwnerData == null) {
                 log.error("Owner(merchant) not found for RBT hash in received transaction.", transactionData);
-            }
-            else {
+            } else {
                 rollingReserveService.setRollingReserveReleaseDate(transactionData, rbtOwnerData.getMerchantHash());
             }
         }

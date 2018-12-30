@@ -27,11 +27,11 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
             BigDecimal fullNodeFeeAmount = BigDecimal.ZERO;
 
             for (OutputBaseTransactionData outputBaseTransactionData : outputBaseTransactions) {
-                if(FullNodeFeeData.class.isInstance(outputBaseTransactionData)) {
+                if (FullNodeFeeData.class.isInstance(outputBaseTransactionData)) {
                     fullNodeFeeAmount = outputBaseTransactionData.getAmount();
                 } else if (NetworkFeeData.class.isInstance(outputBaseTransactionData)) {
                     reducedAmount = ((NetworkFeeData) outputBaseTransactionData).getReducedAmount();
-                } else if(ReceiverBaseTransactionData.class.isInstance(outputBaseTransactionData)) {
+                } else if (ReceiverBaseTransactionData.class.isInstance(outputBaseTransactionData)) {
                     return outputBaseTransactionData.getAmount().compareTo(reducedAmount.add(fullNodeFeeAmount)) == 0;
                 }
             }
@@ -95,7 +95,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
                 if (!Class.forName(packagePath + outputBaseTransactionNames.get(i)).equals(outputBaseTransactionData.getClass())) {
                     return false;
                 }
-                if (!originalAmount.equals(BigDecimal.ZERO) && originalAmount.compareTo(outputBaseTransactionData.getOriginalAmount()) != 0 ) {
+                if (!originalAmount.equals(BigDecimal.ZERO) && originalAmount.compareTo(outputBaseTransactionData.getOriginalAmount()) != 0) {
                     return false;
                 }
                 originalAmount = outputBaseTransactionData.getOriginalAmount();

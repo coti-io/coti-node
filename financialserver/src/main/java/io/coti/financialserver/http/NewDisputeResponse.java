@@ -1,8 +1,7 @@
 package io.coti.financialserver.http;
 
-import lombok.Data;
-
 import io.coti.basenode.http.BaseResponse;
+import lombok.Data;
 
 @Data
 public class NewDisputeResponse extends BaseResponse {

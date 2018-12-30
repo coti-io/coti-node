@@ -280,10 +280,9 @@ public class DisputeService {
                 }
             }
 
-            if(votesForConsumer >= majorityOfVotes) {
+            if (votesForConsumer >= majorityOfVotes) {
                 disputeItem.setStatus(DisputeItemStatus.AcceptedByArbitrators);
-            }
-            else if(votesForMerchant >= majorityOfVotes) {
+            } else if (votesForMerchant >= majorityOfVotes) {
                 disputeItem.setStatus(DisputeItemStatus.RejectedByArbitrators);
             }
         }
@@ -301,18 +300,18 @@ public class DisputeService {
             }
         }
 
-        if(arbitratorsVotedOnAllItems) {
+        if (arbitratorsVotedOnAllItems) {
 
             BigDecimal chargebackAmount = new BigDecimal(0);
-            for(DisputeItemData disputeItem : dispute.getDisputeItems()) {
-                if(disputeItem.getStatus() == DisputeItemStatus.AcceptedByArbitrators) {
+            for (DisputeItemData disputeItem : dispute.getDisputeItems()) {
+                if (disputeItem.getStatus() == DisputeItemStatus.AcceptedByArbitrators) {
                     chargebackAmount = chargebackAmount.add(disputeItem.getPrice());
                 }
             }
 
             TransactionData transactionData = transactions.getByHash(dispute.getTransactionHash());
 
-            if(chargebackAmount.compareTo(BigDecimal.ZERO) > 0) {
+            if (chargebackAmount.compareTo(BigDecimal.ZERO) > 0) {
                 rollingReserveService.chargebackConsumer(dispute, transactionData.getSenderHash(), chargebackAmount);
             }
             dispute.setDisputeStatus(DisputeStatus.Closed);

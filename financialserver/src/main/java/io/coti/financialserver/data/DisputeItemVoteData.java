@@ -12,32 +12,32 @@ import java.io.Serializable;
 @Data
 public class DisputeItemVoteData implements Serializable, ISignable, ISignValidatable {
 
-    private Hash userHash;
+    private Hash arbitratorHash;
     @NotNull
     private Long itemId;
     @NotNull
     private Hash disputeHash;
     @NotNull
     private DisputeItemStatus status;
-    private SignatureData userSignature;
+    private SignatureData arbitratorSignature;
 
     @Override
     public SignatureData getSignature() {
-    return userSignature;
+        return arbitratorSignature;
     }
 
     @Override
     public Hash getSignerHash() {
-    return userHash;
+        return arbitratorHash;
     }
 
     @Override
-    public void setSignerHash(Hash hash) {
-    userHash = hash;
+    public void setSignerHash(Hash signerHash) {
+        arbitratorHash = signerHash;
     }
 
     @Override
     public void setSignature(SignatureData signature) {
-    this.userSignature = signature;
+        this.arbitratorSignature = signature;
     }
 }

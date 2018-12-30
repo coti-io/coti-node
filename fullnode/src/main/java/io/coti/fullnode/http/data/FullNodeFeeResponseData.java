@@ -5,7 +5,6 @@ import io.coti.basenode.data.FullNodeFeeData;
 import io.coti.basenode.data.SignatureData;
 import lombok.Data;
 
-import java.math.BigDecimal;
 import java.util.Date;
 
 @Data

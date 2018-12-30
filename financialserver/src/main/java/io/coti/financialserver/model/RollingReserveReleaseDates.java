@@ -1,11 +1,10 @@
 package io.coti.financialserver.model;
 
-import javax.annotation.PostConstruct;
-
+import io.coti.basenode.model.Collection;
 import io.coti.financialserver.data.RollingReserveReleaseDateData;
 import org.springframework.stereotype.Service;
 
-import io.coti.basenode.model.Collection;
+import javax.annotation.PostConstruct;
 
 @Service
 public class RollingReserveReleaseDates extends Collection<RollingReserveReleaseDateData> {

@@ -1,14 +1,14 @@
 package io.coti.financialserver.services;
 
-import javax.annotation.PostConstruct;
-import java.util.List;
+import io.coti.basenode.data.NodeType;
+import io.coti.basenode.services.BaseNodeInitializationService;
+import io.coti.basenode.services.CommunicationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import io.coti.basenode.data.NodeType;
-import io.coti.basenode.services.BaseNodeInitializationService;
-import io.coti.basenode.services.CommunicationService;
+import javax.annotation.PostConstruct;
+import java.util.List;
 
 @Service
 public class InitializationService {

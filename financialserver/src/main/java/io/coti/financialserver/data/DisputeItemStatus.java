@@ -5,6 +5,7 @@ public enum DisputeItemStatus {
     AcceptedByMerchant,
     RejectedByMerchant,
     CanceledByConsumer,
+    Claim,
     AcceptedByArbitrators,
     RejectedByArbitrators
 }
