@@ -29,7 +29,7 @@ import static testUtils.TestUtils.generateRandomHash;
         DependencyInjectionTestExecutionListener.class,
         BaseNodeAddressServiceTest.class})
 @Slf4j
-public class BaseNodeAddressServiceTest  extends AbstractTestExecutionListener {
+public class BaseNodeAddressServiceTest extends AbstractTestExecutionListener {
 
     @Autowired
     private BaseNodeAddressService baseNodeAddressService;
@@ -38,7 +38,7 @@ public class BaseNodeAddressServiceTest  extends AbstractTestExecutionListener {
     private IDatabaseConnector rocksDBConnector;
 
     @Override
-    public void beforeTestClass(TestContext testContext){
+    public void beforeTestClass(TestContext testContext) {
         RocksDBConnector rocksDBConnector =
                 testContext.getApplicationContext().getBean("rocksDBConnector", RocksDBConnector.class);
         rocksDBConnector.init();

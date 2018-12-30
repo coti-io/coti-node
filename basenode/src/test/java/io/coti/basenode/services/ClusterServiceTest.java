@@ -25,11 +25,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static testUtils.TestUtils.generateRandomHash;
 
-//
-//@TestPropertySource(locations = "classpath:test.properties")
-//@RunWith(SpringRunner.class)
 @ContextConfiguration(classes = ClusterService.class)
-//@Slf4j
+
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @RunWith(SpringRunner.class)

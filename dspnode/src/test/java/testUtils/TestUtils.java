@@ -1,12 +1,8 @@
 package testUtils;
 
-import io.coti.basenode.data.*;
+import io.coti.basenode.data.Hash;
 import lombok.extern.slf4j.Slf4j;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j

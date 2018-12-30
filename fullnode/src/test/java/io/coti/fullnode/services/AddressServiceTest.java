@@ -7,26 +7,31 @@ import io.coti.basenode.database.RocksDBConnector;
 import io.coti.basenode.model.Addresses;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestContext;
+import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.support.AbstractTestExecutionListener;
+import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 
 import static testUtils.TestUtils.generateRandomHash;
 
 @TestPropertySource(locations = "classpath:test.properties")
-@RunWith(SpringRunner.class)
+@RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {AddressService.class,
         Addresses.class,
         RocksDBConnector.class}
 )
+@TestExecutionListeners(listeners = {
+        DependencyInjectionTestExecutionListener.class,
+        AddressServiceTest.class})
 @Slf4j
-public class AddressServiceTest {
-    private static boolean setUpIsDone = false;
+public class AddressServiceTest extends AbstractTestExecutionListener {
 
     @Autowired
     private AddressService addressService;
@@ -40,17 +45,11 @@ public class AddressServiceTest {
     @MockBean
     private ISender sender;
 
-    @Before
-    public void setUp() {
-        if (setUpIsDone) {
-            return;
-        }
-        try {
-            setUpIsDone = true;
-            rocksDBConnector.init();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    @Override
+    public void beforeTestClass(TestContext testContext) {
+        RocksDBConnector rocksDBConnector =
+                testContext.getApplicationContext().getBean("rocksDBConnector", RocksDBConnector.class);
+        rocksDBConnector.init();
     }
 
     @Test

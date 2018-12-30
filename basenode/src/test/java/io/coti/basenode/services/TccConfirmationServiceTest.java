@@ -25,10 +25,7 @@ import java.util.stream.Collectors;
 
 import static testUtils.TestUtils.generateRandomHash;
 
-//@RunWith(SpringRunner.class)
 @ContextConfiguration(classes = TccConfirmationService.class)
-//@TestPropertySource(locations = "classpath:test.properties")
-//@Slf4j
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @RunWith(SpringRunner.class)

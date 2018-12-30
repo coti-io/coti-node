@@ -2,6 +2,7 @@ package io.coti.fullnode.services;
 
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.data.TransactionStatus;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +15,6 @@ import testUtils.TestUtils;
 
 import java.math.BigDecimal;
 
-import static org.junit.Assert.assertNull;
 import static testUtils.TestUtils.generateRandomHash;
 import static testUtils.TestUtils.generateRandomPositiveAmount;
 
@@ -36,7 +36,7 @@ public class WebSocketSenderTest {
                     new BigDecimal(generateRandomPositiveAmount()),
                     new BigDecimal(generateRandomPositiveAmount()));
         } catch (Exception e) {
-            assertNull(e);
+            Assert.fail(e.getMessage());
         }
     }
 
@@ -48,7 +48,7 @@ public class WebSocketSenderTest {
             webSocketSender.notifyTransactionHistoryChange(transactionData,
                     TransactionStatus.CONFIRMED);
         } catch (Exception e) {
-            assertNull(e);
+            Assert.fail(e.getMessage());
         }
     }
 
@@ -57,7 +57,7 @@ public class WebSocketSenderTest {
         try {
             webSocketSender.notifyGeneratedAddress(generateRandomHash());
         } catch (Exception e) {
-            assertNull(e);
+            Assert.fail(e.getMessage());
         }
     }
 

@@ -43,7 +43,7 @@ public class TestUtils {
         ArrayList<BaseTransactionData> baseTransactions = new ArrayList<>(
                 Collections.singletonList(new InputBaseTransactionData(generateRandomHash(),
                         new BigDecimal(0),
-                                new Date())));
+                        new Date())));
         return new TransactionData(baseTransactions,
                 hash,
                 "test",
@@ -51,6 +51,7 @@ public class TestUtils {
                 new Date(),
                 TransactionType.Payment);
     }
+
     public static Hash generateRandomHash() {
         return generateRandomHash(SIZE_OF_HASH);
     }

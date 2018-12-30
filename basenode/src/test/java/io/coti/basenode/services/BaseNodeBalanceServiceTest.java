@@ -56,7 +56,7 @@ public class BaseNodeBalanceServiceTest extends AbstractTestExecutionListener {
 
         // inputBaseTransactionData1 address is negative. checkBalancesAndAddToPreBalance will return false
         boolean result = baseNodeBalanceService.checkBalancesAndAddToPreBalance(new ArrayList<>(
-                Arrays.asList(inputBaseTransactionData1, outputBaseTransactionData1 )));
+                Arrays.asList(inputBaseTransactionData1, outputBaseTransactionData1)));
 
         Assert.assertFalse(result);
     }
