@@ -2,10 +2,9 @@ package io.coti.trustscore.controllers;
 
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.trustscore.http.GetTransactionTrustScoreRequest;
-import io.coti.trustscore.http.GetTrustScoreRequest;
-import io.coti.trustscore.http.InsertTrustScoreEventRequest;
-import io.coti.trustscore.http.SetKycTrustScoreRequest;
+import io.coti.trustscore.http.*;
+import io.coti.trustscore.services.NetworkFeeService;
+import io.coti.trustscore.services.RollingReserveService;
 import io.coti.trustscore.services.TrustScoreService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +31,6 @@ public class TrustScoreController {
     @RequestMapping(path = "/usertrustscore", method = RequestMethod.PUT)
     public ResponseEntity<BaseResponse> setKycTrustScore(@Valid @RequestBody SetKycTrustScoreRequest request) {
         return trustScoreService.setKycTrustScore(request);
-
     }
 
     @RequestMapping(path = "/transactiontrustscore", method = RequestMethod.POST)
@@ -40,9 +38,13 @@ public class TrustScoreController {
         return trustScoreService.getTransactionTrustScore(request.userHash, request.transactionHash, request.userSignature);
     }
 
-
     @RequestMapping(path = "/insertevent", method = RequestMethod.PUT)
-    public ResponseEntity<BaseResponse> insertTrustScoreEvent(@Valid @RequestBody InsertTrustScoreEventRequest request) {
+    public ResponseEntity<BaseResponse> insertTrustScoreEvent(@Valid @RequestBody InsertEventRequest request) {
         return trustScoreService.addCentralServerEvent(request);
+    }
+
+    @RequestMapping(path = "/usertype", method = RequestMethod.PUT)
+    public ResponseEntity<BaseResponse> setUserType(@Valid @RequestBody SetUserTypeRequest request) {
+        return trustScoreService.setUserType(request);
     }
 }

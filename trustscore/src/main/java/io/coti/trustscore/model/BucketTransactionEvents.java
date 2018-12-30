@@ -11,8 +11,6 @@ import javax.annotation.PostConstruct;
 @Service
 public class BucketTransactionEvents extends Collection<BucketTransactionEventsData> {
 
-    public BucketTransactionEvents() {
-    }
 
     @PostConstruct
     public void init() {

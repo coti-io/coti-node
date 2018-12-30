@@ -1,10 +1,8 @@
 package io.coti.trustscore.database;
 
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
-import io.coti.trustscore.model.BucketTransactionEvents;
-import io.coti.trustscore.model.TransactionEvents;
+import io.coti.trustscore.model.BucketEvents;
 import io.coti.trustscore.model.TrustScores;
-import io.coti.trustscore.model.UserBehaviourEvents;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
@@ -18,12 +16,9 @@ public class TrustScoreRocksDBConnector extends BaseNodeRocksDBConnector {
     public void setColumnFamily() {
         super.setColumnFamily();
         columnFamilyClassNames.addAll(Arrays.asList(
-                BucketTransactionEvents.class.getName(),
-                UserBehaviourEvents.class.getName(),
-                TrustScores.class.getName(),
-                TransactionEvents.class.getName()
+                BucketEvents.class.getName(),
+                TrustScores.class.getName()
+                
         ));
-
-
     }
 }
