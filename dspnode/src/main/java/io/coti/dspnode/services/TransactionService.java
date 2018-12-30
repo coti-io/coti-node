@@ -99,5 +99,6 @@ public class TransactionService extends BaseNodeTransactionService {
         if (!transactionData.isZeroSpend()) {
             transactionsToValidate.add(transactionData);
         }
+
     }
 }
