@@ -362,4 +362,13 @@ public class TransactionHelper implements ITransactionHelper {
     public void removeNoneIndexedTransaction(TransactionData transactionData) {
         noneIndexedTransactionHashes.remove(transactionData.getHash());
     }
+
+    public PaymentInputBaseTransactionData getPaymentInputBaseTransaction(TransactionData transactionData) {
+        for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
+            if (baseTransactionData instanceof PaymentInputBaseTransactionData) {
+                return (PaymentInputBaseTransactionData) baseTransactionData;
+            }
+        }
+        return null;
+    }
 }

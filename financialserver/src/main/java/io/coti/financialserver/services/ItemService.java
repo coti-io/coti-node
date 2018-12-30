@@ -51,7 +51,7 @@ public class ItemService {
 
         List<DisputeItemData> disputeItems = new ArrayList<>();
         disputeItems.add(disputeItemData);
-        if ( !disputeService.isDisputeItemsValid(disputeData.getConsumerHash(), disputeItems, disputeData.getTransactionHash()) ) {
+        if ( !disputeService.isDisputeItemsExist(disputeData.getConsumerHash(), disputeItems, disputeData.getTransactionHash()) ) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ITEMS_EXIST_ALREADY, STATUS_ERROR));
         }
 

@@ -1,9 +1,6 @@
 package io.coti.basenode.services.interfaces;
 
-import io.coti.basenode.data.BaseTransactionData;
-import io.coti.basenode.data.DspConsensusResult;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 import io.coti.basenode.http.GetTransactionBatchResponse;
 
@@ -60,4 +57,6 @@ public interface ITransactionHelper {
     void addNoneIndexedTransaction(TransactionData transactionData);
 
     void removeNoneIndexedTransaction(TransactionData transactionData);
+
+    PaymentInputBaseTransactionData getPaymentInputBaseTransaction(TransactionData transactionData);
 }
