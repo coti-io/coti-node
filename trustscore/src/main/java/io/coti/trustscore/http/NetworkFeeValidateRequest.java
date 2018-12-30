@@ -13,4 +13,7 @@ public class NetworkFeeValidateRequest {
     @NotNull
     NetworkFeeData networkFeeData;
 
+    @NotNull
+    String userHash;
+
 }

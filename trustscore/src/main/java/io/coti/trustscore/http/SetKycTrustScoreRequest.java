@@ -11,6 +11,8 @@ public class SetKycTrustScoreRequest extends Request {
     @NotNull
     public Hash userHash;
     @NotNull
+    public String userType;
+    @NotNull
     public @Valid SignatureData signature;
     @NotNull
     public double kycTrustScore;

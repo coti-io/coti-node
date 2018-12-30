@@ -1,8 +1,8 @@
 package io.coti.trustscore.config.rules;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
+import lombok.Data;
 
+@Data
 public abstract class EventScore {
 
     private String name;
@@ -10,33 +10,4 @@ public abstract class EventScore {
     private double weight;
 
     private String decay;
-
-    @XmlAttribute(name = "name")
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @XmlElement(name = "weight")
-    public double getWeight() {
-        return weight;
-    }
-
-    public void setWeight(double weight) {
-        this.weight = weight;
-    }
-
-    @XmlElement(name = "decay")
-    public String getDecay() {
-        return decay;
-    }
-
-    public void setDecay(String decay) {
-        this.decay = decay;
-    }
-
-
 }

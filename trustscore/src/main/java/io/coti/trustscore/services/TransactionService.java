@@ -9,13 +9,13 @@ import org.springframework.stereotype.Service;
 public class TransactionService extends BaseNodeTransactionService {
 
     @Autowired
-    TrustScoreService trustScoreService;
+    private TrustScoreService trustScoreService;
 
 
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
-        if (transactionData.getDspConsensusResult() != null && transactionData.getDspConsensusResult().isDspConsensus())
+        if (transactionData.getDspConsensusResult() != null && transactionData.getDspConsensusResult().isDspConsensus() && !transactionData.isZeroSpend()) {
             trustScoreService.addTransactionToTsCalculation(transactionData);
+        }
     }
-
 }
