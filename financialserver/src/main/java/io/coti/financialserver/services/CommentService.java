@@ -43,7 +43,6 @@ public class CommentService {
 
         DisputeCommentData disputeCommentData = request.getDisputeCommentData();
         disputeCommentData.init();
-        disputeCommentCrypto.signMessage(disputeCommentData);
 
         if (!disputeCommentCrypto.verifySignature(disputeCommentData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
@@ -88,7 +87,6 @@ public class CommentService {
 
     public ResponseEntity<IResponse> getComments(GetCommentsRequest request) {
         GetDisputeItemDetailData getDisputeCommentsData = request.getDisputeCommentsData();
-        getDisputeCommentsCrypto.signMessage(getDisputeCommentsData);
 
         if (!getDisputeCommentsCrypto.verifySignature(getDisputeCommentsData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
