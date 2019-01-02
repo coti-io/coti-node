@@ -3,6 +3,7 @@ package io.coti.trustscore.data.Events;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.IEntity;
+import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.trustscore.data.Enums.EventType;
 import io.coti.trustscore.http.InsertEventRequest;
 import lombok.Data;
@@ -13,11 +14,12 @@ import java.util.Date;
 
 @Slf4j
 @Data
-public abstract class EventData implements IEntity, Serializable {
+public abstract class EventData implements IEntity, Serializable, ISignValidatable {
 
     private Date eventDate;
     private Hash uniqueIdentifier;
     private EventType eventType;
+    private Hash eventSignerHash;
     private SignatureData eventSignature;
 
     public EventData() {
@@ -46,6 +48,16 @@ public abstract class EventData implements IEntity, Serializable {
     @Override
     public void setHash(Hash hash) {
         this.uniqueIdentifier = hash;
+    }
+
+    @Override
+    public SignatureData getSignature() {
+        return eventSignature;
+    }
+
+    @Override
+    public Hash getSignerHash() {
+        return eventSignerHash;
     }
 }
 

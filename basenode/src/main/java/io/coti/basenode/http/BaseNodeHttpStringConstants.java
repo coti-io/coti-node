@@ -25,5 +25,6 @@ public class BaseNodeHttpStringConstants {
     public static final String API_SERVER_ERROR = "Api Server Error";
 
     public static final String INVALID_PARAMETERS_MESSAGE = "Invalid request parameters.";
+    public static final String INVALID_SIGNER = "Invalid signer hash";
     public static final String GENERAL_EXCEPTION_ERROR = "Error In Service";
 }
