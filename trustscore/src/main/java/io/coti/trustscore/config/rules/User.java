@@ -6,14 +6,13 @@ import lombok.Data;
 public class User {
 
     private String type;
-    private String userID;
     private String addressMapping;
     private InitialTrustScoreEventsScore initialTrustScore;
     private TransactionEventsScore transactionEventScore;
     private BehaviorEventsScore behaviorEventsScore;
     private BehaviorHighFrequencyEventsScore behaviorHighFrequencyEventsScore;
     private CompensableEventsScore compensableEventsScore;
-
+    
     public TransactionEventsScore getBehaviorCumulativeScores() {
         return transactionEventScore;
     }
