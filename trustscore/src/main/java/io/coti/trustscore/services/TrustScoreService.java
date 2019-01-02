@@ -3,10 +3,7 @@ package io.coti.trustscore.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.SignatureData;
-import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.TransactionTrustScoreData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.TransactionTrustScoreResponseData;
@@ -327,7 +324,7 @@ public class TrustScoreService {
 
         bucketEvents.put(bucketTransactionEventsData);
 
-        if (transactionData.getAmount().doubleValue() > 0) {
+        if (transactionData.getType() == TransactionType.Payment && transactionData.getAmount().doubleValue() > 0) {
             addTransactionToChargeBackBucket(transactionData.getSenderHash(), transactionData);
         }
     }
