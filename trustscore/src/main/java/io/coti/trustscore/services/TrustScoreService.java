@@ -279,8 +279,6 @@ public class TrustScoreService {
         LocalDate transactionConsensusDate = transactionData.getDspConsensusResult().getIndexingTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate currentDate = new Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
-        //TODO: case if transaction belong to the day before but only received now.
-
         if (currentDate.equals(transactionConsensusDate)) {
             addToTransactionBucketsCalculation(trustScoreData, transactionData);
         }
