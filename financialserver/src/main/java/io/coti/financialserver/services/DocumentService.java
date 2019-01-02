@@ -54,7 +54,6 @@ public class DocumentService {
     public ResponseEntity<IResponse> newDocument(NewDocumentRequest request) {
 
         DisputeDocumentData disputeDocumentData = request.getDisputeDocumentData();
-        disputeDocumentCrypto.signMessage(disputeDocumentData);
 
         if (!disputeDocumentCrypto.verifySignature(disputeDocumentData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
@@ -124,7 +123,6 @@ public class DocumentService {
 
     public ResponseEntity getDocumentNames(GetDocumentNamesRequest request) {
         GetDisputeItemDetailData getDisputeDocumentNamesData = request.getDisputeDocumentNamesData();
-        getDisputeDocumentNamesCrypto.signMessage(getDisputeDocumentNamesData);
 
         if (!getDisputeDocumentNamesCrypto.verifySignature(getDisputeDocumentNamesData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
@@ -150,7 +148,6 @@ public class DocumentService {
 
     public void getDocumentFile(GetDocumentFileRequest request, HttpServletResponse response) throws IOException {
         GetDocumentFileData getDocumentFileData = request.getDocumentFileData();
-        getDocumentFileCrypto.signMessage(getDocumentFileData);
 
         if (!getDocumentFileCrypto.verifySignature(getDocumentFileData)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
