@@ -5,6 +5,7 @@ import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.BaseResponse;
+import io.coti.basenode.http.ExceptionResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.TransactionTrustScoreResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
@@ -50,8 +51,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNER;
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 import static io.coti.trustscore.http.HttpStringConstants.*;
 import static io.coti.trustscore.utils.BucketBuilder.buildTransactionDataRequest;
 
@@ -111,7 +111,7 @@ public class TrustScoreService {
     }
 
     public ResponseEntity<IResponse> addKycServerEvent(InsertEventRequest request) {
-        BaseResponse addingKycServerEventResponse;
+        IResponse addingKycServerEventResponse;
         try {
             if(!request.getSignerHash().equals(new Hash(kycServerPublicKey))){
                 return ResponseEntity
@@ -390,7 +390,7 @@ public class TrustScoreService {
         return rulesData;
     }
 
-    private BaseResponse sendToSuitableService(InsertEventRequest request) {
+    private IResponse sendToSuitableService(InsertEventRequest request) throws Exception {
         switch (request.eventType) {
             case INITIAL_EVENT: {
                 return sendToBucketInitialTrustScoreEventsService(request);
@@ -405,12 +405,11 @@ public class TrustScoreService {
                 return sendToBucketNotFulfilmentEventsService(request);
             }
             default:
-                return null;
-            // TODO : define response
+                throw new Exception(ILLEGAL_EVENT_FROM_KYC_SERVER);
         }
     }
 
-    private BaseResponse sendToBucketInitialTrustScoreEventsService(InsertEventRequest request) {
+    private IResponse sendToBucketInitialTrustScoreEventsService(InsertEventRequest request) {
 
         InitialTrustScoreEventsData initialTrustScoreEventsData =
                 new InitialTrustScoreEventsData(request);
@@ -427,7 +426,7 @@ public class TrustScoreService {
         return new SetInitialTrustScoreEventResponse(request.userHash, request.eventType, request.getInitialTrustScoreType(), request.getScore());
     }
 
-    private BaseResponse sendToHighFrequencyEventScoreService(InsertEventRequest request) {
+    private IResponse sendToHighFrequencyEventScoreService(InsertEventRequest request) {
         if (request.getHighFrequencyEventScoreType() == HighFrequencyEventScoreType.CHARGE_BACK) {
             ChargeBackEventsData chargeBackEventsData = new ChargeBackEventsData(request);
 
@@ -440,12 +439,10 @@ public class TrustScoreService {
             Hash transactionDataHash = (request.getTransactionData() != null) ? request.getTransactionData().getHash() : null;
             return new SetHighFrequencyEventScoreResponse(request.userHash, request.eventType, request.getHighFrequencyEventScoreType(), transactionDataHash);
         }
-
-        // TODO: other high frequency events
-        return null;
+        return new Response(ILLEGAL_EVENT_FROM_KYC_SERVER, API_SERVER_ERROR);
     }
 
-    private BaseResponse sendToBucketNotFulfilmentEventsService(InsertEventRequest request) {
+    private IResponse sendToBucketNotFulfilmentEventsService(InsertEventRequest request) {
         NotFulfilmentEventsData notFulfilmentEventsData = new NotFulfilmentEventsData(request);
 
         Hash bucketHash = getBucketHashByUserHashAndEventType(request);
@@ -461,7 +458,7 @@ public class TrustScoreService {
         return new SetNotFulfilmentEventScoreResponse(request.userHash, request.eventType, request.getCompensableEventScoreType());
     }
 
-    private BaseResponse sendToBucketBehaviorEventsService(InsertEventRequest request) {
+    private IResponse sendToBucketBehaviorEventsService(InsertEventRequest request) {
         BehaviorEventsData behaviorEventsData = new BehaviorEventsData(request);
 
         Hash bucketHash = getBucketHashByUserHashAndEventType(request);
