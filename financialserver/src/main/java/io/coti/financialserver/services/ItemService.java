@@ -58,14 +58,14 @@ public class ItemService {
 
         for (Long itemId : disputeUpdateItemData.getItemIds()) {
             try {
-                DisputeItemStatusService.valueOf(disputeUpdateItemData.getStatus().toString()).changeStatus(disputeData, itemId, actionSide);
+                DisputeItemStatusService.valueOf(disputeUpdateItemData.getStatus().toString()).changeStatus(disputeData, itemId, disputeData.getActionSide());
             } catch (Exception e) {
                 e.printStackTrace();
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(e.getMessage(), STATUS_ERROR));
             }
             WebSocketUserHashSessionName webSocketUserHashSessionName = webSocketMapUserHashSessionName.getByHash(disputeData.getMessageReceiverHash());
             if(webSocketUserHashSessionName != null) {
-                messagingSender.convertAndSendToUser(webSocketUserHashSessionName.getWebSocketUserName(), "/topic/public", disputeItemData);
+                messagingSender.convertAndSendToUser(webSocketUserHashSessionName.getWebSocketUserName(), "/topic/public", disputeData.getDisputeItem(itemId));
             }
         }
         disputeService.update(disputeData);

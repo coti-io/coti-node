@@ -15,6 +15,7 @@ import io.coti.financialserver.data.*;
 import io.coti.financialserver.http.GetDisputesRequest;
 import io.coti.financialserver.http.GetDisputesResponse;
 import io.coti.financialserver.http.NewDisputeRequest;
+import io.coti.financialserver.http.NewDisputeResponse;
 import io.coti.financialserver.http.data.GetDisputesData;
 import io.coti.financialserver.model.*;
 import lombok.extern.slf4j.Slf4j;
@@ -62,7 +63,7 @@ public class DisputeService {
     @Autowired
     private ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
     @Autowired
-    private ITransactionHelper transactionHelper;
+    private TransactionHelper transactionHelper;
     @Autowired
     private RollingReserveService rollingReserveService;
     @Autowired
@@ -72,8 +73,6 @@ public class DisputeService {
     WebSocketMapUserHashSessionName webSocketMapUserHashSessionName;
     @Autowired
     private SimpMessagingTemplate messagingSender;
-    @Autowired
-    private TransactionHelper transactionHelper;
 
     @PostConstruct
     public void init() {
