@@ -143,7 +143,7 @@ public class DocumentService {
         List<DisputeDocumentData> disputeDocumentDataList = new ArrayList<>();
         disputeDocumentHashes.forEach(disputeDocumentHash -> disputeDocumentDataList.add(disputeDocuments.getByHash(disputeDocumentHash)));
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new GetDocumentNamesResponse(disputeDocumentDataList));
+        return ResponseEntity.status(HttpStatus.OK).body(new GetDocumentNamesResponse(disputeDocumentDataList));
     }
 
     public void getDocumentFile(GetDocumentFileRequest request, HttpServletResponse response) throws IOException {
