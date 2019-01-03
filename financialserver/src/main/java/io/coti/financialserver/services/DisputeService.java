@@ -73,8 +73,6 @@ public class DisputeService {
 
         DisputeData disputeData = newDisputeRequest.getDisputeData();
 
-        disputeCrypto.signMessage(disputeData);
-
         if (!disputeCrypto.verifySignature(disputeData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
@@ -99,8 +97,9 @@ public class DisputeService {
             if (itemIds.contains(item.getId()) || paymentItemsStreamSupplier.get().count() == 0) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_ITEMS_INVALID, STATUS_ERROR));
             }
+
             item.setPrice(paymentItemsStreamSupplier.get().findFirst().get().getItemPrice());
-            disputeAmount.add(item.getPrice());
+            disputeAmount = disputeAmount.add(item.getPrice());
             itemIds.add(item.getId());
         }
         disputeData.setAmount(disputeAmount);
@@ -207,7 +206,7 @@ public class DisputeService {
     public void update(DisputeData disputeData) {
 
         disputeData.setUpdateTime(new Date());
-        if (disputeData.getDisputeStatus().equals(DisputeStatus.Claim) && disputeData.getArbitratorHashes() == null) {
+        if (disputeData.getDisputeStatus().equals(DisputeStatus.Claim) && disputeData.getArbitratorHashes().isEmpty()) {
             assignToArbitrators(disputeData);
             disputeData.setArbitratorsAssignTime(new Date());
         }
@@ -282,7 +281,7 @@ public class DisputeService {
 
         for (Hash disputeHash : transactionDisputesData.getDisputeHashes()) {
             disputeData = disputes.getByHash(disputeHash);
-            if (disputeData.getDisputeStatus() == DisputeStatus.Recall) {
+            if (disputeData.getDisputeStatus().equals(DisputeStatus.Recall) || !DisputeStatusService.valueOf(disputeData.getDisputeStatus().toString()).isFinalStatus()) {
                 return true;
             }
         }

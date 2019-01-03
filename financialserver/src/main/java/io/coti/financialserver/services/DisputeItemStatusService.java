@@ -179,8 +179,7 @@ public enum DisputeItemStatusService {
     public void createChargeBackTransaction(DisputeData disputeData) {
         List<DisputeItemData> refundableDisputeItems = disputeData.getDisputeItems().stream().filter(disputeItemData -> valueOf(disputeItemData.getStatus().toString()).isRefundable()).collect(Collectors.toList());
         if (refundableDisputeItems.size() != 0) {
-            BigDecimal refundAmount = BigDecimal.ZERO;
-            refundableDisputeItems.forEach(disputeItemData -> refundAmount.add(disputeItemData.getPrice()));
+            BigDecimal refundAmount = refundableDisputeItems.stream().map(DisputeItemData::getPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
             TransactionData transactionData = transactions.getByHash(disputeData.getTransactionHash());
             rollingReserveService.chargebackConsumer(disputeData, transactionData.getSenderHash(), refundAmount);
         }
