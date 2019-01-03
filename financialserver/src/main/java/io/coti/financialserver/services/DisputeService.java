@@ -158,8 +158,7 @@ public class DisputeService {
 
         disputes.put(disputeData);
 
-        WebSocketUserHashSessionName webSocketUserHashSessionName = webSocketMapUserHashSessionName.getByHash(disputeData.getMerchantHash());
-        messagingSender.convertAndSendToUser(webSocketUserHashSessionName.getWebSocketUserName(), "/topic/public", disputeData);
+        messagingSender.convertAndSend("/topic/user/" + disputeData.getMessageReceiverHash(), disputeData);
 
         emailNotificationsService.sendEmail(disputeData.getHash(), disputeData.getMerchantHash(), FinancialServerEvent.NewDispute, null);
         return ResponseEntity.status(HttpStatus.OK).body(new NewDisputeResponse(disputeData.getHash().toString(), STATUS_SUCCESS));
@@ -230,6 +229,7 @@ public class DisputeService {
 
     public void update(DisputeData disputeData) {
 
+        disputeData.setUpdateTime(new Date());
         if (disputeData.getDisputeStatus().equals(DisputeStatus.Claim) && disputeData.getArbitratorHashes().isEmpty()) {
             assignToArbitrators(disputeData);
             disputeData.setArbitratorsAssignTime(Instant.now());
@@ -243,10 +243,6 @@ public class DisputeService {
 
         int arbitratorsCount = disputeData.getArbitratorHashes().size();
         int majorityOfVotes = arbitratorsCount / 2 + 1;
-
-        if (disputeItemData.getDisputeItemVotesData().size() < arbitratorsCount) {
-            return;
-        }
 
         int votesForConsumer = 0;
         int votesForMerchant = 0;

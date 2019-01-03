@@ -77,7 +77,7 @@ public class ItemService {
     public ResponseEntity<IResponse> vote(VoteRequest request) {
 
         DisputeItemVoteData disputeItemVoteData = request.getDisputeItemVoteData();
-        
+
         if (!disputeItemVoteCrypto.verifySignature(disputeItemVoteData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
@@ -117,7 +117,7 @@ public class ItemService {
         
         for(Hash arbitratorHash : disputeData.getArbitratorHashes()) {
             WebSocketUserHashSessionName webSocketUserHashSessionName = webSocketMapUserHashSessionName.getByHash(arbitratorHash);
-            messagingSender.convertAndSendToUser(webSocketUserHashSessionName.getWebSocketUserName(), "/topic/public", disputeItemData);
+            //messagingSender.convertAndSendToUser(webSocketUserHashSessionName.getWebSocketUserName(), "/topic/public", disputeItemData);
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(new Response(DISPUTE_ITEM_VOTE_SUCCESS, STATUS_SUCCESS));
