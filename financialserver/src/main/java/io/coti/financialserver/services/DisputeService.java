@@ -8,7 +8,7 @@ import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Collection;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.TransactionHelper;
 import io.coti.financialserver.crypto.DisputeCrypto;
 import io.coti.financialserver.crypto.GetDisputesCrypto;
 import io.coti.financialserver.data.*;
@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -62,7 +63,17 @@ public class DisputeService {
     private ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
     @Autowired
     private ITransactionHelper transactionHelper;
+    @Autowired
+    private RollingReserveService rollingReserveService;
+    @Autowired
+    private EmailNotificationsService emailNotificationsService;
     private Map<ActionSide, Collection<UserDisputesData>> userDisputesCollectionMap = new EnumMap<>(ActionSide.class);
+    @Autowired
+    WebSocketMapUserHashSessionName webSocketMapUserHashSessionName;
+    @Autowired
+    private SimpMessagingTemplate messagingSender;
+    @Autowired
+    private TransactionHelper transactionHelper;
 
     @PostConstruct
     public void init() {
@@ -148,7 +159,11 @@ public class DisputeService {
 
         disputes.put(disputeData);
 
-        return ResponseEntity.status(HttpStatus.OK).body(new GetDisputesResponse(Arrays.asList(disputeData), ActionSide.Consumer, disputeData.getConsumerHash()));
+        WebSocketUserHashSessionName webSocketUserHashSessionName = webSocketMapUserHashSessionName.getByHash(disputeData.getMerchantHash());
+        messagingSender.convertAndSendToUser(webSocketUserHashSessionName.getWebSocketUserName(), "/topic/public", disputeData);
+
+        emailNotificationsService.sendEmail(disputeData.getHash(), disputeData.getMerchantHash(), FinancialServerEvent.NewDispute, null);
+        return ResponseEntity.status(HttpStatus.OK).body(new NewDisputeResponse(disputeData.getHash().toString(), STATUS_SUCCESS));
     }
 
     private void addUserDisputeHash(ActionSide actionSide, Hash userHash, Hash disputeHash) {

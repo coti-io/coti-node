@@ -36,10 +36,12 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
     private BigDecimal recourseClaimAmount;
     private Boolean recourseClaimOpen;
     private Hash recourseClaimTransactionHash;
-    private Instant creationTime;
-    private Instant updateTime;
-    private Instant arbitratorsAssignTime;
-    private Instant closedTime;
+    private Date creationTime;
+    private Date updateTime;
+    private Date arbitratorsAssignTime;
+    private Date closedTime;
+    private Hash messageReceiverHash;
+    private ActionSide actionSide;
 
     private DisputeData() {
 
@@ -81,6 +83,22 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
         return disputeItems;
     }
 
+    public Boolean setActionSideAndMessageReceiverHash(Hash actionInitiatorHash) {
+
+        if (getConsumerHash().equals(actionInitiatorHash)) {
+            actionSide = ActionSide.Consumer;
+            messageReceiverHash = getMerchantHash();
+        } else if (getMerchantHash().equals(actionInitiatorHash)) {
+            actionSide = ActionSide.Merchant;
+            messageReceiverHash = getConsumerHash();
+        } else {
+            return false;
+        }
+
+        return true;
+    }
+
+    // serializer.writeValueAsString(entity)
     @Override
     public Hash getHash() {
         return hash;

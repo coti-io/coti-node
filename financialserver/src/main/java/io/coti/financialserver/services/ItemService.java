@@ -1,5 +1,6 @@
 package io.coti.financialserver.services;
 
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.financialserver.crypto.DisputeItemVoteCrypto;
@@ -8,10 +9,12 @@ import io.coti.financialserver.data.*;
 import io.coti.financialserver.http.UpdateItemRequest;
 import io.coti.financialserver.http.VoteRequest;
 import io.coti.financialserver.model.Disputes;
+import io.coti.financialserver.model.WebSocketMapUserHashSessionName;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import static io.coti.financialserver.http.HttpStringConstants.*;
@@ -28,6 +31,12 @@ public class ItemService {
     DisputeItemVoteCrypto disputeItemVoteCrypto;
     @Autowired
     DisputeService disputeService;
+    @Autowired
+    private EmailNotificationsService emailNotificationsService;
+    @Autowired
+    private SimpMessagingTemplate messagingSender;
+    @Autowired
+    WebSocketMapUserHashSessionName webSocketMapUserHashSessionName;
 
     public ResponseEntity<IResponse> updateItem(UpdateItemRequest request) {
 
@@ -43,13 +52,8 @@ public class ItemService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_NOT_FOUND, STATUS_ERROR));
         }
 
-        ActionSide actionSide;
-        if (disputeData.getConsumerHash().equals(disputeUpdateItemData.getUserHash())) {
-            actionSide = ActionSide.Consumer;
-        } else if (disputeData.getMerchantHash().equals(disputeUpdateItemData.getUserHash())) {
-            actionSide = ActionSide.Merchant;
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
+        if( !disputeData.setActionSideAndMessageReceiverHash(disputeUpdateItemData.getUserHash()) ) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_COMMENT_CREATE_UNAUTHORIZED, STATUS_ERROR));
         }
 
         for (Long itemId : disputeUpdateItemData.getItemIds()) {
@@ -59,10 +63,15 @@ public class ItemService {
                 e.printStackTrace();
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(e.getMessage(), STATUS_ERROR));
             }
+            WebSocketUserHashSessionName webSocketUserHashSessionName = webSocketMapUserHashSessionName.getByHash(disputeData.getMessageReceiverHash());
+            if(webSocketUserHashSessionName != null) {
+                messagingSender.convertAndSendToUser(webSocketUserHashSessionName.getWebSocketUserName(), "/topic/public", disputeItemData);
+            }
         }
         disputeService.update(disputeData);
 
-        return ResponseEntity.status(HttpStatus.OK).body(new Response(DISPUTE_ITEM_UPDATE_SUCCESS, STATUS_SUCCESS));
+        emailNotificationsService.sendEmail(disputeData.getHash(), disputeData.getMessageReceiverHash(), FinancialServerEvent.ItemStatusUpdated, disputeData.getDisputeItems());
+        return ResponseEntity.status(HttpStatus.OK).body(new Response(SUCCESS, STATUS_SUCCESS));
     }
 
     public ResponseEntity<IResponse> vote(VoteRequest request) {
@@ -104,6 +113,11 @@ public class ItemService {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(e.getMessage(), STATUS_ERROR));
+        }
+        
+        for(Hash arbitratorHash : disputeData.getArbitratorHashes()) {
+            WebSocketUserHashSessionName webSocketUserHashSessionName = webSocketMapUserHashSessionName.getByHash(arbitratorHash);
+            messagingSender.convertAndSendToUser(webSocketUserHashSessionName.getWebSocketUserName(), "/topic/public", disputeItemData);
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(new Response(DISPUTE_ITEM_VOTE_SUCCESS, STATUS_SUCCESS));
