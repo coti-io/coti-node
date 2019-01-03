@@ -15,7 +15,6 @@ import io.coti.financialserver.data.*;
 import io.coti.financialserver.http.GetDisputesRequest;
 import io.coti.financialserver.http.GetDisputesResponse;
 import io.coti.financialserver.http.NewDisputeRequest;
-import io.coti.financialserver.http.NewDisputeResponse;
 import io.coti.financialserver.http.data.GetDisputesData;
 import io.coti.financialserver.model.*;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +25,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.Supplier;
@@ -206,120 +204,49 @@ public class DisputeService {
         return userHash.equals(disputeData.getConsumerHash()) || userHash.equals(disputeData.getMerchantHash()) || disputeData.getArbitratorHashes().contains(userHash);
     }
 
-    public void update(DisputeData dispute) {
+    public void update(DisputeData disputeData) {
 
-        dispute.setUpdateTime(new Date());
-
-        boolean noRecallItems = true;
-        boolean allItemsAcceptedByMerchant = true;
-        boolean allItemsCancelledByConsumer = true;
-        boolean atLeastOneItemRejectedByMerchant = false;
-
-        for (DisputeItemData disputeItem : dispute.getDisputeItems()) {
-
-            if (disputeItem.getStatus() == DisputeItemStatus.Recall) {
-                noRecallItems = false;
-                allItemsAcceptedByMerchant = false;
-                allItemsCancelledByConsumer = false;
-                break;
-            }
-
-            if (disputeItem.getStatus() == DisputeItemStatus.AcceptedByMerchant) {
-                allItemsCancelledByConsumer = false;
-            }
-
-            if (disputeItem.getStatus() == DisputeItemStatus.CanceledByConsumer) {
-                allItemsAcceptedByMerchant = false;
-            }
-
-            if (disputeItem.getStatus() == DisputeItemStatus.RejectedByMerchant) {
-                allItemsAcceptedByMerchant = false;
-                allItemsCancelledByConsumer = false;
-                atLeastOneItemRejectedByMerchant = true;
-            }
+        disputeData.setUpdateTime(new Date());
+        if (disputeData.getDisputeStatus().equals(DisputeStatus.Claim) && disputeData.getArbitratorHashes() == null) {
+            assignToArbitrators(disputeData);
+            disputeData.setArbitratorsAssignTime(new Date());
         }
 
-        if (noRecallItems && atLeastOneItemRejectedByMerchant) {
-            dispute.setDisputeStatus(DisputeStatus.Claim);
-            assignToArbitrators(dispute);
-        } else if (allItemsAcceptedByMerchant) {
-            dispute.setDisputeStatus(DisputeStatus.AcceptedByMerchant);
-        } else if (allItemsCancelledByConsumer) {
-            dispute.setDisputeStatus(DisputeStatus.CanceledByConsumer);
-        } else if (noRecallItems) {
-            dispute.setDisputeStatus(DisputeStatus.PartlyAcceptedByMerchant);
-        }
-
-        disputes.put(dispute);
+        disputes.put(disputeData);
     }
 
-    public void updateAfterVote(DisputeData dispute) {
+    public void updateAfterVote(DisputeData disputeData, DisputeItemData disputeItemData) throws Exception {
 
-        dispute.setUpdateTime(new Date());
+        disputeData.setUpdateTime(new Date());
 
-        int arbitratorsCount = dispute.getArbitratorHashes().size();
-        int majorityOfVotes = (arbitratorsCount + 1) / 2;
-        int votesForConsumer;
-        int votesForMerchant;
+        int arbitratorsCount = disputeData.getArbitratorHashes().size();
+        int majorityOfVotes = arbitratorsCount / 2 + 1;
 
-        for (DisputeItemData disputeItem : dispute.getDisputeItems()) {
+        if (disputeItemData.getDisputeItemVotesData().size() < arbitratorsCount) {
+            return;
+        }
 
-            if (disputeItem.getDisputeItemVotesData().size() < arbitratorsCount) {
-                continue;
-            }
+        int votesForConsumer = 0;
+        int votesForMerchant = 0;
 
-            votesForConsumer = 0;
-            votesForMerchant = 0;
+        for (DisputeItemVoteData disputeItemVoteData : disputeItemData.getDisputeItemVotesData()) {
 
-            for (DisputeItemVoteData disputeItemVoteData : disputeItem.getDisputeItemVotesData()) {
-
-                if (disputeItemVoteData.getStatus() == DisputeItemStatus.AcceptedByArbitrators) {
-                    votesForConsumer++;
-                } else {
-                    votesForMerchant++;
-                }
-            }
-
-            if(votesForConsumer >= majorityOfVotes) {
-                disputeItem.setStatus(DisputeItemStatus.AcceptedByArbitrators);
-            }
-            else if(votesForMerchant >= majorityOfVotes) {
-                disputeItem.setStatus(DisputeItemStatus.RejectedByArbitrators);
+            if (disputeItemVoteData.getStatus() == DisputeItemVoteStatus.AcceptedByArbitrator) {
+                votesForConsumer++;
+            } else {
+                votesForMerchant++;
             }
         }
 
-        boolean arbitratorsVotedOnAllItems = true;
+        if (votesForConsumer >= majorityOfVotes) {
+            DisputeItemStatusService.AcceptedByArbitrators.changeStatus(disputeData, disputeItemData.getId(), ActionSide.Arbitrator);
 
-        for (DisputeItemData disputeItem : dispute.getDisputeItems()) {
-            if (disputeItem.getStatus() == DisputeItemStatus.CanceledByConsumer) {
-                continue;
-            }
-
-            if (disputeItem.getStatus() != DisputeItemStatus.AcceptedByArbitrators && disputeItem.getStatus() != DisputeItemStatus.RejectedByArbitrators) {
-                arbitratorsVotedOnAllItems = false;
-                break;
-            }
+        } else if (votesForMerchant >= majorityOfVotes) {
+            DisputeItemStatusService.RejectedByArbitrators.changeStatus(disputeData, disputeItemData.getId(), ActionSide.Arbitrator);
         }
 
-        if(arbitratorsVotedOnAllItems) {
-
-            BigDecimal chargebackAmount = new BigDecimal(0);
-            for(DisputeItemData disputeItem : dispute.getDisputeItems()) {
-                if(disputeItem.getStatus() == DisputeItemStatus.AcceptedByArbitrators) {
-                    chargebackAmount = chargebackAmount.add(disputeItem.getPrice());
-                }
-            }
-
-            TransactionData transactionData = transactions.getByHash(dispute.getTransactionHash());
-
-            if(chargebackAmount.compareTo(BigDecimal.ZERO) > 0) {
-                rollingReserveService.chargebackConsumer(dispute, transactionData.getSenderHash(), chargebackAmount);
-            }
-            dispute.setDisputeStatus(DisputeStatus.Closed);
-        }
-
-        disputes.put(dispute);
-    }
+        disputes.put(disputeData);
+}
 
     private void assignToArbitrators(DisputeData dispute) {
 

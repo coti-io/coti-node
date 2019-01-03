@@ -1,7 +1,6 @@
 package io.coti.financialserver.http;
 
 import io.coti.basenode.http.Request;
-import io.coti.financialserver.data.DisputeCommentData;
 import io.coti.financialserver.http.data.GetDisputeItemDetailData;
 import lombok.Data;
 

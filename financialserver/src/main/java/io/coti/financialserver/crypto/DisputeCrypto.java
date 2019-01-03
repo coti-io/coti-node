@@ -1,14 +1,13 @@
 package io.coti.financialserver.crypto;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import org.springframework.stereotype.Service;
-
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.SignatureCrypto;
 import io.coti.financialserver.data.DisputeData;
 import io.coti.financialserver.data.DisputeItemData;
+import org.springframework.stereotype.Service;
+
+import java.nio.ByteBuffer;
+import java.util.List;
 
 @Service
 public class DisputeCrypto extends SignatureCrypto<DisputeData> {
@@ -20,9 +19,9 @@ public class DisputeCrypto extends SignatureCrypto<DisputeData> {
         byte[] disputeItemsInBytes = new byte[0];
 
         List<DisputeItemData> disputeItems = disputeData.getDisputeItems();
-        if(disputeItems != null && disputeItems.size() > 0) {
+        if (disputeItems != null && disputeItems.size() > 0) {
             int disputeItemsByteSize = 0;
-            for(DisputeItemData disputeItemData :disputeItems){
+            for (DisputeItemData disputeItemData : disputeItems) {
                 disputeItemsByteSize += Long.BYTES + disputeItemData.getReason().toString().getBytes().length;
             }
             ByteBuffer disputeItemsBuffer = ByteBuffer.allocate(disputeItemsByteSize);
@@ -31,7 +30,7 @@ public class DisputeCrypto extends SignatureCrypto<DisputeData> {
         }
 
         ByteBuffer disputeDataBuffer = ByteBuffer.allocate(transactionHashInBytes.length + disputeItemsInBytes.length)
-                                                 .put(transactionHashInBytes).put(disputeItemsInBytes);
+                .put(transactionHashInBytes).put(disputeItemsInBytes);
 
         byte[] disputeDataInBytes = disputeDataBuffer.array();
         return CryptoHelper.cryptoHash(disputeDataInBytes).getBytes();

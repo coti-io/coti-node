@@ -37,6 +37,7 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
     private Hash recourseClaimTransactionHash;
     private Date creationTime;
     private Date updateTime;
+    private Date arbitratorsAssignTime;
     private Date closedTime;
 
     private DisputeData() {

@@ -4,10 +4,9 @@ import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.crypto.DspConsensusCrypto;
 import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.services.ClusterService;
 import io.coti.basenode.services.TransactionHelper;
 import io.coti.basenode.services.TransactionIndexService;
-import io.coti.basenode.services.ClusterService;
-import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.financialserver.crypto.TransactionCryptoCreator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +46,7 @@ public class TransactionCreationService {
 
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
 
-        if( !poolAmount.equals(new BigDecimal(0)) ) {
+        if (!poolAmount.equals(new BigDecimal(0))) {
             InputBaseTransactionData IBTcotiPool = new InputBaseTransactionData(rollingReserveService.getCotiPoolAddress(), poolAmount.multiply(new BigDecimal(-1)), new Date());
             baseTransactions.add(IBTcotiPool);
         }

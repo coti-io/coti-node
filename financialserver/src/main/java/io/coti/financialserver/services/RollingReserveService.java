@@ -15,8 +15,8 @@ import io.coti.financialserver.http.GetRollingReserveReleaseDatesResponse;
 import io.coti.financialserver.http.RecourseClaimRequest;
 import io.coti.financialserver.model.Disputes;
 import io.coti.financialserver.model.RecourseClaims;
-import io.coti.financialserver.model.RollingReserves;
 import io.coti.financialserver.model.RollingReserveReleaseDates;
+import io.coti.financialserver.model.RollingReserves;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,12 +63,12 @@ public class RollingReserveService {
     private AtomicInteger lastAddressIndex;
 
     public void init() {
-        lastAddressIndex = new AtomicInteger(COTI_POOL_ADDRESS_INDEX+1);
+        lastAddressIndex = new AtomicInteger(COTI_POOL_ADDRESS_INDEX + 1);
         rollingReserves.forEach(c -> lastAddressIndex.getAndIncrement());
     }
 
     public Hash getCotiPoolAddress() {
-        return CryptoHelper.generateAddress(SEED , COTI_POOL_ADDRESS_INDEX);
+        return CryptoHelper.generateAddress(SEED, COTI_POOL_ADDRESS_INDEX);
     }
 
     public ResponseEntity getRollingReserveData(GetRollingReserveMerchantDataRequest request) {
@@ -80,22 +80,21 @@ public class RollingReserveService {
         RollingReserveCrypto rollingReserveCrypto = new RollingReserveCrypto();
         rollingReserveCrypto.signMessage(rollingReserveData);
 
-        if ( !rollingReserveCrypto.verifySignature(rollingReserveData) ) {
+        if (!rollingReserveCrypto.verifySignature(rollingReserveData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
         }
 
-        if( rollingReserves.getByHash(rollingReserveData.getHash()) == null ) {
+        if (rollingReserves.getByHash(rollingReserveData.getHash()) == null) {
             createRollingReserveDataForMerchant(rollingReserveData.getHash());
             rollingReserveData = rollingReserves.getByHash(rollingReserveData.getHash());
             propagationPublisher.propagate(new RollingReserveAddressPropagatable(rollingReserveData.getHash(), rollingReserveData.getRollingReserveAddress()),
-                                            Arrays.asList(NodeType.TrustScoreNode));
-        }
-        else {
+                    Arrays.asList(NodeType.TrustScoreNode));
+        } else {
             rollingReserveData = rollingReserves.getByHash(rollingReserveData.getHash());
         }
 
         Map<String, RollingReserveReleaseStatus> rollingReserveReleases = new HashMap<>();
-        for(Date releaseData : rollingReserveData.getReleaseDates()) {
+        for (Date releaseData : rollingReserveData.getReleaseDates()) {
 
             Hash dateHash = new Hash(releaseData.getTime());
             rollingReserveReleaseDateData = rollingReserveReleaseDates.getByHash(dateHash);
@@ -115,7 +114,7 @@ public class RollingReserveService {
         RecourseClaimCrypto recourseClaimCrypto = new RecourseClaimCrypto();
         recourseClaimCrypto.signMessage(recourseClaimData);
 
-        if ( !recourseClaimCrypto.verifySignature(recourseClaimData) ) {
+        if (!recourseClaimCrypto.verifySignature(recourseClaimData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
         }
 
@@ -125,26 +124,26 @@ public class RollingReserveService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_TRANSACTION_NOT_FOUND, STATUS_ERROR));
         }
 
-        if( !transactionData.getReceiverBaseTransactionAddressHash().equals(getCotiPoolAddress()) ) {
+        if (!transactionData.getReceiverBaseTransactionAddressHash().equals(getCotiPoolAddress())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(NOT_COTI_POOL, STATUS_ERROR));
         }
 
         DisputeData disputeData = disputes.getByHash(recourseClaimData.getDisputeHashes().iterator().next());
 
-        if ( disputeData == null ) {
+        if (disputeData == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_NOT_FOUND, STATUS_ERROR));
         }
-        if( !disputeData.getMerchantHash().equals(recourseClaimData.getMerchantHash()) ) {
+        if (!disputeData.getMerchantHash().equals(recourseClaimData.getMerchantHash())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_UNAUTHORIZED, STATUS_ERROR));
         }
 
         recourseClaimData = recourseClaims.getByHash(recourseClaimData.getMerchantHash());
 
-        if(recourseClaimData.getTransactionHashes().contains(transactionData)) {
+        if (recourseClaimData.getTransactionHashes().contains(transactionData)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(ALREADY_GOT_THIS_RECOURSE_CLAIM, STATUS_ERROR));
         }
 
-        if(transactionData.getAmount().compareTo(recourseClaimData.getAmountToPay()) < 0) {
+        if (transactionData.getAmount().compareTo(recourseClaimData.getAmountToPay()) < 0) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(NOT_ENOUGH_MONEY_IN_TRANSACTION, STATUS_ERROR));
         }
 
@@ -163,30 +162,29 @@ public class RollingReserveService {
         Hash dateHash = new Hash(date.getTime());
         RollingReserveReleaseDateData rollingReserveReleaseDateData = rollingReserveReleaseDates.getByHash(dateHash);
 
-        if(rollingReserveReleaseDateData == null) {
+        if (rollingReserveReleaseDateData == null) {
             rollingReserveReleaseDateData = new RollingReserveReleaseDateData(date);
         }
 
         RollingReserveReleaseStatus rollingReserveReleaseStatus = rollingReserveReleaseDateData.getRollingReserveReleaseStatusByMerchant().get(merchantHash);
 
-        if(rollingReserveReleaseStatus == null) {
+        if (rollingReserveReleaseStatus == null) {
             rollingReserveReleaseStatus = new RollingReserveReleaseStatus(transactionData.getRollingReserveAmount(), transactionData.getHash());
-        }
-        else {
+        } else {
             rollingReserveReleaseStatus.addToInitialAmount(transactionData.getRollingReserveAmount());
             rollingReserveReleaseStatus.getPaymentTransactions().add(transactionData.getHash());
         }
 
         rollingReserveReleaseDateData.getRollingReserveReleaseStatusByMerchant().put(merchantHash, rollingReserveReleaseStatus);
 
-        if( rollingReserves.getByHash(merchantHash) == null ) {
+        if (rollingReserves.getByHash(merchantHash) == null) {
             createRollingReserveDataForMerchant(merchantHash);
         }
 
         RollingReserveData rollingReserveData = rollingReserves.getByHash(merchantHash);
 
         rollingReserveReleaseDates.put(rollingReserveReleaseDateData);
-        if( !rollingReserveData.getReleaseDates().contains(date) ) {
+        if (!rollingReserveData.getReleaseDates().contains(date)) {
             rollingReserveData.getReleaseDates().add(date);
         }
 
@@ -199,19 +197,19 @@ public class RollingReserveService {
         RollingReserveReleaseDateData rollingReserveReleaseDateData;
         Hash merchantHash = disputeData.getMerchantHash();
 
-        if(rollingReserves.getByHash(merchantHash) == null) {
+        if (rollingReserves.getByHash(merchantHash) == null) {
             createRollingReserveDataForMerchant(merchantHash);
         }
         RollingReserveData rollingReserveData = rollingReserves.getByHash(merchantHash);
         List<Date> releaseDates = rollingReserveData.getReleaseDates();
 
         BigDecimal remainingChargebackAmount = amount;
-        for(Date releaseDate : releaseDates) {
+        for (Date releaseDate : releaseDates) {
             dateHash = new Hash(releaseDate.getTime());
             rollingReserveReleaseDateData = rollingReserveReleaseDates.getByHash(dateHash);
             RollingReserveReleaseStatus rollingReserveReleaseStatus = rollingReserveReleaseDateData.getRollingReserveReleaseStatusByMerchant().get(merchantHash);
 
-            if( rollingReserveReleaseStatus.getRemainingAmount().compareTo(remainingChargebackAmount) < 0 ) {
+            if (rollingReserveReleaseStatus.getRemainingAmount().compareTo(remainingChargebackAmount) < 0) {
 
                 remainingChargebackAmount = remainingChargebackAmount.subtract(rollingReserveReleaseStatus.getRemainingAmount());
                 rollingReserveReleaseStatus.setReturnedAmount(rollingReserveReleaseStatus.getInitialAmount());
@@ -219,11 +217,10 @@ public class RollingReserveService {
 
                 rollingReserveReleaseDateData.getRollingReserveReleaseStatusByMerchant().put(merchantHash, rollingReserveReleaseStatus);
                 rollingReserveReleaseDates.put(rollingReserveReleaseDateData);
-            }
-            else {
+            } else {
 
                 rollingReserveReleaseStatus.setReturnedAmount(rollingReserveReleaseStatus.getReturnedAmount().add(remainingChargebackAmount));
-                if(rollingReserveReleaseStatus.getInitialAmount().equals(rollingReserveReleaseStatus.getReturnedAmount())) {
+                if (rollingReserveReleaseStatus.getInitialAmount().equals(rollingReserveReleaseStatus.getReturnedAmount())) {
                     addConsumerToRollingReserveReceiver(rollingReserveReleaseStatus);
                     rollingReserveData.getReleaseDates().remove(releaseDate);
                 }
@@ -237,9 +234,9 @@ public class RollingReserveService {
 
         transactionCreationService.createNewChargebackTransaction(amount, rollingReserveData.getRollingReserveAddress(), consumerAddress, remainingChargebackAmount);
 
-        if( !remainingChargebackAmount.equals(new BigDecimal(0)) ) {
+        if (!remainingChargebackAmount.equals(new BigDecimal(0))) {
             RecourseClaimData recourseClaimData = recourseClaims.getByHash(merchantHash);
-            if(recourseClaimData == null) {
+            if (recourseClaimData == null) {
                 recourseClaimData = new RecourseClaimData();
                 recourseClaimData.setHash(merchantHash);
             }
@@ -256,11 +253,11 @@ public class RollingReserveService {
 
     private void createRollingReserveDataForMerchant(Hash merchantHash) {
 
-        if(lastAddressIndex == null) {
+        if (lastAddressIndex == null) {
             init();
         }
 
-        Hash address = CryptoHelper.generateAddress(SEED , lastAddressIndex.intValue());
+        Hash address = CryptoHelper.generateAddress(SEED, lastAddressIndex.intValue());
 
         RollingReserveData rollingReserveData = new RollingReserveData();
         rollingReserveData.setMerchantHash(merchantHash);
@@ -273,11 +270,9 @@ public class RollingReserveService {
 
     private void addConsumerToRollingReserveReceiver(RollingReserveReleaseStatus rollingReserveReleaseStatus) {
 
-        if(rollingReserveReleaseStatus.getRollingReserveReceiver() == RollingReserveReceiver.Merchant) {
+        if (rollingReserveReleaseStatus.getRollingReserveReceiver() == RollingReserveReceiver.Merchant) {
             rollingReserveReleaseStatus.setRollingReserveReceiver(RollingReserveReceiver.MerchantAndConsumer);
-        }
-
-        else {
+        } else {
             rollingReserveReleaseStatus.setRollingReserveReceiver(RollingReserveReceiver.Consumer);
         }
     }

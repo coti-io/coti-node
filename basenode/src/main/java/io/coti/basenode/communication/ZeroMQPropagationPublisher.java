@@ -3,7 +3,6 @@ package io.coti.basenode.communication;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.ISerializer;
 import io.coti.basenode.data.NodeType;
-import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

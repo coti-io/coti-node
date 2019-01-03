@@ -15,8 +15,8 @@ public class DisputeCommentCrypto extends SignatureCrypto<DisputeCommentData> {
 
         byte[] disputeHashInBytes = commentData.getDisputeHash().getBytes();
         byte[] itemIdsInBytes = new byte[0];
-        if(commentData.getItemIds() != null) {
-            ByteBuffer itemIdsBuffer = ByteBuffer.allocate(commentData.getItemIds().size()*Long.BYTES);
+        if (commentData.getItemIds() != null) {
+            ByteBuffer itemIdsBuffer = ByteBuffer.allocate(commentData.getItemIds().size() * Long.BYTES);
             commentData.getItemIds().forEach(itemId -> itemIdsBuffer.putLong(itemId));
             itemIdsInBytes = itemIdsBuffer.array();
         }
@@ -25,7 +25,7 @@ public class DisputeCommentCrypto extends SignatureCrypto<DisputeCommentData> {
         int byteBufferLength = disputeHashInBytes.length + itemIdsInBytes.length + commentInBytes.length;
 
         ByteBuffer commentDataBuffer = ByteBuffer.allocate(byteBufferLength)
-                                          .put(disputeHashInBytes).put(itemIdsInBytes).put(commentInBytes);
+                .put(disputeHashInBytes).put(itemIdsInBytes).put(commentInBytes);
 
         byte[] commentDataInBytes = commentDataBuffer.array();
         return CryptoHelper.cryptoHash(commentDataInBytes).getBytes();

@@ -38,7 +38,7 @@ public class TransactionService extends BaseNodeTransactionService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
 
-        receiverBaseTransactionOwners.put(rbtOwnerData);
+        receiverBaseTransactionOwners.put(receiverBaseTransactionOwnerData);
 
         return ResponseEntity.status(HttpStatus.OK).body(new TransactionResponse(STATUS_SUCCESS));
     }
@@ -46,13 +46,12 @@ public class TransactionService extends BaseNodeTransactionService {
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
 
-        if(transactionData.getType() == TransactionType.Payment) {
+        if (transactionData.getType() == TransactionType.Payment) {
 
             ReceiverBaseTransactionOwnerData rbtOwnerData = receiverBaseTransactionOwners.getByHash(transactionData.getReceiverBaseTransactionHash());
-            if(rbtOwnerData == null) {
+            if (rbtOwnerData == null) {
                 log.error("Owner(merchant) not found for RBT hash in received transaction.", transactionData);
-            }
-            else {
+            } else {
                 rollingReserveService.setRollingReserveReleaseDate(transactionData, rbtOwnerData.getMerchantHash());
             }
         }

@@ -1,11 +1,11 @@
 package io.coti.financialserver.data;
 
-import lombok.Data;
-import java.util.ArrayList;
-import java.util.List;
-
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
+import lombok.Data;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 public class UserDisputesData implements IEntity {
@@ -13,7 +13,7 @@ public class UserDisputesData implements IEntity {
     private List<Hash> disputeHashes;
 
     public void appendDisputeHash(Hash disputeHash) {
-        if(disputeHashes == null) {
+        if (disputeHashes == null) {
             disputeHashes = new ArrayList<>();
         }
         disputeHashes.add(disputeHash);
