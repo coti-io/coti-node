@@ -30,7 +30,7 @@ public enum DisputeStatusService {
     }
 
     public void changeStatus(DisputeData disputeData) throws Exception {
-        if (valueOf(disputeData.getDisputeStatus().toString()).isFinalStatus()) {
+        if (!disputeData.getDisputeStatus().equals(DisputeStatus.Recall) && valueOf(disputeData.getDisputeStatus().toString()).isFinalStatus()) {
             throw new Exception(DISPUTE_STATUS_FINAL);
         }
         if (!previousDisputeStatuses.contains(disputeData.getDisputeStatus())) {

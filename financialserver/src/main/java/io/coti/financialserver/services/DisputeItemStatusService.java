@@ -24,6 +24,7 @@ public enum DisputeItemStatusService {
         public void changeDisputeItemsStatuses(DisputeData disputeData, Long itemId) {
             changePreClaimDisputeItemsStatuses(disputeData, itemId);
         }
+
         @Override
         public void changeDisputeStatus(DisputeData disputeData) throws Exception {
             Stream<DisputeItemData> disputeItemDataStream = disputeData.getDisputeItems().stream().filter(disputeItemData -> disputeItemData.getStatus().equals(DisputeItemStatus.RejectedByMerchant));
@@ -39,6 +40,7 @@ public enum DisputeItemStatusService {
         public void changeDisputeItemsStatuses(DisputeData disputeData, Long itemId) {
             changePreClaimDisputeItemsStatuses(disputeData, itemId);
         }
+
         @Override
         public void changeDisputeStatus(DisputeData disputeData) throws Exception {
             this.Claim.changeDisputeStatus(disputeData);
@@ -131,7 +133,7 @@ public enum DisputeItemStatusService {
         if (disputeItemData == null) {
             throw new Exception(DISPUTE_ITEM_NOT_FOUND);
         }
-        if (valueOf(disputeItemData.getStatus().toString()).isFinalStatus()) {
+        if (!disputeItemData.getStatus().equals(DisputeItemStatus.Recall) && valueOf(disputeItemData.getStatus().toString()).isFinalStatus()) {
             throw new Exception(DISPUTE_ITEM_STATUS_FINAL);
         }
         if (!previousDisputeItemStatuses.contains(disputeItemData.getStatus())) {

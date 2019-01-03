@@ -2,8 +2,6 @@ package io.coti.financialserver.data;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
-import io.coti.basenode.data.interfaces.ISignValidatable;
-import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
@@ -13,9 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class DisputeItemData implements Serializable, ISignable, ISignValidatable {
-
-    private Hash userHash;
+public class DisputeItemData implements Serializable {
     @NotNull
     private Long id;
     private BigDecimal price;
@@ -28,7 +24,6 @@ public class DisputeItemData implements Serializable, ISignable, ISignValidatabl
     private List<Hash> disputeDocumentHashes;
     private List<Hash> disputeCommentHashes;
     private List<DisputeItemVoteData> disputeItemVotesData;
-    private SignatureData userSignature;
 
     public DisputeItemData() {
         disputeDocumentHashes = new ArrayList<>();
@@ -56,25 +51,5 @@ public class DisputeItemData implements Serializable, ISignable, ISignValidatabl
             }
         }
         return false;
-    }
-
-    @Override
-    public SignatureData getSignature() {
-        return userSignature;
-    }
-
-    @Override
-    public Hash getSignerHash() {
-        return userHash;
-    }
-
-    @Override
-    public void setSignerHash(Hash hash) {
-        userHash = hash;
-    }
-
-    @Override
-    public void setSignature(SignatureData signature) {
-        this.userSignature = signature;
     }
 }
