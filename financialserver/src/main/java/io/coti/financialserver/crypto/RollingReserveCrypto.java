@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
 public class RollingReserveCrypto extends SignatureCrypto<RollingReserveData> {
 
     @Override
-    public byte[] getMessageInBytes(RollingReserveData rollingReserveData) {
+    public byte[] getSignatureMessage(RollingReserveData rollingReserveData) {
 
         int byteBufferLength;
         byte[] merchantHashInBytes;

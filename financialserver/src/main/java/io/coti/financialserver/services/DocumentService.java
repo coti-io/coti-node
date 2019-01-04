@@ -119,7 +119,7 @@ public class DocumentService {
         disputes.put(disputeData);
         disputeDocuments.put(disputeDocumentData);
 
-        return ResponseEntity.status(HttpStatus.OK).body(new NewDocumentResponse(disputeDocumentData.getHash()));
+        return ResponseEntity.status(HttpStatus.OK).body(new NewDocumentResponse(disputeDocumentData));
     }
 
     public ResponseEntity<IResponse> getDocumentNames(GetDocumentNamesRequest request) {

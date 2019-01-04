@@ -8,7 +8,7 @@ import java.nio.ByteBuffer;
 @Service
 public class DspVoteCrypto extends SignatureCrypto<DspVote> {
     @Override
-    public byte[] getMessageInBytes(DspVote dspVote) {
+    public byte[] getSignatureMessage(DspVote dspVote) {
 
         byte[] transactionHashInBytes = dspVote.getTransactionHash().getBytes();
 

@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
 public class GetDisputesCrypto extends SignatureCrypto<GetDisputesData> {
 
     @Override
-    public byte[] getMessageInBytes(GetDisputesData getDisputesData) {
+    public byte[] getSignatureMessage(GetDisputesData getDisputesData) {
 
         byte[] disputeHashesInBytes = getDisputesData.getDisputeHashes() != null ? getDisputesData.getDisputeHashes().toString().getBytes() : new byte[0];
         byte[] disputeSideInBytes = getDisputesData.getDisputeSide().toString().getBytes();

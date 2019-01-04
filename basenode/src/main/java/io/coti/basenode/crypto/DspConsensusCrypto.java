@@ -9,7 +9,7 @@ import java.util.Date;
 @Service
 public class DspConsensusCrypto extends SignatureCrypto<DspConsensusResult> {
     @Override
-    public byte[] getMessageInBytes(DspConsensusResult dspConsensusResult) {
+    public byte[] getSignatureMessage(DspConsensusResult dspConsensusResult) {
         byte[] transactionHashInBytes = dspConsensusResult.getTransactionHash().getBytes();
 
         ByteBuffer indexBuffer = ByteBuffer.allocate(8);

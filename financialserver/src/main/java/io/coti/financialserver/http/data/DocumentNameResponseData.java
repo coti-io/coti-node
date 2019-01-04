@@ -4,11 +4,11 @@ import io.coti.financialserver.data.DisputeDocumentData;
 import lombok.Data;
 
 @Data
-public class GetDocumentNameResponseData {
+public class DocumentNameResponseData {
     String hash;
     String fileName;
 
-    public GetDocumentNameResponseData(DisputeDocumentData disputeDocumentData) {
+    public DocumentNameResponseData(DisputeDocumentData disputeDocumentData) {
         this.hash = disputeDocumentData.getHash().toString();
         this.fileName = disputeDocumentData.getFileName();
     }

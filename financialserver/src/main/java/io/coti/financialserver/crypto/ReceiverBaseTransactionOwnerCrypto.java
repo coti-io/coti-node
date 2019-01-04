@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
 public class ReceiverBaseTransactionOwnerCrypto extends SignatureCrypto<ReceiverBaseTransactionOwnerData> {
 
     @Override
-    public byte[] getMessageInBytes(ReceiverBaseTransactionOwnerData rbtOwnerData) {
+    public byte[] getSignatureMessage(ReceiverBaseTransactionOwnerData rbtOwnerData) {
 
         int byteBufferLength;
 

@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
 public class TrustScoreCrypto extends SignatureValidationCrypto<TrustScoreData> {
 
     @Override
-    public byte[] getMessageInBytes(TrustScoreData trustScoreData) {
+    public byte[] getSignatureMessage(TrustScoreData trustScoreData) {
         byte[] userHashInBytes = trustScoreData.getUserHash().getBytes();
 
         ByteBuffer trustScoreMessageBuffer = ByteBuffer.allocate(userHashInBytes.length + Double.BYTES).

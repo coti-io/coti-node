@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 public class DisputeDocumentCrypto extends SignatureCrypto<DisputeDocumentData> {
 
     @Override
-    public byte[] getMessageInBytes(DisputeDocumentData documentData) {
+    public byte[] getSignatureMessage(DisputeDocumentData documentData) {
 
         byte[] disputeHashInBytes = documentData.getDisputeHash().getBytes();
         byte[] itemIdsInBytes = new byte[0];

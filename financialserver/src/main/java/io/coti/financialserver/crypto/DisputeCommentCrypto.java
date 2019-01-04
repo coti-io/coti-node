@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
 public class DisputeCommentCrypto extends SignatureCrypto<DisputeCommentData> {
 
     @Override
-    public byte[] getMessageInBytes(DisputeCommentData commentData) {
+    public byte[] getSignatureMessage(DisputeCommentData commentData) {
 
         byte[] disputeHashInBytes = commentData.getDisputeHash().getBytes();
         byte[] itemIdsInBytes = new byte[0];

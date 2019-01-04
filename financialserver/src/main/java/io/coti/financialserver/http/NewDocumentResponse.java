@@ -2,15 +2,17 @@ package io.coti.financialserver.http;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.BaseResponse;
+import io.coti.financialserver.data.DisputeDocumentData;
+import io.coti.financialserver.http.data.DocumentNameResponseData;
 import lombok.Data;
 
 @Data
 public class NewDocumentResponse extends BaseResponse {
 
-    private String documentHash;
+    private DocumentNameResponseData document;
 
-    public NewDocumentResponse(Hash documentHash) {
+    public NewDocumentResponse(DisputeDocumentData disputeDocumentData) {
         super();
-        this.documentHash = documentHash.toString();
+        this.document = new DocumentNameResponseData(disputeDocumentData);
     }
 }

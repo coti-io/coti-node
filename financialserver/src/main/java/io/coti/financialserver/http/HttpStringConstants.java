@@ -6,6 +6,7 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
 
     public static final String SUCCESS = "Success";
 
+    public static final String DISPUTE_ALREADY_EXISTS_FOR_TRANSACTION = "Dispute already exists for this trnasaction";
     public static final String DISPUTE_COMMENT_CREATE_UNAUTHORIZED = "Unauthorized dispute comment creation request";
     public static final String DISPUTE_COMMENT_UNAUTHORIZED = "Unauthorized dispute comment request";
     public static final String DISPUTE_DOCUMENT_CREATE_UNAUTHORIZED = "Unauthorized dispute document creation request";

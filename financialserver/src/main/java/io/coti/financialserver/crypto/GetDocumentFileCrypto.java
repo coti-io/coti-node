@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 public class GetDocumentFileCrypto extends SignatureCrypto<GetDocumentFileData> {
 
     @Override
-    public byte[] getMessageInBytes(GetDocumentFileData getDocumentFileData) {
+    public byte[] getSignatureMessage(GetDocumentFileData getDocumentFileData) {
         return getDocumentFileData.getDocumentHash().getBytes();
     }
 }

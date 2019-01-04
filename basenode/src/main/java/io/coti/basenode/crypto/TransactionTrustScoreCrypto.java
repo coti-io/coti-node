@@ -8,7 +8,7 @@ import java.nio.ByteBuffer;
 @Service
 public class TransactionTrustScoreCrypto extends SignatureCrypto<TransactionTrustScoreData> {
     @Override
-    public byte[] getMessageInBytes(TransactionTrustScoreData transactionTrustScoreData) {
+    public byte[] getSignatureMessage(TransactionTrustScoreData transactionTrustScoreData) {
         byte[] userHashInBytes = transactionTrustScoreData.getUserHash().getBytes();
 
         byte[] transactionHashInBytes = transactionTrustScoreData.getTransactionHash().getBytes();

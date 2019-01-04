@@ -12,7 +12,7 @@ import java.nio.ByteBuffer;
 public class RecourseClaimCrypto extends SignatureCrypto<RecourseClaimData> {
 
     @Override
-    public byte[] getMessageInBytes(RecourseClaimData recourseClaimData) {
+    public byte[] getSignatureMessage(RecourseClaimData recourseClaimData) {
 
         int byteBufferLength;
         byte[] merchantHashInBytes;

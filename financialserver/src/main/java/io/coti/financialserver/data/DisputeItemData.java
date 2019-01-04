@@ -15,11 +15,9 @@ public class DisputeItemData implements Serializable {
     @NotNull
     private Long id;
     private BigDecimal price;
-    @NotNull
     private int quantity;
     @NotNull
     private DisputeReason reason;
-    private Hash disputeHash;
     private DisputeItemStatus status;
     private List<Hash> disputeDocumentHashes;
     private List<Hash> disputeCommentHashes;

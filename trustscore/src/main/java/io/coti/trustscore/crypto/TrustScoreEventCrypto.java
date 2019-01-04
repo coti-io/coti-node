@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 @Service
 public class TrustScoreEventCrypto extends SignatureValidationCrypto<KycEventData> {
     @Override
-    public byte[] getMessageInBytes(KycEventData eventData) {
+    public byte[] getSignatureMessage(KycEventData eventData) {
         byte[] userHashInBytes = eventData.getUserHash().getBytes();
 
         ByteBuffer trustScoreMessageBuffer = ByteBuffer.allocate(userHashInBytes.length + Long.BYTES + Integer.BYTES).

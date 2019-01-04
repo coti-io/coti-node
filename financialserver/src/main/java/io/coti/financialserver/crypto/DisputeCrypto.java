@@ -13,7 +13,7 @@ import java.util.List;
 public class DisputeCrypto extends SignatureCrypto<DisputeData> {
 
     @Override
-    public byte[] getMessageInBytes(DisputeData disputeData) {
+    public byte[] getSignatureMessage(DisputeData disputeData) {
 
         byte[] transactionHashInBytes = disputeData.getTransactionHash().getBytes();
         byte[] disputeItemsInBytes = new byte[0];
