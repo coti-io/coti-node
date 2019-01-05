@@ -3,13 +3,13 @@ package io.coti.financialserver.http.data;
 import io.coti.financialserver.data.DisputeCommentData;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.Instant;
 
 @Data
 public class GetCommentResponseData {
     private String comment;
     private String commentSide;
-    private Date creationTime;
+    private Instant creationTime;
 
     public GetCommentResponseData(DisputeCommentData disputeCommentData) {
         this.comment = disputeCommentData.getComment();

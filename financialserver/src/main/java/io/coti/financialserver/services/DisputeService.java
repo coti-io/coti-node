@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -214,18 +215,16 @@ public class DisputeService {
 
     public void update(DisputeData disputeData) {
 
-        disputeData.setUpdateTime(new Date());
         if (disputeData.getDisputeStatus().equals(DisputeStatus.Claim) && disputeData.getArbitratorHashes().isEmpty()) {
             assignToArbitrators(disputeData);
-            disputeData.setArbitratorsAssignTime(new Date());
+            disputeData.setArbitratorsAssignTime(Instant.now());
         }
 
+        disputeData.setUpdateTime(Instant.now());
         disputes.put(disputeData);
     }
 
     public void updateAfterVote(DisputeData disputeData, DisputeItemData disputeItemData) throws Exception {
-
-        disputeData.setUpdateTime(new Date());
 
         int arbitratorsCount = disputeData.getArbitratorHashes().size();
         int majorityOfVotes = arbitratorsCount / 2 + 1;
@@ -253,6 +252,7 @@ public class DisputeService {
             DisputeItemStatusService.RejectedByArbitrators.changeStatus(disputeData, disputeItemData.getId(), ActionSide.Arbitrator);
         }
 
+        disputeData.setUpdateTime(Instant.now());
         disputes.put(disputeData);
     }
 

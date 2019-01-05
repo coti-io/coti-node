@@ -9,7 +9,7 @@ import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 
 @Data
@@ -23,7 +23,7 @@ public class DisputeDocumentData implements IEntity, ISignable, ISignValidatable
     private ActionSide uploadSide;
     private String description;
     private String fileName;
-    private Date creationTime;
+    private Instant creationTime;
 
     public DisputeDocumentData(Hash userHash, Hash disputeHash, List<Long> itemIds, SignatureData userSignature) {
         this.userHash = userHash;
@@ -34,7 +34,7 @@ public class DisputeDocumentData implements IEntity, ISignable, ISignValidatable
     }
 
     public void init() {
-        this.creationTime = new Date();
+        this.creationTime = Instant.now();
         byte[] concatDateAndUserHashBytes = ArrayUtils.addAll(userHash.getBytes(), creationTime.toString().getBytes());
         this.hash = CryptoHelper.cryptoHash(concatDateAndUserHashBytes);
     }

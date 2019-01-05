@@ -6,28 +6,29 @@ import io.coti.financialserver.data.DisputeStatus;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Data
 public class GetDisputeResponseData {
-    private String hash;
-    private String transactionHash;
-    private String consumerHash;
-    private SignatureData consumerSignature;
-    private String merchantHash;
-    private List<DisputeItemResponseData> disputeItems;
-    private DisputeStatus disputeStatus;
-    private BigDecimal amount;
-    private BigDecimal chargeBackAmount;
-    private String chargeBackTransactionHash;
-    private BigDecimal recourseClaimAmount;
-    private Boolean recourseClaimOpen;
-    private String recourseClaimTransactionHash;
-    private Date creationTime;
-    private Date updateTime;
-    private Date closedTime;
+    protected String hash;
+    protected String transactionHash;
+    protected String consumerHash;
+    protected SignatureData consumerSignature;
+    protected String merchantHash;
+    protected List<DisputeItemResponseData> disputeItems;
+    protected DisputeStatus disputeStatus;
+    protected BigDecimal amount;
+    protected BigDecimal chargeBackAmount;
+    protected String chargeBackTransactionHash;
+    protected BigDecimal recourseClaimAmount;
+    protected Boolean recourseClaimOpen;
+    protected String recourseClaimTransactionHash;
+    protected Instant creationTime;
+    protected Instant updateTime;
+    protected Instant arbitratorsAssignTime;
+    protected Instant closedTime;
 
     public GetDisputeResponseData(DisputeData disputeData) {
 

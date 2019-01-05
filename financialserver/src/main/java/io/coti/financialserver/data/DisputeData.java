@@ -12,8 +12,8 @@ import org.apache.commons.lang3.ArrayUtils;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Data
@@ -35,10 +35,10 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
     private BigDecimal recourseClaimAmount;
     private Boolean recourseClaimOpen;
     private Hash recourseClaimTransactionHash;
-    private Date creationTime;
-    private Date updateTime;
-    private Date arbitratorsAssignTime;
-    private Date closedTime;
+    private Instant creationTime;
+    private Instant updateTime;
+    private Instant arbitratorsAssignTime;
+    private Instant closedTime;
 
     private DisputeData() {
 
@@ -47,8 +47,8 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
     public void init() {
 
         disputeStatus = DisputeStatus.Recall;
-        creationTime = new Date();
-        updateTime = new Date();
+        creationTime = Instant.now();
+        updateTime = Instant.now();
         arbitratorHashes = new ArrayList<>();
 
         byte[] concatDateAndUserHashBytes = ArrayUtils.addAll(consumerHash.getBytes(), creationTime.toString().getBytes());

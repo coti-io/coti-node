@@ -10,7 +10,7 @@ import lombok.Data;
 import org.apache.commons.lang3.ArrayUtils;
 
 import javax.validation.constraints.NotNull;
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 
 @Data
@@ -28,14 +28,14 @@ public class DisputeCommentData implements IEntity, ISignable, ISignValidatable 
     private ActionSide commentSide;
     @NotNull
     private String comment;
-    private Date creationTime;
+    private Instant creationTime;
 
     private DisputeCommentData() {
 
     }
 
     public void init() {
-        this.creationTime = new Date();
+        this.creationTime = Instant.now();
         byte[] concatDateAndUserHashBytes = ArrayUtils.addAll(userHash.getBytes(), creationTime.toString().getBytes());
         this.hash = CryptoHelper.cryptoHash(concatDateAndUserHashBytes);
     }

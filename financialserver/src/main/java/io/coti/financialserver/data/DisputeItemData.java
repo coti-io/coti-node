@@ -1,7 +1,6 @@
 package io.coti.financialserver.data;
 
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.SignatureData;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
