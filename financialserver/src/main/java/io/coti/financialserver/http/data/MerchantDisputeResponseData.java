@@ -1,9 +1,11 @@
 package io.coti.financialserver.http.data;
 
 import io.coti.financialserver.data.DisputeData;
+import lombok.Data;
 
 import java.math.BigDecimal;
 
+@Data
 public class MerchantDisputeResponseData extends GetDisputeResponseData {
 
     private BigDecimal recourseClaimAmount;
@@ -15,7 +17,7 @@ public class MerchantDisputeResponseData extends GetDisputeResponseData {
         setDisputeItems(disputeData.getDisputeItems());
         this.recourseClaimAmount = disputeData.getRecourseClaimAmount();
         this.recourseClaimOpen = disputeData.getRecourseClaimOpen();
-        this.recourseClaimTransactionHash = disputeData.getRecourseClaimTransactionHash().toString();
+        this.recourseClaimTransactionHash = disputeData.getRecourseClaimTransactionHash() != null ? disputeData.getRecourseClaimTransactionHash().toString() : null;
 
     }
 }

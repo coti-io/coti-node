@@ -76,7 +76,7 @@ public class DisputeService {
     public ResponseEntity<IResponse> createDispute(NewDisputeRequest newDisputeRequest) {
 
         DisputeData disputeData = newDisputeRequest.getDisputeData();
-
+        disputeCrypto.signMessage(disputeData);
         if (!disputeCrypto.verifySignature(disputeData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
@@ -168,7 +168,7 @@ public class DisputeService {
     public ResponseEntity<IResponse> getDisputes(GetDisputesRequest getDisputesRequest) {
 
         GetDisputesData getDisputesData = getDisputesRequest.getDisputesData();
-
+        getDisputesCrypto.signMessage(getDisputesData);
         if (!getDisputesCrypto.verifySignature(getDisputesData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }

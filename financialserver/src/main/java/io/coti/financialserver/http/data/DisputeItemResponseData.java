@@ -19,6 +19,10 @@ public class DisputeItemResponseData {
     private List<String> disputeDocumentHashes;
     private List<String> disputeCommentHashes;
 
+    protected DisputeItemResponseData() {
+
+    }
+
     public DisputeItemResponseData(DisputeItemData disputeItemData) {
 
         id = disputeItemData.getId();

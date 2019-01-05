@@ -28,6 +28,10 @@ public abstract class GetDisputeResponseData {
     protected Instant arbitratorsAssignTime;
     protected Instant closedTime;
 
+    protected GetDisputeResponseData() {
+
+    }
+
     public GetDisputeResponseData(DisputeData disputeData) {
 
         this.hash = disputeData.getHash().toString();
