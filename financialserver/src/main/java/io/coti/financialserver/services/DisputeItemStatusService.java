@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -139,12 +141,19 @@ public enum DisputeItemStatusService {
         if (!previousDisputeItemStatuses.contains(disputeItemData.getStatus())) {
             throw new Exception(DISPUTE_ITEM_STATUS_INVALID_CHANGE);
         }
-        disputeItemData.setStatus(newDisputeItemStatus);
+        changeStatus(disputeItemData);
         changeDisputeItemsStatuses(disputeData, itemId);
         if (isFinalStatusForAllItems(disputeData)) {
             createChargeBackTransaction(disputeData);
         }
         changeDisputeStatus(disputeData);
+    }
+
+    private void changeStatus(DisputeItemData disputeItemData) {
+        disputeItemData.setStatus(newDisputeItemStatus);
+        if(actionSide.equals(ActionSide.Arbitrator)){
+            disputeItemData.setArbitratorsDecisionTime(Instant.now());
+        }
     }
 
     public void changeDisputeItemsStatuses(DisputeData disputeData, Long itemId) {

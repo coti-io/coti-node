@@ -6,6 +6,7 @@ import lombok.Data;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +22,7 @@ public class DisputeItemData implements Serializable {
     private List<Hash> disputeDocumentHashes;
     private List<Hash> disputeCommentHashes;
     private List<DisputeItemVoteData> disputeItemVotesData;
+    private Instant arbitratorsDecisionTime;
 
     public DisputeItemData() {
         disputeDocumentHashes = new ArrayList<>();

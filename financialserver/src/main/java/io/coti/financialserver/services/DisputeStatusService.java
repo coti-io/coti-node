@@ -3,6 +3,7 @@ package io.coti.financialserver.services;
 import io.coti.financialserver.data.DisputeData;
 import io.coti.financialserver.data.DisputeStatus;
 
+import java.time.Instant;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -13,7 +14,13 @@ import static io.coti.financialserver.http.HttpStringConstants.DISPUTE_STATUS_IN
 public enum DisputeStatusService {
     CanceledByConsumer(DisputeStatus.CanceledByConsumer, EnumSet.of(DisputeStatus.Recall), true),
     Claim(DisputeStatus.Claim, EnumSet.of(DisputeStatus.Recall), false),
-    Closed(DisputeStatus.Closed, EnumSet.of(DisputeStatus.Recall, DisputeStatus.Claim), true);
+    Closed(DisputeStatus.Closed, EnumSet.of(DisputeStatus.Recall, DisputeStatus.Claim), true) {
+        @Override
+        public void changeStatus(DisputeData disputeData) throws Exception {
+            super.changeStatus(disputeData);
+            disputeData.setClosedTime(Instant.now());
+        }
+    };
 
     private DisputeStatus newDisputeStatus;
     private Set<DisputeStatus> previousDisputeStatuses;
