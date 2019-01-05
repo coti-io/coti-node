@@ -62,8 +62,6 @@ public class DisputeService {
     private ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
     @Autowired
     private ITransactionHelper transactionHelper;
-    @Autowired
-    private RollingReserveService rollingReserveService;
     private Map<ActionSide, Collection<UserDisputesData>> userDisputesCollectionMap = new EnumMap<>(ActionSide.class);
 
     @PostConstruct
@@ -105,7 +103,7 @@ public class DisputeService {
             item.setPrice(paymentItemData.getItemPrice());
             item.setQuantity(paymentItemData.getItemQuantity());
 
-            disputeAmount = disputeAmount.add(item.getPrice());
+            disputeAmount = disputeAmount.add(item.getPrice().multiply(new BigDecimal(item.getQuantity())));
             itemIds.add(item.getId());
         }
         disputeData.setAmount(disputeAmount);
