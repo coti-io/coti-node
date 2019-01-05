@@ -147,7 +147,7 @@ public class DisputeService {
 
         disputes.put(disputeData);
 
-        return ResponseEntity.status(HttpStatus.OK).body(new GetDisputesResponse(Arrays.asList(disputeData)));
+        return ResponseEntity.status(HttpStatus.OK).body(new GetDisputesResponse(Arrays.asList(disputeData), ActionSide.Consumer, disputeData.getConsumerHash()));
     }
 
     private void addUserDisputeHash(ActionSide actionSide, Hash userHash, Hash disputeHash) {
@@ -205,7 +205,7 @@ public class DisputeService {
             disputesData.add(disputeData);
         }
 
-        return ResponseEntity.status(HttpStatus.OK).body(new GetDisputesResponse(disputesData));
+        return ResponseEntity.status(HttpStatus.OK).body(new GetDisputesResponse(disputesData, getDisputesData.getDisputeSide(), getDisputesData.getUserHash()));
     }
 
     public Boolean isAuthorizedDisputeDetailDisplay(DisputeData disputeData, Hash userHash) {
