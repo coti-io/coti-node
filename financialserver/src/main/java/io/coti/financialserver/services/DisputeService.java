@@ -37,7 +37,7 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 @Service
 public class DisputeService {
 
-    private static final int COUNT_ARBITRATORS_PER_DISPUTE = 3;
+    private static final int COUNT_ARBITRATORS_PER_DISPUTE = 2;
 
     @Value("#{'${arbitrators.userHashes}'.split(',')}")
     private List<String> ARBITRATOR_USER_HASHES;
@@ -147,7 +147,7 @@ public class DisputeService {
 
         disputes.put(disputeData);
 
-        return ResponseEntity.status(HttpStatus.OK).body(new GetDisputesResponse(Arrays.asList(disputeData)));
+        return ResponseEntity.status(HttpStatus.OK).body(new GetDisputesResponse(Arrays.asList(disputeData), ActionSide.Consumer, disputeData.getConsumerHash()));
     }
 
     private void addUserDisputeHash(ActionSide actionSide, Hash userHash, Hash disputeHash) {
@@ -205,7 +205,7 @@ public class DisputeService {
             disputesData.add(disputeData);
         }
 
-        return ResponseEntity.status(HttpStatus.OK).body(new GetDisputesResponse(disputesData));
+        return ResponseEntity.status(HttpStatus.OK).body(new GetDisputesResponse(disputesData, getDisputesData.getDisputeSide(), getDisputesData.getUserHash()));
     }
 
     public Boolean isAuthorizedDisputeDetailDisplay(DisputeData disputeData, Hash userHash) {
@@ -260,21 +260,14 @@ public class DisputeService {
 
         int random;
 
-        List<String> arbitratorUserHashes = ARBITRATOR_USER_HASHES;
+        List<String> arbitratorUserHashes = new ArrayList<>(ARBITRATOR_USER_HASHES);
         for (int i = 0; i < COUNT_ARBITRATORS_PER_DISPUTE; i++) {
 
             random = (int) ((Math.random() * arbitratorUserHashes.size()));
 
             Hash arbitratorHash = new Hash(arbitratorUserHashes.get(random));
             dispute.getArbitratorHashes().add(arbitratorHash);
-            UserDisputesData arbitratorDisputesData = arbitratorDisputes.getByHash(arbitratorHash);
-            List<Hash> arbitratorDisputeHashes = new ArrayList<>();
-            if(arbitratorDisputesData != null) {
-                arbitratorDisputeHashes = arbitratorDisputesData.getDisputeHashes();
-            }
-            arbitratorDisputeHashes.add(dispute.getHash());
-            arbitratorDisputesData.setDisputeHashes(arbitratorDisputeHashes);
-            arbitratorDisputes.put(arbitratorDisputesData);
+            addUserDisputeHash(ActionSide.Arbitrator, arbitratorHash, dispute.getHash());
 
             arbitratorUserHashes.remove(random);
         }

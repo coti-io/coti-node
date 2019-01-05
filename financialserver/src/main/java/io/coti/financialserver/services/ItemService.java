@@ -2,8 +2,8 @@ package io.coti.financialserver.services;
 
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.financialserver.crypto.DisputeUpdateItemCrypto;
 import io.coti.financialserver.crypto.DisputeItemVoteCrypto;
+import io.coti.financialserver.crypto.DisputeUpdateItemCrypto;
 import io.coti.financialserver.data.*;
 import io.coti.financialserver.http.UpdateItemRequest;
 import io.coti.financialserver.http.VoteRequest;
@@ -32,7 +32,6 @@ public class ItemService {
     public ResponseEntity<IResponse> updateItem(UpdateItemRequest request) {
 
         DisputeUpdateItemData disputeUpdateItemData = request.getDisputeUpdateItemData();
-        disputeUpdateItemCrypto.signMessage(disputeUpdateItemData);
 
         if (!disputeUpdateItemCrypto.verifySignature(disputeUpdateItemData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
@@ -63,15 +62,13 @@ public class ItemService {
         }
         disputeService.update(disputeData);
 
-        return ResponseEntity.status(HttpStatus.OK).body(new Response(SUCCESS, STATUS_SUCCESS));
+        return ResponseEntity.status(HttpStatus.OK).body(new Response(DISPUTE_ITEM_UPDATE_SUCCESS, STATUS_SUCCESS));
     }
 
     public ResponseEntity<IResponse> vote(VoteRequest request) {
 
         DisputeItemVoteData disputeItemVoteData = request.getDisputeItemVoteData();
-
-        disputeItemVoteCrypto.signMessage(disputeItemVoteData);
-
+        
         if (!disputeItemVoteCrypto.verifySignature(disputeItemVoteData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
@@ -108,8 +105,7 @@ public class ItemService {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(e.getMessage(), STATUS_ERROR));
         }
-        disputes.put(disputeData);
 
-        return ResponseEntity.status(HttpStatus.OK).body(new Response(SUCCESS, STATUS_SUCCESS));
+        return ResponseEntity.status(HttpStatus.OK).body(new Response(DISPUTE_ITEM_VOTE_SUCCESS, STATUS_SUCCESS));
     }
 }

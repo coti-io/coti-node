@@ -6,7 +6,7 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
 
     public static final String SUCCESS = "Success";
 
-    public static final String DISPUTE_ALREADY_EXISTS_FOR_TRANSACTION = "Dispute already exists for this trnasaction";
+    public static final String DISPUTE_ALREADY_EXISTS_FOR_TRANSACTION = "Dispute already exists for this transaction";
     public static final String DISPUTE_COMMENT_CREATE_UNAUTHORIZED = "Unauthorized dispute comment creation request";
     public static final String DISPUTE_COMMENT_UNAUTHORIZED = "Unauthorized dispute comment request";
     public static final String DISPUTE_DOCUMENT_CREATE_UNAUTHORIZED = "Unauthorized dispute document creation request";
@@ -18,6 +18,8 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String DISPUTE_ITEM_STATUS_FINAL = "Dispute item status is final. It can not be changed";
     public static final String DISPUTE_ITEM_STATUS_INVALID_CHANGE = "Dispute item status change is invalid";
     public static final String DISPUTE_ITEM_STATUS_INVALID_ACTIONSIDE = "%s is not valid side for item status change to %s";
+    public static final String DISPUTE_ITEM_UPDATE_SUCCESS = "Dispute item successfully updated";
+    public static final String DISPUTE_ITEM_VOTE_SUCCESS = "Dispute item vote successfully submitted";
     public static final String DISPUTE_ITEMS_EXIST_ALREADY = "At least one of the dispute items is already was(or right now) in dispute";
     public static final String DISPUTE_ITEMS_INVALID = "Invalid dispute items";
     public static final String DISPUTE_STATUS_FINAL = "Dispute status is final. It can not be changed";
