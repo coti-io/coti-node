@@ -76,7 +76,7 @@ public class DisputeService {
     public ResponseEntity<IResponse> createDispute(NewDisputeRequest newDisputeRequest) {
 
         DisputeData disputeData = newDisputeRequest.getDisputeData();
-        
+
         if (!disputeCrypto.verifySignature(disputeData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
@@ -264,7 +264,18 @@ public class DisputeService {
         for (int i = 0; i < COUNT_ARBITRATORS_PER_DISPUTE; i++) {
 
             random = (int) ((Math.random() * arbitratorUserHashes.size()));
-            dispute.getArbitratorHashes().add(new Hash(arbitratorUserHashes.get(random)));
+
+            Hash arbitratorHash = new Hash(arbitratorUserHashes.get(random));
+            dispute.getArbitratorHashes().add(arbitratorHash);
+            UserDisputesData arbitratorDisputesData = arbitratorDisputes.getByHash(arbitratorHash);
+            List<Hash> arbitratorDisputeHashes = new ArrayList<>();
+            if(arbitratorDisputesData != null) {
+                arbitratorDisputeHashes = arbitratorDisputesData.getDisputeHashes();
+            }
+            arbitratorDisputeHashes.add(dispute.getHash());
+            arbitratorDisputesData.setDisputeHashes(arbitratorDisputeHashes);
+            arbitratorDisputes.put(arbitratorDisputesData);
+
             arbitratorUserHashes.remove(random);
         }
     }

@@ -7,6 +7,7 @@ import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -21,6 +22,7 @@ public class DisputeItemData implements Serializable {
     private List<Hash> disputeDocumentHashes;
     private List<Hash> disputeCommentHashes;
     private List<DisputeItemVoteData> disputeItemVotesData;
+    private Date arbitratorsDecisionTime;
 
     public DisputeItemData() {
         disputeDocumentHashes = new ArrayList<>();
