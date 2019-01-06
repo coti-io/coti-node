@@ -9,15 +9,15 @@ class TrustScoreDifficulty {
         _difficulty = difficulty;
     }
 
+    static public int getTrustScoreFromSegment(int segmentIndex) {
+        return (int) ((100.0 / IAlgorithm.AlgorithmTypes.values().length) * (segmentIndex + 1));
+    }
+
     public int getTrustScore() {
         return _trustScore;
     }
 
     public String getDifficulty() {
         return _difficulty;
-    }
-
-    static public int getTrustScoreFromSegment(int segmentIndex) {
-        return (int) ((100.0 / IAlgorithm.AlgorithmTypes.values().length) * (segmentIndex + 1));
     }
 }

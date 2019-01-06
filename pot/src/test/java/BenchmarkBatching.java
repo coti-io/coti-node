@@ -47,14 +47,6 @@ public class BenchmarkBatching {
         _median = median / 1000000000.0;
     }
 
-    public double getMedian() {
-        return _median;
-    }
-
-    public double getMean() {
-        return _mean;
-    }
-
     /**
      * Get CPU time in nanoseconds.
      */
@@ -62,5 +54,13 @@ public class BenchmarkBatching {
         ThreadMXBean bean = ManagementFactory.getThreadMXBean();
         return bean.isCurrentThreadCpuTimeSupported() ?
                 bean.getCurrentThreadCpuTime() : 0L;
+    }
+
+    public double getMedian() {
+        return _median;
+    }
+
+    public double getMean() {
+        return _mean;
     }
 }
