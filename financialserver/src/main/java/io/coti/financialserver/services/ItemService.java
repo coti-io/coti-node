@@ -63,10 +63,6 @@ public class ItemService {
                 e.printStackTrace();
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(e.getMessage(), STATUS_ERROR));
             }
-            WebSocketUserHashSessionName webSocketUserHashSessionName = webSocketMapUserHashSessionName.getByHash(disputeData.getMessageReceiverHash());
-            if (webSocketUserHashSessionName != null) {
-                messagingSender.convertAndSendToUser(webSocketUserHashSessionName.getWebSocketUserName(), "/topic/public", disputeData.getDisputeItem(itemId));
-            }
         }
         disputeService.update(disputeData);
 
@@ -113,11 +109,6 @@ public class ItemService {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(e.getMessage(), STATUS_ERROR));
-        }
-
-        for (Hash arbitratorHash : disputeData.getArbitratorHashes()) {
-            WebSocketUserHashSessionName webSocketUserHashSessionName = webSocketMapUserHashSessionName.getByHash(arbitratorHash);
-            //messagingSender.convertAndSendToUser(webSocketUserHashSessionName.getWebSocketUserName(), "/topic/public", disputeItemData);
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(new Response(DISPUTE_ITEM_VOTE_SUCCESS, STATUS_SUCCESS));

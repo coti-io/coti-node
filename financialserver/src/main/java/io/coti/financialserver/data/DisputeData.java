@@ -6,6 +6,7 @@ import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
+import io.coti.financialserver.data.interfaces.IDisputeEvent;
 import lombok.Data;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -17,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class DisputeData implements IEntity, ISignable, ISignValidatable {
+public class DisputeData implements IEntity, ISignable, ISignValidatable, IDisputeEvent {
 
     private Hash hash;
     @NotNull
@@ -98,7 +99,6 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
         return true;
     }
 
-    // serializer.writeValueAsString(entity)
     @Override
     public Hash getHash() {
         return hash;

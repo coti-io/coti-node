@@ -68,12 +68,10 @@ public class DisputeService {
     @Autowired
     private TransactionHelper transactionHelper;
     @Autowired
-    private RollingReserveService rollingReserveService;
-    @Autowired
     private EmailNotificationsService emailNotificationsService;
     private Map<ActionSide, Collection<UserDisputesData>> userDisputesCollectionMap = new EnumMap<>(ActionSide.class);
     @Autowired
-    private SimpMessagingTemplate messagingSender;
+    private WebSocketService webSocketService;
 
     @PostConstruct
     public void init() {
@@ -159,8 +157,7 @@ public class DisputeService {
 
         disputes.put(disputeData);
 
-        messagingSender.convertAndSend("/topic/user/" + disputeData.getMessageReceiverHash(), disputeData);
-
+        webSocketService.notifyOnNewDispute(disputeData);
         emailNotificationsService.sendEmail(disputeData.getHash(), disputeData.getMerchantHash(), FinancialServerEvent.NewDispute, null);
         return ResponseEntity.status(HttpStatus.OK).body(new NewDisputeResponse(disputeData.getHash().toString(), STATUS_SUCCESS));
     }

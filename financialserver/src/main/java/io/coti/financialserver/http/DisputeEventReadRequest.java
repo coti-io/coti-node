@@ -10,10 +10,12 @@ import lombok.Data;
 import javax.validation.constraints.NotNull;
 
 @Data
-public class WebSocketAuthRequest extends Request implements ISignable, ISignValidatable {
+public class DisputeEventReadRequest extends Request implements ISignable, ISignValidatable {
 
     @NotNull
     private Hash userHash;
+    @NotNull
+    private Hash disputeEventHash;
     @NotNull
     private SignatureData userSignature;
 

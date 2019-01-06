@@ -52,6 +52,8 @@ public class DocumentService {
     private DisputeService disputeService;
     @Autowired
     private EmailNotificationsService emailNotificationsService;
+    @Autowired
+    private WebSocketService webSocketService;
 
     public ResponseEntity<IResponse> newDocument(NewDocumentRequest request) {
 
@@ -117,6 +119,7 @@ public class DocumentService {
         disputeDocuments.put(disputeDocumentData);
 
         emailNotificationsService.sendEmail(disputeData.getHash(), disputeData.getMessageReceiverHash(), FinancialServerEvent.NewDocument, disputeItemsData);
+        webSocketService.notifyOnNewCommentOrDocument(disputeData, disputeDocumentData, disputeDocumentData.getUploadSide());
         return ResponseEntity.status(HttpStatus.OK).body(new NewDocumentResponse(disputeDocumentData));
     }
 

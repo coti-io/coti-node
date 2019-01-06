@@ -5,6 +5,7 @@ import io.coti.basenode.model.Transactions;
 import io.coti.financialserver.data.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
@@ -18,6 +19,7 @@ import java.util.stream.Stream;
 import static io.coti.financialserver.http.HttpStringConstants.*;
 
 public enum DisputeItemStatusService {
+
     AcceptedByMerchant(DisputeItemStatus.AcceptedByMerchant, EnumSet.of(DisputeItemStatus.Recall), ActionSide.Merchant, true, true) {
         @Override
         public void changeDisputeItemsStatuses(DisputeData disputeData) {
@@ -89,6 +91,7 @@ public enum DisputeItemStatusService {
         }
     };
 
+    protected WebSocketService webSocketService;
     protected Transactions transactions;
     protected RollingReserveService rollingReserveService;
     private DisputeItemStatus newDisputeItemStatus;
@@ -136,6 +139,8 @@ public enum DisputeItemStatusService {
         if (isFinalStatusForAllItems(disputeData)) {
             createChargeBackTransaction(disputeData);
         }
+
+        webSocketService.notifyOnItemStatusChange(disputeData, itemId);
         changeDisputeStatus(disputeData);
     }
 
@@ -208,12 +213,15 @@ public enum DisputeItemStatusService {
         private Transactions transactions;
         @Autowired
         private RollingReserveService rollingReserveService;
+        @Autowired
+        private WebSocketService webSocketService;
 
         @PostConstruct
         public void postConstruct() {
             for (DisputeItemStatusService disputeItemStatusService : EnumSet.allOf(DisputeItemStatusService.class)) {
                 disputeItemStatusService.transactions = transactions;
                 disputeItemStatusService.rollingReserveService = rollingReserveService;
+                disputeItemStatusService.webSocketService = webSocketService;
             }
         }
     }

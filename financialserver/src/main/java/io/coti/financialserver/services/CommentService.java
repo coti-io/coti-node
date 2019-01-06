@@ -46,6 +46,8 @@ public class CommentService {
     private EmailNotificationsService emailNotificationsService;
     @Autowired
     private SimpMessagingTemplate messagingSender;
+    @Autowired
+    private WebSocketService webSocketService;
 
     public ResponseEntity<IResponse> newComment(NewCommentRequest request) {
 
@@ -85,12 +87,8 @@ public class CommentService {
         disputes.put(disputeData);
         disputeComments.put(disputeCommentData);
 
-        WebSocketUserHashSessionName webSocketUserHashSessionName = webSocketMapUserHashSessionName.getByHash(disputeData.getMessageReceiverHash());
-        if (webSocketUserHashSessionName != null) {
-            messagingSender.convertAndSendToUser(webSocketUserHashSessionName.getWebSocketUserName(), "/topic/public", disputeCommentData);
-        }
-
         emailNotificationsService.sendEmail(disputeData.getHash(), disputeData.getMessageReceiverHash(), FinancialServerEvent.NewComment, disputeItemsData);
+        webSocketService.notifyOnNewCommentOrDocument(disputeData, disputeCommentData, disputeCommentData.getCommentSide());
         return ResponseEntity.status(HttpStatus.OK).body(new NewCommentResponse(disputeCommentData.getHash()));
     }
 
