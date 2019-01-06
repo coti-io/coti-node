@@ -18,6 +18,12 @@ public class GetDocumentFileData implements ISignable, ISignValidatable {
     @NotNull
     private @Valid SignatureData userSignature;
 
+    public GetDocumentFileData(Hash documentHash, Hash userHash, SignatureData userSignature) {
+        this.documentHash = documentHash;
+        this.userHash = userHash;
+        this.userSignature = userSignature;
+    }
+    
     @Override
     public SignatureData getSignature() {
         return userSignature;

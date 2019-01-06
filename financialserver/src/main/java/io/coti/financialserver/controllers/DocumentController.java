@@ -33,8 +33,8 @@ public class DocumentController {
         return documentService.getDocumentNames(request);
     }
 
-    @RequestMapping(path = "/download", method = RequestMethod.POST)
-    public void getDocumentFile(@RequestBody @Valid GetDocumentFileRequest request, HttpServletResponse response) throws IOException {
+    @RequestMapping(path = "/{userHash}/{r}/{s}/{documentHash}", method = RequestMethod.GET)
+    public void getDocumentFile(@ModelAttribute @Valid GetDocumentFileRequest request, HttpServletResponse response) throws IOException {
 
         documentService.getDocumentFile(request, response);
         response.flushBuffer();
