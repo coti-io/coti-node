@@ -35,12 +35,12 @@ public class BaseNodeAddressServiceTest extends AbstractTestExecutionListener {
     private BaseNodeAddressService baseNodeAddressService;
 
     @Autowired
-    private IDatabaseConnector rocksDBConnector;
+    private BaseNodeRocksDBConnector rocksDBConnector;
 
     @Override
     public void beforeTestClass(TestContext testContext) {
         BaseNodeRocksDBConnector rocksDBConnector =
-                testContext.getApplicationContext().getBean("BaseNodeRocksDBConnector", BaseNodeRocksDBConnector.class);
+                testContext.getApplicationContext().getBean("baseNodeRocksDBConnector", BaseNodeRocksDBConnector.class);
         rocksDBConnector.init();
     }
 

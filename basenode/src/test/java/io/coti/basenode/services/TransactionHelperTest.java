@@ -113,14 +113,6 @@ public class TransactionHelperTest {
     }
 
     @Test
-    public void validateTransactionType_isValid() {
-        List<BaseTransactionData> baseTransactions = generateValidateBaseTransactionData();
-        TransactionData TransactionData = new TransactionData(baseTransactions, generateRandomHash(), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Payment);
-        Assert.assertTrue(transactionHelper.validateTransactionType(TransactionData));
-    }
-
-
-    @Test
     public void validateTransactionType_isNotValid() {
         List<BaseTransactionData> baseTransactions = generateValidateBaseTransactionData();
         TransactionData TransactionData = new TransactionData(baseTransactions, generateRandomHash(), TRANSACTION_DESCRIPTION, generateRandomTrustScore(), new Date(), TransactionType.Transfer);

@@ -37,7 +37,7 @@ public class AddressServiceTest extends AbstractTestExecutionListener {
     private AddressService addressService;
 
     @Autowired
-    private IDatabaseConnector rocksDBConnector;
+    private BaseNodeRocksDBConnector baseNodeRocksDBConnector;
 
     @MockBean
     private WebSocketSender webSocketSender;
@@ -48,7 +48,7 @@ public class AddressServiceTest extends AbstractTestExecutionListener {
     @Override
     public void beforeTestClass(TestContext testContext) {
         BaseNodeRocksDBConnector rocksDBConnector =
-                testContext.getApplicationContext().getBean("rocksDBConnector", BaseNodeRocksDBConnector.class);
+                testContext.getApplicationContext().getBean("baseNodeRocksDBConnector", BaseNodeRocksDBConnector.class);
         rocksDBConnector.init();
     }
 
