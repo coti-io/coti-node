@@ -85,6 +85,8 @@ public class DisputeService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_TRANSACTION_NOT_FOUND, STATUS_ERROR));
         }
 
+        disputeData.setTransactionCreationTime(transactionData.getCreateTime().toInstant());
+
         PaymentInputBaseTransactionData paymentInputBaseTransactionData = transactionHelper.getPaymentInputBaseTransaction(transactionData);
         if (paymentInputBaseTransactionData == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_TRANSACTION_NOT_PAYMENT, STATUS_ERROR));
@@ -102,6 +104,7 @@ public class DisputeService {
             PaymentItemData paymentItemData = paymentItemsStreamSupplier.get().findFirst().get();
             item.setPrice(paymentItemData.getItemPrice());
             item.setQuantity(paymentItemData.getItemQuantity());
+            item.setName(paymentItemData.getItemName());
 
             disputeAmount = disputeAmount.add(item.getPrice().multiply(new BigDecimal(item.getQuantity())));
             itemIds.add(item.getId());

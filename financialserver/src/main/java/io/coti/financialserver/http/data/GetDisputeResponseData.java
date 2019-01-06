@@ -15,6 +15,7 @@ import java.util.List;
 public abstract class GetDisputeResponseData {
     protected String hash;
     protected String transactionHash;
+    protected Instant transactionCreationTime;
     protected String consumerHash;
     protected SignatureData consumerSignature;
     protected String merchantHash;
@@ -36,6 +37,7 @@ public abstract class GetDisputeResponseData {
 
         this.hash = disputeData.getHash().toString();
         this.transactionHash = disputeData.getTransactionHash().toString();
+        this.transactionCreationTime = disputeData.getTransactionCreationTime();
         this.consumerHash = disputeData.getConsumerHash().toString();
         this.consumerSignature = disputeData.getSignature();
         this.merchantHash = disputeData.getMerchantHash().toString();

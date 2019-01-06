@@ -22,6 +22,7 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
     private Hash hash;
     @NotNull
     private Hash transactionHash;
+    private Instant transactionCreationTime;
     @NotNull
     private Hash consumerHash;
     private SignatureData consumerSignature;
