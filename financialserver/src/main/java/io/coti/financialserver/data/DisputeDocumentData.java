@@ -55,6 +55,11 @@ public class DisputeDocumentData implements IEntity, ISignable, ISignValidatable
     }
 
     @Override
+    public void setSignature(SignatureData signature) {
+        this.userSignature = signature;
+    }
+
+    @Override
     public Hash getSignerHash() {
         return userHash;
     }
@@ -62,10 +67,5 @@ public class DisputeDocumentData implements IEntity, ISignable, ISignValidatable
     @Override
     public void setSignerHash(Hash hash) {
         userHash = hash;
-    }
-
-    @Override
-    public void setSignature(SignatureData signature) {
-        this.userSignature = signature;
     }
 }

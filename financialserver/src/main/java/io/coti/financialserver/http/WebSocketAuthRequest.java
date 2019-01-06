@@ -23,6 +23,11 @@ public class WebSocketAuthRequest extends Request implements ISignable, ISignVal
     }
 
     @Override
+    public void setSignature(SignatureData signature) {
+        this.userSignature = signature;
+    }
+
+    @Override
     public Hash getSignerHash() {
         return userHash;
     }
@@ -30,10 +35,5 @@ public class WebSocketAuthRequest extends Request implements ISignable, ISignVal
     @Override
     public void setSignerHash(Hash hash) {
         userHash = hash;
-    }
-
-    @Override
-    public void setSignature(SignatureData signature) {
-        this.userSignature = signature;
     }
 }

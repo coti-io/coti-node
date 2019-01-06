@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -71,7 +70,7 @@ public enum DisputeItemStatusService {
     Claim(DisputeItemStatus.Claim, EnumSet.of(DisputeItemStatus.Recall, DisputeItemStatus.RejectedByMerchant), ActionSide.FinancialServer, false, false) {
         @Override
         public void changeDisputeStatus(DisputeData disputeData) throws Exception {
-            if(existRecallDisputeItems(disputeData)){
+            if (existRecallDisputeItems(disputeData)) {
                 return;
             }
             DisputeStatusService.Claim.changeStatus(disputeData);
@@ -90,13 +89,13 @@ public enum DisputeItemStatusService {
         }
     };
 
+    protected Transactions transactions;
+    protected RollingReserveService rollingReserveService;
     private DisputeItemStatus newDisputeItemStatus;
     private Set<DisputeItemStatus> previousDisputeItemStatuses;
     private ActionSide actionSide;
     private boolean finalStatus;
     private boolean refundable;
-    protected Transactions transactions;
-    protected RollingReserveService rollingReserveService;
 
     DisputeItemStatusService(DisputeItemStatus newDisputeItemStatus, Set<DisputeItemStatus> previousDisputeItemStatuses, ActionSide actionSide, boolean finalStatus, boolean refundable) {
         this.newDisputeItemStatus = newDisputeItemStatus;
@@ -104,22 +103,6 @@ public enum DisputeItemStatusService {
         this.actionSide = actionSide;
         this.finalStatus = finalStatus;
         this.refundable = refundable;
-    }
-
-    @Component
-    public static class DisputeItemStatusServiceInjector {
-        @Autowired
-        private Transactions transactions;
-        @Autowired
-        private RollingReserveService rollingReserveService;
-
-        @PostConstruct
-        public void postConstruct() {
-            for (DisputeItemStatusService disputeItemStatusService : EnumSet.allOf(DisputeItemStatusService.class)) {
-                disputeItemStatusService.transactions = transactions;
-                disputeItemStatusService.rollingReserveService = rollingReserveService;
-            }
-        }
     }
 
     private boolean isActionSideValid(ActionSide actionSide) {
@@ -158,7 +141,7 @@ public enum DisputeItemStatusService {
 
     private void changeStatus(DisputeItemData disputeItemData) {
         disputeItemData.setStatus(newDisputeItemStatus);
-        if(actionSide.equals(ActionSide.Arbitrator)){
+        if (actionSide.equals(ActionSide.Arbitrator)) {
             disputeItemData.setArbitratorsDecisionTime(Instant.now());
         }
     }
@@ -209,7 +192,6 @@ public enum DisputeItemStatusService {
 
     abstract void changeDisputeStatus(DisputeData disputeData) throws Exception;
 
-
     public boolean isFinalStatusForAllItems(DisputeData disputeData) {
         List<DisputeItemData> disputeItems = disputeData.getDisputeItems();
         for (DisputeItemData disputeItemData : disputeItems) {
@@ -218,5 +200,21 @@ public enum DisputeItemStatusService {
             }
         }
         return true;
+    }
+
+    @Component
+    public static class DisputeItemStatusServiceInjector {
+        @Autowired
+        private Transactions transactions;
+        @Autowired
+        private RollingReserveService rollingReserveService;
+
+        @PostConstruct
+        public void postConstruct() {
+            for (DisputeItemStatusService disputeItemStatusService : EnumSet.allOf(DisputeItemStatusService.class)) {
+                disputeItemStatusService.transactions = transactions;
+                disputeItemStatusService.rollingReserveService = rollingReserveService;
+            }
+        }
     }
 }

@@ -31,6 +31,8 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 public class CommentService {
 
     @Autowired
+    WebSocketMapUserHashSessionName webSocketMapUserHashSessionName;
+    @Autowired
     private DisputeComments disputeComments;
     @Autowired
     private DisputeCommentCrypto disputeCommentCrypto;
@@ -44,8 +46,6 @@ public class CommentService {
     private EmailNotificationsService emailNotificationsService;
     @Autowired
     private SimpMessagingTemplate messagingSender;
-    @Autowired
-    WebSocketMapUserHashSessionName webSocketMapUserHashSessionName;
 
     public ResponseEntity<IResponse> newComment(NewCommentRequest request) {
 
@@ -76,7 +76,7 @@ public class CommentService {
             disputeItemData.addCommentHash(disputeCommentData.getHash());
         }
 
-        if( !disputeData.setActionSideAndMessageReceiverHash(disputeCommentData.getUserHash()) ) {
+        if (!disputeData.setActionSideAndMessageReceiverHash(disputeCommentData.getUserHash())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_COMMENT_CREATE_UNAUTHORIZED, STATUS_ERROR));
         }
 
@@ -86,7 +86,7 @@ public class CommentService {
         disputeComments.put(disputeCommentData);
 
         WebSocketUserHashSessionName webSocketUserHashSessionName = webSocketMapUserHashSessionName.getByHash(disputeData.getMessageReceiverHash());
-        if(webSocketUserHashSessionName != null) {
+        if (webSocketUserHashSessionName != null) {
             messagingSender.convertAndSendToUser(webSocketUserHashSessionName.getWebSocketUserName(), "/topic/public", disputeCommentData);
         }
 

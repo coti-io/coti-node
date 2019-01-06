@@ -20,7 +20,7 @@ public class UserDisputesData implements IEntity {
     }
 
     public List<Hash> getDisputeHashes() {
-        if(disputeHashes == null) {
+        if (disputeHashes == null) {
             disputeHashes = new ArrayList<>();
         }
         return disputeHashes;

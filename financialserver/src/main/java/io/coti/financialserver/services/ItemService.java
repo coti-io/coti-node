@@ -32,11 +32,11 @@ public class ItemService {
     @Autowired
     DisputeService disputeService;
     @Autowired
+    WebSocketMapUserHashSessionName webSocketMapUserHashSessionName;
+    @Autowired
     private EmailNotificationsService emailNotificationsService;
     @Autowired
     private SimpMessagingTemplate messagingSender;
-    @Autowired
-    WebSocketMapUserHashSessionName webSocketMapUserHashSessionName;
 
     public ResponseEntity<IResponse> updateItem(UpdateItemRequest request) {
 
@@ -52,7 +52,7 @@ public class ItemService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_NOT_FOUND, STATUS_ERROR));
         }
 
-        if( !disputeData.setActionSideAndMessageReceiverHash(disputeUpdateItemData.getUserHash()) ) {
+        if (!disputeData.setActionSideAndMessageReceiverHash(disputeUpdateItemData.getUserHash())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_COMMENT_CREATE_UNAUTHORIZED, STATUS_ERROR));
         }
 
@@ -64,7 +64,7 @@ public class ItemService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(e.getMessage(), STATUS_ERROR));
             }
             WebSocketUserHashSessionName webSocketUserHashSessionName = webSocketMapUserHashSessionName.getByHash(disputeData.getMessageReceiverHash());
-            if(webSocketUserHashSessionName != null) {
+            if (webSocketUserHashSessionName != null) {
                 messagingSender.convertAndSendToUser(webSocketUserHashSessionName.getWebSocketUserName(), "/topic/public", disputeData.getDisputeItem(itemId));
             }
         }
@@ -114,8 +114,8 @@ public class ItemService {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(e.getMessage(), STATUS_ERROR));
         }
-        
-        for(Hash arbitratorHash : disputeData.getArbitratorHashes()) {
+
+        for (Hash arbitratorHash : disputeData.getArbitratorHashes()) {
             WebSocketUserHashSessionName webSocketUserHashSessionName = webSocketMapUserHashSessionName.getByHash(arbitratorHash);
             //messagingSender.convertAndSendToUser(webSocketUserHashSessionName.getWebSocketUserName(), "/topic/public", disputeItemData);
         }

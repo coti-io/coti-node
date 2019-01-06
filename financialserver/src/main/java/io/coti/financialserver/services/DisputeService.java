@@ -29,7 +29,10 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -40,10 +43,10 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 public class DisputeService {
 
     private static final int COUNT_ARBITRATORS_PER_DISPUTE = 2;
-
+    @Autowired
+    WebSocketMapUserHashSessionName webSocketMapUserHashSessionName;
     @Value("#{'${arbitrators.userHashes}'.split(',')}")
     private List<String> ARBITRATOR_USER_HASHES;
-
     @Autowired
     private GetDisputesCrypto getDisputesCrypto;
     @Autowired
@@ -69,8 +72,6 @@ public class DisputeService {
     @Autowired
     private EmailNotificationsService emailNotificationsService;
     private Map<ActionSide, Collection<UserDisputesData>> userDisputesCollectionMap = new EnumMap<>(ActionSide.class);
-    @Autowired
-    WebSocketMapUserHashSessionName webSocketMapUserHashSessionName;
     @Autowired
     private SimpMessagingTemplate messagingSender;
 
@@ -229,7 +230,7 @@ public class DisputeService {
 
     public void update(DisputeData disputeData) {
 
-        disputeData.setUpdateTime(new Date());
+        disputeData.setUpdateTime(Instant.now());
         if (disputeData.getDisputeStatus().equals(DisputeStatus.Claim) && disputeData.getArbitratorHashes().isEmpty()) {
             assignToArbitrators(disputeData);
             disputeData.setArbitratorsAssignTime(Instant.now());

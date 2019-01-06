@@ -2,11 +2,10 @@ package io.coti.financialserver.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.financialserver.data.DisputeItemData;
-import io.coti.financialserver.data.DisputeUpdateItemData;
 import io.coti.financialserver.data.FinancialServerEvent;
 import io.coti.financialserver.http.KYCEmailRequest;
-import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -16,11 +15,10 @@ import java.util.List;
 @Service
 public class EmailNotificationsService {
 
-    @Value("${kycserver.url}")
-    private String KYC_SERVER_URL;
-
     private static final String CREATE_EMAIL_PATH = "sendEmail";
     private static final String SLASH = "/";
+    @Value("${kycserver.url}")
+    private String KYC_SERVER_URL;
 
     public void sendEmail(Hash disputeHash, Hash merchantHash, FinancialServerEvent financialServerEvent, List<DisputeItemData> disputeItemsData) {
 

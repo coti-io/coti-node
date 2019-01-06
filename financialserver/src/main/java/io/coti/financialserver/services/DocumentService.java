@@ -81,7 +81,7 @@ public class DocumentService {
             disputeItemData.addDocumentHash(disputeDocumentData.getHash());
         }
 
-        if( !disputeData.setActionSideAndMessageReceiverHash(disputeDocumentData.getUserHash()) ) {
+        if (!disputeData.setActionSideAndMessageReceiverHash(disputeDocumentData.getUserHash())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_COMMENT_CREATE_UNAUTHORIZED, STATUS_ERROR));
         }
 

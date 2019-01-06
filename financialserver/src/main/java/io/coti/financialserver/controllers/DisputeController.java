@@ -1,7 +1,10 @@
 package io.coti.financialserver.controllers;
 
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.financialserver.http.*;
+import io.coti.financialserver.http.GetDisputesRequest;
+import io.coti.financialserver.http.NewDisputeRequest;
+import io.coti.financialserver.http.UpdateItemRequest;
+import io.coti.financialserver.http.VoteRequest;
 import io.coti.financialserver.services.DisputeService;
 import io.coti.financialserver.services.ItemService;
 import lombok.extern.slf4j.Slf4j;

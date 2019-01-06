@@ -36,10 +36,10 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
     private BigDecimal recourseClaimAmount;
     private Boolean recourseClaimOpen;
     private Hash recourseClaimTransactionHash;
-    private Date creationTime;
-    private Date updateTime;
-    private Date arbitratorsAssignTime;
-    private Date closedTime;
+    private Instant creationTime;
+    private Instant updateTime;
+    private Instant arbitratorsAssignTime;
+    private Instant closedTime;
     private Hash messageReceiverHash;
     private ActionSide actionSide;
 
@@ -115,6 +115,11 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
     }
 
     @Override
+    public void setSignature(SignatureData signature) {
+        this.consumerSignature = signature;
+    }
+
+    @Override
     public Hash getSignerHash() {
         return consumerHash;
     }
@@ -122,10 +127,5 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
     @Override
     public void setSignerHash(Hash hash) {
         consumerHash = hash;
-    }
-
-    @Override
-    public void setSignature(SignatureData signature) {
-        this.consumerSignature = signature;
     }
 }

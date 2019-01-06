@@ -29,6 +29,11 @@ public class DisputeItemVoteData implements Serializable, ISignable, ISignValida
     }
 
     @Override
+    public void setSignature(SignatureData signature) {
+        this.arbitratorSignature = signature;
+    }
+
+    @Override
     public Hash getSignerHash() {
         return arbitratorHash;
     }
@@ -36,10 +41,5 @@ public class DisputeItemVoteData implements Serializable, ISignable, ISignValida
     @Override
     public void setSignerHash(Hash signerHash) {
         arbitratorHash = signerHash;
-    }
-
-    @Override
-    public void setSignature(SignatureData signature) {
-        this.arbitratorSignature = signature;
     }
 }
