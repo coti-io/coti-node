@@ -58,7 +58,7 @@ public class DocumentService {
     public ResponseEntity<IResponse> newDocument(NewDocumentRequest request) {
 
         DisputeDocumentData disputeDocumentData = request.getDisputeDocumentData();
-
+        disputeDocumentCrypto.signMessage(disputeDocumentData);
         if (!disputeDocumentCrypto.verifySignature(disputeDocumentData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }

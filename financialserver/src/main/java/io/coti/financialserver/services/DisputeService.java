@@ -83,7 +83,7 @@ public class DisputeService {
     public ResponseEntity<IResponse> createDispute(NewDisputeRequest newDisputeRequest) {
 
         DisputeData disputeData = newDisputeRequest.getDisputeData();
-
+        disputeCrypto.signMessage(disputeData);
         if (!disputeCrypto.verifySignature(disputeData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }

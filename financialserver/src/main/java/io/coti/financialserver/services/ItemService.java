@@ -41,7 +41,7 @@ public class ItemService {
     public ResponseEntity<IResponse> updateItem(UpdateItemRequest request) {
 
         DisputeUpdateItemData disputeUpdateItemData = request.getDisputeUpdateItemData();
-
+        disputeUpdateItemCrypto.signMessage(disputeUpdateItemData);
         if (!disputeUpdateItemCrypto.verifySignature(disputeUpdateItemData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
@@ -73,7 +73,7 @@ public class ItemService {
     public ResponseEntity<IResponse> vote(VoteRequest request) {
 
         DisputeItemVoteData disputeItemVoteData = request.getDisputeItemVoteData();
-
+        disputeItemVoteCrypto.signMessage(disputeItemVoteData);
         if (!disputeItemVoteCrypto.verifySignature(disputeItemVoteData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
