@@ -14,6 +14,7 @@ public class DisputeItemResponseData {
     private Long id;
     private BigDecimal price;
     private int quantity;
+    private String name;
     private DisputeReason reason;
     private DisputeItemStatus status;
     private List<String> disputeDocumentHashes;
@@ -28,6 +29,7 @@ public class DisputeItemResponseData {
         id = disputeItemData.getId();
         price = disputeItemData.getPrice();
         quantity = disputeItemData.getQuantity();
+        name = disputeItemData.getName();
         reason = disputeItemData.getReason();
         status = disputeItemData.getStatus();
         disputeDocumentHashes = new ArrayList<>();
