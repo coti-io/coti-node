@@ -10,32 +10,10 @@ import lombok.Data;
 import javax.validation.constraints.NotNull;
 
 @Data
-public class DisputeEventReadRequest extends Request implements ISignable, ISignValidatable {
+public class DisputeEventReadRequest extends Request {
 
     @NotNull
     private Hash userHash;
     @NotNull
     private Hash disputeEventHash;
-    @NotNull
-    private SignatureData userSignature;
-
-    @Override
-    public SignatureData getSignature() {
-        return userSignature;
-    }
-
-    @Override
-    public void setSignature(SignatureData signature) {
-        this.userSignature = signature;
-    }
-
-    @Override
-    public Hash getSignerHash() {
-        return userHash;
-    }
-
-    @Override
-    public void setSignerHash(Hash hash) {
-        userHash = hash;
-    }
 }

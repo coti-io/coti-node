@@ -1,6 +1,7 @@
 package io.coti.financialserver.http.data;
 
 import io.coti.basenode.data.SignatureData;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.financialserver.data.DisputeData;
 import io.coti.financialserver.data.DisputeItemData;
 import io.coti.financialserver.data.DisputeStatus;
@@ -12,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public abstract class GetDisputeResponseData {
+public abstract class GetDisputeResponseData implements IResponse {
     protected String hash;
     protected String transactionHash;
     protected Instant transactionCreationTime;

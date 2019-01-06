@@ -4,6 +4,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
 import io.coti.financialserver.data.*;
 import io.coti.financialserver.data.interfaces.IDisputeEvent;
+import io.coti.financialserver.http.DisputeEventDataSent;
 import io.coti.financialserver.http.DisputeEventReadRequest;
 import io.coti.financialserver.http.DisputePopulateEventsRequest;
 import io.coti.financialserver.model.DisputeEvents;
@@ -39,6 +40,7 @@ public class WebSocketService {
 
         UserDisputeEventData userDisputeEventData = userDisputeEvents.getByHash(disputeEventReadRequest.getUserHash());
         userDisputeEventData.getDisputeEventHashes().remove(disputeEventReadRequest.getDisputeEventHash());
+        userDisputeEvents.put(userDisputeEventData);
 
         return ResponseEntity.status(HttpStatus.OK).body(new Response(SUCCESS, STATUS_SUCCESS));
     }
@@ -47,10 +49,10 @@ public class WebSocketService {
 
         UserDisputeEventData userDisputeEventData = userDisputeEvents.getByHash(disputePopulateEventsRequest.getUserHash());
         DisputeEventData disputeEventData;
-        if(userDisputeEventData.getDisputeEventHashes() != null) {
+        if(userDisputeEventData != null) {
             for(Hash disputeEventHash : userDisputeEventData.getDisputeEventHashes()) {
                 disputeEventData = disputeEvents.getByHash(disputeEventHash);
-                messagingSender.convertAndSend("/topic/user/" + disputePopulateEventsRequest.getUserHash(), disputeEventData);
+                messagingSender.convertAndSend("/topic/user/" + disputePopulateEventsRequest.getUserHash(), new DisputeEventDataSent(disputeEventData, disputePopulateEventsRequest.getUserHash()));
             }
         }
 
@@ -62,29 +64,30 @@ public class WebSocketService {
         List<Hash> usersToUpdate = new ArrayList<>();
         usersToUpdate.add(disputeData.getMerchantHash());
 
-        updateDisputeHistory(disputeData.getHash(), disputeData, usersToUpdate);
+        DisputeEventData disputeEventData = updateDisputeHistory(disputeData.getHash(), disputeData, usersToUpdate);
 
-        messagingSender.convertAndSend("/topic/user/" + disputeData.getConsumerHash(), disputeData);
+        messagingSender.convertAndSend("/topic/user/" + disputeData.getConsumerHash(), new DisputeEventDataSent(disputeEventData, disputeData.getConsumerHash()));
     }
 
     public void notifyOnNewCommentOrDocument(DisputeData disputeData, IDisputeEvent disputeEvent, ActionSide actionSide) {
 
         List<Hash> usersToUpdate = new ArrayList<>();
+
         if(actionSide.equals(ActionSide.Consumer)) {
             usersToUpdate.add(disputeData.getMerchantHash());
-            messagingSender.convertAndSend("/topic/user/" + disputeData.getConsumerHash(), disputeData);
+            DisputeEventData disputeEventData = updateDisputeHistory(disputeData.getHash(), disputeEvent, usersToUpdate);
+            messagingSender.convertAndSend("/topic/user/" + disputeData.getConsumerHash(), new DisputeEventDataSent(disputeEventData, disputeData.getConsumerHash()));
         }
         else {
             usersToUpdate.add(disputeData.getConsumerHash());
-            messagingSender.convertAndSend("/topic/user/" + disputeData.getMerchantHash(), disputeData);
+            DisputeEventData disputeEventData = updateDisputeHistory(disputeData.getHash(), disputeEvent, usersToUpdate);
+            messagingSender.convertAndSend("/topic/user/" + disputeData.getMerchantHash(), new DisputeEventDataSent(disputeEventData, disputeData.getMerchantHash()));
         }
-
-        updateDisputeHistory(disputeData.getHash(), disputeEvent, usersToUpdate);
     }
 
     public void notifyOnDisputeStatusChange(DisputeData disputeData) {
 
-        DisputeStatusChangeEvent disputeStatusChangeEvent = new DisputeStatusChangeEvent(disputeData.getHash(), disputeData.getDisputeStatus());
+        DisputeStatusChangedEvent disputeStatusChangedEvent = new DisputeStatusChangedEvent(disputeData.getHash(), disputeData.getDisputeStatus());
 
         List<Hash> usersToUpdate = new ArrayList<>();
         usersToUpdate.add(disputeData.getConsumerHash());
@@ -94,7 +97,7 @@ public class WebSocketService {
             usersToUpdate.addAll(disputeData.getArbitratorHashes());
         }
 
-        updateDisputeHistory(disputeData.getHash(), disputeStatusChangeEvent, usersToUpdate);
+        updateDisputeHistory(disputeData.getHash(), disputeStatusChangedEvent, usersToUpdate);
     }
 
     public void notifyOnItemStatusChange(DisputeData disputeData, Long itemId) {
@@ -111,7 +114,7 @@ public class WebSocketService {
         updateDisputeHistory(disputeData.getHash(), disputeStatusChangeEvent, usersToUpdate);
     }
 
-    private void updateDisputeHistory(Hash disputeHash, IDisputeEvent eventObject, List<Hash> usersToUpdate) {
+    private DisputeEventData updateDisputeHistory(Hash disputeHash, IDisputeEvent eventObject, List<Hash> usersToUpdate) {
 
         DisputeEventData disputeEventData = new DisputeEventData(eventObject);
 
@@ -129,10 +132,12 @@ public class WebSocketService {
             }
             userDisputeEventData.getDisputeEventHashes().add(disputeEventData.getHash());
             userDisputeEvents.put(userDisputeEventData);
-            messagingSender.convertAndSend("/topic/user/" + userToUpdate, disputeEventData);
+            messagingSender.convertAndSend("/topic/user/" + userToUpdate, new DisputeEventDataSent(disputeEventData, userToUpdate));
         }
 
         disputeEvents.put(disputeEventData);
         disputeHistory.put(disputeHistoryData);
+
+        return disputeEventData;
     }
 }

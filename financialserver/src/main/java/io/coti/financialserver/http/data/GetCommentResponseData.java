@@ -1,12 +1,13 @@
 package io.coti.financialserver.http.data;
 
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.financialserver.data.DisputeCommentData;
 import lombok.Data;
 
 import java.time.Instant;
 
 @Data
-public class GetCommentResponseData {
+public class GetCommentResponseData implements IResponse {
     private String comment;
     private String commentSide;
     private Instant creationTime;

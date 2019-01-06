@@ -6,12 +6,12 @@ import io.coti.financialserver.data.interfaces.IDisputeEvent;
 import lombok.Data;
 
 @Data
-public class DisputeStatusChangeEvent implements IDisputeEvent, IEntity {
+public class DisputeStatusChangedEvent implements IDisputeEvent, IEntity {
 
     private Hash disputeHash;
     private DisputeStatus disputeStatus;
 
-    public DisputeStatusChangeEvent(Hash disputeHash, DisputeStatus disputeStatus) {
+    public DisputeStatusChangedEvent(Hash disputeHash, DisputeStatus disputeStatus) {
         this.disputeHash = disputeHash;
         this.disputeStatus = disputeStatus;
     }
