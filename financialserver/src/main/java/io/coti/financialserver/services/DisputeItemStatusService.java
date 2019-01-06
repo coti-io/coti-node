@@ -2,10 +2,7 @@ package io.coti.financialserver.services;
 
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.model.Transactions;
-import io.coti.financialserver.data.ActionSide;
-import io.coti.financialserver.data.DisputeData;
-import io.coti.financialserver.data.DisputeItemData;
-import io.coti.financialserver.data.DisputeItemStatus;
+import io.coti.financialserver.data.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -29,7 +26,11 @@ public enum DisputeItemStatusService {
 
         @Override
         public void changeDisputeStatus(DisputeData disputeData) throws Exception {
-            this.CanceledByConsumer.changeDisputeStatus(disputeData);
+            if (!existRecallorRejectedDisputeItems(disputeData)) {
+                DisputeStatusService.Closed.changeStatus(disputeData);
+            } else {
+                this.Claim.changeDisputeStatus(disputeData);
+            }
 
         }
     },
@@ -48,12 +49,20 @@ public enum DisputeItemStatusService {
             changePreClaimDisputeItemsStatuses(disputeData, itemId);
         }
 
+        @Override
         public void changeDisputeStatus(DisputeData disputeData) throws Exception {
-            if (!existRecallorRejectedDisputeItems(disputeData)) {
+            if(isCanceledByConsumerForAllItems(disputeData)){
+                DisputeStatusService.CanceledByConsumer.changeStatus(disputeData);
+            } else if (!existRecallorRejectedDisputeItems(disputeData)) {
                 DisputeStatusService.Closed.changeStatus(disputeData);
             } else {
                 this.Claim.changeDisputeStatus(disputeData);
             }
+        }
+
+        private boolean isCanceledByConsumerForAllItems(DisputeData disputeData) {
+            List<DisputeItemData> disputeItems = disputeData.getDisputeItems();
+            return disputeItems.stream().filter(disputeItemData -> disputeItemData.getStatus().equals(DisputeItemStatus.CanceledByConsumer)).count() == disputeItems.size();
         }
     },
     Claim(DisputeItemStatus.Claim, EnumSet.of(DisputeItemStatus.Recall, DisputeItemStatus.RejectedByMerchant), ActionSide.FinancialServer, false, false) {
