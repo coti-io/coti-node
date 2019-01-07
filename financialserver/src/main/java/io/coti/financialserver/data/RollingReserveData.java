@@ -40,6 +40,11 @@ public class RollingReserveData implements IEntity, ISignable, ISignValidatable 
     }
 
     @Override
+    public void setSignature(SignatureData signature) {
+        merchantSignature = signature;
+    }
+
+    @Override
     public Hash getSignerHash() {
         return merchantHash;
     }
@@ -47,10 +52,5 @@ public class RollingReserveData implements IEntity, ISignable, ISignValidatable 
     @Override
     public void setSignerHash(Hash hash) {
         merchantHash = hash;
-    }
-
-    @Override
-    public void setSignature(SignatureData signature) {
-        merchantSignature = signature;
     }
 }

@@ -14,11 +14,11 @@ import java.util.List;
 @Data
 public class GetDisputesData implements ISignable, ISignValidatable {
 
-    @NotNull
-    private Hash userHash;
     List<Hash> disputeHashes;
     @NotNull
     ActionSide disputeSide;
+    @NotNull
+    private Hash userHash;
     @NotNull
     private @Valid SignatureData userSignature;
 
@@ -32,6 +32,11 @@ public class GetDisputesData implements ISignable, ISignValidatable {
     }
 
     @Override
+    public void setSignature(SignatureData signature) {
+        this.userSignature = signature;
+    }
+
+    @Override
     public Hash getSignerHash() {
         return userHash;
     }
@@ -39,10 +44,5 @@ public class GetDisputesData implements ISignable, ISignValidatable {
     @Override
     public void setSignerHash(Hash hash) {
         userHash = hash;
-    }
-
-    @Override
-    public void setSignature(SignatureData signature) {
-        this.userSignature = signature;
     }
 }

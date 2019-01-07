@@ -6,6 +6,7 @@ import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
+import io.coti.financialserver.data.interfaces.IDisputeEvent;
 import lombok.Data;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -14,7 +15,7 @@ import java.time.Instant;
 import java.util.List;
 
 @Data
-public class DisputeCommentData implements IEntity, ISignable, ISignValidatable {
+public class DisputeCommentData implements IDisputeEvent, IEntity, ISignable, ISignValidatable {
 
     private Hash hash;
     @NotNull
@@ -56,6 +57,11 @@ public class DisputeCommentData implements IEntity, ISignable, ISignValidatable 
     }
 
     @Override
+    public void setSignature(SignatureData signature) {
+        this.userSignature = signature;
+    }
+
+    @Override
     public Hash getSignerHash() {
         return userHash;
     }
@@ -63,10 +69,5 @@ public class DisputeCommentData implements IEntity, ISignable, ISignValidatable 
     @Override
     public void setSignerHash(Hash hash) {
         userHash = hash;
-    }
-
-    @Override
-    public void setSignature(SignatureData signature) {
-        this.userSignature = signature;
     }
 }

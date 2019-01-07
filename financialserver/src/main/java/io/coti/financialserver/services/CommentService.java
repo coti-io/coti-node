@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -38,6 +39,10 @@ public class CommentService {
     private Disputes disputes;
     @Autowired
     private DisputeService disputeService;
+    @Autowired
+    private SimpMessagingTemplate messagingSender;
+    @Autowired
+    private WebSocketService webSocketService;
 
     public ResponseEntity<IResponse> newComment(NewCommentRequest request) {
 
@@ -68,20 +73,16 @@ public class CommentService {
             disputeItemData.addCommentHash(disputeCommentData.getHash());
         }
 
-        ActionSide uploadSide;
-        if (disputeData.getConsumerHash().equals(disputeCommentData.getUserHash())) {
-            uploadSide = ActionSide.Consumer;
-        } else if (disputeData.getMerchantHash().equals(disputeCommentData.getUserHash())) {
-            uploadSide = ActionSide.Merchant;
-        } else {
+        if (!disputeData.setActionSideAndMessageReceiverHash(disputeCommentData.getUserHash())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_COMMENT_CREATE_UNAUTHORIZED, STATUS_ERROR));
         }
 
-        disputeCommentData.setCommentSide(uploadSide);
+        disputeCommentData.setCommentSide(disputeData.getActionSide());
 
         disputes.put(disputeData);
         disputeComments.put(disputeCommentData);
 
+        webSocketService.notifyOnNewCommentOrDocument(disputeData, disputeCommentData, disputeCommentData.getCommentSide());
         return ResponseEntity.status(HttpStatus.OK).body(new NewCommentResponse(disputeCommentData.getHash()));
     }
 
@@ -108,6 +109,5 @@ public class CommentService {
         disputeCommentHashes.forEach(disputeCommentHash -> disputeCommentDataList.add(disputeComments.getByHash(disputeCommentHash)));
 
         return ResponseEntity.status(HttpStatus.OK).body(new GetCommentsResponse(disputeCommentDataList));
-
     }
 }

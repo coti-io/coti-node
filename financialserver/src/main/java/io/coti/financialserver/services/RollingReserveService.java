@@ -39,12 +39,6 @@ public class RollingReserveService {
 
     private static final int COTI_POOL_ADDRESS_INDEX = 0;
     private static final int ROLLING_RESERVE_DEFAULT_DAYS_TO_HOLD = 10;
-
-    @Value("${financialserver.seed}")
-    private String SEED;
-
-    @Autowired
-    private DisputeService disputeService;
     @Autowired
     RollingReserves rollingReserves;
     @Autowired
@@ -52,9 +46,13 @@ public class RollingReserveService {
     @Autowired
     TransactionCreationService transactionCreationService;
     @Autowired
-    private IPropagationPublisher propagationPublisher;
-    @Autowired
     RecourseClaims recourseClaims;
+    @Value("${financialserver.seed}")
+    private String SEED;
+    @Autowired
+    private DisputeService disputeService;
+    @Autowired
+    private IPropagationPublisher propagationPublisher;
     @Autowired
     private Transactions transactions;
     @Autowired
