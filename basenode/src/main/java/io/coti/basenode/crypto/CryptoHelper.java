@@ -33,7 +33,6 @@ public class CryptoHelper {
     private static final ECDomainParameters domain = new ECDomainParameters(curve.getCurve(), curve.getG(), curve.getN(), curve.getH());
     private static final ECParameterSpec spec = new ECParameterSpec(curve.getCurve(), curve.getG(), curve.getN(), curve.getH());
 
-
     public static PublicKey getPublicKeyFromHexString(String pubKeyHex) throws NoSuchAlgorithmException, InvalidKeySpecException {
         String pointX = pubKeyHex.substring(0, (pubKeyHex.length() / 2));
         String pointY = pubKeyHex.substring(pubKeyHex.length() / 2);
@@ -48,7 +47,6 @@ public class CryptoHelper {
         PublicKey pubKey = keyfac.generatePublic(publicSpec);
         return pubKey;
     }
-
 
     private static PublicKey getPublicKeyFromByte(byte[] pubKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
         org.bouncycastle.math.ec.ECPoint point = curve.getCurve().decodePoint(pubKey);
@@ -67,7 +65,6 @@ public class CryptoHelper {
 
         byte[] xPointPart = new byte[0];
         byte[] yPointPart = new byte[0];
-
 
         for (int i = 0; i < xPart.length; i++) {
             if (xPart[i] == 0)
@@ -140,7 +137,6 @@ public class CryptoHelper {
 
         byte[] checksumValue = ByteBuffer.allocate(4).putInt((int) checksum.getValue()).array();
         return Arrays.equals(checksumValue, addressCheckSum);
-
     }
 
     private static byte[] getCrc32OfByteArray(byte[] array) {

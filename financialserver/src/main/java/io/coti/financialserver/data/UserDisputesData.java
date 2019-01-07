@@ -19,6 +19,13 @@ public class UserDisputesData implements IEntity {
         disputeHashes.add(disputeHash);
     }
 
+    public List<Hash> getDisputeHashes() {
+        if (disputeHashes == null) {
+            disputeHashes = new ArrayList<>();
+        }
+        return disputeHashes;
+    }
+
     @Override
     public Hash getHash() {
         return userHash;

@@ -1,8 +1,12 @@
 package io.coti.financialserver.services;
 
+import io.coti.basenode.model.Transactions;
 import io.coti.financialserver.data.DisputeData;
 import io.coti.financialserver.data.DisputeStatus;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.time.Instant;
 import java.util.EnumSet;
 import java.util.Set;
@@ -19,6 +23,7 @@ public enum DisputeStatusService {
     private DisputeStatus newDisputeStatus;
     private Set<DisputeStatus> previousDisputeStatuses;
     private boolean finalStatus;
+    protected WebSocketService webSocketService;
 
     DisputeStatusService(DisputeStatus newDisputeStatus, Set<DisputeStatus> previousDisputeStatuses, boolean finalStatus) {
         this.newDisputeStatus = newDisputeStatus;
@@ -37,11 +42,25 @@ public enum DisputeStatusService {
         if (!previousDisputeStatuses.contains(disputeData.getDisputeStatus())) {
             throw new Exception(DISPUTE_STATUS_INVALID_CHANGE);
         }
+
         disputeData.setDisputeStatus(newDisputeStatus);
         if(isFinalStatus()){
             disputeData.setClosedTime(Instant.now());
         }
+        webSocketService.notifyOnDisputeStatusChange(disputeData);
+    }
 
+    @Component
+    public static class DisputeStatusServiceInjector {
+        @Autowired
+        private WebSocketService webSocketService;
+
+        @PostConstruct
+        public void postConstruct() {
+            for (DisputeStatusService disputeStatusService : EnumSet.allOf(DisputeStatusService.class)) {
+                disputeStatusService.webSocketService = webSocketService;
+            }
+        }
     }
 
 }

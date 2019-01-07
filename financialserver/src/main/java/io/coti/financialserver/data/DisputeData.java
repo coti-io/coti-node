@@ -6,6 +6,7 @@ import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
+import io.coti.financialserver.data.interfaces.IDisputeEvent;
 import lombok.Data;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -17,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class DisputeData implements IEntity, ISignable, ISignValidatable {
+public class DisputeData implements IEntity, ISignable, ISignValidatable, IDisputeEvent {
 
     private Hash hash;
     @NotNull
@@ -40,6 +41,8 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
     private Instant updateTime;
     private Instant arbitratorsAssignTime;
     private Instant closedTime;
+    private Hash messageReceiverHash;
+    private ActionSide actionSide;
 
     private DisputeData() {
 
@@ -81,6 +84,21 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
         return disputeItems;
     }
 
+    public Boolean setActionSideAndMessageReceiverHash(Hash actionInitiatorHash) {
+
+        if (getConsumerHash().equals(actionInitiatorHash)) {
+            actionSide = ActionSide.Consumer;
+            messageReceiverHash = getMerchantHash();
+        } else if (getMerchantHash().equals(actionInitiatorHash)) {
+            actionSide = ActionSide.Merchant;
+            messageReceiverHash = getConsumerHash();
+        } else {
+            return false;
+        }
+
+        return true;
+    }
+
     @Override
     public Hash getHash() {
         return hash;
@@ -97,6 +115,11 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
     }
 
     @Override
+    public void setSignature(SignatureData signature) {
+        this.consumerSignature = signature;
+    }
+
+    @Override
     public Hash getSignerHash() {
         return consumerHash;
     }
@@ -104,10 +127,5 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable {
     @Override
     public void setSignerHash(Hash hash) {
         consumerHash = hash;
-    }
-
-    @Override
-    public void setSignature(SignatureData signature) {
-        this.consumerSignature = signature;
     }
 }

@@ -41,6 +41,11 @@ public class ReceiverBaseTransactionOwnerData implements IEntity, ISignable, ISi
     }
 
     @Override
+    public void setSignature(SignatureData signature) {
+        this.merchantSignature = signature;
+    }
+
+    @Override
     public Hash getSignerHash() {
         return merchantHash;
     }
@@ -48,10 +53,5 @@ public class ReceiverBaseTransactionOwnerData implements IEntity, ISignable, ISi
     @Override
     public void setSignerHash(Hash signerHash) {
         this.merchantHash = signerHash;
-    }
-
-    @Override
-    public void setSignature(SignatureData signature) {
-        this.merchantSignature = signature;
     }
 }

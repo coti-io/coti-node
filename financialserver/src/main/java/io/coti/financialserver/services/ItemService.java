@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -32,6 +33,8 @@ public class ItemService {
     DisputeItemVoteCrypto disputeItemVoteCrypto;
     @Autowired
     DisputeService disputeService;
+    @Autowired
+    private SimpMessagingTemplate messagingSender;
 
     public ResponseEntity<IResponse> updateItem(UpdateItemRequest request) {
 
@@ -47,18 +50,13 @@ public class ItemService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_NOT_FOUND, STATUS_ERROR));
         }
 
-        ActionSide actionSide;
-        if (disputeData.getConsumerHash().equals(disputeUpdateItemData.getUserHash())) {
-            actionSide = ActionSide.Consumer;
-        } else if (disputeData.getMerchantHash().equals(disputeUpdateItemData.getUserHash())) {
-            actionSide = ActionSide.Merchant;
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
+        if (!disputeData.setActionSideAndMessageReceiverHash(disputeUpdateItemData.getUserHash())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_COMMENT_CREATE_UNAUTHORIZED, STATUS_ERROR));
         }
 
         for (Long itemId : disputeUpdateItemData.getItemIds()) {
             try {
-                DisputeItemStatusService.valueOf(disputeUpdateItemData.getStatus().toString()).changeStatus(disputeData, itemId, actionSide);
+                DisputeItemStatusService.valueOf(disputeUpdateItemData.getStatus().toString()).changeStatus(disputeData, itemId, disputeData.getActionSide());
             } catch (Exception e) {
                 e.printStackTrace();
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(e.getMessage(), STATUS_ERROR));
@@ -105,6 +103,7 @@ public class ItemService {
 
         disputeItemVoteData.setVoteTime(Instant.now());
         disputeItemData.addItemVoteData(disputeItemVoteData);
+        disputes.put(disputeData);
 
         try {
             disputeService.updateAfterVote(disputeData, disputeItemData);
