@@ -73,11 +73,12 @@ public class CommentService {
             disputeItemData.addCommentHash(disputeCommentData.getHash());
         }
 
-        if (!disputeData.setActionSideAndMessageReceiverHash(disputeCommentData.getUserHash())) {
+        ActionSide actionSide = disputeService.getActionSide(disputeData, disputeCommentData.getUserHash());
+        if (actionSide == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_COMMENT_CREATE_UNAUTHORIZED, STATUS_ERROR));
         }
 
-        disputeCommentData.setCommentSide(disputeData.getActionSide());
+        disputeCommentData.setCommentSide(actionSide);
 
         disputes.put(disputeData);
         disputeComments.put(disputeCommentData);

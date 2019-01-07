@@ -50,13 +50,14 @@ public class ItemService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_NOT_FOUND, STATUS_ERROR));
         }
 
-        if (!disputeData.setActionSideAndMessageReceiverHash(disputeUpdateItemData.getUserHash())) {
+        ActionSide actionSide = disputeService.getActionSide(disputeData, disputeUpdateItemData.getUserHash());
+        if (actionSide == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_COMMENT_CREATE_UNAUTHORIZED, STATUS_ERROR));
         }
 
         for (Long itemId : disputeUpdateItemData.getItemIds()) {
             try {
-                DisputeItemStatusService.valueOf(disputeUpdateItemData.getStatus().toString()).changeStatus(disputeData, itemId, disputeData.getActionSide());
+                DisputeItemStatusService.valueOf(disputeUpdateItemData.getStatus().toString()).changeStatus(disputeData, itemId, actionSide);
             } catch (Exception e) {
                 e.printStackTrace();
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(e.getMessage(), STATUS_ERROR));

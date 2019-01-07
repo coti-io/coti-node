@@ -81,11 +81,12 @@ public class DocumentService {
             disputeItemData.addDocumentHash(disputeDocumentData.getHash());
         }
 
-        if (!disputeData.setActionSideAndMessageReceiverHash(disputeDocumentData.getUserHash())) {
+        ActionSide actionSide = disputeService.getActionSide(disputeData, disputeDocumentData.getUserHash());
+        if (actionSide == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_COMMENT_CREATE_UNAUTHORIZED, STATUS_ERROR));
         }
 
-        disputeDocumentData.setUploadSide(disputeData.getActionSide());
+        disputeDocumentData.setUploadSide(actionSide);
 
         MultipartFile multiPartFile = request.getFile();
 

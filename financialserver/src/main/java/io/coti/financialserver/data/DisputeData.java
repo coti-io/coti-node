@@ -84,21 +84,6 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable, IDispu
         return disputeItems;
     }
 
-    public Boolean setActionSideAndMessageReceiverHash(Hash actionInitiatorHash) {
-
-        if (getConsumerHash().equals(actionInitiatorHash)) {
-            actionSide = ActionSide.Consumer;
-            messageReceiverHash = getMerchantHash();
-        } else if (getMerchantHash().equals(actionInitiatorHash)) {
-            actionSide = ActionSide.Merchant;
-            messageReceiverHash = getConsumerHash();
-        } else {
-            return false;
-        }
-
-        return true;
-    }
-
     @Override
     public Hash getHash() {
         return hash;
