@@ -228,28 +228,25 @@ public class DisputeService {
     public void updateAfterVote(DisputeData disputeData, DisputeItemData disputeItemData) throws Exception {
 
         int arbitratorsCount = disputeData.getArbitratorHashes().size();
-        int majorityOfVotes = arbitratorsCount / 2 + 1;
+        int majorityOfVotes = ((int) Math.floor(arbitratorsCount / 2)) + 1;
 
         if (disputeItemData.getDisputeItemVotesData().size() < arbitratorsCount) {
             return;
         }
 
         int votesForConsumer = 0;
-        int votesForMerchant = 0;
 
         for (DisputeItemVoteData disputeItemVoteData : disputeItemData.getDisputeItemVotesData()) {
 
             if (disputeItemVoteData.getStatus() == DisputeItemVoteStatus.AcceptedByArbitrator) {
                 votesForConsumer++;
-            } else {
-                votesForMerchant++;
             }
         }
 
         if (votesForConsumer >= majorityOfVotes) {
             DisputeItemStatusService.AcceptedByArbitrators.changeStatus(disputeData, disputeItemData.getId(), ActionSide.Arbitrator);
 
-        } else if (votesForMerchant >= majorityOfVotes) {
+        } else {
             DisputeItemStatusService.RejectedByArbitrators.changeStatus(disputeData, disputeItemData.getId(), ActionSide.Arbitrator);
         }
 

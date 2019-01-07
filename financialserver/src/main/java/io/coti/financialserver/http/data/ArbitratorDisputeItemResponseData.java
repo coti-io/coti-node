@@ -10,7 +10,7 @@ public class ArbitratorDisputeItemResponseData extends DisputeItemResponseData {
     private DisputeItemVoteResponseData arbitratorItemVote;
 
     private ArbitratorDisputeItemResponseData() {
-
+        super();
     }
 
     public ArbitratorDisputeItemResponseData(DisputeItemData disputeItemData, Hash arbitratorHash) {

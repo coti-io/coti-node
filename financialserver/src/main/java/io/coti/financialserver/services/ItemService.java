@@ -73,6 +73,8 @@ public class ItemService {
 
         DisputeItemVoteData disputeItemVoteData = request.getDisputeItemVoteData();
 
+        log.info("Vote for disputeHash {} and item {} with status {} by arbitrator {} ", disputeItemVoteData.getDisputeHash(), disputeItemVoteData.getItemId(), disputeItemVoteData.getStatus(), disputeItemVoteData.getArbitratorHash());
+
         if (!disputeItemVoteCrypto.verifySignature(disputeItemVoteData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
