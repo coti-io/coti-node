@@ -330,4 +330,15 @@ public class DisputeService {
 
         return true;
     }
+
+    public ActionSide getActionSide(DisputeData disputeData, Hash actionInitiatorHash) {
+
+        if (disputeData.getConsumerHash().equals(actionInitiatorHash)) {
+            return ActionSide.Consumer;
+        } else if (disputeData.getMerchantHash().equals(actionInitiatorHash)) {
+            return ActionSide.Merchant;
+        }
+
+        return null;
+    }
 }

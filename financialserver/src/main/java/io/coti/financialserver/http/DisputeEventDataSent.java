@@ -22,8 +22,7 @@ public class DisputeEventDataSent {
         IDisputeEvent disputeEvent = disputeEventData.getEventObject();
         if(disputeEvent instanceof DisputeData) {
             DisputeData disputeData = ((DisputeData) disputeEventData.getEventObject());
-            disputeData.setActionSideAndMessageReceiverHash(userHash);
-            eventObject = GetDisputeResponseClass.valueOf(disputeData.getActionSide().toString()).getNewInstance(disputeData, userHash);
+            eventObject = GetDisputeResponseClass.valueOf(getActionSide(disputeData, userHash).toString()).getNewInstance(disputeData, userHash);
         }
         else if(disputeEvent instanceof DisputeCommentData) {
             DisputeCommentData disputeCommentData = ((DisputeCommentData) disputeEventData.getEventObject());
@@ -44,5 +43,14 @@ public class DisputeEventDataSent {
 
         hash = disputeEventData.getHash().toHexString();
         creationTime = disputeEventData.getCreationTime();
+    }
+
+    private ActionSide getActionSide(DisputeData disputeData, Hash actionInitiatorHash) {
+
+        if (disputeData.getConsumerHash().equals(actionInitiatorHash)) {
+            return ActionSide.Consumer;
+        } else {
+            return ActionSide.Merchant;
+        }
     }
 }
