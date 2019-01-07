@@ -6,13 +6,14 @@ import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.Instant;
 
 @Data
 public class DisputeItemVoteData implements Serializable, ISignable, ISignValidatable {
-
+    @NotNull
     private Hash arbitratorHash;
     @NotNull
     private Hash disputeHash;
@@ -20,8 +21,9 @@ public class DisputeItemVoteData implements Serializable, ISignable, ISignValida
     private Long itemId;
     @NotNull
     private DisputeItemVoteStatus status;
-    private Date voteTime;
-    private SignatureData arbitratorSignature;
+    private Instant voteTime;
+    @NotNull
+    private @Valid SignatureData arbitratorSignature;
 
     @Override
     public SignatureData getSignature() {

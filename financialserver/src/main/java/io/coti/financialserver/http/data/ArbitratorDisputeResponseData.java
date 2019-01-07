@@ -13,6 +13,7 @@ public class ArbitratorDisputeResponseData extends GetDisputeResponseData {
     private ArbitratorDisputeResponseData() {
         super();
     }
+
     public ArbitratorDisputeResponseData(DisputeData disputeData, Hash arbitratorHash) {
         super(disputeData);
         setDisputeItems(disputeData.getDisputeItems(), arbitratorHash);

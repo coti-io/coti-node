@@ -5,6 +5,7 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.financialserver.crypto.DisputeItemVoteCrypto;
 import io.coti.financialserver.crypto.DisputeUpdateItemCrypto;
 import io.coti.financialserver.data.*;
+import io.coti.financialserver.http.GetDisputesResponse;
 import io.coti.financialserver.http.UpdateItemRequest;
 import io.coti.financialserver.http.VoteRequest;
 import io.coti.financialserver.model.Disputes;
@@ -13,6 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.util.Arrays;
 
 import static io.coti.financialserver.http.HttpStringConstants.*;
 
@@ -68,7 +72,7 @@ public class ItemService {
     public ResponseEntity<IResponse> vote(VoteRequest request) {
 
         DisputeItemVoteData disputeItemVoteData = request.getDisputeItemVoteData();
-        
+
         if (!disputeItemVoteCrypto.verifySignature(disputeItemVoteData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
@@ -97,6 +101,7 @@ public class ItemService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(ALREADY_GOT_YOUR_VOTE, STATUS_ERROR));
         }
 
+        disputeItemVoteData.setVoteTime(Instant.now());
         disputeItemData.addItemVoteData(disputeItemVoteData);
 
         try {
@@ -106,6 +111,6 @@ public class ItemService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(e.getMessage(), STATUS_ERROR));
         }
 
-        return ResponseEntity.status(HttpStatus.OK).body(new Response(DISPUTE_ITEM_VOTE_SUCCESS, STATUS_SUCCESS));
+        return ResponseEntity.status(HttpStatus.OK).body(new GetDisputesResponse(Arrays.asList(disputeData), ActionSide.Arbitrator, disputeItemVoteData.getArbitratorHash()));
     }
 }

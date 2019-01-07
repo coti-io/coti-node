@@ -2,15 +2,12 @@ package io.coti.financialserver.http.data;
 
 import io.coti.basenode.data.Hash;
 import io.coti.financialserver.data.DisputeItemData;
-import io.coti.financialserver.data.DisputeItemVoteStatus;
+import io.coti.financialserver.data.DisputeItemVoteData;
 import lombok.Data;
-
-import java.util.Date;
 
 @Data
 public class ArbitratorDisputeItemResponseData extends DisputeItemResponseData {
-    private DisputeItemVoteStatus voteStatus;
-    private Date voteTime;
+    private DisputeItemVoteResponseData arbitratorItemVote;
 
     private ArbitratorDisputeItemResponseData() {
 
@@ -18,6 +15,12 @@ public class ArbitratorDisputeItemResponseData extends DisputeItemResponseData {
 
     public ArbitratorDisputeItemResponseData(DisputeItemData disputeItemData, Hash arbitratorHash) {
         super(disputeItemData);
+        for (DisputeItemVoteData disputeItemVoteData : disputeItemData.getDisputeItemVotesData()) {
+            if (disputeItemVoteData.getArbitratorHash().equals(arbitratorHash)) {
+                arbitratorItemVote = new DisputeItemVoteResponseData(disputeItemVoteData);
+                break;
+            }
+        }
 
     }
 }
