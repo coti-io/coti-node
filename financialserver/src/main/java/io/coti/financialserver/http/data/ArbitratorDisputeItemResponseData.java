@@ -9,10 +9,6 @@ import lombok.Data;
 public class ArbitratorDisputeItemResponseData extends DisputeItemResponseData {
     private DisputeItemVoteResponseData arbitratorItemVote;
 
-    private ArbitratorDisputeItemResponseData() {
-        super();
-    }
-
     public ArbitratorDisputeItemResponseData(DisputeItemData disputeItemData, Hash arbitratorHash) {
         super(disputeItemData);
         for (DisputeItemVoteData disputeItemVoteData : disputeItemData.getDisputeItemVotesData()) {
