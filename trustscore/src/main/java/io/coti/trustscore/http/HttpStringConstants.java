@@ -20,6 +20,7 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String USER_HASH_IS_NOT_IN_DB = "User hash not in DB";
 
     public static final String FULL_NODE_FEE_VALIDATION_ERROR = "Full Node Fee Validation Failed";
+    public static final String NETWORK_FEE_VALIDATION_ERROR = "NETWORK Fee Validation Failed";
     public static final String ROLLING_RESERVE_VALIDATION_ERROR = "Rolling Reserve Validation Failed";
 
 }

@@ -1,6 +1,6 @@
 package io.coti.trustscore.services;
 
-import io.coti.basenode.database.RocksDBConnector;
+import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.trustscore.data.Buckets.BucketNotFulfilmentEventsData;
 import io.coti.trustscore.data.Enums.CompensableEventScoreType;
 import io.coti.trustscore.data.Enums.EventType;
@@ -24,7 +24,7 @@ import static io.coti.trustscore.testUtils.GeneralUtilsFunctions.generateRandomH
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ContextConfiguration(classes = {BucketNotFulfilmentEventsService.class,
-        RocksDBConnector.class
+        BaseNodeRocksDBConnector.class
 })
 public class BucketNotFulfilmentEventsServiceTest {
 

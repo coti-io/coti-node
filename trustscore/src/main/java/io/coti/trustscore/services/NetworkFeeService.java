@@ -29,6 +29,8 @@ import java.util.Map;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.trustscore.http.HttpStringConstants.FULL_NODE_FEE_VALIDATION_ERROR;
+import static io.coti.trustscore.http.HttpStringConstants.NETWORK_FEE_VALIDATION_ERROR;
+
 @Slf4j
 @Service
 public class NetworkFeeService {
@@ -48,15 +50,14 @@ public class NetworkFeeService {
     private TrustScoreService trustScoreService;
 
 
-    public ResponseEntity<Response> createNetworkFee(NetworkFeeRequest networkFeeRequest) {
+    public ResponseEntity<IResponse> createNetworkFee(NetworkFeeRequest networkFeeRequest) {
         try {
             FullNodeFeeData fullNodeFeeData = networkFeeRequest.getFullNodeFeeData();
             if (!validateFullNodeFee(fullNodeFeeData)) {
                 return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST)
-                        .body(new NetworkFeeResponse(
-                                STATUS_ERROR,
-                                FULL_NODE_FEE_VALIDATION_ERROR));
+                        .body(new Response(FULL_NODE_FEE_VALIDATION_ERROR,
+                                STATUS_ERROR));
             }
 
 
@@ -86,9 +87,8 @@ public class NetworkFeeService {
             if (!validateFullNodeFee(fullNodeFeeData)) {
                 return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST)
-                        .body(new NetworkFeeResponse(
-                                STATUS_ERROR,
-                                FULL_NODE_FEE_VALIDATION_ERROR));
+                        .body(new Response(NETWORK_FEE_VALIDATION_ERROR,
+                                STATUS_ERROR));
             }
 
             NetworkFeeData networkFeeData = networkFeeValidateRequest.getNetworkFeeData();

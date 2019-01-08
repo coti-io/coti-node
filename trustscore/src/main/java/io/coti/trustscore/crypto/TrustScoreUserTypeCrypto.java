@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 public class TrustScoreUserTypeCrypto extends SignatureValidationCrypto<SetUserTypeRequest> {
 
     @Override
-    public byte[] getMessageInBytes(SetUserTypeRequest setUserTypeRequest) {
+    public byte[] getSignatureMessage(SetUserTypeRequest setUserTypeRequest) {
         byte[] userHashBytes = setUserTypeRequest.getUserHash().getBytes();
         byte[] userTypeBytes = setUserTypeRequest.getUserType().getBytes(StandardCharsets.UTF_8);
         ByteBuffer trustScoreMessageBuffer = ByteBuffer.allocate(userHashBytes.length + userTypeBytes.length);
