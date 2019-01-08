@@ -3,7 +3,7 @@ package io.coti.trustscore.services;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
-import io.coti.basenode.database.RocksDBConnector;
+import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.trustscore.data.Buckets.BucketChargeBackEventsData;
 import io.coti.trustscore.data.Enums.EventType;
 import io.coti.trustscore.data.Enums.HighFrequencyEventScoreType;
@@ -34,7 +34,7 @@ import static io.coti.trustscore.utils.DatesCalculation.decreaseTodayDateByDays;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ContextConfiguration(classes = {BucketChargeBackEventsService.class,
-        RocksDBConnector.class
+        BaseNodeRocksDBConnector.class
 })
 
 @Slf4j

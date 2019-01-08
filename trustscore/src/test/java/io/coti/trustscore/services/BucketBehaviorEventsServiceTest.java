@@ -1,6 +1,6 @@
 package io.coti.trustscore.services;
 
-import io.coti.basenode.database.RocksDBConnector;
+import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.trustscore.data.Buckets.BucketBehaviorEventsData;
 import io.coti.trustscore.data.Enums.BehaviorEventsScoreType;
 import io.coti.trustscore.data.Enums.EventType;
@@ -30,7 +30,7 @@ import static io.coti.trustscore.utils.DatesCalculation.decreaseTodayDateByDays;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ContextConfiguration(classes = {BucketBehaviorEventsService.class,
-        RocksDBConnector.class
+        BaseNodeRocksDBConnector.class
 })
 public class BucketBehaviorEventsServiceTest {
 
