@@ -38,7 +38,7 @@ public abstract class BucketEventData<T extends EventData> implements IEntity {
         if (isEventExistsInBucket(eventData)) {
             return;
         }
-        //TODO: if we have a problem here, event can be added without calculated
+
         eventDataHashToEventDataMap.put(eventData.getUniqueIdentifier(), eventData);
     }
 

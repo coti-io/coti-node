@@ -18,7 +18,6 @@ public class TrustScoreRocksDBConnector extends BaseNodeRocksDBConnector {
         columnFamilyClassNames.addAll(Arrays.asList(
                 BucketEvents.class.getName(),
                 TrustScores.class.getName()
-                
         ));
     }
 }

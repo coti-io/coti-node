@@ -3,8 +3,6 @@ package io.coti.trustscore.controllers;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.trustscore.http.*;
-import io.coti.trustscore.services.NetworkFeeService;
-import io.coti.trustscore.services.RollingReserveService;
 import io.coti.trustscore.services.TrustScoreService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,12 +22,12 @@ public class TrustScoreController {
     private TrustScoreService trustScoreService;
 
     @RequestMapping(path = "/usertrustscore", method = RequestMethod.POST)
-    public ResponseEntity<BaseResponse> getUserTrustScore(@Valid @RequestBody GetTrustScoreRequest request) {
+    public ResponseEntity<IResponse> getUserTrustScore(@Valid @RequestBody GetTrustScoreRequest request) {
         return trustScoreService.getUserTrustScore(request.userHash);
     }
 
     @RequestMapping(path = "/usertrustscore", method = RequestMethod.PUT)
-    public ResponseEntity<BaseResponse> setKycTrustScore(@Valid @RequestBody SetKycTrustScoreRequest request) {
+    public ResponseEntity<IResponse> setKycTrustScore(@Valid @RequestBody SetKycTrustScoreRequest request) {
         return trustScoreService.setKycTrustScore(request);
     }
 
@@ -39,12 +37,12 @@ public class TrustScoreController {
     }
 
     @RequestMapping(path = "/insertevent", method = RequestMethod.PUT)
-    public ResponseEntity<BaseResponse> insertTrustScoreEvent(@Valid @RequestBody InsertEventRequest request) {
-        return trustScoreService.addCentralServerEvent(request);
+    public ResponseEntity<IResponse> insertTrustScoreEvent(@Valid @RequestBody InsertEventRequest request) {
+        return trustScoreService.addKycServerEvent(request);
     }
 
     @RequestMapping(path = "/usertype", method = RequestMethod.PUT)
-    public ResponseEntity<BaseResponse> setUserType(@Valid @RequestBody SetUserTypeRequest request) {
+    public ResponseEntity<IResponse> setUserType(@Valid @RequestBody SetUserTypeRequest request) {
         return trustScoreService.setUserType(request);
     }
 }
