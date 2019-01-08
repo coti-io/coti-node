@@ -98,6 +98,10 @@ public class ItemService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(ITEM_NOT_FOUND, STATUS_ERROR));
         }
 
+        if ( !disputeItemData.getStatus().equals(DisputeItemStatus.Claim )) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ITEM_NOT_IN_CLAIM_STATUS, STATUS_ERROR));
+        }
+
         if (disputeItemData.arbitratorAlreadyVoted(disputeItemVoteData.getArbitratorHash())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(ALREADY_GOT_YOUR_VOTE, STATUS_ERROR));
         }

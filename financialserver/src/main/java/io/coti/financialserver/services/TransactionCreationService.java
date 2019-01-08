@@ -13,10 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -39,20 +36,28 @@ public class TransactionCreationService {
     @Autowired
     private RollingReserveService rollingReserveService;
 
-    public void createNewChargebackTransaction(BigDecimal amount, Hash merchantRollingReserveAddress, Hash consumerAddress, BigDecimal poolAmount) {
+    public Hash createNewChargebackTransaction(BigDecimal amountFromRR, BigDecimal poolAmount, Hash merchantRollingReserveAddress, Map<Hash,BigDecimal> IBTAddressesWithAmountPercent) {
 
-        InputBaseTransactionData IBT = new InputBaseTransactionData(merchantRollingReserveAddress, amount.multiply(new BigDecimal(-1)), new Date());
-        ReceiverBaseTransactionData RBT = new ReceiverBaseTransactionData(consumerAddress, amount, amount, new Date());
+        BigDecimal totalChargebackAmount = amountFromRR.add(poolAmount);
+        InputBaseTransactionData IBT = new InputBaseTransactionData(merchantRollingReserveAddress, amountFromRR.multiply(new BigDecimal(-1)), new Date());
+        OutputBaseTransactionData OBT;
 
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
 
         if (!poolAmount.equals(new BigDecimal(0))) {
-            InputBaseTransactionData IBTcotiPool = new InputBaseTransactionData(rollingReserveService.getCotiPoolAddress(), poolAmount.multiply(new BigDecimal(-1)), new Date());
-            baseTransactions.add(IBTcotiPool);
+            InputBaseTransactionData IBTCotiPool = new InputBaseTransactionData(rollingReserveService.getCotiPoolAddress(), poolAmount.multiply(new BigDecimal(-1)), new Date());
+            baseTransactions.add(IBTCotiPool);
         }
 
         baseTransactions.add(IBT);
-        baseTransactions.add(RBT);
+
+        for (Map.Entry<Hash, BigDecimal> IBTAddressWithAmountPercent : IBTAddressesWithAmountPercent.entrySet()) {
+            OBT = new ChargebackBaseTransactionData(
+                    IBTAddressWithAmountPercent.getKey(),
+                    totalChargebackAmount.multiply(IBTAddressWithAmountPercent.getValue()),
+                    totalChargebackAmount, new Date());
+            baseTransactions.add(OBT);
+        }
 
         TransactionData chargebackTransaction = new TransactionData(baseTransactions);
 
@@ -73,6 +78,7 @@ public class TransactionCreationService {
         transactionIndexService.insertNewTransactionIndex(chargebackTransaction);
 
         propagationPublisher.propagate(chargebackTransaction, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode));
+        return chargebackTransaction.getHash();
     }
 
     private synchronized void setIndexForDspResult(TransactionData chargebackTransaction, DspConsensusResult dspConsensusResult) {

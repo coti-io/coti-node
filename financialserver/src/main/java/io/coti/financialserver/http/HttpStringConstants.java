@@ -36,7 +36,7 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String ITEM_NOT_FOUND = "Item not found";
     public static final String DISPUTE_ITEM_PASSED_RECALL_STATUS = "Dispute item passed recall status";
     public static final String DISPUTE_NOT_IN_CLAIM_STATUS = "Dispute not in claim status";
-    public static final String ITEM_NOT_REJECTED_BY_MERCHANT = "Item not rejected by merchant";
+    public static final String DISPUTE_ITEM_NOT_IN_CLAIM_STATUS = "Item not in claim status";
     public static final String STATUS_NOT_VALID = "Status not valid";
     public static final String ALREADY_GOT_YOUR_VOTE = "You already voted on this item";
 

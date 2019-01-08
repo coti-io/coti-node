@@ -189,7 +189,7 @@ public class RollingReserveService {
         rollingReserves.put(rollingReserveData);
     }
 
-    public void chargebackConsumer(DisputeData disputeData, Hash consumerAddress, BigDecimal amount) {
+    public void chargebackConsumer(DisputeData disputeData, Map<Hash,BigDecimal> IBTAddressesWithAmountPercent, BigDecimal amount) {
 
         Hash dateHash;
         RollingReserveReleaseDateData rollingReserveReleaseDateData;
@@ -230,7 +230,7 @@ public class RollingReserveService {
             }
         }
 
-        transactionCreationService.createNewChargebackTransaction(amount, rollingReserveData.getRollingReserveAddress(), consumerAddress, remainingChargebackAmount);
+        Hash chargebackTransactionHash = transactionCreationService.createNewChargebackTransaction(amount.subtract(remainingChargebackAmount), remainingChargebackAmount, rollingReserveData.getRollingReserveAddress(), IBTAddressesWithAmountPercent);
 
         if (!remainingChargebackAmount.equals(new BigDecimal(0))) {
             RecourseClaimData recourseClaimData = recourseClaims.getByHash(merchantHash);
@@ -247,6 +247,9 @@ public class RollingReserveService {
         }
 
         rollingReserves.put(rollingReserveData);
+        disputeData.setChargeBackTransactionHash(chargebackTransactionHash);
+        disputeData.setChargeBackAmount(amount);
+        disputes.put(disputeData);
     }
 
     private void createRollingReserveDataForMerchant(Hash merchantHash) {

@@ -126,8 +126,8 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
                 return new byte[0];
             }
         }
-
     },
+
     ReceiverBaseTransactionData {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
@@ -173,6 +173,36 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
                 }
             }
             return CryptoHelper.cryptoHash(baseTransactionHashBuffer.array()).getBytes();
+        }
+    },
+
+    ChargebackBaseTransactionData {
+        @Override
+        public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
+            if (!ChargebackBaseTransactionData.class.isInstance(baseTransactionData)) {
+                throw new IllegalArgumentException("");
+            }
+
+            try {
+                ChargebackBaseTransactionData chargebackBaseTransactionData = (ChargebackBaseTransactionData) baseTransactionData;
+                return getOutputMessageInBytes(chargebackBaseTransactionData);
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+                return new byte[0];
+            }
+        }
+
+        @Override
+        public boolean verifySignature(TransactionData transactionData, BaseTransactionData baseTransactionData) {
+            if (TransactionType.Transfer.equals(transactionData.getType())) {
+                return true;
+            }
+            try {
+                return CryptoHelper.VerifyByPublicKey(getSignatureMessage(transactionData), baseTransactionData.getSignatureData().getR(), baseTransactionData.getSignatureData().getS(), getPublicKey(baseTransactionData));
+            } catch (ClassNotFoundException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+                e.printStackTrace();
+                return false;
+            }
         }
     };
 

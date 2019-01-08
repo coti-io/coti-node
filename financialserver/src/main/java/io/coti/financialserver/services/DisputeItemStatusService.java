@@ -1,5 +1,6 @@
 package io.coti.financialserver.services;
 
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.model.Transactions;
 import io.coti.financialserver.data.*;
@@ -137,7 +138,7 @@ public enum DisputeItemStatusService {
         changeStatus(disputeItemData);
         changeDisputeItemsStatuses(disputeData);
         if (isFinalStatusForAllItems(disputeData)) {
-         //   createChargeBackTransaction(disputeData);
+            createChargeBackTransaction(disputeData);
         }
 
         webSocketService.notifyOnItemStatusChange(disputeData, itemId);
@@ -190,9 +191,8 @@ public enum DisputeItemStatusService {
         if (refundableDisputeItems.size() != 0) {
             BigDecimal refundAmount = refundableDisputeItems.stream().map(DisputeItemData::getPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
             TransactionData transactionData = transactions.getByHash(disputeData.getTransactionHash());
-            rollingReserveService.chargebackConsumer(disputeData, transactionData.getSenderHash(), refundAmount);
+            rollingReserveService.chargebackConsumer(disputeData, transactionData.getIBTAddressesWithAmountPercent(), refundAmount);
         }
-
     }
 
     abstract void changeDisputeStatus(DisputeData disputeData) throws Exception;

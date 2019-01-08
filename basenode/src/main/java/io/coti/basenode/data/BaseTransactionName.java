@@ -6,7 +6,8 @@ public enum BaseTransactionName {
     FFBT(FullNodeFeeData.class),
     NFBT(NetworkFeeData.class),
     RRBT(RollingReserveData.class),
-    RBT(ReceiverBaseTransactionData.class);
+    RBT(ReceiverBaseTransactionData.class),
+    CBT(ChargebackBaseTransactionData.class);
 
 
     private Class<? extends BaseTransactionData> baseTransactionClass;
