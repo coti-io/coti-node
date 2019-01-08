@@ -12,9 +12,8 @@ import javax.validation.constraints.NotNull;
 @Data
 public class SetUserTypeRequest extends Request implements ISignValidatable {
 
-
+    @NotNull
     private Hash signerHash;
-
     @NotNull
     public String userType;
     @NotNull
@@ -26,9 +25,6 @@ public class SetUserTypeRequest extends Request implements ISignValidatable {
     public SignatureData getSignature() {
         return signature;
     }
-
-
-
 
     @Override
     public Hash getSignerHash() {

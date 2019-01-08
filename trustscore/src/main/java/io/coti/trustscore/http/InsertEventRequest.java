@@ -22,11 +22,11 @@ public class InsertEventRequest extends Request {
 
     @NotNull
     public EventType eventType;
-
-    //@NotNull
+    @NotNull
+    public Hash signerHash;
+    @NotNull
     public SignatureData signature;
 
-    @NotNull
     public Hash uniqueIdentifier;
 
     private BehaviorEventsScoreType behaviorEventsScoreType;
@@ -37,10 +37,5 @@ public class InsertEventRequest extends Request {
     private double score;
     private double debtAmount;
     private Hash otherUserHash;
-
-
-    public KycEventData convertToCentralEvent() {
-        return new KycEventData(this);
-    }
 
 }

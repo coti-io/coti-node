@@ -3,11 +3,9 @@ package io.coti.trustscore.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.SignatureData;
-import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.TransactionTrustScoreData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.http.BaseResponse;
+import io.coti.basenode.http.ExceptionResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.TransactionTrustScoreResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
@@ -26,7 +24,6 @@ import io.coti.trustscore.data.TrustScoreData;
 import io.coti.trustscore.http.*;
 import io.coti.trustscore.model.BucketEvents;
 import io.coti.trustscore.model.TrustScores;
-import io.coti.trustscore.model.UserTypeOfUsers;
 import io.coti.trustscore.services.interfaces.IBucketEventService;
 import io.coti.trustscore.utils.BucketBuilder;
 import io.coti.trustscore.utils.DatesCalculation;
@@ -56,7 +53,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 import static io.coti.trustscore.http.HttpStringConstants.*;
 import static io.coti.trustscore.utils.BucketBuilder.buildTransactionDataRequest;
 
@@ -64,9 +61,6 @@ import static io.coti.trustscore.utils.BucketBuilder.buildTransactionDataRequest
 @Service
 @Data
 public class TrustScoreService {
-
-    @Autowired
-    private UserTypeOfUsers userTypeOfUsers;
 
     @Autowired
     private TransactionTrustScoreCrypto transactionTrustScoreCrypto;
@@ -118,29 +112,35 @@ public class TrustScoreService {
         addBucketsToBucketEventServiceList();
     }
 
-    public ResponseEntity<BaseResponse> addCentralServerEvent(InsertEventRequest request) {
-        BaseResponse addingCentralEventResponse;
+    public ResponseEntity<IResponse> addKycServerEvent(InsertEventRequest request) {
+        IResponse addingKycServerEventResponse;
         try {
+            if(!request.getSignerHash().equals(new Hash(kycServerPublicKey))){
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(new Response(INVALID_SIGNER, STATUS_ERROR));
+            }
+
             BucketEventData bucketEventData = (BucketEventData) bucketEvents.getByHash(getBucketHashByUserHashAndEventType(request));
             if (bucketEventData.getEventDataHashToEventDataMap().get(request.uniqueIdentifier) != null) {
                 return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST)
-                        .body(new Response(CENTRAL_EVENT_EXIST, STATUS_ERROR));
+                        .body(new Response(KYC_SERVER_EVENT_EXIST, STATUS_ERROR));
             }
 
-            addingCentralEventResponse = sendToSuitableService(request);
+            addingKycServerEventResponse = sendToSuitableService(request);
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(addingCentralEventResponse);
+                    .body(addingKycServerEventResponse);
 
         } catch (Exception e) {
             log.error(e.getMessage());
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new Response(ADD_CENTRAL_EVENT_ERROR, STATUS_ERROR));
+                    .body(new Response(ADD_KYC_SERVER_EVENT_ERROR, STATUS_ERROR));
         }
     }
 
-    public ResponseEntity<BaseResponse> setUserType(SetUserTypeRequest request) {
+    public ResponseEntity<IResponse> setUserType(SetUserTypeRequest request) {
         try {
             log.info("Setting UserType: " + request.userHash + "=" + request.userType);
 
@@ -161,22 +161,21 @@ public class TrustScoreService {
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new Response(CANT_CHANGE_FROM_NOT_CUSOMER_TYPE_MESSAGE, STATUS_ERROR));
             }
-                UserType userType = UserType.enumFromString(request.userType);
-                trustScoreData.setUserType(userType);
-                trustScores.put(trustScoreData);
-                userTypeOfUsers.put(new UserTypeOfUserData(request.userHash, userType));
+            UserType userType = UserType.enumFromString(request.userType);
+            trustScoreData.setUserType(userType);
+            trustScores.put(trustScoreData);
 
-                updateUserTypeInBuckets(request);
+            updateUserTypeInBuckets(trustScoreData);
 
-                SetUserTypeResponse setUserTypeResponse = new SetUserTypeResponse(userType, request.userHash);
-                return ResponseEntity.status(HttpStatus.OK)
-                        .body(setUserTypeResponse);
-            } catch(Exception e){
-                log.error(e.getMessage());
-                return ResponseEntity
-                        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(new Response(USER_TYPE_SET_ERROR, STATUS_ERROR));
-            }
+            SetUserTypeResponse setUserTypeResponse = new SetUserTypeResponse(userType, request.userHash);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(setUserTypeResponse);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response(USER_TYPE_SET_ERROR, STATUS_ERROR));
+        }
 
     }
 
@@ -184,7 +183,7 @@ public class TrustScoreService {
         return trustScoreData.getUserType() == UserType.CONSUMER;
     }
 
-    public ResponseEntity<BaseResponse> getUserTrustScore(Hash userHash) {
+    public ResponseEntity<IResponse> getUserTrustScore(Hash userHash) {
         TrustScoreData trustScoreData = trustScores.getByHash(userHash);
         if (trustScoreData == null) {
             return ResponseEntity
@@ -192,17 +191,15 @@ public class TrustScoreService {
                     .body(new Response(NON_EXISTING_USER_MESSAGE, STATUS_ERROR));
         }
         double currentTrustScore = calculateUserTrustScore(trustScoreData);
-        GetUserTrustScoreResponse getUserTrustScoreResponse = new GetUserTrustScoreResponse(userHash.toHexString(), currentTrustScore);
+        GetUserTrustScoreResponse getUserTrustScoreResponse = new GetUserTrustScoreResponse(userHash.toString(), currentTrustScore);
         return ResponseEntity.status(HttpStatus.OK).body(getUserTrustScoreResponse);
     }
 
 
-
-    public ResponseEntity<BaseResponse> getTransactionTrustScore(Hash userHash, Hash transactionHash, SignatureData signatureData) {
+    public ResponseEntity<IResponse> getTransactionTrustScore(Hash userHash, Hash transactionHash, SignatureData signatureData) {
 
         try {
             PublicKey publicKey = CryptoHelper.getPublicKeyFromHexString(userHash.toHexString());
-
             if (!CryptoHelper.VerifyByPublicKey(transactionHash.getBytes(), signatureData.getR(), signatureData.getS(), publicKey)) {
                 return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST).body(new Response(BAD_SIGNATURE_ON_TRUST_SCORE_FOR_TRANSACTION));
@@ -230,14 +227,9 @@ public class TrustScoreService {
         return ResponseEntity.status(HttpStatus.OK).body(getTransactionTrustScoreResponse);
     }
 
-    public ResponseEntity<BaseResponse> setKycTrustScore(SetKycTrustScoreRequest request) {
+    public ResponseEntity<IResponse> setKycTrustScore(SetKycTrustScoreRequest request) {
         try {
             log.info("Setting KYC trust score: " + request.userHash + "=" + request.kycTrustScore);
-            if (trustScores.getByHash(request.userHash) != null) {
-                return ResponseEntity
-                        .status(HttpStatus.BAD_REQUEST)
-                        .body(new Response(TRUST_SCORE_EXIST, STATUS_ERROR));
-            }
             TrustScoreData trustScoreData = new TrustScoreData(request.userHash,
                     request.kycTrustScore,
                     request.signature,
@@ -248,7 +240,9 @@ public class TrustScoreService {
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new Response(KYC_TRUST_SCORE_AUTHENTICATION_ERROR, STATUS_ERROR));
             }
-
+            if (trustScores.getByHash(request.userHash) == null) {
+                createBuckets(trustScoreData);
+            }
             trustScores.put(trustScoreData);
             SetKycTrustScoreResponse kycTrustScoreResponse = new SetKycTrustScoreResponse(trustScoreData);
             return ResponseEntity.status(HttpStatus.OK)
@@ -264,11 +258,9 @@ public class TrustScoreService {
     public synchronized void addTransactionToTsCalculation(TransactionData transactionData) {
         TrustScoreData trustScoreData;
 
-        try
-        {
+        try {
             trustScoreData = trustScores.getByHash(transactionData.getSenderHash());
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             return;
         }
 
@@ -289,8 +281,6 @@ public class TrustScoreService {
         LocalDate transactionConsensusDate = transactionData.getDspConsensusResult().getIndexingTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate currentDate = new Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
-        //TODO: case if transaction belong to the day before but only received now.
-
         if (currentDate.equals(transactionConsensusDate)) {
             addToTransactionBucketsCalculation(trustScoreData, transactionData);
         }
@@ -305,7 +295,6 @@ public class TrustScoreService {
                 bucketEvents.put(bucketEventData);
                 trustScoreData.getEventTypeToBucketHashMap().put(event, bucketEventData.getHash());
             }
-            trustScores.put(trustScoreData);
         } catch (IllegalAccessException | InstantiationException e) {
             log.error(e.toString());
         }
@@ -335,7 +324,7 @@ public class TrustScoreService {
 
         bucketEvents.put(bucketTransactionEventsData);
 
-        if (transactionData.getAmount().doubleValue() > 0) {
+        if (transactionData.getType() == TransactionType.Payment && transactionData.getAmount().doubleValue() > 0) {
             addTransactionToChargeBackBucket(transactionData.getSenderHash(), transactionData);
         }
     }
@@ -375,14 +364,13 @@ public class TrustScoreService {
                 * trustScoreData.getKycTrustScore() * kycInitialTrustScoreEventScore.getWeight();
     }
 
-    private void updateUserTypeInBuckets(SetUserTypeRequest request) {
-        TrustScoreData trustScoreData = trustScores.getByHash(request.userHash);
+    private void updateUserTypeInBuckets(TrustScoreData trustScoreData) {
         for (Map.Entry<EventType, Hash> eventTypeToBucketHashEntry
                 : trustScoreData.getEventTypeToBucketHashMap().entrySet()) {
             Hash bucketHash = eventTypeToBucketHashEntry.getValue();
             BucketEventData bucket = (BucketEventData) bucketEvents.getByHash(bucketHash);
             if (bucket != null) {
-                bucket.setUserType(UserType.enumFromString(request.userType));
+                bucket.setUserType(trustScoreData.getUserType());
                 bucketEvents.put(bucket);
             }
         }
@@ -402,7 +390,7 @@ public class TrustScoreService {
         return rulesData;
     }
 
-    private BaseResponse sendToSuitableService(InsertEventRequest request) {
+    private IResponse sendToSuitableService(InsertEventRequest request) throws Exception {
         switch (request.eventType) {
             case INITIAL_EVENT: {
                 return sendToBucketInitialTrustScoreEventsService(request);
@@ -417,12 +405,11 @@ public class TrustScoreService {
                 return sendToBucketNotFulfilmentEventsService(request);
             }
             default:
-                return null;
-            // TODO : define response
+                throw new Exception(ILLEGAL_EVENT_FROM_KYC_SERVER);
         }
     }
 
-    private BaseResponse sendToBucketInitialTrustScoreEventsService(InsertEventRequest request) {
+    private IResponse sendToBucketInitialTrustScoreEventsService(InsertEventRequest request) {
 
         InitialTrustScoreEventsData initialTrustScoreEventsData =
                 new InitialTrustScoreEventsData(request);
@@ -439,7 +426,7 @@ public class TrustScoreService {
         return new SetInitialTrustScoreEventResponse(request.userHash, request.eventType, request.getInitialTrustScoreType(), request.getScore());
     }
 
-    private BaseResponse sendToHighFrequencyEventScoreService(InsertEventRequest request) {
+    private IResponse sendToHighFrequencyEventScoreService(InsertEventRequest request) {
         if (request.getHighFrequencyEventScoreType() == HighFrequencyEventScoreType.CHARGE_BACK) {
             ChargeBackEventsData chargeBackEventsData = new ChargeBackEventsData(request);
 
@@ -452,12 +439,10 @@ public class TrustScoreService {
             Hash transactionDataHash = (request.getTransactionData() != null) ? request.getTransactionData().getHash() : null;
             return new SetHighFrequencyEventScoreResponse(request.userHash, request.eventType, request.getHighFrequencyEventScoreType(), transactionDataHash);
         }
-
-        // TODO: other high frequency events
-        return null;
+        return new Response(ILLEGAL_EVENT_FROM_KYC_SERVER, API_SERVER_ERROR);
     }
 
-    private BaseResponse sendToBucketNotFulfilmentEventsService(InsertEventRequest request) {
+    private IResponse sendToBucketNotFulfilmentEventsService(InsertEventRequest request) {
         NotFulfilmentEventsData notFulfilmentEventsData = new NotFulfilmentEventsData(request);
 
         Hash bucketHash = getBucketHashByUserHashAndEventType(request);
@@ -473,7 +458,7 @@ public class TrustScoreService {
         return new SetNotFulfilmentEventScoreResponse(request.userHash, request.eventType, request.getCompensableEventScoreType());
     }
 
-    private BaseResponse sendToBucketBehaviorEventsService(InsertEventRequest request) {
+    private IResponse sendToBucketBehaviorEventsService(InsertEventRequest request) {
         BehaviorEventsData behaviorEventsData = new BehaviorEventsData(request);
 
         Hash bucketHash = getBucketHashByUserHashAndEventType(request);
@@ -489,7 +474,6 @@ public class TrustScoreService {
         Hash transactionDataHash = (request.getTransactionData() != null) ? request.getTransactionData().getHash() : null;
         return new SetBehaviorEventResponse(request.userHash, request.eventType, request.getBehaviorEventsScoreType(), transactionDataHash);
     }
-
 
 
     private Hash getBucketHashByUserHashAndEventType(InsertEventRequest request) {

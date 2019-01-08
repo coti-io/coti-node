@@ -24,7 +24,6 @@
   "user": [
     {
       "type": "consumer",
-      "userID": "userHash",
       "addressMapping": "address -> userHash",
       "initialTrustScore": {
         "initialTrustScoreEventScoreList": [
@@ -219,7 +218,6 @@
     },
     {
       "type": "arbitrator",
-      "userID": "userHash",
       "addressMapping": "address -> userHash",
       "initialTrustScore": {
         "initialTrustScoreEventScoreList": [
@@ -414,7 +412,6 @@
     },
     {
       "type": "merchant",
-      "userID": "userHash",
       "addressMapping": "address -> userHash",
       "initialTrustScore": {
         "initialTrustScoreEventScoreList": [
@@ -636,7 +633,6 @@
     },
     {
       "type": "fullnode",
-      "userID": "userHash",
       "addressMapping": "address -> userHash",
       "initialTrustScore": {
         "initialTrustScoreEventScoreList": [

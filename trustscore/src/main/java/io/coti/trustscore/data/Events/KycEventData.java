@@ -9,18 +9,12 @@ import lombok.Data;
 
 
 @Data
-public class KycEventData extends EventData implements ISignValidatable {
+public class KycEventData extends EventData {
     private Hash userHash;
     private EventType eventType;
-    private SignatureData signature;
-    private Hash kycServerPublicKey;
 
     public KycEventData(InsertEventRequest request) {
         super(request);
     }
 
-    @Override
-    public Hash getSignerHash() {
-        return kycServerPublicKey;
-    }
 }
