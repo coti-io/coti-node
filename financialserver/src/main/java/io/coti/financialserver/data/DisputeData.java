@@ -41,8 +41,6 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable, IDispu
     private Instant updateTime;
     private Instant arbitratorsAssignTime;
     private Instant closedTime;
-    private Hash messageReceiverHash;
-    private ActionSide actionSide;
 
     private DisputeData() {
 
