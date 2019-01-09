@@ -4,11 +4,13 @@ import io.coti.basenode.crypto.BaseTransactionCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.Response;
+import io.coti.trustscore.data.MerchantRollingReserveData;
 import io.coti.trustscore.data.TrustScoreData;
 import io.coti.trustscore.http.RollingReserveRequest;
 import io.coti.trustscore.http.RollingReserveResponse;
 import io.coti.trustscore.http.RollingReserveValidateRequest;
 import io.coti.trustscore.http.data.RollingReserveResponseData;
+import io.coti.trustscore.model.MerchantRollingReserve;
 import io.coti.trustscore.model.TrustScores;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -36,10 +39,14 @@ public class RollingReserveService {
     @Value("${rolling.reserve.difference.validation}")
     private BigDecimal rollingReserveDifferenceValidation;
 
-    @Value("${rolling.reserve.address}")
-    private Hash rollingReserveAddress;
+    /*@Value("${rolling.reserve.address}")
+    private Hash rollingReserveAddress;*/
 
+    @Value("${financial.server.address}")
+    private String financialServerAddress;
 
+    @Autowired
+    MerchantRollingReserve merchantRollingReserve;
 
     @Autowired
     private TrustScores trustScores;
@@ -64,6 +71,9 @@ public class RollingReserveService {
             BigDecimal originalAmount = networkFeeData.getOriginalAmount();
             BigDecimal reducedAmount = networkFeeData.getReducedAmount().subtract(networkFeeData.getAmount());
             BigDecimal rollingReserveAmount = calculateRollingReserveAmount(reducedAmount, trustScoreService.calculateUserTrustScore(trustScoreData));
+
+            Hash rollingReserveAddress = getMerchantRollingReserveAddress(rollingReserveRequest.getMerchantHash());
+
             RollingReserveData rollingReserveData = new RollingReserveData(rollingReserveAddress, rollingReserveAmount, originalAmount, reducedAmount, new Date());
             setRollingReserveNodeFeeHash(rollingReserveData);
             signRollingReserveFee(rollingReserveData, true);
@@ -74,6 +84,26 @@ public class RollingReserveService {
             log.error(e.getMessage());
             throw new RuntimeException(e);
         }
+    }
+
+    public Hash getMerchantRollingReserveAddress(Hash merchantHash){
+        MerchantRollingReserveData merchantRollingReserveData =  merchantRollingReserve.getByHash(merchantHash);
+        if (merchantRollingReserveData == null) {
+            Hash rollingReserveAddress = getMerchanrAddressFromFinancialNode(merchantHash);
+            merchantRollingReserveData = new MerchantRollingReserveData();
+            merchantRollingReserveData.setMerchantHash(merchantHash);
+            merchantRollingReserveData.setMerchantRollingReserveAddress(rollingReserveAddress);
+            merchantRollingReserve.put(merchantRollingReserveData);
+        }
+
+        return  merchantRollingReserveData.getMerchantRollingReserveAddress();
+
+    }
+
+    private Hash getMerchanrAddressFromFinancialNode(Hash merchantHash){
+        RestTemplate restTemplate = new RestTemplate();
+        MerchantRollingReserveData result = restTemplate.postForObject(financialServerAddress, merchantHash, MerchantRollingReserveData.class);
+        return result.getMerchantRollingReserveAddress();
     }
 
     public ResponseEntity<Response> validateRollingReserve(RollingReserveValidateRequest rollingReserveValidateRequest) {
