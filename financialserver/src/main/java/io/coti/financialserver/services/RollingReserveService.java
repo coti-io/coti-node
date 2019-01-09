@@ -156,39 +156,46 @@ public class RollingReserveService {
 
     public void setRollingReserveReleaseDate(TransactionData transactionData, Hash merchantHash) {
 
-        // TODO: Get number of days from transaction data
-        Date date = getDateNumberOfDaysAfterToday(ROLLING_RESERVE_DEFAULT_DAYS_TO_HOLD);
+        try {
+            // TODO: Get number of days from transaction data
+            Date date = getDateNumberOfDaysAfterToday(ROLLING_RESERVE_DEFAULT_DAYS_TO_HOLD);
 
-        Hash dateHash = new Hash(date.getTime());
-        RollingReserveReleaseDateData rollingReserveReleaseDateData = rollingReserveReleaseDates.getByHash(dateHash);
+            Hash dateHash = new Hash(date.getTime());
+            RollingReserveReleaseDateData rollingReserveReleaseDateData = rollingReserveReleaseDates.getByHash(dateHash);
 
-        if (rollingReserveReleaseDateData == null) {
-            rollingReserveReleaseDateData = new RollingReserveReleaseDateData(date);
+            if (rollingReserveReleaseDateData == null) {
+                rollingReserveReleaseDateData = new RollingReserveReleaseDateData(date);
+            }
+
+            RollingReserveReleaseStatus rollingReserveReleaseStatus = rollingReserveReleaseDateData.getRollingReserveReleaseStatusByMerchant().get(merchantHash);
+
+            if (rollingReserveReleaseStatus == null) {
+                rollingReserveReleaseStatus = new RollingReserveReleaseStatus(transactionData.getRollingReserveAmount(), transactionData.getHash());
+            } else {
+                rollingReserveReleaseStatus.addToInitialAmount(transactionData.getRollingReserveAmount());
+                rollingReserveReleaseStatus.getPaymentTransactions().add(transactionData.getHash());
+            }
+
+            rollingReserveReleaseDateData.getRollingReserveReleaseStatusByMerchant().put(merchantHash, rollingReserveReleaseStatus);
+
+            if (rollingReserves.getByHash(merchantHash) == null) {
+                createRollingReserveDataForMerchant(merchantHash);
+            }
+
+            RollingReserveData rollingReserveData = rollingReserves.getByHash(merchantHash);
+
+            rollingReserveReleaseDates.put(rollingReserveReleaseDateData);
+            if (!rollingReserveData.getReleaseDates().contains(date)) {
+                rollingReserveData.getReleaseDates().add(date);
+            }
+
+            rollingReserves.put(rollingReserveData);
+            log.info("Rolling reserve release date set success for transaction {} and merchant {}", transactionData.getHash(), merchantHash);
+
+        } catch (Exception e) {
+            log.error("Rolling reserve release date set error for transaction {} and merchant {}", transactionData.getHash(), merchantHash);
+            e.printStackTrace();
         }
-
-        RollingReserveReleaseStatus rollingReserveReleaseStatus = rollingReserveReleaseDateData.getRollingReserveReleaseStatusByMerchant().get(merchantHash);
-
-        if (rollingReserveReleaseStatus == null) {
-            rollingReserveReleaseStatus = new RollingReserveReleaseStatus(transactionData.getRollingReserveAmount(), transactionData.getHash());
-        } else {
-            rollingReserveReleaseStatus.addToInitialAmount(transactionData.getRollingReserveAmount());
-            rollingReserveReleaseStatus.getPaymentTransactions().add(transactionData.getHash());
-        }
-
-        rollingReserveReleaseDateData.getRollingReserveReleaseStatusByMerchant().put(merchantHash, rollingReserveReleaseStatus);
-
-        if (rollingReserves.getByHash(merchantHash) == null) {
-            createRollingReserveDataForMerchant(merchantHash);
-        }
-
-        RollingReserveData rollingReserveData = rollingReserves.getByHash(merchantHash);
-
-        rollingReserveReleaseDates.put(rollingReserveReleaseDateData);
-        if (!rollingReserveData.getReleaseDates().contains(date)) {
-            rollingReserveData.getReleaseDates().add(date);
-        }
-
-        rollingReserves.put(rollingReserveData);
     }
 
     public void chargebackConsumer(DisputeData disputeData, Hash consumerAddress, BigDecimal amount) {
