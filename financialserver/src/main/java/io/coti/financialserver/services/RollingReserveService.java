@@ -7,7 +7,7 @@ import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.model.Transactions;
-import io.coti.financialserver.crypto.RecourseClaimCrypto;
+import io.coti.financialserver.crypto.ResolveRecourseClaimCrypto;
 import io.coti.financialserver.crypto.RollingReserveCrypto;
 import io.coti.financialserver.data.*;
 import io.coti.financialserver.http.GetRollingReserveMerchantDataRequest;
@@ -108,15 +108,14 @@ public class RollingReserveService {
 
     public ResponseEntity recourseClaim(RecourseClaimRequest request) {
 
-        RecourseClaimData recourseClaimData = request.getRecourseClaimData();
-        RecourseClaimCrypto recourseClaimCrypto = new RecourseClaimCrypto();
-        recourseClaimCrypto.signMessage(recourseClaimData);
+        ResolveRecourseClaim resolveRecourseClaim = request.getResolveRecourseClaim();
+        ResolveRecourseClaimCrypto resolveRecourseClaimCrypto = new ResolveRecourseClaimCrypto();
 
-        if (!recourseClaimCrypto.verifySignature(recourseClaimData)) {
+        if (!resolveRecourseClaimCrypto.verifySignature(resolveRecourseClaim)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
         }
 
-        TransactionData transactionData = transactions.getByHash(recourseClaimData.getTransactionHashes().iterator().next());
+        TransactionData transactionData = transactions.getByHash(resolveRecourseClaim.getTransactionHash());
 
         if (transactionData == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_TRANSACTION_NOT_FOUND, STATUS_ERROR));
@@ -126,16 +125,16 @@ public class RollingReserveService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(NOT_COTI_POOL, STATUS_ERROR));
         }
 
-        DisputeData disputeData = disputes.getByHash(recourseClaimData.getDisputeHashes().iterator().next());
+        DisputeData disputeData = disputes.getByHash(resolveRecourseClaim.getDisputeHash());
 
         if (disputeData == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_NOT_FOUND, STATUS_ERROR));
         }
-        if (!disputeData.getMerchantHash().equals(recourseClaimData.getMerchantHash())) {
+        if (!disputeData.getMerchantHash().equals(resolveRecourseClaim.getMerchantHash())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_UNAUTHORIZED, STATUS_ERROR));
         }
 
-        recourseClaimData = recourseClaims.getByHash(recourseClaimData.getMerchantHash());
+        RecourseClaimData recourseClaimData = recourseClaims.getByHash(resolveRecourseClaim.getMerchantHash());
 
         if (recourseClaimData.getTransactionHashes().contains(transactionData)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(ALREADY_GOT_THIS_RECOURSE_CLAIM, STATUS_ERROR));
