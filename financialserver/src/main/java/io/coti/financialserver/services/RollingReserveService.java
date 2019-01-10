@@ -6,13 +6,20 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.Response;
+import io.coti.basenode.http.RollingReserveMerchantAddressRequest;
 import io.coti.basenode.model.Transactions;
 import io.coti.financialserver.crypto.RecourseClaimCrypto;
 import io.coti.financialserver.crypto.RollingReserveCrypto;
+import io.coti.basenode.crypto.RollingReserveMerchantAddressCrypto;
 import io.coti.financialserver.data.*;
 import io.coti.financialserver.http.GetRollingReserveMerchantDataRequest;
 import io.coti.financialserver.http.GetRollingReserveReleaseDatesResponse;
+
+
+import io.coti.basenode.http.RollingReserveMerchantAddressResponse;
+
 import io.coti.financialserver.http.RecourseClaimRequest;
+
 import io.coti.financialserver.model.Disputes;
 import io.coti.financialserver.model.RecourseClaims;
 import io.coti.financialserver.model.RollingReserveReleaseDates;
@@ -82,14 +89,7 @@ public class RollingReserveService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
         }
 
-        if (rollingReserves.getByHash(rollingReserveData.getHash()) == null) {
-            createRollingReserveDataForMerchant(rollingReserveData.getHash());
-            rollingReserveData = rollingReserves.getByHash(rollingReserveData.getHash());
-            propagationPublisher.propagate(new RollingReserveAddressPropagatable(rollingReserveData.getHash(), rollingReserveData.getRollingReserveAddress()),
-                    Arrays.asList(NodeType.TrustScoreNode));
-        } else {
-            rollingReserveData = rollingReserves.getByHash(rollingReserveData.getHash());
-        }
+        rollingReserveData = getRollingReserveMerchantData(rollingReserveData.getHash());
 
         Map<String, RollingReserveReleaseStatus> rollingReserveReleases = new HashMap<>();
         for (Date releaseData : rollingReserveData.getReleaseDates()) {
@@ -102,8 +102,30 @@ public class RollingReserveService {
         }
 
         RecourseClaimData recourseClaimData = recourseClaims.getByHash(rollingReserveData.getMerchantHash());
-
         return ResponseEntity.status(HttpStatus.OK).body(new GetRollingReserveReleaseDatesResponse(rollingReserveData, rollingReserveReleases, recourseClaimData));
+    }
+
+
+    public RollingReserveData getRollingReserveMerchantData(Hash merchantHash){
+        RollingReserveData rollingReserveData = rollingReserves.getByHash(merchantHash);
+        if (rollingReserveData == null) {
+            createRollingReserveDataForMerchant(merchantHash);
+            rollingReserveData = rollingReserves.getByHash(merchantHash);
+            propagationPublisher.propagate(new RollingReserveAddressPropagatable(rollingReserveData.getHash(), rollingReserveData.getRollingReserveAddress()),
+                    Arrays.asList(NodeType.TrustScoreNode));
+        }
+        return rollingReserveData;
+    }
+
+    public ResponseEntity getMerchantRollingReserveAddress(RollingReserveMerchantAddressRequest request) {
+        RollingReserveMerchantAddressCrypto rollingReserveMerchantAddressCrypto = new RollingReserveMerchantAddressCrypto();
+
+        if (!rollingReserveMerchantAddressCrypto.verifySignature(request)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
+        }
+
+        RollingReserveData rollingReserveData = getRollingReserveMerchantData(request.getMerchantHash());
+        return ResponseEntity.status(HttpStatus.OK).body(new RollingReserveMerchantAddressResponse(rollingReserveData.getRollingReserveAddress()));
     }
 
     public ResponseEntity recourseClaim(RecourseClaimRequest request) {

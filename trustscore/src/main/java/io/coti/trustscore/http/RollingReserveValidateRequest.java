@@ -14,5 +14,5 @@ public class RollingReserveValidateRequest {
     RollingReserveData rollingReserveData;
 
     @NotNull
-    String userHash;
+    String merchantHash;
 }
