@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
 import io.coti.basenode.data.*;
-import io.coti.basenode.http.BaseResponse;
-import io.coti.basenode.http.ExceptionResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.TransactionTrustScoreResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
@@ -36,10 +34,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.core.io.ClassPathResource;
 import javax.annotation.PostConstruct;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -338,6 +333,7 @@ public class TrustScoreService {
     }
 
     public double calculateUserTrustScore(TrustScoreData trustScoreData) {
+
         double eventsTrustScore = 0;
 
         for (IBucketEventService bucketEventService : bucketEventServiceList) {
