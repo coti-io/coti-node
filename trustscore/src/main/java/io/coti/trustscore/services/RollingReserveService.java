@@ -42,9 +42,6 @@ public class RollingReserveService {
     @Value("${rolling.reserve.difference.validation}")
     private BigDecimal rollingReserveDifferenceValidation;
 
-    /*@Value("${rolling.reserve.address}")
-    private Hash rollingReserveAddress;*/
-
     @Value("${financial.server.merchant.point.address}")
     private String financialServerAddress;
 
