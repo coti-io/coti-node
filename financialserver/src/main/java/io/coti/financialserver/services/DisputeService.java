@@ -15,7 +15,6 @@ import io.coti.financialserver.data.*;
 import io.coti.financialserver.http.GetDisputesRequest;
 import io.coti.financialserver.http.GetDisputesResponse;
 import io.coti.financialserver.http.NewDisputeRequest;
-import io.coti.financialserver.http.NewDisputeResponse;
 import io.coti.financialserver.http.data.GetDisputesData;
 import io.coti.financialserver.model.*;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -64,6 +62,8 @@ public class DisputeService {
     private ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
     @Autowired
     private ITransactionHelper transactionHelper;
+    @Autowired
+    private WebSocketService webSocketService;
     private Map<ActionSide, Collection<UserDisputesData>> userDisputesCollectionMap = new EnumMap<>(ActionSide.class);
 
     @PostConstruct
@@ -149,6 +149,7 @@ public class DisputeService {
         addUserDisputeHash(ActionSide.Merchant, merchantHash, disputeData.getHash());
 
         disputes.put(disputeData);
+        webSocketService.notifyOnNewDispute(disputeData);
 
         return ResponseEntity.status(HttpStatus.OK).body(new GetDisputesResponse(Arrays.asList(disputeData), ActionSide.Consumer, disputeData.getConsumerHash()));
     }
@@ -241,7 +242,7 @@ public class DisputeService {
 
             if (disputeItemVoteData.getStatus().equals(DisputeItemVoteStatus.AcceptedByArbitrator)) {
                 votesForConsumer++;
-            } else if(disputeItemVoteData.getStatus().equals(DisputeItemVoteStatus.RejectedByArbitrator)) {
+            } else if (disputeItemVoteData.getStatus().equals(DisputeItemVoteStatus.RejectedByArbitrator)) {
                 votesForMerchant++;
             }
         }
@@ -249,7 +250,7 @@ public class DisputeService {
         if (votesForConsumer >= majorityOfVotes) {
             DisputeItemStatusService.AcceptedByArbitrators.changeStatus(disputeData, disputeItemData.getId(), ActionSide.Arbitrator);
 
-        } else if(votesForMerchant >= majorityOfVotes || disputeItemVotes.size() == arbitratorsCount){
+        } else if (votesForMerchant >= majorityOfVotes || disputeItemVotes.size() == arbitratorsCount) {
             DisputeItemStatusService.RejectedByArbitrators.changeStatus(disputeData, disputeItemData.getId(), ActionSide.Arbitrator);
         }
 
@@ -257,7 +258,7 @@ public class DisputeService {
         disputes.put(disputeData);
     }
 
-    private void assignToArbitrators(DisputeData dispute) {
+    private void assignToArbitrators(DisputeData disputeData) {
 
         int random;
 
@@ -267,11 +268,13 @@ public class DisputeService {
             random = (int) ((Math.random() * arbitratorUserHashes.size()));
 
             Hash arbitratorHash = new Hash(arbitratorUserHashes.get(random));
-            dispute.getArbitratorHashes().add(arbitratorHash);
-            addUserDisputeHash(ActionSide.Arbitrator, arbitratorHash, dispute.getHash());
+            disputeData.getArbitratorHashes().add(arbitratorHash);
+            addUserDisputeHash(ActionSide.Arbitrator, arbitratorHash, disputeData.getHash());
 
             arbitratorUserHashes.remove(random);
         }
+        
+        webSocketService.notifyOnDisputeToArbitrators(disputeData);
     }
 
     private Hash getMerchantHash(Hash receiverBaseTransactionHash) {

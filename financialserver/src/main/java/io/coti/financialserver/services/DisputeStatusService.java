@@ -1,6 +1,5 @@
 package io.coti.financialserver.services;
 
-import io.coti.basenode.model.Transactions;
 import io.coti.financialserver.data.DisputeData;
 import io.coti.financialserver.data.DisputeStatus;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +43,7 @@ public enum DisputeStatusService {
         }
 
         disputeData.setDisputeStatus(newDisputeStatus);
-        if(isFinalStatus()){
+        if (isFinalStatus()) {
             disputeData.setClosedTime(Instant.now());
         }
         webSocketService.notifyOnDisputeStatusChange(disputeData);

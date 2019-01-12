@@ -4,6 +4,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
+import io.coti.financialserver.data.interfaces.IDisputeEvent;
 import lombok.Data;
 
 import javax.validation.Valid;
@@ -12,7 +13,7 @@ import java.io.Serializable;
 import java.time.Instant;
 
 @Data
-public class DisputeItemVoteData implements Serializable, ISignable, ISignValidatable {
+public class DisputeItemVoteData implements Serializable, ISignable, ISignValidatable, IDisputeEvent {
     @NotNull
     private Hash arbitratorHash;
     @NotNull

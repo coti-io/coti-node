@@ -8,12 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class UserDisputeEventData implements IEntity{
+public class UnreadUserDisputeEventData implements IEntity {
 
     private Hash userHash;
     private List<Hash> disputeEventHashes;
 
-    public UserDisputeEventData(Hash userHash) {
+    public UnreadUserDisputeEventData(Hash userHash) {
         this.userHash = userHash;
         disputeEventHashes = new ArrayList<>();
     }

@@ -3,12 +3,13 @@ package io.coti.financialserver.http.data;
 import io.coti.basenode.data.SignatureData;
 import io.coti.financialserver.data.DisputeItemVoteData;
 import io.coti.financialserver.data.DisputeItemVoteStatus;
+import io.coti.financialserver.http.data.interfaces.IDisputeEventResponseData;
 import lombok.Data;
 
 import java.time.Instant;
 
 @Data
-public class DisputeItemVoteResponseData {
+public class DisputeItemVoteResponseData implements IDisputeEventResponseData {
     private String arbitratorHash;
     private String disputeHash;
     private Long itemId;
@@ -19,7 +20,7 @@ public class DisputeItemVoteResponseData {
     private DisputeItemVoteResponseData() {
 
     }
-    
+
     public DisputeItemVoteResponseData(DisputeItemVoteData disputeItemVoteData) {
         this.arbitratorHash = disputeItemVoteData.getArbitratorHash().toString();
         this.disputeHash = disputeItemVoteData.getDisputeHash().toString();

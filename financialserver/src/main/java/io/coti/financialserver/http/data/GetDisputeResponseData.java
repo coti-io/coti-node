@@ -1,10 +1,10 @@
 package io.coti.financialserver.http.data;
 
 import io.coti.basenode.data.SignatureData;
-import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.financialserver.data.DisputeData;
 import io.coti.financialserver.data.DisputeItemData;
 import io.coti.financialserver.data.DisputeStatus;
+import io.coti.financialserver.http.data.interfaces.IDisputeEventResponseData;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public abstract class GetDisputeResponseData implements IResponse {
+public abstract class GetDisputeResponseData implements IDisputeEventResponseData {
     protected String hash;
     protected String transactionHash;
     protected Instant transactionCreationTime;

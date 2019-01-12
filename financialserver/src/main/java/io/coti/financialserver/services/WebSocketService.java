@@ -4,12 +4,12 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
 import io.coti.financialserver.data.*;
 import io.coti.financialserver.data.interfaces.IDisputeEvent;
-import io.coti.financialserver.http.DisputeEventDataSent;
+import io.coti.financialserver.http.DisputeEventResponse;
 import io.coti.financialserver.http.DisputeEventReadRequest;
 import io.coti.financialserver.http.DisputePopulateEventsRequest;
 import io.coti.financialserver.model.DisputeEvents;
 import io.coti.financialserver.model.DisputeHistory;
-import io.coti.financialserver.model.UserDisputeEvents;
+import io.coti.financialserver.model.UnreadUserDisputeEvents;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,7 +18,9 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_SUCCESS;
 import static io.coti.financialserver.http.HttpStringConstants.SUCCESS;
@@ -28,7 +30,7 @@ import static io.coti.financialserver.http.HttpStringConstants.SUCCESS;
 public class WebSocketService {
 
     @Autowired
-    private UserDisputeEvents userDisputeEvents;
+    private UnreadUserDisputeEvents unreadUserDisputeEvents;
     @Autowired
     private DisputeEvents disputeEvents;
     @Autowired
@@ -38,21 +40,21 @@ public class WebSocketService {
 
     public ResponseEntity eventRead(DisputeEventReadRequest disputeEventReadRequest) {
 
-        UserDisputeEventData userDisputeEventData = userDisputeEvents.getByHash(disputeEventReadRequest.getUserHash());
-        userDisputeEventData.getDisputeEventHashes().remove(disputeEventReadRequest.getDisputeEventHash());
-        userDisputeEvents.put(userDisputeEventData);
+        UnreadUserDisputeEventData unreadUserDisputeEventData = unreadUserDisputeEvents.getByHash(disputeEventReadRequest.getUserHash());
+        unreadUserDisputeEventData.getDisputeEventHashes().remove(disputeEventReadRequest.getDisputeEventHash());
+        unreadUserDisputeEvents.put(unreadUserDisputeEventData);
 
         return ResponseEntity.status(HttpStatus.OK).body(new Response(SUCCESS, STATUS_SUCCESS));
     }
 
     public ResponseEntity populateNotReadEvents(DisputePopulateEventsRequest disputePopulateEventsRequest) {
 
-        UserDisputeEventData userDisputeEventData = userDisputeEvents.getByHash(disputePopulateEventsRequest.getUserHash());
+        UnreadUserDisputeEventData unreadUserDisputeEventData = unreadUserDisputeEvents.getByHash(disputePopulateEventsRequest.getUserHash());
         DisputeEventData disputeEventData;
-        if(userDisputeEventData != null) {
-            for(Hash disputeEventHash : userDisputeEventData.getDisputeEventHashes()) {
+        if(unreadUserDisputeEventData != null) {
+            for(Hash disputeEventHash : unreadUserDisputeEventData.getDisputeEventHashes()) {
                 disputeEventData = disputeEvents.getByHash(disputeEventHash);
-                messagingSender.convertAndSend("/topic/user/" + disputePopulateEventsRequest.getUserHash(), new DisputeEventDataSent(disputeEventData, disputePopulateEventsRequest.getUserHash()));
+                messagingSender.convertAndSend("/topic/user/" + disputePopulateEventsRequest.getUserHash(), new DisputeEventResponse(disputeEventData, disputePopulateEventsRequest.getUserHash()));
             }
         }
 
@@ -61,60 +63,65 @@ public class WebSocketService {
 
     public void notifyOnNewDispute(DisputeData disputeData) {
 
-        List<Hash> usersToUpdate = new ArrayList<>();
-        usersToUpdate.add(disputeData.getMerchantHash());
+        Map<Hash, ActionSide> userHashToEventDisplaySideMap = new HashMap<>();
+        userHashToEventDisplaySideMap.put(disputeData.getConsumerHash(), ActionSide.Consumer);
+        userHashToEventDisplaySideMap.put(disputeData.getMerchantHash(), ActionSide.Merchant);
 
-        DisputeEventData disputeEventData = updateDisputeHistory(disputeData.getHash(), disputeData, usersToUpdate);
+        updateDisputeHistory(disputeData.getHash(), disputeData, userHashToEventDisplaySideMap, ActionSide.Consumer);
+    }
 
-        messagingSender.convertAndSend("/topic/user/" + disputeData.getConsumerHash(), new DisputeEventDataSent(disputeEventData, disputeData.getConsumerHash()));
+    public void notifyOnDisputeToArbitrators(DisputeData disputeData) {
+        if(disputeData.getArbitratorHashes().isEmpty()){
+            log.error("Notification on dispute to arbitrators error: Dispute is not assigned to any arbitrator");
+            return;
+        }
+        Map<Hash, ActionSide> userHashToEventDisplaySideMap = new HashMap<>();
+        disputeData.getArbitratorHashes().forEach(arbitratorHash -> userHashToEventDisplaySideMap.put(arbitratorHash, ActionSide.Arbitrator));
+
+        updateDisputeHistory(disputeData.getHash(), disputeData, userHashToEventDisplaySideMap, ActionSide.FinancialServer);
+
     }
 
     public void notifyOnNewCommentOrDocument(DisputeData disputeData, IDisputeEvent disputeEvent, ActionSide actionSide) {
 
-        List<Hash> usersToUpdate = new ArrayList<>();
+        Map<Hash, ActionSide> userHashToEventDisplaySideMap = new HashMap<>();
+        userHashToEventDisplaySideMap.put(disputeData.getConsumerHash(), ActionSide.Consumer);
+        userHashToEventDisplaySideMap.put(disputeData.getMerchantHash(), ActionSide.Merchant);
 
-        if(actionSide.equals(ActionSide.Consumer)) {
-            usersToUpdate.add(disputeData.getMerchantHash());
-            DisputeEventData disputeEventData = updateDisputeHistory(disputeData.getHash(), disputeEvent, usersToUpdate);
-            messagingSender.convertAndSend("/topic/user/" + disputeData.getConsumerHash(), new DisputeEventDataSent(disputeEventData, disputeData.getConsumerHash()));
-        }
-        else {
-            usersToUpdate.add(disputeData.getConsumerHash());
-            DisputeEventData disputeEventData = updateDisputeHistory(disputeData.getHash(), disputeEvent, usersToUpdate);
-            messagingSender.convertAndSend("/topic/user/" + disputeData.getMerchantHash(), new DisputeEventDataSent(disputeEventData, disputeData.getMerchantHash()));
-        }
+        updateDisputeHistory(disputeData.getHash(), disputeEvent, userHashToEventDisplaySideMap, actionSide);
     }
 
     public void notifyOnDisputeStatusChange(DisputeData disputeData) {
 
-        DisputeStatusChangedEvent disputeStatusChangedEvent = new DisputeStatusChangedEvent(disputeData.getHash(), disputeData.getDisputeStatus());
+        DisputeStatusChangeEventData disputeStatusChangedEventData = new DisputeStatusChangeEventData(disputeData.getHash(), disputeData.getDisputeStatus());
 
-        List<Hash> usersToUpdate = new ArrayList<>();
-        usersToUpdate.add(disputeData.getConsumerHash());
-        usersToUpdate.add(disputeData.getMerchantHash());
+        Map<Hash, ActionSide> userHashToEventDisplaySideMap = new HashMap<>();
+        userHashToEventDisplaySideMap.put(disputeData.getConsumerHash(), ActionSide.Consumer);
+        userHashToEventDisplaySideMap.put(disputeData.getMerchantHash(), ActionSide.Merchant);
+        disputeData.getArbitratorHashes().forEach(arbitratorHash -> userHashToEventDisplaySideMap.put(arbitratorHash, ActionSide.Arbitrator));
 
-        if(!disputeData.getArbitratorHashes().isEmpty()) {
-            usersToUpdate.addAll(disputeData.getArbitratorHashes());
-        }
-
-        updateDisputeHistory(disputeData.getHash(), disputeStatusChangedEvent, usersToUpdate);
+        updateDisputeHistory(disputeData.getHash(), disputeStatusChangedEventData, userHashToEventDisplaySideMap, ActionSide.FinancialServer);
     }
 
-    public void notifyOnItemStatusChange(DisputeData disputeData, Long itemId) {
-        ItemStatusChangedEvent disputeStatusChangeEvent = new ItemStatusChangedEvent(disputeData.getHash(), itemId, disputeData.getDisputeItem(itemId).getStatus());
+    public void notifyOnItemStatusChange(DisputeData disputeData, Long itemId, ActionSide actionSide) {
+        DisputeItemStatusChangeEventData disputeIemStatusChangeEventData = new DisputeItemStatusChangeEventData(disputeData.getHash(), itemId, disputeData.getDisputeItem(itemId).getStatus());
 
-        List<Hash> usersToUpdate = new ArrayList<>();
-        usersToUpdate.add(disputeData.getConsumerHash());
-        usersToUpdate.add(disputeData.getMerchantHash());
+        Map<Hash, ActionSide> userHashToEventDisplaySideMap = new HashMap<>();
+        userHashToEventDisplaySideMap.put(disputeData.getConsumerHash(), ActionSide.Consumer);
+        userHashToEventDisplaySideMap.put(disputeData.getMerchantHash(), ActionSide.Merchant);
+        disputeData.getArbitratorHashes().forEach(arbitratorHash -> userHashToEventDisplaySideMap.put(arbitratorHash, ActionSide.Arbitrator));
 
-        if(!disputeData.getArbitratorHashes().isEmpty()) {
-            usersToUpdate.addAll(disputeData.getArbitratorHashes());
-        }
-
-        updateDisputeHistory(disputeData.getHash(), disputeStatusChangeEvent, usersToUpdate);
+        updateDisputeHistory(disputeData.getHash(), disputeIemStatusChangeEventData, userHashToEventDisplaySideMap, actionSide);
     }
 
-    private DisputeEventData updateDisputeHistory(Hash disputeHash, IDisputeEvent eventObject, List<Hash> usersToUpdate) {
+    public void notifyOnNewItemVote(DisputeItemVoteData disputeItemVoteData) {
+        Map<Hash, ActionSide> userHashToEventDisplaySideMap = new HashMap<>();
+        userHashToEventDisplaySideMap.put(disputeItemVoteData.getArbitratorHash(), ActionSide.Arbitrator);
+
+        updateDisputeHistory(disputeItemVoteData.getDisputeHash(), disputeItemVoteData, userHashToEventDisplaySideMap, ActionSide.Arbitrator);
+    }
+
+    private void updateDisputeHistory(Hash disputeHash, IDisputeEvent eventObject, Map<Hash, ActionSide> userHashToEventDisplaySideMap, ActionSide actionSide) {
 
         DisputeEventData disputeEventData = new DisputeEventData(eventObject);
 
@@ -124,20 +131,21 @@ public class WebSocketService {
         }
         disputeHistoryData.getDisputeEventHashes().add(disputeEventData.getHash());
 
-        UserDisputeEventData userDisputeEventData;
-        for(Hash userToUpdate : usersToUpdate) {
-            userDisputeEventData = userDisputeEvents.getByHash(userToUpdate);
-            if(userDisputeEventData == null) {
-                userDisputeEventData = new UserDisputeEventData(userToUpdate);
+        userHashToEventDisplaySideMap.forEach((userHash, eventDisplaySide) -> {
+            boolean eventRead = eventDisplaySide.equals(actionSide);
+            if(!eventRead) {
+                UnreadUserDisputeEventData unreadUserDisputeEventData =  unreadUserDisputeEvents.getByHash(userHash);
+                if(unreadUserDisputeEventData == null) {
+                    unreadUserDisputeEventData = new UnreadUserDisputeEventData(userHash);
+                }
+                unreadUserDisputeEventData.getDisputeEventHashes().add(disputeEventData.getHash());
+                unreadUserDisputeEvents.put(unreadUserDisputeEventData);
             }
-            userDisputeEventData.getDisputeEventHashes().add(disputeEventData.getHash());
-            userDisputeEvents.put(userDisputeEventData);
-            messagingSender.convertAndSend("/topic/user/" + userToUpdate, new DisputeEventDataSent(disputeEventData, userToUpdate));
-        }
+            messagingSender.convertAndSend("/topic/user/" + userHash, new DisputeEventResponse(disputeEventData, userHash, eventDisplaySide, eventRead));
+        });
 
         disputeEvents.put(disputeEventData);
         disputeHistory.put(disputeHistoryData);
 
-        return disputeEventData;
     }
 }

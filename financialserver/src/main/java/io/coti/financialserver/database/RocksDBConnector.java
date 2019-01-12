@@ -29,7 +29,7 @@ public class RocksDBConnector extends BaseNodeRocksDBConnector {
                 RollingReserveReleaseDates.class.getName(),
                 DisputeEvents.class.getName(),
                 DisputeHistory.class.getName(),
-                UserDisputeEvents.class.getName()
+                UnreadUserDisputeEvents.class.getName()
         ));
     }
 }

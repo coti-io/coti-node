@@ -135,12 +135,12 @@ public enum DisputeItemStatusService {
             throw new Exception(DISPUTE_ITEM_STATUS_INVALID_CHANGE);
         }
         changeStatus(disputeItemData);
+        webSocketService.notifyOnItemStatusChange(disputeData, itemId, actionSide);
         changeDisputeItemsStatuses(disputeData);
         if (isFinalStatusForAllItems(disputeData)) {
          //   createChargeBackTransaction(disputeData);
         }
 
-        webSocketService.notifyOnItemStatusChange(disputeData, itemId);
         changeDisputeStatus(disputeData);
     }
 
@@ -162,6 +162,7 @@ public enum DisputeItemStatusService {
         disputeData.getDisputeItems().forEach(disputeItemData -> {
             if (disputeItemData.getStatus().equals(DisputeItemStatus.RejectedByMerchant)) {
                 disputeItemData.setStatus(DisputeItemStatus.Claim);
+                webSocketService.notifyOnItemStatusChange(disputeData, disputeItemData.getId(), ActionSide.FinancialServer);
             }
         });
     }

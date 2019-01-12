@@ -2,8 +2,9 @@ package io.coti.financialserver.data;
 
 public enum FinancialServerEvent {
     NewDispute,
-    NewComment,
-    NewDocument,
-    ItemStatusUpdated,
-    DisputeStatusUpdated
+    NewDisputeComment,
+    NewDisputeDocument,
+    DisputeItemStatusUpdated,
+    DisputeStatusUpdated,
+    NewDisputeItemVote;
 }

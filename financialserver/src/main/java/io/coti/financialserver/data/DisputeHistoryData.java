@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class DisputeHistoryData implements IEntity{
+public class DisputeHistoryData implements IEntity {
 
     private Hash disputeHash;
     private List<Hash> disputeEventHashes;
