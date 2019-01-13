@@ -41,24 +41,20 @@ public class WebSocketService {
     public ResponseEntity eventRead(DisputeEventReadRequest disputeEventReadRequest) {
 
         UnreadUserDisputeEventData unreadUserDisputeEventData = unreadUserDisputeEvents.getByHash(disputeEventReadRequest.getUserHash());
-        unreadUserDisputeEventData.getDisputeEventHashes().remove(disputeEventReadRequest.getDisputeEventHash());
-        unreadUserDisputeEvents.put(unreadUserDisputeEventData);
+        ActionSide eventDisplaySide = unreadUserDisputeEventData.getDisputeEventHashToEventDisplaySideMap().get(disputeEventReadRequest.getDisputeEventHash());
+        if(eventDisplaySide != null){
+            unreadUserDisputeEventData.getDisputeEventHashToEventDisplaySideMap().remove(disputeEventReadRequest.getDisputeEventHash());
+            unreadUserDisputeEvents.put(unreadUserDisputeEventData);
+            DisputeEventData disputeEventData = disputeEvents.getByHash(disputeEventReadRequest.getDisputeEventHash());
+            notifyOnDisputeEventRead(disputeEventData, disputeEventReadRequest.getUserHash(), eventDisplaySide);
+        }
 
         return ResponseEntity.status(HttpStatus.OK).body(new Response(SUCCESS, STATUS_SUCCESS));
     }
 
-    public ResponseEntity populateNotReadEvents(DisputePopulateEventsRequest disputePopulateEventsRequest) {
+    public void notifyOnDisputeEventRead(DisputeEventData disputeEventData, Hash userHash, ActionSide eventDisplaySide) {
 
-        UnreadUserDisputeEventData unreadUserDisputeEventData = unreadUserDisputeEvents.getByHash(disputePopulateEventsRequest.getUserHash());
-        DisputeEventData disputeEventData;
-        if(unreadUserDisputeEventData != null) {
-            for(Hash disputeEventHash : unreadUserDisputeEventData.getDisputeEventHashes()) {
-                disputeEventData = disputeEvents.getByHash(disputeEventHash);
-                messagingSender.convertAndSend("/topic/user/" + disputePopulateEventsRequest.getUserHash(), new DisputeEventResponse(disputeEventData, disputePopulateEventsRequest.getUserHash()));
-            }
-        }
-
-        return ResponseEntity.status(HttpStatus.OK).body(new Response(SUCCESS, STATUS_SUCCESS));
+        messagingSender.convertAndSend("/topic/user/" + userHash, new DisputeEventResponse(disputeEventData, userHash, eventDisplaySide, true));
     }
 
     public void notifyOnNewDispute(DisputeData disputeData) {
@@ -138,7 +134,7 @@ public class WebSocketService {
                 if(unreadUserDisputeEventData == null) {
                     unreadUserDisputeEventData = new UnreadUserDisputeEventData(userHash);
                 }
-                unreadUserDisputeEventData.getDisputeEventHashes().add(disputeEventData.getHash());
+                unreadUserDisputeEventData.getDisputeEventHashToEventDisplaySideMap().put(disputeEventData.getHash(), eventDisplaySide);
                 unreadUserDisputeEvents.put(unreadUserDisputeEventData);
             }
             messagingSender.convertAndSend("/topic/user/" + userHash, new DisputeEventResponse(disputeEventData, userHash, eventDisplaySide, eventRead));

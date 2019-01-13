@@ -2,7 +2,6 @@ package io.coti.financialserver.controllers;
 
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.financialserver.http.DisputeEventReadRequest;
-import io.coti.financialserver.http.DisputePopulateEventsRequest;
 import io.coti.financialserver.services.WebSocketService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +23,4 @@ public class WebSocketController {
         return webSocketService.eventRead(disputeEventReadRequest);
     }
 
-    @MessageMapping("/populateNotReadEvents")
-    public ResponseEntity<IResponse> populateNotReadEvents(@Payload DisputePopulateEventsRequest disputePopulateEventsRequest) {
-
-        return webSocketService.populateNotReadEvents(disputePopulateEventsRequest);
-    }
 }

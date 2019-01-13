@@ -4,18 +4,18 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
 import lombok.Data;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Data
 public class UnreadUserDisputeEventData implements IEntity {
 
     private Hash userHash;
-    private List<Hash> disputeEventHashes;
+    private Map<Hash, ActionSide> disputeEventHashToEventDisplaySideMap;
 
     public UnreadUserDisputeEventData(Hash userHash) {
         this.userHash = userHash;
-        disputeEventHashes = new ArrayList<>();
+        disputeEventHashToEventDisplaySideMap = new ConcurrentHashMap<>();
     }
 
     @Override
