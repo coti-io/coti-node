@@ -1,8 +1,12 @@
 package io.coti.financialserver.services;
 
+import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.InputBaseTransactionData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.model.Transactions;
+import io.coti.basenode.services.TransactionHelper;
+import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.financialserver.data.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -11,9 +15,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -191,8 +193,20 @@ public enum DisputeItemStatusService {
         if (refundableDisputeItems.size() != 0) {
             BigDecimal refundAmount = refundableDisputeItems.stream().map(DisputeItemData::getPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
             TransactionData transactionData = transactions.getByHash(disputeData.getTransactionHash());
-            rollingReserveService.chargebackConsumer(disputeData, transactionData.getIBTAddressesWithAmountPercent(), refundAmount);
+            rollingReserveService.chargebackConsumer(disputeData, getIBTAddressesWithAmountPercent(transactionData), refundAmount);
         }
+    }
+
+    private Map<Hash,BigDecimal> getIBTAddressesWithAmountPercent(TransactionData transactionData) {
+        Map<Hash,BigDecimal> IBTAddressesWithAmountPercent = new HashMap<>();
+
+        for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
+            if (baseTransactionData instanceof InputBaseTransactionData) {
+                IBTAddressesWithAmountPercent.put(baseTransactionData.getAddressHash(), baseTransactionData.getAmount().divide(transactionData.getAmount()).multiply(new BigDecimal(-1)));
+            }
+        }
+
+        return IBTAddressesWithAmountPercent;
     }
 
     abstract void changeDisputeStatus(DisputeData disputeData) throws Exception;

@@ -176,18 +176,6 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
         return null;
     }
 
-    public Map<Hash,BigDecimal> getIBTAddressesWithAmountPercent() {
-        Map<Hash,BigDecimal> IBTAddressesWithAmountPercent = new HashMap<>();
-
-        for (BaseTransactionData baseTransactionData : baseTransactions) {
-            if (baseTransactionData instanceof InputBaseTransactionData) {
-                IBTAddressesWithAmountPercent.put(baseTransactionData.getAddressHash(), baseTransactionData.getAmount().divide(getAmount()).multiply(new BigDecimal(-1)));
-            }
-        }
-
-        return IBTAddressesWithAmountPercent;
-    }
-
     @Override
     public int compareTo(TransactionData other) {
         return Double.compare(this.senderTrustScore, other.senderTrustScore);
