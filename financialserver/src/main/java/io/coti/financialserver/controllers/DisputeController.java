@@ -50,9 +50,9 @@ public class DisputeController {
     }
 
     @RequestMapping(path = "/history", method = RequestMethod.POST)
-    public ResponseEntity<IResponse> getDisputeHistory(@Valid @RequestBody VoteRequest request) {
+    public ResponseEntity<IResponse> getDisputeHistory(@Valid @RequestBody GetDisputeHistoryRequest request) {
 
-        return itemService.vote(request);
+        return disputeService.getDisputeHistory(request);
     }
 
 }

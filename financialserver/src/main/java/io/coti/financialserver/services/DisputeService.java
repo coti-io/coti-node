@@ -10,11 +10,11 @@ import io.coti.basenode.model.Collection;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.financialserver.crypto.DisputeCrypto;
+import io.coti.financialserver.crypto.GetDisputeHistoryCrypto;
 import io.coti.financialserver.crypto.GetDisputesCrypto;
 import io.coti.financialserver.data.*;
-import io.coti.financialserver.http.GetDisputesRequest;
-import io.coti.financialserver.http.GetDisputesResponse;
-import io.coti.financialserver.http.NewDisputeRequest;
+import io.coti.financialserver.http.*;
+import io.coti.financialserver.http.data.GetDisputeHistoryData;
 import io.coti.financialserver.http.data.GetDisputesData;
 import io.coti.financialserver.model.*;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +47,8 @@ public class DisputeService {
     @Autowired
     private DisputeCrypto disputeCrypto;
     @Autowired
+    private GetDisputeHistoryCrypto getDisputeHistoryCrypto;
+    @Autowired
     private Transactions transactions;
     @Autowired
     private Disputes disputes;
@@ -60,6 +62,10 @@ public class DisputeService {
     private TransactionDisputes transactionDisputes;
     @Autowired
     private ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
+    @Autowired
+    private DisputeHistory disputeHistory;
+    @Autowired
+    private DisputeEvents disputeEvents;
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -212,6 +218,28 @@ public class DisputeService {
         return ResponseEntity.status(HttpStatus.OK).body(new GetDisputesResponse(disputesData, getDisputesData.getDisputeSide(), getDisputesData.getUserHash()));
     }
 
+    public ResponseEntity<IResponse> getDisputeHistory(GetDisputeHistoryRequest getDisputeHistoryRequest) {
+        GetDisputeHistoryData getDisputeHistoryData = getDisputeHistoryRequest.getDisputeHistoryData();
+
+        if (!getDisputeHistoryCrypto.verifySignature(getDisputeHistoryData)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
+        }
+
+        List<DisputeEventResponse> disputeEventResponses = new ArrayList<>();
+
+        DisputeHistoryData disputeHistoryData = disputeHistory.getByHash(getDisputeHistoryData.getDisputeHash());
+        if(disputeHistoryData != null) {
+            disputeHistoryData.getDisputeEventHashToEventDisplayUserMap().forEach((disputeEventHash, userHashToEventDisplaySideMap) -> {
+                ActionSide eventDisplaySide = userHashToEventDisplaySideMap.get(getDisputeHistoryData.getUserHash());
+                if(eventDisplaySide != null) {
+                    disputeEventResponses.add(new DisputeEventResponse(disputeEvents.getByHash(getDisputeHistoryData.getDisputeHash()), getDisputeHistoryData.getUserHash(), eventDisplaySide, true));
+                }
+            });
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(new GetDisputeHistoryResponse(disputeEventResponses));
+    }
+
     public Boolean isAuthorizedDisputeDetailDisplay(DisputeData disputeData, Hash userHash) {
 
         return userHash.equals(disputeData.getConsumerHash()) || userHash.equals(disputeData.getMerchantHash()) || disputeData.getArbitratorHashes().contains(userHash);
@@ -273,7 +301,7 @@ public class DisputeService {
 
             arbitratorUserHashes.remove(random);
         }
-        
+
         webSocketService.notifyOnDisputeToArbitrators(disputeData);
     }
 
