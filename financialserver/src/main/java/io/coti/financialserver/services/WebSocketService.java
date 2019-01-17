@@ -94,7 +94,7 @@ public class WebSocketService {
         sendDisputeEvent(disputeData.getHash(), disputeEvent, userHashToEventDisplaySideMap, actionSide, false);
     }
 
-    public void notifyOnDisputeStatusChange(DisputeData disputeData) {
+    public void notifyOnDisputeStatusChange(DisputeData disputeData, ActionSide actionSide) {
 
         DisputeStatusChangeEventData disputeStatusChangedEventData = new DisputeStatusChangeEventData(disputeData.getHash(), disputeData.getDisputeStatus());
 
@@ -103,7 +103,7 @@ public class WebSocketService {
         userHashToEventDisplaySideMap.put(disputeData.getMerchantHash(), ActionSide.Merchant);
         disputeData.getArbitratorHashes().forEach(arbitratorHash -> userHashToEventDisplaySideMap.put(arbitratorHash, ActionSide.Arbitrator));
 
-        sendDisputeEvent(disputeData.getHash(), disputeStatusChangedEventData, userHashToEventDisplaySideMap, ActionSide.FinancialServer, true);
+        sendDisputeEvent(disputeData.getHash(), disputeStatusChangedEventData, userHashToEventDisplaySideMap, actionSide, true);
     }
 
     public void notifyOnItemStatusChange(DisputeData disputeData, Long itemId, ActionSide actionSide) {
