@@ -34,7 +34,7 @@ public class ItemService {
     @Autowired
     DisputeService disputeService;
     @Autowired
-    private SimpMessagingTemplate messagingSender;
+    WebSocketService webSocketService;
 
     public ResponseEntity<IResponse> updateItem(UpdateItemRequest request) {
 
@@ -105,6 +105,7 @@ public class ItemService {
         disputeItemVoteData.setVoteTime(Instant.now());
         disputeItemData.addItemVoteData(disputeItemVoteData);
         disputes.put(disputeData);
+        webSocketService.notifyOnNewItemVote(disputeItemVoteData);
 
         try {
             disputeService.updateAfterVote(disputeData, disputeItemData);

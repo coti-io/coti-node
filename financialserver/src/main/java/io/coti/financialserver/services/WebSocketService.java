@@ -2,6 +2,8 @@ package io.coti.financialserver.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
+import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.financialserver.crypto.DisputeEventReadCrypto;
 import io.coti.financialserver.data.*;
 import io.coti.financialserver.data.interfaces.IDisputeEvent;
 import io.coti.financialserver.http.DisputeEventReadRequest;
@@ -18,15 +20,18 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_SUCCESS;
+import static io.coti.financialserver.http.HttpStringConstants.INVALID_SIGNATURE;
 import static io.coti.financialserver.http.HttpStringConstants.SUCCESS;
 
 @Slf4j
 @Service
 public class WebSocketService {
 
+    @Autowired
+    private DisputeEventReadCrypto disputeEventReadCrypto;
     @Autowired
     private UnreadUserDisputeEvents unreadUserDisputeEvents;
     @Autowired
@@ -36,17 +41,21 @@ public class WebSocketService {
     @Autowired
     private SimpMessagingTemplate messagingSender;
 
-    public ResponseEntity eventRead(DisputeEventReadRequest disputeEventReadRequest) {
+    public ResponseEntity<IResponse> eventRead(DisputeEventReadRequest disputeEventReadRequest) {
 
-        UnreadUserDisputeEventData unreadUserDisputeEventData = unreadUserDisputeEvents.getByHash(disputeEventReadRequest.getUserHash());
-        ActionSide eventDisplaySide = unreadUserDisputeEventData.getDisputeEventHashToEventDisplaySideMap().get(disputeEventReadRequest.getDisputeEventHash());
-        if (eventDisplaySide != null) {
-            unreadUserDisputeEventData.getDisputeEventHashToEventDisplaySideMap().remove(disputeEventReadRequest.getDisputeEventHash());
-            unreadUserDisputeEvents.put(unreadUserDisputeEventData);
-            DisputeEventData disputeEventData = disputeEvents.getByHash(disputeEventReadRequest.getDisputeEventHash());
-            notifyOnDisputeEventRead(disputeEventData, disputeEventReadRequest.getUserHash(), eventDisplaySide);
+        if (!disputeEventReadCrypto.verifySignature(disputeEventReadRequest)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
-
+        UnreadUserDisputeEventData unreadUserDisputeEventData = unreadUserDisputeEvents.getByHash(disputeEventReadRequest.getUserHash());
+        if (unreadUserDisputeEventData != null) {
+            ActionSide eventDisplaySide = unreadUserDisputeEventData.getDisputeEventHashToEventDisplaySideMap().get(disputeEventReadRequest.getDisputeEventHash());
+            if (eventDisplaySide != null) {
+                unreadUserDisputeEventData.getDisputeEventHashToEventDisplaySideMap().remove(disputeEventReadRequest.getDisputeEventHash());
+                unreadUserDisputeEvents.put(unreadUserDisputeEventData);
+                DisputeEventData disputeEventData = disputeEvents.getByHash(disputeEventReadRequest.getDisputeEventHash());
+                notifyOnDisputeEventRead(disputeEventData, disputeEventReadRequest.getUserHash(), eventDisplaySide);
+            }
+        }
         return ResponseEntity.status(HttpStatus.OK).body(new Response(SUCCESS, STATUS_SUCCESS));
     }
 
@@ -132,7 +141,7 @@ public class WebSocketService {
 
             messagingSender.convertAndSend("/topic/user/" + userHash, new DisputeEventResponse(disputeEventData, userHash, eventDisplaySide, eventRead));
         });
-        if(updateDisputeHistory) {
+        if (updateDisputeHistory) {
             DisputeHistoryData disputeHistoryData = disputeHistory.getByHash(disputeHash);
             if (disputeHistoryData == null) {
                 disputeHistoryData = new DisputeHistoryData(disputeHash);

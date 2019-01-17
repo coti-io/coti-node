@@ -7,13 +7,26 @@ import io.coti.basenode.data.interfaces.ISignable;
 import io.coti.basenode.http.Request;
 import lombok.Data;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Data
-public class DisputeEventReadRequest extends Request {
+public class DisputeEventReadRequest extends Request implements ISignValidatable {
 
+    @NotNull
+    private Hash disputeEventHash;
     @NotNull
     private Hash userHash;
     @NotNull
-    private Hash disputeEventHash;
+    private @Valid SignatureData userSignature;
+
+    @Override
+    public SignatureData getSignature() {
+        return userSignature;
+    }
+
+    @Override
+    public Hash getSignerHash() {
+        return userHash;
+    }
 }

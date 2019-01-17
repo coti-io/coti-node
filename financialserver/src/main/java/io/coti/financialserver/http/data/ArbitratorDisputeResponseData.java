@@ -3,6 +3,7 @@ package io.coti.financialserver.http.data;
 import io.coti.basenode.data.Hash;
 import io.coti.financialserver.data.DisputeData;
 import io.coti.financialserver.data.DisputeItemData;
+import io.coti.financialserver.services.DisputeItemStatusService;
 import lombok.Data;
 
 import java.util.List;
@@ -16,6 +17,7 @@ public class ArbitratorDisputeResponseData extends GetDisputeResponseData {
     }
 
     private void setDisputeItems(List<DisputeItemData> disputeItems, Hash arbitratorHash) {
+        DisputeItemStatusService.removePreClaimDisputeItems(disputeItems);
         disputeItems.forEach(disputeItemData -> this.disputeItems.add(new ArbitratorDisputeItemResponseData(disputeItemData, arbitratorHash)));
     }
 }

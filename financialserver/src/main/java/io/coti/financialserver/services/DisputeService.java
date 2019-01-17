@@ -67,6 +67,8 @@ public class DisputeService {
     @Autowired
     private DisputeEvents disputeEvents;
     @Autowired
+    private UnreadUserDisputeEvents unreadUserDisputeEvents;
+    @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
     private WebSocketService webSocketService;
@@ -228,11 +230,16 @@ public class DisputeService {
         List<DisputeEventResponse> disputeEventResponses = new ArrayList<>();
 
         DisputeHistoryData disputeHistoryData = disputeHistory.getByHash(getDisputeHistoryData.getDisputeHash());
-        if(disputeHistoryData != null) {
+        if (disputeHistoryData != null) {
             disputeHistoryData.getDisputeEventHashToEventDisplayUserMap().forEach((disputeEventHash, userHashToEventDisplaySideMap) -> {
                 ActionSide eventDisplaySide = userHashToEventDisplaySideMap.get(getDisputeHistoryData.getUserHash());
-                if(eventDisplaySide != null) {
-                    disputeEventResponses.add(new DisputeEventResponse(disputeEvents.getByHash(getDisputeHistoryData.getDisputeHash()), getDisputeHistoryData.getUserHash(), eventDisplaySide, true));
+                if (eventDisplaySide != null) {
+                    boolean eventRead = true;
+                    UnreadUserDisputeEventData unreadUserDisputeEventData = unreadUserDisputeEvents.getByHash(getDisputeHistoryData.getUserHash());
+                    if (unreadUserDisputeEventData != null && unreadUserDisputeEventData.getDisputeEventHashToEventDisplaySideMap().get(disputeEventHash) != null) {
+                        eventRead = false;
+                    }
+                    disputeEventResponses.add(new DisputeEventResponse(disputeEvents.getByHash(disputeEventHash), getDisputeHistoryData.getUserHash(), eventDisplaySide, eventRead));
                 }
             });
         }
@@ -276,10 +283,10 @@ public class DisputeService {
         }
 
         if (votesForConsumer >= majorityOfVotes) {
-            DisputeItemStatusService.AcceptedByArbitrators.changeStatus(disputeData, disputeItemData.getId(), ActionSide.Arbitrator);
+            DisputeItemStatusService.AcceptedByArbitrators.changeStatus(disputeData, disputeItemData.getId(), ActionSide.FinancialServer);
 
         } else if (votesForMerchant >= majorityOfVotes || disputeItemVotes.size() == arbitratorsCount) {
-            DisputeItemStatusService.RejectedByArbitrators.changeStatus(disputeData, disputeItemData.getId(), ActionSide.Arbitrator);
+            DisputeItemStatusService.RejectedByArbitrators.changeStatus(disputeData, disputeItemData.getId(), ActionSide.FinancialServer);
         }
 
         disputeData.setUpdateTime(Instant.now());

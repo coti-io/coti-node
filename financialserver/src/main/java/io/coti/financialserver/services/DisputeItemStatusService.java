@@ -2,10 +2,12 @@ package io.coti.financialserver.services;
 
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.model.Transactions;
-import io.coti.financialserver.data.*;
+import io.coti.financialserver.data.ActionSide;
+import io.coti.financialserver.data.DisputeData;
+import io.coti.financialserver.data.DisputeItemData;
+import io.coti.financialserver.data.DisputeItemStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
@@ -20,7 +22,7 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 
 public enum DisputeItemStatusService {
 
-    AcceptedByMerchant(DisputeItemStatus.AcceptedByMerchant, EnumSet.of(DisputeItemStatus.Recall), ActionSide.Merchant, true, true) {
+    AcceptedByMerchant(DisputeItemStatus.AcceptedByMerchant, EnumSet.of(DisputeItemStatus.Recall), ActionSide.Merchant, true, true, true) {
         @Override
         public void changeDisputeItemsStatuses(DisputeData disputeData) {
             changePreClaimDisputeItemsStatuses(disputeData);
@@ -30,7 +32,7 @@ public enum DisputeItemStatusService {
         public void changeDisputeStatus(DisputeData disputeData) throws Exception {
             if (existRecallDisputeItems(disputeData)) {
                 return;
-            } else if(!existClaimDisputeItems(disputeData)){
+            } else if (!existClaimDisputeItems(disputeData)) {
                 DisputeStatusService.Closed.changeStatus(disputeData);
             } else {
                 DisputeStatusService.Claim.changeStatus(disputeData);
@@ -38,7 +40,7 @@ public enum DisputeItemStatusService {
 
         }
     },
-    RejectedByMerchant(DisputeItemStatus.RejectedByMerchant, EnumSet.of(DisputeItemStatus.Recall), ActionSide.Merchant, false, false) {
+    RejectedByMerchant(DisputeItemStatus.RejectedByMerchant, EnumSet.of(DisputeItemStatus.Recall), ActionSide.Merchant, false, false, true) {
         @Override
         public void changeDisputeItemsStatuses(DisputeData disputeData) {
             changePreClaimDisputeItemsStatuses(disputeData);
@@ -49,7 +51,7 @@ public enum DisputeItemStatusService {
             this.Claim.changeDisputeStatus(disputeData);
         }
     },
-    CanceledByConsumer(DisputeItemStatus.CanceledByConsumer, EnumSet.of(DisputeItemStatus.Recall), ActionSide.Consumer, true, false) {
+    CanceledByConsumer(DisputeItemStatus.CanceledByConsumer, EnumSet.of(DisputeItemStatus.Recall), ActionSide.Consumer, true, false, true) {
         @Override
         public void changeDisputeItemsStatuses(DisputeData disputeData) {
             changePreClaimDisputeItemsStatuses(disputeData);
@@ -57,7 +59,7 @@ public enum DisputeItemStatusService {
 
         @Override
         public void changeDisputeStatus(DisputeData disputeData) throws Exception {
-            if(isCanceledByConsumerForAllItems(disputeData)){
+            if (isCanceledByConsumerForAllItems(disputeData)) {
                 DisputeStatusService.CanceledByConsumer.changeStatus(disputeData);
             } else {
                 this.AcceptedByMerchant.changeDisputeStatus(disputeData);
@@ -69,7 +71,7 @@ public enum DisputeItemStatusService {
             return disputeItems.stream().filter(disputeItemData -> disputeItemData.getStatus().equals(DisputeItemStatus.CanceledByConsumer)).count() == disputeItems.size();
         }
     },
-    Claim(DisputeItemStatus.Claim, EnumSet.of(DisputeItemStatus.Recall, DisputeItemStatus.RejectedByMerchant), ActionSide.FinancialServer, false, false) {
+    Claim(DisputeItemStatus.Claim, EnumSet.of(DisputeItemStatus.Recall, DisputeItemStatus.RejectedByMerchant), ActionSide.FinancialServer, false, false, false) {
         @Override
         public void changeDisputeStatus(DisputeData disputeData) throws Exception {
             if (existRecallDisputeItems(disputeData)) {
@@ -78,13 +80,13 @@ public enum DisputeItemStatusService {
             DisputeStatusService.Claim.changeStatus(disputeData);
         }
     },
-    AcceptedByArbitrators(DisputeItemStatus.AcceptedByArbitrators, EnumSet.of(DisputeItemStatus.Claim), ActionSide.Arbitrator, true, true) {
+    AcceptedByArbitrators(DisputeItemStatus.AcceptedByArbitrators, EnumSet.of(DisputeItemStatus.Claim), ActionSide.FinancialServer, true, true, false) {
         @Override
         public void changeDisputeStatus(DisputeData disputeData) throws Exception {
             changeDisputeStatusForPostClaimDisputeItem(disputeData);
         }
     },
-    RejectedByArbitrators(DisputeItemStatus.RejectedByArbitrators, EnumSet.of(DisputeItemStatus.Claim), ActionSide.Arbitrator, true, false) {
+    RejectedByArbitrators(DisputeItemStatus.RejectedByArbitrators, EnumSet.of(DisputeItemStatus.Claim), ActionSide.FinancialServer, true, false, false) {
         @Override
         public void changeDisputeStatus(DisputeData disputeData) throws Exception {
             changeDisputeStatusForPostClaimDisputeItem(disputeData);
@@ -99,13 +101,15 @@ public enum DisputeItemStatusService {
     private ActionSide actionSide;
     private boolean finalStatus;
     private boolean refundable;
+    private boolean preClaim;
 
-    DisputeItemStatusService(DisputeItemStatus newDisputeItemStatus, Set<DisputeItemStatus> previousDisputeItemStatuses, ActionSide actionSide, boolean finalStatus, boolean refundable) {
+    DisputeItemStatusService(DisputeItemStatus newDisputeItemStatus, Set<DisputeItemStatus> previousDisputeItemStatuses, ActionSide actionSide, boolean finalStatus, boolean refundable, boolean preClaim) {
         this.newDisputeItemStatus = newDisputeItemStatus;
         this.previousDisputeItemStatuses = previousDisputeItemStatuses;
         this.actionSide = actionSide;
         this.finalStatus = finalStatus;
         this.refundable = refundable;
+        this.preClaim = preClaim;
     }
 
     private boolean isActionSideValid(ActionSide actionSide) {
@@ -118,6 +122,10 @@ public enum DisputeItemStatusService {
 
     public boolean isRefundable() {
         return refundable;
+    }
+
+    public boolean isPreClaim() {
+        return preClaim;
     }
 
     public void changeStatus(DisputeData disputeData, Long itemId, ActionSide actionSide) throws Exception {
@@ -184,6 +192,10 @@ public enum DisputeItemStatusService {
             }
         }
         DisputeStatusService.Closed.changeStatus(disputeData);
+    }
+
+    public static void removePreClaimDisputeItems(List<DisputeItemData> disputeItems) {
+        disputeItems.removeIf(disputeItemData -> DisputeItemStatusService.valueOf(disputeItemData.getStatus().toString()).isPreClaim());
     }
 
     public void createChargeBackTransaction(DisputeData disputeData) {
