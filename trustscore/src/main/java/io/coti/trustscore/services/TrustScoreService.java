@@ -7,6 +7,7 @@ import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionTrustScoreData;
 import io.coti.basenode.http.BaseResponse;
+import io.coti.basenode.http.GetUserTrustScoreResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.TransactionTrustScoreResponseData;
 import io.coti.basenode.http.interfaces.IResponse;

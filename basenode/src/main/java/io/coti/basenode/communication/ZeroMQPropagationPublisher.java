@@ -19,10 +19,10 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket propagator;
     private String propagationPort;
-    @Value("${server.ip}")
-    private String publisherIp;
     private final int HEARTBEAT_INTERVAL = 5000;
     private final int INITIAL_DELAY = 1000;
+    @Value("${server.ip}")
+    protected String nodeIp;
 
     @Autowired
     private ISerializer serializer;
@@ -39,9 +39,10 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
     public <T extends IPropagatable> void propagate(T toPropagate, List<NodeType> subscriberNodeTypes) {
         synchronized (propagator) {
             subscriberNodeTypes.forEach(nodeType -> {
-                log.debug("Propagating {} to {}", toPropagate.getHash(), Channel.getChannelString(toPropagate.getClass(), nodeType));
+                String channelString = Channel.getChannelString(toPropagate.getClass(), nodeType);
+                log.debug("Propagating {} to {}", toPropagate.getHash().toHexString(), channelString );
                 byte[] message = serializer.serialize(toPropagate);
-                propagator.sendMore(Channel.getChannelString(toPropagate.getClass(), nodeType).getBytes());
+                propagator.sendMore(channelString.getBytes());
                 propagator.send(message);
             });
         }
@@ -51,7 +52,7 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
     public void propagateHeartBeatMessage() {
         if (propagator != null) {
             synchronized (propagator) {
-                String serverAddress = "tcp://" + publisherIp + ":" + propagationPort;
+                String serverAddress = "tcp://" + nodeIp + ":" + propagationPort;
                 propagator.sendMore(new String("HeartBeat " + serverAddress).getBytes());
                 propagator.send(serverAddress.getBytes());
             }

@@ -2,7 +2,7 @@ package io.coti.basenode.model;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
-import io.coti.basenode.database.Interfaces.IDatabaseConnector;
+import io.coti.basenode.database.Interfaces.IRocksDBConnector;
 import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.RocksIterator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,10 +13,9 @@ import java.util.function.Consumer;
 @Slf4j
 public abstract class Collection<T extends IEntity> {
 
-    protected String columnFamilyName = getClass().getName();
-
     @Autowired
-    public IDatabaseConnector databaseConnector;
+    public IRocksDBConnector databaseConnector;
+    protected String columnFamilyName = getClass().getName();
 
     public void init() {
         log.info("Collection init running. Class: " + columnFamilyName);
