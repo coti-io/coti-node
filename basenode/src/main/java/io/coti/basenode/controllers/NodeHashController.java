@@ -1,4 +1,4 @@
-package io.coti.dspnode.controllers;
+package io.coti.basenode.controllers;
 
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.Hash;
@@ -11,7 +11,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 @Slf4j
 @RestController
 @RequestMapping("/nodeHash")
-public class GetNodeHashController {
+public class NodeHashController {
 
     @RequestMapping(method = GET)
     public Hash getNodeHash() {
