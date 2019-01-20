@@ -76,7 +76,7 @@ public class BaseNodeTransactionService implements ITransactionService {
                 postponedTransactions.remove(postponedTransaction);
                 handlePropagatedTransaction(postponedTransaction);
             });
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         } finally {
             transactionHelper.endHandleTransaction(transactionData);

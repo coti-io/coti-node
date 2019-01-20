@@ -13,10 +13,9 @@ import java.util.function.Consumer;
 @Slf4j
 public abstract class Collection<T extends IEntity> {
 
-    protected String columnFamilyName = getClass().getName();
-
     @Autowired
     public IDatabaseConnector databaseConnector;
+    protected String columnFamilyName = getClass().getName();
 
     public void init() {
         log.info("Collection init running. Class: " + columnFamilyName);
