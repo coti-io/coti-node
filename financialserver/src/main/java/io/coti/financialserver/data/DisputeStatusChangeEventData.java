@@ -10,10 +10,12 @@ public class DisputeStatusChangeEventData implements IDisputeEvent, IEntity {
 
     private Hash disputeHash;
     private DisputeStatus disputeStatus;
+    private Hash transactionHash;
 
-    public DisputeStatusChangeEventData(Hash disputeHash, DisputeStatus disputeStatus) {
-        this.disputeHash = disputeHash;
-        this.disputeStatus = disputeStatus;
+    public DisputeStatusChangeEventData(DisputeData disputeData) {
+        this.disputeHash = disputeData.getHash();
+        this.disputeStatus = disputeData.getDisputeStatus();
+        this.transactionHash = disputeData.getTransactionHash();
     }
 
     @Override

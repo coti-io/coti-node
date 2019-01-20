@@ -1,6 +1,5 @@
 package io.coti.financialserver.http.data;
 
-import io.coti.basenode.data.SignatureData;
 import io.coti.financialserver.data.DisputeData;
 import io.coti.financialserver.data.DisputeItemData;
 import io.coti.financialserver.data.DisputeStatus;

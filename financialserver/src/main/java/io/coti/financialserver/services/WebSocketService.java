@@ -96,7 +96,7 @@ public class WebSocketService {
 
     public void notifyOnDisputeStatusChange(DisputeData disputeData, ActionSide actionSide) {
 
-        DisputeStatusChangeEventData disputeStatusChangedEventData = new DisputeStatusChangeEventData(disputeData.getHash(), disputeData.getDisputeStatus());
+        DisputeStatusChangeEventData disputeStatusChangedEventData = new DisputeStatusChangeEventData(disputeData);
 
         Map<Hash, ActionSide> userHashToEventDisplaySideMap = new HashMap<>();
         userHashToEventDisplaySideMap.put(disputeData.getConsumerHash(), ActionSide.Consumer);
@@ -107,7 +107,7 @@ public class WebSocketService {
     }
 
     public void notifyOnItemStatusChange(DisputeData disputeData, Long itemId, ActionSide actionSide) {
-        DisputeItemStatusChangeEventData disputeIemStatusChangeEventData = new DisputeItemStatusChangeEventData(disputeData.getHash(), itemId, disputeData.getDisputeItem(itemId).getStatus());
+        DisputeItemStatusChangeEventData disputeIemStatusChangeEventData = new DisputeItemStatusChangeEventData(disputeData, itemId);
 
         Map<Hash, ActionSide> userHashToEventDisplaySideMap = new HashMap<>();
         userHashToEventDisplaySideMap.put(disputeData.getConsumerHash(), ActionSide.Consumer);

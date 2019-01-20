@@ -5,19 +5,19 @@ import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.financialserver.data.interfaces.IDisputeEvent;
 import lombok.Data;
 
-import java.util.List;
-
 @Data
 public class DisputeItemStatusChangeEventData implements IDisputeEvent, IEntity {
 
     private Hash disputeHash;
     private Long itemId;
     private DisputeItemStatus disputeItemStatus;
+    private Hash transactionHash;
 
-    public DisputeItemStatusChangeEventData(Hash disputeHash, Long itemId, DisputeItemStatus disputeItemStatus) {
-        this.disputeHash = disputeHash;
+    public DisputeItemStatusChangeEventData(DisputeData disputeData, Long itemId) {
+        this.disputeHash = disputeData.getHash();
         this.itemId = itemId;
-        this.disputeItemStatus = disputeItemStatus;
+        this.disputeItemStatus = disputeData.getDisputeItem(itemId).getStatus();
+        this.transactionHash = disputeData.getTransactionHash();
     }
 
     @Override
