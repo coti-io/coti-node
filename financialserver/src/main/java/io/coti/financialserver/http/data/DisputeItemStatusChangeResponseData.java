@@ -11,11 +11,13 @@ public class DisputeItemStatusChangeResponseData implements IDisputeEventRespons
     private String disputeHash;
     private Long itemId;
     private DisputeItemStatus disputeItemStatus;
+    private String transactionHash;
 
     public DisputeItemStatusChangeResponseData(DisputeItemStatusChangeEventData disputeItemStatusChangeEventData) {
 
         disputeHash = disputeItemStatusChangeEventData.getHash().toString();
         itemId = disputeItemStatusChangeEventData.getItemId();
         disputeItemStatus = disputeItemStatusChangeEventData.getDisputeItemStatus();
+        transactionHash = disputeItemStatusChangeEventData.getTransactionHash().toString();
     }
 }

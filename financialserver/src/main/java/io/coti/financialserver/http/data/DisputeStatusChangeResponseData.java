@@ -10,10 +10,12 @@ public class DisputeStatusChangeResponseData implements IDisputeEventResponseDat
 
     private String disputeHash;
     private DisputeStatus disputeStatus;
+    private String transactionHash;
 
     public DisputeStatusChangeResponseData(DisputeStatusChangeEventData disputeStatusChangeEventData) {
 
         disputeHash = disputeStatusChangeEventData.getHash().toString();
         disputeStatus = disputeStatusChangeEventData.getDisputeStatus();
+        transactionHash = disputeStatusChangeEventData.getTransactionHash().toString();
     }
 }
