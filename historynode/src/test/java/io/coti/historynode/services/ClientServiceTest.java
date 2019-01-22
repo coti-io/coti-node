@@ -1,6 +1,8 @@
 package io.coti.historynode.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.TransactionData;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.RestClient;
 import org.junit.Before;
@@ -31,6 +33,9 @@ public class ClientServiceTest {
     @Test
     public void test() throws IOException {
         TransactionData transactionData = createRandomTransaction();
-        clientService.insertTransaction(transactionData);
+        ObjectMapper mapper = new ObjectMapper();
+        String transactionAsJson = mapper.writeValueAsString(transactionData );
+        clientService.insertTransaction(transactionData.getHash(), transactionAsJson );
+        String transactionAsJson2 = clientService.getTransactionByHash(transactionData.getHash());
     }
 }
