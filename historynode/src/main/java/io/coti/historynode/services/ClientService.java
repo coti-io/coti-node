@@ -38,7 +38,8 @@ public class ClientService {
     private String INDEX_NAME = "transaction";
    private String INDEX_TYPE = "json";
     private String ELASTICSEARCH_HOST_IP = "localhost";
-    private int ELASTICSEARCH_HOST_PORT = 9200;
+    private int ELASTICSEARCH_HOST_PORT1 = 9200;
+    private int ELASTICSEARCH_HOST_PORT2 = 9201;
 
     private RestHighLevelClient restClient;
     private ObjectMapper mapper;
@@ -47,7 +48,8 @@ public class ClientService {
         try {
             mapper = new ObjectMapper();
             restClient = new RestHighLevelClient(RestClient.builder(
-                    new HttpHost(ELASTICSEARCH_HOST_IP, ELASTICSEARCH_HOST_PORT)));
+                    new HttpHost(ELASTICSEARCH_HOST_IP, ELASTICSEARCH_HOST_PORT1),
+                    new HttpHost(ELASTICSEARCH_HOST_IP, ELASTICSEARCH_HOST_PORT2)));
             if (!ifIndexExist(INDEX_NAME)) {
                 sendCreateIndexRequest();
                 createMapping();
@@ -61,8 +63,8 @@ public class ClientService {
     private void sendCreateIndexRequest() throws IOException {
         CreateIndexRequest request = new CreateIndexRequest(INDEX_NAME);
         request.settings(Settings.builder()
-                .put("index.number_of_shards", 1)
-                .put("index.number_of_replicas", 1)
+                .put("index.number_of_shards", 6)
+                .put("index.number_of_replicas", 2)
         );
 
         //request.source(createMapping());
