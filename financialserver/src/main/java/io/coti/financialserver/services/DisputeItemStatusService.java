@@ -194,10 +194,6 @@ public enum DisputeItemStatusService {
         DisputeStatusService.Closed.changeStatus(disputeData);
     }
 
-    public static void removePreClaimDisputeItems(List<DisputeItemData> disputeItems) {
-        disputeItems.removeIf(disputeItemData -> DisputeItemStatusService.valueOf(disputeItemData.getStatus().toString()).isPreClaim());
-    }
-
     public void createChargeBackTransaction(DisputeData disputeData) {
         List<DisputeItemData> refundableDisputeItems = disputeData.getDisputeItems().stream().filter(disputeItemData -> valueOf(disputeItemData.getStatus().toString()).isRefundable()).collect(Collectors.toList());
         if (refundableDisputeItems.size() != 0) {
