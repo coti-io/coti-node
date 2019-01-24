@@ -32,6 +32,7 @@ public class ClientServiceTest {
 
     @Test
     public void test() throws IOException {
+        clientService.getClusterDetails();
         TransactionData transactionData = createRandomTransaction();
         ObjectMapper mapper = new ObjectMapper();
         String transactionAsJson = mapper.writeValueAsString(transactionData );
