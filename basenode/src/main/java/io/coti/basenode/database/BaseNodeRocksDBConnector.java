@@ -9,18 +9,15 @@ import org.rocksdb.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
-
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.*;
-
 @Slf4j
 @Service
 public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     @Value("${database.folder.name}")
     private String databaseFolderName;
     protected List<String> columnFamilyClassNames;
-
     @Value("${application.name}")
     private String applicationName;
     @Value("${resetDatabase}")
@@ -60,7 +57,8 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
                 Addresses.class.getName(),
                 AddressTransactionsHistories.class.getName(),
                 TransactionIndexes.class.getName(),
-                TransactionVotes.class.getName()
+                TransactionVotes.class.getName(),
+                KYCResponseRecords.class.getName()
         ));
 
     }

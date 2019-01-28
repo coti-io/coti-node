@@ -8,13 +8,12 @@ import io.coti.basenode.model.TransactionVotes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeDspVoteService;
 import io.coti.basenode.services.TransactionIndexService;
+import io.coti.basenode.services.interfaces.INetworkDetailsService;
+import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,9 +22,6 @@ import java.util.concurrent.ConcurrentMap;
 @Slf4j
 @Service
 public class DspVoteService extends BaseNodeDspVoteService {
-    @Value("#{'${dsp.server.addresses}'.split(',')}")
-    private List<String> dspServerAddresses;
-
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
@@ -38,9 +34,13 @@ public class DspVoteService extends BaseNodeDspVoteService {
     private DspVoteCrypto dspVoteCrypto;
     @Autowired
     private DspConsensusCrypto dspConsensusCrypto;
+    @Autowired
+    private INetworkService networkService;
+    @Autowired
+    private INetworkDetailsService networkDetailsService;
+
+
     private ConcurrentMap<Hash, List<DspVote>> transactionHashToVotesListMapping;
-    private static final String NODE_HASH_ENDPOINT = "/nodeHash";
-    private List<Hash> currentLiveDspNodes;
 
     @Override
     public void init() {
@@ -49,8 +49,12 @@ public class DspVoteService extends BaseNodeDspVoteService {
     }
 
     public void preparePropagatedTransactionForVoting(TransactionData transactionData) {
-        log.debug("Received new transaction. Live DSP Nodes: ");
-        TransactionVoteData transactionVoteData = new TransactionVoteData(transactionData.getHash(), currentLiveDspNodes);
+        List<Hash> dspHashList = new LinkedList<>();
+        networkDetailsService.getNetworkData().getDspNetworkNodesMap().forEach((hash, node)->
+            dspHashList.add(node.getHash())
+        );
+        log.debug("Received new transaction. Live DSP Nodes: {}", dspHashList);
+        TransactionVoteData transactionVoteData = new TransactionVoteData(transactionData.getHash(), dspHashList);
         transactionVotes.put(transactionVoteData);
         transactionHashToVotesListMapping.put(transactionData.getHash(), new LinkedList<>());
     }
@@ -93,29 +97,6 @@ public class DspVoteService extends BaseNodeDspVoteService {
         return "Ok";
     }
 
-    @Scheduled(fixedDelay = 10000, initialDelay = 5000)
-    private void updateLiveDspNodesList() {
-        List<Hash> onlineDspHashes = new LinkedList<>();
-        RestTemplate restTemplate = new RestTemplate();
-        for (String dspServerAddress : dspServerAddresses) {
-            try {
-                Hash voterHash = restTemplate.getForObject(dspServerAddress + NODE_HASH_ENDPOINT, Hash.class);
-                if (voterHash == null) {
-                    log.error("Voter hash received is null: {}", dspServerAddress);
-                } else {
-                    onlineDspHashes.add(voterHash);
-                }
-            } catch (RestClientException e) {
-                log.error("Unresponsive Dsp Node: {}", dspServerAddress);
-            }
-        }
-        if (onlineDspHashes.isEmpty()) {
-            log.error("No Dsp Nodes are online...");
-        }
-        currentLiveDspNodes = onlineDspHashes;
-        log.info("Updated live dsp nodes list. Count: {}", currentLiveDspNodes.size());
-    }
-
     @Scheduled(fixedDelay = 1000)
     private void sumAndSaveVotes() {
         for (Map.Entry<Hash, List<DspVote>> transactionHashToVotesListEntrySet :
@@ -136,7 +117,6 @@ public class DspVoteService extends BaseNodeDspVoteService {
                         log.debug("Undecided majority: {}", currentVotes.getHash());
                     }
                     transactionVotes.put(currentVotes);
-
                 }
             }
         }
