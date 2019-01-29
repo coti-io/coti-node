@@ -2,7 +2,7 @@ package io.coti.historynode.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.Hash;
-import javafx.util.Pair;
+import io.coti.historynode.services.interfaces.IClientService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
@@ -19,7 +19,6 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.main.MainResponse;
-import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -28,9 +27,10 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
@@ -38,8 +38,7 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 @Slf4j
 @Data
 @Service
-public class ClientService {
-    //private String INDEX_NAME = "transaction";
+public class ClientService implements IClientService {
     private String INDEX_TYPE = "json";
     private String ELASTICSEARCH_HOST_IP = "localhost";
     private int ELASTICSEARCH_HOST_PORT1 = 9200;
@@ -48,27 +47,36 @@ public class ClientService {
     private RestHighLevelClient restClient;
     private ObjectMapper mapper;
 
-    public void init(Map<String, String> indexes) {
+    @PostConstruct
+    private void init() {
         try {
             mapper = new ObjectMapper();
             restClient = new RestHighLevelClient(RestClient.builder(
                     new HttpHost(ELASTICSEARCH_HOST_IP, ELASTICSEARCH_HOST_PORT1)
             ));
-            for(Map.Entry<String, String> indexToObjectPair: indexes.entrySet()){
-                if (!ifIndexExist(indexToObjectPair.getKey())) {
-                    sendCreateIndexRequest(indexToObjectPair.getKey());
-                    createMapping(indexToObjectPair.getKey(), indexToObjectPair.getValue());
-                }
-            }
         } catch (Exception e) {
             log.error(e.getMessage());
         }
     }
 
-    public void getClusterDetails(List<String> indexes) throws IOException {
+    public void addIndexes(Map<String, String> indexes) throws IOException {
+        for (Map.Entry<String, String> indexToObjectPair : indexes.entrySet()) {
+            addIndex(indexToObjectPair.getKey(), indexToObjectPair.getValue());
+        }
+    }
+
+    public void addIndex(String indexName, String objectName) throws IOException {
+        if (!ifIndexExist(indexName)) {
+            sendCreateIndexRequest(indexName);
+            createMapping(indexName, objectName);
+        }
+    }
+
+    @Override
+    public void getClusterDetails(Set<String> indexes) throws IOException {
         MainResponse mainResponse = restClient.info(RequestOptions.DEFAULT);
 
-        for(String index : indexes){
+        for (String index : indexes) {
             String searchShardsDetails = getSearchShardsDetails(index);
             ClusterHealthRequest clusterHealthRequest = new ClusterHealthRequest(index);
             ClusterHealthResponse response = restClient.cluster().health(clusterHealthRequest, RequestOptions.DEFAULT);
@@ -79,14 +87,15 @@ public class ClientService {
     }
 
     private String getSearchShardsDetails(String index) {
-        final String uri = "http://" +  ELASTICSEARCH_HOST_IP + ":" + ELASTICSEARCH_HOST_PORT1 + "/" + index + "/" + "_search_shards";
+        final String uri = "http://" + ELASTICSEARCH_HOST_IP + ":" + ELASTICSEARCH_HOST_PORT1 + "/" + index + "/" + "_search_shards";
         RestTemplate restTemplate = new RestTemplate();
         String result = restTemplate.getForObject(uri, String.class);
         return result;
     }
 
 
-    public String getTransactionByHash(Hash hash, String index) throws IOException {
+    @Override
+    public String getObjectByHash(Hash hash, String index) throws IOException {
 
         GetRequest request = new GetRequest(index, INDEX_TYPE, hash.toString());
         try {
@@ -98,14 +107,14 @@ public class ClientService {
         }
     }
 
-    public void insertTransaction(Hash hash, String objectAsJsonString, String index, String objectName) throws IOException {
-        IndexResponse indexResponse;
+    @Override
+    public String insertObject(Hash hash, String objectAsJsonString, String index, String objectName) throws IOException {
+        IndexResponse indexResponse = null;
         try {
             IndexRequest request = new IndexRequest(
                     index,
                     INDEX_TYPE,
                     hash.toString());
-
             request.source((jsonBuilder()
                     .startObject()
                     .field(objectName, objectAsJsonString)
@@ -113,8 +122,9 @@ public class ClientService {
             indexResponse = restClient.index(request, RequestOptions.DEFAULT);
         } catch (Exception e) {
             log.error(e.getMessage());
+        } finally {
+            return indexResponse.toString();
         }
-
     }
 
     private void sendCreateIndexRequest(String index) throws IOException {
@@ -128,7 +138,6 @@ public class ClientService {
     }
 
     private void createMapping(String index, String objectName) throws IOException {
-
         XContentBuilder builder = jsonBuilder();
         builder.startObject();
         {
@@ -146,7 +155,7 @@ public class ClientService {
         PutMappingRequest request = new PutMappingRequest(index);
         request.type(INDEX_TYPE);
         request.source(builder);
-        AcknowledgedResponse putMappingResponse = restClient.indices().putMapping(request, RequestOptions.DEFAULT);
+        restClient.indices().putMapping(request, RequestOptions.DEFAULT);
     }
 
 
