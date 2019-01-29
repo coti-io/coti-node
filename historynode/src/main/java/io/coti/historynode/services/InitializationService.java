@@ -7,11 +7,11 @@ import javax.annotation.PostConstruct;
 
 @Service
 public class InitializationService {
-    @Autowired
-    private ClientService clientService;
-
-    @PostConstruct
-    public void init() {
-        clientService.init();
-    }
+//    @Autowired
+//    private ClientService clientService;
+//
+//    @PostConstruct
+//    public void init() {
+//        clientService.init();
+//    }
 }
