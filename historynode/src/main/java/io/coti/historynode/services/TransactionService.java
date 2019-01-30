@@ -1,11 +1,16 @@
 package io.coti.historynode.services;
 
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.GetTransactionJsonResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.historynode.data.ObjectDocument;
 import io.coti.historynode.http.AddTransactionJsonResponse;
+import io.coti.historynode.http.GetMultiObjectJsonResponse;
+import io.coti.historynode.http.GetObjectJsonResponse;
+import io.coti.historynode.services.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.get.MultiGetItemResponse;
+import org.elasticsearch.action.get.MultiGetResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,12 +18,15 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 
 @Slf4j
 @Service
-public class TransactionService {
+public class TransactionService implements ITransactionService {
 
     @Autowired
     private ClientService clientService;
@@ -35,6 +43,7 @@ public class TransactionService {
         }
     }
 
+    @Override
     public ResponseEntity<IResponse> insertTransactionJson(Hash hash, String transactionAsJson) throws IOException {
         if (!validateTransaction(hash, transactionAsJson)) {
             return ResponseEntity
@@ -44,7 +53,7 @@ public class TransactionService {
                             STATUS_ERROR));
         }
         String insertResponse =
-                clientService.insertObject(hash, transactionAsJson, TRANSACTION_INDEX_NAME, TRANSACTION_OBJECT_NAME);
+                clientService.insertObjectToDb(hash, transactionAsJson, TRANSACTION_INDEX_NAME, TRANSACTION_OBJECT_NAME);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(new AddTransactionJsonResponse(
@@ -52,8 +61,31 @@ public class TransactionService {
                         TRANSACTION_CREATED_MESSAGE, insertResponse));
     }
 
+
+    @Override
+    public ResponseEntity<IResponse> getMultiTransactionsFromDb(Map<Hash, String> hashAndIndexNameMap) throws IOException {
+        Map<Hash, String> hashToObjectsFromDbMap = null;
+        MultiGetResponse multiGetResponse = clientService.getMultiObjectsFromDb(hashAndIndexNameMap);
+        hashToObjectsFromDbMap = new HashMap<>();
+        for (MultiGetItemResponse multiGetItemResponse : multiGetResponse.getResponses()) {
+            hashToObjectsFromDbMap.put(new Hash(multiGetItemResponse.getId()),
+                    new String(multiGetItemResponse.getResponse().getSourceAsBytes()));
+        }
+        //TODO: Define logic
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new GetMultiObjectJsonResponse(hashToObjectsFromDbMap));
+    }
+
+    @Override
+    public ResponseEntity<IResponse> insertMultiObjectsToDb(List<ObjectDocument> transactionDocumentList) throws IOException {
+        clientService.insertMultiObjectsToDb(transactionDocumentList);
+        //TODO: Define logic
+        return null;
+    }
+
+    @Override
     public ResponseEntity<IResponse> getTransactionByHash(Hash hash) throws IOException {
-        String transactionAsJson = clientService.getObjectByHash(hash, TRANSACTION_INDEX_NAME);
+        String transactionAsJson = clientService.getObjectFromDbByHash(hash, TRANSACTION_INDEX_NAME);
         if (transactionAsJson == null)
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
@@ -62,7 +94,7 @@ public class TransactionService {
                             STATUS_ERROR));
         try {
             return ResponseEntity.status(HttpStatus.OK)
-                    .body(new GetTransactionJsonResponse(hash, transactionAsJson));
+                    .body(new GetObjectJsonResponse(hash, transactionAsJson));
         } catch (Exception e) {
             log.error(e.getMessage());
             return ResponseEntity

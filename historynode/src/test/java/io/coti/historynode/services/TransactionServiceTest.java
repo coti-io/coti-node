@@ -2,8 +2,7 @@ package io.coti.historynode.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.http.BaseResponse;
-import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.historynode.http.GetObjectJsonResponse;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,7 +29,7 @@ public class TransactionServiceTest {
         ObjectMapper mapper = new ObjectMapper();
         String transactionAsJson = mapper.writeValueAsString(transactionData);
         transactionService.insertTransactionJson(transactionData.getHash(), transactionAsJson);
-        IResponse response = transactionService.getTransactionByHash(transactionData.getHash()).getBody();
-        Assert.assertTrue(((BaseResponse)(response)).getStatus().equals(STATUS_SUCCESS));
+        GetObjectJsonResponse response = (GetObjectJsonResponse) transactionService.getTransactionByHash(transactionData.getHash()).getBody();
+        Assert.assertTrue(response.getStatus().equals(STATUS_SUCCESS));
     }
 }

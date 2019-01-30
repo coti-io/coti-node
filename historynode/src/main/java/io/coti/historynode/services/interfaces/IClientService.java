@@ -8,7 +8,7 @@ import java.util.Set;
 public interface IClientService {
     void getClusterDetails(Set<String> indexes) throws IOException;
 
-    String getObjectByHash(Hash hash, String index) throws IOException;
+    String getObjectFromDbByHash(Hash hash, String index) throws IOException;
 
-    String insertObject(Hash hash, String objectAsJsonString, String index, String objectName) throws IOException;
+    String insertObjectToDb(Hash hash, String objectAsJsonString, String index, String objectName) throws IOException;
 }

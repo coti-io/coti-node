@@ -2,6 +2,7 @@ package io.coti.historynode.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.Hash;
+import io.coti.historynode.data.ObjectDocument;
 import io.coti.historynode.services.interfaces.IClientService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -14,8 +15,11 @@ import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsRespons
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
+import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.MultiGetRequest;
+import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.main.MainResponse;
@@ -24,11 +28,13 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -95,7 +101,7 @@ public class ClientService implements IClientService {
 
 
     @Override
-    public String getObjectByHash(Hash hash, String index) throws IOException {
+    public String getObjectFromDbByHash(Hash hash, String index) throws IOException {
 
         GetRequest request = new GetRequest(index, INDEX_TYPE, hash.toString());
         try {
@@ -107,8 +113,40 @@ public class ClientService implements IClientService {
         }
     }
 
+
+    public void insertMultiObjectsToDb(List<ObjectDocument> objectDocumentList) throws IOException {
+        try {
+            BulkRequest request = new BulkRequest();
+            for (ObjectDocument objectDocument : objectDocumentList) {
+                request.add(new IndexRequest(objectDocument.getIndexName()).id(objectDocument.getHash().toString()).type(INDEX_TYPE)
+                        .source(XContentType.JSON, objectDocument.getObjectName(), objectDocument.getObjectAsJsonString()));
+            }
+            restClient.bulk(request, RequestOptions.DEFAULT);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+    }
+
+    public MultiGetResponse getMultiObjectsFromDb(Map<Hash, String> hashAndIndexNameMap) {
+        MultiGetResponse multiGetResponse = null;
+        try {
+            MultiGetRequest request = new MultiGetRequest();
+            for (Map.Entry<Hash, String> entry : hashAndIndexNameMap.entrySet()) {
+                request.add(new MultiGetRequest.Item(
+                        entry.getValue(),
+                        INDEX_TYPE,
+                        entry.getKey().toString()));
+            }
+            multiGetResponse = restClient.mget(request, RequestOptions.DEFAULT);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        } finally {
+            return multiGetResponse;
+        }
+    }
+
     @Override
-    public String insertObject(Hash hash, String objectAsJsonString, String index, String objectName) throws IOException {
+    public String insertObjectToDb(Hash hash, String objectAsJsonString, String index, String objectName) throws IOException {
         IndexResponse indexResponse = null;
         try {
             IndexRequest request = new IndexRequest(
