@@ -3,7 +3,6 @@ package io.coti.storagenode.services;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.storagenode.data.ObjectDocument;
 import io.coti.storagenode.http.AddObjectJsonResponse;
 import io.coti.storagenode.http.GetObjectBulkJsonResponse;
 import io.coti.storagenode.http.GetObjectJsonResponse;
@@ -52,11 +51,11 @@ public class TransactionService implements ITransactionService {
     }
 
     @Override
-        public ResponseEntity<IResponse> getMultiTransactionsFromDb(List<Hash> hashes){
+    public ResponseEntity<IResponse> getMultiTransactionsFromDb(List<Hash> hashes) {
         Map<Hash, String> hashToTransactionFromDbMap = null;
 
         //TODO: Define logic.
-        hashToTransactionFromDbMap = clientService.getMultiObjects(hashes,TRANSACTION_INDEX_NAME);
+        hashToTransactionFromDbMap = clientService.getMultiObjects(hashes, TRANSACTION_INDEX_NAME);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new GetObjectBulkJsonResponse(hashToTransactionFromDbMap));
     }

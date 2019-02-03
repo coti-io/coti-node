@@ -5,9 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
-import io.coti.storagenode.data.ObjectDocument;
-import org.elasticsearch.action.get.MultiGetItemResponse;
-import org.elasticsearch.action.get.MultiGetResponse;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,7 +18,10 @@ import testUtils.AddressAsObjectAndJsonString;
 import testUtils.TransactionAsObjectAndJsonString;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static testUtils.TestUtils.createRandomTransaction;
 import static testUtils.TestUtils.generateRandomHash;
@@ -79,12 +79,12 @@ public class ClientServiceTest {
 
     @Test
     public void insertAndGetMultiObjects() throws IOException {
-        Map<Hash, String> hashToObjectJsonDataMap= insertAddressBulk();
+        Map<Hash, String> hashToObjectJsonDataMap = insertAddressBulk();
         Map<Hash, String> hashToObjectsFromDbMap = getMultiObjectsFromDb(ADDRESS_INDEX_NAME, new ArrayList<>(hashToObjectJsonDataMap.keySet()));
         Assert.assertTrue(insertedObjectsEqualToObjectsFromDb(hashToObjectJsonDataMap, hashToObjectsFromDbMap));
     }
 
-    private boolean insertedObjectsEqualToObjectsFromDb(Map<Hash, String>  hashToObjectJsonDataMap, Map<Hash, String> hashToObjectsFromDbMap) {
+    private boolean insertedObjectsEqualToObjectsFromDb(Map<Hash, String> hashToObjectJsonDataMap, Map<Hash, String> hashToObjectsFromDbMap) {
         if (hashToObjectJsonDataMap.size() != hashToObjectsFromDbMap.size()) {
             return false;
         }
@@ -92,7 +92,7 @@ public class ClientServiceTest {
     }
 
     private Map<Hash, String> getMultiObjectsFromDb(String indexName, List<Hash> hashes) {
-        return  clientService.getMultiObjects(hashes, indexName);
+        return clientService.getMultiObjects(hashes, indexName);
     }
 
     private Map<Hash, String> insertAddressBulk() throws IOException {
@@ -101,8 +101,8 @@ public class ClientServiceTest {
             AddressAsObjectAndJsonString addressAsObjectAndJsonString = getRandomAddressAsObjectAndJsonString();
             hashToObjectJsonDataMap.put(addressAsObjectAndJsonString.getHash(), addressAsObjectAndJsonString.getAddressAsJsonString());
         }
-        clientService.insertMultiObjectsToDb(ADDRESS_INDEX_NAME, ADDRESS_OBJECT_NAME, hashToObjectJsonDataMap );
-        return hashToObjectJsonDataMap ;
+        clientService.insertMultiObjectsToDb(ADDRESS_INDEX_NAME, ADDRESS_OBJECT_NAME, hashToObjectJsonDataMap);
+        return hashToObjectJsonDataMap;
     }
 
     private TransactionAsObjectAndJsonString getRandomTransactionAsObjectAndJsonString() throws JsonProcessingException {
