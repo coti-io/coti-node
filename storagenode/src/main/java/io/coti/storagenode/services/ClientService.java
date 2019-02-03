@@ -1,9 +1,9 @@
-package io.coti.historynode.services;
+package io.coti.storagenode.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.Hash;
 import io.coti.historynode.data.ObjectDocument;
-import io.coti.historynode.services.interfaces.IClientService;
+import io.coti.storagenode.services.interfaces.IClientService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;

@@ -1,13 +1,13 @@
-package io.coti.historynode.services;
+package io.coti.storagenode.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.historynode.data.ObjectDocument;
-import io.coti.historynode.http.AddTransactionJsonResponse;
+import io.coti.historynode.http.AddAddressJsonResponse;
 import io.coti.historynode.http.GetMultiObjectJsonResponse;
 import io.coti.historynode.http.GetObjectJsonResponse;
-import io.coti.historynode.services.interfaces.ITransactionService;
+import io.coti.storagenode.services.interfaces.IAddressService;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
@@ -26,26 +26,33 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 
 @Slf4j
 @Service
-public class TransactionService implements ITransactionService {
-
+public class AddressService implements IAddressService {
     @Autowired
     private ClientService clientService;
 
-    private String TRANSACTION_INDEX_NAME = "transactions";
-    private String TRANSACTION_OBJECT_NAME = "transactionData";
+    private String ADDRESS_INDEX_NAME = "address";
+    private String ADDRESS_OBJECT_NAME = "addressData";
 
     @PostConstruct
     private void init() {
         try {
-            clientService.addIndex(TRANSACTION_INDEX_NAME, TRANSACTION_OBJECT_NAME);
+            clientService.addIndex(ADDRESS_INDEX_NAME, ADDRESS_OBJECT_NAME);
         } catch (IOException e) {
             log.error(e.getMessage());
         }
     }
 
+
     @Override
-    public ResponseEntity<IResponse> insertTransactionJson(Hash hash, String transactionAsJson) throws IOException {
-        if (!validateTransaction(hash, transactionAsJson)) {
+    public ResponseEntity<IResponse> insertMultiAddressesToDb(List<ObjectDocument> addressDocumentList) throws IOException {
+        clientService.insertMultiObjectsToDb(addressDocumentList);
+        //TODO: Define logic
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<IResponse> insertAddressJson(Hash hash, String addressAsJson) throws IOException {
+        if (!validateAddress(hash, addressAsJson)) {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .body(new Response(
@@ -53,17 +60,16 @@ public class TransactionService implements ITransactionService {
                             STATUS_ERROR));
         }
         String insertResponse =
-                clientService.insertObjectToDb(hash, transactionAsJson, TRANSACTION_INDEX_NAME, TRANSACTION_OBJECT_NAME);
+                clientService.insertObjectToDb(hash, addressAsJson, ADDRESS_INDEX_NAME, ADDRESS_OBJECT_NAME);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(new AddTransactionJsonResponse(
+                .body(new AddAddressJsonResponse(
                         STATUS_SUCCESS,
-                        TRANSACTION_CREATED_MESSAGE, insertResponse));
+                        ADDRESS_CREATED_MESSAGE, insertResponse));
     }
 
-
     @Override
-    public ResponseEntity<IResponse> getMultiTransactionsFromDb(Map<Hash, String> hashAndIndexNameMap) throws IOException {
+    public ResponseEntity<IResponse> getMultiAddressesFromDb(Map<Hash, String> hashAndIndexNameMap) throws IOException {
         Map<Hash, String> hashToObjectsFromDbMap = null;
         MultiGetResponse multiGetResponse = clientService.getMultiObjectsFromDb(hashAndIndexNameMap);
         hashToObjectsFromDbMap = new HashMap<>();
@@ -71,41 +77,35 @@ public class TransactionService implements ITransactionService {
             hashToObjectsFromDbMap.put(new Hash(multiGetItemResponse.getId()),
                     new String(multiGetItemResponse.getResponse().getSourceAsBytes()));
         }
-        //TODO: Define logic
+        //TODO: Define logic.
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new GetMultiObjectJsonResponse(hashToObjectsFromDbMap));
     }
 
-    @Override
-    public ResponseEntity<IResponse> insertMultiObjectsToDb(List<ObjectDocument> transactionDocumentList) throws IOException {
-        clientService.insertMultiObjectsToDb(transactionDocumentList);
-        //TODO: Define logic
-        return null;
-    }
 
     @Override
-    public ResponseEntity<IResponse> getTransactionByHash(Hash hash) throws IOException {
-        String transactionAsJson = clientService.getObjectFromDbByHash(hash, TRANSACTION_INDEX_NAME);
-        if (transactionAsJson == null)
+    public ResponseEntity<IResponse> getAddressByHash(Hash hash) throws IOException {
+        String addressAsJson = clientService.getObjectFromDbByHash(hash, ADDRESS_INDEX_NAME);
+        if (addressAsJson == null)
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .body(new Response(
-                            TRANSACTION_DOESNT_EXIST_MESSAGE,
+                            ADDRESS_DOESNT_EXIST_MESSAGE,
                             STATUS_ERROR));
         try {
             return ResponseEntity.status(HttpStatus.OK)
-                    .body(new GetObjectJsonResponse(hash, transactionAsJson));
+                    .body(new GetObjectJsonResponse(hash, addressAsJson));
         } catch (Exception e) {
             log.error(e.getMessage());
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new Response(
-                            TRANSACTION_DETAILS_SERVER_ERROR,
+                            ADDRESS_TRANSACTIONS_SERVER_ERROR,
                             STATUS_ERROR));
         }
     }
 
-    public boolean validateTransaction(Hash hash, String transactionAsJsonString) throws IOException {
+    private boolean validateAddress(Hash hash, String addressAsJsonString) throws IOException {
         // TODO:
         return true;
     }

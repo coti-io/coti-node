@@ -1,4 +1,4 @@
-package io.coti.historynode.services;
+package io.coti.storagenode.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.AddressData;
@@ -9,6 +9,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -17,6 +19,7 @@ import java.io.IOException;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_SUCCESS;
 import static testUtils.TestUtils.generateRandomHash;
 
+@ContextConfiguration(classes = {AddressService.class, ClientService.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -24,6 +27,9 @@ public class AddressServiceTest {
 
     @Autowired
     private AddressService addressService;
+
+    @Autowired
+    private ClientService clientService;
 
     @Test
     public void addressTest() throws IOException {

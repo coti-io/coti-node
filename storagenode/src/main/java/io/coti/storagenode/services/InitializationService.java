@@ -1,4 +1,4 @@
-package io.coti.historynode.services;
+package io.coti.storagenode.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

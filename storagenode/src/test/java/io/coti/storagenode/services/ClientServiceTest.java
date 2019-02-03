@@ -1,4 +1,4 @@
-package io.coti.historynode.services;
+package io.coti.storagenode.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
