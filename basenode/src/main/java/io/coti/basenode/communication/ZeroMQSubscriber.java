@@ -5,6 +5,7 @@ import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.communication.interfaces.ISerializer;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.DspConsensusResult;
+import io.coti.basenode.data.PrepareForSnapshot;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.interfaces.IEntity;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +30,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     private HashMap<String, Consumer<Object>> messagesHandler;
     private Map<String, Date> connectedServerAddresses = new ConcurrentHashMap<>();
     private BlockingQueue<ZeroMQMessageData> messageQueue;
-    private List<Class<? extends IEntity>> messageTypes = new ArrayList<>(Arrays.asList(TransactionData.class, AddressData.class, DspConsensusResult.class));
+    private List<Class<? extends IEntity>> messageTypes = new ArrayList<>(Arrays.asList(TransactionData.class, AddressData.class, DspConsensusResult.class, PrepareForSnapshot.class));
     private List<String> channelsToSubscribe;
     private final int HEARTBEAT_INTERVAL = 10000;
     private final int INITIAL_DELAY = 5000;

@@ -15,6 +15,7 @@ public class PrepareForSnapshot implements IEntity, IPropagatable, ISignable, IS
     private SignatureData zeroSpendSignature;
 
     public PrepareForSnapshot(Long lastDspConfirmed) {
+        this.hash = new Hash(lastDspConfirmed);
         this.lastDspConfirmed = lastDspConfirmed;
     }
 
