@@ -8,6 +8,7 @@ import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.data.*;
 import io.coti.basenode.services.interfaces.IAddressService;
 import io.coti.basenode.services.interfaces.IDspVoteService;
+import io.coti.basenode.services.interfaces.ISnapshotService;
 import io.coti.basenode.services.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,8 @@ public class CommunicationService {
     private ITransactionService transactionService;
     @Autowired
     private IDspVoteService dspVoteService;
+    @Autowired
+    private ISnapshotService snapshotService;
 
     public void initSubscriber(List<String> propagationServerAddresses, NodeType nodeType, HashMap<String, Consumer<Object>> classNameToSubscriberHandlerMapping) {
         classNameToSubscriberHandlerMapping.put(Channel.getChannelString(TransactionData.class, nodeType), data ->
@@ -43,6 +46,9 @@ public class CommunicationService {
                 addressService.handlePropagatedAddress((AddressData) data));
         classNameToSubscriberHandlerMapping.put(Channel.getChannelString(DspConsensusResult.class, nodeType), data ->
                 dspVoteService.handleVoteConclusion((DspConsensusResult) data));
+        classNameToSubscriberHandlerMapping.put(Channel.getChannelString(PrepareForSnapshot.class, nodeType), data ->
+                snapshotService.handlePrepareForSnapshot((PrepareForSnapshot) data));
+
         propagationSubscriber.init(propagationServerAddresses, classNameToSubscriberHandlerMapping);
     }
 
