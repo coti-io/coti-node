@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.zeromq.ZMQ;
+import org.zeromq.ZMQException;
 
 import java.util.List;
 
@@ -19,6 +20,7 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket propagator;
     private String propagationPort;
+    private Thread pollerThread;
     @Value("${server.ip}")
     private String publisherIp;
     private final int HEARTBEAT_INTERVAL = 5000;
@@ -28,11 +30,33 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
     private ISerializer serializer;
 
     public void init(String propagationPort) {
-        zeroMQContext = ZMQ.context(1);
-        propagator = zeroMQContext.socket(ZMQ.PUB);
-        propagator.setHWM(10000);
         this.propagationPort = propagationPort;
+        zeroMQContext = ZMQ.context(1);
+        //   ZAuth auth = new ZAuth(zeroMQContext);
+        propagator = zeroMQContext.socket(ZMQ.XPUB);
+        propagator.setHWM(10000);
         propagator.bind("tcp://*:" + propagationPort);
+
+        pollerThread = new Thread(() -> {
+            boolean contextTerminated = false;
+            while (!contextTerminated && !Thread.currentThread().isInterrupted()) {
+                try {
+                    byte[] msg = propagator.recv();
+                    if (msg[0] == 1) {
+                        log.info("New Subscriber to channel {}", new String(msg).substring(1));
+                    } else {
+                        log.info("A Subscriber left the channel {}", new String(msg).substring(1));
+                    }
+                } catch (ZMQException e) {
+                    if (e.getErrorCode() == ZMQ.Error.ETERM.getCode()) {
+                        contextTerminated = true;
+                    } else {
+                        log.error("ZeroMQ exception at receiver thread", e);
+                    }
+                }
+            }
+        });
+        pollerThread.start();
         log.info("ZeroMQ Publisher is up");
     }
 

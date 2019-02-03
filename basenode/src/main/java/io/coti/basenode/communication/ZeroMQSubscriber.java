@@ -174,6 +174,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
             if (propagationReceiver != null) {
                 log.info("Shutting down {}", this.getClass().getSimpleName());
                 //  propagationReceiver.unbind("tcp://*:" + port);
+         //       propagationReceiver.close();
                 zeroMQContext.term();
                 receiverThread.interrupt();
                 receiverThread.join();
@@ -181,6 +182,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                 propagationThread.join();
             }
         } catch (InterruptedException e) {
+            e.printStackTrace();
             log.error("Interrupted shutdown ZeroMQ subscriber");
         }
     }
