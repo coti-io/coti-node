@@ -14,7 +14,7 @@ public interface ITransactionService {
 
     ResponseEntity<IResponse> getTransactionByHash(Hash hash) throws IOException;
 
-    ResponseEntity<IResponse> getMultiTransactionsFromDb(Map<Hash, String> hashAndIndexNameMap) throws IOException;
+    ResponseEntity<IResponse> getMultiTransactionsFromDb(List<Hash> hashes);
 
-    ResponseEntity<IResponse> insertMultiObjectsToDb(List<ObjectDocument> objectDocumentList) throws IOException;
+    ResponseEntity<IResponse> insertMultiTransactions(Map<Hash, String> hashToTransactionJsonDataMap);
 }

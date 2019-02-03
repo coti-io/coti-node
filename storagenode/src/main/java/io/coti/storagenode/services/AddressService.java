@@ -3,14 +3,11 @@ package io.coti.storagenode.services;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.storagenode.data.ObjectDocument;
-import io.coti.storagenode.http.AddAddressJsonResponse;
-import io.coti.storagenode.http.GetMultiObjectJsonResponse;
+import io.coti.storagenode.http.AddObjectJsonResponse;
+import io.coti.storagenode.http.GetObjectBulkJsonResponse;
 import io.coti.storagenode.http.GetObjectJsonResponse;
 import io.coti.storagenode.services.interfaces.IAddressService;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.action.get.MultiGetItemResponse;
-import org.elasticsearch.action.get.MultiGetResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,59 +38,53 @@ public class AddressService implements IAddressService {
         }
     }
 
-
     @Override
-    public ResponseEntity<IResponse> insertMultiAddressesToDb(List<ObjectDocument> addressDocumentList) throws IOException {
-        clientService.insertMultiObjectsToDb(addressDocumentList);
+    public ResponseEntity<IResponse> insertMultiAddresses(Map<Hash, String> hashToAddressJsonDataMap) {
+
+        try {
+            clientService.insertMultiObjectsToDb(ADDRESS_INDEX_NAME, ADDRESS_OBJECT_NAME, hashToAddressJsonDataMap);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
         //TODO: Define logic
         return null;
+
+        //clientService.insertMultiObjectsToDb(addressDocumentList);
     }
 
     @Override
-    public ResponseEntity<IResponse> insertAddressJson(Hash hash, String addressAsJson) throws IOException {
-        if (!validateAddress(hash, addressAsJson)) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new Response(
-                            INVALID_PARAMETERS_MESSAGE,
-                            STATUS_ERROR));
+    public ResponseEntity<IResponse> insertAddressJson(Hash hash, String addressAsJson) {
+        String insertResponse = null;
+        try {
+            insertResponse = clientService.insertObjectToDb(hash, addressAsJson, ADDRESS_INDEX_NAME, ADDRESS_OBJECT_NAME);
+        } catch (IOException e) {
+            log.error(e.getMessage());
         }
-        String insertResponse =
-                clientService.insertObjectToDb(hash, addressAsJson, ADDRESS_INDEX_NAME, ADDRESS_OBJECT_NAME);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(new AddAddressJsonResponse(
+                .body(new AddObjectJsonResponse(
                         STATUS_SUCCESS,
                         ADDRESS_CREATED_MESSAGE, insertResponse));
     }
 
     @Override
-    public ResponseEntity<IResponse> getMultiAddressesFromDb(Map<Hash, String> hashAndIndexNameMap) throws IOException {
-        Map<Hash, String> hashToObjectsFromDbMap = null;
-        MultiGetResponse multiGetResponse = clientService.getMultiObjectsFromDb(hashAndIndexNameMap);
-        hashToObjectsFromDbMap = new HashMap<>();
-        for (MultiGetItemResponse multiGetItemResponse : multiGetResponse.getResponses()) {
-            hashToObjectsFromDbMap.put(new Hash(multiGetItemResponse.getId()),
-                    new String(multiGetItemResponse.getResponse().getSourceAsBytes()));
-        }
+    public ResponseEntity<IResponse> getMultiAddressesFromDb(List<Hash> hashes) {
+        Map<Hash, String> hashToAddressFromDbMap = null;
         //TODO: Define logic.
+        try {
+            hashToAddressFromDbMap = clientService.getMultiObjects(hashes, ADDRESS_INDEX_NAME);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new GetMultiObjectJsonResponse(hashToObjectsFromDbMap));
+                .body(new GetObjectBulkJsonResponse(hashToAddressFromDbMap));
     }
 
-
     @Override
-    public ResponseEntity<IResponse> getAddressByHash(Hash hash) throws IOException {
-        String addressAsJson = clientService.getObjectFromDbByHash(hash, ADDRESS_INDEX_NAME);
-        if (addressAsJson == null)
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new Response(
-                            ADDRESS_DOESNT_EXIST_MESSAGE,
-                            STATUS_ERROR));
+    public ResponseEntity<IResponse> getAddressByHash(Hash hash) {
+        String addressAsJson = null;
         try {
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(new GetObjectJsonResponse(hash, addressAsJson));
+            addressAsJson = clientService.getObjectFromDbByHash(hash, ADDRESS_INDEX_NAME);
         } catch (Exception e) {
             log.error(e.getMessage());
             return ResponseEntity
@@ -103,10 +93,34 @@ public class AddressService implements IAddressService {
                             ADDRESS_TRANSACTIONS_SERVER_ERROR,
                             STATUS_ERROR));
         }
+        if (addressAsJson == null)
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new Response(
+                            ADDRESS_DOESNT_EXIST_MESSAGE,
+                            STATUS_ERROR));
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new GetObjectJsonResponse(hash, addressAsJson));
     }
 
-    private boolean validateAddress(Hash hash, String addressAsJsonString) throws IOException {
-        // TODO:
-        return true;
+    @Override
+    public ResponseEntity<IResponse> deleteMultiAddressesFromDb(List<Hash> hashes) {
+        //TODO: Define logic.
+        try {
+            for (Hash hash : hashes) {
+                clientService.deleteObject(hash, ADDRESS_INDEX_NAME);
+            }
+
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<IResponse> deleteAddressByHash(Hash hash) {
+        clientService.deleteObject(hash, ADDRESS_INDEX_NAME);
+        return null;
     }
 }

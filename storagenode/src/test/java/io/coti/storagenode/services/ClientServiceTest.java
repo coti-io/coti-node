@@ -21,10 +21,7 @@ import testUtils.AddressAsObjectAndJsonString;
 import testUtils.TransactionAsObjectAndJsonString;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static testUtils.TestUtils.createRandomTransaction;
 import static testUtils.TestUtils.generateRandomHash;
@@ -82,46 +79,30 @@ public class ClientServiceTest {
 
     @Test
     public void insertAndGetMultiObjects() throws IOException {
-        List<ObjectDocument> insertedObjectDocuments = insertBulk();
-        Map<Hash, String> hashToObjectsFromDbMap = getMultiObjects(insertedObjectDocuments);
-        Assert.assertTrue(insertedObjectsEqualToObjectsFromDb(insertedObjectDocuments, hashToObjectsFromDbMap));
+        Map<Hash, String> hashToObjectJsonDataMap= insertAddressBulk();
+        Map<Hash, String> hashToObjectsFromDbMap = getMultiObjectsFromDb(ADDRESS_INDEX_NAME, new ArrayList<>(hashToObjectJsonDataMap.keySet()));
+        Assert.assertTrue(insertedObjectsEqualToObjectsFromDb(hashToObjectJsonDataMap, hashToObjectsFromDbMap));
     }
 
-    private boolean insertedObjectsEqualToObjectsFromDb(List<ObjectDocument> insertedObjectDocuments, Map<Hash, String> hashToObjectsFromDbMap) {
-        if (insertedObjectDocuments.size() != hashToObjectsFromDbMap.size()) {
+    private boolean insertedObjectsEqualToObjectsFromDb(Map<Hash, String>  hashToObjectJsonDataMap, Map<Hash, String> hashToObjectsFromDbMap) {
+        if (hashToObjectJsonDataMap.size() != hashToObjectsFromDbMap.size()) {
             return false;
         }
         return true;
     }
 
-    private Map<Hash, String> getMultiObjects(List<ObjectDocument> insertedObjectDocuments) {
-        Map<Hash, String> hashToObjectsFromDbMap = null;
-        Map<Hash, String> hashAndIndexNameMap = new HashMap<>();
-        for (ObjectDocument objectDocument : insertedObjectDocuments) {
-            hashAndIndexNameMap.put(objectDocument.getHash(), objectDocument.getIndexName());
-        }
-        MultiGetResponse multiGetResponse = clientService.getMultiObjectsFromDb(hashAndIndexNameMap);
-        hashToObjectsFromDbMap = new HashMap<>();
-        for (MultiGetItemResponse multiGetItemResponse : multiGetResponse.getResponses()) {
-            hashToObjectsFromDbMap.put(new Hash(multiGetItemResponse.getId()),
-                    new String(multiGetItemResponse.getResponse().getSourceAsBytes()));
-        }
-        return hashToObjectsFromDbMap;
+    private Map<Hash, String> getMultiObjectsFromDb(String indexName, List<Hash> hashes) {
+        return  clientService.getMultiObjects(hashes, indexName);
     }
 
-    private List<ObjectDocument> insertBulk() throws IOException {
-        List<ObjectDocument> objectDocuments = new ArrayList<>();
+    private Map<Hash, String> insertAddressBulk() throws IOException {
+        Map<Hash, String> hashToObjectJsonDataMap = new HashMap<>();
         for (int i = 0; i < NUMBER_OF_OBJECTS; i++) {
-            if (i % 2 == 0) {
-                TransactionAsObjectAndJsonString transactionAsObjectAndJsonString = getRandomTransactionAsObjectAndJsonString();
-                objectDocuments.add(new ObjectDocument(TRANSACTION_INDEX_NAME, TRANSACTION_OBJECT_NAME, transactionAsObjectAndJsonString.getHash(), transactionAsObjectAndJsonString.getTransactionAsJsonString()));
-            } else {
-                AddressAsObjectAndJsonString addressAsObjectAndJsonString = getRandomAddressAsObjectAndJsonString();
-                objectDocuments.add(new ObjectDocument(ADDRESS_INDEX_NAME, ADDRESS_OBJECT_NAME, addressAsObjectAndJsonString.getHash(), addressAsObjectAndJsonString.getAddressAsJsonString()));
-            }
+            AddressAsObjectAndJsonString addressAsObjectAndJsonString = getRandomAddressAsObjectAndJsonString();
+            hashToObjectJsonDataMap.put(addressAsObjectAndJsonString.getHash(), addressAsObjectAndJsonString.getAddressAsJsonString());
         }
-        clientService.insertMultiObjectsToDb(objectDocuments);
-        return objectDocuments;
+        clientService.insertMultiObjectsToDb(ADDRESS_INDEX_NAME, ADDRESS_OBJECT_NAME, hashToObjectJsonDataMap );
+        return hashToObjectJsonDataMap ;
     }
 
     private TransactionAsObjectAndJsonString getRandomTransactionAsObjectAndJsonString() throws JsonProcessingException {

@@ -2,7 +2,6 @@ package io.coti.storagenode.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.Hash;
-import io.coti.storagenode.data.ObjectDocument;
 import io.coti.storagenode.services.interfaces.IClientService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -16,10 +15,9 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.get.GetRequest;
-import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.get.MultiGetRequest;
-import org.elasticsearch.action.get.MultiGetResponse;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.delete.DeleteResponse;
+import org.elasticsearch.action.get.*;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.main.MainResponse;
@@ -34,6 +32,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -114,12 +113,12 @@ public class ClientService implements IClientService {
     }
 
 
-    public void insertMultiObjectsToDb(List<ObjectDocument> objectDocumentList) throws IOException {
+    public void insertMultiObjectsToDb(String indexName, String objectName, Map<Hash, String> hashToObjectJsonDataMap) {
         try {
             BulkRequest request = new BulkRequest();
-            for (ObjectDocument objectDocument : objectDocumentList) {
-                request.add(new IndexRequest(objectDocument.getIndexName()).id(objectDocument.getHash().toString()).type(INDEX_TYPE)
-                        .source(XContentType.JSON, objectDocument.getObjectName(), objectDocument.getObjectAsJsonString()));
+            for (Map.Entry<Hash, String> entry : hashToObjectJsonDataMap.entrySet()) {
+                request.add(new IndexRequest(indexName).id(entry.getKey().toString()).type(INDEX_TYPE)
+                        .source(XContentType.JSON, objectName, entry.getValue()));
             }
             restClient.bulk(request, RequestOptions.DEFAULT);
         } catch (Exception e) {
@@ -127,15 +126,15 @@ public class ClientService implements IClientService {
         }
     }
 
-    public MultiGetResponse getMultiObjectsFromDb(Map<Hash, String> hashAndIndexNameMap) {
+    public MultiGetResponse getMultiObjectsFromDb(List<Hash> hashes, String indexName) {
         MultiGetResponse multiGetResponse = null;
         try {
             MultiGetRequest request = new MultiGetRequest();
-            for (Map.Entry<Hash, String> entry : hashAndIndexNameMap.entrySet()) {
+            for (Hash hash : hashes) {
                 request.add(new MultiGetRequest.Item(
-                        entry.getValue(),
+                        indexName,
                         INDEX_TYPE,
-                        entry.getKey().toString()));
+                        hash.toString()));
             }
             multiGetResponse = restClient.mget(request, RequestOptions.DEFAULT);
         } catch (Exception e) {
@@ -143,6 +142,17 @@ public class ClientService implements IClientService {
         } finally {
             return multiGetResponse;
         }
+    }
+
+    public Map<Hash, String> getMultiObjects(List<Hash> hashes, String indexName) {
+        Map<Hash, String> hashToObjectsFromDbMap = null;
+        MultiGetResponse multiGetResponse = getMultiObjectsFromDb(hashes, indexName);
+        hashToObjectsFromDbMap = new HashMap<>();
+        for (MultiGetItemResponse multiGetItemResponse : multiGetResponse.getResponses()) {
+            hashToObjectsFromDbMap.put(new Hash(multiGetItemResponse.getId()),
+                    new String(multiGetItemResponse.getResponse().getSourceAsBytes()));
+        }
+        return hashToObjectsFromDbMap;
     }
 
     @Override
@@ -203,5 +213,19 @@ public class ClientService implements IClientService {
         getIndexRequest.indices(indexName);
         boolean exists = restClient.indices().exists(getIndexRequest, RequestOptions.DEFAULT);
         return exists;
+    }
+
+    public void deleteObject(Hash hash, String indexName) {
+        DeleteResponse deleteResponse = null;
+        DeleteRequest request = new DeleteRequest(
+                indexName,
+                INDEX_TYPE,
+                hash.toString());
+        try {
+            deleteResponse = restClient.delete(
+                    request, RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
     }
 }

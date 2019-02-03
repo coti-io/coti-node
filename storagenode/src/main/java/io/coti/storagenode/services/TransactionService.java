@@ -4,13 +4,11 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.data.ObjectDocument;
-import io.coti.storagenode.http.AddTransactionJsonResponse;
-import io.coti.storagenode.http.GetMultiObjectJsonResponse;
+import io.coti.storagenode.http.AddObjectJsonResponse;
+import io.coti.storagenode.http.GetObjectBulkJsonResponse;
 import io.coti.storagenode.http.GetObjectJsonResponse;
 import io.coti.storagenode.services.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.action.get.MultiGetItemResponse;
-import org.elasticsearch.action.get.MultiGetResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -45,42 +42,36 @@ public class TransactionService implements ITransactionService {
 
     @Override
     public ResponseEntity<IResponse> insertTransactionJson(Hash hash, String transactionAsJson) throws IOException {
-        if (!validateTransaction(hash, transactionAsJson)) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new Response(
-                            INVALID_PARAMETERS_MESSAGE,
-                            STATUS_ERROR));
-        }
         String insertResponse =
                 clientService.insertObjectToDb(hash, transactionAsJson, TRANSACTION_INDEX_NAME, TRANSACTION_OBJECT_NAME);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(new AddTransactionJsonResponse(
+                .body(new AddObjectJsonResponse(
                         STATUS_SUCCESS,
                         TRANSACTION_CREATED_MESSAGE, insertResponse));
     }
 
-
     @Override
-    public ResponseEntity<IResponse> getMultiTransactionsFromDb(Map<Hash, String> hashAndIndexNameMap) throws IOException {
-        Map<Hash, String> hashToObjectsFromDbMap = null;
-        MultiGetResponse multiGetResponse = clientService.getMultiObjectsFromDb(hashAndIndexNameMap);
-        hashToObjectsFromDbMap = new HashMap<>();
-        for (MultiGetItemResponse multiGetItemResponse : multiGetResponse.getResponses()) {
-            hashToObjectsFromDbMap.put(new Hash(multiGetItemResponse.getId()),
-                    new String(multiGetItemResponse.getResponse().getSourceAsBytes()));
-        }
-        //TODO: Define logic
+        public ResponseEntity<IResponse> getMultiTransactionsFromDb(List<Hash> hashes){
+        Map<Hash, String> hashToTransactionFromDbMap = null;
+
+        //TODO: Define logic.
+        hashToTransactionFromDbMap = clientService.getMultiObjects(hashes,TRANSACTION_INDEX_NAME);
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new GetMultiObjectJsonResponse(hashToObjectsFromDbMap));
+                .body(new GetObjectBulkJsonResponse(hashToTransactionFromDbMap));
     }
 
     @Override
-    public ResponseEntity<IResponse> insertMultiObjectsToDb(List<ObjectDocument> transactionDocumentList) throws IOException {
-        clientService.insertMultiObjectsToDb(transactionDocumentList);
+    public ResponseEntity<IResponse> insertMultiTransactions(Map<Hash, String> hashToTransactionJsonDataMap) {
+        try {
+            clientService.insertMultiObjectsToDb(TRANSACTION_INDEX_NAME, TRANSACTION_OBJECT_NAME, hashToTransactionJsonDataMap);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
         //TODO: Define logic
         return null;
+
+        //clientService.insertMultiObjectsToDb(addressDocumentList);
     }
 
     @Override
@@ -103,10 +94,5 @@ public class TransactionService implements ITransactionService {
                             TRANSACTION_DETAILS_SERVER_ERROR,
                             STATUS_ERROR));
         }
-    }
-
-    public boolean validateTransaction(Hash hash, String transactionAsJsonString) throws IOException {
-        // TODO:
-        return true;
     }
 }

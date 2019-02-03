@@ -2,7 +2,6 @@ package io.coti.storagenode.services.interfaces;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.storagenode.data.ObjectDocument;
 import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
@@ -14,7 +13,11 @@ public interface IAddressService {
 
     ResponseEntity<IResponse> getAddressByHash(Hash hash) throws IOException;
 
-    ResponseEntity<IResponse> getMultiAddressesFromDb(Map<Hash, String> hashAndIndexNameMap) throws IOException;
+    ResponseEntity<IResponse> getMultiAddressesFromDb(List<Hash> hashes) throws IOException;
 
-    ResponseEntity<IResponse> insertMultiAddressesToDb(List<ObjectDocument> objectDocumentList) throws IOException;
+    ResponseEntity<IResponse> insertMultiAddresses(Map<Hash, String> hashToObjectJsonDataMap);
+
+    ResponseEntity<IResponse> deleteMultiAddressesFromDb(List<Hash> hashes);
+
+    ResponseEntity<IResponse> deleteAddressByHash(Hash hash);
 }

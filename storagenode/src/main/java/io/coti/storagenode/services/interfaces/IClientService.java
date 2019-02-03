@@ -11,4 +11,5 @@ public interface IClientService {
     String getObjectFromDbByHash(Hash hash, String index) throws IOException;
 
     String insertObjectToDb(Hash hash, String objectAsJsonString, String index, String objectName) throws IOException;
+
 }

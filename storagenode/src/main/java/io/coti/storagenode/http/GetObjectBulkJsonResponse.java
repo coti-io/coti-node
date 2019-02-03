@@ -5,11 +5,11 @@ import io.coti.basenode.http.BaseResponse;
 
 import java.util.Map;
 
-public class GetMultiObjectJsonResponse extends BaseResponse {
+public class GetObjectBulkJsonResponse extends BaseResponse {
 
     Map<Hash, String> hashToObjectsFromDbMap;
 
-    public GetMultiObjectJsonResponse(Map<Hash, String> hashToObjectsFromDbMap) {
+    public GetObjectBulkJsonResponse(Map<Hash, String> hashToObjectsFromDbMap) {
         this.hashToObjectsFromDbMap = hashToObjectsFromDbMap;
     }
 }
