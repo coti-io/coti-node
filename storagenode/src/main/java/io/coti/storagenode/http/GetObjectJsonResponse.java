@@ -1,4 +1,4 @@
-package io.coti.historynode.http;
+package io.coti.storagenode.http;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.BaseResponse;

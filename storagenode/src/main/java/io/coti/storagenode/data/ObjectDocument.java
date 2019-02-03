@@ -1,4 +1,4 @@
-package io.coti.historynode.data;
+package io.coti.storagenode.data;
 
 import io.coti.basenode.data.Hash;
 import lombok.Data;

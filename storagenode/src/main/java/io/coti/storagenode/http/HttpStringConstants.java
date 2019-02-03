@@ -1,4 +1,4 @@
-package io.coti.historynode.http;
+package io.coti.storagenode.http;
 
 import io.coti.basenode.http.BaseNodeHttpStringConstants;
 

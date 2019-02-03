@@ -2,7 +2,7 @@ package io.coti.storagenode.services.interfaces;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.historynode.data.ObjectDocument;
+import io.coti.storagenode.data.ObjectDocument;
 import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;

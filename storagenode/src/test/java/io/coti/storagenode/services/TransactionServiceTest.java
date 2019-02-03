@@ -2,7 +2,7 @@ package io.coti.storagenode.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.TransactionData;
-import io.coti.historynode.http.GetObjectJsonResponse;
+import io.coti.storagenode.http.GetObjectJsonResponse;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
