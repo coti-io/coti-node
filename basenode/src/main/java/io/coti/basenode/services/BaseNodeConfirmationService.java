@@ -21,8 +21,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @Slf4j
 @Service
 public class BaseNodeConfirmationService implements IConfirmationService {
-    @Autowired
-    private LiveViewService liveViewService;
+
     @Autowired
     private IBalanceService balanceService;
     @Autowired
@@ -31,12 +30,14 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     private TransactionIndexService transactionIndexService;
     @Autowired
     private Transactions transactions;
+    @Autowired
+    protected LiveViewService liveViewService;
     private BlockingQueue<ConfirmationData> confirmationQueue;
     private Map<Long, DspConsensusResult> waitingDspConsensusResults = new ConcurrentHashMap<>();
     private AtomicLong totalConfirmed = new AtomicLong(0);
     private AtomicLong tccConfirmed = new AtomicLong(0);
-    private AtomicLong dspConfirmed = new AtomicLong(0);
     private Thread confirmedTransactionsThread;
+    protected AtomicLong dspConfirmed = new AtomicLong(0);
 
     public void init() {
         confirmationQueue = new LinkedBlockingQueue<>();
@@ -75,7 +76,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                 return;
             }
             if (transactionHelper.isDspConfirmed(transactionData)) {
-                dspConfirmed.incrementAndGet();
+                incrementAndGetDspConfirmed();
             }
         }
         if (transactionHelper.isConfirmed(transactionData)) {
@@ -101,6 +102,10 @@ public class BaseNodeConfirmationService implements IConfirmationService {
             }
             return true;
         }
+    }
+
+    protected void incrementAndGetDspConfirmed() {
+        dspConfirmed.incrementAndGet();
     }
 
     private void processConfirmedTransaction(TransactionData transactionData) {
@@ -132,7 +137,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
             }
         });
         if (isDspConfirmed) {
-            dspConfirmed.incrementAndGet();
+            incrementAndGetDspConfirmed();
         }
         if (transactionData.isTrustChainConsensus()) {
             tccConfirmed.incrementAndGet();
