@@ -2,8 +2,8 @@ package io.coti.zerospend.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.crypto.PrepareForSnapshotCrypto;
-import io.coti.basenode.data.PrepareForSnapshot;
 import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.SnapshotPreparationData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.services.BaseNodeConfirmationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +14,7 @@ import java.util.Arrays;
 @Service
 public class ConfirmationService extends BaseNodeConfirmationService {
 
-    private static final int MAKE_SNAPSHOT_EACH_TRANSACTION = 1;
+    private static final int SNAPSHOT_PER_TRANSACTION_RATIO = 1;
 
     @Autowired
     private IPropagationPublisher propagationPublisher;
@@ -30,12 +30,12 @@ public class ConfirmationService extends BaseNodeConfirmationService {
     protected void incrementAndGetDspConfirmed() {
 
         long dspConfirmedLocal = dspConfirmed.incrementAndGet();
-        if(dspConfirmedLocal > 11 && dspConfirmedLocal % MAKE_SNAPSHOT_EACH_TRANSACTION == 0) {
+        if(dspConfirmedLocal > 11 && dspConfirmedLocal % SNAPSHOT_PER_TRANSACTION_RATIO == 0) {
 
-            PrepareForSnapshot prepareForSnapshot = new PrepareForSnapshot(dspConfirmedLocal);
-            prepareForSnapshotCrypto.signMessage(prepareForSnapshot);
+            SnapshotPreparationData snapshotPreparationData = new SnapshotPreparationData(dspConfirmedLocal);
+            prepareForSnapshotCrypto.signMessage(snapshotPreparationData);
 
-            propagationPublisher.propagate(prepareForSnapshot, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer));
+            propagationPublisher.propagate(snapshotPreparationData, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer));
         }
     }
 }

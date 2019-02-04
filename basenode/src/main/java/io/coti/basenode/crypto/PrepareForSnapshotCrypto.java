@@ -1,19 +1,19 @@
 package io.coti.basenode.crypto;
 
-import io.coti.basenode.data.PrepareForSnapshot;
+import io.coti.basenode.data.SnapshotPreparationData;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
 
 @Service
-public class PrepareForSnapshotCrypto extends SignatureCrypto<PrepareForSnapshot> {
+public class PrepareForSnapshotCrypto extends SignatureCrypto<SnapshotPreparationData> {
 
     @Override
-    public byte[] getSignatureMessage(PrepareForSnapshot prepareForSnapshot) {
+    public byte[] getSignatureMessage(SnapshotPreparationData snapshotPreperationData) {
 
         int byteBufferLength = 0;
 
-        Long lastDspConfirmed = prepareForSnapshot.getLastDspConfirmed();
+        Long lastDspConfirmed = snapshotPreperationData.getLastDspConfirmed();
         byteBufferLength += Long.BYTES;
 
         ByteBuffer disputeDataBuffer = ByteBuffer.allocate(byteBufferLength).putLong(lastDspConfirmed);

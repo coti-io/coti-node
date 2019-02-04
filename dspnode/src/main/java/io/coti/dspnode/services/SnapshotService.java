@@ -1,16 +1,56 @@
 package io.coti.dspnode.services;
 
-import io.coti.basenode.data.PrepareForSnapshot;
-import io.coti.basenode.services.BaseNodeSnapshotService;
+import io.coti.basenode.communication.interfaces.IPropagationPublisher;
+import io.coti.basenode.crypto.PrepareForSnapshotCrypto;
+import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.SnapshotPreparationData;
+import io.coti.basenode.services.interfaces.ISnapshotService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+import java.util.Arrays;
+
+/**
+ * Handler for PrepareForSnapshot messages propagated to DSP.
+ */
 @Slf4j
 @Service
-public    class SnapshotService  extends BaseNodeSnapshotService {
+public class SnapshotService implements ISnapshotService {
+
+    private boolean isSnapshotInProgress;
+
+    @Autowired
+    private IPropagationPublisher propagationPublisher;
+
+    @Autowired
+    private PrepareForSnapshotCrypto prepareForSnapshotCrypto;
+
+    @PostConstruct
+    private void init(){
+        isSnapshotInProgress = false;
+    }
 
     @Override
-    public void handlePrepareForSnapshot(PrepareForSnapshot prepareForSnapshot) {
-        boolean bp = true;
+    public void prepareForSnapshot(SnapshotPreparationData snapshotPreparationDataZs) {
+        log.debug("\"prepare for snapshot\" propagated message received from ZS to DSP");
+        if(!isSnapshotInProgress){
+            isSnapshotInProgress = true;
+
+            SnapshotPreparationData prepareForSnapshotDsp = new SnapshotPreparationData(snapshotPreparationDataZs.getLastDspConfirmed());
+            prepareForSnapshotCrypto.signMessage(prepareForSnapshotDsp);
+
+            propagationPublisher.propagate(prepareForSnapshotDsp, Arrays.asList(NodeType.FullNode));
+        }
+        else{
+            log.info("DSP node is already preparing for snapshot");
+            //TODO 2/4/2019 astolia: Send to ZS that snapshot prepare is in process?
+        }
     }
+
+    public boolean isSnapshotInProgress() {
+        return isSnapshotInProgress;
+    }
+
 }

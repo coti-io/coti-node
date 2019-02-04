@@ -46,8 +46,8 @@ public class CommunicationService {
                 addressService.handlePropagatedAddress((AddressData) data));
         classNameToSubscriberHandlerMapping.put(Channel.getChannelString(DspConsensusResult.class, nodeType), data ->
                 dspVoteService.handleVoteConclusion((DspConsensusResult) data));
-        classNameToSubscriberHandlerMapping.put(Channel.getChannelString(PrepareForSnapshot.class, nodeType), data ->
-                snapshotService.handlePrepareForSnapshot((PrepareForSnapshot) data));
+        classNameToSubscriberHandlerMapping.put(Channel.getChannelString(SnapshotPreparationData.class, nodeType), data ->
+                snapshotService.prepareForSnapshot((SnapshotPreparationData) data));
 
         propagationSubscriber.init(propagationServerAddresses, classNameToSubscriberHandlerMapping);
     }
