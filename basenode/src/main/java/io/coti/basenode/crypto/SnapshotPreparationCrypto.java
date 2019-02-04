@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import java.nio.ByteBuffer;
 
 @Service
-public class PrepareForSnapshotCrypto extends SignatureCrypto<SnapshotPreparationData> {
+public class SnapshotPreparationCrypto extends SignatureCrypto<SnapshotPreparationData> {
 
     @Override
     public byte[] getSignatureMessage(SnapshotPreparationData snapshotPreparationData) {
