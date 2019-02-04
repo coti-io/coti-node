@@ -17,7 +17,6 @@ public class InitializationService {
     @Value("#{'${propagation.server.addresses}'.split(',')}")
     private List<String> propagationServerAddresses;
 
-
     @Autowired
     private BaseNodeInitializationService baseNodeInitializationService;
     @Autowired

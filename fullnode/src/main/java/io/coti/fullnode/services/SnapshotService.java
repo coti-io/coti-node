@@ -1,8 +1,7 @@
 package io.coti.fullnode.services;
 
-import io.coti.basenode.data.PrepareForSnapshot;
+import io.coti.basenode.data.SnapshotPreparationData;
 import io.coti.basenode.services.BaseNodeSnapshotService;
-import io.coti.basenode.services.interfaces.ISnapshotService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -11,7 +10,7 @@ import org.springframework.stereotype.Service;
 public class SnapshotService extends BaseNodeSnapshotService {
 
     @Override
-    public void handlePrepareForSnapshot(PrepareForSnapshot prepareForSnapshot) {
+    public void prepareForSnapshot(SnapshotPreparationData snapshotPreparationData) {
         boolean bp = true;
     }
 }
