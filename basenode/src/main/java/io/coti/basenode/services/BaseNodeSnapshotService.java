@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 public class BaseNodeSnapshotService implements ISnapshotService {
 
     @Override
-    public void prepareForSnapshot(SnapshotPreparationData snapshotPreparationData) {
+    public void prepareForSnapshot(SnapshotPreparationData prepareForSnapshot) {
         boolean bp = true;
     }
 }

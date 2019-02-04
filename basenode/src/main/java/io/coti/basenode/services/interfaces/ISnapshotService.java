@@ -4,5 +4,5 @@ import io.coti.basenode.data.SnapshotPreparationData;
 
 public interface ISnapshotService {
 
-    void prepareForSnapshot(SnapshotPreparationData snapshotPreparationData);
+    void prepareForSnapshot(SnapshotPreparationData prepareForSnapshot);
 }

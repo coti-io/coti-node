@@ -39,8 +39,8 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     private Map<Long, DspConsensusResult> waitingDspConsensusResults = new ConcurrentHashMap<>();
     private AtomicLong totalConfirmed = new AtomicLong(0);
     private AtomicLong tccConfirmed = new AtomicLong(0);
+    private AtomicLong dspConfirmed = new AtomicLong(0);
     private Thread confirmedTransactionsThread;
-    protected AtomicLong dspConfirmed = new AtomicLong(0);
 
     public void init() {
         confirmationQueue = new LinkedBlockingQueue<>();
