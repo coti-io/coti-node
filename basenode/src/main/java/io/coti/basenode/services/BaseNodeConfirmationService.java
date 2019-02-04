@@ -6,6 +6,7 @@ import io.coti.basenode.services.LiveView.LiveViewService;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IConfirmationService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.interfaces.IIndexService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,12 +33,14 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     private Transactions transactions;
     @Autowired
     protected LiveViewService liveViewService;
+    @Autowired
+    private IIndexService indexService;
     private BlockingQueue<ConfirmationData> confirmationQueue;
     private Map<Long, DspConsensusResult> waitingDspConsensusResults = new ConcurrentHashMap<>();
     private AtomicLong totalConfirmed = new AtomicLong(0);
     private AtomicLong tccConfirmed = new AtomicLong(0);
+    private AtomicLong dspConfirmed = new AtomicLong(0);
     private Thread confirmedTransactionsThread;
-    protected AtomicLong dspConfirmed = new AtomicLong(0);
 
     public void init() {
         confirmationQueue = new LinkedBlockingQueue<>();
@@ -104,8 +107,8 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         }
     }
 
-    protected void incrementAndGetDspConfirmed() {
-        dspConfirmed.incrementAndGet();
+    private void incrementAndGetDspConfirmed() {
+        indexService.incrementAndGetDspConfirmed(dspConfirmed.incrementAndGet());
     }
 
     private void processConfirmedTransaction(TransactionData transactionData) {

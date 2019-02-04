@@ -9,11 +9,11 @@ import java.nio.ByteBuffer;
 public class PrepareForSnapshotCrypto extends SignatureCrypto<SnapshotPreparationData> {
 
     @Override
-    public byte[] getSignatureMessage(SnapshotPreparationData snapshotPreperationData) {
+    public byte[] getSignatureMessage(SnapshotPreparationData snapshotPreparationData) {
 
         int byteBufferLength = 0;
 
-        Long lastDspConfirmed = snapshotPreperationData.getLastDspConfirmed();
+        Long lastDspConfirmed = snapshotPreparationData.getLastDspConfirmed();
         byteBufferLength += Long.BYTES;
 
         ByteBuffer disputeDataBuffer = ByteBuffer.allocate(byteBufferLength).putLong(lastDspConfirmed);
