@@ -35,7 +35,7 @@ public class SnapshotService implements ISnapshotService {
     @Override
     public void prepareForSnapshot(SnapshotPreparationData snapshotPreparationDataZs) {
         log.debug("\"prepare for snapshot\" propagated message received from ZS to DSP");
-        if(!isSnapshotInProgress){
+        if(!isSnapshotInProgress) {
             isSnapshotInProgress = true;
 
             SnapshotPreparationData prepareForSnapshotDsp = new SnapshotPreparationData(snapshotPreparationDataZs.getLastDspConfirmed());
