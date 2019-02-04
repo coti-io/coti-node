@@ -49,7 +49,8 @@ public class SnapshotService implements ISnapshotService {
         }
     }
 
-    public boolean isSnapshotInProgress() {
+    @Override
+    public boolean getIsSnapshotInProgress() {
         return isSnapshotInProgress;
     }
 
