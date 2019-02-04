@@ -1,7 +1,7 @@
 package io.coti.dspnode.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
-import io.coti.basenode.crypto.PrepareForSnapshotCrypto;
+import io.coti.basenode.crypto.SnapshotPreparationCrypto;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.SnapshotPreparationData;
 import io.coti.basenode.services.interfaces.ISnapshotService;
@@ -25,7 +25,7 @@ public class SnapshotService implements ISnapshotService {
     private IPropagationPublisher propagationPublisher;
 
     @Autowired
-    private PrepareForSnapshotCrypto prepareForSnapshotCrypto;
+    private SnapshotPreparationCrypto snapshotPreparationCrypto;
 
     @PostConstruct
     private void init(){
@@ -39,7 +39,7 @@ public class SnapshotService implements ISnapshotService {
             isSnapshotInProgress = true;
 
             SnapshotPreparationData prepareForSnapshotDsp = new SnapshotPreparationData(snapshotPreparationDataZs.getLastDspConfirmed());
-            prepareForSnapshotCrypto.signMessage(prepareForSnapshotDsp);
+            snapshotPreparationCrypto.signMessage(prepareForSnapshotDsp);
 
             propagationPublisher.propagate(prepareForSnapshotDsp, Arrays.asList(NodeType.FullNode));
         }
