@@ -13,4 +13,9 @@ public class BaseNodeSnapshotService implements ISnapshotService {
     public void prepareForSnapshot(SnapshotPreparationData prepareForSnapshot) {
         boolean bp = true;
     }
+
+    @Override
+    public boolean getIsSnapshotInProgress() {
+        return false;
+    }
 }

@@ -83,8 +83,11 @@ public class TransactionService extends BaseNodeTransactionService {
                 return validationResponseOpt.get();
             }
 
-            //TODO 2/4/2019 astolia:  need to handle transactions here is case snapshot is in progeress.
-            //snapshotService.isSnapshotInProgres
+            //TODO 2/4/2019 astolia:  handle transactions here is case snapshot is in progeress.
+            // add them to a different collection with status CLUSTERSTAMP
+            if(snapshotService.getIsSnapshotInProgress()){
+
+            }
 
             selectSources(transactionData);
             if (!transactionData.hasSources()) {
@@ -146,37 +149,31 @@ public class TransactionService extends BaseNodeTransactionService {
                         transactionMessage)));
     }
 
-    private Optional<ResponseEntity<Response>> handleValidation(TransactionData transactionData, String errorMsg, String transactionMessage){
+    private Optional<ResponseEntity<Response>> handleFailedValidation(TransactionData transactionData, String errorMsg, String transactionMessage){
         log.debug(errorMsg, transactionData.getHash());
         return getValidationResponse(transactionMessage);
     }
 
     private Optional<ResponseEntity<Response>> validateNewTransaction(TransactionData transactionData){
         if (transactionHelper.isTransactionExists(transactionData)) {
-            handleValidation(transactionData, "Received existing transaction: {}", TRANSACTION_ALREADY_EXIST_MESSAGE);
+            return handleFailedValidation(transactionData, "Received existing transaction: {}", TRANSACTION_ALREADY_EXIST_MESSAGE);
         }
 
         transactionHelper.startHandleTransaction(transactionData);
         if (!validationService.validateTransactionDataIntegrity(transactionData)) {
-            handleValidation(transactionData, "Data Integrity validation failed: {}", AUTHENTICATION_FAILED_MESSAGE);
+            return handleFailedValidation(transactionData, "Data Integrity validation failed: {}", AUTHENTICATION_FAILED_MESSAGE);
         }
 
         if (!validationService.validateBaseTransactionAmounts(transactionData)) {
-            handleValidation(transactionData, "Illegal base transaction amounts: {}", ILLEGAL_TRANSACTION_MESSAGE);
-            log.error("Illegal base transaction amounts: {}", transactionData.getHash());
-            return getValidationResponse(ILLEGAL_TRANSACTION_MESSAGE);
+            return handleFailedValidation(transactionData, "Illegal base transaction amounts: {}", ILLEGAL_TRANSACTION_MESSAGE);
         }
 
         if (!validationService.validateTransactionTrustScore(transactionData)) {
-            handleValidation(transactionData, "Invalid sender trust score: {}", INVALID_TRUST_SCORE_MESSAGE);
-            log.error("Invalid sender trust score: {}", transactionData.getHash());
-            return getValidationResponse(INVALID_TRUST_SCORE_MESSAGE);
+            return handleFailedValidation(transactionData, "Invalid sender trust score: {}", INVALID_TRUST_SCORE_MESSAGE);
         }
 
         if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
-            handleValidation(transactionData, "Balance and Pre balance check failed: {}", INSUFFICIENT_FUNDS_MESSAGE);
-            log.error("Balance and Pre balance check failed: {}", transactionData.getHash());
-            return getValidationResponse(INSUFFICIENT_FUNDS_MESSAGE);
+            return handleFailedValidation(transactionData, "Balance and Pre balance check failed: {}", INSUFFICIENT_FUNDS_MESSAGE);
         }
 
         return Optional.empty();
