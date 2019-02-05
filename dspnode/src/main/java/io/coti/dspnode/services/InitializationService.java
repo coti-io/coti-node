@@ -1,6 +1,7 @@
 package io.coti.dspnode.services;
 
 import io.coti.basenode.data.AddressData;
+import io.coti.basenode.data.FullNodeReadyForClusterStampData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.services.BaseNodeInitializationService;
@@ -33,6 +34,8 @@ public class InitializationService {
     private AddressService addressService;
     @Autowired
     private CommunicationService communicationService;
+    @Autowired
+    private ClusterStampService clusterStampService;
 
     @PostConstruct
     public void init() {
@@ -42,6 +45,8 @@ public class InitializationService {
                 transactionService.handleNewTransactionFromFullNode((TransactionData) data));
         classNameToReceiverHandlerMapping.put(AddressData.class.getName(), data ->
                 addressService.handleNewAddressFromFullNode((AddressData) data));
+        classNameToReceiverHandlerMapping.put(FullNodeReadyForClusterStampData.class.getName(), data ->
+                clusterStampService.fullNodeReadyForClusterStamp((FullNodeReadyForClusterStampData) data));
 
         communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
         communicationService.initSender(receivingServerAddresses);

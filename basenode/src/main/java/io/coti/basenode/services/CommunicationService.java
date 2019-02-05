@@ -8,7 +8,7 @@ import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.data.*;
 import io.coti.basenode.services.interfaces.IAddressService;
 import io.coti.basenode.services.interfaces.IDspVoteService;
-import io.coti.basenode.services.interfaces.ISnapshotService;
+import io.coti.basenode.services.interfaces.IClusterStampService;
 import io.coti.basenode.services.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +36,7 @@ public class CommunicationService {
     @Autowired
     private IDspVoteService dspVoteService;
     @Autowired
-    private ISnapshotService snapshotService;
+    private IClusterStampService clusterStampService;
 
     public void initSubscriber(List<String> propagationServerAddresses, NodeType nodeType) {
         HashMap<String, Consumer<Object>> classNameToSubscriberHandlerMapping = new HashMap<>();
@@ -46,8 +46,10 @@ public class CommunicationService {
                 addressService.handlePropagatedAddress((AddressData) data));
         classNameToSubscriberHandlerMapping.put(Channel.getChannelString(DspConsensusResult.class, nodeType), data ->
                 dspVoteService.handleVoteConclusion((DspConsensusResult) data));
-        classNameToSubscriberHandlerMapping.put(Channel.getChannelString(SnapshotPreparationData.class, nodeType), data ->
-                snapshotService.prepareForSnapshot((SnapshotPreparationData) data));
+        classNameToSubscriberHandlerMapping.put(Channel.getChannelString(ClusterStampPreparationData.class, nodeType), data ->
+                clusterStampService.prepareForClusterStamp((ClusterStampPreparationData) data));
+        classNameToSubscriberHandlerMapping.put(Channel.getChannelString(DspNodeReadyForClusterStampData.class, nodeType), data ->
+                clusterStampService.dspNodeReadyForClusterStamp((DspNodeReadyForClusterStampData) data));
 
         propagationSubscriber.init(propagationServerAddresses, classNameToSubscriberHandlerMapping);
     }

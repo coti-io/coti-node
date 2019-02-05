@@ -38,6 +38,8 @@ public class TransactionService extends BaseNodeTransactionService {
     private ISender sender;
     @Autowired
     private DspVoteCrypto dspVoteCrypto;
+    @Autowired
+    private ClusterStampService clusterStampService;
 
     public String handleNewTransactionFromFullNode(TransactionData transactionData) {
         try {
@@ -66,8 +68,6 @@ public class TransactionService extends BaseNodeTransactionService {
         } finally {
             transactionHelper.endHandleTransaction(transactionData);
         }
-
-
     }
 
     @Scheduled(fixedRate = 1000)
@@ -96,9 +96,12 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     public void continueHandlePropagatedTransaction(TransactionData transactionData) {
-        propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
-        if (!transactionData.isZeroSpend()) {
-            transactionsToValidate.add(transactionData);
+
+        if(!clusterStampService.getIsClusterStampInProgress()) {
+            propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
+            if (!transactionData.isZeroSpend()) {
+                transactionsToValidate.add(transactionData);
+            }
         }
     }
 }

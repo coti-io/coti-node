@@ -8,19 +8,19 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Data
-public class SnapshotPreparationData implements IPropagatable, ISignable, ISignValidatable {
+public class ClusterStampPreparationData implements IPropagatable, ISignable, ISignValidatable {
 
     private Hash hash;
     private Long lastDspConfirmed;
     private Hash zeroSpendHash;
     private SignatureData zeroSpendSignature;
 
-    public SnapshotPreparationData(Long lastDspConfirmed) {
+    public ClusterStampPreparationData(Long lastDspConfirmed) {
         this.hash = new Hash(lastDspConfirmed);
         this.lastDspConfirmed = lastDspConfirmed;
     }
 
-    public SnapshotPreparationData() {
+    public ClusterStampPreparationData() {
     }
 
     @Override

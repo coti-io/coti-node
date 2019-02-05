@@ -14,7 +14,7 @@ import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.IClusterService;
-import io.coti.basenode.services.interfaces.ISnapshotService;
+import io.coti.basenode.services.interfaces.IClusterStampService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.fullnode.http.AddTransactionRequest;
@@ -59,7 +59,7 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private WebSocketSender webSocketSender;
     @Autowired
-    private ISnapshotService snapshotService;
+    private IClusterStampService clusterStampService;
 
     @Autowired
     private PotService potService;
@@ -85,7 +85,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
             //TODO 2/4/2019 astolia:  handle transactions here is case snapshot is in progeress.
             // add them to a different collection with status CLUSTERSTAMP
-            if(snapshotService.getIsSnapshotInProgress()){
+            if(clusterStampService.getIsClusterStampInProgress()){
 
             }
 
