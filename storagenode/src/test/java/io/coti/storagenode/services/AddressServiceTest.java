@@ -47,9 +47,9 @@ public class AddressServiceTest {
     public void addressTest() throws IOException {
         AddressData addressData = new AddressData(generateRandomHash());
         String addressAsJson = mapper.writeValueAsString(addressData);
-        addressService.insertAddressJson(addressData.getHash(), addressAsJson);
-        addressService.insertAddressJson(addressData.getHash(), addressAsJson);
-        IResponse response = addressService.getAddressByHash(addressData.getHash()).getBody();
+        addressService.insertObjectJson(addressData.getHash(), addressAsJson);
+        addressService.insertObjectJson(addressData.getHash(), addressAsJson);
+        IResponse response = addressService.getObjectByHash(addressData.getHash()).getBody();
         Assert.assertTrue(((BaseResponse) (response)).getStatus().equals(STATUS_SUCCESS));
     }
 
@@ -61,13 +61,13 @@ public class AddressServiceTest {
         Map<Hash, String> hashToAddressJsonDataMap = new HashMap<>();
         hashToAddressJsonDataMap.put(addressData1.getHash(), mapper.writeValueAsString(addressData1));
         hashToAddressJsonDataMap.put(addressData2.getHash(), mapper.writeValueAsString(addressData2));
-        addressService.insertMultiAddresses(hashToAddressJsonDataMap);
+        addressService.insertMultiObjects(hashToAddressJsonDataMap);
 
         List<Hash> hashes = new ArrayList<>();
         hashes.add(addressData1.getHash());
         hashes.add(addressData2.getHash());
 
-        IResponse response = addressService.getMultiAddressesFromDb(hashes).getBody();
+        IResponse response = addressService.getMultiObjectsFromDb(hashes).getBody();
         Assert.assertTrue(((BaseResponse) (response)).getStatus().equals(STATUS_SUCCESS));
     }
 }

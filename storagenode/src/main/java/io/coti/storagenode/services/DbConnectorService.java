@@ -3,7 +3,7 @@ package io.coti.storagenode.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.Hash;
 import io.coti.storagenode.data.MultiDbInsertionStatus;
-import io.coti.storagenode.services.interfaces.IClientService;
+import io.coti.storagenode.services.interfaces.IDbConnectorService;
 import javafx.util.Pair;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +48,7 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 @Slf4j
 @Data
 @Service
-public class DbConnectorService implements IClientService {
+public class DbConnectorService implements IDbConnectorService {
     private String INDEX_TYPE = "json";
     private String ELASTICSEARCH_HOST_IP = "localhost";
     private int ELASTICSEARCH_HOST_PORT1 = 9200;

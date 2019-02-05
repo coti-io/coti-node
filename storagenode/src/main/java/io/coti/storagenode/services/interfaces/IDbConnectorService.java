@@ -5,7 +5,7 @@ import io.coti.basenode.data.Hash;
 import java.io.IOException;
 import java.util.Set;
 
-public interface IClientService {
+public interface IDbConnectorService {
     void getClusterDetails(Set<String> indexes) throws IOException;
 
     String getObjectFromDbByHash(Hash hash, String index) throws IOException;
