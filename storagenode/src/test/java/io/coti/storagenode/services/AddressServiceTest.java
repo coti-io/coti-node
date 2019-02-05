@@ -5,6 +5,8 @@ import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.storagenode.http.GetObjectBulkJsonResponse;
+import io.coti.storagenode.http.GetObjectJsonResponse;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_SUCCESS;
+import static io.coti.storagenode.http.HttpStringConstants.STATUS_OK;
 import static testUtils.TestUtils.generateRandomHash;
 
 @ContextConfiguration(classes = {AddressService.class, DbConnectorService.class})
@@ -30,6 +33,7 @@ import static testUtils.TestUtils.generateRandomHash;
 @RunWith(SpringRunner.class)
 public class AddressServiceTest {
 
+    private static final int NUMBER_OF_ADDRESSES = 4;
     @Autowired
     private AddressService addressService;
 
@@ -38,6 +42,7 @@ public class AddressServiceTest {
 
     private ObjectMapper mapper;
 
+
     @Before
     public void init() {
         mapper = new ObjectMapper();
@@ -45,29 +50,45 @@ public class AddressServiceTest {
 
     @Test
     public void addressTest() throws IOException {
-        AddressData addressData = new AddressData(generateRandomHash());
-        String addressAsJson = mapper.writeValueAsString(addressData);
-        addressService.insertObjectJson(addressData.getHash(), addressAsJson);
-        addressService.insertObjectJson(addressData.getHash(), addressAsJson);
-        IResponse response = addressService.getObjectByHash(addressData.getHash()).getBody();
-        Assert.assertTrue(((BaseResponse) (response)).getStatus().equals(STATUS_SUCCESS));
+        AddressData addressData1 = new AddressData(generateRandomHash());
+        AddressData addressData2 = new AddressData(generateRandomHash());
+
+        String addressAsJson = mapper.writeValueAsString(addressData1);
+        addressService.insertObjectJson(addressData1.getHash(), addressAsJson);
+        addressService.insertObjectJson(addressData2.getHash(), addressAsJson);
+
+        IResponse deleteResponse = addressService.deleteObjectByHash(addressData2.getHash()).getBody();
+
+        IResponse getResponse = addressService.getObjectByHash(addressData1.getHash()).getBody();
+        Assert.assertTrue(((BaseResponse) (getResponse)).getStatus().equals(STATUS_SUCCESS) &&
+                ((GetObjectJsonResponse) deleteResponse).status.equals(STATUS_SUCCESS));
     }
 
     @Test
     public void multiAddressTest() throws IOException {
-        AddressData addressData1 = new AddressData(generateRandomHash());
-        AddressData addressData2 = new AddressData(generateRandomHash());
-
         Map<Hash, String> hashToAddressJsonDataMap = new HashMap<>();
-        hashToAddressJsonDataMap.put(addressData1.getHash(), mapper.writeValueAsString(addressData1));
-        hashToAddressJsonDataMap.put(addressData2.getHash(), mapper.writeValueAsString(addressData2));
+        List<AddressData> AddressDataList = new ArrayList<>();
+        for (int i = 0; i < NUMBER_OF_ADDRESSES ;i++) {
+            AddressData addressData = new AddressData(generateRandomHash());
+            AddressDataList.add(addressData);
+            hashToAddressJsonDataMap.put(addressData.getHash(), mapper.writeValueAsString(addressData));
+        }
         addressService.insertMultiObjects(hashToAddressJsonDataMap);
 
-        List<Hash> hashes = new ArrayList<>();
-        hashes.add(addressData1.getHash());
-        hashes.add(addressData2.getHash());
+        List<Hash> deleteHashes = new ArrayList<>();
+        deleteHashes.add(AddressDataList.get(0).getHash());
+        deleteHashes.add(AddressDataList.get(1).getHash());
 
-        IResponse response = addressService.getMultiObjectsFromDb(hashes).getBody();
-        Assert.assertTrue(((BaseResponse) (response)).getStatus().equals(STATUS_SUCCESS));
+        IResponse deleteResponse = addressService.deleteMultiObjectsFromDb(deleteHashes).getBody();
+
+        List<Hash> GetHashes = new ArrayList<>();
+        GetHashes.add(AddressDataList.get(2).getHash());
+        GetHashes.add(AddressDataList.get(3).getHash());
+
+        IResponse response = addressService.getMultiObjectsFromDb(GetHashes).getBody();
+
+        Assert.assertTrue(((BaseResponse) (response)).getStatus().equals(STATUS_SUCCESS)
+                && ((GetObjectBulkJsonResponse) deleteResponse).getHashToObjectsFromDbMap().get(AddressDataList.get(0).getHash()).equals(STATUS_OK)
+                && ((GetObjectBulkJsonResponse) deleteResponse).getHashToObjectsFromDbMap().get(AddressDataList.get(1).getHash()).equals(STATUS_OK));
     }
 }
