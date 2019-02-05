@@ -19,10 +19,9 @@ public class DspNodeReadyForClusterStampData implements IPropagatable, ISignable
     private Hash dspNodeHash;
     private SignatureData dspNodeSignature;
 
-    public DspNodeReadyForClusterStampData(Hash hash, FullNodeReadyForClusterStampData fullNodeReadyForClusterStampData) {
+    public DspNodeReadyForClusterStampData(Hash hash) {
         this.hash = hash;
         this.fullNodeReadyForClusterStampDataList = new ArrayList<>();
-        this.fullNodeReadyForClusterStampDataList.add(fullNodeReadyForClusterStampData);
     }
 
     public DspNodeReadyForClusterStampData() {
