@@ -75,7 +75,7 @@ public class TransactionService extends BaseNodeTransactionService {
         if (!isValidatorRunning.compareAndSet(false, true)) {
             return;
         }
-        while (!transactionsToValidate.isEmpty()) {
+        while (!clusterStampService.getIsReadyForClusterStamp() && !transactionsToValidate.isEmpty()) {
             TransactionData transactionData = transactionsToValidate.remove();
             log.debug("DSP Fully Checking transaction: {}", transactionData.getHash());
             DspVote dspVote = new DspVote(
@@ -97,11 +97,9 @@ public class TransactionService extends BaseNodeTransactionService {
 
     public void continueHandlePropagatedTransaction(TransactionData transactionData) {
 
-        if(!clusterStampService.getIsClusterStampInProgress()) {
-            propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
-            if (!transactionData.isZeroSpend()) {
-                transactionsToValidate.add(transactionData);
-            }
+        propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
+        if (!transactionData.isZeroSpend()) {
+            transactionsToValidate.add(transactionData);
         }
     }
 }

@@ -2,8 +2,10 @@ package io.coti.fullnode.services;
 
 import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.crypto.FullNodeReadyForClusterStampCrypto;
+import io.coti.basenode.data.ClusterStampData;
 import io.coti.basenode.data.ClusterStampPreparationData;
 import io.coti.basenode.data.FullNodeReadyForClusterStampData;
+import io.coti.basenode.model.ClusterStamp;
 import io.coti.basenode.services.BaseNodeClusterStampService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,8 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private FullNodeReadyForClusterStampCrypto fullNodeReadyForClusterStampCrypto;
     @Autowired
     private ISender sender;
+    @Autowired
+    private ClusterStamp clusterStamp;
     @PostConstruct
     private void init(){
         isClusterStampInProgress = false;
@@ -36,7 +40,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Override
     public void prepareForClusterStamp(ClusterStampPreparationData clusterStampPreparationData) {
 
-        log.debug("\"prepare for cluster stamp\" propagated message received from DSP to FN");
+        log.debug("Prepare for cluster stamp propagated message received from DSP to FN");
 
         if(!isClusterStampInProgress) {
             FullNodeReadyForClusterStampData fullNodeReadyForClusterStampData = new FullNodeReadyForClusterStampData(clusterStampPreparationData.getLastDspConfirmed());
@@ -50,8 +54,14 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         }
     }
 
-    @Override
     public boolean getIsClusterStampInProgress() {
         return isClusterStampInProgress;
+    }
+
+    @Override
+    public void newClusterStamp(ClusterStampData clusterStampData) {
+
+        isClusterStampInProgress = false;
+        clusterStamp.put(clusterStampData);
     }
 }

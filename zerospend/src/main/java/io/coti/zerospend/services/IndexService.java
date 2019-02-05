@@ -14,6 +14,7 @@ import java.util.Arrays;
 public class IndexService extends BaseNodeIndexService {
 
     private static final int MAKE_CLUSTER_STAMP_EACH_TRANSACTION = 1;
+    private static final int AMOUNT_OF_GENESIS_TRANSACTIONS = 11;
 
     @Autowired
     private IPropagationPublisher propagationPublisher;
@@ -23,7 +24,7 @@ public class IndexService extends BaseNodeIndexService {
 
     public void incrementAndGetDspConfirmed(long dspConfirmed) {
 
-        if(dspConfirmed > 11 && dspConfirmed % MAKE_CLUSTER_STAMP_EACH_TRANSACTION == 0) {
+        if(dspConfirmed > AMOUNT_OF_GENESIS_TRANSACTIONS && dspConfirmed % MAKE_CLUSTER_STAMP_EACH_TRANSACTION == 0) {
 
             ClusterStampPreparationData clusterStampPreparationData = new ClusterStampPreparationData(dspConfirmed);
             clusterStampPreparationCrypto.signMessage(clusterStampPreparationData);

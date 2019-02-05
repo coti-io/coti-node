@@ -53,11 +53,8 @@ public class BaseNodeInitializationService {
     private IPotService potService;
     @Autowired
     private ZeroMQSubscriber zeroMQSubscriber;
-
-
     @Autowired
     private IDatabaseConnector rocksDbConnector;
-
 
     public void init() {
         try {

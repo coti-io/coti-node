@@ -1,5 +1,6 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.data.ClusterStampData;
 import io.coti.basenode.data.ClusterStampPreparationData;
 import io.coti.basenode.data.DspNodeReadyForClusterStampData;
 import io.coti.basenode.data.FullNodeReadyForClusterStampData;
@@ -15,16 +16,15 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     public void prepareForClusterStamp(ClusterStampPreparationData prepareForSnapshot) {}
 
     @Override
-    public boolean getIsClusterStampInProgress() {
-        return false;
-    }
-
-    @Override
     public void fullNodeReadyForClusterStamp(FullNodeReadyForClusterStampData fullNodeReadyForClusterStampData) {
     }
 
     @Override
     public void dspNodeReadyForClusterStamp(DspNodeReadyForClusterStampData clusterStampReadyData) {
-        boolean bp = true;
+    }
+
+    @Override
+    public void newClusterStamp(ClusterStampData clusterStampData) {
+
     }
 }

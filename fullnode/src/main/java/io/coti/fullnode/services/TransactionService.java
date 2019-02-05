@@ -59,7 +59,7 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private WebSocketSender webSocketSender;
     @Autowired
-    private IClusterStampService clusterStampService;
+    private ClusterStampService clusterStampService;
 
     @Autowired
     private PotService potService;

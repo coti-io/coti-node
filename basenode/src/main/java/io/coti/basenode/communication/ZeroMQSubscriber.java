@@ -5,6 +5,7 @@ import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.communication.interfaces.ISerializer;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IEntity;
+import io.coti.basenode.model.ClusterStamp;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -27,7 +28,13 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     private HashMap<String, Consumer<Object>> messagesHandler;
     private Map<String, Date> connectedServerAddresses = new ConcurrentHashMap<>();
     private BlockingQueue<ZeroMQMessageData> messageQueue;
-    private List<Class<? extends IEntity>> messageTypes = new ArrayList<>(Arrays.asList(TransactionData.class, AddressData.class, DspConsensusResult.class, ClusterStampPreparationData.class, FullNodeReadyForClusterStampData.class, DspNodeReadyForClusterStampData.class));
+    private List<Class<? extends IEntity>> messageTypes = new ArrayList<>(Arrays.asList(
+            TransactionData.class,
+            AddressData.class,
+            DspConsensusResult.class,
+            ClusterStampPreparationData.class,
+            DspNodeReadyForClusterStampData.class,
+            ClusterStampData.class));
     private List<String> channelsToSubscribe;
     private final int HEARTBEAT_INTERVAL = 10000;
     private final int INITIAL_DELAY = 5000;

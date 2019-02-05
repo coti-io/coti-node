@@ -38,14 +38,19 @@ public class DspVoteService extends BaseNodeDspVoteService {
     private DspVoteCrypto dspVoteCrypto;
     @Autowired
     private DspConsensusCrypto dspConsensusCrypto;
+    @Autowired
+    private ClusterStampService clusterStampService;
     private ConcurrentMap<Hash, List<DspVote>> transactionHashToVotesListMapping;
     private static final String NODE_HASH_ENDPOINT = "/nodeHash";
     private List<Hash> currentLiveDspNodes;
+    private Thread sumAndSaveVotesThread;
 
     @Override
     public void init() {
         transactionHashToVotesListMapping = new ConcurrentHashMap<>();
         super.init();
+        sumAndSaveVotesThread = new Thread(() -> sumAndSaveVotes());
+        sumAndSaveVotesThread.start();
     }
 
     public void preparePropagatedTransactionForVoting(TransactionData transactionData) {
@@ -116,28 +121,46 @@ public class DspVoteService extends BaseNodeDspVoteService {
         log.info("Updated live dsp nodes list. Count: {}", currentLiveDspNodes.size());
     }
 
-    @Scheduled(fixedDelay = 1000)
     private void sumAndSaveVotes() {
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                for (Map.Entry<Hash, List<DspVote>> transactionHashToVotesListEntrySet :
+                        transactionHashToVotesListMapping.entrySet()) {
+                    sumAndSaveVotesHandler(transactionHashToVotesListEntrySet);
+                }
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        log.info("Please wait to process remaining vote(s)", transactionHashToVotesListMapping.size());
+
         for (Map.Entry<Hash, List<DspVote>> transactionHashToVotesListEntrySet :
                 transactionHashToVotesListMapping.entrySet()) {
-            synchronized (transactionHashToVotesListEntrySet.getKey().toHexString()) {
-                if (transactionHashToVotesListEntrySet.getValue() != null && transactionHashToVotesListEntrySet.getValue().size() > 0) {
-                    Hash transactionHash = transactionHashToVotesListEntrySet.getKey();
-                    TransactionVoteData currentVotes = transactionVotes.getByHash(transactionHash);
-                    Map<Hash, DspVote> mapHashToDspVote = currentVotes.getDspHashToVoteMapping();
-                    transactionHashToVotesListEntrySet.getValue().forEach(dspVote -> mapHashToDspVote.putIfAbsent(dspVote.getVoterDspHash(), dspVote));
-                    if (isPositiveMajorityAchieved(currentVotes)) {
-                        publishDecision(transactionHash, mapHashToDspVote, true);
-                        log.debug("Valid vote majority achieved for: {}", currentVotes.getHash());
-                    } else if (isNegativeMajorityAchieved(currentVotes)) {
-                        publishDecision(transactionHash, mapHashToDspVote, false);
-                        log.debug("Invalid vote majority achieved for: {}", currentVotes.getHash());
-                    } else {
-                        log.debug("Undecided majority: {}", currentVotes.getHash());
-                    }
-                    transactionVotes.put(currentVotes);
+            sumAndSaveVotesHandler(transactionHashToVotesListEntrySet);
+        }
 
+        clusterStampService.makeAndPropagateClusterStamp();
+    }
+
+    private void sumAndSaveVotesHandler(Map.Entry<Hash, List<DspVote>> transactionHashToVotesListEntrySet) {
+        synchronized (transactionHashToVotesListEntrySet.getKey().toHexString()) {
+            if (transactionHashToVotesListEntrySet.getValue() != null && transactionHashToVotesListEntrySet.getValue().size() > 0) {
+                Hash transactionHash = transactionHashToVotesListEntrySet.getKey();
+                TransactionVoteData currentVotes = transactionVotes.getByHash(transactionHash);
+                Map<Hash, DspVote> mapHashToDspVote = currentVotes.getDspHashToVoteMapping();
+                transactionHashToVotesListEntrySet.getValue().forEach(dspVote -> mapHashToDspVote.putIfAbsent(dspVote.getVoterDspHash(), dspVote));
+                if (isPositiveMajorityAchieved(currentVotes)) {
+                    publishDecision(transactionHash, mapHashToDspVote, true);
+                    log.debug("Valid vote majority achieved for: {}", currentVotes.getHash());
+                } else if (isNegativeMajorityAchieved(currentVotes)) {
+                    publishDecision(transactionHash, mapHashToDspVote, false);
+                    log.debug("Invalid vote majority achieved for: {}", currentVotes.getHash());
+                } else {
+                    log.debug("Undecided majority: {}", currentVotes.getHash());
                 }
+                transactionVotes.put(currentVotes);
             }
         }
     }
@@ -195,5 +218,19 @@ public class DspVoteService extends BaseNodeDspVoteService {
 
     @Override
     public void continueHandleVoteConclusion(DspConsensusResult dspConsensusResult) {
+    }
+
+    public void stopSumAndSaveVotes() {
+        log.info("Shutting down {}", this.getClass().getSimpleName());
+        sumAndSaveVotesThread.interrupt();
+        try {
+            sumAndSaveVotesThread.join();
+        } catch (InterruptedException e) {
+            log.error("Interrupted shutdown {}", this.getClass().getSimpleName());
+        }
+    }
+
+    public void startSumAndSaveVotes() {
+        sumAndSaveVotesThread.start();
     }
 }

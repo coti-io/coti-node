@@ -11,20 +11,20 @@ import java.util.List;
 
 @Slf4j
 @Data
-public class DspNodeReadyForClusterStampData implements IPropagatable, ISignable, ISignValidatable {
+public class ClusterStampData implements IPropagatable, ISignable, ISignValidatable {
 
     private Hash hash;
     private Long lastDspConfirmed;
-    private List<FullNodeReadyForClusterStampData> fullNodeReadyForClusterStampDataList;
-    private Hash dspNodeHash;
-    private SignatureData dspNodeSignature;
+    private List<DspNodeReadyForClusterStampData> dspNodeReadyForClusterStampDataList;
+    private Hash zeroSpendHash;
+    private SignatureData zeroSpendSignature;
 
-    public DspNodeReadyForClusterStampData(Hash hash) {
+    public ClusterStampData(Hash hash) {
         this.hash = hash;
-        this.fullNodeReadyForClusterStampDataList = new ArrayList<>();
+        this.dspNodeReadyForClusterStampDataList = new ArrayList<>();
     }
 
-    public DspNodeReadyForClusterStampData() {
+    public ClusterStampData() {
     }
 
     @Override
@@ -39,21 +39,21 @@ public class DspNodeReadyForClusterStampData implements IPropagatable, ISignable
 
     @Override
     public SignatureData getSignature() {
-        return dspNodeSignature;
+        return zeroSpendSignature;
     }
 
     @Override
     public Hash getSignerHash() {
-        return dspNodeHash;
+        return zeroSpendHash;
     }
 
     @Override
     public void setSignerHash(Hash signerHash) {
-        dspNodeHash = signerHash;
+        zeroSpendHash = signerHash;
     }
 
     @Override
     public void setSignature(SignatureData signature) {
-        dspNodeSignature = signature;
+        zeroSpendSignature = signature;
     }
 }
