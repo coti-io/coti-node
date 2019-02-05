@@ -1,7 +1,6 @@
 package io.coti.storagenode.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.BaseResponse;
@@ -27,7 +26,6 @@ import java.util.Map;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_SUCCESS;
 import static io.coti.storagenode.http.HttpStringConstants.STATUS_OK;
 import static testUtils.TestUtils.createRandomTransaction;
-import static testUtils.TestUtils.generateRandomHash;
 
 @ContextConfiguration(classes = {TransactionService.class, DbConnectorService.class})
 @TestPropertySource(locations = "classpath:test.properties")
@@ -69,7 +67,7 @@ public class TransactionServiceTest {
     public void multiTransactionTest() throws IOException {
         Map<Hash, String> hashToTransactionJsonDataMap = new HashMap<>();
         List<TransactionData> TransactionDataList = new ArrayList<>();
-        for (int i = 0; i < NUMBER_OF_TRANSACTIONS ;i++) {
+        for (int i = 0; i < NUMBER_OF_TRANSACTIONS; i++) {
             TransactionData transactionData = createRandomTransaction();
             TransactionDataList.add(transactionData);
             hashToTransactionJsonDataMap.put(transactionData.getHash(), mapper.writeValueAsString(transactionData));

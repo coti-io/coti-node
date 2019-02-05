@@ -104,10 +104,7 @@ public class DbConnectorServiceTest {
     }
 
     private boolean insertedObjectsEqualToObjectsFromDb(Map<Hash, String> hashToObjectJsonDataMap, Map<Hash, String> hashToObjectsFromDbMap) {
-        if (hashToObjectJsonDataMap.size() != hashToObjectsFromDbMap.size()) {
-            return false;
-        }
-        return true;
+        return hashToObjectJsonDataMap.size() == hashToObjectsFromDbMap.size();
     }
 
     private Map<Hash, String> getMultiObjectsFromDb(String indexName, List<Hash> hashes) throws Exception {

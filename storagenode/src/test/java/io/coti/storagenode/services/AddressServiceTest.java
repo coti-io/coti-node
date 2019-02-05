@@ -68,7 +68,7 @@ public class AddressServiceTest {
     public void multiAddressTest() throws IOException {
         Map<Hash, String> hashToAddressJsonDataMap = new HashMap<>();
         List<AddressData> AddressDataList = new ArrayList<>();
-        for (int i = 0; i < NUMBER_OF_ADDRESSES ;i++) {
+        for (int i = 0; i < NUMBER_OF_ADDRESSES; i++) {
             AddressData addressData = new AddressData(generateRandomHash());
             AddressDataList.add(addressData);
             hashToAddressJsonDataMap.put(addressData.getHash(), mapper.writeValueAsString(addressData));

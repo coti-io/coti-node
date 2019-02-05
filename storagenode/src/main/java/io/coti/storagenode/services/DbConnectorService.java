@@ -100,8 +100,7 @@ public class DbConnectorService implements IDbConnectorService {
     private String getSearchShardsDetails(String index) {
         final String uri = "http://" + ELASTICSEARCH_HOST_IP + ":" + ELASTICSEARCH_HOST_PORT1 + "/" + index + "/" + "_search_shards";
         RestTemplate restTemplate = new RestTemplate();
-        String result = restTemplate.getForObject(uri, String.class);
-        return result;
+        return restTemplate.getForObject(uri, String.class);
     }
 
 
@@ -204,9 +203,9 @@ public class DbConnectorService implements IDbConnectorService {
     }
 
     public HttpStatus getHttpStatus(MultiDbInsertionStatus multiDbInsertionStatus) {
-        if (multiDbInsertionStatus == multiDbInsertionStatus.Success) {
+        if (multiDbInsertionStatus == MultiDbInsertionStatus.Success) {
             return HttpStatus.OK;
-        } else if (multiDbInsertionStatus == multiDbInsertionStatus.Failed) {
+        } else if (multiDbInsertionStatus == MultiDbInsertionStatus.Failed) {
             return HttpStatus.INTERNAL_SERVER_ERROR;
         }
         return HttpStatus.MULTI_STATUS;
@@ -248,8 +247,7 @@ public class DbConnectorService implements IDbConnectorService {
 
         GetIndexRequest getIndexRequest = new GetIndexRequest();
         getIndexRequest.indices(indexName);
-        boolean exists = restClient.indices().exists(getIndexRequest, RequestOptions.DEFAULT);
-        return exists;
+        return restClient.indices().exists(getIndexRequest, RequestOptions.DEFAULT);
     }
 
     public String deleteObject(Hash hash, String indexName) {

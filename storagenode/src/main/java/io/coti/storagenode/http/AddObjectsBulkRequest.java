@@ -10,7 +10,7 @@ import java.util.Map;
 @Data
 public class AddObjectsBulkRequest {
     @NotNull(message = "Addresses must not be blank")
-    public Map<Hash, String> hashToObjectJsonDataMap;
+    private Map<Hash, String> hashToObjectJsonDataMap;
 
     public AddObjectsBulkRequest() {
 
