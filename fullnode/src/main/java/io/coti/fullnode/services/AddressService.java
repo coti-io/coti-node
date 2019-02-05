@@ -4,25 +4,30 @@ import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.services.BaseNodeAddressService;
+import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.LinkedList;
 import java.util.List;
 
 @Slf4j
 @Service
 public class AddressService extends BaseNodeAddressService {
-    @Value("#{'${receiving.server.addresses}'.split(',')}")
-    private List<String> receivingServerAddresses;
+
     @Autowired
     private WebSocketSender webSocketSender;
 
     @Autowired
     private ISender sender;
+    @Autowired
+    private INetworkService networkService;
 
     public boolean addAddress(Hash addressHash) {
+        List<String> receivingServerAddresses = new LinkedList<>();
+        receivingServerAddresses.add(networkService.getShuffledNetworkNodeDataListFromMapValues(networkDetailsService.getNetworkData()
+                .getDspNetworkNodesMap()).get(0).getReceivingFullAddress());
         if (!super.addNewAddress(addressHash)) {
             return false;
         }
