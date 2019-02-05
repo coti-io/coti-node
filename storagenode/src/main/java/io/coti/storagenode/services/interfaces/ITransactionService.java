@@ -9,11 +9,15 @@ import java.util.List;
 import java.util.Map;
 
 public interface ITransactionService {
-    ResponseEntity<IResponse> insertTransactionJson(Hash hash, String transactionAsJson) throws IOException;
+    ResponseEntity<IResponse> insertTransactionJson(Hash hash, String transactionAsJson);
 
-    ResponseEntity<IResponse> getTransactionByHash(Hash hash) throws IOException;
+    ResponseEntity<IResponse> getTransactionByHash(Hash hash);
 
     ResponseEntity<IResponse> getMultiTransactionsFromDb(List<Hash> hashes);
 
-    ResponseEntity<IResponse> insertMultiTransactions(Map<Hash, String> hashToTransactionJsonDataMap);
+    ResponseEntity<IResponse> insertMultiTransactions(Map<Hash, String> hashToObjectJsonDataMap);
+
+    ResponseEntity<IResponse> deleteMultiTransactionsFromDb(List<Hash> hashes);
+
+    ResponseEntity<IResponse> deleteTransactionByHash(Hash hash);
 }

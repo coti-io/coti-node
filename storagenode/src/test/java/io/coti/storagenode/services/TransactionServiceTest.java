@@ -17,7 +17,7 @@ import java.io.IOException;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_SUCCESS;
 import static testUtils.TestUtils.createRandomTransaction;
 
-@ContextConfiguration(classes = {TransactionService.class, ClientService.class})
+@ContextConfiguration(classes = {TransactionService.class, DbConnectorService.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -26,7 +26,7 @@ public class TransactionServiceTest {
     private TransactionService transactionService;
 
     @Autowired
-    private ClientService clientService;
+    private DbConnectorService dbConnectorService;
 
     @Test
     public void transactionTest() throws IOException {

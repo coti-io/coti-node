@@ -23,14 +23,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static io.coti.storagenode.http.HttpStringConstants.STATUS_NOT_FOUND;
+import static io.coti.storagenode.http.HttpStringConstants.STATUS_OK;
 import static testUtils.TestUtils.createRandomTransaction;
 import static testUtils.TestUtils.generateRandomHash;
 
-@ContextConfiguration(classes = ClientService.class)
+@ContextConfiguration(classes = DbConnectorService.class)
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @RunWith(SpringRunner.class)
-public class ClientServiceTest {
+public class DbConnectorServiceTest {
     private final static String TRANSACTION_INDEX_NAME = "transactions";
     private final static String TRANSACTION_OBJECT_NAME = "transactionData";
     private final static String ADDRESS_INDEX_NAME = "address";
@@ -40,48 +42,65 @@ public class ClientServiceTest {
     private Map<String, String> indexes;
 
     @Autowired
-    private ClientService clientService;
+    private DbConnectorService dbConnectorService;
 
     @Before
     public void setUp() throws Exception {
         indexes = new HashMap<>();
         indexes.put(TRANSACTION_INDEX_NAME, TRANSACTION_OBJECT_NAME);
         indexes.put(ADDRESS_INDEX_NAME, ADDRESS_OBJECT_NAME);
-        clientService.addIndexes(indexes);
+        dbConnectorService.addIndexes(indexes);
     }
 
     @Test
     public void getClusterDetails() throws IOException {
-        clientService.getClusterDetails(indexes.keySet());
+        dbConnectorService.getClusterDetails(indexes.keySet());
     }
 
     @Test
     public void testTransactions() throws IOException {
         TransactionAsObjectAndJsonString transactionAsObjectAndJsonString = getRandomTransactionAsObjectAndJsonString();
-        clientService.insertObjectToDb(transactionAsObjectAndJsonString.getHash(),
+        dbConnectorService.insertObjectToDb(transactionAsObjectAndJsonString.getHash(),
                 transactionAsObjectAndJsonString.getTransactionAsJsonString(),
                 TRANSACTION_INDEX_NAME,
                 TRANSACTION_OBJECT_NAME);
-        String transactionAsJsonFromDb = clientService.getObjectFromDbByHash(transactionAsObjectAndJsonString.getHash(), TRANSACTION_INDEX_NAME);
+        String transactionAsJsonFromDb = dbConnectorService.getObjectFromDbByHash(transactionAsObjectAndJsonString.getHash(), TRANSACTION_INDEX_NAME);
         Assert.assertNotNull(transactionAsJsonFromDb);
     }
 
     @Test
     public void testAddresses() throws IOException {
         AddressAsObjectAndJsonString addressAsObjectAndJsonString = getRandomAddressAsObjectAndJsonString();
-        clientService.insertObjectToDb(addressAsObjectAndJsonString.getHash(),
+        dbConnectorService.insertObjectToDb(addressAsObjectAndJsonString.getHash(),
                 addressAsObjectAndJsonString.getAddressAsJsonString(),
                 ADDRESS_INDEX_NAME,
                 ADDRESS_OBJECT_NAME);
-        String addressAsJsonFromDb = clientService.getObjectFromDbByHash(addressAsObjectAndJsonString.getHash(), ADDRESS_INDEX_NAME);
+        String addressAsJsonFromDb = dbConnectorService.getObjectFromDbByHash(addressAsObjectAndJsonString.getHash(), ADDRESS_INDEX_NAME);
         Assert.assertNotNull(addressAsJsonFromDb);
     }
 
     @Test
-    public void insertAndGetMultiObjects() throws IOException {
+    public void insertAndGetMultiObjects() throws Exception {
         Map<Hash, String> hashToObjectJsonDataMap = insertAddressBulk();
         Map<Hash, String> hashToObjectsFromDbMap = getMultiObjectsFromDb(ADDRESS_INDEX_NAME, new ArrayList<>(hashToObjectJsonDataMap.keySet()));
         Assert.assertTrue(insertedObjectsEqualToObjectsFromDb(hashToObjectJsonDataMap, hashToObjectsFromDbMap));
+    }
+
+    @Test
+    public void deleteAddressByHash_hashNotExist() {
+        String status = dbConnectorService.deleteObject(generateRandomHash(), ADDRESS_INDEX_NAME);
+        Assert.assertTrue(status.equals(STATUS_NOT_FOUND));
+    }
+
+    @Test
+    public void deleteAddressByHash_Exist() throws IOException {
+        AddressAsObjectAndJsonString addressAsObjectAndJsonString = getRandomAddressAsObjectAndJsonString();
+        dbConnectorService.insertObjectToDb(addressAsObjectAndJsonString.getHash(),
+                addressAsObjectAndJsonString.getAddressAsJsonString(),
+                ADDRESS_INDEX_NAME,
+                ADDRESS_OBJECT_NAME);
+        String status = dbConnectorService.deleteObject(addressAsObjectAndJsonString.getHash(), ADDRESS_INDEX_NAME);
+        Assert.assertTrue(status.equals(STATUS_OK));
     }
 
     private boolean insertedObjectsEqualToObjectsFromDb(Map<Hash, String> hashToObjectJsonDataMap, Map<Hash, String> hashToObjectsFromDbMap) {
@@ -91,17 +110,17 @@ public class ClientServiceTest {
         return true;
     }
 
-    private Map<Hash, String> getMultiObjectsFromDb(String indexName, List<Hash> hashes) {
-        return clientService.getMultiObjects(hashes, indexName);
+    private Map<Hash, String> getMultiObjectsFromDb(String indexName, List<Hash> hashes) throws Exception {
+        return dbConnectorService.getMultiObjects(hashes, indexName);
     }
 
-    private Map<Hash, String> insertAddressBulk() throws IOException {
+    private Map<Hash, String> insertAddressBulk() throws Exception {
         Map<Hash, String> hashToObjectJsonDataMap = new HashMap<>();
         for (int i = 0; i < NUMBER_OF_OBJECTS; i++) {
             AddressAsObjectAndJsonString addressAsObjectAndJsonString = getRandomAddressAsObjectAndJsonString();
             hashToObjectJsonDataMap.put(addressAsObjectAndJsonString.getHash(), addressAsObjectAndJsonString.getAddressAsJsonString());
         }
-        clientService.insertMultiObjectsToDb(ADDRESS_INDEX_NAME, ADDRESS_OBJECT_NAME, hashToObjectJsonDataMap);
+        dbConnectorService.insertMultiObjectsToDb(ADDRESS_INDEX_NAME, ADDRESS_OBJECT_NAME, hashToObjectJsonDataMap);
         return hashToObjectJsonDataMap;
     }
 

@@ -2,7 +2,9 @@ package io.coti.storagenode.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.Hash;
+import io.coti.storagenode.data.MultiDbInsertionStatus;
 import io.coti.storagenode.services.interfaces.IClientService;
+import javafx.util.Pair;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
@@ -14,7 +16,9 @@ import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsRespons
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
+import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.*;
@@ -27,6 +31,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -43,11 +48,11 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 @Slf4j
 @Data
 @Service
-public class ClientService implements IClientService {
+public class DbConnectorService implements IClientService {
     private String INDEX_TYPE = "json";
     private String ELASTICSEARCH_HOST_IP = "localhost";
     private int ELASTICSEARCH_HOST_PORT1 = 9200;
-    //private int ELASTICSEARCH_HOST_PORT2 = 9201;
+    private int ELASTICSEARCH_HOST_PORT2 = 9201;
 
     private RestHighLevelClient restClient;
     private ObjectMapper mapper;
@@ -57,7 +62,8 @@ public class ClientService implements IClientService {
         try {
             mapper = new ObjectMapper();
             restClient = new RestHighLevelClient(RestClient.builder(
-                    new HttpHost(ELASTICSEARCH_HOST_IP, ELASTICSEARCH_HOST_PORT1)
+                    new HttpHost(ELASTICSEARCH_HOST_IP, ELASTICSEARCH_HOST_PORT1),
+                    new HttpHost(ELASTICSEARCH_HOST_IP, ELASTICSEARCH_HOST_PORT2)
             ));
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -101,7 +107,6 @@ public class ClientService implements IClientService {
 
     @Override
     public String getObjectFromDbByHash(Hash hash, String index) throws IOException {
-
         GetRequest request = new GetRequest(index, INDEX_TYPE, hash.toString());
         try {
             GetResponse getResponse = restClient.get(request, RequestOptions.DEFAULT);
@@ -112,21 +117,43 @@ public class ClientService implements IClientService {
         }
     }
 
-
-    public void insertMultiObjectsToDb(String indexName, String objectName, Map<Hash, String> hashToObjectJsonDataMap) {
+    public Pair<MultiDbInsertionStatus, Map<Hash, String>> insertMultiObjectsToDb(String indexName, String objectName, Map<Hash, String> hashToObjectJsonDataMap) throws Exception {
+        Pair<MultiDbInsertionStatus, Map<Hash, String>> insertResponse = null;
         try {
             BulkRequest request = new BulkRequest();
             for (Map.Entry<Hash, String> entry : hashToObjectJsonDataMap.entrySet()) {
                 request.add(new IndexRequest(indexName).id(entry.getKey().toString()).type(INDEX_TYPE)
                         .source(XContentType.JSON, objectName, entry.getValue()));
             }
-            restClient.bulk(request, RequestOptions.DEFAULT);
+            BulkResponse bulkResponse = restClient.bulk(request, RequestOptions.DEFAULT);
+            insertResponse = createMultiInsertResponse(bulkResponse);
+            if (insertResponse.getValue().size() == hashToObjectJsonDataMap.size()) {
+                insertResponse = new Pair<>(MultiDbInsertionStatus.Failed, insertResponse.getValue());
+            }
         } catch (Exception e) {
             log.error(e.getMessage());
+            throw new Exception(e.getMessage());
         }
+        return insertResponse;
+
     }
 
-    public MultiGetResponse getMultiObjectsFromDb(List<Hash> hashes, String indexName) {
+    private Pair<MultiDbInsertionStatus, Map<Hash, String>> createMultiInsertResponse(BulkResponse bulkResponse) {
+        if (bulkResponse == null) {
+            return null;
+        }
+        MultiDbInsertionStatus errorInInsertion = MultiDbInsertionStatus.Success;
+        Map<Hash, String> hashToResponseMap = new HashMap<>();
+        for (BulkItemResponse bulkItemResponse : bulkResponse.getItems()) {
+            if (bulkItemResponse.isFailed()) {
+                errorInInsertion = MultiDbInsertionStatus.PartlyFailed;
+                hashToResponseMap.put(new Hash(bulkItemResponse.getId()), bulkItemResponse.getFailure().getMessage());
+            }
+        }
+        return new Pair<>(errorInInsertion, hashToResponseMap);
+    }
+
+    public MultiGetResponse getMultiObjectsFromDb(List<Hash> hashes, String indexName) throws Exception {
         MultiGetResponse multiGetResponse = null;
         try {
             MultiGetRequest request = new MultiGetRequest();
@@ -139,12 +166,13 @@ public class ClientService implements IClientService {
             multiGetResponse = restClient.mget(request, RequestOptions.DEFAULT);
         } catch (Exception e) {
             log.error(e.getMessage());
-        } finally {
-            return multiGetResponse;
+            throw new Exception(e.getMessage());
         }
+        return multiGetResponse;
+
     }
 
-    public Map<Hash, String> getMultiObjects(List<Hash> hashes, String indexName) {
+    public Map<Hash, String> getMultiObjects(List<Hash> hashes, String indexName) throws Exception {
         Map<Hash, String> hashToObjectsFromDbMap = null;
         MultiGetResponse multiGetResponse = getMultiObjectsFromDb(hashes, indexName);
         hashToObjectsFromDbMap = new HashMap<>();
@@ -156,7 +184,7 @@ public class ClientService implements IClientService {
     }
 
     @Override
-    public String insertObjectToDb(Hash hash, String objectAsJsonString, String index, String objectName) throws IOException {
+    public String insertObjectToDb(Hash hash, String objectAsJsonString, String index, String objectName) {
         IndexResponse indexResponse = null;
         try {
             IndexRequest request = new IndexRequest(
@@ -175,11 +203,20 @@ public class ClientService implements IClientService {
         }
     }
 
+    public HttpStatus getHttpStatus(MultiDbInsertionStatus multiDbInsertionStatus) {
+        if (multiDbInsertionStatus == multiDbInsertionStatus.Success) {
+            return HttpStatus.OK;
+        } else if (multiDbInsertionStatus == multiDbInsertionStatus.Failed) {
+            return HttpStatus.INTERNAL_SERVER_ERROR;
+        }
+        return HttpStatus.MULTI_STATUS;
+    }
+
     private void sendCreateIndexRequest(String index) throws IOException {
         CreateIndexRequest request = new CreateIndexRequest(index);
         request.settings(Settings.builder()
-                .put("index.number_of_shards", 5)
-                .put("index.number_of_replicas", 1)
+                .put("index.number_of_shards", 1)
+                .put("index.number_of_replicas", 2)
         );
 
         restClient.indices().create(request, RequestOptions.DEFAULT);
@@ -215,17 +252,18 @@ public class ClientService implements IClientService {
         return exists;
     }
 
-    public void deleteObject(Hash hash, String indexName) {
-        DeleteResponse deleteResponse = null;
+    public String deleteObject(Hash hash, String indexName) {
         DeleteRequest request = new DeleteRequest(
                 indexName,
                 INDEX_TYPE,
                 hash.toString());
         try {
-            deleteResponse = restClient.delete(
+            DeleteResponse deleteResponse = restClient.delete(
                     request, RequestOptions.DEFAULT);
+            return deleteResponse.status().name();
         } catch (IOException e) {
             log.error(e.getMessage());
+            return e.getMessage();
         }
     }
 }

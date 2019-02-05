@@ -6,6 +6,7 @@ import io.coti.storagenode.http.AddObjectsBulkRequest;
 import io.coti.storagenode.http.GetObjectRequest;
 import io.coti.storagenode.http.GetObjectsBulkRequest;
 import io.coti.storagenode.services.AddressService;
+import io.coti.storagenode.services.interfaces.IAddressService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.*;
 public class AddressController {
 
     @Autowired
-    private AddressService addressService;
+    private IAddressService addressService;
 
     @RequestMapping(value = "/addresses", method = PUT)
     public ResponseEntity<IResponse> addOrUpdateAddresses(@Valid @RequestBody AddObjectsBulkRequest addObjectsBulkRequest) {

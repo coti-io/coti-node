@@ -25,24 +25,43 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 public class TransactionService implements ITransactionService {
 
     @Autowired
-    private ClientService clientService;
+    private DbConnectorService dbConnectorService;
 
     private String TRANSACTION_INDEX_NAME = "transactions";
     private String TRANSACTION_OBJECT_NAME = "transactionData";
 
     @PostConstruct
-    private void init() {
+    private void init() throws Exception {
         try {
-            clientService.addIndex(TRANSACTION_INDEX_NAME, TRANSACTION_OBJECT_NAME);
+            dbConnectorService.addIndex(TRANSACTION_INDEX_NAME, TRANSACTION_OBJECT_NAME);
         } catch (IOException e) {
             log.error(e.getMessage());
+            throw new Exception(e.getMessage());
         }
     }
 
     @Override
-    public ResponseEntity<IResponse> insertTransactionJson(Hash hash, String transactionAsJson) throws IOException {
-        String insertResponse =
-                clientService.insertObjectToDb(hash, transactionAsJson, TRANSACTION_INDEX_NAME, TRANSACTION_OBJECT_NAME);
+    public ResponseEntity<IResponse> insertMultiTransactions(Map<Hash, String> hashToObjectJsonDataMap) {
+
+        try {
+            dbConnectorService.insertMultiObjectsToDb(TRANSACTION_INDEX_NAME, TRANSACTION_OBJECT_NAME, hashToObjectJsonDataMap);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+        //TODO: Define logic
+        return null;
+
+    }
+
+    @Override
+    public ResponseEntity<IResponse> insertTransactionJson(Hash hash, String transactionAsJson) {
+        String insertResponse = null;
+        try {
+            insertResponse =
+                    dbConnectorService.insertObjectToDb(hash, transactionAsJson, TRANSACTION_INDEX_NAME, TRANSACTION_OBJECT_NAME);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(new AddObjectJsonResponse(
@@ -55,36 +74,20 @@ public class TransactionService implements ITransactionService {
         Map<Hash, String> hashToTransactionFromDbMap = null;
 
         //TODO: Define logic.
-        hashToTransactionFromDbMap = clientService.getMultiObjects(hashes, TRANSACTION_INDEX_NAME);
+        try {
+            hashToTransactionFromDbMap = dbConnectorService.getMultiObjects(hashes, TRANSACTION_INDEX_NAME);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new GetObjectBulkJsonResponse(hashToTransactionFromDbMap));
     }
 
     @Override
-    public ResponseEntity<IResponse> insertMultiTransactions(Map<Hash, String> hashToTransactionJsonDataMap) {
+    public ResponseEntity<IResponse> getTransactionByHash(Hash hash) {
+        String transactionAsJson = null;
         try {
-            clientService.insertMultiObjectsToDb(TRANSACTION_INDEX_NAME, TRANSACTION_OBJECT_NAME, hashToTransactionJsonDataMap);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-        }
-        //TODO: Define logic
-        return null;
-
-        //clientService.insertMultiObjectsToDb(addressDocumentList);
-    }
-
-    @Override
-    public ResponseEntity<IResponse> getTransactionByHash(Hash hash) throws IOException {
-        String transactionAsJson = clientService.getObjectFromDbByHash(hash, TRANSACTION_INDEX_NAME);
-        if (transactionAsJson == null)
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new Response(
-                            TRANSACTION_DOESNT_EXIST_MESSAGE,
-                            STATUS_ERROR));
-        try {
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(new GetObjectJsonResponse(hash, transactionAsJson));
+            transactionAsJson = dbConnectorService.getObjectFromDbByHash(hash, TRANSACTION_INDEX_NAME);
         } catch (Exception e) {
             log.error(e.getMessage());
             return ResponseEntity
@@ -92,6 +95,37 @@ public class TransactionService implements ITransactionService {
                     .body(new Response(
                             TRANSACTION_DETAILS_SERVER_ERROR,
                             STATUS_ERROR));
+
+
         }
+        if (transactionAsJson == null)
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new Response(
+                            TRANSACTION_DOESNT_EXIST_MESSAGE,
+                            STATUS_ERROR));
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new GetObjectJsonResponse(hash, transactionAsJson));
+
     }
+
+    @Override
+    public ResponseEntity<IResponse> deleteMultiTransactionsFromDb(List<Hash> hashes) {
+        //TODO: Define logic.
+        try {
+            for (Hash hash : hashes) {
+                dbConnectorService.deleteObject(hash, TRANSACTION_INDEX_NAME);
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<IResponse> deleteTransactionByHash(Hash hash) {
+        dbConnectorService.deleteObject(hash, TRANSACTION_INDEX_NAME);
+        return null;
+    }
+
 }
