@@ -12,9 +12,9 @@ public class TransactionService extends ObjectService {
     @PostConstruct
     private void init() throws Exception {
         try {
-            INDEX_NAME = "transactions";
-            OBJECT_NAME = "transactionData";
-            dbConnectorService.addIndex(INDEX_NAME, OBJECT_NAME);
+            indexName = "transactions";
+            objectName = "transactionData";
+            dbConnectorService.addIndex(indexName, objectName);
         } catch (IOException e) {
             log.error(e.getMessage());
             throw new Exception(e.getMessage());

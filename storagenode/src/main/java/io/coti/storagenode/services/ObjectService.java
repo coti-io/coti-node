@@ -28,13 +28,13 @@ public abstract class ObjectService implements IObjectService {
     @Autowired
     protected DbConnectorService dbConnectorService;
 
-    protected String INDEX_NAME;
-    protected String OBJECT_NAME;
+    protected String indexName;
+    protected String objectName;
 
     public ResponseEntity<IResponse> insertMultiObjects(Map<Hash, String> hashToObjectJsonDataMap) {
         Pair<MultiDbInsertionStatus, Map<Hash, String>> insertResponse = null;
         try {
-            insertResponse = dbConnectorService.insertMultiObjectsToDb(INDEX_NAME, OBJECT_NAME, hashToObjectJsonDataMap);
+            insertResponse = dbConnectorService.insertMultiObjectsToDb(indexName, objectName, hashToObjectJsonDataMap);
         } catch (Exception e) {
             log.error(e.getMessage());
             return ResponseEntity
@@ -52,7 +52,7 @@ public abstract class ObjectService implements IObjectService {
     public ResponseEntity<IResponse> insertObjectJson(Hash hash, String objectAsJson) {
         String insertResponse = null;
         try {
-            insertResponse = dbConnectorService.insertObjectToDb(hash, objectAsJson, INDEX_NAME, OBJECT_NAME);
+            insertResponse = dbConnectorService.insertObjectToDb(hash, objectAsJson, indexName, objectName);
         } catch (Exception e) {
             log.error(e.getMessage());
             return ResponseEntity
@@ -73,7 +73,7 @@ public abstract class ObjectService implements IObjectService {
         Map<Hash, String> hashToObjectFromDbMap = null;
         //TODO: Define logic.
         try {
-            hashToObjectFromDbMap = dbConnectorService.getMultiObjects(hashes, INDEX_NAME);
+            hashToObjectFromDbMap = dbConnectorService.getMultiObjects(hashes, indexName);
         } catch (Exception e) {
             log.error(e.getMessage());
             return ResponseEntity
@@ -90,7 +90,7 @@ public abstract class ObjectService implements IObjectService {
     public ResponseEntity<IResponse> getObjectByHash(Hash hash) {
         String objectAsJson = null;
         try {
-            objectAsJson = dbConnectorService.getObjectFromDbByHash(hash, INDEX_NAME);
+            objectAsJson = dbConnectorService.getObjectFromDbByHash(hash, indexName);
         } catch (Exception e) {
             log.error(e.getMessage());
             return ResponseEntity
@@ -99,12 +99,13 @@ public abstract class ObjectService implements IObjectService {
                             e.getMessage(),
                             STATUS_ERROR));
         }
-        if (objectAsJson == null)
+        if (objectAsJson == null) {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .body(new Response(
                             SERVER_ERROR,
                             STATUS_ERROR));
+        }
 
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new GetObjectJsonResponse(hash, objectAsJson));
@@ -115,7 +116,7 @@ public abstract class ObjectService implements IObjectService {
         Map<Hash, String> hashToResponseMap = new HashMap<>();
         try {
             for (Hash hash : hashes) {
-                hashToResponseMap.put(hash, dbConnectorService.deleteObject(hash, INDEX_NAME));
+                hashToResponseMap.put(hash, dbConnectorService.deleteObject(hash, indexName));
             }
 
         } catch (Exception e) {
@@ -132,7 +133,7 @@ public abstract class ObjectService implements IObjectService {
 
     @Override
     public ResponseEntity<IResponse> deleteObjectByHash(Hash hash) {
-        String status = dbConnectorService.deleteObject(hash, INDEX_NAME);
+        String status = dbConnectorService.deleteObject(hash, indexName);
         switch (status) {
             case STATUS_OK:
                 return ResponseEntity.status(HttpStatus.OK)

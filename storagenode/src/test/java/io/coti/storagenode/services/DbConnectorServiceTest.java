@@ -93,7 +93,7 @@ public class DbConnectorServiceTest {
     }
 
     @Test
-    public void deleteAddressByHash_Exist() throws IOException {
+    public void deleteAddressByHash_hashExist() throws IOException {
         AddressAsObjectAndJsonString addressAsObjectAndJsonString = getRandomAddressAsObjectAndJsonString();
         dbConnectorService.insertObjectToDb(addressAsObjectAndJsonString.getHash(),
                 addressAsObjectAndJsonString.getAddressAsJsonString(),

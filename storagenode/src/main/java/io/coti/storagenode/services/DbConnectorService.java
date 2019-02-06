@@ -49,10 +49,10 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 @Data
 @Service
 public class DbConnectorService implements IDbConnectorService {
-    private String INDEX_TYPE = "json";
-    private String ELASTICSEARCH_HOST_IP = "localhost";
-    private int ELASTICSEARCH_HOST_PORT1 = 9200;
-    private int ELASTICSEARCH_HOST_PORT2 = 9201;
+    private static final String INDEX_TYPE = "json";
+    private static final String ELASTICSEARCH_HOST_IP = "localhost";
+    private static final int ELASTICSEARCH_HOST_PORT1 = 9200;
+    private static final int ELASTICSEARCH_HOST_PORT2 = 9201;
 
     private RestHighLevelClient restClient;
     private ObjectMapper mapper;

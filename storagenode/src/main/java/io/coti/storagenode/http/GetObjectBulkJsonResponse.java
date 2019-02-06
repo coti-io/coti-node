@@ -9,7 +9,7 @@ import java.util.Map;
 @Data
 public class GetObjectBulkJsonResponse extends BaseResponse {
 
-    Map<Hash, String> hashToObjectsFromDbMap;
+    private Map<Hash, String> hashToObjectsFromDbMap;
 
     public GetObjectBulkJsonResponse(Map<Hash, String> hashToObjectsFromDbMap) {
         this.hashToObjectsFromDbMap = hashToObjectsFromDbMap;
