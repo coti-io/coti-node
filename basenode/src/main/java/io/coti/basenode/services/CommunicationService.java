@@ -48,8 +48,8 @@ public class CommunicationService {
                 dspVoteService.handleVoteConclusion((DspConsensusResult) data));
         classNameToSubscriberHandlerMapping.put(Channel.getChannelString(ClusterStampPreparationData.class, nodeType), data ->
                 clusterStampService.prepareForClusterStamp((ClusterStampPreparationData) data));
-        classNameToSubscriberHandlerMapping.put(Channel.getChannelString(DspNodeReadyForClusterStampData.class, nodeType), data ->
-                clusterStampService.dspNodeReadyForClusterStamp((DspNodeReadyForClusterStampData) data));
+        classNameToSubscriberHandlerMapping.put(Channel.getChannelString(DspReadyForClusterStampData.class, nodeType), data ->
+                clusterStampService.dspNodeReadyForClusterStamp((DspReadyForClusterStampData) data));
         classNameToSubscriberHandlerMapping.put(Channel.getChannelString(ClusterStampData.class, nodeType), data ->
                 clusterStampService.newClusterStamp((ClusterStampData) data));
 
