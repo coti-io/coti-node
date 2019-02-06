@@ -21,10 +21,10 @@ import java.util.Arrays;
 @Service
 public class ClusterStampService extends BaseNodeClusterStampService {
 
+    final private static int FULL_NODES_MAJORITY = 1;
+
     private boolean isClusterStampInProgress;
     private boolean isReadyForClusterStamp;
-    private int fullNodesMajority;
-
     @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired
@@ -39,7 +39,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @PostConstruct
     private void init() {
         isReadyForClusterStamp = false;
-        fullNodesMajority = 1;
     }
 
     @Override
@@ -62,20 +61,20 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
         log.debug("Ready for cluster stamp propagated message received from FN to DSP");
         if(isClusterStampInProgress && !isReadyForClusterStamp && fullNodeReadyForClusterStampCrypto.verifySignature(fullNodeReadyForClusterStampData)) {
-            DspNodeReadyForClusterStampData dspNodeReadyForClusterStampData = dspNodeReadyForClusterStamp.getByHash(fullNodeReadyForClusterStampData.getHash());
+            DspReadyForClusterStampData dspReadyForClusterStampData = dspNodeReadyForClusterStamp.getByHash(fullNodeReadyForClusterStampData.getHash());
 
-            if ( dspNodeReadyForClusterStampData == null ) {
-                dspNodeReadyForClusterStampData = new DspNodeReadyForClusterStampData(fullNodeReadyForClusterStampData.getHash());
+            if ( dspReadyForClusterStampData == null ) {
+                dspReadyForClusterStampData = new DspReadyForClusterStampData(fullNodeReadyForClusterStampData.getHash());
             }
 
-            dspNodeReadyForClusterStampData.getFullNodeReadyForClusterStampDataList().add(fullNodeReadyForClusterStampData);
+            dspReadyForClusterStampData.getFullNodeReadyForClusterStampDataList().add(fullNodeReadyForClusterStampData);
 
-            if ( dspNodeReadyForClusterStampData.getFullNodeReadyForClusterStampDataList().size() >= fullNodesMajority ) {
+            if ( dspReadyForClusterStampData.getFullNodeReadyForClusterStampDataList().size() >= FULL_NODES_MAJORITY ) {
                 isReadyForClusterStamp = true;
-                propagationPublisher.propagate(dspNodeReadyForClusterStampData, Arrays.asList(NodeType.DspNode, NodeType.ZeroSpendServer));
+                propagationPublisher.propagate(dspReadyForClusterStampData, Arrays.asList(NodeType.DspNode, NodeType.ZeroSpendServer));
             }
 
-            dspNodeReadyForClusterStamp.put(dspNodeReadyForClusterStampData);
+            dspNodeReadyForClusterStamp.put(dspReadyForClusterStampData);
         }
     }
 

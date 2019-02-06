@@ -2,7 +2,7 @@ package io.coti.zerospend.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.data.ClusterStampData;
-import io.coti.basenode.data.DspNodeReadyForClusterStampData;
+import io.coti.basenode.data.DspReadyForClusterStampData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.model.ClusterStamp;
@@ -18,9 +18,11 @@ import java.util.Arrays;
 @Service
 public class ClusterStampService extends BaseNodeClusterStampService {
 
+    final private static int DSP_NODES_MAJORITY = 1;
+
     private Hash clusterStampCurrentHash;
     private Hash clusterStampInProgressHash;
-    private int dspNodesMajority;
+    private boolean isClusterStampInMaking;
 
     @Autowired
     private IPropagationPublisher propagationPublisher;
@@ -28,16 +30,18 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private ClusterStamp clusterStamp;
     @Autowired
     private DspVoteService dspVoteService;
+    @Autowired
+    private BalanceService balanceService;
 
     @PostConstruct
     private void init() {
         clusterStampCurrentHash = new Hash("current");
         clusterStampInProgressHash = new Hash("inProgress");
-        dspNodesMajority = 1;
+        isClusterStampInMaking = false;
     }
 
     @Override
-    public void dspNodeReadyForClusterStamp(DspNodeReadyForClusterStampData dspNodeReadyForClusterStampData) {
+    public void dspNodeReadyForClusterStamp(DspReadyForClusterStampData dspReadyForClusterStampData) {
 
         log.debug("Ready for cluster stamp propagated message received from DSP to ZS");
 
@@ -47,9 +51,9 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             clusterStampData = new ClusterStampData(clusterStampInProgressHash);
         }
 
-        clusterStampData.getDspNodeReadyForClusterStampDataList().add(dspNodeReadyForClusterStampData);
+        clusterStampData.getDspReadyForClusterStampDataList().add(dspReadyForClusterStampData);
 
-        if ( clusterStampData.getDspNodeReadyForClusterStampDataList().size() >= dspNodesMajority ) {
+        if ( clusterStampData.getDspReadyForClusterStampDataList().size() >= DSP_NODES_MAJORITY ) {
             log.info("Stop dsp vote service from sum and save dsp votes");
             dspVoteService.stopSumAndSaveVotes();
         }
@@ -61,11 +65,16 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
         ClusterStampData clusterStampData = clusterStamp.getByHash(clusterStampInProgressHash);
         clusterStampData.setHash(clusterStampCurrentHash);
+        clusterStampData.setBalanceMap(balanceService.getBalanceMap());
         clusterStamp.put(clusterStampData);
         clusterStamp.put(new ClusterStampData(clusterStampInProgressHash));
         propagationPublisher.propagate(clusterStampData, Arrays.asList(NodeType.DspNode));
 
         log.info("Restart dsp vote service to sum and save dsp votes");
         dspVoteService.startSumAndSaveVotes();
+    }
+
+    public boolean getIsClusterStampInMaking() {
+        return isClusterStampInMaking;
     }
 }

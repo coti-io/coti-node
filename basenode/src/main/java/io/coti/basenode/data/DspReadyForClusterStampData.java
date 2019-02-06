@@ -6,30 +6,25 @@ import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Data
-public class ClusterStampData implements IPropagatable, ISignable, ISignValidatable {
+public class DspReadyForClusterStampData implements IPropagatable, ISignable, ISignValidatable {
 
     private Hash hash;
     private Long lastDspConfirmed;
-    private Map<Hash, BigDecimal> balanceMap;
-    private List<DspReadyForClusterStampData> dspReadyForClusterStampDataList;
-    private List<DspClusterStampVoteData> dspClusterStampVoteData;
-    private Hash zeroSpendHash;
-    private SignatureData zeroSpendSignature;
+    private List<FullNodeReadyForClusterStampData> fullNodeReadyForClusterStampDataList;
+    private Hash dspNodeHash;
+    private SignatureData dspNodeSignature;
 
-    public ClusterStampData(Hash hash) {
+    public DspReadyForClusterStampData(Hash hash) {
         this.hash = hash;
-        this.dspReadyForClusterStampDataList = new ArrayList<>();
-        this.dspClusterStampVoteData = new ArrayList<>();
+        this.fullNodeReadyForClusterStampDataList = new ArrayList<>();
     }
 
-    public ClusterStampData() {
+    public DspReadyForClusterStampData() {
     }
 
     @Override
@@ -44,21 +39,21 @@ public class ClusterStampData implements IPropagatable, ISignable, ISignValidata
 
     @Override
     public SignatureData getSignature() {
-        return zeroSpendSignature;
+        return dspNodeSignature;
     }
 
     @Override
     public Hash getSignerHash() {
-        return zeroSpendHash;
+        return dspNodeHash;
     }
 
     @Override
     public void setSignerHash(Hash signerHash) {
-        zeroSpendHash = signerHash;
+        dspNodeHash = signerHash;
     }
 
     @Override
     public void setSignature(SignatureData signature) {
-        zeroSpendSignature = signature;
+        dspNodeSignature = signature;
     }
 }

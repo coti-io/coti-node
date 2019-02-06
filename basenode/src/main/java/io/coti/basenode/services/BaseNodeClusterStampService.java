@@ -2,7 +2,7 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.data.ClusterStampData;
 import io.coti.basenode.data.ClusterStampPreparationData;
-import io.coti.basenode.data.DspNodeReadyForClusterStampData;
+import io.coti.basenode.data.DspReadyForClusterStampData;
 import io.coti.basenode.data.FullNodeReadyForClusterStampData;
 import io.coti.basenode.services.interfaces.IClusterStampService;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +20,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     }
 
     @Override
-    public void dspNodeReadyForClusterStamp(DspNodeReadyForClusterStampData clusterStampReadyData) {
+    public void dspNodeReadyForClusterStamp(DspReadyForClusterStampData clusterStampReadyData) {
     }
 
     @Override

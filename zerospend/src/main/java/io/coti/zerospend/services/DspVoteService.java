@@ -134,13 +134,6 @@ public class DspVoteService extends BaseNodeDspVoteService {
             }
         }
 
-        log.info("Please wait to process remaining vote(s)", transactionHashToVotesListMapping.size());
-
-        for (Map.Entry<Hash, List<DspVote>> transactionHashToVotesListEntrySet :
-                transactionHashToVotesListMapping.entrySet()) {
-            sumAndSaveVotesHandler(transactionHashToVotesListEntrySet);
-        }
-
         clusterStampService.makeAndPropagateClusterStamp();
     }
 

@@ -3,7 +3,7 @@ package io.coti.basenode.services.interfaces;
 import io.coti.basenode.data.ClusterStampData;
 import io.coti.basenode.data.ClusterStampPreparationData;
 import io.coti.basenode.data.FullNodeReadyForClusterStampData;
-import io.coti.basenode.data.DspNodeReadyForClusterStampData;
+import io.coti.basenode.data.DspReadyForClusterStampData;
 
 public interface IClusterStampService {
 
@@ -11,7 +11,7 @@ public interface IClusterStampService {
 
     void fullNodeReadyForClusterStamp(FullNodeReadyForClusterStampData fullNodeReadyForClusterStampData);
 
-    void dspNodeReadyForClusterStamp(DspNodeReadyForClusterStampData clusterStampReadyData);
+    void dspNodeReadyForClusterStamp(DspReadyForClusterStampData clusterStampReadyData);
 
     void newClusterStamp(ClusterStampData clusterStampData);
 }

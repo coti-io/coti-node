@@ -11,7 +11,7 @@ import java.util.List;
 
 @Slf4j
 @Data
-public class DspNodeReadyForClusterStampData implements IPropagatable, ISignable, ISignValidatable {
+public class DspClusterStampVoteData implements IPropagatable, ISignable, ISignValidatable {
 
     private Hash hash;
     private Long lastDspConfirmed;
@@ -19,12 +19,12 @@ public class DspNodeReadyForClusterStampData implements IPropagatable, ISignable
     private Hash dspNodeHash;
     private SignatureData dspNodeSignature;
 
-    public DspNodeReadyForClusterStampData(Hash hash) {
+    public DspClusterStampVoteData(Hash hash) {
         this.hash = hash;
         this.fullNodeReadyForClusterStampDataList = new ArrayList<>();
     }
 
-    public DspNodeReadyForClusterStampData() {
+    public DspClusterStampVoteData() {
     }
 
     @Override

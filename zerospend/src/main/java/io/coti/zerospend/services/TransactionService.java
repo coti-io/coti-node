@@ -11,9 +11,13 @@ import org.springframework.stereotype.Service;
 public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private DspVoteService dspVoteService;
+    @Autowired
+    private ClusterStampService clusterStampService;
 
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
-        dspVoteService.preparePropagatedTransactionForVoting(transactionData);
+        if( !clusterStampService.getIsClusterStampInMaking() ) {
+            dspVoteService.preparePropagatedTransactionForVoting(transactionData);
+        }
     }
 }
