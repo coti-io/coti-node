@@ -57,16 +57,16 @@ public class DbConnectorServiceTest {
         dbConnectorService.getClusterDetails(indexes.keySet());
     }
 
-//    @Test
-//    public void testTransactions() throws IOException {
-//        TransactionAsObjectAndJsonString transactionAsObjectAndJsonString = getRandomTransactionAsObjectAndJsonString();
-//        dbConnectorService.insertObjectToDb(transactionAsObjectAndJsonString.getHash(),
-//                transactionAsObjectAndJsonString.getTransactionAsJsonString(),
-//                TRANSACTION_INDEX_NAME,
-//                TRANSACTION_OBJECT_NAME);
-//        String transactionAsJsonFromDb = dbConnectorService.getObjectFromDbByHash(transactionAsObjectAndJsonString.getHash(), TRANSACTION_INDEX_NAME);
-//        Assert.assertNotNull(transactionAsJsonFromDb);
-//    }
+    @Test
+    public void testTransactions() throws IOException {
+        TransactionAsObjectAndJsonString transactionAsObjectAndJsonString = getRandomTransactionAsObjectAndJsonString();
+        dbConnectorService.insertObjectToDb(transactionAsObjectAndJsonString.getHash(),
+                transactionAsObjectAndJsonString.getTransactionAsJsonString(),
+                TRANSACTION_INDEX_NAME,
+                TRANSACTION_OBJECT_NAME);
+        String transactionAsJsonFromDb = dbConnectorService.getObjectFromDbByHash(transactionAsObjectAndJsonString.getHash(), TRANSACTION_INDEX_NAME);
+        Assert.assertNotNull(transactionAsJsonFromDb);
+    }
 
     @Test
     public void testAddresses() throws IOException {
