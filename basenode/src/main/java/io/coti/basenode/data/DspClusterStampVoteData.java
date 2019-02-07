@@ -4,56 +4,54 @@ import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.List;
-
-@Slf4j
 @Data
 public class DspClusterStampVoteData implements IPropagatable, ISignable, ISignValidatable {
 
-    private Hash hash;
-    private Long lastDspConfirmed;
-    private List<FullNodeReadyForClusterStampData> fullNodeReadyForClusterStampDataList;
-    private Hash dspNodeHash;
-    private SignatureData dspNodeSignature;
+    public Hash clusterStampHash;
+    public boolean validClusterStamp;
+    public Hash voterDspHash;
+    public SignatureData signature;
 
-    public DspClusterStampVoteData(Hash hash) {
-        this.hash = hash;
-        this.fullNodeReadyForClusterStampDataList = new ArrayList<>();
+    private DspClusterStampVoteData() {
     }
 
-    public DspClusterStampVoteData() {
+    public DspClusterStampVoteData(Hash clusterStampHash, boolean validClusterStamp) {
+        this.clusterStampHash = clusterStampHash;
+        this.validClusterStamp = validClusterStamp;
     }
 
     @Override
     public Hash getHash() {
-        return hash;
+        return clusterStampHash;
     }
 
     @Override
     public void setHash(Hash hash) {
-        this.hash = hash;
+        this.clusterStampHash = hash;
     }
 
     @Override
     public SignatureData getSignature() {
-        return dspNodeSignature;
+        return signature;
     }
 
     @Override
     public Hash getSignerHash() {
-        return dspNodeHash;
+        return voterDspHash;
     }
 
     @Override
     public void setSignerHash(Hash signerHash) {
-        dspNodeHash = signerHash;
+        voterDspHash = signerHash;
     }
 
     @Override
     public void setSignature(SignatureData signature) {
-        dspNodeSignature = signature;
+        this.signature = signature;
+    }
+
+    public String toString() {
+        return String.format("Cluster Stamp Hash= {}, Voter Hash= {}, IsValid= {}", clusterStampHash, voterDspHash, isValidClusterStamp());
     }
 }
