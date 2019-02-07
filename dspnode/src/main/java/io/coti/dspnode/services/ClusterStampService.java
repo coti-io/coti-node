@@ -1,8 +1,8 @@
 package io.coti.dspnode.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
-import io.coti.basenode.crypto.ClusterStampPreparationCrypto;
-import io.coti.basenode.crypto.FullNodeReadyForClusterStampCrypto;
+import io.coti.basenode.crypto.ClusterStampCrypto;
+import io.coti.basenode.crypto.ClusterStampStateCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.model.ClusterStamp;
 import io.coti.basenode.services.BaseNodeClusterStampService;
@@ -28,9 +28,9 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired
-    private ClusterStampPreparationCrypto clusterStampPreparationCrypto;
+    private ClusterStampStateCrypto clusterStampStateCrypto;
     @Autowired
-    private FullNodeReadyForClusterStampCrypto fullNodeReadyForClusterStampCrypto;
+    private ClusterStampCrypto clusterStampCrypto;
     @Autowired
     private DspNodeReadyForClusterStamp dspNodeReadyForClusterStamp;
     @Autowired
@@ -45,10 +45,10 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     public void prepareForClusterStamp(ClusterStampPreparationData clusterStampPreparationData) {
 
         log.debug("Prepare for cluster stamp propagated message received from ZS to DSP");
-        if( !isClusterStampInProgress && clusterStampPreparationCrypto.verifySignature(clusterStampPreparationData)) {
+        if( !isClusterStampInProgress && clusterStampStateCrypto.verifySignature(clusterStampPreparationData)) {
             isClusterStampInProgress = true;
 
-            clusterStampPreparationCrypto.signMessage(clusterStampPreparationData);
+            clusterStampStateCrypto.signMessage(clusterStampPreparationData);
             propagationPublisher.propagate(clusterStampPreparationData, Arrays.asList(NodeType.FullNode));
         }
         else {
@@ -60,7 +60,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     public void fullNodeReadyForClusterStamp(FullNodeReadyForClusterStampData fullNodeReadyForClusterStampData) {
 
         log.debug("Ready for cluster stamp propagated message received from FN to DSP");
-        if(isClusterStampInProgress && !isReadyForClusterStamp && fullNodeReadyForClusterStampCrypto.verifySignature(fullNodeReadyForClusterStampData)) {
+        if(isClusterStampInProgress && !isReadyForClusterStamp && clusterStampStateCrypto.verifySignature(fullNodeReadyForClusterStampData)) {
             DspReadyForClusterStampData dspReadyForClusterStampData = dspNodeReadyForClusterStamp.getByHash(fullNodeReadyForClusterStampData.getHash());
 
             if ( dspReadyForClusterStampData == null ) {
@@ -81,8 +81,12 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Override
     public void newClusterStamp(ClusterStampData clusterStampData) {
 
-        isReadyForClusterStamp = false;
-        clusterStamp.put(clusterStampData);
+        if(clusterStampCrypto.verifySignature(clusterStampData)) {
+            isReadyForClusterStamp = false;
+            clusterStamp.put(clusterStampData);
+
+
+        }
     }
 
     public boolean getIsReadyForClusterStamp() {

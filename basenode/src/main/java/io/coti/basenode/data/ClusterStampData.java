@@ -19,14 +19,14 @@ public class ClusterStampData implements IPropagatable, ISignable, ISignValidata
     private Long lastDspConfirmed;
     private Map<Hash, BigDecimal> balanceMap;
     private List<DspReadyForClusterStampData> dspReadyForClusterStampDataList;
-    private List<DspClusterStampVoteData> dspClusterStampVoteData;
+    private List<Hash> unconfirmedTransactions;
+    private ClusterStampConsensusResult clusterStampConsensusResult;
     private Hash zeroSpendHash;
     private SignatureData zeroSpendSignature;
 
     public ClusterStampData(Hash hash) {
         this.hash = hash;
         this.dspReadyForClusterStampDataList = new ArrayList<>();
-        this.dspClusterStampVoteData = new ArrayList<>();
     }
 
     public ClusterStampData() {
