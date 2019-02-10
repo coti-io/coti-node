@@ -32,7 +32,6 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
             AddressData.class,
             DspConsensusResult.class,
             ClusterStampPreparationData.class,
-            DspReadyForClusterStampData.class,
             ClusterStampData.class));
     private List<String> channelsToSubscribe;
     private final int HEARTBEAT_INTERVAL = 10000;

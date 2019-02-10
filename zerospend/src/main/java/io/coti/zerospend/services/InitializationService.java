@@ -1,7 +1,9 @@
 package io.coti.zerospend.services;
 
+import io.coti.basenode.data.DspReadyForClusterStampData;
 import io.coti.basenode.data.DspVote;
 import io.coti.basenode.data.NodeType;
+import io.coti.basenode.model.DspReadyForClusterStamp;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
@@ -32,14 +34,17 @@ public class InitializationService {
     @Autowired
     private TransactionCreationService transactionCreationService;
     @Autowired
+    private ClusterStampService clusterStampService;
+    @Autowired
     private Transactions transactions;
 
     @PostConstruct
     public void init() {
         HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping = new HashMap<>();
-        classNameToReceiverHandlerMapping.put(
-                DspVote.class.getName(), data ->
-                        dspVoteService.receiveDspVote((DspVote) data));
+        classNameToReceiverHandlerMapping.put(DspVote.class.getName(), data ->
+                dspVoteService.receiveDspVote((DspVote) data));
+        classNameToReceiverHandlerMapping.put(DspReadyForClusterStampData.class.getName(), data ->
+                clusterStampService.dspNodeReadyForClusterStamp((DspReadyForClusterStampData) data));
         communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
         communicationService.initSubscriber(propagationServerAddresses, NodeType.ZeroSpendServer);
         communicationService.initPropagator(propagationPort);

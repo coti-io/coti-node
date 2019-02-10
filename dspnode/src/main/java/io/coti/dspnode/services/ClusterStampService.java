@@ -1,18 +1,21 @@
 package io.coti.dspnode.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
+import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.crypto.ClusterStampCrypto;
 import io.coti.basenode.crypto.ClusterStampStateCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.model.ClusterStamp;
 import io.coti.basenode.services.BaseNodeClusterStampService;
-import io.coti.basenode.model.DspNodeReadyForClusterStamp;
+import io.coti.basenode.model.DspReadyForClusterStamp;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Handler for PrepareForSnapshot messages propagated to DSP.
@@ -25,6 +28,8 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     private boolean isClusterStampInProgress;
     private boolean isReadyForClusterStamp;
+    @Value("${zerospend.receiving.address}")
+    private String receivingZerospendAddress;
     @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired
@@ -32,9 +37,11 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Autowired
     private ClusterStampCrypto clusterStampCrypto;
     @Autowired
-    private DspNodeReadyForClusterStamp dspNodeReadyForClusterStamp;
+    private DspReadyForClusterStamp dspReadyForClusterStamp;
     @Autowired
     private ClusterStamp clusterStamp;
+    @Autowired
+    private ISender sender;
 
     @PostConstruct
     private void init() {
@@ -62,7 +69,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
         log.debug("Ready for cluster stamp propagated message received from FN to DSP");
         if(isClusterStampInProgress && !isReadyForClusterStamp && clusterStampStateCrypto.verifySignature(fullNodeReadyForClusterStampData)) {
-            DspReadyForClusterStampData dspReadyForClusterStampData = dspNodeReadyForClusterStamp.getByHash(fullNodeReadyForClusterStampData.getHash());
+            DspReadyForClusterStampData dspReadyForClusterStampData = dspReadyForClusterStamp.getByHash(fullNodeReadyForClusterStampData.getHash());
 
             if ( dspReadyForClusterStampData == null ) {
                 dspReadyForClusterStampData = new DspReadyForClusterStampData(fullNodeReadyForClusterStampData.getLastDspConfirmed());
@@ -72,10 +79,11 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
             if ( dspReadyForClusterStampData.getFullNodeReadyForClusterStampDataList().size() >= FULL_NODES_MAJORITY ) {
                 isReadyForClusterStamp = true;
-                propagationPublisher.propagate(dspReadyForClusterStampData, Arrays.asList(NodeType.DspNode, NodeType.ZeroSpendServer));
+                clusterStampStateCrypto.signMessage(dspReadyForClusterStampData);
+                sender.send(dspReadyForClusterStampData, receivingZerospendAddress);
             }
 
-            dspNodeReadyForClusterStamp.put(dspReadyForClusterStampData);
+            dspReadyForClusterStamp.put(dspReadyForClusterStampData);
         }
     }
 
