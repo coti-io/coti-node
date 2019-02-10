@@ -19,12 +19,10 @@ public class NodeRegistrationData implements IEntity, ISignValidatable {
     @NotNull
     private Instant creationTime;
     @NotNull
-    private Hash registrationHash;
-    @NotNull
     private Hash registrarHash;
     @NotNull
     @Valid
-    private SignatureData signature;
+    private SignatureData registrarSignature;
 
     @Override
     public Hash getHash() {
@@ -43,7 +41,7 @@ public class NodeRegistrationData implements IEntity, ISignValidatable {
 
     @Override
     public SignatureData getSignature() {
-        return signature;
+        return registrarSignature;
     }
     
 }
