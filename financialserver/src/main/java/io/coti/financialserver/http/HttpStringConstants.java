@@ -36,8 +36,6 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String ITEM_NOT_FOUND = "Item not found";
     public static final String DISPUTE_ITEM_PASSED_RECALL_STATUS = "Dispute item passed recall status";
     public static final String DISPUTE_NOT_IN_CLAIM_STATUS = "Dispute not in claim status";
-    public static final String ITEM_NOT_REJECTED_BY_MERCHANT = "Item not rejected by merchant";
-    public static final String STATUS_NOT_VALID = "Status not valid";
     public static final String ALREADY_GOT_YOUR_VOTE = "You already voted on this item";
 
     public static final String HEADER_CONTENT_DISPOSITION = "Content-Disposition";
@@ -49,8 +47,6 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String ALREADY_GOT_THIS_RECOURSE_CLAIM = "Recourse claim transaction already processed";
     public static final String NOT_ENOUGH_MONEY_IN_TRANSACTION = "Not enough money in transaction";
 
-    public static final String UNAUTHORIZED = "Unauthorized";
-    public static final String INVALID_SIGNATURE = "Invalid signature";
     public static final String INTERNAL_ERROR = "Internal error";
 
 

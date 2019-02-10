@@ -1,7 +1,7 @@
 package io.coti.basenode.services.LiveView;
 
-import io.coti.basenode.data.GraphData;
-import io.coti.basenode.data.NodeData;
+import io.coti.basenode.services.LiveView.data.GraphData;
+import io.coti.basenode.services.LiveView.data.GraphTransactionData;
 import io.coti.basenode.data.TransactionData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,61 +21,61 @@ public class LiveViewService {
 
     public LiveViewService() {
         this.graphData = new GraphData();
-        this.graphData.nodes = new Vector<>();
+        this.graphData.transactions = new Vector<>();
     }
 
     public GraphData getFullGraph() {
         return graphData;
     }
 
-    public void addNode(TransactionData transactionData) {
-        NodeData nodeData = new NodeData();
-        nodeData.setId(transactionData.getHash().toHexString());
-        nodeData.setTrustScore(transactionData.getSenderTrustScore());
-        nodeData.setGenesis(transactionData.isGenesis());
+    public void addTransaction(TransactionData transactionData) {
+        GraphTransactionData graphTransactionData = new GraphTransactionData();
+        graphTransactionData.setId(transactionData.getHash().toHexString());
+        graphTransactionData.setTrustScore(transactionData.getSenderTrustScore());
+        graphTransactionData.setGenesis(transactionData.isGenesis());
 
         if (transactionData.isSource()) {
-            nodeData.setStatus(0);
+            graphTransactionData.setStatus(0);
         } else {
-            nodeData.setStatus(transactionData.isTrustChainConsensus() ? 2 : 1);
+            graphTransactionData.setStatus(transactionData.isTrustChainConsensus() ? 2 : 1);
         }
 
         if (transactionData.getLeftParentHash() != null) {
-            nodeData.setLeftParent(transactionData.getLeftParentHash().toHexString());
+            graphTransactionData.setLeftParent(transactionData.getLeftParentHash().toHexString());
         }
         if (transactionData.getRightParentHash() != null) {
-            nodeData.setRightParent(transactionData.getRightParentHash().toHexString());
+            graphTransactionData.setRightParent(transactionData.getRightParentHash().toHexString());
         }
-        setNodeDataDatesFromTransactionData(transactionData, nodeData);
-        graphData.nodes.add(nodeData);
+        setGraphTransactionDataDatesFromTransactionData(transactionData, graphTransactionData);
+        graphData.transactions.add(graphTransactionData);
 
-        sendNode(nodeData);
+        sendTransaction(graphTransactionData);
     }
 
     public void updateNodeStatus(TransactionData transactionData, int newStatus) {
-        NodeData nodeData = new NodeData();
-        nodeData.setId(transactionData.getHash().toHexString());
-        nodeData.setTrustScore(transactionData.getSenderTrustScore());
-        nodeData.setStatus(newStatus);
-        setNodeDataDatesFromTransactionData(transactionData, nodeData);
-        int index = graphData.nodes.indexOf(nodeData);
+        GraphTransactionData graphTransactionData = new GraphTransactionData();
+        graphTransactionData.setId(transactionData.getHash().toHexString());
+        graphTransactionData.setTrustScore(transactionData.getSenderTrustScore());
+        graphTransactionData.setStatus(newStatus);
+        setGraphTransactionDataDatesFromTransactionData(transactionData, graphTransactionData);
+        int index = graphData.transactions.indexOf(graphTransactionData);
         if (index == -1) {
-            graphData.nodes.add(nodeData);
+            graphData.transactions.add(graphTransactionData);
         } else {
-            graphData.nodes.set(index, nodeData);
+            graphData.transactions.set(index, graphTransactionData);
         }
-        sendNode(nodeData);
+        sendTransaction(graphTransactionData);
     }
 
-    public void setNodeDataDatesFromTransactionData(TransactionData transactionData, NodeData nodeData) {
-        nodeData.setAttachmentTime(transactionData.getAttachmentTime());
-        nodeData.setTransactionConsensusUpdateTime(transactionData.getTransactionConsensusUpdateTime());
+    public void setGraphTransactionDataDatesFromTransactionData(TransactionData transactionData, GraphTransactionData graphTransactionData) {
+        graphTransactionData.setAttachmentTime(transactionData.getAttachmentTime());
+        graphTransactionData.setTransactionConsensusUpdateTime(transactionData.getTransactionConsensusUpdateTime());
         if (transactionData.getAttachmentTime() != null && transactionData.getTransactionConsensusUpdateTime() != null) {
-            nodeData.setTccDuration((transactionData.getTransactionConsensusUpdateTime().getTime() - transactionData.getAttachmentTime().getTime()) / 1000);
+            graphTransactionData.setTccDuration((transactionData.getTransactionConsensusUpdateTime().getTime() - transactionData.getAttachmentTime().getTime()) / 1000);
         }
     }
 
-    private void sendNode(NodeData nodeData) {
-        messagingSender.convertAndSend("/topic/nodes", nodeData);
+    private void sendTransaction(GraphTransactionData graphTransactionData) {
+        messagingSender.convertAndSend("/topic/transactions", graphTransactionData);
     }
 }

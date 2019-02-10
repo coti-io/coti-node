@@ -3,6 +3,7 @@ package io.coti.fullnode.controllers;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.data.AddressStatus;
 import io.coti.basenode.services.interfaces.IValidationService;
+
 import io.coti.fullnode.http.AddAddressResponse;
 import io.coti.fullnode.http.AddressBulkRequest;
 import io.coti.fullnode.http.AddressRequest;
@@ -14,12 +15,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 
-import static org.springframework.web.bind.annotation.RequestMethod.POST;
-import static org.springframework.web.bind.annotation.RequestMethod.PUT;
+
 
 @Slf4j
 @RestController
@@ -32,7 +33,7 @@ public class AddressController {
     @Autowired
     private IValidationService validationService;
 
-    @RequestMapping(method = PUT)
+    @RequestMapping(method = RequestMethod.PUT)
     public ResponseEntity<AddAddressResponse> addAddress(@Valid @RequestBody AddressRequest addAddressRequest) {
 
         if (addressLengthValidation(addAddressRequest.getAddress())) {
@@ -53,7 +54,7 @@ public class AddressController {
         }
     }
 
-    @RequestMapping(method = POST)
+    @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<AddressesExistsResponse> addressExists(@Valid @RequestBody AddressBulkRequest addressRequest) {
         Hash[] addressesHash = addressRequest.getAddresses();
         AddressesExistsResponse addressResponse = new AddressesExistsResponse();

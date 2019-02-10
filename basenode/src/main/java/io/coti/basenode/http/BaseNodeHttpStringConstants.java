@@ -16,9 +16,6 @@ public class BaseNodeHttpStringConstants {
     public static final String TRANSACTION_ROLLBACK_MESSAGE = "Transaction creation failed";
     public static final String TRANSACTION_SOURCE_NOT_FOUND = "There is no valid source. Please try again later";
 
-    public static final String TRANSACTION_CURRENTLY_MISSING_MESSAGE = "Transaction is currently missing. Waiting for propagation from neighbors!";
-    public static final String WAITING_FOR_TRANSACTION_PARENT_MESSAGE = "Waiting_for_transaction_parent!";
-
     public static final String AUTHENTICATION_FAILED_MESSAGE = "Authentication failed!";
     public static final String INSUFFICIENT_FUNDS_MESSAGE = "Balance for address is insufficient!";
     public static final String ILLEGAL_TRANSACTION_MESSAGE = "Illegal transaction - sum of base transactions must be 0!";
@@ -30,5 +27,8 @@ public class BaseNodeHttpStringConstants {
     public static final String INVALID_PARAMETERS_MESSAGE = "Invalid request parameters.";
     public static final String GENERAL_EXCEPTION_ERROR = "Error In Service";
 
-    public static final String VALIDATION_EXCEPTION_MESSAGE = "We are sorry, this node didn't pass validation, please contact our customer service for more details";
+    public static final String UNAUTHORIZED = "Unauthorized";
+    public static final String INVALID_SIGNATURE = "Invalid signature";
+    public static final String INVALID_NODE_REGISTRAR = "Invalid node registrar";
+    public static final String INVALID_NODE_REGISTRATION_SIGNATURE = "Invalid node registration signature";
 }
