@@ -1,7 +1,7 @@
 package io.coti.zerospend.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
-import io.coti.basenode.crypto.ClusterStampPreparationCrypto;
+import io.coti.basenode.crypto.ClusterStampStateCrypto;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.ClusterStampPreparationData;
 import io.coti.basenode.services.BaseNodeIndexService;
@@ -20,14 +20,14 @@ public class IndexService extends BaseNodeIndexService {
     private IPropagationPublisher propagationPublisher;
 
     @Autowired
-    private ClusterStampPreparationCrypto clusterStampPreparationCrypto;
+    private ClusterStampStateCrypto clusterStampStateCrypto;
 
     public void incrementAndGetDspConfirmed(long dspConfirmed) {
 
         if(dspConfirmed > AMOUNT_OF_GENESIS_TRANSACTIONS && dspConfirmed % MAKE_CLUSTER_STAMP_EACH_TRANSACTION == 0) {
 
             ClusterStampPreparationData clusterStampPreparationData = new ClusterStampPreparationData(dspConfirmed);
-            clusterStampPreparationCrypto.signMessage(clusterStampPreparationData);
+            clusterStampStateCrypto.signMessage(clusterStampPreparationData);
 
             propagationPublisher.propagate(clusterStampPreparationData, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer));
         }

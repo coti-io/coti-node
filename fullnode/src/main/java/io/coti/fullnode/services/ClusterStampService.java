@@ -1,7 +1,7 @@
 package io.coti.fullnode.services;
 
 import io.coti.basenode.communication.interfaces.ISender;
-import io.coti.basenode.crypto.FullNodeReadyForClusterStampCrypto;
+import io.coti.basenode.crypto.ClusterStampStateCrypto;
 import io.coti.basenode.data.ClusterStampData;
 import io.coti.basenode.data.ClusterStampPreparationData;
 import io.coti.basenode.data.FullNodeReadyForClusterStampData;
@@ -27,7 +27,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Value("#{'${receiving.server.addresses}'.split(',')}")
     private List<String> receivingServerAddresses;
     @Autowired
-    private FullNodeReadyForClusterStampCrypto fullNodeReadyForClusterStampCrypto;
+    private ClusterStampStateCrypto clusterStampStateCrypto;
     @Autowired
     private ISender sender;
     @Autowired
@@ -44,7 +44,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
         if(!isClusterStampInProgress) {
             FullNodeReadyForClusterStampData fullNodeReadyForClusterStampData = new FullNodeReadyForClusterStampData(clusterStampPreparationData.getLastDspConfirmed());
-            fullNodeReadyForClusterStampCrypto.signMessage(fullNodeReadyForClusterStampData);
+            clusterStampStateCrypto.signMessage(fullNodeReadyForClusterStampData);
             receivingServerAddresses.forEach(address -> sender.send(fullNodeReadyForClusterStampData, address));
             isClusterStampInProgress = true;
         }

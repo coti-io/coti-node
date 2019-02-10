@@ -104,4 +104,8 @@ public class TccConfirmationService {
         return transactionConsensusConfirmed;
     }
 
+    public ConcurrentHashMap<Hash, TransactionData> getHashToTccUnConfirmTransactionsMapping() {
+        return hashToTccUnConfirmTransactionsMapping;
+    }
+
 }

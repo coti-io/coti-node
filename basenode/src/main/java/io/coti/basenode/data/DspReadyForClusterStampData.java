@@ -12,8 +12,12 @@ public class DspReadyForClusterStampData extends ClusterStampStateData {
 
     private List<FullNodeReadyForClusterStampData> fullNodeReadyForClusterStampDataList;
 
-    public DspReadyForClusterStampData(Hash hash) {
-        this.clusterStampHash = hash;
+    public DspReadyForClusterStampData() {
+    }
+
+    public DspReadyForClusterStampData(long lastDspConfirmed) {
+        this.clusterStampHash = new Hash(lastDspConfirmed);
+        this.lastDspConfirmed = lastDspConfirmed;
         this.fullNodeReadyForClusterStampDataList = new ArrayList<>();
     }
 }

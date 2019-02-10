@@ -64,7 +64,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             DspReadyForClusterStampData dspReadyForClusterStampData = dspNodeReadyForClusterStamp.getByHash(fullNodeReadyForClusterStampData.getHash());
 
             if ( dspReadyForClusterStampData == null ) {
-                dspReadyForClusterStampData = new DspReadyForClusterStampData(fullNodeReadyForClusterStampData.getHash());
+                dspReadyForClusterStampData = new DspReadyForClusterStampData(fullNodeReadyForClusterStampData.getLastDspConfirmed());
             }
 
             dspReadyForClusterStampData.getFullNodeReadyForClusterStampDataList().add(fullNodeReadyForClusterStampData);
@@ -81,9 +81,10 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Override
     public void newClusterStamp(ClusterStampData clusterStampData) {
 
+        boolean bp = true;
         if(clusterStampCrypto.verifySignature(clusterStampData)) {
             isReadyForClusterStamp = false;
-            clusterStamp.put(clusterStampData);
+
 
 
         }

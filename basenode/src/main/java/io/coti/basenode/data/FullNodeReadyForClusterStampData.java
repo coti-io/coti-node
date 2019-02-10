@@ -10,4 +10,12 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 public class FullNodeReadyForClusterStampData extends ClusterStampStateData {
 
+    public FullNodeReadyForClusterStampData() {
+
+    }
+
+    public FullNodeReadyForClusterStampData(long lastDspConfirmed) {
+        this.clusterStampHash = new Hash(lastDspConfirmed);
+        this.lastDspConfirmed = lastDspConfirmed;
+    }
 }
