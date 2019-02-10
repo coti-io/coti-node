@@ -1,6 +1,6 @@
 package io.coti.fullnode.controllers;
 
-import io.coti.basenode.data.GraphData;
+import io.coti.basenode.services.LiveView.data.GraphData;
 import io.coti.basenode.services.LiveView.LiveViewService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

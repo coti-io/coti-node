@@ -4,6 +4,7 @@ import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.AddressTransactionsHistory;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.exceptions.TransactionException;
 import io.coti.basenode.http.Response;
@@ -13,16 +14,14 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
-import io.coti.basenode.services.interfaces.IClusterService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
-import io.coti.basenode.services.interfaces.IValidationService;
+import io.coti.basenode.services.interfaces.*;
+
 import io.coti.fullnode.http.AddTransactionRequest;
 import io.coti.fullnode.http.AddTransactionResponse;
 import io.coti.fullnode.http.GetAddressTransactionHistoryResponse;
 import io.coti.fullnode.http.GetTransactionResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -37,8 +36,7 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 @Slf4j
 @Service
 public class TransactionService extends BaseNodeTransactionService {
-    @Value("#{'${receiving.server.addresses}'.split(',')}")
-    private List<String> receivingServerAddresses;
+
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -56,6 +54,8 @@ public class TransactionService extends BaseNodeTransactionService {
     private Transactions transactions;
     @Autowired
     private WebSocketSender webSocketSender;
+    @Autowired
+    private INetworkService networkService;
 
     @Autowired
     private PotService potService;
@@ -153,7 +153,9 @@ public class TransactionService extends BaseNodeTransactionService {
             transactionHelper.setTransactionStateToSaved(transactionData);
             webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
             final TransactionData finalTransactionData = transactionData;
-            receivingServerAddresses.forEach(address -> sender.send(finalTransactionData, address));
+            networkService.getMapFromFactory(NodeType.DspNode).forEach ((hash, networkNode) ->
+                    sender.send(finalTransactionData, networkNode.getReceivingFullAddress())
+            );
             transactionHelper.setTransactionStateToFinished(transactionData);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
