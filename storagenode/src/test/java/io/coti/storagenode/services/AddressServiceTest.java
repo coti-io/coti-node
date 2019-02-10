@@ -54,12 +54,12 @@ public class AddressServiceTest {
         AddressData addressData2 = new AddressData(generateRandomHash());
 
         String addressAsJson = mapper.writeValueAsString(addressData1);
-        addressService.insertObjectJson(addressData1.getHash(), addressAsJson);
-        addressService.insertObjectJson(addressData2.getHash(), addressAsJson);
+        addressService.insertObjectJson(addressData1.getHash(), addressAsJson, true);
+        addressService.insertObjectJson(addressData2.getHash(), addressAsJson, true);
 
-        IResponse deleteResponse = addressService.deleteObjectByHash(addressData2.getHash()).getBody();
+        IResponse deleteResponse = addressService.deleteObjectByHash(addressData2.getHash(), true).getBody();
 
-        IResponse getResponse = addressService.getObjectByHash(addressData1.getHash()).getBody();
+        IResponse getResponse = addressService.getObjectByHash(addressData1.getHash(), true).getBody();
         Assert.assertTrue(((BaseResponse) (getResponse)).getStatus().equals(STATUS_SUCCESS) &&
                 ((GetObjectJsonResponse) deleteResponse).status.equals(STATUS_SUCCESS));
     }
@@ -73,19 +73,19 @@ public class AddressServiceTest {
             AddressDataList.add(addressData);
             hashToAddressJsonDataMap.put(addressData.getHash(), mapper.writeValueAsString(addressData));
         }
-        addressService.insertMultiObjects(hashToAddressJsonDataMap);
+        addressService.insertMultiObjects(hashToAddressJsonDataMap, true);
 
         List<Hash> deleteHashes = new ArrayList<>();
         deleteHashes.add(AddressDataList.get(0).getHash());
         deleteHashes.add(AddressDataList.get(1).getHash());
 
-        IResponse deleteResponse = addressService.deleteMultiObjectsFromDb(deleteHashes).getBody();
+        IResponse deleteResponse = addressService.deleteMultiObjectsFromDb(deleteHashes, true).getBody();
 
         List<Hash> GetHashes = new ArrayList<>();
         GetHashes.add(AddressDataList.get(2).getHash());
         GetHashes.add(AddressDataList.get(3).getHash());
 
-        IResponse response = addressService.getMultiObjectsFromDb(GetHashes).getBody();
+        IResponse response = addressService.getMultiObjectsFromDb(GetHashes, true).getBody();
 
         Assert.assertTrue(((BaseResponse) (response)).getStatus().equals(STATUS_SUCCESS)
                 && ((GetObjectBulkJsonResponse) deleteResponse).getHashToObjectsFromDbMap().get(AddressDataList.get(0).getHash()).equals(STATUS_OK)

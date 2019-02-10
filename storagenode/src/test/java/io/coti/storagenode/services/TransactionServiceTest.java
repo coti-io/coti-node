@@ -54,11 +54,11 @@ public class TransactionServiceTest {
         TransactionData transactionData2 = createRandomTransaction();
 
         String transactionAsJson = mapper.writeValueAsString(transactionData1);
-        transactionService.insertObjectJson(transactionData1.getHash(), transactionAsJson);
+        transactionService.insertObjectJson(transactionData1.getHash(), transactionAsJson, true);
 
-        IResponse deleteResponse = transactionService.deleteObjectByHash(transactionData2.getHash()).getBody();
+        IResponse deleteResponse = transactionService.deleteObjectByHash(transactionData2.getHash(), true).getBody();
 
-        GetObjectJsonResponse response = (GetObjectJsonResponse) transactionService.getObjectByHash(transactionData1.getHash()).getBody();
+        GetObjectJsonResponse response = (GetObjectJsonResponse) transactionService.getObjectByHash(transactionData1.getHash(), true).getBody();
         Assert.assertTrue(response.getStatus().equals(STATUS_SUCCESS) &&
                 ((GetObjectJsonResponse) deleteResponse).status.equals(STATUS_SUCCESS));
     }
@@ -72,19 +72,19 @@ public class TransactionServiceTest {
             TransactionDataList.add(transactionData);
             hashToTransactionJsonDataMap.put(transactionData.getHash(), mapper.writeValueAsString(transactionData));
         }
-        transactionService.insertMultiObjects(hashToTransactionJsonDataMap);
+        transactionService.insertMultiObjects(hashToTransactionJsonDataMap, true);
 
         List<Hash> deleteHashes = new ArrayList<>();
         deleteHashes.add(TransactionDataList.get(0).getHash());
         deleteHashes.add(TransactionDataList.get(1).getHash());
 
-        IResponse deleteResponse = transactionService.deleteMultiObjectsFromDb(deleteHashes).getBody();
+        IResponse deleteResponse = transactionService.deleteMultiObjectsFromDb(deleteHashes, true).getBody();
 
         List<Hash> GetHashes = new ArrayList<>();
         GetHashes.add(TransactionDataList.get(2).getHash());
         GetHashes.add(TransactionDataList.get(3).getHash());
 
-        IResponse response = transactionService.getMultiObjectsFromDb(GetHashes).getBody();
+        IResponse response = transactionService.getMultiObjectsFromDb(GetHashes, true).getBody();
 
         Assert.assertTrue(((BaseResponse) (response)).getStatus().equals(STATUS_SUCCESS)
                 && ((GetObjectBulkJsonResponse) deleteResponse).getHashToObjectsFromDbMap().get(TransactionDataList.get(0).getHash()).equals(STATUS_OK)

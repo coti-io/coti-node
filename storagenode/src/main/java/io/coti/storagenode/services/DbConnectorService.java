@@ -54,15 +54,19 @@ public class DbConnectorService implements IDbConnectorService {
     private static final int ELASTICSEARCH_HOST_PORT1 = 9200;
     private static final int ELASTICSEARCH_HOST_PORT2 = 9201;
 
-    private RestHighLevelClient restClient;
+    private RestHighLevelClient restClientToMainStorage;
+    private RestHighLevelClient restClientToSecondaryStorage;
     private ObjectMapper mapper;
 
     @PostConstruct
     private void init() {
         try {
             mapper = new ObjectMapper();
-            restClient = new RestHighLevelClient(RestClient.builder(
-                    new HttpHost(ELASTICSEARCH_HOST_IP, ELASTICSEARCH_HOST_PORT1),
+            restClientToMainStorage = new RestHighLevelClient(RestClient.builder(
+                    new HttpHost(ELASTICSEARCH_HOST_IP, ELASTICSEARCH_HOST_PORT1)
+
+            ));
+            restClientToSecondaryStorage = new RestHighLevelClient(RestClient.builder(
                     new HttpHost(ELASTICSEARCH_HOST_IP, ELASTICSEARCH_HOST_PORT2)
             ));
         } catch (Exception e) {
@@ -70,45 +74,47 @@ public class DbConnectorService implements IDbConnectorService {
         }
     }
 
-    public void addIndexes(Map<String, String> indexes) throws IOException {
+    public void addIndexes(Map<String, String> indexes, boolean addToMainStorage) throws IOException {
         for (Map.Entry<String, String> indexToObjectPair : indexes.entrySet()) {
-            addIndex(indexToObjectPair.getKey(), indexToObjectPair.getValue());
+            addIndex(indexToObjectPair.getKey(), indexToObjectPair.getValue(),  addToMainStorage);
         }
     }
 
-    public void addIndex(String indexName, String objectName) throws IOException {
-        if (!ifIndexExist(indexName)) {
-            sendCreateIndexRequest(indexName);
-            createMapping(indexName, objectName);
+    public void addIndex(String indexName, String objectName, boolean addToMainStorage) throws IOException {
+        if (!ifIndexExist(indexName,  addToMainStorage)) {
+            sendCreateIndexRequest(indexName,addToMainStorage);
+            createMapping(indexName, objectName,  addToMainStorage);
         }
     }
 
     @Override
-    public void getClusterDetails(Set<String> indexes) throws IOException {
-        MainResponse mainResponse = restClient.info(RequestOptions.DEFAULT);
+    public void getClusterDetails(Set<String> indexes, boolean mainStorageDetails) throws IOException {
+        MainResponse mainResponse =  getStorage(mainStorageDetails).info(RequestOptions.DEFAULT);
 
         for (String index : indexes) {
             String searchShardsDetails = getSearchShardsDetails(index);
             ClusterHealthRequest clusterHealthRequest = new ClusterHealthRequest(index);
-            ClusterHealthResponse response = restClient.cluster().health(clusterHealthRequest, RequestOptions.DEFAULT);
+            ClusterHealthResponse response = getStorage(mainStorageDetails).cluster().health(clusterHealthRequest, RequestOptions.DEFAULT);
         }
 
         ClusterGetSettingsRequest clusterGetSettingsRequest = new ClusterGetSettingsRequest();
-        ClusterGetSettingsResponse getSettings = restClient.cluster().getSettings(clusterGetSettingsRequest, RequestOptions.DEFAULT);
+        ClusterGetSettingsResponse getSettings = getStorage(mainStorageDetails).cluster().getSettings(clusterGetSettingsRequest, RequestOptions.DEFAULT);
     }
 
-    private String getSearchShardsDetails(String index) {
-        final String uri = "http://" + ELASTICSEARCH_HOST_IP + ":" + ELASTICSEARCH_HOST_PORT1 + "/" + index + "/" + "_search_shards";
-        RestTemplate restTemplate = new RestTemplate();
-        return restTemplate.getForObject(uri, String.class);
+    public HttpStatus getHttpStatus(MultiDbInsertionStatus multiDbInsertionStatus) {
+        if (multiDbInsertionStatus == MultiDbInsertionStatus.Success) {
+            return HttpStatus.OK;
+        } else if (multiDbInsertionStatus == MultiDbInsertionStatus.Failed) {
+            return HttpStatus.INTERNAL_SERVER_ERROR;
+        }
+        return HttpStatus.MULTI_STATUS;
     }
-
 
     @Override
-    public String getObjectFromDbByHash(Hash hash, String index) throws IOException {
+    public String getObjectFromDbByHash(Hash hash, String index, boolean getFromMainStorage) throws IOException {
         GetRequest request = new GetRequest(index, INDEX_TYPE, hash.toString());
         try {
-            GetResponse getResponse = restClient.get(request, RequestOptions.DEFAULT);
+            GetResponse getResponse = getStorage(getFromMainStorage).get(request, RequestOptions.DEFAULT);
             return getResponse.getSourceAsString();
         } catch (ElasticsearchException e) {
             log.error(e.getMessage());
@@ -116,7 +122,36 @@ public class DbConnectorService implements IDbConnectorService {
         }
     }
 
-    public Pair<MultiDbInsertionStatus, Map<Hash, String>> insertMultiObjectsToDb(String indexName, String objectName, Map<Hash, String> hashToObjectJsonDataMap) throws Exception {
+    @Override
+    public Map<Hash, String> getMultiObjects(List<Hash> hashes, String indexName, boolean getFromMainStorage) throws Exception {
+        Map<Hash, String> hashToObjectsFromDbMap = null;
+        MultiGetResponse multiGetResponse = getMultiObjectsFromDb(hashes, indexName, getFromMainStorage);
+        hashToObjectsFromDbMap = new HashMap<>();
+        for (MultiGetItemResponse multiGetItemResponse : multiGetResponse.getResponses()) {
+            hashToObjectsFromDbMap.put(new Hash(multiGetItemResponse.getId()),
+                    new String(multiGetItemResponse.getResponse().getSourceAsBytes()));
+        }
+        return hashToObjectsFromDbMap;
+    }
+
+    @Override
+    public String deleteObject(Hash hash, String indexName, boolean deleteFromMainStorage) {
+        DeleteRequest request = new DeleteRequest(
+                indexName,
+                INDEX_TYPE,
+                hash.toString());
+        try {
+            DeleteResponse deleteResponse = getStorage(deleteFromMainStorage).delete(
+                    request, RequestOptions.DEFAULT);
+            return deleteResponse.status().name();
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            return e.getMessage();
+        }
+    }
+
+    @Override
+    public Pair<MultiDbInsertionStatus, Map<Hash, String>> insertMultiObjectsToDb(String indexName, String objectName, Map<Hash, String> hashToObjectJsonDataMap, boolean addToMainStorage) throws Exception {
         Pair<MultiDbInsertionStatus, Map<Hash, String>> insertResponse = null;
         try {
             BulkRequest request = new BulkRequest();
@@ -124,7 +159,7 @@ public class DbConnectorService implements IDbConnectorService {
                 request.add(new IndexRequest(indexName).id(entry.getKey().toString()).type(INDEX_TYPE)
                         .source(XContentType.JSON, objectName, entry.getValue()));
             }
-            BulkResponse bulkResponse = restClient.bulk(request, RequestOptions.DEFAULT);
+            BulkResponse bulkResponse = getStorage(addToMainStorage).bulk(request, RequestOptions.DEFAULT);
             insertResponse = createMultiInsertResponse(bulkResponse);
             if (insertResponse.getValue().size() == hashToObjectJsonDataMap.size()) {
                 insertResponse = new Pair<>(MultiDbInsertionStatus.Failed, insertResponse.getValue());
@@ -137,53 +172,10 @@ public class DbConnectorService implements IDbConnectorService {
 
     }
 
-    private Pair<MultiDbInsertionStatus, Map<Hash, String>> createMultiInsertResponse(BulkResponse bulkResponse) {
-        if (bulkResponse == null) {
-            return null;
-        }
-        MultiDbInsertionStatus errorInInsertion = MultiDbInsertionStatus.Success;
-        Map<Hash, String> hashToResponseMap = new HashMap<>();
-        for (BulkItemResponse bulkItemResponse : bulkResponse.getItems()) {
-            if (bulkItemResponse.isFailed()) {
-                errorInInsertion = MultiDbInsertionStatus.PartlyFailed;
-                hashToResponseMap.put(new Hash(bulkItemResponse.getId()), bulkItemResponse.getFailure().getMessage());
-            }
-        }
-        return new Pair<>(errorInInsertion, hashToResponseMap);
-    }
 
-    public MultiGetResponse getMultiObjectsFromDb(List<Hash> hashes, String indexName) throws Exception {
-        MultiGetResponse multiGetResponse = null;
-        try {
-            MultiGetRequest request = new MultiGetRequest();
-            for (Hash hash : hashes) {
-                request.add(new MultiGetRequest.Item(
-                        indexName,
-                        INDEX_TYPE,
-                        hash.toString()));
-            }
-            multiGetResponse = restClient.mget(request, RequestOptions.DEFAULT);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new Exception(e.getMessage());
-        }
-        return multiGetResponse;
-
-    }
-
-    public Map<Hash, String> getMultiObjects(List<Hash> hashes, String indexName) throws Exception {
-        Map<Hash, String> hashToObjectsFromDbMap = null;
-        MultiGetResponse multiGetResponse = getMultiObjectsFromDb(hashes, indexName);
-        hashToObjectsFromDbMap = new HashMap<>();
-        for (MultiGetItemResponse multiGetItemResponse : multiGetResponse.getResponses()) {
-            hashToObjectsFromDbMap.put(new Hash(multiGetItemResponse.getId()),
-                    new String(multiGetItemResponse.getResponse().getSourceAsBytes()));
-        }
-        return hashToObjectsFromDbMap;
-    }
 
     @Override
-    public String insertObjectToDb(Hash hash, String objectAsJsonString, String index, String objectName) {
+    public String insertObjectToDb(Hash hash, String objectAsJsonString, String index, String objectName, boolean addToMainStorage) {
         IndexResponse indexResponse = null;
         try {
             IndexRequest request = new IndexRequest(
@@ -194,7 +186,7 @@ public class DbConnectorService implements IDbConnectorService {
                     .startObject()
                     .field(objectName, objectAsJsonString)
                     .endObject()));
-            indexResponse = restClient.index(request, RequestOptions.DEFAULT);
+            indexResponse =  getStorage(addToMainStorage).index(request, RequestOptions.DEFAULT);
         } catch (Exception e) {
             log.error(e.getMessage());
         } finally {
@@ -202,26 +194,38 @@ public class DbConnectorService implements IDbConnectorService {
         }
     }
 
-    public HttpStatus getHttpStatus(MultiDbInsertionStatus multiDbInsertionStatus) {
-        if (multiDbInsertionStatus == MultiDbInsertionStatus.Success) {
-            return HttpStatus.OK;
-        } else if (multiDbInsertionStatus == MultiDbInsertionStatus.Failed) {
-            return HttpStatus.INTERNAL_SERVER_ERROR;
-        }
-        return HttpStatus.MULTI_STATUS;
-    }
 
-    private void sendCreateIndexRequest(String index) throws IOException {
+
+    private void sendCreateIndexRequest(String index, boolean toMainStorage) throws IOException {
         CreateIndexRequest request = new CreateIndexRequest(index);
         request.settings(Settings.builder()
                 .put("index.number_of_shards", 1)
                 .put("index.number_of_replicas", 2)
         );
 
-        restClient.indices().create(request, RequestOptions.DEFAULT);
+        getStorage(toMainStorage).indices().create(request, RequestOptions.DEFAULT);
     }
 
-    private void createMapping(String index, String objectName) throws IOException {
+    private MultiGetResponse getMultiObjectsFromDb(List<Hash> hashes, String indexName, boolean getFromMainStorage) throws Exception {
+        MultiGetResponse multiGetResponse = null;
+        try {
+            MultiGetRequest request = new MultiGetRequest();
+            for (Hash hash : hashes) {
+                request.add(new MultiGetRequest.Item(
+                        indexName,
+                        INDEX_TYPE,
+                        hash.toString()));
+            }
+            multiGetResponse =  getStorage(getFromMainStorage).mget(request, RequestOptions.DEFAULT);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new Exception(e.getMessage());
+        }
+        return multiGetResponse;
+
+    }
+
+    private void createMapping(String index, String objectName, boolean isMainStorage) throws IOException {
         XContentBuilder builder = jsonBuilder();
         builder.startObject();
         {
@@ -239,29 +243,44 @@ public class DbConnectorService implements IDbConnectorService {
         PutMappingRequest request = new PutMappingRequest(index);
         request.type(INDEX_TYPE);
         request.source(builder);
-        restClient.indices().putMapping(request, RequestOptions.DEFAULT);
+        getStorage(isMainStorage).indices().putMapping(request, RequestOptions.DEFAULT);
     }
 
 
-    private boolean ifIndexExist(String indexName) throws IOException {
+    private boolean ifIndexExist(String indexName, boolean isMainStorage) throws IOException {
 
         GetIndexRequest getIndexRequest = new GetIndexRequest();
         getIndexRequest.indices(indexName);
-        return restClient.indices().exists(getIndexRequest, RequestOptions.DEFAULT);
+        return getStorage(isMainStorage).indices().exists(getIndexRequest, RequestOptions.DEFAULT);
     }
 
-    public String deleteObject(Hash hash, String indexName) {
-        DeleteRequest request = new DeleteRequest(
-                indexName,
-                INDEX_TYPE,
-                hash.toString());
-        try {
-            DeleteResponse deleteResponse = restClient.delete(
-                    request, RequestOptions.DEFAULT);
-            return deleteResponse.status().name();
-        } catch (IOException e) {
-            log.error(e.getMessage());
-            return e.getMessage();
+    private String getSearchShardsDetails(String index) {
+        final String uri = "http://" + ELASTICSEARCH_HOST_IP + ":" + ELASTICSEARCH_HOST_PORT1 + "/" + index + "/" + "_search_shards";
+        RestTemplate restTemplate = new RestTemplate();
+        return restTemplate.getForObject(uri, String.class);
+    }
+
+
+    private Pair<MultiDbInsertionStatus, Map<Hash, String>> createMultiInsertResponse(BulkResponse bulkResponse) {
+        if (bulkResponse == null) {
+            return null;
         }
+        MultiDbInsertionStatus errorInInsertion = MultiDbInsertionStatus.Success;
+        Map<Hash, String> hashToResponseMap = new HashMap<>();
+        for (BulkItemResponse bulkItemResponse : bulkResponse.getItems()) {
+            if (bulkItemResponse.isFailed()) {
+                errorInInsertion = MultiDbInsertionStatus.PartlyFailed;
+                hashToResponseMap.put(new Hash(bulkItemResponse.getId()), bulkItemResponse.getFailure().getMessage());
+            }
+        }
+        return new Pair<>(errorInInsertion, hashToResponseMap);
+    }
+
+    private RestHighLevelClient getStorage(boolean isMainStorage) {
+        if (isMainStorage){
+            return restClientToMainStorage;
+
+        }
+        return restClientToSecondaryStorage;
     }
 }

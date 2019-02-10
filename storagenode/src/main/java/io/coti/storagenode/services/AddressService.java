@@ -15,7 +15,7 @@ public class AddressService extends ObjectService {//} implements IAddressServic
         try {
             indexName = "address";
             objectName = "addressData";
-            dbConnectorService.addIndex(indexName, objectName);
+            dbConnectorService.addIndex(indexName, objectName,true);
         } catch (IOException e) {
             log.error(e.getMessage());
             throw new Exception(e.getMessage());

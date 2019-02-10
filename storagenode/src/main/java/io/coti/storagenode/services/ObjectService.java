@@ -31,10 +31,10 @@ public abstract class ObjectService implements IObjectService {
     protected String indexName;
     protected String objectName;
 
-    public ResponseEntity<IResponse> insertMultiObjects(Map<Hash, String> hashToObjectJsonDataMap) {
+    public ResponseEntity<IResponse> insertMultiObjects(Map<Hash, String> hashToObjectJsonDataMap, boolean insertToMainStorage) {
         Pair<MultiDbInsertionStatus, Map<Hash, String>> insertResponse = null;
         try {
-            insertResponse = dbConnectorService.insertMultiObjectsToDb(indexName, objectName, hashToObjectJsonDataMap);
+            insertResponse = dbConnectorService.insertMultiObjectsToDb(indexName, objectName, hashToObjectJsonDataMap, insertToMainStorage);
         } catch (Exception e) {
             log.error(e.getMessage());
             return ResponseEntity
@@ -49,10 +49,10 @@ public abstract class ObjectService implements IObjectService {
     }
 
     @Override
-    public ResponseEntity<IResponse> insertObjectJson(Hash hash, String objectAsJson) {
+    public ResponseEntity<IResponse> insertObjectJson(Hash hash, String objectAsJson, boolean insertToMainStorage) {
         String insertResponse = null;
         try {
-            insertResponse = dbConnectorService.insertObjectToDb(hash, objectAsJson, indexName, objectName);
+            insertResponse = dbConnectorService.insertObjectToDb(hash, objectAsJson, indexName, objectName, insertToMainStorage);
         } catch (Exception e) {
             log.error(e.getMessage());
             return ResponseEntity
@@ -69,11 +69,11 @@ public abstract class ObjectService implements IObjectService {
     }
 
     @Override
-    public ResponseEntity<IResponse> getMultiObjectsFromDb(List<Hash> hashes) {
+    public ResponseEntity<IResponse> getMultiObjectsFromDb(List<Hash> hashes, boolean getFromMainStorage) {
         Map<Hash, String> hashToObjectFromDbMap = null;
         //TODO: Define logic.
         try {
-            hashToObjectFromDbMap = dbConnectorService.getMultiObjects(hashes, indexName);
+            hashToObjectFromDbMap = dbConnectorService.getMultiObjects(hashes, indexName, getFromMainStorage);
         } catch (Exception e) {
             log.error(e.getMessage());
             return ResponseEntity
@@ -87,10 +87,10 @@ public abstract class ObjectService implements IObjectService {
     }
 
     @Override
-    public ResponseEntity<IResponse> getObjectByHash(Hash hash) {
+    public ResponseEntity<IResponse> getObjectByHash(Hash hash, boolean getFromMainStorage) {
         String objectAsJson = null;
         try {
-            objectAsJson = dbConnectorService.getObjectFromDbByHash(hash, indexName);
+            objectAsJson = dbConnectorService.getObjectFromDbByHash(hash, indexName, getFromMainStorage);
         } catch (Exception e) {
             log.error(e.getMessage());
             return ResponseEntity
@@ -112,11 +112,11 @@ public abstract class ObjectService implements IObjectService {
     }
 
     @Override
-    public ResponseEntity<IResponse> deleteMultiObjectsFromDb(List<Hash> hashes) {
+    public ResponseEntity<IResponse> deleteMultiObjectsFromDb(List<Hash> hashes, boolean deleteFromMainStorage) {
         Map<Hash, String> hashToResponseMap = new HashMap<>();
         try {
             for (Hash hash : hashes) {
-                hashToResponseMap.put(hash, dbConnectorService.deleteObject(hash, indexName));
+                hashToResponseMap.put(hash, dbConnectorService.deleteObject(hash, indexName, deleteFromMainStorage));
             }
 
         } catch (Exception e) {
@@ -132,8 +132,8 @@ public abstract class ObjectService implements IObjectService {
     }
 
     @Override
-    public ResponseEntity<IResponse> deleteObjectByHash(Hash hash) {
-        String status = dbConnectorService.deleteObject(hash, indexName);
+    public ResponseEntity<IResponse> deleteObjectByHash(Hash hash, boolean deleteFromMainStorage) {
+        String status = dbConnectorService.deleteObject(hash, indexName, deleteFromMainStorage);
         switch (status) {
             case STATUS_OK:
                 return ResponseEntity.status(HttpStatus.OK)

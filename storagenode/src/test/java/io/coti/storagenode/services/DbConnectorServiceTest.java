@@ -49,12 +49,12 @@ public class DbConnectorServiceTest {
         indexes = new HashMap<>();
         indexes.put(TRANSACTION_INDEX_NAME, TRANSACTION_OBJECT_NAME);
         indexes.put(ADDRESS_INDEX_NAME, ADDRESS_OBJECT_NAME);
-        dbConnectorService.addIndexes(indexes);
+        dbConnectorService.addIndexes(indexes, true);
     }
 
     @Test
     public void getClusterDetails() throws IOException {
-        dbConnectorService.getClusterDetails(indexes.keySet());
+        dbConnectorService.getClusterDetails(indexes.keySet(), true);
     }
 
     @Test
@@ -63,8 +63,9 @@ public class DbConnectorServiceTest {
         dbConnectorService.insertObjectToDb(transactionAsObjectAndJsonString.getHash(),
                 transactionAsObjectAndJsonString.getTransactionAsJsonString(),
                 TRANSACTION_INDEX_NAME,
-                TRANSACTION_OBJECT_NAME);
-        String transactionAsJsonFromDb = dbConnectorService.getObjectFromDbByHash(transactionAsObjectAndJsonString.getHash(), TRANSACTION_INDEX_NAME);
+                TRANSACTION_OBJECT_NAME,true);
+        String transactionAsJsonFromDb =
+                dbConnectorService.getObjectFromDbByHash(transactionAsObjectAndJsonString.getHash(), TRANSACTION_INDEX_NAME,true);
         Assert.assertNotNull(transactionAsJsonFromDb);
     }
 
@@ -74,8 +75,8 @@ public class DbConnectorServiceTest {
         dbConnectorService.insertObjectToDb(addressAsObjectAndJsonString.getHash(),
                 addressAsObjectAndJsonString.getAddressAsJsonString(),
                 ADDRESS_INDEX_NAME,
-                ADDRESS_OBJECT_NAME);
-        String addressAsJsonFromDb = dbConnectorService.getObjectFromDbByHash(addressAsObjectAndJsonString.getHash(), ADDRESS_INDEX_NAME);
+                ADDRESS_OBJECT_NAME,true);
+        String addressAsJsonFromDb = dbConnectorService.getObjectFromDbByHash(addressAsObjectAndJsonString.getHash(), ADDRESS_INDEX_NAME,true);
         Assert.assertNotNull(addressAsJsonFromDb);
     }
 
@@ -88,7 +89,7 @@ public class DbConnectorServiceTest {
 
     @Test
     public void deleteAddressByHash_hashNotExist() {
-        String status = dbConnectorService.deleteObject(generateRandomHash(), ADDRESS_INDEX_NAME);
+        String status = dbConnectorService.deleteObject(generateRandomHash(), ADDRESS_INDEX_NAME, true);
         Assert.assertTrue(status.equals(STATUS_NOT_FOUND));
     }
 
@@ -98,8 +99,8 @@ public class DbConnectorServiceTest {
         dbConnectorService.insertObjectToDb(addressAsObjectAndJsonString.getHash(),
                 addressAsObjectAndJsonString.getAddressAsJsonString(),
                 ADDRESS_INDEX_NAME,
-                ADDRESS_OBJECT_NAME);
-        String status = dbConnectorService.deleteObject(addressAsObjectAndJsonString.getHash(), ADDRESS_INDEX_NAME);
+                ADDRESS_OBJECT_NAME, true);
+        String status = dbConnectorService.deleteObject(addressAsObjectAndJsonString.getHash(), ADDRESS_INDEX_NAME, true);
         Assert.assertTrue(status.equals(STATUS_OK));
     }
 
@@ -108,7 +109,7 @@ public class DbConnectorServiceTest {
     }
 
     private Map<Hash, String> getMultiObjectsFromDb(String indexName, List<Hash> hashes) throws Exception {
-        return dbConnectorService.getMultiObjects(hashes, indexName);
+        return dbConnectorService.getMultiObjects(hashes, indexName,true);
     }
 
     private Map<Hash, String> insertAddressBulk() throws Exception {
@@ -117,7 +118,7 @@ public class DbConnectorServiceTest {
             AddressAsObjectAndJsonString addressAsObjectAndJsonString = getRandomAddressAsObjectAndJsonString();
             hashToObjectJsonDataMap.put(addressAsObjectAndJsonString.getHash(), addressAsObjectAndJsonString.getAddressAsJsonString());
         }
-        dbConnectorService.insertMultiObjectsToDb(ADDRESS_INDEX_NAME, ADDRESS_OBJECT_NAME, hashToObjectJsonDataMap);
+        dbConnectorService.insertMultiObjectsToDb(ADDRESS_INDEX_NAME, ADDRESS_OBJECT_NAME, hashToObjectJsonDataMap,true);
         return hashToObjectJsonDataMap;
     }
 

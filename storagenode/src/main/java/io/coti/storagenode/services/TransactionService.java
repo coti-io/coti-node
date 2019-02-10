@@ -14,7 +14,7 @@ public class TransactionService extends ObjectService {
         try {
             indexName = "transactions";
             objectName = "transactionData";
-            dbConnectorService.addIndex(indexName, objectName);
+            dbConnectorService.addIndex(indexName, objectName, true);
         } catch (IOException e) {
             log.error(e.getMessage());
             throw new Exception(e.getMessage());
