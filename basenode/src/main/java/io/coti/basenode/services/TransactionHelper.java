@@ -286,7 +286,7 @@ public class TransactionHelper implements ITransactionHelper {
             confirmationService.setDspcToTrue(transactionData.getDspConsensusResult());
         }
         updateAddressTransactionHistory(transactionData);
-        liveViewService.addNode(transactionData);
+        liveViewService.addTransaction(transactionData);
         clusterService.attachToCluster(transactionData);
     }
 

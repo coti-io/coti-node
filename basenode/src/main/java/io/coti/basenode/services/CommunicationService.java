@@ -17,7 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -38,23 +37,35 @@ public class CommunicationService {
     @Autowired
     private IDspVoteService dspVoteService;
 
-    public void initSubscriber(List<String> propagationServerAddresses, NodeType nodeType) {
-        HashMap<String, Consumer<Object>> classNameToSubscriberHandlerMapping = new HashMap<>();
-        classNameToSubscriberHandlerMapping.put(Channel.getChannelString(TransactionData.class, nodeType), data ->
+    public void initSubscriber(NodeType nodeType) {
+        HashMap<String, Consumer<Object>> channelToSubscriberHandlerMap = new HashMap<>();
+        channelToSubscriberHandlerMap.put(Channel.getChannelString(TransactionData.class, nodeType), data ->
                 transactionService.handlePropagatedTransaction((TransactionData) data));
-        classNameToSubscriberHandlerMapping.put(Channel.getChannelString(AddressData.class, nodeType), data ->
+        channelToSubscriberHandlerMap.put(Channel.getChannelString(AddressData.class, nodeType), data ->
                 addressService.handlePropagatedAddress((AddressData) data));
-        classNameToSubscriberHandlerMapping.put(Channel.getChannelString(DspConsensusResult.class, nodeType), data ->
+        channelToSubscriberHandlerMap.put(Channel.getChannelString(DspConsensusResult.class, nodeType), data ->
                 dspVoteService.handleVoteConclusion((DspConsensusResult) data));
-        propagationSubscriber.init(propagationServerAddresses, classNameToSubscriberHandlerMapping);
+        propagationSubscriber.addMessageHandler(channelToSubscriberHandlerMap);
     }
 
     public void initReceiver(String receivingPort, HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping) {
         receiver.init(receivingPort, classNameToReceiverHandlerMapping);
     }
 
-    public void initSender(List<String> receivingServerAddresses) {
-        sender.init(receivingServerAddresses);
+    public void addSender(String receivingServerAddress) {
+        sender.connectToNode(receivingServerAddress);
+    }
+
+    public void removeSender(String receivingFullAddress, NodeType nodeType) {
+        sender.disconnectFromNode(receivingFullAddress, nodeType);
+    }
+
+    public void addSubscription(String propagationServerAddress) {
+        propagationSubscriber.connectAndSubscribeToServer(propagationServerAddress);
+    }
+
+    public void removeSubscription(String propagationServerAddress, NodeType nodeType) {
+        propagationSubscriber.disconnect(propagationServerAddress, nodeType);
     }
 
     public void initPropagator(String propagationPort) {
