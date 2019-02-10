@@ -38,6 +38,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     @PostConstruct
     private void init() {
+        isClusterStampInProgress = false;
         isReadyForClusterStamp = false;
     }
 
