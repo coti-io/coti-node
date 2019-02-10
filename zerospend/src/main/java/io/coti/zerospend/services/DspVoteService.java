@@ -205,6 +205,10 @@ public class DspVoteService extends BaseNodeDspVoteService {
     public void continueHandleVoteConclusion(DspConsensusResult dspConsensusResult) {
     }
 
+    public ConcurrentMap<Hash, List<DspVote>> getTransactionHashToVotesListMapping() {
+        return transactionHashToVotesListMapping;
+    }
+
     public void stopSumAndSaveVotes() {
         log.info("Shutting down {}", this.getClass().getSimpleName());
         sumAndSaveVotesThread.interrupt();
