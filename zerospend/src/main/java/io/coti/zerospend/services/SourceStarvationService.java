@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Collections;
@@ -24,28 +25,55 @@ public class SourceStarvationService {
     private IClusterService clusterService;
     @Autowired
     private TransactionCreationService transactionCreationService;
+    private Thread checkSourcesStarvationThread;
 
-    @Scheduled(fixedDelay = SOURCE_STARVATION_CHECK_TASK_DELAY)
+    @PostConstruct
+    private void init() {
+        checkSourcesStarvationThread = new Thread(() -> checkSourcesStarvation());
+    }
+
     public void checkSourcesStarvation() {
-        log.debug("Checking Source Starvation");
-        Date now = new Date();
-        List<List<TransactionData>> sourceListsByTrustScore = Collections.unmodifiableList(clusterService.getSourceListsByTrustScore());
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                log.debug("Checking Source Starvation");
+                Date now = new Date();
+                List<List<TransactionData>> sourceListsByTrustScore = Collections.unmodifiableList(clusterService.getSourceListsByTrustScore());
 
-        sourceListsByTrustScore
-                .stream()
-                .flatMap(Collection::stream)
-                .filter(transactionData -> !(transactionData.isGenesis()))
-                .collect(Collectors.toList()).forEach(transactionData -> {
-            long minimumWaitingTimeInMilliseconds = (long) ((100 - transactionData.getSenderTrustScore()) * 15 + MINIMUM_WAIT_TIME_IN_SECONDS) * 1000;
-            long actualWaitingTimeInMilliseconds = now.getTime() - transactionData.getAttachmentTime().getTime();
-            log.debug("Waiting transaction: {}. Time without attachment: {}, Minimum wait time: {}", transactionData.getHash(), millisecondsToMinutes(actualWaitingTimeInMilliseconds), millisecondsToMinutes(minimumWaitingTimeInMilliseconds));
-            if (actualWaitingTimeInMilliseconds > minimumWaitingTimeInMilliseconds) {
-                transactionCreationService.createNewStarvationZeroSpendTransaction(transactionData);
+                sourceListsByTrustScore
+                        .stream()
+                        .flatMap(Collection::stream)
+                        .filter(transactionData -> !(transactionData.isGenesis()))
+                        .collect(Collectors.toList()).forEach(transactionData -> {
+                    long minimumWaitingTimeInMilliseconds = (long) ((100 - transactionData.getSenderTrustScore()) * 15 + MINIMUM_WAIT_TIME_IN_SECONDS) * 1000;
+                    long actualWaitingTimeInMilliseconds = now.getTime() - transactionData.getAttachmentTime().getTime();
+                    log.debug("Waiting transaction: {}. Time without attachment: {}, Minimum wait time: {}", transactionData.getHash(), millisecondsToMinutes(actualWaitingTimeInMilliseconds), millisecondsToMinutes(minimumWaitingTimeInMilliseconds));
+                    if (actualWaitingTimeInMilliseconds > minimumWaitingTimeInMilliseconds) {
+                        transactionCreationService.createNewStarvationZeroSpendTransaction(transactionData);
+                    }
+                });
+
+                Thread.sleep(SOURCE_STARVATION_CHECK_TASK_DELAY);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
-        });
+        }
     }
 
     String millisecondsToMinutes(long milliseconds) {
         return new SimpleDateFormat("mm:ss").format(new Date(milliseconds));
+    }
+
+    public void stopCheckSourcesStarvation() {
+        log.info("Shutting down {}", this.getClass().getSimpleName());
+        checkSourcesStarvationThread.interrupt();
+        try {
+            checkSourcesStarvationThread.join();
+        } catch (InterruptedException e) {
+            log.error("Interrupted shutdown {}", this.getClass().getSimpleName());
+        }
+    }
+
+    public void startCheckSourcesStarvation() {
+        checkSourcesStarvationThread.start();
     }
 }

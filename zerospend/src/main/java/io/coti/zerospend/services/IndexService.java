@@ -22,7 +22,7 @@ public class IndexService extends BaseNodeIndexService {
     private IPropagationPublisher propagationPublisher;
 
     @Autowired
-    private ClusterStampStateCrypto clusterStampPreparationCrypto;
+    private ClusterStampStateCrypto clusterStampStateCrypto;
 
     @Autowired
     IndexService(@Value("${clusterstamp.transaction.ratio}") final int ratio,
@@ -35,7 +35,7 @@ public class IndexService extends BaseNodeIndexService {
         if(dspConfirmed > GENESIS_TRANSACTIONS && dspConfirmed % CLUSTER_STAMP_TRANSACTION_RATIO == 0) {
 
             ClusterStampPreparationData clusterStampPreparationData = new ClusterStampPreparationData(dspConfirmed);
-            clusterStampPreparationCrypto.signMessage(clusterStampPreparationData);
+            clusterStampStateCrypto.signMessage(clusterStampPreparationData);
 
             propagationPublisher.propagate(clusterStampPreparationData, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer));
         }
