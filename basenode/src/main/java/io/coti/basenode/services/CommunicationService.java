@@ -36,8 +36,6 @@ public class CommunicationService {
     private ITransactionService transactionService;
     @Autowired
     private IDspVoteService dspVoteService;
-    @Autowired
-    private IClusterStampService clusterStampService;
 
     public void initSubscriber(List<String> propagationServerAddresses, NodeType nodeType, HashMap<String, Consumer<Object>> classNameToSubscriberHandlerMapping) {
         classNameToSubscriberHandlerMapping.put(Channel.getChannelString(TransactionData.class, nodeType), data ->
@@ -46,11 +44,6 @@ public class CommunicationService {
                 addressService.handlePropagatedAddress((AddressData) data));
         classNameToSubscriberHandlerMapping.put(Channel.getChannelString(DspConsensusResult.class, nodeType), data ->
                 dspVoteService.handleVoteConclusion((DspConsensusResult) data));
-        classNameToSubscriberHandlerMapping.put(Channel.getChannelString(ClusterStampPreparationData.class, nodeType), data ->
-                clusterStampService.prepareForClusterStamp((ClusterStampPreparationData) data));
-        classNameToSubscriberHandlerMapping.put(Channel.getChannelString(ClusterStampData.class, nodeType), data ->
-                clusterStampService.newClusterStamp((ClusterStampData) data));
-
         propagationSubscriber.init(propagationServerAddresses, classNameToSubscriberHandlerMapping);
     }
 
