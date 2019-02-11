@@ -1,14 +1,20 @@
 package io.coti.fullnode.services;
 
+import io.coti.basenode.communication.Channel;
+import io.coti.basenode.data.ClusterStampData;
+import io.coti.basenode.data.ClusterStampPreparationData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
+import io.coti.basenode.services.interfaces.IClusterStampService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.util.HashMap;
 import java.util.List;
+import java.util.function.Consumer;
 
 @Service
 public class InitializationService {
@@ -21,13 +27,26 @@ public class InitializationService {
     private BaseNodeInitializationService baseNodeInitializationService;
     @Autowired
     private CommunicationService communicationService;
+    @Autowired
+    private IClusterStampService clusterStampService;
 
     @PostConstruct
     public void init() {
 
         communicationService.initSender(receivingServerAddresses);
-        communicationService.initSubscriber(propagationServerAddresses, NodeType.FullNode);
+        initSubscriber();
 
         baseNodeInitializationService.init();
+    }
+
+    public void initSubscriber(){
+        HashMap<String, Consumer<Object>> classNameToSubscriberHandler = new HashMap<>();
+
+        classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampPreparationData.class, NodeType.FullNode), data ->
+                clusterStampService.prepareForClusterStamp((ClusterStampPreparationData) data));
+        classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampData.class, NodeType.FullNode), data ->
+                clusterStampService.newClusterStamp((ClusterStampData) data));
+
+        communicationService.initSubscriber(propagationServerAddresses, NodeType.FullNode, classNameToSubscriberHandler);
     }
 }
