@@ -8,6 +8,7 @@ import org.rocksdb.RocksIterator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.SerializationUtils;
 
+import javax.xml.bind.DatatypeConverter;
 import java.util.function.Consumer;
 
 @Slf4j
