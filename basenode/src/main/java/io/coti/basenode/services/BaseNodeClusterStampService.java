@@ -25,11 +25,10 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     @Override
     public void newClusterStamp(ClusterStampData clusterStampData) {
-
     }
 
     @Override
-    public boolean isReadyForClusterStamp() {
+    public boolean isClusterStampInProgress() {
         return false;
     }
 }

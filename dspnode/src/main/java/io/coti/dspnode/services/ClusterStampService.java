@@ -23,13 +23,9 @@ import java.util.concurrent.CompletableFuture;
 @Service
 public class ClusterStampService extends BaseNodeClusterStampService {
 
-    final private static int FULL_NODES_MAJORITY = 1;
-
     final private static int NUMBER_OF_FULL_NODES = 3;
 
     private boolean clusterStampInProgress;
-
-    private boolean readyForClusterStamp;
 
     @Value("${zerospend.receiving.address}")
     private String receivingZerospendAddress;
@@ -38,8 +34,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private int replyTimeOut;
 
     private int readyForClusterStampMsgCount;
-
-    private boolean majorityMode;
 
     @Autowired
     private IPropagationPublisher propagationPublisher;
@@ -55,34 +49,23 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @PostConstruct
     private void init() {
         clusterStampInProgress = false;
-        readyForClusterStamp = false;
-        majorityMode = false;
         readyForClusterStampMsgCount = 0;
     }
 
     @Override
     public void prepareForClusterStamp(ClusterStampPreparationData clusterStampPreparationData) {
-
         log.debug("Prepare for cluster stamp propagated message received from ZS to DSP");
         if(validatePrepareForClusterStampRequest(clusterStampPreparationData)){
-            clusterStampInProgress = true;
             clusterStampStateCrypto.signMessage(clusterStampPreparationData);
             propagationPublisher.propagate(clusterStampPreparationData, Arrays.asList(NodeType.FullNode));
-            CompletableFuture.runAsync(() -> initMajorityTimer());
+            CompletableFuture.runAsync(this::initTimer);
         }
     }
 
-    private void initMajorityTimer(){
+    private void initTimer(){
         try {
             Thread.sleep(replyTimeOut);
-            majorityMode = true;
-            log.info("DSP node didn't receive responses from all full nodes. Starting majority timer");
-            Thread.sleep(replyTimeOut);
-            if(!readyForClusterStamp){
-                clusterStampInProgress = false;
-                log.error("ClusterStamp failed! DSP node didn't receive responses from majority of full nodes.");
-                //TODO 2/11/2019 astolia: clean up stuff
-            }
+            clusterStampInProgress = true;
         } catch (InterruptedException e) {
             log.error(e.getMessage());
         }
@@ -104,7 +87,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     public void handleFullNodeReadyForClusterStampMessage(FullNodeReadyForClusterStampData fullNodeReadyForClusterStampData) {
 
         log.debug("\'Ready for cluster stamp\' propagated message received from FN to DSP");
-        if(clusterStampInProgress && !readyForClusterStamp && clusterStampStateCrypto.verifySignature(fullNodeReadyForClusterStampData)) {
+        if(!clusterStampInProgress && clusterStampStateCrypto.verifySignature(fullNodeReadyForClusterStampData)) {
 
             DspReadyForClusterStampData dspReadyForClusterStampData = dspReadyForClusterStampMessages.getByHash(fullNodeReadyForClusterStampData.getHash());
 
@@ -123,35 +106,25 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
             if(NUMBER_OF_FULL_NODES == readyForClusterStampMsgCount){
                 log.info("All full nodes are ready for cluster stamp");
-                readyForClusterStamp = true;
-                //TODO 2/10/2019 astolia: start cluster stamp:
-                // clear all received message. need to save them for some reason?
-                // Starts rejecting new transactions from Full Node’s
-                // Sends DspReadyForClusterStampData to ZS
-                return;
-            }
-
-            if ( majorityMode && dspReadyForClusterStampData.getFullNodeReadyForClusterStampDataList().size() >= FULL_NODES_MAJORITY ) {
-                readyForClusterStamp = true;
+                clusterStampInProgress = true;
                 clusterStampStateCrypto.signMessage(dspReadyForClusterStampData);
                 sender.send(dspReadyForClusterStampData, receivingZerospendAddress);
+                dspReadyForClusterStampMessages.deleteByHash(fullNodeReadyForClusterStampData.getHash());
             }
         }
     }
 
     @Override
     public void newClusterStamp(ClusterStampData clusterStampData) {
-
-        boolean bp = true;
-        if(clusterStampCrypto.verifySignature(clusterStampData)) {
-            readyForClusterStamp = false;
-
-        }
+//        boolean bp = true;
+//        if(clusterStampCrypto.verifySignature(clusterStampData)) {
+//            readyForClusterStamp = false;
+//
+//        }
     }
 
     @Override
-    public boolean isReadyForClusterStamp() {
-        return readyForClusterStamp;
+    public boolean isClusterStampInProgress() {
+        return clusterStampInProgress;
     }
-
 }

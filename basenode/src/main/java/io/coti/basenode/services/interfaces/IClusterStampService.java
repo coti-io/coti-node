@@ -15,6 +15,6 @@ public interface IClusterStampService {
 
     void newClusterStamp(ClusterStampData clusterStampData);
 
-    boolean isReadyForClusterStamp();
+    boolean isClusterStampInProgress();
 
 }

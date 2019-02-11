@@ -43,6 +43,9 @@ public class TransactionService extends BaseNodeTransactionService {
     private IClusterStampService clusterStampService;
 
     public String handleNewTransactionFromFullNode(TransactionData transactionData) {
+        if(clusterStampService.isClusterStampInProgress()){
+            return "Cluster stamp in progress";
+        }
         try {
             log.debug("Running new transactions from full node handler");
             if (transactionHelper.isTransactionAlreadyPropagated(transactionData)) {
@@ -76,7 +79,7 @@ public class TransactionService extends BaseNodeTransactionService {
         if (!isValidatorRunning.compareAndSet(false, true)) {
             return;
         }
-        while (!clusterStampService.isReadyForClusterStamp() && !transactionsToValidate.isEmpty()) {
+        while (!clusterStampService.isClusterStampInProgress() && !transactionsToValidate.isEmpty()) {
             TransactionData transactionData = transactionsToValidate.remove();
             log.debug("DSP Fully Checking transaction: {}", transactionData.getHash());
             DspVote dspVote = new DspVote(
