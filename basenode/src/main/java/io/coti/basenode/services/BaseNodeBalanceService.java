@@ -42,6 +42,7 @@ public class BaseNodeBalanceService implements IBalanceService {
             String line;
 
             while ((line = bufferedReader.readLine()) != null) {
+
                 String[] addressDetails = line.split(",");
                 if (addressDetails.length != 2) {
                     throw new Exception("Bad csv file format");

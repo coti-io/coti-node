@@ -91,6 +91,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
                 log.info("Stop dsp vote service from sum and save dsp votes");
                 dspVoteService.stopSumAndSaveVotes();
                 sourceStarvationService.stopCheckSourcesStarvation();
+                makeAndPropagateClusterStamp();
             }
         }
 
