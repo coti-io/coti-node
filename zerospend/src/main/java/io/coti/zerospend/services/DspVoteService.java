@@ -221,7 +221,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
         log.info("Shutting down {}", this.getClass().getSimpleName());
         sumAndSaveVotesThread.interrupt();
         try {
-            sumAndSaveVotesThread.join();
+           sumAndSaveVotesThread.join();
         } catch (InterruptedException e) {
             log.error("Interrupted shutdown {}", this.getClass().getSimpleName());
         }

@@ -23,7 +23,7 @@ import java.util.concurrent.CompletableFuture;
 @Service
 public class ClusterStampService extends BaseNodeClusterStampService {
 
-    final private static int NUMBER_OF_FULL_NODES = 3;
+    final private static int NUMBER_OF_FULL_NODES = 1;
 
     @Autowired
     private IPropagationPublisher propagationPublisher;

@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +34,14 @@ public class ClusterStampData implements IPropagatable, ISignable, ISignValidata
     }
 
     public void setHash() {
-        this.hash = new Hash(balanceMap.toString() + unconfirmedTransactions.toString());
+        byte[] balanceMapBytes = balanceMap.toString().getBytes();
+        byte[] unconfirmedTransactionsBytes = unconfirmedTransactions.toString().getBytes();
+
+        int byteBufferLength = balanceMapBytes.length + unconfirmedTransactionsBytes.length;
+        ByteBuffer hashBytesBuffer = ByteBuffer.allocate(byteBufferLength)
+                .put(balanceMapBytes)
+                .put(unconfirmedTransactionsBytes);
+        this.hash = new Hash(hashBytesBuffer.array());
     }
 
 
