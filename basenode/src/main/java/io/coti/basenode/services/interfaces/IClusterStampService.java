@@ -11,7 +11,7 @@ public interface IClusterStampService {
 
     void handleFullNodeReadyForClusterStampMessage(FullNodeReadyForClusterStampData fullNodeReadyForClusterStampData);
 
-    void dspNodeReadyForClusterStamp(DspReadyForClusterStampData clusterStampReadyData);
+    void handleDspNodeReadyForClusterStampMessage(DspReadyForClusterStampData clusterStampReadyData);
 
     void newClusterStamp(ClusterStampData clusterStampData);
 

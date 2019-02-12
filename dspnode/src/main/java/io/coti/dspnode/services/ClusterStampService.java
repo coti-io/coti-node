@@ -25,16 +25,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     final private static int NUMBER_OF_FULL_NODES = 3;
 
-    private boolean clusterStampInProgress;
-
-    @Value("${zerospend.receiving.address}")
-    private String receivingZerospendAddress;
-
-    @Value("${clusterstamp.reply.timeout}")
-    private int replyTimeOut;
-
-    private int readyForClusterStampMsgCount;
-
     @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired
@@ -45,6 +35,17 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private DspReadyForClusterStamp dspReadyForClusterStampMessages;
     @Autowired
     private ISender sender;
+
+    @Value("${zerospend.receiving.address}")
+    private String receivingZerospendAddress;
+
+    @Value("${clusterstamp.reply.timeout}")
+
+    private int replyTimeOut;
+
+    private boolean clusterStampInProgress;
+
+    private int readyForClusterStampMsgCount;
 
     @PostConstruct
     private void init() {

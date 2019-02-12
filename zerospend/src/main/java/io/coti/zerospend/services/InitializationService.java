@@ -43,7 +43,7 @@ public class InitializationService {
         classNameToReceiverHandlerMapping.put(DspVote.class.getName(), data ->
                 dspVoteService.receiveDspVote((DspVote) data));
         classNameToReceiverHandlerMapping.put(DspReadyForClusterStampData.class.getName(), data ->
-                clusterStampService.dspNodeReadyForClusterStamp((DspReadyForClusterStampData) data));
+                clusterStampService.handleDspNodeReadyForClusterStampMessage((DspReadyForClusterStampData) data));
         communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
         initSubscriber();
         communicationService.initPropagator(propagationPort);

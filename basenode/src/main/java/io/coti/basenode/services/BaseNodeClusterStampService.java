@@ -20,7 +20,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     }
 
     @Override
-    public void dspNodeReadyForClusterStamp(DspReadyForClusterStampData clusterStampReadyData) {
+    public void handleDspNodeReadyForClusterStampMessage(DspReadyForClusterStampData clusterStampReadyData) {
     }
 
     @Override

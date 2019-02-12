@@ -1,6 +1,7 @@
 package io.coti.zerospend.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
+import io.coti.basenode.crypto.ClusterStampStateCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.model.ClusterStamp;
 import io.coti.basenode.model.Transactions;
@@ -8,6 +9,7 @@ import io.coti.basenode.services.BaseNodeClusterStampService;
 import io.coti.basenode.services.TccConfirmationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -16,16 +18,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
 public class ClusterStampService extends BaseNodeClusterStampService {
 
     final private static int DSP_NODES_MAJORITY = 1;
-
-    private boolean isClusterStampInMaking;
-    private Hash currentHash;
-    private Hash inProgressHash;
 
     @Autowired
     private IPropagationPublisher propagationPublisher;
@@ -41,32 +40,62 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private TccConfirmationService tccConfirmationService;
     @Autowired
     private Transactions transactions;
+    @Autowired
+    private ClusterStampStateCrypto clusterStampStateCrypto;
+
+    @Value("${clusterstamp.reply.timeout}")
+    private int replyTimeOut;
+
+    private boolean clusterStampInProgress;
+
+    private Hash currentHash;
+
+    private Hash inProgressHash;
+
 
     @PostConstruct
     private void init() {
-        isClusterStampInMaking = false;
+        clusterStampInProgress = false;
         inProgressHash = new Hash("inProgress");
     }
 
     @Override
-    public void dspNodeReadyForClusterStamp(DspReadyForClusterStampData dspReadyForClusterStampData) {
+    public void prepareForClusterStamp(ClusterStampPreparationData clusterStampPreparationData) {
+        log.debug("Start preparation of ZS for cluster stamp");
+        propagationPublisher.propagate(clusterStampPreparationData, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer));
+        CompletableFuture.runAsync(this::initTimer);
+    }
 
-        log.debug("Ready for cluster stamp propagated message received from DSP to ZS");
+    private void initTimer(){
+        try {
+            Thread.sleep(replyTimeOut);
+            clusterStampInProgress = true;
+        } catch (InterruptedException e) {
+            log.error(e.getMessage());
+        }
+    }
 
-        ClusterStampData clusterStampData = clusterStamp.getByHash(inProgressHash);
+    @Override
+    public void handleDspNodeReadyForClusterStampMessage(DspReadyForClusterStampData dspReadyForClusterStampData) {
 
-        if ( clusterStampData == null ) {
-            clusterStampData = new ClusterStampData(inProgressHash);
+        log.debug("\'Ready for cluster stamp\' propagated message received from DSP to ZS");
+        if(!clusterStampInProgress && clusterStampStateCrypto.verifySignature(dspReadyForClusterStampData)){
+            ClusterStampData clusterStampData = clusterStamp.getByHash(inProgressHash);
+
+            if ( clusterStampData == null ) {
+                clusterStampData = new ClusterStampData(inProgressHash);
+            }
+
+            clusterStampData.getDspReadyForClusterStampDataList().add(dspReadyForClusterStampData);
+            clusterStamp.put(clusterStampData);
+
+            if ( clusterStampData.getDspReadyForClusterStampDataList().size() >= DSP_NODES_MAJORITY ) {
+                log.info("Stop dsp vote service from sum and save dsp votes");
+                dspVoteService.stopSumAndSaveVotes();
+                sourceStarvationService.stopCheckSourcesStarvation();
+            }
         }
 
-        clusterStampData.getDspReadyForClusterStampDataList().add(dspReadyForClusterStampData);
-        clusterStamp.put(clusterStampData);
-
-        if ( clusterStampData.getDspReadyForClusterStampDataList().size() >= DSP_NODES_MAJORITY ) {
-            log.info("Stop dsp vote service from sum and save dsp votes");
-            dspVoteService.stopSumAndSaveVotes();
-            sourceStarvationService.stopCheckSourcesStarvation();
-        }
     }
 
     public void makeAndPropagateClusterStamp() {
@@ -82,8 +111,9 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         sourceStarvationService.startCheckSourcesStarvation();
     }
 
-    public boolean getIsClusterStampInMaking() {
-        return isClusterStampInMaking;
+    @Override
+    public boolean isClusterStampInProgress() {
+        return clusterStampInProgress;
     }
 
     private List<TransactionData> getUnconfirmedTransactions() {
