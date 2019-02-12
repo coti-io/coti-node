@@ -1,10 +1,10 @@
 package io.coti.fullnode.services;
 
 import io.coti.basenode.communication.interfaces.ISender;
+import io.coti.basenode.crypto.ClusterStampConsensusResultCrypto;
+import io.coti.basenode.crypto.ClusterStampCrypto;
 import io.coti.basenode.crypto.ClusterStampStateCrypto;
-import io.coti.basenode.data.ClusterStampData;
-import io.coti.basenode.data.ClusterStampPreparationData;
-import io.coti.basenode.data.FullNodeReadyForClusterStampData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.model.ClusterStamp;
 import io.coti.basenode.services.BaseNodeClusterStampService;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -29,9 +30,13 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Autowired
     private ClusterStampStateCrypto clusterStampStateCrypto;
     @Autowired
+    private ClusterStampConsensusResultCrypto clusterStampConsensusResultCrypto;
+    @Autowired
     private ISender sender;
     @Autowired
     private ClusterStamp clusterStamp;
+    @Autowired
+    private ClusterStampCrypto clusterStampCrypto;
     @PostConstruct
     private void init(){
         isClusterStampInProgress = false;
@@ -54,14 +59,30 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         }
     }
 
-    public boolean getIsClusterStampInProgress() {
+    @Override
+    public boolean isClusterStampInProgress() {
         return isClusterStampInProgress;
     }
 
     @Override
     public void newClusterStamp(ClusterStampData clusterStampData) {
 
-        isClusterStampInProgress = false;
-        clusterStamp.put(clusterStampData);
+        if(clusterStampCrypto.verifySignature(clusterStampData)) {
+
+            clusterStamp.put(clusterStampData);
+        }
+    }
+
+    public void newClusterStampConsensusResult(ClusterStampConsensusResult clusterStampConsensusResult) {
+
+        if(clusterStampConsensusResultCrypto.verifySignature(clusterStampConsensusResult) && clusterStampConsensusResult.isDspConsensus()) {
+
+            ClusterStampData clusterStampData = clusterStamp.getByHash(clusterStampConsensusResult.getHash());
+            clusterStampData.setClusterStampConsensusResult(clusterStampConsensusResult);
+
+            clusterStamp.put(clusterStampData);
+            isClusterStampInProgress = false;
+        }
+
     }
 }

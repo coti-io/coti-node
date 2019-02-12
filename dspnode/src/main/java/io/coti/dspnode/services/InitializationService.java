@@ -34,7 +34,7 @@ public class InitializationService {
     @Autowired
     private CommunicationService communicationService;
     @Autowired
-    private IClusterStampService clusterStampService;
+    private ClusterStampService clusterStampService;
 
     @PostConstruct
     public void init() {
@@ -67,6 +67,8 @@ public class InitializationService {
                 clusterStampService.prepareForClusterStamp((ClusterStampPreparationData) data));
         classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampData.class, NodeType.DspNode), data ->
                 clusterStampService.newClusterStamp((ClusterStampData) data));
+        classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampConsensusResult.class, NodeType.DspNode), data ->
+                clusterStampService.newClusterStampConsensusResult((ClusterStampConsensusResult) data));
 
         communicationService.initSubscriber(propagationServerAddresses, NodeType.DspNode, classNameToSubscriberHandler);
     }

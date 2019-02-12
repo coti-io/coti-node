@@ -85,7 +85,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
             //TODO 2/4/2019 astolia:  handle transactions here is case snapshot is in progeress.
             // add them to a different collection with status CLUSTERSTAMP
-            if(clusterStampService.getIsClusterStampInProgress()){
+            if(clusterStampService.isClusterStampInProgress()){
 
             }
 

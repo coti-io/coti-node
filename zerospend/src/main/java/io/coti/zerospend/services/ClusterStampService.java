@@ -1,10 +1,13 @@
 package io.coti.zerospend.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
+import io.coti.basenode.crypto.ClusterStampConsensusResultCrypto;
+import io.coti.basenode.crypto.ClusterStampCrypto;
 import io.coti.basenode.crypto.ClusterStampStateCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.model.ClusterStamp;
 import io.coti.basenode.model.Transactions;
+import io.coti.basenode.services.BaseNodeBalanceService;
 import io.coti.basenode.services.BaseNodeClusterStampService;
 import io.coti.basenode.services.TccConfirmationService;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +16,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -33,26 +35,29 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Autowired
     private SourceStarvationService sourceStarvationService;
     @Autowired
-    private BalanceService balanceService;
+    private BaseNodeBalanceService balanceService;
     @Autowired
     private TccConfirmationService tccConfirmationService;
     @Autowired
+    private ClusterStampConsensusResultCrypto clusterStampConsensusResultCrypto;
+    @Autowired
     private Transactions transactions;
     @Autowired
+    private ClusterStamp clusterStamp;
+    @Autowired
     private ClusterStampStateCrypto clusterStampStateCrypto;
-
+    @Autowired
+    private ClusterStampCrypto clusterStampCrypto;
     @Value("${clusterstamp.reply.timeout}")
     private int replyTimeOut;
-
     private ClusterStampData currentClusterStamp;
-
-    private boolean clusterStampInProgress;
+    private boolean isClusterStampInProgress;
 
 
 
     @PostConstruct
     private void init() {
-        clusterStampInProgress = false;
+        isClusterStampInProgress = false;
         currentClusterStamp = new ClusterStampData(new Hash("inProgress"));
     }
 
@@ -66,7 +71,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private void initTimer(){
         try {
             Thread.sleep(replyTimeOut);
-            clusterStampInProgress = true;
+            isClusterStampInProgress = true;
         } catch (InterruptedException e) {
             log.error(e.getMessage());
         }
@@ -76,12 +81,12 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     public void handleDspNodeReadyForClusterStampMessage(DspReadyForClusterStampData dspReadyForClusterStampData) {
 
         log.debug("\'Ready for cluster stamp\' propagated message received from DSP to ZS");
-        if(!clusterStampInProgress && clusterStampStateCrypto.verifySignature(dspReadyForClusterStampData)) {
+        if(!isClusterStampInProgress && clusterStampStateCrypto.verifySignature(dspReadyForClusterStampData)) {
             currentClusterStamp.getDspReadyForClusterStampDataList().add(dspReadyForClusterStampData);
 
             if ( currentClusterStamp.getDspReadyForClusterStampDataList().size() >= DSP_NODES_MAJORITY ) {
                 log.info("Stop dsp vote service from sum and save dsp votes");
-                dspVoteService.stopSumAndSaveVotes();
+                //dspVoteService.stopSumAndSaveVotes();
                 sourceStarvationService.stopCheckSourcesStarvation();
                 makeAndPropagateClusterStamp();
             }
@@ -95,9 +100,12 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         clusterStampData.setBalanceMap(balanceService.getBalanceMap());
         clusterStampData.setUnconfirmedTransactions(getUnconfirmedTransactions());
         clusterStampData.setHash();
+
+        clusterStampCrypto.signMessage(clusterStampData);
         propagationPublisher.propagate(clusterStampData, Arrays.asList(NodeType.DspNode));
 
         currentClusterStamp = new ClusterStampData(new Hash("inProgress"));
+        clusterStamp.put(clusterStampData);
         log.info("Restart DSP vote service to sum and save dsp votes, and starvation service");
         //dspVoteService.startSumAndSaveVotes();
         //sourceStarvationService.startCheckSourcesStarvation();
@@ -105,7 +113,29 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     @Override
     public boolean isClusterStampInProgress() {
-        return clusterStampInProgress;
+        return isClusterStampInProgress;
+    }
+
+    public void handleDspClusterStampVote(DspClusterStampVoteData dspClusterStampVoteData) {
+
+        ClusterStampData clusterStampData = clusterStamp.getByHash(dspClusterStampVoteData.getHash());
+        clusterStampData.getClusterStampConsensusResult().getDspClusterStampVoteDataList().add(dspClusterStampVoteData);
+
+        int validClusterStampVotes = 0;
+        for(DspClusterStampVoteData dspClusterStampVoteDataIterator : clusterStampData.getClusterStampConsensusResult().getDspClusterStampVoteDataList()) {
+            if( dspClusterStampVoteDataIterator.validClusterStamp ) {
+                validClusterStampVotes++;
+            }
+        }
+
+        if(validClusterStampVotes >= DSP_NODES_MAJORITY) {
+            clusterStampData.getClusterStampConsensusResult().setDspConsensus(true);
+            clusterStampConsensusResultCrypto.signMessage(clusterStampData.getClusterStampConsensusResult());
+            propagationPublisher.propagate(clusterStampData.getClusterStampConsensusResult(), Arrays.asList(NodeType.DspNode));
+            this.isClusterStampInProgress = false;
+        }
+
+        clusterStamp.put(clusterStampData);
     }
 
     private List<TransactionData> getUnconfirmedTransactions() {

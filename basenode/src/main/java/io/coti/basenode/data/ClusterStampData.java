@@ -17,7 +17,6 @@ import java.util.Map;
 public class ClusterStampData implements IPropagatable, ISignable, ISignValidatable {
 
     private Hash hash;
-    private Long lastDspConfirmed;
     private Map<Hash, BigDecimal> balanceMap;
     private List<TransactionData> unconfirmedTransactions;
     private List<DspReadyForClusterStampData> dspReadyForClusterStampDataList;
@@ -42,6 +41,7 @@ public class ClusterStampData implements IPropagatable, ISignable, ISignValidata
                 .put(balanceMapBytes)
                 .put(unconfirmedTransactionsBytes);
         this.hash = new Hash(hashBytesBuffer.array());
+        this.clusterStampConsensusResult = new ClusterStampConsensusResult(this.hash);
     }
 
 

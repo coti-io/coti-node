@@ -13,8 +13,8 @@ public class ClusterStampCrypto extends SignatureCrypto<ClusterStampData> {
 
         int byteBufferLength = 0;
 
-        Long lastDspConfirmed = clusterStampData.getLastDspConfirmed();
-        byteBufferLength += Long.BYTES;
+        byte[] clusterStampHashInBytes = clusterStampData.getHash().getBytes();
+        byteBufferLength += clusterStampHashInBytes.length;
 
         byte[] balanceMapInBytes = clusterStampData.getBalanceMap().toString().getBytes();
         byteBufferLength += balanceMapInBytes.length;
@@ -23,7 +23,7 @@ public class ClusterStampCrypto extends SignatureCrypto<ClusterStampData> {
         byteBufferLength += unconfirmedTransactionsInBytes.length;
 
         ByteBuffer clusterStampDataBuffer = ByteBuffer.allocate(byteBufferLength)
-                .putLong(lastDspConfirmed)
+                .put(clusterStampHashInBytes)
                 .put(balanceMapInBytes)
                 .put(unconfirmedTransactionsInBytes);
 
