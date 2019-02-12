@@ -24,8 +24,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     final private static int DSP_NODES_MAJORITY = 1;
 
     private boolean isClusterStampInMaking;
-    private Hash currentHash;
-    private Hash inProgressHash;
+    private ClusterStampData clusterStampInProcess;
 
     @Autowired
     private IPropagationPublisher propagationPublisher;
@@ -45,7 +44,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @PostConstruct
     private void init() {
         isClusterStampInMaking = false;
-        inProgressHash = new Hash("inProgress");
+        clusterStampInProcess = new ClusterStampData(new Hash("inProgress"));
     }
 
     @Override
@@ -53,16 +52,9 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
         log.debug("Ready for cluster stamp propagated message received from DSP to ZS");
 
-        ClusterStampData clusterStampData = clusterStamp.getByHash(inProgressHash);
+        clusterStampInProcess.getDspReadyForClusterStampDataList().add(dspReadyForClusterStampData);
 
-        if ( clusterStampData == null ) {
-            clusterStampData = new ClusterStampData(inProgressHash);
-        }
-
-        clusterStampData.getDspReadyForClusterStampDataList().add(dspReadyForClusterStampData);
-        clusterStamp.put(clusterStampData);
-
-        if ( clusterStampData.getDspReadyForClusterStampDataList().size() >= DSP_NODES_MAJORITY ) {
+        if ( clusterStampInProcess.getDspReadyForClusterStampDataList().size() >= DSP_NODES_MAJORITY ) {
             log.info("Stop dsp vote service from sum and save dsp votes");
             dspVoteService.stopSumAndSaveVotes();
             sourceStarvationService.stopCheckSourcesStarvation();
@@ -71,15 +63,16 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     public void makeAndPropagateClusterStamp() {
 
-        ClusterStampData clusterStampData = clusterStamp.getByHash(inProgressHash);
+        ClusterStampData clusterStampData = clusterStampInProcess;
         clusterStampData.setBalanceMap(balanceService.getBalanceMap());
         clusterStampData.setUnconfirmedTransactions(getUnconfirmedTransactions());
-        clusterStamp.put(clusterStampData);
+        clusterStampData.setHash();
         propagationPublisher.propagate(clusterStampData, Arrays.asList(NodeType.DspNode));
 
-        log.info("Restart dsp vote service to sum and save dsp votes, and starvation service");
-        dspVoteService.startSumAndSaveVotes();
-        sourceStarvationService.startCheckSourcesStarvation();
+        clusterStampInProcess = new ClusterStampData(new Hash("inProgress"));
+        log.info("Restart DSP vote service to sum and save dsp votes, and starvation service");
+        //dspVoteService.startSumAndSaveVotes();
+        //sourceStarvationService.startCheckSourcesStarvation();
     }
 
     public boolean getIsClusterStampInMaking() {

@@ -89,7 +89,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Override
     public void newClusterStamp(ClusterStampData clusterStampData) {
 
-        boolean bp = true;
         if(clusterStampCrypto.verifySignature(clusterStampData)) {
             isReadyForClusterStamp = false;
 
