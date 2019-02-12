@@ -16,7 +16,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     public void prepareForClusterStamp(ClusterStampPreparationData prepareForSnapshot) {}
 
     @Override
-    public void fullNodeReadyForClusterStamp(FullNodeReadyForClusterStampData fullNodeReadyForClusterStampData) {
+    public void handleFullNodeReadyForClusterStampMessage(FullNodeReadyForClusterStampData fullNodeReadyForClusterStampData) {
     }
 
     @Override
@@ -26,5 +26,10 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     @Override
     public void newClusterStamp(ClusterStampData clusterStampData) {
 
+    }
+
+    @Override
+    public boolean isReadyForClusterStamp() {
+        return false;
     }
 }
