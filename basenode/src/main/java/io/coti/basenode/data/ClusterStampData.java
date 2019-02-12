@@ -29,6 +29,11 @@ public class ClusterStampData implements IPropagatable, ISignable, ISignValidata
         this.dspReadyForClusterStampDataList = new ArrayList<>();
     }
 
+    public void setHash() {
+        this.hash = new Hash(balanceMap.toString() + unconfirmedTransactions.toString());
+    }
+
+
     @Override
     public Hash getHash() {
         return hash;
