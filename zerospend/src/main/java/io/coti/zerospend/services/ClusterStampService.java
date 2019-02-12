@@ -66,7 +66,11 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private void initTimer(){
         try {
             Thread.sleep(replyTimeOut);
-            clusterStampInProgress = true;
+            if(!clusterStampInProgress){
+                log.info("Zero spend starting cluster stamp after timer expired.");
+                clusterStampInProgress = true;
+                //TODO 2/12/2019 astolia: Start cluster stamp
+            }
         } catch (InterruptedException e) {
             log.error(e.getMessage());
         }
@@ -77,6 +81,10 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
         log.debug("\'Ready for cluster stamp\' propagated message received from DSP to ZS");
         if(!clusterStampInProgress && clusterStampStateCrypto.verifySignature(dspReadyForClusterStampData)) {
+            if(currentClusterStamp.getDspReadyForClusterStampDataList().contains(dspReadyForClusterStampData)){
+                log.warn("Message from DSP was already sent.");
+                return;
+            }
             currentClusterStamp.getDspReadyForClusterStampDataList().add(dspReadyForClusterStampData);
 
             if ( currentClusterStamp.getDspReadyForClusterStampDataList().size() >= DSP_NODES_MAJORITY ) {

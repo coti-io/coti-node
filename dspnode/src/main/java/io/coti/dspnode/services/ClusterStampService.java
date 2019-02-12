@@ -23,7 +23,7 @@ import java.util.concurrent.CompletableFuture;
 @Service
 public class ClusterStampService extends BaseNodeClusterStampService {
 
-    final private static int NUMBER_OF_FULL_NODES = 3;
+    final private static int NUMBER_OF_FULL_NODES = 1;
 
     @Autowired
     private IPropagationPublisher propagationPublisher;
@@ -66,7 +66,12 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private void initTimer(){
         try {
             Thread.sleep(replyTimeOut);
-            clusterStampInProgress = true;
+            if(!clusterStampInProgress){
+                log.info("DSP starting cluster stamp after timer expired.");
+                clusterStampInProgress = true;
+                //TODO 2/12/2019 astolia: delete messages and reset counter to 0.
+                // START CLUSTER STAMP
+            }
         } catch (InterruptedException e) {
             log.error(e.getMessage());
         }
@@ -107,10 +112,11 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
             if(NUMBER_OF_FULL_NODES == readyForClusterStampMsgCount){
                 log.info("All full nodes are ready for cluster stamp");
-                clusterStampInProgress = true;
                 clusterStampStateCrypto.signMessage(dspReadyForClusterStampData);
                 sender.send(dspReadyForClusterStampData, receivingZerospendAddress);
                 dspReadyForClusterStampMessages.deleteByHash(fullNodeReadyForClusterStampData.getHash());
+                clusterStampInProgress = true;
+                readyForClusterStampMsgCount = 0;
             }
         }
     }
