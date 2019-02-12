@@ -86,7 +86,12 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private void initTimer(){
         try {
             Thread.sleep(replyTimeOut);
-            isClusterStampInProgress = true;
+            if(!isClusterStampInProgress){
+                log.info("DSP starting cluster stamp after timer expired.");
+                isClusterStampInProgress = true;
+                //TODO 2/12/2019 astolia: delete messages and reset counter to 0.
+                // START CLUSTER STAMP
+            }
         } catch (InterruptedException e) {
             log.error(e.getMessage());
         }
@@ -127,10 +132,10 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
             if(NUMBER_OF_FULL_NODES == readyForClusterStampMsgCount){
                 log.info("All full nodes are ready for cluster stamp");
-                isClusterStampInProgress = true;
                 clusterStampStateCrypto.signMessage(dspReadyForClusterStampData);
                 sender.send(dspReadyForClusterStampData, receivingZerospendAddress);
                 dspReadyForClusterStampMessages.deleteByHash(fullNodeReadyForClusterStampData.getHash());
+                readyForClusterStampMsgCount = 0;
             }
         }
     }

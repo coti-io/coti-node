@@ -71,7 +71,11 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private void initTimer(){
         try {
             Thread.sleep(replyTimeOut);
-            isClusterStampInProgress = true;
+            if(!isClusterStampInProgress){
+                log.info("Zero spend starting cluster stamp after timer expired.");
+                isClusterStampInProgress = true;
+                //TODO 2/12/2019 astolia: Start cluster stamp
+            }
         } catch (InterruptedException e) {
             log.error(e.getMessage());
         }
