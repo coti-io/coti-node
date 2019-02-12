@@ -29,8 +29,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired
-    private ClusterStamp clusterStamp;
-    @Autowired
     private DspVoteService dspVoteService;
     @Autowired
     private SourceStarvationService sourceStarvationService;
@@ -46,17 +44,16 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Value("${clusterstamp.reply.timeout}")
     private int replyTimeOut;
 
+    private ClusterStampData currentClusterStamp;
+
     private boolean clusterStampInProgress;
 
-    private Hash currentHash;
-
-    private Hash inProgressHash;
 
 
     @PostConstruct
     private void init() {
         clusterStampInProgress = false;
-        inProgressHash = new Hash("inProgress");
+        currentClusterStamp = new ClusterStampData(new Hash("inProgress"));
     }
 
     @Override
@@ -79,17 +76,10 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     public void handleDspNodeReadyForClusterStampMessage(DspReadyForClusterStampData dspReadyForClusterStampData) {
 
         log.debug("\'Ready for cluster stamp\' propagated message received from DSP to ZS");
-        if(!clusterStampInProgress && clusterStampStateCrypto.verifySignature(dspReadyForClusterStampData)){
-            ClusterStampData clusterStampData = clusterStamp.getByHash(inProgressHash);
+        if(!clusterStampInProgress && clusterStampStateCrypto.verifySignature(dspReadyForClusterStampData)) {
+            currentClusterStamp.getDspReadyForClusterStampDataList().add(dspReadyForClusterStampData);
 
-            if ( clusterStampData == null ) {
-                clusterStampData = new ClusterStampData(inProgressHash);
-            }
-
-            clusterStampData.getDspReadyForClusterStampDataList().add(dspReadyForClusterStampData);
-            clusterStamp.put(clusterStampData);
-
-            if ( clusterStampData.getDspReadyForClusterStampDataList().size() >= DSP_NODES_MAJORITY ) {
+            if ( currentClusterStamp.getDspReadyForClusterStampDataList().size() >= DSP_NODES_MAJORITY ) {
                 log.info("Stop dsp vote service from sum and save dsp votes");
                 dspVoteService.stopSumAndSaveVotes();
                 sourceStarvationService.stopCheckSourcesStarvation();
@@ -100,15 +90,16 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     public void makeAndPropagateClusterStamp() {
 
-        ClusterStampData clusterStampData = clusterStamp.getByHash(inProgressHash);
+        ClusterStampData clusterStampData = currentClusterStamp;
         clusterStampData.setBalanceMap(balanceService.getBalanceMap());
         clusterStampData.setUnconfirmedTransactions(getUnconfirmedTransactions());
-        clusterStamp.put(clusterStampData);
+        clusterStampData.setHash();
         propagationPublisher.propagate(clusterStampData, Arrays.asList(NodeType.DspNode));
 
-        log.info("Restart dsp vote service to sum and save dsp votes, and starvation service");
-        dspVoteService.startSumAndSaveVotes();
-        sourceStarvationService.startCheckSourcesStarvation();
+        currentClusterStamp = new ClusterStampData(new Hash("inProgress"));
+        log.info("Restart DSP vote service to sum and save dsp votes, and starvation service");
+        //dspVoteService.startSumAndSaveVotes();
+        //sourceStarvationService.startCheckSourcesStarvation();
     }
 
     @Override
