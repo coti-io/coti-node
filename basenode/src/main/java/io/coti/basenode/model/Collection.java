@@ -57,8 +57,12 @@ public abstract class Collection<T extends IEntity> {
         return !iterator.isValid();
     }
 
-    public void deleteByHash(Hash hash) {
-        databaseConnector.delete(columnFamilyName,hash.getBytes());
+    public void deleteAll() {
+        RocksIterator iterator = databaseConnector.getIterator(columnFamilyName);
+        iterator.seekToFirst();
+        while (iterator.isValid()) {
+            databaseConnector.delete(columnFamilyName,iterator.key());
+        }
     }
 
 }

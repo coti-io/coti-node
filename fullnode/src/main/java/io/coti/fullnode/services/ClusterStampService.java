@@ -23,8 +23,6 @@ import java.util.List;
 @Service
 public class ClusterStampService extends BaseNodeClusterStampService {
 
-    private boolean isClusterStampInProgress;
-
     @Value("#{'${receiving.server.addresses}'.split(',')}")
     private List<String> receivingServerAddresses;
     @Autowired
@@ -39,50 +37,28 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private ClusterStampCrypto clusterStampCrypto;
     @PostConstruct
     private void init(){
-        isClusterStampInProgress = false;
+        isReadyForClusterStamp = false;
     }
 
-    @Override
     public void prepareForClusterStamp(ClusterStampPreparationData clusterStampPreparationData) {
 
         log.debug("Prepare for cluster stamp propagated message received from DSP to FN");
 
-        if(!isClusterStampInProgress) {
+        if(!isReadyForClusterStamp) {
             FullNodeReadyForClusterStampData fullNodeReadyForClusterStampData = new FullNodeReadyForClusterStampData(clusterStampPreparationData.getLastDspConfirmed());
             clusterStampStateCrypto.signMessage(fullNodeReadyForClusterStampData);
             receivingServerAddresses.forEach(address -> sender.send(fullNodeReadyForClusterStampData, address));
-            isClusterStampInProgress = true;
+            isReadyForClusterStamp = true;
         }
         else {
             log.info("Full Node is already preparing for cluster stamp");
-            //TODO 2/4/2019 astolia: Send to DSP that snapshot prepare is in process?
         }
     }
 
-    @Override
-    public boolean isClusterStampInProgress() {
-        return isClusterStampInProgress;
-    }
-
-    @Override
     public void newClusterStamp(ClusterStampData clusterStampData) {
 
         if(clusterStampCrypto.verifySignature(clusterStampData)) {
-
             clusterStamp.put(clusterStampData);
         }
-    }
-
-    public void newClusterStampConsensusResult(ClusterStampConsensusResult clusterStampConsensusResult) {
-
-        if(clusterStampConsensusResultCrypto.verifySignature(clusterStampConsensusResult) && clusterStampConsensusResult.isDspConsensus()) {
-
-            ClusterStampData clusterStampData = clusterStamp.getByHash(clusterStampConsensusResult.getHash());
-            clusterStampData.setClusterStampConsensusResult(clusterStampConsensusResult);
-
-            clusterStamp.put(clusterStampData);
-            isClusterStampInProgress = false;
-        }
-
     }
 }

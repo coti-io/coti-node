@@ -7,7 +7,6 @@ import io.coti.basenode.data.DspVote;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.services.BaseNodeTransactionService;
-import io.coti.basenode.services.interfaces.IClusterStampService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
@@ -40,11 +39,11 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private DspVoteCrypto dspVoteCrypto;
     @Autowired
-    private IClusterStampService clusterStampService;
+    private ClusterStampService clusterStampService;
 
     public String handleNewTransactionFromFullNode(TransactionData transactionData) {
-        if(clusterStampService.isClusterStampInProgress()){
-            return "Cluster stamp in progress";
+        if(clusterStampService.isReadyForClusterStamp()){
+            return "Waiting for cluster stamp";
         }
         try {
             log.debug("Running new transactions from full node handler");
@@ -79,7 +78,7 @@ public class TransactionService extends BaseNodeTransactionService {
         if (!isValidatorRunning.compareAndSet(false, true)) {
             return;
         }
-        while (!clusterStampService.isClusterStampInProgress() && !transactionsToValidate.isEmpty()) {
+        while (!clusterStampService.isReadyForClusterStamp() && !transactionsToValidate.isEmpty()) {
             TransactionData transactionData = transactionsToValidate.remove();
             log.debug("DSP Fully Checking transaction: {}", transactionData.getHash());
             DspVote dspVote = new DspVote(

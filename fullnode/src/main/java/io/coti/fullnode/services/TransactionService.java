@@ -14,7 +14,6 @@ import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.IClusterService;
-import io.coti.basenode.services.interfaces.IClusterStampService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.fullnode.http.AddTransactionRequest;
@@ -39,6 +38,7 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 @Slf4j
 @Service
 public class TransactionService extends BaseNodeTransactionService {
+
     @Value("#{'${receiving.server.addresses}'.split(',')}")
     private List<String> receivingServerAddresses;
     @Autowired
@@ -49,7 +49,6 @@ public class TransactionService extends BaseNodeTransactionService {
     private IValidationService validationService;
     @Autowired
     private IClusterService clusterService;
-
     @Autowired
     private ISender sender;
     @Autowired
@@ -60,7 +59,6 @@ public class TransactionService extends BaseNodeTransactionService {
     private WebSocketSender webSocketSender;
     @Autowired
     private ClusterStampService clusterStampService;
-
     @Autowired
     private PotService potService;
 
@@ -85,7 +83,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
             //TODO 2/4/2019 astolia:  handle transactions here is case snapshot is in progeress.
             // add them to a different collection with status CLUSTERSTAMP
-            if(clusterStampService.isClusterStampInProgress()){
+            if(clusterStampService.isReadyForClusterStamp()){
 
             }
 
@@ -125,6 +123,8 @@ public class TransactionService extends BaseNodeTransactionService {
             transactionHelper.setTransactionStateToSaved(transactionData);
             webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
             final TransactionData finalTransactionData = transactionData;
+
+
             receivingServerAddresses.forEach(address -> sender.send(finalTransactionData, address));
             transactionHelper.setTransactionStateToFinished(transactionData);
             return ResponseEntity

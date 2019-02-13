@@ -18,32 +18,15 @@ public class ClusterStampData implements IPropagatable, ISignable, ISignValidata
 
     private Hash hash;
     private Map<Hash, BigDecimal> balanceMap;
-    private List<TransactionData> unconfirmedTransactions;
+    private Map<Hash, TransactionData> unconfirmedTransactions;
     private List<DspReadyForClusterStampData> dspReadyForClusterStampDataList;
     private ClusterStampConsensusResult clusterStampConsensusResult;
     private Hash zeroSpendHash;
     private SignatureData zeroSpendSignature;
 
-    public ClusterStampData(Hash inProgressHash) {
-        this.hash = inProgressHash;
+    public ClusterStampData() {
         this.dspReadyForClusterStampDataList = new ArrayList<>();
     }
-
-    public ClusterStampData() {
-    }
-
-    public void setHash() {
-        byte[] balanceMapBytes = balanceMap.toString().getBytes();
-        byte[] unconfirmedTransactionsBytes = unconfirmedTransactions.toString().getBytes();
-
-        int byteBufferLength = balanceMapBytes.length + unconfirmedTransactionsBytes.length;
-        ByteBuffer hashBytesBuffer = ByteBuffer.allocate(byteBufferLength)
-                .put(balanceMapBytes)
-                .put(unconfirmedTransactionsBytes);
-        this.hash = new Hash(hashBytesBuffer.array());
-        this.clusterStampConsensusResult = new ClusterStampConsensusResult(this.hash);
-    }
-
 
     @Override
     public Hash getHash() {
@@ -52,6 +35,7 @@ public class ClusterStampData implements IPropagatable, ISignable, ISignValidata
 
     @Override
     public void setHash(Hash hash) {
+        clusterStampConsensusResult = new ClusterStampConsensusResult(hash);
         this.hash = hash;
     }
 

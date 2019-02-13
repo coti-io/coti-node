@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentMap;
 @Slf4j
 @Service
 public class BaseNodeDspVoteService implements IDspVoteService {
+
     @Autowired
     protected ITransactionHelper transactionHelper;
     @Autowired

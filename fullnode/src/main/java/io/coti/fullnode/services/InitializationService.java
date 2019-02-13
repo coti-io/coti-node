@@ -7,7 +7,6 @@ import io.coti.basenode.data.ClusterStampPreparationData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
-import io.coti.basenode.services.interfaces.IClusterStampService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
