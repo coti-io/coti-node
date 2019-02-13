@@ -8,7 +8,6 @@ import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.data.*;
 import io.coti.basenode.services.interfaces.IAddressService;
 import io.coti.basenode.services.interfaces.IDspVoteService;
-import io.coti.basenode.services.interfaces.IClusterStampService;
 import io.coti.basenode.services.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

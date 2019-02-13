@@ -9,16 +9,16 @@ import lombok.Data;
 public class DspClusterStampVoteData implements IPropagatable, ISignable, ISignValidatable {
 
     public Hash clusterStampHash;
-    public boolean validClusterStamp;
+    public boolean isValidClusterStamp;
     public Hash voterDspHash;
     public SignatureData signature;
 
     private DspClusterStampVoteData() {
     }
 
-    public DspClusterStampVoteData(Hash clusterStampHash, boolean validClusterStamp) {
+    public DspClusterStampVoteData(Hash clusterStampHash, boolean isValidClusterStamp) {
         this.clusterStampHash = clusterStampHash;
-        this.validClusterStamp = validClusterStamp;
+        this.isValidClusterStamp = isValidClusterStamp;
     }
 
     @Override
