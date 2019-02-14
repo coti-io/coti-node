@@ -724,6 +724,100 @@
       "behaviorHighFrequencyEventsScore": {
         "highFrequencyEventsScoreList": []
       }
+    },
+	{
+      "type": "dspnode",
+      "addressMapping": "address -> userHash",
+      "initialTrustScore": {
+        "initialTrustScoreEventScoreList": [
+          {
+            "definition": "Borrow the TS from the owner",
+            "range": {
+              "from": "0",
+              "to": "100"
+            },
+            "weight": "0.4",
+            "decay": "exp(-ln(2)/365*T)",
+            "name": "OwnersTS"
+          }
+        ]
+      },
+      "behaviorCumulativeScores": {
+        "transactionEventScoreList": [
+          {
+            "idea": "More transactions - more TS",
+            "algorithm": "Day-by-day calculation",
+            "valueAdjusting": "Maximum contribution is 30 80% of max contribution corresponds to 1,000,000 Txs per month or N0.8 = 1,000,000 or rxN0.8 = 40,000 for day-by day",
+            "calculating": "N = count(outcomingTxForAllAddressesForTheUser) within a day",
+            "nonlinearFunction": "tanh(N/40000*1.098612289)",
+            "weight": "1.5",
+            "decay": "exp(-ln(2)/30*T)",
+            "valueToStore": "TStnum",
+            "currentValue": "TStnum + tanh(N/40000*1.098612289)",
+            "dayShift": "TStnum = TStnum * exp(-decay) + currentValue",
+            "issue": "When the day changes? It should be different for different locations?",
+            "name": "TransactionFrequency"
+          },
+          {
+            "idea": "More turnover - more TS",
+            "algorithm": "Day-by-day calculation",
+            "valueAdjusting": "Maximum contribution is 30 80% of max contribution corresponds to 100,000 COTI per month or T0.8 = 10,000,000 or rxT0.8 = 400,000 for day-by day calculation",
+            "calculating": "T = sum(outcomingTxForAllAddressesForTheUser) within a day",
+            "nonlinearFunction": "tanh(T/400000*1.098612289)",
+            "weight": "1.0",
+            "decay": "exp(-ln(2)/30*T)",
+            "valueToStore": "TStsum",
+            "currentValue": "TStsum + tanh(T/400000*1.098612289)",
+            "dayShift": "TStnum = TStsum * exp(-decay) + currentValue",
+            "issue": "When the day changes? It should be different for different locations?",
+            "name": "Turnover"
+          }
+        ]
+      },
+      "behaviorEventsScore": {
+        "suspiciousEventScoreList": [
+          {
+            "idea": "It is to be defined, how to catch it",
+            "algorithm": [
+              "Go through all events, apply weight and decay and summarize",
+              "After a limitation term, move events from actual table to archive"
+            ],
+            "contribution": "tailContribution + eventsNumber",
+            "term": "360",
+            "weight": "-2.0",
+            "decay": "exp(-ln(2)/30*T)",
+            "issue": "When the day changes? It should be different for different locations?",
+            "name": "IncorrectTransaction"
+          },
+          {
+            "idea": "It is to be defined, how to catch it",
+            "algorithm": [
+              "Go through all events, apply weight and decay and summarize",
+              "After a limitation term, move events from actual table to archive"
+            ],
+            "contribution": "tailContribution + eventsNumber",
+            "term": "360",
+            "weight": "-10.0",
+            "decay": "exp(-ln(2)/90*T)",
+            "issue": "When the day changes? It should be different for different locations?",
+            "name": "DoubleSpending"
+          },
+          {
+            "comment": "TBD",
+            "name": "ConfiramationEvading"
+          },
+          {
+            "comment": "TBD",
+            "name": "SmartContractExecutionEvading"
+          }
+        ]
+      },
+      "compensableEventsScore": {
+        "compensableEventScoreList": []
+      },
+      "behaviorHighFrequencyEventsScore": {
+        "highFrequencyEventsScoreList": []
+      }
     }
   ]
 }

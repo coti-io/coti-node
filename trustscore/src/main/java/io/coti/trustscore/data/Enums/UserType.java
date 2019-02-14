@@ -4,7 +4,8 @@ public enum UserType {
     MERCHANT("merchant"),
     CONSUMER("consumer"),
     FULL_NODE("fullnode"),
-    ARBITRATOR("arbitrator");
+    ARBITRATOR("arbitrator"),
+    DSP_NODE("dspnode");
 
     private String text;
 
