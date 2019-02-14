@@ -1,19 +1,18 @@
 package io.coti.fullnode.services;
 
 import io.coti.basenode.communication.interfaces.ISender;
-import io.coti.basenode.crypto.ClusterStampConsensusResultCrypto;
 import io.coti.basenode.crypto.ClusterStampCrypto;
 import io.coti.basenode.crypto.ClusterStampStateCrypto;
 import io.coti.basenode.data.*;
-import io.coti.basenode.model.ClusterStamps;
 import io.coti.basenode.services.BaseNodeClusterStampService;
+import io.coti.basenode.services.TransactionHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -28,16 +27,19 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Autowired
     private ClusterStampStateCrypto clusterStampStateCrypto;
     @Autowired
-    private ClusterStampConsensusResultCrypto clusterStampConsensusResultCrypto;
-    @Autowired
     private ISender sender;
     @Autowired
-    private ClusterStamps clusterStamps;
-    @Autowired
     private ClusterStampCrypto clusterStampCrypto;
+
+    @Autowired
+    TransactionHelper transactionHelper;
+
+    private List<TransactionData> clusterStampTransactions;
+
     @PostConstruct
     private void init(){
         isReadyForClusterStamp = false;
+        clusterStampTransactions = new ArrayList<>();
     }
 
     public void prepareForClusterStamp(ClusterStampPreparationData clusterStampPreparationData) {
@@ -59,7 +61,28 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     public void newClusterStamp(ClusterStampData clusterStampData) {
 
         if(clusterStampCrypto.verifySignature(clusterStampData)) {
-            clusterStamp.put(clusterStampData);
+            clusterStamps.put(clusterStampData);
         }
+    }
+
+    public void addClusterStampTransaction(TransactionData clusterStampTransaction){
+        clusterStampTransactions.add(clusterStampTransaction);
+    }
+
+    @Override
+    public void handleClusterStampConsensusResult(ClusterStampConsensusResult clusterStampConsensusResult) {
+        super.handleClusterStampConsensusResult(clusterStampConsensusResult);
+        if(!clusterStampTransactions.isEmpty()){
+            clusterStampTransactions.forEach( transaction -> {
+                handleUnfinishedClusterStampTransaction(transaction);
+                clusterStampTransactions.remove(transaction);
+            });
+        }
+    }
+
+    private void handleUnfinishedClusterStampTransaction(TransactionData transactionData){
+        final TransactionData finalTransactionData = transactionData;
+        receivingServerAddresses.forEach(address -> sender.send(finalTransactionData, address));
+        transactionHelper.setTransactionStateToFinished(transactionData);
     }
 }

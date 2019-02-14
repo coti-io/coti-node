@@ -46,7 +46,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     private int replyTimeOut;
     private int readyForClusterStampMsgCount;
-    private boolean isReadyForClusterStamp;
 
     @PostConstruct
     private void init() {
@@ -131,7 +130,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             sender.send(dspClusterStampVoteData, receivingZerospendAddress);
 
             if(validClusterStamp) {
-                clusterStamp.put(clusterStampData);
+                clusterStamps.put(clusterStampData);
             }
         }
     }
@@ -148,8 +147,8 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     }
 
     @Override
-    public void newClusterStampConsensusResult(ClusterStampConsensusResult clusterStampConsensusResult) {
-        super.newClusterStampConsensusResult(clusterStampConsensusResult);
+    public void handleClusterStampConsensusResult(ClusterStampConsensusResult clusterStampConsensusResult) {
+        super.handleClusterStampConsensusResult(clusterStampConsensusResult);
         propagationPublisher.propagate(clusterStampConsensusResult, Arrays.asList(NodeType.FullNode));
     }
 }

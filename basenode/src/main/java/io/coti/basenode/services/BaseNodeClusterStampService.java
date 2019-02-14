@@ -3,7 +3,7 @@ package io.coti.basenode.services;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.crypto.ClusterStampConsensusResultCrypto;
 import io.coti.basenode.data.*;
-import io.coti.basenode.model.ClusterStamp;
+import io.coti.basenode.model.ClusterStamps;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IDspVoteService;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +28,7 @@ public class BaseNodeClusterStampService {
     @Autowired
     protected Transactions transactions;
     @Autowired
-    protected ClusterStamp clusterStamp;
+    protected ClusterStamps clusterStamps;
 
     protected boolean isReadyForClusterStamp;
 
@@ -53,13 +53,13 @@ public class BaseNodeClusterStampService {
         return unconfirmedTransactions;
     }
 
-    public void newClusterStampConsensusResult(ClusterStampConsensusResult clusterStampConsensusResult) {
+    public void handleClusterStampConsensusResult(ClusterStampConsensusResult clusterStampConsensusResult) {
 
         if(clusterStampConsensusResultCrypto.verifySignature(clusterStampConsensusResult) && clusterStampConsensusResult.isDspConsensus()) {
 
-            ClusterStampData clusterStampData = clusterStamp.getByHash(clusterStampConsensusResult.getHash());
+            ClusterStampData clusterStampData = clusterStamps.getByHash(clusterStampConsensusResult.getHash());
             clusterStampData.setClusterStampConsensusResult(clusterStampConsensusResult);
-            clusterStamp.put(clusterStampData);
+            clusterStamps.put(clusterStampData);
 
             isReadyForClusterStamp = false;
             transactions.deleteAll();
