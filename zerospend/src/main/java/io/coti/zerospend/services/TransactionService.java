@@ -16,7 +16,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
-        if( !clusterStampService.isClusterStampInProgress() ) {
+        if( !clusterStampService.isReadyForClusterStamp() ) {
             dspVoteService.preparePropagatedTransactionForVoting(transactionData);
         }
     }

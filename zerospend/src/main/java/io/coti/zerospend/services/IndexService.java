@@ -3,7 +3,6 @@ package io.coti.zerospend.services;
 import io.coti.basenode.crypto.ClusterStampStateCrypto;
 import io.coti.basenode.data.ClusterStampPreparationData;
 import io.coti.basenode.services.BaseNodeIndexService;
-import io.coti.basenode.services.interfaces.IClusterStampService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,11 +18,11 @@ public class IndexService extends BaseNodeIndexService {
     private ClusterStampStateCrypto clusterStampStateCrypto;
 
     @Autowired
-    private IClusterStampService clusterStampService;
+    private ClusterStampService clusterStampService;
 
     @Autowired
     IndexService(@Value("${clusterstamp.transaction.ratio}") final int ratio,
-                 @Value("${clusterstamp.genesis.transactions}") final int genesisTransactions){
+                 @Value("${clusterstamp.genesis.transactions}") final int genesisTransactions) {
         CLUSTER_STAMP_TRANSACTION_RATIO = ratio;
         GENESIS_TRANSACTIONS = genesisTransactions;
     }

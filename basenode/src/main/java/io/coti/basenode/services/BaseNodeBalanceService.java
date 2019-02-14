@@ -151,4 +151,8 @@ public class BaseNodeBalanceService implements IBalanceService {
         preBalanceMap.putIfAbsent(addressHash, amount);
     }
 
+    public Map<Hash, BigDecimal> getBalanceMap() {
+        return balanceMap;
+    }
+
 }

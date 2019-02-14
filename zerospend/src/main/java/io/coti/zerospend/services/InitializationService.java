@@ -1,5 +1,6 @@
 package io.coti.zerospend.services;
 
+import io.coti.basenode.data.DspClusterStampVoteData;
 import io.coti.basenode.data.DspReadyForClusterStampData;
 import io.coti.basenode.data.DspVote;
 import io.coti.basenode.data.NodeType;
@@ -56,6 +57,8 @@ public class InitializationService {
                 dspVoteService.receiveDspVote((DspVote) data));
         classNameToReceiverHandler.put(DspReadyForClusterStampData.class.getName(), data ->
                 clusterStampService.handleDspNodeReadyForClusterStampMessage((DspReadyForClusterStampData) data));
+        classNameToReceiverHandler.put(DspClusterStampVoteData.class.getName(), data ->
+                clusterStampService.handleDspClusterStampVote((DspClusterStampVoteData) data));
         communicationService.initReceiver(receivingPort, classNameToReceiverHandler);
     }
 

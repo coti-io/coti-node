@@ -40,14 +40,12 @@ public class DspVoteService extends BaseNodeDspVoteService {
     private DspConsensusCrypto dspConsensusCrypto;
     @Autowired
     private ClusterStampService clusterStampService;
-    private ConcurrentMap<Hash, List<DspVote>> transactionHashToVotesListMapping;
     private static final String NODE_HASH_ENDPOINT = "/nodeHash";
     private List<Hash> currentLiveDspNodes;
     private Thread sumAndSaveVotesThread;
 
     @Override
     public void init() {
-        transactionHashToVotesListMapping = new ConcurrentHashMap<>();
         super.init();
         sumAndSaveVotesThread = new Thread(() -> sumAndSaveVotes());
         sumAndSaveVotesThread.start();
@@ -133,8 +131,6 @@ public class DspVoteService extends BaseNodeDspVoteService {
                 Thread.currentThread().interrupt();
             }
         }
-
-        clusterStampService.makeAndPropagateClusterStamp();
     }
 
     private void sumAndSaveVotesHandler(Map.Entry<Hash, List<DspVote>> transactionHashToVotesListEntrySet) {
@@ -211,10 +207,6 @@ public class DspVoteService extends BaseNodeDspVoteService {
 
     @Override
     public void continueHandleVoteConclusion(DspConsensusResult dspConsensusResult) {
-    }
-
-    public ConcurrentMap<Hash, List<DspVote>> getTransactionHashToVotesListMapping() {
-        return transactionHashToVotesListMapping;
     }
 
     public void stopSumAndSaveVotes() {

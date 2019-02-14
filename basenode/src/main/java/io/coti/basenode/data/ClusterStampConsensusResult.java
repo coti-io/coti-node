@@ -5,6 +5,7 @@ import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -16,8 +17,9 @@ public class ClusterStampConsensusResult implements IPropagatable, ISignable, IS
     private Hash zeroSpendServerHash;
     private SignatureData zeroSpendSignature;
 
-    public ClusterStampConsensusResult(Hash transactionHash) {
-        this.clusterStampHash = transactionHash;
+    public ClusterStampConsensusResult(Hash clusterStampHash) {
+        this.clusterStampHash = clusterStampHash;
+        dspClusterStampVoteDataList = new ArrayList<>();
     }
 
     private ClusterStampConsensusResult() {
@@ -51,5 +53,9 @@ public class ClusterStampConsensusResult implements IPropagatable, ISignable, IS
     @Override
     public void setSignature(SignatureData signature) {
         zeroSpendSignature = signature;
+    }
+
+    public boolean isDspConsensus() {
+        return isDspConsensus;
     }
 }

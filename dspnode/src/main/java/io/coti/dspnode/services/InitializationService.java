@@ -4,7 +4,6 @@ import io.coti.basenode.communication.Channel;
 import io.coti.basenode.data.*;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
-import io.coti.basenode.services.interfaces.IClusterStampService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -34,7 +33,7 @@ public class InitializationService {
     @Autowired
     private CommunicationService communicationService;
     @Autowired
-    private IClusterStampService clusterStampService;
+    private ClusterStampService clusterStampService;
 
     @PostConstruct
     public void init() {
@@ -67,6 +66,8 @@ public class InitializationService {
                 clusterStampService.prepareForClusterStamp((ClusterStampPreparationData) data));
         classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampData.class, NodeType.DspNode), data ->
                 clusterStampService.newClusterStamp((ClusterStampData) data));
+        classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampConsensusResult.class, NodeType.DspNode), data ->
+                clusterStampService.newClusterStampConsensusResult((ClusterStampConsensusResult) data));
 
         communicationService.initSubscriber(propagationServerAddresses, NodeType.DspNode, classNameToSubscriberHandler);
     }
