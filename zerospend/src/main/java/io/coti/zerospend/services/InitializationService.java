@@ -40,15 +40,7 @@ public class InitializationService {
 
     @PostConstruct
     public void init() {
-        HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping = new HashMap<>();
-        classNameToReceiverHandlerMapping.put(DspVote.class.getName(), data ->
-                dspVoteService.receiveDspVote((DspVote) data));
-        classNameToReceiverHandlerMapping.put(DspReadyForClusterStampData.class.getName(), data ->
-                clusterStampService.handleDspNodeReadyForClusterStampMessage((DspReadyForClusterStampData) data));
-        classNameToReceiverHandlerMapping.put(DspClusterStampVoteData.class.getName(), data ->
-                clusterStampService.handleDspClusterStampVote((DspClusterStampVoteData) data));
-
-        communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
+        initReceiver();
         initSubscriber();
         communicationService.initPropagator(propagationPort);
 
@@ -57,6 +49,17 @@ public class InitializationService {
         if (transactions.isEmpty()) {
             transactionCreationService.createGenesisTransactions();
         }
+    }
+
+    public void initReceiver(){
+        HashMap<String, Consumer<Object>> classNameToReceiverHandler = new HashMap<>();
+        classNameToReceiverHandler.put(DspVote.class.getName(), data ->
+                dspVoteService.receiveDspVote((DspVote) data));
+        classNameToReceiverHandler.put(DspReadyForClusterStampData.class.getName(), data ->
+                clusterStampService.handleDspNodeReadyForClusterStampMessage((DspReadyForClusterStampData) data));
+        classNameToReceiverHandler.put(DspClusterStampVoteData.class.getName(), data ->
+                clusterStampService.handleDspClusterStampVote((DspClusterStampVoteData) data));
+        communicationService.initReceiver(receivingPort, classNameToReceiverHandler);
     }
 
     public void initSubscriber(){

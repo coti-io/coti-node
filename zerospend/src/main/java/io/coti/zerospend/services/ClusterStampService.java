@@ -6,7 +6,6 @@ import io.coti.basenode.crypto.ClusterStampCrypto;
 import io.coti.basenode.crypto.ClusterStampStateCrypto;
 import io.coti.basenode.crypto.DspClusterStampVoteCrypto;
 import io.coti.basenode.data.*;
-import io.coti.basenode.model.ClusterStamp;
 import io.coti.basenode.services.BaseNodeBalanceService;
 import io.coti.basenode.services.BaseNodeClusterStampService;
 import lombok.extern.slf4j.Slf4j;
@@ -37,13 +36,13 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Autowired
     private ClusterStampConsensusResultCrypto clusterStampConsensusResultCrypto;
     @Autowired
-    private ClusterStamp clusterStamp;
-    @Autowired
     private ClusterStampStateCrypto clusterStampStateCrypto;
     @Autowired
     private ClusterStampCrypto clusterStampCrypto;
+
     @Value("${clusterstamp.reply.timeout}")
     private int replyTimeOut;
+
     private ClusterStampData currentClusterStamp;
 
     @PostConstruct
@@ -62,7 +61,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         try {
             Thread.sleep(replyTimeOut);
             if(!isReadyForClusterStamp) {
-                log.info("Zero spend starting cluster stamp after timer expired.");
+                log.info("Zero spend started cluster stamp after timer has expired.");
                 isReadyForClusterStamp = true;
                 makeAndPropagateClusterStamp();
             }
@@ -80,7 +79,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
                 log.warn("\'Dsp Node Ready For Cluster Stamp\' was already sent by the sender of this message");
                 return;
             }
-
             currentClusterStamp.getDspReadyForClusterStampDataList().add(dspReadyForClusterStampData);
 
             if ( currentClusterStamp.getDspReadyForClusterStampDataList().size() == NUMBER_OF_DSP_NODES ) {
@@ -104,7 +102,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         propagationPublisher.propagate(clusterStampData, Arrays.asList(NodeType.DspNode));
 
         currentClusterStamp = new ClusterStampData();
-        clusterStamp.put(clusterStampData);
+        clusterStamps.put(clusterStampData);
         log.info("Restart DSP vote service to sum and save DSP votes, and starvation service");
     }
 
@@ -112,7 +110,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
         if(dspClusterStampVoteCrypto.verifySignature(dspClusterStampVoteData)) {
 
-            ClusterStampData clusterStampData = clusterStamp.getByHash(dspClusterStampVoteData.getHash());
+            ClusterStampData clusterStampData = clusterStamps.getByHash(dspClusterStampVoteData.getHash());
             clusterStampData.getClusterStampConsensusResult().getDspClusterStampVoteDataList().add(dspClusterStampVoteData);
 
             int validClusterStampVotes = 0;
@@ -133,7 +131,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
                 sourceStarvationService.startCheckSourcesStarvation();
             }
 
-            clusterStamp.put(clusterStampData);
+            clusterStamps.put(clusterStampData);
         }
     }
 }

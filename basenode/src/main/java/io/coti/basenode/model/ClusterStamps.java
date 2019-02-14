@@ -6,9 +6,9 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 
 @Service
-public class ClusterStamp extends Collection<ClusterStampData> {
+public class ClusterStamps extends Collection<ClusterStampData> {
 
-    public ClusterStamp() {
+    public ClusterStamps() {
     }
 
     @PostConstruct

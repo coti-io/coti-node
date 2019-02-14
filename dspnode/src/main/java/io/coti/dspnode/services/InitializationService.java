@@ -67,7 +67,7 @@ public class InitializationService {
         classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampData.class, NodeType.DspNode), data ->
                 clusterStampService.newClusterStamp((ClusterStampData) data));
         classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampConsensusResult.class, NodeType.DspNode), data ->
-                clusterStampService.newClusterStampConsensusResult((ClusterStampConsensusResult) data));
+                clusterStampService.handleClusterStampConsensusResult((ClusterStampConsensusResult) data));
 
         communicationService.initSubscriber(propagationServerAddresses, NodeType.DspNode, classNameToSubscriberHandler);
     }

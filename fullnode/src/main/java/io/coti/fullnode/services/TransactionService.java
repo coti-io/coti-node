@@ -81,12 +81,6 @@ public class TransactionService extends BaseNodeTransactionService {
                 return validationResponseOpt.get();
             }
 
-            //TODO 2/4/2019 astolia:  handle transactions here is case snapshot is in progeress.
-            // add them to a different collection with status CLUSTERSTAMP
-            if(clusterStampService.isReadyForClusterStamp()){
-
-            }
-
             selectSources(transactionData);
             if (!transactionData.hasSources()) {
                 int selectSourceRetryCount = 0;
@@ -119,20 +113,33 @@ public class TransactionService extends BaseNodeTransactionService {
 
             transactionData.setAttachmentTime(new Date());
 
+
+
+
             transactionHelper.attachTransactionToCluster(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
-            webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
-            final TransactionData finalTransactionData = transactionData;
 
+            if(clusterStampService.isReadyForClusterStamp()){
+                webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
+                clusterStampService.addClusterStampTransaction(transactionData);
+                return ResponseEntity
+                        .status(HttpStatus.CREATED)
+                        .body(new AddTransactionResponse(
+                                STATUS_SUCCESS,
+                                TRANSACTION_CLUSTERSTAMP));
+            }
+            else{
+                webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
+                final TransactionData finalTransactionData = transactionData;
 
-            receivingServerAddresses.forEach(address -> sender.send(finalTransactionData, address));
-            transactionHelper.setTransactionStateToFinished(transactionData);
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(new AddTransactionResponse(
-                            STATUS_SUCCESS,
-                            TRANSACTION_CREATED_MESSAGE));
-
+                receivingServerAddresses.forEach(address -> sender.send(finalTransactionData, address));
+                transactionHelper.setTransactionStateToFinished(transactionData);
+                return ResponseEntity
+                        .status(HttpStatus.CREATED)
+                        .body(new AddTransactionResponse(
+                                STATUS_SUCCESS,
+                                TRANSACTION_CREATED_MESSAGE));
+            }
         } catch (Exception ex) {
             log.error("Exception while adding transaction: {}", transactionData.getHash(), ex);
             throw new TransactionException(ex);
