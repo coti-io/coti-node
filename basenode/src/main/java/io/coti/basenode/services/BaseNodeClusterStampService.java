@@ -5,6 +5,7 @@ import io.coti.basenode.crypto.ClusterStampConsensusResultCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.model.ClusterStamps;
 import io.coti.basenode.model.Transactions;
+import io.coti.basenode.services.interfaces.IClusterStampService;
 import io.coti.basenode.services.interfaces.IDspVoteService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +16,7 @@ import java.util.*;
 
 @Slf4j
 @Service
-public class BaseNodeClusterStampService {
+public class BaseNodeClusterStampService implements IClusterStampService {
 
     @Autowired
     protected IPropagationPublisher propagationPublisher;
@@ -30,10 +31,25 @@ public class BaseNodeClusterStampService {
     @Autowired
     protected ClusterStamps clusterStamps;
 
-    protected boolean isReadyForClusterStamp;
+    protected boolean amIReadyForClusterStamp;
+    protected boolean isMyParentNodeReadyForClusterStamp;
 
-    public boolean isReadyForClusterStamp() {
-        return isReadyForClusterStamp;
+    protected void init() {
+        amIReadyForClusterStamp = false;
+        isMyParentNodeReadyForClusterStamp = false;
+    }
+
+    public boolean amIReadyForClusterStamp() {
+        return amIReadyForClusterStamp;
+    }
+
+    /**
+     * Parent node for full node is his dsp node
+     * Parent node for dsp node is zero spend
+     * @return boolean
+     */
+    public boolean isMyParentNodeReadyForClusterStamp() {
+        return isMyParentNodeReadyForClusterStamp;
     }
 
     protected Map<Hash, TransactionData> getUnconfirmedTransactions() {
@@ -65,7 +81,7 @@ public class BaseNodeClusterStampService {
             clusterStampData.setClusterStampConsensusResult(clusterStampConsensusResult);
             clusterStamps.put(clusterStampData);
 
-            isReadyForClusterStamp = false;
+            amIReadyForClusterStamp = false;
             transactions.deleteAll();
             Iterator it = clusterStampData.getUnconfirmedTransactions().entrySet().iterator();
             while (it.hasNext()) {

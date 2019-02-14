@@ -44,15 +44,17 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private int replyTimeOut;
 
     private ClusterStampData currentClusterStamp;
+    private long totalConfirmedTransactionsCount;
 
     @PostConstruct
-    private void init() {
-        isReadyForClusterStamp = false;
+    protected void init() {
+        super.init();
         currentClusterStamp = new ClusterStampData();
     }
 
     public void prepareForClusterStamp(ClusterStampPreparationData clusterStampPreparationData) {
         log.debug("Start preparation of ZS for cluster stamp");
+        totalConfirmedTransactionsCount = clusterStampPreparationData.getTotalConfirmedTransactionsCount();
         propagationPublisher.propagate(clusterStampPreparationData, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer));
         CompletableFuture.runAsync(this::initTimer);
     }
@@ -60,9 +62,9 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private void initTimer() {
         try {
             Thread.sleep(replyTimeOut);
-            if(!isReadyForClusterStamp) {
+            if(!amIReadyForClusterStamp) {
                 log.info("Zero spend started cluster stamp after timer has expired.");
-                isReadyForClusterStamp = true;
+                amIReadyForClusterStamp = true;
                 makeAndPropagateClusterStamp();
             }
         } catch (InterruptedException e) {
@@ -73,7 +75,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     public void handleDspNodeReadyForClusterStampMessage(DspReadyForClusterStampData dspReadyForClusterStampData) {
 
         log.debug("\'Ready for cluster stamp\' propagated message received from DSP to ZS");
-        if(!isReadyForClusterStamp && clusterStampStateCrypto.verifySignature(dspReadyForClusterStampData)) {
+        if(!amIReadyForClusterStamp && clusterStampStateCrypto.verifySignature(dspReadyForClusterStampData)) {
 
             if(currentClusterStamp.getDspReadyForClusterStampDataList().contains(dspReadyForClusterStampData)) {
                 log.warn("\'Dsp Node Ready For Cluster Stamp\' was already sent by the sender of this message");
@@ -92,6 +94,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
         dspVoteService.stopSumAndSaveVotes();
         sourceStarvationService.stopCheckSourcesStarvation();
+        propagateClusterStampInProcessData();
 
         ClusterStampData clusterStampData = currentClusterStamp;
         clusterStampData.setBalanceMap(balanceService.getBalanceMap());
@@ -101,6 +104,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         clusterStampCrypto.signMessage(clusterStampData);
         propagationPublisher.propagate(clusterStampData, Arrays.asList(NodeType.DspNode));
 
+        amIReadyForClusterStamp = true;
         currentClusterStamp = new ClusterStampData();
         clusterStamps.put(clusterStampData);
         log.info("Restart DSP vote service to sum and save DSP votes, and starvation service");
@@ -125,7 +129,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
                 clusterStampConsensusResultCrypto.signMessage(clusterStampData.getClusterStampConsensusResult());
 
                 propagationPublisher.propagate(clusterStampData.getClusterStampConsensusResult(), Arrays.asList(NodeType.DspNode));
-                this.isReadyForClusterStamp = false;
+                this.amIReadyForClusterStamp = false;
 
                 dspVoteService.startSumAndSaveVotes();
                 sourceStarvationService.startCheckSourcesStarvation();
@@ -133,5 +137,11 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
             clusterStamps.put(clusterStampData);
         }
+    }
+
+    private void propagateClusterStampInProcessData() {
+        ZeroSpendIsReadyForClusterStampData zerospendIsReadyForClusterStampData = new ZeroSpendIsReadyForClusterStampData(totalConfirmedTransactionsCount);
+        zerospendIsReadyForClusterStampData.setDspReadyForClusterStampDataList(currentClusterStamp.getDspReadyForClusterStampDataList());
+        propagationPublisher.propagate(zerospendIsReadyForClusterStampData, Arrays.asList(NodeType.DspNode));
     }
 }

@@ -1,10 +1,8 @@
 package io.coti.fullnode.services;
 
 import io.coti.basenode.communication.Channel;
-import io.coti.basenode.data.ClusterStampConsensusResult;
-import io.coti.basenode.data.ClusterStampData;
-import io.coti.basenode.data.ClusterStampPreparationData;
-import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.*;
+import io.coti.basenode.model.DspReadyForClusterStamp;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +42,8 @@ public class InitializationService {
 
         classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampPreparationData.class, NodeType.FullNode), data ->
                 clusterStampService.prepareForClusterStamp((ClusterStampPreparationData) data));
+        classNameToSubscriberHandler.put(Channel.getChannelString(DspReadyForClusterStampData.class, NodeType.FullNode), data ->
+                clusterStampService.handleDspReadyForClusterStampData((DspReadyForClusterStampData) data));
         classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampData.class, NodeType.FullNode), data ->
                 clusterStampService.newClusterStamp((ClusterStampData) data));
         classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampConsensusResult.class, NodeType.FullNode), data ->

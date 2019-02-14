@@ -15,9 +15,9 @@ public class DspReadyForClusterStampData extends ClusterStampStateData {
     public DspReadyForClusterStampData() {
     }
 
-    public DspReadyForClusterStampData(long lastDspConfirmed) {
-        this.clusterStampHash = new Hash(lastDspConfirmed);
-        this.lastDspConfirmed = lastDspConfirmed;
+    public DspReadyForClusterStampData(long totalConfirmedTransactionsCount) {
+        this.clusterStampHash = new Hash(totalConfirmedTransactionsCount);
+        this.totalConfirmedTransactionsCount = totalConfirmedTransactionsCount;
         this.fullNodeReadyForClusterStampDataList = new ArrayList<>();
     }
 }

@@ -30,15 +30,14 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private ISender sender;
     @Autowired
     private ClusterStampCrypto clusterStampCrypto;
-
     @Autowired
     TransactionHelper transactionHelper;
 
     private List<TransactionData> clusterStampTransactions;
 
     @PostConstruct
-    private void init(){
-        isReadyForClusterStamp = false;
+    protected void init(){
+        super.init();
         clusterStampTransactions = new ArrayList<>();
     }
 
@@ -46,15 +45,21 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
         log.debug("Prepare for cluster stamp propagated message received from DSP to FN");
 
-        if(!isReadyForClusterStamp && clusterStampStateCrypto.verifySignature(clusterStampPreparationData)) {
+        if(!amIReadyForClusterStamp && clusterStampStateCrypto.verifySignature(clusterStampPreparationData)) {
             FullNodeReadyForClusterStampData fullNodeReadyForClusterStampData = new FullNodeReadyForClusterStampData(clusterStampPreparationData.getTotalConfirmedTransactionsCount());
             clusterStampStateCrypto.signMessage(fullNodeReadyForClusterStampData);
             receivingServerAddresses.forEach(address -> sender.send(fullNodeReadyForClusterStampData, address));
-            isReadyForClusterStamp = true;
+            amIReadyForClusterStamp = true;
         }
         else {
             log.info("Full Node is already preparing for cluster stamp");
             //TODO 2/4/2019 astolia: Send to DSP that snapshot prepare is in process?
+        }
+    }
+
+    public void handleDspReadyForClusterStampData(DspReadyForClusterStampData dspReadyForClusterStampData) {
+        if(clusterStampStateCrypto.verifySignature(dspReadyForClusterStampData)) {
+            isMyParentNodeReadyForClusterStamp = true;
         }
     }
 

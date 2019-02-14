@@ -46,7 +46,7 @@ public class TransactionService extends BaseNodeTransactionService {
     private NotTotalConfirmedTransactionHashes notTotalConfirmedTransactionHashes;
 
     public String handleNewTransactionFromFullNode(TransactionData transactionData) {
-        if(clusterStampService.isReadyForClusterStamp()){
+        if(clusterStampService.amIReadyForClusterStamp()){
             return "Waiting for cluster stamp";
         }
         try {
@@ -83,7 +83,7 @@ public class TransactionService extends BaseNodeTransactionService {
         if (!isValidatorRunning.compareAndSet(false, true)) {
             return;
         }
-        while (!clusterStampService.isReadyForClusterStamp() && !transactionsToValidate.isEmpty()) {
+        while (!clusterStampService.amIReadyForClusterStamp() && !transactionsToValidate.isEmpty()) {
             TransactionData transactionData = transactionsToValidate.remove();
             log.debug("DSP Fully Checking transaction: {}", transactionData.getHash());
             DspVote dspVote = new DspVote(

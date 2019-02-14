@@ -48,8 +48,8 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private int readyForClusterStampMsgCount;
 
     @PostConstruct
-    private void init() {
-        isReadyForClusterStamp = false;
+    protected void init() {
+        super.init();
         readyForClusterStampMsgCount = 0;
     }
 
@@ -65,7 +65,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private void initTimer(){
         try {
             Thread.sleep(replyTimeOut);
-            if(!isReadyForClusterStamp) {
+            if(!amIReadyForClusterStamp) {
                 log.info("DSP sending it's ready after timer expired");
                 sendDspReadyForClusterStamp(new DspReadyForClusterStampData());
             }
@@ -75,7 +75,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     }
 
     private boolean validatePrepareForClusterStampRequest(ClusterStampPreparationData clusterStampPreparationData){
-        if(isReadyForClusterStamp){
+        if(amIReadyForClusterStamp){
             log.info("Preparation for cluster stamp is already in process");
             return false;
         }
@@ -89,7 +89,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     public void handleFullNodeReadyForClusterStampMessage(FullNodeReadyForClusterStampData fullNodeReadyForClusterStampData) {
 
         log.debug("\'Ready for cluster stamp\' propagated message received from FN to DSP");
-        if(!isReadyForClusterStamp && clusterStampStateCrypto.verifySignature(fullNodeReadyForClusterStampData)) {
+        if(!amIReadyForClusterStamp && clusterStampStateCrypto.verifySignature(fullNodeReadyForClusterStampData)) {
 
             DspReadyForClusterStampData dspReadyForClusterStampData = dspReadyForClusterStamp.getByHash(fullNodeReadyForClusterStampData.getHash());
 
@@ -134,16 +134,19 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         }
     }
 
-    public boolean isReadyForClusterStamp() {
-        return isReadyForClusterStamp;
-    }
-
     private void sendDspReadyForClusterStamp(DspReadyForClusterStampData dspReadyForClusterStampData) {
 
-        isReadyForClusterStamp = true;
+        amIReadyForClusterStamp = true;
         clusterStampStateCrypto.signMessage(dspReadyForClusterStampData);
+        propagationPublisher.propagate(dspReadyForClusterStampData, Arrays.asList(NodeType.FullNode));
         sender.send(dspReadyForClusterStampData, receivingZerospendAddress);
         readyForClusterStampMsgCount = 0;
+    }
+
+    public void handleZeroSpendIsReadyForClusterStampData(ZeroSpendIsReadyForClusterStampData zerospendIsReadyForClusterStampData){
+        if(clusterStampStateCrypto.verifySignature(zerospendIsReadyForClusterStampData)) {
+            isMyParentNodeReadyForClusterStamp = true;
+        }
     }
 
     @Override
