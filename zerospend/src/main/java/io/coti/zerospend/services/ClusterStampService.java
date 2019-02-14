@@ -3,7 +3,7 @@ package io.coti.zerospend.services;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.crypto.ClusterStampStateCrypto;
 import io.coti.basenode.data.*;
-import io.coti.basenode.model.ClusterStamp;
+import io.coti.basenode.model.ClusterStamps;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeClusterStampService;
 import io.coti.basenode.services.TccConfirmationService;
@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,18 +40,22 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Autowired
     private ClusterStampStateCrypto clusterStampStateCrypto;
 
+    @Autowired
+    private ClusterStamps clusterStamps;
+
     @Value("${clusterstamp.reply.timeout}")
     private int replyTimeOut;
 
     private ClusterStampData currentClusterStamp;
 
-    private boolean clusterStampInProgress;
+
+    private boolean isClusterStampInProgress;
 
 
 
     @PostConstruct
     private void init() {
-        clusterStampInProgress = false;
+        isClusterStampInProgress = false;
         currentClusterStamp = new ClusterStampData(new Hash("inProgress"));
     }
 
@@ -66,9 +69,9 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private void initTimer(){
         try {
             Thread.sleep(replyTimeOut);
-            if(!clusterStampInProgress){
+            if(!isClusterStampInProgress){
                 log.info("Zero spend starting cluster stamp after timer expired.");
-                clusterStampInProgress = true;
+                isClusterStampInProgress = true;
                 //TODO 2/12/2019 astolia: Start cluster stamp
             }
         } catch (InterruptedException e) {
@@ -80,12 +83,14 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     public void handleDspNodeReadyForClusterStampMessage(DspReadyForClusterStampData dspReadyForClusterStampData) {
 
         log.debug("\'Ready for cluster stamp\' propagated message received from DSP to ZS");
-        if(!clusterStampInProgress && clusterStampStateCrypto.verifySignature(dspReadyForClusterStampData)) {
+        if(!isClusterStampInProgress && clusterStampStateCrypto.verifySignature(dspReadyForClusterStampData)) {
             if(currentClusterStamp.getDspReadyForClusterStampDataList().contains(dspReadyForClusterStampData)){
                 log.warn("Message from DSP was already sent.");
                 return;
             }
+            //TODO 2/13/2019 astolia: check regarding 'clusterStamps'. take a look at DSPNODE:ClusterStampService
             currentClusterStamp.getDspReadyForClusterStampDataList().add(dspReadyForClusterStampData);
+            clusterStamps.put(currentClusterStamp);
 
             if ( currentClusterStamp.getDspReadyForClusterStampDataList().size() >= DSP_NODES_MAJORITY ) {
                 log.info("Stop dsp vote service from sum and save dsp votes");
@@ -113,7 +118,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     @Override
     public boolean isClusterStampInProgress() {
-        return clusterStampInProgress;
+        return isClusterStampInProgress;
     }
 
     private List<TransactionData> getUnconfirmedTransactions() {

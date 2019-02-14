@@ -14,7 +14,6 @@ import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.IClusterService;
-import io.coti.basenode.services.interfaces.IClusterStampService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.fullnode.http.AddTransactionRequest;
@@ -123,6 +122,9 @@ public class TransactionService extends BaseNodeTransactionService {
 
             transactionHelper.attachTransactionToCluster(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
+
+            //TODO 2/14/2019 astolia: set status here to clusterstamp?
+
             webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
             final TransactionData finalTransactionData = transactionData;
             receivingServerAddresses.forEach(address -> sender.send(finalTransactionData, address));

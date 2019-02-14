@@ -5,7 +5,7 @@ import io.coti.basenode.crypto.ClusterStampStateCrypto;
 import io.coti.basenode.data.ClusterStampData;
 import io.coti.basenode.data.ClusterStampPreparationData;
 import io.coti.basenode.data.FullNodeReadyForClusterStampData;
-import io.coti.basenode.model.ClusterStamp;
+import io.coti.basenode.model.ClusterStamps;
 import io.coti.basenode.services.BaseNodeClusterStampService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +31,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Autowired
     private ISender sender;
     @Autowired
-    private ClusterStamp clusterStamp;
+    private ClusterStamps clusterStamp;
     @PostConstruct
     private void init(){
         isClusterStampInProgress = false;
@@ -42,7 +42,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
         log.debug("Prepare for cluster stamp propagated message received from DSP to FN");
 
-        if(!isClusterStampInProgress) {
+        if(!isClusterStampInProgress && clusterStampStateCrypto.verifySignature(clusterStampPreparationData)) {
             FullNodeReadyForClusterStampData fullNodeReadyForClusterStampData = new FullNodeReadyForClusterStampData(clusterStampPreparationData.getLastDspConfirmed());
             clusterStampStateCrypto.signMessage(fullNodeReadyForClusterStampData);
             receivingServerAddresses.forEach(address -> sender.send(fullNodeReadyForClusterStampData, address));
