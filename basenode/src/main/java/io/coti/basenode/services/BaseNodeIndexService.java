@@ -6,6 +6,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class BaseNodeIndexService implements IIndexService {
 
-    public void incrementAndGetDspConfirmed(long dspConfirmed) {
+    public void incrementAndGetTotalConfirmed(long totalConfirmedTransactions) {
     }
 }

@@ -10,8 +10,8 @@ public class ClusterStampPreparationData extends ClusterStampStateData {
     public ClusterStampPreparationData() {
     }
 
-    public ClusterStampPreparationData(long lastDspConfirmed) {
-        this.clusterStampHash = new Hash(lastDspConfirmed);
-        this.lastDspConfirmed = lastDspConfirmed;
+    public ClusterStampPreparationData(long totalConfirmedTransactions) {
+        this.clusterStampHash = new Hash(totalConfirmedTransactions);
+        this.totalConfirmedTransactionsCount = totalConfirmedTransactions;
     }
 }
