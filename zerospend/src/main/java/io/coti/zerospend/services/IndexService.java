@@ -2,6 +2,7 @@ package io.coti.zerospend.services;
 
 import io.coti.basenode.crypto.ClusterStampStateCrypto;
 import io.coti.basenode.data.ClusterStampPreparationData;
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.services.BaseNodeIndexService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,9 +28,9 @@ public class IndexService extends BaseNodeIndexService {
         GENESIS_TRANSACTIONS = genesisTransactions;
     }
 
-    public void incrementAndGetDspConfirmed(long dspConfirmed) {
-        if(dspConfirmed > GENESIS_TRANSACTIONS && (dspConfirmed % CLUSTER_STAMP_TRANSACTION_RATIO == 0)) {
-            ClusterStampPreparationData clusterStampPreparationData = new ClusterStampPreparationData(dspConfirmed);
+    public void incrementAndGetTotalConfirmed(Hash transactionHash, long totalConfirmedTransactions) {
+        if(totalConfirmedTransactions > GENESIS_TRANSACTIONS && (totalConfirmedTransactions % CLUSTER_STAMP_TRANSACTION_RATIO == 0)) {
+            ClusterStampPreparationData clusterStampPreparationData = new ClusterStampPreparationData(totalConfirmedTransactions);
             clusterStampStateCrypto.signMessage(clusterStampPreparationData);
             clusterStampService.prepareForClusterStamp(clusterStampPreparationData);
         }

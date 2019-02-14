@@ -14,7 +14,7 @@ import java.util.List;
 public abstract class ClusterStampStateData implements IPropagatable, ISignable, ISignValidatable {
 
     protected Hash clusterStampHash;
-    protected long lastDspConfirmed;
+    protected long totalConfirmedTransactionsCount;
     protected Hash nodeHash;
     protected SignatureData nodeSignature;
 

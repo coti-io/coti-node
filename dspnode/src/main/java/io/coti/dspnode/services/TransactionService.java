@@ -9,6 +9,8 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
+import io.coti.dspnode.data.NotTotalConfirmedTransactionHash;
+import io.coti.dspnode.model.NotTotalConfirmedTransactionHashes;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,6 +42,8 @@ public class TransactionService extends BaseNodeTransactionService {
     private DspVoteCrypto dspVoteCrypto;
     @Autowired
     private ClusterStampService clusterStampService;
+    @Autowired
+    private NotTotalConfirmedTransactionHashes notTotalConfirmedTransactionHashes;
 
     public String handleNewTransactionFromFullNode(TransactionData transactionData) {
         if(clusterStampService.isReadyForClusterStamp()){
@@ -67,6 +71,7 @@ public class TransactionService extends BaseNodeTransactionService {
                     NodeType.FinancialServer));
             transactionHelper.setTransactionStateToFinished(transactionData);
             transactionsToValidate.add(transactionData);
+            notTotalConfirmedTransactionHashes.put(new NotTotalConfirmedTransactionHash(transactionData.getHash()));
             return "Received Transaction: " + transactionData.getHash();
         } finally {
             transactionHelper.endHandleTransaction(transactionData);
@@ -102,6 +107,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
         propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
         if (!transactionData.isZeroSpend()) {
+            notTotalConfirmedTransactionHashes.put(new NotTotalConfirmedTransactionHash(transactionData.getHash()));
             transactionsToValidate.add(transactionData);
         }
     }

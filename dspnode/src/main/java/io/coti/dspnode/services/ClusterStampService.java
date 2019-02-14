@@ -68,7 +68,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             Thread.sleep(replyTimeOut);
             if(!isReadyForClusterStamp) {
                 log.info("DSP sending it's ready after timer expired");
-                isReadyForClusterStamp = true;
                 sendDspReadyForClusterStamp(new DspReadyForClusterStampData());
             }
         } catch (InterruptedException e) {
@@ -96,7 +95,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             DspReadyForClusterStampData dspReadyForClusterStampData = dspReadyForClusterStamp.getByHash(fullNodeReadyForClusterStampData.getHash());
 
             if (dspReadyForClusterStampData == null) {
-                dspReadyForClusterStampData = new DspReadyForClusterStampData(fullNodeReadyForClusterStampData.getLastDspConfirmed());
+                dspReadyForClusterStampData = new DspReadyForClusterStampData(fullNodeReadyForClusterStampData.getTotalConfirmedTransactionsCount());
             }
             else {
                 if(dspReadyForClusterStampData.getFullNodeReadyForClusterStampDataList().contains(fullNodeReadyForClusterStampData)){
@@ -142,6 +141,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     private void sendDspReadyForClusterStamp(DspReadyForClusterStampData dspReadyForClusterStampData) {
 
+        isReadyForClusterStamp = true;
         clusterStampStateCrypto.signMessage(dspReadyForClusterStampData);
         sender.send(dspReadyForClusterStampData, receivingZerospendAddress);
         readyForClusterStampMsgCount = 0;

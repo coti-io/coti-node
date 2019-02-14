@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -45,7 +44,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         log.debug("Prepare for cluster stamp propagated message received from DSP to FN");
 
         if(!isReadyForClusterStamp) {
-            FullNodeReadyForClusterStampData fullNodeReadyForClusterStampData = new FullNodeReadyForClusterStampData(clusterStampPreparationData.getLastDspConfirmed());
+            FullNodeReadyForClusterStampData fullNodeReadyForClusterStampData = new FullNodeReadyForClusterStampData(clusterStampPreparationData.getTotalConfirmedTransactionsCount());
             clusterStampStateCrypto.signMessage(fullNodeReadyForClusterStampData);
             receivingServerAddresses.forEach(address -> sender.send(fullNodeReadyForClusterStampData, address));
             isReadyForClusterStamp = true;

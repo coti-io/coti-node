@@ -79,7 +79,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                 return;
             }
             if (transactionHelper.isDspConfirmed(transactionData)) {
-                incrementAndGetDspConfirmed();
+                dspConfirmed.incrementAndGet();
             }
         }
         if (transactionHelper.isConfirmed(transactionData)) {
@@ -107,14 +107,14 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         }
     }
 
-    private void incrementAndGetDspConfirmed() {
-        indexService.incrementAndGetDspConfirmed(dspConfirmed.incrementAndGet());
+    private void incrementAndGetTotalConfirmed(Hash transactionHash) {
+        indexService.incrementAndGetTotalConfirmed(transactionHash, totalConfirmed.incrementAndGet());
     }
 
     private void processConfirmedTransaction(TransactionData transactionData) {
         transactionData.setTransactionConsensusUpdateTime(new Date());
         transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount()));
-        totalConfirmed.incrementAndGet();
+        incrementAndGetTotalConfirmed(transactionData.getHash());
 
         liveViewService.updateNodeStatus(transactionData, 2);
 
@@ -140,13 +140,13 @@ public class BaseNodeConfirmationService implements IConfirmationService {
             }
         });
         if (isDspConfirmed) {
-            incrementAndGetDspConfirmed();
+            dspConfirmed.incrementAndGet();
         }
         if (transactionData.isTrustChainConsensus()) {
             tccConfirmed.incrementAndGet();
         }
         if (isConfirmed) {
-            totalConfirmed.incrementAndGet();
+            incrementAndGetTotalConfirmed(transactionData.getHash());
         }
     }
 

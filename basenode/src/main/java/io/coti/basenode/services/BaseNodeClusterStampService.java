@@ -45,9 +45,13 @@ public class BaseNodeClusterStampService {
         unconfirmedHashTransactions.addAll(unreachedDspcHashTransactions);
         unconfirmedHashTransactions.addAll(unreachedTccHashTransactions);
 
+        TransactionData transactionData;
         Map<Hash, TransactionData>  unconfirmedTransactions = new HashMap<>();
         for(Hash unconfirmedHashTransaction : unconfirmedHashTransactions) {
-            unconfirmedTransactions.put(unconfirmedHashTransaction, transactions.getByHash(unconfirmedHashTransaction));
+            transactionData =  transactions.getByHash(unconfirmedHashTransaction);
+            if (!transactionData.isZeroSpend()) {
+                unconfirmedTransactions.put(unconfirmedHashTransaction, transactionData);
+            }
         }
 
         return unconfirmedTransactions;
