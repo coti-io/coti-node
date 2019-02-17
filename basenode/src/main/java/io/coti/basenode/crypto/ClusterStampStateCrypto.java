@@ -13,7 +13,7 @@ public class ClusterStampStateCrypto extends SignatureCrypto<ClusterStampStateDa
 
         int byteBufferLength = 0;
 
-        Long lastDspConfirmed = clusterStampStateData.getLastDspConfirmed();
+        Long lastDspConfirmed = clusterStampStateData.getTotalConfirmedTransactionsCount();
         byteBufferLength += Long.BYTES;
 
         ByteBuffer clusterStampDataBuffer = ByteBuffer.allocate(byteBufferLength).putLong(lastDspConfirmed);
