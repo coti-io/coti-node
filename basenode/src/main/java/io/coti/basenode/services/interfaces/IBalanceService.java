@@ -2,6 +2,7 @@ package io.coti.basenode.services.interfaces;
 
 import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.InputBaseTransactionData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.GetBalancesRequest;
 import io.coti.basenode.http.GetBalancesResponse;
@@ -14,7 +15,7 @@ public interface IBalanceService {
 
     void init() throws Exception;
 
-    boolean checkBalancesAndAddToPreBalance(List<BaseTransactionData> baseTransactionDatas);
+    boolean checkBalancesAndAddToPreBalance(TransactionData transactionData);
 
     ResponseEntity<GetBalancesResponse> getBalances(GetBalancesRequest getBalancesRequest);
 
@@ -24,7 +25,5 @@ public interface IBalanceService {
 
     void validateBalances();
 
-    void updateBalance(Hash addressHash, BigDecimal amount);
-
-    void updatePreBalance(Hash addressHash, BigDecimal amount);
+    void updateBalanceAndPreBalanceConditionally(TransactionData transactionData);
 }

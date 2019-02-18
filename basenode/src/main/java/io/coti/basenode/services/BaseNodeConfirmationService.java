@@ -105,7 +105,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
 
     private void processConfirmedTransaction(TransactionData transactionData) {
         transactionData.setTransactionConsensusUpdateTime(Instant.now());
-        transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount()));
+        balanceService.updateBalanceAndPreBalanceConditionally(transactionData);
         totalConfirmed.incrementAndGet();
 
         liveViewService.updateTransactionStatus(transactionData, 2);
@@ -126,10 +126,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         boolean isConfirmed = transactionHelper.isConfirmed(transactionData);
         boolean isDspConfirmed = transactionHelper.isDspConfirmed(transactionData);
         transactionData.getBaseTransactions().forEach(baseTransactionData -> {
-            balanceService.updatePreBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
-            if (isConfirmed) {
-                balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
-            }
+            balanceService.updateBalanceAndPreBalanceConditionally(transactionData);
         });
         if (isDspConfirmed) {
             dspConfirmed.incrementAndGet();
