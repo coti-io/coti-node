@@ -265,7 +265,7 @@ public class TransactionHelper implements ITransactionHelper {
         if (!isTransactionExists(transactionData)) {
             return false;
         }
-        if (!balanceService.checkBalancesAndAddToPreBalance(transactionData.getBaseTransactions())) {
+        if (!balanceService.checkBalancesAndAddToPreBalance(transactionData)) {
             return false;
         }
         transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(PRE_BALANCE_CHANGED);

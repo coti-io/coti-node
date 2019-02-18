@@ -1,12 +1,12 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.data.BaseTransactionData;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.http.GetBalancesRequest;
 import io.coti.basenode.http.GetBalancesResponse;
+import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -15,7 +15,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.math.BigDecimal;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,10 +25,17 @@ import java.util.concurrent.ConcurrentHashMap;
 public class BaseNodeBalanceService implements IBalanceService {
     protected Map<Hash, BigDecimal> balanceMap;
     protected Map<Hash, BigDecimal> preBalanceMap;
+    private Map<Hash, List<Hash>> addressHashToPreBalanceGapTransactionHashes;
+
+    @Autowired
+    TransactionHelper transactionHelper;
+    @Autowired
+    Transactions transactions;
 
     public void init() throws Exception {
         balanceMap = new ConcurrentHashMap<>();
         preBalanceMap = new ConcurrentHashMap<>();
+        addressHashToPreBalanceGapTransactionHashes = new ConcurrentHashMap<>();
         loadBalanceFromSnapshot();
         log.info("{} is up", this.getClass().getSimpleName());
     }
@@ -67,12 +74,12 @@ public class BaseNodeBalanceService implements IBalanceService {
     }
 
     @Override
-    public synchronized boolean checkBalancesAndAddToPreBalance(List<BaseTransactionData> baseTransactionDatas) {
-        Map<Hash, BigDecimal> preBalanceChanges = new HashMap<>();
-        for (BaseTransactionData baseTransactionData : baseTransactionDatas) {
+    public boolean checkBalancesAndAddToPreBalance(TransactionData transactionData) {
 
-            BigDecimal amount = baseTransactionData.getAmount();
-            Hash addressHash = baseTransactionData.getAddressHash();
+        for (BaseTransactionData inputBaseTransactionData : transactionData.getInputBaseTransactions()) {
+
+            BigDecimal amount = inputBaseTransactionData.getAmount();
+            Hash addressHash = inputBaseTransactionData.getAddressHash();
             BigDecimal balance = balanceMap.containsKey(addressHash) ? balanceMap.get(addressHash) : BigDecimal.ZERO;
             BigDecimal preBalance = preBalanceMap.containsKey(addressHash) ? preBalanceMap.get(addressHash) : BigDecimal.ZERO;
             if (amount.add(balance).signum() < 0) {
@@ -85,12 +92,12 @@ public class BaseNodeBalanceService implements IBalanceService {
                         amount, preBalance);
                 return false;
             }
-            preBalanceChanges.put(addressHash, amount.add(preBalance));
-        }
-        preBalanceChanges.forEach((addressHash, preBalance) -> {
-            preBalanceMap.put(addressHash, preBalance);
+
             continueHandleBalanceChanges(addressHash);
-        });
+        }
+
+        updateBalanceAndPreBalanceConditionally(transactionData);
+
         return true;
     }
 
@@ -106,16 +113,29 @@ public class BaseNodeBalanceService implements IBalanceService {
         for (Hash hash : getBalancesRequest.getAddresses()) {
             balance = balanceMap.containsKey(hash) ? balanceMap.get(hash) : new BigDecimal(0);
             preBalance = preBalanceMap.containsKey(hash) ? preBalanceMap.get(hash) : new BigDecimal(0);
-            getBalancesResponse.addAddressBalanceToResponse(hash, balance, preBalance);
-
+            if(getBalancesRequest.isIncludePreBalanceGapTransactions() && addressHashToPreBalanceGapTransactionHashes.containsKey(hash)) {
+                List<Hash> preBalanceGapTransactionHashes =  addressHashToPreBalanceGapTransactionHashes.get(hash);
+                List<TransactionData> preBalanceGapTransactions = new ArrayList<>();
+                    preBalanceGapTransactionHashes.forEach(
+                    preBalanceGapTransactionHash ->
+                        preBalanceGapTransactions.add(transactions.getByHash(preBalanceGapTransactionHash))
+                    );
+                getBalancesResponse.addAddressBalanceToResponse(hash, balance, preBalance, preBalanceGapTransactions);
+            }
+            else {
+                getBalancesResponse.addAddressBalanceToResponse(hash, balance, preBalance);
+            }
         }
         return ResponseEntity.status(HttpStatus.OK).body(getBalancesResponse);
     }
 
     @Override
     public void rollbackBaseTransactions(TransactionData transactionData) {
-        transactionData.getBaseTransactions().forEach(baseTransactionData ->
-                preBalanceMap.computeIfPresent(baseTransactionData.getAddressHash(), (addressHash, amount) -> amount.add(baseTransactionData.getAmount().negate()))
+
+        transactionData.getBaseTransactions().forEach(baseTransactionData -> {
+                preBalanceMap.computeIfPresent(baseTransactionData.getAddressHash(), (addressHash, amount) -> amount.add(baseTransactionData.getAmount().negate()));
+                addressHashToPreBalanceGapTransactionHashes.get(baseTransactionData.getAddressHash()).remove(transactionData.getHash());
+            }
         );
     }
 
@@ -137,17 +157,63 @@ public class BaseNodeBalanceService implements IBalanceService {
     }
 
     @Override
-    public void updateBalance(Hash addressHash, BigDecimal amount) {
+    public synchronized void updateBalanceAndPreBalanceConditionally(TransactionData transactionData) {
+
+        if(transactionData.getType() == TransactionType.ZeroSpend) {
+            return;
+        }
+        boolean isConfirmed = transactionHelper.isConfirmed(transactionData);
+
+        for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
+            if(isConfirmed) {
+                updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount(), transactionData.getHash());
+            }
+            if(baseTransactionData instanceof InputBaseTransactionData && !isConfirmed) {
+                updatePreBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount(), transactionData.getHash(), false);
+            }
+            if(baseTransactionData instanceof OutputBaseTransactionData && isConfirmed) {
+                updatePreBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount(), transactionData.getHash(), true);
+            }
+        }
+    }
+
+    private void updateBalance(Hash addressHash, BigDecimal amount, Hash transactionHash) {
         balanceMap.computeIfPresent(addressHash, (currentHash, currentAmount) ->
                 currentAmount.add(amount));
         balanceMap.putIfAbsent(addressHash, amount);
+
+        List<Hash> transactionHashList = addressHashToPreBalanceGapTransactionHashes.get(addressHash);
+
+        if( transactionHashList != null ) {
+            transactionHashList.remove(transactionHash);
+
+            if( !transactionHashList.isEmpty() ) {
+                addressHashToPreBalanceGapTransactionHashes.put(addressHash, transactionHashList);
+            }
+            else {
+                addressHashToPreBalanceGapTransactionHashes.remove(addressHash);
+            }
+        }
     }
 
-    @Override
-    public void updatePreBalance(Hash addressHash, BigDecimal amount) {
+    private void updatePreBalance(Hash addressHash, BigDecimal amount, Hash transactionHash, boolean isConfirmed) {
         preBalanceMap.computeIfPresent(addressHash, (currentHash, currentAmount) ->
                 currentAmount.add(amount));
         preBalanceMap.putIfAbsent(addressHash, amount);
-    }
 
+        if( !isConfirmed ) {
+
+            List<Hash> transactionHashList = addressHashToPreBalanceGapTransactionHashes.get(addressHash);
+
+            if( transactionHashList == null ) {
+                transactionHashList = new ArrayList<>();
+            }
+
+            if( !transactionHashList.contains(transactionHash) ) {
+                transactionHashList.add(transactionHash);
+            }
+
+            addressHashToPreBalanceGapTransactionHashes.put(addressHash, transactionHashList);
+        }
+    }
 }
