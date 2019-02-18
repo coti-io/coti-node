@@ -1,5 +1,7 @@
 package io.coti.financialserver.controllers;
 
+import io.coti.basenode.http.MerchantRollingReserveAddressRequest;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.financialserver.http.GetRollingReserveMerchantDataRequest;
 import io.coti.financialserver.http.RecourseClaimRequest;
 import io.coti.financialserver.services.RollingReserveService;
@@ -31,5 +33,11 @@ public class RollingReserveController {
     public ResponseEntity recourseClaim(@Valid @RequestBody RecourseClaimRequest request) {
 
         return rollingReserveService.recourseClaim(request);
+    }
+
+    @RequestMapping(path = "/merchantReserveAddress", method = RequestMethod.POST)
+    public ResponseEntity<IResponse> getMerchantRollingReserveAddress(@Valid @RequestBody MerchantRollingReserveAddressRequest request) {
+
+        return rollingReserveService.getMerchantRollingReserveAddress(request);
     }
 }

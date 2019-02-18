@@ -13,4 +13,6 @@ public class RollingReserveValidateRequest {
     @NotNull
     RollingReserveData rollingReserveData;
 
+    @NotNull
+    String merchantHash;
 }

@@ -4,34 +4,17 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.trustscore.data.Enums.EventType;
+import io.coti.trustscore.http.InsertEventRequest;
 import lombok.Data;
-
-import java.util.Date;
 
 
 @Data
-public class KycEventData extends EventData implements ISignValidatable {
+public class KycEventData extends EventData {
+    private Hash userHash;
+    private EventType eventType;
 
-    public Hash userHash;
-    public EventType eventType;
-    public SignatureData signature;
-    private Hash kycServerPublicKey;
-
-    public KycEventData(Hash userHash, Date eventDate, EventType eventType, SignatureData signature) {
-        super.eventDate = eventDate;
-        this.userHash = userHash;
-        this.eventType = eventType;
-        this.signature = signature;
+    public KycEventData(InsertEventRequest request) {
+        super(request);
     }
 
-    @Override
-    public Hash getHash() {
-        return super.getHash();
-    }
-
-
-    @Override
-    public Hash getSignerHash() {
-        return kycServerPublicKey;
-    }
 }

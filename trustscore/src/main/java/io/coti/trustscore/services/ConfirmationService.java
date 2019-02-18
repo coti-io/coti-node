@@ -16,6 +16,8 @@ public class ConfirmationService extends BaseNodeConfirmationService {
 
     @Override
     protected void continueHandleAddressHistoryChanges(TransactionData transactionData) {
-        trustScoreService.addTransactionToTsCalculation(transactionData);
+        if (!transactionData.isZeroSpend()) {
+            trustScoreService.addTransactionToTsCalculation(transactionData);
+        }
     }
 }

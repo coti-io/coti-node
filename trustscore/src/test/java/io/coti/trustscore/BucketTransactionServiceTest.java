@@ -1,16 +1,19 @@
 package io.coti.trustscore;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.trustscore.data.Buckets.BucketTransactionEventsData;
 import io.coti.trustscore.data.Enums.UserType;
+import io.coti.trustscore.data.Events.BalanceCountAndContribution;
 import io.coti.trustscore.data.Events.TransactionEventData;
 import io.coti.trustscore.model.BucketTransactionEvents;
 import io.coti.trustscore.services.BucketTransactionService;
 import io.coti.trustscore.services.calculationServices.BucketTransactionsCalculator;
-import javafx.util.Pair;
-import org.junit.After;
+import io.coti.trustscore.testUtils.BucketUtil;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,10 +25,13 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
+import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-import static io.coti.trustscore.BucketUtil.generateRulesDataObject;
+import static io.coti.trustscore.testUtils.BucketUtil.generateRulesDataObject;
+import static io.coti.trustscore.testUtils.GeneralUtilsFunctions.*;
+import static io.coti.trustscore.utils.BucketBuilder.buildTransactionDataRequest;
 import static io.coti.trustscore.utils.DatesCalculation.*;
 import static io.coti.trustscore.utils.MathCalculation.ifTwoNumbersAreEqualOrAlmostEqual;
 
@@ -39,145 +45,200 @@ import static io.coti.trustscore.utils.MathCalculation.ifTwoNumbersAreEqualOrAlm
         BucketTransactionEvents.class
 })
 public class BucketTransactionServiceTest {
+    private Hash walletHash;
+    private Hash nodeHash;
+
 
     @Autowired
     private BucketTransactionService bucketTransactionService;
+    private BucketTransactionEventsData bucketTransactionEventsDataForWallet;
+    private BucketTransactionEventsData bucketTransactionEventsDataForNode;
 
-
-    private BucketTransactionEventsData bucketTransactionEventsData;
-
- /*   @Before
+    @Before
     public void setUp() {
-        bucketTransactionService.init(generateRulesDataObject());
-        bucketTransactionEventsData = new BucketTransactionEventsData();
-        bucketTransactionEventsData.setUserType(UserType.WALLET);
+        walletHash = generateRandomHash(64);
+        nodeHash = generateRandomHash(64);
 
-        TransactionData transactionData = BucketUtil.createTransactionWithSpecificHash(new Hash("1234"), new Hash("abcd"), 70.45);
-        transactionData.getBaseTransactions().get(0).setAmount(new BigDecimal(8));
-
-        TransactionData transactionData2 = BucketUtil.createTransactionWithSpecificHash(new Hash("2345"), new Hash("abcd"), 70.45);
-        transactionData2.getBaseTransactions().get(0).setAmount(new BigDecimal(5));
-
-        bucketTransactionService.addEventToCalculations(new TransactionEventData(transactionData), bucketTransactionEventsData);
-        bucketTransactionService.addEventToCalculations(new TransactionEventData(transactionData2), bucketTransactionEventsData);
+        BucketTransactionService.init(generateRulesDataObject());
+        initialBucketTransactionEventsDataForWallet();
+        initialBucketTransactionEventsDataForNode();
     }
 
-    @After
-    public void tearDown() {
+    private void initialBucketTransactionEventsDataForNode() {
+        bucketTransactionEventsDataForNode = new BucketTransactionEventsData();
+        bucketTransactionEventsDataForNode.setUserType(UserType.FULL_NODE);
+        TransactionData transactionData = BucketUtil.createTransactionWithSpecificHash(new Hash("1234"), nodeHash, 70.45, TransactionType.Payment);
+        transactionData.setAmount(new BigDecimal(-8));
 
+        TransactionData transactionData2 = BucketUtil.createTransactionWithSpecificHash(new Hash("2345"), nodeHash, 70.45, TransactionType.Payment);
+        transactionData2.setAmount(new BigDecimal(-5));
+
+        bucketTransactionService.addEventToCalculations(new TransactionEventData(buildTransactionDataRequest(new Hash("8765"),
+                null,
+                transactionData)), bucketTransactionEventsDataForNode);
+        bucketTransactionService.addEventToCalculations(new TransactionEventData(buildTransactionDataRequest(new Hash("8765"),
+                null,
+                transactionData2)), bucketTransactionEventsDataForNode);
+    }
+
+    private void initialBucketTransactionEventsDataForWallet() {
+        bucketTransactionEventsDataForWallet = new BucketTransactionEventsData();
+        bucketTransactionEventsDataForWallet.setUserType(UserType.CONSUMER);
+
+        TransactionData transactionData = BucketUtil.createTransactionWithSpecificHash(new Hash("1234"), walletHash, 70.45, TransactionType.Payment);
+        transactionData.setAmount(new BigDecimal(8));
+
+        TransactionData transactionData2 = BucketUtil.createTransactionWithSpecificHash(new Hash("2345"), walletHash, 70.45, TransactionType.Payment);
+        transactionData2.setAmount(new BigDecimal(5));
+
+        TransactionData transactionDatatemp = BucketUtil.createTransactionWithSpecificHash(new Hash("1234"),
+                new Hash("2d543b3026626fb4de4b6250ad10ffa7a8c1845927e005608700c3d52834502d8c80ebaae318184cd525352ed07694d6ed8ed2a8a2cf1171200e2108cbe53702"),
+                70.45,
+                TransactionType.Payment);
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            String jsonInString = mapper.writeValueAsString(transactionDatatemp);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        bucketTransactionService.addEventToCalculations(new TransactionEventData(buildTransactionDataRequest(new Hash("8765"),
+                null,
+                transactionData)), bucketTransactionEventsDataForWallet);
+        bucketTransactionService.addEventToCalculations(new TransactionEventData(buildTransactionDataRequest(new Hash("8765"),
+                null,
+                transactionData2)), bucketTransactionEventsDataForWallet);
     }
 
     @Test
     public void addEventToCalculationsTest() {
-        //BucketTransactionService bucketTransactionService2 =  bucketTransactionService;
         Assert.assertTrue(
-                (ifTwoNumbersAreEqualOrAlmostEqual(bucketTransactionEventsData.getCurrentMonthBalance()
-                        .get(setDateOnBeginningOfDay(decreaseTodayDateByDays(0)).getTime()).getValue(), 0.03568973444951873))
-                        && (ifTwoNumbersAreEqualOrAlmostEqual(bucketTransactionEventsData.getCurrentDateNumberOfTransactionsContribution(), 0.0))
-                        && (ifTwoNumbersAreEqualOrAlmostEqual(bucketTransactionEventsData.getCurrentDateTurnOverContribution(), 0.0))
+                (ifTwoNumbersAreEqualOrAlmostEqual(bucketTransactionEventsDataForWallet.getCurrentMonthDayToBalanceCountAndContribution()
+                        .get(setDateOnBeginningOfDay(decreaseTodayDateByDays(0))).getContribution(), 0.03568973444951873))
+                        && (ifTwoNumbersAreEqualOrAlmostEqual(bucketTransactionEventsDataForWallet.getCurrentDateNumberOfTransactionsContribution(), 0.0))
+                        && (ifTwoNumbersAreEqualOrAlmostEqual(bucketTransactionEventsDataForWallet.getCurrentDateTurnOverContribution(), 0.0))
         );
     }
 
     @Test
     public void getBucketSumScoreTest() {
-        double sumScore = bucketTransactionService.getBucketSumScore(bucketTransactionEventsData);
-        Assert.assertTrue(ifTwoNumbersAreEqualOrAlmostEqual(sumScore, 0.02676730083));
+        double bucketSumScore = bucketTransactionService.getBucketSumScore(bucketTransactionEventsDataForWallet);
+        isTrustScoreValueValid(bucketSumScore);
     }
 
     @Test
     public void BucketTransactionService_simulationOfZeroDayDecayedTest() {
-        decayDays(0);
-
-        double sumScore = bucketTransactionService.getBucketSumScore(bucketTransactionEventsData);
-
-        Assert.assertTrue(ifTwoNumbersAreEqualOrAlmostEqual(sumScore, 0.02676730083));
+        decayDailyEventsDataForWallet(0);
+        double bucketSumScore = bucketTransactionService.getBucketSumScore(bucketTransactionEventsDataForWallet);
+        isTrustScoreValueValid(bucketSumScore);
     }
 
     @Test
     public void BucketTransactionService_simulationOfDayDecayedTest() {
-        decayDays(1);
-
-        double sumScore = bucketTransactionService.getBucketSumScore(bucketTransactionEventsData);
-
-        Assert.assertTrue(ifTwoNumbersAreEqualOrAlmostEqual(sumScore, 0.05292323566));
+        decayDailyEventsDataForWallet(1);
+        double bucketSumScore = bucketTransactionService.getBucketSumScore(bucketTransactionEventsDataForWallet);
+        isTrustScoreValueValid(bucketSumScore);
     }
 
     @Test
     public void BucketTransactionService_simulationOfTwoDayDecayedTest() {
-        decayDays(2);
-
-        double sumScore = bucketTransactionService.getBucketSumScore(bucketTransactionEventsData);
-
-        Assert.assertTrue(ifTwoNumbersAreEqualOrAlmostEqual(sumScore, 0.07848176812));
+        decayDailyEventsDataForWallet(2);
+        double bucketSumScore = bucketTransactionService.getBucketSumScore(bucketTransactionEventsDataForWallet);
+        isTrustScoreValueValid(bucketSumScore);
     }
 
     @Test
     public void BucketTransactionService_simulationOfThreeDayDecayed() {
-        decayDays(3);
-
-        double sumScore = bucketTransactionService.getBucketSumScore(bucketTransactionEventsData);
-
-        Assert.assertTrue(ifTwoNumbersAreEqualOrAlmostEqual(sumScore, 0.1034565429));
+        decayDailyEventsDataForWallet(3);
+        double bucketSumScore = bucketTransactionService.getBucketSumScore(bucketTransactionEventsDataForWallet);
+        isTrustScoreValueValid(bucketSumScore);
     }
 
     @Test
     public void BucketTransactionService_simulationOfThreeDayDecayedAndAddingNewTransactionTest() {
-        decayDays(3);
-        TransactionData transactionData = BucketUtil.createTransactionWithSpecificHash(new Hash("1236"), new Hash("abcd"), 70.45);
-        transactionData.getBaseTransactions().get(0).setAmount(new BigDecimal(7));
-        bucketTransactionService.addEventToCalculations(new TransactionEventData(transactionData), bucketTransactionEventsData);
+        decayDailyEventsDataForWallet(3);
 
-        double sumScore = bucketTransactionService.getBucketSumScore(bucketTransactionEventsData);
+        TransactionData transactionData =
+                BucketUtil.createTransactionWithSpecificHash(generateRandomHash(64), walletHash, 70.45, TransactionType.Payment);
+        transactionData.setAmount(new BigDecimal(7));
+        bucketTransactionService.addEventToCalculations(new TransactionEventData(buildTransactionDataRequest(generateRandomHash(64),
+                null,
+                transactionData)), bucketTransactionEventsDataForWallet);
 
-        Assert.assertTrue(ifTwoNumbersAreEqualOrAlmostEqual(sumScore, 0.1178458163));
+        double bucketSumScore = bucketTransactionService.getBucketSumScore(bucketTransactionEventsDataForWallet);
+        isTrustScoreValueValid(bucketSumScore);
     }
 
     @Test
     public void BucketTransactionService_complicatedScenarioTest() {
         // Decay 3 days, and adding transaction of 7 coti
-        decayDays(3);
-        TransactionData transactionData = BucketUtil.createTransactionWithSpecificHash(new Hash("1236"), new Hash("abcd"), 70.45);
-        transactionData.getBaseTransactions().get(0).setAmount(new BigDecimal(7));
-        bucketTransactionService.addEventToCalculations(new TransactionEventData(transactionData), bucketTransactionEventsData);
-        double sumScore = bucketTransactionService.getBucketSumScore(bucketTransactionEventsData);
-        Assert.assertTrue(ifTwoNumbersAreEqualOrAlmostEqual(sumScore, 0.1178458163));
+        decayDailyEventsDataForWallet(3);
+        TransactionData transactionData =
+                BucketUtil.createTransactionWithSpecificHash(generateRandomHash(64), walletHash, generateRandomTrustScore(), TransactionType.Payment);
+        transactionData.setAmount(new BigDecimal(7));
+        bucketTransactionService.addEventToCalculations(new TransactionEventData(buildTransactionDataRequest(generateRandomHash(64),
+                null,
+                transactionData)), bucketTransactionEventsDataForWallet);
 
         // Decay 2 days
-        decayDays(2);
-        double sumScore1 = bucketTransactionService.getBucketSumScore(bucketTransactionEventsData);
-        Assert.assertTrue(ifTwoNumbersAreEqualOrAlmostEqual(sumScore1, 0.1938972193));
+        decayDailyEventsDataForWallet(2);
+        bucketTransactionService.getBucketSumScore(bucketTransactionEventsDataForWallet);
+
 
         // Decay 2 days
-        decayDays(26);
-        double sumScore26 = bucketTransactionService.getBucketSumScore(bucketTransactionEventsData);
-        Assert.assertTrue(ifTwoNumbersAreEqualOrAlmostEqual(sumScore26, 0.9200733628));
+        decayDailyEventsDataForWallet(26);
 
-        // Adding transaction of 11 coti
-        TransactionData transactionData2 = BucketUtil.createTransactionWithSpecificHash(new Hash("3456"), new Hash("abcd"), 70.45);
-        transactionData2.getBaseTransactions().get(0).setAmount(new BigDecimal(11));
-        bucketTransactionService.addEventToCalculations(new TransactionEventData(transactionData2), bucketTransactionEventsData);
-        double sumScore2 = bucketTransactionService.getBucketSumScore(bucketTransactionEventsData);
-        Assert.assertTrue(ifTwoNumbersAreEqualOrAlmostEqual(sumScore2, 0.9426197695));
+        TransactionData transactionData2 =
+                BucketUtil.createTransactionWithSpecificHash(generateRandomHash(64), walletHash, generateRandomTrustScore(), TransactionType.Payment);
+        transactionData2.setAmount(new BigDecimal(11));
+        bucketTransactionService.addEventToCalculations(new TransactionEventData(buildTransactionDataRequest(generateRandomHash(64),
+                null,
+                transactionData2)), bucketTransactionEventsDataForWallet);
 
         // Adding transaction of -3 coti
-        TransactionData transactionData3 = BucketUtil.createTransactionWithSpecificHash(new Hash("3457"), new Hash("abcd"), 70.45);
-        transactionData3.getBaseTransactions().get(0).setAmount(new BigDecimal(-3));
-        bucketTransactionService.addEventToCalculations(new TransactionEventData(transactionData3), bucketTransactionEventsData);
-        double sumScore3 = bucketTransactionService.getBucketSumScore(bucketTransactionEventsData);
-        Assert.assertTrue(ifTwoNumbersAreEqualOrAlmostEqual(sumScore3, 0.9391583623));
-
+        TransactionData transactionData3 =
+                BucketUtil.createTransactionWithSpecificHash(generateRandomHash(64), walletHash, generateRandomTrustScore(), TransactionType.Payment);
+        transactionData3.setAmount(new BigDecimal(-3));
+        bucketTransactionService.addEventToCalculations(new TransactionEventData(buildTransactionDataRequest(generateRandomHash(64),
+                null,
+                transactionData3)), bucketTransactionEventsDataForWallet);
+        double bucketSumScore = bucketTransactionService.getBucketSumScore(bucketTransactionEventsDataForWallet);
+        isTrustScoreValueValid(bucketSumScore);
     }
 
-    public void decayDays(int numOfDays) {
+    @Test
+    public void BucketTransactionEventsDataForNodeTest() {
+        decayDailyEventsDataForNode(3);
+
+        TransactionData transactionData =
+                BucketUtil.createTransactionWithSpecificHash(generateRandomHash(64), nodeHash, generateRandomTrustScore(), TransactionType.Payment);
+        transactionData.setAmount(new BigDecimal(-12));
+        bucketTransactionService.addEventToCalculations(new TransactionEventData(buildTransactionDataRequest(generateRandomHash(64),
+                null,
+                transactionData)),
+                bucketTransactionEventsDataForNode);
+
+        decayDailyEventsDataForNode(29);
+        double bucketSumScore = bucketTransactionService.getBucketSumScore(bucketTransactionEventsDataForNode);
+        isTrustScoreValueValid(bucketSumScore);
+    }
+
+    public void decayDailyEventsDataForWallet(int numOfDays) {
         // simulation of moving to a new day
-        bucketTransactionEventsData.setLastUpdate(decreaseTodayDateByDays(numOfDays));
-        HashMap<Long, Pair<Double, Double>> CurrentMonthBalanceWithDateChangedEntry = new HashMap<>();
-        for (Map.Entry<Long, Pair<Double, Double>> currentMonthBalanceEntry : bucketTransactionEventsData.getCurrentMonthBalance().entrySet()) {
-            long dateBeforeDEcayed = currentMonthBalanceEntry.getKey();
-            long oldTime = addToDateByDays(dateBeforeDEcayed, -numOfDays).getTime();
-            Pair<Double, Double> value = currentMonthBalanceEntry.getValue();
-            CurrentMonthBalanceWithDateChangedEntry.put(oldTime, value);
+        bucketTransactionEventsDataForWallet.setLastUpdate(decreaseTodayDateByDays(numOfDays));
+        ConcurrentHashMap<Date, BalanceCountAndContribution> CurrentMonthBalanceWithDateChangedEntry = new ConcurrentHashMap<>();
+        for (Map.Entry<Date, BalanceCountAndContribution> currentMonthBalanceEntry
+                : bucketTransactionEventsDataForWallet.getCurrentMonthDayToBalanceCountAndContribution().entrySet()) {
+            Date dateBeforeDecayed = currentMonthBalanceEntry.getKey();
+            Date oldDate = addToDateByDays(dateBeforeDecayed.getTime(), -numOfDays);
+            BalanceCountAndContribution value = currentMonthBalanceEntry.getValue();
+            CurrentMonthBalanceWithDateChangedEntry.put(oldDate, value);
         }
-        bucketTransactionEventsData.setCurrentMonthBalance(CurrentMonthBalanceWithDateChangedEntry);
-    } */
+        bucketTransactionEventsDataForWallet.setCurrentMonthDayToBalanceCountAndContribution(CurrentMonthBalanceWithDateChangedEntry);
+    }
+
+    public void decayDailyEventsDataForNode(int numOfDays) {
+        // simulation of moving to a new day
+        bucketTransactionEventsDataForNode.setLastUpdate(decreaseTodayDateByDays(numOfDays));
+    }
 }

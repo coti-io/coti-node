@@ -2,10 +2,14 @@ package io.coti.financialserver.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.crypto.CryptoHelper;
+import io.coti.basenode.crypto.MerchantRollingReserveAddressCrypto;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.Response;
+import io.coti.basenode.http.MerchantRollingReserveAddressRequest;
+import io.coti.basenode.http.MerchantRollingReserveAddressResponse;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
 import io.coti.financialserver.crypto.RecourseClaimCrypto;
 import io.coti.financialserver.crypto.RollingReserveCrypto;
@@ -48,7 +52,11 @@ public class RollingReserveService {
     @Autowired
     RecourseClaims recourseClaims;
     @Value("${financialserver.seed}")
-    private String SEED;
+    private String seed;
+    @Autowired
+    private RollingReserveCrypto rollingReserveCrypto;
+    @Autowired
+    private MerchantRollingReserveAddressCrypto merchantRollingReserveAddressCrypto;
     @Autowired
     private DisputeService disputeService;
     @Autowired
@@ -66,7 +74,7 @@ public class RollingReserveService {
     }
 
     public Hash getCotiPoolAddress() {
-        return CryptoHelper.generateAddress(SEED, COTI_POOL_ADDRESS_INDEX);
+        return CryptoHelper.generateAddress(seed, COTI_POOL_ADDRESS_INDEX);
     }
 
     public ResponseEntity getRollingReserveData(GetRollingReserveMerchantDataRequest request) {
@@ -75,21 +83,12 @@ public class RollingReserveService {
         RollingReserveReleaseStatus rollingReserveReleaseStatus;
 
         RollingReserveData rollingReserveData = request.getRollingReserveData();
-        RollingReserveCrypto rollingReserveCrypto = new RollingReserveCrypto();
-        rollingReserveCrypto.signMessage(rollingReserveData);
 
         if (!rollingReserveCrypto.verifySignature(rollingReserveData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
         }
 
-        if (rollingReserves.getByHash(rollingReserveData.getHash()) == null) {
-            createRollingReserveDataForMerchant(rollingReserveData.getHash());
-            rollingReserveData = rollingReserves.getByHash(rollingReserveData.getHash());
-            propagationPublisher.propagate(new RollingReserveAddressPropagatable(rollingReserveData.getHash(), rollingReserveData.getRollingReserveAddress()),
-                    Arrays.asList(NodeType.TrustScoreNode));
-        } else {
-            rollingReserveData = rollingReserves.getByHash(rollingReserveData.getHash());
-        }
+        rollingReserveData = getRollingReserveMerchantData(rollingReserveData.getHash());
 
         Map<String, RollingReserveReleaseStatus> rollingReserveReleases = new HashMap<>();
         for (Date releaseData : rollingReserveData.getReleaseDates()) {
@@ -102,8 +101,29 @@ public class RollingReserveService {
         }
 
         RecourseClaimData recourseClaimData = recourseClaims.getByHash(rollingReserveData.getMerchantHash());
-
         return ResponseEntity.status(HttpStatus.OK).body(new GetRollingReserveReleaseDatesResponse(rollingReserveData, rollingReserveReleases, recourseClaimData));
+    }
+
+
+    public RollingReserveData getRollingReserveMerchantData(Hash merchantHash) {
+        RollingReserveData rollingReserveData = rollingReserves.getByHash(merchantHash);
+        if (rollingReserveData == null) {
+            createRollingReserveDataForMerchant(merchantHash);
+            rollingReserveData = rollingReserves.getByHash(merchantHash);
+            propagationPublisher.propagate(new RollingReserveAddressPropagatable(rollingReserveData.getHash(), rollingReserveData.getRollingReserveAddress()),
+                    Arrays.asList(NodeType.TrustScoreNode));
+        }
+        return rollingReserveData;
+    }
+
+    public ResponseEntity<IResponse> getMerchantRollingReserveAddress(MerchantRollingReserveAddressRequest request) {
+
+        if (!merchantRollingReserveAddressCrypto.verifySignature(request)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
+        }
+
+        RollingReserveData rollingReserveData = getRollingReserveMerchantData(request.getMerchantHash());
+        return ResponseEntity.status(HttpStatus.OK).body(new MerchantRollingReserveAddressResponse(rollingReserveData.getRollingReserveAddress()));
     }
 
     public ResponseEntity recourseClaim(RecourseClaimRequest request) {
@@ -262,7 +282,7 @@ public class RollingReserveService {
             init();
         }
 
-        Hash address = CryptoHelper.generateAddress(SEED, lastAddressIndex.intValue());
+        Hash address = CryptoHelper.generateAddress(seed, lastAddressIndex.intValue());
 
         RollingReserveData rollingReserveData = new RollingReserveData();
         rollingReserveData.setMerchantHash(merchantHash);
