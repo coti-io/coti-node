@@ -8,7 +8,5 @@ import org.springframework.stereotype.Service;
 public class BaseNodeIndexService implements IIndexService {
 
     @Override
-    public void incrementAndGetTotalConfirmed(Hash transactionHash, long totalConfirmedTransactions) {
-        throw new UnsupportedOperationException();
-    }
+    public void incrementAndGetTotalConfirmed(Hash transactionHash, long totalConfirmedTransactions) { }
 }

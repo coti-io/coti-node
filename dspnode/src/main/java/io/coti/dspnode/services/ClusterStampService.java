@@ -73,7 +73,14 @@ public class ClusterStampService extends BaseNodeClusterStampService implements 
 
     @Override
     public boolean isClusterStampPreparing() {
+
         return clusterStampState == ClusterStampState.PREPARING;
+    }
+
+    @Override
+    public boolean isClusterStampReady(){
+
+        return clusterStampState == ClusterStampState.READY;
     }
 
     private void initReadyForClusterStampTimer(){

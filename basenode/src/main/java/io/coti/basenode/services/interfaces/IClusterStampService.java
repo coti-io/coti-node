@@ -12,4 +12,6 @@ public interface IClusterStampService {
 
     boolean isClusterStampPreparing();
 
+    boolean isClusterStampReady();
+
 }

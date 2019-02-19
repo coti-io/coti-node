@@ -55,17 +55,21 @@ public class ClusterStampService extends BaseNodeClusterStampService implements 
         }
     }
 
-    public boolean isReadyForClusterStamp(){
+    @Override
+    public boolean isClusterStampReady(){
+
         return clusterStampState == ClusterStampState.READY;
     }
 
     @Override
     public boolean isClusterStampInProcess(){
+
         return clusterStampState == ClusterStampState.IN_PROCESS;
     }
 
     @Override
     public boolean isClusterStampPreparing() {
+
         return clusterStampState == ClusterStampState.PREPARING;
     }
 
