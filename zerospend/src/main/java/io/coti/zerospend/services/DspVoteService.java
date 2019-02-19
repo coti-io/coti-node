@@ -17,15 +17,12 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 @Slf4j
 @Service
 public class DspVoteService extends BaseNodeDspVoteService {
-    @Value("#{'${dsp.server.addresses}'.split(',')}")
-    private List<String> dspServerAddresses;
 
+    private static final String NODE_HASH_ENDPOINT = "/nodeHash";
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
@@ -40,7 +37,8 @@ public class DspVoteService extends BaseNodeDspVoteService {
     private DspConsensusCrypto dspConsensusCrypto;
     @Autowired
     private ClusterStampService clusterStampService;
-    private static final String NODE_HASH_ENDPOINT = "/nodeHash";
+    @Value("#{'${dsp.server.addresses}'.split(',')}")
+    private List<String> dspServerAddresses;
     private List<Hash> currentLiveDspNodes;
     private Thread sumAndSaveVotesThread;
 

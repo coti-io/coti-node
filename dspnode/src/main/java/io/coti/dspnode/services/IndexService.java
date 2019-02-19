@@ -12,6 +12,7 @@ public class IndexService extends BaseNodeIndexService {
     @Autowired
     private NotTotalConfirmedTransactionHashes notTotalConfirmedTransactionHashes;
 
+    // TODO rename.
     public void incrementAndGetTotalConfirmed(Hash transactionHash, long totalConfirmedTransactions) {
         notTotalConfirmedTransactionHashes.deleteByHash(transactionHash);
     }

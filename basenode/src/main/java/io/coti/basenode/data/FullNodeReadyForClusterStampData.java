@@ -14,8 +14,8 @@ public class FullNodeReadyForClusterStampData extends ClusterStampStateData {
 
     }
 
-    public FullNodeReadyForClusterStampData(long lastDspConfirmed) {
-        this.clusterStampHash = new Hash(lastDspConfirmed);
-        this.lastDspConfirmed = lastDspConfirmed;
+    public FullNodeReadyForClusterStampData(long totalConfirmedTransactionsCount) {
+        this.clusterStampHash = new Hash(totalConfirmedTransactionsCount);
+        this.totalConfirmedTransactionsCount = totalConfirmedTransactionsCount;
     }
 }

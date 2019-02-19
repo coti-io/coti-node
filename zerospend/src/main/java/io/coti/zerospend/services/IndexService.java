@@ -28,8 +28,10 @@ public class IndexService extends BaseNodeIndexService {
         GENESIS_TRANSACTIONS = genesisTransactions;
     }
 
+    @Override
+    // TODO rename.
     public void incrementAndGetTotalConfirmed(Hash transactionHash, long totalConfirmedTransactions) {
-        if(totalConfirmedTransactions > GENESIS_TRANSACTIONS && (totalConfirmedTransactions % CLUSTER_STAMP_TRANSACTION_RATIO == 0)) {
+        if(totalConfirmedTransactions > GENESIS_TRANSACTIONS && (totalConfirmedTransactions % CLUSTER_STAMP_TRANSACTION_RATIO) == 0) {
             ClusterStampPreparationData clusterStampPreparationData = new ClusterStampPreparationData(totalConfirmedTransactions);
             clusterStampStateCrypto.signMessage(clusterStampPreparationData);
             clusterStampService.prepareForClusterStamp(clusterStampPreparationData);

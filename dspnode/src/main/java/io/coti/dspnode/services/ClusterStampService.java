@@ -8,6 +8,8 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.services.BaseNodeBalanceService;
 import io.coti.basenode.services.BaseNodeClusterStampService;
 import io.coti.basenode.model.DspReadyForClusterStamp;
+import io.coti.basenode.services.interfaces.IClusterStampService;
+import io.coti.basenode.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,15 +19,11 @@ import javax.annotation.PostConstruct;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
-/**
- * Handler for PrepareForSnapshot messages propagated to DSP.
- */
 @Slf4j
 @Service
-public class ClusterStampService extends BaseNodeClusterStampService {
+public class ClusterStampService extends BaseNodeClusterStampService implements IClusterStampService{
 
-    final private static int NUMBER_OF_FULL_NODES = 1;
-
+    private static final int NUMBER_OF_FULL_NODES = 1;
     @Autowired
     private ClusterStampStateCrypto clusterStampStateCrypto;
     @Autowired
@@ -38,34 +36,50 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private BaseNodeBalanceService balanceService;
     @Autowired
     private DspClusterStampVoteCrypto dspClusterStampVoteCrypto;
-
+    @Autowired
+    private IValidationService validationService;
     @Value("${zerospend.receiving.address}")
     private String receivingZerospendAddress;
-
     @Value("${clusterstamp.reply.timeout}")
-
     private int replyTimeOut;
     private int readyForClusterStampMsgCount;
+    private ClusterStampState clusterStampState;
 
+
+    @Override
     @PostConstruct
-    protected void init() {
-        super.init();
+    public void init() {
+        clusterStampState = ClusterStampState.OFF;
         readyForClusterStampMsgCount = 0;
     }
 
+    @Override
     public void prepareForClusterStamp(ClusterStampPreparationData clusterStampPreparationData) {
-        log.debug("Prepare for cluster stamp propagated message received from ZS to DSP");
-        if(validatePrepareForClusterStampRequest(clusterStampPreparationData)){
+        if(validationService.validatePrepareForClusterStampRequest(clusterStampPreparationData, clusterStampState)){
+            log.debug("Start preparation of DSP for cluster stamp");
+            clusterStampState = clusterStampState.nextState(); //Change state to PREPARING
+
             clusterStampStateCrypto.signMessage(clusterStampPreparationData);
             propagationPublisher.propagate(clusterStampPreparationData, Arrays.asList(NodeType.FullNode));
-            CompletableFuture.runAsync(this::initTimer);
+            CompletableFuture.runAsync(this::initReadyForClusterStampTimer);
         }
     }
 
-    private void initTimer(){
+    @Override
+    public boolean isClusterStampInProcess(){
+
+        return clusterStampState == ClusterStampState.IN_PROCESS;
+    }
+
+    @Override
+    public boolean isClusterStampPreparing() {
+        return clusterStampState == ClusterStampState.PREPARING;
+    }
+
+    private void initReadyForClusterStampTimer(){
         try {
             Thread.sleep(replyTimeOut);
-            if(!amIReadyForClusterStamp) {
+            if(!isClusterStampInProcess()) {
                 log.info("DSP sending it's ready after timer expired");
                 sendDspReadyForClusterStamp(new DspReadyForClusterStampData());
             }
@@ -74,23 +88,10 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         }
     }
 
-    private boolean validatePrepareForClusterStampRequest(ClusterStampPreparationData clusterStampPreparationData){
-        if(amIReadyForClusterStamp){
-            log.info("Preparation for cluster stamp is already in process");
-            return false;
-        }
-        else if(!clusterStampStateCrypto.verifySignature(clusterStampPreparationData)){
-            log.error("Wrong signature for \'prepare for cluster stamp\' request.");
-            return false;
-        }
-        return true;
-    }
-
     public void handleFullNodeReadyForClusterStampMessage(FullNodeReadyForClusterStampData fullNodeReadyForClusterStampData) {
 
         log.debug("\'Ready for cluster stamp\' propagated message received from FN to DSP");
-        if(!amIReadyForClusterStamp && clusterStampStateCrypto.verifySignature(fullNodeReadyForClusterStampData)) {
-
+        if(validationService.validateReadyForClusterStampRequest(fullNodeReadyForClusterStampData,clusterStampState)) {
             DspReadyForClusterStampData dspReadyForClusterStampData = dspReadyForClusterStamp.getByHash(fullNodeReadyForClusterStampData.getHash());
 
             if (dspReadyForClusterStampData == null) {
@@ -114,7 +115,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         }
     }
 
-    public void newClusterStamp(ClusterStampData clusterStampData) {
+    public void voteAndStoreClusterStamp(ClusterStampData clusterStampData) {
 
         if(clusterStampCrypto.verifySignature(clusterStampData)) {
             ClusterStampData clusterStampDataLocal = new ClusterStampData();
@@ -135,8 +136,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     }
 
     private void sendDspReadyForClusterStamp(DspReadyForClusterStampData dspReadyForClusterStampData) {
-
-        amIReadyForClusterStamp = true;
+        clusterStampState = clusterStampState.nextState(); //Change state to READY
         clusterStampStateCrypto.signMessage(dspReadyForClusterStampData);
         propagationPublisher.propagate(dspReadyForClusterStampData, Arrays.asList(NodeType.FullNode));
         sender.send(dspReadyForClusterStampData, receivingZerospendAddress);
@@ -145,7 +145,8 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     public void handleZeroSpendIsReadyForClusterStampData(ZeroSpendIsReadyForClusterStampData zerospendIsReadyForClusterStampData){
         if(clusterStampStateCrypto.verifySignature(zerospendIsReadyForClusterStampData)) {
-            isMyParentNodeReadyForClusterStamp = true;
+            clusterStampState = clusterStampState.nextState(); //Change state to IN_PROCESS
+            //TODO 2/18/2019 astolia: need to handle anything here?
         }
     }
 
@@ -154,4 +155,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         super.handleClusterStampConsensusResult(clusterStampConsensusResult);
         propagationPublisher.propagate(clusterStampConsensusResult, Arrays.asList(NodeType.FullNode));
     }
+
+    //TODO 2/18/2019 astolia: when to change dsp cluster stamp state to off?
 }

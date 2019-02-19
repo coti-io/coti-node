@@ -6,6 +6,8 @@ import io.coti.basenode.crypto.ClusterStampStateCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.services.BaseNodeClusterStampService;
 import io.coti.basenode.services.TransactionHelper;
+import io.coti.basenode.services.interfaces.IClusterStampService;
+import io.coti.basenode.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,15 +17,10 @@ import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Handler for PrepareForSnapshot messages propagated to FullNode.
- */
 @Slf4j
 @Service
-public class ClusterStampService extends BaseNodeClusterStampService {
+public class ClusterStampService extends BaseNodeClusterStampService implements IClusterStampService {
 
-    @Value("#{'${receiving.server.addresses}'.split(',')}")
-    private List<String> receivingServerAddresses;
     @Autowired
     private ClusterStampStateCrypto clusterStampStateCrypto;
     @Autowired
@@ -31,39 +28,54 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Autowired
     private ClusterStampCrypto clusterStampCrypto;
     @Autowired
-    TransactionHelper transactionHelper;
-
+    private TransactionHelper transactionHelper;
+    @Autowired
+    private IValidationService validationService;
+    @Value("#{'${receiving.server.addresses}'.split(',')}")
+    private List<String> receivingServerAddresses;
     private List<TransactionData> clusterStampTransactions;
+    private ClusterStampState clusterStampState;
 
     @PostConstruct
-    protected void init(){
-        super.init();
+    @Override
+    public void init(){
+        clusterStampState = ClusterStampState.OFF;
         clusterStampTransactions = new ArrayList<>();
     }
 
+    @Override
     public void prepareForClusterStamp(ClusterStampPreparationData clusterStampPreparationData) {
+        if(validationService.validatePrepareForClusterStampRequest(clusterStampPreparationData, clusterStampState)){
+            log.debug("Start preparation of Full node for cluster stamp");
+            clusterStampState = clusterStampState.nextState();
 
-        log.debug("Prepare for cluster stamp propagated message received from DSP to FN");
-
-        if(!amIReadyForClusterStamp && clusterStampStateCrypto.verifySignature(clusterStampPreparationData)) {
             FullNodeReadyForClusterStampData fullNodeReadyForClusterStampData = new FullNodeReadyForClusterStampData(clusterStampPreparationData.getTotalConfirmedTransactionsCount());
             clusterStampStateCrypto.signMessage(fullNodeReadyForClusterStampData);
             receivingServerAddresses.forEach(address -> sender.send(fullNodeReadyForClusterStampData, address));
-            amIReadyForClusterStamp = true;
         }
-        else {
-            log.info("Full Node is already preparing for cluster stamp");
-            //TODO 2/4/2019 astolia: Send to DSP that snapshot prepare is in process?
-        }
+    }
+
+    public boolean isReadyForClusterStamp(){
+        return clusterStampState == ClusterStampState.READY;
+    }
+
+    @Override
+    public boolean isClusterStampInProcess(){
+        return clusterStampState == ClusterStampState.IN_PROCESS;
+    }
+
+    @Override
+    public boolean isClusterStampPreparing() {
+        return clusterStampState == ClusterStampState.PREPARING;
     }
 
     public void handleDspReadyForClusterStampData(DspReadyForClusterStampData dspReadyForClusterStampData) {
         if(clusterStampStateCrypto.verifySignature(dspReadyForClusterStampData)) {
-            isMyParentNodeReadyForClusterStamp = true;
+            clusterStampState = clusterStampState.nextState();
         }
     }
 
-    public void newClusterStamp(ClusterStampData clusterStampData) {
+    public void handleClusterStamp(ClusterStampData clusterStampData) {
 
         if(clusterStampCrypto.verifySignature(clusterStampData)) {
             clusterStamps.put(clusterStampData);

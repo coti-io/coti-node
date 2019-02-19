@@ -5,7 +5,6 @@ import io.coti.basenode.crypto.ClusterStampConsensusResultCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.model.ClusterStamps;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.IClusterStampService;
 import io.coti.basenode.services.interfaces.IDspVoteService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +15,7 @@ import java.util.*;
 
 @Slf4j
 @Service
-public class BaseNodeClusterStampService implements IClusterStampService {
+public class BaseNodeClusterStampService {
 
     @Autowired
     protected IPropagationPublisher propagationPublisher;
@@ -30,27 +29,6 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     protected Transactions transactions;
     @Autowired
     protected ClusterStamps clusterStamps;
-
-    protected boolean amIReadyForClusterStamp;
-    protected boolean isMyParentNodeReadyForClusterStamp;
-
-    protected void init() {
-        amIReadyForClusterStamp = false;
-        isMyParentNodeReadyForClusterStamp = false;
-    }
-
-    public boolean amIReadyForClusterStamp() {
-        return amIReadyForClusterStamp;
-    }
-
-    /**
-     * Parent node for full node is his dsp node
-     * Parent node for dsp node is zero spend
-     * @return boolean
-     */
-    public boolean isMyParentNodeReadyForClusterStamp() {
-        return isMyParentNodeReadyForClusterStamp;
-    }
 
     protected Map<Hash, TransactionData> getUnconfirmedTransactions() {
 
@@ -80,8 +58,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             ClusterStampData clusterStampData = clusterStamps.getByHash(clusterStampConsensusResult.getHash());
             clusterStampData.setClusterStampConsensusResult(clusterStampConsensusResult);
             clusterStamps.put(clusterStampData);
-
-            amIReadyForClusterStamp = false;
+            // TODO change to next state?
             transactions.deleteAll();
             Iterator it = clusterStampData.getUnconfirmedTransactions().entrySet().iterator();
             while (it.hasNext()) {
@@ -95,11 +72,11 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     public void setHash(ClusterStampData clusterStampData) {
         byte[] balanceMapBytes = clusterStampData.getBalanceMap().toString().getBytes();
         byte[] unconfirmedTransactionHashesBytes = clusterStampData.getUnconfirmedTransactions().keySet().toString().getBytes();
-
         int byteBufferLength = balanceMapBytes.length + unconfirmedTransactionHashesBytes.length;
         ByteBuffer hashBytesBuffer = ByteBuffer.allocate(byteBufferLength)
                 .put(balanceMapBytes)
                 .put(unconfirmedTransactionHashesBytes);
+
         clusterStampData.setHash(new Hash(hashBytesBuffer.array()));
     }
 

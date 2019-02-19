@@ -1,5 +1,6 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.data.ClusterStampState;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.model.Transactions;
@@ -40,7 +41,7 @@ public class BaseNodeTransactionService implements ITransactionService {
     @Override
     public void handlePropagatedTransaction(TransactionData transactionData) {
 
-        if(clusterStampService.isMyParentNodeReadyForClusterStamp()) {
+        if(clusterStampService.isClusterStampInProcess()) {
             log.debug("Cluster stamp in process, won't accept new transactions: {}", transactionData.getHash());
             return;
         }

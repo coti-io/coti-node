@@ -107,6 +107,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         }
     }
 
+    // TODO rename.
     private void incrementAndGetTotalConfirmed(Hash transactionHash) {
         indexService.incrementAndGetTotalConfirmed(transactionHash, totalConfirmed.incrementAndGet());
     }

@@ -62,13 +62,17 @@ public class InitializationService {
 
     public void initSubscriber(){
         HashMap<String, Consumer<Object>> classNameToSubscriberHandler = new HashMap<>();
+
         classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampPreparationData.class, NodeType.DspNode), data ->
                 clusterStampService.prepareForClusterStamp((ClusterStampPreparationData) data));
+
         classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampData.class, NodeType.DspNode), data ->
-                clusterStampService.newClusterStamp((ClusterStampData) data));
-        classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampConsensusResult.class, NodeType.DspNode), data ->
-                clusterStampService.handleZeroSpendIsReadyForClusterStampData((ZeroSpendIsReadyForClusterStampData) data));
+                clusterStampService.voteAndStoreClusterStamp((ClusterStampData) data));
+
         classNameToSubscriberHandler.put(Channel.getChannelString(ZeroSpendIsReadyForClusterStampData.class, NodeType.DspNode), data ->
+                clusterStampService.handleZeroSpendIsReadyForClusterStampData((ZeroSpendIsReadyForClusterStampData) data));
+
+        classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampConsensusResult.class, NodeType.DspNode), data ->
                 clusterStampService.handleClusterStampConsensusResult((ClusterStampConsensusResult) data));
 
         communicationService.initSubscriber(propagationServerAddresses, NodeType.DspNode, classNameToSubscriberHandler);
