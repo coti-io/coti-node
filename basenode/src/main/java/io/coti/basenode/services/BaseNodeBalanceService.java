@@ -107,7 +107,7 @@ public class BaseNodeBalanceService implements IBalanceService {
             ClusterStampData lastClusterStampData =
                 restTemplate.postForObject(
                     recoveryServerAddress + "/getLastClusterStamp",
-                    new GetClusterStampRequest(totalConfirmedTransactionsPriorClusterStamp),
+                    totalConfirmedTransactionsPriorClusterStamp,
                     ClusterStampData.class);
 
             if(lastClusterStampData != null) {
