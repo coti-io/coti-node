@@ -8,7 +8,7 @@ import javax.validation.constraints.NotNull;
 @Data
 public class AddressBulkRequest {
     @NotNull(message = "Address Hashes must not be blank")
-    public Hash[] addresses;
+    private Hash[] addresses;
 
     public AddressBulkRequest() {
 

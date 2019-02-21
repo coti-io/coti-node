@@ -23,7 +23,5 @@ public class TrustScoreRocksDBConnector extends BaseNodeRocksDBConnector {
                 TrustScores.class.getName(),
                 TransactionEvents.class.getName()
         ));
-
-
     }
 }
