@@ -1,5 +1,7 @@
 package io.coti.zerospend.services;
 
+import io.coti.basenode.data.DspClusterStampVoteData;
+import io.coti.basenode.data.DspReadyForClusterStampData;
 import io.coti.basenode.data.DspVote;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.model.Transactions;
@@ -32,16 +34,14 @@ public class InitializationService {
     @Autowired
     private TransactionCreationService transactionCreationService;
     @Autowired
+    private ClusterStampService clusterStampService;
+    @Autowired
     private Transactions transactions;
 
     @PostConstruct
     public void init() {
-        HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping = new HashMap<>();
-        classNameToReceiverHandlerMapping.put(
-                DspVote.class.getName(), data ->
-                        dspVoteService.receiveDspVote((DspVote) data));
-        communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
-        communicationService.initSubscriber(propagationServerAddresses, NodeType.ZeroSpendServer);
+        initReceiver();
+        initSubscriber();
         communicationService.initPropagator(propagationPort);
 
         baseNodeInitializationService.init();
@@ -49,5 +49,21 @@ public class InitializationService {
         if (transactions.isEmpty()) {
             transactionCreationService.createGenesisTransactions();
         }
+    }
+
+    public void initReceiver(){
+        HashMap<String, Consumer<Object>> classNameToReceiverHandler = new HashMap<>();
+        classNameToReceiverHandler.put(DspVote.class.getName(), data ->
+                dspVoteService.receiveDspVote((DspVote) data));
+        classNameToReceiverHandler.put(DspReadyForClusterStampData.class.getName(), data ->
+                clusterStampService.handleDspNodeReadyForClusterStampMessage((DspReadyForClusterStampData) data));
+        classNameToReceiverHandler.put(DspClusterStampVoteData.class.getName(), data ->
+                clusterStampService.handleDspClusterStampVote((DspClusterStampVoteData) data));
+        communicationService.initReceiver(receivingPort, classNameToReceiverHandler);
+    }
+
+    public void initSubscriber(){
+        HashMap<String, Consumer<Object>> classNameToSubscriberHandler = new HashMap<>();
+        communicationService.initSubscriber(propagationServerAddresses, NodeType.ZeroSpendServer, classNameToSubscriberHandler);
     }
 }

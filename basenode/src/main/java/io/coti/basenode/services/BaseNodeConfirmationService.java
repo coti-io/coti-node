@@ -6,6 +6,7 @@ import io.coti.basenode.services.LiveView.LiveViewService;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IConfirmationService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.interfaces.IIndexService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,8 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @Slf4j
 @Service
 public class BaseNodeConfirmationService implements IConfirmationService {
-    @Autowired
-    private LiveViewService liveViewService;
+
     @Autowired
     private IBalanceService balanceService;
     @Autowired
@@ -31,6 +31,10 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     private TransactionIndexService transactionIndexService;
     @Autowired
     private Transactions transactions;
+    @Autowired
+    protected LiveViewService liveViewService;
+    @Autowired
+    private IIndexService indexService;
     private BlockingQueue<ConfirmationData> confirmationQueue;
     private Map<Long, DspConsensusResult> waitingDspConsensusResults = new ConcurrentHashMap<>();
     private AtomicLong totalConfirmed = new AtomicLong(0);
@@ -103,10 +107,15 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         }
     }
 
+    // TODO rename.
+    private void incrementAndGetTotalConfirmed(Hash transactionHash) {
+        indexService.incrementAndGetTotalConfirmed(transactionHash, totalConfirmed.incrementAndGet());
+    }
+
     private void processConfirmedTransaction(TransactionData transactionData) {
         transactionData.setTransactionConsensusUpdateTime(new Date());
         transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount()));
-        totalConfirmed.incrementAndGet();
+        incrementAndGetTotalConfirmed(transactionData.getHash());
 
         liveViewService.updateNodeStatus(transactionData, 2);
 
@@ -138,7 +147,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
             tccConfirmed.incrementAndGet();
         }
         if (isConfirmed) {
-            totalConfirmed.incrementAndGet();
+            incrementAndGetTotalConfirmed(transactionData.getHash());
         }
     }
 

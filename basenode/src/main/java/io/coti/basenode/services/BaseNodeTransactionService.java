@@ -1,8 +1,10 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.data.ClusterStampState;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.model.Transactions;
+import io.coti.basenode.services.interfaces.IClusterStampService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.ITransactionService;
 import io.coti.basenode.services.interfaces.IValidationService;
@@ -26,6 +28,8 @@ public class BaseNodeTransactionService implements ITransactionService {
     private IValidationService validationService;
     @Autowired
     private Transactions transactions;
+    @Autowired
+    private IClusterStampService clusterStampService;
     private Map<Hash, TransactionData> parentProcessingTransactions = new ConcurrentHashMap<>();
     private List<TransactionData> postponedTransactions = new LinkedList<>();
 
@@ -36,6 +40,11 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     @Override
     public void handlePropagatedTransaction(TransactionData transactionData) {
+
+        if(clusterStampService.isClusterStampInProcess()) {
+            log.debug("Cluster stamp in process, won't accept new transactions: {}", transactionData.getHash());
+            return;
+        }
         if (transactionHelper.isTransactionAlreadyPropagated(transactionData)) {
             log.debug("Transaction already exists: {}", transactionData.getHash());
             return;

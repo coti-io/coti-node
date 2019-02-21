@@ -1,8 +1,6 @@
 package io.coti.basenode.services.interfaces;
 
-import io.coti.basenode.data.BaseTransactionData;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 
 public interface IValidationService {
@@ -30,4 +28,8 @@ public interface IValidationService {
     boolean fullValidation(TransactionData transactionData);
 
     boolean validatePot(TransactionData transactionData);
+
+    boolean validatePrepareForClusterStampRequest(ClusterStampStateData clusterStampPreparationData, ClusterStampState clusterStampState);
+
+    boolean validateReadyForClusterStampRequest(ClusterStampStateData nodeReadyForClusterStampData, ClusterStampState clusterStampState);
 }

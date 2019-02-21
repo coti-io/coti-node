@@ -5,10 +5,7 @@ import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.communication.interfaces.ISender;
-import io.coti.basenode.data.AddressData;
-import io.coti.basenode.data.DspConsensusResult;
-import io.coti.basenode.data.NodeType;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.services.interfaces.IAddressService;
 import io.coti.basenode.services.interfaces.IDspVoteService;
 import io.coti.basenode.services.interfaces.ITransactionService;
@@ -23,6 +20,7 @@ import java.util.function.Consumer;
 @Slf4j
 @Service
 public class CommunicationService {
+
     @Autowired
     protected IReceiver receiver;
     @Autowired
@@ -38,8 +36,7 @@ public class CommunicationService {
     @Autowired
     private IDspVoteService dspVoteService;
 
-    public void initSubscriber(List<String> propagationServerAddresses, NodeType nodeType) {
-        HashMap<String, Consumer<Object>> classNameToSubscriberHandlerMapping = new HashMap<>();
+    public void initSubscriber(List<String> propagationServerAddresses, NodeType nodeType, HashMap<String, Consumer<Object>> classNameToSubscriberHandlerMapping) {
         classNameToSubscriberHandlerMapping.put(Channel.getChannelString(TransactionData.class, nodeType), data ->
                 transactionService.handlePropagatedTransaction((TransactionData) data));
         classNameToSubscriberHandlerMapping.put(Channel.getChannelString(AddressData.class, nodeType), data ->

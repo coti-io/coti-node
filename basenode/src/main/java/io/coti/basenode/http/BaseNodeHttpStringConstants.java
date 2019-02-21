@@ -10,6 +10,7 @@ public class BaseNodeHttpStringConstants {
     public static final String TRANSACTION_ALREADY_EXIST_MESSAGE = "Transaction already exists!";
     public static final String TRANSACTION_CREATED_MESSAGE = "Transaction created";
     public static final String TRANSACTION_CREATION_FAILED_MESSAGE = "Transaction creation failed";
+    public static final String TRANSACTION_CLUSTERSTAMP = "Transaction created and will be finished after backup process is over.";
     public static final String TRANSACTION_DETAILS_SERVER_ERROR = "Transaction details server error";
     public static final String TRANSACTION_DOESNT_EXIST_MESSAGE = "Transaction doesn't exist";
     public static final String TRANSACTION_RESPONSE_ERROR = "Transaction response error";
