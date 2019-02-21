@@ -1,10 +1,12 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.communication.ZeroMQSubscriber;
+import io.coti.basenode.data.ClusterStampData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.database.Interfaces.IDatabaseConnector;
 import io.coti.basenode.http.GetTransactionBatchRequest;
 import io.coti.basenode.http.GetTransactionBatchResponse;
+import io.coti.basenode.model.ClusterStamps;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.LiveView.LiveViewService;
 import io.coti.basenode.services.interfaces.*;
@@ -53,11 +55,8 @@ public class BaseNodeInitializationService {
     private IPotService potService;
     @Autowired
     private ZeroMQSubscriber zeroMQSubscriber;
-
-
     @Autowired
     private IDatabaseConnector rocksDbConnector;
-
 
     public void init() {
         try {

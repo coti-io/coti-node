@@ -5,7 +5,6 @@ import io.coti.basenode.services.BaseNodeBalanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-
 @Service
 public class BalanceService extends BaseNodeBalanceService {
     @Autowired

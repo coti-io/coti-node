@@ -1,8 +1,7 @@
 package io.coti.dspnode.services;
 
-import io.coti.basenode.data.AddressData;
-import io.coti.basenode.data.NodeType;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.communication.Channel;
+import io.coti.basenode.data.*;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,22 +32,49 @@ public class InitializationService {
     private AddressService addressService;
     @Autowired
     private CommunicationService communicationService;
+    @Autowired
+    private ClusterStampService clusterStampService;
 
     @PostConstruct
     public void init() {
 
+
+        initReceiver();
+        communicationService.initSender(receivingServerAddresses);
+        initSubscriber();
+        communicationService.initPropagator(propagationPort);
+
+        baseNodeInitializationService.init();
+
+    }
+
+    public void initReceiver(){
         HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping = new HashMap<>();
         classNameToReceiverHandlerMapping.put(TransactionData.class.getName(), data ->
                 transactionService.handleNewTransactionFromFullNode((TransactionData) data));
         classNameToReceiverHandlerMapping.put(AddressData.class.getName(), data ->
                 addressService.handleNewAddressFromFullNode((AddressData) data));
+        classNameToReceiverHandlerMapping.put(FullNodeReadyForClusterStampData.class.getName(), data ->
+                clusterStampService.handleFullNodeReadyForClusterStampMessage((FullNodeReadyForClusterStampData) data));
 
         communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
-        communicationService.initSender(receivingServerAddresses);
-        communicationService.initSubscriber(propagationServerAddresses, NodeType.DspNode);
-        communicationService.initPropagator(propagationPort);
+    }
 
-        baseNodeInitializationService.init();
+    public void initSubscriber(){
+        HashMap<String, Consumer<Object>> classNameToSubscriberHandler = new HashMap<>();
 
+        classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampPreparationData.class, NodeType.DspNode), data ->
+                clusterStampService.prepareForClusterStamp((ClusterStampPreparationData) data));
+
+        classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampData.class, NodeType.DspNode), data ->
+                clusterStampService.voteAndStoreClusterStamp((ClusterStampData) data));
+
+        classNameToSubscriberHandler.put(Channel.getChannelString(ZeroSpendIsReadyForClusterStampData.class, NodeType.DspNode), data ->
+                clusterStampService.handleZeroSpendIsReadyForClusterStampData((ZeroSpendIsReadyForClusterStampData) data));
+
+        classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampConsensusResult.class, NodeType.DspNode), data ->
+                clusterStampService.handleClusterStampConsensusResult((ClusterStampConsensusResult) data));
+
+        communicationService.initSubscriber(propagationServerAddresses, NodeType.DspNode, classNameToSubscriberHandler);
     }
 }

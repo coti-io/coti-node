@@ -60,7 +60,9 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
                 Addresses.class.getName(),
                 AddressTransactionsHistories.class.getName(),
                 TransactionIndexes.class.getName(),
-                TransactionVotes.class.getName()
+                TransactionVotes.class.getName(),
+                DspReadyForClusterStamp.class.getName(),
+                ClusterStamps.class.getName()
         ));
 
     }
