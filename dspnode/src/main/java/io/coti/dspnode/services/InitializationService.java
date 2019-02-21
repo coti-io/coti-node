@@ -55,7 +55,7 @@ public class InitializationService {
         classNameToReceiverHandlerMapping.put(AddressData.class.getName(), data ->
                 addressService.handleNewAddressFromFullNode((AddressData) data));
         classNameToReceiverHandlerMapping.put(FullNodeReadyForClusterStampData.class.getName(), data ->
-                clusterStampService.handleFullNodeReadyForClusterStampMessage((FullNodeReadyForClusterStampData) data));
+                clusterStampService.getReadyForClusterStamp((FullNodeReadyForClusterStampData) data));
 
         communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
     }
@@ -69,8 +69,8 @@ public class InitializationService {
         classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampData.class, NodeType.DspNode), data ->
                 clusterStampService.voteAndStoreClusterStamp((ClusterStampData) data));
 
-        classNameToSubscriberHandler.put(Channel.getChannelString(ZeroSpendIsReadyForClusterStampData.class, NodeType.DspNode), data ->
-                clusterStampService.handleZeroSpendIsReadyForClusterStampData((ZeroSpendIsReadyForClusterStampData) data));
+        classNameToSubscriberHandler.put(Channel.getChannelString(ZeroSpendReadyForClusterStampData.class, NodeType.DspNode), data ->
+                clusterStampService.handleZeroSpendReadyForClusterStampData((ZeroSpendReadyForClusterStampData) data));
 
         classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampConsensusResult.class, NodeType.DspNode), data ->
                 clusterStampService.handleClusterStampConsensusResult((ClusterStampConsensusResult) data));

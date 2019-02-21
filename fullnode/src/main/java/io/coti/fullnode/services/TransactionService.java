@@ -119,7 +119,8 @@ public class TransactionService extends BaseNodeTransactionService {
             transactionHelper.attachTransactionToCluster(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
 
-            if(clusterStampService.isReadyForClusterStamp()){
+            // Stop handling transactions if cluster stamp started
+            if(!clusterStampService.isClusterStampOff()){
                 webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
                 clusterStampService.addClusterStampTransaction(transactionData);
                 return ResponseEntity

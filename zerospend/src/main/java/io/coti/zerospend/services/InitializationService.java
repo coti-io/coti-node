@@ -56,7 +56,7 @@ public class InitializationService {
         classNameToReceiverHandler.put(DspVote.class.getName(), data ->
                 dspVoteService.receiveDspVote((DspVote) data));
         classNameToReceiverHandler.put(DspReadyForClusterStampData.class.getName(), data ->
-                clusterStampService.handleDspNodeReadyForClusterStampMessage((DspReadyForClusterStampData) data));
+                clusterStampService.getReadyForClusterStamp((DspReadyForClusterStampData) data));
         classNameToReceiverHandler.put(DspClusterStampVoteData.class.getName(), data ->
                 clusterStampService.handleDspClusterStampVote((DspClusterStampVoteData) data));
         communicationService.initReceiver(receivingPort, classNameToReceiverHandler);

@@ -1,7 +1,7 @@
 package io.coti.dspnode.database;
 
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
-import io.coti.dspnode.model.NotTotalConfirmedTransactionHashes;
+import io.coti.basenode.model.NotTotalConfirmedTransactionHashes;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 

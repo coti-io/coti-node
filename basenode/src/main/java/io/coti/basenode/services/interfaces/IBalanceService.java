@@ -30,4 +30,6 @@ public interface IBalanceService {
     void updatePreBalance(Hash addressHash, BigDecimal amount);
 
     void updateBalanceAndPreBalanceMap(Map<Hash, BigDecimal> balanceMap);
+
+    Map<Hash, BigDecimal> getBalanceMap();
 }

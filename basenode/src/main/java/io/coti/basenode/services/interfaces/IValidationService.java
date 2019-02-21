@@ -29,7 +29,28 @@ public interface IValidationService {
 
     boolean validatePot(TransactionData transactionData);
 
-    boolean validatePrepareForClusterStampRequest(ClusterStampStateData clusterStampPreparationData, ClusterStampState clusterStampState);
+    /**
+     * Validates the Request signature and the current Cluster stamp state is OFF.
+     * @param clusterStampPreparationData The ClusterStamp request.
+     * @param currentClusterStampState The current node state in the cluster stamp flow.
+     * @return true if request is valid and the state is correct. false otherwise.
+     */
+    boolean validateRequestAndOffState(ClusterStampStateData clusterStampPreparationData, ClusterStampState currentClusterStampState);
 
-    boolean validateReadyForClusterStampRequest(ClusterStampStateData nodeReadyForClusterStampData, ClusterStampState clusterStampState);
+    /**
+     * Validates the Request signature and the current Cluster stamp state is PREPARING.
+     * @param nodeReadyForClusterStampData The ClusterStamp request.
+     * @param currentClusterStampState The current node state in the cluster stamp flow.
+     * @return true if request is valid and the state is correct. false otherwise.
+     */
+    boolean validateRequestAndPreparingState(ClusterStampStateData nodeReadyForClusterStampData, ClusterStampState currentClusterStampState);
+
+    /**
+     * Validates the Request signature and the current Cluster stamp state is READY.
+     * @param clusterStampStateData The ClusterStamp request.
+     * @param currentClusterStampState The current node state in the cluster stamp flow.
+     * @return true if request is valid and the state is correct. false otherwise.
+     */
+    boolean validateRequestAndReadyState(ClusterStampStateData clusterStampStateData, ClusterStampState currentClusterStampState);
+
 }

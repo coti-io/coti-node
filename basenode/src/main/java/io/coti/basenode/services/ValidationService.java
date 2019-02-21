@@ -101,18 +101,30 @@ public class ValidationService implements IValidationService {
     }
 
     @Override
-    public boolean validatePrepareForClusterStampRequest(ClusterStampStateData clusterStampPreparationData, ClusterStampState clusterStampState) {
-        return validateClusterStampRequestByState(clusterStampPreparationData,clusterStampState,ClusterStampState.PREPARING);
+    public boolean validateRequestAndOffState(ClusterStampStateData clusterStampPreparationData, ClusterStampState currentClusterStampState) {
+        return validateClusterStampRequestByState(clusterStampPreparationData,currentClusterStampState,ClusterStampState.OFF);
     }
 
     @Override
-    public boolean validateReadyForClusterStampRequest(ClusterStampStateData nodeReadyForClusterStampData, ClusterStampState clusterStampState) {
-        return validateClusterStampRequestByState(nodeReadyForClusterStampData,clusterStampState,ClusterStampState.READY);
+    public boolean validateRequestAndPreparingState(ClusterStampStateData nodeReadyForClusterStampData, ClusterStampState currentClusterStampState) {
+        return validateClusterStampRequestByState(nodeReadyForClusterStampData,currentClusterStampState,ClusterStampState.PREPARING);
     }
 
-    private boolean validateClusterStampRequestByState(ClusterStampStateData clusterStampStateData, ClusterStampState currentState, ClusterStampState expectedState){
-        if(currentState == expectedState){
-            log.info("Expected cluster stamp state is already in progress");
+    @Override
+    public boolean validateRequestAndReadyState(ClusterStampStateData clusterStampStateData, ClusterStampState currentClusterStampState) {
+        return validateClusterStampRequestByState(clusterStampStateData,currentClusterStampState,ClusterStampState.READY);
+    }
+
+    /**
+     * Validates the cluster stamp request signature and the current state is same as expected.
+     * @param clusterStampStateData the cluster stamp request.
+     * @param currentState current cluster stamp state.
+     * @param expectedCurrentState expected cluster stamp state.
+     * @return true if request signature and current cluster stamp state are correct. false otherwise.
+     */
+    private boolean validateClusterStampRequestByState(ClusterStampStateData clusterStampStateData, ClusterStampState currentState, ClusterStampState expectedCurrentState){
+        if(currentState != expectedCurrentState){
+            log.error("Expected cluster stamp state: {}. Current cluster stamp state: {}",expectedCurrentState,currentState);
             return false;
         }
         else if(!clusterStampStateCrypto.verifySignature(clusterStampStateData)){

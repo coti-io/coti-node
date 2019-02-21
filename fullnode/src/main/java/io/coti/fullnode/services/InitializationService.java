@@ -43,7 +43,7 @@ public class InitializationService {
                 clusterStampService.prepareForClusterStamp((ClusterStampPreparationData) data));
 
         classNameToSubscriberHandler.put(Channel.getChannelString(DspReadyForClusterStampData.class, NodeType.FullNode), data ->
-                clusterStampService.handleDspReadyForClusterStampData((DspReadyForClusterStampData) data));
+                clusterStampService.getReadyForClusterStamp((DspReadyForClusterStampData) data));
 
         classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampData.class, NodeType.FullNode), data ->
                 clusterStampService.handleClusterStamp((ClusterStampData) data));

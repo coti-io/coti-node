@@ -7,14 +7,14 @@ import java.util.List;
 
 @Slf4j
 @Data
-public class ZeroSpendIsReadyForClusterStampData extends ClusterStampStateData {
+public class ZeroSpendReadyForClusterStampData extends ClusterStampStateData {
 
     private List<DspReadyForClusterStampData> dspReadyForClusterStampDataList;
 
-    private ZeroSpendIsReadyForClusterStampData() {
+    private ZeroSpendReadyForClusterStampData() {
     }
 
-    public ZeroSpendIsReadyForClusterStampData(long totalConfirmedTransactions) {
+    public ZeroSpendReadyForClusterStampData(long totalConfirmedTransactions) {
         this.clusterStampHash = new Hash(totalConfirmedTransactions);
         this.totalConfirmedTransactionsCount = totalConfirmedTransactions;
     }

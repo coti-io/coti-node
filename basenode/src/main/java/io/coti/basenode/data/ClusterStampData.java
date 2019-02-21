@@ -15,6 +15,7 @@ import java.util.Map;
 @Data
 public class ClusterStampData implements IPropagatable, ISignable, ISignValidatable {
 
+    //TODO 3/4/2019 astolia: see if can decrease amount of data here.
     private Hash hash;
     private long totalConfirmedTransactionsPriorClusterStamp;
     private Map<Hash, BigDecimal> balanceMap;

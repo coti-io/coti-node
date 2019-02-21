@@ -1,7 +1,6 @@
-package io.coti.dspnode.model;
+package io.coti.basenode.model;
 
-import io.coti.basenode.model.Collection;
-import io.coti.dspnode.data.NotTotalConfirmedTransactionHash;
+import io.coti.basenode.data.NotTotalConfirmedTransactionHash;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +13,7 @@ public class NotTotalConfirmedTransactionHashes extends Collection<NotTotalConfi
     public NotTotalConfirmedTransactionHashes() {
     }
 
+    @Override
     @PostConstruct
     public void init() {
         super.init();

@@ -28,7 +28,6 @@
             <artifactId>spring-boot-starter-integration</artifactId>
         </dependency>
     </dependencies>
-
     <build>
         <plugins>
             <plugin>

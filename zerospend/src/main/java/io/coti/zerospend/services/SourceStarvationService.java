@@ -30,6 +30,7 @@ public class SourceStarvationService {
     @PostConstruct
     private void init() {
         checkSourcesStarvationThread = new Thread(() -> checkSourcesStarvation());
+        checkSourcesStarvationThread.start();
     }
 
     public void checkSourcesStarvation() {
@@ -74,6 +75,8 @@ public class SourceStarvationService {
     }
 
     public void startCheckSourcesStarvation() {
+        log.info("Restarting {}", this.getClass().getSimpleName());
+        checkSourcesStarvationThread = new Thread(() -> checkSourcesStarvation());
         checkSourcesStarvationThread.start();
     }
 }

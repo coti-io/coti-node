@@ -4,12 +4,7 @@ import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.List;
-
-@Slf4j
 @Data
 public abstract class ClusterStampStateData implements IPropagatable, ISignable, ISignValidatable {
 

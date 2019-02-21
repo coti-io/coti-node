@@ -35,8 +35,6 @@ public class DspVoteService extends BaseNodeDspVoteService {
     private DspVoteCrypto dspVoteCrypto;
     @Autowired
     private DspConsensusCrypto dspConsensusCrypto;
-    @Autowired
-    private ClusterStampService clusterStampService;
     @Value("#{'${dsp.server.addresses}'.split(',')}")
     private List<String> dspServerAddresses;
     private List<Hash> currentLiveDspNodes;
@@ -218,6 +216,8 @@ public class DspVoteService extends BaseNodeDspVoteService {
     }
 
     public void startSumAndSaveVotes() {
+        log.info("Restarting {}", this.getClass().getSimpleName());
+        sumAndSaveVotesThread = new Thread(() -> sumAndSaveVotes());
         sumAndSaveVotesThread.start();
     }
 }

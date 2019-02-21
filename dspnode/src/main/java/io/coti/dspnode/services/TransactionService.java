@@ -5,13 +5,13 @@ import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.crypto.DspVoteCrypto;
 import io.coti.basenode.data.DspVote;
 import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.NotTotalConfirmedTransactionHash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.model.NotTotalConfirmedTransactionHashes;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.IClusterStampService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
-import io.coti.dspnode.data.NotTotalConfirmedTransactionHash;
-import io.coti.dspnode.model.NotTotalConfirmedTransactionHashes;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,6 +47,7 @@ public class TransactionService extends BaseNodeTransactionService {
     private NotTotalConfirmedTransactionHashes notTotalConfirmedTransactionHashes;
 
     public String handleNewTransactionFromFullNode(TransactionData transactionData) {
+        //TODO 2/20/2019 astolia: check if this is correct state here.
         if(clusterStampService.isReadyForClusterStamp()){
             return "Waiting for cluster stamp";
         }
@@ -104,6 +105,7 @@ public class TransactionService extends BaseNodeTransactionService {
         super.init();
     }
 
+    @Override
     public void continueHandlePropagatedTransaction(TransactionData transactionData) {
 
         propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
