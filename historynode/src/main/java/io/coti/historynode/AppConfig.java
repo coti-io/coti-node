@@ -11,11 +11,5 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 )
 @EnableScheduling
 @PropertySource("classpath:application.properties")
-//@Configuration
-//@ComponentScan(
-//        basePackages = {"io.coti.historynode", "io.coti.basenode"}
-//)
-//@EnableScheduling
-//@PropertySource("classpath:application.properties")
 public class AppConfig {
 }
