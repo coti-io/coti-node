@@ -1,9 +1,8 @@
 package io.coti.trustscore.database;
 
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
-import io.coti.trustscore.data.MerchantRollingReserveData;
 import io.coti.trustscore.model.BucketEvents;
-import io.coti.trustscore.model.MerchantRollingReserve;
+import io.coti.trustscore.model.MerchantRollingReserveAddresses;
 import io.coti.trustscore.model.TrustScores;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
@@ -20,7 +19,7 @@ public class TrustScoreRocksDBConnector extends BaseNodeRocksDBConnector {
         columnFamilyClassNames.addAll(Arrays.asList(
                 BucketEvents.class.getName(),
                 TrustScores.class.getName(),
-                MerchantRollingReserve.class.getName()
+                MerchantRollingReserveAddresses.class.getName()
         ));
     }
 }

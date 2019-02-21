@@ -377,7 +377,7 @@ public class TrustScoreService {
             ObjectMapper objectMapper = new ObjectMapper();
             InputStream jsonConfigStream = new ClassPathResource("trustScoreRules.json").getInputStream();
             rulesData = objectMapper.readValue(jsonConfigStream, RulesData.class);
-            log.info(rulesData.toString());
+            log.debug(rulesData.toString());
         } catch (IOException e) {
             log.error("Error reading from JSON file", e);
             log.error("Shutting down!");

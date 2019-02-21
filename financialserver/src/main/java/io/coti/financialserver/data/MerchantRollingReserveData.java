@@ -12,7 +12,7 @@ import java.util.Date;
 import java.util.List;
 
 @Data
-public class RollingReserveData implements IEntity, ISignable, ISignValidatable {
+public class MerchantRollingReserveData implements IEntity, ISignable, ISignValidatable {
 
     Hash merchantHash;
     Hash rollingReserveAddress;
@@ -20,7 +20,7 @@ public class RollingReserveData implements IEntity, ISignable, ISignValidatable 
     List<Date> releaseDates;
     private SignatureData merchantSignature;
 
-    public RollingReserveData() {
+    public MerchantRollingReserveData() {
         releaseDates = new ArrayList<>();
     }
 

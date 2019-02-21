@@ -10,7 +10,7 @@ import javax.validation.constraints.NotNull;
 
 
 @Data
-public class MerchantRollingReserveAddressRequest implements ISignable, ISignValidatable {
+public class GetMerchantRollingReserveAddressRequest implements ISignable, ISignValidatable {
 
     @NotNull
     Hash trustScoreNodeHash;
@@ -18,11 +18,6 @@ public class MerchantRollingReserveAddressRequest implements ISignable, ISignVal
     Hash merchantHash;
     @NotNull
     private SignatureData signature;
-
-    @Override
-    public SignatureData getSignature() {
-        return signature;
-    }
 
     @Override
     public Hash getSignerHash() {

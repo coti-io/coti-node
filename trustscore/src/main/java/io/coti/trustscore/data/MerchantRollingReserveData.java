@@ -13,7 +13,6 @@ public class MerchantRollingReserveData implements IEntity {
     private Hash merchantRollingReserveAddress;
 
 
-
     @Override
     public Hash getHash() {
         return merchantHash;

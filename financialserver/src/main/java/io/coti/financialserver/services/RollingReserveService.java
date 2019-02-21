@@ -2,25 +2,26 @@ package io.coti.financialserver.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.crypto.CryptoHelper;
-import io.coti.basenode.crypto.MerchantRollingReserveAddressCrypto;
+import io.coti.basenode.crypto.GetMerchantRollingReserveAddressCrypto;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.MerchantRollingReserveAddressData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.Response;
-import io.coti.basenode.http.MerchantRollingReserveAddressRequest;
-import io.coti.basenode.http.MerchantRollingReserveAddressResponse;
+import io.coti.basenode.http.GetMerchantRollingReserveAddressRequest;
+import io.coti.basenode.http.GetMerchantRollingReserveAddressResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
 import io.coti.financialserver.crypto.RecourseClaimCrypto;
-import io.coti.financialserver.crypto.RollingReserveCrypto;
+import io.coti.financialserver.crypto.MerchantRollingReserveCrypto;
 import io.coti.financialserver.data.*;
-import io.coti.financialserver.http.GetRollingReserveMerchantDataRequest;
+import io.coti.financialserver.http.GetMerchantRollingReserveDataRequest;
 import io.coti.financialserver.http.GetRollingReserveReleaseDatesResponse;
 import io.coti.financialserver.http.RecourseClaimRequest;
 import io.coti.financialserver.model.Disputes;
 import io.coti.financialserver.model.RecourseClaims;
 import io.coti.financialserver.model.RollingReserveReleaseDates;
-import io.coti.financialserver.model.RollingReserves;
+import io.coti.financialserver.model.MerchantRollingReserves;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +45,7 @@ public class RollingReserveService {
     private static final int COTI_POOL_ADDRESS_INDEX = 0;
     private static final int ROLLING_RESERVE_DEFAULT_DAYS_TO_HOLD = 10;
     @Autowired
-    RollingReserves rollingReserves;
+    MerchantRollingReserves merchantRollingReserves;
     @Autowired
     RollingReserveReleaseDates rollingReserveReleaseDates;
     @Autowired
@@ -54,9 +55,9 @@ public class RollingReserveService {
     @Value("${financialserver.seed}")
     private String seed;
     @Autowired
-    private RollingReserveCrypto rollingReserveCrypto;
+    private MerchantRollingReserveCrypto merchantRollingReserveCrypto;
     @Autowired
-    private MerchantRollingReserveAddressCrypto merchantRollingReserveAddressCrypto;
+    private GetMerchantRollingReserveAddressCrypto getMerchantRollingReserveAddressCrypto;
     @Autowired
     private DisputeService disputeService;
     @Autowired
@@ -70,60 +71,60 @@ public class RollingReserveService {
 
     public void init() {
         lastAddressIndex = new AtomicInteger(COTI_POOL_ADDRESS_INDEX + 1);
-        rollingReserves.forEach(c -> lastAddressIndex.getAndIncrement());
+        merchantRollingReserves.forEach(c -> lastAddressIndex.getAndIncrement());
     }
 
     public Hash getCotiPoolAddress() {
         return CryptoHelper.generateAddress(seed, COTI_POOL_ADDRESS_INDEX);
     }
 
-    public ResponseEntity getRollingReserveData(GetRollingReserveMerchantDataRequest request) {
+    public ResponseEntity getRollingReserveData(GetMerchantRollingReserveDataRequest request) {
 
         RollingReserveReleaseDateData rollingReserveReleaseDateData;
         RollingReserveReleaseStatus rollingReserveReleaseStatus;
 
-        RollingReserveData rollingReserveData = request.getRollingReserveData();
+        MerchantRollingReserveData merchantRollingReserveData = request.getMerchantRollingReserveData();
 
-        if (!rollingReserveCrypto.verifySignature(rollingReserveData)) {
+        if (!merchantRollingReserveCrypto.verifySignature(merchantRollingReserveData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
         }
 
-        rollingReserveData = getRollingReserveMerchantData(rollingReserveData.getHash());
+        merchantRollingReserveData = getMerchantRollingReserveData(merchantRollingReserveData.getHash());
 
         Map<String, RollingReserveReleaseStatus> rollingReserveReleases = new HashMap<>();
-        for (Date releaseData : rollingReserveData.getReleaseDates()) {
+        for (Date releaseData : merchantRollingReserveData.getReleaseDates()) {
 
             Hash dateHash = new Hash(releaseData.getTime());
             rollingReserveReleaseDateData = rollingReserveReleaseDates.getByHash(dateHash);
-            rollingReserveReleaseStatus = rollingReserveReleaseDateData.getRollingReserveReleaseStatusByMerchant().get(rollingReserveData.getHash());
+            rollingReserveReleaseStatus = rollingReserveReleaseDateData.getRollingReserveReleaseStatusByMerchant().get(merchantRollingReserveData.getHash());
 
             rollingReserveReleases.put(releaseData.toString(), rollingReserveReleaseStatus);
         }
 
-        RecourseClaimData recourseClaimData = recourseClaims.getByHash(rollingReserveData.getMerchantHash());
-        return ResponseEntity.status(HttpStatus.OK).body(new GetRollingReserveReleaseDatesResponse(rollingReserveData, rollingReserveReleases, recourseClaimData));
+        RecourseClaimData recourseClaimData = recourseClaims.getByHash(merchantRollingReserveData.getMerchantHash());
+        return ResponseEntity.status(HttpStatus.OK).body(new GetRollingReserveReleaseDatesResponse(merchantRollingReserveData, rollingReserveReleases, recourseClaimData));
     }
 
 
-    public RollingReserveData getRollingReserveMerchantData(Hash merchantHash) {
-        RollingReserveData rollingReserveData = rollingReserves.getByHash(merchantHash);
-        if (rollingReserveData == null) {
+    public MerchantRollingReserveData getMerchantRollingReserveData(Hash merchantHash) {
+        MerchantRollingReserveData merchantRollingReserveData = merchantRollingReserves.getByHash(merchantHash);
+        if (merchantRollingReserveData == null) {
             createRollingReserveDataForMerchant(merchantHash);
-            rollingReserveData = rollingReserves.getByHash(merchantHash);
-            propagationPublisher.propagate(new RollingReserveAddressPropagatable(rollingReserveData.getHash(), rollingReserveData.getRollingReserveAddress()),
+            merchantRollingReserveData = merchantRollingReserves.getByHash(merchantHash);
+            propagationPublisher.propagate(new MerchantRollingReserveAddressData(merchantRollingReserveData.getHash(), merchantRollingReserveData.getRollingReserveAddress()),
                     Arrays.asList(NodeType.TrustScoreNode));
         }
-        return rollingReserveData;
+        return merchantRollingReserveData;
     }
 
-    public ResponseEntity<IResponse> getMerchantRollingReserveAddress(MerchantRollingReserveAddressRequest request) {
+    public ResponseEntity<IResponse> getMerchantRollingReserveAddress(GetMerchantRollingReserveAddressRequest request) {
 
-        if (!merchantRollingReserveAddressCrypto.verifySignature(request)) {
+        if (!getMerchantRollingReserveAddressCrypto.verifySignature(request)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
         }
 
-        RollingReserveData rollingReserveData = getRollingReserveMerchantData(request.getMerchantHash());
-        return ResponseEntity.status(HttpStatus.OK).body(new MerchantRollingReserveAddressResponse(rollingReserveData.getRollingReserveAddress()));
+        MerchantRollingReserveData merchantRollingReserveData = getMerchantRollingReserveData(request.getMerchantHash());
+        return ResponseEntity.status(HttpStatus.OK).body(new GetMerchantRollingReserveAddressResponse(merchantRollingReserveData.getMerchantHash(), merchantRollingReserveData.getRollingReserveAddress()));
     }
 
     public ResponseEntity recourseClaim(RecourseClaimRequest request) {
@@ -196,18 +197,18 @@ public class RollingReserveService {
 
             rollingReserveReleaseDateData.getRollingReserveReleaseStatusByMerchant().put(merchantHash, rollingReserveReleaseStatus);
 
-            if (rollingReserves.getByHash(merchantHash) == null) {
+            if (merchantRollingReserves.getByHash(merchantHash) == null) {
                 createRollingReserveDataForMerchant(merchantHash);
             }
 
-            RollingReserveData rollingReserveData = rollingReserves.getByHash(merchantHash);
+            MerchantRollingReserveData merchantRollingReserveData = merchantRollingReserves.getByHash(merchantHash);
 
             rollingReserveReleaseDates.put(rollingReserveReleaseDateData);
-            if (!rollingReserveData.getReleaseDates().contains(date)) {
-                rollingReserveData.getReleaseDates().add(date);
+            if (!merchantRollingReserveData.getReleaseDates().contains(date)) {
+                merchantRollingReserveData.getReleaseDates().add(date);
             }
 
-            rollingReserves.put(rollingReserveData);
+            merchantRollingReserves.put(merchantRollingReserveData);
             log.info("Rolling reserve release date set success for transaction {} and merchant {}", transactionData.getHash(), merchantHash);
 
         } catch (Exception e) {
@@ -222,11 +223,11 @@ public class RollingReserveService {
         RollingReserveReleaseDateData rollingReserveReleaseDateData;
         Hash merchantHash = disputeData.getMerchantHash();
 
-        if (rollingReserves.getByHash(merchantHash) == null) {
+        if (merchantRollingReserves.getByHash(merchantHash) == null) {
             createRollingReserveDataForMerchant(merchantHash);
         }
-        RollingReserveData rollingReserveData = rollingReserves.getByHash(merchantHash);
-        List<Date> releaseDates = rollingReserveData.getReleaseDates();
+        MerchantRollingReserveData merchantRollingReserveData = merchantRollingReserves.getByHash(merchantHash);
+        List<Date> releaseDates = merchantRollingReserveData.getReleaseDates();
 
         BigDecimal remainingChargebackAmount = amount;
         for (Date releaseDate : releaseDates) {
@@ -247,7 +248,7 @@ public class RollingReserveService {
                 rollingReserveReleaseStatus.setReturnedAmount(rollingReserveReleaseStatus.getReturnedAmount().add(remainingChargebackAmount));
                 if (rollingReserveReleaseStatus.getInitialAmount().equals(rollingReserveReleaseStatus.getReturnedAmount())) {
                     addConsumerToRollingReserveReceiver(rollingReserveReleaseStatus);
-                    rollingReserveData.getReleaseDates().remove(releaseDate);
+                    merchantRollingReserveData.getReleaseDates().remove(releaseDate);
                 }
 
                 remainingChargebackAmount = new BigDecimal(0);
@@ -257,7 +258,7 @@ public class RollingReserveService {
             }
         }
 
-        transactionCreationService.createNewChargebackTransaction(amount, rollingReserveData.getRollingReserveAddress(), consumerAddress, remainingChargebackAmount);
+        transactionCreationService.createNewChargebackTransaction(amount, merchantRollingReserveData.getRollingReserveAddress(), consumerAddress, remainingChargebackAmount);
 
         if (!remainingChargebackAmount.equals(new BigDecimal(0))) {
             RecourseClaimData recourseClaimData = recourseClaims.getByHash(merchantHash);
@@ -273,10 +274,10 @@ public class RollingReserveService {
             recourseClaims.put(recourseClaimData);
         }
 
-        rollingReserves.put(rollingReserveData);
+        merchantRollingReserves.put(merchantRollingReserveData);
     }
 
-    private void createRollingReserveDataForMerchant(Hash merchantHash) {
+    private synchronized void createRollingReserveDataForMerchant(Hash merchantHash) {
 
         if (lastAddressIndex == null) {
             init();
@@ -284,11 +285,11 @@ public class RollingReserveService {
 
         Hash address = CryptoHelper.generateAddress(seed, lastAddressIndex.intValue());
 
-        RollingReserveData rollingReserveData = new RollingReserveData();
-        rollingReserveData.setMerchantHash(merchantHash);
-        rollingReserveData.setRollingReserveAddress(address);
-        rollingReserveData.setAddressIndex(lastAddressIndex.intValue());
-        rollingReserves.put(rollingReserveData);
+        MerchantRollingReserveData merchantRollingReserveData = new MerchantRollingReserveData();
+        merchantRollingReserveData.setMerchantHash(merchantHash);
+        merchantRollingReserveData.setRollingReserveAddress(address);
+        merchantRollingReserveData.setAddressIndex(lastAddressIndex.intValue());
+        merchantRollingReserves.put(merchantRollingReserveData);
 
         lastAddressIndex.incrementAndGet();
     }
