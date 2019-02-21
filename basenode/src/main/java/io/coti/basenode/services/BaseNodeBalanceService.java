@@ -93,13 +93,13 @@ public class BaseNodeBalanceService implements IBalanceService {
 
         long totalConfirmedTransactionsPriorClusterStamp;
 
-        ClusterStampData localClusterStampData = clusterStamps.getByHash(new Hash(""));
+        ClusterStampData localClusterStampData = clusterStampService.getLastClusterStamp(0);
 
         if (localClusterStampData != null) {
             totalConfirmedTransactionsPriorClusterStamp = localClusterStampData.getTotalConfirmedTransactionsPriorClusterStamp();
         }
         else {
-            totalConfirmedTransactionsPriorClusterStamp = 0;
+            totalConfirmedTransactionsPriorClusterStamp = -1;
         }
 
         if(!recoveryServerAddress.isEmpty()) {
@@ -111,7 +111,7 @@ public class BaseNodeBalanceService implements IBalanceService {
                     ClusterStampData.class);
 
             if(lastClusterStampData != null) {
-                log.info("Received last cluster stamp for total confirmed transactions: {}", localClusterStampData.getTotalConfirmedTransactionsPriorClusterStamp());
+                log.info("Received last cluster stamp for total confirmed transactions: {}", lastClusterStampData);
                 return lastClusterStampData;
             }
         }

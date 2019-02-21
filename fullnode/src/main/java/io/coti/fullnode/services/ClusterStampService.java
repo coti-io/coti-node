@@ -47,7 +47,7 @@ public class ClusterStampService extends BaseNodeClusterStampService implements 
     public void prepareForClusterStamp(ClusterStampPreparationData clusterStampPreparationData) {
         if(validationService.validatePrepareForClusterStampRequest(clusterStampPreparationData, clusterStampState)){
             log.debug("Start preparation of Full node for cluster stamp");
-            clusterStampState = clusterStampState.nextState();
+            clusterStampState = clusterStampState.nextState(); //Change state to Preparing
 
             FullNodeReadyForClusterStampData fullNodeReadyForClusterStampData = new FullNodeReadyForClusterStampData(clusterStampPreparationData.getTotalConfirmedTransactionsCount());
             clusterStampStateCrypto.signMessage(fullNodeReadyForClusterStampData);
@@ -75,7 +75,7 @@ public class ClusterStampService extends BaseNodeClusterStampService implements 
 
     public void handleDspReadyForClusterStampData(DspReadyForClusterStampData dspReadyForClusterStampData) {
         if(clusterStampStateCrypto.verifySignature(dspReadyForClusterStampData)) {
-            clusterStampState = clusterStampState.nextState();
+            clusterStampState = clusterStampState.nextState().nextState(); //Change state to In process
         }
     }
 
@@ -92,12 +92,15 @@ public class ClusterStampService extends BaseNodeClusterStampService implements 
 
     @Override
     public void handleClusterStampConsensusResult(ClusterStampConsensusResult clusterStampConsensusResult) {
-        super.handleClusterStampConsensusResult(clusterStampConsensusResult);
-        if(!clusterStampTransactions.isEmpty()){
-            clusterStampTransactions.forEach( transaction -> {
-                handleUnfinishedClusterStampTransaction(transaction);
-                clusterStampTransactions.remove(transaction);
-            });
+        if(isClusterStampInProcess()) {
+            super.handleClusterStampConsensusResult(clusterStampConsensusResult);
+            if(!clusterStampTransactions.isEmpty()){
+                clusterStampTransactions.forEach( transaction -> {
+                    handleUnfinishedClusterStampTransaction(transaction);
+                    clusterStampTransactions.remove(transaction);
+                });
+            }
+            clusterStampState.nextState(); // Change state to Off
         }
     }
 

@@ -70,7 +70,7 @@ public class BaseNodeInitializationService {
 
             AtomicLong maxTransactionIndex = new AtomicLong(-1);
             transactions.forEach(transactionData -> handleExistingTransaction(maxTransactionIndex, transactionData));
-            transactionIndexService.init(maxTransactionIndex);
+            transactionIndexService.init(11,maxTransactionIndex);
             log.info("Transactions Load completed");
 
             monitorService.init();

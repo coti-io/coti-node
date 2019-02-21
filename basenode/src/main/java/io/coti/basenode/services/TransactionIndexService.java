@@ -26,12 +26,12 @@ public class TransactionIndexService {
     private Transactions transactions;
     private TransactionIndexData lastTransactionIndexData;
 
-    public void init(AtomicLong maxTransactionIndex) throws Exception {
+    public void init(int minTransactionIndex, AtomicLong maxTransactionIndex) throws Exception {
         byte[] accumulatedHash = "GENESIS".getBytes();
         TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash(-1), -1, "GENESIS".getBytes());
         TransactionIndexData nextTransactionIndexData;
         try {
-            for (long i = 0; i <= maxTransactionIndex.get(); i++) {
+            for (long i = minTransactionIndex; i <= maxTransactionIndex.get(); i++) {
                 nextTransactionIndexData = transactionIndexes.getByHash(new Hash(i));
                 if (nextTransactionIndexData == null) {
                     log.error("Null transaction index data found for index: {}", i);

@@ -96,8 +96,8 @@ public class ClusterStampService extends BaseNodeClusterStampService implements 
     public void handleDspNodeReadyForClusterStampMessage(DspReadyForClusterStampData dspReadyForClusterStampData) {
 
         log.debug("\'Ready for cluster stamp\' propagated message received from DSP to ZS");
-        //TODO 2/19/2019 astolia: change to use validator.
-        if(isPreparingForClusterStamp() && clusterStampStateCrypto.verifySignature(dspReadyForClusterStampData)) {
+
+        if(validationService.validateReadyForClusterStampRequest(dspReadyForClusterStampData, clusterStampState)) {
 
             if(currentClusterStamp.getDspReadyForClusterStampDataList().contains(dspReadyForClusterStampData)) {
                 log.warn("\'Dsp Node Ready For Cluster Stamp\' was already sent by the sender of this message");
@@ -117,10 +117,10 @@ public class ClusterStampService extends BaseNodeClusterStampService implements 
      * Called after received 'dsp ready' from all DSP's OR after prepare for clusterstamp timeout has expired.
      */
     public void makeAndPropagateClusterStamp() {
-        clusterStampState = clusterStampState.nextState(); //Change state to READY
+        clusterStampState = clusterStampState.nextState().nextState(); //Change state to In Process
         //TODO BUG dspVoteService appears also in the extended class. either add method to interface or remove form base class.
-        dspVoteService.stopSumAndSaveVotes();
-        sourceStarvationService.stopCheckSourcesStarvation();
+        //dspVoteService.stopSumAndSaveVotes();
+        //sourceStarvationService.stopCheckSourcesStarvation();
         propagateClusterStampInProcessData();
 
         ClusterStampData clusterStampData = currentClusterStamp;
@@ -156,8 +156,8 @@ public class ClusterStampService extends BaseNodeClusterStampService implements 
                 propagationPublisher.propagate(clusterStampData.getClusterStampConsensusResult(), Arrays.asList(NodeType.DspNode));
                 clusterStampState = clusterStampState.nextState(); //Change state to OFF
 
-                dspVoteService.startSumAndSaveVotes();
-                sourceStarvationService.startCheckSourcesStarvation();
+                //dspVoteService.startSumAndSaveVotes();
+                //sourceStarvationService.startCheckSourcesStarvation();
             }
 
             clusterStamps.put(clusterStampData);
@@ -167,7 +167,7 @@ public class ClusterStampService extends BaseNodeClusterStampService implements 
     private void propagateClusterStampInProcessData() {
         ZeroSpendIsReadyForClusterStampData zerospendIsReadyForClusterStampData = new ZeroSpendIsReadyForClusterStampData(totalConfirmedTransactionsCount);
         zerospendIsReadyForClusterStampData.setDspReadyForClusterStampDataList(currentClusterStamp.getDspReadyForClusterStampDataList());
+        clusterStampStateCrypto.signMessage(zerospendIsReadyForClusterStampData);
         propagationPublisher.propagate(zerospendIsReadyForClusterStampData, Arrays.asList(NodeType.DspNode));
-        clusterStampState = clusterStampState.nextState(); //Change state to IN_PROCESS
     }
 }

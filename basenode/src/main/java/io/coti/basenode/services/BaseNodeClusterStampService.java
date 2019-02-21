@@ -62,8 +62,8 @@ public class BaseNodeClusterStampService {
             ClusterStampData clusterStampData = clusterStamps.getByHash(clusterStampConsensusResult.getHash());
             clusterStampData.setClusterStampConsensusResult(clusterStampConsensusResult);
             clusterStamps.deleteAll();
-            // TODO: think about hash that cluster stamp should be saved with
-            clusterStampData.setHash(new Hash(""));
+
+            clusterStampData.setHash(new Hash("00"));
             clusterStamps.put(clusterStampData);
             // TODO change to next state?
             loadBalanceFromClusterStamp(clusterStampData);
@@ -96,7 +96,6 @@ public class BaseNodeClusterStampService {
 
     public ClusterStampData getLastClusterStamp(long totalConfirmedTransactionsPriorClusterStamp) {
 
-        // TODO: think about hash that cluster stamp should be saved with
         ClusterStampData currentClusterStampData = clusterStamps.getByHash(new Hash("00"));
         if(currentClusterStampData != null &&
             currentClusterStampData.getTotalConfirmedTransactionsPriorClusterStamp() > totalConfirmedTransactionsPriorClusterStamp) {

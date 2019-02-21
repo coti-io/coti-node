@@ -85,7 +85,7 @@ public class ClusterStampService extends BaseNodeClusterStampService implements 
     private void initReadyForClusterStampTimer(){
         try {
             Thread.sleep(replyTimeOut);
-            if(!isClusterStampInProcess()) {
+            if(!isReadyForClusterStamp()) {
                 log.info("DSP sending it's ready after timer expired");
                 sendDspReadyForClusterStamp(new DspReadyForClusterStampData());
             }
@@ -123,7 +123,7 @@ public class ClusterStampService extends BaseNodeClusterStampService implements 
 
     public void voteAndStoreClusterStamp(ClusterStampData clusterStampData) {
 
-        if(clusterStampCrypto.verifySignature(clusterStampData)) {
+        if(clusterStampCrypto.verifySignature(clusterStampData) && isClusterStampInProcess()) {
             ClusterStampData clusterStampDataLocal = new ClusterStampData();
             clusterStampDataLocal.setBalanceMap(balanceService.getBalanceMap());
             clusterStampDataLocal.setUnconfirmedTransactions(getUnconfirmedTransactions());
@@ -150,17 +150,17 @@ public class ClusterStampService extends BaseNodeClusterStampService implements 
     }
 
     public void handleZeroSpendIsReadyForClusterStampData(ZeroSpendIsReadyForClusterStampData zerospendIsReadyForClusterStampData){
-        if(clusterStampStateCrypto.verifySignature(zerospendIsReadyForClusterStampData)) {
+        if(clusterStampStateCrypto.verifySignature(zerospendIsReadyForClusterStampData) && isReadyForClusterStamp()) {
             clusterStampState = clusterStampState.nextState(); //Change state to IN_PROCESS
-            //TODO 2/18/2019 astolia: need to handle anything here?
         }
     }
 
     @Override
     public void handleClusterStampConsensusResult(ClusterStampConsensusResult clusterStampConsensusResult) {
-        super.handleClusterStampConsensusResult(clusterStampConsensusResult);
-        propagationPublisher.propagate(clusterStampConsensusResult, Arrays.asList(NodeType.FullNode));
+        if(isClusterStampInProcess()) {
+            super.handleClusterStampConsensusResult(clusterStampConsensusResult);
+            propagationPublisher.propagate(clusterStampConsensusResult, Arrays.asList(NodeType.FullNode));
+            clusterStampState.nextState(); // Change state to OFF
+        }
     }
-
-    //TODO 2/18/2019 astolia: when to change dsp cluster stamp state to off?
 }

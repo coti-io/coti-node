@@ -65,6 +65,7 @@ public abstract class Collection<T extends IEntity> {
         iterator.seekToFirst();
         while (iterator.isValid()) {
             databaseConnector.delete(columnFamilyName,iterator.key());
+            iterator.next();
         }
     }
 
