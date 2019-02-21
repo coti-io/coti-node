@@ -14,7 +14,7 @@ public class StorageNodeApplication {
 
         SpringApplication.run(StorageNodeApplication.class, args);
         log.info("############################################################");
-        log.info("#############    COTI HISTORY NODE IS UP       ################");
+        log.info("#############    COTI STORAGE NODE IS UP       ################");
         log.info("############################################################");
     }
 }
