@@ -7,6 +7,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class BaseNodeIndexService implements IIndexService {
 
-    public void incrementAndGetTotalConfirmed(Hash hash, long totalConfirmedTransactions) {
-    }
+    @Override
+    public void incrementAndGetTotalConfirmed(Hash transactionHash, long totalConfirmedTransactions) { }
 }
