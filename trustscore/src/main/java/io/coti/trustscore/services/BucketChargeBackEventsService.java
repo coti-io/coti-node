@@ -52,7 +52,7 @@ public class BucketChargeBackEventsService implements IBucketEventService<Charge
         if (bucketCalculator.decayScores(bucketChargeBackEventsData)) {
             bucketCalculator.setCurrentScores();
         }
-        return (bucketCalculator).getBucketSumScore(bucketChargeBackEventsData);
+        return bucketCalculator.getBucketSumScore(bucketChargeBackEventsData);
     }
 
     @Override

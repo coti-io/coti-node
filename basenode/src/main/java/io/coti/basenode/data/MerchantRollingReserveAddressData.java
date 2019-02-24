@@ -12,6 +12,9 @@ public class MerchantRollingReserveAddressData implements IPropagatable {
     @NotNull
     private Hash merchantRollingReserveAddress;
 
+    private MerchantRollingReserveAddressData() {
+    }
+
     public MerchantRollingReserveAddressData(Hash merchantHash, Hash merchantRollingReserveAddress) {
         this.merchantHash = merchantHash;
         this.merchantRollingReserveAddress = merchantRollingReserveAddress;

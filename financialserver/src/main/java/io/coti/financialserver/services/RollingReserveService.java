@@ -7,21 +7,21 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.MerchantRollingReserveAddressData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.http.Response;
 import io.coti.basenode.http.GetMerchantRollingReserveAddressRequest;
 import io.coti.basenode.http.GetMerchantRollingReserveAddressResponse;
+import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
-import io.coti.financialserver.crypto.RecourseClaimCrypto;
 import io.coti.financialserver.crypto.MerchantRollingReserveCrypto;
+import io.coti.financialserver.crypto.RecourseClaimCrypto;
 import io.coti.financialserver.data.*;
 import io.coti.financialserver.http.GetMerchantRollingReserveDataRequest;
 import io.coti.financialserver.http.GetRollingReserveReleaseDatesResponse;
 import io.coti.financialserver.http.RecourseClaimRequest;
 import io.coti.financialserver.model.Disputes;
+import io.coti.financialserver.model.MerchantRollingReserves;
 import io.coti.financialserver.model.RecourseClaims;
 import io.coti.financialserver.model.RollingReserveReleaseDates;
-import io.coti.financialserver.model.MerchantRollingReserves;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -120,7 +120,7 @@ public class RollingReserveService {
     public ResponseEntity<IResponse> getMerchantRollingReserveAddress(GetMerchantRollingReserveAddressRequest request) {
 
         if (!getMerchantRollingReserveAddressCrypto.verifySignature(request)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new GetMerchantRollingReserveAddressResponse(UNAUTHORIZED, STATUS_ERROR));
         }
 
         MerchantRollingReserveData merchantRollingReserveData = getMerchantRollingReserveData(request.getMerchantHash());

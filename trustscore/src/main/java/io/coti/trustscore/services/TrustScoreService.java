@@ -34,6 +34,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,7 +49,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.API_SERVER_ERROR;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNER;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.trustscore.http.HttpStringConstants.*;
 import static io.coti.trustscore.utils.BucketBuilder.buildTransactionDataRequest;
 
@@ -110,7 +113,7 @@ public class TrustScoreService {
     public ResponseEntity<IResponse> addKycServerEvent(InsertEventRequest request) {
         IResponse addingKycServerEventResponse;
         try {
-            if(!request.getSignerHash().equals(new Hash(kycServerPublicKey))){
+            if (!request.getSignerHash().equals(new Hash(kycServerPublicKey))) {
                 return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST)
                         .body(new Response(INVALID_SIGNER, STATUS_ERROR));

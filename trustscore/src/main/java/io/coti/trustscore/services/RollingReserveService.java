@@ -30,8 +30,7 @@ import java.util.Date;
 import java.util.List;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
-import static io.coti.trustscore.http.HttpStringConstants.NETWORK_FEE_VALIDATION_ERROR;
-import static io.coti.trustscore.http.HttpStringConstants.USER_NOT_MERCHANT;
+import static io.coti.trustscore.http.HttpStringConstants.*;
 
 @Slf4j
 @Service
@@ -85,12 +84,12 @@ public class RollingReserveService {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new RollingReserveResponse(rollingReserveResponseData));
         } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
         }
     }
 
-    public Hash getMerchantRollingReserveAddress(Hash merchantHash) {
+    public Hash getMerchantRollingReserveAddress(Hash merchantHash) throws Exception {
         MerchantRollingReserveAddressData merchantRollingReserveAddressData = merchantRollingReserveAddresses.getByHash(merchantHash);
         if (merchantRollingReserveAddressData == null) {
             merchantRollingReserveAddressData = getMerchantAddressFromFinancialNode(merchantHash);
@@ -100,15 +99,19 @@ public class RollingReserveService {
         return merchantRollingReserveAddressData.getMerchantRollingReserveAddress();
     }
 
-    private MerchantRollingReserveAddressData getMerchantAddressFromFinancialNode(Hash merchantHash) {
+    private MerchantRollingReserveAddressData getMerchantAddressFromFinancialNode(Hash merchantHash) throws Exception {
         RestTemplate restTemplate = new RestTemplate();
         GetMerchantRollingReserveAddressRequest getMerchantRollingReserveAddressRequest = new GetMerchantRollingReserveAddressRequest();
         getMerchantRollingReserveAddressRequest.setMerchantHash(merchantHash);
 
         getMerchantRollingReserveAddressCrypto.signMessage(getMerchantRollingReserveAddressRequest);
-        GetMerchantRollingReserveAddressResponse result = restTemplate.postForObject(financialServerAddress + MERCHANT_ADDRESS_END_POINT, getMerchantRollingReserveAddressRequest, GetMerchantRollingReserveAddressResponse.class);
 
-        return result.getMerchantRollingReserveAddressData();
+        ResponseEntity<GetMerchantRollingReserveAddressResponse> result = restTemplate.postForEntity(financialServerAddress + MERCHANT_ADDRESS_END_POINT, getMerchantRollingReserveAddressRequest, GetMerchantRollingReserveAddressResponse.class);
+
+        if (!result.getStatusCode().equals(HttpStatus.OK)) {
+            throw new Exception(String.format(MERCHANT_ADRRESS_GET_ERROR, result.getBody().getMessage()));
+        }
+        return result.getBody().getMerchantRollingReserveAddressData();
     }
 
     public ResponseEntity<IResponse> validateRollingReserve(RollingReserveValidateRequest rollingReserveValidateRequest) {
@@ -165,6 +168,6 @@ public class RollingReserveService {
     private BigDecimal calculateRollingReserveAmount(BigDecimal reducedAmount, double trustScore) {
 
         double reserveRate = (trustScore == 0) ? MAX_ROLLING_RESERVE_RATE : Math.min(MAX_ROLLING_RESERVE_RATE / trustScore, MAX_ROLLING_RESERVE_RATE);
-        return reducedAmount.multiply(new BigDecimal(reserveRate));
+        return reducedAmount.multiply(new BigDecimal(reserveRate / 100));
     }
 }

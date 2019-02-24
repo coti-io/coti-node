@@ -23,6 +23,6 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
 
     public static final String FULL_NODE_FEE_VALIDATION_ERROR = "Full node fee validation failed";
     public static final String NETWORK_FEE_VALIDATION_ERROR = "Network fee validation failed";
-    public static final String ROLLING_RESERVE_VALIDATION_ERROR = "Rolling Reserve validation failed";
+    public static final String MERCHANT_ADRRESS_GET_ERROR = "Error at getting merchant address: %s";
 
 }
