@@ -22,7 +22,7 @@ public abstract class EntityStorageValidationService implements IEntityStorageVa
 {
     @Autowired
     private ObjectService objectService;
-
+    
     @Autowired
     private HistoryNodesConsensusService historyNodesConsensusService;
 
