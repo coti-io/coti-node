@@ -3,9 +3,13 @@ package io.coti.basenode.http;
 public class BaseNodeHttpStringConstants {
     public static final String STATUS_SUCCESS = "Success";
     public static final String STATUS_ERROR = "Error";
+    public static final String SERVER_ERROR = "server error";
+    public static final String CREATED_MESSAGE = "Created";
 
     public static final String ADDRESS_INVALID_ERROR_MESSAGE = "Address %s  is invalid";
+    public static final String ADDRESS_DOESNT_EXIST_MESSAGE = "Address doesn't exist";
     public static final String ADDRESS_TRANSACTIONS_SERVER_ERROR = "Address transactions server error";
+    public static final String ADDRESS_CREATED_MESSAGE = "Address created";
 
     public static final String TRANSACTION_ALREADY_EXIST_MESSAGE = "Transaction already exists!";
     public static final String TRANSACTION_CREATED_MESSAGE = "Transaction created";
