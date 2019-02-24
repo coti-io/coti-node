@@ -61,7 +61,7 @@ public class InitializationService extends BaseNodeInitializationService {
     }
 
     protected NetworkNodeData createNodeProperties() {
-        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.ZeroSpendServer, nodeIp, serverPort, NodeCryptoHelper.getNodeHash());
+        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.ZeroSpendServer, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType);
         networkNodeData.setPropagationPort(propagationPort);
         networkNodeData.setReceivingPort(receivingPort);
         return networkNodeData;

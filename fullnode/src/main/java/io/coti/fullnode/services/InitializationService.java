@@ -50,7 +50,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
     protected NetworkNodeData createNodeProperties() {
         if (validateFeePercentage(nodeFee)) {
-            NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), nodeFee);
+            NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType, nodeFee);
             return networkNodeData;
         }
         return new NetworkNodeData();
