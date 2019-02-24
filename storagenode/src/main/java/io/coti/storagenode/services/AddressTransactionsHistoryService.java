@@ -8,12 +8,13 @@ import java.io.IOException;
 
 @Slf4j
 @Service
-public class TransactionService extends ObjectService {
+public class AddressTransactionsHistoryService extends ObjectService {//} implements IAddressService {
+
     @PostConstruct
     private void init() throws Exception {
         try {
-            indexName = "transactions";
-            objectName = "transactionData";
+            indexName = "address";
+            objectName = "addressTransactionsHistoryData";
             dbConnectorService.addIndex(indexName, objectName, false);
             dbConnectorService.addIndex(indexName, objectName, true);
         } catch (IOException e) {

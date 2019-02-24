@@ -6,5 +6,5 @@ public enum NodeType {
     TrustScoreNode,
     ZeroSpendServer,
     FinancialServer,
-    HistoryNode
+    HistoryNode,
 }

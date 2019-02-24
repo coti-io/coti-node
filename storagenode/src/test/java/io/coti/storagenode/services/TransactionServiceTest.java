@@ -5,8 +5,8 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.storagenode.http.GetObjectBulkJsonResponse;
-import io.coti.storagenode.http.GetObjectJsonResponse;
+import io.coti.storagenode.http.GetEntitiesBulkJsonResponse;
+import io.coti.storagenode.http.GetEntityJsonResponse;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,13 +54,13 @@ public class TransactionServiceTest {
         TransactionData transactionData2 = createRandomTransaction();
 
         String transactionAsJson = mapper.writeValueAsString(transactionData1);
-        transactionService.insertObjectJson(transactionData1.getHash(), transactionAsJson, true);
+        transactionService.insertObjectJson(transactionData1.getHash(), transactionAsJson, false);
 
-        IResponse deleteResponse = transactionService.deleteObjectByHash(transactionData2.getHash(), true).getBody();
+        IResponse deleteResponse = transactionService.deleteObjectByHash(transactionData2.getHash(), false).getBody();
 
-        GetObjectJsonResponse response = (GetObjectJsonResponse) transactionService.getObjectByHash(transactionData1.getHash(), true).getBody();
+        GetEntityJsonResponse response = (GetEntityJsonResponse) transactionService.getObjectByHash(transactionData1.getHash(), false).getBody();
         Assert.assertTrue(response.getStatus().equals(STATUS_SUCCESS) &&
-                ((GetObjectJsonResponse) deleteResponse).status.equals(STATUS_SUCCESS));
+                ((GetEntityJsonResponse) deleteResponse).status.equals(STATUS_SUCCESS));
     }
 
     @Test
@@ -72,23 +72,23 @@ public class TransactionServiceTest {
             TransactionDataList.add(transactionData);
             hashToTransactionJsonDataMap.put(transactionData.getHash(), mapper.writeValueAsString(transactionData));
         }
-        transactionService.insertMultiObjects(hashToTransactionJsonDataMap, true);
+        transactionService.insertMultiObjects(hashToTransactionJsonDataMap, false);
 
         List<Hash> deleteHashes = new ArrayList<>();
         deleteHashes.add(TransactionDataList.get(0).getHash());
         deleteHashes.add(TransactionDataList.get(1).getHash());
 
-        IResponse deleteResponse = transactionService.deleteMultiObjectsFromDb(deleteHashes, true).getBody();
+        IResponse deleteResponse = transactionService.deleteMultiObjectsFromDb(deleteHashes, false).getBody();
 
         List<Hash> GetHashes = new ArrayList<>();
         GetHashes.add(TransactionDataList.get(2).getHash());
         GetHashes.add(TransactionDataList.get(3).getHash());
 
-        IResponse response = transactionService.getMultiObjectsFromDb(GetHashes, true).getBody();
+        IResponse response = transactionService.getMultiObjectsFromDb(GetHashes, false).getBody();
 
         Assert.assertTrue(((BaseResponse) (response)).getStatus().equals(STATUS_SUCCESS)
-                && ((GetObjectBulkJsonResponse) deleteResponse).getHashToObjectsFromDbMap().get(TransactionDataList.get(0).getHash()).equals(STATUS_OK)
-                && ((GetObjectBulkJsonResponse) deleteResponse).getHashToObjectsFromDbMap().get(TransactionDataList.get(1).getHash()).equals(STATUS_OK));
+                && ((GetEntitiesBulkJsonResponse) deleteResponse).getHashToEntitiesFromDbMap().get(TransactionDataList.get(0).getHash()).equals(STATUS_OK)
+                && ((GetEntitiesBulkJsonResponse) deleteResponse).getHashToEntitiesFromDbMap().get(TransactionDataList.get(1).getHash()).equals(STATUS_OK));
     }
 
 

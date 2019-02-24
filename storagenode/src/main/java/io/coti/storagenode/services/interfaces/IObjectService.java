@@ -8,15 +8,15 @@ import java.util.List;
 import java.util.Map;
 
 public interface IObjectService {
-    ResponseEntity<IResponse> insertObjectJson(Hash hash, String objectAsJson, boolean insertToMainStorage);
+    ResponseEntity<IResponse> insertObjectJson(Hash hash, String objectAsJson, boolean fromColdStorage);
 
-    ResponseEntity<IResponse> insertMultiObjects(Map<Hash, String> hashToObjectJsonDataMap, boolean insertToMainStorage);
+    ResponseEntity<IResponse> getObjectByHash(Hash hash, boolean fromColdStorage);
 
-    ResponseEntity<IResponse> getObjectByHash(Hash hash, boolean getFromMainStorage);
+    ResponseEntity<IResponse> getMultiObjectsFromDb(List<Hash> hashes, boolean fromColdStorage);
 
-    ResponseEntity<IResponse> getMultiObjectsFromDb(List<Hash> hashes, boolean getFromMainStorage);
+    ResponseEntity<IResponse> insertMultiObjects(Map<Hash, String> hashToObjectJsonDataMap, boolean fromColdStorage);
 
-    ResponseEntity<IResponse> deleteMultiObjectsFromDb(List<Hash> hashes, boolean deleteFromMainStorage);
+    ResponseEntity<IResponse> deleteMultiObjectsFromDb(List<Hash> hashes, boolean fromColdStorage);
 
-    ResponseEntity<IResponse> deleteObjectByHash(Hash hash, boolean deleteFromMainStorage);
+    ResponseEntity<IResponse> deleteObjectByHash(Hash hash, boolean fromColdStorage);
 }
