@@ -5,10 +5,7 @@ import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.crypto.GetNodeRegistrationRequestCrypto;
 import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeRegistrationCrypto;
-import io.coti.basenode.data.NetworkData;
-import io.coti.basenode.data.NetworkNodeData;
-import io.coti.basenode.data.NodeRegistrationData;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.database.Interfaces.IDatabaseConnector;
 import io.coti.basenode.http.GetNodeRegistrationRequest;
 import io.coti.basenode.http.GetNodeRegistrationResponse;
@@ -21,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -40,12 +36,14 @@ import java.util.function.Consumer;
 @Service
 public abstract class BaseNodeInitializationService {
 
-    private final static String NODE_REGISTRATION = "/node_registration";
+    private final static String NODE_REGISTRATION = "/node/node_registration";
     private final static String NODE_MANAGER_NODES_ENDPOINT = "/nodes";
     private final static String RECOVERY_NODE_GET_BATCH_ENDPOINT = "/transaction_batch";
     private final static String STARTING_INDEX_URL_PARAM_ENDPOINT = "?starting_index=";
     @Autowired
     protected INetworkService networkService;
+    @Value("${network}")
+    protected NetworkType networkType;
     @Value("${server.ip}")
     protected String nodeIp;
     private NetworkNodeData networkNodeData;
@@ -222,7 +220,7 @@ public abstract class BaseNodeInitializationService {
     }
 
     private void getNodeRegistration(NetworkNodeData networkNodeData) {
-        GetNodeRegistrationRequest getNodeRegistrationRequest = new GetNodeRegistrationRequest(networkNodeData.getNodeType());
+        GetNodeRegistrationRequest getNodeRegistrationRequest = new GetNodeRegistrationRequest(networkNodeData.getNodeType(), networkType);
         getNodeRegistrationRequestCrypto.signMessage(getNodeRegistrationRequest);
 
         ResponseEntity<GetNodeRegistrationResponse> getNodeRegistrationResponseEntity =
@@ -250,7 +248,7 @@ public abstract class BaseNodeInitializationService {
 
         }
 
-        if(!nodeRegistrationCrypto.verifySignature(nodeRegistrationData)){
+        if (!nodeRegistrationCrypto.verifySignature(nodeRegistrationData)) {
             log.error("Node registration failed signature validation! Shutting down server");
             System.exit(-1);
         }

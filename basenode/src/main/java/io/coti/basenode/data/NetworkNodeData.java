@@ -18,21 +18,23 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
     private String propagationPort;
     private String receivingPort;
     private String recoveryServerAddress;
+    private NetworkType networkType;
     private transient Double trustScore;
     private transient Double feePercentage;
     private SignatureData nodeSignature;
     private NodeRegistrationData nodeRegistrationData;
 
 
-    public NetworkNodeData(NodeType nodeType, String address, String httpPort, Hash nodeHash) {
+    public NetworkNodeData(NodeType nodeType, String address, String httpPort, Hash nodeHash, NetworkType networkType) {
         this.nodeType = nodeType;
         this.address = address;
         this.httpPort = httpPort;
         this.nodeHash = nodeHash;
+        this.networkType = networkType;
     }
 
-    public NetworkNodeData(NodeType nodeType, String address, String httpPort, Hash nodeHash, double feePercentage) {
-        this(nodeType, address, httpPort, nodeHash);
+    public NetworkNodeData(NodeType nodeType, String address, String httpPort, Hash nodeHash, NetworkType networkType, double feePercentage) {
+        this(nodeType, address, httpPort, nodeHash, networkType);
 
         if (trustScore < 0.0 || trustScore > 100.0) {
             log.error("Trust score is invalid! trustScore: {} ", trustScore);
