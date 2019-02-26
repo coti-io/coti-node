@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -205,7 +206,7 @@ public abstract class BaseNodeInitializationService {
             }
             networkNodeCrypto.signMessage(networkNodeData);
             HttpEntity<NetworkNodeData> entity = new HttpEntity<>(networkNodeData);
-            return restTemplate.postForEntity(nodeManagerAddress + NODE_MANAGER_NODES_ENDPOINT, entity, String.class);
+            return restTemplate.exchange(nodeManagerAddress + NODE_MANAGER_NODES_ENDPOINT, HttpMethod.PUT, entity, String.class);
         } catch (Exception e) {
             log.error("Error connecting node manager, please check node's address / contact COTI:");
             e.printStackTrace();
