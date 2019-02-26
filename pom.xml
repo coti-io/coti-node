@@ -19,7 +19,7 @@
         <module>financialserver</module>
         <module>storagenode</module>
         <module>historynode</module>
-    </modules>
+	</modules>
 
     <name>coti-node</name>
     <description>Coti Full Node</description>

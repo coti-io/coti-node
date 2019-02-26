@@ -36,12 +36,14 @@ public class TestUtils {
                         generateRandomHash(SIZE_OF_BASE_TRANSACTION_HASH),
                         new BigDecimal(0),
                         new Date())));
-        return new TransactionData(baseTransactions,
+        TransactionData transactionData = new TransactionData(baseTransactions,
                 hash,
                 TRANSACTION_DESCRIPTION,
                 generateRandomTrustScore(),
                 new Date(),
                 TransactionType.Payment);
+//        transactionData.setHash(hash); // Added as the field is marked as not null
+        return transactionData;
     }
 
     public static TransactionData createRandomTransaction() {

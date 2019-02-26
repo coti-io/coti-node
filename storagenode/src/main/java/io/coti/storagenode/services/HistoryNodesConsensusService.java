@@ -81,21 +81,25 @@ public class HistoryNodesConsensusService implements IHistoryNodesConsensusServi
     private ResponseEntity<IResponse> verifyHistoryNodesVotes(HistoryNodeConsensusResult historyNodeConsensusResult, ResponseEntity response, byte[] originalDataToVerify) {
         // Verify each history node's signature from consensus
         List<HistoryNodeVote> historyNodesVotesList = historyNodeConsensusResult.getHistoryNodesVotesList();
-        List<HistoryNodeVote> confirmedHistoryNodesList = historyNodesVotesList.stream().filter(hVote -> {
-                    try {
-                        if( !isVoteByLiveHistoryNode(hVote) )
+        List<HistoryNodeVote> confirmedHistoryNodesList=null;
+        if( historyNodesVotesList!= null && !historyNodesVotesList.isEmpty() )
+        {
+            confirmedHistoryNodesList = historyNodesVotesList.stream().filter(hVote -> {
+                        try {
+                            if( !isVoteByLiveHistoryNode(hVote) )
+                                return false;
+                            return CryptoHelper.VerifyByPublicKey(originalDataToVerify, hVote.getSignature().getR(),
+                                    hVote.getSignature().getS(), hVote.getSignerHash().toHexString()) && hVote.isValidRequest(); // TODO verify if checks are enough
+                        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+                            e.printStackTrace();
                             return false;
-                        return CryptoHelper.VerifyByPublicKey(originalDataToVerify, hVote.getSignature().getR(),
-                                hVote.getSignature().getS(), hVote.getSignerHash().toHexString()) && hVote.isValidRequest(); // TODO verify if checks are enough
-                    } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-                        e.printStackTrace();
-                        return false;
+                        }
                     }
-                }
-        ).collect(Collectors.toList());
+            ).collect(Collectors.toList());
+        }
 
         //TODO
-        if ( !isMajorityReached( confirmedHistoryNodesList ) )
+        if ( confirmedHistoryNodesList!= null && !isMajorityReached( confirmedHistoryNodesList ) )
             response = ResponseEntity
                     .status(HttpStatus.NOT_ACCEPTABLE)
                     .body("Suggested consensus failed to meet majority requirement.");
@@ -105,25 +109,27 @@ public class HistoryNodesConsensusService implements IHistoryNodesConsensusServi
 
 
     private boolean isResponseOK(ResponseEntity<IResponse> iResponse) {
-        return iResponse != null && !iResponse.getStatusCode().equals(HttpStatus.OK);
+        return iResponse != null && iResponse.getStatusCode().equals(HttpStatus.OK);
     }
 
     private boolean isMajorityReached(List<HistoryNodeVote> confirmedHistoryNodesList)
     {
+        return true; // TODO remove once liveliness indication is provided
         // TODO compare confirmed votes with existing list history nodes
-        long liveHistoryNodesAmount = liveHistoryNodes.stream().distinct().count();
-        long confirmedByHistoryNodesAmount = confirmedHistoryNodesList.stream().distinct().count();
-        final boolean majorityReached = confirmedByHistoryNodesAmount > (liveHistoryNodesAmount / 2);
-        return majorityReached;
+//        long liveHistoryNodesAmount = liveHistoryNodes.stream().distinct().count();
+//        long confirmedByHistoryNodesAmount = confirmedHistoryNodesList.stream().distinct().count();
+//        final boolean majorityReached = confirmedByHistoryNodesAmount > (liveHistoryNodesAmount / 2);
+//        return majorityReached;
     }
 
     private boolean isVoteByLiveHistoryNode(HistoryNodeVote hVote)
     {
+        return true; // TODO remove once liveliness indication is provided
         // TODO assumes hVote.getSignerHash() returns node's public key?
         // Get entries for nodes from expected public key in history vote and verify the node is alive
-        Set<Hash> collectNodesBySignature = historyNodesPublicKeys.entrySet().stream().filter(entry ->
-                Objects.equals(entry.getValue(), hVote.getSignerHash())).map(Map.Entry::getKey).collect(Collectors.toSet());
-        return  liveHistoryNodes.containsAll(collectNodesBySignature);
+//        Set<Hash> collectNodesBySignature = historyNodesPublicKeys.entrySet().stream().filter(entry ->
+//                Objects.equals(entry.getValue(), hVote.getSignerHash())).map(Map.Entry::getKey).collect(Collectors.toSet());
+//        return  liveHistoryNodes.containsAll(collectNodesBySignature);
     }
 
 //    private PublicKey getHistoryNodesMasterPublicKey() {
