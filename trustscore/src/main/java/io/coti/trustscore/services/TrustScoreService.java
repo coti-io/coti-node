@@ -157,7 +157,7 @@ public class TrustScoreService {
             if (!changingIsLegal(trustScoreData)) {
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
-                        .body(new Response(CANT_CHANGE_FROM_NOT_CUSOMER_TYPE_MESSAGE, STATUS_ERROR));
+                        .body(new Response(USER_TYPE_ALREADY_UPDATED, STATUS_ERROR));
             }
             UserType userType = UserType.enumFromString(request.userType);
             trustScoreData.setUserType(userType);
