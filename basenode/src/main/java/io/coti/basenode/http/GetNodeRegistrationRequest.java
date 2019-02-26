@@ -14,7 +14,7 @@ import javax.validation.constraints.NotNull;
 @Data
 public class GetNodeRegistrationRequest extends Request implements ISignable {
 
-    private Hash nodeHash;
+    private String nodeHash;
     private SignatureData nodeSignature;
     private String nodeType;
     private String networkType;
@@ -26,7 +26,7 @@ public class GetNodeRegistrationRequest extends Request implements ISignable {
 
     @Override
     public void setSignerHash(Hash signerHash) {
-        nodeHash = signerHash;
+        nodeHash = signerHash.toString();
     }
 
     @Override
