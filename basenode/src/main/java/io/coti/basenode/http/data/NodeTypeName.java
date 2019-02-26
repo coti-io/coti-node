@@ -22,7 +22,7 @@ public enum NodeTypeName {
         return node;
     }
 
-    public NodeType getNodeType(String node) {
+    public static NodeType getNodeType(String node) {
         for (NodeTypeName nodeTypeName : values()) {
             if (nodeTypeName.node.equals(node)) {
                 return nodeTypeName.nodeType;

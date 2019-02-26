@@ -3,6 +3,8 @@ package io.coti.basenode.data;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
+import io.coti.basenode.http.data.NetworkTypeName;
+import io.coti.basenode.http.data.NodeTypeName;
 import lombok.Data;
 
 import javax.validation.Valid;
@@ -44,6 +46,22 @@ public class NodeRegistrationData implements IEntity, ISignValidatable {
     @Override
     public SignatureData getSignature() {
         return registrarSignature;
+    }
+
+    public void setNodeType(String node) {
+        this.nodeType = NodeTypeName.getNodeType(node);
+    }
+
+    public void setNetworkType(String network) {
+        this.networkType = NetworkTypeName.getNetworkType(network);
+    }
+
+    public String getNode() {
+        return NodeTypeName.valueOf(nodeType.toString()).getNode();
+    }
+
+    public String getNetwork() {
+        return NetworkTypeName.valueOf(networkType.toString()).getNetwork();
     }
     
 }
