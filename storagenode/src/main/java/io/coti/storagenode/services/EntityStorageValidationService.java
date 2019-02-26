@@ -205,7 +205,7 @@ public abstract class EntityStorageValidationService implements IEntityStorageVa
 
 
     protected boolean isResponseOK(ResponseEntity<IResponse> iResponse) {
-        return iResponse != null && !iResponse.getStatusCode().equals(HttpStatus.OK);
+        return iResponse != null && iResponse.getStatusCode().equals(HttpStatus.OK);
     }
 
 }
