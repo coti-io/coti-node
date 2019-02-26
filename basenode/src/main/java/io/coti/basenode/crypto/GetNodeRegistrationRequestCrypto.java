@@ -10,8 +10,8 @@ public class GetNodeRegistrationRequestCrypto extends SignatureCreationCrypto<Ge
 
     @Override
     public byte[] getSignatureMessage(GetNodeRegistrationRequest getNodeRegistrationRequest) {
-        byte[] nodeTypeInBytes = getNodeRegistrationRequest.getNodeType().toString().getBytes();
-        byte[] networkTypeInBytes = getNodeRegistrationRequest.getNetworkType().toString().getBytes();
+        byte[] nodeTypeInBytes = getNodeRegistrationRequest.getNodeType().getBytes();
+        byte[] networkTypeInBytes = getNodeRegistrationRequest.getNetworkType().getBytes();
 
         ByteBuffer nodeRegistrationBuffer = ByteBuffer.allocate(nodeTypeInBytes.length + networkTypeInBytes.length).put(nodeTypeInBytes).put(networkTypeInBytes);
         return CryptoHelper.cryptoHash(nodeRegistrationBuffer.array()).getBytes();

@@ -17,6 +17,8 @@ public class NodeRegistrationData implements IEntity, ISignValidatable {
     @NotNull
     private NodeType nodeType;
     @NotNull
+    private NetworkType networkType;
+    @NotNull
     private Instant creationTime;
     @NotNull
     private Hash registrarHash;

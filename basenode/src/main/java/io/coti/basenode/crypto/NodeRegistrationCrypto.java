@@ -19,11 +19,13 @@ public class NodeRegistrationCrypto extends SignatureValidationCrypto<NodeRegist
 
         byte[] nodeTypeInBytes = nodeRegistrationData.getNodeType().toString().getBytes();
 
+        byte[] networkTypeInBytes = nodeRegistrationData.getNetworkType().toString().getBytes();
+
         Instant creationTime = nodeRegistrationData.getCreationTime();
         byte[] creationTimeInBytes = ByteBuffer.allocate(Long.BYTES).putLong(creationTime.getEpochSecond() * 1000 + creationTime.getNano() / 1000000).array();
 
-        ByteBuffer nodeRegistrationBuffer = ByteBuffer.allocate(nodeHashInBytes.length + nodeTypeInBytes.length + creationTimeInBytes.length)
-                                                      .put(nodeHashInBytes).put(nodeTypeInBytes).put(creationTimeInBytes);
+        ByteBuffer nodeRegistrationBuffer = ByteBuffer.allocate(nodeHashInBytes.length + nodeTypeInBytes.length + networkTypeInBytes.length + creationTimeInBytes.length)
+                                                      .put(nodeHashInBytes).put(nodeTypeInBytes).put(networkTypeInBytes).put(creationTimeInBytes);
 
         return CryptoHelper.cryptoHash(nodeRegistrationBuffer.array()).getBytes();
     }
