@@ -91,7 +91,7 @@ public class CryptoHelper {
 
         byte[] privateKey = DatatypeConverter.parseHexBinary(privateKeyHex);
         ECDSASigner signer = new ECDSASigner();
-        signer.init(true, new ECPrivateKeyParameters(new BigInteger(privateKey), domain));
+        signer.init(true, new ECPrivateKeyParameters(new BigInteger(1, privateKey), domain));
         BigInteger[] signature = signer.generateSignature(bytesToSign);
         BigInteger r = signature[0];
         BigInteger s = signature[1];
@@ -100,7 +100,7 @@ public class CryptoHelper {
 
     public static String GetPublicKeyFromPrivateKey(String privateKeyHex) {
         byte[] privateKey = DatatypeConverter.parseHexBinary(privateKeyHex);
-        ECPoint curvePt = domain.getG().multiply(new BigInteger(privateKey));
+        ECPoint curvePt = domain.getG().multiply(new BigInteger(1, privateKey));
         curvePt = curvePt.normalize();
         String x = curvePt.getXCoord().toBigInteger().toString(16);
         String y = curvePt.getYCoord().toBigInteger().toString(16);
