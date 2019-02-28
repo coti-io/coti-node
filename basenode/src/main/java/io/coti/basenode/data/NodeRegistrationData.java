@@ -49,11 +49,19 @@ public class NodeRegistrationData implements IEntity, ISignValidatable {
     }
 
     public void setNodeType(String node) {
-        this.nodeType = NodeTypeName.getNodeType(node);
+        try {
+            this.nodeType = NodeType.valueOf(node);
+        } catch(IllegalArgumentException e) {
+            this.nodeType = NodeTypeName.getNodeType(node);
+        }
     }
 
     public void setNetworkType(String network) {
-        this.networkType = NetworkTypeName.getNetworkType(network);
+        try {
+            this.networkType = NetworkType.valueOf(network);
+        } catch(IllegalArgumentException e) {
+            this.networkType = NetworkTypeName.getNetworkType(network);
+        }
     }
 
     public String getNode() {

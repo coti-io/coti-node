@@ -53,7 +53,7 @@ public class InitializationService extends BaseNodeInitializationService {
             NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType, nodeFee);
             return networkNodeData;
         }
-        return new NetworkNodeData();
+        return new NetworkNodeData(NodeType.FullNode);
     }
 
     private boolean validateFeePercentage(Double feePercentage) {
