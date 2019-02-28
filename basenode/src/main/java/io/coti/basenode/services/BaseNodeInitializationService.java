@@ -7,9 +7,7 @@ import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeRegistrationCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.database.Interfaces.IDatabaseConnector;
-import io.coti.basenode.http.GetNodeRegistrationRequest;
-import io.coti.basenode.http.GetNodeRegistrationResponse;
-import io.coti.basenode.http.GetTransactionBatchResponse;
+import io.coti.basenode.http.*;
 import io.coti.basenode.model.NodeRegistrations;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.LiveView.LiveViewService;
@@ -19,9 +17,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -97,6 +96,8 @@ public abstract class BaseNodeInitializationService {
     private NetworkNodeCrypto networkNodeCrypto;
     @Autowired
     private NodeRegistrations nodeRegistrations;
+    @Autowired
+    private HttpJacksonSerializer jacksonSerializer;
 
     public void init() {
         try {
@@ -194,32 +195,29 @@ public abstract class BaseNodeInitializationService {
 
     public void connectToNetwork() {
         networkNodeData = createNodeProperties();
-        nodeManagerAddress = "http://"+nodeManagerIp+":"+nodeManagerPort;
-        ResponseEntity<String> addNewNodeResponse = addNewNodeToNodeManager();
-        if (!addNewNodeResponse.getStatusCode().equals(HttpStatus.OK)) {
-            log.error("Couldn't add node to node manager. Message from NodeManager: {}", addNewNodeResponse);
-            System.exit(-1);
-        }
+        nodeManagerAddress = "http://" + nodeManagerIp + ":" + nodeManagerPort;
+        addNewNodeToNodeManager();
         networkService.setNetworkData(getNetworkDetailsFromNodeManager());
     }
 
-    private ResponseEntity<String> addNewNodeToNodeManager() {
+    private void addNewNodeToNodeManager() {
+        restTemplate.setRequestFactory(new CustomHttpComponentsClientHttpRequestFactory());
+
+        NodeRegistrationData nodeRegistrationData = nodeRegistrations.getByHash(networkNodeData.getHash());
+        if (nodeRegistrationData != null) {
+            networkNodeData.setNodeRegistrationData(nodeRegistrationData);
+        } else {
+            getNodeRegistration(networkNodeData);
+        }
+        networkNodeCrypto.signMessage(networkNodeData);
+        HttpEntity<NetworkNodeData> entity = new HttpEntity<>(networkNodeData);
         try {
-            NodeRegistrationData nodeRegistrationData = nodeRegistrations.getByHash(networkNodeData.getHash());
-            if (nodeRegistrationData != null) {
-                networkNodeData.setNodeRegistrationData(nodeRegistrationData);
-            } else {
-                getNodeRegistration(networkNodeData);
-            }
-            networkNodeCrypto.signMessage(networkNodeData);
-            HttpEntity<NetworkNodeData> entity = new HttpEntity<>(networkNodeData);
-            return restTemplate.exchange(nodeManagerAddress + NODE_MANAGER_NODES_ENDPOINT, HttpMethod.PUT, entity, String.class);
-        } catch (Exception e) {
-            log.error("Error connecting node manager, please check node's address / contact COTI:");
-            e.printStackTrace();
+            ResponseEntity<String> response = restTemplate.exchange(nodeManagerAddress + NODE_MANAGER_NODES_ENDPOINT, HttpMethod.PUT, entity, String.class);
+            log.info("{}", response.getBody());
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            log.error("Node manager error: ", e.getResponseBodyAsString());
             System.exit(-1);
         }
-        return ResponseEntity.noContent().build();
     }
 
     private NetworkData getNetworkDetailsFromNodeManager() {
@@ -228,23 +226,24 @@ public abstract class BaseNodeInitializationService {
     }
 
     private void getNodeRegistration(NetworkNodeData networkNodeData) {
-        GetNodeRegistrationRequest getNodeRegistrationRequest = new GetNodeRegistrationRequest(networkNodeData.getNodeType(), networkType);
-        getNodeRegistrationRequestCrypto.signMessage(getNodeRegistrationRequest);
+        try {
+            GetNodeRegistrationRequest getNodeRegistrationRequest = new GetNodeRegistrationRequest(networkNodeData.getNodeType(), networkType);
+            getNodeRegistrationRequestCrypto.signMessage(getNodeRegistrationRequest);
 
-        ResponseEntity<GetNodeRegistrationResponse> getNodeRegistrationResponseEntity =
-                restTemplate.postForEntity(
-                        kycServerAddress + NODE_REGISTRATION,
-                        getNodeRegistrationRequest,
-                        GetNodeRegistrationResponse.class);
-        log.info("Node registration received");
-        if (getNodeRegistrationResponseEntity.getStatusCode().equals(HttpStatus.OK) && getNodeRegistrationResponseEntity.getBody() != null) {
+            ResponseEntity<GetNodeRegistrationResponse> getNodeRegistrationResponseEntity =
+                    restTemplate.postForEntity(
+                            kycServerAddress + NODE_REGISTRATION,
+                            getNodeRegistrationRequest,
+                            GetNodeRegistrationResponse.class);
+            log.info("Node registration received");
+
             NodeRegistrationData nodeRegistrationData = getNodeRegistrationResponseEntity.getBody().getNodeRegistrationData();
             if (nodeRegistrationData != null && validateNodeRegistrationResponse(nodeRegistrationData)) {
                 networkNodeData.setNodeRegistrationData(nodeRegistrationData);
                 nodeRegistrations.put(nodeRegistrationData);
             }
-        } else {
-            log.error("Error at registration of node : ", getNodeRegistrationResponseEntity);
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            log.error("Error at registration of node. Registrar response: \n {}", e.getResponseBodyAsString());
             System.exit(-1);
         }
     }
