@@ -4,9 +4,7 @@ import io.coti.basenode.crypto.BaseTransactionCrypto;
 import io.coti.basenode.crypto.GetMerchantRollingReserveAddressCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
-import io.coti.basenode.http.GetMerchantRollingReserveAddressRequest;
-import io.coti.basenode.http.GetMerchantRollingReserveAddressResponse;
-import io.coti.basenode.http.Response;
+import io.coti.basenode.http.*;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.TrustScoreData;
@@ -21,7 +19,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
@@ -49,6 +50,8 @@ public class RollingReserveService {
     private MerchantRollingReserveAddresses merchantRollingReserveAddresses;
     @Autowired
     private TrustScores trustScores;
+    @Autowired
+    private HttpJacksonSerializer jacksonSerializer;
 
 
     @Autowired
@@ -67,7 +70,7 @@ public class RollingReserveService {
 
             TrustScoreData trustScoreData = trustScores.getByHash(rollingReserveRequest.getMerchantHash());
 
-            if (!trustScoreData.getUserType().equals(UserType.MERCHANT)) {
+            if (trustScoreData == null || !trustScoreData.getUserType().equals(UserType.MERCHANT)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(USER_NOT_MERCHANT, rollingReserveRequest.getMerchantHash()), STATUS_ERROR));
             }
 
@@ -84,7 +87,6 @@ public class RollingReserveService {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new RollingReserveResponse(rollingReserveResponseData));
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
         }
     }
@@ -101,17 +103,20 @@ public class RollingReserveService {
 
     private MerchantRollingReserveAddressData getMerchantAddressFromFinancialNode(Hash merchantHash) throws Exception {
         RestTemplate restTemplate = new RestTemplate();
+        restTemplate.setRequestFactory(new CustomHttpComponentsClientHttpRequestFactory());
         GetMerchantRollingReserveAddressRequest getMerchantRollingReserveAddressRequest = new GetMerchantRollingReserveAddressRequest();
         getMerchantRollingReserveAddressRequest.setMerchantHash(merchantHash);
 
         getMerchantRollingReserveAddressCrypto.signMessage(getMerchantRollingReserveAddressRequest);
 
-        ResponseEntity<GetMerchantRollingReserveAddressResponse> result = restTemplate.postForEntity(financialServerAddress + MERCHANT_ADDRESS_END_POINT, getMerchantRollingReserveAddressRequest, GetMerchantRollingReserveAddressResponse.class);
-
-        if (!result.getStatusCode().equals(HttpStatus.OK)) {
-            throw new Exception(String.format(MERCHANT_ADRRESS_GET_ERROR, result.getBody().getMessage()));
+        try {
+            ResponseEntity<GetMerchantRollingReserveAddressResponse> result = restTemplate.postForEntity(financialServerAddress + MERCHANT_ADDRESS_END_POINT, getMerchantRollingReserveAddressRequest, GetMerchantRollingReserveAddressResponse.class);
+            return result.getBody().getMerchantRollingReserveAddressData();
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            throw new Exception(String.format(MERCHANT_ADRRESS_GET_ERROR, ((SeriazableResponse) jacksonSerializer.deserialize(e.getResponseBodyAsByteArray())).getMessage()));
         }
-        return result.getBody().getMerchantRollingReserveAddressData();
+
+
     }
 
     public ResponseEntity<IResponse> validateRollingReserve(RollingReserveValidateRequest rollingReserveValidateRequest) {

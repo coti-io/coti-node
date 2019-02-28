@@ -10,6 +10,7 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.GetMerchantRollingReserveAddressRequest;
 import io.coti.basenode.http.GetMerchantRollingReserveAddressResponse;
 import io.coti.basenode.http.Response;
+import io.coti.basenode.http.SeriazableResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
 import io.coti.financialserver.crypto.MerchantRollingReserveCrypto;
@@ -120,7 +121,7 @@ public class RollingReserveService {
     public ResponseEntity<IResponse> getMerchantRollingReserveAddress(GetMerchantRollingReserveAddressRequest request) {
 
         if (!getMerchantRollingReserveAddressCrypto.verifySignature(request)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new GetMerchantRollingReserveAddressResponse(UNAUTHORIZED, STATUS_ERROR));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new SeriazableResponse(UNAUTHORIZED, STATUS_ERROR));
         }
 
         MerchantRollingReserveData merchantRollingReserveData = getMerchantRollingReserveData(request.getMerchantHash());
