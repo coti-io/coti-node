@@ -44,7 +44,7 @@ public class BaseNodeNetworkService implements INetworkService {
         NodeTypeService.getNodeTypeList(true).forEach(nodeType -> multipleNodeMaps.put(nodeType, new ConcurrentHashMap<>()));
 
         singleNodeNetworkDataMap = new EnumMap<>(NodeType.class);
-        NodeTypeService.getNodeTypeList(false).forEach(nodeType -> singleNodeNetworkDataMap.put(nodeType, new NetworkNodeData()));
+        NodeTypeService.getNodeTypeList(false).forEach(nodeType -> singleNodeNetworkDataMap.put(nodeType, new NetworkNodeData(nodeType)));
 
     }
 
@@ -84,7 +84,7 @@ public class BaseNodeNetworkService implements INetworkService {
             log.error("Unsupported networkNodeData type : {}", newNetworkNodeData.getNodeType());
             throw new IllegalArgumentException("Unsupported networkNodeData type");
         }
-        singleNodeNetworkDataMap.put(networkNodeData.getNodeType(), newNetworkNodeData);
+        singleNodeNetworkDataMap.put(newNetworkNodeData.getNodeType(), newNetworkNodeData);
     }
 
     @Override
@@ -104,7 +104,7 @@ public class BaseNodeNetworkService implements INetworkService {
     public void removeNode(NetworkNodeData networkNodeData) {
         try {
             if (!NodeTypeService.valueOf(networkNodeData.getNodeType().toString()).isMultipleNode()) {
-                setSingleNodeData(new NetworkNodeData());
+                setSingleNodeData(new NetworkNodeData(networkNodeData.getNodeType()));
             } else {
                 if (getMapFromFactory(networkNodeData.getNodeType()).remove(networkNodeData.getHash()) == null) {
                     log.info("networkNode {} isn't found", networkNodeData);
@@ -148,7 +148,7 @@ public class BaseNodeNetworkService implements INetworkService {
             log.error("Invalid node registration signature by node {}", networkNodeData.getNodeHash());
             throw new Exception(INVALID_NODE_REGISTRATION_SIGNATURE);
         }
-        if (!networkNodeData.getNodeRegistrationData().getRegistrarHash().equals(kycServerPublicKey)) {
+        if (!networkNodeData.getNodeRegistrationData().getRegistrarHash().toString().equals(kycServerPublicKey)) {
             log.error("Invalid registrar node hash for node {}", networkNodeData.getNodeHash());
             throw new Exception(INVALID_NODE_REGISTRAR);
         }
@@ -157,12 +157,15 @@ public class BaseNodeNetworkService implements INetworkService {
 
     @Override
     public boolean isNodeExistsOnMemory(NetworkNodeData networkNodeData) {
-
-        if (!NodeTypeService.valueOf(networkNodeData.getNodeType().toString()).isMultipleNode()) {
-            return singleNodeNetworkDataMap.get(networkNodeData.getNodeType()).equals(networkNodeData);
-        } else {
-            return getMapFromFactory(networkNodeData.getNodeType()).containsKey(networkNodeData.getHash()) &&
-                    getMapFromFactory(networkNodeData.getNodeType()).get(networkNodeData.getHash()).equals(networkNodeData);
+        try {
+            if (!NodeTypeService.valueOf(networkNodeData.getNodeType().toString()).isMultipleNode()) {
+                return singleNodeNetworkDataMap.get(networkNodeData.getNodeType()).equals(networkNodeData);
+            } else {
+                return getMapFromFactory(networkNodeData.getNodeType()).containsKey(networkNodeData.getHash()) &&
+                        getMapFromFactory(networkNodeData.getNodeType()).get(networkNodeData.getHash()).equals(networkNodeData);
+            }
+        } catch(NullPointerException e) {
+            return false;
         }
     }
 

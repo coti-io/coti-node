@@ -21,7 +21,7 @@ public class NetworkData implements IPropagatable {
         NodeTypeService.getNodeTypeList(true).forEach(nodeType -> multipleNodeMaps.put(nodeType, new ConcurrentHashMap<>()));
 
         singleNodeNetworkDataMap = new EnumMap<>(NodeType.class);
-        NodeTypeService.getNodeTypeList(false).forEach(nodeType -> singleNodeNetworkDataMap.put(nodeType, new NetworkNodeData()));
+        NodeTypeService.getNodeTypeList(false).forEach(nodeType -> singleNodeNetworkDataMap.put(nodeType, new NetworkNodeData(nodeType)));
 
     }
 

@@ -50,6 +50,10 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
     public NetworkNodeData() {
     }
 
+    public NetworkNodeData(NodeType nodeType) {
+        this.nodeType = nodeType;
+    }
+
     @Override
     public boolean equals(Object a) {
         if (a instanceof NetworkNodeData) {

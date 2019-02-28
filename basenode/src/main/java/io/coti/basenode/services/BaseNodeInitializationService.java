@@ -48,7 +48,12 @@ public abstract class BaseNodeInitializationService {
     @Value("${server.ip}")
     protected String nodeIp;
     private NetworkNodeData networkNodeData;
-    @Value("${node.manager.address}")
+    @Value("${node.manager.ip}")
+    private String nodeManagerIp;
+    @Value("${node.manager.port}")
+    private String nodeManagerPort;
+    @Value("${node.manager.propagation.port}")
+    private String nodeManagerPropagationPort;
     private String nodeManagerAddress;
     @Value("${kycserver.url}")
     private String kycServerAddress;
@@ -141,6 +146,7 @@ public abstract class BaseNodeInitializationService {
     }
 
     private void initCommunication() {
+        networkService.setNodeManagerPropagationAddress("tcp://" + nodeManagerIp + ":" + nodeManagerPropagationPort);
         HashMap<String, Consumer<Object>> channelToSubscriberHandlerMap = new HashMap<>();
         channelToSubscriberHandlerMap.put(Channel.getChannelString(NetworkData.class, this.networkNodeData.getNodeType()),
                 newNetworkData -> networkService.handleNetworkChanges((NetworkData) newNetworkData));
@@ -187,7 +193,8 @@ public abstract class BaseNodeInitializationService {
     }
 
     public void connectToNetwork() {
-        this.networkNodeData = createNodeProperties();
+        networkNodeData = createNodeProperties();
+        nodeManagerAddress = "http://"+nodeManagerIp+":"+nodeManagerPort;
         ResponseEntity<String> addNewNodeResponse = addNewNodeToNodeManager();
         if (!addNewNodeResponse.getStatusCode().equals(HttpStatus.OK)) {
             log.error("Couldn't add node to node manager. Message from NodeManager: {}", addNewNodeResponse);
