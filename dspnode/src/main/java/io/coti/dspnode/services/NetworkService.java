@@ -2,6 +2,7 @@ package io.coti.dspnode.services;
 
 import io.coti.basenode.data.NetworkData;
 import io.coti.basenode.data.NetworkNodeData;
+import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.BaseNodeNetworkService;
 import io.coti.basenode.services.CommunicationService;
 import lombok.extern.slf4j.Slf4j;
@@ -28,10 +29,11 @@ public class NetworkService extends BaseNodeNetworkService {
 
     @Override
     public void handleNetworkChanges(NetworkData newNetworkData) {
-        log.info("New newNetworkDetails structure received: {}", networkDetailsService.getNetworkSummary(newNetworkData));
-        NetworkNodeData zerospendNetworkNodeData = newNetworkData.getZerospendServer();
-        List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetworkData.getDspNetworkNodesMap().values()
-                , networkDetailsService.getNetworkData().getDspNetworkNodesMap().values()));
+        log.info("New newNetworkDetails structure received");
+        NetworkNodeData zerospendNetworkNodeData = newNetworkData.getSingleNodeNetworkDataMap().get(NodeType.ZeroSpendServer);
+        List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(
+                newNetworkData.getMultipleNodeMaps().get(NodeType.DspNode).values(), getMapFromFactory(NodeType.DspNode).values()
+        ));
         dspNodesToConnect.removeIf(dsp -> dsp.getAddress().equals(nodeIp) && dsp.getHttpPort().equals(serverPort));
         if (dspNodesToConnect.size() > 0) {
             Collections.shuffle(dspNodesToConnect);
@@ -43,7 +45,7 @@ public class NetworkService extends BaseNodeNetworkService {
             communicationService.addSender(zerospendNetworkNodeData.getReceivingFullAddress());
             communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress());
         }
-        networkDetailsService.setNetworkData(newNetworkData);
+        setNetworkData(newNetworkData);
     }
 
 

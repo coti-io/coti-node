@@ -33,8 +33,8 @@ public class NetworkService extends BaseNodeNetworkService {
                 communicationService.removeSender(dspNode.getReceivingFullAddress(), dspNode.getNodeType());
             }
         });
-        List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetworkData.getDspNetworkNodesMap().values(),
-                networkDetailsService.getNetworkData().getDspNetworkNodesMap().values()));
+        List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetworkData.getMultipleNodeMaps().get(NodeType.DspNode).values(),
+                getMapFromFactory(NodeType.DspNode).values()));
 
         List<NetworkNodeData> twoDspNodes = new LinkedList<>();
         Collections.shuffle(dspNodesToConnect);
@@ -46,7 +46,7 @@ public class NetworkService extends BaseNodeNetworkService {
         }
         addListToSubscriptionAndNetwork(twoDspNodes);
         twoDspNodes.forEach(node -> communicationService.addSender(node.getReceivingFullAddress()));
-        networkDetailsService.setNetworkData(newNetworkData);
+        setNetworkData(newNetworkData);
 
     }
 

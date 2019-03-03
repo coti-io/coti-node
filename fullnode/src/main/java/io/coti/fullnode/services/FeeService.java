@@ -29,7 +29,7 @@ public class FeeService {
     private BigDecimal minimumFee;
     @Value("${maximumFee}")
     private BigDecimal maximumFee;
-    @Value("${feePercentage}")
+    @Value("${fee.percentage}")
     private BigDecimal feePercentage;
     @Autowired
     private NodeCryptoHelper nodeCryptoHelper;

@@ -3,6 +3,7 @@ package io.coti.basenode.communication;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.coti.basenode.communication.interfaces.ISerializer;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ public class JacksonSerializer implements ISerializer {
     @PostConstruct
     private void init() {
         serializer = new ObjectMapper();
+        serializer.registerModule(new JavaTimeModule());
         serializer.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 

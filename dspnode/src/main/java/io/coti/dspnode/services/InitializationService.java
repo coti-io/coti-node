@@ -25,8 +25,6 @@ public class InitializationService extends BaseNodeInitializationService {
     private String receivingPort;
     @Value("${propagation.port}")
     private String propagationPort;
-    @Value("${node.manager.address}")
-    private String nodeManagerAddress;
     @Value("${server.port}")
     private String serverPort;
     @Autowired

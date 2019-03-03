@@ -17,12 +17,17 @@ public class NetworkService extends BaseNodeNetworkService {
 
     @Override
     public void handleNetworkChanges(NetworkData newNetworkData) {
-        log.info("New newNetworkDetails structure received: {}");
-        List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(
-                newNetworkData.getMultipleNodeMaps().get(NodeType.DspNode).values(), getMapFromFactory(NodeType.DspNode).values()
-        ));
-        addListToSubscriptionAndNetwork(dspNodesToConnect);
-        setNetworkData(newNetworkData);
+        try {
+            log.info("New newNetworkDetails structure received");
+            List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(
+                    newNetworkData.getMultipleNodeMaps().get(NodeType.DspNode).values(), getMapFromFactory(NodeType.DspNode).values()
+            ));
+            addListToSubscriptionAndNetwork(dspNodesToConnect);
+            setNetworkData(newNetworkData);
+        } catch(Exception e) {
+            log.error("Handle network changes error");
+            e.printStackTrace();
+        }
     }
 
 
