@@ -1,11 +1,11 @@
-package io.coti.basenode.data;
+package io.coti.basenode.services.LiveView.data;
 
 import lombok.Data;
 
 import java.util.Date;
 
 @Data
-public class NodeData {
+public class GraphTransactionData {
     private String id;
     private String leftParent;
     private String rightParent;
@@ -22,10 +22,10 @@ public class NodeData {
             return true;
         }
 
-        if (!(other instanceof NodeData)) {
+        if (!(other instanceof GraphTransactionData)) {
             return false;
         }
-        return id.equals(((NodeData) other).id);
+        return id.equals(((GraphTransactionData) other).id);
     }
 
     @Override

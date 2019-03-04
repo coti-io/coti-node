@@ -1,6 +1,6 @@
 package io.coti.basenode.controllers;
 
-import io.coti.basenode.data.GraphData;
+import io.coti.basenode.services.LiveView.data.GraphData;
 import io.coti.basenode.services.LiveView.LiveViewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
