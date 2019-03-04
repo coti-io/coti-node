@@ -107,11 +107,11 @@ public class BaseNodeNetworkService implements INetworkService {
                 setSingleNodeData(new NetworkNodeData(networkNodeData.getNodeType()));
             } else {
                 if (getMapFromFactory(networkNodeData.getNodeType()).remove(networkNodeData.getHash()) == null) {
-                    log.info("networkNode {} isn't found", networkNodeData);
+                    log.info("NetworkNode {} of type {} isn't found", networkNodeData.getNodeHash(), networkNodeData.getNodeType());
                     return;
                 }
             }
-            log.info("networkNode {} is deleted", networkNodeData);
+            log.info("NetworkNode {}  of type {} is deleted", networkNodeData.getNodeHash(), networkNodeData.getNodeType());
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
         }

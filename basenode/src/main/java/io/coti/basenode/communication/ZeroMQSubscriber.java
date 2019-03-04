@@ -157,7 +157,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         channelsToSubscribe.forEach(channel ->
         {
             if (propagationReceiver.subscribe(channel)) {
-                log.debug("Subscribed to server {} and channel {}", serverAddress, channel);
+                log.info("Subscribed to server {} and channel {}", serverAddress, channel);
             } else {
                 log.error("Subscription failed for server {} and channel {}", serverAddress, channel);
             }
