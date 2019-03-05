@@ -44,7 +44,7 @@ public class BaseNodeNetworkService implements INetworkService {
         NodeTypeService.getNodeTypeList(true).forEach(nodeType -> multipleNodeMaps.put(nodeType, new ConcurrentHashMap<>()));
 
         singleNodeNetworkDataMap = new EnumMap<>(NodeType.class);
-        NodeTypeService.getNodeTypeList(false).forEach(nodeType -> singleNodeNetworkDataMap.put(nodeType, new NetworkNodeData(nodeType)));
+        NodeTypeService.getNodeTypeList(false).forEach(nodeType -> singleNodeNetworkDataMap.put(nodeType, null));
 
     }
 
@@ -70,28 +70,34 @@ public class BaseNodeNetworkService implements INetworkService {
 
     @Override
     public NetworkNodeData getSingleNodeData(NodeType nodeType) {
-        NetworkNodeData networkNodeData = singleNodeNetworkDataMap.get(nodeType);
-        if (networkNodeData == null) {
+        if (!singleNodeNetworkDataMap.containsKey(nodeType)) {
             log.error("Unsupported networkNodeData type : {}", nodeType);
             throw new IllegalArgumentException("Unsupported networkNodeData type");
         }
-        return networkNodeData;
+        return singleNodeNetworkDataMap.get(nodeType);
     }
 
-    private void setSingleNodeData(NetworkNodeData newNetworkNodeData) {
-        NetworkNodeData networkNodeData = singleNodeNetworkDataMap.get(newNetworkNodeData.getNodeType());
-        if (networkNodeData == null) {
-            log.error("Unsupported networkNodeData type : {}", newNetworkNodeData.getNodeType());
+    private void setSingleNodeData(NodeType nodeType, NetworkNodeData newNetworkNodeData) {
+        if (!singleNodeNetworkDataMap.containsKey(nodeType)) {
+            log.error("Unsupported networkNodeData type : {}", nodeType);
             throw new IllegalArgumentException("Unsupported networkNodeData type");
         }
-        singleNodeNetworkDataMap.put(newNetworkNodeData.getNodeType(), newNetworkNodeData);
+        if(newNetworkNodeData != null && !newNetworkNodeData.getNodeType().equals(nodeType)) {
+            log.error("Invalid networkNodeData type : {}", nodeType);
+            throw new IllegalArgumentException("Invalid networkNodeData type");
+        }
+        singleNodeNetworkDataMap.put(nodeType, newNetworkNodeData);
     }
 
     @Override
     public void addNode(NetworkNodeData networkNodeData) {
         try {
+            if(networkNodeData.getNodeHash() == null || networkNodeData.getNodeType() == null) {
+                log.error("Invalid networkNodeData adding request");
+                throw new IllegalArgumentException("Invalid networkNodeData adding request");
+            }
             if (!NodeTypeService.valueOf(networkNodeData.getNodeType().toString()).isMultipleNode()) {
-                setSingleNodeData(networkNodeData);
+                setSingleNodeData(networkNodeData.getNodeType(),networkNodeData);
             } else {
                 getMapFromFactory(networkNodeData.getNodeType()).putIfAbsent(networkNodeData.getHash(), networkNodeData);
             }
@@ -104,7 +110,7 @@ public class BaseNodeNetworkService implements INetworkService {
     public void removeNode(NetworkNodeData networkNodeData) {
         try {
             if (!NodeTypeService.valueOf(networkNodeData.getNodeType().toString()).isMultipleNode()) {
-                setSingleNodeData(new NetworkNodeData(networkNodeData.getNodeType()));
+                setSingleNodeData(networkNodeData.getNodeType(), null);
             } else {
                 if (getMapFromFactory(networkNodeData.getNodeType()).remove(networkNodeData.getHash()) == null) {
                     log.info("NetworkNode {} of type {} isn't found", networkNodeData.getNodeHash(), networkNodeData.getNodeType());
@@ -159,10 +165,12 @@ public class BaseNodeNetworkService implements INetworkService {
     public boolean isNodeExistsOnMemory(NetworkNodeData networkNodeData) {
         try {
             if (!NodeTypeService.valueOf(networkNodeData.getNodeType().toString()).isMultipleNode()) {
-                return singleNodeNetworkDataMap.get(networkNodeData.getNodeType()).equals(networkNodeData);
+                return singleNodeNetworkDataMap.containsKey(networkNodeData.getNodeType()) &&
+                       singleNodeNetworkDataMap.get(networkNodeData.getNodeType()) != null &&
+                       singleNodeNetworkDataMap.get(networkNodeData.getNodeType()).getNodeHash().equals(networkNodeData.getNodeHash());
             } else {
                 return getMapFromFactory(networkNodeData.getNodeType()).containsKey(networkNodeData.getHash()) &&
-                        getMapFromFactory(networkNodeData.getNodeType()).get(networkNodeData.getHash()).equals(networkNodeData);
+                        getMapFromFactory(networkNodeData.getNodeType()).get(networkNodeData.getHash()).getNodeHash().equals(networkNodeData.getNodeHash());
             }
         } catch(NullPointerException e) {
             return false;
