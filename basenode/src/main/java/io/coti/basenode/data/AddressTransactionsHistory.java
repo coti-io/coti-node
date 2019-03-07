@@ -22,6 +22,8 @@ public class AddressTransactionsHistory implements IEntity {
         transactionsHistory = new ArrayList<>();
     }
 
+    private AddressTransactionsHistory() {}
+
     public void addTransactionHashToHistory(Hash transactionHash) {
         transactionsHistory.add(transactionHash);
     }

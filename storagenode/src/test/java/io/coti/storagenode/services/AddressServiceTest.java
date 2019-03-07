@@ -5,8 +5,8 @@ import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.storagenode.http.GetObjectBulkJsonResponse;
-import io.coti.storagenode.http.GetObjectJsonResponse;
+import io.coti.storagenode.http.GetEntitiesBulkJsonResponse;
+import io.coti.storagenode.http.GetEntityJsonResponse;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +42,6 @@ public class AddressServiceTest {
 
     private ObjectMapper mapper;
 
-
     @Before
     public void init() {
         mapper = new ObjectMapper();
@@ -61,13 +60,14 @@ public class AddressServiceTest {
 
         IResponse getResponse = addressService.getObjectByHash(addressData1.getHash(), true).getBody();
         Assert.assertTrue(((BaseResponse) (getResponse)).getStatus().equals(STATUS_SUCCESS) &&
-                ((GetObjectJsonResponse) deleteResponse).status.equals(STATUS_SUCCESS));
+                ((GetEntityJsonResponse) deleteResponse).status.equals(STATUS_SUCCESS));
     }
 
     @Test
     public void multiAddressTest() throws IOException {
-        Map<Hash, String> hashToAddressJsonDataMap = new HashMap<>();
         List<AddressData> AddressDataList = new ArrayList<>();
+        Map<Hash, String> hashToAddressJsonDataMap = new HashMap<>();
+
         for (int i = 0; i < NUMBER_OF_ADDRESSES; i++) {
             AddressData addressData = new AddressData(generateRandomHash());
             AddressDataList.add(addressData);
@@ -86,9 +86,12 @@ public class AddressServiceTest {
         GetHashes.add(AddressDataList.get(3).getHash());
 
         IResponse response = addressService.getMultiObjectsFromDb(GetHashes, true).getBody();
+        Assert.assertTrue(((GetEntitiesBulkJsonResponse) response).getStatus().equals(STATUS_SUCCESS));
 
         Assert.assertTrue(((BaseResponse) (response)).getStatus().equals(STATUS_SUCCESS)
-                && ((GetObjectBulkJsonResponse) deleteResponse).getHashToObjectsFromDbMap().get(AddressDataList.get(0).getHash()).equals(STATUS_OK)
-                && ((GetObjectBulkJsonResponse) deleteResponse).getHashToObjectsFromDbMap().get(AddressDataList.get(1).getHash()).equals(STATUS_OK));
+                && ((GetEntitiesBulkJsonResponse) deleteResponse).getHashToEntitiesFromDbMap().get(AddressDataList.get(0).getHash()).equals(STATUS_OK)
+                && ((GetEntitiesBulkJsonResponse) deleteResponse).getHashToEntitiesFromDbMap().get(AddressDataList.get(1).getHash()).equals(STATUS_OK));
     }
+
+
 }
