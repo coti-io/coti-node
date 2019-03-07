@@ -137,7 +137,8 @@ public class DbConnectorService implements IDbConnectorService {
             BulkRequest request = new BulkRequest();
             for (Map.Entry<Hash, String> entry : hashToObjectJsonDataMap.entrySet()) {
                 request.add(new IndexRequest(indexName).id(entry.getKey().toString()).type(INDEX_TYPE)
-                        .source(XContentType.JSON, objectName, entry.getValue()));
+//                        .source(XContentType.JSON, objectName, entry.getValue()));
+                        .source(entry.getValue(), XContentType.JSON ));
             }
             BulkResponse bulkResponse;
             if( fromColdStorage )
@@ -214,10 +215,11 @@ public class DbConnectorService implements IDbConnectorService {
                     index,
                     INDEX_TYPE,
                     hash.toString());
-            request.source((jsonBuilder()
-                    .startObject()
-                    .field(objectName, objectAsJsonString)
-                    .endObject()));
+            request.source(objectAsJsonString, XContentType.JSON);
+//            request.source((jsonBuilder()
+//                    .startObject()
+//                    .field(objectName, objectAsJsonString)
+//                    .endObject()));
             if( fromColdStorage )
                 indexResponse = restColdStorageClient.index(request, RequestOptions.DEFAULT);
             else

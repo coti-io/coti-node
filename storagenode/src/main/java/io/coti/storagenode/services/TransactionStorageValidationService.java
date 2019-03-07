@@ -1,5 +1,6 @@
 package io.coti.storagenode.services;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.AddressTransactionsHistory;
 import io.coti.basenode.data.Hash;
@@ -7,9 +8,12 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.ValidationService;
 import io.coti.storagenode.services.interfaces.ITransactionStorageValidationService;
+import org.apache.commons.lang3.SerializationUtils;
+import org.aspectj.lang.annotation.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 
 @Service
@@ -24,21 +28,30 @@ public class TransactionStorageValidationService extends EntityStorageValidation
     @Autowired
     private Transactions transactions;
 
+    private ObjectMapper mapper;
+
+    @PostConstruct
+    public void init()
+    {
+        mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
     public boolean isObjectDIOK(Hash objectHash, String txAsJson)
     {
         //Check for Data Integrity of the Tx
-        // TODO implement method also based on objectAsJson
         // TODO specific difference for Tx from Address
 
-        TransactionData txData = null;
+        TransactionData txDataDeserializedFromES = null;
         try {
-            txData = new ObjectMapper().readValue(txAsJson, TransactionData.class);
+            txDataDeserializedFromES = mapper.readValue(txAsJson, TransactionData.class);
+            int temp = 7;
         } catch (IOException e) {
             e.printStackTrace();
             return false;
         }
 
-        boolean valid = validationService.validateTransactionDataIntegrity(txData);
+        boolean valid = validationService.validateTransactionDataIntegrity(txDataDeserializedFromES);
 
         return valid;
     }

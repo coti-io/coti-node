@@ -42,7 +42,6 @@ public class TestUtils {
                 generateRandomTrustScore(),
                 new Date(),
                 TransactionType.Payment);
-//        transactionData.setHash(hash); // Added as the field is marked as not null
         return transactionData;
     }
 

@@ -3,6 +3,8 @@ package io.coti.storagenode.services;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.HistoryNodeConsensusResult;
 import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.storagenode.http.GetEntitiesBulkJsonResponse;
+import io.coti.storagenode.http.GetEntityJsonResponse;
 import io.coti.storagenode.services.interfaces.IEntityStorageValidationService;
 import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
@@ -69,8 +71,10 @@ public abstract class EntityStorageValidationService implements IEntityStorageVa
         }
 
 
-        Hash objectHash = ((Pair<Hash, String>) objectByHashResponse.getBody()).getKey();
-        String objectAsJson = ((Pair<Hash, String>) objectByHashResponse.getBody()).getValue();
+        String objectAsJson = ((GetEntityJsonResponse)objectByHashResponse.getBody()).getEntityJsonPair().getValue();
+        Hash objectHash = ((GetEntityJsonResponse)objectByHashResponse.getBody()).getEntityJsonPair().getKey();
+//        Hash objectHash = ((Pair<Hash, String>) objectByHashResponse.getBody()).getKey();
+//        String objectAsJson = ((Pair<Hash, String>) objectByHashResponse.getBody()).getValue();
 
         return verifyRetrievedSingleObject(objectHash, objectAsJson, fromColdStorage);
     }
@@ -195,7 +199,8 @@ public abstract class EntityStorageValidationService implements IEntityStorageVa
         }
 
         // For successfully retrieved data, perform also data-integrity checks
-        ((Map<Hash, String>)objectsByHashResponse.getBody()).forEach( (hash, objectAsJsonString) ->
+//        ((Map<Hash, String>)objectsByHashResponse.getBody()).forEach( (hash, objectAsJsonString) ->
+        ((GetEntitiesBulkJsonResponse)objectsByHashResponse.getBody()).getHashToEntitiesFromDbMap().forEach( (hash, objectAsJsonString) ->
                 {
                     responsesMap.put(hash, verifyRetrievedSingleObject(hash, objectAsJsonString, false));
                 }
