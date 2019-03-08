@@ -2,10 +2,10 @@ package io.coti.fullnode.services;
 
 import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
-import io.coti.basenode.data.NetworkNodeData;
-import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.*;
+import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.services.BaseNodeInitializationService;
-import io.coti.basenode.services.CommunicationService;
+import io.coti.basenode.services.interfaces.ICommunicationService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,13 +13,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.List;
 
 @Service
 @Slf4j
 public class InitializationService extends BaseNodeInitializationService {
     @Autowired
-    private CommunicationService communicationService;
+    private ICommunicationService communicationService;
     @Value("${server.port}")
     private String serverPort;
     @Autowired
@@ -28,12 +30,16 @@ public class InitializationService extends BaseNodeInitializationService {
     private NetworkNodeCrypto networkNodeCrypto;
     @Value("${fee.percentage}")
     private Double nodeFee;
+    private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
     public void init() {
         super.initDB();
         super.connectToNetwork();
-        communicationService.initSubscriber(NodeType.FullNode);
+
+        publisherNodeTypeToMessageTypesMap.put(NodeType.DspNode, Arrays.asList(TransactionData.class, AddressData.class, DspConsensusResult.class));
+
+        communicationService.initSubscriber(NodeType.FullNode, publisherNodeTypeToMessageTypesMap);
 
         List<NetworkNodeData> dspNetworkNodeData = networkService.getShuffledNetworkNodeDataListFromMapValues(NodeType.DspNode);
         if (!dspNetworkNodeData.isEmpty()) {
@@ -42,7 +48,7 @@ public class InitializationService extends BaseNodeInitializationService {
         super.init();
 
         for (int i = 0; i < dspNetworkNodeData.size() && i < 2; i++) {
-            communicationService.addSubscription(dspNetworkNodeData.get(i).getPropagationFullAddress());
+            communicationService.addSubscription(dspNetworkNodeData.get(i).getPropagationFullAddress(), NodeType.DspNode);
             communicationService.addSender(dspNetworkNodeData.get(i).getReceivingFullAddress());
         }
 

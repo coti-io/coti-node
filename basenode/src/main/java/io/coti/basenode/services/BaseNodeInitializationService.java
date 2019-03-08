@@ -108,7 +108,6 @@ public abstract class BaseNodeInitializationService {
             dspVoteService.init();
             transactionService.init();
             potService.init();
-            networkService.init();
             initCommunication();
             log.info("The communication initialization is done");
             initTransactionSync();
@@ -139,6 +138,7 @@ public abstract class BaseNodeInitializationService {
             }
             balanceService.validateBalances();
             clusterService.finalizeInit();
+            propagationSubscriber.initPropagationHandler();
             log.info("Transactions Load completed");
         } catch (Exception e) {
             log.error("Fatal error in initialization", e);
@@ -148,14 +148,9 @@ public abstract class BaseNodeInitializationService {
 
     private void initCommunication() {
         networkService.setNodeManagerPropagationAddress("tcp://" + nodeManagerIp + ":" + nodeManagerPropagationPort);
-        HashMap<String, Consumer<Object>> channelToSubscriberHandlerMap = new HashMap<>();
-        channelToSubscriberHandlerMap.put(Channel.getChannelString(NetworkData.class, this.networkNodeData.getNodeType()),
-                newNetworkData -> networkService.handleNetworkChanges((NetworkData) newNetworkData));
 
         monitorService.init();
-        propagationSubscriber.addMessageHandler(channelToSubscriberHandlerMap);
-        propagationSubscriber.connectAndSubscribeToServer(networkService.getNodeManagerPropagationAddress());
-        propagationSubscriber.initPropagationHandler();
+        propagationSubscriber.connectAndSubscribeToServer(networkService.getNodeManagerPropagationAddress(), NodeType.NodeManager);
         propagationSubscriber.startListening();
 
     }
@@ -194,6 +189,7 @@ public abstract class BaseNodeInitializationService {
     }
 
     public void connectToNetwork() {
+        networkService.init();
         networkNodeData = createNodeProperties();
         nodeManagerAddress = "http://" + nodeManagerIp + ":" + nodeManagerPort;
         addNewNodeToNodeManager();

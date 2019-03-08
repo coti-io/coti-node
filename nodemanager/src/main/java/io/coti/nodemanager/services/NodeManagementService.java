@@ -53,7 +53,7 @@ public class NodeManagementService implements INodeManagementService {
     @PostConstruct
     private void init() {
         networkService.setNodeManagerPropagationAddress("tcp://" + nodeManagerIp + ":" + propagationPort);
-        propagationPublisher.init(propagationPort);
+        propagationPublisher.init(propagationPort, NodeType.NodeManager);
     }
 
     public void propagateNetworkChanges() {

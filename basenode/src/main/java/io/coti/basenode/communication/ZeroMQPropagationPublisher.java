@@ -19,6 +19,7 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket propagator;
     private String propagationPort;
+    private NodeType publisherNodeType;
     @Value("${server.ip}")
     private String publisherIp;
     private final int HEARTBEAT_INTERVAL = 5000;
@@ -27,7 +28,8 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
     @Autowired
     private ISerializer serializer;
 
-    public void init(String propagationPort) {
+    public void init(String propagationPort, NodeType publisherNodeType) {
+        this.publisherNodeType = publisherNodeType;
         zeroMQContext = ZMQ.context(1);
         propagator = zeroMQContext.socket(ZMQ.PUB);
         propagator.setHWM(10000);
@@ -38,10 +40,10 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
 
     public <T extends IPropagatable> void propagate(T toPropagate, List<NodeType> subscriberNodeTypes) {
         synchronized (propagator) {
-            subscriberNodeTypes.forEach(nodeType -> {
-                log.debug("Propagating {} to {}", toPropagate.getHash(), Channel.getChannelString(toPropagate.getClass(), nodeType));
+            subscriberNodeTypes.forEach(subscriberNodeType -> {
+                log.debug("Propagating {} to {}", toPropagate.getHash(), Channel.getChannelString(toPropagate.getClass(), publisherNodeType, subscriberNodeType));
                 byte[] message = serializer.serialize(toPropagate);
-                propagator.sendMore(Channel.getChannelString(toPropagate.getClass(), nodeType).getBytes());
+                propagator.sendMore(Channel.getChannelString(toPropagate.getClass(), publisherNodeType, subscriberNodeType).getBytes());
                 propagator.send(message);
             });
         }

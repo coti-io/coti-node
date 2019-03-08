@@ -4,7 +4,7 @@ import io.coti.basenode.data.NetworkData;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.BaseNodeNetworkService;
-import io.coti.basenode.services.CommunicationService;
+import io.coti.basenode.services.interfaces.ICommunicationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +25,7 @@ public class NetworkService extends BaseNodeNetworkService {
     private String serverPort;
 
     @Autowired
-    private CommunicationService communicationService;
+    private ICommunicationService communicationService;
 
     @Override
     public void handleNetworkChanges(NetworkData newNetworkData) {
@@ -43,7 +43,7 @@ public class NetworkService extends BaseNodeNetworkService {
             log.info("Zero spend server {} is about to be added", zerospendNetworkNodeData.getHttpFullAddress());
             recoveryServerAddress = zerospendNetworkNodeData.getHttpFullAddress();
             communicationService.addSender(zerospendNetworkNodeData.getReceivingFullAddress());
-            communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress());
+            communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress(), NodeType.ZeroSpendServer);
         }
         setNetworkData(newNetworkData);
     }

@@ -1,13 +1,15 @@
 package io.coti.financialserver.services;
 
 import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.services.BaseNodeInitializationService;
-import io.coti.basenode.services.CommunicationService;
+import io.coti.basenode.services.interfaces.ICommunicationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.util.EnumMap;
 import java.util.List;
 
 @Service
@@ -21,13 +23,14 @@ public class InitializationService {
     @Autowired
     private BaseNodeInitializationService baseNodeInitializationService;
     @Autowired
-    private CommunicationService communicationService;
+    private ICommunicationService communicationService;
+    private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
     public void init() {
-        communicationService.initSubscriber(propagationServerAddresses, NodeType.FinancialServer);
+        communicationService.initSubscriber(NodeType.FinancialServer, publisherNodeTypeToMessageTypesMap);
 
-        communicationService.initPropagator(propagationPort);
+        communicationService.initPublisher(propagationPort, NodeType.FinancialServer);
         baseNodeInitializationService.init();
     }
 }

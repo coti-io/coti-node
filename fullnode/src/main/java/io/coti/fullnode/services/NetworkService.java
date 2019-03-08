@@ -4,7 +4,7 @@ import io.coti.basenode.data.NetworkData;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.BaseNodeNetworkService;
-import io.coti.basenode.services.CommunicationService;
+import io.coti.basenode.services.interfaces.ICommunicationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +20,7 @@ import java.util.List;
 public class NetworkService extends BaseNodeNetworkService {
 
     @Autowired
-    private CommunicationService communicationService;
+    private ICommunicationService communicationService;
     private List<NetworkNodeData> subscribedDspNodes = new ArrayList<>(2);
 
     @Override

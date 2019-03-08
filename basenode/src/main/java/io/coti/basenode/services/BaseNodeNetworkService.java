@@ -6,18 +6,19 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkData;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
+import io.coti.basenode.services.interfaces.ICommunicationService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import javax.xml.soap.Node;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_NODE_REGISTRAR;
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_NODE_REGISTRATION_SIGNATURE;
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 
 
 @Slf4j
@@ -29,13 +30,13 @@ public class BaseNodeNetworkService implements INetworkService {
     private String kycServerPublicKey;
     private String nodeManagerPropagationAddress;
     @Autowired
-    private CommunicationService communicationService;
+    private ICommunicationService communicationService;
     @Autowired
     private NetworkNodeCrypto networkNodeCrypto;
     @Autowired
     private NodeRegistrationCrypto nodeRegistrationCrypto;
-    private Map<NodeType, Map<Hash, NetworkNodeData>> multipleNodeMaps;
-    private Map<NodeType, NetworkNodeData> singleNodeNetworkDataMap;
+    protected Map<NodeType, Map<Hash, NetworkNodeData>> multipleNodeMaps;
+    protected Map<NodeType, NetworkNodeData> singleNodeNetworkDataMap;
 
 
     @Override
@@ -46,6 +47,18 @@ public class BaseNodeNetworkService implements INetworkService {
         singleNodeNetworkDataMap = new EnumMap<>(NodeType.class);
         NodeTypeService.getNodeTypeList(false).forEach(nodeType -> singleNodeNetworkDataMap.put(nodeType, null));
 
+    }
+
+    @Scheduled(initialDelay = 1000, fixedDelay = 10000)
+    public void lastState() {
+        try {
+            if(multipleNodeMaps!= null){
+                log.info("FullNode: {}, DspNode: {}, TrustScoreNode: {}", multipleNodeMaps.get(NodeType.FullNode).size(), multipleNodeMaps.get(NodeType.DspNode).size(), multipleNodeMaps.get(NodeType.TrustScoreNode).size());
+            }
+
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     public void handleNetworkChanges(NetworkData networkData) {
@@ -209,7 +222,7 @@ public class BaseNodeNetworkService implements INetworkService {
             NetworkNodeData node = nodeDataIterator.next();
             log.info("{} {} is about to be added to subscription and network", node.getNodeType(), node.getHttpFullAddress());
             addNode(node);
-            communicationService.addSubscription(node.getPropagationFullAddress());
+            communicationService.addSubscription(node.getPropagationFullAddress(), node.getNodeType());
         }
     }
 

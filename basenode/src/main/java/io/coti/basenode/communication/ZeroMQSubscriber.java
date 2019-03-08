@@ -1,9 +1,11 @@
 package io.coti.basenode.communication;
 
+import io.coti.basenode.communication.data.ConnectedNodeData;
 import io.coti.basenode.communication.data.ZeroMQMessageData;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.communication.interfaces.ISerializer;
-import io.coti.basenode.data.*;
+import io.coti.basenode.communication.interfaces.ISubscriberHandler;
+import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +16,8 @@ import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
 
 import javax.annotation.PostConstruct;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,20 +33,19 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     private final int FIXED_DELAY = 5000;
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket propagationReceiver;
-    private Map<String, Consumer<Object>> channelToSubscriberHandlerMap;
-    private Map<String, Date> connectedServerAddresses = new ConcurrentHashMap<>();
+    private Map<String, ConnectedNodeData> connectedNodes = new ConcurrentHashMap<>();
     private BlockingQueue<ZeroMQMessageData> messageQueue;
-    private List<Class<? extends IPropagatable>> messageTypes = new ArrayList<>(Arrays.asList(TransactionData.class, AddressData.class, DspConsensusResult.class, NetworkData.class));
-    private List<String> channelsToSubscribe;
     private Thread propagationReceiverThread;
     private Thread messagesQueueHandlerThread;
     @Autowired
     private ISerializer serializer;
+    private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap;
+    private NodeType subscriberNodeType;
+    @Autowired
+    private ISubscriberHandler subscriberHandler;
 
     @PostConstruct
     private void init() {
-        channelToSubscriberHandlerMap = new ConcurrentHashMap<>();
-        channelsToSubscribe = new LinkedList<>();
         initSockets();
         messageQueue = new LinkedBlockingQueue<>();
     }
@@ -52,6 +55,16 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         propagationReceiver = zeroMQContext.socket(ZMQ.SUB);
         propagationReceiver.setHWM(10000);
         ZeroMQUtils.bindToRandomPort(propagationReceiver);
+    }
+
+    @Override
+    public void setSubscriberNodeType(NodeType subscriberNodeType) {
+        this.subscriberNodeType = subscriberNodeType;
+    }
+
+    @Override
+    public void setPublisherNodeTypeToMessageTypesMap(EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap) {
+        this.publisherNodeTypeToMessageTypesMap = publisherNodeTypeToMessageTypesMap;
     }
 
     @Override
@@ -86,12 +99,6 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         messagesQueueHandlerThread.start();
     }
 
-    @Override
-    public void addMessageHandler(HashMap<String, Consumer<Object>> messagesHandler) {
-        this.channelToSubscriberHandlerMap.putAll(messagesHandler);
-        this.channelsToSubscribe.addAll(messagesHandler.keySet());
-    }
-
     private void handleMessagesQueueTask() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
@@ -100,85 +107,101 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                 propagationProcess(zeroMQMessageData);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
             }
         }
         LinkedList<ZeroMQMessageData> remainingMessages = new LinkedList<>();
         messageQueue.drainTo(remainingMessages);
         if (remainingMessages.size() != 0) {
             log.info("Please wait to process {} remaining messages", remainingMessages.size());
-            remainingMessages.forEach(zeroMQMessageData -> propagationProcess(zeroMQMessageData));
+            remainingMessages.forEach(zeroMQMessageData -> {
+                try {
+                    propagationProcess(zeroMQMessageData);
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+            });
         }
 
     }
 
-    private void propagationProcess(ZeroMQMessageData zeroMQMessageData) {
+    private void propagationProcess(ZeroMQMessageData zeroMQMessageData) throws ClassNotFoundException {
         String channel = zeroMQMessageData.getChannel();
         byte[] message = zeroMQMessageData.getMessage();
         if (channel.contains("HeartBeat")) {
             String serverAddress = new String(message);
-            connectedServerAddresses.put(serverAddress, new Date());
+            ConnectedNodeData connectedNodeData = connectedNodes.get(serverAddress);
+            if(connectedNodeData != null) {
+                connectedNodeData.setLastConnectionTime(Instant.now());
+            }
         } else {
-            messageTypes.forEach(messageData -> {
+            String[] channelArray = channel.split(":");
+            Class<? extends IPropagatable> propagatedMessageType = (Class<? extends IPropagatable>) Class.forName(channelArray[0]);
+            NodeType publisherNodeType = NodeType.valueOf(channelArray[1]);
+            publisherNodeTypeToMessageTypesMap.get(publisherNodeType).forEach(messageType -> {
 
-                if (channel.contains(messageData.getName()) &&
-                        channelToSubscriberHandlerMap.containsKey(channel)) {
-                    handleMessageData(message, channel);
+                if (messageType.equals(propagatedMessageType)) {
+                    handleMessageData(message, propagatedMessageType, publisherNodeType);
                 }
             });
         }
     }
 
-    private void handleMessageData(byte[] message, String channel) {
+    private void handleMessageData(byte[] message, Class<? extends IPropagatable> propagatedMessageType, NodeType publisherNodeType) {
         try {
             IEntity messageData = serializer.deserialize(message);
-            channelToSubscriberHandlerMap.get(channel).accept(messageData);
+            subscriberHandler.get(propagatedMessageType.getSimpleName()).apply(publisherNodeType).accept(messageData);
         } catch (ClassCastException e) {
             log.error("Invalid request received: " + e.getMessage());
         }
     }
 
-    public void connectAndSubscribeToServer(String propagationAddressAndPort) {
-        log.info("ZeroMQ subscriber connecting to address {}", propagationAddressAndPort);
-        try {
-            TimeUnit.SECONDS.sleep(1);
-        } catch (InterruptedException e) {
-            log.error("Exception in sleep", e);
-        }
-        if (propagationReceiver.connect(propagationAddressAndPort)) {
-            subscribeAll(propagationAddressAndPort);
-            log.info("address {} added", propagationAddressAndPort);
+    @Override
+    public void connectAndSubscribeToServer(String publisherAddressAndPort, NodeType publisherNodeType) {
+        log.info("ZeroMQ subscriber connecting to address {}", publisherAddressAndPort);
+        if (propagationReceiver.connect(publisherAddressAndPort)) {
+            log.info("Subscriber connected to server {} of node type {}", publisherAddressAndPort, publisherNodeType);
+            subscribeAll(publisherAddressAndPort, publisherNodeType);
+            connectedNodes.put(publisherAddressAndPort, new ConnectedNodeData(publisherNodeType, Instant.now()));
+
         } else {
-            log.error("Unable to connect to server {}", propagationAddressAndPort);
+            log.error("Unable to connect to server {} of node type {}", publisherAddressAndPort, publisherNodeType);
         }
     }
 
-    public void subscribeAll(String serverAddress) {
-        propagationReceiver.subscribe("HeartBeat " + serverAddress);
-        channelsToSubscribe.forEach(channel ->
+    private void subscribeAll(String publisherAddressAndPort, NodeType publisherNodeType) {
+        propagationReceiver.subscribe("HeartBeat " + publisherAddressAndPort);
+        publisherNodeTypeToMessageTypesMap.get(publisherNodeType).forEach(messageType ->
         {
+            String channel =  Channel.getChannelString(messageType, publisherNodeType, subscriberNodeType);
             if (propagationReceiver.subscribe(channel)) {
-                log.info("Subscribed to server {} and channel {}", serverAddress, channel);
+                log.info("Subscribed to server {} and channel {}", publisherAddressAndPort, channel);
             } else {
-                log.error("Subscription failed for server {} and channel {}", serverAddress, channel);
+                log.error("Subscription failed for server {} and channel {}", publisherAddressAndPort, channel);
             }
         });
     }
 
     @Override
-    public void disconnect(String propagationFullAddress, NodeType nodeType) {
-        if (propagationReceiver.disconnect(propagationFullAddress)) {
-            log.info("{} with address {} was disconnected successfully ", nodeType, propagationFullAddress);
+    public void disconnect(String publisherAddressAndPort, NodeType publisherNodeType) {
+        if (propagationReceiver.disconnect(publisherAddressAndPort)) {
+            log.info("Subscriber disconnected from server {} of node type {}", publisherAddressAndPort, publisherNodeType);
+            connectedNodes.remove(publisherAddressAndPort);
         } else {
-            log.info("{} with address {} failed disconnection", nodeType, propagationFullAddress);
+            log.info("Subscriber failed disconnection from server {} of node type {}", publisherAddressAndPort, publisherNodeType);
         }
     }
 
-    private void unsubscribeAll(String serverAddress) {
-        propagationReceiver.unsubscribe("HeartBeat " + serverAddress);
-        channelsToSubscribe.forEach(channel ->
+    private void unsubscribeAll(String publisherAddressAndPort, NodeType publisherNodeType) {
+        propagationReceiver.unsubscribe("HeartBeat " + publisherAddressAndPort);
+        publisherNodeTypeToMessageTypesMap.get(publisherNodeType).forEach(messageType ->
         {
+            String channel =  Channel.getChannelString(messageType, publisherNodeType, subscriberNodeType);
             if (propagationReceiver.unsubscribe(channel)) {
-                log.debug("Unsubscribe from {}", serverAddress);
+                log.info("Unsubscribed from server {} and channel {}", publisherAddressAndPort, channel);
+            } else {
+                log.error("UnSubscription failed from server {} and channel {}", publisherAddressAndPort, channel);
             }
         });
     }
@@ -186,13 +209,11 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
 
     @Scheduled(initialDelay = INITIAL_DELAY, fixedDelay = FIXED_DELAY)
     public void reconnectToPublisher() {
-        connectedServerAddresses.forEach((serverAddress, date) -> {
-            if (new Date().getTime() - date.getTime() > HEARTBEAT_INTERVAL) {
-                log.info("Publisher heartbeat message timeout: server = {}, lastHeartBeat = {}", serverAddress, date);
-                unsubscribeAll(serverAddress);
-                if (propagationReceiver.connect(serverAddress)) {
-                    subscribeAll(serverAddress);
-                }
+        connectedNodes.forEach((serverAddress, connectedNodeData) -> {
+            if (Duration.between(connectedNodeData.getLastConnectionTime(), Instant.now()).toMillis() > HEARTBEAT_INTERVAL) {
+                log.info("Publisher heartbeat message timeout: server = {}, lastHeartBeat = {}", serverAddress, connectedNodeData.getLastConnectionTime());
+                unsubscribeAll(serverAddress,connectedNodeData.getNodeType());
+                connectAndSubscribeToServer(serverAddress, connectedNodeData.getNodeType());
             }
         });
     }
