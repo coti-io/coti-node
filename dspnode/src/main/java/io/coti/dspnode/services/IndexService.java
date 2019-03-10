@@ -2,7 +2,7 @@ package io.coti.dspnode.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.services.BaseNodeIndexService;
-import io.coti.dspnode.model.NotTotalConfirmedTransactionHashes;
+import io.coti.basenode.model.NotTotalConfirmedTransactionHashes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

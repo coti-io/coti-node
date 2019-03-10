@@ -62,6 +62,11 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
 
     public abstract Set<Hash> getUnreachedDspcHashTransactions();
 
+    // TODO: implement
+    public void handleClusterStampData(ClusterStampData clusterStampData) {
+
+    }
+
     public void handleClusterStampConsensusResult(ClusterStampConsensusResult clusterStampConsensusResult) {
         //TODO 3/4/2019 astolia: see if can make things more efficient here.
         if(clusterStampConsensusResultCrypto.verifySignature(clusterStampConsensusResult) && clusterStampConsensusResult.isDspConsensus()) {
@@ -92,7 +97,8 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
     public void loadBalanceFromClusterStamp(ClusterStampData clusterStampData) {
 
         balanceService.updateBalanceAndPreBalanceMap(clusterStampData.getBalanceMap());
-        transactions.deleteAll();
+        // TODO: fix this
+        //transactions.deleteAll();
         Iterator it = clusterStampData.getUnconfirmedTransactions().entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry unConfirmedTransaction = (Map.Entry)it.next();

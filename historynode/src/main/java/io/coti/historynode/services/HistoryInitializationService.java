@@ -39,7 +39,7 @@ public class HistoryInitializationService {
         HashMap<String, Consumer<Object>> classNameToSubscriberHandler = new HashMap<>();
 
         classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampData.class, NodeType.HistoryNode), data ->
-                clusterStampService.newClusterStamp((ClusterStampData) data));
+                clusterStampService.handleClusterStampData((ClusterStampData) data));
         classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampConsensusResult.class, NodeType.HistoryNode), data ->
                 clusterStampService.handleClusterStampConsensusResult((ClusterStampConsensusResult) data));
 

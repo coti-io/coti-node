@@ -66,14 +66,6 @@ public abstract class Collection<T extends IEntity> {
         iterator.seekToFirst();
         while (iterator.isValid()) {
             databaseConnector.delete(columnFamilyName,iterator.key());
-        }
-    }
-
-    public void deleteAll() {
-        RocksIterator iterator = databaseConnector.getIterator(columnFamilyName);
-        iterator.seekToFirst();
-        while (iterator.isValid()) {
-            databaseConnector.delete(columnFamilyName,iterator.key());
             iterator.next();
         }
     }
