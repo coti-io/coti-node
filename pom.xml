@@ -17,7 +17,9 @@
         <module>tools</module>
         <module>trustscore</module>
         <module>financialserver</module>
-    </modules>
+        <module>storagenode</module>
+        <module>historynode</module>
+	</modules>
 
     <name>coti-node</name>
     <description>Coti Full Node</description>

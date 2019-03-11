@@ -5,8 +5,11 @@ import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.crypto.DspVoteCrypto;
 import io.coti.basenode.data.DspVote;
 import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.NotTotalConfirmedTransactionHash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.model.NotTotalConfirmedTransactionHashes;
 import io.coti.basenode.services.BaseNodeTransactionService;
+import io.coti.basenode.services.interfaces.IClusterStampService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
@@ -38,8 +41,16 @@ public class TransactionService extends BaseNodeTransactionService {
     private ISender sender;
     @Autowired
     private DspVoteCrypto dspVoteCrypto;
+    @Autowired
+    private IClusterStampService clusterStampService;
+    @Autowired
+    private NotTotalConfirmedTransactionHashes notTotalConfirmedTransactionHashes;
 
     public String handleNewTransactionFromFullNode(TransactionData transactionData) {
+        //TODO 2/20/2019 astolia: check if this is correct state here.
+        if(clusterStampService.isReadyForClusterStamp()){
+            return "Waiting for cluster stamp";
+        }
         try {
             log.debug("Running new transactions from full node handler");
             if (transactionHelper.isTransactionAlreadyPropagated(transactionData)) {
@@ -62,12 +73,11 @@ public class TransactionService extends BaseNodeTransactionService {
                     NodeType.FinancialServer));
             transactionHelper.setTransactionStateToFinished(transactionData);
             transactionsToValidate.add(transactionData);
+            notTotalConfirmedTransactionHashes.put(new NotTotalConfirmedTransactionHash(transactionData.getHash()));
             return "Received Transaction: " + transactionData.getHash();
         } finally {
             transactionHelper.endHandleTransaction(transactionData);
         }
-
-
     }
 
     @Scheduled(fixedRate = 1000)
@@ -75,7 +85,7 @@ public class TransactionService extends BaseNodeTransactionService {
         if (!isValidatorRunning.compareAndSet(false, true)) {
             return;
         }
-        while (!transactionsToValidate.isEmpty()) {
+        while (!clusterStampService.isReadyForClusterStamp() && !transactionsToValidate.isEmpty()) {
             TransactionData transactionData = transactionsToValidate.remove();
             log.debug("DSP Fully Checking transaction: {}", transactionData.getHash());
             DspVote dspVote = new DspVote(
@@ -95,9 +105,12 @@ public class TransactionService extends BaseNodeTransactionService {
         super.init();
     }
 
+    @Override
     public void continueHandlePropagatedTransaction(TransactionData transactionData) {
+
         propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
         if (!transactionData.isZeroSpend()) {
+            notTotalConfirmedTransactionHashes.put(new NotTotalConfirmedTransactionHash(transactionData.getHash()));
             transactionsToValidate.add(transactionData);
         }
     }

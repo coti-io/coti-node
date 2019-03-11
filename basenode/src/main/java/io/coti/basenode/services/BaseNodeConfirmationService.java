@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @Slf4j
 @Service
 public class BaseNodeConfirmationService implements IConfirmationService {
+
     @Autowired
     private LiveViewService liveViewService;
     @Autowired
@@ -31,6 +32,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     private TransactionIndexService transactionIndexService;
     @Autowired
     private Transactions transactions;
+
     private BlockingQueue<ConfirmationData> confirmationQueue;
     private Map<Long, DspConsensusResult> waitingDspConsensusResults = new ConcurrentHashMap<>();
     private AtomicLong totalConfirmed = new AtomicLong(0);
@@ -80,6 +82,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         }
         if (transactionHelper.isConfirmed(transactionData)) {
             processConfirmedTransaction(transactionData);
+            removeConfirmedTxFromUnconfirmedTransactions(transactionData.getHash());
         }
         transactions.put(transactionData);
     }
@@ -103,10 +106,14 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         }
     }
 
+    protected long incrementAndGetTotalConfirmed() {
+        return totalConfirmed.incrementAndGet();
+    }
+
     private void processConfirmedTransaction(TransactionData transactionData) {
         transactionData.setTransactionConsensusUpdateTime(new Date());
         transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount()));
-        totalConfirmed.incrementAndGet();
+        incrementAndGetTotalConfirmed();
 
         liveViewService.updateNodeStatus(transactionData, 2);
 
@@ -138,8 +145,13 @@ public class BaseNodeConfirmationService implements IConfirmationService {
             tccConfirmed.incrementAndGet();
         }
         if (isConfirmed) {
-            totalConfirmed.incrementAndGet();
+            incrementAndGetTotalConfirmed();
+            removeConfirmedTxFromUnconfirmedTransactions(transactionData.getHash());
         }
+    }
+
+    protected void removeConfirmedTxFromUnconfirmedTransactions(Hash txHash){
+        // This method is overridden and implemented only in dsp node.
     }
 
     @Override

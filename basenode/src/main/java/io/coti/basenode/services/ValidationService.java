@@ -1,20 +1,21 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.crypto.ClusterStampStateCrypto;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.TransactionCrypto;
-import io.coti.basenode.data.BaseTransactionData;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IPotService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 
 @Service
+@Slf4j
 public class ValidationService implements IValidationService {
     @Autowired
     private Transactions transactions;
@@ -24,6 +25,8 @@ public class ValidationService implements IValidationService {
     private TransactionCrypto transactionCrypto;
     @Autowired
     private IPotService potService;
+    @Autowired
+    private ClusterStampStateCrypto clusterStampStateCrypto;
 
     @Override
     public boolean validateSource(Hash transactionHash) {
@@ -95,5 +98,39 @@ public class ValidationService implements IValidationService {
     @Override
     public boolean validatePot(TransactionData transactionData) {
         return potService.validatePot(transactionData);
+    }
+
+    @Override
+    public boolean validateRequestAndOffState(ClusterStampStateData clusterStampPreparationData, ClusterStampState currentClusterStampState) {
+        return validateClusterStampRequestByState(clusterStampPreparationData,currentClusterStampState,ClusterStampState.OFF);
+    }
+
+    @Override
+    public boolean validateRequestAndPreparingState(ClusterStampStateData nodeReadyForClusterStampData, ClusterStampState currentClusterStampState) {
+        return validateClusterStampRequestByState(nodeReadyForClusterStampData,currentClusterStampState,ClusterStampState.PREPARING);
+    }
+
+    @Override
+    public boolean validateRequestAndReadyState(ClusterStampStateData clusterStampStateData, ClusterStampState currentClusterStampState) {
+        return validateClusterStampRequestByState(clusterStampStateData,currentClusterStampState,ClusterStampState.READY);
+    }
+
+    /**
+     * Validates the cluster stamp request signature and the current state is same as expected.
+     * @param clusterStampStateData the cluster stamp request.
+     * @param currentState current cluster stamp state.
+     * @param expectedCurrentState expected cluster stamp state.
+     * @return true if request signature and current cluster stamp state are correct. false otherwise.
+     */
+    private boolean validateClusterStampRequestByState(ClusterStampStateData clusterStampStateData, ClusterStampState currentState, ClusterStampState expectedCurrentState){
+        if(currentState != expectedCurrentState){
+            log.error("Expected cluster stamp state: {}. Current cluster stamp state: {}",expectedCurrentState,currentState);
+            return false;
+        }
+        else if(!clusterStampStateCrypto.verifySignature(clusterStampStateData)){
+            log.error("Wrong signature for \'prepare for cluster stamp\' request.");
+            return false;
+        }
+        return true;
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 public interface IBalanceService {
 
@@ -27,4 +28,8 @@ public interface IBalanceService {
     void updateBalance(Hash addressHash, BigDecimal amount);
 
     void updatePreBalance(Hash addressHash, BigDecimal amount);
+
+    void updateBalanceAndPreBalanceMap(Map<Hash, BigDecimal> balanceMap);
+
+    Map<Hash, BigDecimal> getBalanceMap();
 }

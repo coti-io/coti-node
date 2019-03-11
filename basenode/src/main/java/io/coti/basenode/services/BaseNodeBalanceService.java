@@ -1,15 +1,20 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.data.BaseTransactionData;
+import io.coti.basenode.data.ClusterStampData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.http.GetBalancesRequest;
-import io.coti.basenode.http.GetBalancesResponse;
+import io.coti.basenode.http.*;
+import io.coti.basenode.model.ClusterStamps;
 import io.coti.basenode.services.interfaces.IBalanceService;
+import io.coti.basenode.services.interfaces.IClusterStampService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -25,15 +30,31 @@ import java.util.concurrent.ConcurrentHashMap;
 public class BaseNodeBalanceService implements IBalanceService {
     protected Map<Hash, BigDecimal> balanceMap;
     protected Map<Hash, BigDecimal> preBalanceMap;
+    @Autowired
+    private ClusterStamps clusterStamps;
+    @Autowired
+    private IClusterStampService clusterStampService;
+
+    @Value("${recovery.server.address}")
+    private String recoveryServerAddress;
 
     public void init() throws Exception {
+
         balanceMap = new ConcurrentHashMap<>();
         preBalanceMap = new ConcurrentHashMap<>();
-        loadBalanceFromSnapshot();
+        ClusterStampData lastClusterStampData = getLastClusterStamp();
+        if(lastClusterStampData != null) {
+            clusterStampService.loadBalanceFromClusterStamp(lastClusterStampData);
+        }
+        else {
+            loadBalanceFromSnapshot();
+        }
+
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
     private void loadBalanceFromSnapshot() throws Exception {
+
         String snapshotFileLocation = "snapshot.csv";
         File snapshotFile = new File(snapshotFileLocation);
 
@@ -42,6 +63,7 @@ public class BaseNodeBalanceService implements IBalanceService {
             String line;
 
             while ((line = bufferedReader.readLine()) != null) {
+
                 String[] addressDetails = line.split(",");
                 if (addressDetails.length != 2) {
                     throw new Exception("Bad csv file format");
@@ -64,6 +86,36 @@ public class BaseNodeBalanceService implements IBalanceService {
             log.error("Errors on snapshot loading: {}", e);
             throw e;
         }
+    }
+
+    private ClusterStampData getLastClusterStamp() {
+
+        long totalConfirmedTransactionsPriorClusterStamp;
+
+        ClusterStampData localClusterStampData = clusterStamps.getByHash(new Hash(""));
+
+        if (localClusterStampData != null) {
+            totalConfirmedTransactionsPriorClusterStamp = localClusterStampData.getTotalConfirmedTransactionsPriorClusterStamp();
+        }
+        else {
+            totalConfirmedTransactionsPriorClusterStamp = 0;
+        }
+
+        if(!recoveryServerAddress.isEmpty()) {
+            RestTemplate restTemplate = new RestTemplate();
+            ClusterStampData lastClusterStampData =
+                    restTemplate.postForObject(
+                            recoveryServerAddress + "/getLastClusterStamp",
+                            totalConfirmedTransactionsPriorClusterStamp,
+                            ClusterStampData.class);
+
+            if(lastClusterStampData != null) {
+                log.info("Received last cluster stamp for total confirmed transactions: {}", localClusterStampData.getTotalConfirmedTransactionsPriorClusterStamp());
+                return lastClusterStampData;
+            }
+        }
+
+        return localClusterStampData;
     }
 
     @Override
@@ -149,5 +201,17 @@ public class BaseNodeBalanceService implements IBalanceService {
                 currentAmount.add(amount));
         preBalanceMap.putIfAbsent(addressHash, amount);
     }
+
+    @Override
+    public void updateBalanceAndPreBalanceMap(Map<Hash, BigDecimal> balanceMap) {
+        this.balanceMap = balanceMap;
+        preBalanceMap.putAll(balanceMap);
+    }
+
+    @Override
+    public Map<Hash, BigDecimal> getBalanceMap() {
+        return balanceMap;
+    }
+
 
 }
