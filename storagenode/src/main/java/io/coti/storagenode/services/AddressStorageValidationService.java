@@ -2,7 +2,6 @@ package io.coti.storagenode.services;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.AddressTransactionsHistory;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.services.ValidationService;
@@ -23,6 +22,9 @@ public class AddressStorageValidationService extends EntityStorageValidationServ
     @Autowired
     private ValidationService validationService;
 
+    @Autowired
+    private AddressTransactionsHistoryService addressTransactionsHistoryService;
+
     @PostConstruct
     public void init()
     {
@@ -41,6 +43,11 @@ public class AddressStorageValidationService extends EntityStorageValidationServ
             return false;
         }
         return validationService.validateAddress(addressTxHistory.getHash()); // TODO add Validation for addressAsJson
+    }
+
+    @Override
+    public ObjectService getObjectService() {
+        return addressTransactionsHistoryService;
     }
 
 }

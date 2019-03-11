@@ -2,14 +2,10 @@ package io.coti.storagenode.services;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.coti.basenode.data.AddressTransactionsHistory;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.ValidationService;
 import io.coti.storagenode.services.interfaces.ITransactionStorageValidationService;
-import org.apache.commons.lang3.SerializationUtils;
-import org.aspectj.lang.annotation.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,14 +15,12 @@ import java.io.IOException;
 @Service
 public class TransactionStorageValidationService extends EntityStorageValidationService implements ITransactionStorageValidationService
 {
-    @Autowired
-    private ObjectService objectService;
 
     @Autowired
     private ValidationService validationService;
 
     @Autowired
-    private Transactions transactions;
+    private TransactionService transactionService;
 
     private ObjectMapper mapper;
 
@@ -54,6 +48,11 @@ public class TransactionStorageValidationService extends EntityStorageValidation
         boolean valid = validationService.validateTransactionDataIntegrity(txDataDeserializedFromES);
 
         return valid;
+    }
+
+    @Override
+    public ObjectService getObjectService() {
+        return transactionService;
     }
 
 }

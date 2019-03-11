@@ -3,6 +3,7 @@ package io.coti.storagenode.services.interfaces;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.HistoryNodeConsensusResult;
 import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.storagenode.services.ObjectService;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
@@ -19,4 +20,6 @@ public interface IEntityStorageValidationService
     Map<Hash, ResponseEntity<IResponse>> retrieveMultipleObjectsFromStorage(List<Hash> hashes, HistoryNodeConsensusResult historyNodeConsensusResult);
 
     boolean isObjectDIOK(Hash objectHash, String objectAsJson);
+
+    ObjectService getObjectService();
 }

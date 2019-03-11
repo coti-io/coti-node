@@ -1,6 +1,5 @@
 package io.coti.storagenode.services;
 
-import io.coti.basenode.communication.Channel;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.CommunicationService;
@@ -25,8 +24,6 @@ public class InitializationService {
     private String propagationPort;
 
 
-
-
     @Autowired
     private TransactionService transactionService;
 
@@ -38,6 +35,7 @@ public class InitializationService {
 
     @Autowired
     private CommunicationService communicationService;
+
 
     @PostConstruct
     public void init()

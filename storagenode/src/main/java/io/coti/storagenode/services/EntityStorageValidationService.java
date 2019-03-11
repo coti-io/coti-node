@@ -22,9 +22,7 @@ import java.util.Map;
 @Slf4j
 public abstract class EntityStorageValidationService implements IEntityStorageValidationService
 {
-    @Autowired
-    private ObjectService objectService;
-    
+
     @Autowired
     private HistoryNodesConsensusService historyNodesConsensusService;
 
@@ -37,12 +35,12 @@ public abstract class EntityStorageValidationService implements IEntityStorageVa
             return response;
 
         // Store data in ongoing storage system
-        response = objectService.insertObjectJson(hash, objectAsJsonString, false);
+        response = getObjectService().insertObjectJson(hash, objectAsJsonString, false);
         if( !isResponseOK(response) )
             return response; // TODO consider some retry mechanism,
         else {
             // Store data also in cold-storage
-            response = objectService.insertObjectJson(hash, objectAsJsonString, true);
+            response = getObjectService().insertObjectJson(hash, objectAsJsonString, true);
             if ( !isResponseOK(response) )
                 return response; // TODO consider some retry mechanism,
         }
@@ -60,12 +58,12 @@ public abstract class EntityStorageValidationService implements IEntityStorageVa
 
         // Retrieve data from ongoing storage system, including data integrity checks
         boolean fromColdStorage = false;
-        ResponseEntity<IResponse> objectByHashResponse = objectService.getObjectByHash(hash, fromColdStorage);
+        ResponseEntity<IResponse> objectByHashResponse = getObjectService().getObjectByHash(hash, fromColdStorage);
 
         if( !isResponseOK(objectByHashResponse) )
         {
             fromColdStorage = true;
-            objectByHashResponse = objectService.getObjectByHash(hash, fromColdStorage);
+            objectByHashResponse = getObjectService().getObjectByHash(hash, fromColdStorage);
             if( !isResponseOK(objectByHashResponse) )
                 return objectByHashResponse;   // Failed to retrieve from both repositories
         }
@@ -90,7 +88,7 @@ public abstract class EntityStorageValidationService implements IEntityStorageVa
             if( !fromColdStorage )
             {
                 // If DI is successful, try to delete potential duplicate data from cold-storage
-                ResponseEntity<IResponse> deleteResponse =  objectService.deleteObjectByHash(objectHash, true);
+                ResponseEntity<IResponse> deleteResponse =  getObjectService().deleteObjectByHash(objectHash, true);
                 if( !isResponseOK(deleteResponse) )
                     return response; // Delete can fail due to previous deletion, should not impact flow
             }
@@ -98,7 +96,7 @@ public abstract class EntityStorageValidationService implements IEntityStorageVa
         }
 
         // If DI failed, retrieve data from cold-storage, remove previous data from ongoing storage system,
-        ResponseEntity<IResponse> coldStorageResponse = objectService.getObjectByHash(objectHash, true);
+        ResponseEntity<IResponse> coldStorageResponse = getObjectService().getObjectByHash(objectHash, true);
         if( isResponseOK(coldStorageResponse) )
         {
             Hash coldObjectHash = ((Pair<Hash, String>) coldStorageResponse.getBody()).getKey();
@@ -110,10 +108,10 @@ public abstract class EntityStorageValidationService implements IEntityStorageVa
                 return failedResponse;
             }
             // Delete compromised copy from ongoing repository
-            ResponseEntity<IResponse> deleteResponse =  objectService.deleteObjectByHash(objectHash, false);
+            ResponseEntity<IResponse> deleteResponse =  getObjectService().deleteObjectByHash(objectHash, false);
             if ( isResponseOK(deleteResponse) )
             {   // Copy data from cold-storage to hot-storage
-                ResponseEntity<IResponse> insertResponse = objectService.insertObjectJson(coldObjectHash, coldObjectAsJson, false);
+                ResponseEntity<IResponse> insertResponse = getObjectService().insertObjectJson(coldObjectHash, coldObjectAsJson, false);
                 // TODO consider verifying response for possible retry mechanism
             }
         }
@@ -141,12 +139,12 @@ public abstract class EntityStorageValidationService implements IEntityStorageVa
             return response;
 
         // Store data from approved request into ongoing storage
-        response = objectService.insertMultiObjects(hashToObjectJsonDataMap, false); // TODO use additional param to indicate it is for ongoing storage
+        response = getObjectService().insertMultiObjects(hashToObjectJsonDataMap, false); // TODO use additional param to indicate it is for ongoing storage
         if( !isResponseOK(response) )
             return response; // TODO consider some retry mechanism
         else
         {
-            response = objectService.insertMultiObjects(hashToObjectJsonDataMap, true); // TODO use additional param to indicate it is for cold storage
+            response = getObjectService().insertMultiObjects(hashToObjectJsonDataMap, true); // TODO use additional param to indicate it is for cold storage
             if( !isResponseOK(response) )
                 return response; // TODO consider some retry mechanism, consider removing from ongoing storage
         }
@@ -190,7 +188,7 @@ public abstract class EntityStorageValidationService implements IEntityStorageVa
         }
 
         // Retrieve data from ongoing storage system
-        ResponseEntity<IResponse> objectsByHashResponse = objectService.getMultiObjectsFromDb(hashes, false);
+        ResponseEntity<IResponse> objectsByHashResponse = getObjectService().getMultiObjectsFromDb(hashes, false);
 
         if( !isResponseOK(objectsByHashResponse) )
         {
@@ -212,5 +210,6 @@ public abstract class EntityStorageValidationService implements IEntityStorageVa
     protected boolean isResponseOK(ResponseEntity<IResponse> iResponse) {
         return iResponse != null && iResponse.getStatusCode().equals(HttpStatus.OK);
     }
+
 
 }
