@@ -25,8 +25,6 @@ public class InitializationService extends BaseNodeInitializationService {
     @Value("${server.port}")
     private String serverPort;
     @Autowired
-    private INetworkService networkService;
-    @Autowired
     private NetworkNodeCrypto networkNodeCrypto;
     @Value("${fee.percentage}")
     private Double nodeFee;
@@ -50,6 +48,7 @@ public class InitializationService extends BaseNodeInitializationService {
         for (int i = 0; i < dspNetworkNodeData.size() && i < 2; i++) {
             communicationService.addSubscription(dspNetworkNodeData.get(i).getPropagationFullAddress(), NodeType.DspNode);
             communicationService.addSender(dspNetworkNodeData.get(i).getReceivingFullAddress());
+            ((NetworkService) networkService).addToConnectedDspNodes(dspNetworkNodeData.get(i));
         }
 
     }

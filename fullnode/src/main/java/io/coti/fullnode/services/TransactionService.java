@@ -1,10 +1,8 @@
 package io.coti.fullnode.services;
 
-import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.AddressTransactionsHistory;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.exceptions.TransactionException;
 import io.coti.basenode.http.Response;
@@ -14,8 +12,10 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
-import io.coti.basenode.services.interfaces.*;
-
+import io.coti.basenode.services.interfaces.IClusterService;
+import io.coti.basenode.services.interfaces.INetworkService;
+import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.fullnode.http.AddTransactionRequest;
 import io.coti.fullnode.http.AddTransactionResponse;
 import io.coti.fullnode.http.GetAddressTransactionHistoryResponse;
@@ -46,8 +46,6 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private IClusterService clusterService;
 
-    @Autowired
-    private ISender sender;
     @Autowired
     private AddressTransactionsHistories addressTransactionHistories;
     @Autowired
@@ -153,9 +151,7 @@ public class TransactionService extends BaseNodeTransactionService {
             transactionHelper.setTransactionStateToSaved(transactionData);
             webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
             final TransactionData finalTransactionData = transactionData;
-            networkService.getMapFromFactory(NodeType.DspNode).forEach ((hash, networkNode) ->
-                    sender.send(finalTransactionData, networkNode.getReceivingFullAddress())
-            );
+            ((NetworkService) networkService).sendDataToConnectedDspNodes(finalTransactionData);
             transactionHelper.setTransactionStateToFinished(transactionData);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
