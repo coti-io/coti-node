@@ -17,9 +17,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-/**
- * A service that provides Cluster Stamp functionality for Zero Spend node.
- */
 @Slf4j
 @Service
 public class ClusterStampService extends BaseNodeClusterStampService {
@@ -38,8 +35,13 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private IValidationService validationService;
     @Autowired
     private DspVoteService dspVoteService;
-    @Value("${clusterstamp.reply.timeout}")
-    private int replyTimeOut;
+    @Value("${clusterstamp.timeout.reply}")
+    private int replyTimeout;
+    @Value("${clusterstamp.transaction.ratio}")
+    private int clusterStampTransactionRatio;
+    @Value("${clusterstamp.genesis.transactions}")
+    private int genesisTransactions;
+
     private ClusterStampData currentClusterStamp;
     private long totalConfirmedTransactionsCount;
 
@@ -49,6 +51,25 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     public void init() {
         super.init();
         currentClusterStamp = new ClusterStampData();
+    }
+
+    @Override
+    protected void terminateClusterStampByNodeType() {
+        currentClusterStamp = null;
+    }
+
+    public void createAndSendClusterStampPreparationMsg(long totalConfirmedTransactions) {
+        if(validateClusterStampInitiation(totalConfirmedTransactions)) {
+            initScheduling();
+            log.info("Starting ClusterStamp");
+            ClusterStampPreparationData clusterStampPreparationData = new ClusterStampPreparationData(totalConfirmedTransactions);
+            clusterStampStateCrypto.signMessage(clusterStampPreparationData);
+            prepareForClusterStamp(clusterStampPreparationData);
+        }
+    }
+
+    private boolean validateClusterStampInitiation(long totalConfirmedTransactions){
+        return totalConfirmedTransactions > genesisTransactions && (totalConfirmedTransactions % clusterStampTransactionRatio) == 0 && isClusterStampOff() ;
     }
 
     @Override
@@ -62,9 +83,9 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     private void initPrepareForClusterStampTimer() {
         try {
-            Thread.sleep(replyTimeOut);
+            Thread.sleep(replyTimeout);
             if(isPreparingForClusterStamp()) {
-                log.info("Zero spend couldn't get a response from all DSP's for {} seconds. starting cluster stamp.", replyTimeOut);
+                log.info("Zero spend couldn't get a response from all DSP's for {} seconds. starting cluster stamp.", replyTimeout);
                 makeAndPropagateClusterStamp(new DspReadyForClusterStampData());
             }
         } catch (InterruptedException e) {
@@ -75,11 +96,14 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     }
 
     @Override
-    //TODO 3/5/2019 astolia: decide if FullNodeReadyForClusterStamp List is required. if not - delete.
-    // if yes - add validation for that list.
+    //TODO 3/5/2019 astolia: decide if FullNodeReadyForClusterStamp List is required. if not - delete from the request and validation.
     public void getReadyForClusterStamp(ClusterStampStateData dspReadyForClusterStampData) {
         log.debug("CLUSTERSTAMP: Received DspReadyForClusterStampData");
         if(validationService.validateRequestAndPreparingState(dspReadyForClusterStampData, clusterStampState)){
+            if(((DspReadyForClusterStampData) dspReadyForClusterStampData).getFullNodeReadyForClusterStampDataList().stream().anyMatch(fnReady -> !clusterStampStateCrypto.verifySignature(fnReady))){
+                log.error("Validation of one or more Full node ready messages failed.");
+                return;
+            }
             if(currentClusterStamp.getDspReadyForClusterStampDataList().contains(dspReadyForClusterStampData)) {
                 log.warn("\'Dsp Node Ready For Cluster Stamp\' was already sent by the sender of this message");
                 return;
@@ -93,10 +117,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         }
     }
 
-    /**
-     * Creates and propagates cluster stamp.
-     * Called after received 'dsp ready' from all DSP's OR after prepare for clusterstamp timer has expired.
-     */
     private void makeAndPropagateClusterStamp(ClusterStampStateData dspReadyForClusterStampData) {
         synchronized (this) {
             if (isPreparingForClusterStamp()) {
@@ -131,12 +151,9 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         clusterStampState = clusterStampState.nextState(zerospendReadyForClusterStampData); //Change state to IN_PROCESS
     }
 
-    /**
-     * Handles DSP votes for whether the cluster stamp is correct or not.
-     * TODO/NOTE/WARNING TBD- some cases aren't handled and may cause a bug. 1) if some DSP's votes are different.
-     * TODO 2) if some of the DSP's didn't respond with a vote or their response didn't arrive.
-     * @param dspClusterStampVoteData DSP vote regarding the cluster stamp.
-     */
+
+     // TODO/NOTE/WARNING TBD- some cases aren't handled and may cause a bug. 1) if some DSP's votes are different.
+     // TODO 2) if some of the DSP's didn't respond with a vote or their response didn't arrive.
     public void handleDspClusterStampVote(DspClusterStampVoteData dspClusterStampVoteData) {
 
         log.debug("CLUSTERSTAMP: Received DspClusterStampVoteData");
@@ -166,11 +183,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         }
     }
 
-    /**
-     * Goes over all the votes and counts the valid votes.
-     * @param votes collection of votes from DSP's.
-     * @return the number of valid votes.
-     */
     private int countValidVotes(List<DspClusterStampVoteData> votes){
         int validClusterStampVotes = 0;
         for(DspClusterStampVoteData currentDspClusterStampVoteData : votes) {
@@ -181,11 +193,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         return validClusterStampVotes;
     }
 
-    /**
-     * Sends the result to relevant nodes.
-     * restart services that were stopped for cluster stamp and changes cluster stamp state to off
-     * @param result the result of cluster stamp votes from DSP's.
-     */
     private void handleDspVotesResult(ClusterStampConsensusResult result){
         result.setDspConsensus(true);
         clusterStampConsensusResultCrypto.signMessage(result);

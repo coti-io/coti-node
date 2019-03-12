@@ -17,9 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-/**
- * A service that provides Cluster Stamp functionality for Full node.
- */
 @Slf4j
 @Service
 public class ClusterStampService extends BaseNodeClusterStampService {
@@ -47,9 +44,15 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     }
 
     @Override
+    protected void terminateClusterStampByNodeType() {
+        handleUnfinishedClusterStampTransactions();
+    }
+
+    @Override
     public void prepareForClusterStamp(ClusterStampPreparationData clusterStampPreparationData) {
         if(validationService.validateRequestAndOffState(clusterStampPreparationData, clusterStampState)){
             log.debug("Start preparation of Full node for cluster stamp");
+            initScheduling();
             clusterStampState = clusterStampState.nextState(clusterStampPreparationData); //Change state to PREPARING
 
             FullNodeReadyForClusterStampData fullNodeReadyForClusterStampData = new FullNodeReadyForClusterStampData(clusterStampPreparationData.getTotalConfirmedTransactionsCount());
@@ -81,10 +84,14 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Override
     public void handleClusterStampConsensusResult(ClusterStampConsensusResult clusterStampConsensusResult) {
         super.handleClusterStampConsensusResult(clusterStampConsensusResult);
+        handleUnfinishedClusterStampTransactions();
+        clusterStampState = clusterStampState.nextState(clusterStampConsensusResult); //Change state to OFF
+    }
+
+    private void handleUnfinishedClusterStampTransactions(){
         if(!clusterStampTransactions.isEmpty()){
             clusterStampTransactions.forEach(this::handleUnfinishedClusterStampTransaction);
         }
-        clusterStampState = clusterStampState.nextState(clusterStampConsensusResult); //Change state to OFF
     }
 
     private void handleUnfinishedClusterStampTransaction(TransactionData transactionData){

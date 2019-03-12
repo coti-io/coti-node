@@ -46,6 +46,11 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private NotTotalConfirmedTransactionHashes notTotalConfirmedTransactionHashes;
 
+    @Override
+    protected boolean isClusterStampInProcess(){
+        return clusterStampService.isClusterStampInProcess();
+    }
+
     public String handleNewTransactionFromFullNode(TransactionData transactionData) {
         //TODO 2/20/2019 astolia: check if this is correct state here.
         if(clusterStampService.isReadyForClusterStamp()){

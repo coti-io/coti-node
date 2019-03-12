@@ -1,4 +1,4 @@
-package io.coti.basenode.controllers;
+package io.coti.zerospend.controllers;
 
 import io.coti.basenode.data.ClusterStampData;
 import io.coti.basenode.services.interfaces.IClusterStampService;

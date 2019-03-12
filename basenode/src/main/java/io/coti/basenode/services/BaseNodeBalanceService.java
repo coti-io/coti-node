@@ -7,7 +7,6 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.*;
 import io.coti.basenode.model.ClusterStamps;
 import io.coti.basenode.services.interfaces.IBalanceService;
-import io.coti.basenode.services.interfaces.IClusterStampService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,8 +31,6 @@ public class BaseNodeBalanceService implements IBalanceService {
     protected Map<Hash, BigDecimal> preBalanceMap;
     @Autowired
     private ClusterStamps clusterStamps;
-    @Autowired
-    private IClusterStampService clusterStampService;
 
     @Value("${recovery.server.address}")
     private String recoveryServerAddress;
@@ -42,15 +39,20 @@ public class BaseNodeBalanceService implements IBalanceService {
 
         balanceMap = new ConcurrentHashMap<>();
         preBalanceMap = new ConcurrentHashMap<>();
+        // TODO Consider moving this to extending class if not necessary in all nodes. -->
         ClusterStampData lastClusterStampData = getLastClusterStamp();
         if(lastClusterStampData != null) {
-            clusterStampService.loadBalanceFromClusterStamp(lastClusterStampData);
+            loadBalanceFromClusterStamp(lastClusterStampData);
         }
         else {
             loadBalanceFromSnapshot();
         }
-
+        // TODO <--
         log.info("{} is up", this.getClass().getSimpleName());
+    }
+
+    protected void loadBalanceFromClusterStamp(ClusterStampData lastClusterStampData){
+        //implemented in extending class
     }
 
     private void loadBalanceFromSnapshot() throws Exception {
@@ -148,6 +150,7 @@ public class BaseNodeBalanceService implements IBalanceService {
 
     @Override
     public void continueHandleBalanceChanges(Hash addressHash) {
+        //implemented in extending class
     }
 
     @Override

@@ -115,13 +115,6 @@ public class ValidationService implements IValidationService {
         return validateClusterStampRequestByState(clusterStampStateData,currentClusterStampState,ClusterStampState.READY);
     }
 
-    /**
-     * Validates the cluster stamp request signature and the current state is same as expected.
-     * @param clusterStampStateData the cluster stamp request.
-     * @param currentState current cluster stamp state.
-     * @param expectedCurrentState expected cluster stamp state.
-     * @return true if request signature and current cluster stamp state are correct. false otherwise.
-     */
     private boolean validateClusterStampRequestByState(ClusterStampStateData clusterStampStateData, ClusterStampState currentState, ClusterStampState expectedCurrentState){
         if(currentState != expectedCurrentState){
             log.error("Expected cluster stamp state: {}. Current cluster stamp state: {}",expectedCurrentState,currentState);

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 public class ConfirmationService extends BaseNodeConfirmationService {
 
     @Autowired
-    private IndexService indexService;
+    private ClusterStampService clusterStampService;
 
     @Override
     protected boolean insertNewTransactionIndex(TransactionData transactionData) {
@@ -19,7 +19,7 @@ public class ConfirmationService extends BaseNodeConfirmationService {
     @Override
     protected long incrementAndGetTotalConfirmed() {
         long totalConfirmed = super.incrementAndGetTotalConfirmed();
-        indexService.createAndSendClusterStampPreparationMsg(totalConfirmed);
+        clusterStampService.createAndSendClusterStampPreparationMsg(totalConfirmed);
         return totalConfirmed;
     }
 
