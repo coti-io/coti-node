@@ -74,7 +74,7 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(nodeType, address, httpPort, nodeHash);
+        return Objects.hash(nodeType, nodeHash);
     }
 
     public Hash getHash() {
@@ -103,5 +103,16 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
     @Override
     public void setSignerHash(Hash signerHash) {
         nodeHash = signerHash;
+    }
+
+    public void clone(NetworkNodeData networkNodeData) {
+        address = networkNodeData.getAddress();
+        httpPort = networkNodeData.getHttpPort();
+        propagationPort = networkNodeData.getPropagationPort();
+        receivingPort = networkNodeData.getReceivingPort();
+        recoveryServerAddress = networkNodeData.getRecoveryServerAddress();
+        networkType = networkNodeData.getNetworkType();
+        nodeSignature = networkNodeData.getNodeSignature();
+        nodeRegistrationData = networkNodeData.getNodeRegistrationData();
     }
 }

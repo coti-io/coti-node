@@ -1,16 +1,15 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.communication.Channel;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.communication.interfaces.ISender;
-import io.coti.basenode.data.*;
+import io.coti.basenode.data.AddressData;
+import io.coti.basenode.data.NetworkData;
+import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.interfaces.IPropagatable;
-import io.coti.basenode.services.interfaces.IAddressService;
 import io.coti.basenode.services.interfaces.ICommunicationService;
-import io.coti.basenode.services.interfaces.IDspVoteService;
-import io.coti.basenode.services.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,12 +31,6 @@ public class CommunicationService implements ICommunicationService {
     private IPropagationPublisher propagationPublisher;
     @Autowired
     private ISender sender;
-    @Autowired
-    private IAddressService addressService;
-    @Autowired
-    private ITransactionService transactionService;
-    @Autowired
-    private IDspVoteService dspVoteService;
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap;
 
     @Override
@@ -66,7 +59,7 @@ public class CommunicationService implements ICommunicationService {
 
     @Override
     public void addSubscription(String propagationServerAddress, NodeType publisherNodeType) {
-        propagationSubscriber.connectAndSubscribeToServer(propagationServerAddress,publisherNodeType);
+        propagationSubscriber.connectAndSubscribeToServer(propagationServerAddress, publisherNodeType);
     }
 
     @Override

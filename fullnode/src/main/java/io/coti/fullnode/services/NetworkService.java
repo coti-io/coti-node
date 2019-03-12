@@ -32,31 +32,11 @@ public class NetworkService extends BaseNodeNetworkService {
     public void handleNetworkChanges(NetworkData newNetworkData) {
         log.info("New network structure received");
         Map<Hash, NetworkNodeData> newDspNodeMap = newNetworkData.getMultipleNodeMaps().get(NodeType.DspNode);
-        connectedDspNodes.removeIf(dspNode -> {
-            boolean remove = !(newDspNodeMap.containsKey(dspNode.getNodeHash()) && newDspNodeMap.get(dspNode.getNodeHash()).getAddress().equals(dspNode.getAddress()));
-            if (remove) {
-                log.info("Disconnecting from dsp {} from subscribing and receiving", dspNode.getAddress());
-                communicationService.removeSubscription(dspNode.getPropagationFullAddress(), NodeType.DspNode);
-                communicationService.removeSender(dspNode.getReceivingFullAddress(), NodeType.DspNode);
-                if (recoveryServerAddress.equals(dspNode.getHttpFullAddress())) {
-                    recoveryServerAddress = null;
-                }
-            } else {
-                if (!newDspNodeMap.get(dspNode.getNodeHash()).getPropagationPort().equals(dspNode.getPropagationPort())) {
-                    communicationService.removeSubscription(dspNode.getPropagationFullAddress(), NodeType.DspNode);
-                    communicationService.addSubscription(newDspNodeMap.get(dspNode.getNodeHash()).getPropagationFullAddress(), NodeType.DspNode);
-                    dspNode.setPropagationPort(newDspNodeMap.get(dspNode.getNodeHash()).getPropagationPort());
-                }
-                if (!newDspNodeMap.get(dspNode.getNodeHash()).getReceivingPort().equals(dspNode.getReceivingPort())) {
-                    communicationService.removeSender(dspNode.getReceivingFullAddress(), NodeType.DspNode);
-                    communicationService.addSender(newDspNodeMap.get(dspNode.getNodeHash()).getReceivingFullAddress());
-                    dspNode.setReceivingPort(newDspNodeMap.get(dspNode.getNodeHash()).getReceivingPort());
-                }
-            }
-            return remove;
-        });
+
+        handleConnectedDspNodesChange(connectedDspNodes, newDspNodeMap, NodeType.FullNode);
+
         if (connectedDspNodes.size() < 2) {
-            List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetworkData.getMultipleNodeMaps().get(NodeType.DspNode).values(), connectedDspNodes));
+            List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newDspNodeMap.values(), connectedDspNodes));
             Collections.shuffle(dspNodesToConnect);
             for (int i = 0; i < dspNodesToConnect.size() && i < 2 - connectedDspNodes.size(); i++) {
                 if (i == 0 && recoveryServerAddress == null) {

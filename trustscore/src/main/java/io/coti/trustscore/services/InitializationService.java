@@ -46,14 +46,13 @@ public class InitializationService extends BaseNodeInitializationService {
 
         NetworkNodeData zerospendNetworkNodeData = networkService.getSingleNodeData(NodeType.ZeroSpendServer);
         if (zerospendNetworkNodeData == null) {
-            log.error("Zero Spend server is down, info came from node manager");
+            log.error("No zerospend server exists in the network got from the node manager. Exiting from the application");
             System.exit(-1);
         }
         networkService.setRecoveryServerAddress(zerospendNetworkNodeData.getHttpFullAddress());
         super.init();
         communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress(), NodeType.ZeroSpendServer);
-        List<NetworkNodeData> dspNetworkNodeData = networkService.getShuffledNetworkNodeDataListFromMapValues(NodeType.DspNode);
-        dspNetworkNodeData.forEach(node -> communicationService.addSubscription(node.getPropagationFullAddress(), NodeType.DspNode));
+        networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.DspNode).values());
     }
 
     @Override

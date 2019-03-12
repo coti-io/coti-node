@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import javax.xml.soap.Node;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -52,11 +51,11 @@ public class BaseNodeNetworkService implements INetworkService {
     @Scheduled(initialDelay = 1000, fixedDelay = 10000)
     public void lastState() {
         try {
-            if(multipleNodeMaps!= null){
+            if (multipleNodeMaps != null) {
                 log.info("FullNode: {}, DspNode: {}, TrustScoreNode: {}", multipleNodeMaps.get(NodeType.FullNode).size(), multipleNodeMaps.get(NodeType.DspNode).size(), multipleNodeMaps.get(NodeType.TrustScoreNode).size());
             }
 
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -95,7 +94,7 @@ public class BaseNodeNetworkService implements INetworkService {
             log.error("Unsupported networkNodeData type : {}", nodeType);
             throw new IllegalArgumentException("Unsupported networkNodeData type");
         }
-        if(newNetworkNodeData != null && !newNetworkNodeData.getNodeType().equals(nodeType)) {
+        if (newNetworkNodeData != null && !newNetworkNodeData.getNodeType().equals(nodeType)) {
             log.error("Invalid networkNodeData type : {}", nodeType);
             throw new IllegalArgumentException("Invalid networkNodeData type");
         }
@@ -105,12 +104,12 @@ public class BaseNodeNetworkService implements INetworkService {
     @Override
     public void addNode(NetworkNodeData networkNodeData) {
         try {
-            if(networkNodeData.getNodeHash() == null || networkNodeData.getNodeType() == null) {
+            if (networkNodeData.getNodeHash() == null || networkNodeData.getNodeType() == null) {
                 log.error("Invalid networkNodeData adding request");
                 throw new IllegalArgumentException("Invalid networkNodeData adding request");
             }
             if (!NodeTypeService.valueOf(networkNodeData.getNodeType().toString()).isMultipleNode()) {
-                setSingleNodeData(networkNodeData.getNodeType(),networkNodeData);
+                setSingleNodeData(networkNodeData.getNodeType(), networkNodeData);
             } else {
                 getMapFromFactory(networkNodeData.getNodeType()).putIfAbsent(networkNodeData.getHash(), networkNodeData);
             }
@@ -179,13 +178,13 @@ public class BaseNodeNetworkService implements INetworkService {
         try {
             if (!NodeTypeService.valueOf(networkNodeData.getNodeType().toString()).isMultipleNode()) {
                 return singleNodeNetworkDataMap.containsKey(networkNodeData.getNodeType()) &&
-                       singleNodeNetworkDataMap.get(networkNodeData.getNodeType()) != null &&
-                       singleNodeNetworkDataMap.get(networkNodeData.getNodeType()).getNodeHash().equals(networkNodeData.getNodeHash());
+                        singleNodeNetworkDataMap.get(networkNodeData.getNodeType()) != null &&
+                        singleNodeNetworkDataMap.get(networkNodeData.getNodeType()).getNodeHash().equals(networkNodeData.getNodeHash());
             } else {
                 return getMapFromFactory(networkNodeData.getNodeType()).containsKey(networkNodeData.getHash()) &&
                         getMapFromFactory(networkNodeData.getNodeType()).get(networkNodeData.getHash()).getNodeHash().equals(networkNodeData.getNodeHash());
             }
-        } catch(NullPointerException e) {
+        } catch (NullPointerException e) {
             return false;
         }
     }
@@ -216,13 +215,73 @@ public class BaseNodeNetworkService implements INetworkService {
     }
 
     @Override
-    public void addListToSubscriptionAndNetwork(Collection<NetworkNodeData> nodeDataList) {
+    public void addListToSubscription(Collection<NetworkNodeData> nodeDataList) {
         Iterator<NetworkNodeData> nodeDataIterator = nodeDataList.iterator();
         while (nodeDataIterator.hasNext()) {
             NetworkNodeData node = nodeDataIterator.next();
             log.info("{} {} is about to be added to subscription and network", node.getNodeType(), node.getHttpFullAddress());
-            addNode(node);
             communicationService.addSubscription(node.getPropagationFullAddress(), node.getNodeType());
+        }
+    }
+
+    @Override
+    public void handleConnectedDspNodesChange(List<NetworkNodeData> connectedDspNodes, Map<Hash, NetworkNodeData> newDspNodeMap, NodeType nodeType) {
+        connectedDspNodes.removeIf(dspNode -> {
+            boolean remove = !(newDspNodeMap.containsKey(dspNode.getNodeHash()) && newDspNodeMap.get(dspNode.getNodeHash()).getAddress().equals(dspNode.getAddress()));
+            if (remove) {
+                log.info("Disconnecting from dsp {} from subscribing and receiving", dspNode.getAddress());
+                communicationService.removeSubscription(dspNode.getPropagationFullAddress(), NodeType.DspNode);
+                communicationService.removeSender(dspNode.getReceivingFullAddress(), NodeType.DspNode);
+                if (recoveryServerAddress != null && recoveryServerAddress.equals(dspNode.getHttpFullAddress())) {
+                    recoveryServerAddress = null;
+                }
+            } else {
+                NetworkNodeData newDspNode = newDspNodeMap.get(dspNode.getNodeHash());
+                if (!newDspNode.getPropagationPort().equals(dspNode.getPropagationPort())) {
+                    communicationService.removeSubscription(dspNode.getPropagationFullAddress(), NodeType.DspNode);
+                    communicationService.addSubscription(newDspNode.getPropagationFullAddress(), NodeType.DspNode);
+                }
+                if (nodeType.equals(NodeType.FullNode) && !newDspNode.getReceivingPort().equals(dspNode.getReceivingPort())) {
+                    communicationService.removeSender(dspNode.getReceivingFullAddress(), NodeType.DspNode);
+                    communicationService.addSender(newDspNode.getReceivingFullAddress());
+                }
+                if (recoveryServerAddress != null && recoveryServerAddress.equals(dspNode.getHttpFullAddress())) {
+                    recoveryServerAddress = newDspNode.getHttpFullAddress();
+                }
+                dspNode.clone(newDspNode);
+            }
+            return remove;
+        });
+
+    }
+
+    @Override
+    public void handleConnectedSingleNodeChange(NetworkData newNetworkData, NodeType singleNodeType, NodeType connectingNodeType) {
+        NetworkNodeData newSingleNodeData = newNetworkData.getSingleNodeNetworkDataMap().get(singleNodeType);
+        NetworkNodeData singleNodeData = getSingleNodeData(singleNodeType);
+        if (newSingleNodeData != null) {
+            if (newSingleNodeData.getPropagationPort() != null) {
+                if(singleNodeData != null && singleNodeData.getPropagationPort() != null && !newSingleNodeData.getPropagationPort().equals(singleNodeData.getPropagationPort())) {
+                    communicationService.removeSubscription(singleNodeData.getPropagationPort(), singleNodeType);
+                    communicationService.addSubscription(newSingleNodeData.getPropagationFullAddress(), singleNodeType);
+                }
+                if(singleNodeData == null) {
+                    communicationService.addSubscription(newSingleNodeData.getPropagationFullAddress(), singleNodeType);
+                }
+            }
+            if (singleNodeType.equals(NodeType.ZeroSpendServer) && connectingNodeType.equals(NodeType.DspNode) && newSingleNodeData.getReceivingPort() != null) {
+                if(singleNodeData != null && singleNodeData.getReceivingPort() != null && !newSingleNodeData.getReceivingPort().equals(singleNodeData.getReceivingPort())) {
+                    communicationService.removeSender(newSingleNodeData.getReceivingFullAddress(), singleNodeType);
+                    communicationService.addSender(newSingleNodeData.getReceivingFullAddress());
+                }
+                if(singleNodeData == null) {
+                    communicationService.addSender(newSingleNodeData.getReceivingFullAddress());
+                }
+            }
+            if (recoveryServerAddress != null && (singleNodeData == null || singleNodeData != null && recoveryServerAddress.equals(singleNodeData.getHttpFullAddress()))) {
+                recoveryServerAddress = newSingleNodeData.getHttpFullAddress();
+            }
+            setSingleNodeData(singleNodeType, newSingleNodeData);
         }
     }
 

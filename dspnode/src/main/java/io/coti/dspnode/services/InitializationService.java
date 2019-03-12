@@ -17,6 +17,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -65,11 +66,10 @@ public class InitializationService extends BaseNodeInitializationService {
         communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
         communicationService.addSender(zerospendNetworkNodeData.getReceivingFullAddress());
         communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress(), NodeType.ZeroSpendServer);
-        List<NetworkNodeData> dspNetworkNodeDataList = networkService
-                .getShuffledNetworkNodeDataListFromMapValues(NodeType.DspNode);
-        dspNetworkNodeDataList.removeIf(dsp -> dsp.getAddress().equals(nodeIp) && dsp.getHttpPort().equals(serverPort));
-        dspNetworkNodeDataList.forEach(node -> communicationService.addSubscription(node.getPropagationFullAddress(), NodeType.DspNode));
-
+        List<NetworkNodeData> dspNetworkNodeDataList = networkService.getMapFromFactory(NodeType.DspNode).values().stream()
+                .filter(dspNode -> !dspNode.equals(networkNodeData))
+                .collect(Collectors.toList());
+        networkService.addListToSubscription(dspNetworkNodeDataList);
     }
 
     @Override

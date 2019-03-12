@@ -1,13 +1,15 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.communication.Channel;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.crypto.GetNodeRegistrationRequestCrypto;
 import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeRegistrationCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.database.Interfaces.IDatabaseConnector;
-import io.coti.basenode.http.*;
+import io.coti.basenode.http.CustomHttpComponentsClientHttpRequestFactory;
+import io.coti.basenode.http.GetNodeRegistrationRequest;
+import io.coti.basenode.http.GetNodeRegistrationResponse;
+import io.coti.basenode.http.GetTransactionBatchResponse;
 import io.coti.basenode.model.NodeRegistrations;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.LiveView.LiveViewService;
@@ -24,13 +26,11 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
 
 @Slf4j
 @Service
@@ -46,7 +46,7 @@ public abstract class BaseNodeInitializationService {
     protected NetworkType networkType;
     @Value("${server.ip}")
     protected String nodeIp;
-    private NetworkNodeData networkNodeData;
+    protected NetworkNodeData networkNodeData;
     @Value("${node.manager.ip}")
     private String nodeManagerIp;
     @Value("${node.manager.port}")
@@ -96,12 +96,9 @@ public abstract class BaseNodeInitializationService {
     private NetworkNodeCrypto networkNodeCrypto;
     @Autowired
     private NodeRegistrations nodeRegistrations;
-    @Autowired
-    private HttpJacksonSerializer jacksonSerializer;
 
     public void init() {
         try {
-
             addressService.init();
             balanceService.init();
             confirmationService.init();

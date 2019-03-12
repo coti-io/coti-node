@@ -39,7 +39,11 @@ public interface INetworkService {
 
     List<NetworkNodeData> getNetworkNodeDataList();
 
-    void addListToSubscriptionAndNetwork(Collection<NetworkNodeData> nodeDataList);
+    void addListToSubscription(Collection<NetworkNodeData> nodeDataList);
+
+    void handleConnectedDspNodesChange(List<NetworkNodeData> connectedDspNodes, Map<Hash, NetworkNodeData> newDspNodeMap, NodeType nodeType);
+
+    void handleConnectedSingleNodeChange(NetworkData newNetworkData, NodeType singleNodeType, NodeType connectingNodeType);
 
     void setNodeManagerPropagationAddress(String nodeManagerPropagationAddress);
 

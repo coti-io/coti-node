@@ -62,9 +62,9 @@ public class InitializationService extends BaseNodeInitializationService {
 
         super.init();
 
-
         communicationService.initPublisher(propagationPort, NodeType.ZeroSpendServer);
-        networkService.addListToSubscriptionAndNetwork(networkService.getMapFromFactory(NodeType.DspNode).values());
+
+        networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.DspNode).values());
         if (transactions.isEmpty()) {
             transactionCreationService.createGenesisTransactions();
         }

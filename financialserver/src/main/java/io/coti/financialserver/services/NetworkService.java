@@ -1,21 +1,22 @@
-package io.coti.trustscore.services;
+package io.coti.financialserver.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkData;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.BaseNodeNetworkService;
+import io.coti.basenode.services.interfaces.ICommunicationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-
-@Service
 @Slf4j
+@Service
 public class NetworkService extends BaseNodeNetworkService {
 
     @Override
@@ -25,18 +26,15 @@ public class NetworkService extends BaseNodeNetworkService {
         Map<Hash, NetworkNodeData> newDspNodeMap = newNetworkData.getMultipleNodeMaps().get(NodeType.DspNode);
         List<NetworkNodeData> connectedDspNodes = new ArrayList<>(getMapFromFactory(NodeType.DspNode).values());
 
-        handleConnectedDspNodesChange(connectedDspNodes, newDspNodeMap, NodeType.TrustScoreNode);
+        handleConnectedDspNodesChange(connectedDspNodes, newDspNodeMap, NodeType.FinancialServer);
 
         List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetworkData.getMultipleNodeMaps().get(NodeType.DspNode).values(),
                 getMapFromFactory(NodeType.DspNode).values()));
         addListToSubscription(dspNodesToConnect);
 
-        handleConnectedSingleNodeChange(newNetworkData, NodeType.ZeroSpendServer, NodeType.TrustScoreNode);
-        handleConnectedSingleNodeChange(newNetworkData, NodeType.FinancialServer, NodeType.TrustScoreNode);
+        handleConnectedSingleNodeChange(newNetworkData, NodeType.ZeroSpendServer, NodeType.FinancialServer);
 
         setNetworkData(newNetworkData);
 
     }
-
-
 }
