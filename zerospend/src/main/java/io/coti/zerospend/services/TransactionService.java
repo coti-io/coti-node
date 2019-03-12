@@ -16,6 +16,11 @@ public class TransactionService extends BaseNodeTransactionService {
     private IClusterStampService clusterStampService;
 
     @Override
+    protected boolean isClusterStampInProcess(){
+        return clusterStampService.isClusterStampInProcess();
+    }
+
+    @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
         //TODO 2/21/2019 astolia: maybe should change to  clusterStampState == OFF??
         if( !clusterStampService.isReadyForClusterStamp() ) {

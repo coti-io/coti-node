@@ -4,9 +4,6 @@ import io.coti.basenode.data.interfaces.IEntity;
 import lombok.Data;
 
 @Data
-/**
- * Transactions that are NOT tcc confirmed, dsp confirmed or total confirmed
- */
 public class NotTotalConfirmedTransactionHash implements IEntity {
 
     private Hash transactionHash;

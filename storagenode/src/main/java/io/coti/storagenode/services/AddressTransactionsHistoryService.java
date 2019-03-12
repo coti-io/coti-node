@@ -18,6 +18,7 @@ public class AddressTransactionsHistoryService extends ObjectService {//} implem
             dbConnectorService.addIndex(indexName, objectName, false);
             dbConnectorService.addIndex(indexName, objectName, true);
         } catch (IOException e) {
+            log.warn("Make sure you are running Elasticsearch!");
             log.error(e.getMessage());
             throw new Exception(e.getMessage());
         }

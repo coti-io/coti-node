@@ -62,6 +62,11 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private PotService potService;
 
+    @Override
+    protected boolean isClusterStampInProcess(){
+        return clusterStampService.isClusterStampInProcess();
+    }
+
     public ResponseEntity<Response> addNewTransaction(AddTransactionRequest request) {
         TransactionData transactionData =
                 new TransactionData(
