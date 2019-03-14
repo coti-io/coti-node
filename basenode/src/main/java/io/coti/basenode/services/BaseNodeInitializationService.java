@@ -167,6 +167,7 @@ public abstract class BaseNodeInitializationService {
         } else {
             transactionHelper.addNoneIndexedTransaction(transactionData);
         }
+        transactionService.incrementAndGetExplorerIndex();
         transactionHelper.incrementTotalTransactions();
     }
 

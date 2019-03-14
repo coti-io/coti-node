@@ -10,9 +10,7 @@ import io.coti.fullnode.services.TransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
@@ -29,22 +27,27 @@ public class TransactionController {
     @Autowired
     private TransactionIndexService transactionIndexService;
 
-    @RequestMapping(method = PUT)
+    @PutMapping()
     public ResponseEntity<Response> addTransaction(@Valid @RequestBody AddTransactionRequest addTransactionRequest) {
         return transactionService.addNewTransaction(addTransactionRequest);
     }
 
-    @RequestMapping(method = POST)
+    @PostMapping()
     public ResponseEntity<IResponse> getTransactionDetails(@Valid @RequestBody GetTransactionRequest getTransactionRequest) {
         return transactionService.getTransactionDetails(getTransactionRequest.transactionHash);
     }
 
-    @RequestMapping(value = "/addressTransactions", method = POST)
+    @PostMapping(value = "/addressTransactions")
     public ResponseEntity<IResponse> getAddressTransactions(@Valid @RequestBody AddressRequest addressRequest) {
         return transactionService.getAddressTransactions(addressRequest.getAddress());
     }
 
-    @RequestMapping(value = "/index", method = GET)
+    @GetMapping(value = "/lastTransactions")
+    public ResponseEntity<IResponse> getLastTransactions() {
+        return transactionService.getLastTransactions();
+    }
+
+    @GetMapping(value = "/index")
     public ResponseEntity getCurrentIndex() {
         return ResponseEntity.ok(transactionIndexService.getLastTransactionIndexData());
     }
