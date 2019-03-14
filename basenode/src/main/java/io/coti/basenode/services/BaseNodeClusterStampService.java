@@ -9,13 +9,14 @@ import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IClusterStampService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.TaskScheduler;
 
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.concurrent.ScheduledFuture;
 
-/**
- * An abstract class that provides basic Cluster Stamp functionality for all nodes that take part in cluster stamp flow.
- */
 @Slf4j
 public abstract class BaseNodeClusterStampService implements IClusterStampService {
 
@@ -32,11 +33,56 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
     @Autowired
     protected ClusterStamps clusterStamps;
 
+    @Qualifier("threadPoolTaskScheduler")
+    @Autowired
+    private TaskScheduler taskScheduler;
+
+    @Value("${clusterstamp.timeout.unresponsive}")
+    private String fixedRate;
+
+    private ScheduledFuture<?> scheduledFuture;
+
     protected ClusterStampState clusterStampState;
+
+    private ClusterStampState clusterStampStateSample;
+
+    public void initScheduling(){
+        log.debug("Started scheduling with rate {}", fixedRate);
+        scheduledFuture = taskScheduler.scheduleAtFixedRate(this::checkAndHandleUnresponsiveClusterStamp, Integer.valueOf(fixedRate));
+    }
+
+    public void stopScheduling(){
+        log.debug("Stopped scheduling");
+        scheduledFuture.cancel(true);
+    }
+
+    public void checkAndHandleUnresponsiveClusterStamp() {
+        // Cluster stamp state hasn't change from last run - Unresponsive.
+        if(clusterStampStateSample != ClusterStampState.OFF && clusterStampStateSample == clusterStampState){
+            terminateUnresponsiveClusterStamp();
+        }
+        //Responsive
+        else{
+            clusterStampStateSample = clusterStampState;
+        }
+    }
+
+    private void terminateUnresponsiveClusterStamp() {
+        log.error("Cluster Stamp unresponsive. Terminating." );
+        clusterStampState = ClusterStampState.OFF;
+        clusterStampStateSample = ClusterStampState.OFF;
+        terminateClusterStampByNodeType();
+        //TODO not sure about this. should store previous clusterstamps?
+        clusterStamps.deleteAll();
+        stopScheduling();
+    }
+
+    protected abstract void terminateClusterStampByNodeType();
 
     @Override
     public void init() {
         clusterStampState = ClusterStampState.OFF;
+        clusterStampStateSample = ClusterStampState.OFF;
     }
 
     protected Map<Hash, TransactionData> getUnconfirmedTransactions() {

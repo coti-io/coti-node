@@ -119,9 +119,9 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
             connectedServerAddresses.put(serverAddress, new Date());
         } else {
             messageTypes.forEach(messageData -> {
-
                 if (channel.contains(messageData.getName()) &&
                         messagesHandler.containsKey(channel)) {
+                    log.debug("Message type {}",messageData.getName());
                     handleMessageData(message, channel);
                 }
             });

@@ -72,11 +72,11 @@ public class InitializationService {
         classNameToSubscriberHandler.put(Channel.getChannelString(ZeroSpendReadyForClusterStampData.class, NodeType.DspNode), data ->
                 clusterStampService.handleZeroSpendReadyForClusterStampData((ZeroSpendReadyForClusterStampData) data));
 
-        // TODO: implement "handleZeroSpendIsReadyForClusterStampData" method
-        //classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampConsensusResult.class, NodeType.DspNode), data ->
-                //clusterStampService.handleZeroSpendIsReadyForClusterStampData((ZeroSpendIsReadyForClusterStampData) data));
-        classNameToSubscriberHandler.put(Channel.getChannelString(ZeroSpendIsReadyForClusterStampData.class, NodeType.DspNode), data ->
+        classNameToSubscriberHandler.put(Channel.getChannelString(ClusterStampConsensusResult.class, NodeType.DspNode), data ->
                 clusterStampService.handleClusterStampConsensusResult((ClusterStampConsensusResult) data));
+
+        classNameToSubscriberHandler.put(Channel.getChannelString(DspReadyForClusterStampData.class, NodeType.DspNode), data ->
+                clusterStampService.handleDspsReady((DspReadyForClusterStampData) data));
 
         communicationService.initSubscriber(propagationServerAddresses, NodeType.DspNode, classNameToSubscriberHandler);
     }
