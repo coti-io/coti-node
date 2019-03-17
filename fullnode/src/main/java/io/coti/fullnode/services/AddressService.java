@@ -20,11 +20,12 @@ public class AddressService extends BaseNodeAddressService {
 
     @Autowired
     private WebSocketSender webSocketSender;
-
     @Autowired
     private ISender sender;
     @Autowired
     private INetworkService networkService;
+    @Autowired
+    private MessageArrivalValidationService messageArrivalValidationService;
 
     public boolean addAddress(Hash addressHash) {
         List<String> receivingServerAddresses = new LinkedList<>();
@@ -34,6 +35,7 @@ public class AddressService extends BaseNodeAddressService {
         }
         AddressData newAddressData = new AddressData(addressHash);
         receivingServerAddresses.forEach(address -> sender.send(newAddressData, address));
+        messageArrivalValidationService.addAddressHash(newAddressData.getHash());
         continueHandleGeneratedAddress(newAddressData);
         return true;
     }

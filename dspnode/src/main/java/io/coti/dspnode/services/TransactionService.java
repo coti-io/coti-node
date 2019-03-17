@@ -38,6 +38,8 @@ public class TransactionService extends BaseNodeTransactionService {
     private DspVoteCrypto dspVoteCrypto;
     @Autowired
     private INetworkService networkService;
+    @Autowired
+    private MessageArrivalValidationService  messageArrivalValidationService;
 
     @Override
     public void init() {
@@ -53,6 +55,7 @@ public class TransactionService extends BaseNodeTransactionService {
                 log.debug("Transaction already exists: {}", transactionData.getHash());
                 return;
             }
+            messageArrivalValidationService.addTransactionHash(transactionData.getHash());
             transactionHelper.startHandleTransaction(transactionData);
             if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData) ||
                     !validationService.validateBalancesAndAddToPreBalance(transactionData)) {
@@ -95,6 +98,7 @@ public class TransactionService extends BaseNodeTransactionService {
         isValidatorRunning.set(false);
     }
 
+    @Override
     public void continueHandlePropagatedTransaction(TransactionData transactionData) {
         propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
         if (!transactionData.isZeroSpend()) {
