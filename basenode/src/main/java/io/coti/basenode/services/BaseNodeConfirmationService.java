@@ -108,7 +108,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount()));
         totalConfirmed.incrementAndGet();
 
-        liveViewService.updateNodeStatus(transactionData, 2);
+        liveViewService.updateTransactionStatus(transactionData, 2);
 
         transactionData.getBaseTransactions().forEach(baseTransactionData -> {
             Hash addressHash = baseTransactionData.getAddressHash();

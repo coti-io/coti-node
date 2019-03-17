@@ -20,7 +20,7 @@ public enum UserType {
                 return value;
             }
         }
-        throw new IllegalArgumentException(String.format("got user type name {}, which not exists", text));
+        throw new IllegalArgumentException(String.format("User type {} doesn't exist", text));
     }
 
     @Override

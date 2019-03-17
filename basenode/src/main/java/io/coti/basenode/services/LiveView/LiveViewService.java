@@ -52,7 +52,7 @@ public class LiveViewService {
         sendTransaction(graphTransactionData);
     }
 
-    public void updateNodeStatus(TransactionData transactionData, int newStatus) {
+    public void updateTransactionStatus(TransactionData transactionData, int newStatus) {
         GraphTransactionData graphTransactionData = new GraphTransactionData();
         graphTransactionData.setId(transactionData.getHash().toHexString());
         graphTransactionData.setTrustScore(transactionData.getSenderTrustScore());
