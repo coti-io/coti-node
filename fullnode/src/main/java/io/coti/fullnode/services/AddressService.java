@@ -15,6 +15,8 @@ public class AddressService extends BaseNodeAddressService {
     @Autowired
     private WebSocketSender webSocketSender;
     @Autowired
+    @Autowired
+    private MessageArrivalValidationService messageArrivalValidationService;
     private NetworkService networkService;
 
     public boolean addAddress(Hash addressHash) {
@@ -23,6 +25,7 @@ public class AddressService extends BaseNodeAddressService {
         if (!super.addNewAddress(addressData)) {
             return false;
         }
+        messageArrivalValidationService.addAddressHash(newAddressData.getHash());
 
         networkService.sendDataToConnectedDspNodes(addressData);
         continueHandleGeneratedAddress(addressData);

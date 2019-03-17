@@ -19,6 +19,7 @@ import java.util.*;
 
 @Slf4j
 @Service
+//TODO 3/19/2019 astolia: Remove service here, remove pramaries from all extending classes. check works.`
 public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     @Value("${database.folder.name}")
     private String databaseFolderName;

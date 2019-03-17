@@ -17,6 +17,11 @@ public class AddressService extends BaseNodeAddressService {
     private IPropagationPublisher propagationPublisher;
 
     public void handleNewAddressFromFullNode(AddressData addressData) {
+    @Autowired
+    private MessageArrivalValidationService  messageArrivalValidationService;
+    public String handleNewAddressFromFullNode(AddressData addressData) {
+        messageArrivalValidationService.addAddressHash(addressData.getHash());
+
         if (addressExists(addressData.getHash())) {
             log.debug("Address {} exists", addressData.getHash());
             return;
