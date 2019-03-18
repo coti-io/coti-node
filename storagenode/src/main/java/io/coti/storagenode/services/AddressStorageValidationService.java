@@ -7,13 +7,14 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.services.ValidationService;
 import io.coti.storagenode.services.interfaces.IAddressStorageValidationService;
 
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 
-
+@Data
 @Service
 public class AddressStorageValidationService extends EntityStorageValidationService implements IAddressStorageValidationService {
 
@@ -42,7 +43,9 @@ public class AddressStorageValidationService extends EntityStorageValidationServ
             e.printStackTrace();
             return false;
         }
-        return validationService.validateAddress(addressTxHistory.getHash()); // TODO add Validation for addressAsJson
+        // TODO: Commented actual check until Addresses are properly signed
+//        return validationService.validateAddress(addressTxHistory.getHash()); // TODO add Validation for addressAsJson
+        return true;
     }
 
     @Override

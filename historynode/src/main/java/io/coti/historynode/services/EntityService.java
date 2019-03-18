@@ -2,8 +2,9 @@ package io.coti.historynode.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.coti.basenode.data.HistoryNodeConsensusResult;
 import io.coti.basenode.data.interfaces.IEntity;
-import io.coti.historynode.http.AddEntitiesBulkRequest;
+import io.coti.basenode.http.AddEntitiesBulkRequest;
 import io.coti.historynode.http.storageConnector.interaces.IStorageConnector;
 import io.coti.historynode.services.interfaces.IEntityService;
 import lombok.extern.slf4j.Slf4j;
@@ -26,12 +27,14 @@ public abstract class EntityService implements IEntityService {
     protected String storageServerAddress;
     protected ObjectMapper mapper;
 
-    public void storeEntities(List<? extends IEntity> entities) {
-        AddEntitiesBulkRequest addEntitiesBulkRequest = new AddEntitiesBulkRequest();
+    public void storeEntities(List<? extends IEntity> entities, HistoryNodeConsensusResult historyNodeConsensusResult) {
+
+
+        AddEntitiesBulkRequest addEntitiesBulkRequest = new AddEntitiesBulkRequest(historyNodeConsensusResult);
         entities.forEach(entity ->
                 {
                     try {
-                        addEntitiesBulkRequest.getHashToObjectJsonDataMap().put(entity.getHash(), mapper.writeValueAsString(entity));
+                        addEntitiesBulkRequest.getHashToEntityJsonDataMap().put(entity.getHash(), mapper.writeValueAsString(entity));
                     } catch (JsonProcessingException e) {
                         log.error(e.getMessage());
                     }

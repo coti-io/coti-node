@@ -43,37 +43,41 @@ public class HistoryNodesConsensusService implements IHistoryNodesConsensusServi
     public ResponseEntity<IResponse> validateStoreMultipleObjectsConsensus(Map<Hash, String> hashToObjectAsJsonStringMap, HistoryNodeConsensusResult historyNodeConsensusResult)
     {
         ResponseEntity response = verifyMasterNodeSignature(historyNodeConsensusResult);
-        if( !isResponseOK(response) )
-            return response;
-
-        byte[] originalDataToVerify = hashToObjectAsJsonStringMap.toString().getBytes();
-        return verifyHistoryNodesVotes(historyNodeConsensusResult, response, originalDataToVerify);
+        // TODO: Commented section until Consensus is filled and can be verified
+//        if( !isResponseOK(response) )
+//            return response;
+//
+//        byte[] originalDataToVerify = hashToObjectAsJsonStringMap.toString().getBytes();
+//        return verifyHistoryNodesVotes(historyNodeConsensusResult, response, originalDataToVerify);
+        return response;
     }
 
 
     @Override
     public ResponseEntity<IResponse> validateRetrieveMultipleObjectsConsensus(List<Hash> hashes, HistoryNodeConsensusResult historyNodeConsensusResult)
     {
-
         ResponseEntity response = verifyMasterNodeSignature(historyNodeConsensusResult);
-        if( !isResponseOK(response) )
-            return response;
-
-        byte[] originalDataToVerify = hashes.toString().getBytes();
-        return verifyHistoryNodesVotes(historyNodeConsensusResult, response, originalDataToVerify);
+        // TODO: Commented section until Consensus is filled and can be verified
+//        if( !isResponseOK(response) )
+//            return response;
+//
+//        byte[] originalDataToVerify = hashes.toString().getBytes();
+//        return verifyHistoryNodesVotes(historyNodeConsensusResult, response, originalDataToVerify);
+        return response;
     }
 
 
     private ResponseEntity verifyMasterNodeSignature(HistoryNodeConsensusResult historyNodeConsensusResult) {
         ResponseEntity response = ResponseEntity.status(HttpStatus.OK).body( "All is well");
+        // TODO: Commented section until Consensus is filled and can be verified
         // Verify Master node signature
-        if( !historyNodeConsensusCrypto.verifySignature(historyNodeConsensusResult) )
+/*        if( !historyNodeConsensusCrypto.verifySignature(historyNodeConsensusResult) )
         {
             response = ResponseEntity
                     .status(HttpStatus.NOT_ACCEPTABLE)
                     .body( "History Master node signature failed verification");
             log.error("History Master node signature failed verification");
-        }
+        }*/
         return response;
     }
 

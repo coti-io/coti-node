@@ -21,7 +21,7 @@ public class HistoryNodeConsensusResult extends ConfirmationData implements IPro
         this.requestHash = requestHash;
     }
 
-    private HistoryNodeConsensusResult() { }
+    public HistoryNodeConsensusResult() { }
 
 
 

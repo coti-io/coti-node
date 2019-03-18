@@ -64,17 +64,21 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             unconfirmedTransactions.add(transaction);
             unconfirmedTransactionsAddresses.add(new AddressData(transaction.getSenderHash()));
         });
-        transactionService.storeEntities(unconfirmedTransactions);
-        addressService.storeEntities(new ArrayList<>(unconfirmedTransactionsAddresses));
+
+        // TODO: later construct consensus based on algorithm
+        HistoryNodeConsensusResult historyNodeConsensusResult =
+                new HistoryNodeConsensusResult(unconfirmedTransactions.get(0).getSenderHash());
+        transactionService.storeEntities(unconfirmedTransactions, historyNodeConsensusResult);
+        addressService.storeEntities(new ArrayList<>(unconfirmedTransactionsAddresses), historyNodeConsensusResult);
     }
 
     @Override
     public void prepareForClusterStamp(ClusterStampPreparationData clusterStampPreparationData) {
-
+        // TODO: Implement this
     }
 
     @Override
     public void getReadyForClusterStamp(ClusterStampStateData nodeReadyForClusterStampData) {
-
+        // TODO: Implement this
     }
 }
