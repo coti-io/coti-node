@@ -1,4 +1,4 @@
-package io.coti.basenode.http.websocket;
+package io.coti.fullnode.websocket.data;
 
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.data.TransactionResponseData;

@@ -15,15 +15,14 @@ import java.util.List;
 public class GetTransactionsResponse extends BaseResponse {
     protected List<TransactionResponseData> transactionsData;
 
-    public GetTransactionsResponse(List<TransactionData> transactionsData) throws Exception{
+    public GetTransactionsResponse(List<TransactionData> transactionsData) throws Exception {
         super();
 
         this.transactionsData = new ArrayList<>();
         try {
-        for(TransactionData transactionData: transactionsData)  {
+            for (TransactionData transactionData : transactionsData) {
                 this.transactionsData.add(new TransactionResponseData(transactionData));
-
-        }
+            }
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }

@@ -6,8 +6,6 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.interfaces.ICommunicationService;
-import io.coti.basenode.services.interfaces.INetworkService;
-import io.coti.fullnode.model.ExplorerIndexes;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,14 +15,10 @@ import javax.annotation.PostConstruct;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 @Slf4j
 public class InitializationService extends BaseNodeInitializationService {
-
-    @Autowired
-    private ExplorerIndexes explorerIndexes;
     @Autowired
     private ICommunicationService communicationService;
     @Value("${server.port}")
@@ -33,14 +27,12 @@ public class InitializationService extends BaseNodeInitializationService {
     private NetworkNodeCrypto networkNodeCrypto;
     @Value("${fee.percentage}")
     private Double nodeFee;
-    private AtomicLong explorerIndex;
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
     public void init() {
         super.initDB();
         super.connectToNetwork();
-        explorerIndex = new AtomicLong(1);
 
         publisherNodeTypeToMessageTypesMap.put(NodeType.DspNode, Arrays.asList(TransactionData.class, AddressData.class, DspConsensusResult.class));
 

@@ -1,4 +1,4 @@
-package io.coti.basenode.http.websocket;
+package io.coti.fullnode.websocket.data;
 
 import io.coti.basenode.data.Hash;
 import lombok.Data;
@@ -16,7 +16,6 @@ public class UpdatedBalanceMessage {
         this.addressHash = addressHash.toHexString();
         this.balance = balance;
         this.preBalance = preBalance;
-
         this.message = "Balance Updated!";
     }
 }

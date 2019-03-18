@@ -2,6 +2,7 @@ package io.coti.fullnode.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.services.BaseNodeBalanceService;
+import io.coti.fullnode.websocket.WebSocketSender;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

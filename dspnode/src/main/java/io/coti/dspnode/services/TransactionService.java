@@ -39,6 +39,13 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private INetworkService networkService;
 
+    @Override
+    public void init() {
+        transactionsToValidate = new PriorityQueue<>();
+        isValidatorRunning = new AtomicBoolean(false);
+        super.init();
+    }
+
     public void handleNewTransactionFromFullNode(TransactionData transactionData) {
         try {
             log.debug("Running new transactions from full node handler");
@@ -86,13 +93,6 @@ public class TransactionService extends BaseNodeTransactionService {
             sender.send(dspVote, zerospendReceivingAddress);
         }
         isValidatorRunning.set(false);
-    }
-
-    @Override
-    public void init() {
-        transactionsToValidate = new PriorityQueue<>();
-        isValidatorRunning = new AtomicBoolean(false);
-        super.init();
     }
 
     public void continueHandlePropagatedTransaction(TransactionData transactionData) {

@@ -1,12 +1,11 @@
-package io.coti.fullnode.services;
+package io.coti.fullnode.websocket;
 
-import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.data.TransactionStatus;
-import io.coti.basenode.http.websocket.GeneratedAddressMessage;
-import io.coti.basenode.http.websocket.NotifyTransactionChange;
-import io.coti.basenode.http.websocket.UpdatedBalanceMessage;
+import io.coti.fullnode.websocket.data.GeneratedAddressMessage;
+import io.coti.fullnode.websocket.data.NotifyTransactionChange;
+import io.coti.fullnode.websocket.data.UpdatedBalanceMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -26,23 +25,25 @@ public class WebSocketSender {
     }
 
     public void notifyBalanceChange(Hash addressHash, BigDecimal balance, BigDecimal preBalance) {
-        log.trace("Address {} with balance {} and pre balance {} is about to be sent to the subscribed user", addressHash.toHexString(), balance, preBalance);
-        messagingSender.convertAndSend("/topic/" + addressHash.toHexString(),
+        log.trace("Address {} with balance {} and pre balance {} is about to be sent to the subscribed user", addressHash, balance, preBalance);
+        messagingSender.convertAndSend("/topic/" + addressHash.toString(),
                 new UpdatedBalanceMessage(addressHash, balance, preBalance));
     }
 
     public void notifyTransactionHistoryChange(TransactionData transactionData, TransactionStatus transactionStatus) {
-        log.debug("Transaction {} is about to be sent to the subscribed user", transactionData.getHash().toHexString());
+        log.debug("Transaction {} is about to be sent to the subscribed user", transactionData.getHash());
 
-        for (BaseTransactionData bxData : transactionData.getBaseTransactions()) {
-            messagingSender.convertAndSend("/topic/addressTransactions/" + bxData.getAddressHash().toHexString(),
+        transactionData.getBaseTransactions().forEach(baseTransactionData -> {
+            messagingSender.convertAndSend("/topic/addressTransactions/" + baseTransactionData.getAddressHash().toString(),
                     new NotifyTransactionChange(transactionData, transactionStatus));
-        }
+        });
+        messagingSender.convertAndSend("/topic/transactions/",
+                new NotifyTransactionChange(transactionData, transactionStatus));
     }
 
     public void notifyGeneratedAddress(Hash addressHash) {
-        log.debug("Address {} is about to be sent to the subscribed user", addressHash.toHexString());
-        messagingSender.convertAndSend("/topic/address/" + addressHash.toHexString(),
+        log.debug("Address {} is about to be sent to the subscribed user", addressHash);
+        messagingSender.convertAndSend("/topic/address/" + addressHash.toString(),
                 new GeneratedAddressMessage(addressHash));
     }
 }
