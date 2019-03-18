@@ -110,13 +110,10 @@ public class HealthCheckService {
         return networkChanged;
     }
 
-
     private void deleteNodeRecord(NetworkNodeData networkNodeData) {
-        log.info("{} of address {} and port {}  is about to be deleted", networkNodeData.getNodeType(), networkNodeData.getAddress(), networkNodeData.getHttpPort());
+        log.info("Deleting {} of address {} and port {}", networkNodeData.getNodeType(), networkNodeData.getAddress(), networkNodeData.getHttpPort());
         nodeManagementService.insertDeletedNodeRecord(networkNodeData);
-        ActiveNodeData activeNodeData = new ActiveNodeData(networkNodeData.getHash(), null);
-        activeNodes.put(activeNodeData);
+        activeNodes.delete(networkNodeData);
     }
-
 
 }

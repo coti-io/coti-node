@@ -25,6 +25,10 @@ public abstract class Collection<T extends IEntity> {
         databaseConnector.put(columnFamilyName, entity.getHash().getBytes(), SerializationUtils.serialize(entity));
     }
 
+    public void delete(IEntity entity) {
+        databaseConnector.delete(columnFamilyName, entity.getHash().getBytes());
+    }
+
     public T getByHash(String hashStringInHexRepresentation) {
         return getByHash(new Hash(hashStringInHexRepresentation));
     }

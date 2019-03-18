@@ -179,7 +179,7 @@ public class TrustScoreService {
     }
 
     private boolean changingIsLegal(TrustScoreData trustScoreData) {
-        return trustScoreData.getUserType() == UserType.CONSUMER;
+        return trustScoreData.getUserType().equals(UserType.CONSUMER);
     }
 
     public ResponseEntity<IResponse> getUserTrustScore(Hash userHash) {

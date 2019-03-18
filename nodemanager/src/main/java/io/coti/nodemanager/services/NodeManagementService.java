@@ -1,8 +1,6 @@
 package io.coti.nodemanager.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
-import io.coti.basenode.crypto.NetworkNodeCrypto;
-import io.coti.basenode.crypto.NodeRegistrationCrypto;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.interfaces.INetworkService;
@@ -35,8 +33,8 @@ import static io.coti.nodemanager.http.HttpStringConstants.NODE_ADDED_TO_NETWORK
 @Service
 public class NodeManagementService implements INodeManagementService {
 
-    public static final String FULL_NODES_FORWALLET_KEY = "FullNodes";
-    public static final String TRUST_SCORE_NODES_FORWALLET_KEY = "TrustScoreNodes";
+    public static final String FULL_NODES_FOR_WALLET_KEY = "FullNodes";
+    public static final String TRUST_SCORE_NODES_FOR_WALLET_KEY = "TrustScoreNodes";
     @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired
@@ -119,8 +117,8 @@ public class NodeManagementService implements INodeManagementService {
         List<SingleNodeDetailsForWallet> trustScoreNodesDetailsForWallet = networkService.getMapFromFactory(NodeType.TrustScoreNode).values().stream()
                 .map(this::createSingleNodeDetailsForWallet)
                 .collect(Collectors.toList());
-        networkDetailsForWallet.put(FULL_NODES_FORWALLET_KEY, fullNodesDetailsForWallet);
-        networkDetailsForWallet.put(TRUST_SCORE_NODES_FORWALLET_KEY, trustScoreNodesDetailsForWallet);
+        networkDetailsForWallet.put(FULL_NODES_FOR_WALLET_KEY, fullNodesDetailsForWallet);
+        networkDetailsForWallet.put(TRUST_SCORE_NODES_FOR_WALLET_KEY, trustScoreNodesDetailsForWallet);
         return networkDetailsForWallet;
     }
 
