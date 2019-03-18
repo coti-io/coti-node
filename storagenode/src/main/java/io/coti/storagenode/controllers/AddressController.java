@@ -11,6 +11,7 @@ import io.coti.storagenode.services.AddressStorageValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -44,15 +45,20 @@ public class AddressController {
 
     @RequestMapping(value = "/addresses", method = PUT)
     public ResponseEntity<IResponse> storeMultipleAddressToStorage(@Valid @RequestBody AddEntitiesBulkRequest addEntitiesBulkRequest) {
+        log.info(" Reached storeMultipleAddressToStorage with addEntitiesBulkRequest = {}", addEntitiesBulkRequest.toString());
         return addressStorageValidationService.storeMultipleObjectsToStorage(addEntitiesBulkRequest.getHashToEntityJsonDataMap(),
                 addEntitiesBulkRequest.getHistoryNodeConsensusResult() );
     }
 
 
-    @RequestMapping(value = "/addresses", method = GET)
-    public Map<Hash, ResponseEntity<IResponse>> getAddressesFromStorage(@Valid @RequestBody GetEntitiesBulkRequest getEntitiesBulkRequest) {
+//    @RequestMapping(value = "/addresses", method = GET)
+    @GetMapping(value = "/addresses")
+//    public Map<Hash, ResponseEntity<IResponse>> getAddressesFromStorage(@Valid @RequestBody GetEntitiesBulkRequest getEntitiesBulkRequest) {
+        public Map<Hash, ResponseEntity<IResponse>> getAddressesFromStorage( GetEntitiesBulkRequest getEntitiesBulkRequest) {
+        log.info(" Reached getAddressesFromStorage with getEntitiesBulkRequest = {}", getEntitiesBulkRequest.toString());
         return addressStorageValidationService.retrieveMultipleObjectsFromStorage(getEntitiesBulkRequest.getHashes(),
                 getEntitiesBulkRequest.getHistoryNodeConsensusResult());
+//        return null;
     }
 
 

@@ -23,6 +23,6 @@ public class AddressController {
 
     @RequestMapping(value = "/addresses", method = GET)
     public ResponseEntity<IResponse> getUsedAddresses(@Valid @RequestBody GetAddressesRequest getAddressesRequest) {
-        return addressService.getAddresses(getAddressesRequest.getAddressesHashes());
+        return addressService.getAddressesFromHistory(getAddressesRequest.getAddressesHashes());
     }
 }

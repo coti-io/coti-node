@@ -2,11 +2,12 @@ package io.coti.historynode.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.HistoryNodeConsensusResult;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.http.GetEntitiesBulkRequest;
 import io.coti.basenode.http.GetTransactionsResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
-import io.coti.historynode.http.GetEntitiesBulkRequest;
 import io.coti.historynode.http.GetTransactionsRequest;
 import io.coti.historynode.http.storageConnector.interaces.IStorageConnector;
 import io.coti.historynode.model.AddressTransactionsByDatesHistories;
@@ -40,9 +41,11 @@ public class TransactionService extends EntityService implements ITransactionSer
 
     @Override
     public ResponseEntity<IResponse> getTransactionsDetails(GetTransactionsRequest getTransactionRequest) {
-        GetEntitiesBulkRequest getEntitiesBulkRequest = new GetEntitiesBulkRequest();
-
         List<TransactionData> transactionsList = new ArrayList<>();
+        List<Hash> hashList = new ArrayList<>();
+        HistoryNodeConsensusResult historyNodeConsensusResult = new HistoryNodeConsensusResult();
+        GetEntitiesBulkRequest getEntitiesBulkRequest = new GetEntitiesBulkRequest(hashList, historyNodeConsensusResult);
+
         List<Hash> transactionHashes = getTransactionsHashesByAddresses(getTransactionRequest);
         for (Hash transactionHash : transactionHashes) {
             TransactionData transactionData = transactions.getByHash(transactionHash);
@@ -70,7 +73,7 @@ public class TransactionService extends EntityService implements ITransactionSer
     }
 
     private List<TransactionData> getTransactionsDetailsFromStorage(GetEntitiesBulkRequest getEntitiesBulkRequest) {
-        List<TransactionData> transactions = new ArrayList<>();
+        List<TransactionData> transactionsList = new ArrayList<>();
         if (!getEntitiesBulkRequest.getHashes().isEmpty()) {
             ResponseEntity<IResponse> response
                     = storageConnector.getForObject(storageServerAddress + endpoint, ResponseEntity.class, getEntitiesBulkRequest);
@@ -78,7 +81,7 @@ public class TransactionService extends EntityService implements ITransactionSer
                 //TODO: Convert http message body to transactions, and add to transactions
             }
         }
-        return transactions;
+        return transactionsList;
     }
 
     private List<Hash> getTransactionsHashesByAddresses(GetTransactionsRequest getTransactionRequest) {
