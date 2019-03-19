@@ -1,6 +1,7 @@
 package io.coti.basenode.data;
 
 import io.coti.basenode.data.interfaces.IEntity;
+import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 
@@ -15,29 +16,41 @@ import java.util.Set;
 
 
 @Data
-public class MessageArrivalValidationData implements IEntity, ISignable, ISignValidatable {
+public class MessageArrivalValidationData implements ISignable, ISignValidatable {
 
-    Set<Hash> unvalidatedArrivalMessageHashes;
-    private transient Hash hash;
+    //TODO 3/18/2019 astolia: Add ArrivalValidationType
+
+    Set<TransactionDataHash> transactionHashes;
+    Set<AddressDataHash> addressHashes;
+
+//    private transient Hash hash;
 
     // Signable
     public SignatureData signature;
     Hash signerHash;
 
-    public MessageArrivalValidationData(Hash hash){
-        this.hash = hash;
-        unvalidatedArrivalMessageHashes = new HashSet<>();
+    public MessageArrivalValidationData(/*Hash hash*/){
+//        this.hash = hash;
+        transactionHashes = new HashSet<>();
+        addressHashes = new HashSet<>();
     }
 
-    @Override
-    public Hash getHash() {
-        return hash;
+    //TODO 3/18/2019 astolia: Not sure if why and who should be Hash.
+    public MessageArrivalValidationData(/*Hash hash, */Set<TransactionDataHash> transactionHashes, Set<AddressDataHash> addressHashes){
+//        this.hash = hash;
+        this.transactionHashes = transactionHashes;
+        this.addressHashes = addressHashes;
     }
 
-    @Override
-    public void setHash(Hash hash) {
-        this.hash = hash;
-    }
+//    @Override
+//    public Hash getHash() {
+//        return hash;
+//    }
+//
+//    @Override
+//    public void setHash(Hash hash) {
+//        this.hash = hash;
+//    }
 
     @Override
     public SignatureData getSignature() {
@@ -59,12 +72,20 @@ public class MessageArrivalValidationData implements IEntity, ISignable, ISignVa
         this.signature = signature;
     }
 
-    public void addHashToUnvalidatedArrivalMessageHashes(Hash hash) {
-        unvalidatedArrivalMessageHashes.add(hash);
-    }
-
-    public void removeHashFromUnvalidatedArrivalMessageHashes(Hash hash){
-        unvalidatedArrivalMessageHashes.remove(hash);
-    }
+//    public void addHashToTransactionHashes(Hash hash) {
+//        transactionHashes.add(new TransactionDataHash(hash));
+//    }
+//
+//    public void removeHashFromTransactionHashes(Hash hash){
+//        transactionHashes.remove(new TransactionDataHash(hash));
+//    }
+//
+//    public void addHashToAddressHashes(Hash hash) {
+//        addressHashes.add(new AddressDataHash(hash));
+//    }
+//
+//    public void removeHashFroAddressHashes(Hash hash){
+//        addressHashes.remove(new AddressDataHash(hash));
+//    }
 
 }

@@ -61,6 +61,8 @@ public class TransactionService extends BaseNodeTransactionService {
     private INetworkService networkService;
     @Autowired
     private PotService potService;
+    @Autowired
+    private MessageArrivalValidationService messageArrivalValidationService;
 
     @Override
     public void init() {
@@ -162,6 +164,7 @@ public class TransactionService extends BaseNodeTransactionService {
             webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
             final TransactionData finalTransactionData = transactionData;
             ((NetworkService) networkService).sendDataToConnectedDspNodes(finalTransactionData);
+            messageArrivalValidationService.addTransactionHash(finalTransactionData.getHash());
             transactionHelper.setTransactionStateToFinished(transactionData);
             return ResponseEntity
                     .status(HttpStatus.CREATED)

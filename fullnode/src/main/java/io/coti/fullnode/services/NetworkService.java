@@ -1,17 +1,20 @@
 package io.coti.fullnode.services;
 
 import io.coti.basenode.communication.interfaces.ISender;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.NetworkData;
-import io.coti.basenode.data.NetworkNodeData;
-import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
+import io.coti.basenode.http.GetNodeRegistrationResponse;
 import io.coti.basenode.services.BaseNodeNetworkService;
 import io.coti.basenode.services.interfaces.ICommunicationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -58,5 +61,48 @@ public class NetworkService extends BaseNodeNetworkService {
     public void sendDataToConnectedDspNodes(IPropagatable propagatable) {
         connectedDspNodes.forEach(networkNodeData -> sender.send(propagatable, networkNodeData.getReceivingFullAddress()));
     }
+
+    public void sendDataToConnectedDspsByHttp(MessageArrivalValidationData data){
+        RestTemplate restTemplate = new RestTemplate();
+        connectedDspNodes.forEach(networkNodeData -> sendMessageArrivalValidationDataToConnectedDsp(restTemplate, buildMessageArrivalValidationHttpUrl(networkNodeData), data));
+
+    }
+
+    private String buildMessageArrivalValidationHttpUrl(NetworkNodeData networkNodeData){
+        StringBuilder sb = new StringBuilder();
+        sb.append("http://").
+                append(networkNodeData.getAddress()).
+                append(":").
+                append(networkNodeData.getHttpPort()).append("/missedDataHashes");
+        return sb.toString();
+    }
+
+    private MessageArrivalValidationData sendMessageArrivalValidationDataToConnectedDsp(RestTemplate restTemplate, String uri, MessageArrivalValidationData data){
+        //TODO 3/19/2019 astolia: change string to REST EP exposed in DSP.
+        log.info("Sending MessageArrivalValidationData to DSP");
+        try {
+
+            ResponseEntity<MessageArrivalValidationData> response =
+                    restTemplate.postForEntity(
+                            uri,
+                            data,
+                            MessageArrivalValidationData.class);
+
+
+//            ResponseEntity<MessageArrivalValidationData> response = restTemplate.exchange(
+//                    url,
+//                    HttpMethod.POST,
+//                    new HttpEntity<>(data),
+//                    new ParameterizedTypeReference<MessageArrivalValidationData>(){});
+
+
+            //ResponseEntity<MessageArrivalValidationData> response = restTemplate.getForObject(url, ResponseEntity.class, data);
+            return response.getBody();
+        }catch (Exception e){
+            log.info(e.getMessage());
+        }
+        return null;
+    }
+
 
 }

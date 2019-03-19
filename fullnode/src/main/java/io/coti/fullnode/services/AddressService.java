@@ -5,6 +5,7 @@ import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.BaseNodeAddressService;
+import io.coti.basenode.services.interfaces.IMessageArrivalValidationService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.fullnode.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,8 @@ public class AddressService extends BaseNodeAddressService {
     private ISender sender;
     @Autowired
     private INetworkService networkService;
+    @Autowired
+    private MessageArrivalValidationService messageArrivalValidationService;
 
     public boolean addAddress(Hash addressHash) {
         List<String> receivingServerAddresses = new LinkedList<>();
@@ -34,6 +37,7 @@ public class AddressService extends BaseNodeAddressService {
         }
         AddressData newAddressData = new AddressData(addressHash);
         receivingServerAddresses.forEach(address -> sender.send(newAddressData, address));
+        messageArrivalValidationService.addAddressHash(newAddressData.getHash());
         continueHandleGeneratedAddress(newAddressData);
         return true;
     }
