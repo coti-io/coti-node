@@ -74,7 +74,7 @@ public class BaseNodeBalanceService implements IBalanceService {
     }
 
     @Override
-    public boolean checkBalancesAndAddToPreBalance(TransactionData transactionData) {
+    public synchronized boolean checkBalancesAndAddToPreBalance(TransactionData transactionData) {
 
         for (BaseTransactionData inputBaseTransactionData : transactionData.getInputBaseTransactions()) {
 
