@@ -10,13 +10,14 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.Date;
 
 @Slf4j
 @Data
 public abstract class EventData implements IEntity, Serializable, ISignValidatable {
 
-    private Date eventDate;
+    private Instant eventDate;
     private Hash uniqueIdentifier;
     private EventType eventType;
     private Hash eventSignerHash;
@@ -29,7 +30,7 @@ public abstract class EventData implements IEntity, Serializable, ISignValidatab
     public EventData(InsertEventRequest request) {
         if (request.eventType != EventType.TRANSACTION) {
             this.uniqueIdentifier = request.uniqueIdentifier;
-            this.eventDate = new Date();
+            this.eventDate = Instant.now();
             this.eventType = request.eventType;
         }
         log.info(String.format("uniqueIdentifier: %s for type: %d", this.uniqueIdentifier.toHexString(), eventType.getValue()));

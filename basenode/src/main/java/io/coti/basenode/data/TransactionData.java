@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -20,15 +21,14 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
     private Hash leftParentHash;
     private Hash rightParentHash;
     private List<Hash> trustChainTransactionHashes;
-    private Hash userTrustScoreTokenHashes;
     private boolean trustChainConsensus;
     private double trustChainTrustScore;
-    private Date transactionConsensusUpdateTime;
-    private Date createTime;
-    private Date attachmentTime;
-    private Date processStartTime;
-    private Date powStartTime;
-    private Date powEndTime;
+    private Instant transactionConsensusUpdateTime;
+    private Instant createTime;
+    private Instant attachmentTime;
+    private Instant processStartTime;
+    private Instant powStartTime;
+    private Instant powEndTime;
     private double senderTrustScore;
     private Hash senderHash;
     private SignatureData senderSignature;
@@ -36,7 +36,6 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
     private SignatureData nodeSignature;
     private List<Hash> childrenTransactions;
     private Boolean valid;
-    private Map<String, Boolean> validByNodes;
     private transient boolean isVisit;
     private boolean isZeroSpend;
     private boolean isGenesis;
@@ -52,12 +51,12 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
         this.baseTransactions = baseTransactions;
     }
 
-    public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, double senderTrustScore, Date createTime, TransactionType type) {
+    public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, double senderTrustScore, Instant createTime, TransactionType type) {
         this(baseTransactions, transactionDescription, senderTrustScore, createTime, type);
         this.hash = transactionHash;
     }
 
-    public TransactionData(List<BaseTransactionData> baseTransactions, String transactionDescription, double senderTrustScore, Date createTime, TransactionType type) {
+    public TransactionData(List<BaseTransactionData> baseTransactions, String transactionDescription, double senderTrustScore, Instant createTime, TransactionType type) {
         this.transactionDescription = transactionDescription;
         this.baseTransactions = baseTransactions;
         this.createTime = createTime;
@@ -71,7 +70,7 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
         this.initTransactionData();
     }
 
-    public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, List<TransactionTrustScoreData> trustScoreResults, Date createTime, Hash senderHash, TransactionType type) {
+    public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, List<TransactionTrustScoreData> trustScoreResults, Instant createTime, Hash senderHash, TransactionType type) {
         this.hash = transactionHash;
         this.transactionDescription = transactionDescription;
         this.baseTransactions = baseTransactions;
@@ -90,7 +89,7 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
     private void initTransactionData() {
         this.trustChainTransactionHashes = new Vector<>();
         this.childrenTransactions = new LinkedList<>();
-        this.processStartTime = (new Date());
+        this.processStartTime = (Instant.now());
     }
 
     public int getRoundedSenderTrustScore() {
@@ -129,10 +128,6 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
 
     public boolean hasSources() {
         return getLeftParentHash() != null || getRightParentHash() != null;
-    }
-
-    public void addNodesToTransaction(Map<String, Boolean> validByNodes) {
-        this.validByNodes.putAll(validByNodes);
     }
 
     public Boolean isValid() {

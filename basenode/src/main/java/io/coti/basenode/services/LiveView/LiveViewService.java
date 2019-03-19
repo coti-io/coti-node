@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.Vector;
 
 @Slf4j
@@ -71,7 +72,7 @@ public class LiveViewService {
         graphTransactionData.setAttachmentTime(transactionData.getAttachmentTime());
         graphTransactionData.setTransactionConsensusUpdateTime(transactionData.getTransactionConsensusUpdateTime());
         if (transactionData.getAttachmentTime() != null && transactionData.getTransactionConsensusUpdateTime() != null) {
-            graphTransactionData.setTccDuration((transactionData.getTransactionConsensusUpdateTime().getTime() - transactionData.getAttachmentTime().getTime()) / 1000);
+            graphTransactionData.setTccDuration(Duration.between(transactionData.getAttachmentTime(), transactionData.getTransactionConsensusUpdateTime()).toMillis() / 1000);
         }
     }
 

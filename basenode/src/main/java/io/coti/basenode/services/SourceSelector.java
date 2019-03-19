@@ -6,7 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
@@ -74,10 +75,10 @@ public class SourceSelector implements ISourceSelector {
 
     public List<TransactionData> selectTwoOptimalSources(List<TransactionData> transactions) {
 
-        Date now = new Date();
+        Instant now = Instant.now();
         List<TransactionData> olderSources =
                 transactions.stream().
-                        filter(s -> !s.getAttachmentTime().after(now)).collect(toList());
+                        filter(s -> !s.getAttachmentTime().isAfter(now)).collect(toList());
 
         if (olderSources.size() <= 2) {
             return olderSources;
@@ -86,7 +87,7 @@ public class SourceSelector implements ISourceSelector {
         // Calculate total timestamp differences from the transaction's timestamp
         long totalWeight =
                 olderSources.stream().
-                        map(s -> now.getTime() - s.getAttachmentTime().getTime()).mapToLong(Long::longValue).sum();
+                        map(s -> Duration.between(s.getAttachmentTime(), now).toMillis()).mapToLong(Long::longValue).sum();
 
         // Now choose sources, randomly weighted by timestamp difference ("older" transactions have a bigger chance to be selected)
         List<TransactionData> randomWeightedSources = new Vector<>();
@@ -95,7 +96,7 @@ public class SourceSelector implements ISourceSelector {
             int randomIndex = -1;
             double random = Math.random() * totalWeight;
             for (int i = 0; i < olderSources.size(); ++i) {
-                random -= now.getTime() - olderSources.get(i).getAttachmentTime().getTime();
+                random -= Duration.between(olderSources.get(i).getAttachmentTime(), now).toMillis();
                 if (random < 0.0d) {
                     randomIndex = i;
                     break;

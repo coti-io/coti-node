@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -134,7 +135,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
 
     public synchronized void setIndexForDspResult(TransactionData transactionData, DspConsensusResult dspConsensusResult) {
         dspConsensusResult.setIndex(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
-        dspConsensusResult.setIndexingTime(new Date());
+        dspConsensusResult.setIndexingTime(Instant.now());
         dspConsensusCrypto.signMessage(dspConsensusResult);
         transactionData.setDspConsensusResult(dspConsensusResult);
         transactionIndexService.insertNewTransactionIndex(transactionData);

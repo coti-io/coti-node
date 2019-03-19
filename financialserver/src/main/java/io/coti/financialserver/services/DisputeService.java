@@ -95,7 +95,7 @@ public class DisputeService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_TRANSACTION_NOT_FOUND, STATUS_ERROR));
         }
 
-        disputeData.setTransactionCreationTime(transactionData.getCreateTime().toInstant());
+        disputeData.setTransactionCreationTime(transactionData.getCreateTime());
 
         PaymentInputBaseTransactionData paymentInputBaseTransactionData = transactionHelper.getPaymentInputBaseTransaction(transactionData);
         if (paymentInputBaseTransactionData == null) {

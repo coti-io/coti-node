@@ -43,6 +43,7 @@ import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -277,7 +278,7 @@ public class TrustScoreService {
             return;
         }
 
-        LocalDate transactionConsensusDate = transactionData.getDspConsensusResult().getIndexingTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate transactionConsensusDate = transactionData.getDspConsensusResult().getIndexingTime().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate currentDate = new Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
         if (currentDate.equals(transactionConsensusDate)) {
