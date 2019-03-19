@@ -2,6 +2,7 @@ package io.coti.basenode.services.LiveView.data;
 
 import lombok.Data;
 
+import java.time.Instant;
 import java.util.Date;
 
 @Data
@@ -13,8 +14,8 @@ public class GraphTransactionData {
     private double trustScore;
     private Integer status;
     private long tccDuration;
-    private Date attachmentTime;
-    private Date transactionConsensusUpdateTime;
+    private Instant attachmentTime;
+    private Instant transactionConsensusUpdateTime;
 
     @Override
     public boolean equals(Object other) {

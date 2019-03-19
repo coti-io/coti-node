@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.Map;
@@ -104,7 +105,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     private void processConfirmedTransaction(TransactionData transactionData) {
-        transactionData.setTransactionConsensusUpdateTime(new Date());
+        transactionData.setTransactionConsensusUpdateTime(Instant.now());
         balanceService.updateBalanceAndPreBalanceConditionally(transactionData);
         totalConfirmed.incrementAndGet();
 

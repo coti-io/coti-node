@@ -9,6 +9,7 @@ import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -49,12 +50,12 @@ public class BucketUtil {
                 transactionHash,
                 "test",
                 trustScoreResults,
-                new Date(),
+                Instant.now(),
                 userHash,
                 transactionType);
 
         DspConsensusResult dspConsensusResult = new DspConsensusResult(new Hash("caba14b7fe219b3da5dee0c29389c88e4d134333a2ee104152d6e9f7b673be9e0e28ca511d1ac749f46bea7f1ab25818f335ab9111a6c5eebe2f650974e12d1b7dccd4d7"));
-        dspConsensusResult.setIndexingTime(new Date());
+        dspConsensusResult.setIndexingTime(Instant.now());
         transactionData.setDspConsensusResult(dspConsensusResult);
         return transactionData;
     }

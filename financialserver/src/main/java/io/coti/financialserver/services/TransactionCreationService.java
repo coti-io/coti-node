@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -56,8 +57,8 @@ public class TransactionCreationService {
 
         TransactionData chargebackTransaction = new TransactionData(baseTransactions);
 
-        chargebackTransaction.setAttachmentTime(new Date());
-        chargebackTransaction.setCreateTime(new Date());
+        chargebackTransaction.setAttachmentTime(Instant.now());
+        chargebackTransaction.setCreateTime(Instant.now());
         chargebackTransaction.setType(TransactionType.Chargeback);
 
         clusterService.selectSources(chargebackTransaction);
@@ -78,7 +79,7 @@ public class TransactionCreationService {
     private synchronized void setIndexForDspResult(TransactionData chargebackTransaction, DspConsensusResult dspConsensusResult) {
 
         dspConsensusResult.setIndex(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
-        dspConsensusResult.setIndexingTime(new Date());
+        dspConsensusResult.setIndexingTime(Instant.now());
 
         dspConsensusCrypto.signMessage(dspConsensusResult);
         chargebackTransaction.setDspConsensusResult(dspConsensusResult);

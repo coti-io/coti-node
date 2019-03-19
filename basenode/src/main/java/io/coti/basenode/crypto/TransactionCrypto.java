@@ -13,7 +13,9 @@ public class TransactionCrypto extends SignatureCrypto<TransactionData> {
     final static int baseTransactionHashSize = 32;
 
     @Override
-    public byte[] getSignatureMessage(TransactionData transactionData) {
+    public byte[] getSignatureMessage(TransactionData transactionData)
+    {
+
         return transactionData.getHash().getBytes();
     }
 

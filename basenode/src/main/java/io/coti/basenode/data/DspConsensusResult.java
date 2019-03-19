@@ -5,7 +5,7 @@ import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 
 @Data
@@ -13,7 +13,7 @@ public class DspConsensusResult extends ConfirmationData implements IPropagatabl
     private Hash transactionHash;
     private Hash zeroSpendServerHash;
     private long index;
-    private Date indexingTime;
+    private Instant indexingTime;
     private SignatureData zeroSpendSignature;
     private List<DspVote> dspVotes;
     private boolean isDspConsensus;

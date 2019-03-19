@@ -16,10 +16,6 @@ import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
-import io.coti.fullnode.http.AddTransactionRequest;
-import io.coti.fullnode.http.AddTransactionResponse;
-import io.coti.fullnode.http.GetAddressTransactionHistoryResponse;
-import io.coti.fullnode.http.GetTransactionResponse;
 import io.coti.fullnode.data.ExplorerIndexData;
 import io.coti.fullnode.http.*;
 import io.coti.fullnode.model.ExplorerIndexes;
@@ -30,8 +26,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -153,13 +149,13 @@ public class TransactionService extends BaseNodeTransactionService {
                 //TODO: Implement an invalidation mechanism for TestNet.
             }
 
-            transactionData.setPowStartTime(new Date());
+            transactionData.setPowStartTime(Instant.now());
             // ############   POT   ###########
             potService.potAction(transactionData);
             // ################################
-            transactionData.setPowEndTime(new Date());
+            transactionData.setPowEndTime(Instant.now());
 
-            transactionData.setAttachmentTime(new Date());
+            transactionData.setAttachmentTime(Instant.now());
 
             transactionHelper.attachTransactionToCluster(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
@@ -246,7 +242,7 @@ public class TransactionService extends BaseNodeTransactionService {
         List<TransactionData> transactionsDataList = new ArrayList<>();
         ExplorerIndexData explorerIndexData;
 
-        for(int i = 0; i < EXPLORER_LAST_TRANSACTIONS_AMOUNT; i++) {
+        for (int i = 0; i < EXPLORER_LAST_TRANSACTIONS_AMOUNT; i++) {
             explorerIndexData = explorerIndexes.getByHash(new Hash(explorerIndex.get()));
             transactionsDataList.add(transactions.getByHash(explorerIndexData.getTransactionHash()));
         }
@@ -254,8 +250,7 @@ public class TransactionService extends BaseNodeTransactionService {
         try {
             return ResponseEntity.status(HttpStatus.OK).body(new GetTransactionsResponse(transactionsDataList) {
             });
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new Response(

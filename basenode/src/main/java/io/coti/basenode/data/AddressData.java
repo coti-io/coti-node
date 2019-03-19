@@ -3,19 +3,21 @@ package io.coti.basenode.data;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import lombok.Data;
 
+import java.time.Instant;
 import java.util.Date;
 
 @Data
 public class AddressData implements IPropagatable {
+
+    private transient Hash hash;
+    private Instant creationTime;
+
     private AddressData() {
     }
 
-    private transient Hash hash;
-    private Date creationTime;
-
     public AddressData(Hash hash) {
         this.hash = hash;
-        creationTime = new Date();
+        creationTime = Instant.now();
     }
 
     @Override

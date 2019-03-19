@@ -4,7 +4,7 @@ import io.coti.basenode.data.DspConsensusResult;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
-import java.util.Date;
+import java.time.Instant;
 
 @Service
 public class DspConsensusCrypto extends SignatureCrypto<DspConsensusResult> {
@@ -12,17 +12,13 @@ public class DspConsensusCrypto extends SignatureCrypto<DspConsensusResult> {
     public byte[] getSignatureMessage(DspConsensusResult dspConsensusResult) {
         byte[] transactionHashInBytes = dspConsensusResult.getTransactionHash().getBytes();
 
-        ByteBuffer indexBuffer = ByteBuffer.allocate(8);
-        indexBuffer.putLong(dspConsensusResult.getIndex());
+        byte[] indexInBytes = ByteBuffer.allocate(Long.BYTES).putLong(dspConsensusResult.getIndex()).array();
 
-        Date indexingTime = dspConsensusResult.getIndexingTime();
-        int timestamp = (int) (indexingTime.getTime());
+        Instant indexingTime = dspConsensusResult.getIndexingTime();
+        byte[] indexingTimeInBytes = ByteBuffer.allocate(Long.BYTES).putLong(indexingTime.toEpochMilli()).array();
 
-        ByteBuffer indexingTimeBuffer = ByteBuffer.allocate(4);
-        indexingTimeBuffer.putInt(timestamp);
-
-        ByteBuffer dspConsensusMessageBuffer = ByteBuffer.allocate(transactionHashInBytes.length + 8 + 4).
-                put(transactionHashInBytes).put(indexBuffer.array()).put(indexingTimeBuffer.array());
+        ByteBuffer dspConsensusMessageBuffer = ByteBuffer.allocate(transactionHashInBytes.length + indexInBytes.length + indexingTimeInBytes.length).
+                put(transactionHashInBytes).put(indexInBytes).put(indexingTimeInBytes);
 
         byte[] dspConsensusMessageInBytes = dspConsensusMessageBuffer.array();
         byte[] cryptoHashedMessage = CryptoHelper.cryptoHash(dspConsensusMessageInBytes).getBytes();

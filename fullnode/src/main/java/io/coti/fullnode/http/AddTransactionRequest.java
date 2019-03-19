@@ -9,7 +9,7 @@ import io.coti.basenode.http.Request;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 
 public class AddTransactionRequest extends Request {
@@ -20,7 +20,7 @@ public class AddTransactionRequest extends Request {
     @NotEmpty
     public String transactionDescription;
     @NotNull
-    public Date createTime;
+    public Instant createTime;
     @NotEmpty
     public List<@Valid TransactionTrustScoreData> trustScoreResults;
     @NotNull

@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -101,8 +102,8 @@ public class TransactionCreationService {
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
         BaseTransactionData baseTransactionData = new InputBaseTransactionData(transactionCryptoCreator.getAddress(), BigDecimal.ZERO, new Date());
         baseTransactions.add(baseTransactionData);
-        TransactionData transactionData = new TransactionData(baseTransactions, description.name(), trustScore, new Date(), TransactionType.ZeroSpend);
-        transactionData.setAttachmentTime(new Date());
+        TransactionData transactionData = new TransactionData(baseTransactions, description.name(), trustScore, Instant.now(), TransactionType.ZeroSpend);
+        transactionData.setAttachmentTime(Instant.now());
         transactionData.setZeroSpend(true);
 
         transactionCryptoCreator.signBaseTransactions(transactionData);
