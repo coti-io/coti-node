@@ -6,6 +6,9 @@ public class TransactionDataHash implements IEntity {
 
     private Hash transactionDataHash;
 
+    public TransactionDataHash() {
+    }
+
     public TransactionDataHash(Hash transactionDataHash) {
         this.transactionDataHash = transactionDataHash;
     }
@@ -22,6 +25,9 @@ public class TransactionDataHash implements IEntity {
 
     @Override
     public String toString() {
+        // "TransactionDataHash: {}"
+        //return transactionDataHash.toString();
+//        return "TransactionDataHash = " + transactionDataHash.toString();
         return transactionDataHash.toString();
     }
 }

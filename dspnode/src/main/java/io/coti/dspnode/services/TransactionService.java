@@ -38,6 +38,10 @@ public class TransactionService extends BaseNodeTransactionService {
     private DspVoteCrypto dspVoteCrypto;
     @Autowired
     private INetworkService networkService;
+    @Autowired
+    private MessageArrivalValidationService  messageArrivalValidationService;
+
+    //TODO 3/20/2019 astolia: add here - save  the has hof the received msg to rocks.
 
     @Override
     public void init() {
@@ -53,6 +57,7 @@ public class TransactionService extends BaseNodeTransactionService {
                 log.debug("Transaction already exists: {}", transactionData.getHash());
                 return;
             }
+            messageArrivalValidationService.addTransactionHash(transactionData.getHash());
             transactionHelper.startHandleTransaction(transactionData);
             if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData) ||
                     !validationService.validateBalancesAndAddToPreBalance(transactionData)) {

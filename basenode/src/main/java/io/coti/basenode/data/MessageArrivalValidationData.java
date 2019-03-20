@@ -30,27 +30,15 @@ public class MessageArrivalValidationData implements ISignable, ISignValidatable
     Hash signerHash;
 
     public MessageArrivalValidationData(/*Hash hash*/){
-//        this.hash = hash;
         transactionHashes = new HashSet<>();
         addressHashes = new HashSet<>();
     }
 
     //TODO 3/18/2019 astolia: Not sure if why and who should be Hash.
     public MessageArrivalValidationData(/*Hash hash, */Set<TransactionDataHash> transactionHashes, Set<AddressDataHash> addressHashes){
-//        this.hash = hash;
         this.transactionHashes = transactionHashes;
         this.addressHashes = addressHashes;
     }
-
-//    @Override
-//    public Hash getHash() {
-//        return hash;
-//    }
-//
-//    @Override
-//    public void setHash(Hash hash) {
-//        this.hash = hash;
-//    }
 
     @Override
     public SignatureData getSignature() {
@@ -72,20 +60,24 @@ public class MessageArrivalValidationData implements ISignable, ISignValidatable
         this.signature = signature;
     }
 
-//    public void addHashToTransactionHashes(Hash hash) {
-//        transactionHashes.add(new TransactionDataHash(hash));
-//    }
-//
-//    public void removeHashFromTransactionHashes(Hash hash){
-//        transactionHashes.remove(new TransactionDataHash(hash));
-//    }
-//
-//    public void addHashToAddressHashes(Hash hash) {
-//        addressHashes.add(new AddressDataHash(hash));
-//    }
-//
-//    public void removeHashFroAddressHashes(Hash hash){
-//        addressHashes.remove(new AddressDataHash(hash));
-//    }
+    public void addHashToTransactionHashes(Hash hash) {
+        transactionHashes.add(new TransactionDataHash(hash));
+    }
 
+    public void removeHashFromTransactionHashes(Hash hash){
+        transactionHashes.remove(new TransactionDataHash(hash));
+    }
+
+    public void addHashToAddressHashes(Hash hash) {
+        addressHashes.add(new AddressDataHash(hash));
+    }
+
+    public void removeHashFroAddressHashes(Hash hash){
+        addressHashes.remove(new AddressDataHash(hash));
+    }
+
+//    @Override
+//    public String toString(){
+//
+//    }
 }

@@ -39,7 +39,6 @@ public class MessageArrivalValidationService extends BaseNodeMessageArrivalValid
         addressDataHashes.put(new AddressDataHash(hash));
     }
 
-    @Override
     @Scheduled(fixedDelay = 5000L, initialDelay = 1000L)
     public void checkDspReceivedMessages(){
 

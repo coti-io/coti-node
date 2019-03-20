@@ -79,24 +79,16 @@ public class NetworkService extends BaseNodeNetworkService {
 
     private MessageArrivalValidationData sendMessageArrivalValidationDataToConnectedDsp(RestTemplate restTemplate, String uri, MessageArrivalValidationData data){
         //TODO 3/19/2019 astolia: change string to REST EP exposed in DSP.
-        log.info("Sending MessageArrivalValidationData to DSP");
+        log.info("Sending MessageArrivalValidationData to DSP: {}", data);
         try {
-
             ResponseEntity<MessageArrivalValidationData> response =
                     restTemplate.postForEntity(
                             uri,
                             data,
                             MessageArrivalValidationData.class);
 
-
-//            ResponseEntity<MessageArrivalValidationData> response = restTemplate.exchange(
-//                    url,
-//                    HttpMethod.POST,
-//                    new HttpEntity<>(data),
-//                    new ParameterizedTypeReference<MessageArrivalValidationData>(){});
-
-
-            //ResponseEntity<MessageArrivalValidationData> response = restTemplate.getForObject(url, ResponseEntity.class, data);
+            log.info("Received missedDataHashes rest response: {}", response.getBody());
+            log.info("Missed TransactionData messages: {}, Missed AddressData messages: {}", response.getBody().getTransactionHashes().size(), response.getBody().getAddressHashes().size());
             return response.getBody();
         }catch (Exception e){
             log.info(e.getMessage());

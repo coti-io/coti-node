@@ -6,6 +6,9 @@ public class AddressDataHash implements IEntity {
 
     private Hash addressDataHash;
 
+    public AddressDataHash() {
+    }
+
     public AddressDataHash(Hash addressDataHash) {
         this.addressDataHash = addressDataHash;
     }
@@ -19,4 +22,6 @@ public class AddressDataHash implements IEntity {
     public void setHash(Hash hash) {
         this.addressDataHash = hash;
     }
+
+
 }

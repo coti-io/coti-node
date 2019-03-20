@@ -68,7 +68,8 @@ public class ZeroMQSender implements ISender {
     private void initializeSenderSocket(String addressAndPort) {
         ZMQ.Socket sender = zeroMQContext.socket(ZMQ.DEALER);
         ZeroMQUtils.bindToRandomPort(sender);
-        sender.connect(addressAndPort);
+        boolean test = sender.connect(addressAndPort);
+        log.info("**** Connection result: {} ****", test);
         receivingAddressToSenderSocketMapping.putIfAbsent(addressAndPort, sender);
         log.debug("Receiver  {} is about to be removed from sending to zmq", addressAndPort);
     }
