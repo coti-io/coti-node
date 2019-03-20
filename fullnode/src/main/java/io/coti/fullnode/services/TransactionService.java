@@ -284,6 +284,7 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
+    @Override
     public long incrementAndGetExplorerIndex() {
         return explorerIndex.incrementAndGet();
     }

@@ -1,6 +1,5 @@
 package io.coti.basenode.model;
 
-import io.coti.basenode.data.AddressDataHash;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionDataHash;
 import org.rocksdb.RocksIterator;

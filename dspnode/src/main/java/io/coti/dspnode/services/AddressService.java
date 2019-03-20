@@ -3,7 +3,6 @@ package io.coti.dspnode.services;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.NodeType;
-import io.coti.basenode.model.AddressDataHashes;
 import io.coti.basenode.services.BaseNodeAddressService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +18,6 @@ public class AddressService extends BaseNodeAddressService {
 
     @Autowired
     private MessageArrivalValidationService  messageArrivalValidationService;
-
-    //TODO 3/20/2019 astolia: add here - save  the has hof the received msg to rocks.
 
     public String handleNewAddressFromFullNode(AddressData addressData) {
         messageArrivalValidationService.addAddressHash(addressData.getHash());

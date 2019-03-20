@@ -41,8 +41,6 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private MessageArrivalValidationService  messageArrivalValidationService;
 
-    //TODO 3/20/2019 astolia: add here - save  the has hof the received msg to rocks.
-
     @Override
     public void init() {
         transactionsToValidate = new PriorityQueue<>();
@@ -100,6 +98,7 @@ public class TransactionService extends BaseNodeTransactionService {
         isValidatorRunning.set(false);
     }
 
+    @Override
     public void continueHandlePropagatedTransaction(TransactionData transactionData) {
         propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
         if (!transactionData.isZeroSpend()) {

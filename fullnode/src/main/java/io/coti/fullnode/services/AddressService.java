@@ -5,7 +5,6 @@ import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.BaseNodeAddressService;
-import io.coti.basenode.services.interfaces.IMessageArrivalValidationService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.fullnode.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +20,6 @@ public class AddressService extends BaseNodeAddressService {
 
     @Autowired
     private WebSocketSender webSocketSender;
-
     @Autowired
     private ISender sender;
     @Autowired

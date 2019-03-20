@@ -4,23 +4,23 @@ import io.coti.basenode.data.interfaces.IEntity;
 
 public class AddressDataHash implements IEntity {
 
-    private Hash addressDataHash;
+    private Hash hash;
 
     public AddressDataHash() {
     }
 
     public AddressDataHash(Hash addressDataHash) {
-        this.addressDataHash = addressDataHash;
+        this.hash = addressDataHash;
     }
 
     @Override
     public Hash getHash() {
-        return addressDataHash;
+        return hash;
     }
 
     @Override
     public void setHash(Hash hash) {
-        this.addressDataHash = hash;
+        this.hash = hash;
     }
 
 

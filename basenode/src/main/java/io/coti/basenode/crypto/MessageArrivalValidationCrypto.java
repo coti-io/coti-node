@@ -3,7 +3,6 @@ package io.coti.basenode.crypto;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.MessageArrivalValidationData;
-import io.coti.basenode.data.interfaces.IEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -45,7 +44,7 @@ public class MessageArrivalValidationCrypto extends SignatureCrypto<MessageArriv
 
     private ByteBuffer allocateAndFacilitateByteBuffer(int buffLength, List<byte[]> bytes){
         ByteBuffer arrivalValidationDataBuffer = ByteBuffer.allocate(buffLength);
-        bytes.forEach(byteArr -> arrivalValidationDataBuffer.put(byteArr));
+        bytes.forEach(arrivalValidationDataBuffer::put);
         return arrivalValidationDataBuffer;
     }
 

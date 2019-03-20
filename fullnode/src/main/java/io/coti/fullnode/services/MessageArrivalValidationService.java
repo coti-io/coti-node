@@ -45,30 +45,12 @@ public class MessageArrivalValidationService extends BaseNodeMessageArrivalValid
         log.info("Scheduled task checkDspReceivedMessages");
         Set<TransactionDataHash> transactionHashes = transactionDataHashes.getHashes();
         Set<AddressDataHash> addressHashes = addressDataHashes.getHashes();
-
-        MessageArrivalValidationData data = new MessageArrivalValidationData(/*new Hash("TODO"), */transactionHashes, addressHashes);
-        signAndSend(data);
-
-        //TODO 3/19/2019 astolia: Decide about the argument for Hash
+        // Avoid sending empty message and unnecessary checks
         if(transactionHashes.isEmpty() && addressHashes.isEmpty()){
-            log.info("Both Empty");
-//            MessageArrivalValidationData data = new MessageArrivalValidationData(/*new Hash("TODO"), */transactionHashes, addressHashes);
-//            signAndSend(data);
+            return;
         }
-
-        //TODO 3/19/2019 astolia: Not sure if need this.
-        else if(transactionHashes.isEmpty()){
-            log.info("transactionHashes is Empty");
-            //TODO 3/19/2019 astolia: handle data
-//            MessageArrivalValidationData data = new MessageArrivalValidationData(/*new Hash("TODO"), */transactionHashes, addressHashes);
-//            signAndSend(null);
-        }
-        //addressHashes is empty
-        else{
-            log.info("addressHashes is Empty");
-            //TODO 3/19/2019 astolia: handle data
-//            signAndSend(null);
-        }
+        MessageArrivalValidationData data = new MessageArrivalValidationData(transactionHashes, addressHashes);
+        signAndSend(data);
     }
 
     private void signAndSend(MessageArrivalValidationData data){

@@ -1,7 +1,5 @@
 package io.coti.basenode.data;
 
-import io.coti.basenode.data.interfaces.IEntity;
-import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 
@@ -10,23 +8,16 @@ import lombok.Data;
 import java.util.HashSet;
 import java.util.Set;
 
-
-//TODO 3/17/2019 astolia: Remove this comment:
-// can take a look at DspVote for reference.
-
-
 @Data
 public class MessageArrivalValidationData implements ISignable, ISignValidatable {
 
     //TODO 3/18/2019 astolia: Add ArrivalValidationType
 
-    Set<TransactionDataHash> transactionHashes;
-    Set<AddressDataHash> addressHashes;
-
-//    private transient Hash hash;
+    private Set<TransactionDataHash> transactionHashes;
+    private Set<AddressDataHash> addressHashes;
 
     // Signable
-    public SignatureData signature;
+    private SignatureData signature;
     Hash signerHash;
 
     public MessageArrivalValidationData(/*Hash hash*/){
@@ -34,8 +25,7 @@ public class MessageArrivalValidationData implements ISignable, ISignValidatable
         addressHashes = new HashSet<>();
     }
 
-    //TODO 3/18/2019 astolia: Not sure if why and who should be Hash.
-    public MessageArrivalValidationData(/*Hash hash, */Set<TransactionDataHash> transactionHashes, Set<AddressDataHash> addressHashes){
+    public MessageArrivalValidationData(Set<TransactionDataHash> transactionHashes, Set<AddressDataHash> addressHashes){
         this.transactionHashes = transactionHashes;
         this.addressHashes = addressHashes;
     }
@@ -76,8 +66,4 @@ public class MessageArrivalValidationData implements ISignable, ISignValidatable
         addressHashes.remove(new AddressDataHash(hash));
     }
 
-//    @Override
-//    public String toString(){
-//
-//    }
 }

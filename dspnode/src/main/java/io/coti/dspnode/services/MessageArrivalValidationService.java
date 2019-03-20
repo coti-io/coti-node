@@ -9,10 +9,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-//TODO 3/20/2019 astolia:
 
 @Slf4j
 @Service
@@ -44,13 +43,13 @@ public class MessageArrivalValidationService extends BaseNodeMessageArrivalValid
         missingHashesMessageArrivalValidation.setAddressHashes(
                 addressHashes.stream().
                         map(addressDataHash -> addressDataHashes.getByHash(addressDataHash.getHash()) == null ? addressDataHash : null).
-                        filter(addressDataHash -> addressDataHash != null).
+                        filter(Objects::nonNull).
                         collect(Collectors.toSet()));
 
         missingHashesMessageArrivalValidation.setTransactionHashes(
                 transactionHashes.stream().
                         map(transactionDataHash -> transactionDataHashes.getByHash(transactionDataHash.getHash()) == null ? transactionDataHash : null).
-                        filter(transactionDataHash -> transactionDataHash != null).
+                        filter(Objects::nonNull).
                         collect(Collectors.toSet()));
 
         messageArrivalValidationCrypto.signMessage(missingHashesMessageArrivalValidation);
@@ -58,12 +57,11 @@ public class MessageArrivalValidationService extends BaseNodeMessageArrivalValid
         log.info("Missed TransactionData messages: {}, Missed AddressData messages: {}", missingHashesMessageArrivalValidation.getTransactionHashes().size(), missingHashesMessageArrivalValidation.getAddressHashes().size());
         return data;
 
-
     }
 
 //    @Scheduled(fixedDelay = 5000L, initialDelay = 1000L)
     public void checkSentMessagesReceivedByDestinationNode(){
-
+        //TODO 3/20/2019 astolia: flow 2
     }
 
 }
