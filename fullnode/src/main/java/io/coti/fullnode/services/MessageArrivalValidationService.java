@@ -1,23 +1,19 @@
 package io.coti.fullnode.services;
 
 import io.coti.basenode.crypto.MessageArrivalValidationCrypto;
-import io.coti.basenode.data.AddressDataHash;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.MessageArrivalValidationData;
-import io.coti.basenode.data.TransactionDataHash;
+import io.coti.basenode.data.*;
 import io.coti.basenode.model.AddressDataHashes;
 import io.coti.basenode.model.TransactionDataHashes;
-import io.coti.basenode.services.BaseNodeMessageArrivalValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.Set;
+import java.util.*;
 
 @Slf4j
 @Service
-public class MessageArrivalValidationService extends BaseNodeMessageArrivalValidationService {
+public class MessageArrivalValidationService {
 
     @Autowired
     private MessageArrivalValidationCrypto messageArrivalValidationCrypto;
@@ -49,7 +45,10 @@ public class MessageArrivalValidationService extends BaseNodeMessageArrivalValid
         if(transactionHashes.isEmpty() && addressHashes.isEmpty()){
             return;
         }
-        MessageArrivalValidationData data = new MessageArrivalValidationData(transactionHashes, addressHashes);
+        Map<String, Set<? extends DataHash>> classNameToHashes = new HashMap<>();
+        classNameToHashes.put(TransactionDataHashes.class.getName(), transactionDataHashes.getHashes());
+        classNameToHashes.put(AddressDataHashes.class.getName(), addressDataHashes.getHashes());
+        MessageArrivalValidationData data = new MessageArrivalValidationData(classNameToHashes);
         signAndSend(data);
     }
 

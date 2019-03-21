@@ -12,10 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -83,7 +80,8 @@ public class NetworkService extends BaseNodeNetworkService {
                             MessageArrivalValidationData.class);
 
             log.info("Received missedDataHashes rest response: {}", response.getBody());
-            log.info("Missed TransactionData messages: {}, Missed AddressData messages: {}", response.getBody().getTransactionHashes().size(), response.getBody().getAddressHashes().size());
+            response.getBody().getClassNameToHashes().keySet().forEach(k -> log.info("Missed {} messages: {}", k, ((Set<? extends DataHash>)response.getBody().getClassNameToHashes().get(k)).size()));
+
             return response.getBody();
         }catch (Exception e){
             log.info(e.getMessage());

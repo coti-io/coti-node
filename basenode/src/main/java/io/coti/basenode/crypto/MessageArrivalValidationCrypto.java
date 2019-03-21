@@ -1,45 +1,53 @@
 package io.coti.basenode.crypto;
 
 
-import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.DataHash;
 import io.coti.basenode.data.MessageArrivalValidationData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class MessageArrivalValidationCrypto extends SignatureCrypto<MessageArrivalValidationData> {
+public class MessageArrivalValidationCrypto<T extends DataHash> extends SignatureCrypto<MessageArrivalValidationData> {
 
-    //TODO 3/18/2019 astolia: implement correct sign
     @Override
-    public byte[] getSignatureMessage(MessageArrivalValidationData signable) {
-        //TODO 3/18/2019 astolia: Figure out what is going on here and if is correct or not. also hoew to set hash.
-
-        byte[] transactionHashesInBytes = getHashesBytes(signable.getTransactionHashes());
-        byte[] addressHashesInBytes = getHashesBytes(signable.getAddressHashes());
-
-        List<byte[]> hashesBytes = new ArrayList<>(Arrays.asList(transactionHashesInBytes, addressHashesInBytes));
-
-        int byteBufferLength = transactionHashesInBytes.length + transactionHashesInBytes.length;
-
+    public byte[] getSignatureMessage(MessageArrivalValidationData messageArrivalValidationData) {
+        List<byte[]> hashesBytes = generateBytesListForDataHashes(messageArrivalValidationData.getClassNameToHashes());
+        int byteBufferLength = calculateBytesLength(hashesBytes);
         ByteBuffer arrivalValidationBuffer = allocateAndFacilitateByteBuffer(byteBufferLength, hashesBytes);
-
         return CryptoHelper.cryptoHash(arrivalValidationBuffer.array()).getBytes();
     }
 
-    private byte[] getHashesBytes(Set<?> hashes){
-        if(hashes.isEmpty()){
-            return new byte[]{};
+    private List<byte[]> generateBytesListForDataHashes(Map<String,Set<T>> classNameToHashes){
+        List<List<byte[]>> hashesBytesLst = new ArrayList<>();
+        classNameToHashes.keySet().forEach(className -> hashesBytesLst.add(getHashesBytes(classNameToHashes.get(className))));
+
+        return hashesBytesLst.
+                stream().
+                filter(List::isEmpty).
+                flatMap(List::stream).
+                collect(Collectors.toList());
+    }
+
+    private int calculateBytesLength(List<byte[]> hashesBytes){
+        int size = 0;
+        for(int i = 0; i < hashesBytes.size() ; i++){
+            size += hashesBytes.get(i).length;
         }
-        //TODO 3/19/2019 astolia: Doesn't work well
-        log.info(hashes.toString());
-        return new Hash(hashes.toString()).getBytes();
+        return size;
+    }
+
+    private List<byte[]> getHashesBytes(Set<T> hashes){
+        if(hashes.isEmpty()){
+            return new ArrayList<>();
+        }
+        List<byte[]> byteArr = new ArrayList<>();
+        hashes.forEach(dataHash -> byteArr.add(dataHash.getHash().getBytes()));
+        return byteArr;
     }
 
     private ByteBuffer allocateAndFacilitateByteBuffer(int buffLength, List<byte[]> bytes){

@@ -5,29 +5,27 @@ import io.coti.basenode.data.interfaces.ISignable;
 
 import lombok.Data;
 
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 @Data
-public class MessageArrivalValidationData implements ISignable, ISignValidatable {
+public class MessageArrivalValidationData<T extends DataHash> implements ISignable, ISignValidatable {
 
-    //TODO 3/18/2019 astolia: Add ArrivalValidationType
-
-    private Set<TransactionDataHash> transactionHashes;
-    private Set<AddressDataHash> addressHashes;
+    private Map<String,Set<T>> classNameToHashes;
 
     // Signable
     private SignatureData signature;
     Hash signerHash;
 
-    public MessageArrivalValidationData(/*Hash hash*/){
-        transactionHashes = new HashSet<>();
-        addressHashes = new HashSet<>();
+    public MessageArrivalValidationData(){
+        classNameToHashes = new HashMap<>();
     }
 
-    public MessageArrivalValidationData(Set<TransactionDataHash> transactionHashes, Set<AddressDataHash> addressHashes){
-        this.transactionHashes = transactionHashes;
-        this.addressHashes = addressHashes;
+    public MessageArrivalValidationData(Map<String,Set<T>> classNameToHashes){
+        this.classNameToHashes = new HashMap<>();
+        this.classNameToHashes.putAll(classNameToHashes);
+
     }
 
     @Override
@@ -50,20 +48,8 @@ public class MessageArrivalValidationData implements ISignable, ISignValidatable
         this.signature = signature;
     }
 
-    public void addHashToTransactionHashes(Hash hash) {
-        transactionHashes.add(new TransactionDataHash(hash));
-    }
-
-    public void removeHashFromTransactionHashes(Hash hash){
-        transactionHashes.remove(new TransactionDataHash(hash));
-    }
-
-    public void addHashToAddressHashes(Hash hash) {
-        addressHashes.add(new AddressDataHash(hash));
-    }
-
-    public void removeHashFroAddressHashes(Hash hash){
-        addressHashes.remove(new AddressDataHash(hash));
+    public void addHashesByNewKey(String className,Set<T> dataHashes) {
+        classNameToHashes.put(className, dataHashes);
     }
 
 }

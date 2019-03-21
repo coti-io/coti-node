@@ -13,7 +13,9 @@ import java.util.Set;
 @Service
 public class AddressDataHashes extends Collection<AddressDataHash> {
 
-    public AddressDataHashes(){}
+    public AddressDataHashes(){
+        // Empty constructor for serialization
+    }
 
     @Override
     @PostConstruct
@@ -26,9 +28,9 @@ public class AddressDataHashes extends Collection<AddressDataHash> {
         RocksIterator iterator = databaseConnector.getIterator(columnFamilyName);
         iterator.seekToFirst();
         while (iterator.isValid()) {
-            AddressDataHash transactionDataHash = (AddressDataHash) SerializationUtils.deserialize(iterator.value());
-            transactionDataHash.setHash(new Hash(iterator.key()));
-            hashes.add(transactionDataHash);
+            AddressDataHash addressDataHash = (AddressDataHash) SerializationUtils.deserialize(iterator.value());
+            addressDataHash.setHash(new Hash(iterator.key()));
+            hashes.add(addressDataHash);
             iterator.next();
         }
         return hashes;
