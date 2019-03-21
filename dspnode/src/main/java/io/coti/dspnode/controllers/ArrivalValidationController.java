@@ -17,7 +17,6 @@ public class ArrivalValidationController {
     @Autowired
     private MessageArrivalValidationService messageArrivalValidationService;
 
-    //TODO 3/20/2019 astolia: GET or POST?
     @PostMapping(value = "/missedDataHashes")
     public ResponseEntity<MessageArrivalValidationData> getMissedDataHashes(@RequestBody MessageArrivalValidationData data) {
         log.info("Received missedDataHashes rest request: {}",data);
