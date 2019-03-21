@@ -79,8 +79,8 @@ public class NetworkService extends BaseNodeNetworkService {
                             data,
                             MessageArrivalValidationData.class);
 
-            log.info("Received missedDataHashes rest response: {}", response.getBody());
-            response.getBody().getClassNameToHashes().keySet().forEach(k -> log.info("Missed {} messages: {}", k, ((Set<? extends DataHash>)response.getBody().getClassNameToHashes().get(k)).size()));
+            log.info("Received missedDataHashes response: {}", response.getBody());
+            response.getBody().getClassNameToHashes().keySet().forEach(k -> log.info("Missed {} messages: {}", k, ((Set<? extends DataHash>)response.getBody().getClassNameToHashes().get(k)).toString()));
 
             return response.getBody();
         }catch (Exception e){
