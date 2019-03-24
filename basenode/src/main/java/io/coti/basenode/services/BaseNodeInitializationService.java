@@ -99,7 +99,7 @@ public class BaseNodeInitializationService {
     }
 
     private void handleExistingTransaction(AtomicLong maxTransactionIndex, TransactionData transactionData) {
-        if (!transactionData.isTrustChainConsensus()) {
+        if (!transactionData.isTrustChainConsensus() || transactionData.isSource()) {
             clusterService.addUnconfirmedTransaction(transactionData);
         }
         liveViewService.addNode(transactionData);

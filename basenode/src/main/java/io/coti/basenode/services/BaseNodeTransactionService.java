@@ -2,17 +2,19 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.http.GetSourcesResponse;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
+import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.ITransactionService;
 import io.coti.basenode.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -26,6 +28,8 @@ public class BaseNodeTransactionService implements ITransactionService {
     private IValidationService validationService;
     @Autowired
     private Transactions transactions;
+    @Autowired
+    private IClusterService clusterService;
     private Map<Hash, TransactionData> parentProcessingTransactions = new ConcurrentHashMap<>();
     private List<TransactionData> postponedTransactions = new LinkedList<>();
 
@@ -93,6 +97,13 @@ public class BaseNodeTransactionService implements ITransactionService {
     }
 
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
+    }
+
+    public ResponseEntity<IResponse> getSources() {
+        List<List<TransactionData>> sourceListsByTrustScore = Collections.unmodifiableList(clusterService.getSourceListsByTrustScore());
+        List<TransactionData> sources = sourceListsByTrustScore.stream().flatMap(Collection::stream).collect(Collectors.toList());
+        log.info("{}", sources.toString());
+        return ResponseEntity.ok(new GetSourcesResponse(sources));
     }
 
     private boolean hasOneOfParentsProcessing(TransactionData transactionData) {
