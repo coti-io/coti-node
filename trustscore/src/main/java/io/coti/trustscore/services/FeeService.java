@@ -119,7 +119,7 @@ public class FeeService {
 
     //TODO: temp implementation in calculating fees
     private BigDecimal calculateNetworkFee(BigDecimal reducedAmount) {
-        return reducedAmount.multiply(new BigDecimal("0.01"));
+        return reducedAmount.multiply(new BigDecimal("0.01")).divide(new BigDecimal(100));
     }
 
 }
