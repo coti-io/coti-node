@@ -15,7 +15,6 @@ public class TransactionCrypto extends SignatureCrypto<TransactionData> {
     @Override
     public byte[] getSignatureMessage(TransactionData transactionData)
     {
-
         return transactionData.getHash().getBytes();
     }
 
@@ -33,7 +32,6 @@ public class TransactionCrypto extends SignatureCrypto<TransactionData> {
         byte[] bytesToHash = getBaseTransactionsHashesBytes(transactionData);
         return CryptoHelper.cryptoHash(bytesToHash);
     }
-
 
     public void setTransactionHash(TransactionData transactionData) {
         try {
@@ -69,6 +67,4 @@ public class TransactionCrypto extends SignatureCrypto<TransactionData> {
         }
         return true;
     }
-
-
 }

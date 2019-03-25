@@ -66,7 +66,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
         networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.DspNode).values());
         if (transactions.isEmpty()) {
-            transactionCreationService.createGenesisTransactions();
+            //transactionCreationService.createGenesisTransactions();
         }
     }
 

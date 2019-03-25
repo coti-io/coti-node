@@ -1,9 +1,9 @@
 package io.coti.financialserver.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
-import io.coti.basenode.crypto.DspConsensusCrypto;
 import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.ClusterService;
 import io.coti.basenode.services.TransactionHelper;
 import io.coti.basenode.services.TransactionIndexService;
@@ -34,26 +34,26 @@ public class TransactionCreationService {
     @Autowired
     private TransactionCryptoCreator transactionCryptoCreator;
     @Autowired
-    private DspConsensusCrypto dspConsensusCrypto;
-    @Autowired
     private ClusterService clusterService;
     @Autowired
     private RollingReserveService rollingReserveService;
+    @Autowired
+    private Transactions transactions;
 
     public void createNewChargebackTransaction(BigDecimal amount, Hash merchantRollingReserveAddress, Hash consumerAddress, BigDecimal poolAmount) {
 
-        InputBaseTransactionData IBT = new InputBaseTransactionData(merchantRollingReserveAddress, amount.multiply(new BigDecimal(-1)), new Date());
-        ReceiverBaseTransactionData RBT = new ReceiverBaseTransactionData(consumerAddress, amount, amount, new Date());
+        InputBaseTransactionData ibt = new InputBaseTransactionData(merchantRollingReserveAddress, amount.multiply(new BigDecimal(-1)), new Date());
+        ReceiverBaseTransactionData rbt = new ReceiverBaseTransactionData(consumerAddress, amount, amount, new Date());
 
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
 
         if (!poolAmount.equals(new BigDecimal(0))) {
-            InputBaseTransactionData IBTcotiPool = new InputBaseTransactionData(rollingReserveService.getCotiPoolAddress(), poolAmount.multiply(new BigDecimal(-1)), new Date());
-            baseTransactions.add(IBTcotiPool);
+            InputBaseTransactionData ibtCotiPool = new InputBaseTransactionData(rollingReserveService.getCotiRollingReserveAddress(), poolAmount.multiply(new BigDecimal(-1)), new Date());
+            baseTransactions.add(ibtCotiPool);
         }
 
-        baseTransactions.add(IBT);
-        baseTransactions.add(RBT);
+        baseTransactions.add(ibt);
+        baseTransactions.add(rbt);
 
         TransactionData chargebackTransaction = new TransactionData(baseTransactions);
 
@@ -69,21 +69,31 @@ public class TransactionCreationService {
         DspConsensusResult dspConsensusResult = new DspConsensusResult(chargebackTransaction.getHash());
         dspConsensusResult.setDspConsensus(true);
 
-        setIndexForDspResult(chargebackTransaction, dspConsensusResult);
         transactionHelper.attachTransactionToCluster(chargebackTransaction);
         transactionIndexService.insertNewTransactionIndex(chargebackTransaction);
 
         propagationPublisher.propagate(chargebackTransaction, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode));
     }
 
-    private synchronized void setIndexForDspResult(TransactionData chargebackTransaction, DspConsensusResult dspConsensusResult) {
+    public void createInitialTransactionToFund(BigDecimal amount, Hash cotiGenesisAddress, Hash fundAddress) {
 
-        dspConsensusResult.setIndex(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
-        dspConsensusResult.setIndexingTime(Instant.now());
+        List<BaseTransactionData> baseTransactions = new ArrayList<>();
 
-        dspConsensusCrypto.signMessage(dspConsensusResult);
-        chargebackTransaction.setDspConsensusResult(dspConsensusResult);
+        InputBaseTransactionData ibt = new InputBaseTransactionData(cotiGenesisAddress, amount.multiply(new BigDecimal(-1)), new Date());
+        ReceiverBaseTransactionData rbt = new ReceiverBaseTransactionData(fundAddress, amount, amount, new Date());
+        baseTransactions.add(ibt);
+        baseTransactions.add(rbt);
 
-        transactionIndexService.insertNewTransactionIndex(chargebackTransaction);
+        double trustScore = 100;
+        TransactionData initialTransactionData = new TransactionData(baseTransactions, TransactionType.Initial.toString(), trustScore, Instant.now(), TransactionType.Initial);
+
+        initialTransactionData.setAttachmentTime(Instant.now());
+
+        transactionCryptoCreator.signBaseTransactions(initialTransactionData);
+        transactionCrypto.signMessage(initialTransactionData);
+        transactionHelper.attachTransactionToCluster(initialTransactionData);
+
+        initialTransactionData = transactions.getByHash(initialTransactionData.getHash());
+        propagationPublisher.propagate(initialTransactionData, Arrays.asList(NodeType.ZeroSpendServer));
     }
 }
