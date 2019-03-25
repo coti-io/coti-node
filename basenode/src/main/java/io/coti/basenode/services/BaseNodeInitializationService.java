@@ -149,7 +149,6 @@ public abstract class BaseNodeInitializationService {
         monitorService.init();
         propagationSubscriber.connectAndSubscribeToServer(networkService.getNodeManagerPropagationAddress(), NodeType.NodeManager);
         propagationSubscriber.startListening();
-
     }
 
     public void initDB() {

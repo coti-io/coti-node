@@ -48,6 +48,27 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
             return inputBaseTransactions.size() == 1 && inputBaseTransactions.get(0).getAmount().equals(BigDecimal.ZERO);
         }
 
+    },
+    Initial(TransactionType.Initial) {
+        @Override
+        public boolean validateBaseTransactions(TransactionData transactionData) {
+            try {
+                return validateInputBaseTransactions(transactionData) && validateOutputBaseTransactions(transactionData, true);
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        @Override
+        public boolean validateInputBaseTransactions(TransactionData transactionData) {
+            if (!type.equals(transactionData.getType())) {
+                throw new IllegalArgumentException("Invalid transaction type");
+            }
+            List<InputBaseTransactionData> inputBaseTransactions = transactionData.getInputBaseTransactions();
+            return inputBaseTransactions.size() == 1;
+        }
+
     };
 
     protected TransactionType type;
@@ -60,7 +81,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
     @Override
     public boolean validateBaseTransactions(TransactionData transactionData) {
         try {
-            return validateInputBaseTransactions(transactionData) && validateOutputBaseTransactions(transactionData);
+            return validateInputBaseTransactions(transactionData) && validateOutputBaseTransactions(transactionData, false);
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
             return false;
@@ -76,7 +97,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
     }
 
     @Override
-    public boolean validateOutputBaseTransactions(TransactionData transactionData) {
+    public boolean validateOutputBaseTransactions(TransactionData transactionData, boolean skipValidationOfReducedAmount) {
         try {
             if (!type.equals(transactionData.getType())) {
                 throw new IllegalArgumentException("Invalid transaction type");
@@ -102,6 +123,9 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
 
             }
 
+            if(skipValidationOfReducedAmount) {
+                return true;
+            }
             return validateReducedAmount(outputBaseTransactions);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
