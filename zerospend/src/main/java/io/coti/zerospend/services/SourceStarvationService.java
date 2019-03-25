@@ -36,7 +36,7 @@ public class SourceStarvationService {
                 .flatMap(Collection::stream)
                 .filter(transactionData -> !(transactionData.isGenesis()))
                 .collect(Collectors.toList()).forEach(transactionData -> {
-            long minimumWaitingTimeInMilliseconds = (long) ((100 - transactionData.getSenderTrustScore()) * 15 + MINIMUM_WAIT_TIME_IN_SECONDS) * 1000;
+            long minimumWaitingTimeInMilliseconds = (long) 1 * 1000;
             long actualWaitingTimeInMilliseconds = now.getTime() - transactionData.getAttachmentTime().getTime();
             log.debug("Waiting transaction: {}. Time without attachment: {}, Minimum wait time: {}", transactionData.getHash(), millisecondsToMinutes(actualWaitingTimeInMilliseconds), millisecondsToMinutes(minimumWaitingTimeInMilliseconds));
             if (actualWaitingTimeInMilliseconds > minimumWaitingTimeInMilliseconds) {
