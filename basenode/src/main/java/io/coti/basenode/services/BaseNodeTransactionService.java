@@ -14,7 +14,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -41,7 +40,7 @@ public class BaseNodeTransactionService implements ITransactionService {
             log.debug("Transaction already exists: {}", transactionData.getHash());
             return;
         }
-        List<Hash> childrenTransactions = transactionData.getChildrenTransactions();
+        List<Hash> childrenTransactions = transactionData.getChildrenTransactionHashes();
         try {
             transactionHelper.startHandleTransaction(transactionData);
             while (hasOneOfParentsProcessing(transactionData)) {

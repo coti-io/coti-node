@@ -6,6 +6,7 @@ import io.coti.basenode.crypto.DspVoteCrypto;
 import io.coti.basenode.data.DspVote;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
@@ -97,7 +98,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
     public void continueHandlePropagatedTransaction(TransactionData transactionData) {
         propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
-        if (!transactionData.isZeroSpend()) {
+        if (!transactionData.getType().equals(TransactionType.ZeroSpend)) {
             transactionsToValidate.add(transactionData);
         }
 

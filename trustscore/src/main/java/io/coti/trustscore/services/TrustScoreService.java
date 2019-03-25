@@ -273,7 +273,7 @@ public class TrustScoreService {
             log.error("User not Exist");
         }
 
-        if (transactionData.isZeroSpend() || transactionData.getDspConsensusResult() == null ||
+        if (transactionData.getType().equals(TransactionType.ZeroSpend) || transactionData.getDspConsensusResult() == null ||
                 !transactionData.getDspConsensusResult().isDspConsensus()) {
             return;
         }

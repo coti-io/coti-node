@@ -274,10 +274,10 @@ public class TransactionHelper implements ITransactionHelper {
 
     public void attachTransactionToCluster(TransactionData transactionData) {
         transactionData.setTrustChainConsensus(false);
-        transactionData.setTrustChainTransactionHashes(new LinkedList<>());
+        transactionData.setTrustChainTransactionHashes(new Vector<>());
         transactionData.setTrustChainTrustScore(0);
         transactionData.setTransactionConsensusUpdateTime(null);
-        transactionData.setChildrenTransactions(new LinkedList<>());
+        transactionData.setChildrenTransactionHashes(new ArrayList<>());
         transactions.put(transactionData);
         totalTransactions.incrementAndGet();
         if (transactionData.getDspConsensusResult() == null) {

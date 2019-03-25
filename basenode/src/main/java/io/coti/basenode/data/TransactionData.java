@@ -34,11 +34,9 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
     private SignatureData senderSignature;
     private Hash nodeHash;
     private SignatureData nodeSignature;
-    private List<Hash> childrenTransactions;
+    private List<Hash> childrenTransactionHashes;
     private Boolean valid;
     private transient boolean isVisit;
-    private boolean isZeroSpend;
-    private boolean isGenesis;
     private String transactionDescription;
     private DspConsensusResult dspConsensusResult;
     private List<TransactionTrustScoreData> trustScoreResults;
@@ -88,8 +86,8 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
 
     private void initTransactionData() {
         this.trustChainTransactionHashes = new Vector<>();
-        this.childrenTransactions = new LinkedList<>();
-        this.processStartTime = (Instant.now());
+        this.childrenTransactionHashes = new ArrayList<>();
+        this.processStartTime = Instant.now();
     }
 
     public int getRoundedSenderTrustScore() {
@@ -97,11 +95,15 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
     }
 
     public boolean isSource() {
-        return childrenTransactions == null || childrenTransactions.size() == 0;
+        return childrenTransactionHashes == null || childrenTransactionHashes.size() == 0;
+    }
+
+    public boolean isGenesis() {
+        return leftParentHash == null && rightParentHash == null;
     }
 
     public void addToChildrenTransactions(Hash hash) {
-        childrenTransactions.add(hash);
+        childrenTransactionHashes.add(hash);
     }
 
     @Override

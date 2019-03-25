@@ -10,7 +10,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -34,9 +34,8 @@ public class TransactionResponseData {
     private Instant powStartTime;
     private Instant powEndTime;
     private double senderTrustScore;
-    private List<String> childrenTransactions;
+    private List<String> childrenTransactionHashes;
     private Boolean isValid;
-    private boolean isZeroSpend;
     private String transactionDescription;
 
 
@@ -48,7 +47,7 @@ public class TransactionResponseData {
         hash = transactionData.getHash().toHexString();
         amount = transactionData.getAmount();
         type = transactionData.getType();
-        baseTransactions = new LinkedList<>();
+        baseTransactions = new ArrayList<>();
         if (transactionData.getBaseTransactions() != null) {
             for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()
                     ) {
@@ -77,11 +76,10 @@ public class TransactionResponseData {
         powEndTime = transactionData.getPowEndTime();
         senderTrustScore = transactionData.getSenderTrustScore();
 
-        childrenTransactions = new LinkedList<>();
-        transactionData.getChildrenTransactions().forEach(childrenTransaction -> childrenTransactions.add(childrenTransaction.toHexString()));
+        childrenTransactionHashes = new ArrayList<>();
+        transactionData.getChildrenTransactionHashes().forEach(childrenTransactionHash -> childrenTransactionHashes.add(childrenTransactionHash.toHexString()));
         transactionDescription = transactionData.getTransactionDescription();
         isValid = transactionData.isValid();
-        isZeroSpend = transactionData.isZeroSpend();
     }
 
 

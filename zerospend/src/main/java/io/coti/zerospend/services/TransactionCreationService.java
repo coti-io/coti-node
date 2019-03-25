@@ -65,8 +65,6 @@ public class TransactionCreationService {
 
         if (zeroSpendTransactionType == STARVATION) {
             transactionData.setLeftParentHash(existingTransactionData.getHash());
-        } else {
-            transactionData.setGenesis(true);
         }
 
         DspConsensusResult dspConsensusResult = new DspConsensusResult(transactionData.getHash());
@@ -92,7 +90,6 @@ public class TransactionCreationService {
             DspConsensusResult dspConsensusResult = new DspConsensusResult(transactionData.getHash());
             dspConsensusResult.setDspConsensus(true);
             dspVoteService.setIndexForDspResult(transactionData, dspConsensusResult);
-            transactionData.setGenesis(true);
 
             transactionHelper.attachTransactionToCluster(transactionData);
         }
@@ -104,7 +101,6 @@ public class TransactionCreationService {
         baseTransactions.add(baseTransactionData);
         TransactionData transactionData = new TransactionData(baseTransactions, description.name(), trustScore, Instant.now(), TransactionType.ZeroSpend);
         transactionData.setAttachmentTime(Instant.now());
-        transactionData.setZeroSpend(true);
 
         transactionCryptoCreator.signBaseTransactions(transactionData);
         transactionCrypto.signMessage(transactionData);

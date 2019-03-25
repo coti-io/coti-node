@@ -81,8 +81,8 @@ public class ClusterService implements IClusterService {
 
     @Override
     public void attachToCluster(TransactionData transactionData) {
-        if (transactionData.getChildrenTransactions() == null) {
-            transactionData.setChildrenTransactions(new LinkedList<>());
+        if (transactionData.getChildrenTransactionHashes() == null) {
+            transactionData.setChildrenTransactionHashes(new ArrayList<>());
         }
 
         updateParents(transactionData);
