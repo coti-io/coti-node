@@ -20,7 +20,7 @@ public enum SubscriberMessageType implements ISubscriberMessageType {
             return transactionData -> transactionService.handlePropagatedTransaction((TransactionData) transactionData);
         }
     },
-    AdressData {
+    AddressData {
         @Override
         public Consumer<Object> getHandler(NodeType publisherNodeType) {
             return addressData -> addressService.handlePropagatedAddress((AddressData) addressData);

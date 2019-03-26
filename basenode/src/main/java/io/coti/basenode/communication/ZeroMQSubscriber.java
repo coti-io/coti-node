@@ -103,11 +103,12 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 ZeroMQMessageData zeroMQMessageData = messageQueue.take();
-                log.debug("zmq message arrived: {}", zeroMQMessageData);
+                log.debug("ZMQ message arrived: {}", zeroMQMessageData);
                 propagationProcess(zeroMQMessageData);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-            } catch (ClassNotFoundException e) {
+            } catch (Exception e) {
+                log.error("ZMQ message handler task error: ");
                 e.printStackTrace();
             }
         }
@@ -154,6 +155,8 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
             subscriberHandler.get(propagatedMessageType.getSimpleName()).apply(publisherNodeType).accept(messageData);
         } catch (ClassCastException e) {
             log.error("Invalid request received: " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
