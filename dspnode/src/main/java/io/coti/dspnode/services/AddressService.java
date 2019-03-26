@@ -16,21 +16,24 @@ public class AddressService extends BaseNodeAddressService {
     @Autowired
     private IPropagationPublisher propagationPublisher;
 
-    public String handleNewAddressFromFullNode(AddressData addressData) {
+    public void handleNewAddressFromFullNode(AddressData addressData) {
         if (addressExists(addressData.getHash())) {
-            log.debug("Address {} exists", addressData.getHash().toHexString());
-            return "Address exists";
+            log.debug("Address {} exists", addressData.getHash());
+            return;
+        }
+        if (!validateAddress(addressData.getHash())) {
+            log.error("Invalid address {}", addressData.getHash());
+            return;
         }
 
-        addNewAddress(addressData.getHash());
+        addNewAddress(addressData);
         propagationPublisher.propagate(addressData, Arrays.asList(
                 NodeType.FullNode,
                 NodeType.TrustScoreNode,
                 NodeType.DspNode,
                 NodeType.ZeroSpendServer,
                 NodeType.FinancialServer));
-        log.debug("Address {} is added", addressData.getHash().toHexString());
-        return "OK";
+        return;
     }
 
     @Override

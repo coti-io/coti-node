@@ -16,7 +16,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 @Slf4j
@@ -42,13 +41,13 @@ public class TransactionCreationService {
 
     public void createNewChargebackTransaction(BigDecimal amount, Hash merchantRollingReserveAddress, Hash consumerAddress, BigDecimal poolAmount) {
 
-        InputBaseTransactionData IBT = new InputBaseTransactionData(merchantRollingReserveAddress, amount.multiply(new BigDecimal(-1)), new Date());
-        ReceiverBaseTransactionData RBT = new ReceiverBaseTransactionData(consumerAddress, amount, amount, new Date());
+        InputBaseTransactionData IBT = new InputBaseTransactionData(merchantRollingReserveAddress, amount.multiply(new BigDecimal(-1)), Instant.now());
+        ReceiverBaseTransactionData RBT = new ReceiverBaseTransactionData(consumerAddress, amount, amount, Instant.now());
 
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
 
         if (!poolAmount.equals(new BigDecimal(0))) {
-            InputBaseTransactionData IBTcotiPool = new InputBaseTransactionData(rollingReserveService.getCotiPoolAddress(), poolAmount.multiply(new BigDecimal(-1)), new Date());
+            InputBaseTransactionData IBTcotiPool = new InputBaseTransactionData(rollingReserveService.getCotiPoolAddress(), poolAmount.multiply(new BigDecimal(-1)), Instant.now());
             baseTransactions.add(IBTcotiPool);
         }
 

@@ -6,11 +6,13 @@ import io.coti.basenode.data.Hash;
 public interface IAddressService {
     void init();
 
-    boolean addNewAddress(Hash addressHash);
+    boolean addNewAddress(AddressData addressData);
 
     boolean addressExists(Hash addressHash);
 
     void handlePropagatedAddress(AddressData addressData);
+
+    boolean validateAddress(Hash addressHash);
 
 
 }

@@ -5,6 +5,7 @@ import io.coti.basenode.data.FullNodeFeeData;
 import io.coti.basenode.data.SignatureData;
 import lombok.Data;
 
+import java.time.Instant;
 import java.util.Date;
 
 @Data
@@ -13,7 +14,7 @@ public class FullNodeFeeResponseData {
     private String amount;
     private String originalAmount;
     private String addressHash;
-    private Date createTime;
+    private Instant createTime;
     private String name;
     private SignatureData signatureData;
 

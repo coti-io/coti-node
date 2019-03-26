@@ -12,7 +12,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 @Slf4j
@@ -38,7 +37,7 @@ public class BucketUtil {
                 Arrays.asList(new InputBaseTransactionData
                         (new Hash("caba14b7fe219b3da5dee0c29389c88e4d134333a2ee104152d6e9f7b673be9e0e28ca511d1ac749f46bea7f1ab25818f335ab9111a6c5eebe2f650974e12d1b7dccd4d7"),
                                 new BigDecimal(0),
-                                new Date())));
+                                Instant.now())));
 
         List<@Valid TransactionTrustScoreData> trustScoreResults = new ArrayList<>();
         trustScoreResults.add(new TransactionTrustScoreData(

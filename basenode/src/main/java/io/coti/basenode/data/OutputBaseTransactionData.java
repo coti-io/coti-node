@@ -4,7 +4,7 @@ import lombok.Data;
 
 import javax.validation.constraints.Positive;
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.Instant;
 
 @Data
 public abstract class OutputBaseTransactionData extends BaseTransactionData {
@@ -15,7 +15,7 @@ public abstract class OutputBaseTransactionData extends BaseTransactionData {
         super();
     }
 
-    protected OutputBaseTransactionData(Hash addressHash, BigDecimal amount, BigDecimal originalAmount, Date createTime) {
+    protected OutputBaseTransactionData(Hash addressHash, BigDecimal amount, BigDecimal originalAmount, Instant createTime) {
         super(addressHash, amount, createTime);
         this.setOriginalAmount(originalAmount);
     }

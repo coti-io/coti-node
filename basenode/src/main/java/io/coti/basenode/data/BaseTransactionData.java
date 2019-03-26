@@ -9,7 +9,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.Instant;
 
 @Slf4j
 @Data
@@ -24,14 +24,14 @@ public abstract class BaseTransactionData implements Serializable {
     protected Hash addressHash;
     protected BigDecimal amount;
     @NotNull
-    protected Date createTime;
+    protected Instant createTime;
     protected @Valid SignatureData signatureData;
 
     protected BaseTransactionData() {
 
     }
 
-    public BaseTransactionData(Hash addressHash, BigDecimal amount, Date createTime) {
+    public BaseTransactionData(Hash addressHash, BigDecimal amount, Instant createTime) {
         this.addressHash = addressHash;
         this.createTime = createTime;
         this.setAmount(amount);
