@@ -164,8 +164,8 @@ public class NetworkFeeService {
 
     private BigDecimal calculateNetworkFeeAmount(UserNetworkFeeByTrustScoreRange userNetworkFeeByTrustScoreRange, BigDecimal amount) {
         // formula calculation:
-        return ((amount.multiply(new BigDecimal(userNetworkFeeByTrustScoreRange.getFeeRate()))).max(new BigDecimal(userNetworkFeeByTrustScoreRange.getMinRate()))).
-                min(new BigDecimal(userNetworkFeeByTrustScoreRange.getMaxRate()));
+        return ((amount.multiply(userNetworkFeeByTrustScoreRange.getFeeRate())).divide(new BigDecimal(100)).max(userNetworkFeeByTrustScoreRange.getMinRate())).
+                min(userNetworkFeeByTrustScoreRange.getMaxRate());
     }
 
 }

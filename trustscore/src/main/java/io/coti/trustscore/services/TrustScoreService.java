@@ -43,7 +43,6 @@ import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -229,7 +228,7 @@ public class TrustScoreService {
 
     public ResponseEntity<IResponse> setKycTrustScore(SetKycTrustScoreRequest request) {
         try {
-            log.info("Setting KYC trust score: " + request.userHash + "=" + request.kycTrustScore);
+            log.info("Setting KYC trust score: userHash =  {}, KTS = {}, userType =  {}", request.userHash, request.kycTrustScore, request.userType);
             TrustScoreData trustScoreData = new TrustScoreData(request.userHash,
                     request.kycTrustScore,
                     request.signature,
@@ -256,33 +255,41 @@ public class TrustScoreService {
     }
 
     public synchronized void addTransactionToTsCalculation(TransactionData transactionData) {
-        TrustScoreData trustScoreData;
-
         try {
-            trustScoreData = trustScores.getByHash(transactionData.getSenderHash());
+            TrustScoreData trustScoreData = trustScores.getByHash(transactionData.getSenderHash());
+            ;
+
+            if (trustScoreData == null) {
+                log.error("Transaction can not be added to TS calculation: User {} doesn't exist", transactionData.getSenderHash());
+                return;
+            }
+
+            BucketEventData bucketEventData
+                    = (BucketEventData) bucketEvents.getByHash(getBucketHashByUserHashAndEventType(transactionData.getSenderHash(), EventType.TRANSACTION));
+            if (bucketEventData == null) {
+                log.error("Transaction can not be added to TS calculation: bucket event data doesn't exist for user {}", transactionData.getSenderHash());
+                return;
+            }
+
+            if (bucketEventData.getEventDataHashToEventDataMap().get(transactionData.getHash()) != null) {
+                log.debug("Transaction {} is already added to ts calculation", transactionData.getHash());
+                return;
+            }
+
+
+            if (transactionData.getType().equals(TransactionType.ZeroSpend) || transactionData.getDspConsensusResult() == null ||
+                    !transactionData.getDspConsensusResult().isDspConsensus()) {
+                return;
+            }
+
+            LocalDate transactionConsensusDate = transactionData.getDspConsensusResult().getIndexingTime().atZone(ZoneId.systemDefault()).toLocalDate();
+            LocalDate currentDate = new Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+            if (currentDate.equals(transactionConsensusDate)) {
+                addToTransactionBucketsCalculation(trustScoreData, transactionData);
+            }
         } catch (Exception e) {
-            return;
-        }
-
-        BucketEventData bucketEventData
-                = (BucketEventData) bucketEvents.getByHash(getBucketHashByUserHashAndEventType(transactionData.getSenderHash(), EventType.TRANSACTION));
-        if (bucketEventData.getEventDataHashToEventDataMap().get(transactionData.getHash()) != null) {
-            return;
-        }
-        if (trustScoreData == null) {
-            log.error("User not Exist");
-        }
-
-        if (transactionData.getType().equals(TransactionType.ZeroSpend) || transactionData.getDspConsensusResult() == null ||
-                !transactionData.getDspConsensusResult().isDspConsensus()) {
-            return;
-        }
-
-        LocalDate transactionConsensusDate = transactionData.getDspConsensusResult().getIndexingTime().atZone(ZoneId.systemDefault()).toLocalDate();
-        LocalDate currentDate = new Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-
-        if (currentDate.equals(transactionConsensusDate)) {
-            addToTransactionBucketsCalculation(trustScoreData, transactionData);
+            e.printStackTrace();
         }
 
     }

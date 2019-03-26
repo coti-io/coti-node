@@ -34,9 +34,14 @@ public class BaseNodeAddressService implements IAddressService {
     }
 
     public void handlePropagatedAddress(AddressData addressData) {
-        if (!addressExists(addressData.getHash())) {
-            addNewAddress(addressData.getHash());
-            continueHandleGeneratedAddress(addressData);
+        try {
+            if (!addressExists(addressData.getHash())) {
+                addNewAddress(addressData.getHash());
+                continueHandleGeneratedAddress(addressData);
+            }
+        } catch (Exception e) {
+            log.error("Error at handlePropagatedAddress");
+            e.printStackTrace();
         }
     }
 
