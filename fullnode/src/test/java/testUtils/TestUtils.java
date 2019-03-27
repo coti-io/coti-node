@@ -52,7 +52,7 @@ public class TestUtils {
         ArrayList<BaseTransactionData> baseTransactions = new ArrayList<>(
                 Collections.singletonList(new InputBaseTransactionData(generateRandomHash(),
                         new BigDecimal(0),
-                        new Date())));
+                        Instant.now())));
         return new TransactionData(baseTransactions,
                 hash,
                 "test",
@@ -108,7 +108,7 @@ public class TestUtils {
         return new InputBaseTransactionData
                 (hash,
                         new BigDecimal(0),
-                        new Date());
+                        Instant.now());
     }
 
     public static NetworkNodeData generateRandomNetworkNodeData() {

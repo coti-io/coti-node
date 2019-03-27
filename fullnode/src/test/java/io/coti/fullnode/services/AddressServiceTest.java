@@ -3,6 +3,7 @@ package io.coti.fullnode.services;
 import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.data.*;
 import io.coti.basenode.model.Addresses;
+import io.coti.basenode.services.ValidationService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.fullnode.controllers.AddressController;
 import io.coti.fullnode.websocket.WebSocketSender;
@@ -49,6 +50,12 @@ public class AddressServiceTest {
 
     @MockBean
     private INetworkService mockINetworkService;
+
+    @MockBean
+    private ValidationService validationService;
+
+    @MockBean
+    private NetworkService networkService;
 
     @Before
     public void setUp() throws Exception {

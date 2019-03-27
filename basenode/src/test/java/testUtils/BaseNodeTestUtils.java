@@ -50,7 +50,7 @@ public class BaseNodeTestUtils {
                 Collections.singletonList(new InputBaseTransactionData(
                         generateRandomHash(SIZE_OF_BASE_TRANSACTION_HASH),
                         new BigDecimal(0),
-                        new Date())));
+                        Instant.now())));
         return
                 new TransactionData(baseTransactions,
                 hash,
@@ -68,7 +68,7 @@ public class BaseNodeTestUtils {
         return new InputBaseTransactionData
                 (hash,
                         new BigDecimal(count),
-                        new Date());
+                        Instant.now());
     }
 
     public static OutputBaseTransactionData generateNetworkFeeData(Hash hash, double amount) {
@@ -80,21 +80,21 @@ public class BaseNodeTestUtils {
                 new BigDecimal(count),
                 new BigDecimal(originalAmount),
                 new BigDecimal(reducedAmount),
-                new Date());
+                Instant.now());
     }
 
     public static BaseTransactionData generateFullNodeFeeData(Hash hash, double count) {
         return new FullNodeFeeData(hash,
                 new BigDecimal(count),
                 new BigDecimal(1),
-                new Date());
+                Instant.now());
     }
 
     public static OutputBaseTransactionData generateReceiverBaseTransactionData(Hash hash, double count) {
         return new ReceiverBaseTransactionData(hash,
                 new BigDecimal(count),
                 new BigDecimal(1),
-                new Date());
+                Instant.now());
     }
 
     public static OutputBaseTransactionData generateRandomReceiverBaseTxData() {
@@ -106,7 +106,7 @@ public class BaseNodeTestUtils {
                 new BigDecimal(count),
                 new BigDecimal(1),
                 new BigDecimal(0.5),
-                new Date());
+                Instant.now());
     }
 
     public static AddressData generateRandomAddressData() {
@@ -125,7 +125,7 @@ public class BaseNodeTestUtils {
         List<BaseTransactionData> baseTxs = new ArrayList<>(
                 Collections.singletonList(new InputBaseTransactionData(generateRandomHash(),
                         new BigDecimal(0),
-                        new Date())));
+                        Instant.now())));
         TransactionData txData = new TransactionData(baseTxs, generateRandomHash(), "Generated Tx ",
                 generateRandomTrustScore(), Instant.ofEpochMilli(new Date().getTime()),
                 TransactionType.Payment);

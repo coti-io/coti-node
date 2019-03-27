@@ -46,7 +46,7 @@ public class TestUtils {
         ArrayList<BaseTransactionData> baseTransactions = new ArrayList<>(
                 Collections.singletonList(new InputBaseTransactionData(generateRandomHash(),
                         new BigDecimal(0),
-                        new Date())));
+                        Instant.now())));
         return new TransactionData(baseTransactions,
                 hash,
                 "test",
@@ -76,7 +76,7 @@ public class TestUtils {
         return new InputBaseTransactionData
                 (hash,
                         new BigDecimal(0),
-                        new Date());
+                        Instant.now());
     }
 
     public static NetworkNodeData generateRandomNetworkNodeData() {
@@ -105,7 +105,7 @@ public class TestUtils {
         List<BaseTransactionData> baseTxs = new ArrayList<>(
                 Collections.singletonList(new InputBaseTransactionData(generateRandomHash(),
                         new BigDecimal(0),
-                        new Date())));
+                        Instant.now())));
         TransactionData txData = new TransactionData(baseTxs, generateRandomHash(), "Generated Tx ",
                 generateRandomTrustScore(), Instant.ofEpochMilli(new Date().getTime()),
                 TransactionType.Payment);
