@@ -7,9 +7,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
@@ -42,6 +44,10 @@ public class TestUtils {
         return (int) (Math.random() * Integer.MAX_VALUE);
     }
 
+    public static BigDecimal generateRandomPositiveBigDecimal() {
+        return new BigDecimal( generateRandomLongNumber() );
+        }
+
     public static TransactionData createRandomTransaction(Hash hash) {
         ArrayList<BaseTransactionData> baseTransactions = new ArrayList<>(
                 Collections.singletonList(new InputBaseTransactionData(generateRandomHash(),
@@ -51,7 +57,7 @@ public class TestUtils {
                 hash,
                 "test",
                 generateRandomTrustScore(),
-                new Date(),
+                Instant.ofEpochMilli(new Date().getTime()),
                 TransactionType.Payment);
     }
 

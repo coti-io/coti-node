@@ -5,8 +5,7 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.model.Addresses;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.fullnode.controllers.AddressController;
-import io.coti.fullnode.services.AddressService;
-import javafx.beans.binding.When;
+import io.coti.fullnode.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Assert;
@@ -14,9 +13,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.mockito.stubbing.OngoingStubbing;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
@@ -26,12 +23,6 @@ import testUtils.TestUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static javafx.beans.binding.Bindings.when;
-import static org.junit.Assert.*;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @TestPropertySource(locations = "classpath:test.properties")
 @ContextConfiguration(classes = {AddressService.class, AddressController.class, Addresses.class})
@@ -89,6 +80,4 @@ public class AddressServiceTest {
         Assert.assertTrue(addAddress);
     }
 
-    @Test
-    public void stamTest() { int b= 7;}
 }
