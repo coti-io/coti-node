@@ -9,7 +9,6 @@ import java.util.Date;
 
 @Slf4j
 public abstract class BucketCalculator {
-    //abstract boolean decayScores();
 
     public abstract void setCurrentScores();
 

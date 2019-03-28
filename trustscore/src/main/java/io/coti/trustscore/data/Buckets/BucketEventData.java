@@ -7,6 +7,7 @@ import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.Events.EventData;
 import io.coti.trustscore.utils.DatesCalculation;
 import lombok.Data;
+import org.apache.commons.lang3.time.DateUtils;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -31,7 +32,7 @@ public abstract class BucketEventData<T extends EventData> implements IEntity {
 
 
     public boolean isEventExistsInBucket(T eventData) {
-        return (eventDataHashToEventDataMap.containsKey(eventData.getHash()));
+        return eventDataHashToEventDataMap.containsKey(eventData.getHash());
     }
 
     public void addEventToBucket(T eventData) {

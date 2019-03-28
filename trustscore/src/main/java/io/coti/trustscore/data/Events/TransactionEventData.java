@@ -1,15 +1,12 @@
 package io.coti.trustscore.data.Events;
 
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.trustscore.data.Enums.EventType;
 import io.coti.trustscore.http.InsertEventRequest;
 import lombok.Data;
 
 @Data
-public class TransactionEventData extends EventData{
+public class TransactionEventData extends EventData {
 
     private TransactionData transactionData;
 

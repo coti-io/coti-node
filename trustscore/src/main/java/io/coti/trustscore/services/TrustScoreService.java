@@ -353,8 +353,8 @@ public class TrustScoreService {
                     (BucketEventData) bucketEvents.getByHash(trustScoreData.getEventTypeToBucketHashMap().get(bucketEventService.getBucketEventType()));
             if (bucketEventData != null) {
                 eventsTrustScore += bucketEventService.getBucketSumScore(bucketEventData);
+                bucketEventData.setLastUpdate(DatesCalculation.setDateOnBeginningOfDay(new Date()));
             }
-            bucketEventData.setLastUpdate(DatesCalculation.setDateOnBeginningOfDay(new Date()));
         }
         return Math.max(eventsTrustScore + getKycScore(trustScoreData), 0.1);
     }
