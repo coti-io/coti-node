@@ -50,9 +50,11 @@ public class InitializationService extends BaseNodeInitializationService {
             System.exit(-1);
         }
         networkService.setRecoveryServerAddress(zerospendNetworkNodeData.getHttpFullAddress());
-        super.init();
         communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress(), NodeType.ZeroSpendServer);
         networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.DspNode).values());
+
+        super.init();
+
     }
 
     @Override

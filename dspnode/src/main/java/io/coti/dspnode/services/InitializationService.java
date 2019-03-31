@@ -54,8 +54,6 @@ public class InitializationService extends BaseNodeInitializationService {
         }
         networkService.setRecoveryServerAddress(zerospendNetworkNodeData.getHttpFullAddress());
         communicationService.initPublisher(propagationPort, NodeType.DspNode);
-        super.init();
-
         HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping = new HashMap<>();
         classNameToReceiverHandlerMapping.put(TransactionData.class.getName(), data ->
                 transactionService.handleNewTransactionFromFullNode((TransactionData) data));
@@ -70,6 +68,9 @@ public class InitializationService extends BaseNodeInitializationService {
                 .filter(dspNode -> !dspNode.equals(networkNodeData))
                 .collect(Collectors.toList());
         networkService.addListToSubscription(dspNetworkNodeDataList);
+
+        super.init();
+
     }
 
     @Override
