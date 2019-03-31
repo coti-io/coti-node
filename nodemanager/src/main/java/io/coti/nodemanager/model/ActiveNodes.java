@@ -9,10 +9,9 @@ import javax.annotation.PostConstruct;
 @Service
 public class ActiveNodes extends Collection<ActiveNodeData> {
 
-    private ActiveNodes() {
+    public ActiveNodes() {
     }
 
-    @PostConstruct
     public void init() {
         super.init();
     }

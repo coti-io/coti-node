@@ -4,14 +4,19 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.database.Interfaces.IDatabaseConnector;
 import io.coti.basenode.model.*;
+import io.coti.basenode.model.Collection;
 import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
+
 import java.io.File;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Paths;
 import java.util.*;
+
 @Slf4j
 @Service
 public class BaseNodeRocksDBConnector implements IDatabaseConnector {
@@ -68,6 +73,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         if (resetDatabase) {
             deleteDatabaseFolder();
         }
+        initColumnFamilyClasses();
         initiateColumnFamilyDescriptors();
         try {
             loadLibrary();
@@ -81,6 +87,17 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             log.error("Error initiating Rocks DB");
             e.printStackTrace();
         }
+    }
+
+    private void initColumnFamilyClasses() {
+        for (int i = 1; i < columnFamilyClassNames.size(); i++) {
+            try {
+                ((Constructor<? extends Collection<? extends IEntity>>) Class.forName(columnFamilyClassNames.get(i)).getConstructor()).newInstance().init();
+            } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 
     private void populateColumnFamilies() {

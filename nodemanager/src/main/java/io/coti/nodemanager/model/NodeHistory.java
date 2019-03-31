@@ -9,10 +9,9 @@ import javax.annotation.PostConstruct;
 @Service
 public class NodeHistory extends Collection<NodeHistoryData> {
 
-    private NodeHistory() {
+    public NodeHistory() {
     }
 
-    @PostConstruct
     public void init() {
         super.init();
     }
