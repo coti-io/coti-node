@@ -12,6 +12,7 @@ import io.coti.basenode.http.GetNodeRegistrationResponse;
 import io.coti.basenode.http.GetTransactionBatchResponse;
 import io.coti.basenode.model.NodeRegistrations;
 import io.coti.basenode.model.Transactions;
+import io.coti.basenode.pot.PriorityExecutor;
 import io.coti.basenode.services.LiveView.LiveViewService;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
@@ -27,9 +28,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Queue;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
@@ -126,13 +126,34 @@ public abstract class BaseNodeInitializationService {
             if (networkService.getRecoveryServerAddress() != null) {
                 List<TransactionData> missingTransactions = requestMissingTransactions(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
                 if (missingTransactions != null) {
-                    int threadPoolSize = 1;
+                    int threadPoolSize = 15;
+                    AtomicLong addedTransactions = new AtomicLong(0);
+                    BlockingQueue missingTransactionQueue = new LinkedBlockingQueue<Runnable>();
+                    Queue runningTransactionsQueue = new ConcurrentLinkedQueue();
                     log.info("{} threads running for missing transactions", threadPoolSize);
-                    ExecutorService executorService = Executors.newFixedThreadPool(threadPoolSize);
+                    ExecutorService executorService = new ThreadPoolExecutor(10,15, 0L, TimeUnit.MILLISECONDS, missingTransactionQueue);
                     List<Callable<Object>> missingTransactionsTasks = new ArrayList<>(missingTransactions.size());
                     missingTransactions.forEach(transactionData ->
-                            missingTransactionsTasks.add(Executors.callable(() -> transactionService.handlePropagatedTransaction(transactionData))));
+                            missingTransactionsTasks.add(Executors.callable(() -> {
+                                long addedTransaction = addedTransactions.get() + 1;
+                                runningTransactionsQueue.add(transactionData);
+                                transactionService.handlePropagatedTransaction(transactionData);
+                                runningTransactionsQueue.remove(transactionData);
+                                addedTransactions.incrementAndGet();
+                            })));
+                    Thread monitorMissingTransactions = new Thread(() -> {
+                        while (!Thread.currentThread().isInterrupted()) {
+                            try {
+                            Thread.sleep(5000);
+                            log.info("Total added transactions: {}, Queue size: {}, Uncompleted queue size: {}, first not completed: {}, first not completed parent: {}", addedTransactions, missingTransactionQueue.size(), runningTransactionsQueue.size(), runningTransactionsQueue.element(), ((TransactionData) runningTransactionsQueue.element()).getLeftParentHash());
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                            }
+                        }
+                    });
+                    monitorMissingTransactions.start();
                     executorService.invokeAll(missingTransactionsTasks);
+                    monitorMissingTransactions.interrupt();
                 }
             }
             balanceService.validateBalances();
