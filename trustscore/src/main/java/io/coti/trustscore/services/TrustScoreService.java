@@ -190,7 +190,7 @@ public class TrustScoreService {
                     .body(new Response(NON_EXISTING_USER_MESSAGE, STATUS_ERROR));
         }
         double currentTrustScore = calculateUserTrustScore(trustScoreData);
-        GetUserTrustScoreResponse getUserTrustScoreResponse = new GetUserTrustScoreResponse(userHash.toString(), currentTrustScore);
+        GetUserTrustScoreResponse getUserTrustScoreResponse = new GetUserTrustScoreResponse(userHash.toString(), currentTrustScore, trustScoreData.getUserType().toString());
         return ResponseEntity.status(HttpStatus.OK).body(getUserTrustScoreResponse);
     }
 
