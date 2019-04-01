@@ -8,10 +8,8 @@ import io.coti.basenode.services.interfaces.ITransactionService;
 import io.coti.basenode.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,7 +26,7 @@ public class BaseNodeTransactionService implements ITransactionService {
     @Autowired
     private Transactions transactions;
     protected Map<Hash, TransactionData> parentProcessingTransactions = new ConcurrentHashMap<>();
-    protected List<TransactionData> postponedTransactions = new LinkedList<>();
+    protected Map<Hash, TransactionData> postponedTransactions = new ConcurrentHashMap<>();
 
     @Override
     public void init() {
@@ -38,6 +36,7 @@ public class BaseNodeTransactionService implements ITransactionService {
     public boolean isTransactionInParentMap(Hash transactionHash) {
         return parentProcessingTransactions.get(transactionHash) != null;
     }
+
     @Override
     public void handlePropagatedTransaction(TransactionData transactionData) {
         if (transactionHelper.isTransactionAlreadyPropagated(transactionData)) {
@@ -50,7 +49,9 @@ public class BaseNodeTransactionService implements ITransactionService {
             while (hasOneOfParentsProcessing(transactionData)) {
                 parentProcessingTransactions.put(transactionData.getHash(), transactionData);
                 synchronized (transactionData) {
+                    //  log.info("start wait: {}", transactionData.getHash());
                     transactionData.wait();
+                    //   log.info("end wait: {}", transactionData.getHash());
                 }
             }
             if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
@@ -58,7 +59,7 @@ public class BaseNodeTransactionService implements ITransactionService {
                 return;
             }
             if (hasOneOfParentsMissing(transactionData)) {
-                postponedTransactions.add(transactionData);
+                postponedTransactions.put(transactionData.getHash(), transactionData);
                 return;
             }
             if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
@@ -70,27 +71,24 @@ public class BaseNodeTransactionService implements ITransactionService {
 
             continueHandlePropagatedTransaction(transactionData);
             transactionHelper.setTransactionStateToFinished(transactionData);
-            List<TransactionData> postponedParentTransactions = postponedTransactions.stream().filter(
-                    postponedTransactionData ->
-                            (postponedTransactionData.getRightParentHash() != null && postponedTransactionData.getRightParentHash().equals(transactionData.getHash())) ||
-                                    (postponedTransactionData.getLeftParentHash() != null && postponedTransactionData.getLeftParentHash().equals(transactionData.getHash())))
-                    .collect(Collectors.toList());
-            postponedParentTransactions.forEach(postponedTransaction -> {
-                log.debug("Handling postponed transaction : {}, parent of transaction: {}", postponedTransaction.getHash(), transactionData.getHash());
-                postponedTransactions.remove(postponedTransaction);
-                handlePropagatedTransaction(postponedTransaction);
-            });
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             transactionHelper.endHandleTransaction(transactionData);
             for (Hash childrenTransactionHash : childrenTransactions) {
-                TransactionData childrenTransaction = parentProcessingTransactions.get(childrenTransactionHash);
-                if (childrenTransaction != null)
-                    synchronized (childrenTransaction) {
-                        childrenTransaction.notify();
+                TransactionData parentProcessingChildrenTransaction = parentProcessingTransactions.get(childrenTransactionHash);
+                if (parentProcessingChildrenTransaction != null) {
+                    synchronized (parentProcessingChildrenTransaction) {
+                        parentProcessingChildrenTransaction.notify();
                         parentProcessingTransactions.remove(childrenTransactionHash);
                     }
+                }
+                TransactionData postponedChildrenTransaction = postponedTransactions.get(childrenTransactionHash);
+                if(postponedChildrenTransaction != null) {
+                    log.debug("Handling postponed transaction : {}, child of transaction: {}", postponedChildrenTransaction.getHash(), transactionData.getHash());
+                    postponedTransactions.remove(childrenTransactionHash);
+                    new Thread(() -> handlePropagatedTransaction(postponedChildrenTransaction)).start();
+                }
             }
         }
 
