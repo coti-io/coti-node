@@ -45,6 +45,23 @@ public class TransactionService extends BaseNodeTransactionService {
         transactionsToValidate = new PriorityQueue<>();
         isValidatorRunning = new AtomicBoolean(false);
         super.init();
+        Thread thread = new Thread(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    Thread.sleep(5000);
+                    log.info("Waiting transactions size: {}, postponed size: {}", parentProcessingTransactions.size(), postponedTransactions.size());
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+
+        });
+        thread.start();
+    }
+
+    @Scheduled(fixedDelay = 5000)
+    public void checkWaitingTransactions() {
+        log.info("Waiting transactions size: {}", parentProcessingTransactions.size());
     }
 
     public void handleNewTransactionFromFullNode(TransactionData transactionData) {

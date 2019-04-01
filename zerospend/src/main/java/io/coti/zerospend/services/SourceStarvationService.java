@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @Service
 public class SourceStarvationService {
     private final long MINIMUM_WAIT_TIME_IN_SECONDS = 300;
-    private final long SOURCE_STARVATION_CHECK_TASK_DELAY = 5000;
+    private final long SOURCE_STARVATION_CHECK_TASK_DELAY = 500;
 
     @Autowired
     private IClusterService clusterService;

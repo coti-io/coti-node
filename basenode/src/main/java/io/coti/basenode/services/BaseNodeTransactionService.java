@@ -8,6 +8,7 @@ import io.coti.basenode.services.interfaces.ITransactionService;
 import io.coti.basenode.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.LinkedList;
@@ -26,14 +27,17 @@ public class BaseNodeTransactionService implements ITransactionService {
     private IValidationService validationService;
     @Autowired
     private Transactions transactions;
-    private Map<Hash, TransactionData> parentProcessingTransactions = new ConcurrentHashMap<>();
-    private List<TransactionData> postponedTransactions = new LinkedList<>();
+    protected Map<Hash, TransactionData> parentProcessingTransactions = new ConcurrentHashMap<>();
+    protected List<TransactionData> postponedTransactions = new LinkedList<>();
 
     @Override
     public void init() {
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
+    public boolean isTransactionInParentMap(Hash transactionHash) {
+        return parentProcessingTransactions.get(transactionHash) != null;
+    }
     @Override
     public void handlePropagatedTransaction(TransactionData transactionData) {
         if (transactionHelper.isTransactionAlreadyPropagated(transactionData)) {

@@ -131,7 +131,7 @@ public abstract class BaseNodeInitializationService {
                     BlockingQueue missingTransactionQueue = new LinkedBlockingQueue<Runnable>();
                     Queue runningTransactionsQueue = new ConcurrentLinkedQueue();
                     log.info("{} threads running for missing transactions", threadPoolSize);
-                    ExecutorService executorService = new ThreadPoolExecutor(10,15, 0L, TimeUnit.MILLISECONDS, missingTransactionQueue);
+                    ExecutorService executorService = new ThreadPoolExecutor(50,100, 0L, TimeUnit.MILLISECONDS, missingTransactionQueue);
                     List<Callable<Object>> missingTransactionsTasks = new ArrayList<>(missingTransactions.size());
                     missingTransactions.forEach(transactionData ->
                             missingTransactionsTasks.add(Executors.callable(() -> {
@@ -145,7 +145,8 @@ public abstract class BaseNodeInitializationService {
                         while (!Thread.currentThread().isInterrupted()) {
                             try {
                             Thread.sleep(5000);
-                            log.info("Total added transactions: {}, Queue size: {}, Uncompleted queue size: {}, first not completed: {}, first not completed parent: {}", addedTransactions, missingTransactionQueue.size(), runningTransactionsQueue.size(), runningTransactionsQueue.element(), ((TransactionData) runningTransactionsQueue.element()).getLeftParentHash());
+                            TransactionData firstNotCompleted =  (TransactionData) runningTransactionsQueue.element();
+                            log.info("Total added transactions: {}, Queue size: {}, Uncompleted queue size: {}, first not completed: {}, first not completed waiting: {}, first not completed parent: {}, first not completed parent waiting: {}", addedTransactions, missingTransactionQueue.size(), runningTransactionsQueue.size(), firstNotCompleted, transactionService.isTransactionInParentMap(firstNotCompleted.getHash()),firstNotCompleted.getLeftParentHash(), transactionService.isTransactionInParentMap(firstNotCompleted.getLeftParentHash()));
                             } catch (InterruptedException e) {
                                 Thread.currentThread().interrupt();
                             }
