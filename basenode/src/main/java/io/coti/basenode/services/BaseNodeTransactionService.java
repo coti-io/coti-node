@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -39,19 +38,21 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     @Override
     public void handlePropagatedTransaction(TransactionData transactionData) {
+       // log.info("Process start: {}", transactionData.getHash());
         if (transactionHelper.isTransactionAlreadyPropagated(transactionData)) {
             log.debug("Transaction already exists: {}", transactionData.getHash());
             return;
         }
-        List<Hash> childrenTransactions = transactionData.getChildrenTransactionHashes();
+        List<Hash> childrenTransactionHashes = transactionData.getChildrenTransactionHashes();
         try {
             transactionHelper.startHandleTransaction(transactionData);
+            childrenTransactionHashes.forEach(childrenTransactionHash -> releasePostponedChildTransaction(transactionData, childrenTransactionHash));
             while (hasOneOfParentsProcessing(transactionData)) {
                 parentProcessingTransactions.put(transactionData.getHash(), transactionData);
                 synchronized (transactionData) {
-                    //  log.info("start wait: {}", transactionData.getHash());
+                 //   log.info("start wait: {}", transactionData.getHash());
                     transactionData.wait();
-                    //   log.info("end wait: {}", transactionData.getHash());
+                //    log.info("end wait: {}", transactionData.getHash());
                 }
             }
             if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
@@ -75,24 +76,31 @@ public class BaseNodeTransactionService implements ITransactionService {
             e.printStackTrace();
         } finally {
             transactionHelper.endHandleTransaction(transactionData);
-            for (Hash childrenTransactionHash : childrenTransactions) {
-                TransactionData parentProcessingChildrenTransaction = parentProcessingTransactions.get(childrenTransactionHash);
-                if (parentProcessingChildrenTransaction != null) {
-                    synchronized (parentProcessingChildrenTransaction) {
-                        parentProcessingChildrenTransaction.notify();
-                        parentProcessingTransactions.remove(childrenTransactionHash);
+            childrenTransactionHashes.forEach(childTransactionHash -> {
+                TransactionData parentProcessingChildTransaction = parentProcessingTransactions.get(childTransactionHash);
+                if (parentProcessingChildTransaction != null) {
+                    synchronized (parentProcessingChildTransaction) {
+                        parentProcessingChildTransaction.notify();
+                        parentProcessingTransactions.remove(childTransactionHash);
                     }
                 }
-                TransactionData postponedChildrenTransaction = postponedTransactions.get(childrenTransactionHash);
-                if(postponedChildrenTransaction != null) {
-                    log.debug("Handling postponed transaction : {}, child of transaction: {}", postponedChildrenTransaction.getHash(), transactionData.getHash());
-                    postponedTransactions.remove(childrenTransactionHash);
-                    new Thread(() -> handlePropagatedTransaction(postponedChildrenTransaction)).start();
-                }
-            }
+                releasePostponedChildTransaction(transactionData, childTransactionHash);
+            });
+
+
         }
 
     }
+
+    private void releasePostponedChildTransaction(TransactionData transactionData, Hash childTransactionHash) {
+        TransactionData postponedChildrenTransaction = postponedTransactions.get(childTransactionHash);
+        if (postponedChildrenTransaction != null) {
+            log.debug("Handling postponed transaction : {}, child of transaction: {}", postponedChildrenTransaction.getHash(), transactionData.getHash());
+            postponedTransactions.remove(childTransactionHash);
+            new Thread(() -> handlePropagatedTransaction(postponedChildrenTransaction)).start();
+        }
+    }
+
 
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
     }
