@@ -2,9 +2,9 @@ package io.coti.financialserver.crypto;
 
 import io.coti.basenode.crypto.SignatureCrypto;
 import io.coti.financialserver.http.data.GetDisputeHistoryData;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
+@Component
 public class GetDisputeHistoryCrypto extends SignatureCrypto<GetDisputeHistoryData> {
     @Override
     public byte[] getSignatureMessage(GetDisputeHistoryData getDisputeHistoryData) {

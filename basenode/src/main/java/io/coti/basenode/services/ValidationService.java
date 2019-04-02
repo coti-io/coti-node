@@ -2,9 +2,11 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.TransactionCrypto;
+import io.coti.basenode.crypto.TransactionSenderCrypto;
 import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IPotService;
@@ -22,6 +24,8 @@ public class ValidationService implements IValidationService {
     private ITransactionHelper transactionHelper;
     @Autowired
     private TransactionCrypto transactionCrypto;
+    @Autowired
+    private TransactionSenderCrypto transactionSenderCrypto;
     @Autowired
     private IPotService potService;
 
@@ -46,7 +50,7 @@ public class ValidationService implements IValidationService {
     @Override
     public boolean validateTransactionDataIntegrity(TransactionData transactionData) {
         return transactionHelper.validateTransactionType(transactionData) && transactionHelper.validateTransactionCrypto(transactionData)
-                && transactionHelper.validateBaseTransactionsDataIntegrity(transactionData);
+                && transactionHelper.validateBaseTransactionsDataIntegrity(transactionData) && validateTransactionSenderSignature(transactionData);
     }
 
     @Override
@@ -59,6 +63,11 @@ public class ValidationService implements IValidationService {
     @Override
     public boolean validateTransactionNodeSignature(TransactionData transactionData) {
         return transactionCrypto.verifySignature(transactionData);
+    }
+
+    @Override
+    public boolean validateTransactionSenderSignature(TransactionData transactionData) {
+        return transactionData.getType().equals(TransactionType.ZeroSpend) || transactionSenderCrypto.verifySignature(transactionData);
     }
 
     @Override

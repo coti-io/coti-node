@@ -7,9 +7,9 @@ import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
+@Component
 public class TransactionCryptoCreator {
     @Autowired
     private NodeCryptoHelper nodeCryptoHelper;

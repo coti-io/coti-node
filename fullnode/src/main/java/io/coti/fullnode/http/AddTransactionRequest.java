@@ -1,9 +1,6 @@
 package io.coti.fullnode.http;
 
-import io.coti.basenode.data.BaseTransactionData;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.TransactionTrustScoreData;
-import io.coti.basenode.data.TransactionType;
+import io.coti.basenode.data.*;
 import io.coti.basenode.http.Request;
 
 import javax.validation.Valid;
@@ -25,6 +22,8 @@ public class AddTransactionRequest extends Request {
     public List<@Valid TransactionTrustScoreData> trustScoreResults;
     @NotNull
     public Hash senderHash;
+    @NotNull
+    public @Valid SignatureData senderSignature;
     @NotNull
     public TransactionType type;
 }

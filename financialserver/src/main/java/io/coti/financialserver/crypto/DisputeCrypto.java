@@ -4,12 +4,12 @@ import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.SignatureCrypto;
 import io.coti.financialserver.data.DisputeData;
 import io.coti.financialserver.data.DisputeItemData;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;
 import java.util.List;
 
-@Service
+@Component
 public class DisputeCrypto extends SignatureCrypto<DisputeData> {
 
     @Override

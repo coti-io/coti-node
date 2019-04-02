@@ -1,9 +1,9 @@
 package io.coti.basenode.crypto;
 
 import io.coti.basenode.http.GetMerchantRollingReserveAddressRequest;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
+@Component
 public class GetMerchantRollingReserveAddressCrypto extends SignatureCrypto<GetMerchantRollingReserveAddressRequest> {
     @Override
     public byte[] getSignatureMessage(GetMerchantRollingReserveAddressRequest signable) {

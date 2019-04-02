@@ -3,12 +3,12 @@ package io.coti.financialserver.crypto;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.SignatureCrypto;
 import io.coti.financialserver.http.data.GetUnreadEventsData;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;
 import java.time.Instant;
 
-@Service
+@Component
 public class GetUnreadEventsCrypto extends SignatureCrypto<GetUnreadEventsData> {
 
     @Override

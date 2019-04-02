@@ -17,6 +17,8 @@ public interface IValidationService {
 
     boolean validateTransactionNodeSignature(TransactionData transactionData);
 
+    boolean validateTransactionSenderSignature(TransactionData transactionData);
+
     boolean validateTransactionTrustScore(TransactionData transactionData);
 
     boolean validateBaseTransactionAmounts(TransactionData transactionData);

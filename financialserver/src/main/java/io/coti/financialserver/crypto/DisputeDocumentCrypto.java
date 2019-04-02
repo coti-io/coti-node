@@ -3,12 +3,12 @@ package io.coti.financialserver.crypto;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.SignatureCrypto;
 import io.coti.financialserver.data.DisputeDocumentData;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
-@Service
+@Component
 public class DisputeDocumentCrypto extends SignatureCrypto<DisputeDocumentData> {
 
     @Override

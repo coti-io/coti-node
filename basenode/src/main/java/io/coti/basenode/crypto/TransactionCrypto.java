@@ -3,18 +3,17 @@ package io.coti.basenode.crypto;
 import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;
 import java.util.List;
 
-@Service
+@Component
 public class TransactionCrypto extends SignatureCrypto<TransactionData> {
     final static int baseTransactionHashSize = 32;
 
     @Override
-    public byte[] getSignatureMessage(TransactionData transactionData)
-    {
+    public byte[] getSignatureMessage(TransactionData transactionData) {
 
         return transactionData.getHash().getBytes();
     }

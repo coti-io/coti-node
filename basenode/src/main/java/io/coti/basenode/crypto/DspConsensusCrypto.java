@@ -1,12 +1,13 @@
 package io.coti.basenode.crypto;
 
 import io.coti.basenode.data.DspConsensusResult;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
 import java.time.Instant;
 
-@Service
+@Component
 public class DspConsensusCrypto extends SignatureCrypto<DspConsensusResult> {
     @Override
     public byte[] getSignatureMessage(DspConsensusResult dspConsensusResult) {

@@ -1,11 +1,11 @@
 package io.coti.basenode.crypto;
 
 import io.coti.basenode.data.DspVote;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;
 
-@Service
+@Component
 public class DspVoteCrypto extends SignatureCrypto<DspVote> {
     @Override
     public byte[] getSignatureMessage(DspVote dspVote) {

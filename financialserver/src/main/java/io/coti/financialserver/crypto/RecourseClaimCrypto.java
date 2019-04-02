@@ -4,11 +4,11 @@ import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.SignatureCrypto;
 import io.coti.basenode.data.Hash;
 import io.coti.financialserver.data.RecourseClaimData;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;
 
-@Service
+@Component
 public class RecourseClaimCrypto extends SignatureCrypto<RecourseClaimData> {
 
     @Override

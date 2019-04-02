@@ -8,7 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Vector;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -68,13 +70,14 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
         this.initTransactionData();
     }
 
-    public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, List<TransactionTrustScoreData> trustScoreResults, Instant createTime, Hash senderHash, TransactionType type) {
+    public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, List<TransactionTrustScoreData> trustScoreResults, Instant createTime, Hash senderHash, SignatureData senderSignature, TransactionType type) {
         this.hash = transactionHash;
         this.transactionDescription = transactionDescription;
         this.baseTransactions = baseTransactions;
         this.createTime = createTime;
         this.type = type;
         this.senderHash = senderHash;
+        this.senderSignature = senderSignature;
         this.trustScoreResults = trustScoreResults;
         BigDecimal amount = BigDecimal.ZERO;
         for (BaseTransactionData baseTransaction : baseTransactions) {
@@ -82,6 +85,10 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
         }
         this.amount = amount;
         this.initTransactionData();
+    }
+
+    public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, List<TransactionTrustScoreData> trustScoreResults, Instant createTime, Hash senderHash, TransactionType type) {
+        this(baseTransactions, transactionHash, transactionDescription, trustScoreResults, createTime, senderHash, null, type);
     }
 
     private void initTransactionData() {
