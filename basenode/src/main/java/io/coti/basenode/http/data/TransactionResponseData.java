@@ -30,9 +30,6 @@ public class TransactionResponseData {
     private Instant transactionConsensusUpdateTime;
     private Instant createTime;
     private Instant attachmentTime;
-    private Instant processStartTime;
-    private Instant powStartTime;
-    private Instant powEndTime;
     private double senderTrustScore;
     private List<String> childrenTransactionHashes;
     private Boolean isValid;
@@ -71,9 +68,6 @@ public class TransactionResponseData {
         transactionConsensusUpdateTime = transactionData.getTransactionConsensusUpdateTime();
         createTime = transactionData.getCreateTime();
         attachmentTime = transactionData.getAttachmentTime();
-        processStartTime = transactionData.getProcessStartTime();
-        powStartTime = transactionData.getPowStartTime();
-        powEndTime = transactionData.getPowEndTime();
         senderTrustScore = transactionData.getSenderTrustScore();
 
         childrenTransactionHashes = new ArrayList<>();

@@ -150,11 +150,9 @@ public class TransactionService extends BaseNodeTransactionService {
                 //TODO: Implement an invalidation mechanism for TestNet.
             }
 
-            transactionData.setPowStartTime(Instant.now());
             // ############   POT   ###########
             potService.potAction(transactionData);
             // ################################
-            transactionData.setPowEndTime(Instant.now());
 
             transactionData.setAttachmentTime(Instant.now());
 

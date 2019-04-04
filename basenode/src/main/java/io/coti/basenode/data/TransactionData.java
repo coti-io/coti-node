@@ -28,9 +28,6 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
     private Instant transactionConsensusUpdateTime;
     private Instant createTime;
     private Instant attachmentTime;
-    private Instant processStartTime;
-    private Instant powStartTime;
-    private Instant powEndTime;
     private double senderTrustScore;
     private Hash senderHash;
     private SignatureData senderSignature;
@@ -94,7 +91,6 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
     private void initTransactionData() {
         this.trustChainTransactionHashes = new Vector<>();
         this.childrenTransactionHashes = new ArrayList<>();
-        this.processStartTime = Instant.now();
     }
 
     public int getRoundedSenderTrustScore() {
