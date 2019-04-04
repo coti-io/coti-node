@@ -4,6 +4,7 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 import io.coti.basenode.http.GetTransactionBatchResponse;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface ITransactionHelper {
@@ -36,6 +37,14 @@ public interface ITransactionHelper {
 
     boolean isDspConfirmed(TransactionData transactionData);
 
+    Hash getReceiverBaseTransactionAddressHash(TransactionData transactionData);
+
+    Hash getReceiverBaseTransactionHash(TransactionData transactionData);
+
+    BigDecimal getRollingReserveAmount(TransactionData transactionData);
+
+    PaymentInputBaseTransactionData getPaymentInputBaseTransaction(TransactionData transactionData);
+
     boolean isTransactionExists(TransactionData transactionData);
 
     boolean isTransactionHashExists(Hash transactionHash);
@@ -57,6 +66,4 @@ public interface ITransactionHelper {
     void addNoneIndexedTransaction(TransactionData transactionData);
 
     void removeNoneIndexedTransaction(TransactionData transactionData);
-
-    PaymentInputBaseTransactionData getPaymentInputBaseTransaction(TransactionData transactionData);
 }

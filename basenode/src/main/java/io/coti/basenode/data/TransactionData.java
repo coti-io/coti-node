@@ -147,35 +147,6 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
         return this.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData.isInput()).map(InputBaseTransactionData.class::cast).collect(Collectors.toList());
     }
 
-    public Hash getReceiverBaseTransactionHash() {
-
-        for (BaseTransactionData baseTransactionData : baseTransactions) {
-            if (baseTransactionData instanceof ReceiverBaseTransactionData) {
-                return baseTransactionData.getHash();
-            }
-        }
-        return null;
-    }
-
-    public Hash getReceiverBaseTransactionAddressHash() {
-
-        for (BaseTransactionData baseTransactionData : baseTransactions) {
-            if (baseTransactionData instanceof ReceiverBaseTransactionData) {
-                return baseTransactionData.getAddressHash();
-            }
-        }
-        return null;
-    }
-
-    public BigDecimal getRollingReserveAmount() {
-        for (BaseTransactionData baseTransactionData : baseTransactions) {
-            if (baseTransactionData instanceof RollingReserveData) {
-                return baseTransactionData.getAmount();
-            }
-        }
-        return null;
-    }
-
     @Override
     public int compareTo(TransactionData other) {
         return Double.compare(this.senderTrustScore, other.senderTrustScore);

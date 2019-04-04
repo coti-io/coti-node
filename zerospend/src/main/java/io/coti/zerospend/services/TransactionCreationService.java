@@ -76,7 +76,7 @@ public class TransactionCreationService {
     }
 
     private void sendTransactionToPublisher(TransactionData transactionData) {
-        log.info("Sending Zero Spend Transaction to DSPs. transaction: Hash = {} , SenderTrustScore = {}", transactionData.getHash(), transactionData.getSenderTrustScore());
+        log.debug("Sending Zero Spend Transaction. transaction: Hash = {} , SenderTrustScore = {}", transactionData.getHash(), transactionData.getSenderTrustScore());
         propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer));
 
     }

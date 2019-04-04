@@ -335,6 +335,48 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     @Override
+    public Hash getReceiverBaseTransactionAddressHash(TransactionData transactionData) {
+
+        for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
+            if (baseTransactionData instanceof ReceiverBaseTransactionData) {
+                return baseTransactionData.getAddressHash();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Hash getReceiverBaseTransactionHash(TransactionData transactionData) {
+
+        for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
+            if (baseTransactionData instanceof ReceiverBaseTransactionData) {
+                return baseTransactionData.getHash();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public BigDecimal getRollingReserveAmount(TransactionData transactionData) {
+        for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
+            if (baseTransactionData instanceof RollingReserveData) {
+                return baseTransactionData.getAmount();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public PaymentInputBaseTransactionData getPaymentInputBaseTransaction(TransactionData transactionData) {
+        for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
+            if (baseTransactionData instanceof PaymentInputBaseTransactionData) {
+                return (PaymentInputBaseTransactionData) baseTransactionData;
+            }
+        }
+        return null;
+    }
+
+    @Override
     public long getTotalTransactions() {
         return totalTransactions.get();
     }
@@ -364,14 +406,5 @@ public class TransactionHelper implements ITransactionHelper {
 
     public void removeNoneIndexedTransaction(TransactionData transactionData) {
         noneIndexedTransactionHashes.remove(transactionData.getHash());
-    }
-
-    public PaymentInputBaseTransactionData getPaymentInputBaseTransaction(TransactionData transactionData) {
-        for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
-            if (baseTransactionData instanceof PaymentInputBaseTransactionData) {
-                return (PaymentInputBaseTransactionData) baseTransactionData;
-            }
-        }
-        return null;
     }
 }

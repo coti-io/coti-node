@@ -5,6 +5,7 @@ import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeTransactionService;
+import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.financialserver.crypto.ReceiverBaseTransactionOwnerCrypto;
 import io.coti.financialserver.data.ReceiverBaseTransactionOwnerData;
 import io.coti.financialserver.http.TransactionRequest;
@@ -27,12 +28,14 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private RollingReserveService rollingReserveService;
     @Autowired
+    private ITransactionHelper transactionHelper;
+    @Autowired
     private ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
 
     public ResponseEntity<IResponse> setReceiverBaseTransactionOwner(TransactionRequest transactionRequest) {
 
         ReceiverBaseTransactionOwnerData receiverBaseTransactionOwnerData = transactionRequest.getReceiverBaseTransactionOwnerData();
-        
+
         if (!receiverBaseTransactionOwnerCrypto.verifySignature(receiverBaseTransactionOwnerData)) {
             log.error("ReceiverBaseTransactionOwner invalid signature for merchant {}", receiverBaseTransactionOwnerData.getMerchantHash());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
@@ -48,7 +51,8 @@ public class TransactionService extends BaseNodeTransactionService {
 
         if (transactionData.getType() == TransactionType.Payment) {
 
-            ReceiverBaseTransactionOwnerData rbtOwnerData = receiverBaseTransactionOwners.getByHash(transactionData.getReceiverBaseTransactionHash());
+            ReceiverBaseTransactionOwnerData rbtOwnerData = receiverBaseTransactionOwners.getByHash(transactionHelper.getReceiverBaseTransactionHash(transactionData));
+
             if (rbtOwnerData == null) {
                 log.error("Owner(merchant) not found for RBT hash in received transaction.", transactionData);
             } else {

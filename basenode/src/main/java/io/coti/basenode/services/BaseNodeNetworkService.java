@@ -2,10 +2,7 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeRegistrationCrypto;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.NetworkData;
-import io.coti.basenode.data.NetworkNodeData;
-import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.*;
 import io.coti.basenode.services.interfaces.ICommunicationService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +24,8 @@ public class BaseNodeNetworkService implements INetworkService {
     protected String recoveryServerAddress;
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
+    @Value("${network}")
+    protected NetworkType networkType;
     private String nodeManagerPropagationAddress;
     @Autowired
     private ICommunicationService communicationService;
@@ -158,6 +157,10 @@ public class BaseNodeNetworkService implements INetworkService {
 
     @Override
     public void validateNetworkNodeData(NetworkNodeData networkNodeData) throws Exception {
+        if (!networkNodeData.getNetworkType().equals(networkType)) {
+            log.error("Invalid network type {} by node {}", networkNodeData.getNetworkType(), networkNodeData.getNodeHash());
+            throw new Exception(String.format(INVALID_NETWORK_TYPE, networkType, networkNodeData.getNetworkType()));
+        }
         if (!networkNodeCrypto.verifySignature(networkNodeData)) {
             log.error("Invalid signature by node {}", networkNodeData.getNodeHash());
             throw new Exception(INVALID_SIGNATURE);
@@ -261,20 +264,20 @@ public class BaseNodeNetworkService implements INetworkService {
         NetworkNodeData singleNodeData = getSingleNodeData(singleNodeType);
         if (newSingleNodeData != null) {
             if (newSingleNodeData.getPropagationPort() != null) {
-                if(singleNodeData != null && singleNodeData.getPropagationPort() != null && !newSingleNodeData.getPropagationPort().equals(singleNodeData.getPropagationPort())) {
+                if (singleNodeData != null && singleNodeData.getPropagationPort() != null && !newSingleNodeData.getPropagationPort().equals(singleNodeData.getPropagationPort())) {
                     communicationService.removeSubscription(singleNodeData.getPropagationPort(), singleNodeType);
                     communicationService.addSubscription(newSingleNodeData.getPropagationFullAddress(), singleNodeType);
                 }
-                if(singleNodeData == null) {
+                if (singleNodeData == null) {
                     communicationService.addSubscription(newSingleNodeData.getPropagationFullAddress(), singleNodeType);
                 }
             }
             if (singleNodeType.equals(NodeType.ZeroSpendServer) && connectingNodeType.equals(NodeType.DspNode) && newSingleNodeData.getReceivingPort() != null) {
-                if(singleNodeData != null && singleNodeData.getReceivingPort() != null && !newSingleNodeData.getReceivingPort().equals(singleNodeData.getReceivingPort())) {
+                if (singleNodeData != null && singleNodeData.getReceivingPort() != null && !newSingleNodeData.getReceivingPort().equals(singleNodeData.getReceivingPort())) {
                     communicationService.removeSender(newSingleNodeData.getReceivingFullAddress(), singleNodeType);
                     communicationService.addSender(newSingleNodeData.getReceivingFullAddress());
                 }
-                if(singleNodeData == null) {
+                if (singleNodeData == null) {
                     communicationService.addSender(newSingleNodeData.getReceivingFullAddress());
                 }
             }

@@ -118,8 +118,10 @@ public abstract class BaseNodeInitializationService {
     private void initTransactionSync() {
         try {
             AtomicLong maxTransactionIndex = new AtomicLong(-1);
+            log.info("Starting to read existing transactions");
             transactions.forEach(transactionData -> handleExistingTransaction(maxTransactionIndex, transactionData));
             transactionIndexService.init(maxTransactionIndex);
+            log.info("Finished to read existing transactions");
 
             if (networkService.getRecoveryServerAddress() != null) {
                 List<TransactionData> missingTransactions = requestMissingTransactions(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
@@ -137,6 +139,8 @@ public abstract class BaseNodeInitializationService {
             clusterService.finalizeInit();
             propagationSubscriber.initPropagationHandler();
             log.info("Transactions Load completed");
+
+            monitorService.init();
         } catch (Exception e) {
             log.error("Fatal error in initialization", e);
             System.exit(-1);
@@ -146,7 +150,6 @@ public abstract class BaseNodeInitializationService {
     private void initCommunication() {
         networkService.setNodeManagerPropagationAddress("tcp://" + nodeManagerIp + ":" + nodeManagerPropagationPort);
 
-        monitorService.init();
         propagationSubscriber.connectAndSubscribeToServer(networkService.getNodeManagerPropagationAddress(), NodeType.NodeManager);
         propagationSubscriber.startListening();
 

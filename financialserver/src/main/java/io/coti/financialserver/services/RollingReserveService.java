@@ -13,6 +13,7 @@ import io.coti.basenode.http.Response;
 import io.coti.basenode.http.SeriazableResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
+import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.financialserver.crypto.MerchantRollingReserveCrypto;
 import io.coti.financialserver.crypto.RecourseClaimCrypto;
 import io.coti.financialserver.data.*;
@@ -61,6 +62,8 @@ public class RollingReserveService {
     private GetMerchantRollingReserveAddressCrypto getMerchantRollingReserveAddressCrypto;
     @Autowired
     private DisputeService disputeService;
+    @Autowired
+    private ITransactionHelper transactionHelper;
     @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired
@@ -144,7 +147,7 @@ public class RollingReserveService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_TRANSACTION_NOT_FOUND, STATUS_ERROR));
         }
 
-        if (!transactionData.getReceiverBaseTransactionAddressHash().equals(getCotiPoolAddress())) {
+        if (!transactionHelper.getReceiverBaseTransactionAddressHash(transactionData).equals(getCotiPoolAddress())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(NOT_COTI_POOL, STATUS_ERROR));
         }
 
@@ -190,9 +193,9 @@ public class RollingReserveService {
             RollingReserveReleaseStatus rollingReserveReleaseStatus = rollingReserveReleaseDateData.getRollingReserveReleaseStatusByMerchant().get(merchantHash);
 
             if (rollingReserveReleaseStatus == null) {
-                rollingReserveReleaseStatus = new RollingReserveReleaseStatus(transactionData.getRollingReserveAmount(), transactionData.getHash());
+                rollingReserveReleaseStatus = new RollingReserveReleaseStatus(transactionHelper.getRollingReserveAmount(transactionData), transactionData.getHash());
             } else {
-                rollingReserveReleaseStatus.addToInitialAmount(transactionData.getRollingReserveAmount());
+                rollingReserveReleaseStatus.addToInitialAmount(transactionHelper.getRollingReserveAmount(transactionData));
                 rollingReserveReleaseStatus.getPaymentTransactions().add(transactionData.getHash());
             }
 
