@@ -239,8 +239,15 @@ public class TrustScoreService {
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new Response(KYC_TRUST_SCORE_AUTHENTICATION_ERROR, STATUS_ERROR));
             }
-            if (trustScores.getByHash(request.userHash) == null) {
+            TrustScoreData trustScoreDataInDB = trustScores.getByHash(request.userHash);
+            if (trustScoreDataInDB == null) {
                 createBuckets(trustScoreData);
+            } else {
+                if (!trustScoreDataInDB.getUserType().equals(UserType.CONSUMER) && !trustScoreDataInDB.getUserType().equals(trustScoreData.getUserType())) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(USER_TYPE_ALREADY_UPDATED, STATUS_ERROR));
+                }
+                Map<EventType, Hash> eventTypeToBucketHashMap = trustScoreData.getEventTypeToBucketHashMap();
+
             }
             trustScores.put(trustScoreData);
             SetKycTrustScoreResponse kycTrustScoreResponse = new SetKycTrustScoreResponse(trustScoreData);
