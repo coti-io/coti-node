@@ -48,7 +48,7 @@ public class InitializationService extends BaseNodeInitializationService {
     @PostConstruct
     public void init() {
         super.initDB();
-        super.connectToNetwork();
+        super.getNetwork();
 
         publisherNodeTypeToMessageTypesMap.put(NodeType.FinancialServer, Arrays.asList(TransactionData.class));
 
@@ -68,6 +68,7 @@ public class InitializationService extends BaseNodeInitializationService {
         if (transactions.isEmpty()) {
             transactionCreationService.createGenesisTransactions();
         }
+        super.connectToNetwork();
     }
 
     protected NetworkNodeData createNodeProperties() {

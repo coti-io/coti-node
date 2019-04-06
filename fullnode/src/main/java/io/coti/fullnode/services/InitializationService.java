@@ -32,7 +32,7 @@ public class InitializationService extends BaseNodeInitializationService {
     @PostConstruct
     public void init() {
         super.initDB();
-        super.connectToNetwork();
+        super.getNetwork();
 
         publisherNodeTypeToMessageTypesMap.put(NodeType.DspNode, Arrays.asList(TransactionData.class, AddressData.class, DspConsensusResult.class));
 
@@ -49,6 +49,7 @@ public class InitializationService extends BaseNodeInitializationService {
         }
 
         super.init();
+        super.connectToNetwork();
 
     }
 

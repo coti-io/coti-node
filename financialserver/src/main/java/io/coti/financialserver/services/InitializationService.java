@@ -37,7 +37,7 @@ public class InitializationService extends BaseNodeInitializationService {
     @PostConstruct
     public void init() {
         super.initDB();
-        super.connectToNetwork();
+        super.getNetwork();
 
         publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(TransactionData.class, DspConsensusResult.class));
         communicationService.initSubscriber(NodeType.FinancialServer, publisherNodeTypeToMessageTypesMap);
@@ -54,6 +54,7 @@ public class InitializationService extends BaseNodeInitializationService {
         networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.DspNode).values());
 
         super.init();
+        super.connectToNetwork();
     }
 
     @Override

@@ -189,12 +189,17 @@ public abstract class BaseNodeInitializationService {
         }
     }
 
-    public void connectToNetwork() {
+    public void getNetwork() {
         networkService.init();
-        networkNodeData = createNodeProperties();
         nodeManagerAddress = "http://" + nodeManagerIp + ":" + nodeManagerPort;
-        addNewNodeToNodeManager();
         networkService.setNetworkData(getNetworkDetailsFromNodeManager());
+    }
+
+    public void connectToNetwork() {
+
+        networkNodeData = createNodeProperties();
+        addNewNodeToNodeManager();
+
     }
 
     private void addNewNodeToNodeManager() {
