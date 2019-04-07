@@ -1,8 +1,8 @@
 package io.coti.basenode.services.LiveView;
 
+import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.services.LiveView.data.GraphData;
 import io.coti.basenode.services.LiveView.data.GraphTransactionData;
-import io.coti.basenode.data.TransactionData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -77,6 +77,6 @@ public class LiveViewService {
     }
 
     private void sendTransaction(GraphTransactionData graphTransactionData) {
-        messagingSender.convertAndSend("/topic/transactions", graphTransactionData);
+        messagingSender.convertAndSend("/topic/live-transactions", graphTransactionData);
     }
 }

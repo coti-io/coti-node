@@ -95,6 +95,10 @@ public class BaseNodeTransactionService implements ITransactionService {
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
     }
 
+    public void addToExplorerIndexes(TransactionData transactionData) {
+
+    }
+
     private boolean hasOneOfParentsProcessing(TransactionData transactionData) {
         return (transactionData.getLeftParentHash() != null && transactionHelper.isTransactionHashProcessing(transactionData.getLeftParentHash())) ||
                 (transactionData.getRightParentHash() != null && transactionHelper.isTransactionHashProcessing(transactionData.getRightParentHash()));
@@ -107,10 +111,5 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     public int totalPostponedTransactions() {
         return postponedTransactions.size();
-    }
-
-    @Override
-    public long incrementAndGetExplorerIndex() {
-        return 0; // Relevant only for Full Node
     }
 }

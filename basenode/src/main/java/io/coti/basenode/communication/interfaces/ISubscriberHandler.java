@@ -7,6 +7,8 @@ import java.util.function.Function;
 
 public interface ISubscriberHandler {
 
+    void init();
+
     Function<NodeType, Consumer<Object>> get(String messageType);
 
 }

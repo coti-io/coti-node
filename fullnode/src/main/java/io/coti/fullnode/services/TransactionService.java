@@ -64,7 +64,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
     @Override
     public void init() {
-        explorerIndex = new AtomicLong(1);
+        explorerIndex = new AtomicLong(0);
         super.init();
     }
 
@@ -159,6 +159,7 @@ public class TransactionService extends BaseNodeTransactionService {
             transactionHelper.attachTransactionToCluster(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
             webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
+            addToExplorerIndexes(transactionData);
             final TransactionData finalTransactionData = transactionData;
             ((NetworkService) networkService).sendDataToConnectedDspNodes(finalTransactionData);
             transactionHelper.setTransactionStateToFinished(transactionData);
@@ -240,9 +241,13 @@ public class TransactionService extends BaseNodeTransactionService {
     public ResponseEntity<IResponse> getLastTransactions() {
         List<TransactionData> transactionsDataList = new ArrayList<>();
         ExplorerIndexData explorerIndexData;
+        long currentExplorerIndex = explorerIndex.get();
 
         for (int i = 0; i < EXPLORER_LAST_TRANSACTIONS_AMOUNT; i++) {
-            explorerIndexData = explorerIndexes.getByHash(new Hash(explorerIndex.get()));
+            if (currentExplorerIndex - i < 1) {
+                break;
+            }
+            explorerIndexData = explorerIndexes.getByHash(new Hash(currentExplorerIndex - i));
             transactionsDataList.add(transactions.getByHash(explorerIndexData.getTransactionHash()));
         }
 
@@ -280,13 +285,19 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
-    public long incrementAndGetExplorerIndex() {
+    private long incrementAndGetExplorerIndex() {
         return explorerIndex.incrementAndGet();
     }
 
     @Override
+    public void addToExplorerIndexes(TransactionData transactionData) {
+        explorerIndexes.put(new ExplorerIndexData(incrementAndGetExplorerIndex(), transactionData.getHash()));
+    }
+
+
+    @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
         webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
-        explorerIndexes.put(new ExplorerIndexData(incrementAndGetExplorerIndex(), transactionData.getHash()));
+        addToExplorerIndexes(transactionData);
     }
 }

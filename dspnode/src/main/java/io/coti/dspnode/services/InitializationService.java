@@ -70,7 +70,6 @@ public class InitializationService extends BaseNodeInitializationService {
         networkService.addListToSubscription(dspNetworkNodeDataList);
 
         super.init();
-        super.connectToNetwork();
     }
 
     @Override

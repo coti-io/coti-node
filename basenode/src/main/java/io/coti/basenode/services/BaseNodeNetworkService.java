@@ -35,6 +35,7 @@ public class BaseNodeNetworkService implements INetworkService {
     private NodeRegistrationCrypto nodeRegistrationCrypto;
     protected Map<NodeType, Map<Hash, NetworkNodeData>> multipleNodeMaps;
     protected Map<NodeType, NetworkNodeData> singleNodeNetworkDataMap;
+    protected NetworkNodeData networkNodeData;
 
 
     @Override
@@ -310,6 +311,11 @@ public class BaseNodeNetworkService implements INetworkService {
     public void setNetworkData(NetworkData networkData) {
         multipleNodeMaps = networkData.getMultipleNodeMaps();
         singleNodeNetworkDataMap = networkData.getSingleNodeNetworkDataMap();
+    }
+
+    @Override
+    public void setNetworkNodeData(NetworkNodeData networkNodeData) {
+        this.networkNodeData = networkNodeData;
     }
 
     public void shutdown() {

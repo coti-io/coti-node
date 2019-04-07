@@ -109,6 +109,10 @@ public abstract class BaseNodeInitializationService {
             log.info("The communication initialization is done");
             initTransactionSync();
             log.info("The transaction sync initialization is done");
+            connectToNetwork();
+            propagationSubscriber.initPropagationHandler();
+
+            monitorService.init();
         } catch (Exception e) {
             log.error("Errors at {} : ", this.getClass().getSimpleName(), e);
             System.exit(-1);
@@ -136,11 +140,9 @@ public abstract class BaseNodeInitializationService {
                 }
             }
             balanceService.validateBalances();
-            clusterService.finalizeInit();
-            propagationSubscriber.initPropagationHandler();
             log.info("Transactions Load completed");
+            clusterService.finalizeInit();
 
-            monitorService.init();
         } catch (Exception e) {
             log.error("Fatal error in initialization", e);
             System.exit(-1);
@@ -152,7 +154,6 @@ public abstract class BaseNodeInitializationService {
 
         propagationSubscriber.connectAndSubscribeToServer(networkService.getNodeManagerPropagationAddress(), NodeType.NodeManager);
         propagationSubscriber.startListening();
-
     }
 
     public void initDB() {
@@ -170,7 +171,7 @@ public abstract class BaseNodeInitializationService {
         } else {
             transactionHelper.addNoneIndexedTransaction(transactionData);
         }
-        transactionService.incrementAndGetExplorerIndex();
+        transactionService.addToExplorerIndexes(transactionData);
         transactionHelper.incrementTotalTransactions();
     }
 
@@ -216,6 +217,7 @@ public abstract class BaseNodeInitializationService {
         try {
             ResponseEntity<String> response = restTemplate.exchange(nodeManagerAddress + NODE_MANAGER_NODES_ENDPOINT, HttpMethod.PUT, entity, String.class);
             log.info("{}", response.getBody());
+            networkService.setNetworkNodeData(networkNodeData);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             log.error("Node manager error: ", e.getResponseBodyAsString());
             System.exit(-1);

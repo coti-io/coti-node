@@ -2,8 +2,6 @@ package io.coti.basenode.services.interfaces;
 
 import io.coti.basenode.data.TransactionData;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 public interface ITransactionService {
 
     void init();
@@ -12,5 +10,5 @@ public interface ITransactionService {
 
     int totalPostponedTransactions();
 
-    long incrementAndGetExplorerIndex();
+    void addToExplorerIndexes(TransactionData transactionData);
 }

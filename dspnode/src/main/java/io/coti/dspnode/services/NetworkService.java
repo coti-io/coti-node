@@ -30,8 +30,8 @@ public class NetworkService extends BaseNodeNetworkService {
         handleConnectedDspNodesChange(connectedDspNodes, newDspNodeMap, NodeType.DspNode);
 
         List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetworkData.getMultipleNodeMaps().get(NodeType.DspNode).values(),
-                getMapFromFactory(NodeType.DspNode).values()));
-
+                connectedDspNodes));
+        dspNodesToConnect.removeIf(dspNode -> dspNode.equals(networkNodeData));
         addListToSubscription(dspNodesToConnect);
 
         handleConnectedSingleNodeChange(newNetworkData, NodeType.ZeroSpendServer, NodeType.DspNode);

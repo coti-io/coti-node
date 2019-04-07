@@ -54,7 +54,6 @@ public class InitializationService extends BaseNodeInitializationService {
         networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.DspNode).values());
 
         super.init();
-        super.connectToNetwork();
     }
 
     @Override

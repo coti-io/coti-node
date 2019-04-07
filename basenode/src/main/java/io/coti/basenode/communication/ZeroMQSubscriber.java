@@ -18,12 +18,13 @@ import org.zeromq.ZMQException;
 import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.EnumMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 @Slf4j
 @Service
@@ -48,6 +49,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     private void init() {
         initSockets();
         messageQueue = new LinkedBlockingQueue<>();
+        subscriberHandler.init();
     }
 
     public void initSockets() {
@@ -133,7 +135,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         if (channel.contains("HeartBeat")) {
             String serverAddress = new String(message);
             ConnectedNodeData connectedNodeData = connectedNodes.get(serverAddress);
-            if(connectedNodeData != null) {
+            if (connectedNodeData != null) {
                 connectedNodeData.setLastConnectionTime(Instant.now());
             }
         } else {
@@ -177,7 +179,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         propagationReceiver.subscribe("HeartBeat " + publisherAddressAndPort);
         publisherNodeTypeToMessageTypesMap.get(publisherNodeType).forEach(messageType ->
         {
-            String channel =  Channel.getChannelString(messageType, publisherNodeType, subscriberNodeType);
+            String channel = Channel.getChannelString(messageType, publisherNodeType, subscriberNodeType);
             if (propagationReceiver.subscribe(channel)) {
                 log.info("Subscribed to server {} and channel {}", publisherAddressAndPort, channel);
             } else {
@@ -200,7 +202,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         propagationReceiver.unsubscribe("HeartBeat " + publisherAddressAndPort);
         publisherNodeTypeToMessageTypesMap.get(publisherNodeType).forEach(messageType ->
         {
-            String channel =  Channel.getChannelString(messageType, publisherNodeType, subscriberNodeType);
+            String channel = Channel.getChannelString(messageType, publisherNodeType, subscriberNodeType);
             if (propagationReceiver.unsubscribe(channel)) {
                 log.info("Unsubscribed from server {} and channel {}", publisherAddressAndPort, channel);
             } else {
@@ -215,7 +217,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         connectedNodes.forEach((serverAddress, connectedNodeData) -> {
             if (Duration.between(connectedNodeData.getLastConnectionTime(), Instant.now()).toMillis() > HEARTBEAT_INTERVAL) {
                 log.info("Publisher heartbeat message timeout: server = {}, lastHeartBeat = {}", serverAddress, connectedNodeData.getLastConnectionTime());
-                unsubscribeAll(serverAddress,connectedNodeData.getNodeType());
+                unsubscribeAll(serverAddress, connectedNodeData.getNodeType());
                 connectAndSubscribeToServer(serverAddress, connectedNodeData.getNodeType());
             }
         });

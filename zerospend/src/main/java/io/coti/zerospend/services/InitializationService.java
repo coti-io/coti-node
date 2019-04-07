@@ -60,15 +60,15 @@ public class InitializationService extends BaseNodeInitializationService {
                         dspVoteService.receiveDspVote((DspVote) data));
         communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
 
+        communicationService.initPublisher(propagationPort, NodeType.ZeroSpendServer);
+        networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.DspNode).values());
+
         super.init();
 
-        communicationService.initPublisher(propagationPort, NodeType.ZeroSpendServer);
-
-        networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.DspNode).values());
         if (transactions.isEmpty()) {
             transactionCreationService.createGenesisTransactions();
         }
-        super.connectToNetwork();
+
     }
 
     protected NetworkNodeData createNodeProperties() {

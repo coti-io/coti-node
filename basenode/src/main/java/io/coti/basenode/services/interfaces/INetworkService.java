@@ -51,4 +51,6 @@ public interface INetworkService {
 
     void setNetworkData(NetworkData networkData);
 
+    void setNetworkNodeData(NetworkNodeData networkNodeData);
+
 }

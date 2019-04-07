@@ -6,13 +6,11 @@ import io.coti.basenode.services.interfaces.IAddressService;
 import io.coti.basenode.services.interfaces.IDspVoteService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.PostConstruct;
-import java.util.EnumSet;
 import java.util.function.Consumer;
 
+@Slf4j
 public enum SubscriberMessageType implements ISubscriberMessageType {
     TransactionData {
         @Override
@@ -39,31 +37,9 @@ public enum SubscriberMessageType implements ISubscriberMessageType {
         }
     };
 
-    protected ITransactionService transactionService;
-    protected IAddressService addressService;
-    protected IDspVoteService dspVoteService;
-    protected INetworkService networkService;
-
-    @Component
-    public static class BaseTransactionCryptoInjector {
-        @Autowired
-        private ITransactionService transactionService;
-        @Autowired
-        private IAddressService addressService;
-        @Autowired
-        private IDspVoteService dspVoteService;
-        @Autowired
-        private INetworkService networkService;
-
-        @PostConstruct
-        public void postConstruct() {
-            for (SubscriberMessageType subscriberMessageType : EnumSet.allOf(SubscriberMessageType.class)) {
-                subscriberMessageType.transactionService = transactionService;
-                subscriberMessageType.addressService = addressService;
-                subscriberMessageType.dspVoteService = dspVoteService;
-                subscriberMessageType.networkService = networkService;
-            }
-        }
-    }
+    public ITransactionService transactionService;
+    public IAddressService addressService;
+    public IDspVoteService dspVoteService;
+    public INetworkService networkService;
 
 }

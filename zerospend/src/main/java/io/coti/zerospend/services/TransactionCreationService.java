@@ -91,6 +91,11 @@ public class TransactionCreationService {
             dspVoteService.setIndexForDspResult(transactionData, dspConsensusResult);
 
             transactionHelper.attachTransactionToCluster(transactionData);
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 

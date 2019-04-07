@@ -49,8 +49,6 @@ public class InitializationService extends BaseNodeInitializationService {
         }
 
         super.init();
-        super.connectToNetwork();
-
     }
 
     protected NetworkNodeData createNodeProperties() {
