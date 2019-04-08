@@ -1,6 +1,7 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.crypto.CryptoHelper;
+import io.coti.basenode.data.DspConsensusResult;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionIndexData;
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
@@ -25,6 +28,7 @@ public class TransactionIndexService {
     @Autowired
     private Transactions transactions;
     private TransactionIndexData lastTransactionIndexData;
+    private Map<Long, TransactionData> waitingMissingTransactionIndexes = new ConcurrentHashMap<>();
 
     public void init(AtomicLong maxTransactionIndex) throws Exception {
         byte[] accumulatedHash = "GENESIS".getBytes();
@@ -70,6 +74,25 @@ public class TransactionIndexService {
             return false;
         }
         return true;
+    }
+
+    public void insertMissingTransactionIndex(TransactionData transactionData) {
+        DspConsensusResult dspConsensusResult = transactionData.getDspConsensusResult();
+        if (dspConsensusResult == null) {
+            return;
+        }
+        if (!insertNewTransactionIndex(transactionData)) {
+            waitingMissingTransactionIndexes.put(dspConsensusResult.getIndex(), transactionData);
+            return;
+        } else {
+            long index = dspConsensusResult.getIndex() + 1;
+            while (waitingMissingTransactionIndexes.containsKey(index)) {
+                insertNewTransactionIndex(waitingMissingTransactionIndexes.get(index));
+                waitingMissingTransactionIndexes.remove(index);
+                index++;
+            }
+            return;
+        }
     }
 
     public TransactionIndexData getLastTransactionIndexData() {

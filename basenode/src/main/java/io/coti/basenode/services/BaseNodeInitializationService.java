@@ -1,5 +1,6 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.crypto.GetNodeRegistrationRequestCrypto;
 import io.coti.basenode.crypto.NetworkNodeCrypto;
@@ -25,11 +26,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
@@ -130,13 +127,16 @@ public abstract class BaseNodeInitializationService {
             if (networkService.getRecoveryServerAddress() != null) {
                 List<TransactionData> missingTransactions = requestMissingTransactions(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
                 if (missingTransactions != null) {
-                    int threadPoolSize = 1;
-                    log.info("{} threads running for missing transactions", threadPoolSize);
-                    ExecutorService executorService = Executors.newFixedThreadPool(threadPoolSize);
-                    List<Callable<Object>> missingTransactionsTasks = new ArrayList<>(missingTransactions.size());
-                    missingTransactions.forEach(transactionData ->
-                            missingTransactionsTasks.add(Executors.callable(() -> transactionService.handlePropagatedTransaction(transactionData))));
-                    executorService.invokeAll(missingTransactionsTasks);
+                    missingTransactions.forEach(transactionData -> {
+                                transactions.put(transactionData);
+                                transactionIndexService.insertMissingTransactionIndex(transactionData);
+                            }
+                    );
+                    missingTransactions.forEach(transactionData -> {
+                        handleExistingTransaction(maxTransactionIndex, transactionData);
+                        propagateMissingTransaction(transactionData);
+                    });
+
                 }
             }
             balanceService.validateBalances();
@@ -268,5 +268,9 @@ public abstract class BaseNodeInitializationService {
     }
 
     protected abstract NetworkNodeData createNodeProperties();
+
+    protected void propagateMissingTransaction(TransactionData transactionData) {
+
+    }
 
 }
