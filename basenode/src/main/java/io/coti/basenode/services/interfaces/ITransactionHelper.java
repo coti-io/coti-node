@@ -23,6 +23,12 @@ public interface ITransactionHelper {
 
     void endHandleTransaction(TransactionData transactionData);
 
+    boolean isTransactionFinished(TransactionData transactionData);
+
+    boolean isTransactionStarted(TransactionData transactionData);
+
+    boolean isTransactionByHashStarted(Hash hash);
+
     boolean checkBalancesAndAddToPreBalance(TransactionData transactionData);
 
     void attachTransactionToCluster(TransactionData transactionData);

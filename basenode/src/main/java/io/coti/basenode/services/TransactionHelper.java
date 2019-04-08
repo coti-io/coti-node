@@ -219,7 +219,7 @@ public class TransactionHelper implements ITransactionHelper {
         if (!transactionHashToTransactionStateStackMapping.containsKey(transactionData.getHash())) {
             return;
         }
-        if (transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).peek().equals(FINISHED)) {
+        if (isTransactionFinished(transactionData)) {
             log.debug("Transaction {} handled successfully", transactionData.getHash());
         } else {
             rollbackTransaction(transactionData);
@@ -229,6 +229,22 @@ public class TransactionHelper implements ITransactionHelper {
             transactionHashToTransactionStateStackMapping.remove(transactionData.getHash());
         }
     }
+
+    @Override
+    public boolean isTransactionFinished(TransactionData transactionData) {
+        return transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).peek().equals(FINISHED);
+    }
+
+    @Override
+    public boolean isTransactionStarted(TransactionData transactionData) {
+        return transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).peek().equals(RECEIVED);
+    }
+
+    @Override
+    public boolean isTransactionByHashStarted(Hash hash) {
+        return transactionHashToTransactionStateStackMapping.get(hash).peek().equals(RECEIVED);
+    }
+
 
     private void rollbackTransaction(TransactionData transactionData) {
         Stack<TransactionState> currentTransactionStateStack = transactionHashToTransactionStateStackMapping.get(transactionData.getHash());
