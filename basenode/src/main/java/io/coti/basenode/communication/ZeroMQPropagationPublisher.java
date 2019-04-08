@@ -41,9 +41,10 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
     public <T extends IPropagatable> void propagate(T toPropagate, List<NodeType> subscriberNodeTypes) {
         synchronized (propagator) {
             subscriberNodeTypes.forEach(subscriberNodeType -> {
-                log.debug("Propagating {} to {}", toPropagate.getHash(), Channel.getChannelString(toPropagate.getClass(), publisherNodeType, subscriberNodeType));
+                String serverAddress = "tcp://" + publisherIp + ":" + propagationPort;
+                log.debug("Propagating {} to {}", toPropagate.getHash(), Channel.getChannelString(toPropagate.getClass(), publisherNodeType, subscriberNodeType, serverAddress));
                 byte[] message = serializer.serialize(toPropagate);
-                propagator.sendMore(Channel.getChannelString(toPropagate.getClass(), publisherNodeType, subscriberNodeType).getBytes());
+                propagator.sendMore(Channel.getChannelString(toPropagate.getClass(), publisherNodeType, subscriberNodeType, serverAddress).getBytes());
                 propagator.send(message);
             });
         }

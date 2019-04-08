@@ -134,20 +134,26 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         byte[] message = zeroMQMessageData.getMessage();
         if (channel.contains("HeartBeat")) {
             String serverAddress = new String(message);
-            ConnectedNodeData connectedNodeData = connectedNodes.get(serverAddress);
-            if (connectedNodeData != null) {
-                connectedNodeData.setLastConnectionTime(Instant.now());
-            }
+            updatePublisherLastConnectionTime(serverAddress);
         } else {
-            String[] channelArray = channel.split(":");
+            String[] channelArray = channel.split("-");
             Class<? extends IPropagatable> propagatedMessageType = (Class<? extends IPropagatable>) Class.forName(channelArray[0]);
             NodeType publisherNodeType = NodeType.valueOf(channelArray[1]);
+            String serverAddress = channelArray[3];
+            updatePublisherLastConnectionTime(serverAddress);
             publisherNodeTypeToMessageTypesMap.get(publisherNodeType).forEach(messageType -> {
 
                 if (messageType.equals(propagatedMessageType)) {
                     handleMessageData(message, propagatedMessageType, publisherNodeType);
                 }
             });
+        }
+    }
+
+    private void updatePublisherLastConnectionTime(String publisherAddressAndPort) {
+        ConnectedNodeData connectedNodeData = connectedNodes.get(publisherAddressAndPort);
+        if (connectedNodeData != null) {
+            connectedNodeData.setLastConnectionTime(Instant.now());
         }
     }
 
@@ -179,7 +185,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         propagationReceiver.subscribe("HeartBeat " + publisherAddressAndPort);
         publisherNodeTypeToMessageTypesMap.get(publisherNodeType).forEach(messageType ->
         {
-            String channel = Channel.getChannelString(messageType, publisherNodeType, subscriberNodeType);
+            String channel = Channel.getChannelString(messageType, publisherNodeType, subscriberNodeType, publisherAddressAndPort);
             if (propagationReceiver.subscribe(channel)) {
                 log.info("Subscribed to server {} and channel {}", publisherAddressAndPort, channel);
             } else {
@@ -202,7 +208,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         propagationReceiver.unsubscribe("HeartBeat " + publisherAddressAndPort);
         publisherNodeTypeToMessageTypesMap.get(publisherNodeType).forEach(messageType ->
         {
-            String channel = Channel.getChannelString(messageType, publisherNodeType, subscriberNodeType);
+            String channel = Channel.getChannelString(messageType, publisherNodeType, subscriberNodeType, publisherAddressAndPort);
             if (propagationReceiver.unsubscribe(channel)) {
                 log.info("Unsubscribed from server {} and channel {}", publisherAddressAndPort, channel);
             } else {
