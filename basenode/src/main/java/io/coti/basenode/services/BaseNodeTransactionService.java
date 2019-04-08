@@ -41,15 +41,16 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     @Override
     public void handlePropagatedTransaction(TransactionData transactionData) {
-        // log.info("Process start: {}", transactionData.getHash());
+         log.info("Process start: {}", transactionData.getHash());
         if (transactionHelper.isTransactionAlreadyPropagated(transactionData)) {
             log.debug("Transaction already exists: {}", transactionData.getHash());
             return;
         }
         List<Hash> childrenTransactionHashes = transactionData.getChildrenTransactionHashes();
-        log.info("[Start print] Transaction: {} has a child transaction: {}", transactionData.getHash(), childrenTransactionHashes.get(0));
+//        log.info("[Start print] Transaction: {} has a child transaction: {}", transactionData.getHash(), childrenTransactionHashes.get(0));
         try {
             synchronized (transactionData) {
+                log.info("Starting synchronized section for transaction {}", transactionData.getHash() );
                 transactionHelper.startHandleTransaction(transactionData);
                 while (hasOneOfParentsProcessing(transactionData)) {
                     parentProcessingTransactions.put(transactionData.getHash(), transactionData);
@@ -68,6 +69,7 @@ public class BaseNodeTransactionService implements ITransactionService {
                     if (!hasOneOfParentsMissing(transactionData)) {
                         postponedTransactions.remove(transactionData.getHash());
                     } else {
+                        log.info("Transaction {} was postponed due to missing parent", transactionData.getHash() );
                         return;
                     }
                 }
@@ -86,8 +88,9 @@ public class BaseNodeTransactionService implements ITransactionService {
         } finally {
             boolean isTransactionFinished = transactionHelper.isTransactionFinished(transactionData);
             transactionHelper.endHandleTransaction(transactionData);
+            log.info("In finally section for transaction: {}, which is finished [{}], childrenTransactionHashes size is: {}",transactionData.getHash(), isTransactionFinished, childrenTransactionHashes.size());
             childrenTransactionHashes.forEach(childTransactionHash -> {
-                log.info("[End print] Transaction: {} has a child transaction: {}", transactionData.getHash(), childTransactionHash);
+                log.info("[End print] Transaction: {} was done [{}], has a child transaction: {}", transactionData.getHash(), isTransactionFinished, childTransactionHash);
                 TransactionData parentProcessingChildTransaction = parentProcessingTransactions.get(childTransactionHash);
                 if (parentProcessingChildTransaction != null) {
                     synchronized (parentProcessingChildTransaction) {
@@ -98,8 +101,7 @@ public class BaseNodeTransactionService implements ITransactionService {
                 if (isTransactionFinished)
                     releasePostponedChildTransaction(transactionData, childTransactionHash);
             });
-
-
+            log.info("Exiting finally section for transaction: {}", transactionData.getHash());
         }
 
     }
