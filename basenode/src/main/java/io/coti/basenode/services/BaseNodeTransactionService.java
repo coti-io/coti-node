@@ -66,19 +66,11 @@ public class BaseNodeTransactionService implements ITransactionService {
 
             continueHandlePropagatedTransaction(transactionData);
             transactionHelper.setTransactionStateToFinished(transactionData);
-            List<TransactionData> postponedParentTransactions = postponedTransactions.stream().filter(
-                    postponedTransactionData ->
-                            (postponedTransactionData.getRightParentHash() != null && postponedTransactionData.getRightParentHash().equals(transactionData.getHash())) ||
-                                    (postponedTransactionData.getLeftParentHash() != null && postponedTransactionData.getLeftParentHash().equals(transactionData.getHash())))
-                    .collect(Collectors.toList());
-            postponedParentTransactions.forEach(postponedTransaction -> {
-                log.debug("Handling postponed transaction : {}, parent of transaction: {}", postponedTransaction.getHash(), transactionData.getHash());
-                postponedTransactions.remove(postponedTransaction);
-                handlePropagatedTransaction(postponedTransaction);
-            });
         } catch (Exception e) {
+            log.info("Transaction propagation handler error:");
             e.printStackTrace();
         } finally {
+            boolean isTransactionFinished = transactionHelper.isTransactionFinished(transactionData);
             transactionHelper.endHandleTransaction(transactionData);
             for (Hash childrenTransactionHash : childrenTransactions) {
                 TransactionData childrenTransaction = parentProcessingTransactions.get(childrenTransactionHash);
@@ -88,6 +80,19 @@ public class BaseNodeTransactionService implements ITransactionService {
                         parentProcessingTransactions.remove(childrenTransactionHash);
                     }
             }
+            if (isTransactionFinished) {
+                List<TransactionData> postponedParentTransactions = postponedTransactions.stream().filter(
+                        postponedTransactionData ->
+                                (postponedTransactionData.getRightParentHash() != null && postponedTransactionData.getRightParentHash().equals(transactionData.getHash())) ||
+                                        (postponedTransactionData.getLeftParentHash() != null && postponedTransactionData.getLeftParentHash().equals(transactionData.getHash())))
+                        .collect(Collectors.toList());
+                postponedParentTransactions.forEach(postponedTransaction -> {
+                    log.debug("Handling postponed transaction : {}, parent of transaction: {}", postponedTransaction.getHash(), transactionData.getHash());
+                    postponedTransactions.remove(postponedTransaction);
+                    handlePropagatedTransaction(postponedTransaction);
+                });
+            }
+
         }
 
     }

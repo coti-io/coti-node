@@ -219,7 +219,7 @@ public class TransactionHelper implements ITransactionHelper {
         if (!transactionHashToTransactionStateStackMapping.containsKey(transactionData.getHash())) {
             return;
         }
-        if (transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).peek().equals(FINISHED)) {
+        if (isTransactionFinished(transactionData)) {
             log.debug("Transaction {} handled successfully", transactionData.getHash());
         } else {
             rollbackTransaction(transactionData);
@@ -228,6 +228,11 @@ public class TransactionHelper implements ITransactionHelper {
         synchronized (transactionData) {
             transactionHashToTransactionStateStackMapping.remove(transactionData.getHash());
         }
+    }
+
+    @Override
+    public boolean isTransactionFinished(TransactionData transactionData) {
+        return transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).peek().equals(FINISHED);
     }
 
     private void rollbackTransaction(TransactionData transactionData) {
