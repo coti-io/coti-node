@@ -80,6 +80,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                     byte[] message = propagationReceiver.recv();
                     messageQueue.put(new ZeroMQMessageData(channel, message));
                 } catch (InterruptedException e) {
+                    log.info("ZMQ subscriber propagation receiver interrupted");
                     Thread.currentThread().interrupt();
                 } catch (ZMQException e) {
                     if (e.getErrorCode() == ZMQ.Error.ETERM.getCode()) {
@@ -108,6 +109,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                 log.debug("ZMQ message arrived: {}", zeroMQMessageData);
                 propagationProcess(zeroMQMessageData);
             } catch (InterruptedException e) {
+                log.info("ZMQ subscriber message handler interrupted");
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
                 log.error("ZMQ message handler task error: ");
@@ -164,6 +166,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         } catch (ClassCastException e) {
             log.error("Invalid request received: " + e.getMessage());
         } catch (Exception e) {
+            log.error("ZMQ subscriber message handler error");
             e.printStackTrace();
         }
     }
@@ -227,6 +230,11 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                 connectAndSubscribeToServer(serverAddress, connectedNodeData.getNodeType());
             }
         });
+    }
+
+    @Override
+    public int getMessageQueueSize() {
+        return messageQueue.size();
     }
 
     @Override

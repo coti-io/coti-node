@@ -22,8 +22,8 @@ public class ShutDownService {
 
     @PreDestroy
     public void shutDownServices() {
-        propagationPublisher.shutdown();
         propagationSubscriber.shutdown();
+        propagationPublisher.shutdown();
         confirmationService.shutdown();
         databaseConnector.shutdown();
     }

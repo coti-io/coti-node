@@ -1,5 +1,6 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,8 @@ public class BaseNodeMonitorService implements IMonitorService {
     private IClusterService clusterService;
     @Autowired
     private ITransactionService transactionService;
+    @Autowired
+    private IPropagationSubscriber propagationSubscriber;
 
     @Value("${allow.transaction.monitoring}")
     private boolean allowTransactionMonitoring;
@@ -30,15 +33,16 @@ public class BaseNodeMonitorService implements IMonitorService {
 
     @Scheduled(initialDelay = 1000, fixedDelay = 5000)
     public void lastState() {
-        if(allowTransactionMonitoring) {
-            log.info("Transactions = {}, TccConfirmed = {}, DspConfirmed = {}, Confirmed = {}, LastIndex = {}, Sources = {}, PostponedTransactions = {}",
+        if (allowTransactionMonitoring) {
+            log.info("Transactions = {}, TccConfirmed = {}, DspConfirmed = {}, Confirmed = {}, LastIndex = {}, Sources = {}, PostponedTransactions = {}, PropagationQueue = {}",
                     transactionHelper.getTotalTransactions(),
                     confirmationService.getTccConfirmed(),
                     confirmationService.getDspConfirmed(),
                     confirmationService.getTotalConfirmed(),
                     transactionIndexService.getLastTransactionIndexData().getIndex(),
                     clusterService.getTotalSources(),
-                    transactionService.totalPostponedTransactions());
+                    transactionService.totalPostponedTransactions(),
+                    propagationSubscriber.getMessageQueueSize());
         }
     }
 }
