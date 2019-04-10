@@ -5,10 +5,7 @@ import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.communication.ZeroMQPropagationPublisher;
 import io.coti.basenode.communication.ZeroMQSubscriber;
 import io.coti.basenode.communication.interfaces.ISubscriberHandler;
-import io.coti.basenode.crypto.DspConsensusCrypto;
-import io.coti.basenode.crypto.NodeCryptoHelper;
-import io.coti.basenode.crypto.TransactionCrypto;
-import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
+import io.coti.basenode.crypto.*;
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.basenode.database.Interfaces.IDatabaseConnector;
 import io.coti.basenode.model.AddressTransactionsHistories;
@@ -53,6 +50,7 @@ import java.util.concurrent.atomic.AtomicLong;
                 ZeroMQSubscriber.class,
                 SimpMessagingTemplate.class,
                 TransactionCrypto.class,
+                TransactionSenderCrypto.class,
                 SourceSelector.class,
                 TccConfirmationService.class,
                 TransactionIndexes.class,
