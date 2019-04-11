@@ -5,7 +5,6 @@ import io.coti.basenode.services.NodeTypeService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,7 +20,7 @@ public class NetworkData implements IPropagatable {
         NodeTypeService.getNodeTypeList(true).forEach(nodeType -> multipleNodeMaps.put(nodeType, new ConcurrentHashMap<>()));
 
         singleNodeNetworkDataMap = new EnumMap<>(NodeType.class);
-        NodeTypeService.getNodeTypeList(false).forEach(nodeType -> singleNodeNetworkDataMap.put(nodeType, new NetworkNodeData(nodeType)));
+        NodeTypeService.getNodeTypeList(false).forEach(nodeType -> singleNodeNetworkDataMap.put(nodeType, null));
 
     }
 

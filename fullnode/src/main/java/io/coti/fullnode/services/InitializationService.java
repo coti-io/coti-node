@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
@@ -25,8 +26,12 @@ public class InitializationService extends BaseNodeInitializationService {
     private String serverPort;
     @Autowired
     private NetworkNodeCrypto networkNodeCrypto;
+    @Value("${minimumFee}")
+    private BigDecimal minimumFee;
+    @Value("${maximumFee}")
+    private BigDecimal maximumFee;
     @Value("${fee.percentage}")
-    private Double nodeFee;
+    private BigDecimal nodeFee;
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
@@ -52,21 +57,13 @@ public class InitializationService extends BaseNodeInitializationService {
     }
 
     protected NetworkNodeData createNodeProperties() {
-        if (validateFeePercentage(nodeFee)) {
-            NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType, nodeFee);
+        FeeData feeData = new FeeData(nodeFee, minimumFee, maximumFee);
+        if (!networkService.validateFeeData(feeData)) {
+            NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType, feeData);
             return networkNodeData;
         }
-        return new NetworkNodeData(NodeType.FullNode);
+        log.error("Fee Data is invalid, please fix fee properties by following coti instructions. Shutting down the server!");
+        System.exit(-1);
+        return null;
     }
-
-    private boolean validateFeePercentage(Double feePercentage) {
-        if (feePercentage < 0.0 || feePercentage > 100.0) {
-            log.error("Fee Percentage is invalid, please fix fee.percentage property by following coti instructions. " +
-                    "Shutting down the server! feePercentage: {} ", feePercentage);
-            System.exit(-1);
-            return false;
-        }
-        return true;
-    }
-
 }

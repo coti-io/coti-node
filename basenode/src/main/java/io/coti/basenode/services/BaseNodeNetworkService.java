@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -174,6 +175,16 @@ public class BaseNodeNetworkService implements INetworkService {
             log.error("Invalid registrar node hash for node {}", networkNodeData.getNodeHash());
             throw new Exception(INVALID_NODE_REGISTRAR);
         }
+        if (networkNodeData.getNodeType().equals(NodeType.FullNode) && !validateFeeData(networkNodeData.getFeeData())) {
+            log.error("Invalid fee data for full node {}", networkNodeData.getNodeHash());
+            throw new Exception(INVALID_FULL_NODE_FEE);
+        }
+    }
+
+    @Override
+    public boolean validateFeeData(FeeData feeData) {
+        return feeData.getFeePercentage().compareTo(new BigDecimal("0")) >= 0 && feeData.getFeePercentage().compareTo(new BigDecimal("100")) < 100 &&
+                feeData.getMinimumFee().compareTo(feeData.getMaximumFee()) <= 0;
     }
 
 

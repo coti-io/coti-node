@@ -8,8 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Objects;
 
-@Data
 @Slf4j
+@Data
 public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
     private Hash nodeHash;
     private NodeType nodeType;
@@ -20,7 +20,7 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
     private String recoveryServerAddress;
     private NetworkType networkType;
     private transient Double trustScore;
-    private transient Double feePercentage;
+    private FeeData feeData;
     private SignatureData nodeSignature;
     private NodeRegistrationData nodeRegistrationData;
 
@@ -33,14 +33,9 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
         this.networkType = networkType;
     }
 
-    public NetworkNodeData(NodeType nodeType, String address, String httpPort, Hash nodeHash, NetworkType networkType, double feePercentage) {
+    public NetworkNodeData(NodeType nodeType, String address, String httpPort, Hash nodeHash, NetworkType networkType, FeeData feeData) {
         this(nodeType, address, httpPort, nodeHash, networkType);
-
-        this.feePercentage = feePercentage;
-        this.nodeType = nodeType;
-        this.address = address;
-        this.httpPort = httpPort;
-        this.nodeHash = nodeHash;
+        this.feeData = feeData;
     }
 
     public NetworkNodeData() {

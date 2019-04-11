@@ -29,6 +29,7 @@ public class BaseNodeHttpStringConstants {
     public static final String GENERAL_EXCEPTION_ERROR = "Error In Service";
 
     public static final String UNAUTHORIZED = "Unauthorized";
+    public static final String INVALID_FULL_NODE_FEE = "Invalid full node fee";
     public static final String INVALID_SIGNATURE = "Invalid signature";
     public static final String INVALID_NODE_REGISTRAR = "Invalid node registrar";
     public static final String INVALID_NODE_REGISTRATION_SIGNATURE = "Invalid node registration signature";

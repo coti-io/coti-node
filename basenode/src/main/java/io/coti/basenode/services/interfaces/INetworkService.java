@@ -1,9 +1,6 @@
 package io.coti.basenode.services.interfaces;
 
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.NetworkData;
-import io.coti.basenode.data.NetworkNodeData;
-import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.*;
 
 import java.util.Collection;
 import java.util.List;
@@ -32,6 +29,8 @@ public interface INetworkService {
     boolean updateNetworkNode(NetworkNodeData networkNodeData);
 
     void validateNetworkNodeData(NetworkNodeData networkNodeData) throws Exception;
+
+    boolean validateFeeData(FeeData feeData);
 
     boolean isNodeExistsOnMemory(NetworkNodeData networkNodeData);
 

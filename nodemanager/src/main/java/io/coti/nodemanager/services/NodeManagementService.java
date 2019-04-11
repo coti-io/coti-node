@@ -125,7 +125,7 @@ public class NodeManagementService implements INodeManagementService {
 
     private SingleNodeDetailsForWallet createSingleNodeDetailsForWallet(NetworkNodeData node) {
         if (NodeType.FullNode.equals(node.getNodeType())) {
-            return new SingleNodeDetailsForWallet(node.getHash(), node.getHttpFullAddress(), node.getFeePercentage(), node.getTrustScore());
+            return new SingleNodeDetailsForWallet(node.getHash(), node.getHttpFullAddress(), node.getFeeData(), node.getTrustScore());
         }
         return new SingleNodeDetailsForWallet(node.getHash(), node.getHttpFullAddress(), null, null);
     }
