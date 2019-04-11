@@ -2,6 +2,7 @@ package testUtils;
 
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.GetBalancesRequest;
+import io.coti.basenode.services.NodeTypeService;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.constraints.NotNull;
@@ -19,6 +20,8 @@ public class BaseNodeTestUtils {
     private static final int MAX_TRUST_SCORE = 100;
     private static final int ANY_NUMBER = 10000;
     private static final String TRANSACTION_DESCRIPTION = "test";
+    public static final String ANY_ADDRESS = "localhost";
+    public static final String ANY_PORT = "7040";
 
     public static Hash generateRandomHash() {
         return generateRandomHash(SIZE_OF_HASH);
@@ -139,6 +142,20 @@ public class BaseNodeTestUtils {
         dspConsensusResult.setDspConsensus(true);
         // TODO initialize additional fields as needed, consider wrapping with input hash if needed
         return dspConsensusResult;
+    }
+
+    public static NetworkNodeData generateRandomNetworkNodeData(boolean isMultipleNodeType) {
+        NodeType nodeType = null;
+        if(isMultipleNodeType)
+            nodeType = NodeTypeService.getNodeTypeList(true).get(0);
+        else
+            nodeType = NodeTypeService.getNodeTypeList(false).get(0);
+
+        Hash hash = BaseNodeTestUtils.generateRandomHash();
+        NetworkType networkType = NetworkType.TestNet;
+        String address = ANY_ADDRESS;
+        String httpPort = ANY_PORT;
+        return new NetworkNodeData(nodeType, address, httpPort, hash, networkType );
     }
 }
 
