@@ -228,23 +228,36 @@ public class TrustScoreService {
     }
 
     public ResponseEntity<IResponse> setKycTrustScore(SetKycTrustScoreRequest request) {
+        SetKycTrustScoreResponse kycTrustScoreResponse;
+
         try {
             log.info("Setting KYC trust score: userHash =  {}, KTS = {}, userType =  {}", request.userHash, request.kycTrustScore, request.userType);
-            TrustScoreData trustScoreData = new TrustScoreData(request.userHash,
+            TrustScoreData trustScoreDataNew = new TrustScoreData(request.userHash,
                     request.kycTrustScore,
+// it is a crutch, there should be modification of initial events bucket
                     request.signature,
                     new Hash(kycServerPublicKey),
                     UserType.enumFromString(request.userType));
-            if (!trustScoreCrypto.verifySignature(trustScoreData)) {
+            if (!trustScoreCrypto.verifySignature(trustScoreDataNew)) {
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new Response(KYC_TRUST_SCORE_AUTHENTICATION_ERROR, STATUS_ERROR));
             }
-            if (trustScores.getByHash(request.userHash) == null) {
-                createBuckets(trustScoreData);
+            TrustScoreData trustScoreDataOld = trustScores.getByHash(request.userHash);
+            if (trustScoreDataOld == null) {
+                createBuckets(trustScoreDataNew);
+                trustScores.put(trustScoreDataNew);
+                kycTrustScoreResponse = new SetKycTrustScoreResponse(trustScoreDataNew);
             }
-            trustScores.put(trustScoreData);
-            SetKycTrustScoreResponse kycTrustScoreResponse = new SetKycTrustScoreResponse(trustScoreData);
+            else {
+                trustScoreDataOld.setKycTrustScore(request.kycTrustScore);
+                trustScoreDataOld.setSignature(request.signature);
+                trustScoreDataOld.setKycServerPublicKey(trustScoreDataNew.getKycServerPublicKey());
+// it is a crutch, there should be modification of initial events bucket
+                trustScores.put(trustScoreDataOld);
+                kycTrustScoreResponse = new SetKycTrustScoreResponse(trustScoreDataOld);
+            }
+
             return ResponseEntity.status(HttpStatus.OK)
                     .body(kycTrustScoreResponse);
         } catch (Exception e) {
