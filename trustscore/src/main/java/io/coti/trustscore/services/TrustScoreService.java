@@ -29,6 +29,7 @@ import io.coti.trustscore.utils.DatesCalculation;
 import io.coti.trustscore.utils.MathCalculation;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -308,7 +309,7 @@ public class TrustScoreService {
     }
 
     private void initBuckets() {
-        BucketTransactionService.init(rulesData);
+        bucketTransactionService.init(rulesData);
         bucketBehaviorEventsService.init(rulesData);
         bucketInitialTrustScoreEventsService.init(rulesData);
         bucketChargeBackEventsService.init(rulesData);
@@ -366,6 +367,8 @@ public class TrustScoreService {
                 .getInitialTrustScore().getComponentByType(InitialTrustScoreType.KYC);
         Date beginningOfToday = DatesCalculation.setDateOnBeginningOfDay(new Date());
         Date beginningDayOfCreateDate = DatesCalculation.setDateOnBeginningOfDay(trustScoreData.getCreateTime());
+//        Date beginningDayOfCreateDate = DateUtils.addDays(DatesCalculation.setDateOnBeginningOfDay(trustScoreData.getCreateTime()),-1000); // Anton !!!! modification of last update date!
+
         int daysDifference = DatesCalculation.calculateDaysDiffBetweenDates(beginningOfToday, beginningDayOfCreateDate);
 
         return MathCalculation.evaluateExpression(kycInitialTrustScoreEventScore.getDecay().replace("T", String.valueOf(daysDifference)))
