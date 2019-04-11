@@ -3,23 +3,26 @@ package io.coti.nodemanager.services;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.services.interfaces.INetworkService;
-import io.coti.nodemanager.data.ActiveNodeData;
 import io.coti.nodemanager.model.ActiveNodes;
+import io.coti.nodemanager.services.interfaces.IHealthCheckService;
 import io.coti.nodemanager.services.interfaces.INodeManagementService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.*;
+import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.*;
 
 import static java.lang.Math.min;
 
 @Service
 @Slf4j
-public class HealthCheckService {
+public class HealthCheckService implements IHealthCheckService {
 
     private static final String NODE_HASH_END_POINT = "/nodeHash";
     private static final int RETRY_INTERVAL_IN_SECONDS = 20;
@@ -32,16 +35,27 @@ public class HealthCheckService {
     private RestTemplate restTemplate;
     @Autowired
     private INetworkService networkService;
+    private Thread healthCheckThread;
 
-    @Scheduled(fixedDelay = 5000, initialDelay = 5000)
+    @PostConstruct
+    public void init() {
+        healthCheckThread = new Thread(() -> nodesHealthCheck());
+        healthCheckThread.start();
+    }
+
     public void nodesHealthCheck() {
-        try {
-            boolean networkChanged = checkNodesList(networkService.getNetworkNodeDataList());
-            if (networkChanged) {
-                nodeManagementService.propagateNetworkChanges();
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                Thread.sleep(5000);
+                boolean networkChanged = checkNodesList(networkService.getNetworkNodeDataList());
+                if (networkChanged) {
+                    nodeManagementService.propagateNetworkChanges();
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                log.error("Exception in health check: ", e);
             }
-        } catch (Exception ex) {
-            log.error("Exception in health check: ", ex);
         }
     }
 
@@ -51,6 +65,9 @@ public class HealthCheckService {
         }
         int tries = 0;
         while (tries < MAX_NUM_OF_TRIES) {
+            if (Thread.currentThread().isInterrupted()) {
+                return true;
+            }
             try {
                 if (tries != 0) {
                     log.info("Waiting {} seconds for #{} retry to {} of address {} healthcheck",
@@ -64,6 +81,9 @@ public class HealthCheckService {
                             networkNodeDataToCheck.getNodeType(), networkNodeDataToCheck.getAddress(), networkNodeDataToCheck.getHttpPort());
                     return true;
                 }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return true;
             } catch (Exception ex) {
                 log.error("Exception in health check to {} . this was the #{} attempt out of {}. Err: {}",
                         networkNodeDataToCheck.getHttpFullAddress(), tries + 1, MAX_NUM_OF_TRIES, ex.getMessage());
@@ -85,10 +105,10 @@ public class HealthCheckService {
 
     private boolean checkNodesList(List<NetworkNodeData> nodesList) {
         boolean networkChanged = false;
-        try {
+        if (!nodesList.isEmpty()) {
+            ExecutorService executorService = Executors.newFixedThreadPool(min(20, nodesList.size()));
             List<NetworkNodeData> nodesToRemove = new LinkedList<>();
-            if (!nodesList.isEmpty()) {
-                ExecutorService executorService = Executors.newFixedThreadPool(min(20,nodesList.size()));
+            try {
                 List<Callable<Boolean>> nodeCheckTasks = new ArrayList<>(nodesList.size());
                 Iterator<NetworkNodeData> iterator = nodesList.iterator();
                 while (iterator.hasNext()) {
@@ -102,10 +122,13 @@ public class HealthCheckService {
                     }
                 }
                 executorService.shutdown();
+                nodesToRemove.forEach(networkNode -> networkService.removeNode(networkNode));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                executorService.shutdown();
+            } catch (Exception e) {
+                log.error("Error while checking nodeList", e);
             }
-            nodesToRemove.forEach(networkNode -> networkService.removeNode(networkNode));
-        } catch (Exception ex) {
-            log.error("Error while checking nodeList", ex);
         }
         return networkChanged;
     }
@@ -114,6 +137,16 @@ public class HealthCheckService {
         log.info("Deleting {} of address {} and port {}", networkNodeData.getNodeType(), networkNodeData.getAddress(), networkNodeData.getHttpPort());
         nodeManagementService.insertDeletedNodeRecord(networkNodeData);
         activeNodes.delete(networkNodeData);
+    }
+
+    public void shutdown() {
+        log.info("Shutting down {}", this.getClass().getSimpleName());
+        healthCheckThread.interrupt();
+        try {
+            healthCheckThread.join();
+        } catch (InterruptedException e) {
+            log.error("Interrupted shutdown health check service");
+        }
     }
 
 }

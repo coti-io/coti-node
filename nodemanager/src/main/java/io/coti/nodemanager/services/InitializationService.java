@@ -2,11 +2,13 @@ package io.coti.nodemanager.services;
 
 import io.coti.basenode.database.Interfaces.IDatabaseConnector;
 import io.coti.basenode.services.interfaces.INetworkService;
+import io.coti.basenode.services.interfaces.IShutDownService;
 import io.coti.nodemanager.model.ActiveNodes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 
 @Service
 public class InitializationService {
@@ -17,7 +19,8 @@ public class InitializationService {
     private INetworkService networkService;
     @Autowired
     private IDatabaseConnector databaseConnector;
-
+    @Autowired
+    private IShutDownService shutDownService;
 
     @PostConstruct
     private void init() {
@@ -33,6 +36,11 @@ public class InitializationService {
                     }
                 }
         );
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        shutDownService.shutdown();
     }
 
 }

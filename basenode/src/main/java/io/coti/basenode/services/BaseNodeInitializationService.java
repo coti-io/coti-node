@@ -1,6 +1,5 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.crypto.GetNodeRegistrationRequestCrypto;
 import io.coti.basenode.crypto.NetworkNodeCrypto;
@@ -26,6 +25,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.PreDestroy;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -83,6 +83,8 @@ public abstract class BaseNodeInitializationService {
     private IDatabaseConnector databaseConnector;
     @Autowired
     private IPropagationSubscriber propagationSubscriber;
+    @Autowired
+    private IShutDownService shutDownService;
     @Autowired
     private RestTemplate restTemplate;
     @Autowired
@@ -271,6 +273,11 @@ public abstract class BaseNodeInitializationService {
 
     protected void propagateMissingTransaction(TransactionData transactionData) {
 
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        shutDownService.shutdown();
     }
 
 }

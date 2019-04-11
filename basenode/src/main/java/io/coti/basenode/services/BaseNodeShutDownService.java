@@ -4,23 +4,27 @@ import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.database.Interfaces.IDatabaseConnector;
 import io.coti.basenode.services.interfaces.IConfirmationService;
+import io.coti.basenode.services.interfaces.IShutDownService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PreDestroy;
-
+@Slf4j
 @Service
-public class ShutDownService {
+public class BaseNodeShutDownService implements IShutDownService {
     @Autowired
-    private IConfirmationService confirmationService;
+    protected IConfirmationService confirmationService;
     @Autowired
-    private IPropagationPublisher propagationPublisher;
+    protected IPropagationPublisher propagationPublisher;
     @Autowired
-    private IPropagationSubscriber propagationSubscriber;
+    protected IPropagationSubscriber propagationSubscriber;
     @Autowired
-    private IDatabaseConnector databaseConnector;
+    protected IDatabaseConnector databaseConnector;
 
-    @PreDestroy
+    public void shutdown() {
+        shutDownServices();
+    }
+
     public void shutDownServices() {
         propagationSubscriber.shutdown();
         propagationPublisher.shutdown();

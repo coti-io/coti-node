@@ -78,6 +78,7 @@ public class NodeManagementService implements INodeManagementService {
             activeNodes.put(activeNodeData);
             insertToDB(networkNodeData, NetworkNodeStatus.ACTIVE);
             propagateNetworkChanges();
+            Thread.sleep(3000); // a delay for other nodes to make changes with the newly added node
             return ResponseEntity.status(HttpStatus.OK).body(String.format(NODE_ADDED_TO_NETWORK, networkNodeData.getNodeHash()));
         } catch (Exception e) {
             e.printStackTrace();
