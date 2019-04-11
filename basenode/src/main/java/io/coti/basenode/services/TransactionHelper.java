@@ -20,6 +20,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -392,17 +395,27 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     @Override
-    public GetTransactionBatchResponse getTransactionBatch(long startingIndex) {
+    public void getTransactionBatch(long startingIndex, HttpServletResponse response) {
+        PrintWriter writer = null;
+        try {
+            writer = response.getWriter();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         List<TransactionData> transactionsToSend = new LinkedList<>();
         if (startingIndex > transactionIndexService.getLastTransactionIndexData().getIndex()) {
-            return new GetTransactionBatchResponse(transactionsToSend);
+            writer.println(new GetTransactionBatchResponse(transactionsToSend));
+            writer.flush();
+            return;
         }
         for (long i = startingIndex; i <= transactionIndexService.getLastTransactionIndexData().getIndex(); i++) {
             transactionsToSend.add(transactions.getByHash(transactionIndexes.getByHash(new Hash(i)).getTransactionHash()));
         }
         transactionsToSend.addAll(noneIndexedTransactionHashes.stream().map(hash -> transactions.getByHash(hash)).collect(Collectors.toList()));
         transactionsToSend.sort(Comparator.comparing(transactionData -> transactionData.getAttachmentTime()));
-        return new GetTransactionBatchResponse(transactionsToSend);
+        writer.println(new GetTransactionBatchResponse(transactionsToSend));
+        writer.flush();
+        return;
     }
 
     public void addNoneIndexedTransaction(TransactionData transactionData) {

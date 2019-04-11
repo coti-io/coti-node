@@ -9,7 +9,6 @@ import io.coti.basenode.database.Interfaces.IDatabaseConnector;
 import io.coti.basenode.http.CustomHttpComponentsClientHttpRequestFactory;
 import io.coti.basenode.http.GetNodeRegistrationRequest;
 import io.coti.basenode.http.GetNodeRegistrationResponse;
-import io.coti.basenode.http.GetTransactionBatchResponse;
 import io.coti.basenode.model.NodeRegistrations;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.LiveView.LiveViewService;
@@ -26,6 +25,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PreDestroy;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -179,13 +179,13 @@ public abstract class BaseNodeInitializationService {
 
     private List<TransactionData> requestMissingTransactions(long firstMissingTransactionIndex) {
         try {
-            GetTransactionBatchResponse getTransactionBatchResponse =
+            String getTransactionBatchResponse =
                     restTemplate.getForObject(
                             networkService.getRecoveryServerAddress() + RECOVERY_NODE_GET_BATCH_ENDPOINT
                                     + STARTING_INDEX_URL_PARAM_ENDPOINT + firstMissingTransactionIndex,
-                            GetTransactionBatchResponse.class);
-            log.info("Received transaction batch of size: {}", getTransactionBatchResponse.getTransactions().size());
-            return getTransactionBatchResponse.getTransactions();
+                            String.class);
+            log.info("Received transaction batch of size: {}", 0);
+            return new ArrayList<>();
         } catch (Exception e) {
             log.error("Error at missing transactions from recovery Node");
             throw new RuntimeException(e);
