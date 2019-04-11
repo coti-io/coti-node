@@ -29,6 +29,11 @@
             <artifactId>aws-java-sdk-s3</artifactId>
             <version>1.11.458</version>
         </dependency>
+        <dependency>
+            <groupId>com.vaadin.external.google</groupId>
+            <artifactId>android-json</artifactId>
+            <version>0.0.20131108.vaadin1</version>
+        </dependency>
     </dependencies>
 
     <build>

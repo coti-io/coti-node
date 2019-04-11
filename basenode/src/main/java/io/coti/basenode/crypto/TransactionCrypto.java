@@ -34,7 +34,6 @@ public class TransactionCrypto extends SignatureCrypto<TransactionData> {
         return CryptoHelper.cryptoHash(bytesToHash);
     }
 
-
     public void setTransactionHash(TransactionData transactionData) {
         try {
             for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
@@ -69,6 +68,4 @@ public class TransactionCrypto extends SignatureCrypto<TransactionData> {
         }
         return true;
     }
-
-
 }

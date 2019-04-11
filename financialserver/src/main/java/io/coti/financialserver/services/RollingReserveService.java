@@ -19,12 +19,9 @@ import io.coti.financialserver.data.*;
 import io.coti.financialserver.http.GetMerchantRollingReserveDataRequest;
 import io.coti.financialserver.http.GetRollingReserveReleaseDatesResponse;
 import io.coti.financialserver.http.RecourseClaimRequest;
-import io.coti.financialserver.model.Disputes;
-import io.coti.financialserver.model.MerchantRollingReserves;
-import io.coti.financialserver.model.RecourseClaims;
-import io.coti.financialserver.model.RollingReserveReleaseDates;
+import io.coti.financialserver.model.*;
+import io.coti.financialserver.utils.DatesHelper;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -32,8 +29,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -43,7 +38,7 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 @Service
 public class RollingReserveService {
 
-    private static final int COTI_POOL_ADDRESS_INDEX = 0;
+    private static final int COTI_ROLLING_RESERVE_ADDRESS_INDEX = 1;
     private static final int ROLLING_RESERVE_DEFAULT_DAYS_TO_HOLD = 10;
     @Autowired
     MerchantRollingReserves merchantRollingReserves;
@@ -67,16 +62,27 @@ public class RollingReserveService {
     private Transactions transactions;
     @Autowired
     private Disputes disputes;
+    @Autowired
+    private InitialFunds initialFunds;
 
     private AtomicInteger lastAddressIndex;
 
+
     public void init() {
-        lastAddressIndex = new AtomicInteger(COTI_POOL_ADDRESS_INDEX + 1);
+        lastAddressIndex = new AtomicInteger(COTI_ROLLING_RESERVE_ADDRESS_INDEX);
+        initialFunds.forEach(c-> lastAddressIndex.getAndIncrement());
         merchantRollingReserves.forEach(c -> lastAddressIndex.getAndIncrement());
     }
 
-    public Hash getCotiPoolAddress() {
-        return CryptoHelper.generateAddress(seed, COTI_POOL_ADDRESS_INDEX);
+    public Hash getCotiRollingReserveAddress() {
+        return CryptoHelper.generateAddress(seed, COTI_ROLLING_RESERVE_ADDRESS_INDEX);
+    }
+
+    public synchronized int getNextAddressIndex() {
+        if (lastAddressIndex == null) {
+            init();
+        }
+        return lastAddressIndex.incrementAndGet();
     }
 
     public ResponseEntity getRollingReserveData(GetMerchantRollingReserveDataRequest request) {
@@ -144,7 +150,7 @@ public class RollingReserveService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_TRANSACTION_NOT_FOUND, STATUS_ERROR));
         }
 
-        if (!transactionData.getReceiverBaseTransactionAddressHash().equals(getCotiPoolAddress())) {
+        if (!transactionData.getReceiverBaseTransactionAddressHash().equals(getCotiRollingReserveAddress())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(NOT_COTI_POOL, STATUS_ERROR));
         }
 
@@ -178,7 +184,7 @@ public class RollingReserveService {
 
         try {
             // TODO: Get number of days from transaction data
-            Date date = getDateNumberOfDaysAfterToday(ROLLING_RESERVE_DEFAULT_DAYS_TO_HOLD);
+            Date date = DatesHelper.getDateNumberOfDaysAfterToday(ROLLING_RESERVE_DEFAULT_DAYS_TO_HOLD);
 
             Hash dateHash = new Hash(date.getTime());
             RollingReserveReleaseDateData rollingReserveReleaseDateData = rollingReserveReleaseDates.getByHash(dateHash);
@@ -278,21 +284,16 @@ public class RollingReserveService {
         merchantRollingReserves.put(merchantRollingReserveData);
     }
 
-    private synchronized void createRollingReserveDataForMerchant(Hash merchantHash) {
+    private void createRollingReserveDataForMerchant(Hash merchantHash) {
 
-        if (lastAddressIndex == null) {
-            init();
-        }
-
-        Hash address = CryptoHelper.generateAddress(seed, lastAddressIndex.intValue());
+        int addressIndex = getNextAddressIndex();
+        Hash address = CryptoHelper.generateAddress(seed, addressIndex);
 
         MerchantRollingReserveData merchantRollingReserveData = new MerchantRollingReserveData();
         merchantRollingReserveData.setMerchantHash(merchantHash);
         merchantRollingReserveData.setRollingReserveAddress(address);
-        merchantRollingReserveData.setAddressIndex(lastAddressIndex.intValue());
+        merchantRollingReserveData.setAddressIndex(addressIndex);
         merchantRollingReserves.put(merchantRollingReserveData);
-
-        lastAddressIndex.incrementAndGet();
     }
 
     private void addConsumerToRollingReserveReceiver(RollingReserveReleaseStatus rollingReserveReleaseStatus) {
@@ -304,19 +305,5 @@ public class RollingReserveService {
         }
     }
 
-    private Date getDateNumberOfDaysAfterToday(int numberOfDays) {
 
-        Date date = new Date();
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-
-        try {
-            date = formatter.parse(formatter.format(date));
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-
-        DateUtils.addDays(date, numberOfDays);
-
-        return date;
-    }
 }
