@@ -5,8 +5,6 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Data
 public class NodeNetworkDataTimestamp implements Serializable {

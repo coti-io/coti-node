@@ -45,7 +45,7 @@ public class EventService {
         List<DisputeEventResponse> disputeEventResponses = new ArrayList<>();
 
         UnreadUserDisputeEventData unreadUserDisputeEventData = unreadUserDisputeEvents.getByHash(getUnreadEventsData.getUserHash());
-        if(unreadUserDisputeEventData != null) {
+        if (unreadUserDisputeEventData != null) {
             Map<Hash, ActionSide> disputeEventHashToEventDisplaySideMap = unreadUserDisputeEventData.getDisputeEventHashToEventDisplaySideMap();
 
             disputeEventHashToEventDisplaySideMap.forEach((disputeHash, eventDisplaySide) ->

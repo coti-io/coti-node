@@ -6,7 +6,6 @@ import io.coti.basenode.data.SignatureData;
 import lombok.Data;
 
 import java.time.Instant;
-import java.util.Date;
 
 @Data
 public class FullNodeFeeResponseData {

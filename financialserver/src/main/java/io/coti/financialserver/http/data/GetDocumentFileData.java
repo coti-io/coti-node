@@ -23,7 +23,7 @@ public class GetDocumentFileData implements ISignable, ISignValidatable {
         this.userHash = userHash;
         this.userSignature = userSignature;
     }
-    
+
     @Override
     public SignatureData getSignature() {
         return userSignature;

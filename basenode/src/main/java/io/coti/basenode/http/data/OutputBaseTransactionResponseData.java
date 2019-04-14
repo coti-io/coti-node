@@ -7,7 +7,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
-public abstract class OutputBaseTransactionResponseData extends BaseTransactionResponseData{
+public abstract class OutputBaseTransactionResponseData extends BaseTransactionResponseData {
     protected BigDecimal originalAmount;
 
     protected OutputBaseTransactionResponseData(BaseTransactionData baseTransactionData) {

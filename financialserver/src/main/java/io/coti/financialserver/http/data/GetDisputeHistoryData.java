@@ -35,6 +35,6 @@ public class GetDisputeHistoryData implements ISignable, ISignValidatable {
 
     @Override
     public void setSignature(SignatureData signature) {
-       this.userSignature = signature;
+        this.userSignature = signature;
     }
 }

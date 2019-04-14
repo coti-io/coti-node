@@ -55,7 +55,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity handleTransactionException(TransactionException e) {
         log.error("An error while adding transaction, performing a rollback procedure", e);
         ResponseEntity responseEntity = new ResponseEntity(
-                new ExceptionResponse(TRANSACTION_ROLLBACK_MESSAGE , API_SERVER_ERROR), HttpStatus.INTERNAL_SERVER_ERROR);
+                new ExceptionResponse(TRANSACTION_ROLLBACK_MESSAGE, API_SERVER_ERROR), HttpStatus.INTERNAL_SERVER_ERROR);
         return responseEntity;
     }
 }

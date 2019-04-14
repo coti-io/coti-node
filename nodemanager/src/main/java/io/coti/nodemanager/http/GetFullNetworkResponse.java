@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.util.List;
 import java.util.Map;
+
 @Data
 public class GetFullNetworkResponse extends BaseResponse {
     private Map<String, List<String>> fullNetworkResponse;

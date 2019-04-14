@@ -5,6 +5,7 @@ import io.coti.nodemanager.data.NodeHistoryData;
 import lombok.Data;
 
 import java.util.List;
+
 @Data
 public class GetNetworkHistoryResponse extends BaseResponse {
     private List<NodeHistoryData> historyDataList;

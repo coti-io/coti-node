@@ -146,7 +146,7 @@ public enum DisputeItemStatusService {
         webSocketService.notifyOnItemStatusChange(disputeData, itemId, actionSide);
         changeDisputeItemsStatuses(disputeData);
         if (isFinalStatusForAllItems(disputeData)) {
-         //   createChargeBackTransaction(disputeData);
+            //   createChargeBackTransaction(disputeData);
         }
 
         changeDisputeStatus(disputeData);

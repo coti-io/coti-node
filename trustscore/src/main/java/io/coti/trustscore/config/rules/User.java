@@ -12,7 +12,7 @@ public class User {
     private BehaviorEventsScore behaviorEventsScore;
     private BehaviorHighFrequencyEventsScore behaviorHighFrequencyEventsScore;
     private CompensableEventsScore compensableEventsScore;
-    
+
     public TransactionEventsScore getBehaviorCumulativeScores() {
         return transactionEventScore;
     }

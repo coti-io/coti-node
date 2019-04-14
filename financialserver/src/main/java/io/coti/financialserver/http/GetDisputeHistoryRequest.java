@@ -1,7 +1,6 @@
 package io.coti.financialserver.http;
 
 import io.coti.financialserver.http.data.GetDisputeHistoryData;
-import io.coti.financialserver.http.data.GetDisputeItemDetailData;
 import lombok.Data;
 
 import javax.validation.Valid;

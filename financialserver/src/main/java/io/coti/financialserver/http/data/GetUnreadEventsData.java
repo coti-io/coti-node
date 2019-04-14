@@ -31,11 +31,11 @@ public class GetUnreadEventsData implements ISignable, ISignValidatable {
 
     @Override
     public void setSignerHash(Hash signerHash) {
-       this.userHash = signerHash;
+        this.userHash = signerHash;
     }
 
     @Override
     public void setSignature(SignatureData signature) {
-       this.userSignature = signature;
+        this.userSignature = signature;
     }
 }

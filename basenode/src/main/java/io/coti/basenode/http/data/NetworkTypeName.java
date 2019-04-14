@@ -3,9 +3,9 @@ package io.coti.basenode.http.data;
 import io.coti.basenode.data.NetworkType;
 
 public enum NetworkTypeName {
-    AlphaNet(NetworkType.AlphaNet,"alphanet"),
-    TestNet(NetworkType.TestNet,"testnet"),
-    MainNet(NetworkType.MainNet,"mainnet");
+    AlphaNet(NetworkType.AlphaNet, "alphanet"),
+    TestNet(NetworkType.TestNet, "testnet"),
+    MainNet(NetworkType.MainNet, "mainnet");
 
     private NetworkType networkType;
     private String network;

@@ -20,7 +20,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -86,25 +89,24 @@ public class TrustScoreService implements ITrustScoreService {
         NodeTrustScoreRequest nodeTrustScoreRequest = createNodeTrustScoreRequest(nodesList);
         List<NetworkNodeData> trustScoreNodesToHandle = chooseTrustScoreNodesFromList(trustScoreNodeList);
         NetworkNodeData firstTrustScoreNode = trustScoreNodesToHandle.get(0);
-        NodeTrustScoreResponse nodeTrustScoreResponse = sendTrustScoreRequestToFirstTrustScoreNode(firstTrustScoreNode,nodeTrustScoreRequest);
+        NodeTrustScoreResponse nodeTrustScoreResponse = sendTrustScoreRequestToFirstTrustScoreNode(firstTrustScoreNode, nodeTrustScoreRequest);
         List<NetworkNodeData> trustScoreNodesForValidations = trustScoreNodeList.stream().skip(1).collect(Collectors.toList());
-        if(nodeTrustScoreResponse.getNodeTrustScoreDataList() != null){
+        if (nodeTrustScoreResponse.getNodeTrustScoreDataList() != null) {
             Map<Hash, NetworkNodeData> nodesToSet = createNodeMapFromList(nodesList);
             sendTrustScoreRequestForValidation(trustScoreNodesForValidations, nodeTrustScoreResponse);
-            for(NodeTrustScoreData nodeTrustScoreData : nodeTrustScoreResponse.getNodeTrustScoreDataList()){
-                if(validateTrustScoreNodesConsensus(nodeTrustScoreData)){
+            for (NodeTrustScoreData nodeTrustScoreData : nodeTrustScoreResponse.getNodeTrustScoreDataList()) {
+                if (validateTrustScoreNodesConsensus(nodeTrustScoreData)) {
                     nodesToSet.get(nodeTrustScoreData.getNodeHash()).setTrustScore(nodeTrustScoreData.getTrustScore());
-                }
-                else{
-                    log.error("The node {} didn't reach consensus" , nodeTrustScoreData);
+                } else {
+                    log.error("The node {} didn't reach consensus", nodeTrustScoreData);
                     nodesToSet.get(nodeTrustScoreData.getNodeHash()).setTrustScore(-1.0);
                 }
             }
         }
     }
 
-    private Map<Hash, NetworkNodeData> createNodeMapFromList(List<NetworkNodeData> networkNodeData){
-        Map<Hash, NetworkNodeData> ans = networkNodeData.stream().collect(Collectors.toMap(x-> x.getHash(),x-> x));
+    private Map<Hash, NetworkNodeData> createNodeMapFromList(List<NetworkNodeData> networkNodeData) {
+        Map<Hash, NetworkNodeData> ans = networkNodeData.stream().collect(Collectors.toMap(x -> x.getHash(), x -> x));
         return ans;
     }
 
@@ -127,11 +129,11 @@ public class TrustScoreService implements ITrustScoreService {
         return trustScoreResponseEntity.getBody();
     }
 
-    private void sendTrustScoreRequestForValidation(List<NetworkNodeData> trustScoreNodes, NodeTrustScoreResponse trustScoreResponseToAggregate){
-        trustScoreNodes.forEach(node-> sendTrustScoreResponseToAggregate(node, trustScoreResponseToAggregate));
+    private void sendTrustScoreRequestForValidation(List<NetworkNodeData> trustScoreNodes, NodeTrustScoreResponse trustScoreResponseToAggregate) {
+        trustScoreNodes.forEach(node -> sendTrustScoreResponseToAggregate(node, trustScoreResponseToAggregate));
     }
 
-    private void sendTrustScoreResponseToAggregate(NetworkNodeData networkNodeData, NodeTrustScoreResponse trustScoreResponseToAggregate){
+    private void sendTrustScoreResponseToAggregate(NetworkNodeData networkNodeData, NodeTrustScoreResponse trustScoreResponseToAggregate) {
 
         ResponseEntity<NodeTrustScoreResponse> trustScoreResponseEntity = null;
         try {
@@ -139,11 +141,11 @@ public class TrustScoreService implements ITrustScoreService {
                     networkNodeData.getHttpFullAddress() + TRUSTSCORE_AGGREGATION_DATA_ENDPOINT, trustScoreResponseToAggregate, NodeTrustScoreResponse.class);
             if (!HttpStatus.OK.equals(trustScoreResponseEntity.getStatusCode())) {
                 log.error("Trust score node {} returned bad status code: {}", networkNodeData.getHttpFullAddress(), trustScoreResponseEntity);
-                return ;
+                return;
             }
             if (trustScoreResponseEntity.getBody() == null) {
                 log.error("Trust score node {} returned null body: {}", networkNodeData.getHttpFullAddress(), trustScoreResponseEntity);
-                return ;
+                return;
             }
         } catch (Exception ex) {
             log.error("Error while contacting trustScoreNode {} exception", networkNodeData.getHttpFullAddress(), ex);
@@ -151,21 +153,20 @@ public class TrustScoreService implements ITrustScoreService {
         trustScoreResponseToAggregate = trustScoreResponseEntity.getBody();
     }
 
-    private boolean validateTrustScoreNodesConsensus(NodeTrustScoreData nodeTrustScoreResponse){
-        if(nodeTrustScoreResponse.getTrustScoreDataResults().size() != NUM_OF_TRUSTSCORE_NODES){
+    private boolean validateTrustScoreNodesConsensus(NodeTrustScoreData nodeTrustScoreResponse) {
+        if (nodeTrustScoreResponse.getTrustScoreDataResults().size() != NUM_OF_TRUSTSCORE_NODES) {
             log.error("Not all of the trustScore transactions voted for the trust score  responses: {}", nodeTrustScoreResponse.getTrustScoreDataResults());
             return false;
         }
         int falseVote = 0;
         int trueVote = 0;
 
-        for(NodeTrustScoreDataResult trustScoreData : nodeTrustScoreResponse.getTrustScoreDataResults()){
-            if(trustScoreData != null){
-                if(trustScoreData.isValid()){
-                    trueVote ++;
-                }
-                else{
-                    falseVote ++;
+        for (NodeTrustScoreDataResult trustScoreData : nodeTrustScoreResponse.getTrustScoreDataResults()) {
+            if (trustScoreData != null) {
+                if (trustScoreData.isValid()) {
+                    trueVote++;
+                } else {
+                    falseVote++;
                 }
             }
         }

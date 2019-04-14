@@ -725,7 +725,7 @@
         "highFrequencyEventsScoreList": []
       }
     },
-	{
+    {
       "type": "dspnode",
       "addressMapping": "address -> userHash",
       "initialTrustScore": {

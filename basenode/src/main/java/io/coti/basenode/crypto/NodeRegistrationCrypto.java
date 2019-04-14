@@ -1,13 +1,10 @@
 package io.coti.basenode.crypto;
 
 import io.coti.basenode.data.NodeRegistrationData;
-import io.coti.basenode.http.GetNodeRegistrationResponse;
 import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
 
 @Component
 public class NodeRegistrationCrypto extends SignatureValidationCrypto<NodeRegistrationData> {
@@ -25,7 +22,7 @@ public class NodeRegistrationCrypto extends SignatureValidationCrypto<NodeRegist
         byte[] creationTimeInBytes = ByteBuffer.allocate(Long.BYTES).putLong(creationTime.toEpochMilli()).array();
 
         ByteBuffer nodeRegistrationBuffer = ByteBuffer.allocate(nodeHashInBytes.length + nodeTypeInBytes.length + networkTypeInBytes.length + creationTimeInBytes.length)
-                                                      .put(nodeHashInBytes).put(nodeTypeInBytes).put(networkTypeInBytes).put(creationTimeInBytes);
+                .put(nodeHashInBytes).put(nodeTypeInBytes).put(networkTypeInBytes).put(creationTimeInBytes);
 
         return CryptoHelper.cryptoHash(nodeRegistrationBuffer.array()).getBytes();
     }

@@ -1,7 +1,7 @@
 package io.coti.basenode.communication.interfaces;
 
-import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.interfaces.IPropagatable;
 
 public interface ISender {
 

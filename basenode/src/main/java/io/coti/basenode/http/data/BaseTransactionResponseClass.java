@@ -14,7 +14,7 @@ public enum BaseTransactionResponseClass {
         this.baseTransactionResponseClass = baseTransactionResponseClass;
     }
 
-    public  Class<? extends BaseTransactionResponseData> getBaseTransactionResponseClass() {
+    public Class<? extends BaseTransactionResponseData> getBaseTransactionResponseClass() {
         return baseTransactionResponseClass;
     }
 }

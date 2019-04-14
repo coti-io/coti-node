@@ -1,8 +1,8 @@
 package io.coti.trustscore.services.calculationServices;
 
-import io.coti.trustscore.config.rules.SuspiciousEventScore;
 import io.coti.trustscore.config.rules.BehaviorEventsScore;
 import io.coti.trustscore.config.rules.RulesData;
+import io.coti.trustscore.config.rules.SuspiciousEventScore;
 import io.coti.trustscore.data.Buckets.BucketBehaviorEventsData;
 import io.coti.trustscore.data.Enums.BehaviorEventsScoreType;
 import io.coti.trustscore.data.Enums.UserType;
