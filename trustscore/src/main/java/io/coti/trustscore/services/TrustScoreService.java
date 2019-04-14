@@ -29,7 +29,6 @@ import io.coti.trustscore.utils.DatesCalculation;
 import io.coti.trustscore.utils.MathCalculation;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -44,6 +43,7 @@ import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -234,7 +234,6 @@ public class TrustScoreService {
             log.info("Setting KYC trust score: userHash =  {}, KTS = {}, userType =  {}", request.userHash, request.kycTrustScore, request.userType);
             TrustScoreData trustScoreDataNew = new TrustScoreData(request.userHash,
                     request.kycTrustScore,
-// it is a crutch, there should be modification of initial events bucket
                     request.signature,
                     new Hash(kycServerPublicKey),
                     UserType.enumFromString(request.userType));
@@ -250,13 +249,19 @@ public class TrustScoreService {
                 kycTrustScoreResponse = new SetKycTrustScoreResponse(trustScoreDataNew);
             }
             else {
-                trustScoreDataOld.setKycTrustScore(request.kycTrustScore);
-                trustScoreDataOld.setSignature(request.signature);
-                trustScoreDataOld.setKycServerPublicKey(trustScoreDataNew.getKycServerPublicKey());
-// it is a crutch, there should be modification of initial events bucket
-                trustScores.put(trustScoreDataOld);
                 kycTrustScoreResponse = new SetKycTrustScoreResponse(trustScoreDataOld);
             }
+// create InsertEventRequest from SetKycTrustScoreRequest
+            InsertEventRequest insertEventRequest = new InsertEventRequest();
+            insertEventRequest.setEventDate(Instant.now());
+            insertEventRequest.setUserHash(request.getUserHash());
+            insertEventRequest.setInitialTrustScoreType(InitialTrustScoreType.KYC);
+            insertEventRequest.setScore(request.getKycTrustScore());
+            insertEventRequest.setSignerHash(new Hash(kycServerPublicKey));
+            insertEventRequest.setSignature(request.getSignature());
+            insertEventRequest.setUniqueIdentifier(new Hash(0));  // there is no hash for this event, no ID
+            insertEventRequest.setEventType(EventType.INITIAL_EVENT);
+            sendToBucketInitialTrustScoreEventsService(insertEventRequest);
 
             return ResponseEntity.status(HttpStatus.OK)
                     .body(kycTrustScoreResponse);
@@ -360,7 +365,7 @@ public class TrustScoreService {
 
     public double calculateUserTrustScore(TrustScoreData trustScoreData) {
 
-        double eventsTrustScore = 0;
+        double eventsTrustScore = 10;
 
         for (IBucketEventService bucketEventService : bucketEventServiceList) {
             BucketEventData bucketEventData =
@@ -370,22 +375,7 @@ public class TrustScoreService {
                 bucketEventData.setLastUpdate(DatesCalculation.setDateOnBeginningOfDay(new Date()));
             }
         }
-        return Math.max(eventsTrustScore + getKycScore(trustScoreData), 0.1);
-    }
-
-    private double getKycScore(TrustScoreData trustScoreData) {
-
-        InitialTrustScoreEventScore kycInitialTrustScoreEventScore
-                = BucketTransactionService.getRulesData().getUsersRules(trustScoreData.getUserType())
-                .getInitialTrustScore().getComponentByType(InitialTrustScoreType.KYC);
-        Date beginningOfToday = DatesCalculation.setDateOnBeginningOfDay(new Date());
-        Date beginningDayOfCreateDate = DatesCalculation.setDateOnBeginningOfDay(trustScoreData.getCreateTime());
-//        Date beginningDayOfCreateDate = DateUtils.addDays(DatesCalculation.setDateOnBeginningOfDay(trustScoreData.getCreateTime()),-1000); // Anton !!!! modification of last update date!
-
-        int daysDifference = DatesCalculation.calculateDaysDiffBetweenDates(beginningOfToday, beginningDayOfCreateDate);
-
-        return MathCalculation.evaluateExpression(kycInitialTrustScoreEventScore.getDecay().replace("T", String.valueOf(daysDifference)))
-                * trustScoreData.getKycTrustScore() * kycInitialTrustScoreEventScore.getWeight();
+        return Math.max(eventsTrustScore, 0.1);
     }
 
     private void updateUserTypeInBuckets(TrustScoreData trustScoreData) {
