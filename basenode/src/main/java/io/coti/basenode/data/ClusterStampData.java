@@ -19,7 +19,7 @@ public class ClusterStampData implements IPropagatable, ISignable, ISignValidata
     private Hash hash;
     private long totalConfirmedTransactionsPriorClusterStamp;
     private Map<Hash, BigDecimal> balanceMap;
-    private List<InitialFundData> initialFundDataList; // Exist only in initial Cluster Stamp
+    private List<InitialFundData> initialFundDataList; // Exists only in initial Cluster Stamp
     private Map<Hash, TransactionData> unconfirmedTransactions;
     private Hash zeroSpendHash;
     private SignatureData zeroSpendSignature;

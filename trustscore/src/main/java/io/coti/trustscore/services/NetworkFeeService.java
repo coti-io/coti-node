@@ -22,8 +22,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -71,7 +71,7 @@ public class NetworkFeeService {
             double userTrustScore = trustScoreService.calculateUserTrustScore(trustScoreData);
 
             BigDecimal fee = calculateNetworkFeeAmount(getUserNetworkFeeByTrustScoreRange(userTrustScore), reducedAmount);
-            NetworkFeeData networkFeeData = new NetworkFeeData(networkFeeAddress, fee, originalAmount, reducedAmount, new Date());
+            NetworkFeeData networkFeeData = new NetworkFeeData(networkFeeAddress, fee, originalAmount, reducedAmount, Instant.now());
             setNetworkFeeHash(networkFeeData);
             signNetworkFee(networkFeeData, true);
             NetworkFeeResponseData networkFeeResponseData = new NetworkFeeResponseData(networkFeeData);

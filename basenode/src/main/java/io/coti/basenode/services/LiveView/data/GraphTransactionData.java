@@ -3,7 +3,6 @@ package io.coti.basenode.services.LiveView.data;
 import lombok.Data;
 
 import java.time.Instant;
-import java.util.Date;
 
 @Data
 public class GraphTransactionData {

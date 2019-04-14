@@ -6,7 +6,7 @@ import io.coti.basenode.data.BaseTransactionName;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.Instant;
 
 @Data
 public abstract class BaseTransactionResponseData {
@@ -14,7 +14,7 @@ public abstract class BaseTransactionResponseData {
     private String hash;
     private String addressHash;
     private BigDecimal amount;
-    private Date createTime;
+    private Instant createTime;
     private String name;
 
     protected BaseTransactionResponseData(BaseTransactionData baseTransactionData) {

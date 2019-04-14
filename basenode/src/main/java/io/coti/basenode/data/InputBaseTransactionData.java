@@ -4,7 +4,7 @@ package io.coti.basenode.data;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.Instant;
 
 @Data
 public class InputBaseTransactionData extends BaseTransactionData {
@@ -13,7 +13,7 @@ public class InputBaseTransactionData extends BaseTransactionData {
         super();
     }
 
-    public InputBaseTransactionData(Hash addressHash, BigDecimal amount, Date createTime) {
+    public InputBaseTransactionData(Hash addressHash, BigDecimal amount, Instant createTime) {
         super(addressHash, amount, createTime);
     }
 

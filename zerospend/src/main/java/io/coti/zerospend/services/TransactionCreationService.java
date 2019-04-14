@@ -17,7 +17,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 import static io.coti.zerospend.data.ZeroSpendTransactionType.GENESIS;
@@ -100,7 +99,7 @@ public class TransactionCreationService {
 
     private TransactionData createZeroSpendTransactionData(double trustScore, ZeroSpendTransactionType description) {
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
-        BaseTransactionData baseTransactionData = new InputBaseTransactionData(transactionCryptoCreator.getAddress(), BigDecimal.ZERO, new Date());
+        BaseTransactionData baseTransactionData = new InputBaseTransactionData(transactionCryptoCreator.getAddress(), BigDecimal.ZERO, Instant.now());
         baseTransactions.add(baseTransactionData);
         TransactionData transactionData = new TransactionData(baseTransactions, description.name(), trustScore, Instant.now(), TransactionType.ZeroSpend);
         transactionData.setAttachmentTime(Instant.now());

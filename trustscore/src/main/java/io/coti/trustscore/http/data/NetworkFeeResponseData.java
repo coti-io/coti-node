@@ -6,8 +6,8 @@ import io.coti.basenode.data.TrustScoreNodeResultData;
 import io.coti.basenode.http.data.TrustScoreNodeResultResponseData;
 import lombok.Data;
 
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Data
@@ -18,7 +18,7 @@ public class NetworkFeeResponseData {
     private String originalAmount;
     private String reducedAmount;
     private String addressHash;
-    private Date createTime;
+    private Instant createTime;
     private String name;
     private List<TrustScoreNodeResultResponseData> networkFeeTrustScoreNodeResult;
 

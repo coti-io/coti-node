@@ -4,7 +4,6 @@ import io.coti.basenode.data.interfaces.IPropagatable;
 import lombok.Data;
 
 import java.time.Instant;
-import java.util.Date;
 
 @Data
 public class AddressData implements IPropagatable {

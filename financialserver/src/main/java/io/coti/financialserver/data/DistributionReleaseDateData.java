@@ -35,5 +35,6 @@ public class DistributionReleaseDateData implements IEntity {
 
     @Override
     public void setHash(Hash hash) {
+        // TODO: implement this
     }
 }

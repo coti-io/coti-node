@@ -5,7 +5,7 @@ import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 
 @Data
@@ -18,7 +18,7 @@ public class NetworkFeeData extends OutputBaseTransactionData implements ITrustS
         super();
     }
 
-    public NetworkFeeData(Hash addressHash, BigDecimal amount, BigDecimal originalAmount, BigDecimal reducedAmount, Date createTime) {
+    public NetworkFeeData(Hash addressHash, BigDecimal amount, BigDecimal originalAmount, BigDecimal reducedAmount, Instant createTime) {
         super(addressHash, amount, originalAmount, createTime);
         this.setReducedAmount(reducedAmount);
     }

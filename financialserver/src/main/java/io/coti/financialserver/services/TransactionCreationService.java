@@ -16,13 +16,13 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 @Slf4j
 @Service
 public class TransactionCreationService {
 
+    public static final int MAX_TRUST_SCORE = 100;
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
@@ -48,8 +48,8 @@ public class TransactionCreationService {
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
 
         if (!poolAmount.equals(new BigDecimal(0))) {
-            InputBaseTransactionData IBTcotiPool = new InputBaseTransactionData(rollingReserveService.getCotiPoolAddress(), poolAmount.multiply(new BigDecimal(-1)), new Date());
-            baseTransactions.add(IBTcotiPool);
+            InputBaseTransactionData ibtCotiPool = new InputBaseTransactionData(rollingReserveService.getCotiRollingReserveAddress(), poolAmount.multiply(new BigDecimal(-1)), Instant.now());
+            baseTransactions.add(ibtCotiPool);
         }
 
         baseTransactions.add(ibt);
@@ -79,12 +79,12 @@ public class TransactionCreationService {
 
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
 
-        InputBaseTransactionData ibt = new InputBaseTransactionData(cotiGenesisAddress, amount.multiply(new BigDecimal(-1)), new Instant());
-        ReceiverBaseTransactionData rbt = new ReceiverBaseTransactionData(fundAddress, amount, amount, new Instant());
+        InputBaseTransactionData ibt = new InputBaseTransactionData(cotiGenesisAddress, amount.multiply(new BigDecimal(-1)), Instant.now());
+        ReceiverBaseTransactionData rbt = new ReceiverBaseTransactionData(fundAddress, amount, amount, Instant.now());
         baseTransactions.add(ibt);
         baseTransactions.add(rbt);
 
-        double trustScore = 100;
+        double trustScore = MAX_TRUST_SCORE;
         TransactionData initialTransactionData = new TransactionData(baseTransactions, TransactionType.Initial.toString(), trustScore, Instant.now(), TransactionType.Initial);
 
         initialTransactionData.setAttachmentTime(Instant.now());
