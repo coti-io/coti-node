@@ -66,8 +66,11 @@ public class BaseNodeTransactionService implements ITransactionService {
 
             continueHandlePropagatedTransaction(transactionData);
             transactionHelper.setTransactionStateToFinished(transactionData);
+        } catch (InterruptedException e) {
+            log.info("Transaction thread wait interrupted");
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
-            log.info("Transaction propagation handler error:");
+            log.error("Transaction propagation handler error:");
             e.printStackTrace();
         } finally {
             boolean isTransactionFinished = transactionHelper.isTransactionFinished(transactionData);

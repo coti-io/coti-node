@@ -179,6 +179,7 @@ public abstract class BaseNodeInitializationService {
 
     private List<TransactionData> requestMissingTransactions(long firstMissingTransactionIndex) {
         try {
+            log.info("Starting to get missing transactions");
             GetTransactionBatchResponse getTransactionBatchResponse =
                     restTemplate.getForObject(
                             networkService.getRecoveryServerAddress() + RECOVERY_NODE_GET_BATCH_ENDPOINT
