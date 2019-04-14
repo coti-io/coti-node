@@ -260,7 +260,7 @@ public class BaseNodeNetworkService implements INetworkService {
                     communicationService.removeSender(dspNode.getReceivingFullAddress(), NodeType.DspNode);
                     communicationService.addSender(newDspNode.getReceivingFullAddress());
                 }
-                if (recoveryServerAddress != null && recoveryServerAddress.equals(dspNode.getHttpFullAddress())) {
+                if (recoveryServerAddress != null && recoveryServerAddress.equals(dspNode.getHttpFullAddress()) && !newDspNode.getHttpFullAddress().equals(dspNode.getHttpFullAddress())) {
                     recoveryServerAddress = newDspNode.getHttpFullAddress();
                 }
                 dspNode.clone(newDspNode);

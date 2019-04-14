@@ -15,7 +15,7 @@ public class NetworkForWalletController {
     @Autowired
     private INodeManagementService nodeManagementService;
 
-    @GetMapping(path = "/network_details")
+    @GetMapping(path = "/nodes")
     public ResponseEntity<GetNetworkDetailsResponse> getNetworkDetails() {
         GetNetworkDetailsResponse networkDetailsResponse = new GetNetworkDetailsResponse(nodeManagementService.getNetworkDetailsForWallet());
         return ResponseEntity.ok(networkDetailsResponse);

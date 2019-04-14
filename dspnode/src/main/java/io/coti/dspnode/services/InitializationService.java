@@ -68,7 +68,7 @@ public class InitializationService extends BaseNodeInitializationService {
         communicationService.addSender(zerospendNetworkNodeData.getReceivingFullAddress());
         communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress(), NodeType.ZeroSpendServer);
         List<NetworkNodeData> dspNetworkNodeDataList = networkService.getMapFromFactory(NodeType.DspNode).values().stream()
-                .filter(dspNode -> !dspNode.equals(networkNodeData))
+                .filter(dspNode -> !dspNode.getNodeHash().equals(NodeCryptoHelper.getNodeHash()))
                 .collect(Collectors.toList());
         networkService.addListToSubscription(dspNetworkNodeDataList);
 

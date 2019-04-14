@@ -44,6 +44,7 @@ public class NetworkService extends BaseNodeNetworkService {
                 }
                 communicationService.addSubscription(dspNodesToConnect.get(i).getPropagationFullAddress(), NodeType.DspNode);
                 communicationService.addSender(dspNodesToConnect.get(i).getReceivingFullAddress());
+                connectedDspNodes.add(dspNodesToConnect.get(i));
             }
         }
 
