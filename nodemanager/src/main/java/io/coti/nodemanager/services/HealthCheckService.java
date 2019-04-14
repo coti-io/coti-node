@@ -145,6 +145,7 @@ public class HealthCheckService implements IHealthCheckService {
         try {
             healthCheckThread.join();
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             log.error("Interrupted shutdown health check service");
         }
     }

@@ -15,7 +15,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -66,7 +69,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
                 try {
                     Thread.sleep(5000);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    Thread.currentThread().interrupt();
                 }
                 transactionVoteData = transactionVotes.getByHash(transactionHash);
                 if (transactionVoteData == null) {

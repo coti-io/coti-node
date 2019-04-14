@@ -251,6 +251,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
             }
         } catch (InterruptedException e) {
             log.error("Interrupted shutdown ZeroMQ subscriber");
+            Thread.currentThread().interrupt();
         }
     }
 }

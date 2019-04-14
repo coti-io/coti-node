@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -148,7 +147,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         try {
             confirmationQueue.put(tccInfo);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -157,7 +156,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         try {
             confirmationQueue.put(dspConsensusResult);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -182,6 +181,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         try {
             confirmedTransactionsThread.join();
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             log.error("Interrupted shutdown {}", this.getClass().getSimpleName());
         }
 

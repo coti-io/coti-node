@@ -189,7 +189,7 @@ public class TransactionService extends BaseNodeTransactionService {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Thread.currentThread().interrupt();
 
             }
             retryTimes--;
@@ -208,7 +208,7 @@ public class TransactionService extends BaseNodeTransactionService {
             try {
                 TimeUnit.SECONDS.sleep(2);
             } catch (InterruptedException e) {
-                log.error("Errors when sleeping: ", e);
+                Thread.currentThread().interrupt();
             }
             clusterService.selectSources(transactionData);
         }

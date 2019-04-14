@@ -29,7 +29,7 @@ public class PotService extends BaseNodePotService {
         super.init();
     }
 
-    public void potAction(TransactionData transactionData) throws InterruptedException {
+    public void potAction(TransactionData transactionData) {
 
         int trustScore = transactionData.getRoundedSenderTrustScore();
 
@@ -38,7 +38,11 @@ public class PotService extends BaseNodePotService {
         queuesPot.get(bucketChoice).submit(new ComparableFutureTask(new PotRunnableTask(transactionData, targetDifficulty)));
         Instant starts = Instant.now();
         synchronized (transactionData) {
-            transactionData.wait();
+            try {
+                transactionData.wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
         Instant ends = Instant.now();
         monitorStatistics.get(bucketChoice).addTransactionStatistics(Duration.between(starts, ends));
