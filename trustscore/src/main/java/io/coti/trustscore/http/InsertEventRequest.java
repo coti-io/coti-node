@@ -8,13 +8,14 @@ import io.coti.trustscore.data.Enums.*;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
+import java.time.Instant;
 import java.util.Date;
 
 @Data
 public class InsertEventRequest extends Request {
 
     @NotNull
-    public Date eventDate;
+    public Instant eventDate;
 
     @NotNull
     public Hash userHash;
