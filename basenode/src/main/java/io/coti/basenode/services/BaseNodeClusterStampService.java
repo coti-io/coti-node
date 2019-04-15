@@ -24,6 +24,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     protected static final Hash LAST_CLUSTER_STAMP_HASH = new Hash(0);
 
+
     @Value("${recovery.server.address:#{null}}")
     private String recoveryServerAddress;
     @Autowired
@@ -85,7 +86,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             totalConfirmedTransactionsPriorClusterStamp = -1;
         }
 
-        if(!recoveryServerAddress.isEmpty()) {
+        if( recoveryServerAddress!=null && !recoveryServerAddress.isEmpty() ) {
             RestTemplate restTemplate = new RestTemplate();
             ClusterStampData lastClusterStampData =
                     restTemplate.postForObject(

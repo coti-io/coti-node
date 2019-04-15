@@ -60,7 +60,7 @@ public class DistributionService {
             initialFundData.setAddressIndex(rollingReserveService.getNextAddressIndex());
             initialFunds.put(initialFundData);
 
-            Float floatFundAmount = (initialFundData.getFundPercentage() / 100) * COIN_GENESIS_MAX_AMOUNT;
+            Float floatFundAmount = (initialFundData.getFundPercentage()  * COIN_GENESIS_MAX_AMOUNT);
             BigDecimal amount = new BigDecimal(floatFundAmount.toString());
             Hash fundAddress = CryptoHelper.generateAddress(seed, initialFundData.getAddressIndex());
             transactionCreationService.createInitialTransactionToFund(amount, cotiGenesisAddress, fundAddress);
@@ -68,33 +68,26 @@ public class DistributionService {
     }
 
     public void verifySumOfFundsPercentages(List<InitialFundData> initialFundDataList) {
-        //TODO: Consider changing logic if exact sum of 100 is needed and in case distribution should be prevented, change to boolean
         Float fundsPercentagesSum = Float.valueOf(0);
         for (InitialFundData fundData : initialFundDataList) {
             fundsPercentagesSum += fundData.getFundPercentage();
         }
-        //TODO: consider throwing error
-        if( fundsPercentagesSum > 100)
-            log.error("Distribution percentages sum: {} from initial funds exceed 100", fundsPercentagesSum);
+        if( fundsPercentagesSum > 1)
+            log.error("Distribution percentages sum: {} from initial funds exceed 100", fundsPercentagesSum*100);
     }
 
     public void startLoadDistributionsFromJsonFileThread() {
-        Thread distributeFromInitialFundsThread = new Thread(() -> loadDistributionsFromJsonFile());
+        Thread distributeFromInitialFundsThread = new Thread(this::loadDistributionsFromJsonFile);
         distributeFromInitialFundsThread.start();
     }
 
     public void loadDistributionsFromJsonFile() {
-
-        while (!Thread.currentThread().isInterrupted()) {
             try {
                 List<DistributionData> distributionsDataList = getDistributionsDataFromJsonFile();
                 distributionsDataList.forEach(distributionData -> distributions.put(distributionData));
-                Thread.sleep(1000);
             } catch (Exception e) {
                 log.error("Distribute from initial funds exception", e);
-                Thread.currentThread().interrupt();
             }
-        }
     }
 
     private List<DistributionData> getDistributionsDataFromJsonFile() throws Exception {
@@ -125,14 +118,11 @@ public class DistributionService {
             if (distributionReleaseDateData == null) {
                 distributionReleaseDateData = new DistributionReleaseDateData(releaseDate);
                 //TODO: Check if needed to update distributionReleaseDates with new value
-                distributionReleaseDates.put(distributionReleaseDateData);
+//                distributionReleaseDates.put(distributionReleaseDateData);
             }
-
             distributionReleaseDateData.getDistributionHashesList().add(distributionData.getHash());
-
             distributionDataList.add(distributionData);
         }
-
         return distributionDataList;
     }
 }

@@ -10,6 +10,10 @@ import java.util.Date;
 @Slf4j
 public class DatesHelper {
 
+    private DatesHelper() {
+        throw new IllegalStateException("Utility class");
+    }
+
     public static Date getDateNumberOfDaysAfterToday(int numberOfDays) {
 
         Date date = new Date();

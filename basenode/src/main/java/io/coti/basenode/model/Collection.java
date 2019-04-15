@@ -45,7 +45,7 @@ public abstract class Collection<T extends IEntity> {
     public void forEach(Consumer<T> consumer) {
         RocksIterator iterator = databaseConnector.getIterator(columnFamilyName);
         iterator.seekToFirst();
-        int countTransactions = 0; // TODO: unused parameter, consider removing
+        int countTransactions = 0; // TODO: unused parameter, just for debugging, consider removing
         while (iterator.isValid()) {
             T deserialized = (T) SerializationUtils.deserialize(iterator.value());
             deserialized.setHash(new Hash(iterator.key()));
