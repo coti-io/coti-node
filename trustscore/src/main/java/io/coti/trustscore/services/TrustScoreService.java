@@ -232,24 +232,24 @@ public class TrustScoreService {
 
         try {
             log.info("Setting KYC trust score: userHash =  {}, KTS = {}, userType =  {}", request.userHash, request.kycTrustScore, request.userType);
-            TrustScoreData trustScoreDataNew = new TrustScoreData(request.userHash,
+            TrustScoreData newTrustScoreData = new TrustScoreData(request.userHash,
                     request.kycTrustScore,
                     request.signature,
                     new Hash(kycServerPublicKey),
                     UserType.enumFromString(request.userType));
-            if (!trustScoreCrypto.verifySignature(trustScoreDataNew)) {
+            if (!trustScoreCrypto.verifySignature(newTrustScoreData)) {
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new Response(KYC_TRUST_SCORE_AUTHENTICATION_ERROR, STATUS_ERROR));
             }
-            TrustScoreData trustScoreDataOld = trustScores.getByHash(request.userHash);
-            if (trustScoreDataOld == null) {
-                createBuckets(trustScoreDataNew);
-                trustScores.put(trustScoreDataNew);
-                kycTrustScoreResponse = new SetKycTrustScoreResponse(trustScoreDataNew);
+            TrustScoreData oldTrustScoreData = trustScores.getByHash(request.userHash);
+            if (oldTrustScoreData == null) {
+                createBuckets(newTrustScoreData);
+                trustScores.put(newTrustScoreData);
+                kycTrustScoreResponse = new SetKycTrustScoreResponse(newTrustScoreData);
             }
             else {
-                kycTrustScoreResponse = new SetKycTrustScoreResponse(trustScoreDataOld);
+                kycTrustScoreResponse = new SetKycTrustScoreResponse(oldTrustScoreData);
             }
 // create InsertEventRequest from SetKycTrustScoreRequest
             InsertEventRequest insertEventRequest = new InsertEventRequest();
@@ -301,8 +301,8 @@ public class TrustScoreService {
                 return;
             }
 
-            LocalDate transactionConsensusDate = transactionData.getDspConsensusResult().getIndexingTime().atZone(ZoneId.systemDefault()).toLocalDate();
-            LocalDate currentDate = new Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+//DSP            LocalDate transactionConsensusDate = transactionData.getDspConsensusResult().getIndexingTime().atZone(ZoneId.systemDefault()).toLocalDate();
+//DSP            LocalDate currentDate = new Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
             if (currentDate.equals(transactionConsensusDate)) {
                 addToTransactionBucketsCalculation(trustScoreData, transactionData);
