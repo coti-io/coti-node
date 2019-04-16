@@ -153,7 +153,7 @@ public class RollingReserveService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_TRANSACTION_NOT_FOUND, STATUS_ERROR));
         }
 
-        if (!transactionData.getReceiverBaseTransactionAddressHash().equals(getCotiRollingReserveAddress())) {
+        if (!transactionHelper.getReceiverBaseTransactionAddressHash(transactionData).equals(getCotiRollingReserveAddress())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(NOT_COTI_POOL, STATUS_ERROR));
         }
 
