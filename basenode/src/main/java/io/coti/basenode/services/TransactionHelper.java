@@ -80,16 +80,19 @@ public class TransactionHelper implements ITransactionHelper {
         return validateBaseTransactionAmounts(baseTransactions) && validateBaseTransactionTrustScoreNodeResults(transactionData);
     }
 
-    private void updateAddressTransactionHistory(TransactionData transactionData) {
-        for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
+    @Override
+    public void updateAddressTransactionHistory(TransactionData transactionData) {
+        transactionData.getBaseTransactions().forEach(baseTransactionData -> {
             AddressTransactionsHistory addressHistory = addressTransactionsHistories.getByHash(baseTransactionData.getAddressHash());
 
             if (addressHistory == null) {
                 addressHistory = new AddressTransactionsHistory(baseTransactionData.getAddressHash());
             }
-            addressHistory.addTransactionHashToHistory(transactionData.getHash());
+            if (!addressHistory.addTransactionHashToHistory(transactionData.getHash())) {
+                log.debug("Transaction {} is already in history of address {}", transactionData.getHash(), baseTransactionData.getAddressHash());
+            }
             addressTransactionsHistories.put(addressHistory);
-        }
+        });
     }
 
     public boolean validateTransactionCrypto(TransactionData transactionData) {

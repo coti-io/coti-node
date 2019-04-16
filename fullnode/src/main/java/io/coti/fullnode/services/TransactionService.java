@@ -151,7 +151,16 @@ public class TransactionService extends BaseNodeTransactionService {
             }
 
             // ############   POT   ###########
-            potService.potAction(transactionData);
+            try {
+                potService.potAction(transactionData);
+            } catch (IllegalArgumentException e) {
+                log.error("Error at POT: {} , Transaction: {}", e.getMessage(), transactionData.getHash());
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body(new AddTransactionResponse(
+                                STATUS_ERROR,
+                                e.getMessage()));
+            }
             // ################################
 
             transactionData.setAttachmentTime(Instant.now());
@@ -222,12 +231,10 @@ public class TransactionService extends BaseNodeTransactionService {
             if (addressTransactionsHistory == null) {
                 return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistoryResponse(transactionsDataList));
             }
-
-            for (Hash transactionHash : addressTransactionsHistory.getTransactionsHistory()) {
+            addressTransactionsHistory.getTransactionsHistory().forEach(transactionHash -> {
                 TransactionData transactionData = transactions.getByHash(transactionHash);
                 transactionsDataList.add(transactionData);
-
-            }
+            });
             return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistoryResponse(transactionsDataList));
         } catch (Exception e) {
             return ResponseEntity

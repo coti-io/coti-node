@@ -132,6 +132,7 @@ public abstract class BaseNodeInitializationService {
                     missingTransactions.forEach(transactionData -> {
                                 transactions.put(transactionData);
                                 transactionIndexService.insertMissingTransactionIndex(transactionData);
+                                transactionHelper.updateAddressTransactionHistory(transactionData);
                             }
                     );
                     missingTransactions.forEach(transactionData -> {

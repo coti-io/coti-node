@@ -5,25 +5,25 @@ import io.coti.basenode.data.interfaces.IEntity;
 import lombok.Data;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 @Data
 public class AddressTransactionsHistory implements IEntity {
 
     private transient Hash hash;
     private Instant creationTime;
-    private List<Hash> transactionsHistory;
+    private HashSet<Hash> transactionsHistory;
 
 
     public AddressTransactionsHistory(Hash hash) {
         this.hash = hash;
         creationTime = Instant.now();
-        transactionsHistory = new ArrayList<>();
+        transactionsHistory = new LinkedHashSet<>();
     }
 
-    public void addTransactionHashToHistory(Hash transactionHash) {
-        transactionsHistory.add(transactionHash);
+    public boolean addTransactionHashToHistory(Hash transactionHash) {
+        return transactionsHistory.add(transactionHash);
     }
 
     @Override

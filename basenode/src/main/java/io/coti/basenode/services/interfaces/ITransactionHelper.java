@@ -13,6 +13,8 @@ public interface ITransactionHelper {
 
     boolean validateBaseTransactionsDataIntegrity(TransactionData transactionData);
 
+    void updateAddressTransactionHistory(TransactionData transactionData);
+
     boolean validateTransactionCrypto(TransactionData transactionData);
 
     boolean validateTransactionType(TransactionData transactionData);
