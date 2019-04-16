@@ -30,7 +30,7 @@ import java.util.List;
 public class DistributionService {
 
     private static final int COTI_GENESIS_ADDRESS_INDEX = 0;
-    private static final String DISTRIBUTIONS_FILE_NAME = "distributions.json";
+    private static final String DISTRIBUTIONS_FILE_NAME = "initialDistributions.json";
     public static final int COIN_GENESIS_MAX_AMOUNT = 2000000000;
 
     @Value("${financialserver.seed}")
