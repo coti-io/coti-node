@@ -9,7 +9,7 @@ public enum OutputBaseTransactionName {
     FullNodeFeeData(EnumSet.of(TransactionType.Payment, TransactionType.Transfer)),
     NetworkFeeData(EnumSet.of(TransactionType.Payment, TransactionType.Transfer)),
     RollingReserveData(EnumSet.of(TransactionType.Payment)),
-    ReceiverBaseTransactionData(EnumSet.of(TransactionType.Payment, TransactionType.Transfer));
+    ReceiverBaseTransactionData(EnumSet.of(TransactionType.Initial, TransactionType.Transfer, TransactionType.Payment));
 
     private Set<TransactionType> transactionTypes;
 

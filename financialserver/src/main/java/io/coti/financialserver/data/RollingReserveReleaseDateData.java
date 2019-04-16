@@ -37,5 +37,6 @@ public class RollingReserveReleaseDateData implements IEntity {
 
     @Override
     public void setHash(Hash hash) {
+        // Hash is generated according to the date field
     }
 }

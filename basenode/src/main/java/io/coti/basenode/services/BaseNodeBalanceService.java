@@ -1,19 +1,16 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.data.BaseTransactionData;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.http.GetBalancesRequest;
 import io.coti.basenode.http.GetBalancesResponse;
 import io.coti.basenode.services.interfaces.IBalanceService;
+import io.coti.basenode.services.interfaces.IClusterStampService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
@@ -23,47 +20,19 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 @Service
 public class BaseNodeBalanceService implements IBalanceService {
+
+    @Autowired
+    private IClusterStampService clusterStampService;
+
     protected Map<Hash, BigDecimal> balanceMap;
     protected Map<Hash, BigDecimal> preBalanceMap;
 
     public void init() throws Exception {
         balanceMap = new ConcurrentHashMap<>();
         preBalanceMap = new ConcurrentHashMap<>();
-        loadBalanceFromSnapshot();
+        clusterStampService.loadBalanceFromLastClusterStamp();
+
         log.info("{} is up", this.getClass().getSimpleName());
-    }
-
-    private void loadBalanceFromSnapshot() throws Exception {
-        String snapshotFileLocation = "snapshot.csv";
-        File snapshotFile = new File(snapshotFileLocation);
-
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(snapshotFile))) {
-
-            String line;
-
-            while ((line = bufferedReader.readLine()) != null) {
-                String[] addressDetails = line.split(",");
-                if (addressDetails.length != 2) {
-                    throw new Exception("Bad csv file format");
-                }
-                Hash addressHash = new Hash(addressDetails[0]);
-                BigDecimal addressAmount = new BigDecimal(addressDetails[1]);
-                log.trace("The hash {} was loaded from the snapshot with amount {}", addressHash, addressAmount);
-
-                if (balanceMap.containsKey(addressHash)) {
-                    log.error("The address {} was already found in the snapshot", addressHash);
-                    throw new Exception(String.format("The address %s was already found in the snapshot", addressHash));
-                }
-                balanceMap.put(addressHash, addressAmount);
-                log.trace("Loading from snapshot into inMem balance+preBalance address {} and amount {}",
-                        addressHash, addressAmount);
-            }
-            log.info("Snapshot is finished");
-            preBalanceMap.putAll(balanceMap);
-        } catch (Exception e) {
-            log.error("Errors on snapshot loading: {}", e);
-            throw e;
-        }
     }
 
     @Override
@@ -124,13 +93,13 @@ public class BaseNodeBalanceService implements IBalanceService {
         preBalanceMap.forEach((hash, bigDecimal) -> {
             if (bigDecimal.signum() == -1) {
                 log.error("PreBalance Validation failed!");
-                throw new IllegalArgumentException("Snapshot or database are corrupted.");
+                throw new IllegalArgumentException("ClusterStamp or database are corrupted.");
             }
         });
         balanceMap.forEach((hash, bigDecimal) -> {
             if (bigDecimal.signum() == -1) {
                 log.error("Balance Validation failed!");
-                throw new IllegalArgumentException("Snapshot or database are corrupted.");
+                throw new IllegalArgumentException("ClusterStamp or database are corrupted.");
             }
         });
         log.info("Balance Validation completed");
@@ -148,6 +117,12 @@ public class BaseNodeBalanceService implements IBalanceService {
         preBalanceMap.computeIfPresent(addressHash, (currentHash, currentAmount) ->
                 currentAmount.add(amount));
         preBalanceMap.putIfAbsent(addressHash, amount);
+    }
+
+    @Override
+    public void updateBalanceAndPreBalanceMap(Map<Hash, BigDecimal> balanceMap) {
+        this.balanceMap = balanceMap;
+        preBalanceMap.putAll(balanceMap);
     }
 
 }

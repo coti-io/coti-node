@@ -45,10 +45,21 @@ public abstract class Collection<T extends IEntity> {
     public void forEach(Consumer<T> consumer) {
         RocksIterator iterator = databaseConnector.getIterator(columnFamilyName);
         iterator.seekToFirst();
+        int countTransactions = 0; // TODO: unused parameter, just for debugging, consider removing
         while (iterator.isValid()) {
             T deserialized = (T) SerializationUtils.deserialize(iterator.value());
             deserialized.setHash(new Hash(iterator.key()));
             consumer.accept(deserialized);
+            countTransactions++;
+            iterator.next();
+        }
+    }
+
+    public void deleteAll() {
+        RocksIterator iterator = databaseConnector.getIterator(columnFamilyName);
+        iterator.seekToFirst();
+        while (iterator.isValid()) {
+            databaseConnector.delete(columnFamilyName,iterator.key());
             iterator.next();
         }
     }
