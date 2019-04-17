@@ -52,10 +52,11 @@ public class BucketTransactionService implements IBucketEventService<Transaction
         {
             // Add dailyEvents to calculations
             double transactionAmount = transactionEventData.getTransactionData().getAmount().doubleValue();
-            if (transactionAmount < 0) {
-                bucketTransactionEventsData.increaseCurrentDateNumberOfTransactionsByOne();
-                bucketTransactionEventsData.setCurrentDateTurnOver(bucketTransactionEventsData.getCurrentDateTurnOver() + Math.abs(transactionAmount));
-            }
+//  if a user is the sender, the amount can be negative only
+//            if (transactionAmount < 0) {
+            bucketTransactionEventsData.increaseCurrentDateNumberOfTransactionsByOne();
+            bucketTransactionEventsData.setCurrentDateTurnOver(bucketTransactionEventsData.getCurrentDateTurnOver() + Math.abs(transactionAmount));
+//            }
 
             // Add monthlyEvents to calculations
             Map<Date, BalanceCountAndContribution> currentMonthBalanceMap

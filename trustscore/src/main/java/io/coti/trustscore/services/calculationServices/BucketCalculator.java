@@ -14,7 +14,6 @@ public abstract class BucketCalculator {
     public abstract void setCurrentScores();
 
     public <T extends BucketEventData> boolean decayScores(T bucketEventData) {
-//        bucketEventData.setLastUpdate(DateUtils.addDays(bucketEventData.getLastUpdate(),-1000)); // Anton !!!! modification of last update date!
         if (!bucketEventData.lastUpdateBeforeToday()) {
             return false;
         }

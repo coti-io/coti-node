@@ -39,10 +39,10 @@ public class TrustScoreController {
         return trustScoreService.getTransactionTrustScore(request.userHash, request.transactionHash, request.userSignature);
     }
 
-    @RequestMapping(path = "/insertevent", method = RequestMethod.PUT)
-    public ResponseEntity<IResponse> insertTrustScoreEvent(@Valid @RequestBody InsertEventRequest request) {
-        return trustScoreService.addKycServerEvent(request);
-    }
+//    @RequestMapping(path = "/insertevent", method = RequestMethod.PUT)
+//    public ResponseEntity<IResponse> insertTrustScoreEvent(@Valid @RequestBody InsertEventRequest request) {
+//        return trustScoreService.addKycServerEvent(request);  //change the name
+//    }
 
     @RequestMapping(path = "/usertype", method = RequestMethod.PUT)
     public ResponseEntity<IResponse> setUserType(@Valid @RequestBody SetUserTypeRequest request) {

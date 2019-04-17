@@ -254,11 +254,18 @@ public class TrustScoreService {
                             .status(HttpStatus.BAD_REQUEST)
                             .body(new Response(KYC_TRUST_DIFFERENT_TYPE, STATUS_ERROR));
                 }
-                else {
-                    return ResponseEntity
-                            .status(HttpStatus.BAD_REQUEST)
-                            .body(new Response(TRUST_SCORE_EXIST, STATUS_ERROR));
-                }
+//                else {
+//                    return ResponseEntity
+//                            .status(HttpStatus.BAD_REQUEST)
+//                            .body(new Response(TRUST_SCORE_EXIST, STATUS_ERROR));
+//                }
+
+                oldTrustScoreData.setKycTrustScore(newTrustScoreData.getKycTrustScore());
+                oldTrustScoreData.setSignature(newTrustScoreData.getSignature());
+                oldTrustScoreData.setCreateTime(newTrustScoreData.getCreateTime());
+                oldTrustScoreData.setKycServerPublicKey(newTrustScoreData.getKycServerPublicKey());
+                trustScores.put(oldTrustScoreData);
+                kycTrustScoreResponse = new SetKycTrustScoreResponse(oldTrustScoreData);
             }
 // create InsertEventRequest from SetKycTrustScoreRequest
             InsertEventRequest insertEventRequest = new InsertEventRequest();

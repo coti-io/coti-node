@@ -299,8 +299,8 @@ public class BucketTransactionsCalculator extends BucketCalculator {
     public double getBucketSumScore(BucketTransactionEventsData bucketTransactionEventsData) {
         return ((bucketTransactionEventsData.getCurrentDateTurnOverContribution()
                 + bucketTransactionEventsData.getOldDateTurnOverContribution()) * getWeightByEventScore(TransactionEventScoreType.TURNOVER))
-                + ((bucketTransactionEventsData.getCurrentMonthBalanceContribution()
-                + bucketTransactionEventsData.getOldMonthBalanceContribution()) * getWeightByEventScore(TransactionEventScoreType.AVERAGE_BALANCE))
+//                + ((bucketTransactionEventsData.getCurrentMonthBalanceContribution()
+//                + bucketTransactionEventsData.getOldMonthBalanceContribution()) * getWeightByEventScore(TransactionEventScoreType.AVERAGE_BALANCE))
                 + ((bucketTransactionEventsData.getCurrentDateNumberOfTransactionsContribution()
                 + bucketTransactionEventsData.getOldDateNumberOfTransactionsContribution()) * getWeightByEventScore(TransactionEventScoreType.TRANSACTION_FREQUENCY));
     }
