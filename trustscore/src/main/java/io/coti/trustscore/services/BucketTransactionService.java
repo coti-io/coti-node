@@ -83,7 +83,10 @@ public class BucketTransactionService implements IBucketEventService<Transaction
     @Override
     public double getBucketSumScore(BucketTransactionEventsData bucketTransactionEventsData) {
         BucketTransactionsCalculator bucketCalculator = new BucketTransactionsCalculator(bucketTransactionEventsData);
-        bucketCalculator.decayScores(bucketTransactionEventsData);
+        // Decay on case that this is the first event, or first access to data today
+        if (bucketCalculator.decayScores(bucketTransactionEventsData)) {
+            bucketCalculator.setCurrentScores();
+        }
         return bucketCalculator.getBucketSumScore(bucketTransactionEventsData);
     }
 

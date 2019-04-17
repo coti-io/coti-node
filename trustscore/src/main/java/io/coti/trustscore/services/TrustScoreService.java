@@ -251,22 +251,21 @@ public class TrustScoreService {
             else {
                 if(oldTrustScoreData.getUserType() != UserType.enumFromString(request.userType)){
                     return ResponseEntity
-                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .status(HttpStatus.BAD_REQUEST)
                             .body(new Response(KYC_TRUST_DIFFERENT_TYPE, STATUS_ERROR));
                 }
-                oldTrustScoreData.setKycTrustScore(newTrustScoreData.getKycTrustScore());
-                oldTrustScoreData.setSignature(newTrustScoreData.getSignature());
-                oldTrustScoreData.setCreateTime(newTrustScoreData.getCreateTime());
-                oldTrustScoreData.setKycServerPublicKey(newTrustScoreData.getKycServerPublicKey());
-                trustScores.put(oldTrustScoreData);
-                kycTrustScoreResponse = new SetKycTrustScoreResponse(oldTrustScoreData);
+                else {
+                    return ResponseEntity
+                            .status(HttpStatus.BAD_REQUEST)
+                            .body(new Response(TRUST_SCORE_EXIST, STATUS_ERROR));
+                }
             }
 // create InsertEventRequest from SetKycTrustScoreRequest
             InsertEventRequest insertEventRequest = new InsertEventRequest();
             insertEventRequest.setEventDate(Instant.now());
             insertEventRequest.setUserHash(request.getUserHash());
             insertEventRequest.setInitialTrustScoreType(InitialTrustScoreType.KYC);
-            insertEventRequest.setScore(request.getKycTrustScore() - 10.0);
+            insertEventRequest.setScore(request.getKycTrustScore());
             insertEventRequest.setSignerHash(new Hash(kycServerPublicKey));
             insertEventRequest.setSignature(request.getSignature());
             insertEventRequest.setUniqueIdentifier(new Hash(0));  // there is no hash for this event, no ID
@@ -385,7 +384,7 @@ public class TrustScoreService {
                 bucketEventData.setLastUpdate(DatesCalculation.setDateOnBeginningOfDay(new Date()));
             }
         }
-        return Math.max(eventsTrustScore, 0.1);
+        return Math.min(Math.max(eventsTrustScore, 0.1), 100.0);
     }
 
     private void updateUserTypeInBuckets(TrustScoreData trustScoreData) {
@@ -438,6 +437,8 @@ public class TrustScoreService {
         InitialTrustScoreEventsData initialTrustScoreEventsData =
                 new InitialTrustScoreEventsData(request);
 
+// TODO Check signature here
+
         Hash bucketHash = getBucketHashByUserHashAndEventType(request);
         BucketInitialTrustScoreEventsData bucketInitialTrustScoreEventsData =
                 (BucketInitialTrustScoreEventsData) bucketEvents.getByHash(bucketHash);
@@ -454,6 +455,8 @@ public class TrustScoreService {
         if (request.getHighFrequencyEventScoreType() == HighFrequencyEventScoreType.CHARGE_BACK) {
             ChargeBackEventsData chargeBackEventsData = new ChargeBackEventsData(request);
 
+// TODO Check signature here
+
             Hash bucketHash = getBucketHashByUserHashAndEventType(request);
             BucketChargeBackEventsData bucketChargeBackEventsData = (BucketChargeBackEventsData) bucketEvents.getByHash(bucketHash);
 
@@ -468,6 +471,8 @@ public class TrustScoreService {
 
     private IResponse sendToBucketNotFulfilmentEventsService(InsertEventRequest request) {
         NotFulfilmentEventsData notFulfilmentEventsData = new NotFulfilmentEventsData(request);
+
+// TODO Check signature here
 
         Hash bucketHash = getBucketHashByUserHashAndEventType(request);
         BucketNotFulfilmentEventsData bucketNotFulfilmentEventsData = (BucketNotFulfilmentEventsData) bucketEvents.getByHash(bucketHash);
@@ -484,6 +489,8 @@ public class TrustScoreService {
 
     private IResponse sendToBucketBehaviorEventsService(InsertEventRequest request) {
         BehaviorEventsData behaviorEventsData = new BehaviorEventsData(request);
+
+// TODO Check signature here
 
         Hash bucketHash = getBucketHashByUserHashAndEventType(request);
         BucketBehaviorEventsData bucketBehaviorEventsData = (BucketBehaviorEventsData) bucketEvents.getByHash(bucketHash);
