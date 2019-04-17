@@ -1,6 +1,5 @@
 package io.coti.dspnode.services;
 
-import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkData;
 import io.coti.basenode.data.NetworkNodeData;
@@ -21,11 +20,11 @@ public class NetworkService extends BaseNodeNetworkService {
 
     @Override
     public void handleNetworkChanges(NetworkData newNetworkData) {
-        log.info("New network structure received");
+        super.handleNetworkChanges(newNetworkData);
 
         Map<Hash, NetworkNodeData> newDspNodeMap = newNetworkData.getMultipleNodeMaps().get(NodeType.DspNode);
         List<NetworkNodeData> connectedDspNodes = getMapFromFactory(NodeType.DspNode).values().stream()
-                .filter(dspNode -> !dspNode.getNodeHash().equals(NodeCryptoHelper.getNodeHash()))
+                .filter(dspNode -> !dspNode.equals(networkNodeData))
                 .collect(Collectors.toList());
         handleConnectedDspNodesChange(connectedDspNodes, newDspNodeMap, NodeType.DspNode);
 
@@ -40,5 +39,8 @@ public class NetworkService extends BaseNodeNetworkService {
         setNetworkData(newNetworkData);
     }
 
-
+    @Override
+    public boolean isNodeConnectedToNetwork(NetworkData newNetworkData) {
+        return newNetworkData.getMultipleNodeMaps().get(NodeType.DspNode).get(networkNodeData.getNodeHash()) != null;
+    }
 }

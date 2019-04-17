@@ -16,8 +16,6 @@ public interface INetworkService {
 
     void setRecoveryServerAddress(String recoveryServerAddress);
 
-    String getNodeManagerPropagationAddress();
-
     Map<Hash, NetworkNodeData> getMapFromFactory(NodeType nodeType);
 
     NetworkNodeData getSingleNodeData(NodeType nodeType);
@@ -46,10 +44,18 @@ public interface INetworkService {
 
     void setNodeManagerPropagationAddress(String nodeManagerPropagationAddress);
 
+    String getNodeManagerPropagationAddress();
+
+    void setConnectToNetworkUrl(String connectToNetworkUrl);
+
     NetworkData getNetworkData();
 
     void setNetworkData(NetworkData networkData);
 
     void setNetworkNodeData(NetworkNodeData networkNodeData);
+
+    NetworkNodeData getNetworkNodeData();
+
+    void connectToNetwork();
 
 }

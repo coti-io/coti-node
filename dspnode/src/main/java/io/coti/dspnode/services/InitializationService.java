@@ -6,7 +6,6 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.interfaces.ICommunicationService;
-import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,13 +36,12 @@ public class InitializationService extends BaseNodeInitializationService {
     private ICommunicationService communicationService;
     @Autowired
     private IPropagationPublisher propagationPublisher;
-    @Autowired
-    private INetworkService networkService;
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
     public void init() {
         super.initDB();
+        super.createNetworkNodeData();
         super.getNetwork();
 
         publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(TransactionData.class, DspConsensusResult.class));
@@ -68,7 +66,7 @@ public class InitializationService extends BaseNodeInitializationService {
         communicationService.addSender(zerospendNetworkNodeData.getReceivingFullAddress());
         communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress(), NodeType.ZeroSpendServer);
         List<NetworkNodeData> dspNetworkNodeDataList = networkService.getMapFromFactory(NodeType.DspNode).values().stream()
-                .filter(dspNode -> !dspNode.getNodeHash().equals(NodeCryptoHelper.getNodeHash()))
+                .filter(dspNode -> !dspNode.equals(networkService.getNetworkNodeData()))
                 .collect(Collectors.toList());
         networkService.addListToSubscription(dspNetworkNodeDataList);
 

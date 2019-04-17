@@ -1,6 +1,5 @@
 package io.coti.fullnode.services;
 
-import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
@@ -24,8 +23,6 @@ public class InitializationService extends BaseNodeInitializationService {
     private ICommunicationService communicationService;
     @Value("${server.port}")
     private String serverPort;
-    @Autowired
-    private NetworkNodeCrypto networkNodeCrypto;
     @Value("${minimumFee}")
     private BigDecimal minimumFee;
     @Value("${maximumFee}")
@@ -37,6 +34,7 @@ public class InitializationService extends BaseNodeInitializationService {
     @PostConstruct
     public void init() {
         super.initDB();
+        super.createNetworkNodeData();
         super.getNetwork();
 
         publisherNodeTypeToMessageTypesMap.put(NodeType.DspNode, Arrays.asList(TransactionData.class, AddressData.class, DspConsensusResult.class));

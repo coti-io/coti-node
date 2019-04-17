@@ -17,8 +17,6 @@ import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -43,14 +41,13 @@ public abstract class BaseNodeInitializationService {
     protected NetworkType networkType;
     @Value("${server.ip}")
     protected String nodeIp;
-    protected NetworkNodeData networkNodeData;
     @Value("${node.manager.ip}")
     private String nodeManagerIp;
     @Value("${node.manager.port}")
     private String nodeManagerPort;
     @Value("${node.manager.propagation.port}")
     private String nodeManagerPropagationPort;
-    private String nodeManagerAddress;
+    private String nodeManagerHttpAddress;
     @Value("${kycserver.url}")
     private String kycServerAddress;
     @Value("${kycserver.public.key}")
@@ -108,7 +105,8 @@ public abstract class BaseNodeInitializationService {
             log.info("The communication initialization is done");
             initTransactionSync();
             log.info("The transaction sync initialization is done");
-            connectToNetwork();
+            networkService.setConnectToNetworkUrl(nodeManagerHttpAddress + NODE_MANAGER_NODES_ENDPOINT);
+            networkService.connectToNetwork();
             propagationSubscriber.initPropagationHandler();
 
             monitorService.init();
@@ -194,22 +192,9 @@ public abstract class BaseNodeInitializationService {
         }
     }
 
-    public void getNetwork() {
+    protected void createNetworkNodeData() {
         networkService.init();
-        nodeManagerAddress = "http://" + nodeManagerIp + ":" + nodeManagerPort;
-        networkService.setNetworkData(getNetworkDetailsFromNodeManager());
-    }
-
-    public void connectToNetwork() {
-
-        networkNodeData = createNodeProperties();
-        addNewNodeToNodeManager();
-
-    }
-
-    private void addNewNodeToNodeManager() {
-        restTemplate.setRequestFactory(new CustomHttpComponentsClientHttpRequestFactory());
-
+        NetworkNodeData networkNodeData = createNodeProperties();
         NodeRegistrationData nodeRegistrationData = nodeRegistrations.getByHash(networkNodeData.getHash());
         if (nodeRegistrationData != null) {
             networkNodeData.setNodeRegistrationData(nodeRegistrationData);
@@ -217,24 +202,22 @@ public abstract class BaseNodeInitializationService {
             getNodeRegistration(networkNodeData);
         }
         networkNodeCrypto.signMessage(networkNodeData);
-        HttpEntity<NetworkNodeData> entity = new HttpEntity<>(networkNodeData);
-        try {
-            ResponseEntity<String> response = restTemplate.exchange(nodeManagerAddress + NODE_MANAGER_NODES_ENDPOINT, HttpMethod.PUT, entity, String.class);
-            log.info("{}", response.getBody());
-            networkService.setNetworkNodeData(networkNodeData);
-        } catch (HttpClientErrorException | HttpServerErrorException e) {
-            log.error("Node manager error: ", e.getResponseBodyAsString());
-            System.exit(-1);
-        }
+        networkService.setNetworkNodeData(networkNodeData);
+    }
+
+    protected void getNetwork() {
+
+        nodeManagerHttpAddress = "http://" + nodeManagerIp + ":" + nodeManagerPort;
+        networkService.setNetworkData(getNetworkDetailsFromNodeManager());
     }
 
     private NetworkData getNetworkDetailsFromNodeManager() {
-        String newNodeURL = nodeManagerAddress + NODE_MANAGER_NODES_ENDPOINT;
-        return restTemplate.getForEntity(newNodeURL, NetworkData.class).getBody();
+        return restTemplate.getForEntity(nodeManagerHttpAddress + NODE_MANAGER_NODES_ENDPOINT, NetworkData.class).getBody();
     }
 
     private void getNodeRegistration(NetworkNodeData networkNodeData) {
         try {
+            restTemplate.setRequestFactory(new CustomHttpComponentsClientHttpRequestFactory());
             GetNodeRegistrationRequest getNodeRegistrationRequest = new GetNodeRegistrationRequest(networkNodeData.getNodeType(), networkType);
             getNodeRegistrationRequestCrypto.signMessage(getNodeRegistrationRequest);
 
@@ -246,7 +229,7 @@ public abstract class BaseNodeInitializationService {
             log.info("Node registration received");
 
             NodeRegistrationData nodeRegistrationData = getNodeRegistrationResponseEntity.getBody().getNodeRegistrationData();
-            if (nodeRegistrationData != null && validateNodeRegistrationResponse(nodeRegistrationData)) {
+            if (nodeRegistrationData != null && validateNodeRegistrationResponse(nodeRegistrationData, networkNodeData)) {
                 networkNodeData.setNodeRegistrationData(nodeRegistrationData);
                 nodeRegistrations.put(nodeRegistrationData);
             }
@@ -256,7 +239,7 @@ public abstract class BaseNodeInitializationService {
         }
     }
 
-    protected boolean validateNodeRegistrationResponse(NodeRegistrationData nodeRegistrationData) {
+    protected boolean validateNodeRegistrationResponse(NodeRegistrationData nodeRegistrationData, NetworkNodeData networkNodeData) {
         if (!networkNodeData.getNodeHash().equals(nodeRegistrationData.getNodeHash()) || !networkNodeData.getNodeType().equals(nodeRegistrationData.getNodeType())) {
             log.error("Node registration response has invalid fields! Shutting down server.");
             System.exit(-1);

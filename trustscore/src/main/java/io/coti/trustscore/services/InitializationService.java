@@ -1,6 +1,5 @@
 package io.coti.trustscore.services;
 
-import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.DspConsensusResult;
 import io.coti.basenode.data.NetworkNodeData;
@@ -9,7 +8,6 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.interfaces.ICommunicationService;
-import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,17 +24,14 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @Autowired
     private ICommunicationService communicationService;
-    @Autowired
-    private INetworkService networkService;
     @Value("${server.port}")
     private String serverPort;
-    @Autowired
-    private NetworkNodeCrypto networkNodeCrypto;
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
     public void init() {
         super.initDB();
+        super.createNetworkNodeData();
         super.getNetwork();
 
         publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(TransactionData.class, DspConsensusResult.class));

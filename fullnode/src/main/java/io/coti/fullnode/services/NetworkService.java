@@ -30,7 +30,8 @@ public class NetworkService extends BaseNodeNetworkService {
 
     @Override
     public void handleNetworkChanges(NetworkData newNetworkData) {
-        log.info("New network structure received");
+        super.handleNetworkChanges(newNetworkData);
+
         Map<Hash, NetworkNodeData> newDspNodeMap = newNetworkData.getMultipleNodeMaps().get(NodeType.DspNode);
 
         handleConnectedDspNodesChange(connectedDspNodes, newDspNodeMap, NodeType.FullNode);
@@ -58,6 +59,11 @@ public class NetworkService extends BaseNodeNetworkService {
 
     public void sendDataToConnectedDspNodes(IPropagatable propagatable) {
         connectedDspNodes.forEach(networkNodeData -> sender.send(propagatable, networkNodeData.getReceivingFullAddress()));
+    }
+
+    @Override
+    public boolean isNodeConnectedToNetwork(NetworkData newNetworkData) {
+        return newNetworkData.getMultipleNodeMaps().get(NodeType.FullNode).get(networkNodeData.getNodeHash()) != null;
     }
 
 }

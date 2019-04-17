@@ -20,7 +20,7 @@ public class NetworkService extends BaseNodeNetworkService {
     @Override
     public void handleNetworkChanges(NetworkData newNetworkData) {
         try {
-            log.info("New network structure received");
+            super.handleNetworkChanges(newNetworkData);
 
             Map<Hash, NetworkNodeData> newDspNodeMap = newNetworkData.getMultipleNodeMaps().get(NodeType.DspNode);
             List<NetworkNodeData> connectedDspNodes = new ArrayList<>(getMapFromFactory(NodeType.DspNode).values());
@@ -41,5 +41,9 @@ public class NetworkService extends BaseNodeNetworkService {
         }
     }
 
-
+    @Override
+    public boolean isNodeConnectedToNetwork(NetworkData newNetworkData) {
+        NetworkNodeData zeroSpendServerData = newNetworkData.getSingleNodeNetworkDataMap().get(NodeType.ZeroSpendServer);
+        return zeroSpendServerData != null && zeroSpendServerData.equals(networkNodeData);
+    }
 }

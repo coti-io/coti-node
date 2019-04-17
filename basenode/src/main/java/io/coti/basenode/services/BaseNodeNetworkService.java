@@ -3,13 +3,20 @@ package io.coti.basenode.services;
 import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeRegistrationCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.http.CustomHttpComponentsClientHttpRequestFactory;
 import io.coti.basenode.services.interfaces.ICommunicationService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -28,6 +35,7 @@ public class BaseNodeNetworkService implements INetworkService {
     @Value("${network}")
     protected NetworkType networkType;
     private String nodeManagerPropagationAddress;
+    private String connectToNetworkUrl;
     @Autowired
     private ICommunicationService communicationService;
     @Autowired
@@ -37,7 +45,6 @@ public class BaseNodeNetworkService implements INetworkService {
     protected Map<NodeType, Map<Hash, NetworkNodeData>> multipleNodeMaps;
     protected Map<NodeType, NetworkNodeData> singleNodeNetworkDataMap;
     protected NetworkNodeData networkNodeData;
-
 
     @Override
     public void init() {
@@ -61,7 +68,17 @@ public class BaseNodeNetworkService implements INetworkService {
         }
     }
 
-    public void handleNetworkChanges(NetworkData networkData) {
+    @Override
+    public void handleNetworkChanges(NetworkData newNetworkData) {
+        log.info("New network structure received");
+
+        if (!isNodeConnectedToNetwork(newNetworkData)) {
+            connectToNetwork();
+        }
+    }
+
+    public boolean isNodeConnectedToNetwork(NetworkData networkData) {
+        return true;
     }
 
     public String getRecoveryServerAddress() {
@@ -311,6 +328,11 @@ public class BaseNodeNetworkService implements INetworkService {
     }
 
     @Override
+    public void setConnectToNetworkUrl(String connectToNetworkUrl) {
+        this.connectToNetworkUrl = connectToNetworkUrl;
+    }
+
+    @Override
     public NetworkData getNetworkData() {
         NetworkData networkData = new NetworkData();
         networkData.setMultipleNodeMaps(multipleNodeMaps);
@@ -329,9 +351,24 @@ public class BaseNodeNetworkService implements INetworkService {
         this.networkNodeData = networkNodeData;
     }
 
-    public void shutdown() {
-        log.error("Shutdown All Resources");
+    @Override
+    public NetworkNodeData getNetworkNodeData() {
+        return networkNodeData;
     }
 
+    @Override
+    public void connectToNetwork() {
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.setRequestFactory(new CustomHttpComponentsClientHttpRequestFactory());
+
+        HttpEntity<NetworkNodeData> entity = new HttpEntity<>(networkNodeData);
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(connectToNetworkUrl, HttpMethod.PUT, entity, String.class);
+            log.info("{}", response.getBody());
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            log.error("Node manager error: ", e.getResponseBodyAsString());
+            System.exit(-1);
+        }
+    }
 
 }

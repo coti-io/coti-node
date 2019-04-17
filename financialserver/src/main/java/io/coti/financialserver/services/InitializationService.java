@@ -8,7 +8,6 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.interfaces.ICommunicationService;
-import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,8 +23,6 @@ import java.util.List;
 public class InitializationService extends BaseNodeInitializationService {
     @Autowired
     RollingReserveService rollingReserveService;
-    @Autowired
-    private INetworkService networkService;
     @Value("${propagation.port}")
     private String propagationPort;
     @Value("${server.port}")
@@ -37,6 +34,7 @@ public class InitializationService extends BaseNodeInitializationService {
     @PostConstruct
     public void init() {
         super.initDB();
+        super.createNetworkNodeData();
         super.getNetwork();
 
         publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(TransactionData.class, DspConsensusResult.class));
