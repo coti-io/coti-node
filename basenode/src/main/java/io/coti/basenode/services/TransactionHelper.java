@@ -57,10 +57,12 @@ public class TransactionHelper implements ITransactionHelper {
     private Map<Hash, Stack<TransactionState>> transactionHashToTransactionStateStackMapping;
     private AtomicLong totalTransactions = new AtomicLong(0);
     private Set<Hash> noneIndexedTransactionHashes;
+    private Map<Hash, Hash> transactionAddressesLockMap;
 
     @PostConstruct
     private void init() {
         transactionHashToTransactionStateStackMapping = new ConcurrentHashMap<>();
+        transactionAddressesLockMap = new ConcurrentHashMap<>();
         noneIndexedTransactionHashes = Sets.newConcurrentHashSet();
         log.info("{} is up", this.getClass().getSimpleName());
     }
@@ -83,15 +85,18 @@ public class TransactionHelper implements ITransactionHelper {
     @Override
     public void updateAddressTransactionHistory(TransactionData transactionData) {
         transactionData.getBaseTransactions().forEach(baseTransactionData -> {
-            AddressTransactionsHistory addressHistory = addressTransactionsHistories.getByHash(baseTransactionData.getAddressHash());
+            transactionAddressesLockMap.putIfAbsent(baseTransactionData.getAddressHash(), baseTransactionData.getAddressHash());
+            synchronized (transactionAddressesLockMap.get(baseTransactionData.getAddressHash())) {
+                AddressTransactionsHistory addressHistory = addressTransactionsHistories.getByHash(baseTransactionData.getAddressHash());
 
-            if (addressHistory == null) {
-                addressHistory = new AddressTransactionsHistory(baseTransactionData.getAddressHash());
+                if (addressHistory == null) {
+                    addressHistory = new AddressTransactionsHistory(baseTransactionData.getAddressHash());
+                }
+                if (!addressHistory.addTransactionHashToHistory(transactionData.getHash())) {
+                    log.debug("Transaction {} is already in history of address {}", transactionData.getHash(), baseTransactionData.getAddressHash());
+                }
+                addressTransactionsHistories.put(addressHistory);
             }
-            if (!addressHistory.addTransactionHashToHistory(transactionData.getHash())) {
-                log.debug("Transaction {} is already in history of address {}", transactionData.getHash(), baseTransactionData.getAddressHash());
-            }
-            addressTransactionsHistories.put(addressHistory);
         });
     }
 

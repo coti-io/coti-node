@@ -76,25 +76,6 @@ public class TransactionIndexService {
         return true;
     }
 
-    public void insertMissingTransactionIndex(TransactionData transactionData) {
-        DspConsensusResult dspConsensusResult = transactionData.getDspConsensusResult();
-        if (dspConsensusResult == null) {
-            return;
-        }
-        if (!insertNewTransactionIndex(transactionData)) {
-            waitingMissingTransactionIndexes.put(dspConsensusResult.getIndex(), transactionData);
-            return;
-        } else {
-            long index = dspConsensusResult.getIndex() + 1;
-            while (waitingMissingTransactionIndexes.containsKey(index)) {
-                insertNewTransactionIndex(waitingMissingTransactionIndexes.get(index));
-                waitingMissingTransactionIndexes.remove(index);
-                index++;
-            }
-            return;
-        }
-    }
-
     public TransactionIndexData getLastTransactionIndexData() {
         return lastTransactionIndexData;
     }

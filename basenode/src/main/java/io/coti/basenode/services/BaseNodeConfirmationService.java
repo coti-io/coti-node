@@ -143,6 +143,23 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     @Override
+    public void insertMissingTransaction(TransactionData transactionData) {
+        boolean isConfirmed = transactionHelper.isConfirmed(transactionData);
+        transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updatePreBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount()));
+        if (transactionData.getDspConsensusResult() == null) {
+            transactionHelper.addNoneIndexedTransaction(transactionData);
+        } else {
+            setDspcToTrue(transactionData.getDspConsensusResult());
+        }
+        if (transactionData.isTrustChainConsensus()) {
+            tccConfirmed.incrementAndGet();
+        }
+        if (isConfirmed) {
+            totalConfirmed.incrementAndGet();
+        }
+    }
+
+    @Override
     public void setTccToTrue(TccInfo tccInfo) {
         try {
             confirmationQueue.put(tccInfo);

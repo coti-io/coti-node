@@ -128,15 +128,9 @@ public abstract class BaseNodeInitializationService {
                 List<TransactionData> missingTransactions = requestMissingTransactions(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
                 if (missingTransactions != null) {
                     missingTransactions.forEach(transactionData -> {
-                                transactions.put(transactionData);
-                                transactionIndexService.insertMissingTransactionIndex(transactionData);
-                                transactionHelper.updateAddressTransactionHistory(transactionData);
+                                handleMissingTransaction(transactionData);
                             }
                     );
-                    missingTransactions.forEach(transactionData -> {
-                        handleExistingTransaction(maxTransactionIndex, transactionData);
-                        propagateMissingTransaction(transactionData);
-                    });
 
                 }
             }
@@ -174,6 +168,24 @@ public abstract class BaseNodeInitializationService {
         }
         transactionService.addToExplorerIndexes(transactionData);
         transactionHelper.incrementTotalTransactions();
+    }
+
+    private void handleMissingTransaction(TransactionData transactionData) {
+        if (transactionHelper.isTransactionAlreadyPropagated(transactionData)) {
+            log.debug("Transaction already exists: {}", transactionData.getHash());
+            return;
+        }
+        if (!transactionData.isTrustChainConsensus()) {
+            clusterService.addUnconfirmedTransaction(transactionData);
+        }
+        transactions.put(transactionData);
+        liveViewService.addTransaction(transactionData);
+        transactionService.addToExplorerIndexes(transactionData);
+        transactionHelper.incrementTotalTransactions();
+
+        confirmationService.insertMissingTransaction(transactionData);
+        new Thread(() -> transactionHelper.updateAddressTransactionHistory(transactionData)).start();
+        propagateMissingTransaction(transactionData);
     }
 
     private List<TransactionData> requestMissingTransactions(long firstMissingTransactionIndex) {

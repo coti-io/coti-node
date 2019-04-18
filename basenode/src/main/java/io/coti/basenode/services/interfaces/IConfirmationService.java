@@ -9,6 +9,8 @@ public interface IConfirmationService {
 
     void insertSavedTransaction(TransactionData transactionData);
 
+    void insertMissingTransaction(TransactionData transactionData);
+
     void setTccToTrue(TccInfo tccInfo);
 
     void setDspcToTrue(DspConsensusResult dspConsensusResult);
