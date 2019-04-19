@@ -2,13 +2,14 @@ package io.coti.financialserver.services;
 
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.InitialFundData;
+import io.coti.basenode.data.InitialFundDataHash;
 import io.coti.basenode.model.Transactions;
 import io.coti.financialserver.data.DistributionData;
 import io.coti.financialserver.data.DistributionReleaseDateData;
+import io.coti.financialserver.data.ReservedAddress;
 import io.coti.financialserver.model.DistributionReleaseDates;
 import io.coti.financialserver.model.Distributions;
-import io.coti.financialserver.model.InitialFunds;
+import io.coti.financialserver.model.InitialFundsHashes;
 import io.coti.financialserver.utils.DatesHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
@@ -23,6 +24,7 @@ import java.math.BigDecimal;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 
 @Slf4j
@@ -31,7 +33,10 @@ public class DistributionService {
 
     private static final int COTI_GENESIS_ADDRESS_INDEX = 0;
     private static final String DISTRIBUTIONS_FILE_NAME = "initialDistributions.json";
-    public static final int COIN_GENESIS_MAX_AMOUNT = 2000000000;
+    public static final int INITIAL_AMOUNT_FOR_TOKEN_SELL = 600000000;
+    public static final int INITIAL_AMOUNT_FOR_INCENTIVES = 900000000;
+    public static final int INITIAL_AMOUNT_FOR_TEAM = 300000000;
+    public static final int INITIAL_AMOUNT_FOR_ADVISORS = 200000000;
 
     @Value("${financialserver.seed}")
     private String seed;
@@ -40,7 +45,7 @@ public class DistributionService {
     @Autowired
     RollingReserveService rollingReserveService;
     @Autowired
-    InitialFunds initialFunds;
+    InitialFundsHashes initialFundsHashes;
     @Autowired
     TransactionCreationService transactionCreationService;
     @Autowired
@@ -50,30 +55,47 @@ public class DistributionService {
     @Autowired
     Transactions transactions;
 
-    public void distributeToInitialFunds(List<InitialFundData> initialFundDataList) {
-
+    public void distributeToInitialFunds() {
         Hash cotiGenesisAddress = CryptoHelper.generateAddress(seed, COTI_GENESIS_ADDRESS_INDEX);
-        verifySumOfFundsPercentages(initialFundDataList);
+        EnumSet<ReservedAddress> initialFundDistributionAddresses = EnumSet.range(ReservedAddress.TOKEN_SELL,ReservedAddress.ADVISORS);
+        initialFundDistributionAddresses.forEach(addressIndex -> {
+            Hash fundAddress = CryptoHelper.generateAddress(seed, Math.toIntExact(addressIndex.getIndex()));
 
-        initialFundDataList.forEach(initialFundData -> {
-
-            initialFundData.setAddressIndex(rollingReserveService.getNextAddressIndex());
-            initialFunds.put(initialFundData);
-
-            Float floatFundAmount = (initialFundData.getFundPercentage()  * COIN_GENESIS_MAX_AMOUNT);
-            BigDecimal amount = new BigDecimal(floatFundAmount.toString());
-            Hash fundAddress = CryptoHelper.generateAddress(seed, initialFundData.getAddressIndex());
-            transactionCreationService.createInitialTransactionToFund(amount, cotiGenesisAddress, fundAddress);
+            if(!isInitialTransactionExistsByAddress(fundAddress))
+            {
+                BigDecimal amount = getInitialAmountByAddressIndex(addressIndex);
+                transactionCreationService.createInitialTransactionToFund(amount, cotiGenesisAddress, fundAddress);
+                InitialFundDataHash initialFundDataHashElement = new InitialFundDataHash(fundAddress);
+                initialFundsHashes.put(initialFundDataHashElement);
+            }
         });
     }
 
-    public void verifySumOfFundsPercentages(List<InitialFundData> initialFundDataList) {
-        Float fundsPercentagesSum = Float.valueOf(0);
-        for (InitialFundData fundData : initialFundDataList) {
-            fundsPercentagesSum += fundData.getFundPercentage();
+    private boolean isInitialTransactionExistsByAddress(Hash fundAddress) {
+        // Verify if transaction hash is not already in new table for initial transactions
+        return ( initialFundsHashes != null && initialFundsHashes.getByHash(fundAddress) != null);
+    }
+
+    private BigDecimal getInitialAmountByAddressIndex(ReservedAddress addressIndex) {
+        BigDecimal amount = BigDecimal.ZERO;
+        if(addressIndex.isInitialFundDistribution()) {
+            switch(addressIndex)
+            {
+                case TOKEN_SELL:
+                    amount = new BigDecimal(INITIAL_AMOUNT_FOR_TOKEN_SELL);
+                    break;
+                case INCENTIVES:
+                    amount = new BigDecimal(INITIAL_AMOUNT_FOR_INCENTIVES);
+                    break;
+                case TEAM:
+                    amount = new BigDecimal(INITIAL_AMOUNT_FOR_TEAM);
+                    break;
+                case ADVISORS:
+                    amount = new BigDecimal(INITIAL_AMOUNT_FOR_ADVISORS);
+                    break;
+            }
         }
-        if( fundsPercentagesSum > 1)
-            log.error("Distribution percentages sum: {} from initial funds exceed 100", fundsPercentagesSum*100);
+        return amount;
     }
 
     public void startLoadDistributionsFromJsonFileThread() {
@@ -125,4 +147,6 @@ public class DistributionService {
         }
         return distributionDataList;
     }
+
+
 }

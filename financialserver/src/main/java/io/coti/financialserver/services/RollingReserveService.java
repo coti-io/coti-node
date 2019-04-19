@@ -72,7 +72,7 @@ public class RollingReserveService {
 
 
     public void init() {
-        lastAddressIndex = new AtomicInteger(COTI_ROLLING_RESERVE_ADDRESS_INDEX);
+        lastAddressIndex = new AtomicInteger(ReservedAddress.values().length); // Reserving initial values to predefined transactions
         initialFunds.forEach(c-> lastAddressIndex.getAndIncrement());
         merchantRollingReserves.forEach(c -> lastAddressIndex.getAndIncrement());
     }

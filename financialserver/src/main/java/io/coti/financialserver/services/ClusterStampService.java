@@ -2,7 +2,7 @@ package io.coti.financialserver.services;
 
 import io.coti.basenode.data.ClusterStampData;
 import io.coti.basenode.services.BaseNodeClusterStampService;
-import io.coti.financialserver.model.InitialFunds;
+import io.coti.financialserver.model.InitialFundsHashes;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,10 +14,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class ClusterStampService extends BaseNodeClusterStampService {
 
-    @Autowired
-    InitialFunds initialFunds;
+
     @Autowired
     DistributionService distributionService;
+    @Autowired
+    InitialFundsHashes initialFundsHashes;
+    @Autowired
+    RollingReserveService rollingReserveService;
+
+
     @Override
     public void loadBalanceFromLastClusterStamp() {
 
@@ -25,11 +30,14 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
         if(clusterStampData != null) {
             loadBalanceFromClusterStamp(clusterStampData);
+            initialFundsHashes.init();
 
-            if( !clusterStampData.getInitialFundDataList().isEmpty() && initialFunds.isEmpty() ) {
-                distributionService.distributeToInitialFunds(clusterStampData.getInitialFundDataList());
-                distributionService.startLoadDistributionsFromJsonFileThread();
-            }
+            distributionService.distributeToInitialFunds();
+            // TODO: Verify in case Transactions Index is still lower than expected initial transactions,
+            //  increment it in order to avoid regular transactions from getting them
+
+
+//          distributionService.startLoadDistributionsFromJsonFileThread();
         }
     }
 }

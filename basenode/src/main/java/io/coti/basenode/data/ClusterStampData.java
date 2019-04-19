@@ -19,7 +19,6 @@ public class ClusterStampData implements IPropagatable, ISignable, ISignValidata
     private Hash hash;
     private long totalConfirmedTransactionsPriorClusterStamp;
     private Map<Hash, BigDecimal> balanceMap;
-    private List<InitialFundData> initialFundDataList; // Exists only in initial Cluster Stamp
     private Map<Hash, TransactionData> unconfirmedTransactions;
     private Hash zeroSpendHash;
     private SignatureData zeroSpendSignature;
@@ -28,7 +27,6 @@ public class ClusterStampData implements IPropagatable, ISignable, ISignValidata
         hash = new Hash(0);
         balanceMap = new ConcurrentHashMap<>();
         unconfirmedTransactions = new ConcurrentHashMap<>();
-        initialFundDataList = new ArrayList<>();
     }
 
     @Override
