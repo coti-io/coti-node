@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import javax.validation.constraints.NotEmpty;
 import javax.xml.bind.DatatypeConverter;
 import java.io.Serializable;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 @Slf4j
@@ -71,8 +70,4 @@ public class Hash implements Serializable /*, Comparable*/ {
         return toHexString();
     }
 
-//    @Override
-//    public int compareTo(Object o) {
-//        return ByteBuffer.wrap(this.bytes).compareTo(ByteBuffer.wrap(((Hash) o).bytes));
-//    }
 }

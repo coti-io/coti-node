@@ -14,8 +14,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class ClusterStampService extends BaseNodeClusterStampService {
 
-    public static final String CLUSTERSTAMP_FILE_SUFFIX = "_clusterStamp.csv";
-
     @Value("${logging.file.name}")
     private String clusterStampFilePrefix;
 

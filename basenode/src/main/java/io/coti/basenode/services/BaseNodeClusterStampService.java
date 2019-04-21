@@ -16,7 +16,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.*;
 import java.math.BigDecimal;
-import java.nio.file.*;
 import java.util.*;
 
 
@@ -75,23 +74,6 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         }
     }
 
-    public ClusterStampData getNewerClusterStamp(long totalConfirmedTransactionsPriorClusterStamp) {
-        ClusterStampData lastClusterStampData = getLastClusterStamp();
-        if(lastClusterStampData.getTotalConfirmedTransactionsPriorClusterStamp() > totalConfirmedTransactionsPriorClusterStamp) {
-            return lastClusterStampData;
-        }
-        return null;
-    }
-
-    public Hash getSignerHash(long totalConfirmedTransactionsPriorClusterStamp) {
-        ClusterStampData lastClusterStampData = getNewerClusterStamp(totalConfirmedTransactionsPriorClusterStamp);
-        if(lastClusterStampData != null) {
-            return lastClusterStampData.getZeroSpendHash();
-        }
-        return null;
-    }
-
-
     protected ClusterStampData getLastClusterStamp() {
 
         long totalConfirmedTransactionsPriorClusterStamp;
@@ -105,8 +87,6 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         String recoveryServerAddress = networkService.getRecoveryServerAddress();
         if( recoveryServerAddress!=null && !recoveryServerAddress.isEmpty() )
         {
-            Path destFile= Paths.get(clusterStampFilePrefix+CLUSTERSTAMP_FILE_SUFFIX);
-            // If signatures do match or after retrieving file from recovery, create clusterStampData from local file.
             lastClusterStampData = loadInitialClusterStamp();
                 clusterStamps.put(lastClusterStampData);
                 return lastClusterStampData;
