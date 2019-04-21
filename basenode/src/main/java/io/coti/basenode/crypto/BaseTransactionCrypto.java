@@ -67,6 +67,8 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         }
     },
     FullNodeFeeData {
+        private static final int FULL_NODE_FEE_ADDRESS_INDEX = 0;
+
         @Override
         public byte[] getMessageInBytes(BaseTransactionData fullNodeFeeData) {
             if (!FullNodeFeeData.class.isInstance(fullNodeFeeData)) {
@@ -79,6 +81,12 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
                 e.printStackTrace();
                 return new byte[0];
             }
+        }
+
+        @Override
+        public void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData) throws ClassNotFoundException {
+            baseTransactionData.setSignature(nodeCryptoHelper.signMessage(this.getSignatureMessage(transactionData), FULL_NODE_FEE_ADDRESS_INDEX));
+
         }
     },
     NetworkFeeData {

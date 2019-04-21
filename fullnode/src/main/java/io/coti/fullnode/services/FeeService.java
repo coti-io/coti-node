@@ -1,7 +1,6 @@
 package io.coti.fullnode.services;
 
 import io.coti.basenode.crypto.BaseTransactionCrypto;
-import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.FullNodeFeeData;
@@ -33,10 +32,10 @@ public class FeeService {
     private BigDecimal maximumFee;
     @Value("${fee.percentage}")
     private BigDecimal feePercentage;
-    @Autowired
-    private NodeCryptoHelper nodeCryptoHelper;
     @Value("${fullnode.seed}")
     private String seed;
+    @Autowired
+    private NodeCryptoHelper nodeCryptoHelper;
 
     public ResponseEntity<BaseResponse> createFullNodeFee(FullNodeFeeRequest fullNodeFeeRequest) {
         try {
@@ -57,7 +56,7 @@ public class FeeService {
     }
 
     public Hash getAddress() {
-        return CryptoHelper.generateAddress(seed, FULL_NODE_FEE_ADDRESS_INDEX);
+        return nodeCryptoHelper.generateAddress(seed, FULL_NODE_FEE_ADDRESS_INDEX);
     }
 
     public void setFullNodeFeeHash(FullNodeFeeData fullNodeFeeData) throws ClassNotFoundException {
