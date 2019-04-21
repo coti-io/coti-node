@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class ClusterStampService extends BaseNodeClusterStampService {
 
-
     @Autowired
     DistributionService distributionService;
     @Autowired
@@ -33,9 +32,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             initialFundsHashes.init();
 
             distributionService.distributeToInitialFunds();
-            // TODO: Verify in case Transactions Index is still lower than expected initial transactions,
-            //  increment it in order to avoid regular transactions from getting them
-
 
 //          distributionService.startLoadDistributionsFromJsonFileThread();
         }

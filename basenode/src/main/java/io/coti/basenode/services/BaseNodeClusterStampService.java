@@ -7,12 +7,16 @@ import io.coti.basenode.model.ClusterStamps;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IClusterStampService;
+import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.web.client.RestTemplate;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.math.BigDecimal;
 import java.nio.file.*;
@@ -42,8 +46,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     public static final String SIGNATURE_LINE_TOKEN = "# Signature";
     public static final int NUMBER_OF_SIGNATURE_LINE_DETAILS = 2;
 
-    @Value("${recovery.server.address:#{null}}")
-    private String recoveryServerAddress;
+
     @Value("${logging.file.name}")
     private String clusterStampFilePrefix;
 
@@ -59,6 +62,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     protected ClusterStamps clusterStamps;
     @Autowired
     protected ClusterStampCrypto clusterStampCrypto;
+    @Autowired
+    protected INetworkService networkService;
+
 
     protected Map<Hash, TransactionData> getUnconfirmedTransactions() {
         return new HashMap<>();
@@ -75,7 +81,6 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     }
 
     protected void loadBalanceFromClusterStamp(ClusterStampData clusterStampData) {
-
         balanceService.updateBalanceAndPreBalanceMap(clusterStampData.getBalanceMap());
         transactions.deleteAll();
         Iterator it = clusterStampData.getUnconfirmedTransactions().entrySet().iterator();
@@ -133,13 +138,40 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             totalConfirmedTransactionsPriorClusterStamp = -1;
         }
 
+        String recoveryServerAddress = networkService.getRecoveryServerAddress();
         if( recoveryServerAddress!=null && !recoveryServerAddress.isEmpty() )
         {
+            Path destFile= Paths.get(clusterStampFilePrefix+CLUSTERSTAMP_FILE_SUFFIX);
             matchingSignatures = isMatchingSignaturesOfClusterStampFiles(totalConfirmedTransactionsPriorClusterStamp, matchingSignatures, restTemplate);
 
             if(!matchingSignatures)
             {
-                copyClusterStampFileFromRecovery();
+                //copyClusterStampFileFromRecovery();
+
+                // TODO: get cluster stamp data from recovery server
+//                ResponseEntity<byte[]> response =
+//                        restTemplate.postForEntity(recoveryServerAddress + "/getClusterStampFile",null ,byte[].class);
+
+                HttpHeaders headers = new HttpHeaders();
+                headers.setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM));
+                HttpEntity<String> entity = new HttpEntity<String>(headers);
+                ResponseEntity<byte[]> response =
+                        restTemplate.exchange(recoveryServerAddress + "/getClusterStampFile", HttpMethod.GET, entity, byte[].class);
+
+                if(response.getStatusCodeValue() == HttpServletResponse.SC_OK)
+                {
+                    try {
+                        Files.write(destFile, response.getBody());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+
+
+                // TODO: copy the file from recovery, locally
+
+
             }
             // If signatures do match or after retrieving file from recovery, create clusterStampData from local file.
             lastClusterStampData = loadInitialClusterStamp();
@@ -150,14 +182,39 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                 lastClusterStampData.setSignerHash(zeroSpendHash);
             }
 
+//            // TODO: temp checks - start
+//            ClusterStampData lastClusterStampDataNotFile =
+//                        restTemplate.postForObject(
+//                                recoveryServerAddress + "/getLastClusterStamp",
+//                                totalConfirmedTransactionsPriorClusterStamp,
+//                                ClusterStampData.class);
+//            boolean verifyClusterStampDataNotFile = clusterStampCrypto.verifySignature(lastClusterStampDataNotFile);
+//            // TODO: temp checks - end
+
             //TODO: currently verifySignature is failing
-            if(lastClusterStampData != null && clusterStampCrypto.verifySignature(lastClusterStampData)) {
+            if(lastClusterStampData != null && clusterStampCrypto.verifySignature(lastClusterStampData) ) {
                 clusterStamps.put(lastClusterStampData);
                 log.info("Received last cluster stamp for total confirmed transactions: {}", totalConfirmedTransactionsPriorClusterStamp);
                 return lastClusterStampData;
             }
         }
         return localClusterStampData;
+    }
+
+    @Override
+    public void getClusterStampFile(HttpServletResponse response) throws IOException {
+        try {
+            String clusterStampFileLocation = clusterStampFilePrefix+CLUSTERSTAMP_FILE_SUFFIX;
+            File localFile = new File(clusterStampFileLocation);
+            InputStream inputStream = new FileInputStream(localFile);
+            response.setStatus(HttpServletResponse.SC_OK);
+            FileCopyUtils.copy(inputStream, response.getOutputStream());
+            inputStream.close();
+
+        } catch (IOException e) {
+            response.setStatus(HttpServletResponse.SC_EXPECTATION_FAILED);
+            response.getWriter().write("Document not found");
+        }
     }
 
     private boolean isMatchingSignaturesOfClusterStampFiles(long totalConfirmedTransactionsPriorClusterStamp, boolean matchingSignatures, RestTemplate restTemplate) {
@@ -174,7 +231,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         if(potentialSignatureFromLocalFile != null) {
             SignatureData lastClusterStampDataSignature =
                     restTemplate.postForObject(
-                            recoveryServerAddress + "/getLastClusterStampSignature",
+                            networkService.getRecoveryServerAddress() + "/getLastClusterStampSignature",
                             totalConfirmedTransactionsPriorClusterStamp,
                             SignatureData.class);
             if (lastClusterStampDataSignature != null)
@@ -186,7 +243,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     private Hash getZeroSpendHash(long totalConfirmedTransactionsPriorClusterStamp) {
         RestTemplate restTemplate = new RestTemplate();
         Hash signerHash = restTemplate.postForObject(
-                recoveryServerAddress + "/getSignerHash",
+                networkService.getRecoveryServerAddress() + "/getSignerHash",
                 totalConfirmedTransactionsPriorClusterStamp,
                 Hash.class);
         return signerHash;
@@ -196,10 +253,13 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         //TODO: instead of getting the object, get the whole file.
         //TODO: until the end point passing the actual file is implemented, grab the file of zeroSpend directly
 
+//        deletePreviousClusterStampFile();
+
         Path srcFile = Paths.get("ZeroSpendServer_clusterStamp.csv");
         Path destFile= Paths.get(clusterStampFilePrefix+CLUSTERSTAMP_FILE_SUFFIX);
         try {
             Files.copy(srcFile, destFile, REPLACE_EXISTING);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -217,6 +277,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 //                                totalConfirmedTransactionsPriorClusterStamp,
 //                                ClusterStampData.class);
     }
+
 
     private SignatureData getPotentialSignatureFromFile(String fileLocation) throws IOException {
         SignatureData signature = null;
@@ -377,4 +438,6 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             e.printStackTrace();
         }
     }
+
+
 }

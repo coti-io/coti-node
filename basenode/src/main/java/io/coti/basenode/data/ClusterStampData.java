@@ -7,10 +7,9 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 @Slf4j
 @Data
@@ -26,6 +25,7 @@ public class ClusterStampData implements IPropagatable, ISignable, ISignValidata
     public ClusterStampData() {
         hash = new Hash(0);
         balanceMap = new ConcurrentHashMap<>();
+//        balanceMap = new ConcurrentSkipListMap<Hash, BigDecimal>();
         unconfirmedTransactions = new ConcurrentHashMap<>();
     }
 
