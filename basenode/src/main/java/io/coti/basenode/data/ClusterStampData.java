@@ -6,10 +6,13 @@ import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 @Data
@@ -20,6 +23,10 @@ public class ClusterStampData implements IPropagatable, ISignable, ISignValidata
     private Map<Hash, BigDecimal> balanceMap;
     private Map<Hash, TransactionData> unconfirmedTransactions;
     private Hash zeroSpendHash;
+    private List<Hash> balanceMapHashes;
+    private List<BigDecimal> balanceMapAmounts;
+    private ByteBuffer rowsBytes;
+    private ByteArrayOutputStream baosRowsBytes;
     private SignatureData zeroSpendSignature;
 
     public ClusterStampData() {
@@ -27,6 +34,10 @@ public class ClusterStampData implements IPropagatable, ISignable, ISignValidata
         balanceMap = new ConcurrentHashMap<>();
 //        balanceMap = new ConcurrentSkipListMap<Hash, BigDecimal>();
         unconfirmedTransactions = new ConcurrentHashMap<>();
+        balanceMapHashes = new CopyOnWriteArrayList<Hash>();
+        balanceMapAmounts = new CopyOnWriteArrayList<BigDecimal>();
+        baosRowsBytes = new ByteArrayOutputStream();
+
     }
 
     @Override

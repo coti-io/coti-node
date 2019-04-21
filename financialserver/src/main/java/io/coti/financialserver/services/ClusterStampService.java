@@ -28,7 +28,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         ClusterStampData clusterStampData = getLastClusterStamp();
 
         if(clusterStampData != null) {
-            loadBalanceFromClusterStamp(clusterStampData);
+            loadBalanceFromClusterStamp(clusterStampData); // TODO: assumes BalanceMap and UnconfirmedTransactions may be present in clusterStampData
             initialFundsHashes.init();
 
             distributionService.distributeToInitialFunds();

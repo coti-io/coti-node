@@ -17,8 +17,10 @@ import org.springframework.util.FileCopyUtils;
 import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.constraints.NotEmpty;
 import java.io.*;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
 import java.nio.file.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -75,13 +77,14 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
         ClusterStampData clusterStampData = getLastClusterStamp();
 
-        if(clusterStampData != null) {
+        if(clusterStampData != null) { // TODO: assumes BalanceMap and UnconfirmedTransactions may be present in clusterStampData
             loadBalanceFromClusterStamp(clusterStampData);
         }
     }
 
     protected void loadBalanceFromClusterStamp(ClusterStampData clusterStampData) {
-        balanceService.updateBalanceAndPreBalanceMap(clusterStampData.getBalanceMap());
+        //TODO: disable use of balanceService
+//        balanceService.updateBalanceAndPreBalanceMap(clusterStampData.getBalanceMap());
         transactions.deleteAll();
         Iterator it = clusterStampData.getUnconfirmedTransactions().entrySet().iterator();
         while (it.hasNext()) {
@@ -161,7 +164,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                 if(response.getStatusCodeValue() == HttpServletResponse.SC_OK)
                 {
                     try {
-                        Files.write(destFile, response.getBody());
+                        Files.write(destFile, response.getBody()); //TODO: write as a temp file until signature is verified
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -175,8 +178,8 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             }
             // If signatures do match or after retrieving file from recovery, create clusterStampData from local file.
             lastClusterStampData = loadInitialClusterStamp();
-
-            if(lastClusterStampData != null && lastClusterStampData.getZeroSpendHash()==null)
+            //TODO: Switch to ger Signer Hash of Recovery Server from NetworkService, networkService.getRecoveryServerHash
+            if(lastClusterStampData != null && lastClusterStampData.getZeroSpendHash()==null) //TODO: needed for signature checks
             {
                 zeroSpendHash = getZeroSpendHash(totalConfirmedTransactionsPriorClusterStamp);
                 lastClusterStampData.setSignerHash(zeroSpendHash);
@@ -394,7 +397,16 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         }
         Hash addressHash = new Hash(addressDetails[ADDRESS_DETAILS_HASH_PLACEMENT]);
         BigDecimal addressAmount = new BigDecimal(addressDetails[ADDRESS_DETAILS_AMOUNT_PLACEMENT]);
-        initialClusterStampData.getBalanceMap().put(addressHash, addressAmount);
+//        initialClusterStampData.getBalanceMap().put(addressHash, addressAmount);
+//        initialClusterStampData.getBalanceMapHashes().add(addressHash);
+//        initialClusterStampData.getBalanceMapAmounts().add(addressAmount);
+
+        ByteArrayOutputStream baos = initialClusterStampData.getBaosRowsBytes(); // TODO: Improve this
+        byte[] hashInBytes = addressHash.getBytes();
+        byte[] addressAmountInBytes = addressAmount.toString().getBytes();
+        baos.write(hashInBytes);
+        baos.write(addressAmountInBytes);
+//        initialClusterStampData.setBaosRowsBytes( baos );
     }
 
     private void fillSignatureDataFromLine(ClusterStampData initialClusterStampData, String line, int signatureRelevantLines) throws Exception {

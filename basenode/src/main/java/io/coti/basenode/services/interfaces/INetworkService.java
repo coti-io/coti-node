@@ -16,6 +16,10 @@ public interface INetworkService {
 
     void setRecoveryServerAddress(String recoveryServerAddress);
 
+    Hash getRecoveryServerHash();
+
+    void setRecoveryServerHash(Hash recoveryServerHash);
+
     String getNodeManagerPropagationAddress();
 
     Map<Hash, NetworkNodeData> getMapFromFactory(NodeType nodeType);
