@@ -11,6 +11,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
@@ -21,18 +24,47 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class BaseNodeBalanceService implements IBalanceService {
 
-    @Autowired
-    private IClusterStampService clusterStampService;
-
     protected Map<Hash, BigDecimal> balanceMap;
     protected Map<Hash, BigDecimal> preBalanceMap;
 
     public void init() throws Exception {
         balanceMap = new ConcurrentHashMap<>();
         preBalanceMap = new ConcurrentHashMap<>();
-        clusterStampService.loadBalanceFromLastClusterStamp();
-
+        loadBalanceFromSnapshot();
         log.info("{} is up", this.getClass().getSimpleName());
+    }
+
+    private void loadBalanceFromSnapshot() throws Exception {
+        String snapshotFileLocation = "FinancialServer_clusterStamp.csv";
+        File snapshotFile = new File(snapshotFileLocation);
+
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(snapshotFile))) {
+
+            String line;
+
+            while ((line = bufferedReader.readLine()) != null && !line.trim().isEmpty()) {
+                String[] addressDetails = line.split(",");
+                if (addressDetails.length != 2) {
+                    throw new Exception("Bad csv file format");
+                }
+                Hash addressHash = new Hash(addressDetails[0]);
+                BigDecimal addressAmount = new BigDecimal(addressDetails[1]);
+                log.trace("The hash {} was loaded from the snapshot with amount {}", addressHash, addressAmount);
+
+                if (balanceMap.containsKey(addressHash)) {
+                    log.error("The address {} was already found in the snapshot", addressHash);
+                    throw new Exception(String.format("The address %s was already found in the snapshot", addressHash));
+                }
+                balanceMap.put(addressHash, addressAmount);
+                log.trace("Loading from snapshot into inMem balance+preBalance address {} and amount {}",
+                        addressHash, addressAmount);
+            }
+            log.info("Snapshot is finished");
+            preBalanceMap.putAll(balanceMap);
+        } catch (Exception e) {
+            log.error("Errors on snapshot loading: {}", e);
+            throw e;
+        }
     }
 
     @Override
@@ -117,12 +149,6 @@ public class BaseNodeBalanceService implements IBalanceService {
         preBalanceMap.computeIfPresent(addressHash, (currentHash, currentAmount) ->
                 currentAmount.add(amount));
         preBalanceMap.putIfAbsent(addressHash, amount);
-    }
-
-    @Override
-    public void updateBalanceAndPreBalanceMap(Map<Hash, BigDecimal> balanceMap) {
-        this.balanceMap = balanceMap;
-        preBalanceMap.putAll(balanceMap);
     }
 
 }

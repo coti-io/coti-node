@@ -18,11 +18,6 @@ public class ClusterStampCrypto extends SignatureCrypto<ClusterStampData> {
                 ByteBuffer.allocate(balanceMapHashesInBytes.length+balanceMapAmountsInBytes.length)
                 .put(balanceMapHashesInBytes).put(balanceMapAmountsInBytes);
 
-//        byte[] rowsAsBytes = clusterStampData.getBaosRowsBytes().toByteArray();
-//        ByteBuffer clusterStampDataBuffer =
-//                ByteBuffer.allocate(rowsAsBytes.length)
-//                        .put(rowsAsBytes);
-
         byte[] clusterStampInBytes = clusterStampDataBuffer.array();
         return CryptoHelper.cryptoHash(clusterStampInBytes).getBytes();
     }

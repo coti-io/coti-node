@@ -3,16 +3,8 @@ package io.coti.zerospend.services;
 import io.coti.basenode.data.*;
 import io.coti.basenode.services.BaseNodeClusterStampService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.FileCopyUtils;
-
-import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 
 
 /**
@@ -47,20 +39,4 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         return localClusterStampData;
     }
 
-//    public void getClusterStampFile(HttpServletResponse response) throws IOException {
-//        try {
-//            String clusterStampFileLocation = clusterStampFilePrefix+CLUSTERSTAMP_FILE_SUFFIX;
-//            File localFile = new File(clusterStampFileLocation);
-//            InputStream inputStream = new FileInputStream(localFile);
-////            byte[] inputStreamAsBytes = IOUtils.toByteArray(inputStream);
-//            response.setStatus(HttpServletResponse.SC_OK);
-//            FileCopyUtils.copy(inputStream, response.getOutputStream());
-//            inputStream.close();
-//
-//        } catch (IOException e) {
-//            response.setStatus(HttpServletResponse.SC_EXPECTATION_FAILED);
-//            response.getWriter().write("Document not found");
-//        }
-//
-//    }
 }

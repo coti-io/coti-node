@@ -65,15 +65,12 @@ public class RollingReserveService {
     private Transactions transactions;
     @Autowired
     private Disputes disputes;
-    @Autowired
-    private InitialFunds initialFunds;
 
     private AtomicInteger lastAddressIndex;
 
 
     public void init() {
         lastAddressIndex = new AtomicInteger(ReservedAddress.values().length); // Reserving initial values to predefined transactions
-        initialFunds.forEach(c-> lastAddressIndex.getAndIncrement());
         merchantRollingReserves.forEach(c -> lastAddressIndex.getAndIncrement());
     }
 

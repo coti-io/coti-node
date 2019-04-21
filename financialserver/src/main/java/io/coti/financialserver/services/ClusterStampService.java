@@ -28,12 +28,10 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         ClusterStampData clusterStampData = getLastClusterStamp();
 
         if(clusterStampData != null) {
-            loadBalanceFromClusterStamp(clusterStampData); // TODO: assumes BalanceMap and UnconfirmedTransactions may be present in clusterStampData
+            loadBalanceFromClusterStamp(clusterStampData);
             initialFundsHashes.init();
 
             distributionService.distributeToInitialFunds();
-
-//          distributionService.startLoadDistributionsFromJsonFileThread();
         }
     }
 }
