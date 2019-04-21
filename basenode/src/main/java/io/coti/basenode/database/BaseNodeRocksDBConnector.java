@@ -151,12 +151,41 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     @Override
     public boolean put(String columnFamilyName, byte[] key, byte[] value) {
         try {
-            db.put(
-                    classNameToColumnFamilyHandleMapping.get(columnFamilyName),
-                    key,
-                    value);
+            db.put(classNameToColumnFamilyHandleMapping.get(columnFamilyName), key, value);
             return true;
         } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean put(String columnFamilyName, WriteOptions writeOptions, byte[] key, byte[] value) {
+        try {
+            db.put(classNameToColumnFamilyHandleMapping.get(columnFamilyName), writeOptions, key, value);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean put(String columnFamilyName, WriteBatch writeBatch, byte[] key, byte[] value) {
+        try {
+            writeBatch.put(classNameToColumnFamilyHandleMapping.get(columnFamilyName), key, value);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean putBatch(WriteBatch writeBatch) {
+        try {
+            db.write(new WriteOptions(), writeBatch);
+            return true;
+        } catch (RocksDBException e) {
             e.printStackTrace();
             return false;
         }

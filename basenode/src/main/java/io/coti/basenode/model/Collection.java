@@ -5,9 +5,12 @@ import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.database.Interfaces.IDatabaseConnector;
 import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.RocksIterator;
+import org.rocksdb.WriteBatch;
+import org.rocksdb.WriteOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.SerializationUtils;
 
+import java.util.Map;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -23,6 +26,18 @@ public abstract class Collection<T extends IEntity> {
 
     public void put(IEntity entity) {
         databaseConnector.put(columnFamilyName, entity.getHash().getBytes(), SerializationUtils.serialize(entity));
+    }
+
+    public void put(WriteOptions writeOptions, IEntity entity) {
+        databaseConnector.put(columnFamilyName, writeOptions, entity.getHash().getBytes(), SerializationUtils.serialize(entity));
+    }
+
+    public void putBatch(Map<Hash, ? extends IEntity> entities) {
+        WriteBatch writeBatch = new WriteBatch();
+        entities.forEach((hash, entity) ->
+                databaseConnector.put(columnFamilyName, writeBatch, hash.getBytes(), SerializationUtils.serialize(entity))
+        );
+        databaseConnector.putBatch(writeBatch);
     }
 
     public void delete(IEntity entity) {

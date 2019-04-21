@@ -10,6 +10,7 @@ import io.coti.basenode.http.CustomHttpComponentsClientHttpRequestFactory;
 import io.coti.basenode.http.GetNodeRegistrationRequest;
 import io.coti.basenode.http.GetNodeRegistrationResponse;
 import io.coti.basenode.http.GetTransactionBatchResponse;
+import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.NodeRegistrations;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.LiveView.LiveViewService;
@@ -24,7 +25,13 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PreDestroy;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
@@ -54,6 +61,8 @@ public abstract class BaseNodeInitializationService {
     private String kycServerPublicKey;
     @Autowired
     private Transactions transactions;
+    @Autowired
+    private AddressTransactionsHistories addressTransactionsHistories;
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
@@ -127,11 +136,32 @@ public abstract class BaseNodeInitializationService {
             if (networkService.getRecoveryServerAddress() != null) {
                 List<TransactionData> missingTransactions = requestMissingTransactions(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
                 if (missingTransactions != null) {
+                    AtomicLong completedMissingTransactionNumber = new AtomicLong(0);
+                    ExecutorService executorService = Executors.newSingleThreadExecutor();
+                    List<Callable<Object>> missingTransactionTasks = new ArrayList<>(missingTransactions.size());
+                    Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap = new ConcurrentHashMap<>();
                     missingTransactions.forEach(transactionData -> {
-                                handleMissingTransaction(transactionData);
+                        missingTransactionTasks.add(Executors.callable(() -> {
+                            handleMissingTransaction(transactionData);
+                            transactionHelper.updateAddressTransactionHistory(addressToTransactionsHistoryMap, transactionData);
+                            completedMissingTransactionNumber.incrementAndGet();
+                        }));
+                    });
+                    Thread monitorMissingTransactions = new Thread(() -> {
+                        while (!Thread.currentThread().isInterrupted()) {
+                            try {
+                                Thread.sleep(5000);
+                                log.info("Inserted missing transactions: {}", completedMissingTransactionNumber);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
                             }
-                    );
-
+                        }
+                    });
+                    monitorMissingTransactions.start();
+                    executorService.invokeAll(missingTransactionTasks);
+                    addressTransactionsHistories.putBatch(addressToTransactionsHistoryMap);
+                    log.info("Inserted missing transactions: {}", completedMissingTransactionNumber);
+                    monitorMissingTransactions.interrupt();
                 }
             }
             balanceService.validateBalances();
@@ -175,16 +205,16 @@ public abstract class BaseNodeInitializationService {
             log.debug("Transaction already exists: {}", transactionData.getHash());
             return;
         }
+        transactions.put(transactionData);
         if (!transactionData.isTrustChainConsensus()) {
             clusterService.addUnconfirmedTransaction(transactionData);
         }
-        transactions.put(transactionData);
+
         liveViewService.addTransaction(transactionData);
         transactionService.addToExplorerIndexes(transactionData);
         transactionHelper.incrementTotalTransactions();
 
         confirmationService.insertMissingTransaction(transactionData);
-        new Thread(() -> transactionHelper.updateAddressTransactionHistory(transactionData)).start();
         propagateMissingTransaction(transactionData);
     }
 

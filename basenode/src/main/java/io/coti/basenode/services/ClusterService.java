@@ -55,6 +55,7 @@ public class ClusterService implements IClusterService {
             sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionData);
             totalSources.incrementAndGet();
         }
+        removeTransactionParentsFromSources(transactionData);
     }
 
     @Override

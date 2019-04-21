@@ -6,6 +6,7 @@ import io.coti.basenode.http.GetTransactionBatchResponse;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 public interface ITransactionHelper {
 
@@ -14,6 +15,8 @@ public interface ITransactionHelper {
     boolean validateBaseTransactionsDataIntegrity(TransactionData transactionData);
 
     void updateAddressTransactionHistory(TransactionData transactionData);
+
+    void updateAddressTransactionHistory(Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap, TransactionData transactionData);
 
     boolean validateTransactionCrypto(TransactionData transactionData);
 
