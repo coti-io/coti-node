@@ -159,7 +159,7 @@ public class CryptoHelper {
 
     public static Hash generatePrivateKey(String seed, Integer addressIndex) {
 
-        byte[] seedInBytes = seed.getBytes();
+        byte[] seedInBytes = DatatypeConverter.parseHexBinary(seed);
 
         int byteBufferLength = 4 + seedInBytes.length;
 
