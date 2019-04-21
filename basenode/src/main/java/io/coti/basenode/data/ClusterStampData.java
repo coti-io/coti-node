@@ -26,7 +26,6 @@ public class ClusterStampData implements IPropagatable, ISignable, ISignValidata
     private List<Hash> balanceMapHashes;
     private List<BigDecimal> balanceMapAmounts;
     private ByteBuffer rowsBytes;
-    private ByteArrayOutputStream baosRowsBytes;
     private SignatureData zeroSpendSignature;
 
     public ClusterStampData() {
@@ -36,7 +35,6 @@ public class ClusterStampData implements IPropagatable, ISignable, ISignValidata
         unconfirmedTransactions = new ConcurrentHashMap<>();
         balanceMapHashes = new CopyOnWriteArrayList<Hash>();
         balanceMapAmounts = new CopyOnWriteArrayList<BigDecimal>();
-        baosRowsBytes = new ByteArrayOutputStream();
 
     }
 

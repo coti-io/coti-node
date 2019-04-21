@@ -398,14 +398,14 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         Hash addressHash = new Hash(addressDetails[ADDRESS_DETAILS_HASH_PLACEMENT]);
         BigDecimal addressAmount = new BigDecimal(addressDetails[ADDRESS_DETAILS_AMOUNT_PLACEMENT]);
 //        initialClusterStampData.getBalanceMap().put(addressHash, addressAmount);
-//        initialClusterStampData.getBalanceMapHashes().add(addressHash);
-//        initialClusterStampData.getBalanceMapAmounts().add(addressAmount);
+        initialClusterStampData.getBalanceMapHashes().add(addressHash);
+        initialClusterStampData.getBalanceMapAmounts().add(addressAmount);
 
-        ByteArrayOutputStream baos = initialClusterStampData.getBaosRowsBytes(); // TODO: Improve this
-        byte[] hashInBytes = addressHash.getBytes();
-        byte[] addressAmountInBytes = addressAmount.toString().getBytes();
-        baos.write(hashInBytes);
-        baos.write(addressAmountInBytes);
+//        ByteArrayOutputStream baos = initialClusterStampData.getBaosRowsBytes(); // TODO: Improve this
+//        byte[] hashInBytes = addressHash.getBytes();
+//        byte[] addressAmountInBytes = addressAmount.toString().getBytes();
+//        baos.write(hashInBytes);
+//        baos.write(addressAmountInBytes);
 //        initialClusterStampData.setBaosRowsBytes( baos );
     }
 
