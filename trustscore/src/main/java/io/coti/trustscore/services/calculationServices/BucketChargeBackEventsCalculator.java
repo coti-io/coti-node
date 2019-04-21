@@ -14,8 +14,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import static java.lang.Double.NaN;
-
 @Slf4j
 public class BucketChargeBackEventsCalculator extends BucketCalculator {
     private static Map<UserType, BehaviorHighFrequencyEventsScore> userTypeToBehaviorHighFrequencyEventsScoreMapping;
@@ -37,7 +35,7 @@ public class BucketChargeBackEventsCalculator extends BucketCalculator {
     public void setCurrentScores() {
         Map<HighFrequencyEventScore, String> highFrequencyEventScoreToCalculationFormulaMap = new ConcurrentHashMap<>();
         HighFrequencyEventScore chargeBackEventScoreByEventScoreType = behaviorHighFrequencyEventsScore.getHighFrequencyEventScoreMap().get(HighFrequencyEventScoreType.CHARGE_BACK_AMOUNT); // Anton -- splitted to check
-        if(chargeBackEventScoreByEventScoreType ==  null) return;  // Anton -- splitted to check
+        if (chargeBackEventScoreByEventScoreType == null) return;
         highFrequencyEventScoreToCalculationFormulaMap.put(chargeBackEventScoreByEventScoreType, createChargeBackAmountFormula());
 
         highFrequencyEventScoreToCalculationFormulaMap.put(behaviorHighFrequencyEventsScore.getHighFrequencyEventScoreMap()
@@ -46,9 +44,9 @@ public class BucketChargeBackEventsCalculator extends BucketCalculator {
 
         ScoreCalculator functionCalculator = new ScoreCalculator(highFrequencyEventScoreToCalculationFormulaMap);
         Map<HighFrequencyEventScore, Double> eventScoresToCalculatedScoreMap = functionCalculator.calculate();
-// Anton or check here if the  eventScoresToCalculatedScoreMap  consists of NaNs
-        for(HighFrequencyEventScore highFrequencyEventScore : eventScoresToCalculatedScoreMap.keySet())
-            if(eventScoresToCalculatedScoreMap.get(highFrequencyEventScore).isNaN()) {
+
+        for (HighFrequencyEventScore highFrequencyEventScore : eventScoresToCalculatedScoreMap.keySet())
+            if (eventScoresToCalculatedScoreMap.get(highFrequencyEventScore).isNaN()) {
                 eventScoresToCalculatedScoreMap.put(highFrequencyEventScore, 0.0);
             }
         updateBucketScoresByFunction(eventScoresToCalculatedScoreMap);
@@ -63,14 +61,14 @@ public class BucketChargeBackEventsCalculator extends BucketCalculator {
 
         double currentDateCountOfChargeBacks = bucketChargeBackEventsData.getCurrentDateChargeBacks().values().stream().mapToDouble(Number::doubleValue).sum();
         HighFrequencyEventScore chargeBackEventScoreByEventScoreType = getChargeBackEventScoreByEventScoreType(HighFrequencyEventScoreType.CHARGE_BACK_AMOUNT); // Anton -- splitted to check
-        if(chargeBackEventScoreByEventScoreType !=  null) {
+        if (chargeBackEventScoreByEventScoreType != null) {
             highFrequencyEventScoreToCalculationFormulaMap.put(chargeBackEventScoreByEventScoreType,
                     currentDateCountOfChargeBacks
                             + bucketChargeBackEventsData.getOldDateAmountOfChargeBacksContribution());
 
             Map<HighFrequencyEventScore, Double> highFrequencyEventScoreDecayedScores = new DecayCalculator(highFrequencyEventScoreToCalculationFormulaMap).calculate(daysDiff);
             bucketChargeBackEventsData.setOldDateAmountOfChargeBacksContribution(highFrequencyEventScoreDecayedScores.get(behaviorHighFrequencyEventsScore.getHighFrequencyEventScoreMap()
-                .get(HighFrequencyEventScoreType.CHARGE_BACK_AMOUNT)));
+                    .get(HighFrequencyEventScoreType.CHARGE_BACK_AMOUNT)));
         }
     }
 
@@ -80,7 +78,7 @@ public class BucketChargeBackEventsCalculator extends BucketCalculator {
         Map<HighFrequencyEventScore, Double> highFrequencyEventScoreToCalculationFormulaMap = new ConcurrentHashMap<>();
 
         HighFrequencyEventScore chargeBackEventScoreByEventScoreType = getChargeBackEventScoreByEventScoreType(HighFrequencyEventScoreType.CHARGE_BACK_AMOUNT); // Anton -- splitted to check
-        if(chargeBackEventScoreByEventScoreType !=  null) {
+        if (chargeBackEventScoreByEventScoreType != null) {
             highFrequencyEventScoreToCalculationFormulaMap.put(chargeBackEventScoreByEventScoreType,
                     currentDateCountOfCreditTransactions
                             + bucketChargeBackEventsData.getOldDateAmountOfCreditTransactionsContribution());
@@ -97,7 +95,7 @@ public class BucketChargeBackEventsCalculator extends BucketCalculator {
 
         double currentDateNumberOfChargeBacks = bucketChargeBackEventsData.getCurrentDateChargeBacks().size();
         HighFrequencyEventScore chargeBackEventScoreByEventScoreType = getChargeBackEventScoreByEventScoreType(HighFrequencyEventScoreType.CHARGE_BACK_AMOUNT); // Anton -- splitted to check
-        if(chargeBackEventScoreByEventScoreType !=  null) {
+        if (chargeBackEventScoreByEventScoreType != null) {
             highFrequencyEventScoreToCalculationFormulaMap.put(chargeBackEventScoreByEventScoreType,
                     currentDateNumberOfChargeBacks
                             + bucketChargeBackEventsData.getOldDateNumberOfChargeBacksContribution());
@@ -114,7 +112,7 @@ public class BucketChargeBackEventsCalculator extends BucketCalculator {
         Map<HighFrequencyEventScore, Double> highFrequencyEventScoreToCalculationFormulaMap = new ConcurrentHashMap<>();
 
         HighFrequencyEventScore chargeBackEventScoreByEventScoreType = getChargeBackEventScoreByEventScoreType(HighFrequencyEventScoreType.CHARGE_BACK_AMOUNT); // Anton -- splitted to check
-        if(chargeBackEventScoreByEventScoreType !=  null) {
+        if (chargeBackEventScoreByEventScoreType != null) {
             highFrequencyEventScoreToCalculationFormulaMap.put(chargeBackEventScoreByEventScoreType,
                     currentDateNumberOfCreditTransactions
                             + bucketChargeBackEventsData.getOldDateNumberOfCreditTransactionsContribution());

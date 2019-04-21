@@ -9,7 +9,6 @@ import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 import java.time.Instant;
-import java.util.Date;
 
 @Data
 public class InsertEventRequest extends Request {

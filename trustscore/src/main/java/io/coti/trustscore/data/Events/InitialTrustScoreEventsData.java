@@ -12,10 +12,9 @@ public class InitialTrustScoreEventsData extends EventData {
     public InitialTrustScoreEventsData(InsertEventRequest request) {
         super(request);
         this.initialTrustScoreType = request.getInitialTrustScoreType();
-        if(this.initialTrustScoreType == InitialTrustScoreType.KYC) {
+        if (this.initialTrustScoreType.equals(InitialTrustScoreType.KYC)) {
             this.score = request.getScore() - 10.0;
-        }
-        else {
+        } else {
             this.score = request.getScore();
         }
         super.setSignatureData(request.getSignature());

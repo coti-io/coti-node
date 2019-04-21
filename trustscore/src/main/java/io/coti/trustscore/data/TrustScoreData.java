@@ -16,10 +16,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @Data
 public class TrustScoreData implements IEntity, ISignValidatable {
     private Hash userHash;
-    private Double kycTrustScore; // used for verification only
+    private Double kycTrustScore;
     private SignatureData signature;
     private Hash kycServerPublicKey;
-    private Date createTime; // used for verification only
+    private Date createTime;
     private ConcurrentHashMap<EventType, Hash> eventTypeToBucketHashMap;
     private UserType userType;
 

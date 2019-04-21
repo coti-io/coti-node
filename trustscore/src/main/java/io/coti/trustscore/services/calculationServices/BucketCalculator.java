@@ -4,7 +4,6 @@ package io.coti.trustscore.services.calculationServices;
 import io.coti.trustscore.data.Buckets.BucketEventData;
 import io.coti.trustscore.utils.DatesCalculation;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.time.DateUtils;
 
 import java.util.Date;
 

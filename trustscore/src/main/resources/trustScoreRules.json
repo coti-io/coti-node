@@ -737,7 +737,7 @@
               "to": "100"
             },
             "weight": "0.4",
-            "decay": "exp(-ln(2)/365*T)",
+            "decay": "exp(-ln(2)/365000*T)",
             "name": "KYC"
           }
         ]
