@@ -129,7 +129,22 @@ public abstract class BaseNodeInitializationService {
         try {
             AtomicLong maxTransactionIndex = new AtomicLong(-1);
             log.info("Starting to read existing transactions");
-            transactions.forEach(transactionData -> handleExistingTransaction(maxTransactionIndex, transactionData));
+            AtomicLong completedExistedTransactionNumber = new AtomicLong(0);
+            List<Callable<Object>> existingTransactionTasks = new ArrayList<>();
+            transactions.forEach(transactionData ->
+                    existingTransactionTasks.add(Executors.callable(() -> {
+                                handleExistingTransaction(maxTransactionIndex, transactionData);
+                                completedExistedTransactionNumber.incrementAndGet();
+                            }
+                    )));
+            if (existingTransactionTasks.size() != 0) {
+                ExecutorService existingTransactionExecutorService = Executors.newSingleThreadExecutor();
+                Thread monitorExistingTransactions = monitorTransactionThread("existing", completedExistedTransactionNumber);
+                monitorExistingTransactions.start();
+                existingTransactionExecutorService.invokeAll(existingTransactionTasks);
+                log.info("Inserted existing transactions: {}", completedExistedTransactionNumber);
+                monitorExistingTransactions.interrupt();
+            }
             transactionIndexService.init(maxTransactionIndex);
             log.info("Finished to read existing transactions");
 
@@ -140,23 +155,14 @@ public abstract class BaseNodeInitializationService {
                     ExecutorService executorService = Executors.newSingleThreadExecutor();
                     List<Callable<Object>> missingTransactionTasks = new ArrayList<>(missingTransactions.size());
                     Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap = new ConcurrentHashMap<>();
-                    missingTransactions.forEach(transactionData -> {
-                        missingTransactionTasks.add(Executors.callable(() -> {
-                            handleMissingTransaction(transactionData);
-                            transactionHelper.updateAddressTransactionHistory(addressToTransactionsHistoryMap, transactionData);
-                            completedMissingTransactionNumber.incrementAndGet();
-                        }));
-                    });
-                    Thread monitorMissingTransactions = new Thread(() -> {
-                        while (!Thread.currentThread().isInterrupted()) {
-                            try {
-                                Thread.sleep(5000);
-                                log.info("Inserted missing transactions: {}", completedMissingTransactionNumber);
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                            }
-                        }
-                    });
+                    missingTransactions.forEach(transactionData ->
+                            missingTransactionTasks.add(Executors.callable(() -> {
+                                handleMissingTransaction(transactionData);
+                                transactionHelper.updateAddressTransactionHistory(addressToTransactionsHistoryMap, transactionData);
+                                completedMissingTransactionNumber.incrementAndGet();
+                            }))
+                    );
+                    Thread monitorMissingTransactions = monitorTransactionThread("missing", completedMissingTransactionNumber);
                     monitorMissingTransactions.start();
                     executorService.invokeAll(missingTransactionTasks);
                     addressTransactionsHistories.putBatch(addressToTransactionsHistoryMap);
@@ -172,6 +178,19 @@ public abstract class BaseNodeInitializationService {
             log.error("Fatal error in initialization", e);
             System.exit(-1);
         }
+    }
+
+    private Thread monitorTransactionThread(String type, AtomicLong transactionNumber) {
+        return new Thread(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    Thread.sleep(5000);
+                    log.info("Inserted {} transactions: {}", type, transactionNumber);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        });
     }
 
     private void initCommunication() {

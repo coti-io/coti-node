@@ -1,7 +1,6 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.crypto.CryptoHelper;
-import io.coti.basenode.data.DspConsensusResult;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionIndexData;
@@ -31,6 +30,7 @@ public class TransactionIndexService {
     private Map<Long, TransactionData> waitingMissingTransactionIndexes = new ConcurrentHashMap<>();
 
     public void init(AtomicLong maxTransactionIndex) throws Exception {
+        log.info("Started to initialize {}", this.getClass().getSimpleName());
         byte[] accumulatedHash = "GENESIS".getBytes();
         TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash(-1), -1, "GENESIS".getBytes());
         TransactionIndexData nextTransactionIndexData;
@@ -56,6 +56,7 @@ public class TransactionIndexService {
             }
         } finally {
             lastTransactionIndexData = transactionIndexData;
+            log.info("Finished to initialize {}", this.getClass().getSimpleName());
         }
     }
 
