@@ -6,6 +6,7 @@ import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.*;
 import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.TrustScoreData;
 import io.coti.trustscore.http.RollingReserveRequest;
@@ -41,8 +42,8 @@ public class RollingReserveService {
     private NetworkFeeService feeService;
     @Value("${rolling.reserve.difference.validation}")
     private BigDecimal rollingReserveDifferenceValidation;
-    @Value("${financial.server.address}")
-    private String financialServerAddress;
+    @Autowired
+    private INetworkService networkService;
     @Autowired
     private GetMerchantRollingReserveAddressCrypto getMerchantRollingReserveAddressCrypto;
     @Autowired
@@ -109,7 +110,9 @@ public class RollingReserveService {
         getMerchantRollingReserveAddressCrypto.signMessage(getMerchantRollingReserveAddressRequest);
 
         try {
-            ResponseEntity<GetMerchantRollingReserveAddressResponse> result = restTemplate.postForEntity(financialServerAddress + MERCHANT_ADDRESS_END_POINT, getMerchantRollingReserveAddressRequest, GetMerchantRollingReserveAddressResponse.class);
+            NetworkNodeData financialServer = networkService.getSingleNodeData(NodeType.FinancialServer);
+            String financialServerHttpAddress = financialServer.getHttpFullAddress();
+            ResponseEntity<GetMerchantRollingReserveAddressResponse> result = restTemplate.postForEntity(financialServerHttpAddress + MERCHANT_ADDRESS_END_POINT, getMerchantRollingReserveAddressRequest, GetMerchantRollingReserveAddressResponse.class);
             return result.getBody().getMerchantRollingReserveAddressData();
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             throw new Exception(String.format(MERCHANT_ADRRESS_GET_ERROR, ((SeriazableResponse) jacksonSerializer.deserialize(e.getResponseBodyAsByteArray())).getMessage()));

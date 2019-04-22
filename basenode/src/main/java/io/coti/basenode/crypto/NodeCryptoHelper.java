@@ -41,8 +41,4 @@ public class NodeCryptoHelper {
     public static Hash getNodeAddress() {
         return CryptoHelper.getAddressFromPrivateKey(nodePrivateKey);
     }
-
-    public void setSeed(String seed) {
-        this.seed = seed;
-    }
 }
