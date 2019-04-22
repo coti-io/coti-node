@@ -104,6 +104,19 @@ public class CryptoHelper {
         curvePt = curvePt.normalize();
         String x = curvePt.getXCoord().toBigInteger().toString(16);
         String y = curvePt.getYCoord().toBigInteger().toString(16);
+        return paddingPublicKey(x, y);
+    }
+
+    private static String paddingPublicKey(String x, String y) {
+        String paddingLetter = "0";
+
+        while (x.length() < 64) {
+            x = paddingLetter + x;
+        }
+
+        while (y.length() < 64) {
+            y = paddingLetter + y;
+        }
         return x + y;
     }
 

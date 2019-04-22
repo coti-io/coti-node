@@ -1,12 +1,12 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.data.BaseTransactionData;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.http.GetBalancesRequest;
 import io.coti.basenode.http.GetBalancesResponse;
 import io.coti.basenode.services.interfaces.IBalanceService;
+import io.coti.basenode.services.interfaces.IClusterStampService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 @Service
 public class BaseNodeBalanceService implements IBalanceService {
+
     protected Map<Hash, BigDecimal> balanceMap;
     protected Map<Hash, BigDecimal> preBalanceMap;
 
@@ -34,14 +35,14 @@ public class BaseNodeBalanceService implements IBalanceService {
     }
 
     private void loadBalanceFromSnapshot() throws Exception {
-        String snapshotFileLocation = "snapshot.csv";
+        String snapshotFileLocation = "FinancialServer_clusterStamp.csv";
         File snapshotFile = new File(snapshotFileLocation);
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(snapshotFile))) {
 
             String line;
 
-            while ((line = bufferedReader.readLine()) != null) {
+            while ((line = bufferedReader.readLine()) != null && !line.trim().isEmpty()) {
                 String[] addressDetails = line.split(",");
                 if (addressDetails.length != 2) {
                     throw new Exception("Bad csv file format");
@@ -124,13 +125,13 @@ public class BaseNodeBalanceService implements IBalanceService {
         preBalanceMap.forEach((hash, bigDecimal) -> {
             if (bigDecimal.signum() == -1) {
                 log.error("PreBalance Validation failed!");
-                throw new IllegalArgumentException("Snapshot or database are corrupted.");
+                throw new IllegalArgumentException("ClusterStamp or database are corrupted.");
             }
         });
         balanceMap.forEach((hash, bigDecimal) -> {
             if (bigDecimal.signum() == -1) {
                 log.error("Balance Validation failed!");
-                throw new IllegalArgumentException("Snapshot or database are corrupted.");
+                throw new IllegalArgumentException("ClusterStamp or database are corrupted.");
             }
         });
         log.info("Balance Validation completed");

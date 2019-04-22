@@ -69,4 +69,5 @@ public class Hash implements Serializable {
     public String toString() {
         return toHexString();
     }
+
 }

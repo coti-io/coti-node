@@ -231,7 +231,6 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     @Override
     public void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData) throws ClassNotFoundException {
         baseTransactionData.setSignature(nodeCryptoHelper.signMessage(this.getSignatureMessage(transactionData)));
-
     }
 
     @Override

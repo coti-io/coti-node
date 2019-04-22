@@ -30,6 +30,8 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 public class BaseNodeNetworkService implements INetworkService {
 
     protected String recoveryServerAddress;
+    protected Hash recoveryServerHash;
+
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
     @Value("${network}")
@@ -87,6 +89,14 @@ public class BaseNodeNetworkService implements INetworkService {
 
     public void setRecoveryServerAddress(String recoveryServerAddress) {
         this.recoveryServerAddress = recoveryServerAddress;
+    }
+
+    public Hash getRecoveryServerHash() {
+        return recoveryServerHash;
+    }
+
+    public void setRecoveryServerHash(Hash recoveryServerHash) {
+        this.recoveryServerHash = recoveryServerHash;
     }
 
     public Map<Hash, NetworkNodeData> getMapFromFactory(NodeType nodeType) {

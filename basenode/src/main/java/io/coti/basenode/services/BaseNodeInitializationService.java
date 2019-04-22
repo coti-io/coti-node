@@ -102,9 +102,15 @@ public abstract class BaseNodeInitializationService {
     @Autowired
     private NodeRegistrations nodeRegistrations;
 
+    @Autowired
+    private IClusterStampService clusterStampService;
+
     public void init() {
         try {
             addressService.init();
+
+            clusterStampService.loadBalanceFromLastClusterStamp();
+
             balanceService.init();
             confirmationService.init();
             dspVoteService.init();

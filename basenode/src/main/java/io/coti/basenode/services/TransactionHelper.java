@@ -116,7 +116,6 @@ public class TransactionHelper implements ITransactionHelper {
 
     public boolean validateTransactionCrypto(TransactionData transactionData) {
         return transactionCrypto.isTransactionValid(transactionData);
-
     }
 
     public boolean validateTransactionType(TransactionData transactionData) {

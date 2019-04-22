@@ -10,7 +10,7 @@ public interface ITransactionTypeValidation {
 
     boolean validateInputBaseTransactions(TransactionData transactionData);
 
-    boolean validateOutputBaseTransactions(TransactionData transactionData);
+    boolean validateOutputBaseTransactions(TransactionData transactionData, boolean skipValidationOfReducedAmount);
 
     boolean validateReducedAmount(List<OutputBaseTransactionData> outputBaseTransactions);
 }
