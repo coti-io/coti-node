@@ -30,7 +30,6 @@ public class NodeCryptoHelper {
         if (this.seed == null) {
             this.seed = seed;
         }
-        this.seed = seed;
         return CryptoHelper.generateAddress(seed, index);
     }
 

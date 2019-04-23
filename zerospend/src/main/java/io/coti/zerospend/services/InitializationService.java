@@ -14,10 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 
 @Service
@@ -55,7 +52,11 @@ public class InitializationService extends BaseNodeInitializationService {
         communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
 
         communicationService.initPublisher(propagationPort, NodeType.ZeroSpendServer);
+
         networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.DspNode).values());
+        if (networkService.getSingleNodeData(NodeType.FinancialServer) != null) {
+            networkService.addListToSubscription(new ArrayList<>(Arrays.asList(networkService.getSingleNodeData(NodeType.FinancialServer))));
+        }
 
         super.init();
 

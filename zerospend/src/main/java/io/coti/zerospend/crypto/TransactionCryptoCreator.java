@@ -9,6 +9,8 @@ import io.coti.basenode.data.TransactionData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 public class TransactionCryptoCreator {
     @Autowired
@@ -16,14 +18,14 @@ public class TransactionCryptoCreator {
     @Autowired
     private TransactionCrypto transactionCrypto;
 
-    public void signBaseTransactions(TransactionData transactionData) {
+    public void signBaseTransactions(TransactionData transactionData, Map<Hash, Integer> addressHashToAddressIndexMap) {
 
         try {
             if (transactionData.getHash() == null) {
                 transactionCrypto.setTransactionHash(transactionData);
             }
-            for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
-                BaseTransactionCrypto.valueOf(baseTransactionData.getClass().getSimpleName()).signMessage(transactionData, baseTransactionData);
+            for (BaseTransactionData baseTransactionData : transactionData.getInputBaseTransactions()) {
+                BaseTransactionCrypto.valueOf(baseTransactionData.getClass().getSimpleName()).signMessage(transactionData, baseTransactionData, addressHashToAddressIndexMap.get(baseTransactionData.getAddressHash()));
             }
         } catch (ClassNotFoundException e) {
             e.printStackTrace();

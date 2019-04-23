@@ -24,9 +24,6 @@ public class BaseNodePotService implements IPotService {
 
     @Override
     public boolean validatePot(TransactionData transactionData) {
-        if (transactionData.getType().equals(TransactionType.ZeroSpend)) {
-            return true;
-        }
         ProofOfTrust pot = new ProofOfTrust(
                 transactionData.getRoundedSenderTrustScore());
         boolean valid = pot.verify(transactionData.getHash().

@@ -25,28 +25,11 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     protected List<String> columnFamilyClassNames;
     @Value("${application.name}")
     private String applicationName;
-    @Value("${resetDatabase}")
-    private boolean resetDatabase;
     private String dbPath;
     private List<ColumnFamilyDescriptor> columnFamilyDescriptors = new ArrayList<>();
     private RocksDB db;
     private Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
     private List<ColumnFamilyHandle> columnFamilyHandles = new ArrayList<>();
-
-
-    private void deleteDatabaseFolder() {
-        File index = new File(dbPath);
-        if (!index.exists()) {
-            return;
-        }
-        String[] entries = index.list();
-        for (String s : entries) {
-            File currentFile = new File(index.getPath(), s);
-            currentFile.delete();
-        }
-        index.delete();
-    }
-
 
     public void init() {
         setColumnFamily();
@@ -70,9 +53,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
 
     public void init(String dbPath) {
         this.dbPath = dbPath;
-        if (resetDatabase) {
-            deleteDatabaseFolder();
-        }
+
         initColumnFamilyClasses();
         initiateColumnFamilyDescriptors();
         try {

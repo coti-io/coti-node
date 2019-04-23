@@ -15,10 +15,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -123,7 +120,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
         }
     }
 
-    private void publishDecision(Hash transactionHash, Map<Hash, DspVote> mapHashToDspVote, boolean isLegalTransaction) {
+    private synchronized void publishDecision(Hash transactionHash, Map<Hash, DspVote> mapHashToDspVote, boolean isLegalTransaction) {
         TransactionData transactionData = transactions.getByHash(transactionHash);
         DspConsensusResult dspConsensusResult = new DspConsensusResult(transactionData.getHash());
         dspConsensusResult.setDspConsensus(isLegalTransaction);
@@ -142,6 +139,10 @@ public class DspVoteService extends BaseNodeDspVoteService {
         dspConsensusCrypto.signMessage(dspConsensusResult);
         transactionData.setDspConsensusResult(dspConsensusResult);
         transactionIndexService.insertNewTransactionIndex(transactionData);
+    }
+
+    public void publishDecision(Hash transactionHash) {
+        publishDecision(transactionHash, new HashMap<>(), true);
     }
 
     private boolean isPositiveMajorityAchieved(TransactionVoteData currentVotes) {
