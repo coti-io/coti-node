@@ -15,6 +15,8 @@ import io.coti.basenode.services.interfaces.IValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.EnumSet;
+
 
 @Service
 public class ValidationService implements IValidationService {
@@ -67,7 +69,7 @@ public class ValidationService implements IValidationService {
 
     @Override
     public boolean validateTransactionSenderSignature(TransactionData transactionData) {
-        return transactionData.getType().equals(TransactionType.ZeroSpend) || transactionSenderCrypto.verifySignature(transactionData);
+        return EnumSet.of(TransactionType.ZeroSpend, TransactionType.Initial).contains(transactionData.getType()) || transactionSenderCrypto.verifySignature(transactionData);
     }
 
     @Override
@@ -103,6 +105,6 @@ public class ValidationService implements IValidationService {
 
     @Override
     public boolean validatePot(TransactionData transactionData) {
-        return potService.validatePot(transactionData);
+        return EnumSet.of(TransactionType.ZeroSpend, TransactionType.Initial).contains(transactionData.getType()) || potService.validatePot(transactionData);
     }
 }

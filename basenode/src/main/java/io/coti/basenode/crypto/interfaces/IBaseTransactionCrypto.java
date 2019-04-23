@@ -18,7 +18,7 @@ public interface IBaseTransactionCrypto {
 
     byte[] getSignatureMessage(TransactionData transactionData, TrustScoreNodeResultData trustScoreNodeResultData) throws ClassNotFoundException;
 
-    void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData) throws ClassNotFoundException;
+    void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData, int index) throws ClassNotFoundException;
 
     <T extends BaseTransactionData & ITrustScoreNodeValidatable> void signMessage(TransactionData transactionData, T baseTransactionData, TrustScoreNodeResultData trustScoreNodeResultData) throws ClassNotFoundException;
 

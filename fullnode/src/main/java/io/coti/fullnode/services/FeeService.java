@@ -66,6 +66,6 @@ public class FeeService {
     public void signFullNodeFee(FullNodeFeeData fullNodeFeeData) throws ClassNotFoundException {
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
         baseTransactions.add(fullNodeFeeData);
-        BaseTransactionCrypto.FullNodeFeeData.signMessage(new TransactionData(baseTransactions), fullNodeFeeData);
+        BaseTransactionCrypto.FullNodeFeeData.signMessage(new TransactionData(baseTransactions), fullNodeFeeData, FULL_NODE_FEE_ADDRESS_INDEX);
     }
 }
