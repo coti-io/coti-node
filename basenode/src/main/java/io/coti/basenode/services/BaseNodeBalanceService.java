@@ -23,25 +23,26 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 @Service
 public class BaseNodeBalanceService implements IBalanceService {
+
     protected Map<Hash, BigDecimal> balanceMap;
     protected Map<Hash, BigDecimal> preBalanceMap;
 
     public void init() throws Exception {
         balanceMap = new ConcurrentHashMap<>();
         preBalanceMap = new ConcurrentHashMap<>();
-        loadBalanceFromSnapshot();
+      //  loadBalanceFromClusterStamp();
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
-    private void loadBalanceFromSnapshot() throws Exception {
-        String snapshotFileLocation = "snapshot.csv";
+    private void loadBalanceFromClusterStamp() throws Exception {
+        String snapshotFileLocation = "FinancialServer_clusterStamp.csv";
         File snapshotFile = new File(snapshotFileLocation);
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(snapshotFile))) {
 
             String line;
 
-            while ((line = bufferedReader.readLine()) != null) {
+            while ((line = bufferedReader.readLine()) != null && !line.trim().isEmpty()) {
                 String[] addressDetails = line.split(",");
                 if (addressDetails.length != 2) {
                     throw new Exception("Bad csv file format");
@@ -124,16 +125,31 @@ public class BaseNodeBalanceService implements IBalanceService {
         preBalanceMap.forEach((hash, bigDecimal) -> {
             if (bigDecimal.signum() == -1) {
                 log.error("PreBalance Validation failed!");
-                throw new IllegalArgumentException("Snapshot or database are corrupted.");
+                throw new IllegalArgumentException("ClusterStamp or database are corrupted.");
             }
         });
         balanceMap.forEach((hash, bigDecimal) -> {
             if (bigDecimal.signum() == -1) {
                 log.error("Balance Validation failed!");
-                throw new IllegalArgumentException("Snapshot or database are corrupted.");
+                throw new IllegalArgumentException("ClusterStamp or database are corrupted.");
             }
         });
         log.info("Balance Validation completed");
+    }
+
+    @Override
+    public void updateBalanceFromClusterStamp(Hash addressHash, BigDecimal amount) throws Exception {
+        if (balanceMap.containsKey(addressHash)) {
+            log.error("The address {} was already found in the clusterstamp", addressHash);
+            throw new Exception(String.format("The address %s was already found in the snapshot", addressHash));
+        }
+        balanceMap.put(addressHash, amount);
+        log.trace("Loading from clusterstamp into inMem balance+preBalance address {} and amount {}", addressHash, amount);
+    }
+
+    @Override
+    public void updatePreBalanceFromClusterStamp() {
+        preBalanceMap.putAll(balanceMap);
     }
 
     @Override

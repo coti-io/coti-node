@@ -24,6 +24,10 @@ public interface IBalanceService {
 
     void validateBalances();
 
+    void updateBalanceFromClusterStamp(Hash addressHash, BigDecimal amount) throws Exception;
+
+    void updatePreBalanceFromClusterStamp();
+
     void updateBalance(Hash addressHash, BigDecimal amount);
 
     void updatePreBalance(Hash addressHash, BigDecimal amount);
