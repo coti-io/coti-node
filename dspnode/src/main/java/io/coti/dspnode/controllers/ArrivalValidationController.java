@@ -18,9 +18,16 @@ public class ArrivalValidationController {
     private MessageArrivalValidationService messageArrivalValidationService;
 
     @PostMapping(value = "/missedDataHashes")
-    public ResponseEntity<MessageArrivalValidationData> getMissedDataHashes(@RequestBody MessageArrivalValidationData data) {
+    public ResponseEntity<MessageArrivalValidationResponse> getMissedDataHashes(@RequestBody MessageArrivalValidationData data) {
         log.info("Received missedDataHashes request");
-        return ResponseEntity.status(HttpStatus.OK).body(messageArrivalValidationService.getMissedMessageHashes(data));
+        MessageArrivalValidationData responseData = messageArrivalValidationService.getMissedMessageHashes(data);
+        MessageArrivalValidationResponse response;
+        if(response != null){
+            return ResponseEntity.status(HttpStatus.OK).body(me ssageArrivalValidationService.getMissedMessageHashes(data));
+        }
+        else{
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
     }
 
 }

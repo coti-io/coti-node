@@ -5,6 +5,7 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.model.AddressDataHashes;
 import io.coti.basenode.model.Collection;
 import io.coti.basenode.model.TransactionDataHashes;
+import io.coti.basenode.services.interfaces.BaseNodeMessageArrivalValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -15,7 +16,7 @@ import java.util.*;
 
 @Slf4j
 @Service
-public class MessageArrivalValidationService {
+public class MessageArrivalValidationService extends BaseNodeMessageArrivalValidationService {
 
     @Autowired
     private MessageArrivalValidationCrypto messageArrivalValidationCrypto;
@@ -46,6 +47,7 @@ public class MessageArrivalValidationService {
         addressDataHashes.put(new AddressDataHash(hash));
     }
 
+    //TODO 3/24/2019 astolia: change to 10 minutes
     @Scheduled(fixedDelay = 5000L, initialDelay = 1000L)
     public void checkDspReceivedMessages(){
 
@@ -67,17 +69,39 @@ public class MessageArrivalValidationService {
     private void signAndSend(MessageArrivalValidationData data){
         messageArrivalValidationCrypto.signMessage(data);
         List<MessageArrivalValidationData> responses = networkService.sendDataToConnectedDspsByHttp(data);
-        responses.forEach(this::printUnReceivedHashes);
-        removeVerifiedHashesFromDB();
+        responses = validateMessages(responses);
+        if(responses.isEmpty()){
+            log.error("All responses failed signature validation!");
+            return;
+        }
+        responses.forEach(this::printUnreceivedHashes);
+        removeVerifiedHashesFromDB(data, responses);
     }
 
-    void printUnReceivedHashes(MessageArrivalValidationData response){
+    //TODO 3/24/2019 astolia: make sure works
+    private List<MessageArrivalValidationData> validateMessages(List<MessageArrivalValidationData> responses){
+        responses.removeIf(response -> verifyAndLogSingleMessageArrivalValidation(response));
+        return responses;
+
+    }
+
+    public boolean verifyAndLogSingleMessageArrivalValidation(MessageArrivalValidationData response){
+        boolean verified = messageArrivalValidationCrypto.verifySignature(response);
+        if(!verified){
+            //TODO 3/24/2019 astolia: log message with the tarfet that failed.
+            log.warn("Failed to authenticate message");
+        }
+        return verified;
+    }
+
+    void printUnreceivedHashes(MessageArrivalValidationData response){
         response.getClassNameToHashes().keySet().forEach(key ->
                 ((Set<? extends DataHash>)response.getClassNameToHashes().get(key)).forEach(dataHash ->
                     log.info("Missed hash {} of type {}", dataHash.getHash(), key)));
     }
 
-    private void removeVerifiedHashesFromDB() {
+    private void removeVerifiedHashesFromDB(MessageArrivalValidationData data, List<MessageArrivalValidationData> responses) {
+        Set<? extends DataHash> allHashes = new HashSet<>();
         // TODO - implelment
     }
 

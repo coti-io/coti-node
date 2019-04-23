@@ -81,6 +81,8 @@ public class NetworkService extends BaseNodeNetworkService {
                             data,
                             MessageArrivalValidationData.class);
 
+
+
             return response.getBody();
         }catch (Exception e){
             log.info(e.getMessage());

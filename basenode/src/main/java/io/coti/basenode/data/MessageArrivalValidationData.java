@@ -18,6 +18,8 @@ public class MessageArrivalValidationData<T extends DataHash> implements ISignab
     private SignatureData signature;
     Hash signerHash;
 
+    //TODO 3/24/2019 astolia: somehow mark the target of the original message
+
     public MessageArrivalValidationData(){
         classNameToHashes = new HashMap<>();
     }

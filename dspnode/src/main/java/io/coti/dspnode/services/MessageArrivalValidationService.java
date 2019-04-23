@@ -5,6 +5,8 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.model.AddressDataHashes;
 import io.coti.basenode.model.Collection;
 import io.coti.basenode.model.TransactionDataHashes;
+import io.coti.basenode.services.interfaces.BaseNodeMessageArrivalValidationService;
+import io.coti.basenode.services.interfaces.IMessageArrivalValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,7 +20,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class MessageArrivalValidationService {
+public class MessageArrivalValidationService extends BaseNodeMessageArrivalValidationService {
 
     @Autowired
     private TransactionDataHashes transactionDataHashes;
@@ -47,6 +49,9 @@ public class MessageArrivalValidationService {
     }
 
     public MessageArrivalValidationData getMissedMessageHashes(MessageArrivalValidationData data){
+        if(!verifyAndLogSingleMessageArrivalValidation(data)){
+            return null;
+        }
         MessageArrivalValidationData missingHashesMessageArrivalValidation = new MessageArrivalValidationData();
 
         data.getClassNameToHashes().keySet().
@@ -70,6 +75,16 @@ public class MessageArrivalValidationService {
                 map(dataHash -> classNameToHandlerService.get(key).exists(dataHash.getHash()) ? null : dataHash).
                 filter(Objects::nonNull).
                 collect(Collectors.toSet());
+    }
+
+    @Override
+    public boolean verifyAndLogSingleMessageArrivalValidation(MessageArrivalValidationData message){
+        boolean verified = messageArrivalValidationCrypto.verifySignature(message);
+        if(!verified){
+            //TODO 3/24/2019 astolia: log message with the target that failed.
+            log.warn("Failed to authenticate message");
+        }
+        return verified;
     }
 
 //    @Scheduled(fixedDelay = 5000L, initialDelay = 1000L)
