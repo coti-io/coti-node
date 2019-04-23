@@ -67,8 +67,6 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         }
     },
     FullNodeFeeData {
-        private static final int FULL_NODE_FEE_ADDRESS_INDEX = 0;
-
         @Override
         public byte[] getMessageInBytes(BaseTransactionData fullNodeFeeData) {
             if (!FullNodeFeeData.class.isInstance(fullNodeFeeData)) {
@@ -84,8 +82,8 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         }
 
         @Override
-        public void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData) throws ClassNotFoundException {
-            baseTransactionData.setSignature(nodeCryptoHelper.signMessage(this.getSignatureMessage(transactionData), FULL_NODE_FEE_ADDRESS_INDEX));
+        public void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData, int index) throws ClassNotFoundException {
+            baseTransactionData.setSignature(nodeCryptoHelper.signMessage(this.getSignatureMessage(transactionData), index));
 
         }
     },
@@ -159,7 +157,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
         @Override
         public boolean verifySignature(TransactionData transactionData, BaseTransactionData baseTransactionData) {
-            if (TransactionType.Transfer.equals(transactionData.getType())) {
+            if (EnumSet.of(TransactionType.Transfer, TransactionType.Initial).contains(transactionData.getType())) {
                 return true;
             }
             try {
@@ -229,8 +227,8 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     }
 
     @Override
-    public void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData) throws ClassNotFoundException {
-        baseTransactionData.setSignature(nodeCryptoHelper.signMessage(this.getSignatureMessage(transactionData)));
+    public void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData, int index) throws ClassNotFoundException {
+        baseTransactionData.setSignature(nodeCryptoHelper.signMessage(this.getSignatureMessage(transactionData), index));
 
     }
 
