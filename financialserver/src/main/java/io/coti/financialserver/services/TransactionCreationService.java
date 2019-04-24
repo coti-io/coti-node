@@ -3,6 +3,7 @@ package io.coti.financialserver.services;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.ClusterService;
 import io.coti.basenode.services.TransactionHelper;
 import io.coti.basenode.services.TransactionIndexService;
@@ -34,6 +35,8 @@ public class TransactionCreationService {
     private ClusterService clusterService;
     @Autowired
     private RollingReserveService rollingReserveService;
+    @Autowired
+    private Transactions transactions;
 
     public void createNewChargebackTransaction(BigDecimal amount, Hash merchantRollingReserveAddress, Hash consumerAddress, BigDecimal poolAmount) {
 
