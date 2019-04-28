@@ -1,7 +1,6 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.services.interfaces.IPotService;
 import io.coti.pot.ProofOfTrust;
 import lombok.extern.slf4j.Slf4j;

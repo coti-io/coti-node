@@ -416,15 +416,34 @@ public class TransactionHelper implements ITransactionHelper {
     @Override
     public GetTransactionBatchResponse getTransactionBatch(long startingIndex) {
         List<TransactionData> transactionsToSend = new LinkedList<>();
+        AtomicLong indexedTransactionNumber = new AtomicLong(0);
         if (startingIndex > transactionIndexService.getLastTransactionIndexData().getIndex()) {
             return new GetTransactionBatchResponse(transactionsToSend);
         }
+        Thread monitorIndexedTransactionBatch = monitorIndexedTransactionBatch(Thread.currentThread().getId(), indexedTransactionNumber);
+        monitorIndexedTransactionBatch.start();
         for (long i = startingIndex; i <= transactionIndexService.getLastTransactionIndexData().getIndex(); i++) {
             transactionsToSend.add(transactions.getByHash(transactionIndexes.getByHash(new Hash(i)).getTransactionHash()));
+            indexedTransactionNumber.incrementAndGet();
         }
+        monitorIndexedTransactionBatch.interrupt();
         transactionsToSend.addAll(noneIndexedTransactionHashes.stream().map(hash -> transactions.getByHash(hash)).collect(Collectors.toList()));
         transactionsToSend.sort(Comparator.comparing(transactionData -> transactionData.getAttachmentTime()));
         return new GetTransactionBatchResponse(transactionsToSend);
+    }
+
+    private Thread monitorIndexedTransactionBatch(long threadId, AtomicLong indexedTransactionNumber) {
+        return new Thread(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    Thread.sleep(5000);
+                    log.info("Transaction batch: thread id = {}, indexedTransactionNumber= {}", threadId, indexedTransactionNumber);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    log.info("Transaction batch: thread id = {}, indexedTransactionNumber= {}", threadId, indexedTransactionNumber);
+                }
+            }
+        });
     }
 
     public void addNoneIndexedTransaction(TransactionData transactionData) {

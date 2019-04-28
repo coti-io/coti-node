@@ -124,7 +124,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
 
             }
 
-            if(skipValidationOfReducedAmount) {
+            if (skipValidationOfReducedAmount) {
                 return true;
             }
             return validateReducedAmount(outputBaseTransactions);

@@ -2,6 +2,7 @@ package io.coti.basenode.exceptions;
 
 import io.coti.basenode.http.ExceptionResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -40,6 +41,12 @@ public class GlobalExceptionHandler {
         ResponseEntity responseEntity = new ResponseEntity(
                 new ExceptionResponse(INVALID_PARAMETERS_MESSAGE, API_CLIENT_ERROR), HttpStatus.BAD_REQUEST);
         return responseEntity;
+    }
+
+    @ExceptionHandler(ClientAbortException.class)
+    public void handleClientAbortException(ClientAbortException e) {
+        log.info("Client aborted");
+        log.info("Exception: {}", e.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
