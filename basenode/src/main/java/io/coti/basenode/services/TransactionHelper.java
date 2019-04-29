@@ -337,7 +337,7 @@ public class TransactionHelper implements ITransactionHelper {
             return false;
         }
         if (transactionData.getDspConsensusResult() != null) {
-            log.error("DspConsensus result already exists for transaction: {}", dspConsensusResult.getHash());
+            log.debug("DspConsensus result already exists for transaction: {}", dspConsensusResult.getHash());
             return false;
         }
         if (dspConsensusResult.isDspConsensus()) {

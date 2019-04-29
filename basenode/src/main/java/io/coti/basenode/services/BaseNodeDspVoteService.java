@@ -25,10 +25,7 @@ public class BaseNodeDspVoteService implements IDspVoteService {
 
     public void handleVoteConclusion(DspConsensusResult dspConsensusResult) {
         log.debug("Received DspConsensus result for transaction: {}", dspConsensusResult.getHash());
-        if (!transactionHelper.handleVoteConclusionResult(dspConsensusResult)) {
-            log.error("Illegal Dsp consensus result for transaction: {}", dspConsensusResult.getHash());
-
-        } else {
+        if (transactionHelper.handleVoteConclusionResult(dspConsensusResult)) {
             confirmationService.setDspcToTrue(dspConsensusResult);
             continueHandleVoteConclusion(dspConsensusResult);
         }

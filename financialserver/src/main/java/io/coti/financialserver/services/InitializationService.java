@@ -30,6 +30,8 @@ public class InitializationService extends BaseNodeInitializationService {
     @Autowired
     private ICommunicationService communicationService;
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
+    @Autowired
+    private DistributionService distributionService;
 
     @PostConstruct
     public void init() {
@@ -52,6 +54,8 @@ public class InitializationService extends BaseNodeInitializationService {
         networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.DspNode).values());
 
         super.init();
+
+        distributionService.distributeToInitialFunds();
     }
 
     @Override

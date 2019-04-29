@@ -12,7 +12,7 @@ import java.util.List;
 
 public interface IBalanceService {
 
-    void init() throws Exception;
+    void init();
 
     boolean checkBalancesAndAddToPreBalance(List<BaseTransactionData> baseTransactionDatas);
 
@@ -23,6 +23,10 @@ public interface IBalanceService {
     void rollbackBaseTransactions(TransactionData transactionData);
 
     void validateBalances();
+
+    void updateBalanceFromClusterStamp(Hash addressHash, BigDecimal amount) throws Exception;
+
+    void updatePreBalanceFromClusterStamp();
 
     void updateBalance(Hash addressHash, BigDecimal amount);
 
