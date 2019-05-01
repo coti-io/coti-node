@@ -6,7 +6,11 @@ public enum BehaviorEventsScoreType {
 
     INCORRECT_TRANSACTION("IncorrectTransaction"),
 
-    FILLING_QUESTIONNAIRE("FillingTheQuestionnaire");
+    FILLING_QUESTIONNAIRE("FillingTheQuestionnaire"),
+
+    CONFIRMATION_EVADING("ConfiramationEvading"),
+
+    SMART_CONTRACT_EXECUTION_EVADING("SmartContractExecutionEvading");
 
     private String text;
 

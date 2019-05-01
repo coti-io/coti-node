@@ -688,7 +688,7 @@
               "Go through all events, apply weight and decay and summarize",
               "After a limitation term, move events from actual table to archive"
             ],
-            "contribution": "tailContribution + eventsNumber",
+            "contribution": "eventsNumber",
             "term": "360",
             "weight": "-2.0",
             "decay": "exp(-ln(2)/30*T)",
@@ -701,7 +701,7 @@
               "Go through all events, apply weight and decay and summarize",
               "After a limitation term, move events from actual table to archive"
             ],
-            "contribution": "tailContribution + eventsNumber",
+            "contribution": "eventsNumber",
             "term": "360",
             "weight": "-10.0",
             "decay": "exp(-ln(2)/90*T)",
@@ -782,7 +782,7 @@
               "Go through all events, apply weight and decay and summarize",
               "After a limitation term, move events from actual table to archive"
             ],
-            "contribution": "tailContribution + eventsNumber",
+            "contribution": "eventsNumber",
             "term": "360",
             "weight": "-2.0",
             "decay": "exp(-ln(2)/30*T)",
@@ -795,7 +795,7 @@
               "Go through all events, apply weight and decay and summarize",
               "After a limitation term, move events from actual table to archive"
             ],
-            "contribution": "tailContribution + eventsNumber",
+            "contribution": "eventsNumber",
             "term": "360",
             "weight": "-10.0",
             "decay": "exp(-ln(2)/90*T)",
