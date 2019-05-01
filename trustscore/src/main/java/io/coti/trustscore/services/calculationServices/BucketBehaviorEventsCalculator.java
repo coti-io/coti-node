@@ -41,7 +41,9 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
             SuspiciousEventScore suspiciousEventScore = baseEventTypeToBaseEventScoreEntry.getValue();
             String scoreFormulaCalculation = createBaseEventScoreFormula(baseEventTypeToBaseEventScoreEntry.getKey());
 
-            baseEventScoreToCalculationFormulaMap.put(suspiciousEventScore, scoreFormulaCalculation);
+            if (scoreFormulaCalculation != null){
+                baseEventScoreToCalculationFormulaMap.put(suspiciousEventScore, scoreFormulaCalculation);
+            }
         }
 
         ScoreCalculator scoreCalculator = new ScoreCalculator(baseEventScoreToCalculationFormulaMap);
@@ -81,11 +83,13 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
         SuspiciousEventScore suspiciousEventScore = behaviorEventsScore.getBaseEventScoreMap().get(baseEventScoreType);
         String contributionFunctionString = suspiciousEventScore.getContribution();
 
-        int eventsCount = 0;
-        if (bucketBehaviorEventsData.getBehaviorEventTypeToCurrentEventCountAndContributionDataMap().get(baseEventScoreType) != null) {
-            eventsCount = bucketBehaviorEventsData.getBehaviorEventTypeToCurrentEventCountAndContributionDataMap().get(baseEventScoreType).getCount();
+        if (contributionFunctionString != null && !contributionFunctionString.isEmpty()) {
+            int eventsCount = 0;
+            if (bucketBehaviorEventsData.getBehaviorEventTypeToCurrentEventCountAndContributionDataMap().get(baseEventScoreType) != null) {
+                eventsCount = bucketBehaviorEventsData.getBehaviorEventTypeToCurrentEventCountAndContributionDataMap().get(baseEventScoreType).getCount();
+            }
+            contributionFunctionString = contributionFunctionString.replace("eventsNumber", Integer.toString(eventsCount));
         }
-        contributionFunctionString = contributionFunctionString.replace("eventsNumber", Integer.toString(eventsCount));
 
         return contributionFunctionString;
     }
