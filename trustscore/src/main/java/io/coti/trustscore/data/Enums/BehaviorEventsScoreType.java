@@ -8,7 +8,7 @@ public enum BehaviorEventsScoreType {
 
     FILLING_QUESTIONNAIRE("FillingTheQuestionnaire"),
 
-    CONFIRMATION_EVADING("ConfiramationEvading"),
+    CONFIRMATION_EVADING("ConfirmationEvading"),
 
     SMART_CONTRACT_EXECUTION_EVADING("SmartContractExecutionEvading");
 
