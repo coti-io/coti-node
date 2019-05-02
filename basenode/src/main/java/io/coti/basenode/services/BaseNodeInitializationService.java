@@ -305,6 +305,10 @@ public abstract class BaseNodeInitializationService {
     }
 
     protected boolean validateNodeRegistrationResponse(NodeRegistrationData nodeRegistrationData, NetworkNodeData networkNodeData) {
+        if (!nodeRegistrationData.getSignerHash().toString().equals(kycServerPublicKey)) {
+            log.error("Invalid kyc server public key.");
+            System.exit(-1);
+        }
         if (!networkNodeData.getNodeHash().equals(nodeRegistrationData.getNodeHash()) || !networkNodeData.getNodeType().equals(nodeRegistrationData.getNodeType())) {
             log.error("Node registration response has invalid fields! Shutting down server.");
             System.exit(-1);

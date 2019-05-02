@@ -5,24 +5,32 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.ISignValidatable;
-import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.util.ArrayList;
+import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+import java.nio.ByteBuffer;
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
 @Data
-public class TokenSaleDistributionData implements IEntity, ISignable, ISignValidatable {
+public class TokenSaleDistributionData implements IEntity, ISignValidatable {
 
-    List<TokenSaleDistributionEntryData> tokenDistributionDataEntries = new ArrayList<TokenSaleDistributionEntryData>();
-    private SignatureData signatureData;
-    private Hash signerHash;
+    @NotEmpty
+    List<@Valid TokenSaleDistributionEntryData> tokenDistributionDataEntries;
+    @NotNull
+    private @Valid SignatureData signatureData;
+    @NotNull
+    private @Valid Hash signerHash;
+    @NotNull
+    private Instant creationDate;
     private Hash hash;
 
     public void init() {
-        byte[] hashConcatenatedBytes = ArrayUtils.addAll(signerHash.getBytes(), tokenDistributionDataEntries.toString().getBytes());
+        byte[] hashConcatenatedBytes = ArrayUtils.addAll(ByteBuffer.allocate(Long.BYTES).putLong(creationDate.toEpochMilli()).array(), tokenDistributionDataEntries.toString().getBytes());
         hash = CryptoHelper.cryptoHash(hashConcatenatedBytes);
     }
 
@@ -44,16 +52,6 @@ public class TokenSaleDistributionData implements IEntity, ISignable, ISignValid
     @Override
     public Hash getSignerHash() {
         return signerHash;
-    }
-
-    @Override
-    public void setSignerHash(Hash signerHash) {
-        this.signerHash = signerHash;
-    }
-
-    @Override
-    public void setSignature(SignatureData signature) {
-        this.signatureData = signature;
     }
 
     @Override

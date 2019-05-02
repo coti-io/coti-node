@@ -5,7 +5,7 @@ import java.util.EnumSet;
 public enum ReservedAddress {
     GENESIS_ONE(0),
     GENESIS_TWO(1),
-    TOKEN_SELL(2),
+    TOKEN_SALE(2),
     INCENTIVES(3),
     TEAM(4),
     ADVISORS(5),

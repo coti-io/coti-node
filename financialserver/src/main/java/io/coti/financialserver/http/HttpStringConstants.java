@@ -29,6 +29,8 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String DISPUTE_TRANSACTION_SENDER_INVALID = "Invalid transaction sender";
     public static final String OPEN_DISPUTE_IN_PROCESS_FOR_THIS_TRANSACTION = "Open dispute already in process for this transaction";
 
+    public static final String DISTRIBUTION_REQUEST_HANDLED_PREVIOUSLY = "Distribution request handled previously";
+
     public static final String DOCUMENT_EXISTS_ERROR = "Document already exists";
     public static final String DOCUMENT_NOT_FOUND = "Document not found";
     public static final String DOCUMENT_UPLOAD_ERROR = "Some error occurred during upload";
@@ -38,6 +40,7 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String DISPUTE_NOT_IN_CLAIM_STATUS = "Dispute not in claim status";
     public static final String ALREADY_GOT_YOUR_VOTE = "You already voted on this item";
 
+    public static final String DUPLICATE_FUND_NAME = "Duplicated fund name";
     public static final String HEADER_CONTENT_DISPOSITION = "Content-Disposition";
     public static final String HEADER_ATTACHMENT_PREFIX = "attachment; filename=";
     public static final String HEADER_CONTENT_TYPE = "Content-Type";

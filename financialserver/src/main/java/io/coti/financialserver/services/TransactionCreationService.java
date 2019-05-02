@@ -6,6 +6,7 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.services.ClusterService;
 import io.coti.basenode.services.TransactionHelper;
 import io.coti.basenode.services.TransactionIndexService;
+import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.financialserver.crypto.TransactionCryptoCreator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,8 @@ public class TransactionCreationService {
     private ClusterService clusterService;
     @Autowired
     private RollingReserveService rollingReserveService;
+    @Autowired
+    private IBalanceService balanceService;
 
     public void createNewChargebackTransaction(BigDecimal amount, Hash merchantRollingReserveAddress, Hash consumerAddress, BigDecimal poolAmount) {
 
@@ -70,7 +73,7 @@ public class TransactionCreationService {
         propagationPublisher.propagate(chargebackTransaction, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode));
     }
 
-    public Hash createInitialTransactionToFund(BigDecimal amount, Hash cotiGenesisAddress, Hash fundAddress, int genesisAddressIndex) {
+    public Hash createInitialTransactionToFund(BigDecimal amount, Hash cotiGenesisAddress, Hash fundAddress, int genesisAddressIndex) throws Exception {
 
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
 
@@ -83,6 +86,9 @@ public class TransactionCreationService {
         double trustScore = MAX_TRUST_SCORE;
         TransactionData initialTransactionData = new TransactionData(baseTransactions, TransactionType.Initial.toString(), trustScore, Instant.now(), TransactionType.Initial);
 
+        if (!balanceService.checkBalancesAndAddToPreBalance(initialTransactionData.getBaseTransactions())) {
+            throw new Exception("Balance check failed");
+        }
         clusterService.selectSources(initialTransactionData);
         initialTransactionData.setAttachmentTime(Instant.now());
 

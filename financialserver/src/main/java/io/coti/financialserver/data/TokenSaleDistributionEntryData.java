@@ -1,26 +1,30 @@
 package io.coti.financialserver.data;
 
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.interfaces.IEntity;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Objects;
 
 @Data
-public class TokenSaleDistributionEntryData implements IEntity {
-
-    private String fundName;    // Should corresponds to the values of TokenSale
+public class TokenSaleDistributionEntryData implements Serializable {
+    @NotNull
+    private TokenSale fundName;
+    @Positive
     private BigDecimal amount;
+    @NotNull
     private String identifyingDescription;
-    private Hash distributionHash;
+    private Hash transactionHash;
     protected boolean completedSuccessfully;
 
-    public TokenSaleDistributionEntryData(String fundName, BigDecimal amount, String identifyingDescription) {
-        this.fundName = fundName;
-        this.amount = amount;
-        this.identifyingDescription = identifyingDescription;
-        this.completedSuccessfully = false;
+    private TokenSaleDistributionEntryData() {
+    }
+
+    public void setFundName(String fundName) {
+        this.fundName = TokenSale.getNameByText(fundName);
     }
 
     @Override
@@ -38,13 +42,4 @@ public class TokenSaleDistributionEntryData implements IEntity {
         return Objects.hash(fundName, amount, identifyingDescription);
     }
 
-    @Override
-    public Hash getHash() {
-        return distributionHash;
-    }
-
-    @Override
-    public void setHash(Hash hash) {
-        this.distributionHash = hash;
-    }
 }

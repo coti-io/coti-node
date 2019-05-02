@@ -2,31 +2,30 @@ package io.coti.financialserver.crypto;
 
 
 import io.coti.basenode.crypto.CryptoHelper;
-import io.coti.basenode.crypto.SignatureCrypto;
+import io.coti.basenode.crypto.SignatureValidationCrypto;
 import io.coti.financialserver.data.TokenSaleDistributionData;
 import io.coti.financialserver.data.TokenSaleDistributionEntryData;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;
 
-@Service
-public class TokenSaleDistributionCrypto extends SignatureCrypto<TokenSaleDistributionData> {
+@Component
+public class TokenSaleDistributionCrypto extends SignatureValidationCrypto<TokenSaleDistributionData> {
 
     @Override
     public byte[] getSignatureMessage(TokenSaleDistributionData tokenSaleDistributionData) {
-        // Need to iterate on every entry and extract from each entry the main fields' values that were sent
         int byteBufferLength = 0;
 
-        for( TokenSaleDistributionEntryData entry : tokenSaleDistributionData.getTokenDistributionDataEntries() ) {
-            byte[] entryDistributionFundNameBytes = entry.getFundName().getBytes();
-            byte[] entryAmountBytes = entry.getAmount().toString().getBytes();
+        for (TokenSaleDistributionEntryData entry : tokenSaleDistributionData.getTokenDistributionDataEntries()) {
+            byte[] entryDistributionFundNameBytes = entry.getFundName().toString().getBytes();
+            byte[] entryAmountBytes = entry.getAmount().stripTrailingZeros().toPlainString().getBytes();
             byte[] entryIdentifyingDescriptionBytes = entry.getIdentifyingDescription().getBytes();
             byteBufferLength += (entryDistributionFundNameBytes.length + entryAmountBytes.length + entryIdentifyingDescriptionBytes.length);
         }
         ByteBuffer tokenSaleDistributionDataBuffer = ByteBuffer.allocate(byteBufferLength);
-        for( TokenSaleDistributionEntryData entry : tokenSaleDistributionData.getTokenDistributionDataEntries() ) {
-            byte[] entryDistributionFundNameBytes = entry.getFundName().getBytes();
-            byte[] entryAmountBytes = entry.getAmount().toString().getBytes();
+        for (TokenSaleDistributionEntryData entry : tokenSaleDistributionData.getTokenDistributionDataEntries()) {
+            byte[] entryDistributionFundNameBytes = entry.getFundName().toString().getBytes();
+            byte[] entryAmountBytes = entry.getAmount().stripTrailingZeros().toPlainString().getBytes();
             byte[] entryIdentifyingDescriptionBytes = entry.getIdentifyingDescription().getBytes();
             tokenSaleDistributionDataBuffer.put(entryDistributionFundNameBytes).put(entryAmountBytes).put(entryIdentifyingDescriptionBytes);
         }

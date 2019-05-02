@@ -1,16 +1,16 @@
 package io.coti.financialserver.http.data;
 
+import io.coti.financialserver.http.TokenSaleDistributionResultData;
 import lombok.Data;
 
 import java.util.List;
-import java.util.Map;
 
 @Data
 public class TokenSaleDistributionResponseData {
 
-    private Map<String, String> tokenSaleDistributionResults;
+    private List<TokenSaleDistributionResultData> tokenSaleDistributionResults;
 
-    public TokenSaleDistributionResponseData(Map<String, String> tokenSaleDistributionResults) {
+    public TokenSaleDistributionResponseData(List<TokenSaleDistributionResultData> tokenSaleDistributionResults) {
         this.tokenSaleDistributionResults = tokenSaleDistributionResults;
     }
 }

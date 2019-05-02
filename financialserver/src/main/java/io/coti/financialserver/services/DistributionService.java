@@ -45,7 +45,13 @@ public class DistributionService {
 
             if (!isInitialTransactionExistsByAddress(fundAddress)) {
                 BigDecimal amount = getInitialAmountByAddressIndex(addressIndex);
-                Hash initialTransactionHash = transactionCreationService.createInitialTransactionToFund(amount, cotiGenesisAddress, fundAddress, COTI_GENESIS_ADDRESS_INDEX);
+                Hash initialTransactionHash = null;
+                try {
+                    initialTransactionHash = transactionCreationService.createInitialTransactionToFund(amount, cotiGenesisAddress, fundAddress, COTI_GENESIS_ADDRESS_INDEX);
+                } catch (Exception e) {
+                    log.error("Failed to create initial fund: {}", e.getMessage());
+                    return;
+                }
                 InitialFundData initialFundDataElement = new InitialFundData(fundAddress, initialTransactionHash);
                 initialFunds.put(initialFundDataElement);
             }
@@ -53,7 +59,6 @@ public class DistributionService {
     }
 
     private boolean isInitialTransactionExistsByAddress(Hash fundAddress) {
-        // Verify if transaction hash is not already in new table for initial transactions
         return initialFunds.getByHash(fundAddress) != null;
     }
 
@@ -61,7 +66,7 @@ public class DistributionService {
         BigDecimal amount = BigDecimal.ZERO;
         if (addressIndex.isInitialFundDistribution()) {
             switch (addressIndex) {
-                case TOKEN_SELL:
+                case TOKEN_SALE:
                     amount = new BigDecimal(INITIAL_AMOUNT_FOR_TOKEN_SELL);
                     break;
                 case INCENTIVES:
