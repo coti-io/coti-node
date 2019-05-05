@@ -226,6 +226,25 @@ public class TrustScoreService {
         return ResponseEntity.status(HttpStatus.OK).body(getTransactionTrustScoreResponse);
     }
 
+    public ResponseEntity<IResponse> getUserTrustScoreComponents(Hash userHash) {
+        TrustScoreData trustScoreData = trustScores.getByHash(userHash);
+        if (trustScoreData == null) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new Response(NON_EXISTING_USER_MESSAGE, STATUS_ERROR));
+        }
+
+        List<BucketEventData> bucketEventDataList = new ArrayList<BucketEventData>();
+        for (IBucketEventService bucketEventService : bucketEventServiceList) {
+            BucketEventData bucketEventData =
+                    (BucketEventData) bucketEvents.getByHash(trustScoreData.getEventTypeToBucketHashMap().get(bucketEventService.getBucketEventType()));
+            bucketEventDataList.add(bucketEventData);
+        }
+
+        GetUserTrustScoreComponentsResponse getUserTrustScoreComponentsResponse = new GetUserTrustScoreComponentsResponse(trustScoreData, bucketEventDataList);
+        return ResponseEntity.status(HttpStatus.OK).body(getUserTrustScoreComponentsResponse);
+    }
+
     public ResponseEntity<IResponse> setKycTrustScore(SetKycTrustScoreRequest request) {
         SetKycTrustScoreResponse kycTrustScoreResponse;
 

@@ -48,4 +48,9 @@ public class TrustScoreController {
     public ResponseEntity<IResponse> setUserType(@Valid @RequestBody SetUserTypeRequest request) {
         return trustScoreService.setUserType(request);
     }
+
+    @RequestMapping(path = "/usertscomponents", method = RequestMethod.POST)
+    public ResponseEntity<IResponse> getUserTrustScoreComponents(@Valid @RequestBody GetTrustScoreRequest request) {
+        return trustScoreService.getUserTrustScoreComponents(request.userHash);
+    }
 }
