@@ -6,13 +6,12 @@ import io.coti.basenode.data.interfaces.IEntity;
 import lombok.Data;
 
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Data
 public class AddressTransactionsHistory implements IEntity {
 
+    private static final long serialVersionUID = 6148574209385536578L;
     private transient Hash hash;
     private Instant creationTime;
     private Set<Hash> transactionsHistory;

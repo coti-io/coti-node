@@ -10,6 +10,8 @@ import java.util.List;
 
 @Data
 public class RollingReserveData extends OutputBaseTransactionData implements ITrustScoreNodeValidatable {
+
+    private static final long serialVersionUID = -8006331684448356440L;
     @NotNull
     private List<TrustScoreNodeResultData> rollingReserveTrustScoreNodeResult;
     private BigDecimal reducedAmount;

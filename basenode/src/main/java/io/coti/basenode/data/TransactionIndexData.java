@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 public class TransactionIndexData implements IEntity {
 
+    private static final long serialVersionUID = 8392829220402228915L;
     private Hash transactionHash;
     private long index;
     private byte[] accumulatedHash;

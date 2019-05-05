@@ -12,6 +12,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Data
 @Slf4j
 public class NetworkData implements IPropagatable {
+
+    private static final long serialVersionUID = 1145085728326369679L;
     private Map<NodeType, Map<Hash, NetworkNodeData>> multipleNodeMaps;
     private Map<NodeType, NetworkNodeData> singleNodeNetworkDataMap;
 

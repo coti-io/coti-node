@@ -8,6 +8,8 @@ import java.time.Instant;
 @Data
 public class FullNodeFeeData extends OutputBaseTransactionData {
 
+    private static final long serialVersionUID = 1268594199336836721L;
+
     private FullNodeFeeData() {
         super();
     }

@@ -8,6 +8,8 @@ import java.time.Instant;
 
 @Data
 public abstract class OutputBaseTransactionData extends BaseTransactionData {
+
+    private static final long serialVersionUID = 5660628603489226186L;
     @Positive
     protected BigDecimal originalAmount;
 

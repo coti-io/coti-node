@@ -10,6 +10,8 @@ import java.io.Serializable;
 
 @Data
 public class TransactionTrustScoreData implements Serializable, ISignable, ISignValidatable {
+
+    private static final long serialVersionUID = 7892150405277241806L;
     @NotNull
     private Hash userHash;
     @NotNull

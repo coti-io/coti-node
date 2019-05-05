@@ -7,6 +7,8 @@ import javax.validation.constraints.NotNull;
 
 @Data
 public class MerchantRollingReserveAddressData implements IPropagatable {
+
+    private static final long serialVersionUID = -5405422504448497013L;
     @NotNull
     private Hash merchantHash;
     @NotNull

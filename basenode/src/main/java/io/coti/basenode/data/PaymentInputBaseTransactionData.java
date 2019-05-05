@@ -8,6 +8,8 @@ import java.util.List;
 
 @Data
 public class PaymentInputBaseTransactionData extends InputBaseTransactionData {
+
+    private static final long serialVersionUID = 5056919546430085702L;
     @NotNull
     private List<@Valid PaymentItemData> items;
     @NotNull

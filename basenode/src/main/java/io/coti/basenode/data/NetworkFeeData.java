@@ -10,6 +10,8 @@ import java.util.List;
 
 @Data
 public class NetworkFeeData extends OutputBaseTransactionData implements ITrustScoreNodeValidatable {
+
+    private static final long serialVersionUID = -7553003211129196688L;
     @NotNull
     private List<TrustScoreNodeResultData> networkFeeTrustScoreNodeResult;
     private BigDecimal reducedAmount;

@@ -8,6 +8,8 @@ import java.math.BigDecimal;
 
 @Data
 public class PaymentItemData implements Serializable {
+
+    private static final long serialVersionUID = 1877040140514962938L;
     @NotNull
     private Long itemId;
     @NotNull

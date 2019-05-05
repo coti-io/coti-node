@@ -4,13 +4,13 @@ import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Objects;
 
-@Slf4j
 @Data
 public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
+
+    private static final long serialVersionUID = 1827712996893751649L;
     private Hash nodeHash;
     private NodeType nodeType;
     private String address;

@@ -9,6 +9,8 @@ import java.time.Instant;
 @Data
 public class InputBaseTransactionData extends BaseTransactionData {
 
+    private static final long serialVersionUID = -4057207259434521625L;
+
     protected InputBaseTransactionData() {
         super();
     }

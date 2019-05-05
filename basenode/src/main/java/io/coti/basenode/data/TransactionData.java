@@ -4,7 +4,6 @@ import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -13,9 +12,10 @@ import java.util.List;
 import java.util.Vector;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Data
 public class TransactionData implements IPropagatable, Comparable<TransactionData>, ISignable, ISignValidatable {
+
+    private static final long serialVersionUID = 6409430318206872225L;
     private List<BaseTransactionData> baseTransactions;
     private Hash hash;
     private BigDecimal amount;

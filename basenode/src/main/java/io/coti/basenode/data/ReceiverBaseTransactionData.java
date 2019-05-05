@@ -8,6 +8,7 @@ import java.time.Instant;
 @Data
 public class ReceiverBaseTransactionData extends OutputBaseTransactionData {
 
+    private static final long serialVersionUID = 3401427617037616873L;
     private Hash receiverDescription;
 
     private ReceiverBaseTransactionData() {

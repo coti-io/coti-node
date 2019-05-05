@@ -13,6 +13,8 @@ import java.util.Arrays;
 @Slf4j
 @Data
 public class Hash implements Serializable {
+
+    private static final long serialVersionUID = 473304212781844813L;
     @NotEmpty
     private byte[] bytes;
 

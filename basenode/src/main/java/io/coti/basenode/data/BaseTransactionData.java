@@ -3,7 +3,6 @@ package io.coti.basenode.data;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -11,13 +10,14 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-@Slf4j
 @Data
 @JsonTypeInfo(use = JsonTypeInfo.Id.CUSTOM,
         include = JsonTypeInfo.As.PROPERTY,
         property = "name")
 @JsonTypeIdResolver(BaseTransactionDataResolver.class)
 public abstract class BaseTransactionData implements Serializable {
+
+    private static final long serialVersionUID = 4812274089984863159L;
     @NotNull
     protected Hash hash;
     @NotNull

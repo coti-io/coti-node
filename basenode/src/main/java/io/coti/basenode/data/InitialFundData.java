@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 public class InitialFundData implements IEntity {
 
+    private static final long serialVersionUID = -8755795138816705813L;
     private Hash fundAddress;
     private Hash transactionHash;
 

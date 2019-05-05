@@ -10,6 +10,8 @@ import java.util.List;
 
 @Data
 public class DspConsensusResult extends ConfirmationData implements IPropagatable, ISignable, ISignValidatable {
+
+    private static final long serialVersionUID = -5825375825689935068L;
     private Hash transactionHash;
     private Hash zeroSpendServerHash;
     private long index;

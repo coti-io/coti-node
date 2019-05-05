@@ -13,6 +13,7 @@ import java.time.Instant;
 @Data
 public class NodeRegistrationData implements IEntity, ISignValidatable {
 
+    private static final long serialVersionUID = -3559786768335905690L;
     @NotNull
     private Hash nodeHash;
     @NotNull
