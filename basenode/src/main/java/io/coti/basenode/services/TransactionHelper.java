@@ -446,11 +446,18 @@ public class TransactionHelper implements ITransactionHelper {
         });
     }
 
+    @Override
     public void addNoneIndexedTransaction(TransactionData transactionData) {
         noneIndexedTransactionHashes.add(transactionData.getHash());
     }
 
+    @Override
     public void removeNoneIndexedTransaction(TransactionData transactionData) {
         noneIndexedTransactionHashes.remove(transactionData.getHash());
+    }
+
+    @Override
+    public Set<Hash> getNoneIndexedTransactionHashes() {
+        return new HashSet<>(noneIndexedTransactionHashes);
     }
 }

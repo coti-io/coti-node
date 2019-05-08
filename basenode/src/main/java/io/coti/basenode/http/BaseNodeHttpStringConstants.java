@@ -34,4 +34,7 @@ public class BaseNodeHttpStringConstants {
     public static final String INVALID_NODE_REGISTRAR = "Invalid node registrar";
     public static final String INVALID_NODE_REGISTRATION_SIGNATURE = "Invalid node registration signature";
     public static final String INVALID_NETWORK_TYPE = "Network type should be %s. Invalid network type %s";
+
+    public static final String UNAUTHORIZED_IP_ACCESS = "Unauthorized ip access";
+    public static final String METHOD_NOT_SUPPORTED = "Unsupported method";
 }

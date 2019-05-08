@@ -6,9 +6,11 @@ import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 
@@ -31,6 +33,24 @@ public class GlobalExceptionHandler {
         log.error("Exception: ", e);
         ResponseEntity responseEntity = new ResponseEntity(
                 new ExceptionResponse(GENERAL_EXCEPTION_ERROR, API_SERVER_ERROR), HttpStatus.INTERNAL_SERVER_ERROR);
+        return responseEntity;
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
+        log.info("Received a request with unsupported method");
+        log.info("Exception message: " + e.getMessage());
+        ResponseEntity responseEntity = new ResponseEntity(
+                new ExceptionResponse(METHOD_NOT_SUPPORTED, API_CLIENT_ERROR), HttpStatus.NOT_FOUND);
+        return responseEntity;
+    }
+
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity handleNoHandlerFoundException(NoHandlerFoundException e) {
+        log.info("Received a request with no handler");
+        log.info("Exception message: " + e.getMessage());
+        ResponseEntity responseEntity = new ResponseEntity(
+                new ExceptionResponse(e.getMessage(), API_CLIENT_ERROR), HttpStatus.NOT_FOUND);
         return responseEntity;
     }
 

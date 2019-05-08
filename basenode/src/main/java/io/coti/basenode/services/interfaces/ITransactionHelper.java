@@ -7,6 +7,7 @@ import io.coti.basenode.http.GetTransactionBatchResponse;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface ITransactionHelper {
 
@@ -73,4 +74,6 @@ public interface ITransactionHelper {
     void addNoneIndexedTransaction(TransactionData transactionData);
 
     void removeNoneIndexedTransaction(TransactionData transactionData);
+
+    Set<Hash> getNoneIndexedTransactionHashes();
 }
