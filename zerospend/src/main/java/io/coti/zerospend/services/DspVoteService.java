@@ -38,7 +38,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
     private INetworkService networkService;
 
 
-    private ConcurrentMap<Hash, List<DspVote>> transactionHashToVotesListMapping;
+    private ConcurrentMap<Hash, HashSet<DspVote>> transactionHashToVotesListMapping;
 
     @Override
     public void init() {
@@ -47,20 +47,23 @@ public class DspVoteService extends BaseNodeDspVoteService {
     }
 
     public void preparePropagatedTransactionForVoting(TransactionData transactionData) {
-        List<Hash> dspHashList = new LinkedList<>();
-        networkService.getMapFromFactory(NodeType.DspNode).forEach((hash, node) ->
-                dspHashList.add(node.getHash())
-        );
-        log.debug("Received new transaction. Live DSP Nodes: {}", dspHashList);
-        TransactionVoteData transactionVoteData = new TransactionVoteData(transactionData.getHash(), dspHashList);
-        transactionVotes.put(transactionVoteData);
-        transactionHashToVotesListMapping.put(transactionData.getHash(), new LinkedList<>());
+        transactionHashToVotesListMapping.putIfAbsent(transactionData.getHash(), new HashSet<>());
+        synchronized (transactionHashToVotesListMapping.get(transactionData.getHash())) {
+            List<Hash> dspHashList = new LinkedList<>();
+            networkService.getMapFromFactory(NodeType.DspNode).forEach((hash, node) ->
+                    dspHashList.add(node.getHash())
+            );
+            log.debug("Received new transaction. Live DSP Nodes: {}", dspHashList);
+            TransactionVoteData transactionVoteData = new TransactionVoteData(transactionData.getHash(), dspHashList);
+            transactionVotes.put(transactionVoteData);
+        }
     }
 
     public String receiveDspVote(DspVote dspVote) {
         log.debug("Received new Dsp Vote: Sender = {} , Transaction = {}", dspVote.getVoterDspHash(), dspVote.getTransactionHash());
         Hash transactionHash = dspVote.getTransactionHash();
-        synchronized (transactionHash.toHexString()) {
+        transactionHashToVotesListMapping.putIfAbsent(transactionHash, new HashSet<>());
+        synchronized (transactionHashToVotesListMapping.get(transactionHash)) {
             TransactionVoteData transactionVoteData = transactionVotes.getByHash(transactionHash);
             if (transactionVoteData == null) {
                 try {
