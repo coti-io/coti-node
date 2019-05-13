@@ -12,6 +12,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Data
 public class BucketInitialTrustScoreEventsData extends BucketEventData<InitialTrustScoreEventsData> implements IEntity {
+
+    private static final long serialVersionUID = -7097339472590357742L;
     private Map<InitialTrustScoreType, InitialTrustScoreData> initialTrustTypeToInitialTrustScoreDataMap;
 
     public BucketInitialTrustScoreEventsData() {

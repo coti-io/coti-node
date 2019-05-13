@@ -8,6 +8,7 @@ import lombok.Data;
 @Data
 public class ActiveNodeData implements IEntity {
 
+    private static final long serialVersionUID = 6551846513058427089L;
     private Hash nodeHash;
     private NetworkNodeData networkNodeData;
 

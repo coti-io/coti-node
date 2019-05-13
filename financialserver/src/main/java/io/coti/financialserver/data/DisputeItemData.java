@@ -12,6 +12,8 @@ import java.util.List;
 
 @Data
 public class DisputeItemData implements Serializable {
+
+    private static final long serialVersionUID = 7650553381348169678L;
     @NotNull
     private Long id;
     private BigDecimal price;

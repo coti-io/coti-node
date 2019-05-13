@@ -13,6 +13,7 @@ import java.util.Map;
 @Data
 public class RollingReserveReleaseDateData implements IEntity {
 
+    private static final long serialVersionUID = 5270626776162833891L;
     private Date date;
     private Map<Hash, RollingReserveReleaseStatus> rollingReserveReleaseStatusByMerchant;
 

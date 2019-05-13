@@ -14,6 +14,8 @@ import java.util.Map;
 
 @Data
 public abstract class BucketEventData<T extends EventData> implements IEntity {
+
+    private static final long serialVersionUID = -9213788901624395906L;
     private UserType userType;
     private Hash bucketHash;
     private Date startPeriodTime;

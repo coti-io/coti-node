@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Data
 public class BucketNotFulfilmentEventsData extends BucketEventData<NotFulfilmentEventsData> implements IEntity {
 
+    private static final long serialVersionUID = 532162141160571858L;
     private Map<Hash, NotFulfilmentToClientContributionData> clientHashToNotFulfilmentContributionMap;
 
     public BucketNotFulfilmentEventsData() {

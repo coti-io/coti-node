@@ -8,6 +8,7 @@ import lombok.Data;
 @Data
 public class DisputeItemStatusChangeEventData implements IDisputeEvent, IEntity {
 
+    private static final long serialVersionUID = 1697027121305613885L;
     private Hash disputeHash;
     private Long itemId;
     private DisputeItemStatus disputeItemStatus;

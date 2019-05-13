@@ -7,6 +7,8 @@ import java.io.Serializable;
 
 @Data
 public class InitialTrustScoreData implements Serializable {
+
+    private static final long serialVersionUID = -6523382550755760652L;
     private InitialTrustScoreType initialTrustScoreType;
     private double originalTrustScore;
     private double decayedTrustScore;

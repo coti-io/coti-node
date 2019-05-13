@@ -12,12 +12,12 @@ import javax.validation.constraints.NotNull;
 
 @Data
 public class ReceiverBaseTransactionOwnerData implements IEntity, ISignable, ISignValidatable {
+
+    private static final long serialVersionUID = -6749557141523342995L;
     @NotNull
     private Hash merchantHash;
-
     @NotNull
     private Hash receiverBaseTransactionHash;
-
     @NotNull
     private @Valid SignatureData merchantSignature;
 

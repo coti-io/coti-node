@@ -7,6 +7,8 @@ import lombok.Data;
 
 @Data
 public class NotFulfilmentEventsData extends EventData {
+
+    private static final long serialVersionUID = -2691323499373309186L;
     private CompensableEventScoreType compensableEventScoreType;
     private Hash clientUserHash;
     private double debtAmount;

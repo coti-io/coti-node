@@ -13,6 +13,8 @@ import java.util.List;
 
 @Data
 public class DisputeUpdateItemData implements Serializable, ISignable, ISignValidatable {
+
+    private static final long serialVersionUID = 3456200480822448729L;
     @NotNull
     private Hash userHash;
     @NotNull

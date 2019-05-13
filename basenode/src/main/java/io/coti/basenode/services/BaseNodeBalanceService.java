@@ -31,28 +31,29 @@ public class BaseNodeBalanceService implements IBalanceService {
     }
 
     @Override
-    public synchronized boolean checkBalancesAndAddToPreBalance(List<BaseTransactionData> baseTransactionDatas) {
-        Map<Hash, BigDecimal> preBalanceChanges = new HashMap<>();
-        for (BaseTransactionData baseTransactionData : baseTransactionDatas) {
+    public synchronized boolean checkBalancesAndAddToPreBalance(List<BaseTransactionData> baseTransactions) {
+        Map<Hash, BigDecimal> balanceInChangeMap = new HashMap<>();
+        Map<Hash, BigDecimal> preBalanceInChangeMap = new HashMap<>();
+        for (BaseTransactionData baseTransactionData : baseTransactions) {
 
             BigDecimal amount = baseTransactionData.getAmount();
             Hash addressHash = baseTransactionData.getAddressHash();
-            BigDecimal balance = balanceMap.containsKey(addressHash) ? balanceMap.get(addressHash) : BigDecimal.ZERO;
-            BigDecimal preBalance = preBalanceMap.containsKey(addressHash) ? preBalanceMap.get(addressHash) : BigDecimal.ZERO;
-            if (amount.add(balance).signum() < 0) {
+            balanceInChangeMap.putIfAbsent(addressHash, balanceMap.containsKey(addressHash) ? balanceMap.get(addressHash) : BigDecimal.ZERO);
+            preBalanceInChangeMap.putIfAbsent(addressHash, preBalanceMap.containsKey(addressHash) ? preBalanceMap.get(addressHash) : BigDecimal.ZERO);
+            if (amount.add(balanceInChangeMap.get(addressHash)).signum() < 0) {
                 log.error("Error in Balance check. Address {}  amount {} current Balance {} ", addressHash,
-                        amount, balance);
+                        amount, balanceInChangeMap.get(addressHash));
                 return false;
             }
-            if (amount.add(preBalance).signum() < 0) {
+            if (amount.add(preBalanceInChangeMap.get(addressHash)).signum() < 0) {
                 log.error("Error in PreBalance check. Address {}  amount {} current PreBalance {} ", addressHash,
-                        amount, preBalance);
+                        amount, preBalanceInChangeMap.get(addressHash));
                 return false;
             }
-            preBalanceChanges.put(addressHash, amount.add(preBalance));
+            preBalanceInChangeMap.put(addressHash, amount.add(preBalanceInChangeMap.get(addressHash)));
         }
-        preBalanceChanges.forEach((addressHash, preBalance) -> {
-            preBalanceMap.put(addressHash, preBalance);
+        preBalanceInChangeMap.forEach((addressHash, preBalanceInChange) -> {
+            preBalanceMap.put(addressHash, preBalanceInChange);
             continueHandleBalanceChanges(addressHash);
         });
         return true;

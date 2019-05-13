@@ -11,6 +11,7 @@ import java.util.List;
 @Data
 public class RollingReserveReleaseStatus implements Serializable {
 
+    private static final long serialVersionUID = 8550422425300746089L;
     private BigDecimal initialAmount;
     private BigDecimal returnedAmount;
     private List<Hash> paymentTransactions;

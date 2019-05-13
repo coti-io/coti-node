@@ -8,6 +8,8 @@ import lombok.Data;
 
 @Data
 public class KycEventData extends EventData {
+
+    private static final long serialVersionUID = -7912516118739590690L;
     private Hash userHash;
     private EventType eventType;
 

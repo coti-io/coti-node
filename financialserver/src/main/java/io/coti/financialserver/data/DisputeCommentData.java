@@ -17,6 +17,7 @@ import java.util.List;
 @Data
 public class DisputeCommentData implements IDisputeEvent, IEntity, ISignable, ISignValidatable {
 
+    private static final long serialVersionUID = 3483236016485597213L;
     private Hash hash;
     @NotNull
     private Hash userHash;

@@ -16,6 +16,7 @@ import java.util.List;
 @Data
 public class RecourseClaimData implements IEntity, ISignable, ISignValidatable, IPropagatable {
 
+    private static final long serialVersionUID = 5881994559179493495L;
     @NotNull
     Hash merchantHash;
     @NotNull

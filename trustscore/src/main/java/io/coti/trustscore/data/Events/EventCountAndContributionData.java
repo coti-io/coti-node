@@ -6,6 +6,8 @@ import java.io.Serializable;
 
 @Data
 public class EventCountAndContributionData implements Serializable {
+
+    private static final long serialVersionUID = 3457883359863824154L;
     private int count;
     private double contribution;
 

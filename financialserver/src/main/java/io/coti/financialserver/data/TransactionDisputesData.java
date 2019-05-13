@@ -9,6 +9,8 @@ import java.util.List;
 
 @Data
 public class TransactionDisputesData implements IEntity {
+
+    private static final long serialVersionUID = 3395898085838935490L;
     private Hash transactionHash;
     private List<Hash> disputeHashes;
 

@@ -11,6 +11,7 @@ import java.util.LinkedList;
 @Data
 public class NodeHistoryData implements IEntity {
 
+    private static final long serialVersionUID = -6158422478371753336L;
     private Hash nodeHash;
     private NodeType nodeType;
     private NetworkNodeStatus nodeStatus;

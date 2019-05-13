@@ -6,6 +6,8 @@ import lombok.Data;
 
 @Data
 public class InitialTrustScoreEventsData extends EventData {
+
+    private static final long serialVersionUID = 3646340117367057313L;
     private InitialTrustScoreType initialTrustScoreType;
     private double score;
 

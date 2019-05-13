@@ -16,6 +16,7 @@ import java.util.List;
 @Data
 public class DisputeDocumentData implements IDisputeEvent, IEntity, ISignable, ISignValidatable {
 
+    private static final long serialVersionUID = 8094265736309125215L;
     private Hash hash;
     private Hash userHash;
     private List<Long> itemIds;

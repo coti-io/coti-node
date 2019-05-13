@@ -20,6 +20,7 @@ import java.util.List;
 @Data
 public class DisputeData implements IEntity, ISignable, ISignValidatable, IDisputeEvent {
 
+    private static final long serialVersionUID = 3311867693372600791L;
     private Hash hash;
     @NotNull
     private Hash transactionHash;

@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Data
 public class DisputeHistoryData implements IEntity {
 
+    private static final long serialVersionUID = -1931642584304907034L;
     private Hash disputeHash;
     private Map<Hash, Map<Hash, ActionSide>> disputeEventHashToEventDisplayUserMap;
 

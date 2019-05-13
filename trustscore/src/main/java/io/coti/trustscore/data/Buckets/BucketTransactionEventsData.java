@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Data
 public class BucketTransactionEventsData extends BucketEventData<TransactionEventData> implements IEntity {
 
+    private static final long serialVersionUID = -8196175492567413372L;
     private int currentDateNumberOfTransactions;
     private double currentDateNumberOfTransactionsContribution;
     private double oldDateNumberOfTransactionsContribution;

@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Data
 public class BucketChargeBackEventsData extends BucketEventData<ChargeBackEventsData> implements IEntity {
 
+    private static final long serialVersionUID = 7686600318847325729L;
     private Map<Hash, Double> currentDateChargeBacks;
     private Map<Hash, Double> currentDatePaymentTransactions;
 

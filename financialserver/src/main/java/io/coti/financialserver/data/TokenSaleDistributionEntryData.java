@@ -11,6 +11,8 @@ import java.util.Objects;
 
 @Data
 public class TokenSaleDistributionEntryData implements Serializable {
+
+    private static final long serialVersionUID = 5997617345762453167L;
     @NotNull
     private TokenSale fundName;
     @Positive

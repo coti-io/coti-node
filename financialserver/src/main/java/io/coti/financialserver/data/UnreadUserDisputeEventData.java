@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Data
 public class UnreadUserDisputeEventData implements IEntity {
 
+    private static final long serialVersionUID = -8740195327751181823L;
     private Hash userHash;
     private Map<Hash, ActionSide> disputeEventHashToEventDisplaySideMap;
 

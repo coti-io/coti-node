@@ -15,6 +15,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 @Data
 public class TrustScoreData implements IEntity, ISignValidatable {
+
+    private static final long serialVersionUID = -8077752791984878796L;
     private Hash userHash;
     private Double kycTrustScore;
     private SignatureData signature;

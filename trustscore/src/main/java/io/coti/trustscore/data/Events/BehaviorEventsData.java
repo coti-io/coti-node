@@ -8,6 +8,8 @@ import lombok.Data;
 
 @Data
 public class BehaviorEventsData extends EventData {
+
+    private static final long serialVersionUID = 5236619026397892238L;
     private TransactionData transactionData;
     private BehaviorEventsScoreType behaviorEventsScoreType;
 

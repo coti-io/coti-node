@@ -6,6 +6,8 @@ import java.io.Serializable;
 
 @Data
 public class BalanceCountAndContribution implements Serializable {
+
+    private static final long serialVersionUID = 8623087199557981479L;
     private double count;
     private double contribution;
 

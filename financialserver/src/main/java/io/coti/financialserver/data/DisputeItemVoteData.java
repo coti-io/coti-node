@@ -14,6 +14,8 @@ import java.time.Instant;
 
 @Data
 public class DisputeItemVoteData implements Serializable, ISignable, ISignValidatable, IDisputeEvent {
+
+    private static final long serialVersionUID = 4410455694308350423L;
     @NotNull
     private Hash arbitratorHash;
     @NotNull

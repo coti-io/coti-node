@@ -7,6 +7,7 @@ import lombok.Data;
 @Data
 public class ExplorerIndexData implements IEntity {
 
+    private static final long serialVersionUID = -7618975944850993406L;
     private Hash transactionHash;
     private long explorerIndex;
 

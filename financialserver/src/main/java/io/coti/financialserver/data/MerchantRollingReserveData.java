@@ -14,6 +14,7 @@ import java.util.List;
 @Data
 public class MerchantRollingReserveData implements IEntity, ISignable, ISignValidatable {
 
+    private static final long serialVersionUID = -4054263333198615240L;
     Hash merchantHash;
     Hash rollingReserveAddress;
     Integer addressIndex;

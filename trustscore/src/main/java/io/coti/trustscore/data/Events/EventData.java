@@ -16,6 +16,7 @@ import java.time.Instant;
 @Data
 public abstract class EventData implements IEntity, Serializable, ISignValidatable {
 
+    private static final long serialVersionUID = -4980370548341874180L;
     private Instant eventDate;
     private Hash uniqueIdentifier;
     private EventType eventType;

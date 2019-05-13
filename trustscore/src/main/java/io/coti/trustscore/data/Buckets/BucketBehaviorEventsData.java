@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Data
 public class BucketBehaviorEventsData extends BucketEventData<BehaviorEventsData> implements IEntity {
 
+    private static final long serialVersionUID = 2383844692698551161L;
     private Map<BehaviorEventsScoreType, Map<Date, Double>> behaviorEventTypeToOldEventsContributionMap;
     private Map<BehaviorEventsScoreType, EventCountAndContributionData> behaviorEventTypeToCurrentEventCountAndContributionDataMap;
     private Map<BehaviorEventsScoreType, Double> behaviorEventTypeToTotalEventsContributionMap;

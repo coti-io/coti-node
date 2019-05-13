@@ -11,6 +11,7 @@ import java.time.Instant;
 @Data
 public class DisputeEventData implements IEntity {
 
+    private static final long serialVersionUID = 5473835124802284108L;
     private Hash hash;
     private Instant creationTime;
     private IDisputeEvent eventObject;

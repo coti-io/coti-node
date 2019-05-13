@@ -19,6 +19,7 @@ import java.util.Objects;
 @Data
 public class TokenSaleDistributionData implements IEntity, ISignValidatable {
 
+    private static final long serialVersionUID = 3723624752108815229L;
     @NotEmpty
     List<@Valid TokenSaleDistributionEntryData> tokenDistributionDataEntries;
     @NotNull
