@@ -23,21 +23,4 @@ public class TransactionDataHashes extends Collection<TransactionDataHash> {
         super.init();
     }
 
-    public Set<TransactionDataHash> getHashes(){
-        Set<TransactionDataHash> hashes = new HashSet<>();
-        databaseConnector.isEmpty(columnFamilyName);
-        RocksIterator iterator = databaseConnector.getIterator(columnFamilyName);
-        if(iterator == null){
-            return Collections.emptySet();
-        }
-        iterator.seekToFirst();
-        while (iterator.isValid()) {
-            TransactionDataHash transactionDataHash = (TransactionDataHash) SerializationUtils.deserialize(iterator.value());
-            transactionDataHash.setHash(new Hash(iterator.key()));
-            hashes.add(transactionDataHash);
-            iterator.next();
-        }
-        return hashes;
-    }
-
 }

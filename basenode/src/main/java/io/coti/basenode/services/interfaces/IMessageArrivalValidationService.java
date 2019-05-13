@@ -4,8 +4,8 @@ import io.coti.basenode.data.MessageArrivalValidationData;
 
 public interface IMessageArrivalValidationService {
 
-    //TODO 3/24/2019 astolia: add methods.
 
-    boolean verifyAndLogSingleMessageArrivalValidation(MessageArrivalValidationData message);
-
+//    boolean validateResponseSignature(MessageArrivalValidationData message);
+//
+//    void validatedMessagesAcceptedByRecipient();
 }

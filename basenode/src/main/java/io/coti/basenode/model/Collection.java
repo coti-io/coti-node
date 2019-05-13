@@ -10,7 +10,10 @@ import org.rocksdb.WriteOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.SerializationUtils;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -85,6 +88,22 @@ public abstract class Collection<T extends IEntity> {
             databaseConnector.delete(columnFamilyName,iterator.key());
             iterator.next();
         }
+    }
+
+    public Set<T> getAll(){
+        Set<T> hashes = new HashSet<>();
+        if(databaseConnector.isEmpty(columnFamilyName)){
+            return Collections.emptySet();
+        }
+        RocksIterator iterator = databaseConnector.getIterator(columnFamilyName);
+        iterator.seekToFirst();
+        while (iterator.isValid()) {
+            T data = (T) SerializationUtils.deserialize(iterator.value());
+            data.setHash(new Hash(iterator.key()));
+            hashes.add(data);
+            iterator.next();
+        }
+        return hashes;
     }
 
     public boolean exists(Hash hash){

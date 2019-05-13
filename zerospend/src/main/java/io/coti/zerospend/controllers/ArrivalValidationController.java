@@ -1,9 +1,9 @@
-package io.coti.dspnode.controllers;
+package io.coti.zerospend.controllers;
 
 import io.coti.basenode.controllers.BaseMessageArrivalValidationController;
 import io.coti.basenode.data.MessageArrivalValidationData;
 import io.coti.basenode.http.GetMissedDataHashesResponse;
-import io.coti.dspnode.services.MessageArrivalValidationRouterService;
+import io.coti.zerospend.services.MessageArrivalValidationRouterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,7 +22,7 @@ public class ArrivalValidationController implements BaseMessageArrivalValidation
 
     @Override
     public ResponseEntity<GetMissedDataHashesResponse> getMissedDataHashes(MessageArrivalValidationData data) {
-        log.info("Received missedDataHashes request");
+        log.info("Received getMissedDataHashes request");
         try {
             MessageArrivalValidationData missedMessagesHashes = messageArrivalValidationRouterService.getMissedMessageHashes(data);
             if (!missedMessagesHashes.isEmpty()) {

@@ -80,14 +80,11 @@ public class NetworkService extends BaseNodeNetworkService {
                             uri,
                             data,
                             MessageArrivalValidationData.class);
-
-
-
             return response.getBody();
         }catch (Exception e){
             log.info(e.getMessage());
         }
-        return null;
+        return new MessageArrivalValidationData();
     }
 
 

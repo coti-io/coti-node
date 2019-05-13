@@ -15,11 +15,10 @@ import java.util.Arrays;
 public class AddressService extends BaseNodeAddressService {
     @Autowired
     private IPropagationPublisher propagationPublisher;
-
-    public void handleNewAddressFromFullNode(AddressData addressData) {
     @Autowired
     private MessageArrivalValidationService  messageArrivalValidationService;
-    public String handleNewAddressFromFullNode(AddressData addressData) {
+
+    public void handleNewAddressFromFullNode(AddressData addressData) {
         messageArrivalValidationService.addAddressHash(addressData.getHash());
 
         if (addressExists(addressData.getHash())) {

@@ -16,9 +16,7 @@ public class MessageArrivalValidationData<T extends DataHash> implements ISignab
 
     // Signable
     private SignatureData signature;
-    Hash signerHash;
-
-    //TODO 3/24/2019 astolia: somehow mark the target of the original message
+    private Hash signerHash;
 
     public MessageArrivalValidationData(){
         classNameToHashes = new HashMap<>();
@@ -52,6 +50,10 @@ public class MessageArrivalValidationData<T extends DataHash> implements ISignab
 
     public void addHashesByNewKey(String className,Set<T> dataHashes) {
         classNameToHashes.put(className, dataHashes);
+    }
+
+    public boolean isEmpty(){
+        return classNameToHashes.isEmpty();
     }
 
 }

@@ -1,13 +1,12 @@
 package io.coti.dspnode.services;
 
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.NetworkData;
-import io.coti.basenode.data.NetworkNodeData;
-import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.*;
 import io.coti.basenode.services.BaseNodeNetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,5 +41,36 @@ public class NetworkService extends BaseNodeNetworkService {
     @Override
     public boolean isNodeConnectedToNetwork(NetworkData newNetworkData) {
         return newNetworkData.getMultipleNodeMaps().get(NodeType.DspNode).get(networkNodeData.getNodeHash()) != null;
+    }
+
+    public List<MessageArrivalValidationData> sendDataToConnectedNodeByHttp(MessageArrivalValidationData data) {
+        RestTemplate restTemplate = new RestTemplate();
+        List<MessageArrivalValidationData> validatedNotReceived = new ArrayList<>();
+        NetworkNodeData zeroSpend = super.singleNodeNetworkDataMap.get(NodeType.ZeroSpendServer);
+        validatedNotReceived.add(sendMessageArrivalValidationDataToConnectedDsp(restTemplate, buildMessageArrivalValidationHttpUrl(zeroSpend), data));
+        return validatedNotReceived;
+    }
+
+    private String buildMessageArrivalValidationHttpUrl(NetworkNodeData networkNodeData){
+        StringBuilder sb = new StringBuilder();
+        sb.append("http://").
+                append(networkNodeData.getAddress()).
+                append(":").
+                append(networkNodeData.getHttpPort()).append("/missedDataHashes");
+        return sb.toString();
+    }
+
+    private MessageArrivalValidationData sendMessageArrivalValidationDataToConnectedDsp(RestTemplate restTemplate, String uri, MessageArrivalValidationData data){
+        try {
+            ResponseEntity<MessageArrivalValidationData> response =
+                    restTemplate.postForEntity(
+                            uri,
+                            data,
+                            MessageArrivalValidationData.class);
+            return response.getBody();
+        }catch (Exception e){
+            log.info(e.getMessage());
+        }
+        return new MessageArrivalValidationData();
     }
 }
