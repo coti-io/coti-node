@@ -304,7 +304,7 @@ public class TrustScoreService {
     public synchronized void addTransactionToTsCalculation(TransactionData transactionData) {
         try {
             TrustScoreData trustScoreData = trustScores.getByHash(transactionData.getSenderHash());
-            ;
+            TrustScoreData nodeTrustScoreData = trustScores.getByHash(transactionData.getNodeHash());
 
             if (trustScoreData == null) {
                 log.error("Transaction can not be added to TS calculation: User {} doesn't exist", transactionData.getSenderHash());
@@ -334,6 +334,7 @@ public class TrustScoreService {
 
             if (currentDate.equals(transactionConsensusDate)) {
                 addToTransactionBucketsCalculation(trustScoreData, transactionData);
+                addToTransactionBucketsCalculation(nodeTrustScoreData, transactionData);
             }
         } catch (Exception e) {
             e.printStackTrace();
