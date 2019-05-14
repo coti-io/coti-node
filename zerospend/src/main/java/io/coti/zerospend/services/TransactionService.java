@@ -9,6 +9,7 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.zerospend.http.SetTransactionIndexRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -63,5 +64,9 @@ public class TransactionService extends BaseNodeTransactionService {
                             ADDRESS_TRANSACTIONS_SERVER_ERROR,
                             STATUS_ERROR));
         }
+    }
+
+    public ResponseEntity<IResponse> setTransactionIndex(SetTransactionIndexRequest setTransactionIndexRequest) {
+
     }
 }

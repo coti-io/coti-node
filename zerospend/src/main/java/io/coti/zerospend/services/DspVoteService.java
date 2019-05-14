@@ -60,38 +60,38 @@ public class DspVoteService extends BaseNodeDspVoteService {
     public String receiveDspVote(DspVote dspVote) {
         log.debug("Received new Dsp Vote: Sender = {} , Transaction = {}", dspVote.getVoterDspHash(), dspVote.getTransactionHash());
         Hash transactionHash = dspVote.getTransactionHash();
-        synchronized (transactionHash.toHexString()) {
-            TransactionVoteData transactionVoteData = transactionVotes.getByHash(transactionHash);
+        TransactionVoteData transactionVoteData = transactionVotes.getByHash(transactionHash);
+        if (transactionVoteData == null) {
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            transactionVoteData = transactionVotes.getByHash(transactionHash);
             if (transactionVoteData == null) {
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                transactionVoteData = transactionVotes.getByHash(transactionHash);
-                if (transactionVoteData == null) {
-                    return "Transaction does not exist";
-                }
+                log.error("Transaction {} does not exist for dsp vote sender {}", dspVote.getTransactionHash(), dspVote.getVoterDspHash());
+                return "Transaction does not exist";
             }
-
-            if (!transactionVoteData.getLegalVoterDspHashes().contains(dspVote.getVoterDspHash())) {
-                log.error("Unauthorized Dsp vote received. Sender =  {}, Transaction =  {}", dspVote.getVoterDspHash(), dspVote.getTransactionHash());
-                log.error("Keyset count: " + transactionVoteData.getDspHashToVoteMapping().keySet().size());
-                transactionVoteData.getDspHashToVoteMapping().keySet().forEach(hash -> log.info(hash.toHexString()));
-                return "Unauthorized";
-            }
-
-            if (!dspVoteCrypto.verifySignature(dspVote)) {
-                log.error("Invalid vote signature. Sender =  {}, Transaction = {}", dspVote.getVoterDspHash(), dspVote.getTransactionHash());
-                return "Invalid Signature";
-            }
-            if (transactionHashToVotesListMapping.get(transactionHash) == null) {
-                log.debug("Transaction Not existing in mapping!!");
-                return "Vote already processed";
-            }
-            log.debug("Adding new vote: {}", dspVote);
-            transactionHashToVotesListMapping.get(transactionHash).add(dspVote);
         }
+
+        if (!transactionVoteData.getLegalVoterDspHashes().contains(dspVote.getVoterDspHash())) {
+            log.error("Unauthorized Dsp vote received. Sender =  {}, Transaction =  {}", dspVote.getVoterDspHash(), dspVote.getTransactionHash());
+            log.error("Keyset count: " + transactionVoteData.getDspHashToVoteMapping().keySet().size());
+            transactionVoteData.getDspHashToVoteMapping().keySet().forEach(hash -> log.info(hash.toHexString()));
+            return "Unauthorized";
+        }
+
+        if (!dspVoteCrypto.verifySignature(dspVote)) {
+            log.error("Invalid vote signature. Sender =  {}, Transaction = {}", dspVote.getVoterDspHash(), dspVote.getTransactionHash());
+            return "Invalid Signature";
+        }
+        if (transactionHashToVotesListMapping.get(transactionHash) == null) {
+            log.debug("Transaction Not existing in mapping!!");
+            return "Vote already processed";
+        }
+        log.debug("Adding new vote: {}", dspVote);
+        transactionHashToVotesListMapping.get(transactionHash).add(dspVote);
+
         return "Ok";
     }
 
@@ -99,7 +99,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
     private void sumAndSaveVotes() {
         for (Map.Entry<Hash, List<DspVote>> transactionHashToVotesListEntrySet :
                 transactionHashToVotesListMapping.entrySet()) {
-            synchronized (transactionHashToVotesListEntrySet.getKey().toHexString()) {
+            synchronized (transactionHashToVotesListEntrySet.getKey()) {
                 if (transactionHashToVotesListEntrySet.getValue() != null && transactionHashToVotesListEntrySet.getValue().size() > 0) {
                     Hash transactionHash = transactionHashToVotesListEntrySet.getKey();
                     TransactionVoteData currentVotes = transactionVotes.getByHash(transactionHash);
