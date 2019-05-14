@@ -6,10 +6,8 @@ import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeRegistrationCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.database.Interfaces.IDatabaseConnector;
-import io.coti.basenode.http.CustomHttpComponentsClientHttpRequestFactory;
-import io.coti.basenode.http.GetNodeRegistrationRequest;
-import io.coti.basenode.http.GetNodeRegistrationResponse;
-import io.coti.basenode.http.GetTransactionBatchResponse;
+import io.coti.basenode.http.*;
+import io.coti.basenode.http.interfaces.ISerializable;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.NodeRegistrations;
 import io.coti.basenode.model.Transactions;
@@ -18,11 +16,10 @@ import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.*;
 
 import javax.annotation.PreDestroy;
 import java.util.ArrayList;
@@ -101,9 +98,10 @@ public abstract class BaseNodeInitializationService {
     private NetworkNodeCrypto networkNodeCrypto;
     @Autowired
     private NodeRegistrations nodeRegistrations;
-
     @Autowired
     private IClusterStampService clusterStampService;
+    @Autowired
+    private HttpJacksonSerializer jacksonSerializer;
 
     public void init() {
         try {
@@ -244,6 +242,17 @@ public abstract class BaseNodeInitializationService {
     private List<TransactionData> requestMissingTransactions(long firstMissingTransactionIndex) {
         try {
             log.info("Starting to get missing transactions");
+            ResponseExtractor responseExtractor = response -> {
+
+                byte[] buf = new byte[8192];
+                while ((response.getBody().read(buf)) > 0) {
+                    GetTransactionBatchStreamResponse transactionBatchStreamResponse = jacksonSerializer.deserialize(buf);
+                }
+                return null;
+            };
+
+           restTemplate.execute(networkService.getRecoveryServerAddress() + "/transaction_batch_stream2"
+                    + STARTING_INDEX_URL_PARAM_ENDPOINT + firstMissingTransactionIndex, HttpMethod.GET, null, responseExtractor);
             GetTransactionBatchResponse getTransactionBatchResponse =
                     restTemplate.getForObject(
                             networkService.getRecoveryServerAddress() + RECOVERY_NODE_GET_BATCH_ENDPOINT
@@ -251,10 +260,14 @@ public abstract class BaseNodeInitializationService {
                             GetTransactionBatchResponse.class);
             log.info("Received transaction batch of size: {}", getTransactionBatchResponse.getTransactions().size());
             return getTransactionBatchResponse.getTransactions();
-        } catch (Exception e) {
+        } catch (
+                Exception e)
+
+        {
             log.error("Error at missing transactions from recovery Node");
             throw new RuntimeException(e);
         }
+
     }
 
     protected void createNetworkNodeData() {
