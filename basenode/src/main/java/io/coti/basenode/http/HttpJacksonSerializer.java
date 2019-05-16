@@ -3,6 +3,7 @@ package io.coti.basenode.http;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.coti.basenode.http.interfaces.ISerializable;
 import io.coti.basenode.http.interfaces.ISerializer;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,7 @@ public class HttpJacksonSerializer implements ISerializer {
     @PostConstruct
     private void init() {
         serializer = new ObjectMapper();
+        serializer.registerModule(new JavaTimeModule());
         serializer.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
