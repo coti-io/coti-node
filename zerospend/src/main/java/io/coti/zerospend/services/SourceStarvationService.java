@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @Service
 public class SourceStarvationService {
     private final long MINIMUM_WAIT_TIME_IN_SECONDS = 300;
-    private final long SOURCE_STARVATION_CHECK_TASK_DELAY = 100;
+    private final long SOURCE_STARVATION_CHECK_TASK_DELAY = 5000;
 
     @Autowired
     private IClusterService clusterService;
@@ -38,7 +38,7 @@ public class SourceStarvationService {
                 .flatMap(Collection::stream)
                 .filter(transactionData -> !(transactionData.isGenesis()))
                 .collect(Collectors.toList()).forEach(transactionData -> {
-            long minimumWaitingTimeInMilliseconds = (long) 100;
+            long minimumWaitingTimeInMilliseconds = (long) ((100 - transactionData.getSenderTrustScore()) * 15 + MINIMUM_WAIT_TIME_IN_SECONDS) * 1000000;
             long actualWaitingTimeInMilliseconds = Duration.between(transactionData.getAttachmentTime(), now).toMillis();
             log.debug("Waiting transaction: {}. Time without attachment: {}, Minimum wait time: {}", transactionData.getHash(), millisecondsToMinutes(actualWaitingTimeInMilliseconds), millisecondsToMinutes(minimumWaitingTimeInMilliseconds));
             if (actualWaitingTimeInMilliseconds > minimumWaitingTimeInMilliseconds) {

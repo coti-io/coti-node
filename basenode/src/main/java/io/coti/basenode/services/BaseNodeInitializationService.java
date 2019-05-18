@@ -148,7 +148,7 @@ public abstract class BaseNodeInitializationService {
                     )));
             if (existingTransactionTasks.size() != 0) {
                 ExecutorService existingTransactionExecutorService = Executors.newSingleThreadExecutor();
-                Thread monitorExistingTransactions = monitorTransactionThread("existing", completedExistedTransactionNumber);
+                Thread monitorExistingTransactions = monitorTransactionThread("existing", completedExistedTransactionNumber, null);
                 monitorExistingTransactions.start();
                 existingTransactionExecutorService.invokeAll(existingTransactionTasks);
                 log.info("Inserted existing transactions: {}", completedExistedTransactionNumber);
@@ -219,7 +219,9 @@ public abstract class BaseNodeInitializationService {
             log.info("Starting to get missing transactions");
             List<TransactionData> missingTransactions = new ArrayList<>();
             AtomicLong completedMissingTransactionNumber = new AtomicLong(0);
-            Thread monitorMissingTransactions = monitorTransactionThread("missing", completedMissingTransactionNumber);
+            AtomicLong receivedMissingTransactionNumber = new AtomicLong(0);
+            Thread monitorMissingTransactionThread = monitorTransactionThread("missing", completedMissingTransactionNumber, receivedMissingTransactionNumber);
+            Thread insertMissingTransactionThread = insertMissingTransactionThread(missingTransactions, completedMissingTransactionNumber);
             ResponseExtractor responseExtractor = response -> {
                 byte[] buf = new byte[Math.toIntExact(MAXIMUM_BUFFER_SIZE)];
                 int offset = 0;
@@ -229,6 +231,11 @@ public abstract class BaseNodeInitializationService {
                         TransactionData missingTransaction = jacksonSerializer.deserialize(buf);
                         if (missingTransaction != null) {
                             missingTransactions.add(missingTransaction);
+                            receivedMissingTransactionNumber.incrementAndGet();
+                            if (!insertMissingTransactionThread.isAlive()) {
+                                insertMissingTransactionThread.start();
+                                monitorMissingTransactionThread.start();
+                            }
                             Arrays.fill(buf, 0, offset + n, (byte) 0);
                             offset = 0;
                         } else {
@@ -244,11 +251,13 @@ public abstract class BaseNodeInitializationService {
             restTemplate.execute(networkService.getRecoveryServerAddress() + "/transaction_batch"
                     + STARTING_INDEX_URL_PARAM_ENDPOINT + firstMissingTransactionIndex, HttpMethod.GET, null, responseExtractor);
             log.info("Received missing transactions: {}", missingTransactions.size());
-            if (missingTransactions.size() != 0) {
-                monitorMissingTransactions.start();
-                insertMissingTransactions(missingTransactions, completedMissingTransactionNumber);
-                monitorMissingTransactions.interrupt();
+            if (insertMissingTransactionThread.isAlive()) {
+                insertMissingTransactionThread.interrupt();
+                insertMissingTransactionThread.join();
+                monitorMissingTransactionThread.interrupt();
+                monitorMissingTransactionThread.join();
             }
+
             log.info("Finished to get missing transactions");
         } catch (Exception e) {
             log.error("Error at missing transactions from recovery Node");
@@ -257,28 +266,45 @@ public abstract class BaseNodeInitializationService {
 
     }
 
-    private void insertMissingTransactions(List<TransactionData> missingTransactions, AtomicLong completedMissingTransactionNumber) throws Exception {
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        List<Callable<Object>> missingTransactionTasks = new ArrayList<>(missingTransactions.size());
-        Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap = new ConcurrentHashMap<>();
-        missingTransactions.forEach(transactionData ->
-                missingTransactionTasks.add(Executors.callable(() -> {
-                    handleMissingTransaction(transactionData);
-                    transactionHelper.updateAddressTransactionHistory(addressToTransactionsHistoryMap, transactionData);
-                    completedMissingTransactionNumber.incrementAndGet();
-                }))
-        );
-        executorService.invokeAll(missingTransactionTasks);
-        addressTransactionsHistories.putBatch(addressToTransactionsHistoryMap);
-        log.info("Inserted missing transactions: {}", completedMissingTransactionNumber);
+    private Thread insertMissingTransactionThread(List<TransactionData> missingTransactions, AtomicLong completedMissingTransactionNumber) throws Exception {
+        return new Thread(() -> {
+            Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap = new ConcurrentHashMap<>();
+            int offset = 0;
+            int nextOffSet;
+            int missingTransactionsSize;
+            while ((missingTransactionsSize = missingTransactions.size()) > offset || !Thread.currentThread().isInterrupted()) {
+
+                if (missingTransactionsSize - 1 > offset || (missingTransactionsSize - 1 == offset && missingTransactions.get(offset) != null)) {
+                    nextOffSet = offset + (Thread.currentThread().isInterrupted() ? missingTransactionsSize - offset : 1);
+                    for (int i = offset; i < nextOffSet; i++) {
+                        if (missingTransactions.get(i) == null) {
+                            log.info("{} transaction for index {}, offset {}, nextOffset {},missingTransactionsSize {}, previous tr: {}", missingTransactions.get(i), i, offset, nextOffSet, missingTransactionsSize, missingTransactions.get(i - 1));
+                        }
+                        TransactionData transactionData = missingTransactions.get(i);
+                        handleMissingTransaction(transactionData);
+                        transactionHelper.updateAddressTransactionHistory(addressToTransactionsHistoryMap, transactionData);
+                        completedMissingTransactionNumber.incrementAndGet();
+                    }
+                    offset = nextOffSet;
+                }
+            }
+            addressTransactionsHistories.putBatch(addressToTransactionsHistoryMap);
+            log.info("Inserted missing transactions: {}", completedMissingTransactionNumber);
+        });
+
     }
 
-    private Thread monitorTransactionThread(String type, AtomicLong transactionNumber) {
+    private Thread monitorTransactionThread(String type, AtomicLong transactionNumber, AtomicLong receivedTransactionNumber) {
         return new Thread(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    Thread.sleep(5000);
-                    log.info("Inserted {} transactions: {}", type, transactionNumber);
+                    Thread.sleep(3000);
+                    if (receivedTransactionNumber != null) {
+                        log.info("Received {} transactions: {}, inserted transactions: {}", type, receivedTransactionNumber, transactionNumber);
+                    } else {
+                        log.info("Inserted {} transactions: {}", type, transactionNumber);
+                    }
+
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
