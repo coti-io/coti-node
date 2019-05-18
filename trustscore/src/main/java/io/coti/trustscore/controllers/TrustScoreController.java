@@ -3,7 +3,6 @@ package io.coti.trustscore.controllers;
 import io.coti.basenode.http.GetTrustScoreRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.trustscore.http.GetTransactionTrustScoreRequest;
-import io.coti.trustscore.http.InsertEventRequest;
 import io.coti.trustscore.http.SetKycTrustScoreRequest;
 import io.coti.trustscore.http.SetUserTypeRequest;
 import io.coti.trustscore.services.TrustScoreService;

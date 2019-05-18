@@ -47,14 +47,17 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     @Override
     public void getTransactionBatch(long startingIndex, HttpServletResponse response) {
+
+        AtomicLong transactionNumber = new AtomicLong(0);
+        Thread monitorTransactionBatch = monitorTransactionBatch(Thread.currentThread().getId(), transactionNumber);
+
         try {
             ServletOutputStream output = response.getOutputStream();
 
-            AtomicLong transactionNumber = new AtomicLong(0);
             if (startingIndex > transactionIndexService.getLastTransactionIndexData().getIndex()) {
                 return;
             }
-            Thread monitorTransactionBatch = monitorTransactionBatch(Thread.currentThread().getId(), transactionNumber);
+
             monitorTransactionBatch.start();
 
             for (long i = startingIndex; i <= transactionIndexService.getLastTransactionIndexData().getIndex(); i++) {
@@ -68,13 +71,14 @@ public class BaseNodeTransactionService implements ITransactionService {
                 transactionNumber.incrementAndGet();
 
             }
-            ;
-
-            monitorTransactionBatch.interrupt();
 
         } catch (Exception e) {
-            log.info("Error sending transaction batch");
-            e.printStackTrace();
+            log.error("Error sending transaction batch");
+            log.error(e.getMessage());
+        } finally {
+            if (monitorTransactionBatch.isAlive()) {
+                monitorTransactionBatch.interrupt();
+            }
         }
     }
 
@@ -83,11 +87,10 @@ public class BaseNodeTransactionService implements ITransactionService {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     Thread.sleep(5000);
-                    log.info("Transaction batch: thread id = {}, transactionNumber= {}", threadId, transactionNumber);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    log.info("Transaction batch: thread id = {}, transactionNumber= {}", threadId, transactionNumber);
                 }
+                log.info("Transaction batch: thread id = {}, transactionNumber= {}", threadId, transactionNumber);
             }
         });
     }

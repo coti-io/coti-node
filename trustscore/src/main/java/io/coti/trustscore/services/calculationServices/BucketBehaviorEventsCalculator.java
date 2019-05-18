@@ -41,7 +41,7 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
             SuspiciousEventScore suspiciousEventScore = baseEventTypeToBaseEventScoreEntry.getValue();
             String scoreFormulaCalculation = createBaseEventScoreFormula(baseEventTypeToBaseEventScoreEntry.getKey());
 
-            if (scoreFormulaCalculation != null){
+            if (scoreFormulaCalculation != null) {
                 baseEventScoreToCalculationFormulaMap.put(suspiciousEventScore, scoreFormulaCalculation);
             }
         }
