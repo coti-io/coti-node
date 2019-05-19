@@ -30,24 +30,31 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
 
     public void init(String propagationPort, NodeType publisherNodeType) {
         this.publisherNodeType = publisherNodeType;
+        this.propagationPort = propagationPort;
+        init();
+        log.info("ZeroMQ Publisher is up");
+    }
+
+    public void init() {
         zeroMQContext = ZMQ.context(1);
         propagator = zeroMQContext.socket(ZMQ.PUB);
         propagator.setHWM(10000);
-        this.propagationPort = propagationPort;
         propagator.bind("tcp://*:" + propagationPort);
-        log.info("ZeroMQ Publisher is up");
     }
 
     public <T extends IPropagatable> void propagate(T toPropagate, List<NodeType> subscriberNodeTypes) {
         synchronized (propagator) {
-            subscriberNodeTypes.forEach(subscriberNodeType -> {
-                String serverAddress = "tcp://" + publisherIp + ":" + propagationPort;
-                log.debug("Propagating {} to {}", toPropagate.getHash(), Channel.getChannelString(toPropagate.getClass(), publisherNodeType, subscriberNodeType, serverAddress));
-                byte[] message = serializer.serialize(toPropagate);
-                propagator.sendMore(Channel.getChannelString(toPropagate.getClass(), publisherNodeType, subscriberNodeType, serverAddress).getBytes());
-                propagator.send(message);
-            });
+            subscriberNodeTypes.forEach(subscriberNodeType -> propagateToNode(toPropagate, subscriberNodeType));
         }
+    }
+
+    private <T extends IPropagatable> void propagateToNode(T toPropagate, NodeType subscriberNodeType) {
+        String serverAddress = "tcp://" + publisherIp + ":" + propagationPort;
+        log.debug("Propagating {} to {}", toPropagate.getHash(), Channel.getChannelString(toPropagate.getClass(), publisherNodeType, subscriberNodeType, serverAddress));
+        byte[] message = serializer.serialize(toPropagate);
+        propagator.sendMore(Channel.getChannelString(toPropagate.getClass(), publisherNodeType, subscriberNodeType, serverAddress).getBytes());
+        propagator.send(message);
+
     }
 
     @Scheduled(initialDelay = INITIAL_DELAY, fixedDelay = HEARTBEAT_INTERVAL)

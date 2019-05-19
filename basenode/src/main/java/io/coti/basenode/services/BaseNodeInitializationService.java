@@ -35,6 +35,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
@@ -45,7 +46,7 @@ public abstract class BaseNodeInitializationService {
     private final static String NODE_MANAGER_NODES_ENDPOINT = "/nodes";
     private final static String RECOVERY_NODE_GET_BATCH_ENDPOINT = "/transaction_batch";
     private final static String STARTING_INDEX_URL_PARAM_ENDPOINT = "?starting_index=";
-    private final static long MAXIMUM_BUFFER_SIZE = 10000;
+    private final static long MAXIMUM_BUFFER_SIZE = 20000;
     @Autowired
     protected INetworkService networkService;
     @Value("${network}")
@@ -220,8 +221,9 @@ public abstract class BaseNodeInitializationService {
             List<TransactionData> missingTransactions = new ArrayList<>();
             AtomicLong completedMissingTransactionNumber = new AtomicLong(0);
             AtomicLong receivedMissingTransactionNumber = new AtomicLong(0);
+            AtomicBoolean finishedToReceive = new AtomicBoolean(false);
             Thread monitorMissingTransactionThread = monitorTransactionThread("missing", completedMissingTransactionNumber, receivedMissingTransactionNumber);
-            Thread insertMissingTransactionThread = insertMissingTransactionThread(missingTransactions, completedMissingTransactionNumber, monitorMissingTransactionThread);
+            Thread insertMissingTransactionThread = insertMissingTransactionThread(missingTransactions, completedMissingTransactionNumber, monitorMissingTransactionThread, finishedToReceive);
             ResponseExtractor responseExtractor = response -> {
                 byte[] buf = new byte[Math.toIntExact(MAXIMUM_BUFFER_SIZE)];
                 int offset = 0;
@@ -251,8 +253,10 @@ public abstract class BaseNodeInitializationService {
                     + STARTING_INDEX_URL_PARAM_ENDPOINT + firstMissingTransactionIndex, HttpMethod.GET, null, responseExtractor);
             if (insertMissingTransactionThread.isAlive()) {
                 log.info("Received all {} missing transactions from recovery server", receivedMissingTransactionNumber);
-                insertMissingTransactionThread.interrupt();
-                insertMissingTransactionThread.join();
+                synchronized (finishedToReceive) {
+                    finishedToReceive.set(true);
+                    finishedToReceive.wait();
+                }
             }
             log.info("Finished to get missing transactions");
         } catch (Exception e) {
@@ -262,17 +266,17 @@ public abstract class BaseNodeInitializationService {
 
     }
 
-    private Thread insertMissingTransactionThread(List<TransactionData> missingTransactions, AtomicLong completedMissingTransactionNumber, Thread monitorMissingTransactionThread) throws Exception {
+    private Thread insertMissingTransactionThread(List<TransactionData> missingTransactions, AtomicLong completedMissingTransactionNumber, Thread monitorMissingTransactionThread, AtomicBoolean finishedToReceive) throws Exception {
         return new Thread(() -> {
             Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap = new ConcurrentHashMap<>();
             int offset = 0;
             int nextOffSet;
             int missingTransactionsSize;
             monitorMissingTransactionThread.start();
-            while ((missingTransactionsSize = missingTransactions.size()) > offset || !Thread.currentThread().isInterrupted()) {
 
+            while ((missingTransactionsSize = missingTransactions.size()) > offset || finishedToReceive.get() == false) {
                 if (missingTransactionsSize - 1 > offset || (missingTransactionsSize - 1 == offset && missingTransactions.get(offset) != null)) {
-                    nextOffSet = offset + (Thread.currentThread().isInterrupted() ? missingTransactionsSize - offset : 1);
+                    nextOffSet = offset + (finishedToReceive.get() == true ? missingTransactionsSize - offset : 1);
                     for (int i = offset; i < nextOffSet; i++) {
                         TransactionData transactionData = missingTransactions.get(i);
                         handleMissingTransaction(transactionData);
@@ -284,11 +288,10 @@ public abstract class BaseNodeInitializationService {
             }
             addressTransactionsHistories.putBatch(addressToTransactionsHistoryMap);
             monitorMissingTransactionThread.interrupt();
-            try {
-                monitorMissingTransactionThread.join();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+            synchronized (finishedToReceive) {
+                finishedToReceive.notify();
             }
+
         });
 
     }
