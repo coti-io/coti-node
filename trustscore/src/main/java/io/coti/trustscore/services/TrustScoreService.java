@@ -303,6 +303,11 @@ public class TrustScoreService {
 
     public synchronized void addTransactionToTsCalculation(TransactionData transactionData) {
         try {
+            if (transactionData.getType().equals(TransactionType.ZeroSpend) || transactionData.getDspConsensusResult() == null ||
+                    !transactionData.getDspConsensusResult().isDspConsensus()) {
+                return;
+            }
+
             TrustScoreData trustScoreData = trustScores.getByHash(transactionData.getSenderHash());
             TrustScoreData nodeTrustScoreData = trustScores.getByHash(transactionData.getNodeHash());
 
@@ -320,12 +325,6 @@ public class TrustScoreService {
 
             if (bucketEventData.getEventDataHashToEventDataMap().get(transactionData.getHash()) != null) {
                 log.debug("Transaction {} is already added to ts calculation", transactionData.getHash());
-                return;
-            }
-
-
-            if (transactionData.getType().equals(TransactionType.ZeroSpend) || transactionData.getDspConsensusResult() == null ||
-                    !transactionData.getDspConsensusResult().isDspConsensus()) {
                 return;
             }
 

@@ -76,6 +76,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                 return;
             }
             if (transactionHelper.isDspConfirmed(transactionData)) {
+                processDSPConfirmedTransaction(transactionData);
                 dspConfirmed.incrementAndGet();
             }
         }
@@ -117,6 +118,9 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         });
 
         continueHandleAddressHistoryChanges(transactionData);
+    }
+
+    protected void processDSPConfirmedTransaction(TransactionData transactionData) {
     }
 
     protected void continueHandleAddressHistoryChanges(TransactionData transactionData) {
