@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -44,17 +43,16 @@ public class TccConfirmationService {
 
     private void setTotalTrustScore(TransactionData parent) {
         double maxSonsTotalTrustScore = 0;
-        Hash maxSonsTotalTrustScoreHash = null;
-        for (Hash hash : parent.getChildrenTransactionHashes()) {
+
+        for (Hash transactionHash : parent.getChildrenTransactionHashes()) {
             try {
-                TransactionData child = hashToTccUnConfirmTransactionsMapping.get(hash);
+                TransactionData child = hashToTccUnConfirmTransactionsMapping.get(transactionHash);
                 if (child != null && child.getTrustChainTrustScore()
                         > maxSonsTotalTrustScore) {
-                    maxSonsTotalTrustScore = hashToTccUnConfirmTransactionsMapping.get(hash).getTrustChainTrustScore();
-                    maxSonsTotalTrustScoreHash = hash;
+                    maxSonsTotalTrustScore = hashToTccUnConfirmTransactionsMapping.get(transactionHash).getTrustChainTrustScore();
                 }
             } catch (Exception e) {
-                log.error("in setTotalSumScore: parent: {} child: {}", parent.getHash(), hash);
+                log.error("in setTotalSumScore: parent: {} child: {}", parent.getHash(), transactionHash);
                 throw e;
             }
         }
@@ -62,13 +60,6 @@ public class TccConfirmationService {
         // updating parent trustChainTrustScore
         parent.setTrustChainTrustScore(parent.getSenderTrustScore() + maxSonsTotalTrustScore);
 
-        //updating parent trustChainTransactionHashes
-        if (maxSonsTotalTrustScoreHash != null) { // not a source
-            List<Hash> maxSonsTotalTrustScoreChain =
-                    new Vector<>(hashToTccUnConfirmTransactionsMapping.get(maxSonsTotalTrustScoreHash).getTrustChainTransactionHashes());
-            maxSonsTotalTrustScoreChain.add(maxSonsTotalTrustScoreHash);
-            parent.setTrustChainTransactionHashes(maxSonsTotalTrustScoreChain);
-        }
     }
 
     private void topologicalSortingHelper(TransactionData parentTransactionData) {
@@ -93,9 +84,7 @@ public class TccConfirmationService {
             if (transaction.getTrustChainTrustScore() >= threshold) {
                 transaction.setTrustChainConsensus(true);
                 transaction.setTransactionConsensusUpdateTime(Instant.now());
-                TccInfo tccInfo = new TccInfo(transaction.getHash(), transaction.getTrustChainTransactionHashes()
-                        , transaction.getTrustChainTrustScore());
-
+                TccInfo tccInfo = new TccInfo(transaction.getHash(), transaction.getTrustChainTrustScore());
                 transactionConsensusConfirmed.add(tccInfo);
                 log.debug("transaction with hash:{} is confirmed with trustScore: {} and totalTrustScore:{} ", transaction.getHash(), transaction.getSenderTrustScore(), transaction.getTrustChainTrustScore());
             }

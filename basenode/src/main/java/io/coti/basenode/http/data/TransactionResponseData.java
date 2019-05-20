@@ -11,7 +11,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.TRANSACTION_RESPONSE_ERROR;
@@ -24,7 +23,6 @@ public class TransactionResponseData {
     private List<BaseTransactionResponseData> baseTransactions;
     private String leftParentHash;
     private String rightParentHash;
-    private List<String> trustChainTransactionHashes;
     private boolean trustChainConsensus;
     private double trustChainTrustScore;
     private Instant transactionConsensusUpdateTime;
@@ -60,8 +58,6 @@ public class TransactionResponseData {
         }
         leftParentHash = transactionData.getLeftParentHash() == null ? null : transactionData.getLeftParentHash().toHexString();
         rightParentHash = transactionData.getRightParentHash() == null ? null : transactionData.getRightParentHash().toHexString();
-        trustChainTransactionHashes = new LinkedList<>();
-        transactionData.getTrustChainTransactionHashes().forEach(trustChainHash -> trustChainTransactionHashes.add(trustChainHash.toHexString()));
 
         trustChainConsensus = transactionData.isTrustChainConsensus();
         trustChainTrustScore = transactionData.getTrustChainTrustScore();

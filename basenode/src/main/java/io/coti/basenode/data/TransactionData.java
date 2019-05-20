@@ -9,7 +9,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 import java.util.stream.Collectors;
 
 @Data
@@ -22,7 +21,6 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
     private TransactionType type;
     private Hash leftParentHash;
     private Hash rightParentHash;
-    private List<Hash> trustChainTransactionHashes;
     private boolean trustChainConsensus;
     private double trustChainTrustScore;
     private Instant transactionConsensusUpdateTime;
@@ -89,7 +87,6 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
     }
 
     private void initTransactionData() {
-        this.trustChainTransactionHashes = new Vector<>();
         this.childrenTransactionHashes = new ArrayList<>();
     }
 

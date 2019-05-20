@@ -68,7 +68,6 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         if (confirmationData instanceof TccInfo) {
             transactionData.setTrustChainConsensus(true);
             transactionData.setTrustChainTrustScore(((TccInfo) confirmationData).getTrustChainTrustScore());
-            transactionData.setTrustChainTransactionHashes(((TccInfo) confirmationData).getTrustChainTransactionHashes());
             tccConfirmed.incrementAndGet();
         } else if (confirmationData instanceof DspConsensusResult) {
             transactionData.setDspConsensusResult((DspConsensusResult) confirmationData);
