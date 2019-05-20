@@ -53,11 +53,4 @@ public abstract class BaseTransactionData implements Serializable {
         this.signatureData = signatureData;
     }
 
-    public boolean isOutput() {
-        return amount.signum() > 0;
-    }
-
-    public boolean isInput() {
-        return amount.signum() <= 0;
-    }
 }

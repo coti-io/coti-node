@@ -16,7 +16,6 @@ import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
-import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.fullnode.data.ExplorerIndexData;
 import io.coti.fullnode.http.AddTransactionRequest;
 import io.coti.fullnode.http.AddTransactionResponse;
@@ -50,7 +49,7 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private TransactionCrypto transactionCrypto;
     @Autowired
-    private IValidationService validationService;
+    private ValidationService validationService;
     @Autowired
     private IClusterService clusterService;
     @Autowired
@@ -85,7 +84,7 @@ public class TransactionService extends BaseNodeTransactionService {
                         request.type);
         try {
             log.debug("New transaction request is being processed. Transaction Hash = {}", request.hash);
-            transactionCrypto.signMessage(transactionData);
+
             if (transactionHelper.isTransactionExists(transactionData)) {
                 log.debug("Received existing transaction: {}", transactionData.getHash());
                 return ResponseEntity
@@ -104,6 +103,14 @@ public class TransactionService extends BaseNodeTransactionService {
                                 AUTHENTICATION_FAILED_MESSAGE));
             }
 
+            if (!validationService.validateFullNodeFeeDataIntegrity(transactionData)) {
+                log.error("Invalid fullnode fee data: {}", transactionData.getHash());
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body(new AddTransactionResponse(
+                                STATUS_ERROR,
+                                INVALID_FULL_NODE_FEE));
+            }
             if (!validationService.validateBaseTransactionAmounts(transactionData)) {
                 log.error("Illegal base transaction amounts: {}", transactionData.getHash());
                 return ResponseEntity
@@ -168,7 +175,7 @@ public class TransactionService extends BaseNodeTransactionService {
             // ################################
 
             transactionData.setAttachmentTime(Instant.now());
-
+            transactionCrypto.signMessage(transactionData);
             transactionHelper.attachTransactionToCluster(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
             webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);

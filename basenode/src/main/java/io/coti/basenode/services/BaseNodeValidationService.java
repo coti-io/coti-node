@@ -19,7 +19,7 @@ import java.util.EnumSet;
 
 
 @Service
-public class ValidationService implements IValidationService {
+public class BaseNodeValidationService implements IValidationService {
     @Autowired
     private Transactions transactions;
     @Autowired

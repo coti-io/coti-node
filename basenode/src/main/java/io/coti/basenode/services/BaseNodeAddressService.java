@@ -4,6 +4,7 @@ import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.model.Addresses;
 import io.coti.basenode.services.interfaces.IAddressService;
+import io.coti.basenode.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,7 @@ public class BaseNodeAddressService implements IAddressService {
     @Autowired
     private Addresses addresses;
     @Autowired
-    private ValidationService validationService;
+    private IValidationService validationService;
 
     public void init() {
         log.info("{} is up", this.getClass().getSimpleName());

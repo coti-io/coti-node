@@ -15,7 +15,20 @@ public class TransactionCrypto extends SignatureCrypto<TransactionData> {
     @Override
     public byte[] getSignatureMessage(TransactionData transactionData) {
 
-        return transactionData.getHash().getBytes();
+        byte[] transactionHashInBytes = transactionData.getHash().getBytes();
+        byte[] attachmentTimeInBytes = ByteBuffer.allocate(Long.BYTES).putLong(transactionData.getAttachmentTime().toEpochMilli()).array();
+        byte[] noncesInBytes = new byte[0];
+        if (transactionData.getNonces() != null) {
+            ByteBuffer nonceBuffer = ByteBuffer.allocate(transactionData.getNonces().length * Integer.BYTES);
+            for (int nonce : transactionData.getNonces()) {
+                nonceBuffer.putInt(nonce);
+            }
+            noncesInBytes = nonceBuffer.array();
+        }
+        ByteBuffer transactionBuffer = ByteBuffer.allocate(transactionHashInBytes.length + attachmentTimeInBytes.length + noncesInBytes.length)
+                .put(transactionHashInBytes).put(attachmentTimeInBytes).put(noncesInBytes);
+        return CryptoHelper.cryptoHash(transactionBuffer.array()).getBytes();
+
     }
 
     private byte[] getBaseTransactionsHashesBytes(TransactionData transactionData) {

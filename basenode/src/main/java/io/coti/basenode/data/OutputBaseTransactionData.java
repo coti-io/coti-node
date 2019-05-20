@@ -23,8 +23,8 @@ public abstract class OutputBaseTransactionData extends BaseTransactionData {
     }
 
     public void setAmount(BigDecimal amount) {
-        if (amount == null || amount.signum() <= 0) {
-            throw new IllegalStateException("Output transaction can not have non positive amount");
+        if (amount == null || amount.signum() < 0) {
+            throw new IllegalStateException("Output transaction can not have negative amount");
         }
         this.amount = amount;
     }
