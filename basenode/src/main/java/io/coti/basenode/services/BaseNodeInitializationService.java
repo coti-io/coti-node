@@ -31,10 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -140,18 +137,15 @@ public abstract class BaseNodeInitializationService {
             AtomicLong maxTransactionIndex = new AtomicLong(-1);
             log.info("Starting to read existing transactions");
             AtomicLong completedExistedTransactionNumber = new AtomicLong(0);
-            List<Callable<Object>> existingTransactionTasks = new ArrayList<>();
-            transactions.forEach(transactionData ->
-                    existingTransactionTasks.add(Executors.callable(() -> {
-                                handleExistingTransaction(maxTransactionIndex, transactionData);
-                                completedExistedTransactionNumber.incrementAndGet();
-                            }
-                    )));
-            if (existingTransactionTasks.size() != 0) {
-                ExecutorService existingTransactionExecutorService = Executors.newSingleThreadExecutor();
-                Thread monitorExistingTransactions = monitorTransactionThread("existing", completedExistedTransactionNumber, null);
-                monitorExistingTransactions.start();
-                existingTransactionExecutorService.invokeAll(existingTransactionTasks);
+            Thread monitorExistingTransactions = monitorTransactionThread("existing", completedExistedTransactionNumber, null);
+            transactions.forEach(transactionData -> {
+                if (!monitorExistingTransactions.isAlive()) {
+                    monitorExistingTransactions.start();
+                }
+                handleExistingTransaction(maxTransactionIndex, transactionData);
+                completedExistedTransactionNumber.incrementAndGet();
+            });
+            if (monitorExistingTransactions.isAlive()) {
                 monitorExistingTransactions.interrupt();
                 monitorExistingTransactions.join();
             }
@@ -249,7 +243,7 @@ public abstract class BaseNodeInitializationService {
                 }
                 return null;
             };
-            restTemplate.execute(networkService.getRecoveryServerAddress() + "/transaction_batch"
+            restTemplate.execute(networkService.getRecoveryServerAddress() + RECOVERY_NODE_GET_BATCH_ENDPOINT
                     + STARTING_INDEX_URL_PARAM_ENDPOINT + firstMissingTransactionIndex, HttpMethod.GET, null, responseExtractor);
             if (insertMissingTransactionThread.isAlive()) {
                 log.info("Received all {} missing transactions from recovery server", receivedMissingTransactionNumber);
