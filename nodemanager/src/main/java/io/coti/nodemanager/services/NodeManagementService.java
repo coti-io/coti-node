@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,7 @@ public class NodeManagementService implements INodeManagementService {
 
     public static final String FULL_NODES_FOR_WALLET_KEY = "FullNodes";
     public static final String TRUST_SCORE_NODES_FOR_WALLET_KEY = "TrustScoreNodes";
+    public static final String FINANCIAL_SERVER_FOR_WALLET_KEY = "FinancialServer";
     @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired
@@ -118,15 +120,23 @@ public class NodeManagementService implements INodeManagementService {
         List<SingleNodeDetailsForWallet> trustScoreNodesDetailsForWallet = networkService.getMapFromFactory(NodeType.TrustScoreNode).values().stream()
                 .map(this::createSingleNodeDetailsForWallet)
                 .collect(Collectors.toList());
+        List<SingleNodeDetailsForWallet> financialServerDetailsForWallet = new ArrayList<>();
+        NetworkNodeData financialServer = networkService.getSingleNodeData(NodeType.FinancialServer);
+        if (financialServer != null) {
+            financialServerDetailsForWallet.add(createSingleNodeDetailsForWallet(financialServer));
+        }
         networkDetailsForWallet.put(FULL_NODES_FOR_WALLET_KEY, fullNodesDetailsForWallet);
         networkDetailsForWallet.put(TRUST_SCORE_NODES_FOR_WALLET_KEY, trustScoreNodesDetailsForWallet);
+        networkDetailsForWallet.put(FINANCIAL_SERVER_FOR_WALLET_KEY, financialServerDetailsForWallet);
         return networkDetailsForWallet;
     }
 
     private SingleNodeDetailsForWallet createSingleNodeDetailsForWallet(NetworkNodeData node) {
+        SingleNodeDetailsForWallet singleNodeDetailsForWallet = new SingleNodeDetailsForWallet(node.getHash(), node.getHttpFullAddress(), node.getWebServerUrl());
         if (NodeType.FullNode.equals(node.getNodeType())) {
-            return new SingleNodeDetailsForWallet(node.getHash(), node.getHttpFullAddress(), node.getFeeData(), node.getTrustScore());
+            singleNodeDetailsForWallet.setFeeData(node.getFeeData());
+            singleNodeDetailsForWallet.setTrustScore(node.getTrustScore());
         }
-        return new SingleNodeDetailsForWallet(node.getHash(), node.getHttpFullAddress(), null, null);
+        return singleNodeDetailsForWallet;
     }
 }

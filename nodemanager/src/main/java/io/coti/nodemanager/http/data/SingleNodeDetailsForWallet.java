@@ -12,15 +12,15 @@ public class SingleNodeDetailsForWallet {
 
     private String nodeHash;
     private String httpAddress;
+    private String url;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private FeeData feeData;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Double trustScore;
 
-    public SingleNodeDetailsForWallet(Hash nodeHash, String fullHttpAddress, FeeData feeData, Double trustScore) {
+    public SingleNodeDetailsForWallet(Hash nodeHash, String fullHttpAddress, String webServerUrl) {
         this.nodeHash = nodeHash.toString();
         this.httpAddress = fullHttpAddress;
-        this.feeData = feeData;
-        this.trustScore = trustScore;
+        this.url = webServerUrl;
     }
 }

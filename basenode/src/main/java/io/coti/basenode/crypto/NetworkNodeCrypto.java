@@ -16,9 +16,15 @@ public class NetworkNodeCrypto extends SignatureCrypto<NetworkNodeData> {
         byte[] propagationPortInBytes = networkNodeData.getPropagationPort() != null ? networkNodeData.getPropagationPort().getBytes() : new byte[0];
         byte[] receivingPortInBytes = networkNodeData.getReceivingPort() != null ? networkNodeData.getReceivingPort().getBytes() : new byte[0];
         byte[] recoveryServerAddressInBytes = networkNodeData.getRecoveryServerAddress() != null ? networkNodeData.getRecoveryServerAddress().getBytes() : new byte[0];
+        byte[] networkTypeInBytes = networkNodeData.getNetworkType().toString().getBytes();
+        byte[] webServerUrlInBytes = networkNodeData.getWebServerUrl() != null ? networkNodeData.getWebServerUrl().getBytes() : new byte[0];
 
-        ByteBuffer networkNodeBuffer = ByteBuffer.allocate(nodeTypeInBytes.length + addressInBytes.length + httpPortInBytes.length + propagationPortInBytes.length + receivingPortInBytes.length + recoveryServerAddressInBytes.length)
-                .put(nodeTypeInBytes).put(addressInBytes).put(httpPortInBytes).put(propagationPortInBytes).put(receivingPortInBytes).put(recoveryServerAddressInBytes);
+        int networkNodeBufferLength = nodeTypeInBytes.length + addressInBytes.length + httpPortInBytes.length + propagationPortInBytes.length +
+                receivingPortInBytes.length + recoveryServerAddressInBytes.length + networkTypeInBytes.length + webServerUrlInBytes.length;
+        ByteBuffer networkNodeBuffer = ByteBuffer.allocate(networkNodeBufferLength)
+                .put(nodeTypeInBytes).put(addressInBytes).put(httpPortInBytes)
+                .put(propagationPortInBytes).put(receivingPortInBytes)
+                .put(recoveryServerAddressInBytes).put(networkTypeInBytes).put(webServerUrlInBytes);
 
         return CryptoHelper.cryptoHash(networkNodeBuffer.array()).getBytes();
     }

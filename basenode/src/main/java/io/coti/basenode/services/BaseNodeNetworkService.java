@@ -167,6 +167,7 @@ public class BaseNodeNetworkService implements INetworkService {
             node.setReceivingPort(networkNodeData.getReceivingPort());
             node.setRecoveryServerAddress(networkNodeData.getRecoveryServerAddress());
             node.setPropagationPort(networkNodeData.getPropagationPort());
+            node.setWebServerUrl(networkNodeData.getWebServerUrl());
             node.setNodeSignature(networkNodeData.getNodeSignature());
             node.setSignerHash(networkNodeData.getSignerHash());
             return true;

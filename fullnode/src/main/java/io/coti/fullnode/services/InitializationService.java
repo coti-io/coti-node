@@ -29,6 +29,8 @@ public class InitializationService extends BaseNodeInitializationService {
     private BigDecimal maximumFee;
     @Value("${fee.percentage}")
     private BigDecimal nodeFee;
+    @Value("${server.url}")
+    private String webServerUrl;
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
@@ -57,7 +59,9 @@ public class InitializationService extends BaseNodeInitializationService {
     protected NetworkNodeData createNodeProperties() {
         FeeData feeData = new FeeData(nodeFee, minimumFee, maximumFee);
         if (networkService.validateFeeData(feeData)) {
-            NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType, feeData);
+            NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType);
+            networkNodeData.setFeeData(feeData);
+            networkNodeData.setWebServerUrl(webServerUrl);
             return networkNodeData;
         }
         log.error("Fee Data is invalid, please fix fee properties by following coti instructions. Shutting down the server!");

@@ -27,6 +27,8 @@ public class InitializationService extends BaseNodeInitializationService {
     private String propagationPort;
     @Value("${server.port}")
     private String serverPort;
+    @Value("${server.url}")
+    private String webServerUrl;
     @Autowired
     private ICommunicationService communicationService;
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
@@ -62,6 +64,7 @@ public class InitializationService extends BaseNodeInitializationService {
     protected NetworkNodeData createNodeProperties() {
         NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FinancialServer, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType);
         networkNodeData.setPropagationPort(propagationPort);
+        networkNodeData.setWebServerUrl(webServerUrl);
         return networkNodeData;
 
     }

@@ -26,6 +26,8 @@ public class InitializationService extends BaseNodeInitializationService {
     private ICommunicationService communicationService;
     @Value("${server.port}")
     private String serverPort;
+    @Value("${server.url}")
+    private String webServerUrl;
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
@@ -54,6 +56,7 @@ public class InitializationService extends BaseNodeInitializationService {
     @Override
     protected NetworkNodeData createNodeProperties() {
         NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.TrustScoreNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType);
+        networkNodeData.setWebServerUrl(webServerUrl);
         return networkNodeData;
 
     }
