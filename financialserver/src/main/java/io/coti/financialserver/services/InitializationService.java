@@ -34,6 +34,8 @@ public class InitializationService extends BaseNodeInitializationService {
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
     @Autowired
     private DistributionService distributionService;
+    @Autowired
+    private DistributeFundService distributeFundService;
 
     @PostConstruct
     public void init() {
@@ -58,6 +60,7 @@ public class InitializationService extends BaseNodeInitializationService {
         super.init();
 
         distributionService.distributeToInitialFunds();
+        distributeFundService.initReservedBalance();
     }
 
     @Override
