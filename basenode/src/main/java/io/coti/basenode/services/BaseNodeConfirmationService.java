@@ -76,6 +76,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                 return;
             }
             if (transactionHelper.isDspConfirmed(transactionData)) {
+                scoreDSPConfirmedTransaction(transactionData);
                 dspConfirmed.incrementAndGet();
             }
         }
@@ -122,6 +123,9 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         continueHandleAddressHistoryChanges(transactionData);
     }
 
+    protected void scoreDSPConfirmedTransaction(TransactionData transactionData) {
+    }
+
     protected void continueHandleAddressHistoryChanges(TransactionData transactionData) {
     }
 
@@ -159,6 +163,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                 return;
             }
             if (transactionHelper.isDspConfirmed(transactionData)) {
+                scoreDSPConfirmedTransaction(transactionData);
                 dspConfirmed.incrementAndGet();
             }
         }
@@ -185,6 +190,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     private void processMissingDspConfirmedTransaction(TransactionData transactionData) {
+        scoreDSPConfirmedTransaction(transactionData);
         dspConfirmed.incrementAndGet();
         if (transactionData.isTrustChainConsensus()) {
             transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount()));

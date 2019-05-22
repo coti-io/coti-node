@@ -9,6 +9,7 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String KYC_TRUST_SCORE_AUTHENTICATION_ERROR = "Kyc Trust Score Authentication Failed";
     public static final String KYC_TRUST_SCORE_ERROR = "Kyc Trust Score Creation or Update Failed";
     public static final String KYC_TRUST_DIFFERENT_TYPE = "Kyc Trust Score Update Failed, please use '/usertype' API call to change the type of user";
+    public static final String KYC_TRUST_INCORRECT_VALUE = "Kyc Trust Score Value is not correct";
     public static final String TRUST_SCORE_EXIST = "Kyc Trust Score already exists, please use '/insertevent' API call";
     public static final String TRUST_SCORE_NOT_EXIST = "Trust score does not exist for user hash %s";
     public static final String ADD_KYC_SERVER_EVENT_ERROR = "Adding kyc server event failed";
