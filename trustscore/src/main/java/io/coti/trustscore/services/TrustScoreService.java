@@ -226,11 +226,35 @@ public class TrustScoreService {
         return ResponseEntity.status(HttpStatus.OK).body(getTransactionTrustScoreResponse);
     }
 
+    public ResponseEntity<IResponse> getUserTrustScoreComponents(Hash userHash) {
+        TrustScoreData trustScoreData = trustScores.getByHash(userHash);
+        if (trustScoreData == null) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new Response(NON_EXISTING_USER_MESSAGE, STATUS_ERROR));
+        }
+
+        List<BucketEventData> bucketEventDataList = new ArrayList<BucketEventData>();
+        for (IBucketEventService bucketEventService : bucketEventServiceList) {
+            BucketEventData bucketEventData =
+                    (BucketEventData) bucketEvents.getByHash(trustScoreData.getEventTypeToBucketHashMap().get(bucketEventService.getBucketEventType()));
+            bucketEventDataList.add(bucketEventData);
+        }
+
+        GetUserTrustScoreComponentsResponse getUserTrustScoreComponentsResponse = new GetUserTrustScoreComponentsResponse(trustScoreData, bucketEventDataList);
+        return ResponseEntity.status(HttpStatus.OK).body(getUserTrustScoreComponentsResponse);
+    }
+
     public ResponseEntity<IResponse> setKycTrustScore(SetKycTrustScoreRequest request) {
         SetKycTrustScoreResponse kycTrustScoreResponse;
 
         try {
             log.info("Setting KYC trust score: userHash =  {}, KTS = {}, userType =  {}", request.userHash, request.kycTrustScore, request.userType);
+            if (request.kycTrustScore <= 0 || request.kycTrustScore > 100) {
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(new Response(KYC_TRUST_INCORRECT_VALUE, STATUS_ERROR));
+            }
             TrustScoreData newTrustScoreData = new TrustScoreData(request.userHash,
                     request.kycTrustScore,
                     request.signature,
@@ -284,8 +308,13 @@ public class TrustScoreService {
 
     public synchronized void addTransactionToTsCalculation(TransactionData transactionData) {
         try {
+            if (transactionData.getType().equals(TransactionType.ZeroSpend) || transactionData.getDspConsensusResult() == null ||
+                    !transactionData.getDspConsensusResult().isDspConsensus()) {
+                return;
+            }
+
             TrustScoreData trustScoreData = trustScores.getByHash(transactionData.getSenderHash());
-            ;
+            TrustScoreData nodeTrustScoreData = trustScores.getByHash(transactionData.getNodeHash());
 
             if (trustScoreData == null) {
                 log.error("Transaction can not be added to TS calculation: User {} doesn't exist", transactionData.getSenderHash());
@@ -304,17 +333,14 @@ public class TrustScoreService {
                 return;
             }
 
-
-            if (transactionData.getType().equals(TransactionType.ZeroSpend) || transactionData.getDspConsensusResult() == null ||
-                    !transactionData.getDspConsensusResult().isDspConsensus()) {
-                return;
-            }
-
             LocalDate transactionConsensusDate = transactionData.getDspConsensusResult().getIndexingTime().atZone(ZoneId.systemDefault()).toLocalDate();
             LocalDate currentDate = new Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
             if (currentDate.equals(transactionConsensusDate)) {
                 addToTransactionBucketsCalculation(trustScoreData, transactionData);
+                if(nodeTrustScoreData != null){
+                    addToTransactionBucketsCalculation(nodeTrustScoreData, transactionData);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
