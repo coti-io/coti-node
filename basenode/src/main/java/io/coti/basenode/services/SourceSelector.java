@@ -10,6 +10,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.Vector;
 
 import static java.util.stream.Collectors.toList;
@@ -26,7 +27,7 @@ public class SourceSelector implements ISourceSelector {
 
     @Override
     public List<TransactionData> selectSourcesForAttachment(
-            List<List<TransactionData>> trustScoreToTransactionMapping,
+            List<Set<TransactionData>> trustScoreToTransactionMapping,
             double transactionTrustScore) {
 
         List<TransactionData> neighbourSources = getNeighbourSources(
@@ -37,7 +38,7 @@ public class SourceSelector implements ISourceSelector {
     }
 
     private List<TransactionData> getNeighbourSources(
-            List<List<TransactionData>> trustScoreToSourceListMapping,
+            List<Set<TransactionData>> trustScoreToSourceListMapping,
             double transactionTrustScore) {
 
         int roundedTrustScore = (int) Math.round(transactionTrustScore);
@@ -63,7 +64,7 @@ public class SourceSelector implements ISourceSelector {
         return neighbourSources;
     }
 
-    private int getNumberOfSources(List<List<TransactionData>> trustScoreToSourceListMapping) {
+    private int getNumberOfSources(List<Set<TransactionData>> trustScoreToSourceListMapping) {
         int numberOfSources = 0;
         for (int i = 0; i < trustScoreToSourceListMapping.size(); i++) {
             if (trustScoreToSourceListMapping.get(i) != null) {

@@ -3,9 +3,10 @@ package io.coti.basenode.services.interfaces;
 import io.coti.basenode.data.TransactionData;
 
 import java.util.List;
+import java.util.Set;
 
 public interface ISourceSelector {
     List<TransactionData> selectSourcesForAttachment(
-            List<List<TransactionData>> trustScoreToTransactionMapping,
+            List<Set<TransactionData>> trustScoreToTransactionMapping,
             double transactionTrustScore);
 }

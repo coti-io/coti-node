@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -78,14 +77,12 @@ public class TccConfirmationService {
     }
 
     public List<TccInfo> getTccConfirmedTransactions() {
-        List<TccInfo> transactionConsensusConfirmed = new LinkedList<>();
+        LinkedList<TccInfo> transactionConsensusConfirmed = new LinkedList<>();
         for (TransactionData transaction : topologicalOrderedGraph) {
             setTotalTrustScore(transaction);
             if (transaction.getTrustChainTrustScore() >= threshold) {
-                transaction.setTrustChainConsensus(true);
-                transaction.setTransactionConsensusUpdateTime(Instant.now());
                 TccInfo tccInfo = new TccInfo(transaction.getHash(), transaction.getTrustChainTrustScore());
-                transactionConsensusConfirmed.add(tccInfo);
+                transactionConsensusConfirmed.addFirst(tccInfo);
                 log.debug("transaction with hash:{} is confirmed with trustScore: {} and totalTrustScore:{} ", transaction.getHash(), transaction.getSenderTrustScore(), transaction.getTrustChainTrustScore());
             }
         }

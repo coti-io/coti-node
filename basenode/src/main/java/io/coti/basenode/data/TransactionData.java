@@ -8,6 +8,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -116,6 +117,11 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
             return false;
         }
         return hash.equals(((TransactionData) other).hash);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(hash.getBytes());
     }
 
     @Override

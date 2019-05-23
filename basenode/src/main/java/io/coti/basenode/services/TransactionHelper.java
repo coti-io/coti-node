@@ -167,13 +167,7 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     public boolean isTransactionHashExists(Hash transactionHash) {
-        if (isTransactionHashProcessing(transactionHash)) {
-            return true;
-        }
-        if (isTransactionHashInDB(transactionHash)) {
-            return true;
-        }
-        return false;
+        return isTransactionHashProcessing(transactionHash) || isTransactionHashInDB(transactionHash);
     }
 
     private boolean isTransactionHashInDB(Hash transactionHash) {

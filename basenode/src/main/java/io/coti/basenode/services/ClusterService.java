@@ -1,5 +1,6 @@
 package io.coti.basenode.services;
 
+import com.google.common.collect.Sets;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TccInfo;
 import io.coti.basenode.data.TransactionData;
@@ -16,15 +17,16 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class ClusterService implements IClusterService {
-    private List<List<TransactionData>> sourceListsByTrustScore = new ArrayList<>();
+    private List<Set<TransactionData>> sourceListsByTrustScore = new ArrayList<>();
 
     @Autowired
     private Transactions transactions;
@@ -44,15 +46,14 @@ public class ClusterService implements IClusterService {
     public void init() {
         hashToUnconfirmedTransactionsMapping = new ConcurrentHashMap<>();
         for (int i = 0; i <= 100; i++) {
-            sourceListsByTrustScore.add(new ArrayList<>());
+            sourceListsByTrustScore.add(Sets.newConcurrentHashSet());
         }
     }
 
     @Override
     public void addUnconfirmedTransaction(TransactionData transactionData) {
         hashToUnconfirmedTransactionsMapping.put(transactionData.getHash(), transactionData);
-        if (transactionData.isSource()) {
-            sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionData);
+        if (transactionData.isSource() && sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionData)) {
             totalSources.incrementAndGet();
         }
         removeTransactionParentsFromSources(transactionData);
@@ -89,8 +90,10 @@ public class ClusterService implements IClusterService {
         updateParents(transactionData);
         hashToUnconfirmedTransactionsMapping.put(transactionData.getHash(), transactionData);
         removeTransactionParentsFromSources(transactionData);
-        sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionData);
-        totalSources.incrementAndGet();
+        if (sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionData)) {
+            totalSources.incrementAndGet();
+        }
+
         log.debug("Added New Transaction with hash:{}", transactionData.getHash());
         return;
     }
@@ -120,8 +123,7 @@ public class ClusterService implements IClusterService {
 
     private void removeTransactionFromSources(Hash transactionHash) {
         TransactionData transactionData = transactions.getByHash(transactionHash);
-        if (sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).contains(transactionData)) {
-            sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).remove(transactionData);
+        if (sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).remove(transactionData)) {
             liveViewService.updateTransactionStatus(transactionData, 1);
             totalSources.decrementAndGet();
         }
@@ -129,7 +131,7 @@ public class ClusterService implements IClusterService {
 
     @Override
     public void selectSources(TransactionData transactionData) {
-        List<List<TransactionData>> trustScoreToTransactionMappingSnapshot =
+        List<Set<TransactionData>> trustScoreToTransactionMappingSnapshot =
                 Collections.unmodifiableList(sourceListsByTrustScore);
 
         List<TransactionData> selectedSourcesForAttachment =
@@ -147,14 +149,13 @@ public class ClusterService implements IClusterService {
             transactionData.setRightParentHash(selectedSourcesForAttachment.get(1).getHash());
         }
 
-        List<Hash> selectedSourceHashes = new LinkedList<>();
-        selectedSourcesForAttachment.forEach(source -> selectedSourceHashes.add(source.getHash()));
+        List<Hash> selectedSourceHashes = selectedSourcesForAttachment.stream().map(source -> source.getHash()).collect(Collectors.toList());
         log.debug("For transaction with hash: {} we found the following sources: {}", transactionData.getHash(), selectedSourceHashes);
 
         return;
     }
 
-    public List<List<TransactionData>> getSourceListsByTrustScore() {
+    public List<Set<TransactionData>> getSourceListsByTrustScore() {
         return sourceListsByTrustScore;
     }
 
