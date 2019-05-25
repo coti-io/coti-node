@@ -41,8 +41,8 @@ public class TrustChainConfirmationService {
             transactionData.getChildrenTransactionHashes().forEach(childHash -> {
                 if (!trustChainConfirmationCluster.containsKey(childHash)) {
                     TransactionData childTransaction = transactions.getByHash(childHash);
-                    if (childTransaction != null) {
-                        log.error("Child {} of trasnaction {} is not in cluster", childHash, transactionData.getHash());
+                    if (childTransaction == null) {
+                        log.error("Child {} of transaction {} is not in cluster", childHash, transactionData.getHash());
                     } else {
                         childTransaction.setVisit(false);
                         childrenToAdd.put(childHash, childTransaction);

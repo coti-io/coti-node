@@ -51,8 +51,11 @@ public class ClusterService implements IClusterService {
     }
 
     @Override
-    public void addUnconfirmedTransaction(TransactionData transactionData) {
-        attachToCluster(transactionData);
+    public void addTransactionOnInit(TransactionData transactionData) {
+        updateParents(transactionData);
+        if (!transactionData.isTrustChainConsensus()) {
+            addTransactionToTccConfirmationCluster(transactionData);
+        }
     }
 
     @Override
@@ -79,24 +82,20 @@ public class ClusterService implements IClusterService {
 
     @Override
     public void attachToCluster(TransactionData transactionData) {
+        updateParents(transactionData);
+
+        addTransactionToTccConfirmationCluster(transactionData);
+    }
+
+    private void updateParents(TransactionData transactionData) {
         if (transactionData.getChildrenTransactionHashes() == null) {
             transactionData.setChildrenTransactionHashes(new ArrayList<>());
         }
 
-        updateParents(transactionData);
-        trustChainConfirmationCluster.put(transactionData.getHash(), transactionData);
-        removeTransactionParentsFromSources(transactionData);
-        if (transactionData.isSource() && sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionData)) {
-            totalSources.incrementAndGet();
-        }
-
-        log.debug("Added New Transaction with hash:{}", transactionData.getHash());
-        return;
-    }
-
-    private void updateParents(TransactionData transactionData) {
         updateSingleParent(transactionData, transactionData.getLeftParentHash());
         updateSingleParent(transactionData, transactionData.getRightParentHash());
+        removeTransactionParentsFromSources(transactionData);
+
     }
 
     private void updateSingleParent(TransactionData transactionData, Hash parentHash) {
@@ -104,7 +103,9 @@ public class ClusterService implements IClusterService {
             TransactionData parentTransactionData = transactions.getByHash(parentHash);
             if (parentTransactionData != null && !parentTransactionData.getChildrenTransactionHashes().contains(transactionData.getHash())) {
                 parentTransactionData.addToChildrenTransactions(transactionData.getHash());
-                trustChainConfirmationCluster.put(parentTransactionData.getHash(), parentTransactionData);
+                if (trustChainConfirmationCluster.containsKey(parentTransactionData.getHash())) {
+                    trustChainConfirmationCluster.put(parentTransactionData.getHash(), parentTransactionData);
+                }
                 transactions.put(parentTransactionData);
             }
         }
@@ -125,6 +126,16 @@ public class ClusterService implements IClusterService {
             liveViewService.updateTransactionStatus(transactionData, 1);
             totalSources.decrementAndGet();
         }
+    }
+
+    private void addTransactionToTccConfirmationCluster(TransactionData transactionData) {
+        trustChainConfirmationCluster.put(transactionData.getHash(), transactionData);
+
+        if (transactionData.isSource() && sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionData)) {
+            totalSources.incrementAndGet();
+        }
+
+        log.debug("Added New Transaction with hash:{}", transactionData.getHash());
     }
 
     @Override

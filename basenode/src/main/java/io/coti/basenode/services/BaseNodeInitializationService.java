@@ -177,9 +177,8 @@ public abstract class BaseNodeInitializationService {
     }
 
     private void handleExistingTransaction(AtomicLong maxTransactionIndex, TransactionData transactionData) {
-        if (!transactionData.isTrustChainConsensus()) {
-            clusterService.addUnconfirmedTransaction(transactionData);
-        }
+        clusterService.addTransactionOnInit(transactionData);
+
         liveViewService.addTransaction(transactionData);
         confirmationService.insertSavedTransaction(transactionData);
         if (transactionData.getDspConsensusResult() != null) {
@@ -196,10 +195,10 @@ public abstract class BaseNodeInitializationService {
             log.debug("Transaction already exists: {}", transactionData.getHash());
             return;
         }
+
         transactions.put(transactionData);
-        if (!transactionData.isTrustChainConsensus()) {
-            clusterService.addUnconfirmedTransaction(transactionData);
-        }
+
+        clusterService.addTransactionOnInit(transactionData);
 
         liveViewService.addTransaction(transactionData);
         transactionService.addToExplorerIndexes(transactionData);
