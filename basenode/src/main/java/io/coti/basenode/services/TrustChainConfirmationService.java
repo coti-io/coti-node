@@ -8,32 +8,34 @@ import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
 @Configurable
-public class TccConfirmationService {
+public class TrustChainConfirmationService {
     @Value("${cluster.trust.chain.threshold}")
     private int threshold;
-    private ConcurrentHashMap<Hash, TransactionData> hashToTccUnConfirmTransactionsMapping;
+    private ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster;
     private LinkedList<TransactionData> topologicalOrderedGraph;
 
-    public void init(ConcurrentHashMap<Hash, TransactionData> hashToUnConfirmationTransactionsMapping) {
-        hashToTccUnConfirmTransactionsMapping = new ConcurrentHashMap<>(hashToUnConfirmationTransactionsMapping);
+    public void init(ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster) {
+        this.trustChainConfirmationCluster = new ConcurrentHashMap<>(trustChainConfirmationCluster);
         topologicalOrderedGraph = new LinkedList<>();
         sortByTopologicalOrder();
     }
 
     private void sortByTopologicalOrder() {
-        hashToTccUnConfirmTransactionsMapping.forEach((hash, transactionData) -> transactionData.setVisit(false));
+        trustChainConfirmationCluster.forEach((hash, transactionData) -> transactionData.setVisit(false));
 
         //loop is for making sure that every vertex is visited since if we select only one random source
         //all vertices might not be reachable from this source
         //eg:1->2->3,1->3 and if we select 3 as source first then no vertex can be visited of course except for 3
-        hashToTccUnConfirmTransactionsMapping.forEach((hash, transactionData) -> {
+        trustChainConfirmationCluster.forEach((hash, transactionData) -> {
             if (!transactionData.isVisit()) {
                 topologicalSortingHelper(transactionData);
             }
@@ -45,10 +47,10 @@ public class TccConfirmationService {
 
         for (Hash transactionHash : parent.getChildrenTransactionHashes()) {
             try {
-                TransactionData child = hashToTccUnConfirmTransactionsMapping.get(transactionHash);
+                TransactionData child = trustChainConfirmationCluster.get(transactionHash);
                 if (child != null && child.getTrustChainTrustScore()
                         > maxSonsTotalTrustScore) {
-                    maxSonsTotalTrustScore = hashToTccUnConfirmTransactionsMapping.get(transactionHash).getTrustChainTrustScore();
+                    maxSonsTotalTrustScore = trustChainConfirmationCluster.get(transactionHash).getTrustChainTrustScore();
                 }
             } catch (Exception e) {
                 log.error("in setTotalSumScore: parent: {} child: {}", parent.getHash(), transactionHash);
@@ -63,7 +65,7 @@ public class TccConfirmationService {
 
     private void topologicalSortingHelper(TransactionData parentTransactionData) {
         for (Hash transactionDataHash : parentTransactionData.getChildrenTransactionHashes()) {
-            TransactionData childTransactionData = hashToTccUnConfirmTransactionsMapping.get(transactionDataHash);
+            TransactionData childTransactionData = trustChainConfirmationCluster.get(transactionDataHash);
             if (childTransactionData != null && !childTransactionData.isVisit()) {
                 topologicalSortingHelper(childTransactionData);
             }
@@ -76,18 +78,19 @@ public class TccConfirmationService {
         topologicalOrderedGraph.addLast(parentTransactionData);
     }
 
-    public List<TccInfo> getTccConfirmedTransactions() {
-        LinkedList<TccInfo> transactionConsensusConfirmed = new LinkedList<>();
-        for (TransactionData transaction : topologicalOrderedGraph) {
-            setTotalTrustScore(transaction);
-            if (transaction.getTrustChainTrustScore() >= threshold) {
-                TccInfo tccInfo = new TccInfo(transaction.getHash(), transaction.getTrustChainTrustScore());
-                transactionConsensusConfirmed.addFirst(tccInfo);
-                log.debug("transaction with hash:{} is confirmed with trustScore: {} and totalTrustScore:{} ", transaction.getHash(), transaction.getSenderTrustScore(), transaction.getTrustChainTrustScore());
+    public List<TccInfo> getTrustChainConfirmedTransactions() {
+        LinkedList<TccInfo> trustChainConfirmations = new LinkedList<>();
+        for (TransactionData transactionData : topologicalOrderedGraph) {
+            setTotalTrustScore(transactionData);
+            if (transactionData.getTrustChainTrustScore() >= threshold) {
+                Instant trustScoreConsensusTime = Optional.ofNullable(transactionData.getTrustChainConsensusTime()).orElse(Instant.now());
+                TccInfo tccInfo = new TccInfo(transactionData.getHash(), transactionData.getTrustChainTrustScore(), trustScoreConsensusTime);
+                trustChainConfirmations.addFirst(tccInfo);
+                log.debug("transaction with hash:{} is confirmed with trustScore: {} and totalTrustScore:{} ", transactionData.getHash(), transactionData.getSenderTrustScore(), transactionData.getTrustChainTrustScore());
             }
         }
 
-        return transactionConsensusConfirmed;
+        return trustChainConfirmations;
     }
 
 }

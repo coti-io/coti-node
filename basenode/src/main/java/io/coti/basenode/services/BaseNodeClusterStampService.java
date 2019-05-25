@@ -43,7 +43,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     @Autowired
     protected IBalanceService balanceService;
     @Autowired
-    protected TccConfirmationService tccConfirmationService;
+    protected TrustChainConfirmationService trustChainConfirmationService;
     @Autowired
     protected Transactions transactions;
     @Autowired

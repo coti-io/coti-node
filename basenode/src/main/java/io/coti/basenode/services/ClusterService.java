@@ -35,16 +35,16 @@ public class ClusterService implements IClusterService {
     @Autowired
     private ISourceSelector sourceSelector;
     @Autowired
-    private TccConfirmationService tccConfirmationService;
+    private TrustChainConfirmationService trustChainConfirmationService;
     @Autowired
     private LiveViewService liveViewService;
     private boolean isStarted;
-    private ConcurrentHashMap<Hash, TransactionData> hashToUnconfirmedTransactionsMapping;
+    private ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster;
     private AtomicLong totalSources = new AtomicLong(0);
 
     @PostConstruct
     public void init() {
-        hashToUnconfirmedTransactionsMapping = new ConcurrentHashMap<>();
+        trustChainConfirmationCluster = new ConcurrentHashMap<>();
         for (int i = 0; i <= 100; i++) {
             sourceListsByTrustScore.add(Sets.newConcurrentHashSet());
         }
@@ -52,7 +52,7 @@ public class ClusterService implements IClusterService {
 
     @Override
     public void addUnconfirmedTransaction(TransactionData transactionData) {
-        hashToUnconfirmedTransactionsMapping.put(transactionData.getHash(), transactionData);
+        trustChainConfirmationCluster.put(transactionData.getHash(), transactionData);
         if (transactionData.isSource() && sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionData)) {
             totalSources.incrementAndGet();
         }
@@ -71,11 +71,11 @@ public class ClusterService implements IClusterService {
             return;
         }
 
-        tccConfirmationService.init(hashToUnconfirmedTransactionsMapping);
-        List<TccInfo> transactionConsensusConfirmed = tccConfirmationService.getTccConfirmedTransactions();
+        trustChainConfirmationService.init(trustChainConfirmationCluster);
+        List<TccInfo> transactionConsensusConfirmed = trustChainConfirmationService.getTrustChainConfirmedTransactions();
 
         transactionConsensusConfirmed.forEach(tccInfo -> {
-            hashToUnconfirmedTransactionsMapping.remove(tccInfo.getHash());
+            trustChainConfirmationCluster.remove(tccInfo.getHash());
             confirmationService.setTccToTrue(tccInfo);
             log.debug("TCC has been reached for transaction {}!!", tccInfo.getHash());
         });
@@ -88,7 +88,7 @@ public class ClusterService implements IClusterService {
         }
 
         updateParents(transactionData);
-        hashToUnconfirmedTransactionsMapping.put(transactionData.getHash(), transactionData);
+        trustChainConfirmationCluster.put(transactionData.getHash(), transactionData);
         removeTransactionParentsFromSources(transactionData);
         if (sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionData)) {
             totalSources.incrementAndGet();
@@ -107,7 +107,7 @@ public class ClusterService implements IClusterService {
         if (parentHash != null) {
             TransactionData parentTransactionData = transactions.getByHash(parentHash);
             parentTransactionData.addToChildrenTransactions(transactionData.getHash());
-            hashToUnconfirmedTransactionsMapping.put(parentTransactionData.getHash(), parentTransactionData);
+            trustChainConfirmationCluster.put(parentTransactionData.getHash(), parentTransactionData);
             transactions.put(parentTransactionData);
         }
     }

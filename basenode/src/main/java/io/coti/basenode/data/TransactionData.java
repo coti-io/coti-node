@@ -24,6 +24,7 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
     private Hash rightParentHash;
     private boolean trustChainConsensus;
     private double trustChainTrustScore;
+    private Instant trustChainConsensusTime;
     private Instant transactionConsensusUpdateTime;
     private Instant createTime;
     private Instant attachmentTime;
