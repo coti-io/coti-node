@@ -67,6 +67,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         TransactionData transactionData = transactions.getByHash(confirmationData.getHash());
         if (confirmationData instanceof TccInfo) {
             transactionData.setTrustChainConsensus(true);
+            transactionData.setTrustChainConsensusTime(((TccInfo) confirmationData).getTrustChainConsensusTime());
             transactionData.setTrustChainTrustScore(((TccInfo) confirmationData).getTrustChainTrustScore());
             tccConfirmed.incrementAndGet();
         } else if (confirmationData instanceof DspConsensusResult) {
@@ -104,7 +105,10 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     private void processConfirmedTransaction(TransactionData transactionData) {
-        transactionData.setTransactionConsensusUpdateTime(Instant.now());
+        Instant trustChainConsensusTime = transactionData.getTrustChainConsensusTime();
+        Instant dspConsensusTime = transactionData.getDspConsensusResult().getIndexingTime();
+        Instant transactionConsensusUpdateTime = trustChainConsensusTime.isAfter(dspConsensusTime) ? trustChainConsensusTime : dspConsensusTime;
+        transactionData.setTransactionConsensusUpdateTime(transactionConsensusUpdateTime);
         transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount()));
         totalConfirmed.incrementAndGet();
 

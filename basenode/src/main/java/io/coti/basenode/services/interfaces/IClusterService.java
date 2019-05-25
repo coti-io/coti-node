@@ -13,7 +13,7 @@ public interface IClusterService {
 
     void selectSources(TransactionData transactionData);
 
-    void addUnconfirmedTransaction(TransactionData transactionData);
+    void addTransactionOnInit(TransactionData transactionData);
 
     void finalizeInit();
 
