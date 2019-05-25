@@ -3,7 +3,9 @@ package io.coti.basenode.services;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TccInfo;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.model.Transactions;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -22,6 +25,8 @@ public class TrustChainConfirmationService {
     private int threshold;
     private ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster;
     private LinkedList<TransactionData> topologicalOrderedGraph;
+    @Autowired
+    private Transactions transactions;
 
     public void init(ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster) {
         this.trustChainConfirmationCluster = new ConcurrentHashMap<>(trustChainConfirmationCluster);
@@ -30,7 +35,22 @@ public class TrustChainConfirmationService {
     }
 
     private void sortByTopologicalOrder() {
-        trustChainConfirmationCluster.forEach((hash, transactionData) -> transactionData.setVisit(false));
+        Map<Hash, TransactionData> childrenToAdd = new ConcurrentHashMap<>();
+        trustChainConfirmationCluster.forEach((hash, transactionData) -> {
+            transactionData.setVisit(false);
+            transactionData.getChildrenTransactionHashes().forEach(childHash -> {
+                if (!trustChainConfirmationCluster.containsKey(childHash)) {
+                    TransactionData childTransaction = transactions.getByHash(childHash);
+                    if (childTransaction != null) {
+                        log.error("Child {} of trasnaction {} is not in cluster", childHash, transactionData.getHash());
+                    } else {
+                        childTransaction.setVisit(false);
+                        childrenToAdd.put(childHash, childTransaction);
+                    }
+                }
+            });
+        });
+        trustChainConfirmationCluster.putAll(childrenToAdd);
 
         //loop is for making sure that every vertex is visited since if we select only one random source
         //all vertices might not be reachable from this source
@@ -59,7 +79,9 @@ public class TrustChainConfirmationService {
         }
 
         // updating parent trustChainTrustScore
-        parent.setTrustChainTrustScore(parent.getSenderTrustScore() + maxSonsTotalTrustScore);
+        if (parent.getTrustChainTrustScore() < parent.getSenderTrustScore() + maxSonsTotalTrustScore) {
+            parent.setTrustChainTrustScore(parent.getSenderTrustScore() + maxSonsTotalTrustScore);
+        }
 
     }
 
@@ -82,7 +104,7 @@ public class TrustChainConfirmationService {
         LinkedList<TccInfo> trustChainConfirmations = new LinkedList<>();
         for (TransactionData transactionData : topologicalOrderedGraph) {
             setTotalTrustScore(transactionData);
-            if (transactionData.getTrustChainTrustScore() >= threshold) {
+            if (transactionData.getTrustChainTrustScore() >= threshold && !transactionData.isTrustChainConsensus()) {
                 Instant trustScoreConsensusTime = Optional.ofNullable(transactionData.getTrustChainConsensusTime()).orElse(Instant.now());
                 TccInfo tccInfo = new TccInfo(transactionData.getHash(), transactionData.getTrustChainTrustScore(), trustScoreConsensusTime);
                 trustChainConfirmations.addFirst(tccInfo);
