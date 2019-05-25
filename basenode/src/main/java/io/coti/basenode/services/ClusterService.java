@@ -52,11 +52,7 @@ public class ClusterService implements IClusterService {
 
     @Override
     public void addUnconfirmedTransaction(TransactionData transactionData) {
-        trustChainConfirmationCluster.put(transactionData.getHash(), transactionData);
-        if (transactionData.isSource() && sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionData)) {
-            totalSources.incrementAndGet();
-        }
-        removeTransactionParentsFromSources(transactionData);
+        attachToCluster(transactionData);
     }
 
     @Override
@@ -90,7 +86,7 @@ public class ClusterService implements IClusterService {
         updateParents(transactionData);
         trustChainConfirmationCluster.put(transactionData.getHash(), transactionData);
         removeTransactionParentsFromSources(transactionData);
-        if (sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionData)) {
+        if (transactionData.isSource() && sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionData)) {
             totalSources.incrementAndGet();
         }
 
@@ -106,9 +102,11 @@ public class ClusterService implements IClusterService {
     private void updateSingleParent(TransactionData transactionData, Hash parentHash) {
         if (parentHash != null) {
             TransactionData parentTransactionData = transactions.getByHash(parentHash);
-            parentTransactionData.addToChildrenTransactions(transactionData.getHash());
-            trustChainConfirmationCluster.put(parentTransactionData.getHash(), parentTransactionData);
-            transactions.put(parentTransactionData);
+            if (parentTransactionData != null && !parentTransactionData.getChildrenTransactionHashes().contains(transactionData.getHash())) {
+                parentTransactionData.addToChildrenTransactions(transactionData.getHash());
+                trustChainConfirmationCluster.put(parentTransactionData.getHash(), parentTransactionData);
+                transactions.put(parentTransactionData);
+            }
         }
     }
 
