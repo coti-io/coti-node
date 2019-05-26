@@ -13,8 +13,6 @@ import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
@@ -27,7 +25,6 @@ public class TransactionIndexService {
     @Autowired
     private Transactions transactions;
     private TransactionIndexData lastTransactionIndexData;
-    private Map<Long, TransactionData> waitingMissingTransactionIndexes = new ConcurrentHashMap<>();
 
     public void init(AtomicLong maxTransactionIndex) throws Exception {
         log.info("Started to initialize {}", this.getClass().getSimpleName());
@@ -60,21 +57,25 @@ public class TransactionIndexService {
         }
     }
 
-    public synchronized boolean insertNewTransactionIndex(TransactionData transactionData) {
+    public synchronized Boolean insertNewTransactionIndex(TransactionData transactionData) {
         if (transactionData.getDspConsensusResult() == null) {
             log.error("Invalid transaction index for transaction {}", transactionData.getHash());
-            return false;
+            return null;
+        }
+        if (transactionData.getDspConsensusResult().getIndex() < lastTransactionIndexData.getIndex() + 1) {
+            log.debug("Already inserted index {}", transactionData.getDspConsensusResult().getIndex());
+            return null;
         }
         if (transactionData.getDspConsensusResult().getIndex() == lastTransactionIndexData.getIndex() + 1) {
             log.debug("Inserting new transaction {} with index: {}", transactionData.getHash(), lastTransactionIndexData.getIndex() + 1);
             lastTransactionIndexData = getNextIndexData(lastTransactionIndexData, transactionData);
             transactionIndexes.put(lastTransactionIndexData);
             transactionHelper.removeNoneIndexedTransaction(transactionData);
+            return true;
         } else {
             //   log.error("Index is not of the last transaction: Index={}, currentLast={}", transactionData.getDspConsensusResult().getIndex(), lastTransactionIndexData.getIndex());
             return false;
         }
-        return true;
     }
 
     public TransactionIndexData getLastTransactionIndexData() {

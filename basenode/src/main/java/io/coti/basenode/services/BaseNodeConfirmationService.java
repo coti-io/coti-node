@@ -87,11 +87,12 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     protected boolean insertNewTransactionIndex(TransactionData transactionData) {
-        DspConsensusResult dspConsensusResult = transactionData.getDspConsensusResult();
-        if (dspConsensusResult == null) {
+        Boolean insertNewTransactionIndex = transactionIndexService.insertNewTransactionIndex(transactionData);
+        if (insertNewTransactionIndex == null) {
             return false;
         }
-        if (!transactionIndexService.insertNewTransactionIndex(transactionData)) {
+        DspConsensusResult dspConsensusResult = transactionData.getDspConsensusResult();
+        if (insertNewTransactionIndex == false) {
             waitingDspConsensusResults.put(dspConsensusResult.getIndex(), dspConsensusResult);
             return false;
         } else {
@@ -130,7 +131,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     @Override
-    public void insertSavedTransaction(TransactionData transactionData) {
+    public void insertSavedTransaction(TransactionData transactionData, AtomicLong maxTransactionIndex) {
         boolean isConfirmed = transactionHelper.isConfirmed(transactionData);
         boolean isDspConfirmed = transactionHelper.isDspConfirmed(transactionData);
         transactionData.getBaseTransactions().forEach(baseTransactionData -> {
@@ -141,7 +142,13 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         });
         if (isDspConfirmed) {
             dspConfirmed.incrementAndGet();
+        } else {
+            transactionHelper.addNoneIndexedTransaction(transactionData);
         }
+        if (transactionData.getDspConsensusResult() != null) {
+            maxTransactionIndex.set(Math.max(maxTransactionIndex.get(), transactionData.getDspConsensusResult().getIndex()));
+        }
+
         if (transactionData.isTrustChainConsensus()) {
             tccConfirmed.incrementAndGet();
         }
@@ -156,25 +163,27 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         if (transactionData.isTrustChainConsensus()) {
             tccConfirmed.incrementAndGet();
         }
-        if (transactionData.getDspConsensusResult() == null) {
-            transactionHelper.addNoneIndexedTransaction(transactionData);
-        } else {
-            if (insertMissingTransactionIndex(transactionData)) {
-                return;
-            }
-            if (transactionHelper.isDspConfirmed(transactionData)) {
-                continueHandleDSPConfirmedTransaction(transactionData);
-                dspConfirmed.incrementAndGet();
-            }
-        }
-
+        insertMissingDspConfirmation(transactionData);
     }
 
-    private boolean insertMissingTransactionIndex(TransactionData transactionData) {
+    @Override
+    public void insertMissingDspConfirmation(TransactionData transactionData) {
+        if (!transactionHelper.isDspConfirmed(transactionData)) {
+            transactionHelper.addNoneIndexedTransaction(transactionData);
+        }
+        if (transactionData.getDspConsensusResult() != null) {
+            insertMissingTransactionIndex(transactionData);
+        }
+    }
+
+    private void insertMissingTransactionIndex(TransactionData transactionData) {
+        Boolean insertNewTransactionIndex = transactionIndexService.insertNewTransactionIndex(transactionData);
+        if (insertNewTransactionIndex == null) {
+            return;
+        }
         DspConsensusResult dspConsensusResult = transactionData.getDspConsensusResult();
-        if (!transactionIndexService.insertNewTransactionIndex(transactionData)) {
+        if (insertNewTransactionIndex == false) {
             waitingMissingTransactionIndexes.put(dspConsensusResult.getIndex(), transactionData);
-            return false;
         } else {
             processMissingDspConfirmedTransaction(transactionData);
             long index = dspConsensusResult.getIndex() + 1;
@@ -185,7 +194,6 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                 waitingMissingTransactionIndexes.remove(index);
                 index++;
             }
-            return true;
         }
     }
 

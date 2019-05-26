@@ -180,32 +180,30 @@ public abstract class BaseNodeInitializationService {
         clusterService.addTransactionOnInit(transactionData);
 
         liveViewService.addTransaction(transactionData);
-        confirmationService.insertSavedTransaction(transactionData);
-        if (transactionData.getDspConsensusResult() != null) {
-            maxTransactionIndex.set(Math.max(maxTransactionIndex.get(), transactionData.getDspConsensusResult().getIndex()));
-        } else {
-            transactionHelper.addNoneIndexedTransaction(transactionData);
-        }
+        confirmationService.insertSavedTransaction(transactionData, maxTransactionIndex);
+
         transactionService.addToExplorerIndexes(transactionData);
         transactionHelper.incrementTotalTransactions();
     }
 
     private void handleMissingTransaction(TransactionData transactionData) {
-        if (transactionHelper.isTransactionAlreadyPropagated(transactionData)) {
-            log.debug("Transaction already exists: {}", transactionData.getHash());
-            return;
+
+        if (!transactionHelper.isTransactionExists(transactionData)) {
+            transactions.put(transactionData);
+
+            liveViewService.addTransaction(transactionData);
+            transactionService.addToExplorerIndexes(transactionData);
+            transactionHelper.incrementTotalTransactions();
+
+            confirmationService.insertMissingTransaction(transactionData);
+            propagateMissingTransaction(transactionData);
+
+        } else {
+            confirmationService.insertMissingDspConfirmation(transactionData);
         }
-
-        transactions.put(transactionData);
-
         clusterService.addTransactionOnInit(transactionData);
 
-        liveViewService.addTransaction(transactionData);
-        transactionService.addToExplorerIndexes(transactionData);
-        transactionHelper.incrementTotalTransactions();
 
-        confirmationService.insertMissingTransaction(transactionData);
-        propagateMissingTransaction(transactionData);
     }
 
     private void requestMissingTransactions(long firstMissingTransactionIndex) {

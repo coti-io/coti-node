@@ -75,7 +75,6 @@ public class TransactionCreationService {
         dspConsensusResult.setDspConsensus(true);
         dspVoteService.setIndexForDspResult(transactionData, dspConsensusResult);
         transactionHelper.attachTransactionToCluster(transactionData);
-        transactionIndexService.insertNewTransactionIndex(transactionData);
         log.info("Created a new Zero Spend Transaction: Hash = {} , SenderTrustScore = {} ", transactionData.getHash(), transactionData.getSenderTrustScore());
         return transactionData;
     }
