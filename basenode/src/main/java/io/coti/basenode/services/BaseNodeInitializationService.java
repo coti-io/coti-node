@@ -27,10 +27,7 @@ import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PreDestroy;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -186,7 +183,7 @@ public abstract class BaseNodeInitializationService {
         transactionHelper.incrementTotalTransactions();
     }
 
-    private void handleMissingTransaction(TransactionData transactionData) {
+    private void handleMissingTransaction(TransactionData transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes) {
 
         if (!transactionHelper.isTransactionExists(transactionData)) {
             transactions.put(transactionData);
@@ -201,7 +198,7 @@ public abstract class BaseNodeInitializationService {
         } else {
             confirmationService.insertMissingDspConfirmation(transactionData);
         }
-        clusterService.addTransactionOnInit(transactionData);
+        clusterService.addMissingTransactionOnInit(transactionData, trustChainUnconfirmedExistingTransactionHashes);
 
 
     }
@@ -210,11 +207,12 @@ public abstract class BaseNodeInitializationService {
         try {
             log.info("Starting to get missing transactions");
             List<TransactionData> missingTransactions = new ArrayList<>();
+            Set<Hash> trustChainUnconfirmedExistingTransactionHashes = clusterService.getTrustChainConfirmationTransactionHashes();
             AtomicLong completedMissingTransactionNumber = new AtomicLong(0);
             AtomicLong receivedMissingTransactionNumber = new AtomicLong(0);
             AtomicBoolean finishedToReceive = new AtomicBoolean(false);
             Thread monitorMissingTransactionThread = monitorTransactionThread("missing", completedMissingTransactionNumber, receivedMissingTransactionNumber);
-            Thread insertMissingTransactionThread = insertMissingTransactionThread(missingTransactions, completedMissingTransactionNumber, monitorMissingTransactionThread, finishedToReceive);
+            Thread insertMissingTransactionThread = insertMissingTransactionThread(missingTransactions, trustChainUnconfirmedExistingTransactionHashes, completedMissingTransactionNumber, monitorMissingTransactionThread, finishedToReceive);
             ResponseExtractor responseExtractor = response -> {
                 byte[] buf = new byte[Math.toIntExact(MAXIMUM_BUFFER_SIZE)];
                 int offset = 0;
@@ -257,7 +255,7 @@ public abstract class BaseNodeInitializationService {
 
     }
 
-    private Thread insertMissingTransactionThread(List<TransactionData> missingTransactions, AtomicLong completedMissingTransactionNumber, Thread monitorMissingTransactionThread, AtomicBoolean finishedToReceive) throws Exception {
+    private Thread insertMissingTransactionThread(List<TransactionData> missingTransactions, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, AtomicLong completedMissingTransactionNumber, Thread monitorMissingTransactionThread, AtomicBoolean finishedToReceive) throws Exception {
         return new Thread(() -> {
             Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap = new ConcurrentHashMap<>();
             int offset = 0;
@@ -270,7 +268,7 @@ public abstract class BaseNodeInitializationService {
                     nextOffSet = offset + (finishedToReceive.get() == true ? missingTransactionsSize - offset : 1);
                     for (int i = offset; i < nextOffSet; i++) {
                         TransactionData transactionData = missingTransactions.get(i);
-                        handleMissingTransaction(transactionData);
+                        handleMissingTransaction(transactionData, trustChainUnconfirmedExistingTransactionHashes);
                         transactionHelper.updateAddressTransactionHistory(addressToTransactionsHistoryMap, transactionData);
                         completedMissingTransactionNumber.incrementAndGet();
                     }
