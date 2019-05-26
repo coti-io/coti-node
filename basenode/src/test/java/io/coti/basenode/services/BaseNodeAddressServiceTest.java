@@ -41,7 +41,7 @@ public class BaseNodeAddressServiceTest extends AbstractTestExecutionListener {
     private BaseNodeAddressService baseNodeAddressService;
 
     @Autowired
-    private BaseNodeRocksDBConnector baseNodeRocksDBConnector;
+    private BaseNodeRocksDBConnector baseNodeRocksDBConnector; 
 
     @MockBean
     private ValidationService validationService;
