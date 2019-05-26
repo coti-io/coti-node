@@ -51,6 +51,13 @@ public class ClusterService implements IClusterService {
     }
 
     @Override
+    public void addExistingTransactionOnInit(TransactionData transactionData) {
+        if (!transactionData.isTrustChainConsensus()) {
+            addTransactionToTccConfirmationCluster(transactionData);
+        }
+    }
+
+    @Override
     public void addTransactionOnInit(TransactionData transactionData) {
         updateParents(transactionData);
         if (!transactionData.isTrustChainConsensus()) {
@@ -122,7 +129,7 @@ public class ClusterService implements IClusterService {
 
     private void removeTransactionFromSources(Hash transactionHash) {
         TransactionData transactionData = transactions.getByHash(transactionHash);
-        if (sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).remove(transactionData)) {
+        if (transactionData != null && sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).remove(transactionData)) {
             liveViewService.updateTransactionStatus(transactionData, 1);
             totalSources.decrementAndGet();
         }
