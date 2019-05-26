@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
+import java.util.EnumSet;
+
 @Primary
 @Service
 public class ConfirmationService extends BaseNodeConfirmationService {
@@ -16,8 +18,8 @@ public class ConfirmationService extends BaseNodeConfirmationService {
     TrustScoreService trustScoreService;
 
     @Override
-    protected void scoreDSPConfirmedTransaction(TransactionData transactionData) {
-        if (!transactionData.getType().equals(TransactionType.ZeroSpend)) {
+    protected void continueHandleDSPConfirmedTransaction(TransactionData transactionData) {
+        if (!EnumSet.of(TransactionType.ZeroSpend, TransactionType.Initial).contains(transactionData.getType())) {
             trustScoreService.addTransactionToTsCalculation(transactionData);
         }
     }

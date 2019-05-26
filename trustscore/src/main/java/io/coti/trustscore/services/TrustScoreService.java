@@ -44,10 +44,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.API_SERVER_ERROR;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNER;
@@ -308,28 +305,8 @@ public class TrustScoreService {
 
     public synchronized void addTransactionToTsCalculation(TransactionData transactionData) {
         try {
-            if (transactionData.getType().equals(TransactionType.ZeroSpend) || transactionData.getDspConsensusResult() == null ||
+            if (EnumSet.of(TransactionType.ZeroSpend, TransactionType.Initial).contains(transactionData.getType()) || transactionData.getDspConsensusResult() == null ||
                     !transactionData.getDspConsensusResult().isDspConsensus()) {
-                return;
-            }
-
-            TrustScoreData trustScoreData = trustScores.getByHash(transactionData.getSenderHash());
-            TrustScoreData nodeTrustScoreData = trustScores.getByHash(transactionData.getNodeHash());
-
-            if (trustScoreData == null) {
-                log.error("Transaction can not be added to TS calculation: User {} doesn't exist", transactionData.getSenderHash());
-                return;
-            }
-
-            BucketEventData bucketEventData
-                    = (BucketEventData) bucketEvents.getByHash(getBucketHashByUserHashAndEventType(transactionData.getSenderHash(), EventType.TRANSACTION));
-            if (bucketEventData == null) {
-                log.error("Transaction can not be added to TS calculation: bucket event data doesn't exist for user {}", transactionData.getSenderHash());
-                return;
-            }
-
-            if (bucketEventData.getEventDataHashToEventDataMap().get(transactionData.getHash()) != null) {
-                log.debug("Transaction {} is already added to ts calculation", transactionData.getHash());
                 return;
             }
 
@@ -337,14 +314,40 @@ public class TrustScoreService {
             LocalDate currentDate = new Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
             if (currentDate.equals(transactionConsensusDate)) {
-                addToTransactionBucketsCalculation(trustScoreData, transactionData);
-                if(nodeTrustScoreData != null){
-                    addToTransactionBucketsCalculation(nodeTrustScoreData, transactionData);
+                if (transactionData.getSenderHash() != null) {
+                    addTransactionToUserTs(transactionData, transactionData.getSenderHash());
+                }
+                if (transactionData.getNodeHash() != null) {
+                    addTransactionToUserTs(transactionData, transactionData.getNodeHash());
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+    }
+
+    private void addTransactionToUserTs(TransactionData transactionData, Hash userHash) {
+        TrustScoreData trustScoreData = trustScores.getByHash(userHash);
+
+        if (trustScoreData == null) {
+            log.error("Transaction can not be added to TS calculation: User {} doesn't exist", userHash);
+            return;
+        }
+
+        BucketEventData bucketEventData
+                = (BucketEventData) bucketEvents.getByHash(getBucketHashByUserHashAndEventType(userHash, EventType.TRANSACTION));
+        if (bucketEventData == null) {
+            log.error("Transaction can not be added to TS calculation: bucket event data doesn't exist for user {}", userHash);
+            return;
+        }
+
+        if (bucketEventData.getEventDataHashToEventDataMap().get(transactionData.getHash()) != null) {
+            log.debug("Transaction {} is already added to ts calculation", transactionData.getHash());
+            return;
+        }
+
+        addToTransactionBucketsCalculation(trustScoreData, transactionData);
 
     }
 
