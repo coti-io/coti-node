@@ -296,9 +296,10 @@ public class TransactionHelper implements ITransactionHelper {
         transactionData.setChildrenTransactionHashes(new ArrayList<>());
         transactions.put(transactionData);
         totalTransactions.incrementAndGet();
-        if (transactionData.getDspConsensusResult() == null) {
+        if (!isDspConfirmed(transactionData)) {
             addNoneIndexedTransaction(transactionData);
-        } else {
+        }
+        if (transactionData.getDspConsensusResult() != null) {
             confirmationService.setDspcToTrue(transactionData.getDspConsensusResult());
         }
         updateAddressTransactionHistory(transactionData);
