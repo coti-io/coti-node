@@ -1,6 +1,7 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.data.*;
+import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.LiveView.LiveViewService;
 import io.coti.basenode.services.interfaces.IBalanceService;
@@ -11,8 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -30,12 +33,14 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
+    private TransactionIndexes transactionIndexes;
+    @Autowired
     private Transactions transactions;
     private BlockingQueue<ConfirmationData> confirmationQueue;
     private Map<Long, DspConsensusResult> waitingDspConsensusResults = new ConcurrentHashMap<>();
     private Map<Long, TransactionData> waitingMissingTransactionIndexes = new ConcurrentHashMap<>();
     private AtomicLong totalConfirmed = new AtomicLong(0);
-    private AtomicLong tccConfirmed = new AtomicLong(0);
+    private AtomicLong trustChainConfirmed = new AtomicLong(0);
     private AtomicLong dspConfirmed = new AtomicLong(0);
     private Thread confirmedTransactionsThread;
 
@@ -44,6 +49,45 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         confirmedTransactionsThread = new Thread(() -> updateConfirmedTransactions());
         confirmedTransactionsThread.start();
         log.info("{} is up", this.getClass().getSimpleName());
+    }
+
+    @Override
+    public void setLastDspConfirmationIndex(AtomicLong maxTransactionIndex) {
+        log.info("Started to set last dsp confirmation index");
+        byte[] accumulatedHash = "GENESIS".getBytes();
+        TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash(-1), -1, "GENESIS".getBytes());
+        TransactionIndexData nextTransactionIndexData;
+        try {
+            for (long i = 0; i <= maxTransactionIndex.get(); i++) {
+                nextTransactionIndexData = transactionIndexes.getByHash(new Hash(i));
+                if (nextTransactionIndexData == null) {
+                    log.error("Null transaction index data found for index: {}", i);
+                    return;
+                }
+
+                TransactionData transactionData = transactions.getByHash(nextTransactionIndexData.getTransactionHash());
+                if (transactionData == null) {
+                    log.error("Null transaction data found for index: {}", i);
+                    return;
+                }
+                accumulatedHash = transactionIndexService.getAccumulatedHash(accumulatedHash, transactionData.getHash(), transactionData.getDspConsensusResult().getIndex());
+                if (!Arrays.equals(accumulatedHash, nextTransactionIndexData.getAccumulatedHash())) {
+                    log.error("Incorrect accumulated hash");
+                    return;
+                }
+                dspConfirmed.incrementAndGet();
+                if (transactionData.isTrustChainConsensus()) {
+                    totalConfirmed.incrementAndGet();
+                    transactionData.getBaseTransactions().forEach(baseTransactionData ->
+                            balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount())
+                    );
+                }
+                transactionIndexData = nextTransactionIndexData;
+            }
+        } finally {
+            transactionIndexService.setLastTransactionIndexData(transactionIndexData);
+            log.info("Finished to set last dsp confirmation index: {}", transactionIndexData.getIndex());
+        }
     }
 
     private void updateConfirmedTransactions() {
@@ -69,7 +113,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
             transactionData.setTrustChainConsensus(true);
             transactionData.setTrustChainConsensusTime(((TccInfo) confirmationData).getTrustChainConsensusTime());
             transactionData.setTrustChainTrustScore(((TccInfo) confirmationData).getTrustChainTrustScore());
-            tccConfirmed.incrementAndGet();
+            trustChainConfirmed.incrementAndGet();
         } else if (confirmationData instanceof DspConsensusResult) {
             transactionData.setDspConsensusResult((DspConsensusResult) confirmationData);
             if (!insertNewTransactionIndex(transactionData)) {
@@ -132,17 +176,11 @@ public class BaseNodeConfirmationService implements IConfirmationService {
 
     @Override
     public void insertSavedTransaction(TransactionData transactionData, AtomicLong maxTransactionIndex) {
-        boolean isConfirmed = transactionHelper.isConfirmed(transactionData);
         boolean isDspConfirmed = transactionHelper.isDspConfirmed(transactionData);
-        transactionData.getBaseTransactions().forEach(baseTransactionData -> {
-            balanceService.updatePreBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
-            if (isConfirmed) {
-                balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
-            }
-        });
-        if (isDspConfirmed) {
-            dspConfirmed.incrementAndGet();
-        } else {
+        transactionData.getBaseTransactions().forEach(baseTransactionData ->
+                balanceService.updatePreBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount())
+        );
+        if (!isDspConfirmed) {
             transactionHelper.addNoneIndexedTransaction(transactionData);
         }
         if (transactionData.getDspConsensusResult() != null) {
@@ -150,24 +188,29 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         }
 
         if (transactionData.isTrustChainConsensus()) {
-            tccConfirmed.incrementAndGet();
+            trustChainConfirmed.incrementAndGet();
         }
-        if (isConfirmed) {
-            totalConfirmed.incrementAndGet();
-        }
+
     }
 
     @Override
     public void insertMissingTransaction(TransactionData transactionData) {
         transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updatePreBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount()));
         if (transactionData.isTrustChainConsensus()) {
-            tccConfirmed.incrementAndGet();
+            trustChainConfirmed.incrementAndGet();
         }
         insertMissingDspConfirmation(transactionData);
     }
 
     @Override
-    public void insertMissingDspConfirmation(TransactionData transactionData) {
+    public void insertMissingConfirmation(TransactionData transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes) {
+        if (trustChainUnconfirmedExistingTransactionHashes.contains(transactionData.getHash()) && transactionData.isTrustChainConsensus()) {
+            trustChainConfirmed.incrementAndGet();
+        }
+        insertMissingDspConfirmation(transactionData);
+    }
+
+    private void insertMissingDspConfirmation(TransactionData transactionData) {
         if (!transactionHelper.isDspConfirmed(transactionData)) {
             transactionHelper.addNoneIndexedTransaction(transactionData);
         }
@@ -230,8 +273,8 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     @Override
-    public long getTccConfirmed() {
-        return tccConfirmed.get();
+    public long getTrustChainConfirmed() {
+        return trustChainConfirmed.get();
     }
 
     @Override

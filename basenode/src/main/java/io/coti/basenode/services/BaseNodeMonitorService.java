@@ -36,7 +36,7 @@ public class BaseNodeMonitorService implements IMonitorService {
         if (allowTransactionMonitoring) {
             log.info("Transactions = {}, TccConfirmed = {}, DspConfirmed = {}, Confirmed = {}, LastIndex = {}, Sources = {}, PostponedTransactions = {}, PropagationQueue = {}",
                     transactionHelper.getTotalTransactions(),
-                    confirmationService.getTccConfirmed(),
+                    confirmationService.getTrustChainConfirmed(),
                     confirmationService.getDspConfirmed(),
                     confirmationService.getTotalConfirmed(),
                     transactionIndexService.getLastTransactionIndexData().getIndex(),

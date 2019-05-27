@@ -52,8 +52,9 @@ public class ClusterService implements IClusterService {
 
     @Override
     public void addExistingTransactionOnInit(TransactionData transactionData) {
+        updateParents(transactionData);
         if (!transactionData.isTrustChainConsensus()) {
-            addTransactionToTccConfirmationCluster(transactionData);
+            addTransactionToTrustChainConfirmationCluster(transactionData);
         }
     }
 
@@ -61,7 +62,9 @@ public class ClusterService implements IClusterService {
     public void addMissingTransactionOnInit(TransactionData transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes) {
         updateParentsByMissingTransaction(transactionData, trustChainUnconfirmedExistingTransactionHashes);
         if (!transactionData.isTrustChainConsensus()) {
-            addTransactionToTccConfirmationCluster(transactionData);
+            addTransactionToTrustChainConfirmationCluster(transactionData);
+        } else if (transactionData.isTrustChainConsensus() && trustChainUnconfirmedExistingTransactionHashes.remove(transactionData.getHash())) {
+            removeTransactionFromTrustChainConfirmationCluster(transactionData);
         }
     }
 
@@ -101,7 +104,7 @@ public class ClusterService implements IClusterService {
     public void attachToCluster(TransactionData transactionData) {
         updateParents(transactionData);
 
-        addTransactionToTccConfirmationCluster(transactionData);
+        addTransactionToTrustChainConfirmationCluster(transactionData);
     }
 
     private void updateParents(TransactionData transactionData) {
@@ -142,7 +145,7 @@ public class ClusterService implements IClusterService {
         }
     }
 
-    private void addTransactionToTccConfirmationCluster(TransactionData transactionData) {
+    private void addTransactionToTrustChainConfirmationCluster(TransactionData transactionData) {
         trustChainConfirmationCluster.put(transactionData.getHash(), transactionData);
 
         if (transactionData.isSource() && sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionData)) {
@@ -150,6 +153,15 @@ public class ClusterService implements IClusterService {
         }
 
         log.debug("Added New Transaction with hash:{}", transactionData.getHash());
+    }
+
+    private void removeTransactionFromTrustChainConfirmationCluster(TransactionData transactionData) {
+        trustChainConfirmationCluster.remove(transactionData.getHash());
+
+        if (transactionData.isSource() && sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).remove(transactionData)) {
+            totalSources.decrementAndGet();
+        }
+
     }
 
     @Override

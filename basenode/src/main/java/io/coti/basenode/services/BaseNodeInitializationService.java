@@ -111,6 +111,7 @@ public abstract class BaseNodeInitializationService {
             balanceService.init();
             clusterStampService.loadClusterStamp();
             confirmationService.init();
+            transactionIndexService.init();
             dspVoteService.init();
             transactionService.init();
             potService.init();
@@ -146,7 +147,7 @@ public abstract class BaseNodeInitializationService {
                 monitorExistingTransactions.interrupt();
                 monitorExistingTransactions.join();
             }
-            transactionIndexService.init(maxTransactionIndex);
+            confirmationService.setLastDspConfirmationIndex(maxTransactionIndex);
             log.info("Finished to read existing transactions");
 
             if (networkService.getRecoveryServerAddress() != null) {
@@ -186,8 +187,8 @@ public abstract class BaseNodeInitializationService {
     private void handleMissingTransaction(TransactionData transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes) {
 
         if (!transactionHelper.isTransactionExists(transactionData)) {
-            transactions.put(transactionData);
 
+            transactions.put(transactionData);
             liveViewService.addTransaction(transactionData);
             transactionService.addToExplorerIndexes(transactionData);
             transactionHelper.incrementTotalTransactions();
@@ -196,7 +197,8 @@ public abstract class BaseNodeInitializationService {
             propagateMissingTransaction(transactionData);
 
         } else {
-            confirmationService.insertMissingDspConfirmation(transactionData);
+            transactions.put(transactionData);
+            confirmationService.insertMissingConfirmation(transactionData, trustChainUnconfirmedExistingTransactionHashes);
         }
         clusterService.addMissingTransactionOnInit(transactionData, trustChainUnconfirmedExistingTransactionHashes);
 
@@ -270,6 +272,7 @@ public abstract class BaseNodeInitializationService {
                         TransactionData transactionData = missingTransactions.get(i);
                         handleMissingTransaction(transactionData, trustChainUnconfirmedExistingTransactionHashes);
                         transactionHelper.updateAddressTransactionHistory(addressToTransactionsHistoryMap, transactionData);
+                        missingTransactions.set(i, null);
                         completedMissingTransactionNumber.incrementAndGet();
                     }
                     offset = nextOffSet;
