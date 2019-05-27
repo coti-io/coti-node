@@ -8,14 +8,14 @@ import lombok.Data;
 public class FundDistributionFileEntryResultData {
 
     private Hash receiverAddress;
-    private Fund distributionPool;
+    private String distributionPool;
     private String source;
     private boolean accepted;
     private boolean uniqueByDate;
     private boolean passedPreBalanceCheck;
 
 
-    public FundDistributionFileEntryResultData(Hash receiverAddress, Fund distributionPool, String source, boolean accepted, boolean passedPreBalanceCheck, boolean uniqueByDate) {
+    public FundDistributionFileEntryResultData(Hash receiverAddress, String distributionPool, String source, boolean accepted, boolean passedPreBalanceCheck, boolean uniqueByDate) {
         this.receiverAddress = receiverAddress;
         this.distributionPool = distributionPool;
         this.source = source;
