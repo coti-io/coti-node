@@ -9,6 +9,7 @@ import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeBalanceService;
 import io.coti.basenode.services.interfaces.INetworkService;
+import io.coti.financialserver.AppConfig;
 import io.coti.financialserver.crypto.FundDistributionFileCrypto;
 import io.coti.financialserver.crypto.FundDistributionFileResultCrypto;
 import io.coti.financialserver.data.*;
@@ -517,6 +518,22 @@ public class DistributeFundService {
         fundDistributionFileResultData.incrementMessageByteSize(resultLineInBytes.length);
     }
 
+
+
+
+    public ResponseEntity<IResponse> removeFundDistributionFromFile(FundDistributionRequest request) {
+
+        //TODO: verify admin controller limits according to IP whitelist
+
+        List<FundDistributionData> fundDistributionFileDataEntries = new ArrayList<>();
+        ResponseEntity<IResponse> distributionFileVerificationResponse =  verifyDailyDistributionFile(request, fundDistributionFileDataEntries);
+        if( !distributionFileVerificationResponse.getStatusCode().equals(HttpStatus.OK) )
+            return distributionFileVerificationResponse;
+
+
+
+        return null;
+    }
 
 
 }

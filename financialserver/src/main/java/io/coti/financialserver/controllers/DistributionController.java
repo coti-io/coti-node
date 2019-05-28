@@ -29,7 +29,7 @@ public class DistributionController {
     }
 
     @RequestMapping(path = "/funds", method = RequestMethod.POST)
-    public ResponseEntity<IResponse> distributeFunds(@ModelAttribute @Valid FundDistributionRequest request) {
+    public ResponseEntity<IResponse> distributeFunds(@RequestBody @Valid FundDistributionRequest request) {
         return distributeFundService.distributeFundFromFile(request);
     }
 

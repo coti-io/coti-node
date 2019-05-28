@@ -1,4 +1,4 @@
-package io.coti.zerospend.filters;
+package io.coti.basenode.filters;
 
 import io.coti.basenode.http.CustomHttpServletResponse;
 import io.coti.basenode.http.Response;
