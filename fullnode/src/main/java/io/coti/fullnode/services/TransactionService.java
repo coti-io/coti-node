@@ -5,6 +5,7 @@ import io.coti.basenode.data.AddressTransactionsHistory;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.exceptions.TransactionException;
+import io.coti.basenode.http.CustomGson;
 import io.coti.basenode.http.GetTransactionsResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.TransactionResponseData;
@@ -17,10 +18,7 @@ import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.fullnode.data.ExplorerIndexData;
-import io.coti.fullnode.http.AddTransactionRequest;
-import io.coti.fullnode.http.AddTransactionResponse;
-import io.coti.fullnode.http.GetAddressTransactionHistoryResponse;
-import io.coti.fullnode.http.GetTransactionResponse;
+import io.coti.fullnode.http.*;
 import io.coti.fullnode.model.ExplorerIndexes;
 import io.coti.fullnode.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
@@ -29,8 +27,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.PrintWriter;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -253,6 +254,45 @@ public class TransactionService extends BaseNodeTransactionService {
                     .body(new Response(
                             ADDRESS_TRANSACTIONS_SERVER_ERROR,
                             STATUS_ERROR));
+        }
+    }
+
+    public void getAddressTransactionBatch(GetAddressTransactionBatchRequest getAddressTransactionBatchRequest, HttpServletResponse response) {
+        try {
+            List<Hash> addresses = getAddressTransactionBatchRequest.getAddresses();
+            PrintWriter output = response.getWriter();
+            output.write("[");
+            output.flush();
+
+            Iterator<Hash> addressHashIterator = addresses.iterator();
+            while (addressHashIterator.hasNext()) {
+                Hash addressHash = addressHashIterator.next();
+                AddressTransactionsHistory addressTransactionsHistory = addressTransactionHistories.getByHash(addressHash);
+                if (addressTransactionsHistory != null) {
+                    Iterator<Hash> transactionHashIterator = addressTransactionsHistory.getTransactionsHistory().iterator();
+                    while (transactionHashIterator.hasNext()) {
+                        Hash transactionHash = transactionHashIterator.next();
+                        TransactionData transactionData = transactions.getByHash(transactionHash);
+                        if (transactionData != null) {
+                            output.write(new CustomGson().getInstance().toJson(new TransactionResponseData(transactionData)));
+                            output.flush();
+                            if (transactionHashIterator.hasNext()) {
+                                output.write(",");
+                                output.flush();
+                            }
+                        }
+                    }
+                    if (addressHashIterator.hasNext()) {
+                        output.write(",");
+                        output.flush();
+                    }
+                }
+            }
+            output.write("]");
+            output.flush();
+        } catch (Exception e) {
+            log.error("Error sending address transaction batch");
+            log.error(e.getMessage());
         }
     }
 
