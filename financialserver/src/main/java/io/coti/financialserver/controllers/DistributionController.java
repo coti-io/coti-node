@@ -1,29 +1,40 @@
 package io.coti.financialserver.controllers;
 
 import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.financialserver.http.FundDistributionRequest;
 import io.coti.financialserver.http.TokenSaleDistributionRequest;
-import io.coti.financialserver.services.DistributeTokensService;
+import io.coti.financialserver.services.DistributeFundService;
+import io.coti.financialserver.services.DistributeTokenService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
 
 @Slf4j
 @RestController
+@RequestMapping("/distribution")
 public class DistributionController {
 
     @Autowired
-    DistributeTokensService distributeTokensService;
+    DistributeTokenService distributeTokenService;
+    @Autowired
+    DistributeFundService distributeFundService;
 
-    @RequestMapping(path = "/distributeTokenSale", method = RequestMethod.POST)
+    @RequestMapping(path = "/tokensale", method = RequestMethod.POST)
     public ResponseEntity<IResponse> distributeTokenSale(@RequestBody @Valid TokenSaleDistributionRequest request) {
-        return distributeTokensService.distributeTokens(request);
+        return distributeTokenService.distributeTokens(request);
+    }
 
+    @RequestMapping(path = "/funds", method = RequestMethod.POST)
+    public ResponseEntity<IResponse> distributeFunds(@Valid @RequestBody FundDistributionRequest request) {
+        return distributeFundService.distributeFundFromFile(request);
+    }
+
+    @RequestMapping(path = "/balances", method = RequestMethod.GET)
+    public ResponseEntity<IResponse> getBalances() {
+        return distributeFundService.getFundBalances();
     }
 }

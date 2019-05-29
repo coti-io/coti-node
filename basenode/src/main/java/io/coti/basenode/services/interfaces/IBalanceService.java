@@ -31,4 +31,8 @@ public interface IBalanceService {
     void updateBalance(Hash addressHash, BigDecimal amount);
 
     void updatePreBalance(Hash addressHash, BigDecimal amount);
+
+    BigDecimal getBalanceByAddress(Hash addressHash);
+
+    BigDecimal getPreBalanceByAddress(Hash addressHash);
 }

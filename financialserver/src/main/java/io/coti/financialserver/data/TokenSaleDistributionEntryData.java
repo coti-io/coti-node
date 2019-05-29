@@ -14,7 +14,7 @@ public class TokenSaleDistributionEntryData implements Serializable {
 
     private static final long serialVersionUID = 5997617345762453167L;
     @NotNull
-    private TokenSale fundName;
+    private Fund fundName;
     @Positive
     private BigDecimal amount;
     @NotNull
@@ -25,8 +25,8 @@ public class TokenSaleDistributionEntryData implements Serializable {
     private TokenSaleDistributionEntryData() {
     }
 
-    public void setFundName(String fundName) {
-        this.fundName = TokenSale.getNameByText(fundName);
+    public void setTokenByFundName(String fundName) {
+        this.fundName = Fund.getTokenSaleRelatedFundNameByText(fundName);
     }
 
     @Override

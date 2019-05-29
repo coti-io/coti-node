@@ -26,12 +26,16 @@ public enum ReservedAddress {
     }
 
     public boolean isGenesisAddress() {
-        return index == 0 || index == 1;
+        return index == GENESIS_ONE.getIndex() || index == GENESIS_TWO.getIndex();
     }
 
     public boolean isInitialFundDistribution() {
-        return index > 1 && index < 6;
+        return index > GENESIS_TWO.getIndex() && index < PRIVATE_SALE.getIndex();
     }
+
+    public boolean isTokenSaleRelatedFund() { return index > ADVISORS.getIndex() && index < ROLLING_RESERVE_POOL.getIndex(); }
+
+    public boolean isSecondaryFundDistribution() { return index > GENESIS_TWO.getIndex() && index < PRIVATE_SALE.getIndex(); }
 
     public static EnumSet<ReservedAddress> getInitialFundDistributionAddresses() {
         EnumSet<ReservedAddress> initialFundDistributionAddresses = EnumSet.noneOf(ReservedAddress.class);
