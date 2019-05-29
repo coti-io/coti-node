@@ -21,7 +21,16 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class BaseNodeBalanceService implements IBalanceService {
 
+    public BigDecimal getBalanceByAddress(Hash addressHash) {
+        return  balanceMap.containsKey(addressHash) ? balanceMap.get(addressHash) : BigDecimal.ZERO;
+    }
+
     protected Map<Hash, BigDecimal> balanceMap;
+
+    public BigDecimal getPreBalanceByAddress(Hash addressHash) {
+        return  preBalanceMap.containsKey(addressHash) ? preBalanceMap.get(addressHash) : BigDecimal.ZERO;
+    }
+
     protected Map<Hash, BigDecimal> preBalanceMap;
 
     public void init() {

@@ -46,11 +46,19 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String HEADER_CONTENT_TYPE = "Content-Type";
     public static final String S3_SUFFIX_METADATA_KEY = "x-amz-meta-suffix";
 
+    public static final String S3_NOT_REACHABLE = "S3 not reachable for a response";
+    public static final String S3_DOCUMENT_DOWNLOAD_ERROR = "Some error occurred during download";
+
     public static final String NOT_COTI_POOL = "Transaction receiver isn't Coti pool";
     public static final String ALREADY_GOT_THIS_RECOURSE_CLAIM = "Recourse claim transaction already processed";
     public static final String NOT_ENOUGH_MONEY_IN_TRANSACTION = "Not enough money in transaction";
 
     public static final String INTERNAL_ERROR = "Internal error";
+    public static final String PARSED_SUCCESSFULLY = "Parsed file successfully.";
+    public static final String PARSED_WITH_ERROR = "Parsing file encountered error.";
+    public static final String DISTRIBUTION_FILE_INVALID = "Distribution file is invalid";
+    public static final String DISTRIBUTION_FILE_ALREADY_PROCESSED = "Distribution file already processed today";
+    public static final String DISTRIBUTION_FILE_DATE_MISMATCHED = "Distribution file by date already saved";
 
 
 }
