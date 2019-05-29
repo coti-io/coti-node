@@ -12,10 +12,12 @@ import io.coti.financialserver.crypto.FundDistributionFileCrypto;
 import io.coti.financialserver.crypto.FundDistributionFileResultCrypto;
 import io.coti.financialserver.data.*;
 import io.coti.financialserver.http.*;
-import io.coti.financialserver.http.data.FundDistributionResponseData;
 import io.coti.financialserver.http.data.FundDistributionBalanceResponseData;
 import io.coti.financialserver.http.data.FundDistributionFileData;
-import io.coti.financialserver.model.*;
+import io.coti.financialserver.http.data.FundDistributionResponseData;
+import io.coti.financialserver.model.DailyFundDistributions;
+import io.coti.financialserver.model.DailyFundDistributionFiles;
+import io.coti.financialserver.model.FailedFundDistribution;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,33 +36,25 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_SUCCESS;
 import static io.coti.financialserver.http.HttpStringConstants.*;
 
 @Slf4j
 @Service
 public class DistributeFundService {
-    private static final String CANT_SAVE_FILE_ON_DISK = "Can't save file on disk.";
-    private static final String CANT_LOAD_FILE_FROM_SHARED_LOCATION = "Can't load file from shared location.";
+
     private static final int NUMBER_OF_DISTRIBUTION_LINE_DETAILS = 7;
     private static final int NUMBER_OF_DISTRIBUTION_SIGNATURE_LINE_DETAILS = 2;
-    private static final String BAD_CSV_FILE_FORMAT = "Bad csv file format";
-    private static final String BAD_CSV_FILE_LINE_FORMAT = "Bad csv file line format";
     private static final String DAILY_DISTRIBUTION_RESULT_FILE_PREFIX = "distribution_results_";
     private static final String DAILY_DISTRIBUTION_RESULT_FILE_SUFFIX = ".csv";
     private static final String COMMA_SEPARATOR = ",";
-    private static final String ACCEPTED = "Accepted";
-    private static final String LOCK_UP_DATE_IS_INVALID = "Lock-up date is invalid";
-    private static final String DATE_UNIQUENESS_WAS_NOT_MAINTAINED = "Date uniqueness was not maintained";
-    private static final String DISTRIBUTION_POOL_BALANCE_CHECKS_FAILED = "Distribution pool balance checks failed";
-    private static final String TRANSACTION_CREATED_SUCCESSFULLY = "Transaction created successfully";
-    private static final String TRANSACTION_CREATION_FAILED = "Transaction creation failed";
 
     @Value("${financialserver.seed}")
     private String seed;
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
-
     @Autowired
     TransactionCreationService transactionCreationService;
     @Autowired
@@ -76,13 +70,11 @@ public class DistributeFundService {
     @Autowired
     private FundDistributionFileResultCrypto fundDistributionFileResultCrypto;
     @Autowired
-    private DailyFundDistribution dailyFundDistribution;
+    private DailyFundDistributions dailyFundDistributions;
     @Autowired
     private FailedFundDistribution failedFundDistribution;
     @Autowired
-    private DailyFundDistributionFile dailyFundDistributionFile;
-
-
+    private DailyFundDistributionFiles dailyFundDistributionFiles;
     private Map<Hash, FundDistributionBalanceData> fundBalanceMap;
 
     public void initReservedBalance() {
@@ -96,9 +88,9 @@ public class DistributeFundService {
     }
 
     private void updateReservedAmountsFromPendingTransactions() {
-        dailyFundDistribution.forEach(dailyFundDistributionData -> {
+        dailyFundDistributions.forEach(dailyFundDistributionData -> {
             dailyFundDistributionData.getFundDistributionEntries().values().forEach(fundDistributionData -> {
-                if( fundDistributionData.isLockingAmount() ) {
+                if (fundDistributionData.isLockingAmount()) {
                     Hash fundAddress = (fundDistributionData.getDistributionPoolFund().getFundHash() == null) ?
                             getFundAddressHash(fundDistributionData.getDistributionPoolFund()) :
                             fundDistributionData.getDistributionPoolFund().getFundHash();
@@ -121,61 +113,49 @@ public class DistributeFundService {
     }
 
     public ResponseEntity<IResponse> getFundBalances() {
-        return getCurrentFundsBalances();
-    }
-
-    private ResponseEntity<IResponse> getCurrentFundsBalances() {
         List<FundDistributionBalanceResultData> fundDistributionBalanceResultDataList = new ArrayList<>();
-        fundBalanceMap.values().forEach(fundDistributionBalanceData ->{
+        fundBalanceMap.values().forEach(fundDistributionBalanceData -> {
             Hash fundAddress = (fundDistributionBalanceData.getFund().getFundHash() == null) ?
                     getFundAddressHash(fundDistributionBalanceData.getFund()) : fundDistributionBalanceData.getFund().getFundHash();
             fundDistributionBalanceResultDataList.add(
-                new FundDistributionBalanceResultData(fundDistributionBalanceData.getFund().getText(),
-                        baseNodeBalanceService.getBalanceByAddress(fundAddress),
-                        baseNodeBalanceService.getPreBalanceByAddress(fundAddress),
-                        fundDistributionBalanceData.getReservedAmount()));
+                    new FundDistributionBalanceResultData(fundDistributionBalanceData.getFund().getText(),
+                            baseNodeBalanceService.getBalanceByAddress(fundAddress),
+                            baseNodeBalanceService.getPreBalanceByAddress(fundAddress),
+                            fundDistributionBalanceData.getReservedAmount()));
         });
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new FundDistributionBalanceResponse(new FundDistributionBalanceResponseData(fundDistributionBalanceResultDataList)));
     }
 
-
-
-
-
-
-
-
-    public ResponseEntity<IResponse> distributeFundFromFile(FundDistributionRequest request)  {
+    public ResponseEntity<IResponse> distributeFundFromFile(FundDistributionRequest request) {
         // Verify whether any previous file was already handled
         Instant yesterdayInstant = getYesterdayInstant();
         Hash hashOfYesterday = getHashOfDate(yesterdayInstant);
 
-        DailyFundDistributionFileData fundDistributionFileByDayByHash = dailyFundDistributionFile.getByHash(hashOfYesterday);
-        if( fundDistributionFileByDayByHash != null ) {
+        DailyFundDistributionFileData fundDistributionFileByDayByHash = dailyFundDistributionFiles.getByHash(hashOfYesterday);
+        if (fundDistributionFileByDayByHash != null) {
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(new Response(DISTRIBUTION_FILE_ALREADY_PROCESSED, STATUS_ERROR));
         }
 
         List<FundDistributionData> fundDistributionFileDataEntries = new ArrayList<>();
-        ResponseEntity<IResponse> distributionFileVerificationResponse =  verifyDailyDistributionFile(request, fundDistributionFileDataEntries);
-        if( !distributionFileVerificationResponse.getStatusCode().equals(HttpStatus.OK) )
+        ResponseEntity<IResponse> distributionFileVerificationResponse = verifyDailyDistributionFile(request, fundDistributionFileDataEntries);
+        if (!distributionFileVerificationResponse.getStatusCode().equals(HttpStatus.OK))
             return distributionFileVerificationResponse;
 
         // Add new entries according to dates
         ResponseEntity<IResponse> responseEntity = updateWithTransactionsEntriesFromVerifiedFile(fundDistributionFileDataEntries);
 
-        if(responseEntity.getStatusCode().equals(HttpStatus.OK)){
+        if (responseEntity.getStatusCode().equals(HttpStatus.OK)) {
             // File was verified and handled, update DB with file name in Hash of today's date
             String fileName = request.getFileName();
             DailyFundDistributionFileData fundDistributionFileOfDay = new DailyFundDistributionFileData(yesterdayInstant, fileName);
             fundDistributionFileOfDay.initHashByDate();
-            if( dailyFundDistributionFile.getByHash(hashOfYesterday) != null ) {
+            if (dailyFundDistributionFiles.getByHash(hashOfYesterday) != null) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(DISTRIBUTION_FILE_DATE_MISMATCHED, STATUS_ERROR));
             } else {
-                dailyFundDistributionFile.put(fundDistributionFileOfDay);
+                dailyFundDistributionFiles.put(fundDistributionFileOfDay);
             }
         }
-
 
 
         return responseEntity;
@@ -206,11 +186,11 @@ public class DistributeFundService {
         }
 
         ResponseEntity<IResponse> responseEntityForFileHandling = handleFundDistributionFile(fundDistributionFileData, fileName, fundDistributionFileDataEntries);
-        if( !responseEntityForFileHandling.getStatusCode().equals(HttpStatus.OK) )
-                return responseEntityForFileHandling;
+        if (!responseEntityForFileHandling.getStatusCode().equals(HttpStatus.OK))
+            return responseEntityForFileHandling;
 
         // Verify signature of Request
-        if( fundDistributionFileData.getUserSignature()==null || !fundDistributionFileCrypto.verifySignature(fundDistributionFileData) ) {
+        if (fundDistributionFileData.getUserSignature() == null || !fundDistributionFileCrypto.verifySignature(fundDistributionFileData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
         return null;
@@ -219,34 +199,32 @@ public class DistributeFundService {
     public ResponseEntity<IResponse> handleFundDistributionFile(FundDistributionFileData fundDistributionFileData, String fileName, List<FundDistributionData> fundDistributionEntriesData) {
         // Parse file and process each line as a new Initial type transaction
         String line = "";
-        try( BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName))) {
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName))) {
             while ((line = bufferedReader.readLine()) != null) {
                 line = line.trim();
-                if( line.isEmpty() )
+                if (line.isEmpty())
                     break;
                 String[] distributionDetails;
                 distributionDetails = line.split(COMMA_SEPARATOR);
-                if( distributionDetails.length != NUMBER_OF_DISTRIBUTION_LINE_DETAILS) {
-                    if(distributionDetails.length == NUMBER_OF_DISTRIBUTION_SIGNATURE_LINE_DETAILS)
-                    {
+                if (distributionDetails.length != NUMBER_OF_DISTRIBUTION_LINE_DETAILS) {
+                    if (distributionDetails.length == NUMBER_OF_DISTRIBUTION_SIGNATURE_LINE_DETAILS) {
                         fundDistributionFileData.setSignature(new SignatureData(distributionDetails[0], distributionDetails[1]));
                     } else {
                         return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(new Response(line, PARSED_WITH_ERROR));
                     }
                 } else {
                     FundDistributionData entryData = handleFundDistributionFileLine(fundDistributionFileData, distributionDetails, fileName);
-                    if( entryData != null)
-                    {
+                    if (entryData != null) {
                         fundDistributionEntriesData.add(entryData);
                     } else {
                         log.error(BAD_CSV_FILE_LINE_FORMAT);
-                        return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(new Response( line, BAD_CSV_FILE_LINE_FORMAT));
+                        return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(new Response(line, BAD_CSV_FILE_LINE_FORMAT));
                     }
                 }
             }
         } catch (Exception e) {
             log.error("Errors on distribution funds service: {}", e);
-            return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(new Response(line, BAD_CSV_FILE_LINE_FORMAT ));
+            return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(new Response(line, BAD_CSV_FILE_LINE_FORMAT));
         }
         return ResponseEntity.status(HttpStatus.OK).body(new Response(PARSED_SUCCESSFULLY, STATUS_SUCCESS));
     }
@@ -255,19 +233,19 @@ public class DistributeFundService {
         // Load details for new transaction
         long id = Long.parseLong(distributionDetails[0]);
         Hash receiverAddress = new Hash(distributionDetails[1]);
-        if( receiverAddress.toString().isEmpty() )
+        if (receiverAddress.toString().isEmpty())
             return null;
         String distributionPool = distributionDetails[2];   // Fund to spend
         BigDecimal amount = new BigDecimal(distributionDetails[3]);
-        if( distributionDetails[4] == null || distributionDetails[5] == null)
+        if (distributionDetails[4] == null || distributionDetails[5] == null)
             return null;
         Instant createTime = Instant.parse(distributionDetails[4]);
-        Instant transactionTime  = Instant.parse(distributionDetails[5]);
+        Instant transactionTime = Instant.parse(distributionDetails[5]);
         String transactionDescription = distributionDetails[6];
 
         FundDistributionData entryData =
-                new FundDistributionData(id, receiverAddress,Fund.getFundByText(distributionPool),
-                        amount,createTime,transactionTime,transactionDescription);
+                new FundDistributionData(id, receiverAddress, Fund.getFundByText(distributionPool),
+                        amount, createTime, transactionTime, transactionDescription);
 
         // Update signature message of file according to current line
         byte[] receiverAddressInBytes = receiverAddress.getBytes();
@@ -292,24 +270,23 @@ public class DistributeFundService {
     private ResponseEntity<IResponse> updateWithTransactionsEntriesFromVerifiedFile(List<FundDistributionData> fundDistributionFileEntriesData) {
         List<FundDistributionFileEntryResultData> fundDistributionFileEntryResultDataList = new ArrayList<>();
         fundDistributionFileEntriesData.forEach(entryData -> {
-            boolean accepted = false;
-            boolean passedPreBalanceCheck = false;
-            boolean isLockupDateValid = isLockupDateValid(entryData);
-            boolean uniqueByDate = isEntryDataUniquePerDate(entryData);
+                    boolean accepted = false;
+                    boolean passedPreBalanceCheck = false;
+                    boolean isLockupDateValid = isLockupDateValid(entryData);
+                    boolean uniqueByDate = isEntryDataUniquePerDate(entryData);
 
-                    if( isLockupDateValid && uniqueByDate && updateFundsAvailableLockedBalance(entryData) ){
+                    if (isLockupDateValid && uniqueByDate && updateFundsAvailableLockedBalance(entryData)) {
                         // Verified uniqueness and pre-balance, add it to structure by dates
                         entryData.setStatus(DistributionEntryStatus.ACCEPTED);
-                        if(dailyFundDistribution.getByHash(entryData.getHashByDate()) == null) {
+                        if (dailyFundDistributions.getByHash(entryData.getHashByDate()) == null) {
                             LinkedHashMap<Hash, FundDistributionData> fundDistributionEntries = new LinkedHashMap<>();
                             DailyFundDistributionData fundDistributionByDateData = new DailyFundDistributionData(entryData.getTransactionTime(), fundDistributionEntries);
-                            fundDistributionByDateData.initHashByDate();
-                            dailyFundDistribution.put(fundDistributionByDateData);
+                            dailyFundDistributions.put(fundDistributionByDateData);
                         }
 
-                        DailyFundDistributionData fundDistributionOfDay = dailyFundDistribution.getByHash(entryData.getHashByDate());
+                        DailyFundDistributionData fundDistributionOfDay = dailyFundDistributions.getByHash(entryData.getHashByDate());
                         fundDistributionOfDay.getFundDistributionEntries().put(entryData.getHash(), entryData);
-                        dailyFundDistribution.put(fundDistributionOfDay);
+                        dailyFundDistributions.put(fundDistributionOfDay);
                         accepted = true;
                         passedPreBalanceCheck = true;
                     }
@@ -323,32 +300,30 @@ public class DistributeFundService {
     }
 
     private String getTransactionEntryStatusByChecks(boolean accepted, boolean passedPreBalanceCheck, boolean uniqueByDate, boolean isLockupDateValid) {
-        if(accepted)
+        if (accepted)
             return ACCEPTED;
-        if(!isLockupDateValid)
+        if (!isLockupDateValid)
             return LOCK_UP_DATE_IS_INVALID;
-        if(!uniqueByDate)
+        if (!uniqueByDate)
             return DATE_UNIQUENESS_WAS_NOT_MAINTAINED;
-        if(!passedPreBalanceCheck)
+        if (!passedPreBalanceCheck)
             return DISTRIBUTION_POOL_BALANCE_CHECKS_FAILED;
         return null;
     }
 
 
     private boolean updateFundsAvailableLockedBalance(FundDistributionData entryData) {
-        if(entryData.getAmount().compareTo(BigDecimal.ZERO) < 0) {
+        if (entryData.getAmount().compareTo(BigDecimal.ZERO) < 0) {
             // Illegal non positive amount
             return false;
         }
         Hash fundAddress = getFundAddressHash(entryData.getDistributionPoolFund());
         FundDistributionBalanceData fundDistributionBalanceData = fundBalanceMap.get(fundAddress);
         BigDecimal updatedAmountToLock = fundDistributionBalanceData.getReservedAmount().add(entryData.getAmount());
-        if( updatedAmountToLock.compareTo(baseNodeBalanceService.getPreBalanceByAddress(fundAddress)) > 0 ||
-                updatedAmountToLock.compareTo(baseNodeBalanceService.getBalanceByAddress(fundAddress)) > 0 )
-        {   // Not enough money in pre-balance
+        if (updatedAmountToLock.compareTo(baseNodeBalanceService.getPreBalanceByAddress(fundAddress)) > 0 ||
+                updatedAmountToLock.compareTo(baseNodeBalanceService.getBalanceByAddress(fundAddress)) > 0) {   // Not enough money in pre-balance
             return false;
-        }
-        else {
+        } else {
             fundDistributionBalanceData.setReservedAmount(updatedAmountToLock);
         }
         return true;
@@ -358,8 +333,8 @@ public class DistributeFundService {
         //Verify no duplicate source->target transactions are scheduled for the same date
         Instant transactionReleaseDate = entryData.getTransactionTime();
         Hash hashOfDate = getHashOfDate(transactionReleaseDate);
-        if(dailyFundDistribution.getByHash(hashOfDate) != null &&
-                dailyFundDistribution.getByHash(hashOfDate).getFundDistributionEntries().get(entryData.getHash()) != null )
+        if (dailyFundDistributions.getByHash(hashOfDate) != null &&
+                dailyFundDistributions.getByHash(hashOfDate).getFundDistributionEntries().get(entryData.getHash()) != null)
             return false;
         return true;
     }
@@ -367,24 +342,21 @@ public class DistributeFundService {
     private boolean isLockupDateValid(FundDistributionData entryData) {
         // Verify lock-up date is not null nor prior to yesterday
         Instant transactionReleaseDate = entryData.getTransactionTime();
-        if( transactionReleaseDate == null )
+        if (transactionReleaseDate == null)
             return false;
         Instant yesterdayInstant = getYesterdayInstant();
-        if( transactionReleaseDate.compareTo(yesterdayInstant) < 0 &&
-                !getHashOfDate(transactionReleaseDate).equals(getHashOfDate(yesterdayInstant)) )
+        if (transactionReleaseDate.compareTo(yesterdayInstant) < 0 &&
+                !getHashOfDate(transactionReleaseDate).equals(getHashOfDate(yesterdayInstant)))
             return false;
         return true;
     }
-
-
-
 
 
     @Scheduled(cron = "0 0 3 * * *")
     public void scheduleTaskUsingCronExpression() {
         log.info("Starting scheduled action for creating pending transactions");
         ResponseEntity<IResponse> pendingTransactionsResponse = createPendingTransactions();
-        if( pendingTransactionsResponse.getStatusCode()!= HttpStatus.OK) {
+        if (pendingTransactionsResponse.getStatusCode() != HttpStatus.OK) {
             log.error("Scheduled task of creating pending transactions failed");
         } else {
             log.info("Finished scheduled action for creating pending transactions");
@@ -401,20 +373,18 @@ public class DistributeFundService {
 
     private void createPendingNonFailedTransactionsByDate(List<FundDistributionFileEntryResultData> fundDistributionFileEntryResultDataList) {
         Hash hashOfYesterday = getHashOfDate(getYesterdayInstant());
-        if( dailyFundDistribution.getByHash(hashOfYesterday) == null)
+        if (dailyFundDistributions.getByHash(hashOfYesterday) == null)
             return;
 
-        DailyFundDistributionData dailyFundDistributionDataOfToday = dailyFundDistribution.getByHash(hashOfYesterday);
+        DailyFundDistributionData dailyFundDistributionDataOfToday = dailyFundDistributions.getByHash(hashOfYesterday);
         LinkedHashMap<Hash, FundDistributionData> fundDistributionEntriesOfToday = dailyFundDistributionDataOfToday.getFundDistributionEntries();
-        for (FundDistributionData fundDistributionFileEntry : dailyFundDistribution.getByHash(hashOfYesterday).getFundDistributionEntries().values())
-        {
+        for (FundDistributionData fundDistributionFileEntry : dailyFundDistributions.getByHash(hashOfYesterday).getFundDistributionEntries().values()) {
             boolean isSuccessful = false;
             Hash initialTransactionHash = null;
             // Create a new Initial transaction if status allows it
-            if( fundDistributionFileEntry.isReadyToInitiate() ) {
+            if (fundDistributionFileEntry.isReadyToInitiate()) {
                 initialTransactionHash = createInitialTransactionToDistributionEntry(fundDistributionFileEntry);
-                if( initialTransactionHash != null )
-                {
+                if (initialTransactionHash != null) {
                     // Update DB with new transaction
                     isSuccessful = true;
                     fundDistributionFileEntry.setStatus(DistributionEntryStatus.CREATED);
@@ -424,12 +394,12 @@ public class DistributeFundService {
                     fundDistributionFileEntry.setStatus(DistributionEntryStatus.FAILED);
                     fundDistributionEntriesOfToday.put(fundDistributionFileEntry.getHash(), fundDistributionFileEntry);
                     FailedFundDistributionData fundDistributionFailedHashesOfToday = failedFundDistribution.getByHash(hashOfYesterday);
-                    if( fundDistributionFailedHashesOfToday == null)
+                    if (fundDistributionFailedHashesOfToday == null)
                         fundDistributionFailedHashesOfToday = new FailedFundDistributionData(hashOfYesterday);
                     fundDistributionFailedHashesOfToday.getFundDistributionHashes().put(fundDistributionFileEntry.getHash(), fundDistributionFileEntry.getHash());
                     failedFundDistribution.put(fundDistributionFailedHashesOfToday);
                 }
-                dailyFundDistribution.put(dailyFundDistributionDataOfToday);
+                dailyFundDistributions.put(dailyFundDistributionDataOfToday);
                 String status = isSuccessful ? TRANSACTION_CREATED_SUCCESSFULLY : TRANSACTION_CREATION_FAILED;
                 fundDistributionFileEntryResultDataList.add(new FundDistributionFileEntryResultData(fundDistributionFileEntry.getId(),
                         fundDistributionFileEntry.getReceiverAddress(), fundDistributionFileEntry.getDistributionPoolFund().getText(),
@@ -442,7 +412,7 @@ public class DistributeFundService {
         // Update reserved balance, once transaction is created
         FundDistributionBalanceData fundReserveBalanceData = fundBalanceMap.get(fundDistributionFileEntry.getDistributionPoolFund().getFundHash());
         BigDecimal updatedReservedAmount = fundReserveBalanceData.getReservedAmount().subtract(fundDistributionFileEntry.getAmount());
-        if( updatedReservedAmount.compareTo( BigDecimal.ZERO ) < 0 ) {
+        if (updatedReservedAmount.compareTo(BigDecimal.ZERO) < 0) {
             log.error("Reserved amount can not be negative.");
             fundReserveBalanceData.setReservedAmount(BigDecimal.ZERO);
         } else {
@@ -452,25 +422,23 @@ public class DistributeFundService {
 
     private Hash getHashOfDate(Instant dayInstant) {
         LocalDateTime ldt = LocalDateTime.ofInstant(dayInstant, ZoneOffset.UTC);
-        return CryptoHelper.cryptoHash( (ldt.getYear() + ldt.getMonth().toString() +
-                ldt.getDayOfMonth()).getBytes() );
+        return CryptoHelper.cryptoHash((ldt.getYear() + ldt.getMonth().toString() +
+                ldt.getDayOfMonth()).getBytes());
     }
 
     private void createPendingFailedTransactions(List<FundDistributionFileEntryResultData> fundDistributionFileEntryResultDataList) {
         failedFundDistribution.forEach(distributionFailedHashes ->
         {
             Hash hashOfDay = distributionFailedHashes.getHash();
-            DailyFundDistributionData fundDistributionDataOfToday = dailyFundDistribution.getByHash(hashOfDay);
-            for(Iterator<Hash> failedEntryHashKeys = distributionFailedHashes.getFundDistributionHashes().keySet().iterator(); failedEntryHashKeys.hasNext(); )
-            {
+            DailyFundDistributionData fundDistributionDataOfToday = dailyFundDistributions.getByHash(hashOfDay);
+            for (Iterator<Hash> failedEntryHashKeys = distributionFailedHashes.getFundDistributionHashes().keySet().iterator(); failedEntryHashKeys.hasNext(); ) {
                 Hash failedEntryHashKey = failedEntryHashKeys.next();
                 Hash initialTransactionHash = null;
                 boolean isSuccessful = false;
                 FundDistributionData entryData = fundDistributionDataOfToday.getFundDistributionEntries().get(failedEntryHashKey);
-                if( entryData.getStatus().equals(DistributionEntryStatus.FAILED) )
-                {
+                if (entryData.getStatus().equals(DistributionEntryStatus.FAILED)) {
                     initialTransactionHash = createInitialTransactionToDistributionEntry(entryData);
-                    if( initialTransactionHash != null ) {
+                    if (initialTransactionHash != null) {
                         // Update DB with new transaction
                         isSuccessful = true;
                         entryData.setStatus(DistributionEntryStatus.CREATED);
@@ -485,14 +453,14 @@ public class DistributeFundService {
                     failedEntryHashKeys.remove();
                 }
             }
-            dailyFundDistribution.put(fundDistributionDataOfToday);
+            dailyFundDistributions.put(fundDistributionDataOfToday);
             failedFundDistribution.put(distributionFailedHashes);
         });
     }
 
     private String createDistributionResultFileNameForToday() {
         LocalDateTime ldt = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC);
-        String today = ldt.getYear() + "-" + StringUtils.leftPad(""+ldt.getMonthValue(),2,"0") + "-" + ldt.getDayOfMonth();
+        String today = ldt.getYear() + "-" + StringUtils.leftPad("" + ldt.getMonthValue(), 2, "0") + "-" + ldt.getDayOfMonth();
         return DAILY_DISTRIBUTION_RESULT_FILE_PREFIX + today + DAILY_DISTRIBUTION_RESULT_FILE_SUFFIX;
     }
 
@@ -520,38 +488,38 @@ public class DistributeFundService {
         File file = new File(resultsFileNameForToday);
         // Create results file based on fundDistributionFileEntryResultDataList including signature
         FundDistributionFileResultData fundDistributionFileResultData = new FundDistributionFileResultData();
-        try( Writer fileWriter = new FileWriter(resultsFileNameForToday, false) ) {
+        try (Writer fileWriter = new FileWriter(resultsFileNameForToday, false)) {
             for (FundDistributionFileEntryResultData entryResult : fundDistributionFileEntryResultDataList) {
-                fileWriter.write( getEntryResultAsCommaDelimitedLine(entryResult) );
+                fileWriter.write(getEntryResultAsCommaDelimitedLine(entryResult));
                 updateFundDistributionFileResultData(fundDistributionFileResultData, entryResult);
             }
             fundDistributionFileResultData.setFinancialServerHash(networkService.getNetworkNodeData().getNodeHash());
             fundDistributionFileResultCrypto.signMessage(fundDistributionFileResultData);
             SignatureData signature = fundDistributionFileResultCrypto.getSignature(fundDistributionFileResultData);
-            fileWriter.write( signature.getR() + COMMA_SEPARATOR + signature.getS()
-                    + COMMA_SEPARATOR + fundDistributionFileResultData.getFinancialServerHash() );
+            fileWriter.write(signature.getR() + COMMA_SEPARATOR + signature.getS()
+                    + COMMA_SEPARATOR + fundDistributionFileResultData.getFinancialServerHash());
         } catch (IOException e) {
             log.error(CANT_SAVE_FILE_ON_DISK, e);
         }
         // Upload file to S3
-        awsService.uploadFundDistributionResultFile(resultsFileNameForToday, file,"application/vnd.ms-excel");
+        awsService.uploadFundDistributionResultFile(resultsFileNameForToday, file, "application/vnd.ms-excel");
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new FundDistributionResponse(new FundDistributionResponseData(fundDistributionFileEntryResultDataList)));
     }
 
     private String getEntryResultAsCommaDelimitedLine(FundDistributionFileEntryResultData entryResult) {
-        return Long.toString(entryResult.getId()) + COMMA_SEPARATOR +  entryResult.getDistributionPool() + COMMA_SEPARATOR +
+        return Long.toString(entryResult.getId()) + COMMA_SEPARATOR + entryResult.getDistributionPool() + COMMA_SEPARATOR +
                 entryResult.getSource() + COMMA_SEPARATOR + getEntryResultSourceFundAddress(entryResult).toString() + COMMA_SEPARATOR +
-                entryResult.getReceiverAddress().toString() + COMMA_SEPARATOR + ((Boolean)entryResult.isAccepted()).toString() + COMMA_SEPARATOR +
+                entryResult.getReceiverAddress().toString() + COMMA_SEPARATOR + ((Boolean) entryResult.isAccepted()).toString() + COMMA_SEPARATOR +
                 entryResult.getStatus() + "\n";
     }
 
     private void updateFundDistributionFileResultData(FundDistributionFileResultData fundDistributionFileResultData, FundDistributionFileEntryResultData entryResult) {
         byte[] distributionPoolNameInBytes = entryResult.getDistributionPool().getBytes();
         byte[] sourceInBytes = entryResult.getSource().getBytes();
-        byte[] distributionPoolAddressInBytes =  entryResult.getReceiverAddress().getBytes();
+        byte[] distributionPoolAddressInBytes = entryResult.getReceiverAddress().getBytes();
         byte[] receiverAddressInBytes = entryResult.getReceiverAddress().getBytes();
-        byte[] isAcceptedInBytes = ((Boolean)entryResult.isAccepted()).toString().getBytes();
+        byte[] isAcceptedInBytes = ((Boolean) entryResult.isAccepted()).toString().getBytes();
         byte[] statusInBytes = entryResult.getStatus().getBytes();
 
         byte[] resultLineInBytes = ByteBuffer.allocate(Long.BYTES + distributionPoolNameInBytes.length + sourceInBytes.length + distributionPoolAddressInBytes.length +
@@ -562,7 +530,6 @@ public class DistributeFundService {
         fundDistributionFileResultData.getSignatureMessage().add(resultLineInBytes);
         fundDistributionFileResultData.incrementMessageByteSize(resultLineInBytes.length);
     }
-
 
 
 }

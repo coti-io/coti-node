@@ -60,5 +60,16 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String DISTRIBUTION_FILE_ALREADY_PROCESSED = "Distribution file already processed today";
     public static final String DISTRIBUTION_FILE_DATE_MISMATCHED = "Distribution file by date already saved";
 
+    public static final String CANT_SAVE_FILE_ON_DISK = "Can't save file on disk.";
+    public static final String CANT_LOAD_FILE_FROM_SHARED_LOCATION = "Can't load file from shared location.";
+    public static final String BAD_CSV_FILE_FORMAT = "Bad csv file format";
+    public static final String BAD_CSV_FILE_LINE_FORMAT = "Bad csv file line format";
+    public static final String ACCEPTED = "Accepted";
+    public static final String LOCK_UP_DATE_IS_INVALID = "Lock-up date is invalid";
+    public static final String DATE_UNIQUENESS_WAS_NOT_MAINTAINED = "Date uniqueness was not maintained";
+    public static final String DISTRIBUTION_POOL_BALANCE_CHECKS_FAILED = "Distribution pool balance checks failed";
+    public static final String TRANSACTION_CREATED_SUCCESSFULLY = "Transaction created successfully";
+    public static final String TRANSACTION_CREATION_FAILED = "Transaction creation failed";
+
 
 }

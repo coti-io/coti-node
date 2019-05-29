@@ -24,9 +24,10 @@ public class DailyFundDistributionData implements IEntity {
     public DailyFundDistributionData(Instant date, LinkedHashMap<Hash, FundDistributionData> fundDistributionEntries) {
         this.date = date;
         this.fundDistributionEntries = fundDistributionEntries;
+        initHashByDate();
     }
 
-    public void initHashByDate() {
+    private void initHashByDate() {
         LocalDateTime ldt = LocalDateTime.ofInstant(date, ZoneOffset.UTC);
         this.hash = CryptoHelper.cryptoHash( (ldt.getYear() + ldt.getMonth().toString() +
                 ldt.getDayOfMonth()).getBytes() );
