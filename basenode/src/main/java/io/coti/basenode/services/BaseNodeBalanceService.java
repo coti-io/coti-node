@@ -21,7 +21,12 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class BaseNodeBalanceService implements IBalanceService {
 
+
+
     protected Map<Hash, BigDecimal> balanceMap;
+
+
+
     protected Map<Hash, BigDecimal> preBalanceMap;
 
     public void init() {
@@ -72,7 +77,6 @@ public class BaseNodeBalanceService implements IBalanceService {
             balance = balanceMap.containsKey(hash) ? balanceMap.get(hash) : new BigDecimal(0);
             preBalance = preBalanceMap.containsKey(hash) ? preBalanceMap.get(hash) : new BigDecimal(0);
             getBalancesResponse.addAddressBalanceToResponse(hash, balance, preBalance);
-
         }
         return ResponseEntity.status(HttpStatus.OK).body(getBalancesResponse);
     }
@@ -128,6 +132,16 @@ public class BaseNodeBalanceService implements IBalanceService {
         preBalanceMap.computeIfPresent(addressHash, (currentHash, currentAmount) ->
                 currentAmount.add(amount));
         preBalanceMap.putIfAbsent(addressHash, amount);
+    }
+
+    @Override
+    public BigDecimal getBalanceByAddress(Hash addressHash) {
+        return  balanceMap.containsKey(addressHash) ? balanceMap.get(addressHash) : BigDecimal.ZERO;
+    }
+
+    @Override
+    public BigDecimal getPreBalanceByAddress(Hash addressHash) {
+        return  preBalanceMap.containsKey(addressHash) ? preBalanceMap.get(addressHash) : BigDecimal.ZERO;
     }
 
 }

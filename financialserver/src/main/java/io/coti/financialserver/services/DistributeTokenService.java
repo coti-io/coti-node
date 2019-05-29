@@ -7,7 +7,7 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
 import io.coti.financialserver.crypto.TokenSaleDistributionCrypto;
 import io.coti.financialserver.data.ReservedAddress;
-import io.coti.financialserver.data.TokenSale;
+import io.coti.financialserver.data.Fund;
 import io.coti.financialserver.data.TokenSaleDistributionData;
 import io.coti.financialserver.data.TokenSaleDistributionEntryData;
 import io.coti.financialserver.http.TokenSaleDistributionRequest;
@@ -32,7 +32,7 @@ import static io.coti.financialserver.http.HttpStringConstants.DUPLICATE_FUND_NA
 
 @Slf4j
 @Service
-public class DistributeTokensService {
+public class DistributeTokenService {
 
     @Value("${financialserver.seed}")
     private String seed;
@@ -54,7 +54,7 @@ public class DistributeTokensService {
         TokenSaleDistributionData tokenSaleDistributionData = request.getTokenSaleDistributionData();
         tokenSaleDistributionData.init();
 
-        EnumMap<TokenSale, Boolean> tokenSaleNameMap = new EnumMap<>(TokenSale.class);
+        EnumMap<Fund, Boolean> tokenSaleNameMap = new EnumMap<>(Fund.class);
 
         for (TokenSaleDistributionEntryData tokenSaleDistributionEntryData : tokenSaleDistributionData.getTokenDistributionDataEntries()) {
             if (tokenSaleNameMap.containsKey(tokenSaleDistributionEntryData.getFundName())) {

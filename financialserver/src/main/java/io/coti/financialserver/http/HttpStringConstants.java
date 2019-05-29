@@ -46,11 +46,30 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String HEADER_CONTENT_TYPE = "Content-Type";
     public static final String S3_SUFFIX_METADATA_KEY = "x-amz-meta-suffix";
 
+    public static final String S3_NOT_REACHABLE = "S3 not reachable for a response";
+    public static final String S3_DOCUMENT_DOWNLOAD_ERROR = "Some error occurred during download";
+
     public static final String NOT_COTI_POOL = "Transaction receiver isn't Coti pool";
     public static final String ALREADY_GOT_THIS_RECOURSE_CLAIM = "Recourse claim transaction already processed";
     public static final String NOT_ENOUGH_MONEY_IN_TRANSACTION = "Not enough money in transaction";
 
     public static final String INTERNAL_ERROR = "Internal error";
+    public static final String PARSED_SUCCESSFULLY = "Parsed file successfully.";
+    public static final String PARSED_WITH_ERROR = "Parsing file encountered error.";
+    public static final String DISTRIBUTION_FILE_INVALID = "Distribution file is invalid";
+    public static final String DISTRIBUTION_FILE_ALREADY_PROCESSED = "Distribution file already processed today";
+    public static final String DISTRIBUTION_FILE_DATE_MISMATCHED = "Distribution file by date already saved";
+
+    public static final String CANT_SAVE_FILE_ON_DISK = "Can't save file on disk.";
+    public static final String CANT_LOAD_FILE_FROM_SHARED_LOCATION = "Can't load file from shared location.";
+    public static final String BAD_CSV_FILE_FORMAT = "Bad csv file format";
+    public static final String BAD_CSV_FILE_LINE_FORMAT = "Bad csv file line format";
+    public static final String ACCEPTED = "Accepted";
+    public static final String LOCK_UP_DATE_IS_INVALID = "Lock-up date is invalid";
+    public static final String DATE_UNIQUENESS_WAS_NOT_MAINTAINED = "Date uniqueness was not maintained";
+    public static final String DISTRIBUTION_POOL_BALANCE_CHECKS_FAILED = "Distribution pool balance checks failed";
+    public static final String TRANSACTION_CREATED_SUCCESSFULLY = "Transaction created successfully";
+    public static final String TRANSACTION_CREATION_FAILED = "Transaction creation failed";
 
 
 }
