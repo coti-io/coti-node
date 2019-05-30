@@ -24,7 +24,6 @@ public class FundDistributionFileData implements IEntity, ISignable, ISignValida
     private @Valid SignatureData userSignature;
     private Instant creationTime;
     private String fileName;
-
     private List<byte[]> signatureMessage = new ArrayList<>();
     private int messageByteSize = 0;
 
