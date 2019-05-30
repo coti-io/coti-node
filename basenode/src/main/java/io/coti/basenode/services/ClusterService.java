@@ -10,6 +10,7 @@ import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.basenode.services.interfaces.IConfirmationService;
 import io.coti.basenode.services.interfaces.ISourceSelector;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.SerializationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -190,10 +191,6 @@ public class ClusterService implements IClusterService {
         return;
     }
 
-    public List<Set<TransactionData>> getSourceListsByTrustScore() {
-        return sourceListsByTrustScore;
-    }
-
     @Override
     public long getTotalSources() {
         return totalSources.get();
@@ -202,6 +199,11 @@ public class ClusterService implements IClusterService {
     @Override
     public Set<Hash> getTrustChainConfirmationTransactionHashes() {
         return trustChainConfirmationCluster.keySet().stream().collect(Collectors.toSet());
+    }
+
+    @Override
+    public ConcurrentHashMap<Hash, TransactionData> getCopyTrustChainConfirmationCluster() {
+        return SerializationUtils.clone(trustChainConfirmationCluster);
     }
 
 }
