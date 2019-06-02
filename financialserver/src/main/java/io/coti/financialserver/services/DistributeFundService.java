@@ -17,7 +17,7 @@ import io.coti.financialserver.http.data.FundDistributionFileData;
 import io.coti.financialserver.http.data.FundDistributionResponseData;
 import io.coti.financialserver.model.DailyFundDistributions;
 import io.coti.financialserver.model.DailyFundDistributionFiles;
-import io.coti.financialserver.model.FailedFundDistribution;
+import io.coti.financialserver.model.FailedFundDistributions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,7 +73,7 @@ public class DistributeFundService {
     @Autowired
     private DailyFundDistributions dailyFundDistributions;
     @Autowired
-    private FailedFundDistribution failedFundDistribution;
+    private FailedFundDistributions failedFundDistributions;
     @Autowired
     private DailyFundDistributionFiles dailyFundDistributionFiles;
     private Map<Hash, FundDistributionBalanceData> fundBalanceMap;
@@ -395,11 +395,11 @@ public class DistributeFundService {
                 } else {
                     fundDistributionFileEntry.setStatus(DistributionEntryStatus.FAILED);
                     fundDistributionEntriesOfToday.put(fundDistributionFileEntry.getHash(), fundDistributionFileEntry);
-                    FailedFundDistributionData fundDistributionFailedHashesOfToday = failedFundDistribution.getByHash(hashOfYesterday);
+                    FailedFundDistributionData fundDistributionFailedHashesOfToday = failedFundDistributions.getByHash(hashOfYesterday);
                     if (fundDistributionFailedHashesOfToday == null)
                         fundDistributionFailedHashesOfToday = new FailedFundDistributionData(hashOfYesterday);
                     fundDistributionFailedHashesOfToday.getFundDistributionHashes().put(fundDistributionFileEntry.getHash(), fundDistributionFileEntry.getHash());
-                    failedFundDistribution.put(fundDistributionFailedHashesOfToday);
+                    failedFundDistributions.put(fundDistributionFailedHashesOfToday);
                 }
                 dailyFundDistributions.put(dailyFundDistributionDataOfToday);
                 String status = isSuccessful ? TRANSACTION_CREATED_SUCCESSFULLY : TRANSACTION_CREATION_FAILED;
@@ -429,7 +429,7 @@ public class DistributeFundService {
     }
 
     private void createPendingFailedTransactions(List<FundDistributionFileEntryResultData> fundDistributionFileEntryResultDataList) {
-        failedFundDistribution.forEach(distributionFailedHashes ->
+        failedFundDistributions.forEach(distributionFailedHashes ->
         {
             Hash hashOfDay = distributionFailedHashes.getHash();
             DailyFundDistributionData fundDistributionDataOfToday = dailyFundDistributions.getByHash(hashOfDay);
@@ -456,7 +456,7 @@ public class DistributeFundService {
                 }
             }
             dailyFundDistributions.put(fundDistributionDataOfToday);
-            failedFundDistribution.put(distributionFailedHashes);
+            failedFundDistributions.put(distributionFailedHashes);
         });
     }
 

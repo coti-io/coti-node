@@ -33,7 +33,7 @@ public class RocksDBConnector extends BaseNodeRocksDBConnector {
                 InitialFunds.class.getName(),
                 TokenSaleDistributions.class.getName(),
                 DailyFundDistributions.class.getName(),
-                FailedFundDistribution.class.getName(),
+                FailedFundDistributions.class.getName(),
                 DailyFundDistributionFiles.class.getName()
         ));
     }
