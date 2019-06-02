@@ -4,39 +4,40 @@ import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
 import lombok.Data;
-import org.apache.commons.lang3.ArrayUtils;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
 @Data
-public class FundDistributionData implements IEntity{
+public class FundDistributionData implements IEntity {
 
     private Hash hash;
     private Hash hashByDate;
     private String fileName; // File name according to which this entry was created
     private DistributionEntryStatus status;
-
     private long id;
     private Hash receiverAddress;
     private Fund distributionPoolFund; // Expected range from ReservedAddress.isSecondaryFundDistribution()
     private BigDecimal amount;
     private Instant createTime;
-    private Instant transactionTime;
+    private Instant releaseTime;
     private String source; // "Source" secondary key
 
-    public FundDistributionData(long id, Hash receiverAddress, Fund distributionPoolFund, BigDecimal amount, Instant createTime,
-                                Instant transactionTime, String source) {
+    public FundDistributionData(@NotNull long id, @NotEmpty Hash receiverAddress, @NotNull Fund distributionPoolFund, @NotNull BigDecimal amount, @NotNull Instant createTime,
+                                @NotNull Instant releaseTime, @NotEmpty String source) {
         this.id = id;
         this.receiverAddress = receiverAddress;
         this.distributionPoolFund = distributionPoolFund;
         this.amount = amount;
         this.createTime = createTime;
-        this.transactionTime = transactionTime;
+        this.releaseTime = releaseTime;
         this.source = source;
-        initHashes();
+        init();
     }
 
     @Override
@@ -49,15 +50,19 @@ public class FundDistributionData implements IEntity{
         this.hash = hash;
     }
 
-    public void initHashes() {
-        byte[] concatDataFields = ArrayUtils.addAll((distributionPoolFund.getText()+ source).getBytes(),receiverAddress.getBytes());
-        this.hash = CryptoHelper.cryptoHash(concatDataFields);
+    public void init() {
+        byte[] distributionPoolInBytes = distributionPoolFund.getText().getBytes();
+        byte[] sourceInBytes = source.getBytes();
+        byte[] receiverAddressInBytes = receiverAddress.getBytes();
+        byte[] concatDataFields = ByteBuffer.allocate(distributionPoolInBytes.length + sourceInBytes.length + receiverAddressInBytes.length).
+                put(distributionPoolInBytes).put(sourceInBytes).put(receiverAddressInBytes).array();
 
+        this.hash = CryptoHelper.cryptoHash(concatDataFields);
         this.status = DistributionEntryStatus.ONHOLD;
 
-        LocalDateTime ldt = LocalDateTime.ofInstant(transactionTime, ZoneOffset.UTC);
-        this.hashByDate = CryptoHelper.cryptoHash( (ldt.getYear() + ldt.getMonth().toString() +
-                ldt.getDayOfMonth()).getBytes() );
+        LocalDateTime ldt = LocalDateTime.ofInstant(releaseTime, ZoneOffset.UTC);
+        this.hashByDate = CryptoHelper.cryptoHash((ldt.getYear() + ldt.getMonth().toString() +
+                ldt.getDayOfMonth()).getBytes());
     }
 
     public boolean isReadyToInitiate() {
