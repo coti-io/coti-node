@@ -36,6 +36,11 @@ public class TransactionService extends BaseNodeTransactionService {
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
         if (EnumSet.of(TransactionType.Initial).contains(transactionData.getType())) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
             dspVoteService.publishDecision(transactionData.getHash());
             return;
         }
