@@ -138,7 +138,7 @@ public class DistributeFundService {
     }
 
     public ResponseEntity<IResponse> getReservedBalances(GetReservedBalancesRequest getReservedBalancesRequest) {
-        List<ReservedBalanceResponseData> reservedBalances = new ArrayList<>();
+        Set<ReservedBalanceResponseData> reservedBalances = new HashSet<>();
         getReservedBalancesRequest.getAddresses().forEach(address -> {
             if (addressToReservedBalanceMap.containsKey(address)) {
                 reservedBalances.add(new ReservedBalanceResponseData(address, addressToReservedBalanceMap.get(address).getReservedAmount()));
@@ -434,18 +434,18 @@ public class DistributeFundService {
         }
         fundReserveBalanceData.setReservedAmount(updatedFundReservedAmount);
 
-        ReservedBalanceData reservedBalanceData = addressToReservedBalanceMap.get(fundDistributionData.getReceiverAddress());
+        Hash receiverAddress = fundDistributionData.getReceiverAddress();
+        ReservedBalanceData reservedBalanceData = addressToReservedBalanceMap.get(receiverAddress);
         if (reservedBalanceData == null) {
             log.error("Receiver reserved balance doesn't exist");
             return;
         }
         BigDecimal updatedReservedAmount = reservedBalanceData.getReservedAmount().subtract(fundDistributionData.getAmount());
-        if (updatedReservedAmount.compareTo(BigDecimal.ZERO) < 0) {
-            log.error("Reserved amount can not be negative.");
-            updatedReservedAmount = BigDecimal.ZERO;
+        if (updatedReservedAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            addressToReservedBalanceMap.remove(receiverAddress);
+            return;
         }
         reservedBalanceData.setReservedAmount(updatedReservedAmount);
-
     }
 
     private Hash getHashOfDate(Instant dayInstant) {

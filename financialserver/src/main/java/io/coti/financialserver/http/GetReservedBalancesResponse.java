@@ -4,13 +4,13 @@ import io.coti.basenode.http.BaseResponse;
 import io.coti.financialserver.http.data.ReservedBalanceResponseData;
 import lombok.Data;
 
-import java.util.List;
+import java.util.Set;
 
 @Data
 public class GetReservedBalancesResponse extends BaseResponse {
-    List<ReservedBalanceResponseData> lockupBalances;
+    Set<ReservedBalanceResponseData> lockupBalances;
 
-    public GetReservedBalancesResponse(List<ReservedBalanceResponseData> reservedBalances) {
+    public GetReservedBalancesResponse(Set<ReservedBalanceResponseData> reservedBalances) {
         lockupBalances = reservedBalances;
     }
 }
