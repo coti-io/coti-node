@@ -21,12 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class BaseNodeBalanceService implements IBalanceService {
 
-
-
     protected Map<Hash, BigDecimal> balanceMap;
-
-
-
     protected Map<Hash, BigDecimal> preBalanceMap;
 
     public void init() {

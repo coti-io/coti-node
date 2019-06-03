@@ -12,10 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -69,6 +66,9 @@ public class InitializationService extends BaseNodeInitializationService {
                 .filter(dspNode -> !dspNode.equals(networkService.getNetworkNodeData()))
                 .collect(Collectors.toList());
         networkService.addListToSubscription(dspNetworkNodeDataList);
+        if (networkService.getSingleNodeData(NodeType.FinancialServer) != null) {
+            networkService.addListToSubscription(new ArrayList<>(Arrays.asList(networkService.getSingleNodeData(NodeType.FinancialServer))));
+        }
 
         super.init();
     }

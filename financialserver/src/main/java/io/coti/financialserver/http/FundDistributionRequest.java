@@ -12,12 +12,11 @@ public class FundDistributionRequest {
     @NotEmpty
     String fileName;
 
-    public FundDistributionRequest(String fileName) {
-        this.fileName = fileName;
+    public FundDistributionRequest() {
     }
 
     public FundDistributionFileData getFundDistributionFileData(Hash hash) {
-        return new FundDistributionFileData(fileName, hash );
+        return new FundDistributionFileData(fileName, hash);
     }
 
 

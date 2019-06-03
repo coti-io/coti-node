@@ -66,6 +66,7 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String BAD_CSV_FILE_LINE_FORMAT = "Bad csv file line format";
     public static final String ACCEPTED = "Accepted";
     public static final String LOCK_UP_DATE_IS_INVALID = "Lock-up date is invalid";
+    public static final String RECEIVER_ADDRESS_INVALID = "Receiver address is invalid";
     public static final String DATE_UNIQUENESS_WAS_NOT_MAINTAINED = "Date uniqueness was not maintained";
     public static final String DISTRIBUTION_POOL_BALANCE_CHECKS_FAILED = "Distribution pool balance checks failed";
     public static final String TRANSACTION_CREATED_SUCCESSFULLY = "Transaction created successfully";

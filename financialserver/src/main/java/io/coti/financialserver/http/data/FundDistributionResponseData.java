@@ -1,6 +1,5 @@
 package io.coti.financialserver.http.data;
 
-import io.coti.financialserver.http.FundDistributionFileEntryResultData;
 import lombok.Data;
 
 import java.util.List;
@@ -8,9 +7,9 @@ import java.util.List;
 @Data
 public class FundDistributionResponseData {
 
-    private List<FundDistributionFileEntryResultData> fundDistributionFileEntryResults;
+    private List<FundDistributionFileEntryResultData> fundDistributionResults;
 
-    public FundDistributionResponseData(List<FundDistributionFileEntryResultData> fundDistributionFileEntryResults) {
-        this.fundDistributionFileEntryResults = fundDistributionFileEntryResults;
+    public FundDistributionResponseData(List<FundDistributionFileEntryResultData> fundDistributionResults) {
+        this.fundDistributionResults = fundDistributionResults;
     }
 }

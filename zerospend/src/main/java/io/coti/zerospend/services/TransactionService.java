@@ -37,6 +37,7 @@ public class TransactionService extends BaseNodeTransactionService {
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
         if (EnumSet.of(TransactionType.Initial).contains(transactionData.getType())) {
             dspVoteService.publishDecision(transactionData.getHash());
+            return;
         }
         dspVoteService.preparePropagatedTransactionForVoting(transactionData);
     }

@@ -1,4 +1,4 @@
-package io.coti.financialserver.http;
+package io.coti.financialserver.http.data;
 
 import lombok.Data;
 
