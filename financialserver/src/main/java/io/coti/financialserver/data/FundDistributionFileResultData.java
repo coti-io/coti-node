@@ -15,6 +15,7 @@ import java.util.List;
 @Data
 public class FundDistributionFileResultData implements IEntity, ISignable, ISignValidatable {
 
+    private static final long serialVersionUID = -4032461223979261902L;
     private Hash financialServerHash;
     private List<byte[]> signatureMessage = new ArrayList<>();
     private int messageByteSize = 0;

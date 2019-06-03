@@ -16,17 +16,18 @@ import java.time.ZoneOffset;
 @Data
 public class FundDistributionData implements IEntity {
 
+    private static final long serialVersionUID = -6738438271045091279L;
     private Hash hash;
     private Hash hashByDate;
-    private String fileName; // File name according to which this entry was created
+    private String fileName;
     private DistributionEntryStatus status;
     private long id;
     private Hash receiverAddress;
-    private Fund distributionPoolFund; // Expected range from ReservedAddress.isSecondaryFundDistribution()
+    private Fund distributionPoolFund;
     private BigDecimal amount;
     private Instant createTime;
     private Instant releaseTime;
-    private String source; // "Source" secondary key
+    private String source;
 
     public FundDistributionData(@NotNull long id, @NotEmpty Hash receiverAddress, @NotNull Fund distributionPoolFund, @NotNull BigDecimal amount, @NotNull Instant createTime,
                                 @NotNull Instant releaseTime, @NotEmpty String source) {

@@ -11,9 +11,10 @@ import java.util.Map;
 @Data
 public class FailedFundDistributionData implements IEntity {
 
+    private static final long serialVersionUID = 2089169974713456690L;
     @NotEmpty
     protected Hash hash;
-    protected Map<Hash,Hash> fundDistributionHashes;
+    protected Map<Hash, Hash> fundDistributionHashes;
 
     public FailedFundDistributionData(Hash hash) {
         this.hash = hash;

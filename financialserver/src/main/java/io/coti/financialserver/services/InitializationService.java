@@ -35,7 +35,7 @@ public class InitializationService extends BaseNodeInitializationService {
     @Autowired
     private DistributionService distributionService;
     @Autowired
-    private DistributeFundService distributeFundService;
+    private FundDistributionService fundDistributionService;
 
     @PostConstruct
     public void init() {
@@ -60,7 +60,7 @@ public class InitializationService extends BaseNodeInitializationService {
         super.init();
 
         distributionService.distributeToInitialFunds();
-        distributeFundService.initReservedBalance();
+        fundDistributionService.initReservedBalance();
     }
 
     @Override

@@ -15,6 +15,7 @@ import java.util.LinkedHashMap;
 @Data
 public class DailyFundDistributionData implements IEntity {
 
+    private static final long serialVersionUID = 3367282572738469785L;
     private Hash hash;
     @NotEmpty
     private Instant date;
