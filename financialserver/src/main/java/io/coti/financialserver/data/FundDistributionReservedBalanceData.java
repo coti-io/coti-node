@@ -5,15 +5,13 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
-public class FundDistributionReservedBalanceData {
+public class FundDistributionReservedBalanceData extends ReservedBalanceData {
 
-    protected Fund fund;
-    protected BigDecimal reservedAmount;
-
+    private Fund fund;
 
     public FundDistributionReservedBalanceData(Fund fund, BigDecimal reservedAmount) {
+        super(reservedAmount);
         this.fund = fund;
-        this.reservedAmount = reservedAmount;
     }
 
 }

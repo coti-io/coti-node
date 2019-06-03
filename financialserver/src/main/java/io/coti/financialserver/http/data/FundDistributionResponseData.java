@@ -1,6 +1,5 @@
 package io.coti.financialserver.http.data;
 
-import io.coti.financialserver.http.FundDistributionFileEntryResultData;
 import lombok.Data;
 
 import java.util.List;

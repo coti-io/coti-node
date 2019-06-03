@@ -2,6 +2,7 @@ package io.coti.financialserver.controllers;
 
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.financialserver.http.FundDistributionRequest;
+import io.coti.financialserver.http.GetReservedBalancesRequest;
 import io.coti.financialserver.http.TokenSaleDistributionRequest;
 import io.coti.financialserver.services.DistributeFundService;
 import io.coti.financialserver.services.DistributeTokenService;
@@ -23,18 +24,23 @@ public class DistributionController {
     @Autowired
     DistributeFundService distributeFundService;
 
-    @RequestMapping(path = "/tokensale", method = RequestMethod.POST)
+    @PostMapping(path = "/tokensale")
     public ResponseEntity<IResponse> distributeTokenSale(@RequestBody @Valid TokenSaleDistributionRequest request) {
         return distributeTokenService.distributeTokens(request);
     }
 
-    @RequestMapping(path = "/funds", method = RequestMethod.POST)
+    @PostMapping(path = "/funds")
     public ResponseEntity<IResponse> distributeFunds(@Valid @RequestBody FundDistributionRequest request) {
         return distributeFundService.distributeFundFromFile(request);
     }
 
-    @RequestMapping(path = "/balances", method = RequestMethod.GET)
+    @GetMapping(path = "/balances")
     public ResponseEntity<IResponse> getBalances() {
         return distributeFundService.getFundBalances();
+    }
+
+    @PostMapping(path = "/balance/lockup")
+    public ResponseEntity<IResponse> getReservedBalances(@RequestBody @Valid GetReservedBalancesRequest getReservedBalancesRequest) {
+        return distributeFundService.getReservedBalances(getReservedBalancesRequest);
     }
 }
