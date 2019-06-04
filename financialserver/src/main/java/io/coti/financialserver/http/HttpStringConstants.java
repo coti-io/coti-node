@@ -72,5 +72,7 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String TRANSACTION_CREATED_SUCCESSFULLY = "Transaction created successfully";
     public static final String TRANSACTION_CREATION_FAILED = "Transaction creation failed";
 
+    public static final String DISTRIBUTION_FILE_RECORD_DELETED = "Distribution file record deleted";
+
 
 }

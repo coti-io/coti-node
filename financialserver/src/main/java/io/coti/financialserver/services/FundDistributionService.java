@@ -28,10 +28,7 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -148,35 +145,72 @@ public class FundDistributionService {
         return ResponseEntity.status(HttpStatus.OK).body(new GetReservedBalancesResponse(reservedBalances));
     }
 
-    public ResponseEntity<IResponse> distributeFundFromFile(FundDistributionRequest request) {
-
-        Instant now = Instant.now();
-        Hash hashOfToday = getHashOfDate(now);
-
-        DailyFundDistributionFileData fundDistributionFileByDayByHash = dailyFundDistributionFiles.getByHash(hashOfToday);
-        if (fundDistributionFileByDayByHash != null) {
-            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(new Response(DISTRIBUTION_FILE_ALREADY_PROCESSED, STATUS_ERROR));
-        }
-
+    public ResponseEntity<IResponse> distributeFundFromLocalFile(FundDistributionRequest request) {
         List<FundDistributionData> fundDistributionFileDataEntries = new ArrayList<>();
-        ResponseEntity<IResponse> distributionFileVerificationResponse = verifyDailyDistributionFile(request, fundDistributionFileDataEntries);
+        ResponseEntity<IResponse> distributionFileVerificationResponse = verifyDailyDistributionLocalFile(request, fundDistributionFileDataEntries);
+
         if (distributionFileVerificationResponse != null) {
             return distributionFileVerificationResponse;
         }
 
-        ResponseEntity<IResponse> responseEntity = updateWithTransactionsEntriesFromVerifiedFile(fundDistributionFileDataEntries);
-
-        if (responseEntity.getStatusCode().equals(HttpStatus.OK)) {
-            String fileName = request.getFileName();
-            DailyFundDistributionFileData fundDistributionFileOfDay = new DailyFundDistributionFileData(now, fileName);
-            dailyFundDistributionFiles.put(fundDistributionFileOfDay);
-        }
+        ResponseEntity<IResponse> responseEntity = updateWithTransactionsEntriesFromVerifiedFile(fundDistributionFileDataEntries, new AtomicLong(0), new AtomicLong(0));
 
         return responseEntity;
+
+    }
+
+    public ResponseEntity<IResponse> distributeFundFromFile(FundDistributionRequest request) {
+        AtomicLong acceptedDistributionNumber = new AtomicLong(0);
+        AtomicLong notAcceptedDistributionNumber = new AtomicLong(0);
+        Thread monitorDistributionFile = monitorDistributionFile(acceptedDistributionNumber, notAcceptedDistributionNumber);
+        try {
+            Instant now = Instant.now();
+            Hash hashOfToday = getHashOfDate(now);
+
+
+            DailyFundDistributionFileData fundDistributionFileByDayByHash = dailyFundDistributionFiles.getByHash(hashOfToday);
+            if (fundDistributionFileByDayByHash != null) {
+                return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(new Response(DISTRIBUTION_FILE_ALREADY_PROCESSED, STATUS_ERROR));
+            }
+
+            List<FundDistributionData> fundDistributionFileDataEntries = new ArrayList<>();
+            ResponseEntity<IResponse> distributionFileVerificationResponse = verifyDailyDistributionFile(request, fundDistributionFileDataEntries);
+            if (distributionFileVerificationResponse != null) {
+                return distributionFileVerificationResponse;
+            }
+            monitorDistributionFile.start();
+            ResponseEntity<IResponse> responseEntity = updateWithTransactionsEntriesFromVerifiedFile(fundDistributionFileDataEntries, acceptedDistributionNumber, notAcceptedDistributionNumber);
+
+            if (responseEntity.getStatusCode().equals(HttpStatus.OK)) {
+                String fileName = request.getFileName();
+                DailyFundDistributionFileData fundDistributionFileOfDay = new DailyFundDistributionFileData(now, fileName);
+                dailyFundDistributionFiles.put(fundDistributionFileOfDay);
+            }
+            return responseEntity;
+        } finally {
+            if (monitorDistributionFile.isAlive()) {
+                monitorDistributionFile.interrupt();
+            }
+        }
+
+
+    }
+
+    private Thread monitorDistributionFile(AtomicLong acceptedDistributionNumber, AtomicLong notAcceptedDistributionNumber) {
+        return new Thread(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                log.info("Fund distributions, accepted : {}, rejected: {}", acceptedDistributionNumber, notAcceptedDistributionNumber);
+            }
+        });
     }
 
     public LocalDateTime getStartOfYesterday() {
-        return LocalDate.now().minusDays(1).atStartOfDay();
+        return LocalDate.now(ZoneId.of("UTC")).minusDays(1).atStartOfDay();
     }
 
     private ResponseEntity<IResponse> verifyDailyDistributionFile(FundDistributionRequest request, List<FundDistributionData> fundDistributionFileDataEntries) {
@@ -188,6 +222,29 @@ public class FundDistributionService {
             return response;
         }
 
+        return null;
+    }
+
+    private ResponseEntity<IResponse> verifyDailyDistributionLocalFile(FundDistributionRequest request, List<FundDistributionData> fundDistributionFileDataEntries) {
+        FundDistributionFileData fundDistributionFileData = request.getFundDistributionFileData(new Hash(kycServerPublicKey));
+        String fileName = request.getFileName();
+
+        ResponseEntity<IResponse> response = verifyDailyDistributionLocalFileByName(fundDistributionFileDataEntries, fundDistributionFileData, fileName);
+        if (response != null) {
+            return response;
+        }
+
+        return null;
+    }
+
+    private ResponseEntity<IResponse> verifyDailyDistributionLocalFileByName(List<FundDistributionData> fundDistributionFileDataEntries, FundDistributionFileData fundDistributionFileData, String fileName) {
+        ResponseEntity<IResponse> responseEntityForFileHandling = handleFundDistributionFile(fundDistributionFileData, fileName, fundDistributionFileDataEntries);
+        if (responseEntityForFileHandling != null) {
+            return responseEntityForFileHandling;
+        }
+        if (fundDistributionFileData.getUserSignature() == null || !fundDistributionFileCrypto.verifySignature(fundDistributionFileData)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
+        }
         return null;
     }
 
@@ -278,7 +335,7 @@ public class FundDistributionService {
         }
     }
 
-    private ResponseEntity<IResponse> updateWithTransactionsEntriesFromVerifiedFile(List<FundDistributionData> fundDistributionFileEntriesData) {
+    private ResponseEntity<IResponse> updateWithTransactionsEntriesFromVerifiedFile(List<FundDistributionData> fundDistributionFileEntriesData, AtomicLong acceptedDistributionNumber, AtomicLong notAcceptedDistributionNumber) {
         List<FundDistributionFileEntryResultData> fundDistributionFileEntryResults = new ArrayList<>();
         fundDistributionFileEntriesData.forEach(entryData -> {
                     boolean isAddressValid;
@@ -289,6 +346,7 @@ public class FundDistributionService {
                             (passedPreBalanceCheck = updateFundAvailableLockedBalances(entryData));
 
                     if (accepted) {
+                        acceptedDistributionNumber.incrementAndGet();
                         entryData.setStatus(DistributionEntryStatus.ACCEPTED);
                         DailyFundDistributionData fundDistributionOfDay = dailyFundDistributions.getByHash(entryData.getHashByDate());
                         if (fundDistributionOfDay == null) {
@@ -297,6 +355,8 @@ public class FundDistributionService {
                         }
                         fundDistributionOfDay.getFundDistributionEntries().put(entryData.getHash(), entryData);
                         dailyFundDistributions.put(fundDistributionOfDay);
+                    } else {
+                        notAcceptedDistributionNumber.incrementAndGet();
                     }
                     String statusByChecks = getTransactionEntryStatusByChecks(isAddressValid, isLockupDateValid, uniqueByDate, passedPreBalanceCheck);
                     fundDistributionFileEntryResults.add(new FundDistributionFileEntryResultData(entryData.getId(), entryData.getReceiverAddress().toString(),
@@ -601,4 +661,13 @@ public class FundDistributionService {
     }
 
 
+    public ResponseEntity<IResponse> deleteFundFileRecord() {
+        Hash fundDistributionFileRecordHash = getHashOfDate(Instant.now());
+
+        DailyFundDistributionFileData fundDistributionFileRecord = dailyFundDistributionFiles.getByHash(fundDistributionFileRecordHash);
+        if (fundDistributionFileRecord != null) {
+            dailyFundDistributionFiles.delete(fundDistributionFileRecord);
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(new Response(DISTRIBUTION_FILE_RECORD_DELETED));
+    }
 }

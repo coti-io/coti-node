@@ -34,6 +34,16 @@ public class DistributionController {
         return fundDistributionService.distributeFundFromFile(request);
     }
 
+    @PostMapping(path = "/funds/manual")
+    public ResponseEntity<IResponse> distributeFundsManual(@Valid @RequestBody FundDistributionRequest request) {
+        return fundDistributionService.distributeFundFromLocalFile(request);
+    }
+
+    @DeleteMapping(path = "/funds/file")
+    public ResponseEntity<IResponse> deleteFundFileRecord() {
+        return fundDistributionService.deleteFundFileRecord();
+    }
+
     @GetMapping(path = "/balances")
     public ResponseEntity<IResponse> getBalances() {
         return fundDistributionService.getFundBalances();
