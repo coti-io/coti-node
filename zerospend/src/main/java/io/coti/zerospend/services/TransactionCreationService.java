@@ -49,8 +49,8 @@ public class TransactionCreationService {
         return createNewZeroSpendTransaction(transactionData, STARVATION);
     }
 
-    public String createNewGenesisZeroSpendTransaction(ZeroSpendTransactionRequest zeroSpendTransactionRequest) {
-        return createNewZeroSpendTransaction(zeroSpendTransactionRequest.getTransactionData(), GENESIS);
+    public void createNewGenesisZeroSpendTransaction(double trustscore) {
+        createZeroSpendTransaction(trustscore, GENESIS);
     }
 
     public String createNewZeroSpendTransaction(TransactionData incomingTransactionData, ZeroSpendTransactionType zeroSpendTransactionType) {
@@ -71,12 +71,24 @@ public class TransactionCreationService {
             transactionData.setLeftParentHash(existingTransactionData.getHash());
         }
 
+        attachTransactionToCluster(transactionData, zeroSpendTransactionType);
+        return transactionData;
+    }
+
+    private TransactionData createZeroSpendTransaction(double trustScore, ZeroSpendTransactionType zeroSpendTransactionType) {
+        TransactionData transactionData = createZeroSpendTransactionData(trustScore, zeroSpendTransactionType);
+
+        attachTransactionToCluster(transactionData, zeroSpendTransactionType);
+        sendTransactionToPublisher(transactionData);
+        return transactionData;
+    }
+
+    private void attachTransactionToCluster(TransactionData transactionData, ZeroSpendTransactionType zeroSpendTransactionType) {
         DspConsensusResult dspConsensusResult = new DspConsensusResult(transactionData.getHash());
         dspConsensusResult.setDspConsensus(true);
         dspVoteService.setIndexForDspResult(transactionData, dspConsensusResult);
         transactionHelper.attachTransactionToCluster(transactionData);
-        log.info("Created a new Zero Spend Transaction: Hash = {} , SenderTrustScore = {} ", transactionData.getHash(), transactionData.getSenderTrustScore());
-        return transactionData;
+        log.info("Created a new {} Zero Spend Transaction: Hash = {} , SenderTrustScore = {} ", zeroSpendTransactionType, transactionData.getHash(), transactionData.getSenderTrustScore());
     }
 
     private void sendTransactionToPublisher(TransactionData transactionData) {

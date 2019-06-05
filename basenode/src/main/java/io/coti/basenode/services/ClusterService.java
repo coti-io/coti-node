@@ -206,4 +206,9 @@ public class ClusterService implements IClusterService {
         return SerializationUtils.clone(trustChainConfirmationCluster);
     }
 
+    @Override
+    public List<Set<TransactionData>> getSourceListsByTrustScore() {
+        return Collections.unmodifiableList(sourceListsByTrustScore);
+    }
+
 }
