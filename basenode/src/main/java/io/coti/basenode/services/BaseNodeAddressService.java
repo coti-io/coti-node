@@ -1,5 +1,7 @@
 package io.coti.basenode.services;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.AddressFileRequest;
@@ -21,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -97,12 +100,12 @@ public class BaseNodeAddressService implements IAddressService {
             }
             output.write("]");
             output.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            log.error("Error at get address batch: " + e);
         }
     }
 
-    public ResponseEntity<IResponse> addAddressBatch(AddressFileRequest request) {
+    public ResponseEntity<IResponse> uploadAddressBatch(AddressFileRequest request) {
         MultipartFile multiPartFile = request.getFile();
 
         String fileName = "addressBatch.txt";
@@ -124,16 +127,21 @@ public class BaseNodeAddressService implements IAddressService {
                 if (line.isEmpty()) {
                     break;
                 }
-                String[] lineSplits = line.split(",");
-                for (int i = 0; i < lineSplits.length; i++) {
-                    if (lineSplits[i].contains("address")) {
-                        String[] subLineSplits = lineSplits[i].split(":");
-                        String address = subLineSplits[1];
-                        addresses.put(new AddressData(new Hash(address.replaceAll("\"", ""))));
-                    }
-                }
+                ObjectMapper mapper = new ObjectMapper();
+                List<AddressResponseData> addressResponseDataList = mapper.readValue(line, new TypeReference<List<AddressResponseData>>() {
+                });
+                addressResponseDataList.forEach(addressResponseData -> addresses.put(new AddressData(new Hash(addressResponseData.getHash()), addressResponseData.getCreationTime())));
+//                String[] lineSplits = line.split(",");
+//                for (int i = 0; i < lineSplits.length; i++) {
+//                    if (lineSplits[i].contains("address")) {
+//                        String[] subLineSplits = lineSplits[i].split(":");
+//                        String address = subLineSplits[1];
+//                        addresses.put(new AddressData(new Hash(address.replaceAll("\"", ""))));
+//                    }
+//                }
             }
         } catch (Exception e) {
+            e.printStackTrace();
         }
         return ResponseEntity.status(HttpStatus.OK).body(new Response());
     }

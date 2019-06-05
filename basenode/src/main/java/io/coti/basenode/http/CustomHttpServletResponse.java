@@ -1,7 +1,6 @@
 package io.coti.basenode.http;
 
 import com.google.gson.Gson;
-import org.apache.http.HttpStatus;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
@@ -16,7 +15,7 @@ public class CustomHttpServletResponse extends HttpServletResponseWrapper {
 
     public void printResponse(BaseResponse response, int status) throws IOException {
         PrintWriter writer = this.getWriter();
-        this.setStatus(HttpStatus.SC_UNAUTHORIZED);
+        this.setStatus(status);
         this.setContentType("application/json");
         this.setCharacterEncoding("UTF-8");
         writer.print(new Gson().toJson(response));

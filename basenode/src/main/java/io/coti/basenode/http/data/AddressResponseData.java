@@ -8,11 +8,14 @@ import java.time.Instant;
 @Data
 public class AddressResponseData {
 
-    private String address;
+    private String hash;
     private Instant creationTime;
 
+    private AddressResponseData() {
+    }
+
     public AddressResponseData(AddressData address) {
-        this.address = address.getHash().toString();
+        this.hash = address.getHash().toString();
         this.creationTime = address.getCreationTime();
     }
 }
