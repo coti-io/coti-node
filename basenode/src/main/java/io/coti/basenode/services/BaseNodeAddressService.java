@@ -1,5 +1,8 @@
 package io.coti.basenode.services;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.AddressFileRequest;
@@ -21,6 +24,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.util.List;
+
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.ADDRESS_BATCH_UPLOADED;
 
 @Slf4j
 @Service
@@ -97,12 +103,12 @@ public class BaseNodeAddressService implements IAddressService {
             }
             output.write("]");
             output.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            log.error("Error at get address batch: " + e);
         }
     }
 
-    public ResponseEntity<IResponse> addAddressBatch(AddressFileRequest request) {
+    public ResponseEntity<IResponse> uploadAddressBatch(AddressFileRequest request) {
         MultipartFile multiPartFile = request.getFile();
 
         String fileName = "addressBatch.txt";
@@ -117,24 +123,21 @@ public class BaseNodeAddressService implements IAddressService {
         } catch (IOException e) {
 
         }
-        String line = "";
+        String line;
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName))) {
             while ((line = bufferedReader.readLine()) != null) {
                 line = line.trim();
                 if (line.isEmpty()) {
                     break;
                 }
-                String[] lineSplits = line.split(",");
-                for (int i = 0; i < lineSplits.length; i++) {
-                    if (lineSplits[i].contains("address")) {
-                        String[] subLineSplits = lineSplits[i].split(":");
-                        String address = subLineSplits[1];
-                        addresses.put(new AddressData(new Hash(address.replaceAll("\"", ""))));
-                    }
-                }
+                ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+                List<AddressResponseData> addressResponseDataList = mapper.readValue(line, new TypeReference<List<AddressResponseData>>() {
+                });
+                addressResponseDataList.forEach(addressResponseData -> addresses.put(new AddressData(new Hash(addressResponseData.getAddress()), addressResponseData.getCreationTime())));
             }
         } catch (Exception e) {
+            e.printStackTrace();
         }
-        return ResponseEntity.status(HttpStatus.OK).body(new Response());
+        return ResponseEntity.status(HttpStatus.OK).body(new Response(ADDRESS_BATCH_UPLOADED));
     }
 }

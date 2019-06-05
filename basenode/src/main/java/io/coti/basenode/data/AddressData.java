@@ -19,6 +19,11 @@ public class AddressData implements IPropagatable {
         creationTime = Instant.now();
     }
 
+    public AddressData(Hash hash, Instant creationTime) {
+        this.hash = hash;
+        this.creationTime = creationTime;
+    }
+
     @Override
     public Hash getHash() {
         return hash;

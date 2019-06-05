@@ -21,5 +21,5 @@ public interface IAddressService {
 
     void getAddressBatch(HttpServletResponse response);
 
-    ResponseEntity<IResponse> addAddressBatch(AddressFileRequest request);
+    ResponseEntity<IResponse> uploadAddressBatch(AddressFileRequest request);
 }

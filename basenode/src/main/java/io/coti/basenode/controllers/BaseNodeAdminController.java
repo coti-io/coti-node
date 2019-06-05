@@ -13,19 +13,18 @@ import javax.validation.Valid;
 
 @Slf4j
 @RestController
-@RequestMapping("/address/batch")
-public class AddressBatchController {
+@RequestMapping("/admin")
+public class BaseNodeAdminController {
     @Autowired
     private IAddressService addressService;
 
-    @GetMapping()
+    @GetMapping(path = "/address/batch")
     public void getAddressBatch(HttpServletResponse response) {
         addressService.getAddressBatch(response);
     }
 
-    @PostMapping()
-    public ResponseEntity<IResponse> addAddressBatch(@ModelAttribute @Valid AddressFileRequest request) {
-        return addressService.addAddressBatch(request);
+    @PostMapping(path = "/address/batch")
+    public ResponseEntity<IResponse> uploadAddressBatch(@ModelAttribute @Valid AddressFileRequest request) {
+        return addressService.uploadAddressBatch(request);
     }
-
 }

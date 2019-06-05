@@ -16,6 +16,7 @@ financialserver*.properties
 nodemanager*.properties
 *.csv
 *.json
+*.txt
 
 ### STS ###
 .apt_generated

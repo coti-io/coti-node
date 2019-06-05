@@ -37,4 +37,6 @@ public class BaseNodeHttpStringConstants {
 
     public static final String UNAUTHORIZED_IP_ACCESS = "Unauthorized ip access";
     public static final String METHOD_NOT_SUPPORTED = "Unsupported method";
+
+    public static final String ADDRESS_BATCH_UPLOADED = "Address batch uploaded";
 }

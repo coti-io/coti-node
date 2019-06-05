@@ -11,6 +11,9 @@ public class AddressResponseData {
     private String address;
     private Instant creationTime;
 
+    private AddressResponseData() {
+    }
+
     public AddressResponseData(AddressData address) {
         this.address = address.getHash().toString();
         this.creationTime = address.getCreationTime();
