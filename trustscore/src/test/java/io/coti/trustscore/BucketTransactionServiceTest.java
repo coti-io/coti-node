@@ -111,16 +111,6 @@ public class BucketTransactionServiceTest {
     }
 
     @Test
-    public void addEventToCalculationsTest() {
-        Assert.assertTrue(
-                (ifTwoNumbersAreEqualOrAlmostEqual(bucketTransactionEventsDataForWallet.getCurrentMonthDayToBalanceCountAndContribution()
-                        .get(setDateOnBeginningOfDay(decreaseTodayDateByDays(0))).getContribution(), 0.03568973444951873))
-                        && (ifTwoNumbersAreEqualOrAlmostEqual(bucketTransactionEventsDataForWallet.getCurrentDateNumberOfTransactionsContribution(), 0.0))
-                        && (ifTwoNumbersAreEqualOrAlmostEqual(bucketTransactionEventsDataForWallet.getCurrentDateTurnOverContribution(), 0.0))
-        );
-    }
-
-    @Test
     public void getBucketSumScoreTest() {
         double bucketSumScore = bucketTransactionService.getBucketSumScore(bucketTransactionEventsDataForWallet);
         isTrustScoreValueValid(bucketSumScore);
