@@ -24,6 +24,7 @@ public class TrustScoreData implements IEntity, ISignValidatable {
     private Date createTime;
     private ConcurrentHashMap<EventType, Hash> eventTypeToBucketHashMap;
     private UserType userType;
+    private Boolean zeroTrustFlag;
 
     public TrustScoreData(Hash userHash, double kycTrustScore, SignatureData signature, Hash kycServerPublicKey, UserType userType) {
         this.userHash = userHash;
@@ -32,6 +33,7 @@ public class TrustScoreData implements IEntity, ISignValidatable {
         this.kycServerPublicKey = kycServerPublicKey;
         this.userType = userType;
         this.createTime = new Date();
+        this.zeroTrustFlag = false;
 
         eventTypeToBucketHashMap = new ConcurrentHashMap<>();
     }
@@ -56,4 +58,5 @@ public class TrustScoreData implements IEntity, ISignValidatable {
     public Hash getSignerHash() {
         return kycServerPublicKey;
     }
+
 }

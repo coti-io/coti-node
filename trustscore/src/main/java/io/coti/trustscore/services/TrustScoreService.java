@@ -20,6 +20,7 @@ import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.Events.*;
 import io.coti.trustscore.data.TrustScoreData;
 import io.coti.trustscore.http.*;
+import io.coti.trustscore.http.SetUserZeroTrustFlagRequest;
 import io.coti.trustscore.model.BucketEvents;
 import io.coti.trustscore.model.TrustScores;
 import io.coti.trustscore.services.interfaces.IBucketEventService;
@@ -303,6 +304,33 @@ public class TrustScoreService {
         }
     }
 
+    public ResponseEntity<IResponse> setUserZeroTrustFlag(SetUserZeroTrustFlagRequest request) {
+        SetKycTrustScoreResponse kycTrustScoreResponse;
+
+        try {
+            log.info("Setting Zero Trust Flag: userHash =  {}, ZTF = {}", request.userHash, request.zeroTrustFlag);
+
+            TrustScoreData trustScoreData = trustScores.getByHash(request.userHash);
+            if (trustScoreData == null) {
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(new Response(NON_EXISTING_USER_MESSAGE, STATUS_ERROR));
+            } else {
+                trustScoreData.setZeroTrustFlag(request.zeroTrustFlag);
+                trustScores.put(trustScoreData);
+
+                SetUserZeroTrustFlagResponse userZeroTrustFlagResponce = new SetUserZeroTrustFlagResponse(trustScoreData);
+                return ResponseEntity.status(HttpStatus.OK)
+                        .body(userZeroTrustFlagResponce);
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response(ZERO_TRUST_FLAG_ERROR, STATUS_ERROR));
+        }
+    }
+
     public synchronized void addTransactionToTsCalculation(TransactionData transactionData) {
         try {
             if (EnumSet.of(TransactionType.ZeroSpend, TransactionType.Initial).contains(transactionData.getType()) || transactionData.getDspConsensusResult() == null ||
@@ -402,6 +430,10 @@ public class TrustScoreService {
     }
 
     public double calculateUserTrustScore(TrustScoreData trustScoreData) {
+
+        if (trustScoreData.getZeroTrustFlag() != null && trustScoreData.getZeroTrustFlag()) {
+            return 0;
+        }
 
         double eventsTrustScore = 10;
 
