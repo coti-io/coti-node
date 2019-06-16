@@ -8,27 +8,23 @@ import io.coti.financialserver.data.RollingReserveReleaseStatus;
 import io.coti.financialserver.model.RollingReserveReleaseDates;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
-@Service
 @Data
 public class GetRollingReserveReleaseDatesResponse extends BaseResponse {
 
-    String merchantHashString;
-    String rollingReserveAddress;
-    Map<String, RollingReserveReleaseStatus> rollingReserveReleases;
-    RecourseClaimData recourseClaimData;
-
+    private String merchantHashString;
+    private String rollingReserveAddress;
+    private Map<String, RollingReserveReleaseStatus> rollingReserveReleases;
+    private RecourseClaimData recourseClaimData;
     @Autowired
-    RollingReserveReleaseDates rollingReserveReleaseDates;
+    private RollingReserveReleaseDates rollingReserveReleaseDates;
 
     public GetRollingReserveReleaseDatesResponse(MerchantRollingReserveData merchantRollingReserveData, Map<String, RollingReserveReleaseStatus> rollingReserveReleases, RecourseClaimData recourseClaimData) {
         super();
 
         this.rollingReserveReleases = rollingReserveReleases;
-
         Hash merchantHash = merchantRollingReserveData.getMerchantHash();
         merchantHashString = merchantHash.toString();
         rollingReserveAddress = merchantRollingReserveData.getRollingReserveAddress().toString();

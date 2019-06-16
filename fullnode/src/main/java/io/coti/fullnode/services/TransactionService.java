@@ -259,13 +259,16 @@ public class TransactionService extends BaseNodeTransactionService {
 
     public void getAddressTransactionBatch(GetAddressTransactionBatchRequest getAddressTransactionBatchRequest, HttpServletResponse response) {
         try {
-            List<Hash> addresses = getAddressTransactionBatchRequest.getAddresses();
+            List<Hash> addressHashList = getAddressTransactionBatchRequest.getAddresses();
             PrintWriter output = response.getWriter();
             output.write("[");
             output.flush();
 
-            Iterator<Hash> addressHashIterator = addresses.iterator();
+            Iterator<Hash> addressHashIterator = addressHashList.iterator();
+            boolean isPreviousAddressTransactionExist = false;
+            boolean isAddressTransactionExist;
             while (addressHashIterator.hasNext()) {
+                isAddressTransactionExist = false;
                 Hash addressHash = addressHashIterator.next();
                 AddressTransactionsHistory addressTransactionsHistory = addressTransactionHistories.getByHash(addressHash);
                 if (addressTransactionsHistory != null) {
@@ -274,6 +277,11 @@ public class TransactionService extends BaseNodeTransactionService {
                         Hash transactionHash = transactionHashIterator.next();
                         TransactionData transactionData = transactions.getByHash(transactionHash);
                         if (transactionData != null) {
+                            if (isPreviousAddressTransactionExist || isAddressTransactionExist) {
+                                output.write(",");
+                                output.flush();
+                            }
+                            isAddressTransactionExist = true;
                             output.write(new CustomGson().getInstance().toJson(new TransactionResponseData(transactionData)));
                             output.flush();
                             if (transactionHashIterator.hasNext()) {
@@ -282,11 +290,8 @@ public class TransactionService extends BaseNodeTransactionService {
                             }
                         }
                     }
-                    if (addressHashIterator.hasNext()) {
-                        output.write(",");
-                        output.flush();
-                    }
                 }
+                isPreviousAddressTransactionExist = isAddressTransactionExist ? isAddressTransactionExist : isPreviousAddressTransactionExist;
             }
             output.write("]");
             output.flush();
