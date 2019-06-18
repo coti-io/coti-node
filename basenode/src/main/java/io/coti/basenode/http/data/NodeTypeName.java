@@ -8,7 +8,9 @@ public enum NodeTypeName {
     TrustScoreNode(NodeType.TrustScoreNode, "trustscorenode"),
     ZeroSpendServer(NodeType.ZeroSpendServer, "zerospendserver"),
     FinancialServer(NodeType.FinancialServer, "financialserver"),
-    NodeManager(NodeType.NodeManager, "nodemanager");
+    NodeManager(NodeType.NodeManager, "nodemanager"),
+    StorageNode(NodeType.StorageNode, "storagenode"),
+    HistoryNode(NodeType.HistoryNode, "historynode");
 
     private NodeType nodeType;
     private String node;
