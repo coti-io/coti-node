@@ -20,7 +20,6 @@ import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.Events.*;
 import io.coti.trustscore.data.TrustScoreData;
 import io.coti.trustscore.http.*;
-import io.coti.trustscore.http.SetUserZeroTrustFlagRequest;
 import io.coti.trustscore.model.BucketEvents;
 import io.coti.trustscore.model.TrustScores;
 import io.coti.trustscore.services.interfaces.IBucketEventService;
@@ -305,23 +304,21 @@ public class TrustScoreService {
     }
 
     public ResponseEntity<IResponse> setUserZeroTrustFlag(SetUserZeroTrustFlagRequest request) {
-        SetKycTrustScoreResponse kycTrustScoreResponse;
 
         try {
-            log.info("Setting Zero Trust Flag: userHash =  {}, ZTF = {}", request.userHash, request.zeroTrustFlag);
+            log.info("Setting Zero Trust Flag: userHash =  {}, ZTF = {}", request.getUserHash(), request.isZeroTrustFlag());
 
-            TrustScoreData trustScoreData = trustScores.getByHash(request.userHash);
+            TrustScoreData trustScoreData = trustScores.getByHash(request.getUserHash());
             if (trustScoreData == null) {
                 return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST)
                         .body(new Response(NON_EXISTING_USER_MESSAGE, STATUS_ERROR));
             } else {
-                trustScoreData.setZeroTrustFlag(request.zeroTrustFlag);
+                trustScoreData.setZeroTrustFlag(request.isZeroTrustFlag());
                 trustScores.put(trustScoreData);
 
-                SetUserZeroTrustFlagResponse userZeroTrustFlagResponce = new SetUserZeroTrustFlagResponse(trustScoreData);
                 return ResponseEntity.status(HttpStatus.OK)
-                        .body(userZeroTrustFlagResponce);
+                        .body(new SetUserZeroTrustFlagResponse(trustScoreData));
             }
         } catch (Exception e) {
             log.error(e.getMessage());
