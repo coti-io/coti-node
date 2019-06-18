@@ -32,5 +32,6 @@ public class BaseNodeDspVoteService implements IDspVoteService {
     }
 
     protected void continueHandleVoteConclusion(DspConsensusResult dspConsensusResult) {
+        log.debug("Continue to handle vote conclusion by base node");
     }
 }

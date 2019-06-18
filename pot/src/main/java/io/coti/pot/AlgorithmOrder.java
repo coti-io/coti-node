@@ -8,12 +8,11 @@ import java.util.*;
 class AlgorithmOrder implements IAlgorithmOrder {
 
     private final List<IAlgorithm.AlgorithmTypes> hashingAlgorithms = new ArrayList<>();
+    private final Map<IAlgorithm.AlgorithmTypes, IAlgorithm> algorithmMap = new HashMap<>();
 
     public List<IAlgorithm.AlgorithmTypes> getHashingAlgorithms() {
         return this.hashingAlgorithms;
     }
-
-    private final Map<IAlgorithm.AlgorithmTypes, IAlgorithm> algorithmMap = new HashMap<>();
 
     public IAlgorithm getHashingAlgorithm(IAlgorithm.AlgorithmTypes algorithm) {
         return this.algorithmMap.get(algorithm);

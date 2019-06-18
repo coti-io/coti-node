@@ -9,8 +9,9 @@ import static javax.xml.bind.DatatypeConverter.printHexBinary;
 import static org.apache.commons.lang3.StringUtils.leftPad;
 
 public class DifficultyMultiplierTiming {
-    static int sampleSize = 200;
-    static int difficultyMultiplier = 2;
+
+    private static int sampleSize = 200;
+    private static int difficultyMultiplier = 2;
 
     @Test
     public void difficultyMultiplierTiming() {

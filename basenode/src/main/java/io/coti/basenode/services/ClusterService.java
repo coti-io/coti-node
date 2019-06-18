@@ -5,10 +5,10 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TccInfo;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.LiveView.LiveViewService;
 import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.basenode.services.interfaces.IConfirmationService;
 import io.coti.basenode.services.interfaces.ISourceSelector;
+import io.coti.basenode.services.liveview.LiveViewService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.SerializationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -187,8 +187,6 @@ public class ClusterService implements IClusterService {
 
         List<Hash> selectedSourceHashes = selectedSourcesForAttachment.stream().map(source -> source.getHash()).collect(Collectors.toList());
         log.debug("For transaction with hash: {} we found the following sources: {}", transactionData.getHash(), selectedSourceHashes);
-
-        return;
     }
 
     @Override

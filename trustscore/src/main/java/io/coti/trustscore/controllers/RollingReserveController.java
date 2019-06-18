@@ -18,8 +18,9 @@ import javax.validation.Valid;
 @RestController
 @RequestMapping("/rollingReserve")
 public class RollingReserveController {
+
     @Autowired
-    RollingReserveService rollingReserveService;
+    private RollingReserveService rollingReserveService;
 
     @RequestMapping(method = RequestMethod.PUT)
     public ResponseEntity<IResponse> createRollingReserveFee(@Valid @RequestBody RollingReserveRequest request) {

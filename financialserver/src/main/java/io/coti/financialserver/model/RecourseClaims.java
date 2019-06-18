@@ -7,9 +7,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class RecourseClaims extends Collection<RecourseClaimData> {
 
-    public RecourseClaims() {
-    }
-
     public void init() {
         super.init();
     }

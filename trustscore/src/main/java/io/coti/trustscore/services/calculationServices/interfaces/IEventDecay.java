@@ -1,4 +1,4 @@
-package io.coti.trustscore.services.calculationServices.interfaces;
+package io.coti.trustscore.services.calculationservices.interfaces;
 
 import io.coti.trustscore.config.rules.EventScore;
 

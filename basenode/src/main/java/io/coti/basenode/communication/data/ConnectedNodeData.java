@@ -7,8 +7,8 @@ import java.time.Instant;
 
 @Data
 public class ConnectedNodeData {
-    NodeType nodeType;
-    Instant lastConnectionTime;
+    private NodeType nodeType;
+    private Instant lastConnectionTime;
 
     public ConnectedNodeData(NodeType nodeType, Instant lastConnectionTime) {
         this.nodeType = nodeType;

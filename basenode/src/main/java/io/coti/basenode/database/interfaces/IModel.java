@@ -1,4 +1,4 @@
-package io.coti.basenode.database.Interfaces;
+package io.coti.basenode.database.interfaces;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;

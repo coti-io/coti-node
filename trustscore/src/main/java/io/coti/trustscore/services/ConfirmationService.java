@@ -15,7 +15,7 @@ import java.util.EnumSet;
 public class ConfirmationService extends BaseNodeConfirmationService {
 
     @Autowired
-    TrustScoreService trustScoreService;
+    private TrustScoreService trustScoreService;
 
     @Override
     protected void continueHandleDSPConfirmedTransaction(TransactionData transactionData) {

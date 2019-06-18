@@ -7,9 +7,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class UnreadUserDisputeEvents extends Collection<UnreadUserDisputeEventData> {
 
-    public UnreadUserDisputeEvents() {
-    }
-
     public void init() {
         super.init();
     }

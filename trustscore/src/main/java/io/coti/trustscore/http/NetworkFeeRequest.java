@@ -10,10 +10,8 @@ import javax.validation.constraints.NotNull;
 public class NetworkFeeRequest {
 
     @NotNull
-    Hash userHash;
-
+    private Hash userHash;
     @NotNull
-    FullNodeFeeData fullNodeFeeData;
-
+    private FullNodeFeeData fullNodeFeeData;
 
 }

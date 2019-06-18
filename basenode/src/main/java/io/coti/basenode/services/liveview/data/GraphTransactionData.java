@@ -1,4 +1,4 @@
-package io.coti.basenode.services.LiveView.data;
+package io.coti.basenode.services.liveview.data;
 
 import lombok.Data;
 

@@ -9,11 +9,11 @@ import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.LiveView.LiveViewService;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.basenode.services.interfaces.IConfirmationService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.liveview.LiveViewService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -133,7 +133,7 @@ public class TransactionHelper implements ITransactionHelper {
     @Override
     public boolean validateBaseTransactionTrustScoreNodeResults(TransactionData transactionData) {
         for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
-            if (ITrustScoreNodeValidatable.class.isAssignableFrom(baseTransactionData.getClass()) && validateBaseTransactionTrustScoreNodeResult((ITrustScoreNodeValidatable) baseTransactionData) == false) {
+            if (ITrustScoreNodeValidatable.class.isAssignableFrom(baseTransactionData.getClass()) && !validateBaseTransactionTrustScoreNodeResult((ITrustScoreNodeValidatable) baseTransactionData)) {
                 return false;
             }
         }

@@ -10,8 +10,8 @@ import javax.validation.constraints.NotNull;
 public class RollingReserveRequest {
 
     @NotNull
-    Hash merchantHash;
+    private Hash merchantHash;
     @NotNull
-    NetworkFeeData networkFeeData;
+    private NetworkFeeData networkFeeData;
 
 }

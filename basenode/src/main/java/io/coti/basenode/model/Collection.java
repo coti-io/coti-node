@@ -2,7 +2,7 @@ package io.coti.basenode.model;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
-import io.coti.basenode.database.Interfaces.IDatabaseConnector;
+import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.RocksIterator;
 import org.rocksdb.WriteBatch;

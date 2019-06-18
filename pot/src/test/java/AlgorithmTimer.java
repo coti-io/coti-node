@@ -17,14 +17,14 @@ class AlgorithmTimer {
     private static Map<IAlgorithm.AlgorithmTypes, Double> results = new HashMap<>();
 
     @BeforeAll
-    static void setup() {
+    public static void setUp() {
         for (int i = 0; i < sampleSize; i++) {
             inputData[i] = ByteBuffer.allocate(4).putInt(i).array();
         }
     }
 
     @AfterAll
-    static void compare() {
+    public static void compare() {
         List<Map.Entry<IAlgorithm.AlgorithmTypes, Double>> entries = new ArrayList<>(results.entrySet());
         entries.sort(Map.Entry.comparingByValue());
 
@@ -35,97 +35,97 @@ class AlgorithmTimer {
     }
 
     @Test
-    void skein() {
+    public void skein() {
         IAlgorithm.AlgorithmTypes type = IAlgorithm.AlgorithmTypes.Skein_512_512;
         results.put(type, dowork(type));
     }
 
     @Test
-    void bmw() {
+    public void bmw() {
         IAlgorithm.AlgorithmTypes type = IAlgorithm.AlgorithmTypes.BMW512;
         results.put(type, dowork(type));
     }
 
     @Test
-    void blake() {
+    public void blake() {
         IAlgorithm.AlgorithmTypes type = IAlgorithm.AlgorithmTypes.BLAKE2B_512;
         results.put(type, dowork(type));
     }
 
     @Test
-    void sha() {
+    public void sha() {
         IAlgorithm.AlgorithmTypes type = IAlgorithm.AlgorithmTypes.SHA_512;
         results.put(type, dowork(type));
     }
 
     @Test
-    void keccak() {
+    public void keccak() {
         IAlgorithm.AlgorithmTypes type = IAlgorithm.AlgorithmTypes.KECCAK_512;
         results.put(type, dowork(type));
     }
 
     @Test
-    void shabal() {
+    public void shabal() {
         IAlgorithm.AlgorithmTypes type = IAlgorithm.AlgorithmTypes.Shabal512;
         results.put(type, dowork(type));
     }
 
     @Test
-    void shavite() {
+    public void shavite() {
         IAlgorithm.AlgorithmTypes type = IAlgorithm.AlgorithmTypes.SHAvite512;
         results.put(type, dowork(type));
     }
 
     @Test
-    void whirlpool() {
+    public void whirlpool() {
         IAlgorithm.AlgorithmTypes type = IAlgorithm.AlgorithmTypes.WHIRLPOOL;
         results.put(type, dowork(type));
     }
 
     @Test
-    void cubehash() {
+    public void cubehash() {
         IAlgorithm.AlgorithmTypes type = IAlgorithm.AlgorithmTypes.CubeHash512;
         results.put(type, dowork(type));
     }
 
     @Test
-    void jh() {
+    public void jh() {
         IAlgorithm.AlgorithmTypes type = IAlgorithm.AlgorithmTypes.JH512;
         results.put(type, dowork(type));
     }
 
     @Test
-    void luffa() {
+    public void luffa() {
         IAlgorithm.AlgorithmTypes type = IAlgorithm.AlgorithmTypes.Luffa512;
         results.put(type, dowork(type));
     }
 
     @Test
-    void echo() {
+    public void echo() {
         IAlgorithm.AlgorithmTypes type = IAlgorithm.AlgorithmTypes.ECHO512;
         results.put(type, dowork(type));
     }
 
     @Test
-    void simd() {
+    public void simd() {
         IAlgorithm.AlgorithmTypes type = IAlgorithm.AlgorithmTypes.SIMD512;
         results.put(type, dowork(type));
     }
 
     @Test
-    void fugue() {
+    public void fugue() {
         IAlgorithm.AlgorithmTypes type = IAlgorithm.AlgorithmTypes.Fugue512;
         results.put(type, dowork(type));
     }
 
     @Test
-    void groestl() {
+    public void groestl() {
         IAlgorithm.AlgorithmTypes type = IAlgorithm.AlgorithmTypes.Groestl512;
         results.put(type, dowork(type));
     }
 
     @Test
-    void hamsi() {
+    public void hamsi() {
         IAlgorithm.AlgorithmTypes type = IAlgorithm.AlgorithmTypes.Hamsi512;
         results.put(type, dowork(type));
     }

@@ -20,7 +20,7 @@ import javax.validation.Valid;
 public class CommentController {
 
     @Autowired
-    CommentService commentService;
+    private CommentService commentService;
 
     @RequestMapping(method = RequestMethod.PUT)
     public ResponseEntity<IResponse> newComment(@Valid @RequestBody NewCommentRequest request) {

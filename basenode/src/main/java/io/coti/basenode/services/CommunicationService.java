@@ -31,14 +31,13 @@ public class CommunicationService implements ICommunicationService {
     private IPropagationPublisher propagationPublisher;
     @Autowired
     private ISender sender;
-    private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap;
 
     @Override
-    public void initSubscriber(NodeType subscriberNodeType, EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap) {
+    public void initSubscriber(NodeType subscriberNodeType, EnumMap<NodeType, List<Class<? extends IPropagatable>>> initialPublisherNodeTypeToMessageTypesMap) {
         propagationSubscriber.setSubscriberNodeType(subscriberNodeType);
-        this.publisherNodeTypeToMessageTypesMap = publisherNodeTypeToMessageTypesMap;
-        this.publisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.NodeManager, Arrays.asList(NetworkData.class));
-        this.publisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.DspNode, Arrays.asList(TransactionData.class, AddressData.class));
+        EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = initialPublisherNodeTypeToMessageTypesMap;
+        publisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.NodeManager, Arrays.asList(NetworkData.class));
+        publisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.DspNode, Arrays.asList(TransactionData.class, AddressData.class));
         propagationSubscriber.setPublisherNodeTypeToMessageTypesMap(publisherNodeTypeToMessageTypesMap);
     }
 

@@ -103,7 +103,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             balanceService.updatePreBalanceFromClusterStamp();
             log.info("Clusterstamp is loaded");
         } catch (Exception e) {
-            log.error("Errors on clusterstamp loading: {}", e);
+            log.error("Errors on clusterstamp loading");
             throw e;
         }
     }

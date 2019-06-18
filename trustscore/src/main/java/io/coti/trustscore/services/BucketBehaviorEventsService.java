@@ -5,7 +5,7 @@ import io.coti.trustscore.data.Buckets.BucketBehaviorEventsData;
 import io.coti.trustscore.data.Enums.EventType;
 import io.coti.trustscore.data.Events.BehaviorEventsData;
 import io.coti.trustscore.data.Events.EventCountAndContributionData;
-import io.coti.trustscore.services.calculationServices.BucketBehaviorEventsCalculator;
+import io.coti.trustscore.services.calculationservices.BucketBehaviorEventsCalculator;
 import io.coti.trustscore.services.interfaces.IBucketEventService;
 import org.springframework.stereotype.Service;
 

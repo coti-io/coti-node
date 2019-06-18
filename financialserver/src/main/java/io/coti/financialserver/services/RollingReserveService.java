@@ -45,21 +45,19 @@ public class RollingReserveService {
     private static final int COTI_ROLLING_RESERVE_ADDRESS_INDEX = Math.toIntExact(ReservedAddress.ROLLING_RESERVE_POOL.getIndex());
     private static final int ROLLING_RESERVE_DEFAULT_DAYS_TO_HOLD = 10;
     @Autowired
-    MerchantRollingReserves merchantRollingReserves;
+    private MerchantRollingReserves merchantRollingReserves;
     @Autowired
-    RollingReserveReleaseDates rollingReserveReleaseDates;
+    private RollingReserveReleaseDates rollingReserveReleaseDates;
     @Autowired
-    TransactionCreationService transactionCreationService;
+    private TransactionCreationService transactionCreationService;
     @Autowired
-    RecourseClaims recourseClaims;
+    private RecourseClaims recourseClaims;
     @Value("${financialserver.seed}")
     private String seed;
     @Autowired
     private MerchantRollingReserveCrypto merchantRollingReserveCrypto;
     @Autowired
     private GetMerchantRollingReserveAddressCrypto getMerchantRollingReserveAddressCrypto;
-    @Autowired
-    private DisputeService disputeService;
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired

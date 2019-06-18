@@ -3,7 +3,6 @@ package io.coti.financialserver.services;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.InitialFundData;
-import io.coti.basenode.model.Transactions;
 import io.coti.financialserver.data.ReservedAddress;
 import io.coti.financialserver.model.InitialFunds;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +18,7 @@ import java.util.EnumSet;
 public class DistributionService {
 
     private static final int COTI_GENESIS_ADDRESS_INDEX = Math.toIntExact(ReservedAddress.GENESIS_ONE.getIndex());
-    public static final int INITIAL_AMOUNT_FOR_TOKEN_SELL = 600000000;
+    public static final int INITIAL_AMOUNT_FOR_TOKEN_SALE = 600000000;
     public static final int INITIAL_AMOUNT_FOR_INCENTIVES = 900000000;
     public static final int INITIAL_AMOUNT_FOR_TEAM = 300000000;
     public static final int INITIAL_AMOUNT_FOR_ADVISORS = 200000000;
@@ -27,13 +26,9 @@ public class DistributionService {
     @Value("${financialserver.seed}")
     private String seed;
     @Autowired
-    RollingReserveService rollingReserveService;
+    private InitialFunds initialFunds;
     @Autowired
-    InitialFunds initialFunds;
-    @Autowired
-    TransactionCreationService transactionCreationService;
-    @Autowired
-    Transactions transactions;
+    private TransactionCreationService transactionCreationService;
     @Autowired
     private NodeCryptoHelper nodeCryptoHelper;
 
@@ -45,7 +40,7 @@ public class DistributionService {
 
             if (!isInitialTransactionExistsByAddress(fundAddress)) {
                 BigDecimal amount = getInitialAmountByAddressIndex(addressIndex);
-                Hash initialTransactionHash = null;
+                Hash initialTransactionHash;
                 try {
                     initialTransactionHash = transactionCreationService.createInitialTransactionToFund(amount, cotiGenesisAddress, fundAddress, COTI_GENESIS_ADDRESS_INDEX);
                 } catch (Exception e) {
@@ -67,7 +62,7 @@ public class DistributionService {
         if (addressIndex.isInitialFundDistribution()) {
             switch (addressIndex) {
                 case TOKEN_SALE:
-                    amount = new BigDecimal(INITIAL_AMOUNT_FOR_TOKEN_SELL);
+                    amount = new BigDecimal(INITIAL_AMOUNT_FOR_TOKEN_SALE);
                     break;
                 case INCENTIVES:
                     amount = new BigDecimal(INITIAL_AMOUNT_FOR_INCENTIVES);

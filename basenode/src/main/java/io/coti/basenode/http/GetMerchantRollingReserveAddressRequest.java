@@ -13,9 +13,9 @@ import javax.validation.constraints.NotNull;
 public class GetMerchantRollingReserveAddressRequest implements ISignable, ISignValidatable {
 
     @NotNull
-    Hash trustScoreNodeHash;
+    private Hash trustScoreNodeHash;
     @NotNull
-    Hash merchantHash;
+    private Hash merchantHash;
     @NotNull
     private SignatureData signature;
 

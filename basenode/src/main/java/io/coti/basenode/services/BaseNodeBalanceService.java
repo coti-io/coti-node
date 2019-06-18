@@ -101,10 +101,10 @@ public class BaseNodeBalanceService implements IBalanceService {
     }
 
     @Override
-    public void updateBalanceFromClusterStamp(Hash addressHash, BigDecimal amount) throws Exception {
+    public void updateBalanceFromClusterStamp(Hash addressHash, BigDecimal amount) throws IllegalArgumentException {
         if (balanceMap.containsKey(addressHash)) {
             log.error("The address {} was already found in the clusterstamp", addressHash);
-            throw new Exception(String.format("The address %s was already found in the clusterstamp", addressHash));
+            throw new IllegalArgumentException(String.format("The address %s was already found in the clusterstamp", addressHash));
         }
         balanceMap.put(addressHash, amount);
         log.trace("Loading from clusterstamp into inMem balance+preBalance address {} and amount {}", addressHash, amount);

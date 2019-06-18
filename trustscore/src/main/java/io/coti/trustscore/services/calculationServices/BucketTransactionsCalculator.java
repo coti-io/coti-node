@@ -1,4 +1,4 @@
-package io.coti.trustscore.services.calculationServices;
+package io.coti.trustscore.services.calculationservices;
 
 import io.coti.trustscore.config.rules.RulesData;
 import io.coti.trustscore.config.rules.TransactionEventScore;
@@ -8,7 +8,7 @@ import io.coti.trustscore.data.Buckets.BucketTransactionEventsData;
 import io.coti.trustscore.data.Enums.TransactionEventScoreType;
 import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.Events.BalanceCountAndContribution;
-import io.coti.trustscore.services.calculationServices.interfaces.IScoreCalculator;
+import io.coti.trustscore.services.calculationservices.interfaces.IScoreCalculator;
 import io.coti.trustscore.utils.DatesCalculation;
 import javafx.util.Pair;
 import lombok.Data;

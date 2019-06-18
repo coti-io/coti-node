@@ -10,7 +10,8 @@ import java.util.List;
 
 @Component
 public class TransactionCrypto extends SignatureCrypto<TransactionData> {
-    final static int baseTransactionHashSize = 32;
+
+    private final static int baseTransactionHashSize = 32;
 
     @Override
     public byte[] getSignatureMessage(TransactionData transactionData) {
@@ -76,7 +77,7 @@ public class TransactionCrypto extends SignatureCrypto<TransactionData> {
         if (!this.isTransactionHashCorrect(transactionData))
             return false;
         for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
-            if (BaseTransactionCrypto.valueOf(baseTransactionData.getClass().getSimpleName()).isBaseTransactionValid(transactionData, baseTransactionData) == false)
+            if (!BaseTransactionCrypto.valueOf(baseTransactionData.getClass().getSimpleName()).isBaseTransactionValid(transactionData, baseTransactionData))
                 return false;
         }
         return true;

@@ -12,11 +12,7 @@ import java.util.stream.Collectors;
 public class RulesData {
 
     private List<User> userList;
-
     private List<UserNetworkFeeByTrustScoreRange> userNetworkFeeByTrustScoreRangeList;
-
-    public RulesData() {
-    }
 
     public void setUser(List<User> userList) {
         this.userList = userList;

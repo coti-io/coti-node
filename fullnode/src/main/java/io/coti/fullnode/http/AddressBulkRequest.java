@@ -9,10 +9,8 @@ import java.util.List;
 
 @Data
 public class AddressBulkRequest {
+
     @NotNull(message = "Address Hashes must not be blank")
     public List<@Valid Hash> addresses;
 
-    public AddressBulkRequest() {
-
-    }
 }

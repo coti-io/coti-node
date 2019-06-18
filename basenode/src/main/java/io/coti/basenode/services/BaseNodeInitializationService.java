@@ -6,15 +6,15 @@ import io.coti.basenode.crypto.GetNodeRegistrationRequestCrypto;
 import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeRegistrationCrypto;
 import io.coti.basenode.data.*;
-import io.coti.basenode.database.Interfaces.IDatabaseConnector;
+import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.http.CustomHttpComponentsClientHttpRequestFactory;
 import io.coti.basenode.http.GetNodeRegistrationRequest;
 import io.coti.basenode.http.GetNodeRegistrationResponse;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.NodeRegistrations;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.LiveView.LiveViewService;
 import io.coti.basenode.services.interfaces.*;
+import io.coti.basenode.services.liveview.LiveViewService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -265,9 +265,9 @@ public abstract class BaseNodeInitializationService {
             int missingTransactionsSize;
             monitorMissingTransactionThread.start();
 
-            while ((missingTransactionsSize = missingTransactions.size()) > offset || finishedToReceive.get() == false) {
+            while ((missingTransactionsSize = missingTransactions.size()) > offset || !finishedToReceive.get()) {
                 if (missingTransactionsSize - 1 > offset || (missingTransactionsSize - 1 == offset && missingTransactions.get(offset) != null)) {
-                    nextOffSet = offset + (finishedToReceive.get() == true ? missingTransactionsSize - offset : 1);
+                    nextOffSet = offset + (finishedToReceive.get() ? missingTransactionsSize - offset : 1);
                     for (int i = offset; i < nextOffSet; i++) {
                         TransactionData transactionData = missingTransactions.get(i);
                         handleMissingTransaction(transactionData, trustChainUnconfirmedExistingTransactionHashes);
@@ -375,7 +375,7 @@ public abstract class BaseNodeInitializationService {
     protected abstract NetworkNodeData createNodeProperties();
 
     protected void propagateMissingTransaction(TransactionData transactionData) {
-
+        log.debug("Propagate missing transaction by base node");
     }
 
     @PreDestroy

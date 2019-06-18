@@ -4,7 +4,7 @@ import java.util.concurrent.FutureTask;
 
 public class ComparableFutureTask extends FutureTask<Void> implements Comparable<ComparableFutureTask> {
 
-    volatile int priority = 0;
+    private volatile int priority;
 
     public ComparableFutureTask(PotRunnableTask runnable) {
         super(runnable, null);

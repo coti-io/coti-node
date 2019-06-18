@@ -2,7 +2,7 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
-import io.coti.basenode.database.Interfaces.IDatabaseConnector;
+import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.services.interfaces.IConfirmationService;
 import io.coti.basenode.services.interfaces.IShutDownService;
 import lombok.extern.slf4j.Slf4j;

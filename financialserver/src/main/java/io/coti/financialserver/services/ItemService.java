@@ -25,15 +25,15 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 public class ItemService {
 
     @Autowired
-    Disputes disputes;
+    private Disputes disputes;
     @Autowired
-    DisputeUpdateItemCrypto disputeUpdateItemCrypto;
+    private DisputeUpdateItemCrypto disputeUpdateItemCrypto;
     @Autowired
-    DisputeItemVoteCrypto disputeItemVoteCrypto;
+    private DisputeItemVoteCrypto disputeItemVoteCrypto;
     @Autowired
-    DisputeService disputeService;
+    private DisputeService disputeService;
     @Autowired
-    WebSocketService webSocketService;
+    private WebSocketService webSocketService;
 
     public ResponseEntity<IResponse> updateItem(UpdateItemRequest request) {
 

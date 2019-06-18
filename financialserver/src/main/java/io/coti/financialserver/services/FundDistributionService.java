@@ -52,7 +52,7 @@ public class FundDistributionService {
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
     @Autowired
-    TransactionCreationService transactionCreationService;
+    private TransactionCreationService transactionCreationService;
     @Autowired
     private NodeCryptoHelper nodeCryptoHelper;
     @Autowired
@@ -404,14 +404,12 @@ public class FundDistributionService {
     private boolean isEntryDataUniquePerDate(FundDistributionData entryData) {
         Instant transactionReleaseDate = entryData.getReleaseTime();
         Hash hashOfDate = getHashOfDate(transactionReleaseDate);
-        if (dailyFundDistributions.getByHash(hashOfDate) != null &&
-                dailyFundDistributions.getByHash(hashOfDate).getFundDistributionEntries().get(entryData.getHash()) != null)
-            return false;
-        return true;
+        return dailyFundDistributions.getByHash(hashOfDate) == null ||
+                dailyFundDistributions.getByHash(hashOfDate).getFundDistributionEntries().get(entryData.getHash()) == null;
     }
 
     private boolean isAddressValid(FundDistributionData entryData) {
-        return CryptoHelper.IsAddressValid(entryData.getReceiverAddress());
+        return CryptoHelper.isAddressValid(entryData.getReceiverAddress());
     }
 
     private boolean isLockupDateValid(FundDistributionData entryData) {

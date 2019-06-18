@@ -1,4 +1,4 @@
-package io.coti.trustscore.services.calculationServices;
+package io.coti.trustscore.services.calculationservices;
 
 
 import io.coti.trustscore.data.Buckets.BucketEventData;
@@ -25,6 +25,6 @@ public abstract class BucketCalculator {
     }
 
     protected void decayDailyEventScoresType(int daysDiff) {
-
+        log.debug("Decay daily event scores type with {} day(s) difference", daysDiff);
     }
 }

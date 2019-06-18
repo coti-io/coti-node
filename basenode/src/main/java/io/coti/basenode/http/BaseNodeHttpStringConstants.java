@@ -9,7 +9,6 @@ public class BaseNodeHttpStringConstants {
 
     public static final String TRANSACTION_ALREADY_EXIST_MESSAGE = "Transaction already exists!";
     public static final String TRANSACTION_CREATED_MESSAGE = "Transaction created";
-    public static final String TRANSACTION_CREATION_FAILED_MESSAGE = "Transaction creation failed";
     public static final String TRANSACTION_DETAILS_SERVER_ERROR = "Transaction details server error";
     public static final String TRANSACTION_DOESNT_EXIST_MESSAGE = "Transaction doesn't exist";
     public static final String TRANSACTION_RESPONSE_ERROR = "Transaction response error";
@@ -39,4 +38,5 @@ public class BaseNodeHttpStringConstants {
     public static final String METHOD_NOT_SUPPORTED = "Unsupported method";
 
     public static final String ADDRESS_BATCH_UPLOADED = "Address batch uploaded";
+    public static final String ADDRESS_BATCH_UPLOAD_ERROR = "Address batch upload error: %s";
 }

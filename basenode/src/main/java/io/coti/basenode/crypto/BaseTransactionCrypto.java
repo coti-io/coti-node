@@ -161,7 +161,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
                 return true;
             }
             try {
-                return CryptoHelper.VerifyByPublicKey(getSignatureMessage(transactionData), baseTransactionData.getSignatureData().getR(), baseTransactionData.getSignatureData().getS(), getPublicKey(baseTransactionData));
+                return CryptoHelper.verifyByPublicKey(getSignatureMessage(transactionData), baseTransactionData.getSignatureData().getR(), baseTransactionData.getSignatureData().getS(), getPublicKey(baseTransactionData));
             } catch (ClassNotFoundException | NoSuchAlgorithmException | InvalidKeySpecException e) {
                 e.printStackTrace();
                 return false;
@@ -217,7 +217,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     public boolean isBaseTransactionValid(TransactionData transactionData, BaseTransactionData baseTransactionData) {
         try {
             return Class.forName(packagePath + name()).isInstance(baseTransactionData) && this.createBaseTransactionHashFromData(baseTransactionData).equals(baseTransactionData.getHash())
-                    && CryptoHelper.IsAddressValid(baseTransactionData.getAddressHash()) && verifySignature(transactionData, baseTransactionData);
+                    && CryptoHelper.isAddressValid(baseTransactionData.getAddressHash()) && verifySignature(transactionData, baseTransactionData);
 
         } catch (ClassNotFoundException | InvalidKeySpecException | NoSuchAlgorithmException e) {
             e.printStackTrace();
@@ -248,13 +248,13 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         if (ITrustScoreNodeValidatable.class.isAssignableFrom(Class.forName(packagePath + name()))) {
             ITrustScoreNodeValidatable trustScoreNodeValidatable = (ITrustScoreNodeValidatable) baseTransactionData;
             for (TrustScoreNodeResultData trustScoreNodeResultData : trustScoreNodeValidatable.getTrustScoreNodeResult()) {
-                if (!CryptoHelper.VerifyByPublicKey(getSignatureMessage(transactionData, trustScoreNodeResultData), trustScoreNodeResultData.getSignature().getR(), trustScoreNodeResultData.getSignature().getS(), getPublicKey(trustScoreNodeResultData))) {
+                if (!CryptoHelper.verifyByPublicKey(getSignatureMessage(transactionData, trustScoreNodeResultData), trustScoreNodeResultData.getSignature().getR(), trustScoreNodeResultData.getSignature().getS(), getPublicKey(trustScoreNodeResultData))) {
                     return false;
                 }
             }
             return true;
         }
-        return CryptoHelper.VerifyByPublicKey(getSignatureMessage(transactionData), baseTransactionData.getSignatureData().getR(), baseTransactionData.getSignatureData().getS(), getPublicKey(baseTransactionData));
+        return CryptoHelper.verifyByPublicKey(getSignatureMessage(transactionData), baseTransactionData.getSignatureData().getR(), baseTransactionData.getSignatureData().getS(), getPublicKey(baseTransactionData));
 
     }
 

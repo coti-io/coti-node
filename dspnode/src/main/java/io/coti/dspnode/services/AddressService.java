@@ -33,7 +33,6 @@ public class AddressService extends BaseNodeAddressService {
                 NodeType.DspNode,
                 NodeType.ZeroSpendServer,
                 NodeType.FinancialServer));
-        return;
     }
 
     @Override

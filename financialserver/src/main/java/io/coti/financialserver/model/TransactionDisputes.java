@@ -7,9 +7,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class TransactionDisputes extends Collection<TransactionDisputesData> {
 
-    public TransactionDisputes() {
-    }
-
     public void init() {
         super.init();
     }

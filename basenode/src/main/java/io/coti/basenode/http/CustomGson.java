@@ -10,9 +10,6 @@ import java.time.Instant;
 
 public class CustomGson {
 
-    public CustomGson() {
-    }
-
     public Gson getInstance() {
         GsonBuilder gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeAdapter(Instant.class, (JsonSerializer<Instant>) (instant, type, jsonSerializationContext) ->

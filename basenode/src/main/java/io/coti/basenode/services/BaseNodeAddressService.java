@@ -27,6 +27,7 @@ import java.io.*;
 import java.util.List;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.ADDRESS_BATCH_UPLOADED;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.ADDRESS_BATCH_UPLOAD_ERROR;
 
 @Slf4j
 @Service
@@ -137,6 +138,7 @@ public class BaseNodeAddressService implements IAddressService {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(String.format(ADDRESS_BATCH_UPLOAD_ERROR, e.getMessage())));
         }
         return ResponseEntity.status(HttpStatus.OK).body(new Response(ADDRESS_BATCH_UPLOADED));
     }

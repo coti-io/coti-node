@@ -1,6 +1,6 @@
 package io.coti.nodemanager.services;
 
-import io.coti.basenode.database.Interfaces.IDatabaseConnector;
+import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.IShutDownService;
 import io.coti.nodemanager.model.ActiveNodes;

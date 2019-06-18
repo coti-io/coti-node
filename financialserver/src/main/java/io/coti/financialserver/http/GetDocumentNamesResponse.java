@@ -10,7 +10,8 @@ import java.util.List;
 
 @Data
 public class GetDocumentNamesResponse extends BaseResponse {
-    List<DocumentNameResponseData> disputeDocumentNames;
+
+    private List<DocumentNameResponseData> disputeDocumentNames;
 
     public GetDocumentNamesResponse(List<DisputeDocumentData> disputeDocuments) {
         super();

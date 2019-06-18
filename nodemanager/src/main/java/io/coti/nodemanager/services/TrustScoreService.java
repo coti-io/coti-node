@@ -23,7 +23,6 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -182,17 +181,11 @@ public class TrustScoreService implements ITrustScoreService {
         return nodeTrustScoreRequest;
     }
 
-
     private List<NetworkNodeData> chooseTrustScoreNodesFromList(List<NetworkNodeData> trustScoreNodeList) {
         Collections.shuffle(trustScoreNodeList);
         List<NetworkNodeData> trustScoreNodesToSend = trustScoreNodeList.stream().limit(NUM_OF_TRUSTSCORE_NODES).collect(Collectors.toList());
         return trustScoreNodesToSend;
     }
 
-
-    private NetworkNodeData chooseTrustScoreNode(List<NetworkNodeData> trustScroeNodeList) { // ATM not in use
-        Random rand = new Random();
-        return trustScroeNodeList.get(rand.nextInt(trustScroeNodeList.size()));
-    }
 }
 

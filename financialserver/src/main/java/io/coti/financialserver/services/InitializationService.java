@@ -21,8 +21,7 @@ import java.util.List;
 @Slf4j
 @Service
 public class InitializationService extends BaseNodeInitializationService {
-    @Autowired
-    RollingReserveService rollingReserveService;
+
     @Value("${propagation.port}")
     private String propagationPort;
     @Value("${server.port}")

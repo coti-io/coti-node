@@ -3,7 +3,6 @@ package io.coti.trustscore.http;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.trustscore.data.Buckets.BucketEventData;
 import io.coti.trustscore.data.TrustScoreData;
-import io.coti.trustscore.model.BucketEvents;
 import lombok.Data;
 
 import java.util.List;

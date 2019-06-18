@@ -12,7 +12,7 @@ public abstract class SignatureValidationCrypto<T extends ISignValidatable> {
 
     public boolean verifySignature(T signValidatable) {
         try {
-            return CryptoHelper.VerifyByPublicKey(this.getSignatureMessage(signValidatable), this.getSignature(signValidatable).getR(), this.getSignature(signValidatable).getS(), this.getSignerHash(signValidatable).toHexString());
+            return CryptoHelper.verifyByPublicKey(this.getSignatureMessage(signValidatable), this.getSignature(signValidatable).getR(), this.getSignature(signValidatable).getS(), this.getSignerHash(signValidatable).toHexString());
         } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
             e.printStackTrace();
             return false;

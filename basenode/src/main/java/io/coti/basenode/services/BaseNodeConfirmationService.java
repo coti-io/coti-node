@@ -3,10 +3,10 @@ package io.coti.basenode.services;
 import io.coti.basenode.data.*;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.LiveView.LiveViewService;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IConfirmationService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.liveview.LiveViewService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -103,7 +103,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         confirmationQueue.drainTo(remainingConfirmedTransactions);
         if (remainingConfirmedTransactions.size() != 0) {
             log.info("Please wait to process {} remaining confirmed transaction(s)", remainingConfirmedTransactions.size());
-            remainingConfirmedTransactions.forEach(confirmationData -> updateConfirmedTransactionHandler(confirmationData));
+            remainingConfirmedTransactions.forEach(this::updateConfirmedTransactionHandler);
         }
     }
 
@@ -136,7 +136,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
             return false;
         }
         DspConsensusResult dspConsensusResult = transactionData.getDspConsensusResult();
-        if (insertNewTransactionIndex == false) {
+        if (!insertNewTransactionIndex) {
             waitingDspConsensusResults.put(dspConsensusResult.getIndex(), dspConsensusResult);
             return false;
         } else {
@@ -169,9 +169,11 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     protected void continueHandleDSPConfirmedTransaction(TransactionData transactionData) {
+        log.debug("Continue to handle DSP confirmed transaction by base node");
     }
 
     protected void continueHandleAddressHistoryChanges(TransactionData transactionData) {
+        log.debug("Continue to handle address history changes by base node");
     }
 
     @Override
@@ -225,7 +227,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
             return;
         }
         DspConsensusResult dspConsensusResult = transactionData.getDspConsensusResult();
-        if (insertNewTransactionIndex == false) {
+        if (!insertNewTransactionIndex) {
             waitingMissingTransactionIndexes.put(dspConsensusResult.getIndex(), transactionData);
         } else {
             processMissingDspConfirmedTransaction(transactionData);

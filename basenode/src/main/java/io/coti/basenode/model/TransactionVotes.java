@@ -7,8 +7,6 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class TransactionVotes extends Collection<TransactionVoteData> {
-    public TransactionVotes() {
-    }
 
     public void init() {
         super.init();

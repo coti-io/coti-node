@@ -7,9 +7,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class RollingReserveReleaseDates extends Collection<RollingReserveReleaseDateData> {
 
-    public RollingReserveReleaseDates() {
-    }
-
     public void init() {
         super.init();
     }

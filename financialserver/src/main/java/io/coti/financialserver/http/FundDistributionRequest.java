@@ -10,14 +10,10 @@ import javax.validation.constraints.NotEmpty;
 public class FundDistributionRequest {
 
     @NotEmpty
-    String fileName;
-
-    public FundDistributionRequest() {
-    }
+    private String fileName;
 
     public FundDistributionFileData getFundDistributionFileData(Hash hash) {
         return new FundDistributionFileData(fileName, hash);
     }
-
 
 }

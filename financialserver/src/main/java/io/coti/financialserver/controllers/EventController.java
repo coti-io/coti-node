@@ -17,8 +17,9 @@ import javax.validation.Valid;
 @RestController
 @RequestMapping("/event")
 public class EventController {
+
     @Autowired
-    EventService eventService;
+    private EventService eventService;
 
     @RequestMapping(path = "/unread", method = RequestMethod.POST)
     public ResponseEntity<IResponse> getUnreadEvents(@Valid @RequestBody GetUnreadEventsRequest getUnreadEventsRequest) {

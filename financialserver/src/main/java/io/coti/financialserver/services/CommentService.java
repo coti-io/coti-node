@@ -17,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -39,8 +38,6 @@ public class CommentService {
     private Disputes disputes;
     @Autowired
     private DisputeService disputeService;
-    @Autowired
-    private SimpMessagingTemplate messagingSender;
     @Autowired
     private WebSocketService webSocketService;
 

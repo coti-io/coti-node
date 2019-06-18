@@ -31,7 +31,7 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
     private final int INITIAL_DELAY = 1000;
     private Thread publishMessageThread;
     private BlockingQueue<ZeroMQMessageData> publishMessageQueue;
-    boolean contextTerminated;
+    private boolean contextTerminated;
 
     @Autowired
     private ISerializer serializer;
@@ -73,7 +73,7 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
         if (propagator != null) {
             String serverAddress = "tcp://" + publisherIp + ":" + propagationPort;
             if (!zeroMQContext.isClosed()) {
-                publishMessageQueue.add(new ZeroMQMessageData(new String("HeartBeat " + serverAddress), serverAddress.getBytes()));
+                publishMessageQueue.add(new ZeroMQMessageData("HeartBeat " + serverAddress, serverAddress.getBytes()));
             }
         }
 
@@ -120,7 +120,7 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
             zeroMQContext.term();
             try {
                 Thread.sleep(1000);
-                if (contextTerminated == false) {
+                if (!contextTerminated) {
                     publishMessageThread.interrupt();
                     publishMessageThread.join();
                 }

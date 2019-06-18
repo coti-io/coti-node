@@ -1,4 +1,4 @@
-package io.coti.trustscore.services.calculationServices;
+package io.coti.trustscore.services.calculationservices;
 
 import io.coti.basenode.data.Hash;
 import io.coti.trustscore.config.rules.CompensableEventScore;

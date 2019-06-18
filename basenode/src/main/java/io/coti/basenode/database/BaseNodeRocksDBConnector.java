@@ -2,7 +2,7 @@ package io.coti.basenode.database;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
-import io.coti.basenode.database.Interfaces.IDatabaseConnector;
+import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.model.*;
 import io.coti.basenode.model.Collection;
 import lombok.extern.slf4j.Slf4j;

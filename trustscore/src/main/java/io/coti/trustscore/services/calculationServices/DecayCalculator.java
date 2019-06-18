@@ -1,8 +1,8 @@
-package io.coti.trustscore.services.calculationServices;
+package io.coti.trustscore.services.calculationservices;
 
 import io.coti.trustscore.config.rules.EventScore;
-import io.coti.trustscore.services.calculationServices.interfaces.IDecayCalculator;
-import io.coti.trustscore.services.calculationServices.interfaces.IEventDecay;
+import io.coti.trustscore.services.calculationservices.interfaces.IDecayCalculator;
+import io.coti.trustscore.services.calculationservices.interfaces.IEventDecay;
 import io.coti.trustscore.utils.MathCalculation;
 import javafx.util.Pair;
 

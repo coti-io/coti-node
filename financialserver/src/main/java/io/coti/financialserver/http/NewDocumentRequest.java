@@ -13,17 +13,17 @@ import java.util.List;
 @Data
 public class NewDocumentRequest extends Request {
     @NotNull
-    Hash userHash;
+    private Hash userHash;
     @NotNull
-    Hash disputeHash;
+    private Hash disputeHash;
     @NotNull
-    List<Long> itemIds;
+    private List<Long> itemIds;
     @NotNull
-    String r;
+    private String r;
     @NotNull
-    String s;
+    private String s;
     @NotNull
-    MultipartFile file;
+    private MultipartFile file;
 
     public DisputeDocumentData getDisputeDocumentData() {
         return new DisputeDocumentData(userHash, disputeHash, itemIds, new SignatureData(r, s));

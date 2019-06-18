@@ -2,7 +2,6 @@ package io.coti.financialserver.data;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
-import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
@@ -14,16 +13,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class RecourseClaimData implements IEntity, ISignable, ISignValidatable, IPropagatable {
+public class RecourseClaimData implements ISignable, ISignValidatable, IPropagatable {
 
     private static final long serialVersionUID = 5881994559179493495L;
     @NotNull
-    Hash merchantHash;
+    private Hash merchantHash;
     @NotNull
-    List<Hash> transactionHashes;
+    private List<Hash> transactionHashes;
     @NotNull
-    List<Hash> disputeHashes;
-    BigDecimal amountToPay;
+    private List<Hash> disputeHashes;
+    private BigDecimal amountToPay;
     private SignatureData merchantSignature;
 
     public RecourseClaimData() {

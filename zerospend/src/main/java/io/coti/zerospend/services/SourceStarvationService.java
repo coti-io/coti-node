@@ -88,7 +88,7 @@ public class SourceStarvationService {
         }
     }
 
-    String millisecondsToMinutes(long milliseconds) {
+    private String millisecondsToMinutes(long milliseconds) {
         return new SimpleDateFormat("mm:ss").format(new Date(milliseconds));
     }
 }

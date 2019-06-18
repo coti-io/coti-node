@@ -6,7 +6,6 @@ import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.services.TransactionHelper;
-import io.coti.basenode.services.TransactionIndexService;
 import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.zerospend.crypto.TransactionCryptoCreator;
 import io.coti.zerospend.data.ZeroSpendTransactionType;
@@ -26,8 +25,6 @@ import static io.coti.zerospend.data.ZeroSpendTransactionType.STARVATION;
 @Service
 public class TransactionCreationService {
     private static final int ZERO_SPEND_ADDRESS_INDEX = 0;
-    @Autowired
-    private TransactionIndexService transactionIndexService;
     @Autowired
     private TransactionHelper transactionHelper;
     @Autowired

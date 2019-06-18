@@ -14,9 +14,9 @@ import java.util.List;
 @Data
 public class GetDisputesData implements ISignable, ISignValidatable {
 
-    List<Hash> disputeHashes;
+    private List<Hash> disputeHashes;
     @NotNull
-    ActionSide disputeSide;
+    private ActionSide disputeSide;
     @NotNull
     private Hash userHash;
     @NotNull

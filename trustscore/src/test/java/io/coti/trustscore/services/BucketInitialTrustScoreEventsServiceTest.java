@@ -18,9 +18,9 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static io.coti.trustscore.testUtils.BucketUtil.generateRulesDataObject;
-import static io.coti.trustscore.testUtils.GeneralUtilsFunctions.generateRandomHash;
-import static io.coti.trustscore.testUtils.GeneralUtilsFunctions.isTrustScoreValueValid;
+import static io.coti.trustscore.testutils.BucketUtil.generateRulesDataObject;
+import static io.coti.trustscore.testutils.GeneralUtilsFunctions.generateRandomHash;
+import static io.coti.trustscore.testutils.GeneralUtilsFunctions.isTrustScoreValueValid;
 import static io.coti.trustscore.utils.DatesCalculation.decreaseTodayDateByDays;
 
 @TestPropertySource(locations = "classpath:test.properties")
@@ -44,14 +44,14 @@ public class BucketInitialTrustScoreEventsServiceTest {
     }
 
     @Test
-    public void addEventToCalculations_simpleTest() {
+    public void addEventToCalculationsSimpleTest() {
         addInitialTrustScoreEvents();
         double bucketSumScore = bucketInitialTrustScoreEventsService.getBucketSumScore(bucketInitialTrustScoreEventsData);
         isTrustScoreValueValid(bucketSumScore);
     }
 
     @Test
-    public void addEventToCalculations_WithDecay_Test() {
+    public void addEventToCalculationsWithDecayTest() {
         addInitialTrustScoreEvents();
         bucketInitialTrustScoreEventsData.setLastUpdate(decreaseTodayDateByDays(1));
 

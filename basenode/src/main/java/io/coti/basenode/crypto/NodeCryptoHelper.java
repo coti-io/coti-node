@@ -15,15 +15,15 @@ public class NodeCryptoHelper {
     @Value("#{'${global.private.key}'}")
     private void nodePrivateKey(String privateKey) {
         nodePrivateKey = privateKey;
-        nodePublicKey = CryptoHelper.GetPublicKeyFromPrivateKey(nodePrivateKey);
+        nodePublicKey = CryptoHelper.getPublicKeyFromPrivateKey(nodePrivateKey);
     }
 
     public static SignatureData signMessage(byte[] message) {
-        return CryptoHelper.SignBytes(message, nodePrivateKey);
+        return CryptoHelper.signBytes(message, nodePrivateKey);
     }
 
     public static SignatureData signMessage(byte[] message, Integer index) {
-        return CryptoHelper.SignBytes(message, CryptoHelper.generatePrivateKey(seed, index).toHexString());
+        return CryptoHelper.signBytes(message, CryptoHelper.generatePrivateKey(seed, index).toHexString());
     }
 
     public Hash generateAddress(String seed, Integer index) {

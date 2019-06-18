@@ -11,7 +11,7 @@ import java.util.Map;
 @Data
 public class GetBalancesResponse extends BaseResponse {
 
-    Map<String, AddressBalance> addressesBalance;
+    private Map<String, AddressBalance> addressesBalance;
 
     public GetBalancesResponse() {
         addressesBalance = new HashMap<>();

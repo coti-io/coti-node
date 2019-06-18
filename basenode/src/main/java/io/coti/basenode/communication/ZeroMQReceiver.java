@@ -13,11 +13,10 @@ import java.util.function.Consumer;
 @Slf4j
 @Service
 public class ZeroMQReceiver implements IReceiver {
-    private HashMap<String, Consumer<Object>> classNameToHandlerMapping;
 
+    private HashMap<String, Consumer<Object>> classNameToHandlerMapping;
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket receiver;
-
     @Autowired
     private ISerializer serializer;
 

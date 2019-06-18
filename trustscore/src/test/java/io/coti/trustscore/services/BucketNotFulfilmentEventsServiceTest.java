@@ -17,8 +17,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static io.coti.trustscore.testUtils.BucketUtil.generateRulesDataObject;
-import static io.coti.trustscore.testUtils.GeneralUtilsFunctions.generateRandomHash;
+import static io.coti.trustscore.testutils.BucketUtil.generateRulesDataObject;
+import static io.coti.trustscore.testutils.GeneralUtilsFunctions.generateRandomHash;
 
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)

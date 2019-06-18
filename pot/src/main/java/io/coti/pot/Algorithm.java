@@ -1,5 +1,6 @@
 package io.coti.pot;
 
+import fr.cryptohash.Digest;
 import io.coti.pot.interfaces.IAlgorithm;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -17,7 +18,7 @@ import java.util.List;
 public class Algorithm implements IAlgorithm {
 
     private AlgorithmTypes hashingAlgorithm;
-    fr.cryptohash.Digest cryptoHashAlgorithm;
+    private Digest cryptoHashAlgorithm;
     private MessageDigest messageDigestAlgorithm;
     private static List<AlgorithmTypes> bouncyCastleAlgorithms;
 
@@ -57,7 +58,7 @@ public class Algorithm implements IAlgorithm {
         return messageDigest;
     }
 
-    private fr.cryptohash.Digest getCryptoHash(AlgorithmTypes hashingAlgorithm) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        return (fr.cryptohash.Digest) Class.forName("fr.cryptohash." + hashingAlgorithm.toString()).getDeclaredConstructor().newInstance();
+    private Digest getCryptoHash(AlgorithmTypes hashingAlgorithm) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        return (Digest) Class.forName("fr.cryptohash." + hashingAlgorithm.toString()).getDeclaredConstructor().newInstance();
     }
 }

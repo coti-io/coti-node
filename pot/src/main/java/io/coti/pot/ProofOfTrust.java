@@ -8,10 +8,10 @@ import io.coti.pot.interfaces.IProofOfTrust;
 import java.util.List;
 
 public class ProofOfTrust implements IProofOfTrust {
+
     private IAlgorithmOrder hashOrder;
     private IAlgorithmWorker hashWorker;
-
-    static int maxTrustScore = 100;
+    private static int maxTrustScore = 100;
 
     public List<IAlgorithm.AlgorithmTypes> getHashingAlgorithms() {
         return hashOrder.getHashingAlgorithms();

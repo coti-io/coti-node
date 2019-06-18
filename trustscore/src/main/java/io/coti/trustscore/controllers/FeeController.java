@@ -17,8 +17,9 @@ import javax.validation.Valid;
 @Slf4j
 @RestController
 public class FeeController {
+
     @Autowired
-    NetworkFeeService feeService;
+    private NetworkFeeService feeService;
 
     @RequestMapping(path = "/networkFee", method = RequestMethod.PUT)
     public ResponseEntity<IResponse> createNetworkFeeConfirmation(@Valid @RequestBody NetworkFeeRequest request) {

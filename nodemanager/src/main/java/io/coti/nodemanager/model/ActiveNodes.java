@@ -7,9 +7,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class ActiveNodes extends Collection<ActiveNodeData> {
 
-    public ActiveNodes() {
-    }
-
     public void init() {
         super.init();
     }

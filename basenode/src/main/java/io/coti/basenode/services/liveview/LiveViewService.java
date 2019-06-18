@@ -1,8 +1,8 @@
-package io.coti.basenode.services.LiveView;
+package io.coti.basenode.services.liveview;
 
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.services.LiveView.data.GraphData;
-import io.coti.basenode.services.LiveView.data.GraphTransactionData;
+import io.coti.basenode.services.liveview.data.GraphData;
+import io.coti.basenode.services.liveview.data.GraphTransactionData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;

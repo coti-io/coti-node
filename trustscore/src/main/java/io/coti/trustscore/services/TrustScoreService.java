@@ -196,7 +196,7 @@ public class TrustScoreService {
 
         try {
             PublicKey publicKey = CryptoHelper.getPublicKeyFromHexString(userHash.toHexString());
-            if (!CryptoHelper.VerifyByPublicKey(transactionHash.getBytes(), signatureData.getR(), signatureData.getS(), publicKey)) {
+            if (!CryptoHelper.verifyByPublicKey(transactionHash.getBytes(), signatureData.getR(), signatureData.getS(), publicKey)) {
                 return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST).body(new Response(BAD_SIGNATURE_ON_TRUST_SCORE_FOR_TRANSACTION));
             }

@@ -7,8 +7,8 @@ import io.coti.trustscore.data.Buckets.BucketTransactionEventsData;
 import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.Events.BalanceCountAndContribution;
 import io.coti.trustscore.services.BucketTransactionService;
-import io.coti.trustscore.services.calculationServices.BucketTransactionsCalculator;
-import io.coti.trustscore.testUtils.BucketUtil;
+import io.coti.trustscore.services.calculationservices.BucketTransactionsCalculator;
+import io.coti.trustscore.testutils.BucketUtil;
 import io.coti.trustscore.utils.DatesCalculation;
 import org.junit.Assert;
 import org.junit.Before;
@@ -23,7 +23,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static io.coti.trustscore.testUtils.GeneralUtilsFunctions.isTrustScoreValueValid;
+import static io.coti.trustscore.testutils.GeneralUtilsFunctions.isTrustScoreValueValid;
 
 @ContextConfiguration(classes = {
         BucketTransactionsCalculator.class,
@@ -53,7 +53,7 @@ public class BucketTransactionsCalculatorTest {
     }
 
     @Test
-    public void decayScoresTest_whenDecayDayEvents() {
+    public void decayScoresTestWhenDecayDayEvents() {
         BucketTransactionEventsData bucketTransactionEventsData = new BucketTransactionEventsData();
         bucketTransactionEventsData.setUserType(UserType.CONSUMER);
         BucketTransactionsCalculator bucketTransactionsCalculator = new BucketTransactionsCalculator(bucketTransactionEventsData);
@@ -70,7 +70,7 @@ public class BucketTransactionsCalculatorTest {
     }
 
     @Test
-    public void decayScoresTest_whenDecayMonthEvents() {
+    public void decayScoresTestWhenDecayMonthEvents() {
         BucketTransactionEventsData bucketTransactionEventsData = new BucketTransactionEventsData();
         bucketTransactionEventsData.setUserType(UserType.CONSUMER);
         BucketTransactionsCalculator bucketTransactionsCalculator = new BucketTransactionsCalculator(bucketTransactionEventsData);

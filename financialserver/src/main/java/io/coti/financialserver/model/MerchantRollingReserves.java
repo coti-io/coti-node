@@ -7,9 +7,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class MerchantRollingReserves extends Collection<MerchantRollingReserveData> {
 
-    public MerchantRollingReserves() {
-    }
-
     public void init() {
         super.init();
     }

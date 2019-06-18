@@ -1,4 +1,4 @@
-package io.coti.basenode.database.Interfaces;
+package io.coti.basenode.database.interfaces;
 
 import org.rocksdb.RocksIterator;
 import org.rocksdb.WriteBatch;

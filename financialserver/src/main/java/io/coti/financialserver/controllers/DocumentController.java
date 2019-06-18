@@ -20,7 +20,7 @@ import java.io.IOException;
 public class DocumentController {
 
     @Autowired
-    DocumentService documentService;
+    private DocumentService documentService;
 
     @RequestMapping(path = "/upload", method = RequestMethod.POST)
     public ResponseEntity<IResponse> newDocument(@ModelAttribute @Valid NewDocumentRequest request) {

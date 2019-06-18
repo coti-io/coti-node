@@ -20,9 +20,9 @@ import javax.validation.Valid;
 public class DistributionController {
 
     @Autowired
-    DistributeTokenService distributeTokenService;
+    private DistributeTokenService distributeTokenService;
     @Autowired
-    FundDistributionService fundDistributionService;
+    private FundDistributionService fundDistributionService;
 
     @PostMapping(path = "/tokensale")
     public ResponseEntity<IResponse> distributeTokenSale(@RequestBody @Valid TokenSaleDistributionRequest request) {

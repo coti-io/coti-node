@@ -162,10 +162,11 @@ public class BaseNodeTransactionService implements ITransactionService {
     }
 
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
+        log.debug("Continue to handle propagated transaction {} by base node", transactionData.getHash());
     }
 
     public void addToExplorerIndexes(TransactionData transactionData) {
-
+        log.debug("Adding the transaction {} to explorer indexes by base node", transactionData.getHash());
     }
 
     private boolean hasOneOfParentsProcessing(TransactionData transactionData) {

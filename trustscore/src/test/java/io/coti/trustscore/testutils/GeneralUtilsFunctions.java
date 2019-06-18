@@ -1,4 +1,4 @@
-package io.coti.trustscore.testUtils;
+package io.coti.trustscore.testutils;
 
 import io.coti.basenode.data.Hash;
 
@@ -8,10 +8,7 @@ public class GeneralUtilsFunctions {
     private static final String[] hexaOptions = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
 
     public static boolean isTrustScoreValueValid(double score) {
-        if (score > 0 && score <= 100) {
-            return true;
-        }
-        return false;
+        return score > 0 && score <= 100;
     }
 
     public static Hash generateRandomHash(int lengthOfHash) {

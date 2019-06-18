@@ -13,7 +13,7 @@ public class TransactionVoteData implements IEntity {
     private static final long serialVersionUID = -7551521383352561518L;
     private Hash transactionHash;
     private Map<Hash, DspVote> dspHashToVoteMapping;
-    List<Hash> legalVoterDspHashes;
+    private List<Hash> legalVoterDspHashes;
 
     private TransactionVoteData() {
     }

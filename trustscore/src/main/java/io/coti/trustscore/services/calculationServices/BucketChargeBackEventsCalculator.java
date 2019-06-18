@@ -1,4 +1,4 @@
-package io.coti.trustscore.services.calculationServices;
+package io.coti.trustscore.services.calculationservices;
 
 import io.coti.trustscore.config.rules.BehaviorHighFrequencyEventsScore;
 import io.coti.trustscore.config.rules.HighFrequencyEventScore;

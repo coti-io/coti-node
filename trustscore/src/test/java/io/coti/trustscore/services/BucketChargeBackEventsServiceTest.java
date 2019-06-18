@@ -10,7 +10,7 @@ import io.coti.trustscore.data.Enums.HighFrequencyEventScoreType;
 import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.Events.ChargeBackEventsData;
 import io.coti.trustscore.http.InsertEventRequest;
-import io.coti.trustscore.testUtils.BucketUtil;
+import io.coti.trustscore.testutils.BucketUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Before;
@@ -25,9 +25,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.math.BigDecimal;
 import java.util.Date;
 
-import static io.coti.trustscore.testUtils.BucketUtil.generateRulesDataObject;
-import static io.coti.trustscore.testUtils.GeneralUtilsFunctions.generateRandomHash;
-import static io.coti.trustscore.testUtils.GeneralUtilsFunctions.generateRandomTrustScore;
+import static io.coti.trustscore.testutils.BucketUtil.generateRulesDataObject;
+import static io.coti.trustscore.testutils.GeneralUtilsFunctions.generateRandomHash;
+import static io.coti.trustscore.testutils.GeneralUtilsFunctions.generateRandomTrustScore;
 import static io.coti.trustscore.utils.DatesCalculation.decreaseTodayDateByDays;
 
 @TestPropertySource(locations = "classpath:test.properties")
@@ -60,14 +60,14 @@ public class BucketChargeBackEventsServiceTest {
     }
 
     @Test
-    public void BehaviorHighFrequencyEventsService_simpleScenarioTest() {
+    public void behaviorHighFrequencyEventsServiceSimpleScenarioTest() {
         addPaymentTransactionsAndChargeBacks();
         double bucketSumScore = bucketChargeBackEventsService.getBucketSumScore(bucketChargeBackEventsData);
         Assert.assertTrue(bucketSumScore < 0);
     }
 
     @Test
-    public void BehaviorHighFrequencyEventsService_complicatedScenarioWithDecayTest() {
+    public void behaviorHighFrequencyEventsServiceComplicatedScenarioWithDecayTest() {
         addPaymentTransactionsAndChargeBacks();
         Date yesterday = decreaseTodayDateByDays(1);
         bucketChargeBackEventsData.setLastUpdate(yesterday);
@@ -80,11 +80,11 @@ public class BucketChargeBackEventsServiceTest {
 
         TransactionData transactionData4 =
                 BucketUtil.createTransactionWithSpecificHash(generateRandomHash(64), user1Hash, generateRandomTrustScore(), TransactionType.Payment);
-        transactionData4.setAmount(new BigDecimal(13.5));
+        transactionData4.setAmount(new BigDecimal("13.5"));
 
         bucketChargeBackEventsService.addPaymentTransactionToCalculations(transactionData4, bucketChargeBackEventsData);
         TransactionData transactionData5 = BucketUtil.createTransactionWithSpecificHash(generateRandomHash(64), user2Hash, generateRandomTrustScore(), TransactionType.Payment);
-        transactionData5.setAmount(new BigDecimal(7.2));
+        transactionData5.setAmount(new BigDecimal("7.2"));
         bucketChargeBackEventsService.addEventToCalculations(new ChargeBackEventsData(buildChargeBackDataRequest(transactionData5)), bucketChargeBackEventsData);
         TransactionData transactionData6 = BucketUtil.createTransactionWithSpecificHash(generateRandomHash(64), user3Hash, generateRandomTrustScore(), TransactionType.Payment);
         transactionData6.setAmount(new BigDecimal(5));

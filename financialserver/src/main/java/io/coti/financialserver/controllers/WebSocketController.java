@@ -15,7 +15,7 @@ import org.springframework.stereotype.Controller;
 public class WebSocketController {
 
     @Autowired
-    WebSocketService webSocketService;
+    private WebSocketService webSocketService;
 
     @MessageMapping("/eventRead")
     public ResponseEntity<IResponse> eventRead(@Payload DisputeEventReadRequest disputeEventReadRequest) {

@@ -117,7 +117,7 @@ public class HealthCheckService implements IHealthCheckService {
                 }
                 List<Future<Boolean>> checkNodeFutures = executorService.invokeAll(nodeCheckTasks);
                 for (Future<Boolean> future : checkNodeFutures) {
-                    if (future.get() == true) {
+                    if (future.get()) {
                         networkChanged = true;
                     }
                 }

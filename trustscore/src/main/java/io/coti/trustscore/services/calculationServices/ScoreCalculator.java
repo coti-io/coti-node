@@ -1,7 +1,7 @@
-package io.coti.trustscore.services.calculationServices;
+package io.coti.trustscore.services.calculationservices;
 
 import io.coti.trustscore.config.rules.EventScore;
-import io.coti.trustscore.services.calculationServices.interfaces.IScoreCalculator;
+import io.coti.trustscore.services.calculationservices.interfaces.IScoreCalculator;
 import io.coti.trustscore.utils.MathCalculation;
 import javafx.util.Pair;
 

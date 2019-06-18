@@ -1,7 +1,7 @@
-package io.coti.trustscore.services.calculationServices;
+package io.coti.trustscore.services.calculationservices;
 
 import io.coti.trustscore.config.rules.EventScore;
-import io.coti.trustscore.services.calculationServices.interfaces.IEventDecay;
+import io.coti.trustscore.services.calculationservices.interfaces.IEventDecay;
 
 
 public class EventDecay implements IEventDecay {

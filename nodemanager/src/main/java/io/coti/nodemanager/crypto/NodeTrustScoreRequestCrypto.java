@@ -17,7 +17,6 @@ public class NodeTrustScoreRequestCrypto extends SignatureCrypto<NodeTrustScoreR
 
         byte[] signerHashInBytes = nodeTrustScoreRequest.getSignerHash().getBytes();
         byte[] nodesHashInBytes = getNodesHashesBytes(nodeTrustScoreRequest.getNodesHash());
-        ;
 
         ByteBuffer finalBuffer = ByteBuffer.allocate(signerHashInBytes.length + nodesHashInBytes.length);
         finalBuffer.put(signerHashInBytes).put(nodesHashInBytes);

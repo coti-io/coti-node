@@ -4,8 +4,8 @@ import lombok.Data;
 
 @Data
 public class ZeroMQMessageData {
-    String channel;
-    byte[] message;
+    private String channel;
+    private byte[] message;
 
     public ZeroMQMessageData(String channel, byte[] message) {
         this.channel = channel;

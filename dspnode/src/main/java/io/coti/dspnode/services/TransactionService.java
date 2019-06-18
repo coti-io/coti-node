@@ -25,9 +25,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Slf4j
 @Service
 public class TransactionService extends BaseNodeTransactionService {
+
     private Queue<TransactionData> transactionsToValidate;
     private AtomicBoolean isValidatorRunning;
-
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired

@@ -8,7 +8,8 @@ import java.util.Set;
 
 @Data
 public class GetReservedBalancesResponse extends BaseResponse {
-    Set<ReservedBalanceResponseData> lockupBalances;
+
+    private Set<ReservedBalanceResponseData> lockupBalances;
 
     public GetReservedBalancesResponse(Set<ReservedBalanceResponseData> reservedBalances) {
         lockupBalances = reservedBalances;

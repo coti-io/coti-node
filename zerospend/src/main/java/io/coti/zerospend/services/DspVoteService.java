@@ -153,10 +153,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
                 .filter(vote -> vote.isValidTransaction())
                 .count();
         long totalVotersCount = currentVotes.getLegalVoterDspHashes().size();
-        if (positiveVotersCount > totalVotersCount / 2) {
-            return true;
-        }
-        return false;
+        return positiveVotersCount > totalVotersCount / 2;
     }
 
     private boolean isNegativeMajorityAchieved(TransactionVoteData currentVotes) {
@@ -169,13 +166,6 @@ public class DspVoteService extends BaseNodeDspVoteService {
         long totalVotersCount = currentVotes
                 .getDspHashToVoteMapping()
                 .size();
-        if (negativeVotersCount > totalVotersCount / 2) {
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public void continueHandleVoteConclusion(DspConsensusResult dspConsensusResult) {
+        return negativeVotersCount > totalVotersCount / 2;
     }
 }

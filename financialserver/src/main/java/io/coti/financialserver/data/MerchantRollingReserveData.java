@@ -15,10 +15,10 @@ import java.util.List;
 public class MerchantRollingReserveData implements IEntity, ISignable, ISignValidatable {
 
     private static final long serialVersionUID = -4054263333198615240L;
-    Hash merchantHash;
-    Hash rollingReserveAddress;
-    Integer addressIndex;
-    List<Date> releaseDates;
+    private Hash merchantHash;
+    private Hash rollingReserveAddress;
+    private Integer addressIndex;
+    private List<Date> releaseDates;
     private SignatureData merchantSignature;
 
     public MerchantRollingReserveData() {

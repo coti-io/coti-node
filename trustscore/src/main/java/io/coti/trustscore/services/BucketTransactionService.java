@@ -5,7 +5,7 @@ import io.coti.trustscore.data.Buckets.BucketTransactionEventsData;
 import io.coti.trustscore.data.Enums.EventType;
 import io.coti.trustscore.data.Events.BalanceCountAndContribution;
 import io.coti.trustscore.data.Events.TransactionEventData;
-import io.coti.trustscore.services.calculationServices.BucketTransactionsCalculator;
+import io.coti.trustscore.services.calculationservices.BucketTransactionsCalculator;
 import io.coti.trustscore.services.interfaces.IBucketEventService;
 import io.coti.trustscore.utils.DatesCalculation;
 import lombok.Data;

@@ -21,7 +21,7 @@ import javax.validation.Valid;
 public class RollingReserveController {
 
     @Autowired
-    RollingReserveService rollingReserveService;
+    private RollingReserveService rollingReserveService;
 
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity getRollingReserveData(@Valid @RequestBody GetMerchantRollingReserveDataRequest request) {

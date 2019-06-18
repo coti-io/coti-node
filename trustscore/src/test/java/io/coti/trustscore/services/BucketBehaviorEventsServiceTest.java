@@ -21,8 +21,8 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static io.coti.trustscore.testUtils.BucketUtil.generateRulesDataObject;
-import static io.coti.trustscore.testUtils.GeneralUtilsFunctions.generateRandomHash;
+import static io.coti.trustscore.testutils.BucketUtil.generateRulesDataObject;
+import static io.coti.trustscore.testutils.GeneralUtilsFunctions.generateRandomHash;
 import static io.coti.trustscore.utils.DatesCalculation.addToDateByDays;
 import static io.coti.trustscore.utils.DatesCalculation.decreaseTodayDateByDays;
 
@@ -47,7 +47,7 @@ public class BucketBehaviorEventsServiceTest {
     }
 
     @Test
-    public void BucketBehaviorEventsService_complicatedScenarioWithDecayTest() {
+    public void bucketBehaviorEventsServiceComplicatedScenarioWithDecayTest() {
         addBehaviorEvents();
         performSimulationOfDecay(3);
         performSimulationOfDecay(2);
@@ -70,7 +70,7 @@ public class BucketBehaviorEventsServiceTest {
     }
 
     @Test
-    public void BucketBehaviorEventsService_simpleScenarioTest() {
+    public void bucketBehaviorEventsServiceSimpleScenarioTest() {
         addBehaviorEvents();
 
         for (int i = 0; i < 8; i++) {
@@ -85,7 +85,7 @@ public class BucketBehaviorEventsServiceTest {
     }
 
     @Test
-    public void BucketBehaviorEventsService_withLargeDecayTest() {
+    public void bucketBehaviorEventsServiceWithLargeDecayTest() {
         addBehaviorEvents();
         performSimulationOfDecay(400);
         addBehaviorEvents();

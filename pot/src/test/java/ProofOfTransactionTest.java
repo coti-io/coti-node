@@ -12,7 +12,7 @@ public class ProofOfTransactionTest {
     private byte[] transactionData = "hello world".getBytes();
 
     @BeforeEach
-    public void setup() {
+    public void setUp() {
 
         pow = new ProofOfTrust(0);
     }

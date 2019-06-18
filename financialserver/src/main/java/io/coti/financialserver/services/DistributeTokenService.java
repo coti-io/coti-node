@@ -4,7 +4,6 @@ import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.model.Transactions;
 import io.coti.financialserver.crypto.TokenSaleDistributionCrypto;
 import io.coti.financialserver.data.Fund;
 import io.coti.financialserver.data.ReservedAddress;
@@ -39,11 +38,9 @@ public class DistributeTokenService {
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
     @Autowired
-    TokenSaleDistributionCrypto tokenSaleDistributionCrypto;
+    private TokenSaleDistributionCrypto tokenSaleDistributionCrypto;
     @Autowired
-    TransactionCreationService transactionCreationService;
-    @Autowired
-    Transactions transactions;
+    private TransactionCreationService transactionCreationService;
     @Autowired
     private NodeCryptoHelper nodeCryptoHelper;
     @Autowired

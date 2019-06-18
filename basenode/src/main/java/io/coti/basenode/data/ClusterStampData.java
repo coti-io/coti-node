@@ -17,9 +17,6 @@ public class ClusterStampData implements ISignable, ISignValidatable {
     private int messageByteSize = 0;
     private SignatureData zeroSpendSignature;
 
-    public ClusterStampData() {
-    }
-
     @Override
     public SignatureData getSignature() {
         return zeroSpendSignature;

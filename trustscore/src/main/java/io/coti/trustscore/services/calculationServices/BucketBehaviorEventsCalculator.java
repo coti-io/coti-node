@@ -1,4 +1,4 @@
-package io.coti.trustscore.services.calculationServices;
+package io.coti.trustscore.services.calculationservices;
 
 import io.coti.trustscore.config.rules.BehaviorEventsScore;
 import io.coti.trustscore.config.rules.RulesData;
@@ -67,7 +67,7 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
             }
 
             double tailContribution = 0;
-            // if the there is this behavior event in the tail events
+            // if the there is this behavior event in the tail Events
             if (bucketBehaviorEventsData.getBehaviorEventTypeToOldEventsContributionMap().get(behaviorEventName) != null) {
                 tailContribution = bucketBehaviorEventsData.getBehaviorEventTypeToOldEventsContributionMap().get(behaviorEventName).values().stream()
                         .mapToDouble(Number::doubleValue).sum();

@@ -46,7 +46,7 @@ public class BaseNodeValidationService implements IValidationService {
     @Override
     public boolean validateAddress(Hash address) {
 
-        return CryptoHelper.IsAddressValid(address);
+        return CryptoHelper.isAddressValid(address);
     }
 
     @Override
