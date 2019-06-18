@@ -3,6 +3,8 @@ package io.coti.basenode.http;
 public class BaseNodeHttpStringConstants {
     public static final String STATUS_SUCCESS = "Success";
     public static final String STATUS_ERROR = "Error";
+    public static final String SERVER_ERROR = "Server error";
+    public static final String CREATED_MESSAGE = "Created";
 
     public static final String INVALID_ADDRESS = "Address %s  is invalid";
     public static final String ADDRESS_TRANSACTIONS_SERVER_ERROR = "Address transactions server error";
