@@ -34,21 +34,30 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
 
     @Override
     public void setCurrentScores() {
-        Map<SuspiciousEventScore, String> baseEventScoreToCalculationFormulaMap = new ConcurrentHashMap<>();
+        Map<SuspiciousEventScore, Double> baseEventScoreToCalculationMap = new ConcurrentHashMap<>();
 
         for (Map.Entry<BehaviorEventsScoreType, SuspiciousEventScore> baseEventTypeToBaseEventScoreEntry : behaviorEventsScore.getBaseEventScoreMap().entrySet()) {
 
             SuspiciousEventScore suspiciousEventScore = baseEventTypeToBaseEventScoreEntry.getValue();
-            String scoreFormulaCalculation = createBaseEventScoreFormula(baseEventTypeToBaseEventScoreEntry.getKey());
 
-            if (scoreFormulaCalculation != null) {
-                baseEventScoreToCalculationFormulaMap.put(suspiciousEventScore, scoreFormulaCalculation);
+            int eventsCount = 0;
+            if (bucketBehaviorEventsData.getBehaviorEventTypeToCurrentEventCountAndContributionDataMap().get(baseEventTypeToBaseEventScoreEntry.getKey()) != null) {
+                eventsCount = bucketBehaviorEventsData.getBehaviorEventTypeToCurrentEventCountAndContributionDataMap().get(baseEventTypeToBaseEventScoreEntry.getKey()).getCount();
+            }
+
+            switch(baseEventTypeToBaseEventScoreEntry.getKey()){
+                case DOUBLE_SPENDING:
+                case INCORRECT_TRANSACTION:
+                case CONFIRMATION_EVADING:
+                case SMART_CONTRACT_EXECUTION_EVADING:
+                    baseEventScoreToCalculationMap.put(suspiciousEventScore, (double) eventsCount);
+                    break;
+                case FILLING_QUESTIONNAIRE:
+                    baseEventScoreToCalculationMap.put(suspiciousEventScore, Math.min(Math.floor(eventsCount/3),3));
+                    break;
             }
         }
-
-        ScoreCalculator scoreCalculator = new ScoreCalculator(baseEventScoreToCalculationFormulaMap);
-        Map<SuspiciousEventScore, Double> baseEventScoreToCalculatedScoreMap = scoreCalculator.calculate();
-        updateBucketScoresAfterCalculation(baseEventScoreToCalculatedScoreMap);
+        updateBucketScoresAfterCalculation(baseEventScoreToCalculationMap);
 
     }
 
@@ -77,21 +86,6 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
                     .put(behaviorEventName, score + tailContribution);
 
         }
-    }
-
-    private String createBaseEventScoreFormula(BehaviorEventsScoreType baseEventScoreType) {
-        SuspiciousEventScore suspiciousEventScore = behaviorEventsScore.getBaseEventScoreMap().get(baseEventScoreType);
-        String contributionFunctionString = suspiciousEventScore.getContribution();
-
-        if (contributionFunctionString != null && !contributionFunctionString.isEmpty()) {
-            int eventsCount = 0;
-            if (bucketBehaviorEventsData.getBehaviorEventTypeToCurrentEventCountAndContributionDataMap().get(baseEventScoreType) != null) {
-                eventsCount = bucketBehaviorEventsData.getBehaviorEventTypeToCurrentEventCountAndContributionDataMap().get(baseEventScoreType).getCount();
-            }
-            contributionFunctionString = contributionFunctionString.replace("eventsNumber", Integer.toString(eventsCount));
-        }
-
-        return contributionFunctionString;
     }
 
     private void addTodayScoreToOldEventsMap() {

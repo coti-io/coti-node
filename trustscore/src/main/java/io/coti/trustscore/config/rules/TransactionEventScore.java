@@ -7,5 +7,7 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TransactionEventScore extends EventScore {
 
-    private String nonlinearFunction;
+    private double level08;
+    private double atanh08;
+
 }

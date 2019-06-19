@@ -170,28 +170,32 @@ public class BucketTransactionsCalculator extends BucketCalculator {
 
     public void setCurrentDayTransactionsScores() {
 
-        Map<TransactionEventScore, String> transactionEventScoreToCalculationFormulaMap = new ConcurrentHashMap<>();
-        transactionEventScoreToCalculationFormulaMap.put(transactionEventsScore.getTransactionEventScoreMap()
-                .get(TransactionEventScoreType.TURNOVER), createTurnOverScoreFormula(bucketTransactionEventsData));
-        transactionEventScoreToCalculationFormulaMap.put(transactionEventsScore.getTransactionEventScoreMap()
-                .get(TransactionEventScoreType.TRANSACTION_FREQUENCY), createTransactionFrequencyScoreFormula());
+        Map<TransactionEventScore, Double> eventScoresMap =  new ConcurrentHashMap<>();
 
-        IScoreCalculator functionCalculator = new ScoreCalculator(transactionEventScoreToCalculationFormulaMap);
-        Map<TransactionEventScore, Double> eventScoresToFunctionalScoreMap = functionCalculator.calculate();
-        updateBucketScoresByFunction(eventScoresToFunctionalScoreMap);
+        TransactionEventScore transactionEventScoreT = transactionEventsScore.getTransactionEventScoreMap().get(TransactionEventScoreType.TURNOVER);
+        eventScoresMap.put(transactionEventScoreT,
+                Math.tanh(bucketTransactionEventsData.getCurrentDateTurnOver()/transactionEventScoreT.getLevel08()*transactionEventScoreT.getAtanh08()));
+
+        TransactionEventScore transactionEventScoreF = transactionEventsScore.getTransactionEventScoreMap().get(TransactionEventScoreType.TRANSACTION_FREQUENCY);
+        eventScoresMap.put(transactionEventScoreF,
+                Math.tanh(bucketTransactionEventsData.getCurrentDateNumberOfTransactions()/transactionEventScoreF.getLevel08()*transactionEventScoreF.getAtanh08()));
+
+        updateBucketScores(eventScoresMap);
     }
 
     public void setCurrentMonthTransactionsScores() {
-        Map<TransactionEventScore, Map<Date, String>> eventScoresToDatesScoreFormulaMap = new ConcurrentHashMap<>();
-        eventScoresToDatesScoreFormulaMap.put(transactionEventsScore.getTransactionEventScoreMap()
-                .get(TransactionEventScoreType.AVERAGE_BALANCE), createLastDaysAverageBalanceScoreFormula());
+
         // Calculate every day from the last days balance score.
-        VectorScoreCalculator vectorScoreCalculator = new VectorScoreCalculator(eventScoresToDatesScoreFormulaMap);
+        Map<TransactionEventScore, Map<Date, Double>> eventScoresToDatesScoreMap = new ConcurrentHashMap<>();
+        TransactionEventScore transactionEventScoreB = transactionEventsScore.getTransactionEventScoreMap().get(TransactionEventScoreType.AVERAGE_BALANCE);
+        eventScoresToDatesScoreMap.put(transactionEventScoreB, createLastDaysAverageBalanceScore());
+
+        VectorScoreCalculator vectorScoreCalculator = new VectorScoreCalculator(eventScoresToDatesScoreMap);
         Map<TransactionEventScore, Map<Date, Double>> latestTransactionEventScoreToCalculationFormulaMap =
                 (vectorScoreCalculator).calculateVectorScore();
         Map<Date, Double> latestBalanceTransactionEventScoreToCalculationFormulaMap =
-                latestTransactionEventScoreToCalculationFormulaMap.get(transactionEventsScore.getTransactionEventScoreMap()
-                        .get(TransactionEventScoreType.AVERAGE_BALANCE));
+                latestTransactionEventScoreToCalculationFormulaMap.get(transactionEventScoreB);
+
         updateCurrentMonthBalance(bucketTransactionEventsData, latestBalanceTransactionEventScoreToCalculationFormulaMap);
         updateCurrentMonthBalanceContribution();
     }
@@ -221,15 +225,11 @@ public class BucketTransactionsCalculator extends BucketCalculator {
     }
 
 
-    public Map<Date, String> createLastDaysAverageBalanceScoreFormula() {
+    private Map<Date, Double> createLastDaysAverageBalanceScore() {
 
-        String nonlinearFormula = transactionEventsScore.getTransactionEventScoreMap()
-                .get(TransactionEventScoreType.AVERAGE_BALANCE).getNonlinearFunction();
-        Map<Date, BalanceCountAndContribution> currentMonthBalanceByDayMap
-                = bucketTransactionEventsData.getCurrentMonthDayToBalanceCountAndContribution();
-        return currentMonthBalanceByDayMap.entrySet().stream()
+        return bucketTransactionEventsData.getCurrentMonthDayToBalanceCountAndContribution().entrySet().stream()
                 .filter(x -> x.getValue().getContribution() == 0)
-                .collect(Collectors.toMap(e -> e.getKey(), e -> nonlinearFormula.replace("B", String.valueOf(e.getValue().getCount()))));//.concat(
+                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getCount()));
     }
 
     private void updateCurrentMonthBalanceContribution() {
@@ -252,7 +252,6 @@ public class BucketTransactionsCalculator extends BucketCalculator {
         }
     }
 
-
     private double getWeightByEventScore(TransactionEventScoreType eventScoreType) {
         if (transactionEventsScore.getTransactionEventScoreMap().get(eventScoreType) == null) {
             return 0;
@@ -264,36 +263,28 @@ public class BucketTransactionsCalculator extends BucketCalculator {
         return transactionEventsScore.getTransactionEventScoreMap().get(eventScoreType);
     }
 
-    private void updateBucketScoresByFunction(Map<TransactionEventScore, Double> transactionEventScoreToUpdatedBucketValuesMap) {
+    private void updateBucketScores(Map<TransactionEventScore, Double> transactionEventScoreToUpdatedBucketValuesMap) {
 
-        if (transactionEventScoreToUpdatedBucketValuesMap.containsKey(getEventScoreByEventScoreType(TransactionEventScoreType.TURNOVER))) {
-            bucketTransactionEventsData.setCurrentDateTurnOverContribution(
-                    transactionEventScoreToUpdatedBucketValuesMap.get(getEventScoreByEventScoreType(TransactionEventScoreType.TURNOVER)));
+        for (TransactionEventScore transactionEventScore: transactionEventsScore.getTransactionEventScoreList()) {
+            TransactionEventScoreType transactionEventScoreType = TransactionEventScoreType.enumFromString(transactionEventScore.getName());
+            if (transactionEventScoreToUpdatedBucketValuesMap.containsKey(getEventScoreByEventScoreType(transactionEventScoreType))) {
+                switch (transactionEventScoreType){
+                    case TRANSACTION_FREQUENCY:
+                        bucketTransactionEventsData.setCurrentDateNumberOfTransactionsContribution(
+                                transactionEventScoreToUpdatedBucketValuesMap.get(getEventScoreByEventScoreType(transactionEventScoreType)));
+                        break;
+                    case TURNOVER:
+                        bucketTransactionEventsData.setCurrentDateTurnOverContribution(
+                                transactionEventScoreToUpdatedBucketValuesMap.get(getEventScoreByEventScoreType(transactionEventScoreType)));
+                        break;
+                    case AVERAGE_BALANCE:
+                        bucketTransactionEventsData.setCurrentMonthBalanceContribution(
+                                transactionEventScoreToUpdatedBucketValuesMap.get(getEventScoreByEventScoreType(transactionEventScoreType)));
+                        break;
+                }
+            }
         }
-        if (transactionEventScoreToUpdatedBucketValuesMap.containsKey(getEventScoreByEventScoreType(TransactionEventScoreType.AVERAGE_BALANCE))) {
-            bucketTransactionEventsData.setCurrentMonthBalanceContribution(
-                    transactionEventScoreToUpdatedBucketValuesMap.get(getEventScoreByEventScoreType(TransactionEventScoreType.AVERAGE_BALANCE)));
-        }
-        if (transactionEventScoreToUpdatedBucketValuesMap.containsKey(getEventScoreByEventScoreType(TransactionEventScoreType.TRANSACTION_FREQUENCY))) {
-            bucketTransactionEventsData.setCurrentDateNumberOfTransactionsContribution(
-                    transactionEventScoreToUpdatedBucketValuesMap.get(getEventScoreByEventScoreType(TransactionEventScoreType.TRANSACTION_FREQUENCY)));
-        }
-    }
 
-
-    public String createTransactionFrequencyScoreFormula() {
-        String nonlinearFunctionformulaString = transactionEventsScore.getTransactionEventScoreMap()
-                .get(TransactionEventScoreType.TRANSACTION_FREQUENCY).getNonlinearFunction();
-
-        double numberOfTransactions = bucketTransactionEventsData.getCurrentDateNumberOfTransactions();
-        return nonlinearFunctionformulaString.replace("N", String.valueOf(numberOfTransactions));
-    }
-
-
-    public String createTurnOverScoreFormula(BucketTransactionEventsData bucketTransactionEventsData) {
-        String nonlinearFunctionString = transactionEventsScore.getTransactionEventScoreMap().get(TransactionEventScoreType.TURNOVER).getNonlinearFunction();
-        double turnover = bucketTransactionEventsData.getCurrentDateTurnOver();
-        return nonlinearFunctionString.replace("T", String.valueOf(turnover));
     }
 
     public double getBucketSumScore(BucketTransactionEventsData bucketTransactionEventsData) {

@@ -7,11 +7,7 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class HighFrequencyEventScore extends EventScore {
 
-    private String linearFunction;
-
     private double standardChargeBackRate;
 
-    private String contribution;
-
-    private String term;
+    private long term;
 }

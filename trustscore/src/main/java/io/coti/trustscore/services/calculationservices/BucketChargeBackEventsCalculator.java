@@ -33,17 +33,24 @@ public class BucketChargeBackEventsCalculator extends BucketCalculator {
 
     @Override
     public void setCurrentScores() {
-        Map<HighFrequencyEventScore, String> highFrequencyEventScoreToCalculationFormulaMap = new ConcurrentHashMap<>();
+        Map<HighFrequencyEventScore, Double> eventScoresToCalculatedScoreMap = new ConcurrentHashMap<>();
         HighFrequencyEventScore chargeBackEventScoreByEventScoreType = behaviorHighFrequencyEventsScore.getHighFrequencyEventScoreMap().get(HighFrequencyEventScoreType.CHARGE_BACK_AMOUNT);
         if (chargeBackEventScoreByEventScoreType == null) return;
-        highFrequencyEventScoreToCalculationFormulaMap.put(chargeBackEventScoreByEventScoreType, createChargeBackAmountFormula());
 
-        highFrequencyEventScoreToCalculationFormulaMap.put(behaviorHighFrequencyEventsScore.getHighFrequencyEventScoreMap()
+        eventScoresToCalculatedScoreMap.put(chargeBackEventScoreByEventScoreType,
+                    Math.max((bucketChargeBackEventsData.getOldDateAmountOfChargeBacksContribution()
+                            + bucketChargeBackEventsData.getCurrentDateChargeBacks().values().stream().mapToDouble(Number::doubleValue).sum())
+                            / (bucketChargeBackEventsData.getOldDateAmountOfCreditTransactionsContribution()
+                            + bucketChargeBackEventsData.getCurrentDatePaymentTransactions().values().stream().mapToDouble(Number::doubleValue).sum())
+                            - chargeBackEventScoreByEventScoreType.getStandardChargeBackRate(), 0));
+
+        eventScoresToCalculatedScoreMap.put(behaviorHighFrequencyEventsScore.getHighFrequencyEventScoreMap()
                         .get(HighFrequencyEventScoreType.CHARGE_BACK_NUMBER),
-                createChargeBackNumberFormula());
-
-        ScoreCalculator functionCalculator = new ScoreCalculator(highFrequencyEventScoreToCalculationFormulaMap);
-        Map<HighFrequencyEventScore, Double> eventScoresToCalculatedScoreMap = functionCalculator.calculate();
+                    Math.max((bucketChargeBackEventsData.getOldDateNumberOfChargeBacksContribution()
+                            + bucketChargeBackEventsData.getCurrentDateChargeBacks().size())
+                            / (bucketChargeBackEventsData.getOldDateNumberOfCreditTransactionsContribution()
+                            + bucketChargeBackEventsData.getCurrentDatePaymentTransactions().size())
+                            - chargeBackEventScoreByEventScoreType.getStandardChargeBackRate(), 0));
 
         for (HighFrequencyEventScore highFrequencyEventScore : eventScoresToCalculatedScoreMap.keySet())
             if (eventScoresToCalculatedScoreMap.get(highFrequencyEventScore).isNaN()) {
@@ -154,46 +161,6 @@ public class BucketChargeBackEventsCalculator extends BucketCalculator {
             bucketChargeBackEventsData.setTotalContributionOfChargeBacksAndCreditsNumberContribution(
                     eventScoresToCalculatedScoreMap.get(getChargeBackEventScoreByEventScoreType(HighFrequencyEventScoreType.CHARGE_BACK_NUMBER)));
         }
-    }
-
-    private String createChargeBackAmountFormula() {
-        HighFrequencyEventScore highFrequencyEventScore =
-                behaviorHighFrequencyEventsScore.getHighFrequencyEventScoreMap().get(HighFrequencyEventScoreType.CHARGE_BACK_AMOUNT);
-
-        String contributionFunctionString = highFrequencyEventScore.getContribution();
-        double standardChargeBackRate = highFrequencyEventScore.getStandardChargeBackRate();
-
-        contributionFunctionString = contributionFunctionString
-                .replace("chargeBacksTodayAmount", Double.toString(bucketChargeBackEventsData.getCurrentDateChargeBacks().values().stream().mapToDouble(Number::doubleValue).sum()));
-        contributionFunctionString = contributionFunctionString
-                .replace("paymentsTodayAmount", Double.toString(bucketChargeBackEventsData.getCurrentDatePaymentTransactions().values().stream().mapToDouble(Number::doubleValue).sum()));
-        contributionFunctionString = contributionFunctionString
-                .replace("standardChargeBackRate", Double.toString(standardChargeBackRate));
-        contributionFunctionString = contributionFunctionString
-                .replace("tail2Contribution", Double.toString(bucketChargeBackEventsData.getOldDateAmountOfChargeBacksContribution()));
-        contributionFunctionString = contributionFunctionString
-                .replace("tail1Contribution", Double.toString(bucketChargeBackEventsData.getOldDateAmountOfCreditTransactionsContribution()));
-        return contributionFunctionString;
-
-    }
-
-    private String createChargeBackNumberFormula() {
-        HighFrequencyEventScore highFrequencyEventScore = behaviorHighFrequencyEventsScore.getHighFrequencyEventScoreMap().get(HighFrequencyEventScoreType.CHARGE_BACK_NUMBER);
-
-        String contributionFunctionString = highFrequencyEventScore.getContribution();
-        double standardChargeBackRate = highFrequencyEventScore.getStandardChargeBackRate();
-
-        contributionFunctionString = contributionFunctionString
-                .replace("chargeBacksTodayNumber", Double.toString(bucketChargeBackEventsData.getCurrentDateChargeBacks().size()));
-        contributionFunctionString = contributionFunctionString
-                .replace("paymentsTodayNumber", Double.toString(bucketChargeBackEventsData.getCurrentDatePaymentTransactions().size()));
-        contributionFunctionString = contributionFunctionString
-                .replace("standardChargeBackRate", Double.toString(standardChargeBackRate));
-        contributionFunctionString = contributionFunctionString
-                .replace("tail2Contribution", Double.toString(bucketChargeBackEventsData.getOldDateNumberOfChargeBacksContribution()));
-        contributionFunctionString = contributionFunctionString
-                .replace("tail1Contribution", Double.toString(bucketChargeBackEventsData.getOldDateNumberOfCreditTransactionsContribution()));
-        return contributionFunctionString;
     }
 
     private double getWeightByEventScore(HighFrequencyEventScoreType eventScoreType) {

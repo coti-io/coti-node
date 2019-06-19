@@ -9,5 +9,6 @@ public abstract class EventScore {
 
     private double weight;
 
-    private String decay;
+    private long semiDecay;
+
 }

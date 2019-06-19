@@ -44,18 +44,18 @@ public class BucketNotFulfilmentEventsCalculator extends BucketCalculator {
     }
 
     private void decayedFine(NotFulfilmentToClientContributionData clientNotFulfilmentToClientContributionData, int daysDiff) {
-        ScoreCalculator scoreCalculator = new ScoreCalculator();
         for (int i = 0; i < daysDiff; i++) {
-            String fineDailyChangeFormula = createFineFormula(clientNotFulfilmentToClientContributionData, compensableEventScore.getFineDailyChange());
             clientNotFulfilmentToClientContributionData
-                    .setFine((double) scoreCalculator.calculateEntry(new Pair<>(compensableEventScore,
-                            fineDailyChangeFormula)).getValue());
+                    .setFine((double) clientNotFulfilmentToClientContributionData.getFine()
+                                    + (compensableEventScore.getWeight1()*Math.signum(clientNotFulfilmentToClientContributionData.getCurrentDebt())
+                                    + compensableEventScore.getWeight2() * clientNotFulfilmentToClientContributionData.getCurrentDebt()/10000
+                                    + clientNotFulfilmentToClientContributionData.getFine()) * 1/365);
         }
     }
 
     private double calculateFine(NotFulfilmentToClientContributionData notFulfilmentToClientContributionData) {
-        String fineFormula = createFineFormula(notFulfilmentToClientContributionData, compensableEventScore.getFine());
-        return (double) (new ScoreCalculator().calculateEntry(new Pair<>(compensableEventScore, fineFormula)).getValue());
+        return ((compensableEventScore.getWeight1())*(Math.signum(notFulfilmentToClientContributionData.getCurrentDebt()))
+                + (compensableEventScore.getWeight2()) * notFulfilmentToClientContributionData.getCurrentDebt()/10000) * 1/365;
     }
 
     public void setCurrentScoresForSpecificClient(boolean isDebtDecreasing, Hash clientHash) {
@@ -67,22 +67,6 @@ public class BucketNotFulfilmentEventsCalculator extends BucketCalculator {
 
         }
         notFulfilmentToClientContributionData.setFine(calculateFine(notFulfilmentToClientContributionData));
-    }
-
-    private String createFineFormula(NotFulfilmentToClientContributionData notFulfilmentToClientContributionData, String formula) {
-        formula = formula.replace("currentDebt",
-                String.valueOf(notFulfilmentToClientContributionData.getCurrentDebt()));
-
-        formula = formula.replace("weight1",
-                String.valueOf(compensableEventScore.getWeight1()));
-
-        formula = formula.replace("weight2",
-                String.valueOf(compensableEventScore.getWeight2()));
-
-        formula = formula.replace("fine",
-                String.valueOf(notFulfilmentToClientContributionData.getFine()));
-
-        return formula;
     }
 
     public double getBucketSumScore(BucketNotFulfilmentEventsData bucketNotFulfilmentEventsData) {
