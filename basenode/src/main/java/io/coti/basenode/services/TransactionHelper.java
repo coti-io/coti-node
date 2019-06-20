@@ -334,32 +334,6 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     @Override
-    public boolean handleVoteConclusionResult(DspConsensusResult dspConsensusResult) {
-        if (!dspConsensusCrypto.verifySignature(dspConsensusResult)) {
-            log.error("DspConsensus signature verification failed for transaction", dspConsensusResult.getHash());
-            return false;
-        }
-        TransactionData transactionData = transactions.getByHash(dspConsensusResult.getHash());
-        if (transactionData == null) {
-            log.error("DspConsensus result is for a non-existing transaction: {}", dspConsensusResult.getHash());
-            return false;
-        }
-        if (transactionData.getDspConsensusResult() != null) {
-            log.debug("DspConsensus result already exists for transaction: {}", dspConsensusResult.getHash());
-            return false;
-        }
-        if (dspConsensusResult.isDspConsensus()) {
-            log.debug("Valid vote conclusion received for transaction: {}", dspConsensusResult.getHash());
-        } else {
-            log.debug("Invalid vote conclusion received for transaction: {}", dspConsensusResult.getHash());
-        }
-
-        log.debug("DspConsensus result for transaction: Hash= {}, DspVoteResult= {}, Index= {}", dspConsensusResult.getHash(), dspConsensusResult.isDspConsensus(), dspConsensusResult.getIndex());
-
-        return true;
-    }
-
-    @Override
     public boolean isConfirmed(TransactionData transactionData) {
         return transactionData.isTrustChainConsensus() && isDspConfirmed(transactionData);
     }
