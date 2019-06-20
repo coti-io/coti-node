@@ -51,6 +51,8 @@ public class FundDistributionService {
     private String seed;
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
+    @Value("${distribution.cron.enabled}")
+    private boolean distributionCronEnabled;
     @Autowired
     private TransactionCreationService transactionCreationService;
     @Autowired
@@ -420,19 +422,21 @@ public class FundDistributionService {
 
     @Scheduled(cron = "${distribution.cron.time}", zone = "UTC")
     public void scheduleTaskUsingCronExpression() {
-        log.info("Starting scheduled action for creating distribution transactions");
-        AtomicLong createdTransactionNumber = new AtomicLong(0);
-        AtomicLong failedTransactionNumber = new AtomicLong(0);
-        Thread monitorCreatedTransactions = monitorCreatedTransactions(createdTransactionNumber, failedTransactionNumber);
-        try {
-            monitorCreatedTransactions.start();
-            createPendingTransactions(createdTransactionNumber, failedTransactionNumber);
-        } catch (Exception e) {
-            log.error("Error at distribution transactions : {}", e.getMessage());
-        } finally {
-            monitorCreatedTransactions.interrupt();
+        if (distributionCronEnabled) {
+            log.info("Starting scheduled action for creating distribution transactions");
+            AtomicLong createdTransactionNumber = new AtomicLong(0);
+            AtomicLong failedTransactionNumber = new AtomicLong(0);
+            Thread monitorCreatedTransactions = monitorCreatedTransactions(createdTransactionNumber, failedTransactionNumber);
+            try {
+                monitorCreatedTransactions.start();
+                createPendingTransactions(createdTransactionNumber, failedTransactionNumber);
+            } catch (Exception e) {
+                log.error("Error at distribution transactions : {}", e.getMessage());
+            } finally {
+                monitorCreatedTransactions.interrupt();
+            }
+            log.info("Finished scheduled action for creating distribution transactions");
         }
-        log.info("Finished scheduled action for creating distribution transactions");
     }
 
     private Thread monitorCreatedTransactions(AtomicLong createdTransactionNumber, AtomicLong failedTransactionNumber) {

@@ -17,7 +17,7 @@ public class BaseNodeHttpStringConstants {
 
     public static final String AUTHENTICATION_FAILED_MESSAGE = "Authentication failed!";
     public static final String INSUFFICIENT_FUNDS_MESSAGE = "Balance for address is insufficient!";
-    public static final String ILLEGAL_TRANSACTION_MESSAGE = "Illegal transaction - sum of base transactions must be 0!";
+    public static final String ILLEGAL_BASE_TRANSACTIONS_AMOUNT = "Illegal transaction - sum of base transactions must be 0!";
     public static final String INVALID_TRUST_SCORE_MESSAGE = "Invalid sender trust score!";
 
     public static final String API_CLIENT_ERROR = "Api Client Error";
@@ -33,6 +33,7 @@ public class BaseNodeHttpStringConstants {
     public static final String INVALID_NODE_REGISTRAR = "Invalid node registrar";
     public static final String INVALID_NODE_REGISTRATION_SIGNATURE = "Invalid node registration signature";
     public static final String INVALID_NETWORK_TYPE = "Network type should be %s. Invalid network type %s";
+    public static final String INVALID_TRANSACTION_TIME_FIELD = "Invalid transaction time field. Current node time: %s";
 
     public static final String UNAUTHORIZED_IP_ACCESS = "Unauthorized ip access";
     public static final String METHOD_NOT_SUPPORTED = "Unsupported method";

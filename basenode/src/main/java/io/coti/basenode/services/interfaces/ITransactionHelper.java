@@ -14,6 +14,8 @@ public interface ITransactionHelper {
 
     boolean validateBaseTransactionsDataIntegrity(TransactionData transactionData);
 
+    boolean validateTransactionTimeFields(TransactionData transactionData);
+
     void updateAddressTransactionHistory(TransactionData transactionData);
 
     void updateAddressTransactionHistory(Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap, TransactionData transactionData);

@@ -5,6 +5,7 @@ import io.coti.basenode.data.AddressTransactionsHistory;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.exceptions.TransactionException;
+import io.coti.basenode.exceptions.TransactionValidationException;
 import io.coti.basenode.http.CustomGson;
 import io.coti.basenode.http.GetTransactionsResponse;
 import io.coti.basenode.http.Response;
@@ -95,48 +96,8 @@ public class TransactionService extends BaseNodeTransactionService {
                                 TRANSACTION_ALREADY_EXIST_MESSAGE));
             }
             transactionHelper.startHandleTransaction(transactionData);
-            if (!validationService.validateTransactionDataIntegrity(transactionData)) {
-                log.error("Data Integrity validation failed: {}", transactionData.getHash());
-                return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
-                        .body(new AddTransactionResponse(
-                                STATUS_ERROR,
-                                AUTHENTICATION_FAILED_MESSAGE));
-            }
 
-            if (!validationService.validateFullNodeFeeDataIntegrity(transactionData)) {
-                log.error("Invalid fullnode fee data: {}", transactionData.getHash());
-                return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
-                        .body(new AddTransactionResponse(
-                                STATUS_ERROR,
-                                INVALID_FULL_NODE_FEE));
-            }
-            if (!validationService.validateBaseTransactionAmounts(transactionData)) {
-                log.error("Illegal base transaction amounts: {}", transactionData.getHash());
-                return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
-                        .body(new AddTransactionResponse(
-                                STATUS_ERROR,
-                                ILLEGAL_TRANSACTION_MESSAGE));
-            }
-            if (!validationService.validateTransactionTrustScore(transactionData)) {
-                log.error("Invalid sender trust score: {}", transactionData.getHash());
-                return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
-                        .body(new AddTransactionResponse(
-                                STATUS_ERROR,
-                                INVALID_TRUST_SCORE_MESSAGE));
-            }
-
-            if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
-                log.error("Balance and Pre balance check failed: {}", transactionData.getHash());
-                return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
-                        .body(new AddTransactionResponse(
-                                STATUS_ERROR,
-                                INSUFFICIENT_FUNDS_MESSAGE));
-            }
+            validateTransaction(transactionData);
 
             selectSources(transactionData);
             if (!transactionData.hasSources()) {
@@ -159,7 +120,6 @@ public class TransactionService extends BaseNodeTransactionService {
             if (!validationService.validateSource(transactionData.getLeftParentHash()) ||
                     !validationService.validateSource(transactionData.getRightParentHash())) {
                 log.debug("Could not validate transaction source");
-                //TODO: Implement an invalidation mechanism for TestNet.
             }
 
             // ############   POT   ###########
@@ -190,9 +150,16 @@ public class TransactionService extends BaseNodeTransactionService {
                             STATUS_SUCCESS,
                             TRANSACTION_CREATED_MESSAGE));
 
-        } catch (Exception ex) {
-            log.error("Exception while adding transaction: {}", transactionData.getHash(), ex);
-            throw new TransactionException(ex);
+        } catch (TransactionValidationException e) {
+            log.error("Transaction validation failed: {}", e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new AddTransactionResponse(
+                            STATUS_ERROR,
+                            e.getMessage()));
+        } catch (Exception e) {
+            log.error("Exception while adding transaction: {}", transactionData.getHash());
+            throw new TransactionException(e);
         } finally {
             transactionHelper.endHandleTransaction(transactionData);
         }
@@ -219,10 +186,6 @@ public class TransactionService extends BaseNodeTransactionService {
                 return;
             }
         }
-        //TODO: ZeroSpend source starvation already implemented. ZeroSpend source creation by request will be implemented for TestNet.
-/*      ZeroSpendTransactionRequest zeroSpendTransactionRequest = new ZeroSpendTransactionRequest();
-        zeroSpendTransactionRequest.setTransactionData(transactionData);
-        receivingServerAddresses.forEach(address -> sender.send(zeroSpendTransactionRequest, address)); */
 
         while (!transactionData.hasSources()) {
             log.debug("Waiting 2 seconds for new zero spend transaction to be added to available sources for transaction {}", transactionData.getHash());
@@ -233,6 +196,38 @@ public class TransactionService extends BaseNodeTransactionService {
             }
             clusterService.selectSources(transactionData);
         }
+    }
+
+    private void validateTransaction(TransactionData transactionData) {
+
+        if (!validationService.validateTransactionDataIntegrity(transactionData)) {
+            log.error("Data Integrity validation failed for transaction {}", transactionData.getHash());
+            throw new TransactionValidationException(AUTHENTICATION_FAILED_MESSAGE);
+        }
+
+        if (!validationService.validateFullNodeFeeDataIntegrity(transactionData)) {
+            log.error("Invalid fullnode fee data for transaction {}", transactionData.getHash());
+            throw new TransactionValidationException(INVALID_FULL_NODE_FEE);
+        }
+        if (!validationService.validateBaseTransactionAmounts(transactionData)) {
+            log.error("Illegal base transaction amounts for transaction {}", transactionData.getHash());
+            throw new TransactionValidationException(ILLEGAL_BASE_TRANSACTIONS_AMOUNT);
+        }
+        if (!validationService.validateTransactionTimeFields(transactionData)) {
+            log.error("Invalid transaction time field for transaction {}", transactionData.getHash());
+            throw new TransactionValidationException(String.format(INVALID_TRANSACTION_TIME_FIELD, Instant.now()));
+        }
+
+        if (!validationService.validateTransactionTrustScore(transactionData)) {
+            log.error("Invalid sender trust score for transaction {}", transactionData.getHash());
+            throw new TransactionValidationException(INVALID_TRUST_SCORE_MESSAGE);
+        }
+
+        if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
+            log.error("Balance and Pre balance check failed for transaction {}", transactionData.getHash());
+            throw new TransactionValidationException(INSUFFICIENT_FUNDS_MESSAGE);
+        }
+
     }
 
     public ResponseEntity<IResponse> getAddressTransactions(Hash addressHash) {
