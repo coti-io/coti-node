@@ -1,10 +1,12 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.communication.JacksonSerializer;
+import io.coti.basenode.data.DspConsensusResult;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
+import io.coti.basenode.services.interfaces.IDspVoteService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.ITransactionService;
 import io.coti.basenode.services.interfaces.IValidationService;
@@ -29,6 +31,8 @@ public class BaseNodeTransactionService implements ITransactionService {
     private ITransactionHelper transactionHelper;
     @Autowired
     private IValidationService validationService;
+    @Autowired
+    private IDspVoteService dspVoteService;
     @Autowired
     private Transactions transactions;
     @Autowired
@@ -145,6 +149,10 @@ public class BaseNodeTransactionService implements ITransactionService {
                     }
             }
             if (isTransactionFinished) {
+                DspConsensusResult postponedDspConsensusResult = dspVoteService.getPostponedDspConsensusResult(transactionData.getHash());
+                if (postponedDspConsensusResult != null) {
+                    dspVoteService.handleVoteConclusion(postponedDspConsensusResult);
+                }
                 List<TransactionData> postponedParentTransactions = postponedTransactions.stream().filter(
                         postponedTransactionData ->
                                 (postponedTransactionData.getRightParentHash() != null && postponedTransactionData.getRightParentHash().equals(transactionData.getHash())) ||

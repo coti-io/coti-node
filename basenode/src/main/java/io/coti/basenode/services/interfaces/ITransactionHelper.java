@@ -40,8 +40,6 @@ public interface ITransactionHelper {
 
     void setTransactionStateToFinished(TransactionData transactionData);
 
-    boolean handleVoteConclusionResult(DspConsensusResult dspConsensusResult);
-
     boolean isConfirmed(TransactionData transactionData);
 
     boolean isDspConfirmed(TransactionData transactionData);

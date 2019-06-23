@@ -33,9 +33,13 @@ public enum ReservedAddress {
         return index > GENESIS_TWO.getIndex() && index < PRIVATE_SALE.getIndex();
     }
 
-    public boolean isTokenSaleRelatedFund() { return index > ADVISORS.getIndex() && index < ROLLING_RESERVE_POOL.getIndex(); }
+    public boolean isTokenSaleRelatedFund() {
+        return index > ADVISORS.getIndex() && index < ROLLING_RESERVE_POOL.getIndex();
+    }
 
-    public boolean isSecondaryFundDistribution() { return index > GENESIS_TWO.getIndex() && index < PRIVATE_SALE.getIndex(); }
+    public boolean isSecondaryFundDistribution() {
+        return index > GENESIS_TWO.getIndex() && index < PRIVATE_SALE.getIndex();
+    }
 
     public static EnumSet<ReservedAddress> getInitialFundDistributionAddresses() {
         EnumSet<ReservedAddress> initialFundDistributionAddresses = EnumSet.noneOf(ReservedAddress.class);

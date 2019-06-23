@@ -10,5 +10,7 @@ public enum DistributionEntryStatus {
 
     private long index;
 
-    DistributionEntryStatus(long index) { this.index = index; }
+    DistributionEntryStatus(long index) {
+        this.index = index;
+    }
 }

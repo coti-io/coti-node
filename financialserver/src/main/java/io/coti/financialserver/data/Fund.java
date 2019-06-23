@@ -4,10 +4,10 @@ import io.coti.basenode.data.Hash;
 
 public enum Fund {
 
-    TOKEN_SALE(ReservedAddress.TOKEN_SALE,"TokenSale"),
+    TOKEN_SALE(ReservedAddress.TOKEN_SALE, "TokenSale"),
     INCENTIVES(ReservedAddress.INCENTIVES, "Incentives"),
     TEAM(ReservedAddress.TEAM, "Team"),
-    ADVISORS(ReservedAddress.ADVISORS,"Advisers");
+    ADVISORS(ReservedAddress.ADVISORS, "Advisers");
 
 
     private ReservedAddress reservedAddress;
@@ -36,7 +36,7 @@ public enum Fund {
         this.fundHash = fundHash;
     }
 
-    public static Fund getTokenSaleRelatedFundNameByText(String text)  {
+    public static Fund getTokenSaleRelatedFundNameByText(String text) {
         for (Fund fund : values()) {
             if (fund.text.contentEquals(text) && fund.isTokenSaleRelatedFund())
                 return fund;
@@ -48,7 +48,7 @@ public enum Fund {
         return reservedAddress.isTokenSaleRelatedFund();
     }
 
-    public static Fund getFundByText(String text)  {
+    public static Fund getFundByText(String text) {
         for (Fund fund : values()) {
             if (fund.text.contentEquals(text) && fund.isSecondaryFundDistribution())
                 return fund;
@@ -56,6 +56,8 @@ public enum Fund {
         throw new IllegalArgumentException("Invalid fund name");
     }
 
-    public boolean isSecondaryFundDistribution() { return reservedAddress.isSecondaryFundDistribution(); }
+    public boolean isSecondaryFundDistribution() {
+        return reservedAddress.isSecondaryFundDistribution();
+    }
 
 }

@@ -90,15 +90,14 @@ public class AwsService {
             bufferedWriter.close();
 
             return fullObject.getObjectContent();
-        } catch(SdkClientException e) {
+        } catch (SdkClientException e) {
             // Amazon S3 couldn't be contacted for a response, or the client
             // couldn't parse the response from Amazon S3.
             e.printStackTrace();
             log.error(S3_NOT_REACHABLE, e);
-        }
-        finally {
+        } finally {
             // To ensure that the network connection doesn't remain open, close any open input streams.
-            if(fullObject != null) {
+            if (fullObject != null) {
                 fullObject.close();
             }
         }
