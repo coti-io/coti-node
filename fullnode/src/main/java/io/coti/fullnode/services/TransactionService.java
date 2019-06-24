@@ -279,10 +279,6 @@ public class TransactionService extends BaseNodeTransactionService {
                             isAddressTransactionExist = true;
                             output.write(new CustomGson().getInstance().toJson(new TransactionResponseData(transactionData)));
                             output.flush();
-                            if (transactionHashIterator.hasNext()) {
-                                output.write(",");
-                                output.flush();
-                            }
                         }
                     }
                 }
