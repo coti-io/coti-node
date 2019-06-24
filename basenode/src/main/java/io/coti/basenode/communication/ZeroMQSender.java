@@ -7,6 +7,7 @@ import io.coti.basenode.data.interfaces.IPropagatable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
 
@@ -66,7 +67,7 @@ public class ZeroMQSender implements ISender {
     }
 
     private void initializeSenderSocket(String addressAndPort) {
-        ZMQ.Socket sender = zeroMQContext.socket(ZMQ.DEALER);
+        ZMQ.Socket sender = zeroMQContext.socket(SocketType.DEALER);
         ZeroMQUtils.bindToRandomPort(sender);
         sender.connect(addressAndPort);
         receivingAddressToSenderSocketMapping.putIfAbsent(addressAndPort, sender);

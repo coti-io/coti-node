@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
 
@@ -54,7 +55,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
 
     public void initSockets() {
         zeroMQContext = ZMQ.context(1);
-        propagationReceiver = zeroMQContext.socket(ZMQ.SUB);
+        propagationReceiver = zeroMQContext.socket(SocketType.SUB);
         propagationReceiver.setHWM(10000);
         ZeroMQUtils.bindToRandomPort(propagationReceiver);
     }

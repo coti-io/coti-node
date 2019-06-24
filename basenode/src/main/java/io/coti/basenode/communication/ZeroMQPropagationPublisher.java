@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
 
@@ -47,7 +48,7 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
 
     public void init() {
         zeroMQContext = ZMQ.context(1);
-        propagator = zeroMQContext.socket(ZMQ.PUB);
+        propagator = zeroMQContext.socket(SocketType.PUB);
         propagator.setHWM(10000);
         propagator.bind("tcp://*:" + propagationPort);
         setPublishMessageThread();

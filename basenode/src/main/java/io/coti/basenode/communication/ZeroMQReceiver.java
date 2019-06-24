@@ -5,6 +5,7 @@ import io.coti.basenode.communication.interfaces.ISerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
 
 import java.util.HashMap;
@@ -24,7 +25,7 @@ public class ZeroMQReceiver implements IReceiver {
     public void init(String receivingPort, HashMap<String, Consumer<Object>> classNameToHandlerMapping) {
         this.classNameToHandlerMapping = classNameToHandlerMapping;
         zeroMQContext = ZMQ.context(1);
-        receiver = zeroMQContext.socket(ZMQ.ROUTER);
+        receiver = zeroMQContext.socket(SocketType.ROUTER);
         receiver.bind("tcp://*:" + receivingPort);
         log.info("Zero MQ Client Connected!");
         Thread receiverThread = new Thread(() -> {
