@@ -61,13 +61,17 @@ public class BaseNodeConfirmationService implements IConfirmationService {
             for (long i = 0; i <= maxTransactionIndex.get(); i++) {
                 nextTransactionIndexData = transactionIndexes.getByHash(new Hash(i));
                 if (nextTransactionIndexData == null) {
-                    log.error("Null transaction index data found for index: {}", i);
+                    log.error("Null transaction index data found for index {}", i);
                     return;
                 }
 
                 TransactionData transactionData = transactions.getByHash(nextTransactionIndexData.getTransactionHash());
                 if (transactionData == null) {
-                    log.error("Null transaction data found for index: {}", i);
+                    log.error("Null transaction data found for index {}", i);
+                    return;
+                }
+                if (transactionData.getDspConsensusResult() == null) {
+                    log.error("Null dsp consensus result found for index {} and transaction {}", i, transactionData.getHash());
                     return;
                 }
                 accumulatedHash = transactionIndexService.getAccumulatedHash(accumulatedHash, transactionData.getHash(), transactionData.getDspConsensusResult().getIndex());
