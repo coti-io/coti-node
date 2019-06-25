@@ -109,6 +109,7 @@ public class BaseNodeTransactionService implements ITransactionService {
         try {
             transactionHelper.startHandleTransaction(transactionData);
             while (hasOneOfParentsProcessing(transactionData)) {
+                transactionData.setTransactionTest(transactionData.getTransactionTest()+"-TrS-"); // catcher
                 parentProcessingTransactions.put(transactionData.getHash(), transactionData);
                 synchronized (transactionData) {
                     transactionData.wait();

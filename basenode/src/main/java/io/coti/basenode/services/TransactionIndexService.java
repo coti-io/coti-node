@@ -38,6 +38,7 @@ public class TransactionIndexService {
         if (transactionData.getDspConsensusResult().getIndex() == lastTransactionIndexData.getIndex() + 1) {
             log.debug("Inserting new transaction {} with index: {}", transactionData.getHash(), lastTransactionIndexData.getIndex() + 1);
             lastTransactionIndexData = getNextIndexData(lastTransactionIndexData, transactionData);
+            lastTransactionIndexData.setTestTransaction(transactionData.getTransactionTest());
             transactionIndexes.put(lastTransactionIndexData);
             transactionHelper.removeNoneIndexedTransaction(transactionData);
             return true;

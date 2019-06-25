@@ -124,6 +124,7 @@ public class ClusterService implements IClusterService {
                 if (trustChainConfirmationCluster.containsKey(parentTransactionData.getHash())) {
                     trustChainConfirmationCluster.put(parentTransactionData.getHash(), parentTransactionData);
                 }
+                transactionData.setTransactionTest(transactionData.getTransactionTest()+"-ClS-"); // catcher
                 transactions.put(parentTransactionData);
             }
         }

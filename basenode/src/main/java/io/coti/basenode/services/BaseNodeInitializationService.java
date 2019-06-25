@@ -188,6 +188,7 @@ public abstract class BaseNodeInitializationService {
 
         if (!transactionHelper.isTransactionExists(transactionData)) {
 
+            transactionData.setTransactionTest(transactionData.getTransactionTest()+"-IS1-"); // catcher
             transactions.put(transactionData);
             liveViewService.addTransaction(transactionData);
             transactionService.addToExplorerIndexes(transactionData);
@@ -197,6 +198,7 @@ public abstract class BaseNodeInitializationService {
             propagateMissingTransaction(transactionData);
 
         } else {
+            transactionData.setTransactionTest(transactionData.getTransactionTest()+"-IS2-"); // catcher
             transactions.put(transactionData);
             confirmationService.insertMissingConfirmation(transactionData, trustChainUnconfirmedExistingTransactionHashes);
         }

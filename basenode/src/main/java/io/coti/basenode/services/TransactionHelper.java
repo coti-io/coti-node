@@ -309,6 +309,7 @@ public class TransactionHelper implements ITransactionHelper {
         transactionData.setTrustChainTrustScore(0);
         transactionData.setTransactionConsensusUpdateTime(null);
         transactionData.setChildrenTransactionHashes(new ArrayList<>());
+        transactionData.setTransactionTest(transactionData.getTransactionTest()+"-TH-"); // catcher
         transactions.put(transactionData);
         totalTransactions.incrementAndGet();
         if (!isDspConfirmed(transactionData)) {

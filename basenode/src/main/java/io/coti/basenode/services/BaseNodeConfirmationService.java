@@ -70,7 +70,14 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                     log.error("Null transaction data found for index: {}", i);
                     return;
                 }
-                accumulatedHash = transactionIndexService.getAccumulatedHash(accumulatedHash, transactionData.getHash(), transactionData.getDspConsensusResult().getIndex());
+/// catcher
+                if (transactionData.getDspConsensusResult() == null) {
+                    log.error("Null DspConsensusResult data found for index: {}", i);
+                    accumulatedHash = transactionIndexService.getAccumulatedHash(accumulatedHash, transactionData.getHash(), i);
+                } else {
+                    accumulatedHash = transactionIndexService.getAccumulatedHash(accumulatedHash, transactionData.getHash(), transactionData.getDspConsensusResult().getIndex());
+                }
+///                accumulatedHash = transactionIndexService.getAccumulatedHash(accumulatedHash, transactionData.getHash(), transactionData.getDspConsensusResult().getIndex());
                 if (!Arrays.equals(accumulatedHash, nextTransactionIndexData.getAccumulatedHash())) {
                     log.error("Incorrect accumulated hash");
                     return;
@@ -127,6 +134,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         if (transactionHelper.isConfirmed(transactionData)) {
             processConfirmedTransaction(transactionData);
         }
+        transactionData.setTransactionTest(transactionData.getTransactionTest()+"-CoS-" + confirmationData.getClass() + "-"); // catcher
         transactions.put(transactionData);
     }
 

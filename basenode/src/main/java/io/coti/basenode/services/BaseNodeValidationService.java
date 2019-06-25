@@ -37,6 +37,7 @@ public class BaseNodeValidationService implements IValidationService {
             TransactionData transactionData = transactions.getByHash(transactionHash);
             if (transactionData != null) {
                 transactionData.setValid(true);
+                transactionData.setTransactionTest(transactionData.getTransactionTest()+"-VS-"); // catcher
                 transactions.put(transactionData);
             }
         }

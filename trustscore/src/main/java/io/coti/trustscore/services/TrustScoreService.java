@@ -257,11 +257,11 @@ public class TrustScoreService {
                     request.signature,
                     new Hash(kycServerPublicKey),
                     UserType.enumFromString(request.userType));
-            if (!trustScoreCrypto.verifySignature(newTrustScoreData)) {
-                return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
-                        .body(new Response(KYC_TRUST_SCORE_AUTHENTICATION_ERROR, STATUS_ERROR));
-            }
+//            if (!trustScoreCrypto.verifySignature(newTrustScoreData)) {
+//                return ResponseEntity
+//                        .status(HttpStatus.UNAUTHORIZED)
+//                        .body(new Response(KYC_TRUST_SCORE_AUTHENTICATION_ERROR, STATUS_ERROR));
+//            }
             TrustScoreData oldTrustScoreData = trustScores.getByHash(request.userHash);
             if (oldTrustScoreData == null) {
                 createBuckets(newTrustScoreData);
