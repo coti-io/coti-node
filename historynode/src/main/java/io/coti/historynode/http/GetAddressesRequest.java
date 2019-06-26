@@ -13,6 +13,7 @@ public class GetAddressesRequest extends Request {
     @NotEmpty(message = "Addresses hashes must not be empty")
     private List<Hash> addressesHashes;
 
+    //TODO: check if needed, for serialization..?
     public GetAddressesRequest() {
         addressesHashes = new ArrayList<>();
     }
