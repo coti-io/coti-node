@@ -2,7 +2,6 @@ package io.coti.historynode.services;
 
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.HistoryNodeConsensusResult;
 import io.coti.basenode.http.GetEntitiesBulkRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.historynode.http.GetAddressBatchResponse;
@@ -58,15 +57,12 @@ public class HistoryAddressServiceTest {
                 addressesData.add(new AddressData(hash));
             });
 
-            HistoryNodeConsensusResult historyNodeConsensusResult =
-                    new HistoryNodeConsensusResult(addresses.get(0));
-
             ResponseEntity<IResponse> response = ResponseEntity
                     .status(HttpStatus.OK)
                     .body(new GetAddressBatchResponse(addressesData));
             when(storageConnector.getForObject(any(String.class), any(Class.class), any(GetEntitiesBulkRequest.class)))
                     .thenReturn(response);
-            addressService.getAddresses(addresses, historyNodeConsensusResult);
+            addressService.getAddresses(addresses);
         } catch (Exception e) {
             Assert.fail(e.getMessage());
         }
