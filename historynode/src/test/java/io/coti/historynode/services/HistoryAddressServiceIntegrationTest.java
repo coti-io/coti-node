@@ -2,7 +2,6 @@ package io.coti.historynode.services;
 
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.HistoryNodeConsensusResult;
 import io.coti.basenode.data.HistoryNodeVote;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.historynode.http.GetAddressBatchResponse;
@@ -68,19 +67,8 @@ public class HistoryAddressServiceIntegrationTest {
                 .status(HttpStatus.OK)
                 .body(new GetAddressBatchResponse(addressesData));
 
-        HistoryNodeConsensusResult historyNodeConsensusResult =
-                new HistoryNodeConsensusResult(addresses.get(0));
-        historyNodeConsensusResult.setHash(addresses.get(0));
-        Map<Hash, String> hashToObjectJsonDataMap = new HashMap<>();
-        historyNodeConsensusResult.setHashToObjectJsonDataMap(hashToObjectJsonDataMap);
-        historyNodeConsensusResult.setHistoryNodeMasterHash(addresses.get(0));
-
-        List<HistoryNodeVote> historyNodesVotesList = new ArrayList<>();
-        historyNodeConsensusResult.setHistoryNodesVotesList(historyNodesVotesList);
-//        addressService.storeEntities(addressesData, historyNodeConsensusResult);
-
+        //TODO: not finished
 // This currently fails
-//        addressService.getAddresses(addresses, historyNodeConsensusResult);
     }
 
 }

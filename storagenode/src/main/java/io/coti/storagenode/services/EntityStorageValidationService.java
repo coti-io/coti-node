@@ -1,7 +1,7 @@
 package io.coti.storagenode.services;
 
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.HistoryNodeConsensusResult;
+import io.coti.basenode.http.GetEntitiesBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.http.GetEntitiesBulkJsonResponse;
 import io.coti.storagenode.http.GetEntityJsonResponse;
@@ -27,10 +27,10 @@ public abstract class EntityStorageValidationService implements IEntityStorageVa
     private HistoryNodesConsensusService historyNodesConsensusService;
 
     @Override
-    public ResponseEntity<IResponse> storeObjectToStorage(Hash hash, String objectAsJsonString, HistoryNodeConsensusResult historyNodeConsensusResult)
+    public ResponseEntity<IResponse> storeObjectToStorage(Hash hash, String objectAsJsonString)
     {
         // Validation of the request itself
-        ResponseEntity<IResponse> response = validateStoreObjectToStorage(hash, objectAsJsonString, historyNodeConsensusResult);
+        ResponseEntity<IResponse> response = validateStoreObjectToStorage(hash, objectAsJsonString);
         if( !isResponseOK(response) )
             return response;
 
@@ -49,10 +49,10 @@ public abstract class EntityStorageValidationService implements IEntityStorageVa
 
 
     @Override
-    public ResponseEntity<IResponse> retrieveObjectFromStorage(Hash hash, HistoryNodeConsensusResult historyNodeConsensusResult, String fieldName)
+    public ResponseEntity<IResponse> retrieveObjectFromStorage(Hash hash, String fieldName)
     {
         // Validation of the request itself
-        ResponseEntity<IResponse> response = validateRetrieveObjectToStorage(hash, historyNodeConsensusResult);
+        ResponseEntity<IResponse> response = validateRetrieveObjectToStorage(hash);
         if( !isResponseOK(response) )
             return response;
 
@@ -80,7 +80,7 @@ public abstract class EntityStorageValidationService implements IEntityStorageVa
 
     private ResponseEntity<IResponse> verifyRetrievedSingleObject(Hash objectHash, String objectAsJson, boolean fromColdStorage, String fieldName)
     {
-        ResponseEntity response = ResponseEntity.status(HttpStatus.OK).body( objectAsJson);
+        ResponseEntity response = ResponseEntity.status(HttpStatus.OK).body(objectAsJson);
 
         // If DI is successful for ongoing repository, remove redundant data from cold-storage
         if( isObjectDIOK(objectHash, objectAsJson) )
@@ -119,52 +119,52 @@ public abstract class EntityStorageValidationService implements IEntityStorageVa
     }
 
 
-    private ResponseEntity<IResponse> validateRetrieveObjectToStorage(Hash hash, HistoryNodeConsensusResult historyNodeConsensusResult)
+    private ResponseEntity<IResponse> validateRetrieveObjectToStorage(Hash hash)
     {
         List<Hash> hashToObjectJsonStringList = new ArrayList<>();
         hashToObjectJsonStringList.add(hash);
 
-        ResponseEntity<IResponse> responsesEntity =
-                historyNodesConsensusService.validateRetrieveMultipleObjectsConsensus(hashToObjectJsonStringList, historyNodeConsensusResult);
+        //TODO: implement or remove method
+        ResponseEntity<IResponse> responsesEntity = new ResponseEntity(HttpStatus.OK);
         return responsesEntity;
     }
 
 
     @Override
-    public ResponseEntity<IResponse> storeMultipleObjectsToStorage(Map<Hash, String> hashToObjectJsonDataMap, HistoryNodeConsensusResult historyNodeConsensusResult)
+    public ResponseEntity<IResponse> storeMultipleObjectsToStorage(Map<Hash, String> hashToObjectJsonDataMap)
     {
         // Validation of the request itself
-        ResponseEntity<IResponse> response = validateStoreMultipleObjectsToStorage(hashToObjectJsonDataMap, historyNodeConsensusResult);
+        ResponseEntity<IResponse> response = validateStoreMultipleObjectsToStorage(hashToObjectJsonDataMap);
         if( !isResponseOK(response) )
             return response;
 
         // Store data from approved request into ongoing storage
-        response = getObjectService().insertMultiObjects(hashToObjectJsonDataMap, false); // TODO use additional param to indicate it is for ongoing storage
+        response = getObjectService().insertMultiObjects(hashToObjectJsonDataMap, false);
         if( !isResponseOK(response) )
             return response; // TODO consider some retry mechanism
         else
         {
-            response = getObjectService().insertMultiObjects(hashToObjectJsonDataMap, true); // TODO use additional param to indicate it is for cold storage
+            response = getObjectService().insertMultiObjects(hashToObjectJsonDataMap, true);
             if( !isResponseOK(response) )
                 return response; // TODO consider some retry mechanism, consider removing from ongoing storage
         }
         return response;
     }
 
-    private ResponseEntity<IResponse> validateStoreObjectToStorage(Hash hash, String objectJson, HistoryNodeConsensusResult historyNodeConsensusResult)
+    private ResponseEntity<IResponse> validateStoreObjectToStorage(Hash hash, String objectJson)
     {
         Map<Hash, String> hashToObjectJsonDataMap = new HashMap<>();
         hashToObjectJsonDataMap.put(hash, objectJson);
         // Validate consensus decision on provided data from history nodes' master + Data Integrity
-        ResponseEntity<IResponse> response = validateStoreMultipleObjectsToStorage(hashToObjectJsonDataMap, historyNodeConsensusResult);
+        ResponseEntity<IResponse> response = validateStoreMultipleObjectsToStorage(hashToObjectJsonDataMap);
         return response;
     }
 
 
-    private ResponseEntity<IResponse> validateStoreMultipleObjectsToStorage(Map<Hash, String> hashToObjectJsonDataMap, HistoryNodeConsensusResult historyNodeConsensusResult)
+    private ResponseEntity<IResponse> validateStoreMultipleObjectsToStorage(Map<Hash, String> hashToObjectJsonDataMap)
     {
         // Validate consensus decision on provided Transactions data from history nodes' master
-        ResponseEntity<IResponse> response = historyNodesConsensusService.validateStoreMultipleObjectsConsensus(hashToObjectJsonDataMap, historyNodeConsensusResult);
+        ResponseEntity<IResponse> response = new ResponseEntity(HttpStatus.OK);
 
         // Additional Validations after consensus checks - Data integrity
         if( !hashToObjectJsonDataMap.entrySet().stream().allMatch( entry -> isObjectDIOK(entry.getKey(), entry.getValue()) ) )
@@ -176,34 +176,35 @@ public abstract class EntityStorageValidationService implements IEntityStorageVa
 
 
     @Override
-    public Map<Hash, ResponseEntity<IResponse>> retrieveMultipleObjectsFromStorage(List<Hash> hashes, HistoryNodeConsensusResult historyNodeConsensusResult, String fieldName)
+    public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(List<Hash> hashes, String fieldName)
     {
-        Map<Hash, ResponseEntity<IResponse>> responsesMap = new HashMap<>();
-        // Validate consensus decision on the request for provided Address data from history nodes' master
-        ResponseEntity<IResponse> iResponse = historyNodesConsensusService.validateRetrieveMultipleObjectsConsensus(hashes, historyNodeConsensusResult);
-        if( !isResponseOK(iResponse) )
-        {
-            responsesMap.put(null, iResponse);
-            return responsesMap;
-        }
+//        HashMap<Hash, ResponseEntity<IResponse>> responsesMap = new HashMap<>();
+        HashMap<Hash, String> responsesMap = new HashMap<>();
+        GetEntitiesBulkResponse entitiesBulkResponse = new GetEntitiesBulkResponse(responsesMap);
 
         // Retrieve data from ongoing storage system
         ResponseEntity<IResponse> objectsByHashResponse = getObjectService().getMultiObjectsFromDb(hashes, false, fieldName);
 
         if( !isResponseOK(objectsByHashResponse) )
         {
-            responsesMap.put(null, objectsByHashResponse);
-            return responsesMap;
+            responsesMap.put(null, null);
+            entitiesBulkResponse.setEntitiesBulkResponses(responsesMap);
+            return ResponseEntity.status(objectsByHashResponse.getStatusCode()).body(entitiesBulkResponse);
         }
 
         // For successfully retrieved data, perform also data-integrity checks
-//        ((Map<Hash, String>)objectsByHashResponse.getBody()).forEach( (hash, objectAsJsonString) ->
         ((GetEntitiesBulkJsonResponse)objectsByHashResponse.getBody()).getHashToEntitiesFromDbMap().forEach( (hash, objectAsJsonString) ->
                 {
-                    responsesMap.put(hash, verifyRetrievedSingleObject(hash, objectAsJsonString, false, fieldName));
+                    //TODO: In case of error in retrieving valid value, return value as a null.
+                    ResponseEntity<IResponse> verifyRetrievedSingleObject = verifyRetrievedSingleObject(hash, objectAsJsonString, false, fieldName);
+                    if (verifyRetrievedSingleObject.getStatusCode() != HttpStatus.OK) {
+                        responsesMap.put(hash, null);
+                    } else {
+                        responsesMap.put(hash, objectAsJsonString);
+                    }
                 }
         );
-        return responsesMap;
+        return ResponseEntity.status(HttpStatus.OK).body(entitiesBulkResponse);
     }
 
 

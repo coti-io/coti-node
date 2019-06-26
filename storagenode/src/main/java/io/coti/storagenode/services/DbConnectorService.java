@@ -13,9 +13,9 @@ import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsRequest;
 import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsResponse;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
-import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
+import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.client.indices.GetIndexRequest;
+import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -94,7 +94,7 @@ public class DbConnectorService implements IDbConnectorService {
     }
 
     @Override
-    public void getClusterDetails(Set<String> indexes) throws IOException {
+    public ClusterGetSettingsResponse getClusterDetails(Set<String> indexes) throws IOException {
         MainResponse mainResponse = restClient.info(RequestOptions.DEFAULT);
 
         for (String index : indexes) {
@@ -105,6 +105,7 @@ public class DbConnectorService implements IDbConnectorService {
 
         ClusterGetSettingsRequest clusterGetSettingsRequest = new ClusterGetSettingsRequest();
         ClusterGetSettingsResponse getSettings = restClient.cluster().getSettings(clusterGetSettingsRequest, RequestOptions.DEFAULT);
+        return getSettings;
     }
 
     private String getSearchShardsDetails(String index) {
@@ -116,7 +117,7 @@ public class DbConnectorService implements IDbConnectorService {
 
     @Override
     public Map<String, Object> getObjectFromDbByHash(Hash hash, String index, boolean fromColdStorage) throws IOException {
-        GetRequest request = new GetRequest(index, INDEX_TYPE, hash.toString());
+        GetRequest request = new GetRequest(index, hash.toString());
 
         try {
             GetResponse getResponse;
@@ -124,8 +125,10 @@ public class DbConnectorService implements IDbConnectorService {
                 getResponse = restColdStorageClient.get(request, RequestOptions.DEFAULT);
             else
                 getResponse = restClient.get(request, RequestOptions.DEFAULT);
-
-//            return getResponse.getSourceAsString();
+            if(!getResponse.isExists()) {
+                log.error("Failed to retrieve {} {}",index, hash );
+                return null;
+            }
             return getResponse.getSourceAsMap();
         } catch (ElasticsearchException e) {
             log.error(e.getMessage());
@@ -134,11 +137,11 @@ public class DbConnectorService implements IDbConnectorService {
     }
 
     public Pair<MultiDbInsertionStatus, Map<Hash, String>> insertMultiObjectsToDb(String indexName, String objectName, Map<Hash, String> hashToObjectJsonDataMap, boolean fromColdStorage) throws Exception {
-        Pair<MultiDbInsertionStatus, Map<Hash, String>> insertResponse = null;
+        Pair<MultiDbInsertionStatus, Map<Hash, String>> insertResponse;
         try {
             BulkRequest request = new BulkRequest();
             for (Map.Entry<Hash, String> entry : hashToObjectJsonDataMap.entrySet()) {
-                request.add(new IndexRequest(indexName).id(entry.getKey().toString()).type(INDEX_TYPE)
+                request.add(new IndexRequest(indexName).id(entry.getKey().toString())
                         .source(XContentType.JSON, objectName, entry.getValue()));
 //                        .source(entry.getValue(), XContentType.JSON ));
             }
@@ -149,7 +152,7 @@ public class DbConnectorService implements IDbConnectorService {
                 bulkResponse = restClient.bulk(request, RequestOptions.DEFAULT);
 
             insertResponse = createMultiInsertResponse(bulkResponse);
-            if (insertResponse.getValue().size() == hashToObjectJsonDataMap.size()) {
+            if (insertResponse!=null && insertResponse.getValue().size() == hashToObjectJsonDataMap.size()) {
                 insertResponse = new Pair<>(MultiDbInsertionStatus.Failed, insertResponse.getValue());
             }
         } catch (Exception e) {
@@ -182,7 +185,6 @@ public class DbConnectorService implements IDbConnectorService {
             for (Hash hash : hashes) {
                 request.add(new MultiGetRequest.Item(
                         indexName,
-                        INDEX_TYPE,
                         hash.toString()));
             }
             if( fromColdStorage )
@@ -203,8 +205,6 @@ public class DbConnectorService implements IDbConnectorService {
         MultiGetResponse multiGetResponse = getMultiObjectsFromDb(hashes, indexName, fromColdStorage);
         hashToObjectsFromDbMap = new HashMap<>();
         for (MultiGetItemResponse multiGetItemResponse : multiGetResponse.getResponses()) {
-//            hashToObjectsFromDbMap.put(new Hash(multiGetItemResponse.getId()),
-//                    new String(multiGetItemResponse.getResponse().getSourceAsBytes()));
             hashToObjectsFromDbMap.put(new Hash(multiGetItemResponse.getId()),
                     (String)multiGetItemResponse.getResponse().getSourceAsMap().get(fieldName));
         }
@@ -215,15 +215,12 @@ public class DbConnectorService implements IDbConnectorService {
     public String insertObjectToDb(Hash hash, String objectAsJsonString, String index, String objectName, boolean fromColdStorage) {
         IndexResponse indexResponse = null;
         try {
-            IndexRequest request = new IndexRequest(
-                    index,
-                    INDEX_TYPE,
-                    hash.toString());
+            IndexRequest request = new IndexRequest(index);
+            request.id(hash.toString());
 //            request.source(objectAsJsonString, XContentType.JSON);
             request.source((jsonBuilder()
                     .startObject()
                     .field(objectName, objectAsJsonString)
-//                    .value(objectAsJsonString)
                     .endObject()));
             if( fromColdStorage )
                 indexResponse = restColdStorageClient.index(request, RequestOptions.DEFAULT);
@@ -232,7 +229,10 @@ public class DbConnectorService implements IDbConnectorService {
         } catch (Exception e) {
             log.error(e.getMessage());
         } finally {
-            return indexResponse.toString();
+            if(indexResponse!= null && !hash.toString().equals(indexResponse.getId())) {
+                log.error("mismatch between expected hash {} and stored ID {}", hash, indexResponse.getId());
+            }
+            return indexResponse == null ? null : indexResponse.toString();
         }
     }
 
@@ -274,7 +274,7 @@ public class DbConnectorService implements IDbConnectorService {
         }
         builder.endObject();
         PutMappingRequest request = new PutMappingRequest(index);
-        request.type(INDEX_TYPE);
+//        request.type(INDEX_TYPE);
         request.source(builder);
         if( fromColdStorage )
             restColdStorageClient.indices().putMapping(request, RequestOptions.DEFAULT);
@@ -285,8 +285,8 @@ public class DbConnectorService implements IDbConnectorService {
 
     private boolean ifIndexExist(String indexName, boolean fromColdStorage) throws IOException {
 
-        GetIndexRequest getIndexRequest = new GetIndexRequest();
-        getIndexRequest.indices(indexName);
+        GetIndexRequest getIndexRequest = new GetIndexRequest(indexName);
+
         if( fromColdStorage )
             return restColdStorageClient.indices().exists(getIndexRequest, RequestOptions.DEFAULT);
         else
@@ -296,7 +296,6 @@ public class DbConnectorService implements IDbConnectorService {
     public String deleteObject(Hash hash, String indexName, boolean fromColdStorage) {
         DeleteRequest request = new DeleteRequest(
                 indexName,
-                INDEX_TYPE,
                 hash.toString());
         try {
             DeleteResponse deleteResponse;
