@@ -2,7 +2,6 @@ package io.coti.historynode.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.HistoryNodeConsensusResult;
 import io.coti.basenode.http.GetEntitiesBulkRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.historynode.http.storageConnector.interaces.IStorageConnector;
@@ -28,20 +27,14 @@ public class HistoryAddressService extends EntityService implements IHistoryAddr
     }
 
 
-    @Override
-    public ResponseEntity<IResponse> getAddresses(List<Hash> addresses, HistoryNodeConsensusResult historyNodeConsensusResult) {
-        GetEntitiesBulkRequest getEntitiesBulkRequest = new GetEntitiesBulkRequest(addresses, historyNodeConsensusResult);
+    public ResponseEntity<IResponse> getAddresses(List<Hash> addresses) {
+        GetEntitiesBulkRequest getEntitiesBulkRequest = new GetEntitiesBulkRequest(addresses);
         return storageConnector.getForObject(storageServerAddress + endpoint, ResponseEntity.class, getEntitiesBulkRequest);
     }
 
 
     @Override
     public ResponseEntity<IResponse> getAddressesFromHistory(List<Hash> addresses) {
-        // TODO: Verify request, reach consensus between History Nodes, retrieve data from Storage node
-
-        HistoryNodeConsensusResult historyNodeConsensusResult =
-                new HistoryNodeConsensusResult(addresses.get(0));
-
-        return getAddresses(addresses, historyNodeConsensusResult);
+        return getAddresses(addresses);
     }
 }
