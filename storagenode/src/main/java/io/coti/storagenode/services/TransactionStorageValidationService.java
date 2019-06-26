@@ -5,25 +5,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
-import com.google.gson.JsonObject;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.HistoryNodeConsensusResult;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.http.GetEntitiesBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.storagenode.services.interfaces.ITransactionStorageValidationService;
-import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.io.StringReader;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import javax.*;
 //import jdk.nashorn.internal.parser.JSONParser;
 //import net.minidev.json.JSONObject;
 
@@ -37,7 +31,8 @@ public class TransactionStorageValidationService extends EntityStorageValidation
     @Autowired
     private TransactionService transactionService;
 
-    private final static String TRANSACTION_OBJECT_NAME = "transactionData";
+    public final static String TRANSACTION_OBJECT_NAME = "transactionData";
+    public final static String TRANSACTION_INDEX_NAME = "transactions";
 
     private ObjectMapper mapper;
 
@@ -66,7 +61,8 @@ public class TransactionStorageValidationService extends EntityStorageValidation
             return false;
         }
 
-        boolean valid = validationService.validateTransactionDataIntegrity(txDataDeserializedFromES);
+        boolean valid = true; //TODO: Disabled for testing purposes
+//        boolean valid = validationService.validateTransactionDataIntegrity(txDataDeserializedFromES);
 
         return valid;
     }
@@ -76,12 +72,12 @@ public class TransactionStorageValidationService extends EntityStorageValidation
         return transactionService;
     }
 
-    public ResponseEntity<IResponse> retrieveObjectFromStorage(Hash hash, HistoryNodeConsensusResult historyNodeConsensusResult) {
-        return retrieveObjectFromStorage(hash, historyNodeConsensusResult, TRANSACTION_OBJECT_NAME);
+    public ResponseEntity<IResponse> retrieveObjectFromStorage(Hash hash) {
+        return retrieveObjectFromStorage(hash, TRANSACTION_OBJECT_NAME);
     }
 
-    public Map<Hash, ResponseEntity<IResponse>> retrieveMultipleObjectsFromStorage(List<Hash> hashes, HistoryNodeConsensusResult historyNodeConsensusResult) {
-        return retrieveMultipleObjectsFromStorage(hashes, historyNodeConsensusResult, TRANSACTION_OBJECT_NAME);
+    public GetEntitiesBulkResponse retrieveMultipleObjectsFromStorage(List<Hash> hashes) {
+        return (GetEntitiesBulkResponse) retrieveMultipleObjectsFromStorage(hashes, TRANSACTION_OBJECT_NAME).getBody();
     }
 
 }

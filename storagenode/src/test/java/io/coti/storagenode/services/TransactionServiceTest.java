@@ -1,7 +1,6 @@
 package io.coti.storagenode.services;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
@@ -10,6 +9,7 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.coti.basenode.crypto.*;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.BaseResponse;
+import io.coti.basenode.http.GetEntitiesBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeValidationService;
@@ -42,7 +42,7 @@ import static testUtils.TestUtils.*;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 @ContextConfiguration(classes = {TransactionService.class, DbConnectorService.class,TransactionStorageValidationService.class,
-        HistoryNodeConsensusResult.class, HistoryNodesConsensusService.class, CryptoHelper.class})
+        HistoryNodesConsensusService.class, CryptoHelper.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -59,8 +59,8 @@ public class TransactionServiceTest {
     @Autowired
     private TransactionStorageValidationService transactionStorageValidationService;
 
-    @MockBean
-    private HistoryNodeConsensusCrypto mockHistoryNodeConsensusCrypto;
+//    @MockBean
+//    private HistoryNodeConsensusCrypto mockHistoryNodeConsensusCrypto;
 
     @MockBean
     private BaseNodeValidationService mockValidationService; // mockValidationService
@@ -172,10 +172,10 @@ public class TransactionServiceTest {
     public void singleTxsStoreRetrieveTest() throws IOException
     {
         // Mocks set-ups
-        when(mockHistoryNodeConsensusCrypto.verifySignature(any(HistoryNodeConsensusResult.class))).thenReturn(true);
+//        when(mockHistoryNodeConsensusCrypto.verifySignature(any(HistoryNodeConsensusResult.class))).thenReturn(true);
         ResponseEntity<IResponse> mockedResponse = new ResponseEntity(HttpStatus.OK);
-        when(mockHistoryNodesConsensusService.validateStoreMultipleObjectsConsensus(Matchers.<Map<Hash, String>> any(),any(HistoryNodeConsensusResult.class))).thenReturn(mockedResponse);
-        when(mockHistoryNodesConsensusService.validateRetrieveMultipleObjectsConsensus(Matchers.anyList(), any(HistoryNodeConsensusResult.class))).thenReturn(mockedResponse);
+        when(mockHistoryNodesConsensusService.validateStoreMultipleObjectsConsensus(Matchers.<Map<Hash, String>> any())).thenReturn(mockedResponse);
+        when(mockHistoryNodesConsensusService.validateRetrieveMultipleObjectsConsensus(Matchers.anyList())).thenReturn(mockedResponse);
         when(mockValidationService.validateTransactionDataIntegrity(any())).thenReturn(true); // TransactionData.class // to catch also null values
 
         TransactionData transactionData1 = createRandomTransaction();
@@ -187,21 +187,21 @@ public class TransactionServiceTest {
         String transactionAsJson1 = mapper.writeValueAsString(transactionData1);
         String transactionAsJson2 = mapper.writeValueAsString(transactionData2);
 
-        HistoryNodeConsensusResult historyNodeConsensusResult1 = createHistoryNodeConsensusResultForTx(transactionData1);
-        HistoryNodeConsensusResult historyNodeConsensusResult2 = createHistoryNodeConsensusResultForTx(transactionData2);
+//        HistoryNodeConsensusResult historyNodeConsensusResult1 = createHistoryNodeConsensusResultForTx(transactionData1);
+//        HistoryNodeConsensusResult historyNodeConsensusResult2 = createHistoryNodeConsensusResultForTx(transactionData2);
 
         ResponseEntity<IResponse> responseResponseEntity1 = transactionStorageValidationService.storeObjectToStorage(
-                transactionData1.getHash(), transactionAsJson1, historyNodeConsensusResult1);
+                transactionData1.getHash(), transactionAsJson1);
         ResponseEntity<IResponse> responseResponseEntity2 = transactionStorageValidationService.storeObjectToStorage(
-                transactionData2.getHash(), transactionAsJson2, historyNodeConsensusResult2);
+                transactionData2.getHash(), transactionAsJson2);
 
         Hash txHash = transactionData1.getHash();
-        ResponseEntity<IResponse> responseRetrieveEntity1 = transactionStorageValidationService.retrieveObjectFromStorage(txHash, historyNodeConsensusResult1);
+        ResponseEntity<IResponse> responseRetrieveEntity1 = transactionStorageValidationService.retrieveObjectFromStorage(txHash, TRANSACTION_OBJECT_NAME);
         String entityAsJsonFromES = String.valueOf(responseRetrieveEntity1.getBody());
         TransactionData txDataDeserializedFromES1 = mapper.readValue(entityAsJsonFromES, TransactionData.class);
 
         Hash txHash2 = transactionData2.getHash();
-        ResponseEntity<IResponse> responseRetrieveEntity2 = transactionStorageValidationService.retrieveObjectFromStorage(txHash2, historyNodeConsensusResult2);
+        ResponseEntity<IResponse> responseRetrieveEntity2 = transactionStorageValidationService.retrieveObjectFromStorage(txHash2, TRANSACTION_OBJECT_NAME);
         String entityAsJsonFromES2 = String.valueOf(responseRetrieveEntity2.getBody());
         TransactionData txDataDeserializedFromES2 = mapper.readValue(entityAsJsonFromES2, TransactionData.class);
 
@@ -219,10 +219,10 @@ public class TransactionServiceTest {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         mapper.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
 
-        when(mockHistoryNodeConsensusCrypto.verifySignature(any(HistoryNodeConsensusResult.class))).thenReturn(true);
+//        when(mockHistoryNodeConsensusCrypto.verifySignature(any(HistoryNodeConsensusResult.class))).thenReturn(true);
         ResponseEntity<IResponse> mockedResponse = new ResponseEntity(HttpStatus.OK);;
-        when(mockHistoryNodesConsensusService.validateStoreMultipleObjectsConsensus(Matchers.<Map<Hash, String>> any(),any(HistoryNodeConsensusResult.class))).thenReturn(mockedResponse);
-        when(mockHistoryNodesConsensusService.validateRetrieveMultipleObjectsConsensus(Matchers.anyList(), any(HistoryNodeConsensusResult.class))).thenReturn(mockedResponse);
+        when(mockHistoryNodesConsensusService.validateStoreMultipleObjectsConsensus(Matchers.<Map<Hash, String>> any())).thenReturn(mockedResponse);
+        when(mockHistoryNodesConsensusService.validateRetrieveMultipleObjectsConsensus(Matchers.anyList())).thenReturn(mockedResponse);
         when(mockValidationService.validateTransactionDataIntegrity(any())).thenReturn(true); // TransactionData.class // to catch also null values
 
         TransactionData transactionData1 = createRandomTransaction();
@@ -232,18 +232,18 @@ public class TransactionServiceTest {
         String transactionAsJson2 = mapper.writeValueAsString(transactionData2);
 
         // TODO update method to receive Map of TxData instead of one
-        HistoryNodeConsensusResult historyNodeConsensusResult1 = createHistoryNodeConsensusResultForTx(transactionData1);
-        HistoryNodeConsensusResult historyNodeConsensusResult2 = createHistoryNodeConsensusResultForTx(transactionData2);
+//        HistoryNodeConsensusResult historyNodeConsensusResult1 = createHistoryNodeConsensusResultForTx(transactionData1);
+//        HistoryNodeConsensusResult historyNodeConsensusResult2 = createHistoryNodeConsensusResultForTx(transactionData2);
 
         Map<Hash, String> txDataJsonToHash = new HashMap<>();
         txDataJsonToHash.put(transactionData1.getHash(),transactionAsJson1);
         txDataJsonToHash.put(transactionData2.getHash(),transactionAsJson2);
 
-        ResponseEntity<IResponse> responseResponseEntity1 = transactionStorageValidationService.storeMultipleObjectsToStorage(txDataJsonToHash, historyNodeConsensusResult1);
+        ResponseEntity<IResponse> responseResponseEntity1 = transactionStorageValidationService.storeMultipleObjectsToStorage(txDataJsonToHash);
         Assert.assertTrue(responseResponseEntity1.getStatusCode().equals(HttpStatus.OK));
 
-        ResponseEntity<IResponse> responseEntity1 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData1.getHash(), historyNodeConsensusResult1);
-        ResponseEntity<IResponse> responseEntity2 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData2.getHash(), historyNodeConsensusResult2);
+        ResponseEntity<IResponse> responseEntity1 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData1.getHash(), TRANSACTION_OBJECT_NAME);
+        ResponseEntity<IResponse> responseEntity2 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData2.getHash(), TRANSACTION_OBJECT_NAME);
 
         String entityAsJsonFromES1 = String.valueOf(responseEntity1.getBody());
         TransactionData txDataDeserializedFromES1 = mapper.readValue(entityAsJsonFromES1, TransactionData.class);
@@ -254,7 +254,7 @@ public class TransactionServiceTest {
         Assert.assertTrue(txDataDeserializedFromES2.equals(transactionData2));
 
         // Add entries again as after retrieval they were removed from cold-storage, which is currently the same as main-storage
-        responseResponseEntity1 = transactionStorageValidationService.storeMultipleObjectsToStorage(txDataJsonToHash, historyNodeConsensusResult1);
+        responseResponseEntity1 = transactionStorageValidationService.storeMultipleObjectsToStorage(txDataJsonToHash);
         Assert.assertTrue(responseResponseEntity1.getStatusCode().equals(HttpStatus.OK));
 
         List<Hash> hashes = new ArrayList<>();
@@ -264,35 +264,38 @@ public class TransactionServiceTest {
 //        ResponseEntity<IResponse> responseEntity3 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData1.getHash(), historyNodeConsensusResult1);
 //        ResponseEntity<IResponse> responseEntity4 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData2.getHash(), historyNodeConsensusResult2);
 
-        Map<Hash, ResponseEntity<IResponse>> hashResponseEntityMap = transactionStorageValidationService.retrieveMultipleObjectsFromStorage(hashes, historyNodeConsensusResult1);
+//        Map<Hash, ResponseEntity<IResponse>> hashResponseEntityMap = transactionStorageValidationService.retrieveMultipleObjectsFromStorage(hashes, TRANSACTION_OBJECT_NAME);
+        GetEntitiesBulkResponse entitiesBulkResponse = (GetEntitiesBulkResponse) transactionStorageValidationService.retrieveMultipleObjectsFromStorage(hashes, TRANSACTION_OBJECT_NAME).getBody();
 
-        String entityAsJsonFromES3 = String.valueOf( hashResponseEntityMap.get( transactionData1.getHash() ).getBody() );
+
+        String entityAsJsonFromES3 = String.valueOf( entitiesBulkResponse.getEntitiesBulkResponses().get( transactionData1.getHash() ) );
         TransactionData txDataDeserializedFromES3 = mapper.readValue(entityAsJsonFromES3, TransactionData.class);
-        String entityAsJsonFromES4 = String.valueOf( hashResponseEntityMap.get( transactionData2.getHash() ).getBody() );
+        String entityAsJsonFromES4 = String.valueOf( entitiesBulkResponse.getEntitiesBulkResponses().get( transactionData2.getHash() ) );
         TransactionData txDataDeserializedFromES4 = mapper.readValue(entityAsJsonFromES4, TransactionData.class);
 
         Assert.assertTrue(txDataDeserializedFromES3.equals(transactionData1));
         Assert.assertTrue(txDataDeserializedFromES4.equals(transactionData2));
     }
 
-    private HistoryNodeConsensusResult createHistoryNodeConsensusResultForTx(TransactionData transactionData) throws JsonProcessingException {
-        HistoryNodeConsensusResult histNodeConsensusResult = new HistoryNodeConsensusResult(transactionData.getHash());
-        histNodeConsensusResult.setHistoryNodeMasterHash(transactionData.getSenderHash());
-        histNodeConsensusResult.setSignature(transactionData.getSenderSignature());
-        List<HistoryNodeVote> historyNodesVotes = new ArrayList<>();
-
-        boolean isValidRequest = true;
-        Hash requestHash = transactionData.getHash();
-        HistoryNodeVote historyNodeVote = new HistoryNodeVote(requestHash, isValidRequest);
-        historyNodesVotes.add(historyNodeVote);
-        histNodeConsensusResult.setHistoryNodesVotesList(historyNodesVotes);
-
-        Map<Hash, String> hashToObjectJsonDataMap = new HashMap<>();
-        hashToObjectJsonDataMap.put(transactionData.getHash(), mapper.writeValueAsString(transactionData) );
-        histNodeConsensusResult.setHashToObjectJsonDataMap(hashToObjectJsonDataMap);
-
-        return histNodeConsensusResult;
-    }
+//    @Deprecated
+//    private HistoryNodeConsensusResult createHistoryNodeConsensusResultForTx(TransactionData transactionData) throws JsonProcessingException {
+////        HistoryNodeConsensusResult histNodeConsensusResult = new HistoryNodeConsensusResult(transactionData.getHash());
+//        histNodeConsensusResult.setHistoryNodeMasterHash(transactionData.getSenderHash());
+//        histNodeConsensusResult.setSignature(transactionData.getSenderSignature());
+//        List<HistoryNodeVote> historyNodesVotes = new ArrayList<>();
+//
+//        boolean isValidRequest = true;
+//        Hash requestHash = transactionData.getHash();
+//        HistoryNodeVote historyNodeVote = new HistoryNodeVote(requestHash, isValidRequest);
+//        historyNodesVotes.add(historyNodeVote);
+//        histNodeConsensusResult.setHistoryNodesVotesList(historyNodesVotes);
+//
+//        Map<Hash, String> hashToObjectJsonDataMap = new HashMap<>();
+//        hashToObjectJsonDataMap.put(transactionData.getHash(), mapper.writeValueAsString(transactionData) );
+//        histNodeConsensusResult.setHashToObjectJsonDataMap(hashToObjectJsonDataMap);
+//
+//        return histNodeConsensusResult;
+//    }
 
 
 }

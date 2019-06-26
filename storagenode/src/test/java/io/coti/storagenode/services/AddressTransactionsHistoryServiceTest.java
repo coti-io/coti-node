@@ -6,11 +6,10 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.coti.basenode.crypto.CryptoHelper;
-import io.coti.basenode.crypto.HistoryNodeConsensusCrypto;
-import io.coti.basenode.data.AddressTransactionsHistory;
+import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.HistoryNodeConsensusResult;
 import io.coti.basenode.http.BaseResponse;
+import io.coti.basenode.http.GetEntitiesBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.storagenode.http.GetEntitiesBulkJsonResponse;
@@ -42,8 +41,8 @@ import static org.mockito.Mockito.when;
 import static testUtils.TestUtils.ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME;
 import static testUtils.TestUtils.generateRandomHash;
 
-@ContextConfiguration(classes = {AddressTransactionsHistoryService.class, DbConnectorService.class, AddressStorageValidationService.class,
-        HistoryNodeConsensusResult.class, HistoryNodesConsensusService.class, CryptoHelper.class})
+@ContextConfiguration(classes = {/*AddressTransactionsHistoryService.class*/ AddressService.class, DbConnectorService.class, AddressStorageValidationService.class,
+        HistoryNodesConsensusService.class, CryptoHelper.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -51,7 +50,8 @@ public class AddressTransactionsHistoryServiceTest {
 
     private static final int NUMBER_OF_ADDRESSES = 4;
     @Autowired
-    private AddressTransactionsHistoryService addressTransactionsHistoryService;
+//    private AddressTransactionsHistoryService addressTransactionsHistoryService;
+    private AddressService addressService;
 
     @Autowired
     private DbConnectorService dbConnectorService;
@@ -61,8 +61,8 @@ public class AddressTransactionsHistoryServiceTest {
     @Autowired
     private AddressStorageValidationService addressStorageValidationService;
 
-    @MockBean
-    private HistoryNodeConsensusCrypto mockHistoryNodeConsensusCrypto;
+//    @MockBean
+//    private HistoryNodeConsensusCrypto mockHistoryNodeConsensusCrypto;
 
     @MockBean
     private BaseNodeValidationService mockValidationService;
@@ -83,43 +83,43 @@ public class AddressTransactionsHistoryServiceTest {
     }
 
     @Test
-    public void AddressTransactionsHistoryTest() throws IOException {
-        AddressTransactionsHistory addressTransactionsHistory1 = new AddressTransactionsHistory(generateRandomHash());
-        AddressTransactionsHistory addressTransactionsHistory2 = new AddressTransactionsHistory(generateRandomHash());
+    public void AddressDataTest() throws IOException {
+        AddressData addressData1 = new AddressData(generateRandomHash());
+        AddressData addressData2 = new AddressData(generateRandomHash());
 
-        String addressTransactionsHistoryAsJson = mapper.writeValueAsString(addressTransactionsHistory1);
-        ResponseEntity<IResponse> insertResponseEntity1 = addressTransactionsHistoryService.insertObjectJson(addressTransactionsHistory1.getHash(), addressTransactionsHistoryAsJson, false);
-        ResponseEntity<IResponse> insertResponseEntity12 = addressTransactionsHistoryService.insertObjectJson(addressTransactionsHistory2.getHash(), addressTransactionsHistoryAsJson, false);
+        String addressDataAsJson = mapper.writeValueAsString(addressData1);
+        ResponseEntity<IResponse> insertResponseEntity1 = addressService.insertObjectJson(addressData1.getHash(), addressDataAsJson, false);
+        ResponseEntity<IResponse> insertResponseEntity12 = addressService.insertObjectJson(addressData2.getHash(), addressDataAsJson, false);
 
-        IResponse deleteResponse = addressTransactionsHistoryService.deleteObjectByHash(addressTransactionsHistory2.getHash(), false).getBody();
+        IResponse deleteResponse = addressService.deleteObjectByHash(addressData2.getHash(), false).getBody();
 
-        IResponse getResponse = addressTransactionsHistoryService.getObjectByHash(addressTransactionsHistory1.getHash(), false, ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME).getBody();
+        IResponse getResponse = addressService.getObjectByHash(addressData1.getHash(), false, ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME).getBody();
         Assert.assertTrue(((BaseResponse) (getResponse)).getStatus().equals(STATUS_SUCCESS) &&
                 ((GetEntityJsonResponse) deleteResponse).status.equals(STATUS_SUCCESS));
     }
 
     @Test
-    public void multiAddressTransactionsHistoryTest() throws IOException {
-        Map<Hash, String> hashToAddressTransactionsHistoryJsonDataMap = new HashMap<>();
-        List<AddressTransactionsHistory> addressTransactionsHistories = new ArrayList<>();
+    public void multiAddressDataTest() throws IOException {
+        Map<Hash, String> hashToAddressDataJsonDataMap = new HashMap<>();
+        List<AddressData> addressTransactionsHistories = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_ADDRESSES; i++) {
-            AddressTransactionsHistory addressTransactionsHistory = new AddressTransactionsHistory(generateRandomHash());
-            addressTransactionsHistories.add(addressTransactionsHistory);
-            hashToAddressTransactionsHistoryJsonDataMap.put(addressTransactionsHistory.getHash(), mapper.writeValueAsString(addressTransactionsHistory));
+            AddressData addressData = new AddressData(generateRandomHash());
+            addressTransactionsHistories.add(addressData);
+            hashToAddressDataJsonDataMap.put(addressData.getHash(), mapper.writeValueAsString(addressData));
         }
-        addressTransactionsHistoryService.insertMultiObjects(hashToAddressTransactionsHistoryJsonDataMap, false);
+        addressService.insertMultiObjects(hashToAddressDataJsonDataMap, false);
 
         List<Hash> deleteHashes = new ArrayList<>();
         deleteHashes.add(addressTransactionsHistories.get(0).getHash());
         deleteHashes.add(addressTransactionsHistories.get(1).getHash());
 
-        IResponse deleteResponse = addressTransactionsHistoryService.deleteMultiObjectsFromDb(deleteHashes, false).getBody();
+        IResponse deleteResponse = addressService.deleteMultiObjectsFromDb(deleteHashes, false).getBody();
 
         List<Hash> GetHashes = new ArrayList<>();
         GetHashes.add(addressTransactionsHistories.get(2).getHash());
         GetHashes.add(addressTransactionsHistories.get(3).getHash());
 
-        IResponse response = addressTransactionsHistoryService.getMultiObjectsFromDb(GetHashes, false, ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME).getBody();
+        IResponse response = addressService.getMultiObjectsFromDb(GetHashes, false, ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME).getBody();
 
         Assert.assertTrue(((BaseResponse) (response)).getStatus().equals(STATUS_SUCCESS)
                 && ((GetEntitiesBulkJsonResponse) deleteResponse).getHashToEntitiesFromDbMap().get(addressTransactionsHistories.get(0).getHash()).equals(STATUS_OK)
@@ -130,33 +130,33 @@ public class AddressTransactionsHistoryServiceTest {
     public void singleAddressStoreRetrieveTest() throws IOException
     {
         // Mocks set-ups
-        when(mockHistoryNodeConsensusCrypto.verifySignature(any(HistoryNodeConsensusResult.class))).thenReturn(true);
+//        when(mockHistoryNodeConsensusCrypto.verifySignature(any(HistoryNodeConsensusResult.class))).thenReturn(true);
         ResponseEntity<IResponse> mockedResponse = new ResponseEntity(HttpStatus.OK);
-        when(mockHistoryNodesConsensusService.validateStoreMultipleObjectsConsensus(Matchers.<Map<Hash, String>> any(),any(HistoryNodeConsensusResult.class))).thenReturn(mockedResponse);
-        when(mockHistoryNodesConsensusService.validateRetrieveMultipleObjectsConsensus(Matchers.anyList(), any(HistoryNodeConsensusResult.class))).thenReturn(mockedResponse);
+        when(mockHistoryNodesConsensusService.validateStoreMultipleObjectsConsensus(Matchers.<Map<Hash, String>> any())).thenReturn(mockedResponse);
+        when(mockHistoryNodesConsensusService.validateRetrieveMultipleObjectsConsensus(Matchers.anyList())).thenReturn(mockedResponse);
         when(mockValidationService.validateAddress(any(Hash.class))).thenReturn(Boolean.TRUE);
 
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        List<AddressTransactionsHistory> addressTxsHistories = new ArrayList<>();
+        List<AddressData> addressTxsHistories = new ArrayList<>();
         Map<Hash, String> hashToAddressTxsHistoryJsonDataMap = new HashMap<>();
 
         for (int i = 0; i < NUMBER_OF_ADDRESSES; i++) {
-            AddressTransactionsHistory addressTransactionsHistory = new AddressTransactionsHistory(generateRandomHash());
-            addressTxsHistories.add(addressTransactionsHistory);
-            hashToAddressTxsHistoryJsonDataMap.put(addressTransactionsHistory.getHash(), mapper.writeValueAsString(addressTransactionsHistory));
+            AddressData addressData = new AddressData(generateRandomHash());
+            addressTxsHistories.add(addressData);
+            hashToAddressTxsHistoryJsonDataMap.put(addressData.getHash(), mapper.writeValueAsString(addressData));
         }
 
         // Store Address
-        HistoryNodeConsensusResult consensus = new HistoryNodeConsensusResult(addressTxsHistories.get(0).getHash());
+//        HistoryNodeConsensusResult consensus = new HistoryNodeConsensusResult(addressTxsHistories.get(0).getHash());
         ResponseEntity<IResponse> storeResponse = addressStorageValidationService.storeObjectToStorage(addressTxsHistories.get(0).getHash(),
-                hashToAddressTxsHistoryJsonDataMap.get(addressTxsHistories.get(0).getHash()), consensus);
+                hashToAddressTxsHistoryJsonDataMap.get(addressTxsHistories.get(0).getHash()));
         Assert.assertTrue( storeResponse.getStatusCode().equals(HttpStatus.OK) );
 
         // Retrieve Address
-        ResponseEntity<IResponse> retrievedAddressResponse = addressStorageValidationService.retrieveObjectFromStorage(addressTxsHistories.get(0).getHash(), consensus);
+        ResponseEntity<IResponse> retrievedAddressResponse = addressStorageValidationService.retrieveObjectFromStorage(addressTxsHistories.get(0).getHash());
         Assert.assertTrue( retrievedAddressResponse.getStatusCode().equals(HttpStatus.OK) );
-        AddressTransactionsHistory retrievedAddress = mapper.readValue(String.valueOf(retrievedAddressResponse.getBody()), AddressTransactionsHistory.class);
+        AddressData retrievedAddress = mapper.readValue(String.valueOf(retrievedAddressResponse.getBody()), AddressData.class);
 
         Assert.assertTrue( retrievedAddress.equals(addressTxsHistories.get(0)) );
 
@@ -168,33 +168,33 @@ public class AddressTransactionsHistoryServiceTest {
     public void multipleAddressStoreRetrieveTest() throws IOException
     {
         // Mocks set-ups
-        when(mockHistoryNodeConsensusCrypto.verifySignature(any(HistoryNodeConsensusResult.class))).thenReturn(true);
+//        when(mockHistoryNodeConsensusCrypto.verifySignature(any(HistoryNodeConsensusResult.class))).thenReturn(true);
         ResponseEntity<IResponse> mockedResponse = new ResponseEntity(HttpStatus.OK);
-        when(mockHistoryNodesConsensusService.validateStoreMultipleObjectsConsensus(Matchers.<Map<Hash, String>> any(),any(HistoryNodeConsensusResult.class))).thenReturn(mockedResponse);
-        when(mockHistoryNodesConsensusService.validateRetrieveMultipleObjectsConsensus(Matchers.anyList(), any(HistoryNodeConsensusResult.class))).thenReturn(mockedResponse);
+        when(mockHistoryNodesConsensusService.validateStoreMultipleObjectsConsensus(Matchers.<Map<Hash, String>> any())).thenReturn(mockedResponse);
+        when(mockHistoryNodesConsensusService.validateRetrieveMultipleObjectsConsensus(Matchers.anyList())).thenReturn(mockedResponse);
         when(mockValidationService.validateAddress(any(Hash.class))).thenReturn(Boolean.TRUE);
 
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        List<AddressTransactionsHistory> addressTxsHistories = new ArrayList<>();
+        List<AddressData> addressTxsHistories = new ArrayList<>();
         Map<Hash, String> hashToAddressTxsHistoryJsonDataMap = new HashMap<>();
 
         for (int i = 0; i < NUMBER_OF_ADDRESSES; i++) {
-            AddressTransactionsHistory addressTransactionsHistory = new AddressTransactionsHistory(generateRandomHash());
-            addressTxsHistories.add(addressTransactionsHistory);
-            hashToAddressTxsHistoryJsonDataMap.put(addressTransactionsHistory.getHash(), mapper.writeValueAsString(addressTransactionsHistory));
+            AddressData addressData = new AddressData(generateRandomHash());
+            addressTxsHistories.add(addressData);
+            hashToAddressTxsHistoryJsonDataMap.put(addressData.getHash(), mapper.writeValueAsString(addressData));
         }
 
         // Store Addresses
         Hash hash0 = addressTxsHistories.get(0).getHash();
-        HistoryNodeConsensusResult consensus = new HistoryNodeConsensusResult(hash0);
-        ResponseEntity<IResponse> storeResponse = addressStorageValidationService.storeMultipleObjectsToStorage(hashToAddressTxsHistoryJsonDataMap, consensus);
+//        HistoryNodeConsensusResult consensus = new HistoryNodeConsensusResult(hash0);
+        ResponseEntity<IResponse> storeResponse = addressStorageValidationService.storeMultipleObjectsToStorage(hashToAddressTxsHistoryJsonDataMap);
         Assert.assertTrue( storeResponse.getStatusCode().equals(HttpStatus.OK) );
 
         // Retrieve Addresses
-        ResponseEntity<IResponse> retrievedAddressResponse = addressStorageValidationService.retrieveObjectFromStorage(hash0, consensus);
+        ResponseEntity<IResponse> retrievedAddressResponse = addressStorageValidationService.retrieveObjectFromStorage(hash0);
         Assert.assertTrue( retrievedAddressResponse.getStatusCode().equals(HttpStatus.OK) );
-        AddressTransactionsHistory retrievedAddress = mapper.readValue(String.valueOf(retrievedAddressResponse.getBody()), AddressTransactionsHistory.class);
+        AddressData retrievedAddress = mapper.readValue(String.valueOf(retrievedAddressResponse.getBody()), AddressData.class);
         Assert.assertTrue( retrievedAddress.equals(addressTxsHistories.get(0)) );
 
         List<Hash> addressesToGet = new ArrayList<>();
@@ -202,11 +202,12 @@ public class AddressTransactionsHistoryServiceTest {
         Hash hash2 = addressTxsHistories.get(2).getHash();
         addressesToGet.add(hash1);
         addressesToGet.add(hash2);
-        Map<Hash, ResponseEntity<IResponse>> hashResponseEntityMap = addressStorageValidationService.retrieveMultipleObjectsFromStorage(addressesToGet, consensus);
-        Assert.assertTrue( hashResponseEntityMap.get(hash1).getStatusCode().equals(HttpStatus.OK) );
-        Assert.assertTrue( hashResponseEntityMap.get(hash2).getStatusCode().equals(HttpStatus.OK) );
-        AddressTransactionsHistory retrievedAddress1 = mapper.readValue(String.valueOf( hashResponseEntityMap.get(hash1).getBody()), AddressTransactionsHistory.class);
-        AddressTransactionsHistory retrievedAddress2 = mapper.readValue(String.valueOf( hashResponseEntityMap.get(hash2).getBody()), AddressTransactionsHistory.class);
+        GetEntitiesBulkResponse hashResponseEntities = addressStorageValidationService.retrieveMultipleObjectsFromStorage(addressesToGet);
+        Assert.assertNotNull(hashResponseEntities.getEntitiesBulkResponses().get(hash1) );
+        Assert.assertNotNull( hashResponseEntities.getEntitiesBulkResponses().get(hash2) );
+        AddressData retrievedAddress1 = mapper.readValue(String.valueOf( hashResponseEntities.getEntitiesBulkResponses().get(hash1)), AddressData.class);
+        AddressData retrievedAddress2 = mapper.readValue(String.valueOf( hashResponseEntities.getEntitiesBulkResponses().get(hash2)), AddressData.class);
+
         Assert.assertTrue( retrievedAddress1.equals(addressTxsHistories.get(1)) );
         Assert.assertTrue( retrievedAddress2.equals(addressTxsHistories.get(2)) );
     }
