@@ -2,7 +2,6 @@ package io.coti.historynode.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.coti.basenode.data.HistoryNodeConsensusResult;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.http.AddEntitiesBulkRequest;
 import io.coti.historynode.http.storageConnector.interaces.IStorageConnector;
@@ -27,10 +26,9 @@ public abstract class EntityService implements IEntityService {
     protected String storageServerAddress;
     protected ObjectMapper mapper;
 
-    public void storeEntities(List<? extends IEntity> entities, HistoryNodeConsensusResult historyNodeConsensusResult) {
+    public void storeEntities(List<? extends IEntity> entities) {
 
-
-        AddEntitiesBulkRequest addEntitiesBulkRequest = new AddEntitiesBulkRequest(historyNodeConsensusResult);
+        AddEntitiesBulkRequest addEntitiesBulkRequest = new AddEntitiesBulkRequest();
         entities.forEach(entity ->
                 {
                     try {

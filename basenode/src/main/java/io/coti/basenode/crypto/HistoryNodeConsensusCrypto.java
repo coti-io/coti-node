@@ -8,6 +8,7 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 //import java.util.Date;
 
+@Deprecated
 @Service
 public class HistoryNodeConsensusCrypto extends SignatureCrypto<HistoryNodeConsensusResult> {
     @Override
