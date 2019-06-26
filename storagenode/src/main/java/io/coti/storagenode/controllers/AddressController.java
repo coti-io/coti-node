@@ -1,10 +1,6 @@
 package io.coti.storagenode.controllers;
 
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.AddEntityRequest;
-import io.coti.basenode.http.AddEntitiesBulkRequest;
-import io.coti.basenode.http.GetEntityRequest;
-import io.coti.basenode.http.GetEntitiesBulkRequest;
+import io.coti.basenode.http.*;
 import io.coti.basenode.http.interfaces.IResponse;
 
 import io.coti.storagenode.services.AddressStorageValidationService;
@@ -17,8 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.validation.Valid;
-
-import java.util.Map;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
@@ -33,32 +27,30 @@ public class AddressController {
     @RequestMapping(value = "/address", method = PUT)
     public ResponseEntity<IResponse> storeAddressToStorage(@Valid @RequestBody AddEntityRequest addAddEntityRequest) {
         return addressStorageValidationService.storeObjectToStorage(addAddEntityRequest.getHash(),
-                addAddEntityRequest.getEntityJson(), addAddEntityRequest.getHistoryNodeConsensusResult() );
+                addAddEntityRequest.getEntityJson());
     }
 
     @RequestMapping(value = "/address", method = GET)
     public ResponseEntity<IResponse> getAddressFromStorage(@Valid @RequestBody GetEntityRequest getEntityRequest) {
-        return addressStorageValidationService.retrieveObjectFromStorage(getEntityRequest.getHash(),
-                getEntityRequest.getHistoryNodeConsensusResult());
+        return addressStorageValidationService.retrieveObjectFromStorage(getEntityRequest.getHash()
+        );
     }
 
 
     @RequestMapping(value = "/addresses", method = PUT)
     public ResponseEntity<IResponse> storeMultipleAddressToStorage(@Valid @RequestBody AddEntitiesBulkRequest addEntitiesBulkRequest) {
         log.info(" Reached storeMultipleAddressToStorage with addEntitiesBulkRequest = {}", addEntitiesBulkRequest.toString());
-        return addressStorageValidationService.storeMultipleObjectsToStorage(addEntitiesBulkRequest.getHashToEntityJsonDataMap(),
-                addEntitiesBulkRequest.getHistoryNodeConsensusResult() );
+        return addressStorageValidationService.storeMultipleObjectsToStorage(addEntitiesBulkRequest.getHashToEntityJsonDataMap()
+        );
     }
 
 
-//    @RequestMapping(value = "/addresses", method = GET)
     @GetMapping(value = "/addresses")
 //    public Map<Hash, ResponseEntity<IResponse>> getAddressesFromStorage(@Valid @RequestBody GetEntitiesBulkRequest getEntitiesBulkRequest) {
-        public Map<Hash, ResponseEntity<IResponse>> getAddressesFromStorage( GetEntitiesBulkRequest getEntitiesBulkRequest) {
+        public GetEntitiesBulkResponse getAddressesFromStorage(GetEntitiesBulkRequest getEntitiesBulkRequest) {
         log.info(" Reached getAddressesFromStorage with getEntitiesBulkRequest = {}", getEntitiesBulkRequest.toString());
-        return addressStorageValidationService.retrieveMultipleObjectsFromStorage(getEntitiesBulkRequest.getHashes(),
-                getEntitiesBulkRequest.getHistoryNodeConsensusResult());
-//        return null;
+        return addressStorageValidationService.retrieveMultipleObjectsFromStorage(getEntitiesBulkRequest.getHashes()
+        );
     }
 
 

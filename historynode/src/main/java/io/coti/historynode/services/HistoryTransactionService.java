@@ -1,29 +1,47 @@
 package io.coti.historynode.services;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.HistoryNodeConsensusResult;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.GetEntitiesBulkRequest;
+import io.coti.basenode.http.GetEntitiesBulkResponse;
+import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
+import io.coti.historynode.crypto.GetTransactionsByAddressRequestCrypto;
+import io.coti.historynode.data.AddressTransactionsByAddress;
+import io.coti.historynode.http.GetTransactionsByAddressRequest;
 import io.coti.historynode.http.GetTransactionsRequest;
+import io.coti.historynode.http.HistoryTransactionResponse;
+import io.coti.historynode.http.data.HistoryTransactionResponseData;
 import io.coti.historynode.http.storageConnector.interaces.IStorageConnector;
+import io.coti.historynode.model.AddressTransactionsByAddresses;
 import io.coti.historynode.model.AddressTransactionsByDatesHistories;
 import io.coti.historynode.services.interfaces.IHistoryTransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 
 @Slf4j
 @Service
 public class HistoryTransactionService extends EntityService implements IHistoryTransactionService {
+
+    @Value("${storage.server.address}")
+    protected String storageServerAddress;
 
     @Autowired
     AddressTransactionsByDatesHistories addressTransactionsByDatesHistories;
@@ -32,9 +50,21 @@ public class HistoryTransactionService extends EntityService implements IHistory
     @Autowired
     private IStorageConnector storageConnector;
 
+    @Autowired
+    private AddressTransactionsByAddresses addressTransactionsByAddresses;
+    @Autowired
+    private GetTransactionsByAddressRequestCrypto getTransactionsByAddressRequestCrypto;
+
+    private ObjectMapper mapper;
+
     @PostConstruct
     public void init() {
-        mapper = new ObjectMapper();
+//        mapper = new ObjectMapper();
+        mapper = new ObjectMapper()
+                .registerModule(new ParameterNamesModule())
+                .registerModule(new Jdk8Module())
+                .registerModule(new JavaTimeModule()); // new module, NOT JSR310Module
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         endpoint = "/transactions";
     }
 
@@ -42,8 +72,7 @@ public class HistoryTransactionService extends EntityService implements IHistory
     public ResponseEntity<IResponse> getTransactionsDetails(GetTransactionsRequest getTransactionRequest) {
         List<TransactionData> transactionsList = new ArrayList<>();
         List<Hash> hashList = new ArrayList<>();
-        HistoryNodeConsensusResult historyNodeConsensusResult = new HistoryNodeConsensusResult();
-        GetEntitiesBulkRequest getEntitiesBulkRequest = new GetEntitiesBulkRequest(hashList, historyNodeConsensusResult);
+        GetEntitiesBulkRequest getEntitiesBulkRequest = new GetEntitiesBulkRequest(hashList);
 
         List<Hash> transactionHashes = getTransactionsHashesByAddresses(getTransactionRequest);
         for (Hash transactionHash : transactionHashes) {
@@ -101,5 +130,53 @@ public class HistoryTransactionService extends EntityService implements IHistory
                         addressTransactionsByDatesHistories.getByHash(addressHash)
                                 .getTransactionsHistory().subMap(startDate, endDate).values()));
         return transactionHashes;
+    }
+
+
+
+    public ResponseEntity<IResponse> getTransactionsByAddress(GetTransactionsByAddressRequest getTransactionsByAddressRequest) {
+        // Verify signature //TODO: Commented for initial integration testing, uncomment after adding signature in tests
+//        if(!getTransactionsByAddressRequestCrypto.verifySignature(getTransactionsByAddressRequest)) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
+//        }
+
+        // Retrieve matching transactions hashes from relevant index
+        AddressTransactionsByAddress addressTransactionsByAddress = addressTransactionsByAddresses.getByHash(getTransactionsByAddressRequest.getAddress());
+        HashMap<Hash, HashSet<Hash>> transactionHashesByDates = addressTransactionsByAddress.getTransactionHashesByDates();
+        List<Hash> transactionsHashes = transactionHashesByDates.keySet().stream().flatMap(key -> transactionHashesByDates.get(key).stream()).collect(Collectors.toList());
+        if( transactionsHashes.isEmpty() ) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new Response(TRANSACTIONS_NOT_FOUND, EMPTY_SEARCH_RESULT));
+        }
+
+        // Retrieve transactions from storage
+        GetEntitiesBulkRequest getEntitiesBulkRequest = new GetEntitiesBulkRequest(transactionsHashes);
+
+        RestTemplate restTemplate = new RestTemplate();
+        endpoint = "/transactions";
+
+        ResponseEntity<GetEntitiesBulkResponse> stringResponseEntity =
+                restTemplate.postForEntity(storageServerAddress + endpoint,  getEntitiesBulkRequest,   GetEntitiesBulkResponse.class);
+        Map<Hash, String> entitiesBulkResponses = stringResponseEntity.getBody().getEntitiesBulkResponses();
+        if(entitiesBulkResponses == null || entitiesBulkResponses.isEmpty()) {
+            log.error("No transactions were retrieved");
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new Response(SERVER_ERROR, EMPTY_SEARCH_RESULT));
+        }
+
+        ArrayList<TransactionData> retrievedTransactions = new ArrayList<>();
+        transactionsHashes.forEach(transactionHash -> {
+            String transactionRetrievedAsJson = entitiesBulkResponses.get(transactionHash);
+            if(transactionRetrievedAsJson != null ) {
+                try {
+                    TransactionData transactionData = mapper.readValue(transactionRetrievedAsJson, TransactionData.class);
+                    retrievedTransactions.add(transactionData);
+                } catch (IOException e) {
+                    log.error("Failed to read value for {}", transactionHash);
+                    e.printStackTrace();
+                }
+            } else {
+                log.error("Failed to retrieve value for {}", transactionHash);
+            }
+        });
+        return ResponseEntity.status(HttpStatus.OK).body( new HistoryTransactionResponse(new HistoryTransactionResponseData(retrievedTransactions)));
     }
 }
