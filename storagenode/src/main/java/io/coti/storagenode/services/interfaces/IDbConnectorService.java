@@ -1,13 +1,14 @@
 package io.coti.storagenode.services.interfaces;
 
 import io.coti.basenode.data.Hash;
+import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsResponse;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
 public interface IDbConnectorService {
-    void getClusterDetails(Set<String> indexes) throws IOException;
+    ClusterGetSettingsResponse getClusterDetails(Set<String> indexes) throws IOException;
 
     Map<String, Object> getObjectFromDbByHash(Hash hash, String index, boolean fromColdStorage) throws IOException;
 

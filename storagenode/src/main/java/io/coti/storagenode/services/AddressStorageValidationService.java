@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
-import io.coti.basenode.data.AddressTransactionsHistory;
+import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.HistoryNodeConsensusResult;
+import io.coti.basenode.http.GetEntitiesBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.storagenode.services.interfaces.IAddressStorageValidationService;
@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 @Data
 @Service
@@ -32,10 +31,12 @@ public class AddressStorageValidationService extends EntityStorageValidationServ
     private BaseNodeValidationService validationService;
 
     @Autowired
-    private AddressTransactionsHistoryService addressTransactionsHistoryService;
+//    private AddressTransactionsHistoryService addressTransactionsHistoryService;
+    private AddressService addressService;
 
 //    private final static String ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME = "addressTransactionsHistoryData";
-    private final static String ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME = "addressData";
+    public final static String ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME = "addressData";
+    public final static String ADDRESS_TRANSACTION_HISTORY_INDEX_NAME = "address";
 
     @PostConstruct
     public void init()
@@ -51,9 +52,10 @@ public class AddressStorageValidationService extends EntityStorageValidationServ
     public boolean isObjectDIOK(Hash addressHash, String addressAsJson)
     {
         //Check for Data Integrity of the address
-        AddressTransactionsHistory addressTxHistory = null;
+        AddressData addressTxHistory = null;
         try {
-            addressTxHistory = mapper.readValue(addressAsJson, AddressTransactionsHistory.class);
+//            addressTxHistory = mapper.readValue(addressAsJson, AddressTransactionsHistory.class);
+            addressTxHistory = mapper.readValue(addressAsJson, AddressData.class);
         } catch (IOException e) {
             e.printStackTrace();
             return false;
@@ -65,16 +67,16 @@ public class AddressStorageValidationService extends EntityStorageValidationServ
 
     @Override
     public ObjectService getObjectService() {
-        return addressTransactionsHistoryService;
+        return addressService;
     }
 
-    public ResponseEntity<IResponse> retrieveObjectFromStorage(Hash hash, HistoryNodeConsensusResult historyNodeConsensusResult)
+    public ResponseEntity<IResponse> retrieveObjectFromStorage(Hash hash)
     {
-        return retrieveObjectFromStorage(hash, historyNodeConsensusResult, ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME);
+        return retrieveObjectFromStorage(hash, ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME);
     }
 
-    public Map<Hash, ResponseEntity<IResponse>> retrieveMultipleObjectsFromStorage(List<Hash> hashes, HistoryNodeConsensusResult historyNodeConsensusResult) {
-        return retrieveMultipleObjectsFromStorage(hashes, historyNodeConsensusResult, ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME);
+    public GetEntitiesBulkResponse retrieveMultipleObjectsFromStorage(List<Hash> hashes) {
+        return (GetEntitiesBulkResponse) retrieveMultipleObjectsFromStorage(hashes, ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME).getBody();
     }
 
 }

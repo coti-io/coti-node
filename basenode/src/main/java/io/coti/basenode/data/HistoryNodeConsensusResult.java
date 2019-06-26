@@ -8,6 +8,7 @@ import lombok.Data;
 import java.util.List;
 import java.util.Map;
 
+@Deprecated
 @Data
 public class HistoryNodeConsensusResult extends ConfirmationData implements IPropagatable, ISignable, ISignValidatable
 {
