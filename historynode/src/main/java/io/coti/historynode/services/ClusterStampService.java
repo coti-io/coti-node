@@ -74,10 +74,8 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 //        });
 
         // TODO: later construct consensus based on algorithm
-        HistoryNodeConsensusResult historyNodeConsensusResult =
-                new HistoryNodeConsensusResult(unconfirmedTransactions.get(0).getSenderHash());
-        historyTransactionService.storeEntities(unconfirmedTransactions, historyNodeConsensusResult);
-        historyAddressService.storeEntities(new ArrayList<>(unconfirmedTransactionsAddresses), historyNodeConsensusResult);
+        historyTransactionService.storeEntities(unconfirmedTransactions);
+        historyAddressService.storeEntities(new ArrayList<>(unconfirmedTransactionsAddresses));
     }
 //TODO: For initial compilation prior to merge
 //    @Override

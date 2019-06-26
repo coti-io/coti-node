@@ -52,4 +52,6 @@ public class AddressTransactionsServiceTest {
 
         Assert.assertNotNull(addressTransactionsByDatesHistories.getByHash(transactionData.getSenderHash()));
     }
+
+
 }

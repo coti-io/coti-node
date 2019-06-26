@@ -12,8 +12,12 @@ import java.util.HashSet;
 public class AddressTransactionsByAddress implements IEntity {
 
     private Hash address;
-    private HashMap<Instant, HashSet<Hash>> transactionHashes;
+    private HashMap<Hash, HashSet<Hash>> transactionHashesByDates;
 
+    public AddressTransactionsByAddress(Hash address, HashMap<Hash, HashSet<Hash>> transactionHashesByDates) {
+        this.address = address;
+        this.transactionHashesByDates = transactionHashesByDates;
+    }
 
     @Override
     public Hash getHash() {
