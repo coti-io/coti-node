@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.Set;
 
 @Data
+@Deprecated
 public class AddressTransactionsHistory implements IEntity {
 
     private static final long serialVersionUID = 6148574209385536578L;

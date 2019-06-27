@@ -13,6 +13,7 @@ import io.coti.basenode.http.GetEntitiesBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeValidationService;
+import io.coti.storagenode.database.DbConnectorService;
 import io.coti.storagenode.http.GetEntitiesBulkJsonResponse;
 import io.coti.storagenode.http.GetEntityJsonResponse;
 import org.junit.Assert;
@@ -41,7 +42,7 @@ import static org.mockito.Mockito.when;
 import static testUtils.TestUtils.*;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
-@ContextConfiguration(classes = {TransactionService.class, DbConnectorService.class,TransactionStorageValidationService.class,
+@ContextConfiguration(classes = {TransactionService.class, DbConnectorService.class, TransactionStorageService.class,
         HistoryNodesConsensusService.class, CryptoHelper.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
@@ -57,7 +58,7 @@ public class TransactionServiceTest {
     private DbConnectorService dbConnectorService;
 
     @Autowired
-    private TransactionStorageValidationService transactionStorageValidationService;
+    private TransactionStorageService transactionStorageValidationService;
 
 //    @MockBean
 //    private HistoryNodeConsensusCrypto mockHistoryNodeConsensusCrypto;
