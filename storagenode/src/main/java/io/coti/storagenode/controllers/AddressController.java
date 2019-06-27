@@ -3,7 +3,7 @@ package io.coti.storagenode.controllers;
 import io.coti.basenode.http.*;
 import io.coti.basenode.http.interfaces.IResponse;
 
-import io.coti.storagenode.services.AddressStorageValidationService;
+import io.coti.storagenode.services.AddressStorageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,17 +22,17 @@ import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 public class AddressController {
 
     @Autowired
-    private AddressStorageValidationService addressStorageValidationService;
+    private AddressStorageService addressStorageService;
 
     @RequestMapping(value = "/address", method = PUT)
     public ResponseEntity<IResponse> storeAddressToStorage(@Valid @RequestBody AddEntityRequest addAddEntityRequest) {
-        return addressStorageValidationService.storeObjectToStorage(addAddEntityRequest.getHash(),
+        return addressStorageService.storeObjectToStorage(addAddEntityRequest.getHash(),
                 addAddEntityRequest.getEntityJson());
     }
 
     @RequestMapping(value = "/address", method = GET)
     public ResponseEntity<IResponse> getAddressFromStorage(@Valid @RequestBody GetEntityRequest getEntityRequest) {
-        return addressStorageValidationService.retrieveObjectFromStorage(getEntityRequest.getHash()
+        return addressStorageService.retrieveObjectFromStorage(getEntityRequest.getHash()
         );
     }
 
@@ -40,7 +40,7 @@ public class AddressController {
     @RequestMapping(value = "/addresses", method = PUT)
     public ResponseEntity<IResponse> storeMultipleAddressToStorage(@Valid @RequestBody AddEntitiesBulkRequest addEntitiesBulkRequest) {
         log.info(" Reached storeMultipleAddressToStorage with addEntitiesBulkRequest = {}", addEntitiesBulkRequest.toString());
-        return addressStorageValidationService.storeMultipleObjectsToStorage(addEntitiesBulkRequest.getHashToEntityJsonDataMap()
+        return addressStorageService.storeMultipleObjectsToStorage(addEntitiesBulkRequest.getHashToEntityJsonDataMap()
         );
     }
 
@@ -49,7 +49,7 @@ public class AddressController {
 //    public Map<Hash, ResponseEntity<IResponse>> getAddressesFromStorage(@Valid @RequestBody GetEntitiesBulkRequest getEntitiesBulkRequest) {
         public GetEntitiesBulkResponse getAddressesFromStorage(GetEntitiesBulkRequest getEntitiesBulkRequest) {
         log.info(" Reached getAddressesFromStorage with getEntitiesBulkRequest = {}", getEntitiesBulkRequest.toString());
-        return addressStorageValidationService.retrieveMultipleObjectsFromStorage(getEntitiesBulkRequest.getHashes()
+        return addressStorageService.retrieveMultipleObjectsFromStorage(getEntitiesBulkRequest.getHashes()
         );
     }
 

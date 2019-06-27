@@ -1,4 +1,4 @@
-package io.coti.storagenode.services.interfaces;
+package io.coti.storagenode.model.interfaces;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.interfaces.IResponse;
