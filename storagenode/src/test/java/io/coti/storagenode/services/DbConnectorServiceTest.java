@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.AddressTransactionsHistory;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.storagenode.database.DbConnectorService;
 import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsResponse;
 import org.junit.Assert;
 import org.junit.Before;

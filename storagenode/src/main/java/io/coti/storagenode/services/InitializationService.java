@@ -1,13 +1,6 @@
 package io.coti.storagenode.services;
 
-import io.coti.basenode.crypto.NodeCryptoHelper;
-import io.coti.basenode.data.NetworkNodeData;
-import io.coti.basenode.data.NodeType;
-import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.interfaces.IPropagatable;
-import io.coti.basenode.services.BaseNodeInitializationService;
-import io.coti.basenode.services.CommunicationService;
-import org.aspectj.lang.annotation.Before;
+import io.coti.storagenode.database.DbConnectorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -15,12 +8,11 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.*;
-import java.util.function.Consumer;
 
-import static io.coti.storagenode.services.AddressStorageValidationService.ADDRESS_TRANSACTION_HISTORY_INDEX_NAME;
-import static io.coti.storagenode.services.AddressStorageValidationService.ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME;
-import static io.coti.storagenode.services.TransactionStorageValidationService.TRANSACTION_INDEX_NAME;
-import static io.coti.storagenode.services.TransactionStorageValidationService.TRANSACTION_OBJECT_NAME;
+import static io.coti.storagenode.services.AddressStorageService.ADDRESS_TRANSACTION_HISTORY_INDEX_NAME;
+import static io.coti.storagenode.services.AddressStorageService.ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME;
+import static io.coti.storagenode.services.TransactionStorageService.TRANSACTION_INDEX_NAME;
+import static io.coti.storagenode.services.TransactionStorageService.TRANSACTION_OBJECT_NAME;
 
 @Service
 public class InitializationService /*extends BaseNodeInitializationService*/{
@@ -41,9 +33,6 @@ public class InitializationService /*extends BaseNodeInitializationService*/{
 
     @Autowired
     private DbConnectorService dbConnectorService;
-
-//    @Autowired
-//    private AddressTransactionsHistoryService addressTransactionsHistoryService;
 
 //    @Autowired
 //    private BaseNodeInitializationService baseNodeInitializationService;

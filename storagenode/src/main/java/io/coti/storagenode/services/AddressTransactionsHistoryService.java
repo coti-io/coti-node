@@ -1,5 +1,6 @@
 package io.coti.storagenode.services;
 
+import io.coti.storagenode.model.ObjectService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +14,7 @@ public class AddressTransactionsHistoryService extends ObjectService {//} implem
     @PostConstruct
     private void init() throws Exception {
         try {
-            indexName = "address";
+            indexName = "addresses";
             objectName = "addressTransactionsHistoryData";
             dbConnectorService.addIndex(indexName, objectName, false);
             dbConnectorService.addIndex(indexName, objectName, true);
