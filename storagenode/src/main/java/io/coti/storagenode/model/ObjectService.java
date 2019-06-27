@@ -1,13 +1,14 @@
-package io.coti.storagenode.services;
+package io.coti.storagenode.model;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.data.MultiDbInsertionStatus;
+import io.coti.storagenode.database.DbConnectorService;
 import io.coti.storagenode.http.AddEntityJsonResponse;
 import io.coti.storagenode.http.GetEntitiesBulkJsonResponse;
 import io.coti.storagenode.http.GetEntityJsonResponse;
-import io.coti.storagenode.services.interfaces.IObjectService;
+import io.coti.storagenode.model.interfaces.IObjectService;
 import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

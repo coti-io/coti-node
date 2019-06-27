@@ -10,6 +10,7 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.GetEntitiesBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeValidationService;
+import io.coti.storagenode.model.ObjectService;
 import io.coti.storagenode.services.interfaces.ITransactionStorageValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ import java.util.List;
 //import net.minidev.json.JSONObject;
 
 @Service
-public class TransactionStorageValidationService extends EntityStorageValidationService implements ITransactionStorageValidationService
+public class TransactionStorageService extends EntityStorageService implements ITransactionStorageValidationService
 {
 
     @Autowired

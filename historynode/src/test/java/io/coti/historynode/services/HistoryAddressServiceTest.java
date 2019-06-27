@@ -3,8 +3,10 @@ package io.coti.historynode.services;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.GetEntitiesBulkRequest;
+import io.coti.basenode.http.GetEntityRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.historynode.http.GetAddressBatchResponse;
+import io.coti.historynode.http.GetAddressResponse;
 import io.coti.historynode.http.storageConnector.interaces.IStorageConnector;
 import io.coti.historynode.services.interfaces.IHistoryAddressService;
 import org.junit.Assert;
@@ -47,25 +49,22 @@ public class HistoryAddressServiceTest {
     }
 
     @Test
-    public void getAddresses_noExceptionIsThrown() {
+    public void getAddress_noExceptionIsThrown() {
         try {
-            List<Hash> addresses = new ArrayList<>();
-            List<AddressData> addressesData = new ArrayList<>();
-            IntStream.range(0, NUMBER_OF_ADDRESSES).forEachOrdered(n -> {
-                Hash hash = TestUtils.generateRandomHash();
-                addresses.add(hash);
-                addressesData.add(new AddressData(hash));
-            });
+            Hash address;
+            AddressData addressData;
+            Hash hash = TestUtils.generateRandomHash();
+            address = hash;
+            addressData = new AddressData(hash);
 
             ResponseEntity<IResponse> response = ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(new GetAddressBatchResponse(addressesData));
-            when(storageConnector.getForObject(any(String.class), any(Class.class), any(GetEntitiesBulkRequest.class)))
+                    .body(new GetAddressResponse(addressData));
+            when(storageConnector.getForObject(any(String.class), any(Class.class), any(GetEntityRequest.class)))
                     .thenReturn(response);
-            addressService.getAddresses(addresses);
+            addressService.getAddress(address);
         } catch (Exception e) {
             Assert.fail(e.getMessage());
         }
-
     }
 }

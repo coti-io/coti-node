@@ -2,13 +2,13 @@ package io.coti.storagenode.services.interfaces;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.storagenode.services.ObjectService;
+import io.coti.storagenode.model.ObjectService;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Map;
 
-public interface IEntityStorageValidationService
+public interface IEntityStorageService
 {
     ResponseEntity<IResponse> storeObjectToStorage(Hash hash, String objectJson);
 

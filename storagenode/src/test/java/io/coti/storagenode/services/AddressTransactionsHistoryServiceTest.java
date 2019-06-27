@@ -12,8 +12,10 @@ import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.GetEntitiesBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeValidationService;
+import io.coti.storagenode.database.DbConnectorService;
 import io.coti.storagenode.http.GetEntitiesBulkJsonResponse;
 import io.coti.storagenode.http.GetEntityJsonResponse;
+import io.coti.storagenode.model.AddressService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,7 +43,8 @@ import static org.mockito.Mockito.when;
 import static testUtils.TestUtils.ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME;
 import static testUtils.TestUtils.generateRandomHash;
 
-@ContextConfiguration(classes = {/*AddressTransactionsHistoryService.class*/ AddressService.class, DbConnectorService.class, AddressStorageValidationService.class,
+
+@ContextConfiguration(classes = {AddressService.class, DbConnectorService.class, AddressStorageService.class,
         HistoryNodesConsensusService.class, CryptoHelper.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
@@ -50,7 +53,6 @@ public class AddressTransactionsHistoryServiceTest {
 
     private static final int NUMBER_OF_ADDRESSES = 4;
     @Autowired
-//    private AddressTransactionsHistoryService addressTransactionsHistoryService;
     private AddressService addressService;
 
     @Autowired
@@ -59,7 +61,7 @@ public class AddressTransactionsHistoryServiceTest {
     private ObjectMapper mapper;
 
     @Autowired
-    private AddressStorageValidationService addressStorageValidationService;
+    private AddressStorageService addressStorageValidationService;
 
 //    @MockBean
 //    private HistoryNodeConsensusCrypto mockHistoryNodeConsensusCrypto;
