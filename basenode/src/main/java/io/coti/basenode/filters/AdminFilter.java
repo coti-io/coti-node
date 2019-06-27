@@ -59,6 +59,6 @@ public class AdminFilter implements Filter {
 
     @Override
     public void destroy() {
-        log.info("Destroying admin filter");
+        log.info("Shut down {}", getClass().getSimpleName());
     }
 }

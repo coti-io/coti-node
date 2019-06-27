@@ -15,7 +15,7 @@ public class FilterConfig {
     private String whitelistIps;
 
     @Bean
-    public FilterRegistrationBean<AdminFilter> filterRegistrationBean() {
+    public FilterRegistrationBean<AdminFilter> adminFilterRegistrationBean() {
         FilterRegistrationBean<AdminFilter> registrationBean = new FilterRegistrationBean();
         AdminFilter adminFilter = new AdminFilter();
         adminFilter.setWhiteListIps(new HashSet<>(Arrays.asList(whitelistIps.split(","))));

@@ -3,9 +3,12 @@ package io.coti.basenode.exceptions;
 import io.coti.basenode.http.ExceptionResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.web.firewall.RequestRejectedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -49,8 +52,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity handleNoHandlerFoundException(NoHandlerFoundException e) {
         log.info("Received a request with no handler");
         log.info("Exception message: " + e.getMessage());
-        ResponseEntity responseEntity = new ResponseEntity(
-                new ExceptionResponse(e.getMessage(), API_CLIENT_ERROR), HttpStatus.NOT_FOUND);
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.setContentType(MediaType.APPLICATION_JSON);
+        ResponseEntity responseEntity = ResponseEntity.status(HttpStatus.NOT_FOUND).headers(responseHeaders).body(new ExceptionResponse(e.getMessage(), API_CLIENT_ERROR));
+        return responseEntity;
+    }
+
+    @ExceptionHandler(RequestRejectedException.class)
+    public ResponseEntity handleRequestRejectedException(RequestRejectedException e) {
+        log.info("Received a rejected request");
+        log.info("Exception message: " + e.getMessage());
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.setContentType(MediaType.APPLICATION_JSON);
+        ResponseEntity responseEntity = ResponseEntity.status(HttpStatus.BAD_REQUEST).headers(responseHeaders).body(new ExceptionResponse(e.getMessage(), API_CLIENT_ERROR));
         return responseEntity;
     }
 
