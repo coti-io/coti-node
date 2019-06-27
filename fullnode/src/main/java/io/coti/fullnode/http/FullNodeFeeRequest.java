@@ -14,11 +14,11 @@ import java.math.BigDecimal;
 @Data
 public class FullNodeFeeRequest extends Request implements ISignValidatable {
     @Positive
-    public BigDecimal originalAmount;
+    private BigDecimal originalAmount;
     @NotNull
-    public @Valid Hash userHash;
+    private @Valid Hash userHash;
     @NotNull
-    public @Valid SignatureData userSignature;
+    private @Valid SignatureData userSignature;
 
     @Override
     public SignatureData getSignature() {

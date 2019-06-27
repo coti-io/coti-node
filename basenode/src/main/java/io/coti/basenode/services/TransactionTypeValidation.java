@@ -124,10 +124,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
 
             }
 
-            if (skipValidationOfReducedAmount) {
-                return true;
-            }
-            return validateReducedAmount(outputBaseTransactions);
+            return skipValidationOfReducedAmount || validateReducedAmount(outputBaseTransactions);
         } catch (ClassNotFoundException e) {
             log.error("Errors of class not found during validation of output base transactions: {}", e);
             return false;
@@ -147,7 +144,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
                 reducedTotalOutputTransactionAmount = reducedTotalOutputTransactionAmount.add(outputBaseTransactionData.getAmount());
             }
         }
-        return reducedAmount.stripTrailingZeros().equals(reducedTotalOutputTransactionAmount.stripTrailingZeros());
+        return reducedAmount.compareTo(reducedTotalOutputTransactionAmount) == 0;
     }
 
 }

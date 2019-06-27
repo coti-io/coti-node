@@ -34,6 +34,8 @@ public class BaseNodeHttpStringConstants {
     public static final String INVALID_NODE_REGISTRATION_SIGNATURE = "Invalid node registration signature";
     public static final String INVALID_NETWORK_TYPE = "Network type should be %s. Invalid network type %s";
     public static final String INVALID_TRANSACTION_TIME_FIELD = "Invalid transaction time field. Current node time: %s";
+    public static final String INVALID_AMOUNT = "Invalid amount";
+    public static final String INVALID_AMOUNT_VS_FULL_NODE_FEE = "Transaction amount should be greater than full node fee";
 
     public static final String UNAUTHORIZED_IP_ACCESS = "Unauthorized ip access";
     public static final String METHOD_NOT_SUPPORTED = "Unsupported method";

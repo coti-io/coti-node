@@ -28,4 +28,6 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String NETWORK_FEE_VALIDATION_ERROR = "Network fee validation failed";
     public static final String MERCHANT_ADRRESS_GET_ERROR = "Error at getting merchant address: %s";
 
+    public static final String INVALID_REDUCED_AMOUNT_VS_NETWORK_FEE = "Transaction amount should be greater than sum of fullnode fee and network fee";
+
 }

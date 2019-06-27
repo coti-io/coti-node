@@ -5,6 +5,8 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 
+import java.math.BigDecimal;
+
 public interface IValidationService {
 
     boolean validateSource(Hash hash);
@@ -32,4 +34,6 @@ public interface IValidationService {
     boolean validatePot(TransactionData transactionData);
 
     boolean validateTransactionTimeFields(TransactionData transactionData);
+
+    boolean validateAmountField(BigDecimal amount);
 }

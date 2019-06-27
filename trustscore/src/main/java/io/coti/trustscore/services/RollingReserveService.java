@@ -7,6 +7,7 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.http.*;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.INetworkService;
+import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.TrustScoreData;
 import io.coti.trustscore.http.RollingReserveRequest;
@@ -26,6 +27,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +54,8 @@ public class RollingReserveService {
     private TrustScores trustScores;
     @Autowired
     private HttpJacksonSerializer jacksonSerializer;
+    @Autowired
+    private IValidationService validationService;
 
 
     @Autowired
@@ -76,6 +80,10 @@ public class RollingReserveService {
 
             BigDecimal originalAmount = networkFeeData.getOriginalAmount();
             BigDecimal reducedAmount = networkFeeData.getReducedAmount().subtract(networkFeeData.getAmount());
+
+            if (reducedAmount.scale() > 0) {
+                reducedAmount = reducedAmount.stripTrailingZeros();
+            }
 
             Hash rollingReserveAddress = getMerchantRollingReserveAddress(rollingReserveRequest.getMerchantHash());
             BigDecimal rollingReserveAmount = calculateRollingReserveAmount(reducedAmount, trustScoreService.calculateUserTrustScore(trustScoreData));
@@ -156,7 +164,11 @@ public class RollingReserveService {
     }
 
     private boolean isRollingReserveValid(RollingReserveData rollingReserveData, NetworkFeeData networkFeeData, double userTrustScore, UserType userType) {
-        return userType.equals(UserType.MERCHANT) && rollingReserveData.getReducedAmount().equals(networkFeeData.getReducedAmount().subtract(networkFeeData.getAmount()))
+        return userType.equals(UserType.MERCHANT)
+                && validationService.validateAmountField(rollingReserveData.getReducedAmount())
+                && validationService.validateAmountField(rollingReserveData.getAmount())
+                && rollingReserveData.getOriginalAmount().equals(networkFeeData.getOriginalAmount())
+                && rollingReserveData.getReducedAmount().equals(networkFeeData.getReducedAmount().subtract(networkFeeData.getAmount()))
                 && isRollingReserveValid(rollingReserveData, userTrustScore);
     }
 
@@ -173,8 +185,14 @@ public class RollingReserveService {
     }
 
     private BigDecimal calculateRollingReserveAmount(BigDecimal reducedAmount, double trustScore) {
-
         double reserveRate = (trustScore == 0) ? MAX_ROLLING_RESERVE_RATE : Math.min(MAX_ROLLING_RESERVE_RATE / trustScore, MAX_ROLLING_RESERVE_RATE);
-        return reducedAmount.multiply(new BigDecimal(reserveRate / 100));
+        BigDecimal rollingReserveAmount = reducedAmount.multiply(new BigDecimal(reserveRate / 100));
+        if (rollingReserveAmount.scale() > 8) {
+            rollingReserveAmount = rollingReserveAmount.setScale(8, RoundingMode.DOWN);
+        }
+        if (rollingReserveAmount.scale() > 0) {
+            rollingReserveAmount = rollingReserveAmount.stripTrailingZeros();
+        }
+        return rollingReserveAmount;
     }
 }

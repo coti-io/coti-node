@@ -15,6 +15,7 @@ import io.coti.basenode.services.interfaces.IValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.EnumSet;
 
 
@@ -106,5 +107,10 @@ public class BaseNodeValidationService implements IValidationService {
     @Override
     public boolean validateTransactionTimeFields(TransactionData transactionData) {
         return transactionHelper.validateTransactionTimeFields(transactionData);
+    }
+
+    @Override
+    public boolean validateAmountField(BigDecimal amount) {
+        return (amount.scale() <= 0 || amount.stripTrailingZeros().equals(amount)) && amount.scale() <= 8;
     }
 }
