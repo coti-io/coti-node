@@ -1,9 +1,8 @@
 package io.coti.storagenode.controllers;
 
-import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.*;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.storagenode.services.TransactionStorageValidationService;
+import io.coti.storagenode.services.TransactionStorageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -12,11 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
-import java.util.HashMap;
-import java.util.Map;
 
-//import static io.coti.storagenode.services.AddressStorageValidationService.ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME;
-import static io.coti.storagenode.services.TransactionStorageValidationService.TRANSACTION_OBJECT_NAME;
+import static io.coti.storagenode.services.TransactionStorageService.TRANSACTION_OBJECT_NAME;
 import static org.springframework.web.bind.annotation.RequestMethod.*;
 
 
@@ -25,7 +21,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.*;
 public class TransactionController {
 
     @Autowired
-    private TransactionStorageValidationService transactionStorageValidationService;
+    private TransactionStorageService transactionStorageValidationService;
 
     //TODO: old implementation, verify this
     @RequestMapping(value = "/transaction", method = PUT)

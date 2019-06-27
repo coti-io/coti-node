@@ -1,9 +1,9 @@
-package io.coti.storagenode.services;
+package io.coti.storagenode.database;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.Hash;
 import io.coti.storagenode.data.MultiDbInsertionStatus;
-import io.coti.storagenode.services.interfaces.IDbConnectorService;
+import io.coti.storagenode.database.interfaces.IDbConnectorService;
 import javafx.util.Pair;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
