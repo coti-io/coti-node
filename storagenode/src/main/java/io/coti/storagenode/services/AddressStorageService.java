@@ -10,7 +10,9 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.GetEntitiesBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeValidationService;
-import io.coti.storagenode.services.interfaces.IAddressStorageValidationService;
+import io.coti.storagenode.model.AddressService;
+import io.coti.storagenode.model.ObjectService;
+import io.coti.storagenode.services.interfaces.IAddressStorageService;
 
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +25,7 @@ import java.util.List;
 
 @Data
 @Service
-public class AddressStorageValidationService extends EntityStorageValidationService implements IAddressStorageValidationService {
+public class AddressStorageService extends EntityStorageService implements IAddressStorageService {
 
     private ObjectMapper mapper;
 
@@ -31,12 +33,11 @@ public class AddressStorageValidationService extends EntityStorageValidationServ
     private BaseNodeValidationService validationService;
 
     @Autowired
-//    private AddressTransactionsHistoryService addressTransactionsHistoryService;
     private AddressService addressService;
 
 //    private final static String ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME = "addressTransactionsHistoryData";
     public final static String ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME = "addressData";
-    public final static String ADDRESS_TRANSACTION_HISTORY_INDEX_NAME = "address";
+    public final static String ADDRESS_TRANSACTION_HISTORY_INDEX_NAME = "addresses";
 
     @PostConstruct
     public void init()

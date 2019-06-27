@@ -5,7 +5,7 @@ import io.coti.basenode.http.GetEntitiesBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.http.GetEntitiesBulkJsonResponse;
 import io.coti.storagenode.http.GetEntityJsonResponse;
-import io.coti.storagenode.services.interfaces.IEntityStorageValidationService;
+import io.coti.storagenode.services.interfaces.IEntityStorageService;
 import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +20,7 @@ import java.util.Map;
 
 @Service
 @Slf4j
-public abstract class EntityStorageValidationService implements IEntityStorageValidationService
+public abstract class EntityStorageService implements IEntityStorageService
 {
 
     @Autowired
