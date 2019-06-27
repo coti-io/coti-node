@@ -1,4 +1,4 @@
-package io.coti.storagenode.services.interfaces;
+package io.coti.storagenode.database.interfaces;
 
 import io.coti.basenode.data.Hash;
 import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsResponse;

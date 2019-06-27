@@ -1,7 +1,7 @@
 package io.coti.storagenode.services.interfaces;
 
 
-public interface IAddressStorageValidationService
+public interface IAddressStorageService
 {
 
 }
