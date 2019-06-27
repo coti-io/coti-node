@@ -3,6 +3,7 @@ package io.coti.historynode.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.GetEntitiesBulkRequest;
+import io.coti.basenode.http.GetEntityRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.historynode.http.storageConnector.interaces.IStorageConnector;
 import io.coti.historynode.services.interfaces.IHistoryAddressService;
@@ -26,15 +27,15 @@ public class HistoryAddressService extends EntityService implements IHistoryAddr
         endpoint = "/addresses";
     }
 
-
-    public ResponseEntity<IResponse> getAddresses(List<Hash> addresses) {
-        GetEntitiesBulkRequest getEntitiesBulkRequest = new GetEntitiesBulkRequest(addresses);
-        return storageConnector.getForObject(storageServerAddress + endpoint, ResponseEntity.class, getEntitiesBulkRequest);
+    @Override
+    public ResponseEntity<IResponse> getAddress(Hash address) {
+        GetEntityRequest getEntityRequest = new GetEntityRequest(address);
+        return storageConnector.getForObject(storageServerAddress + endpoint, ResponseEntity.class, getEntityRequest);
     }
-
 
     @Override
-    public ResponseEntity<IResponse> getAddressesFromHistory(List<Hash> addresses) {
-        return getAddresses(addresses);
+    public ResponseEntity<IResponse> getAddressFromHistory(Hash address) {
+        return getAddress(address);
     }
+
 }

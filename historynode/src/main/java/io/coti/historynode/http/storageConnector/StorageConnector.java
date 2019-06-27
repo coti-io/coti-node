@@ -2,6 +2,7 @@ package io.coti.historynode.http.storageConnector;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.GetEntitiesBulkRequest;
+import io.coti.basenode.http.GetEntityRequest;
 import io.coti.basenode.http.Request;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.historynode.http.storageConnector.interaces.IStorageConnector;
@@ -43,6 +44,12 @@ public ResponseEntity<IResponse> getForObject(String url, Class<ResponseEntity> 
 
     // TODO: consider changing returned value into a collection
     return (ResponseEntity<IResponse>) exchangeResponse.getBody().get(0);
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getForObject(String url, Class<ResponseEntity> responseEntityClass, GetEntityRequest getEntityRequest) {
+        //TODO 6/27/2019 astolia: Implement
+        return null;
     }
 
     public void putObject(String url, Request request) {
