@@ -1,16 +1,18 @@
 package io.coti.historynode.http.data;
 
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import lombok.Data;
 
+import java.util.HashMap;
 import java.util.List;
 
 @Data
 public class HistoryTransactionResponseData {
 
-    private List<TransactionData> HistoryTransactionResults;
+    private HashMap<Hash, TransactionData> HistoryTransactionResults;
 
-    public HistoryTransactionResponseData(List<TransactionData> historyTransactionResults) {
+    public HistoryTransactionResponseData(HashMap<Hash, TransactionData> historyTransactionResults) {
         HistoryTransactionResults = historyTransactionResults;
     }
 }
