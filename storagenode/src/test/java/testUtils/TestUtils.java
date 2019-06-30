@@ -1,12 +1,12 @@
 package testUtils;
 
 import io.coti.basenode.data.*;
+import io.coti.storagenode.data.enums.ElasticSearchData;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class TestUtils {
@@ -18,11 +18,10 @@ public class TestUtils {
     private static final int ANY_NUMBER = 10000;
     private static final String TRANSACTION_DESCRIPTION = "test";
 
-    public final static String TRANSACTION_INDEX_NAME = "transactions";
-    public final static String TRANSACTION_OBJECT_NAME = "transactionData";
-    public final static String ADDRESS_TRANSACTION_HISTORY_INDEX_NAME = "address";
-//    public final static String ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME = "addressTransactionsHistoryData";
-    public final static String ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME = "addressData";
+    public final static String TRANSACTION_INDEX_NAME = ElasticSearchData.TRANSACTIONS.getIndex();
+    public final static String TRANSACTION_OBJECT_NAME = ElasticSearchData.TRANSACTIONS.getObjectName();
+    public final static String ADDRESS_INDEX_NAME = ElasticSearchData.ADDRESSES.getIndex();
+    public final static String ADDRESS_OBJECT_NAME = ElasticSearchData.ADDRESSES.getObjectName();
 
     public static Hash generateRandomHash(int lengthOfHash) {
         StringBuilder hexa = new StringBuilder();
