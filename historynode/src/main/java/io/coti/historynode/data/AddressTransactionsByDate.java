@@ -15,11 +15,11 @@ import java.util.HashSet;
 public class AddressTransactionsByDate implements IEntity {
 
     private Instant date;
-    private HashSet<Hash> addresses;
+    private HashSet<Hash> transactionsAddresses;
 
-    public AddressTransactionsByDate(Instant date, HashSet<Hash> addresses) {
+    public AddressTransactionsByDate(Instant date, HashSet<Hash> transactionsAddresses) {
         this.date = date;
-        this.addresses = addresses;
+        this.transactionsAddresses = transactionsAddresses;
     }
 
     @Override
