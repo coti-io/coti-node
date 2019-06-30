@@ -12,10 +12,11 @@ import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.GetEntitiesBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeValidationService;
+import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.database.DbConnectorService;
 import io.coti.storagenode.http.GetEntitiesBulkJsonResponse;
 import io.coti.storagenode.http.GetEntityJsonResponse;
-import io.coti.storagenode.model.AddressService;
+import io.coti.storagenode.model.ObjectService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,11 +41,10 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_SUCCESS;
 import static io.coti.storagenode.http.HttpStringConstants.STATUS_OK;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static testUtils.TestUtils.ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME;
 import static testUtils.TestUtils.generateRandomHash;
 
-
-@ContextConfiguration(classes = {AddressService.class, DbConnectorService.class, AddressStorageService.class,
+@Deprecated
+@ContextConfiguration(classes = {ObjectService.class, DbConnectorService.class, AddressStorageService.class,
         HistoryNodesConsensusService.class, CryptoHelper.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
@@ -52,8 +52,9 @@ import static testUtils.TestUtils.generateRandomHash;
 public class AddressTransactionsHistoryServiceTest {
 
     private static final int NUMBER_OF_ADDRESSES = 4;
+
     @Autowired
-    private AddressService addressService;
+    private ObjectService objectService;
 
     @Autowired
     private DbConnectorService dbConnectorService;
@@ -90,12 +91,12 @@ public class AddressTransactionsHistoryServiceTest {
         AddressData addressData2 = new AddressData(generateRandomHash());
 
         String addressDataAsJson = mapper.writeValueAsString(addressData1);
-        ResponseEntity<IResponse> insertResponseEntity1 = addressService.insertObjectJson(addressData1.getHash(), addressDataAsJson, false);
-        ResponseEntity<IResponse> insertResponseEntity12 = addressService.insertObjectJson(addressData2.getHash(), addressDataAsJson, false);
+        ResponseEntity<IResponse> insertResponseEntity1 = objectService.insertObjectJson(addressData1.getHash(), addressDataAsJson, false, ElasticSearchData.ADDRESSES);
+        ResponseEntity<IResponse> insertResponseEntity12 = objectService.insertObjectJson(addressData2.getHash(), addressDataAsJson, false, ElasticSearchData.ADDRESSES);
 
-        IResponse deleteResponse = addressService.deleteObjectByHash(addressData2.getHash(), false).getBody();
+        IResponse deleteResponse = objectService.deleteObjectByHash(addressData2.getHash(), false, ElasticSearchData.ADDRESSES).getBody();
 
-        IResponse getResponse = addressService.getObjectByHash(addressData1.getHash(), false, ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME).getBody();
+        IResponse getResponse = objectService.getObjectByHash(addressData1.getHash(), false, ElasticSearchData.ADDRESSES).getBody();
         Assert.assertTrue(((BaseResponse) (getResponse)).getStatus().equals(STATUS_SUCCESS) &&
                 ((GetEntityJsonResponse) deleteResponse).status.equals(STATUS_SUCCESS));
     }
@@ -109,19 +110,19 @@ public class AddressTransactionsHistoryServiceTest {
             addressTransactionsHistories.add(addressData);
             hashToAddressDataJsonDataMap.put(addressData.getHash(), mapper.writeValueAsString(addressData));
         }
-        addressService.insertMultiObjects(hashToAddressDataJsonDataMap, false);
+        objectService.insertMultiObjects(hashToAddressDataJsonDataMap, false, ElasticSearchData.ADDRESSES);
 
         List<Hash> deleteHashes = new ArrayList<>();
         deleteHashes.add(addressTransactionsHistories.get(0).getHash());
         deleteHashes.add(addressTransactionsHistories.get(1).getHash());
 
-        IResponse deleteResponse = addressService.deleteMultiObjectsFromDb(deleteHashes, false).getBody();
+        IResponse deleteResponse = objectService.deleteMultiObjectsFromDb(deleteHashes, false, ElasticSearchData.ADDRESSES).getBody();
 
         List<Hash> GetHashes = new ArrayList<>();
         GetHashes.add(addressTransactionsHistories.get(2).getHash());
         GetHashes.add(addressTransactionsHistories.get(3).getHash());
 
-        IResponse response = addressService.getMultiObjectsFromDb(GetHashes, false, ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME).getBody();
+        IResponse response = objectService.getMultiObjectsFromDb(GetHashes, false, ElasticSearchData.ADDRESSES).getBody();
 
         Assert.assertTrue(((BaseResponse) (response)).getStatus().equals(STATUS_SUCCESS)
                 && ((GetEntitiesBulkJsonResponse) deleteResponse).getHashToEntitiesFromDbMap().get(addressTransactionsHistories.get(0).getHash()).equals(STATUS_OK)
@@ -156,7 +157,7 @@ public class AddressTransactionsHistoryServiceTest {
         Assert.assertTrue( storeResponse.getStatusCode().equals(HttpStatus.OK) );
 
         // Retrieve Address
-        ResponseEntity<IResponse> retrievedAddressResponse = addressStorageValidationService.retrieveObjectFromStorage(addressTxsHistories.get(0).getHash());
+        ResponseEntity<IResponse> retrievedAddressResponse = addressStorageValidationService.retrieveObjectFromStorage(addressTxsHistories.get(0).getHash(), ElasticSearchData.ADDRESSES);
         Assert.assertTrue( retrievedAddressResponse.getStatusCode().equals(HttpStatus.OK) );
         AddressData retrievedAddress = mapper.readValue(String.valueOf(retrievedAddressResponse.getBody()), AddressData.class);
 
@@ -194,7 +195,7 @@ public class AddressTransactionsHistoryServiceTest {
         Assert.assertTrue( storeResponse.getStatusCode().equals(HttpStatus.OK) );
 
         // Retrieve Addresses
-        ResponseEntity<IResponse> retrievedAddressResponse = addressStorageValidationService.retrieveObjectFromStorage(hash0);
+        ResponseEntity<IResponse> retrievedAddressResponse = addressStorageValidationService.retrieveObjectFromStorage(hash0, ElasticSearchData.ADDRESSES);
         Assert.assertTrue( retrievedAddressResponse.getStatusCode().equals(HttpStatus.OK) );
         AddressData retrievedAddress = mapper.readValue(String.valueOf(retrievedAddressResponse.getBody()), AddressData.class);
         Assert.assertTrue( retrievedAddress.equals(addressTxsHistories.get(0)) );
@@ -204,7 +205,7 @@ public class AddressTransactionsHistoryServiceTest {
         Hash hash2 = addressTxsHistories.get(2).getHash();
         addressesToGet.add(hash1);
         addressesToGet.add(hash2);
-        GetEntitiesBulkResponse hashResponseEntities = addressStorageValidationService.retrieveMultipleObjectsFromStorage(addressesToGet);
+        GetEntitiesBulkResponse hashResponseEntities = (GetEntitiesBulkResponse)addressStorageValidationService.retrieveMultipleObjectsFromStorage(addressesToGet).getBody();
         Assert.assertNotNull(hashResponseEntities.getEntitiesBulkResponses().get(hash1) );
         Assert.assertNotNull( hashResponseEntities.getEntitiesBulkResponses().get(hash2) );
         AddressData retrievedAddress1 = mapper.readValue(String.valueOf( hashResponseEntities.getEntitiesBulkResponses().get(hash1)), AddressData.class);

@@ -3,8 +3,10 @@ package io.coti.storagenode.services;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.GetEntitiesBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.http.GetEntitiesBulkJsonResponse;
 import io.coti.storagenode.http.GetEntityJsonResponse;
+import io.coti.storagenode.model.ObjectService;
 import io.coti.storagenode.services.interfaces.IEntityStorageService;
 import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
@@ -18,13 +20,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Service
 @Slf4j
 public abstract class EntityStorageService implements IEntityStorageService
 {
 
     @Autowired
     private HistoryNodesConsensusService historyNodesConsensusService;
+
+    @Autowired
+    private ObjectService objectService;
+
+    protected ElasticSearchData objectType;
 
     @Override
     public ResponseEntity<IResponse> storeObjectToStorage(Hash hash, String objectAsJsonString)
@@ -35,12 +41,12 @@ public abstract class EntityStorageService implements IEntityStorageService
             return response;
 
         // Store data in ongoing storage system
-        response = getObjectService().insertObjectJson(hash, objectAsJsonString, false);
+        response = objectService.insertObjectJson(hash, objectAsJsonString, false, objectType);
         if( !isResponseOK(response) )
             return response; // TODO consider some retry mechanism,
         else {
             // Store data also in cold-storage
-            response = getObjectService().insertObjectJson(hash, objectAsJsonString, true);
+            response = objectService.insertObjectJson(hash, objectAsJsonString, true, objectType);
             if ( !isResponseOK(response) )
                 return response; // TODO consider some retry mechanism,
         }
@@ -49,7 +55,7 @@ public abstract class EntityStorageService implements IEntityStorageService
 
 
     @Override
-    public ResponseEntity<IResponse> retrieveObjectFromStorage(Hash hash, String fieldName)
+    public ResponseEntity<IResponse> retrieveObjectFromStorage(Hash hash, ElasticSearchData objectType)
     {
         // Validation of the request itself
         ResponseEntity<IResponse> response = validateRetrieveObjectToStorage(hash);
@@ -58,12 +64,12 @@ public abstract class EntityStorageService implements IEntityStorageService
 
         // Retrieve data from ongoing storage system, including data integrity checks
         boolean fromColdStorage = false;
-        ResponseEntity<IResponse> objectByHashResponse = getObjectService().getObjectByHash(hash, fromColdStorage, fieldName);
+        ResponseEntity<IResponse> objectByHashResponse = objectService.getObjectByHash(hash, fromColdStorage, objectType);
 
         if( !isResponseOK(objectByHashResponse) )
         {
             fromColdStorage = true;
-            objectByHashResponse = getObjectService().getObjectByHash(hash, fromColdStorage, fieldName);
+            objectByHashResponse = objectService.getObjectByHash(hash, fromColdStorage, objectType);
             if( !isResponseOK(objectByHashResponse) )
                 return objectByHashResponse;   // Failed to retrieve from both repositories
         }
@@ -74,11 +80,11 @@ public abstract class EntityStorageService implements IEntityStorageService
 //        Hash objectHash = ((Pair<Hash, String>) objectByHashResponse.getBody()).getKey();
 //        String objectAsJson = ((Pair<Hash, String>) objectByHashResponse.getBody()).getValue();
 
-        return verifyRetrievedSingleObject(objectHash, objectAsJson, fromColdStorage, fieldName);
+        return verifyRetrievedSingleObject(objectHash, objectAsJson, fromColdStorage, objectType);
     }
 
 
-    private ResponseEntity<IResponse> verifyRetrievedSingleObject(Hash objectHash, String objectAsJson, boolean fromColdStorage, String fieldName)
+    private ResponseEntity<IResponse> verifyRetrievedSingleObject(Hash objectHash, String objectAsJson, boolean fromColdStorage, ElasticSearchData objectType)
     {
         ResponseEntity response = ResponseEntity.status(HttpStatus.OK).body(objectAsJson);
 
@@ -88,7 +94,7 @@ public abstract class EntityStorageService implements IEntityStorageService
             if( !fromColdStorage )
             {
                 // If DI is successful, try to delete potential duplicate data from cold-storage
-                ResponseEntity<IResponse> deleteResponse =  getObjectService().deleteObjectByHash(objectHash, true);
+                ResponseEntity<IResponse> deleteResponse =  objectService.deleteObjectByHash(objectHash, true, objectType);
                 if( !isResponseOK(deleteResponse) )
                     return response; // Delete can fail due to previous deletion, should not impact flow
             }
@@ -96,7 +102,7 @@ public abstract class EntityStorageService implements IEntityStorageService
         }
 
         // If DI failed, retrieve data from cold-storage, remove previous data from ongoing storage system,
-        ResponseEntity<IResponse> coldStorageResponse = getObjectService().getObjectByHash(objectHash, true, fieldName);
+        ResponseEntity<IResponse> coldStorageResponse = objectService.getObjectByHash(objectHash, true, objectType);
         if( isResponseOK(coldStorageResponse) )
         {
             Hash coldObjectHash = ((Pair<Hash, String>) coldStorageResponse.getBody()).getKey();
@@ -108,10 +114,10 @@ public abstract class EntityStorageService implements IEntityStorageService
                 return failedResponse;
             }
             // Delete compromised copy from ongoing repository
-            ResponseEntity<IResponse> deleteResponse =  getObjectService().deleteObjectByHash(objectHash, false);
+            ResponseEntity<IResponse> deleteResponse =  objectService.deleteObjectByHash(objectHash, false, objectType);
             if ( isResponseOK(deleteResponse) )
             {   // Copy data from cold-storage to hot-storage
-                ResponseEntity<IResponse> insertResponse = getObjectService().insertObjectJson(coldObjectHash, coldObjectAsJson, false);
+                ResponseEntity<IResponse> insertResponse = objectService.insertObjectJson(coldObjectHash, coldObjectAsJson, false, objectType);
                 // TODO consider verifying response for possible retry mechanism
             }
         }
@@ -139,12 +145,12 @@ public abstract class EntityStorageService implements IEntityStorageService
             return response;
 
         // Store data from approved request into ongoing storage
-        response = getObjectService().insertMultiObjects(hashToObjectJsonDataMap, false);
+        response = objectService.insertMultiObjects(hashToObjectJsonDataMap, false, objectType);
         if( !isResponseOK(response) )
             return response; // TODO consider some retry mechanism
         else
         {
-            response = getObjectService().insertMultiObjects(hashToObjectJsonDataMap, true);
+            response = objectService.insertMultiObjects(hashToObjectJsonDataMap, true, objectType);
             if( !isResponseOK(response) )
                 return response; // TODO consider some retry mechanism, consider removing from ongoing storage
         }
@@ -176,14 +182,14 @@ public abstract class EntityStorageService implements IEntityStorageService
 
 
     @Override
-    public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(List<Hash> hashes, String fieldName)
+    public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(List<Hash> hashes)
     {
 //        HashMap<Hash, ResponseEntity<IResponse>> responsesMap = new HashMap<>();
         HashMap<Hash, String> responsesMap = new HashMap<>();
         GetEntitiesBulkResponse entitiesBulkResponse = new GetEntitiesBulkResponse(responsesMap);
 
         // Retrieve data from ongoing storage system
-        ResponseEntity<IResponse> objectsByHashResponse = getObjectService().getMultiObjectsFromDb(hashes, false, fieldName);
+        ResponseEntity<IResponse> objectsByHashResponse = objectService.getMultiObjectsFromDb(hashes, false, objectType);
 
         if( !isResponseOK(objectsByHashResponse) )
         {
@@ -196,7 +202,7 @@ public abstract class EntityStorageService implements IEntityStorageService
         ((GetEntitiesBulkJsonResponse)objectsByHashResponse.getBody()).getHashToEntitiesFromDbMap().forEach( (hash, objectAsJsonString) ->
                 {
                     //TODO: In case of error in retrieving valid value, return value as a null.
-                    ResponseEntity<IResponse> verifyRetrievedSingleObject = verifyRetrievedSingleObject(hash, objectAsJsonString, false, fieldName);
+                    ResponseEntity<IResponse> verifyRetrievedSingleObject = verifyRetrievedSingleObject(hash, objectAsJsonString, false, objectType);
                     if (verifyRetrievedSingleObject.getStatusCode() != HttpStatus.OK) {
                         responsesMap.put(hash, null);
                     } else {
