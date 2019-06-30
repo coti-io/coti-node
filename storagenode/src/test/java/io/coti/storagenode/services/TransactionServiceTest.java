@@ -13,9 +13,11 @@ import io.coti.basenode.http.GetEntitiesBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeValidationService;
+import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.database.DbConnectorService;
 import io.coti.storagenode.http.GetEntitiesBulkJsonResponse;
 import io.coti.storagenode.http.GetEntityJsonResponse;
+import io.coti.storagenode.model.ObjectService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +44,7 @@ import static org.mockito.Mockito.when;
 import static testUtils.TestUtils.*;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
-@ContextConfiguration(classes = {TransactionService.class, DbConnectorService.class, TransactionStorageService.class,
+@ContextConfiguration(classes = {ObjectService.class, DbConnectorService.class, TransactionStorageService.class,
         HistoryNodesConsensusService.class, CryptoHelper.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
@@ -52,7 +54,7 @@ public class TransactionServiceTest {
     private static final int NUMBER_OF_TRANSACTIONS = 4;
 
     @Autowired
-    private TransactionService transactionService;
+    private ObjectService transactionService;
 
     @Autowired
     private DbConnectorService dbConnectorService;
@@ -93,11 +95,11 @@ public class TransactionServiceTest {
         TransactionData transactionData2 = createRandomTransaction();
 
         String transactionAsJson = mapper.writeValueAsString(transactionData1);
-        transactionService.insertObjectJson(transactionData1.getHash(), transactionAsJson, false);
+        transactionService.insertObjectJson(transactionData1.getHash(), transactionAsJson, false, ElasticSearchData.TRANSACTIONS);
 
-        IResponse deleteResponse = transactionService.deleteObjectByHash(transactionData2.getHash(), false).getBody();
+        IResponse deleteResponse = transactionService.deleteObjectByHash(transactionData2.getHash(), false, ElasticSearchData.TRANSACTIONS).getBody();
 
-        GetEntityJsonResponse response = (GetEntityJsonResponse) transactionService.getObjectByHash(transactionData1.getHash(), false, TRANSACTION_OBJECT_NAME).getBody();
+        GetEntityJsonResponse response = (GetEntityJsonResponse) transactionService.getObjectByHash(transactionData1.getHash(), false, ElasticSearchData.TRANSACTIONS).getBody();
         Assert.assertTrue(response.getStatus().equals(STATUS_SUCCESS) &&
                 ((GetEntityJsonResponse) deleteResponse).status.equals(STATUS_SUCCESS));
     }
@@ -111,19 +113,19 @@ public class TransactionServiceTest {
             TransactionDataList.add(transactionData);
             hashToTransactionJsonDataMap.put(transactionData.getHash(), mapper.writeValueAsString(transactionData));
         }
-        transactionService.insertMultiObjects(hashToTransactionJsonDataMap, false);
+        transactionService.insertMultiObjects(hashToTransactionJsonDataMap, false, ElasticSearchData.TRANSACTIONS);
 
         List<Hash> deleteHashes = new ArrayList<>();
         deleteHashes.add(TransactionDataList.get(0).getHash());
         deleteHashes.add(TransactionDataList.get(1).getHash());
 
-        IResponse deleteResponse = transactionService.deleteMultiObjectsFromDb(deleteHashes, false).getBody();
+        IResponse deleteResponse = transactionService.deleteMultiObjectsFromDb(deleteHashes, false, ElasticSearchData.TRANSACTIONS).getBody();
 
         List<Hash> GetHashes = new ArrayList<>();
         GetHashes.add(TransactionDataList.get(2).getHash());
         GetHashes.add(TransactionDataList.get(3).getHash());
 
-        IResponse response = transactionService.getMultiObjectsFromDb(GetHashes, false, TRANSACTION_OBJECT_NAME).getBody();
+        IResponse response = transactionService.getMultiObjectsFromDb(GetHashes, false, ElasticSearchData.TRANSACTIONS).getBody();
 
         //TODO 6/27/2019 tomer: Investigate conditions below
         Assert.assertTrue(((BaseResponse) (response)).getStatus().equals(STATUS_SUCCESS)
@@ -198,12 +200,12 @@ public class TransactionServiceTest {
                 transactionData2.getHash(), transactionAsJson2);
 
         Hash txHash = transactionData1.getHash();
-        ResponseEntity<IResponse> responseRetrieveEntity1 = transactionStorageValidationService.retrieveObjectFromStorage(txHash, TRANSACTION_OBJECT_NAME);
+        ResponseEntity<IResponse> responseRetrieveEntity1 = transactionStorageValidationService.retrieveObjectFromStorage(txHash, ElasticSearchData.TRANSACTIONS);
         String entityAsJsonFromES = String.valueOf(responseRetrieveEntity1.getBody());
         TransactionData txDataDeserializedFromES1 = mapper.readValue(entityAsJsonFromES, TransactionData.class);
 
         Hash txHash2 = transactionData2.getHash();
-        ResponseEntity<IResponse> responseRetrieveEntity2 = transactionStorageValidationService.retrieveObjectFromStorage(txHash2, TRANSACTION_OBJECT_NAME);
+        ResponseEntity<IResponse> responseRetrieveEntity2 = transactionStorageValidationService.retrieveObjectFromStorage(txHash2, ElasticSearchData.TRANSACTIONS);
         String entityAsJsonFromES2 = String.valueOf(responseRetrieveEntity2.getBody());
         TransactionData txDataDeserializedFromES2 = mapper.readValue(entityAsJsonFromES2, TransactionData.class);
 
@@ -244,8 +246,8 @@ public class TransactionServiceTest {
         ResponseEntity<IResponse> responseResponseEntity1 = transactionStorageValidationService.storeMultipleObjectsToStorage(txDataJsonToHash);
         Assert.assertTrue(responseResponseEntity1.getStatusCode().equals(HttpStatus.OK));
 
-        ResponseEntity<IResponse> responseEntity1 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData1.getHash(), TRANSACTION_OBJECT_NAME);
-        ResponseEntity<IResponse> responseEntity2 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData2.getHash(), TRANSACTION_OBJECT_NAME);
+        ResponseEntity<IResponse> responseEntity1 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData1.getHash(), ElasticSearchData.TRANSACTIONS);
+        ResponseEntity<IResponse> responseEntity2 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData2.getHash(), ElasticSearchData.TRANSACTIONS);
 
         String entityAsJsonFromES1 = String.valueOf(responseEntity1.getBody());
         TransactionData txDataDeserializedFromES1 = mapper.readValue(entityAsJsonFromES1, TransactionData.class);
@@ -267,7 +269,7 @@ public class TransactionServiceTest {
 //        ResponseEntity<IResponse> responseEntity4 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData2.getHash(), historyNodeConsensusResult2);
 
 //        Map<Hash, ResponseEntity<IResponse>> hashResponseEntityMap = transactionStorageValidationService.retrieveMultipleObjectsFromStorage(hashes, TRANSACTION_OBJECT_NAME);
-        GetEntitiesBulkResponse entitiesBulkResponse = (GetEntitiesBulkResponse) transactionStorageValidationService.retrieveMultipleObjectsFromStorage(hashes, TRANSACTION_OBJECT_NAME).getBody();
+        GetEntitiesBulkResponse entitiesBulkResponse = (GetEntitiesBulkResponse) transactionStorageValidationService.retrieveMultipleObjectsFromStorage(hashes).getBody();
 
 
         String entityAsJsonFromES3 = String.valueOf( entitiesBulkResponse.getEntitiesBulkResponses().get( transactionData1.getHash() ) );
