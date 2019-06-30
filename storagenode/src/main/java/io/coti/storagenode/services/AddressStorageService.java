@@ -10,8 +10,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.GetEntitiesBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeValidationService;
-import io.coti.storagenode.model.AddressService;
-import io.coti.storagenode.model.ObjectService;
+import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.services.interfaces.IAddressStorageService;
 
 import lombok.Data;
@@ -32,13 +31,6 @@ public class AddressStorageService extends EntityStorageService implements IAddr
     @Autowired
     private BaseNodeValidationService validationService;
 
-    @Autowired
-    private AddressService addressService;
-
-//    private final static String ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME = "addressTransactionsHistoryData";
-    public final static String ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME = "addressData";
-    public final static String ADDRESS_TRANSACTION_HISTORY_INDEX_NAME = "addresses";
-
     @PostConstruct
     public void init()
     {
@@ -48,6 +40,7 @@ public class AddressStorageService extends EntityStorageService implements IAddr
                 .registerModule(new Jdk8Module())
                 .registerModule(new JavaTimeModule()); // new module, NOT JSR310Module
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        super.objectType = ElasticSearchData.ADDRESSES;
     }
 
     public boolean isObjectDIOK(Hash addressHash, String addressAsJson)
@@ -66,18 +59,14 @@ public class AddressStorageService extends EntityStorageService implements IAddr
         return true;
     }
 
-    @Override
-    public ObjectService getObjectService() {
-        return addressService;
-    }
-
     public ResponseEntity<IResponse> retrieveObjectFromStorage(Hash hash)
     {
-        return retrieveObjectFromStorage(hash, ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME);
+        return super.retrieveObjectFromStorage(hash, ElasticSearchData.ADDRESSES);
     }
 
-    public GetEntitiesBulkResponse retrieveMultipleObjectsFromStorage(List<Hash> hashes) {
-        return (GetEntitiesBulkResponse) retrieveMultipleObjectsFromStorage(hashes, ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME).getBody();
+
+    public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(List<Hash> hashes) {
+        return super.retrieveMultipleObjectsFromStorage(hashes);
     }
 
 }

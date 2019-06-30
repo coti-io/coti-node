@@ -4,6 +4,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.data.MultiDbInsertionStatus;
+import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.database.DbConnectorService;
 import io.coti.storagenode.http.AddEntityJsonResponse;
 import io.coti.storagenode.http.GetEntitiesBulkJsonResponse;
@@ -16,6 +17,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,18 +29,21 @@ import static io.coti.storagenode.http.HttpStringConstants.STATUS_OK;
 
 @Service
 @Slf4j
-public abstract class ObjectService implements IObjectService {
+public class ObjectService implements IObjectService {
 
     @Autowired
     protected DbConnectorService dbConnectorService;
 
-    protected String indexName;
-    protected String objectName;
+    @PostConstruct
+    private void init() throws IOException {
+        dbConnectorService.addIndexes(true);
+        dbConnectorService.addIndexes(false);
+    }
 
-    public ResponseEntity<IResponse> insertMultiObjects(Map<Hash, String> hashToObjectJsonDataMap, boolean fromColdStorage) {
+    public ResponseEntity<IResponse> insertMultiObjects(Map<Hash, String> hashToObjectJsonDataMap, boolean fromColdStorage, ElasticSearchData objectType) {
         Pair<MultiDbInsertionStatus, Map<Hash, String>> insertResponse = null;
         try {
-            insertResponse = dbConnectorService.insertMultiObjectsToDb(indexName, objectName, hashToObjectJsonDataMap, fromColdStorage);
+            insertResponse = dbConnectorService.insertMultiObjectsToDb(objectType.getIndex(), objectType.getObjectName(), hashToObjectJsonDataMap, fromColdStorage);
         } catch (Exception e) {
             log.error(e.getMessage());
             return ResponseEntity
@@ -52,10 +58,10 @@ public abstract class ObjectService implements IObjectService {
     }
 
     @Override
-    public ResponseEntity<IResponse> insertObjectJson(Hash hash, String objectAsJson, boolean fromColdStorage) {
+    public ResponseEntity<IResponse> insertObjectJson(Hash hash, String objectAsJson, boolean fromColdStorage, ElasticSearchData objectType) {
         String insertResponse = null;
         try {
-            insertResponse = dbConnectorService.insertObjectToDb(hash, objectAsJson, indexName, objectName, fromColdStorage);
+            insertResponse = dbConnectorService.insertObjectToDb(hash, objectAsJson, objectType.getIndex(), objectType.getObjectName(), fromColdStorage);
         } catch (Exception e) {
             log.error(e.getMessage());
             return ResponseEntity
@@ -72,11 +78,11 @@ public abstract class ObjectService implements IObjectService {
     }
 
     @Override
-    public ResponseEntity<IResponse> getMultiObjectsFromDb(List<Hash> hashes, boolean fromColdStorage, String fieldName) {
+    public ResponseEntity<IResponse> getMultiObjectsFromDb(List<Hash> hashes, boolean fromColdStorage, ElasticSearchData objectType) {
         Map<Hash, String> hashToObjectFromDbMap = null;
         //TODO: Define logic.
         try {
-            hashToObjectFromDbMap = dbConnectorService.getMultiObjects(hashes, indexName, fromColdStorage, fieldName);
+            hashToObjectFromDbMap = dbConnectorService.getMultiObjects(hashes, objectType.getIndex(), fromColdStorage, objectType.getObjectName());
         } catch (Exception e) {
             log.error(e.getMessage());
             return ResponseEntity
@@ -90,13 +96,13 @@ public abstract class ObjectService implements IObjectService {
     }
 
     @Override
-    public ResponseEntity<IResponse> getObjectByHash(Hash hash, boolean fromColdStorage, String fieldName) {
+    public ResponseEntity<IResponse> getObjectByHash(Hash hash, boolean fromColdStorage, ElasticSearchData objectType) {
         Map<String, Object> objectAsJsonMap = null;
         String objectAsJson = null;
         try {
 //            objectAsJson = dbConnectorService.getObjectFromDbByHash(hash, indexName, fromColdStorage);
-            objectAsJsonMap = dbConnectorService.getObjectFromDbByHash(hash, indexName, fromColdStorage);
-            objectAsJson = (String)objectAsJsonMap.get(fieldName);
+            objectAsJsonMap = dbConnectorService.getObjectFromDbByHash(hash, objectType.getIndex(), fromColdStorage);
+            objectAsJson = (String)objectAsJsonMap.get(objectType.getObjectName());
         } catch (Exception e) {
             log.error(e.getMessage());
             return ResponseEntity
@@ -118,11 +124,11 @@ public abstract class ObjectService implements IObjectService {
     }
 
     @Override
-    public ResponseEntity<IResponse> deleteMultiObjectsFromDb(List<Hash> hashes, boolean fromColdStorage) {
+    public ResponseEntity<IResponse> deleteMultiObjectsFromDb(List<Hash> hashes, boolean fromColdStorage, ElasticSearchData objectType) {
         Map<Hash, String> hashToResponseMap = new HashMap<>();
         try {
             for (Hash hash : hashes) {
-                hashToResponseMap.put(hash, dbConnectorService.deleteObject(hash, indexName, fromColdStorage));
+                hashToResponseMap.put(hash, dbConnectorService.deleteObject(hash, objectType.getIndex(), fromColdStorage));
             }
 
         } catch (Exception e) {
@@ -138,8 +144,8 @@ public abstract class ObjectService implements IObjectService {
     }
 
     @Override
-    public ResponseEntity<IResponse> deleteObjectByHash(Hash hash, boolean fromColdStorage) {
-        String status = dbConnectorService.deleteObject(hash, indexName, fromColdStorage);
+    public ResponseEntity<IResponse> deleteObjectByHash(Hash hash, boolean fromColdStorage, ElasticSearchData objectType) {
+        String status = dbConnectorService.deleteObject(hash, objectType.getIndex(), fromColdStorage);
         switch (status) {
             case STATUS_OK:
                 return ResponseEntity.status(HttpStatus.OK)
