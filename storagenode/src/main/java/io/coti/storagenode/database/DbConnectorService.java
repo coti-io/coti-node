@@ -57,6 +57,8 @@ public class DbConnectorService implements IDbConnectorService {
     private static final String ELASTICSEARCH_SECONDARY_HOST_IP = "localhost";
     private static final int ELASTICSEARCH_SECONDARY_HOST_PORT1 = 9200;
     private static final int ELASTICSEARCH_SECONDARY_HOST_PORT2 = 9201;
+    public static final int INDEX_NUMBER_OF_SHARDS = 1;
+    public static final int INDEX_NUMBER_OF_REPLICAS = 2;
 
 
     private RestHighLevelClient restClient;
@@ -248,8 +250,8 @@ public class DbConnectorService implements IDbConnectorService {
     private void sendCreateIndexRequest(String index, boolean fromColdStorage) throws IOException {
         CreateIndexRequest request = new CreateIndexRequest(index);
         request.settings(Settings.builder()
-                .put("index.number_of_shards", 1)
-                .put("index.number_of_replicas", 2)
+                .put("index.number_of_shards", INDEX_NUMBER_OF_SHARDS)
+                .put("index.number_of_replicas", INDEX_NUMBER_OF_REPLICAS)
         );
 
         if( fromColdStorage )

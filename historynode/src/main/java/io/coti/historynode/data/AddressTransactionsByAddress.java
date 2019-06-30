@@ -5,18 +5,22 @@ import io.coti.basenode.data.interfaces.IEntity;
 import lombok.Data;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.SortedMap;
 
 @Data
 public class AddressTransactionsByAddress implements IEntity {
 
     private Hash address;
-    private HashMap<Hash, HashSet<Hash>> transactionHashesByDates;
+//    private HashMap<Hash, HashSet<Hash>> transactionHashesByDates;
+    private SortedMap<LocalDate, HashSet<Hash>> transactionHashesByDates;
 
-    public AddressTransactionsByAddress(Hash address, HashMap<Hash, HashSet<Hash>> transactionHashesByDates) {
+
+    public AddressTransactionsByAddress(Hash address, SortedMap<LocalDate, HashSet<Hash>> transactionHashesByDate) {
         this.address = address;
-        this.transactionHashesByDates = transactionHashesByDates;
+        this.transactionHashesByDates = transactionHashesByDate;
     }
 
     @Override
