@@ -24,7 +24,7 @@ public class HistoryAddressService extends EntityService implements IHistoryAddr
     @PostConstruct
     public void init() {
         mapper = new ObjectMapper();
-        endpoint = "/addresses";
+        endpoint = "/transactionsAddresses";
     }
 
     @Override
