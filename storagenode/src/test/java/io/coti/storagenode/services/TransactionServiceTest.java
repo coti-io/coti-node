@@ -123,8 +123,9 @@ public class TransactionServiceTest {
         GetHashes.add(TransactionDataList.get(2).getHash());
         GetHashes.add(TransactionDataList.get(3).getHash());
 
-        IResponse response = transactionService.getMultiObjectsFromDb(GetHashes, false, ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME).getBody();
+        IResponse response = transactionService.getMultiObjectsFromDb(GetHashes, false, TRANSACTION_OBJECT_NAME).getBody();
 
+        //TODO 6/27/2019 tomer: Investigate conditions below
         Assert.assertTrue(((BaseResponse) (response)).getStatus().equals(STATUS_SUCCESS)
                 && ((GetEntitiesBulkJsonResponse) deleteResponse).getHashToEntitiesFromDbMap().get(TransactionDataList.get(0).getHash()).equals(STATUS_OK)
                 && ((GetEntitiesBulkJsonResponse) deleteResponse).getHashToEntitiesFromDbMap().get(TransactionDataList.get(1).getHash()).equals(STATUS_OK));
