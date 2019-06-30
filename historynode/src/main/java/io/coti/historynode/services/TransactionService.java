@@ -22,7 +22,7 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private IValidationService validationService;
     @Autowired
-    private TransactionIndexingService transactionIndexingService;
+    private HistoryTransactionService historyTransactionService;
 
     @Override
     public void init() {
@@ -42,7 +42,7 @@ public class TransactionService extends BaseNodeTransactionService {
             log.debug("History node Fully Checking transaction: {}", transactionData.getHash());
             if( validationService.fullValidation(transactionData) ) {
                 // Update Indexing structures with details from the new transaction
-                transactionIndexingService.addToHistoryTransactionIndexes(transactionData);
+                historyTransactionService.addToHistoryTransactionIndexes(transactionData);
             }
         }
         isValidatorRunning.set(false);

@@ -3,6 +3,7 @@ package io.coti.historynode.controllers;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.historynode.http.GetTransactionsByAddressRequest;
 import io.coti.historynode.http.GetTransactionsRequest;
+import io.coti.historynode.http.GetTransactionsRequestOld;
 import io.coti.historynode.services.HistoryTransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,13 +25,18 @@ public class TransactionController {
     private HistoryTransactionService historyTransactionService;
 
     //TODO: old implementation
-    @RequestMapping(value = "/transactions", method = GET)
-    public ResponseEntity<IResponse> getTransactionsDetails(@Valid @RequestBody GetTransactionsRequest getTransactionRequest) {
+    @RequestMapping(value = "/transactionsOld", method = GET)
+    public ResponseEntity<IResponse> getTransactionsDetails(@Valid @RequestBody GetTransactionsRequestOld getTransactionRequest) {
         return historyTransactionService.getTransactionsDetails(getTransactionRequest);
     }
 
     @GetMapping(path  = "/transactionsByAddress")
     public ResponseEntity<IResponse> getTransaction(@Valid @RequestBody GetTransactionsByAddressRequest getTransactionsByAddressRequest) {
         return historyTransactionService.getTransactionsByAddress(getTransactionsByAddressRequest);
+    }
+
+    @GetMapping(path  = "/transactions")
+    public ResponseEntity<IResponse> getTransaction(@Valid @RequestBody GetTransactionsRequest getTransactionsRequest) {
+        return historyTransactionService.getTransactions(getTransactionsRequest);
     }
 }
