@@ -36,7 +36,7 @@ public class NetworkFeeData extends OutputBaseTransactionData implements ITrustS
     }
 
     public void setReducedAmount(BigDecimal reducedAmount) {
-        if (reducedAmount == null || reducedAmount.signum() <= 0) {
+        if (reducedAmount != null && reducedAmount.signum() <= 0) {
             throw new IllegalStateException("Reduced amount can not have non positive amount");
         }
         this.reducedAmount = reducedAmount;

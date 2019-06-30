@@ -32,7 +32,8 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
                 } else if (NetworkFeeData.class.isInstance(outputBaseTransactionData)) {
                     reducedAmount = ((NetworkFeeData) outputBaseTransactionData).getReducedAmount();
                 } else if (ReceiverBaseTransactionData.class.isInstance(outputBaseTransactionData)) {
-                    return outputBaseTransactionData.getAmount().compareTo(reducedAmount.add(fullNodeFeeAmount)) == 0;
+                    return (reducedAmount == null && outputBaseTransactionData.getOriginalAmount().compareTo(outputBaseTransactionData.getAmount()) == 0) ||
+                            (reducedAmount != null && outputBaseTransactionData.getAmount().compareTo(reducedAmount.add(fullNodeFeeAmount)) == 0);
                 }
             }
             return false;

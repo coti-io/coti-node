@@ -54,6 +54,7 @@ public class FeeService {
             if (!fullNodeFeeRequestCrypto.verifySignature(fullNodeFeeRequest)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
             }
+            boolean feeIncluded = fullNodeFeeRequest.isFeeIncluded();
             BigDecimal originalAmount = fullNodeFeeRequest.getOriginalAmount().stripTrailingZeros();
             if (!validationService.validateAmountField(originalAmount)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_AMOUNT, STATUS_ERROR));
@@ -73,7 +74,7 @@ public class FeeService {
             if (amount.scale() > 0) {
                 amount = amount.stripTrailingZeros();
             }
-            if (originalAmount.compareTo(amount) <= 0) {
+            if (feeIncluded && originalAmount.compareTo(amount) <= 0) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_AMOUNT_VS_FULL_NODE_FEE, STATUS_ERROR));
             }
 

@@ -19,8 +19,8 @@ public class FullNodeFeeResponseData {
 
     public FullNodeFeeResponseData(FullNodeFeeData fullNodeFeeData) {
         this.hash = fullNodeFeeData.getHash().toString();
-        this.amount = fullNodeFeeData.getAmount().toString();
-        this.originalAmount = fullNodeFeeData.getOriginalAmount().toString();
+        this.amount = fullNodeFeeData.getAmount().toPlainString();
+        this.originalAmount = fullNodeFeeData.getOriginalAmount().toPlainString();
         this.addressHash = fullNodeFeeData.getAddressHash().toString();
         this.createTime = fullNodeFeeData.getCreateTime();
         this.name = BaseTransactionName.getName(FullNodeFeeData.class).name();

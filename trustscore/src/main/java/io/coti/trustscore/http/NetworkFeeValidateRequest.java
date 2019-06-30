@@ -15,5 +15,6 @@ public class NetworkFeeValidateRequest {
     private NetworkFeeData networkFeeData;
     @NotNull
     private Hash userHash;
+    private boolean feeIncluded;
 
 }

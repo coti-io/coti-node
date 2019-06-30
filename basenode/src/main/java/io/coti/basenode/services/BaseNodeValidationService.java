@@ -111,6 +111,6 @@ public class BaseNodeValidationService implements IValidationService {
 
     @Override
     public boolean validateAmountField(BigDecimal amount) {
-        return (amount.scale() <= 0 || amount.stripTrailingZeros().equals(amount)) && amount.scale() <= 8;
+        return amount != null && (amount.scale() <= 0 || amount.stripTrailingZeros().equals(amount)) && amount.scale() <= 8;
     }
 }

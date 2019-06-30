@@ -97,8 +97,8 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
             try {
                 NetworkFeeData networkFeeData = (NetworkFeeData) baseTransactionData;
                 byte[] outputMessageInBytes = getOutputMessageInBytes(networkFeeData);
-                String decimalReducedAmountRepresentation = networkFeeData.getReducedAmount().stripTrailingZeros().toPlainString();
-                byte[] bytesOfReducedAmount = decimalReducedAmountRepresentation.getBytes(StandardCharsets.UTF_8);
+                byte[] bytesOfReducedAmount = networkFeeData.getReducedAmount() == null ? new byte[0]
+                        : networkFeeData.getReducedAmount().stripTrailingZeros().toPlainString().getBytes(StandardCharsets.UTF_8);
 
                 ByteBuffer baseTransactionBuffer = ByteBuffer.allocate(outputMessageInBytes.length + bytesOfReducedAmount.length).
                         put(outputMessageInBytes).put(bytesOfReducedAmount);

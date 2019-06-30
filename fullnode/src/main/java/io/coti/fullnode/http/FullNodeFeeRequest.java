@@ -13,6 +13,8 @@ import java.math.BigDecimal;
 
 @Data
 public class FullNodeFeeRequest extends Request implements ISignValidatable {
+
+    private boolean feeIncluded;
     @Positive
     private BigDecimal originalAmount;
     @NotNull

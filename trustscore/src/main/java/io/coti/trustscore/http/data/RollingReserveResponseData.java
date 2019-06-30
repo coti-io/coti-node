@@ -24,9 +24,9 @@ public class RollingReserveResponseData {
 
     public RollingReserveResponseData(RollingReserveData rollingReserveData) {
         this.hash = rollingReserveData.getHash().toString();
-        this.amount = rollingReserveData.getAmount().toString();
-        this.originalAmount = rollingReserveData.getOriginalAmount().toString();
-        this.reducedAmount = rollingReserveData.getReducedAmount().toString();
+        this.amount = rollingReserveData.getAmount().toPlainString();
+        this.originalAmount = rollingReserveData.getOriginalAmount().toPlainString();
+        this.reducedAmount = rollingReserveData.getReducedAmount().toPlainString();
         this.addressHash = rollingReserveData.getAddressHash().toString();
         this.createTime = rollingReserveData.getCreateTime();
         this.name = BaseTransactionName.getName(RollingReserveData.class).name();

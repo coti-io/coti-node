@@ -13,5 +13,6 @@ public class NetworkFeeRequest {
     private Hash userHash;
     @NotNull
     private FullNodeFeeData fullNodeFeeData;
+    private boolean feeIncluded;
 
 }

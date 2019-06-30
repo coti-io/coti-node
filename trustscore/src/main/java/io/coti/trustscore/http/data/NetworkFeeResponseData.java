@@ -24,9 +24,9 @@ public class NetworkFeeResponseData {
 
     public NetworkFeeResponseData(NetworkFeeData networkFeeData) {
         this.hash = networkFeeData.getHash().toString();
-        this.amount = networkFeeData.getAmount().toString();
-        this.originalAmount = networkFeeData.getOriginalAmount().toString();
-        this.reducedAmount = networkFeeData.getReducedAmount().toString();
+        this.amount = networkFeeData.getAmount().toPlainString();
+        this.originalAmount = networkFeeData.getOriginalAmount().toPlainString();
+        this.reducedAmount = networkFeeData.getReducedAmount() == null ? null : networkFeeData.getReducedAmount().toPlainString();
         this.addressHash = networkFeeData.getAddressHash().toString();
         this.createTime = networkFeeData.getCreateTime();
         this.name = BaseTransactionName.getName(NetworkFeeData.class).name();
