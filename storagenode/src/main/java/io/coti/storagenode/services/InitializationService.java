@@ -1,5 +1,6 @@
 package io.coti.storagenode.services;
 
+import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.database.DbConnectorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,10 +10,6 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.*;
 
-import static io.coti.storagenode.services.AddressStorageService.ADDRESS_TRANSACTION_HISTORY_INDEX_NAME;
-import static io.coti.storagenode.services.AddressStorageService.ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME;
-import static io.coti.storagenode.services.TransactionStorageService.TRANSACTION_INDEX_NAME;
-import static io.coti.storagenode.services.TransactionStorageService.TRANSACTION_OBJECT_NAME;
 
 @Service
 public class InitializationService /*extends BaseNodeInitializationService*/{
@@ -27,10 +24,6 @@ public class InitializationService /*extends BaseNodeInitializationService*/{
     @Value("${propagation.port}")
     private String propagationPort;
 
-
-    @Autowired
-    private TransactionService transactionService;
-
     @Autowired
     private DbConnectorService dbConnectorService;
 
@@ -44,20 +37,20 @@ public class InitializationService /*extends BaseNodeInitializationService*/{
 
     private Map<String, String> indexes;
 
-    @PostConstruct
-    public void init()
-    {
-
-        indexes = new HashMap<>();
-        indexes.put(TRANSACTION_INDEX_NAME, TRANSACTION_OBJECT_NAME);
-        indexes.put(ADDRESS_TRANSACTION_HISTORY_INDEX_NAME, ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME);
-        try {
-            dbConnectorService.addIndexes(indexes, false);
-            dbConnectorService.addIndexes(indexes, true);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//    @PostConstruct
+//    public void init()
+//    {
+//
+//        indexes = new HashMap<>();
+//        indexes.put(TRANSACTION_INDEX_NAME, TRANSACTION_OBJECT_NAME);
+//        indexes.put(ElasticSearchData.ADDRESSES.getIndex(), ElasticSearchData.ADDRESSES.getObjectName());
+//        try {
+//            dbConnectorService.addIndexes(false);
+//            dbConnectorService.addIndexes(true);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
 //        super.initDB();
 //        super.createNetworkNodeData();

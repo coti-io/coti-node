@@ -3,6 +3,7 @@ package io.coti.storagenode.database;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.Hash;
 import io.coti.storagenode.data.MultiDbInsertionStatus;
+import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.database.interfaces.IDbConnectorService;
 import javafx.util.Pair;
 import lombok.Data;
@@ -82,13 +83,13 @@ public class DbConnectorService implements IDbConnectorService {
         }
     }
 
-    public void addIndexes(Map<String, String> indexes, boolean fromColdStorage) throws IOException {
-        for (Map.Entry<String, String> indexToObjectPair : indexes.entrySet()) {
-            addIndex(indexToObjectPair.getKey(), indexToObjectPair.getValue(), fromColdStorage);
+    public void addIndexes(boolean fromColdStorage) throws IOException {
+        for(ElasticSearchData data: ElasticSearchData.values()){
+            addIndex(data.getIndex(), data.getObjectName(), fromColdStorage);
         }
     }
 
-    public void addIndex(String indexName, String objectName, boolean fromColdStorage) throws IOException {
+    private void addIndex(String indexName, String objectName, boolean fromColdStorage) throws IOException {
         if (!ifIndexExist(indexName, fromColdStorage)) {
             sendCreateIndexRequest(indexName, fromColdStorage);
             createMapping(indexName, objectName, fromColdStorage);
@@ -180,7 +181,7 @@ public class DbConnectorService implements IDbConnectorService {
         return new Pair<>(errorInInsertion, hashToResponseMap);
     }
 
-    public MultiGetResponse getMultiObjectsFromDb(List<Hash> hashes, String indexName, boolean fromColdStorage) throws Exception {
+    private MultiGetResponse getMultiObjectsFromDb(List<Hash> hashes, String indexName, boolean fromColdStorage) throws Exception {
         MultiGetResponse multiGetResponse = null;
         try {
             MultiGetRequest request = new MultiGetRequest();
@@ -203,9 +204,9 @@ public class DbConnectorService implements IDbConnectorService {
     }
 
     public Map<Hash, String> getMultiObjects(List<Hash> hashes, String indexName, boolean fromColdStorage, String fieldName) throws Exception {
-        Map<Hash, String> hashToObjectsFromDbMap = null;
+        Map<Hash, String> hashToObjectsFromDbMap = new HashMap<>();
+        // TODO: 6/30/2019 handle exception that might be thrownW
         MultiGetResponse multiGetResponse = getMultiObjectsFromDb(hashes, indexName, fromColdStorage);
-        hashToObjectsFromDbMap = new HashMap<>();
         for (MultiGetItemResponse multiGetItemResponse : multiGetResponse.getResponses()) {
             hashToObjectsFromDbMap.put(new Hash(multiGetItemResponse.getId()),
                     (String)multiGetItemResponse.getResponse().getSourceAsMap().get(fieldName));

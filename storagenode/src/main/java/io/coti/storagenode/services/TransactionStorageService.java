@@ -10,6 +10,7 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.GetEntitiesBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeValidationService;
+import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.model.ObjectService;
 import io.coti.storagenode.services.interfaces.ITransactionStorageValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,12 +30,6 @@ public class TransactionStorageService extends EntityStorageService implements I
     @Autowired
     private BaseNodeValidationService validationService;
 
-    @Autowired
-    private TransactionService transactionService;
-
-    public final static String TRANSACTION_OBJECT_NAME = "transactionData";
-    public final static String TRANSACTION_INDEX_NAME = "transactions";
-
     private ObjectMapper mapper;
 
     @PostConstruct
@@ -46,6 +41,7 @@ public class TransactionStorageService extends EntityStorageService implements I
                 .registerModule(new Jdk8Module())
                 .registerModule(new JavaTimeModule()); // new module, NOT JSR310Module
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        super.objectType = ElasticSearchData.TRANSACTIONS;
     }
 
     public boolean isObjectDIOK(Hash objectHash, String txAsJson)
@@ -68,17 +64,12 @@ public class TransactionStorageService extends EntityStorageService implements I
         return valid;
     }
 
-    @Override
-    public ObjectService getObjectService() {
-        return transactionService;
-    }
-
     public ResponseEntity<IResponse> retrieveObjectFromStorage(Hash hash) {
-        return retrieveObjectFromStorage(hash, TRANSACTION_OBJECT_NAME);
+        return retrieveObjectFromStorage(hash, ElasticSearchData.TRANSACTIONS);
     }
 
-    public GetEntitiesBulkResponse retrieveMultipleObjectsFromStorage(List<Hash> hashes) {
-        return (GetEntitiesBulkResponse) retrieveMultipleObjectsFromStorage(hashes, TRANSACTION_OBJECT_NAME).getBody();
+    public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(List<Hash> hashes) {
+        return super.retrieveMultipleObjectsFromStorage(hashes);
     }
 
 }

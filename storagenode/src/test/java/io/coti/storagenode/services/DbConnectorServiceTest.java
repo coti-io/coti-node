@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.AddressTransactionsHistory;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.database.DbConnectorService;
 import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsResponse;
 import org.junit.Assert;
@@ -46,8 +47,8 @@ public class DbConnectorServiceTest {
     public void setUp() throws Exception {
         indexes = new HashMap<>();
         indexes.put(TRANSACTION_INDEX_NAME, TRANSACTION_OBJECT_NAME);
-        indexes.put(ADDRESS_TRANSACTION_HISTORY_INDEX_NAME, ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME);
-        dbConnectorService.addIndexes(indexes, false);
+        indexes.put(ADDRESS_INDEX_NAME, ADDRESS_OBJECT_NAME);
+        dbConnectorService.addIndexes(false);
     }
 
     @Test
@@ -68,28 +69,28 @@ public class DbConnectorServiceTest {
         Assert.assertNotNull(transactionAsJsonFromDb);
     }
 
-//    @Test
+    @Test
     public void testAddresses() throws IOException {
         AddressAsObjectAndJsonString addressAsObjectAndJsonString = getRandomAddressAsObjectAndJsonString();
         dbConnectorService.insertObjectToDb(addressAsObjectAndJsonString.getHash(),
                 addressAsObjectAndJsonString.getAddressAsJsonString(),
-                ADDRESS_TRANSACTION_HISTORY_INDEX_NAME,
-                ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME, false);
-        Map<String, Object> addresses = dbConnectorService.getObjectFromDbByHash(addressAsObjectAndJsonString.getHash(), ADDRESS_TRANSACTION_HISTORY_INDEX_NAME, false);
-        Object addressAsJsonFromDb = addresses.get(ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME);
+                ADDRESS_INDEX_NAME,
+                ADDRESS_OBJECT_NAME, false);
+        Map<String, Object> addresses = dbConnectorService.getObjectFromDbByHash(addressAsObjectAndJsonString.getHash(), ADDRESS_INDEX_NAME, false);
+        Object addressAsJsonFromDb = addresses.get(ElasticSearchData.ADDRESSES.getObjectName());
         Assert.assertNotNull(addressAsJsonFromDb);
     }
 
-//    @Test
+    @Test
     public void insertAndGetMultiObjects() throws Exception {
         Map<Hash, String> hashToObjectJsonDataMap = insertAddressBulk();
-        Map<Hash, String> hashToObjectsFromDbMap = getMultiObjectsFromDb(ADDRESS_TRANSACTION_HISTORY_INDEX_NAME, new ArrayList<>(hashToObjectJsonDataMap.keySet()), ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME);
+        Map<Hash, String> hashToObjectsFromDbMap = getMultiObjectsFromDb(ElasticSearchData.ADDRESSES.getIndex(), new ArrayList<>(hashToObjectJsonDataMap.keySet()), ElasticSearchData.ADDRESSES.getObjectName());
         Assert.assertTrue(insertedObjectsEqualToObjectsFromDb(hashToObjectJsonDataMap, hashToObjectsFromDbMap));
     }
 
     @Test
     public void deleteAddressByHash_hashNotExist() {
-        String status = dbConnectorService.deleteObject(generateRandomHash(), ADDRESS_TRANSACTION_HISTORY_INDEX_NAME, false);
+        String status = dbConnectorService.deleteObject(generateRandomHash(), ElasticSearchData.ADDRESSES.getIndex(), false);
         Assert.assertTrue(status.equals(STATUS_NOT_FOUND));
     }
 
@@ -98,9 +99,9 @@ public class DbConnectorServiceTest {
         AddressAsObjectAndJsonString addressAsObjectAndJsonString = getRandomAddressAsObjectAndJsonString();
         dbConnectorService.insertObjectToDb(addressAsObjectAndJsonString.getHash(),
                 addressAsObjectAndJsonString.getAddressAsJsonString(),
-                ADDRESS_TRANSACTION_HISTORY_INDEX_NAME,
-                ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME, false);
-        String status = dbConnectorService.deleteObject(addressAsObjectAndJsonString.getHash(), ADDRESS_TRANSACTION_HISTORY_INDEX_NAME, false);
+                ADDRESS_INDEX_NAME,
+                ElasticSearchData.ADDRESSES.getObjectName(), false);
+        String status = dbConnectorService.deleteObject(addressAsObjectAndJsonString.getHash(), ElasticSearchData.ADDRESSES.getIndex(), false);
         Assert.assertTrue(status.equals(STATUS_OK));
     }
 
@@ -118,7 +119,7 @@ public class DbConnectorServiceTest {
             AddressAsObjectAndJsonString addressAsObjectAndJsonString = getRandomAddressAsObjectAndJsonString();
             hashToObjectJsonDataMap.put(addressAsObjectAndJsonString.getHash(), addressAsObjectAndJsonString.getAddressAsJsonString());
         }
-        dbConnectorService.insertMultiObjectsToDb(ADDRESS_TRANSACTION_HISTORY_INDEX_NAME, ADDRESS_TRANSACTION_HISTORY_OBJECT_NAME, hashToObjectJsonDataMap, false);
+        dbConnectorService.insertMultiObjectsToDb(ADDRESS_INDEX_NAME, ElasticSearchData.ADDRESSES.getObjectName(), hashToObjectJsonDataMap, false);
         return hashToObjectJsonDataMap;
     }
 
