@@ -46,8 +46,14 @@ public ResponseEntity<IResponse> getForObject(String url, Class<ResponseEntity> 
 
     @Override
     public ResponseEntity<IResponse> getForObject(String url, Class<ResponseEntity> responseEntityClass, GetEntityRequest getEntityRequest) {
-        //TODO 6/27/2019 astolia: Implement
-        return null;
+        //TODO 7/1/2019 astolia: implement and check works
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+        HttpEntity<GetEntityRequest> requestEntity = new HttpEntity<>(getEntityRequest, headers);
+        ResponseEntity<List<IResponse>> exchangeResponse = restTemplate.exchange(url, HttpMethod.POST, requestEntity,
+                new ParameterizedTypeReference<List<IResponse>>() {
+                });
+        return (ResponseEntity<IResponse>) exchangeResponse.getBody().get(0);
     }
 
     public ResponseEntity<StoreEntitiesToStorageResponse> putObject(String url, Request request) {
