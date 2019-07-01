@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 
 public interface IHistoryAddressService {
-    ResponseEntity<IResponse> getAddress(Hash address);
+    //ResponseEntity<IResponse> getAddressFromStorage(Hash address);
 
-    ResponseEntity<IResponse> getAddressFromHistory(Hash address);
+    //ResponseEntity<IResponse> getAddressFromHistory(Hash address);
 }
