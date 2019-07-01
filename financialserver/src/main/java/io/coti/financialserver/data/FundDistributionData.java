@@ -41,6 +41,12 @@ public class FundDistributionData implements IEntity {
         init();
     }
 
+    public FundDistributionData(Hash receiverAddress, Fund distributionPoolFund, String source) {
+        this.receiverAddress = receiverAddress;
+        this.distributionPoolFund = distributionPoolFund;
+        this.source = source;
+    }
+
     @Override
     public Hash getHash() {
         return hash;
@@ -51,14 +57,18 @@ public class FundDistributionData implements IEntity {
         this.hash = hash;
     }
 
-    public void init() {
+    public void setHash() {
         byte[] distributionPoolInBytes = distributionPoolFund.getText().getBytes();
         byte[] sourceInBytes = source.getBytes();
         byte[] receiverAddressInBytes = receiverAddress.getBytes();
         byte[] concatDataFields = ByteBuffer.allocate(distributionPoolInBytes.length + sourceInBytes.length + receiverAddressInBytes.length).
                 put(distributionPoolInBytes).put(sourceInBytes).put(receiverAddressInBytes).array();
 
-        this.hash = CryptoHelper.cryptoHash(concatDataFields);
+        hash = CryptoHelper.cryptoHash(concatDataFields);
+    }
+
+    public void init() {
+        setHash();
         this.status = DistributionEntryStatus.ONHOLD;
 
         LocalDateTime ldt = LocalDateTime.ofInstant(releaseTime, ZoneOffset.UTC);

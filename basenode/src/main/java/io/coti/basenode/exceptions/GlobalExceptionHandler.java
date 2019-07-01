@@ -86,7 +86,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity handleDefaultException(Exception e) {
         log.error("{} for a request.", e.getClass().getSimpleName());
-        log.error("Exception: ", e);
+        log.error("Exception: " + e);
         ResponseEntity responseEntity = new ResponseEntity(
                 new ExceptionResponse(GENERAL_EXCEPTION_ERROR, API_SERVER_ERROR), HttpStatus.INTERNAL_SERVER_ERROR);
         return responseEntity;

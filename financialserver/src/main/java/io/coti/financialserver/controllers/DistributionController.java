@@ -1,7 +1,7 @@
 package io.coti.financialserver.controllers;
 
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.financialserver.http.FundDistributionRequest;
+import io.coti.financialserver.http.AddFundDistributionsRequest;
 import io.coti.financialserver.http.GetReservedBalancesRequest;
 import io.coti.financialserver.http.TokenSaleDistributionRequest;
 import io.coti.financialserver.services.DistributeTokenService;
@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-
 
 @Slf4j
 @RestController
@@ -30,18 +29,8 @@ public class DistributionController {
     }
 
     @PostMapping(path = "/funds")
-    public ResponseEntity<IResponse> distributeFunds(@Valid @RequestBody FundDistributionRequest request) {
+    public ResponseEntity<IResponse> distributeFunds(@Valid @RequestBody AddFundDistributionsRequest request) {
         return fundDistributionService.distributeFundFromFile(request);
-    }
-
-    @PostMapping(path = "/funds/manual")
-    public ResponseEntity<IResponse> distributeFundsManual(@Valid @RequestBody FundDistributionRequest request) {
-        return fundDistributionService.distributeFundFromLocalFile(request);
-    }
-
-    @DeleteMapping(path = "/funds/file")
-    public ResponseEntity<IResponse> deleteFundFileRecord() {
-        return fundDistributionService.deleteFundFileRecord();
     }
 
     @GetMapping(path = "/balances")
