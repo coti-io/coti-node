@@ -5,6 +5,7 @@ import io.coti.historynode.http.GetAddressRequest;
 import io.coti.historynode.services.HistoryAddressService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,6 +24,12 @@ public class AddressController {
 
     @RequestMapping(value = "/addresses", method = GET)
     public ResponseEntity<IResponse> checkAddressValidity(@Valid @RequestBody GetAddressRequest getAddressRequest) {
-        return historyAddressService.getAddressFromHistory(getAddressRequest.getAddressesHash());
+        return historyAddressService.getAddress(getAddressRequest.getAddressesHash());
+    }
+
+    //TODO 7/1/2019 astolia: this endpoint should be used by TransactionService too. Need to move it to common controller.
+    @RequestMapping(value = "/addresses", method = GET)
+    public ResponseEntity<IResponse> triggerAddressStorage(@Valid @RequestBody GetAddressRequest getAddressRequest) {
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }
