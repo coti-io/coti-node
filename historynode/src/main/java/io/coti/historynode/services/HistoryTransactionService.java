@@ -15,19 +15,16 @@ import io.coti.basenode.http.GetEntitiesBulkResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
-import io.coti.historynode.crypto.GetTransactionsByAddressRequestCrypto;
 import io.coti.historynode.crypto.TransactionsRequestCrypto;
 import io.coti.historynode.data.AddressTransactionsByAddress;
 import io.coti.historynode.data.AddressTransactionsByDate;
 import io.coti.historynode.http.GetTransactionsByAddressRequest;
-import io.coti.historynode.http.GetTransactionsRequest;
-import io.coti.historynode.http.GetTransactionsRequestOld;
+import io.coti.historynode.http.GetTransactionsByDateRequest;
 import io.coti.historynode.http.HistoryTransactionResponse;
 import io.coti.historynode.http.data.HistoryTransactionResponseData;
 import io.coti.historynode.http.storageConnector.interaces.IStorageConnector;
 import io.coti.historynode.model.AddressTransactionsByAddresses;
 import io.coti.historynode.model.AddressTransactionsByDates;
-import io.coti.historynode.model.AddressTransactionsByDatesHistories;
 import io.coti.historynode.services.interfaces.IHistoryTransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,8 +54,6 @@ public class HistoryTransactionService extends EntityService implements IHistory
     protected String storageServerAddress;
 
     @Autowired
-    AddressTransactionsByDatesHistories addressTransactionsByDatesHistories;
-    @Autowired
     private Transactions transactions;
     @Autowired
     private IStorageConnector storageConnector;
@@ -67,8 +62,6 @@ public class HistoryTransactionService extends EntityService implements IHistory
     private AddressTransactionsByAddresses addressTransactionsByAddresses;
     @Autowired
     private AddressTransactionsByDates addressTransactionsByDates;
-    @Autowired
-    private GetTransactionsByAddressRequestCrypto getTransactionsByAddressRequestCrypto;
     @Autowired
     private TransactionsRequestCrypto transactionsRequestCrypto;
 
@@ -85,36 +78,36 @@ public class HistoryTransactionService extends EntityService implements IHistory
         endpoint = "/transactions";
     }
 
-    @Override
-    public ResponseEntity<IResponse> getTransactionsDetails(GetTransactionsRequestOld getTransactionRequest) {
-        List<TransactionData> transactionsList = new ArrayList<>();
-        List<Hash> hashList = new ArrayList<>();
-        GetEntitiesBulkRequest getEntitiesBulkRequest = new GetEntitiesBulkRequest(hashList);
-
-        List<Hash> transactionHashes = getTransactionsHashesByAddresses(getTransactionRequest);
-        for (Hash transactionHash : transactionHashes) {
-            TransactionData transactionData = transactions.getByHash(transactionHash);
-            if (transactionData == null) {
-                getEntitiesBulkRequest.getHashes().add(transactionHash);
-            } else {
-                transactionsList.add(transactionData);
-            }
-        }
-
-        transactionsList.addAll(getTransactionsDetailsFromStorage(getEntitiesBulkRequest));
-        ResponseEntity<IResponse> response = ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(null);
-        try {
-            response = ResponseEntity
-                    .status(HttpStatus.OK)
-//                    .body((new GetTransactionsResponse(transactionsList)); //TODO: For initial compilation prior to merge
-            .body(null);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return response;
-    }
+//    @Override
+//    public ResponseEntity<IResponse> getTransactionsDetails(GetTransactionsRequestOld getTransactionRequest) {
+//        List<TransactionData> transactionsList = new ArrayList<>();
+//        List<Hash> hashList = new ArrayList<>();
+//        GetEntitiesBulkRequest getEntitiesBulkRequest = new GetEntitiesBulkRequest(hashList);
+//
+//        List<Hash> transactionHashes = getTransactionsHashesByAddresses(getTransactionRequest);
+//        for (Hash transactionHash : transactionHashes) {
+//            TransactionData transactionData = transactions.getByHash(transactionHash);
+//            if (transactionData == null) {
+//                getEntitiesBulkRequest.getHashes().add(transactionHash);
+//            } else {
+//                transactionsList.add(transactionData);
+//            }
+//        }
+//
+//        transactionsList.addAll(getTransactionsDetailsFromStorage(getEntitiesBulkRequest));
+//        ResponseEntity<IResponse> response = ResponseEntity
+//                .status(HttpStatus.BAD_REQUEST)
+//                .body(null);
+//        try {
+//            response = ResponseEntity
+//                    .status(HttpStatus.OK)
+////                    .body((new GetTransactionsResponse(transactionsList)); //TODO: For initial compilation prior to merge
+//            .body(null);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        return response;
+//    }
 
 
     @Override
@@ -126,53 +119,64 @@ public class HistoryTransactionService extends EntityService implements IHistory
         });
     }
 
-    private List<TransactionData> getTransactionsDetailsFromStorage(GetEntitiesBulkRequest getEntitiesBulkRequest) {
-        List<TransactionData> transactionsList = new ArrayList<>();
-        if (!getEntitiesBulkRequest.getHashes().isEmpty()) {
-            ResponseEntity<IResponse> response
-                    = storageConnector.getForObject(storageServerAddress + endpoint, ResponseEntity.class, getEntitiesBulkRequest);
-            if (response.getStatusCode() == HttpStatus.OK) {
-                //TODO: Convert http message body to transactions, and add to transactions
-            }
-        }
-        return transactionsList;
-    }
+//    private List<TransactionData> getTransactionsDetailsFromStorage(GetEntitiesBulkRequest getEntitiesBulkRequest) {
+//        List<TransactionData> transactionsList = new ArrayList<>();
+//        if (!getEntitiesBulkRequest.getHashes().isEmpty()) {
+//            ResponseEntity<IResponse> response
+//                    = storageConnector.getForObject(storageServerAddress + endpoint, ResponseEntity.class, getEntitiesBulkRequest);
+//            if (response.getStatusCode() == HttpStatus.OK) {
+//                //TODO: Convert http message body to transactions, and add to transactions
+//            }
+//        }
+//        return transactionsList;
+//    }
 
-    private List<Hash> getTransactionsHashesByAddresses(GetTransactionsRequestOld getTransactionRequest) {
-        List<Hash> transactionHashes = new ArrayList<>();
-        long startDate = getTransactionRequest.getStartingDate() != null ? getTransactionRequest.getStartingDate().getTime() : Long.MIN_VALUE;
-        long endDate = getTransactionRequest.getEndingDate() != null ? getTransactionRequest.getEndingDate().getTime() : Long.MAX_VALUE;
-        getTransactionRequest.getAddressesHashes().forEach(addressHash ->
-                transactionHashes.addAll(
-                        addressTransactionsByDatesHistories.getByHash(addressHash)
-                                .getTransactionsHistory().subMap(startDate, endDate).values()));
-        return transactionHashes;
-    }
-
+//    private List<Hash> getTransactionsHashesByAddresses(GetTransactionsRequestOld getTransactionRequest) {
+//        List<Hash> transactionHashes = new ArrayList<>();
+//        long startDate = getTransactionRequest.getStartingDate() != null ? getTransactionRequest.getStartingDate().getTime() : Long.MIN_VALUE;
+//        long endDate = getTransactionRequest.getEndingDate() != null ? getTransactionRequest.getEndingDate().getTime() : Long.MAX_VALUE;
+//        getTransactionRequest.getAddressesHashes().forEach(addressHash ->
+//                transactionHashes.addAll(
+//                        addressTransactionsByDatesHistories.getByHash(addressHash)
+//                                .getTransactionsHistory().subMap(startDate, endDate).values()));
+//        return transactionHashes;
+//    }
 
 
     public ResponseEntity<IResponse> getTransactionsByAddress(GetTransactionsByAddressRequest getTransactionsByAddressRequest) {
         // Verify signature //TODO: Commented for initial integration testing, uncomment after adding signature in tests
-//        if(!getTransactionsByAddressRequestCrypto.verifySignature(getTransactionsByAddressRequest)) {
+//        if(!transactionsRequestCrypto.verifySignature(getTransactionsByAddressRequest)) {
 //            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
 //        }
 
-        Hash address = getTransactionsByAddressRequest.getAddress();
-        // Retrieve matching transactions hashes from relevant index
-        List<Hash> transactionsHashes = getTransactionsHashesByAddress(address);
-        List<Hash> transactionsHashesToRetrieveFromStorage = new ArrayList<>();
-
+        List<Hash> transactionsHashes = getTransactionsHashesToRetrieve(getTransactionsByAddressRequest);
         if( transactionsHashes.isEmpty() ) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new Response(TRANSACTIONS_NOT_FOUND, EMPTY_SEARCH_RESULT));
         }
-
-        // Retrieve transactions from local RocksDB, Storage and merge results
-        HashMap<Hash, TransactionData> retrievedTransactionsFromLocal = getTransactionsFromLocal(transactionsHashes, transactionsHashesToRetrieveFromStorage);
-        HashMap<Hash, TransactionData> retrievedTransactionsFromStorage = getTransactionFromElasticSearch(transactionsHashesToRetrieveFromStorage);
-        HashMap<Hash, TransactionData> collectedTransactions = new HashMap<>(retrievedTransactionsFromLocal);
-        collectedTransactions.putAll(retrievedTransactionsFromStorage);
+        HashMap<Hash, TransactionData> collectedTransactions = retrieveTransactions(transactionsHashes);
 
         return ResponseEntity.status(HttpStatus.OK).body( new HistoryTransactionResponse(new HistoryTransactionResponseData(collectedTransactions)));
+    }
+
+    public ResponseEntity<IResponse> getTransactionsByDate(GetTransactionsByDateRequest getTransactionsByDateRequest) {
+
+        List<Hash> transactionsHashes = getTransactionsHashesByDate(getTransactionsByDateRequest.getDate()) ;
+        if( transactionsHashes.isEmpty() ) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new Response(TRANSACTIONS_NOT_FOUND, EMPTY_SEARCH_RESULT));
+        }
+        HashMap<Hash, TransactionData> collectedTransactions = retrieveTransactions(transactionsHashes);
+
+        return ResponseEntity.status(HttpStatus.OK).body( new HistoryTransactionResponse(new HistoryTransactionResponseData(collectedTransactions)));
+    }
+
+    private HashMap<Hash, TransactionData> retrieveTransactions(List<Hash> transactionsHashes) {
+        // Retrieve transactions from local RocksDB, Storage and merge results
+        List<Hash> transactionsHashesToRetrieveFromStorage = new ArrayList<>();
+        HashMap<Hash, TransactionData> retrievedTransactionsFromRocksDB = getTransactionsFromLocal(transactionsHashes, transactionsHashesToRetrieveFromStorage);
+        HashMap<Hash, TransactionData> retrievedTransactionsFromElasticSearch = getTransactionFromElasticSearch(transactionsHashesToRetrieveFromStorage);
+        HashMap<Hash, TransactionData> collectedTransactions = new HashMap<>(retrievedTransactionsFromRocksDB);
+        collectedTransactions.putAll(retrievedTransactionsFromElasticSearch);
+        return collectedTransactions;
     }
 
     private HashMap<Hash, TransactionData> getTransactionFromElasticSearch(List<Hash> transactionsHashesToRetrieveFromStorage) {
@@ -233,46 +237,35 @@ public class HistoryTransactionService extends EntityService implements IHistory
         GetEntitiesBulkRequest getEntitiesBulkRequest = new GetEntitiesBulkRequest(transactionsHashes);
         RestTemplate restTemplate = new RestTemplate();
         endpoint = "/transactions";
+        //TODO 7/1/2019 tomer: update according to IStorageConnector after refactoring
+
         return restTemplate.postForEntity(storageServerAddress + endpoint,  getEntitiesBulkRequest,   GetEntitiesBulkResponse.class);
     }
 
 
-    public ResponseEntity<IResponse> getTransactions(GetTransactionsRequest getTransactionsRequest) {
-        // Verify signature //TODO: Commented for initial integration testing, uncomment after adding signature in tests
-//        if(!transactionsRequestCrypto.verifySignature(getTransactionsRequest)) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
-//        }
 
-        List<Hash> transactionsHashes = getTransactionsHashesByGetTransactionsRequest(getTransactionsRequest);
 
-        List<Hash> transactionsHashesToRetrieveFromStorage = new ArrayList<>();
-
-        if( transactionsHashes.isEmpty() ) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new Response(TRANSACTIONS_NOT_FOUND, EMPTY_SEARCH_RESULT));
+    private List<Hash> getTransactionsHashesToRetrieve(GetTransactionsByAddressRequest getTransactionsByAddressRequest) {
+        if( getTransactionsByAddressRequest.getAddress()==null ) {
+            return new ArrayList<>();
         }
-
-        // Retrieve transactions from local RocksDB, Storage and merge results
-        HashMap<Hash, TransactionData> retrievedTransactionsFromRocksDB = getTransactionsFromLocal(transactionsHashes, transactionsHashesToRetrieveFromStorage);
-        HashMap<Hash, TransactionData> retrievedTransactionsFromElasticSearch = getTransactionFromElasticSearch(transactionsHashesToRetrieveFromStorage);
-        HashMap<Hash, TransactionData> collectedTransactions = new HashMap<>(retrievedTransactionsFromRocksDB);
-        collectedTransactions.putAll(retrievedTransactionsFromElasticSearch);
-
-        return ResponseEntity.status(HttpStatus.OK).body( new HistoryTransactionResponse(new HistoryTransactionResponseData(collectedTransactions)));
-    }
-
-    protected List<Hash> getTransactionsHashesByGetTransactionsRequest(GetTransactionsRequest getTransactionsRequest) {
-        if( getTransactionsRequest.getStartDate()==null || getTransactionsRequest.getEndDate()==null ) {
-            return getTransactionsHashesByAddress(getTransactionsRequest.getTransactionAddress());
+        if( getTransactionsByAddressRequest.getStartDate()==null || getTransactionsByAddressRequest.getEndDate()==null ) {
+            return getTransactionsHashesByAddress(getTransactionsByAddressRequest.getAddress());
         }
-
-        if( getTransactionsRequest.getTransactionAddress()==null ) {
-            return getTransactionsHashesByDates(getTransactionsRequest.getStartDate(), getTransactionsRequest.getEndDate());
-        }
-
-        return getTransactionsHashesByAddressAndDates(getTransactionsRequest.getTransactionAddress(), getTransactionsRequest.getStartDate(), getTransactionsRequest.getEndDate());
+        return getTransactionsHashesByAddressAndDates(getTransactionsByAddressRequest.getAddress(), getTransactionsByAddressRequest.getStartDate(), getTransactionsByAddressRequest.getEndDate());
     }
 
 
+    private List<Hash> getTransactionsHashesByDate(Instant date) {
+        if(date==null) {
+            return new ArrayList<>();
+        }
+        AddressTransactionsByDate addressTransactionsByDate = addressTransactionsByDates.getByHash(getHashByLocalDate(getLocalDateByInstant(date)));
+        if(addressTransactionsByDate==null || addressTransactionsByDate.getTransactionsAddresses()==null || addressTransactionsByDate.getTransactionsAddresses().isEmpty()) {
+            return new ArrayList<>();
+        }
+        return addressTransactionsByDate.getTransactionsAddresses().stream().collect(Collectors.toList());
+    }
 
     private List<Hash> getTransactionsHashesByDates(Instant startDate, Instant endDate) {
         if(startDate==null || endDate==null || startDate.isAfter(endDate)) {
@@ -284,7 +277,6 @@ public class HistoryTransactionService extends EntityService implements IHistory
 
         List<Hash> collectedTransactionsHashes = localDatesBetween.stream().map(localDate -> addressTransactionsByDates.getByHash(getHashByLocalDate(localDate)))
                 .flatMap(transactionsByDate -> transactionsByDate.getTransactionsAddresses().stream())
-                .distinct() //TODO: Redundant?
                 .collect(Collectors.toList());
         return collectedTransactionsHashes;
     }
@@ -299,7 +291,7 @@ public class HistoryTransactionService extends EntityService implements IHistory
     }
 
     public static List<LocalDate> getLocalDatesBetween(LocalDate startDate, LocalDate endDate) {
-        long numOfDaysBetween = ChronoUnit.DAYS.between(startDate, endDate);
+        long numOfDaysBetween = ChronoUnit.DAYS.between(startDate, endDate.plusDays(1));
         return IntStream.iterate(0, i -> i + 1)
                 .limit(numOfDaysBetween)
                 .mapToObj(i -> startDate.plusDays(i))
@@ -311,7 +303,7 @@ public class HistoryTransactionService extends EntityService implements IHistory
         if(addressTransactionsByAddress==null) {
             return new ArrayList<>();
         }
-        SortedMap<LocalDate, HashSet<Hash>> transactionHashesByDates = addressTransactionsByAddress.getTransactionHashesByDates();
+        HashMap<LocalDate, HashSet<Hash>> transactionHashesByDates = addressTransactionsByAddress.getTransactionHashesByDates();
         return transactionHashesByDates.keySet().stream().flatMap(key -> transactionHashesByDates.get(key).stream()).collect(Collectors.toList());
     }
 
@@ -320,12 +312,11 @@ public class HistoryTransactionService extends EntityService implements IHistory
         if(addressTransactionsByAddress==null) {
             return new ArrayList<>();
         }
-        SortedMap<LocalDate, HashSet<Hash>> transactionHashesByDates = addressTransactionsByAddress.getTransactionHashesByDates();
-//        List<LocalDate> localDatesBetween = getLocalDatesBetween(getLocalDateByInstant(startDate),getLocalDateByInstant(endDate));
+        HashMap<LocalDate, HashSet<Hash>> transactionHashesByDates = addressTransactionsByAddress.getTransactionHashesByDates();
+        List<LocalDate> localDatesBetween = getLocalDatesBetween(getLocalDateByInstant(startDate),getLocalDateByInstant(endDate));
 
-        SortedMap<LocalDate, HashSet<Hash>> transactionsHashesByDates =
-                transactionHashesByDates.subMap(getLocalDateByInstant(startDate), getLocalDateByInstant(endDate).plusDays(1));
-        return transactionsHashesByDates.keySet().stream().flatMap(key -> transactionHashesByDates.get(key).stream()).collect(Collectors.toList());
+        return localDatesBetween.stream().filter(localDate->  transactionHashesByDates.containsKey(localDate)).
+                flatMap(localDate -> transactionHashesByDates.get(localDate).stream()).collect(Collectors.toList());
     }
 
 
@@ -347,7 +338,7 @@ public class HistoryTransactionService extends EntityService implements IHistory
 
 
         for(Hash transactionAddressHash : relatedAddressHashes) {
-            SortedMap<LocalDate, HashSet<Hash>> transactionHashesMap = new TreeMap<>();
+            HashMap<LocalDate, HashSet<Hash>> transactionHashesMap = new HashMap<>();
             AddressTransactionsByAddress transactionsByAddressHash = addressTransactionsByAddresses.getByHash(transactionAddressHash);
             if(transactionsByAddressHash==null) {
                 HashSet<Hash> transactionHashes = new HashSet<>();
@@ -372,7 +363,7 @@ public class HistoryTransactionService extends EntityService implements IHistory
 
 
 
-    public HashSet<Hash> getRelatedAddresses(TransactionData transactionData) {
+    private HashSet<Hash> getRelatedAddresses(TransactionData transactionData) {
         HashSet<Hash> hashes = new HashSet<>();
         hashes.add(transactionData.getSenderHash());
         for(BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
