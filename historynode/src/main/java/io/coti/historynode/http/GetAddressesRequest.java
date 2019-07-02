@@ -7,17 +7,18 @@ import io.coti.basenode.http.Request;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
+import java.util.Set;
 
 @Data
-public class GetAddressRequest extends Request implements ISignValidatable {
+public class GetAddressesRequest extends Request implements ISignValidatable  {
     @NotNull(message = "Address hash must not be null")
-    private Hash addressesHash;
+    private Set<Hash> addressesHash;
     @NotNull
     private Hash userHash;
     @NotNull
     private SignatureData userSignature;
 
-    public GetAddressRequest(Hash addressesHash) {
+    public GetAddressesRequest(Set<Hash> addressesHash) {
         this.addressesHash = addressesHash;
     }
 
