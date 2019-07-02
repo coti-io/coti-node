@@ -2,20 +2,20 @@ package io.coti.historynode.crypto;
 
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.SignatureValidationCrypto;
-import io.coti.historynode.http.GetTransactionsRequest;
+import io.coti.historynode.http.GetTransactionsByAddressRequest;
 import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;
 
 @Component
-public class TransactionsRequestCrypto extends SignatureValidationCrypto<GetTransactionsRequest> {
+public class TransactionsRequestCrypto extends SignatureValidationCrypto<GetTransactionsByAddressRequest> {
 
     @Override
-    public byte[] getSignatureMessage(GetTransactionsRequest getTransactionsRequest) {
-        byte[] addressInBytes = getTransactionsRequest.getTransactionAddress().getBytes();
+    public byte[] getSignatureMessage(GetTransactionsByAddressRequest getTransactionsByAddressRequest) {
+        byte[] addressInBytes = getTransactionsByAddressRequest.getAddress().getBytes();
         ByteBuffer transactionsRequestBuffer = ByteBuffer.allocate(addressInBytes.length+Long.BYTES+Long.BYTES).
-                put(addressInBytes).putLong(getTransactionsRequest.getStartDate().toEpochMilli()).
-                putLong(getTransactionsRequest.getEndDate().toEpochMilli());
+                put(addressInBytes).putLong(getTransactionsByAddressRequest.getStartDate().toEpochMilli()).
+                putLong(getTransactionsByAddressRequest.getEndDate().toEpochMilli());
         byte[] transactionsRequestInBytes = transactionsRequestBuffer.array();
         return CryptoHelper.cryptoHash(transactionsRequestInBytes).getBytes();
     }

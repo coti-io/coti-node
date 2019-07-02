@@ -3,7 +3,6 @@ package io.coti.historynode.services;
 import io.coti.basenode.crypto.ClusterStampCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.services.BaseNodeClusterStampService;
-import io.coti.historynode.services.interfaces.IAddressTransactionsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,8 +25,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private HistoryTransactionService historyTransactionService;
     @Autowired
     private HistoryAddressService historyAddressService;
-    @Autowired
-    private IAddressTransactionsService addressTransactionsService;
 
     public void newClusterStamp(ClusterStampData clusterStampData) {
         if (clusterStampCrypto.verifySignature(clusterStampData)) {
