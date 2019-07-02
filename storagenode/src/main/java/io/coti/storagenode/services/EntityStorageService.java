@@ -89,7 +89,7 @@ public abstract class EntityStorageService implements IEntityStorageService
         ResponseEntity response = ResponseEntity.status(HttpStatus.OK).body(objectAsJson);
 
         // If DI is successful for ongoing repository, remove redundant data from cold-storage
-        if( isObjectDIOK(objectHash, objectAsJson) )
+        if( objectAsJson!=null && isObjectDIOK(objectHash, objectAsJson) )
         {
             if( !fromColdStorage )
             {
@@ -108,7 +108,7 @@ public abstract class EntityStorageService implements IEntityStorageService
             Hash coldObjectHash = ((Pair<Hash, String>) coldStorageResponse.getBody()).getKey();
             String coldObjectAsJson = ((Pair<Hash, String>) coldStorageResponse.getBody()).getValue();
             // Check DI from cold storage, should never fail
-            if( !isObjectDIOK(coldObjectHash, coldObjectAsJson) )
+            if( objectAsJson!=null && !isObjectDIOK(coldObjectHash, coldObjectAsJson) )
             {
                 ResponseEntity failedResponse = ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body( "Failed to retrieve = "+ objectHash.toString()+ " from all repositories. \n");
                 return failedResponse;
@@ -173,10 +173,10 @@ public abstract class EntityStorageService implements IEntityStorageService
         ResponseEntity<IResponse> response = new ResponseEntity(HttpStatus.OK);
 
         // Additional Validations after consensus checks - Data integrity
-        if( !hashToObjectJsonDataMap.entrySet().stream().allMatch( entry -> isObjectDIOK(entry.getKey(), entry.getValue()) ) )
-        {
-            response = new ResponseEntity(HttpStatus.EXPECTATION_FAILED);
-        }
+//        if( !hashToObjectJsonDataMap.entrySet().stream().allMatch( entry -> isObjectDIOK(entry.getKey(), entry.getValue()) ) )
+//        {
+//            response = new ResponseEntity(HttpStatus.EXPECTATION_FAILED);
+//        }
         return response;
     }
 

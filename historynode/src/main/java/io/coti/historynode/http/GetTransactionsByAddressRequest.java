@@ -1,5 +1,6 @@
 package io.coti.historynode.http;
 
+
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.ISignValidatable;
@@ -7,13 +8,17 @@ import io.coti.basenode.http.Request;
 import lombok.Data;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.time.Instant;
 
 @Data
 public class GetTransactionsByAddressRequest extends Request implements ISignValidatable {
 
-    @NotNull
-    private @Valid Hash address;
+
+    private @NotEmpty Hash address;
+    private Instant startDate;
+    private Instant endDate;
 
     @NotNull
     public @Valid Hash userHash;
@@ -30,3 +35,4 @@ public class GetTransactionsByAddressRequest extends Request implements ISignVal
         return userHash;
     }
 }
+
