@@ -2,16 +2,13 @@ package io.coti.historynode.services;
 
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.GetEntitiesBulkRequest;
-import io.coti.basenode.http.GetEntityRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Addresses;
-import io.coti.historynode.http.GetAddressBatchResponse;
 import io.coti.historynode.http.GetAddressResponse;
-import io.coti.historynode.http.storageConnector.interaces.IStorageConnector;
-import io.coti.historynode.services.interfaces.IHistoryAddressService;
+import io.coti.historynode.http.GetAddressesRequest;
+import io.coti.historynode.services.interfaces.IStorageConnector;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +21,8 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import utils.TestUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.IntStream;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -48,8 +44,16 @@ public class HistoryAddressServiceTest {
     @MockBean
     private Addresses addresses;
 
-    @Before
-    public void setUp() throws Exception {
+    private Hash hash;
+    private Set<Hash> hashes;
+    private GetAddressesRequest getAddressesRequest;
+
+    @BeforeClass
+    public void setUpOnce() throws Exception {
+        hash = TestUtils.generateRandomHash();
+        hashes = new HashSet<>();
+        hashes.add(hash);
+        getAddressesRequest = new GetAddressesRequest(hashes);
     }
 
     /** getAddress
@@ -60,6 +64,8 @@ public class HistoryAddressServiceTest {
     **/
     @Test
     public void getAddress(){
+        // test signature validation
+        // test correctly splits set of hashes to found and not found
         getAddress_AddressInRocksDb_returnFoundAddress();
         getAddress_AddressNotInRocksDb_returnFoundAddress();
         getAddress_AddressNotInRocksDbOrStorage_returnNotFoundAddress();
@@ -67,37 +73,35 @@ public class HistoryAddressServiceTest {
     }
 
     public void getAddress_AddressInRocksDb_returnFoundAddress() {
-        Hash hash = TestUtils.generateRandomHash();
         AddressData addressData = new AddressData(hash);
         when(addresses.getByHash(hash)).thenReturn(addressData);
-        ResponseEntity<IResponse> response = addressService.getAddress(hash);
-        Assert.assertEquals(response,ResponseEntity
+        ResponseEntity<IResponse> expectedResponse = ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new GetAddressResponse(hash,addressData)));
+                .body(new GetAddressResponse(hash,addressData));
+        Assert.assertEquals(expectedResponse, addressService.getAddresses(getAddressesRequest));
     }
 
     public void getAddress_AddressNotInRocksDb_returnFoundAddress() {
-        Hash hash = TestUtils.generateRandomHash();
         AddressData addressData = new AddressData(hash);
         when(addresses.getByHash(hash)).thenReturn(null);
-        Assert.assertEquals(null, addressService.getAddress(hash));
-        ResponseEntity<IResponse> response = ResponseEntity
+        Assert.assertEquals(null, addressService.getAddresses(getAddressesRequest));
+        ResponseEntity<IResponse> expectedResponse = ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new GetAddressResponse(hash,addressData));
 //        when(addressService.getAddressFromStorage(hash)).thenReturn(response);
-        Assert.assertEquals(response, addressService.getAddress(hash));
+        Assert.assertEquals(expectedResponse, addressService.getAddresses(getAddressesRequest));
     }
 
     public void getAddress_AddressNotInRocksDbOrStorage_returnNotFoundAddress() {
         Hash hash = TestUtils.generateRandomHash();
         AddressData addressData = new AddressData(hash);
         when(addresses.getByHash(hash)).thenReturn(null);
-        Assert.assertEquals(null, addressService.getAddress(hash));
-        ResponseEntity<IResponse> response = ResponseEntity
+        Assert.assertEquals(null, addressService.getAddresses(getAddressesRequest));
+        ResponseEntity<IResponse> expectedResponse = ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new GetAddressResponse(hash,null));
         //when(addressService.getAddressFromStorage(hash)).thenReturn(response);
-        Assert.assertEquals(response, addressService.getAddress(hash));
+        Assert.assertEquals(expectedResponse, addressService.getAddresses(getAddressesRequest));
     }
 
 //    @Test
