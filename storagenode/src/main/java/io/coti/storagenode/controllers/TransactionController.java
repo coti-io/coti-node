@@ -37,7 +37,7 @@ public class TransactionController {
                 );
     }
 
-    //TODO: old implementation, verify this
+
     @RequestMapping(value = "/transactions", method = PUT)
     public ResponseEntity<IResponse> storeMultipleTransactionsToStorage(@Valid @RequestBody AddEntitiesBulkRequest addEntitiesBulkRequest) {
         return transactionStorageService.storeMultipleObjectsToStorage(addEntitiesBulkRequest.getHashToEntityJsonDataMap());
