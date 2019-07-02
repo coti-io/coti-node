@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.http.AddEntitiesBulkRequest;
 import io.coti.historynode.http.StoreEntitiesToStorageResponse;
-import io.coti.historynode.http.storageConnector.interaces.IStorageConnector;
+import io.coti.historynode.services.interfaces.IStorageConnector;
 import io.coti.historynode.services.interfaces.IEntityService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
