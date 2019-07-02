@@ -2,11 +2,9 @@ package io.coti.historynode.services;
 
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.HistoryNodeVote;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.historynode.http.GetAddressBatchResponse;
-import io.coti.historynode.http.storageConnector.StorageConnector;
-import io.coti.historynode.http.storageConnector.interaces.IStorageConnector;
+import io.coti.historynode.services.interfaces.IStorageConnector;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -20,9 +18,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import utils.TestUtils;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.IntStream;
 
 @ContextConfiguration(classes = {HistoryAddressService.class, StorageConnector.class})
