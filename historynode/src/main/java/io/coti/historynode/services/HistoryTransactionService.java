@@ -22,7 +22,7 @@ import io.coti.historynode.http.GetTransactionsByAddressRequest;
 import io.coti.historynode.http.GetTransactionsByDateRequest;
 import io.coti.historynode.http.HistoryTransactionResponse;
 import io.coti.historynode.http.data.HistoryTransactionResponseData;
-import io.coti.historynode.http.storageConnector.interaces.IStorageConnector;
+import io.coti.historynode.services.interfaces.IStorageConnector;
 import io.coti.historynode.model.AddressTransactionsByAddresses;
 import io.coti.historynode.model.AddressTransactionsByDates;
 import io.coti.historynode.services.interfaces.IHistoryTransactionService;
