@@ -1,5 +1,6 @@
 package io.coti.basenode.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
@@ -92,14 +93,17 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
         this.childrenTransactionHashes = new ArrayList<>();
     }
 
+    @JsonIgnore
     public int getRoundedSenderTrustScore() {
         return (int) Math.round(senderTrustScore);
     }
 
+    @JsonIgnore
     public boolean isSource() {
         return childrenTransactionHashes == null || childrenTransactionHashes.size() == 0;
     }
 
+    @JsonIgnore
     public boolean isGenesis() {
         return leftParentHash == null && rightParentHash == null;
     }
@@ -143,10 +147,12 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
         return valid;
     }
 
+    @JsonIgnore
     public List<OutputBaseTransactionData> getOutputBaseTransactions() {
         return this.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData instanceof OutputBaseTransactionData).map(OutputBaseTransactionData.class::cast).collect(Collectors.toList());
     }
 
+    @JsonIgnore
     public List<InputBaseTransactionData> getInputBaseTransactions() {
         return this.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData instanceof InputBaseTransactionData).map(InputBaseTransactionData.class::cast).collect(Collectors.toList());
     }
@@ -167,11 +173,13 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
     }
 
     @Override
+    @JsonIgnore
     public SignatureData getSignature() {
         return nodeSignature;
     }
 
     @Override
+    @JsonIgnore
     public Hash getSignerHash() {
         return nodeHash;
     }

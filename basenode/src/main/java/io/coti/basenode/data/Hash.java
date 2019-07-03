@@ -1,5 +1,6 @@
 package io.coti.basenode.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import lombok.Data;
@@ -46,6 +47,7 @@ public class Hash implements Serializable {
         return DatatypeConverter.printHexBinary(bytes).toLowerCase();
     }
 
+    @JsonIgnore
     public boolean isNull() {
         return bytes == null;
     }

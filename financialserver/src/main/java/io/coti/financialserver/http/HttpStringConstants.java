@@ -57,6 +57,8 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String DISTRIBUTION_DATE_ERROR = "No distribution on specified date";
     public static final String DISTRIBUTION_DATE_EMPTY_ENTRIES_ERROR = "Empty distribution entries on specified date";
     public static final String DISTRIBUTION_HASH_DOESNT_EXIST = "Distribution hash doesn't exist";
+    public static final String DISTRIBUTION_INITIATED_OR_CANCELLED = "Distribution is either initiated or cancelled";
+    public static final String INVALID_UPDATED_DISTRIBUTION_AMOUNT = "Invalid updated distribution amount";
 
     public static final String CANT_SAVE_FILE_ON_DISK = "Can't save file on disk.";
     public static final String BAD_CSV_FILE_LINE_FORMAT = "Bad csv file line format";
