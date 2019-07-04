@@ -2,10 +2,10 @@ package io.coti.historynode.services;
 
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.http.GetAddressesRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Addresses;
 import io.coti.historynode.http.GetAddressResponse;
-import io.coti.historynode.http.GetAddressesRequest;
 import io.coti.historynode.services.interfaces.IStorageConnector;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -24,7 +24,6 @@ import utils.TestUtils;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ContextConfiguration(classes = HistoryAddressService.class)

@@ -10,8 +10,8 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Addresses;
 import io.coti.historynode.crypto.AddressesRequestCrypto;
 import io.coti.historynode.crypto.HistoryAddressCrypto;
-import io.coti.historynode.http.GetAddressesRequest;
-import io.coti.historynode.http.GetAddressesResponse;
+import io.coti.basenode.http.GetAddressesRequest;
+import io.coti.basenode.http.GetAddressesResponse;
 import io.coti.historynode.services.interfaces.IHistoryAddressService;
 import io.coti.historynode.services.interfaces.IStorageConnector;
 import lombok.extern.slf4j.Slf4j;
@@ -77,7 +77,7 @@ public class HistoryAddressService extends EntityService implements IHistoryAddr
     private ResponseEntity<IResponse> getAddressesFromStorage(Set<Hash> addressesHashes) {
         GetAddressesRequest getAddressesRequest = new GetAddressesRequest(addressesHashes);
         //TODO 7/1/2019 astolia: sign the message
-        return storageConnector.getForObject(storageServerAddress + endpoint, ResponseEntity.class, getAddressesRequest);
+        return storageConnector.getForObject(storageServerAddress + "/addresses", ResponseEntity.class, getAddressesRequest);
     }
 
     private ResponseEntity<IResponse> generateResponse(HttpStatus httpStatus, Response response){
