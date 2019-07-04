@@ -4,7 +4,7 @@ import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.SignatureValidationCrypto;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
-import io.coti.historynode.http.GetAddressesResponse;
+import io.coti.basenode.http.GetAddressesResponse;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
@@ -18,6 +18,7 @@ public class AddressesResponseCrypto extends SignatureValidationCrypto<GetAddres
         Hash firstKey = addressHashesToAddresses.entrySet().iterator().next().getKey();
         int byteBufferSize = getByteBufferSize(addressHashesToAddresses.get(firstKey), addressHashesToAddresses.size());
         ByteBuffer addressesResponseBuffer = ByteBuffer.allocate(byteBufferSize);
+        //TODO 7/2/2019 astolia: don't sign both hashes. just make sure they are the same.
         addressHashesToAddresses.forEach((hash,addressHash) ->
                 addressesResponseBuffer.
                         put(hash.getBytes()).
