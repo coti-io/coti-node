@@ -25,6 +25,8 @@ public class InitializationService extends BaseNodeInitializationService {
     private String propagationPort;
     @Value("${server.port}")
     private String serverPort;
+    @Value("${recovery.server.address}")
+    private String recoveryServerAddress;
     @Autowired
     private ICommunicationService communicationService;
     @Autowired
@@ -56,6 +58,9 @@ public class InitializationService extends BaseNodeInitializationService {
         networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.DspNode).values());
         if (networkService.getSingleNodeData(NodeType.FinancialServer) != null) {
             networkService.addListToSubscription(new ArrayList<>(Arrays.asList(networkService.getSingleNodeData(NodeType.FinancialServer))));
+        }
+        if (!recoveryServerAddress.isEmpty()) {
+            networkService.setRecoveryServerAddress(recoveryServerAddress);
         }
 
         super.init();

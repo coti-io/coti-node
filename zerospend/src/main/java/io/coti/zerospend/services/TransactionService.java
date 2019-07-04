@@ -9,6 +9,8 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.zerospend.http.SetIndexesRequest;
+import io.coti.zerospend.http.SetIndexesResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,6 +21,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.ADDRESS_TRANSACTIONS_SERVER_ERROR;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
@@ -69,5 +72,24 @@ public class TransactionService extends BaseNodeTransactionService {
                             ADDRESS_TRANSACTIONS_SERVER_ERROR,
                             STATUS_ERROR));
         }
+    }
+
+    public ResponseEntity<IResponse> setIndexToTransactions(SetIndexesRequest setIndexesRequest) {
+        Set<Hash> transactionHashes = setIndexesRequest.getTransactionHashes();
+        if (transactionHashes.isEmpty()) {
+            transactionHashes = transactionHelper.getNoneIndexedTransactionHashes();
+        }
+        int requestedIndexNumber = transactionHashes.size();
+        AtomicInteger indexedTransactionNumber = new AtomicInteger(0);
+        transactionHashes.forEach(transactionHash -> {
+            try {
+                dspVoteService.publishDecision(transactionHash);
+                indexedTransactionNumber.incrementAndGet();
+            } catch (Exception e) {
+                log.error("Error at indexing for hash {} . Error: {}", transactionHash, e.getMessage());
+            }
+        });
+
+        return ResponseEntity.ok().body(new SetIndexesResponse(requestedIndexNumber, indexedTransactionNumber.get()));
     }
 }

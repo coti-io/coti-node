@@ -58,16 +58,14 @@ public class BaseNodeTransactionService implements ITransactionService {
         try {
             ServletOutputStream output = response.getOutputStream();
 
-            if (startingIndex > transactionIndexService.getLastTransactionIndexData().getIndex()) {
-                return;
-            }
-
             monitorTransactionBatch.start();
 
-            for (long i = startingIndex; i <= transactionIndexService.getLastTransactionIndexData().getIndex(); i++) {
-                output.write(jacksonSerializer.serialize(transactions.getByHash(transactionIndexes.getByHash(new Hash(i)).getTransactionHash())));
-                output.flush();
-                transactionNumber.incrementAndGet();
+            if (startingIndex <= transactionIndexService.getLastTransactionIndexData().getIndex()) {
+                for (long i = startingIndex; i <= transactionIndexService.getLastTransactionIndexData().getIndex(); i++) {
+                    output.write(jacksonSerializer.serialize(transactions.getByHash(transactionIndexes.getByHash(new Hash(i)).getTransactionHash())));
+                    output.flush();
+                    transactionNumber.incrementAndGet();
+                }
             }
             for (Hash hash : transactionHelper.getNoneIndexedTransactionHashes()) {
                 output.write(jacksonSerializer.serialize(transactions.getByHash(hash)));
