@@ -1,10 +1,9 @@
-package io.coti.historynode.http;
+package io.coti.basenode.http;
 
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.ISignValidatable;
-import io.coti.basenode.http.Response;
 import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
