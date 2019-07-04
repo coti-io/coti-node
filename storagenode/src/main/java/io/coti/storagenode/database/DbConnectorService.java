@@ -218,6 +218,9 @@ public class DbConnectorService implements IDbConnectorService {
                         (String)multiGetItemResponse.getResponse().getSourceAsMap().get(fieldName));
             } else {
                 hashToObjectsFromDbMap.put(new Hash(multiGetItemResponse.getId()), null);
+
+
+
                 //TODO 6/30/2019 tomer: raise a flag for calling method in case of missing values
             }
         }

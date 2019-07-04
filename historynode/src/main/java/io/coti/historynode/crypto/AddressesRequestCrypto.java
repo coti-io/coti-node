@@ -3,7 +3,7 @@ package io.coti.historynode.crypto;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.SignatureValidationCrypto;
 import io.coti.basenode.data.Hash;
-import io.coti.historynode.http.GetAddressesRequest;
+import io.coti.basenode.http.GetAddressesRequest;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
