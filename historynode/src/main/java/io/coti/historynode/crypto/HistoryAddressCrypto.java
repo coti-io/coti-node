@@ -1,7 +1,7 @@
 package io.coti.historynode.crypto;
 
-import io.coti.historynode.http.GetAddressesRequest;
-import io.coti.historynode.http.GetAddressesResponse;
+import io.coti.basenode.http.GetAddressesRequest;
+import io.coti.basenode.http.GetAddressesResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
