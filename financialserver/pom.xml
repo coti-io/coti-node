@@ -5,7 +5,7 @@
     <parent>
         <artifactId>coti-node</artifactId>
         <groupId>io.coti</groupId>
-        <version>1.0.1-SNAPSHOT</version>
+        <version>1.0.1.RELEASE</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -15,7 +15,7 @@
         <dependency>
             <groupId>io.coti</groupId>
             <artifactId>basenode</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
+            <version>1.0.1.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>

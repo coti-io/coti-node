@@ -386,11 +386,11 @@ public class FundDistributionService {
     }
 
     private boolean updateFundAvailableLockedBalances(FundDistributionData entryData) {
-        return updateFundAvailableLockedBalances(entryData.getDistributionPoolFund().getFundHash(), entryData.getReceiverAddress(), entryData.getAmount());
+        return updateFundAvailableLockedBalances(entryData.getDistributionPoolFund().getFundHash(), entryData.getReceiverAddress(), entryData.getAmount(), false);
     }
 
-    private boolean updateFundAvailableLockedBalances(Hash fundAddress, Hash receiverAddress, BigDecimal amount) {
-        if (amount.compareTo(BigDecimal.ZERO) < 0) {
+    private boolean updateFundAvailableLockedBalances(Hash fundAddress, Hash receiverAddress, BigDecimal amount, boolean allowNegative) {
+        if (!allowNegative && amount.compareTo(BigDecimal.ZERO) < 0) {
             return false;
         }
         FundDistributionReservedBalanceData fundDistributionReservedBalanceData = fundReservedBalanceMap.get(fundAddress);
@@ -737,7 +737,7 @@ public class FundDistributionService {
         }
 
         BigDecimal oldAmount = fundDistributionData.getAmount();
-        if (!updateFundAvailableLockedBalances(fundDistributionData.getDistributionPoolFund().getFundHash(), fundDistributionData.getReceiverAddress(), updateDistributionAmountRequest.getDistributionAmount().subtract(oldAmount))) {
+        if (!updateFundAvailableLockedBalances(fundDistributionData.getDistributionPoolFund().getFundHash(), fundDistributionData.getReceiverAddress(), updateDistributionAmountRequest.getDistributionAmount().subtract(oldAmount), true)) {
             return ResponseEntity.badRequest().body(new Response(INVALID_UPDATED_DISTRIBUTION_AMOUNT, STATUS_ERROR));
         }
         fundDistributionData.setAmount(updateDistributionAmountRequest.getDistributionAmount());
