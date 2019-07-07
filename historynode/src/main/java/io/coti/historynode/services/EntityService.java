@@ -4,11 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.http.AddEntitiesBulkRequest;
+import io.coti.historynode.http.StoreEntitiesToStorageResponse;
 import io.coti.historynode.http.storageConnector.interaces.IStorageConnector;
 import io.coti.historynode.services.interfaces.IEntityService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,7 +28,7 @@ public abstract class EntityService implements IEntityService {
     protected String storageServerAddress;
     protected ObjectMapper mapper;
 
-    public void storeEntities(List<? extends IEntity> entities) {
+    public ResponseEntity<StoreEntitiesToStorageResponse> storeEntities(List<? extends IEntity> entities) {
 
         AddEntitiesBulkRequest addEntitiesBulkRequest = new AddEntitiesBulkRequest();
         entities.forEach(entity ->
@@ -38,6 +40,7 @@ public abstract class EntityService implements IEntityService {
                     }
                 }
         );
-        storageConnector.putObject(storageServerAddress + endpoint, addEntitiesBulkRequest);
+        ResponseEntity<StoreEntitiesToStorageResponse> storeEntitiesToStorageResponse = storageConnector.putObject(storageServerAddress + endpoint, addEntitiesBulkRequest);
+        return storeEntitiesToStorageResponse;
     }
 }
