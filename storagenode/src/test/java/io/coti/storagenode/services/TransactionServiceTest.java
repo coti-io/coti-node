@@ -113,7 +113,11 @@ public class TransactionServiceTest {
             TransactionDataList.add(transactionData);
             hashToTransactionJsonDataMap.put(transactionData.getHash(), mapper.writeValueAsString(transactionData));
         }
-        transactionService.insertMultiObjects(hashToTransactionJsonDataMap, false, ElasticSearchData.TRANSACTIONS);
+        ResponseEntity<IResponse> insertResponse = transactionService.insertMultiObjects(hashToTransactionJsonDataMap, false, ElasticSearchData.TRANSACTIONS);
+
+        Assert.assertTrue(insertResponse.getStatusCode().equals(HttpStatus.OK));
+        Assert.assertTrue(((BaseResponse)insertResponse.getBody()).getStatus().equals("Success"));
+        Assert.assertTrue(((GetEntitiesBulkJsonResponse)insertResponse.getBody()).getHashToEntitiesFromDbMap().keySet().containsAll(hashToTransactionJsonDataMap.keySet()));
 
         List<Hash> deleteHashes = new ArrayList<>();
         deleteHashes.add(TransactionDataList.get(0).getHash());
@@ -245,6 +249,8 @@ public class TransactionServiceTest {
 
         ResponseEntity<IResponse> responseResponseEntity1 = transactionStorageValidationService.storeMultipleObjectsToStorage(txDataJsonToHash);
         Assert.assertTrue(responseResponseEntity1.getStatusCode().equals(HttpStatus.OK));
+        Assert.assertTrue(((BaseResponse)responseResponseEntity1.getBody()).getStatus().equals("Success"));
+        Assert.assertTrue(((GetEntitiesBulkJsonResponse)responseResponseEntity1.getBody()).getHashToEntitiesFromDbMap().keySet().containsAll(txDataJsonToHash.keySet()));
 
         ResponseEntity<IResponse> responseEntity1 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData1.getHash(), ElasticSearchData.TRANSACTIONS);
         ResponseEntity<IResponse> responseEntity2 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData2.getHash(), ElasticSearchData.TRANSACTIONS);
@@ -260,6 +266,9 @@ public class TransactionServiceTest {
         // Add entries again as after retrieval they were removed from cold-storage, which is currently the same as main-storage
         responseResponseEntity1 = transactionStorageValidationService.storeMultipleObjectsToStorage(txDataJsonToHash);
         Assert.assertTrue(responseResponseEntity1.getStatusCode().equals(HttpStatus.OK));
+        Assert.assertTrue(((BaseResponse)responseResponseEntity1.getBody()).getStatus().equals("Success"));
+        Assert.assertTrue(((GetEntitiesBulkJsonResponse)responseResponseEntity1.getBody()).getHashToEntitiesFromDbMap().keySet().containsAll(txDataJsonToHash.keySet()));
+
 
         List<Hash> hashes = new ArrayList<>();
         hashes.add( transactionData1.getHash() );

@@ -1,6 +1,7 @@
 package io.coti.storagenode.services;
 
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.GetEntitiesBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.data.enums.ElasticSearchData;
@@ -216,6 +217,7 @@ public abstract class EntityStorageService implements IEntityStorageService
 
     protected boolean isResponseOK(ResponseEntity<IResponse> iResponse) {
         return iResponse != null && iResponse.getStatusCode().equals(HttpStatus.OK);
+//               && ((BaseResponse)iResponse.getBody()).getStatus().equals("Success");
     }
 
 

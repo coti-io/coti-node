@@ -41,7 +41,7 @@ public class ObjectService implements IObjectService {
     }
 
     public ResponseEntity<IResponse> insertMultiObjects(Map<Hash, String> hashToObjectJsonDataMap, boolean fromColdStorage, ElasticSearchData objectType) {
-        Pair<MultiDbInsertionStatus, Map<Hash, String>> insertResponse = null;
+        Pair<MultiDbInsertionStatus, Map<Hash, String>> insertResponse = new Pair<>(MultiDbInsertionStatus.Success,null);
         try {
             insertResponse = dbConnectorService.insertMultiObjectsToDb(objectType.getIndex(), objectType.getObjectName(), hashToObjectJsonDataMap, fromColdStorage);
         } catch (Exception e) {

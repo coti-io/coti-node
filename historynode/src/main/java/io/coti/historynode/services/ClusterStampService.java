@@ -3,15 +3,16 @@ package io.coti.historynode.services;
 import io.coti.basenode.crypto.ClusterStampCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.services.BaseNodeClusterStampService;
+import io.coti.historynode.http.StoreEntitiesToStorageResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -61,7 +62,9 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 //    }
 
     private void storeData(ClusterStampData lastClusterStamp) {
-        List<TransactionData> unconfirmedTransactions = new ArrayList<>();
+        List<TransactionData> unconfirmedTransactionsFromClusterStamp = new ArrayList<>();
+        List<Hash> unconfirmedTransactionHashesFromClusterStamp =
+                unconfirmedTransactionsFromClusterStamp.stream().map(transactionData->transactionData.getHash()).collect(Collectors.toList());
         Set<AddressData> unconfirmedTransactionsAddresses = new HashSet<>();
 //TODO: For initial compilation prior to merge
 //        lastClusterStamp.getUnconfirmedTransactions().values().forEach(transaction -> {
@@ -71,9 +74,45 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 //        });
 
         // TODO: later construct consensus based on algorithm
-        historyTransactionService.storeEntities(unconfirmedTransactions);
+
+        //TODO 7/4/2019 tomer:
+        // Get local unconfirmed transactions hashes
+        historyTransactionService.updateUnconfirmedTransactionsNotFromClusterStamp(unconfirmedTransactionHashesFromClusterStamp);
+
+        // Replace / update matching transactions in RocksDB with the entries from the cluster-stamp
+        unconfirmedTransactionsFromClusterStamp.forEach(transactionData -> {
+            if(transactions.getByHash(transactionData.getHash())==null) {
+                historyTransactionService.addToHistoryTransactionIndexes(transactionData);
+            }
+            transactions.put(transactionData);
+        });
+
+        // Store in Elastic-search all of the confirmed transactions, remove from local storage those that were stored in ES successfully
+        List<TransactionData> confirmedTransactionsToStore = new ArrayList<>();
+        transactions.forEach(transactionData -> {
+            if(transactionData.isTrustChainConsensus() && transactionData.getDspConsensusResult().isDspConsensus()) {
+                confirmedTransactionsToStore.add(transactionData);
+            }
+        });
+
+        //TODO 7/7/2019 tomer: Consider sending in groups of size..
+        ResponseEntity<StoreEntitiesToStorageResponse> storeEntitiesToStorageResponse = historyTransactionService.storeEntities(confirmedTransactionsToStore);
+        if(storeEntitiesToStorageResponse.getStatusCode().equals(HttpStatus.OK)) {
+            HashMap<Hash, Boolean> entitiesSentToStorage = storeEntitiesToStorageResponse.getBody().getEntitiesSentToStorage();
+            entitiesSentToStorage.entrySet().forEach(pair -> {
+                if(pair.getValue()) {
+                    transactions.deleteByHash(pair.getKey());
+                }
+            });
+        }
+
+        //TODO 7/7/2019 tomer: Add handling of response
         historyAddressService.storeEntities(new ArrayList<>(unconfirmedTransactionsAddresses));
     }
+
+
+
+
 //TODO: For initial compilation prior to merge
 //    @Override
 //    public void prepareForClusterStamp(ClusterStampPreparationData clusterStampPreparationData) {
