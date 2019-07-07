@@ -155,8 +155,10 @@ public class DbConnectorService implements IDbConnectorService {
                 bulkResponse = restClient.bulk(request, RequestOptions.DEFAULT);
 
             insertResponse = createMultiInsertResponse(bulkResponse);
-            if (insertResponse!=null && insertResponse.getValue().size() == hashToObjectJsonDataMap.size()) {
+            if (insertResponse!=null && (insertResponse.getValue().size() != hashToObjectJsonDataMap.size() || !insertResponse.getKey().equals(MultiDbInsertionStatus.Success))) {
                 insertResponse = new Pair<>(MultiDbInsertionStatus.Failed, insertResponse.getValue());
+            } else {
+                insertResponse = new Pair<>(insertResponse.getKey(), insertResponse.getValue());
             }
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -170,15 +172,18 @@ public class DbConnectorService implements IDbConnectorService {
         if (bulkResponse == null) {
             return null;
         }
-        MultiDbInsertionStatus errorInInsertion = MultiDbInsertionStatus.Success;
+        MultiDbInsertionStatus insertionStatus = MultiDbInsertionStatus.Success;
         Map<Hash, String> hashToResponseMap = new HashMap<>();
         for (BulkItemResponse bulkItemResponse : bulkResponse.getItems()) {
             if (bulkItemResponse.isFailed()) {
-                errorInInsertion = MultiDbInsertionStatus.PartlyFailed;
+                insertionStatus = MultiDbInsertionStatus.PartlyFailed;
                 hashToResponseMap.put(new Hash(bulkItemResponse.getId()), bulkItemResponse.getFailure().getMessage());
+            } else {
+                hashToResponseMap.put(new Hash(bulkItemResponse.getId()), bulkItemResponse.getResponse().getResult().name());
             }
+
         }
-        return new Pair<>(errorInInsertion, hashToResponseMap);
+        return new Pair<>(insertionStatus, hashToResponseMap);
     }
 
     private MultiGetResponse getMultiObjectsFromDb(List<Hash> hashes, String indexName, boolean fromColdStorage) throws Exception {

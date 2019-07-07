@@ -1,10 +1,10 @@
 package io.coti.historynode.http.storageConnector;
 
-import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.GetEntitiesBulkRequest;
 import io.coti.basenode.http.GetEntityRequest;
 import io.coti.basenode.http.Request;
 import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.historynode.http.StoreEntitiesToStorageResponse;
 import io.coti.historynode.http.storageConnector.interaces.IStorageConnector;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
@@ -14,9 +14,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Service
@@ -52,7 +50,9 @@ public ResponseEntity<IResponse> getForObject(String url, Class<ResponseEntity> 
         return null;
     }
 
-    public void putObject(String url, Request request) {
-        restTemplate.put(url, request);
+    public ResponseEntity<StoreEntitiesToStorageResponse> putObject(String url, Request request) {
+        //TODO 7/7/2019 tomer: Check change from put to post, move response to base node,match it with actual response from storage node
+        ResponseEntity<StoreEntitiesToStorageResponse> storeEntitiesToStorageResponse = restTemplate.postForEntity(url, request, StoreEntitiesToStorageResponse.class);
+        return storeEntitiesToStorageResponse;
     }
 }

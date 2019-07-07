@@ -193,6 +193,8 @@ public class AddressTransactionsHistoryServiceTest {
 //        HistoryNodeConsensusResult consensus = new HistoryNodeConsensusResult(hash0);
         ResponseEntity<IResponse> storeResponse = addressStorageValidationService.storeMultipleObjectsToStorage(hashToAddressTxsHistoryJsonDataMap);
         Assert.assertTrue( storeResponse.getStatusCode().equals(HttpStatus.OK) );
+        Assert.assertTrue(((BaseResponse)storeResponse.getBody()).getStatus().equals("Success"));
+        Assert.assertTrue(((GetEntitiesBulkJsonResponse)storeResponse.getBody()).getHashToEntitiesFromDbMap().keySet().containsAll(hashToAddressTxsHistoryJsonDataMap.keySet()));
 
         // Retrieve Addresses
         ResponseEntity<IResponse> retrievedAddressResponse = addressStorageValidationService.retrieveObjectFromStorage(hash0, ElasticSearchData.ADDRESSES);

@@ -11,7 +11,7 @@ import java.util.Map;
 public class GetEntitiesBulkJsonResponse extends BaseResponse {
 
     @NotEmpty
-    private Map<Hash, String> hashToEntitiesFromDbMap;
+    public Map<Hash, String> hashToEntitiesFromDbMap;
 
     public GetEntitiesBulkJsonResponse(Map<Hash, String> hashToEntitiesFromDbMap) {
         this.hashToEntitiesFromDbMap = hashToEntitiesFromDbMap;
