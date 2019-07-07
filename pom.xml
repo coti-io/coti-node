@@ -5,7 +5,7 @@
 
     <groupId>io.coti</groupId>
     <artifactId>coti-node</artifactId>
-    <version>1.0.1.RELEASE</version>
+    <version>1.0.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
