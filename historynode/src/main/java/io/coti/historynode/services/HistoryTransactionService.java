@@ -109,6 +109,33 @@ public class HistoryTransactionService extends EntityService implements IHistory
 //        return response;
 //    }
 
+    public List<Hash> getLocalTransactionsUnconfirmed() {
+        ArrayList<Hash> localTransactionsUnconfirmed = new ArrayList<>();
+        transactions.forEach(transactionData -> {
+            if (!transactionData.isTrustChainConsensus() || !transactionData.getDspConsensusResult().isDspConsensus()) {
+                localTransactionsUnconfirmed.add(transactionData.getHash());
+            }
+        });
+        return localTransactionsUnconfirmed;
+    }
+
+    public TransactionData getTransactionFromRecovery(Hash unconfirmedTransactionHash) {
+        //TODO 7/7/2019 tomer: implement logic to retrieve updated transaction data from recovery server ?
+        return transactions.getByHash(unconfirmedTransactionHash);
+    }
+
+    protected void updateUnconfirmedTransactionsNotFromClusterStamp(List<Hash> unconfirmedTransactionHashesFromClusterStamp) {
+        List<Hash> unconfirmedTransactionsHashesFromRocksDB = getLocalTransactionsUnconfirmed();
+        // If any transaction is not in the unconfirmed transactions of the cluster-stamp, verify status from {?} recovery server and update accordingly
+        List<Hash> intersectionUnconfirmedTransactions = new ArrayList<>(unconfirmedTransactionsHashesFromRocksDB);
+        intersectionUnconfirmedTransactions.retainAll(unconfirmedTransactionHashesFromClusterStamp);
+        List<Hash> unconfirmedTransactionsHashesNotInClusterStamp = new ArrayList<>(unconfirmedTransactionsHashesFromRocksDB);
+        unconfirmedTransactionsHashesNotInClusterStamp.removeAll(intersectionUnconfirmedTransactions);
+        unconfirmedTransactionsHashesNotInClusterStamp.forEach(unconfirmedTransactionHash -> {
+            transactions.put(getTransactionFromRecovery(unconfirmedTransactionHash));
+        });
+    }
+
 
     @Override
     public void deleteLocalUnconfirmedTransactions() {
@@ -144,29 +171,29 @@ public class HistoryTransactionService extends EntityService implements IHistory
 
 
     public ResponseEntity<IResponse> getTransactionsByAddress(GetTransactionsByAddressRequest getTransactionsByAddressRequest) {
-        // Verify signature //TODO: Commented for initial integration testing, uncomment after adding signature in tests
+        //TODO 7/2/2019 tomer: Commented for initial integration testing, uncomment after adding signature in tests
+        // Verify signature
 //        if(!transactionsRequestCrypto.verifySignature(getTransactionsByAddressRequest)) {
 //            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
 //        }
 
         List<Hash> transactionsHashes = getTransactionsHashesToRetrieve(getTransactionsByAddressRequest);
-        if( transactionsHashes.isEmpty() ) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new Response(TRANSACTIONS_NOT_FOUND, EMPTY_SEARCH_RESULT));
-        }
-        HashMap<Hash, TransactionData> collectedTransactions = retrieveTransactions(transactionsHashes);
-
-        return ResponseEntity.status(HttpStatus.OK).body( new HistoryTransactionResponse(new HistoryTransactionResponseData(collectedTransactions)));
+        return getTransactions(transactionsHashes);
     }
 
     public ResponseEntity<IResponse> getTransactionsByDate(GetTransactionsByDateRequest getTransactionsByDateRequest) {
 
         List<Hash> transactionsHashes = getTransactionsHashesByDate(getTransactionsByDateRequest.getDate()) ;
-        if( transactionsHashes.isEmpty() ) {
+        return getTransactions(transactionsHashes);
+    }
+
+    private ResponseEntity<IResponse> getTransactions(List<Hash> transactionsHashes) {
+        if (transactionsHashes.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new Response(TRANSACTIONS_NOT_FOUND, EMPTY_SEARCH_RESULT));
         }
         HashMap<Hash, TransactionData> collectedTransactions = retrieveTransactions(transactionsHashes);
 
-        return ResponseEntity.status(HttpStatus.OK).body( new HistoryTransactionResponse(new HistoryTransactionResponseData(collectedTransactions)));
+        return ResponseEntity.status(HttpStatus.OK).body(new HistoryTransactionResponse(new HistoryTransactionResponseData(collectedTransactions)));
     }
 
     private HashMap<Hash, TransactionData> retrieveTransactions(List<Hash> transactionsHashes) {
