@@ -1,6 +1,9 @@
 package io.coti.storagenode.controllers;
 
-import io.coti.basenode.http.*;
+import io.coti.basenode.http.AddEntitiesBulkRequest;
+import io.coti.basenode.http.AddEntityRequest;
+import io.coti.basenode.http.GetEntitiesBulkRequest;
+import io.coti.basenode.http.GetEntityRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.services.TransactionStorageService;
