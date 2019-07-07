@@ -89,6 +89,8 @@ public class HistoryTransactionServiceTest {
     private BaseNodeRocksDBConnector baseNodeRocksDBConnector;
     @Autowired
     private HistoryRocksDBConnector historyRocksDBConnector;
+//    @Autowired
+//    private GetTransactionsByAddressRequest GetTransactionsByAddressRequest;
 
 
     @Autowired
@@ -304,8 +306,9 @@ public class HistoryTransactionServiceTest {
         // Retrieve transactions according to various criteria
         GetTransactionsByAddressRequest getTransactionsByAddressRequest = new GetTransactionsByAddressRequest();
         getTransactionsByAddressRequest.setAddress(generatedTransactionsData.get(2).getSenderHash());
-        @NotNull @Valid Hash userHash = generateRandomHash();
+        Hash userHash = generateRandomHash();
         getTransactionsByAddressRequest.setUserHash(userHash);
+
 
         ResponseEntity<IResponse> transactionsByAddressResponse = historyTransactionService.getTransactionsByAddress(getTransactionsByAddressRequest);
         Assert.assertTrue(((HistoryTransactionResponse)transactionsByAddressResponse.getBody()).getHistoryTransactionResponseData()
