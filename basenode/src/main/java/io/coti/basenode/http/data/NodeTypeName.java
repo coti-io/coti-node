@@ -9,7 +9,6 @@ public enum NodeTypeName {
     ZeroSpendServer(NodeType.ZeroSpendServer, "zerospendserver"),
     FinancialServer(NodeType.FinancialServer, "financialserver"),
     NodeManager(NodeType.NodeManager, "nodemanager"),
-    StorageNode(NodeType.StorageNode, "storagenode"),
     HistoryNode(NodeType.HistoryNode, "historynode");
 
     private NodeType nodeType;
