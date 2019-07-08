@@ -1,12 +1,14 @@
 package io.coti.historynode.services;
 
 import io.coti.basenode.crypto.ClusterStampCrypto;
-import io.coti.basenode.data.*;
+import io.coti.basenode.data.AddressData;
+import io.coti.basenode.data.ClusterStampData;
+import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.services.BaseNodeClusterStampService;
 import io.coti.historynode.http.StoreEntitiesToStorageResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -18,8 +20,6 @@ import java.util.stream.Collectors;
 @Service
 public class ClusterStampService extends BaseNodeClusterStampService {
 
-    @Value("#{'${receiving.server.addresses}'.split(',')}")
-    private List<String> receivingServerAddresses;
     @Autowired
     private ClusterStampCrypto clusterStampCrypto;
     @Autowired
@@ -41,12 +41,12 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     }
 
-//    @Override
+    //    @Override
     protected void terminateClusterStampByNodeType() {
         // TODO implement
     }
 
-//    @Override
+    //    @Override
     public Set<Hash> getUnreachedDspcHashTransactions() {
         // TODO consider implementation change.
         return null;
@@ -64,7 +64,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private void storeData(ClusterStampData lastClusterStamp) {
         List<TransactionData> unconfirmedTransactionsFromClusterStamp = new ArrayList<>();
         List<Hash> unconfirmedTransactionHashesFromClusterStamp =
-                unconfirmedTransactionsFromClusterStamp.stream().map(transactionData->transactionData.getHash()).collect(Collectors.toList());
+                unconfirmedTransactionsFromClusterStamp.stream().map(transactionData -> transactionData.getHash()).collect(Collectors.toList());
         Set<AddressData> unconfirmedTransactionsAddresses = new HashSet<>();
 //TODO: For initial compilation prior to merge
 //        lastClusterStamp.getUnconfirmedTransactions().values().forEach(transaction -> {
@@ -81,7 +81,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
         // Replace / update matching transactions in RocksDB with the entries from the cluster-stamp
         unconfirmedTransactionsFromClusterStamp.forEach(transactionData -> {
-            if(transactions.getByHash(transactionData.getHash())==null) {
+            if (transactions.getByHash(transactionData.getHash()) == null) {
                 historyTransactionService.addToHistoryTransactionIndexes(transactionData);
             }
             transactions.put(transactionData);
@@ -90,17 +90,17 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         // Store in Elastic-search all of the confirmed transactions, remove from local storage those that were stored in ES successfully
         List<TransactionData> confirmedTransactionsToStore = new ArrayList<>();
         transactions.forEach(transactionData -> {
-            if(transactionData.isTrustChainConsensus() && transactionData.getDspConsensusResult().isDspConsensus()) {
+            if (transactionData.isTrustChainConsensus() && transactionData.getDspConsensusResult().isDspConsensus()) {
                 confirmedTransactionsToStore.add(transactionData);
             }
         });
 
         //TODO 7/7/2019 tomer: Consider sending in groups of size..
         ResponseEntity<StoreEntitiesToStorageResponse> storeEntitiesToStorageResponse = historyTransactionService.storeEntities(confirmedTransactionsToStore);
-        if(storeEntitiesToStorageResponse.getStatusCode().equals(HttpStatus.OK)) {
+        if (storeEntitiesToStorageResponse.getStatusCode().equals(HttpStatus.OK)) {
             HashMap<Hash, Boolean> entitiesSentToStorage = storeEntitiesToStorageResponse.getBody().getEntitiesSentToStorage();
             entitiesSentToStorage.entrySet().forEach(pair -> {
-                if(pair.getValue()) {
+                if (pair.getValue()) {
                     transactions.deleteByHash(pair.getKey());
                 }
             });
@@ -109,8 +109,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         //TODO 7/7/2019 tomer: Add handling of response
         historyAddressService.storeEntities(new ArrayList<>(unconfirmedTransactionsAddresses));
     }
-
-
 
 
 //TODO: For initial compilation prior to merge

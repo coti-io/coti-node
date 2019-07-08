@@ -11,7 +11,8 @@ public enum NodeTypeService {
     DspNode(NodeType.DspNode, true),
     TrustScoreNode(NodeType.TrustScoreNode, true),
     ZeroSpendServer(NodeType.ZeroSpendServer, false),
-    FinancialServer(NodeType.FinancialServer, false);
+    FinancialServer(NodeType.FinancialServer, false),
+    HistoryNode(NodeType.HistoryNode, true);
 
     private NodeType nodeType;
     private boolean multipleNode;
