@@ -53,6 +53,7 @@ initialDatabase/
 ZeroSpendServerrocksDB*/
 FinancialServerrocksDB*/
 NodeManagerrocksDB*/
+HistoryNoderocksDB*/
 
 *.jar
 *.class
