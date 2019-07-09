@@ -3,6 +3,7 @@ package io.coti.financialserver.services;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.exceptions.TransactionValidationException;
 import io.coti.basenode.services.ClusterService;
 import io.coti.basenode.services.TransactionHelper;
 import io.coti.basenode.services.TransactionIndexService;
@@ -73,7 +74,7 @@ public class TransactionCreationService {
         propagationPublisher.propagate(chargebackTransaction, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode));
     }
 
-    public Hash createInitialTransactionToFund(BigDecimal amount, Hash cotiGenesisAddress, Hash fundAddress, int genesisAddressIndex) throws Exception {
+    public Hash createInitialTransactionToFund(BigDecimal amount, Hash cotiGenesisAddress, Hash fundAddress, int genesisAddressIndex) {
 
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
 
@@ -87,7 +88,7 @@ public class TransactionCreationService {
         TransactionData initialTransactionData = new TransactionData(baseTransactions, TransactionType.Initial.toString(), trustScore, Instant.now(), TransactionType.Initial);
 
         if (!balanceService.checkBalancesAndAddToPreBalance(initialTransactionData.getBaseTransactions())) {
-            throw new Exception("Balance check failed");
+            throw new TransactionValidationException("Balance check failed");
         }
         clusterService.selectSources(initialTransactionData);
         initialTransactionData.setAttachmentTime(Instant.now());

@@ -612,7 +612,8 @@ public class FundDistributionService {
             initialTransactionHash = transactionCreationService.createInitialTransactionToFund(fundDistributionData.getAmount(),
                     sourceAddress, fundDistributionData.getReceiverAddress(), sourceAddressIndex);
         } catch (Exception e) {
-            log.error("Failed to create transaction ", e);
+            log.error("Failed to create initial transaction.");
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
         }
         return initialTransactionHash;
     }

@@ -44,7 +44,8 @@ public class DistributionService {
                 try {
                     initialTransactionHash = transactionCreationService.createInitialTransactionToFund(amount, cotiGenesisAddress, fundAddress, COTI_GENESIS_ADDRESS_INDEX);
                 } catch (Exception e) {
-                    log.error("Failed to create initial fund: {}", e.getMessage());
+                    log.error("Failed to create initial fund");
+                    log.error("{}: {}", e.getClass().getName(), e.getMessage());
                     return;
                 }
                 InitialFundData initialFundDataElement = new InitialFundData(fundAddress, initialTransactionHash);
