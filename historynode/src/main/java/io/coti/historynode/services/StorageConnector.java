@@ -1,7 +1,6 @@
 package io.coti.historynode.services;
 
-import io.coti.basenode.http.GetEntitiesBulkRequest;
-import io.coti.basenode.http.Request;
+import io.coti.basenode.http.*;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.historynode.services.interfaces.IStorageConnector;
 import lombok.extern.slf4j.Slf4j;
@@ -13,9 +12,9 @@ import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
-public abstract class StorageConnector implements IStorageConnector {
+public abstract class StorageConnector<T extends Request, U extends Response> implements IStorageConnector<T,U> {
 
-    public ResponseEntity<IResponse> getForObject(String url, Class<ResponseEntity> responseEntityClass, GetEntitiesBulkRequest getEntitiesBulkRequest) {
+    public ResponseEntity<IResponse> getForObject(String url, GetEntitiesBulkRequest getEntitiesBulkRequest, Class<ResponseEntity> responseEntityClass) {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
@@ -34,7 +33,17 @@ public abstract class StorageConnector implements IStorageConnector {
         return (ResponseEntity<IResponse>) exchangeResponse.getBody().get(0);
     }
 
+    @Override
+    public ResponseEntity<U> postForObjects(String url, T request) {
+        RestTemplate restTemplate = new RestTemplate();
+        return (ResponseEntity<U>) restTemplate.postForEntity(url, request, Response.class);
+    }
 
+    @Override
+    public ResponseEntity<U> postForObjects(String url, T request, Class<U> responseType) {
+        RestTemplate restTemplate = new RestTemplate();
+        return restTemplate.postForEntity(url, request, responseType);
+    }
 
 
     public void putObject(String url, Request request) {

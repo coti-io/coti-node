@@ -1,10 +1,18 @@
 package io.coti.historynode.services;
 
+import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.database.interfaces.IDatabaseConnector;
+import io.coti.basenode.http.GetAddressesRequest;
 import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.basenode.model.Addresses;
+import io.coti.historynode.crypto.AddressesRequestCrypto;
+import io.coti.historynode.crypto.AddressesResponseCrypto;
+import io.coti.historynode.crypto.HistoryAddressCrypto;
+import io.coti.historynode.database.HistoryRocksDBConnector;
 import io.coti.historynode.http.GetAddressBatchResponse;
-import io.coti.historynode.services.interfaces.IStorageConnector;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,7 +29,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
-@ContextConfiguration(classes = {HistoryAddressService.class, StorageConnector.class})
+@ContextConfiguration(classes = {HistoryAddressService.class, HistoryAddressStorageConnector.class, Addresses.class, HistoryRocksDBConnector.class, AddressesRequestCrypto.class, NodeCryptoHelper.class
+, HistoryAddressCrypto.class, AddressesRequestCrypto.class, AddressesResponseCrypto.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -31,20 +40,39 @@ public class HistoryAddressServiceIntegrationTest {
 
     @Autowired
     private HistoryAddressService historyAddressService;
-
     @Autowired
     private EntityService entityService;
-
     @Autowired
-    private StorageConnector storageConnector;
-
+    private HistoryRocksDBConnector historyRocksDBConnector;
     @Autowired
-    private IStorageConnector iStorageConnector;
+    public IDatabaseConnector databaseConnector;
+    @Autowired
+    private Addresses addressesCollection;
+    @Autowired
+    AddressesRequestCrypto addressesRequestCrypto;
+
+    private GetAddressesRequest getAddressesRequest;
+
+    private Hash insertedHash;
 
     @Before
     public void setUp() throws Exception {
+        databaseConnector.init();
+        getAddressesRequest = TestUtils.generateGetAddressesRequest();
+        addressesRequestCrypto.signMessage(getAddressesRequest);
+        insertedHash = getAddressesRequest.getAddressesHash().iterator().next();
+        insertAddressDataToRocksDB(insertedHash);
     }
 
+    @After
+    public void finishUp() throws Exception {
+        addressesCollection.deleteByHash(insertedHash);
+    }
+
+    @Test
+    public void getAddressesTestTemp(){
+        historyAddressService.getAddresses(getAddressesRequest);
+    }
 
     @Test
     public void storePlusRetrieveAddress_AddressMatch()
@@ -65,6 +93,11 @@ public class HistoryAddressServiceIntegrationTest {
 
         //TODO: not finished
 // This currently fails
+    }
+
+    private void insertAddressDataToRocksDB(Hash addressHash){
+        AddressData data = new AddressData(addressHash);
+        addressesCollection.put(data);
     }
 
 }
