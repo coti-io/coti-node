@@ -1,13 +1,16 @@
 package io.coti.historynode.services.interfaces;
 
-import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Request;
-import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.basenode.http.Response;
 import org.springframework.http.ResponseEntity;
 
-public interface IStorageConnector {
-    <T extends Request> ResponseEntity<IResponse> getForObject(String url, Class<ResponseEntity> responseEntityClass, T request);
-    <T extends Request,U extends BaseResponse> ResponseEntity<IResponse> postForObject(String url, Class<ResponseEntity> responseEntityClass, T request);
+//TODO 7/9/2019 astolia: check if changing  <T extends Request, U extends Response> to <T, U> works fine
+public interface IStorageConnector<T extends Request, U extends Response> {
 
-    void putObject(String url, Request request);
+    ResponseEntity<U> getForObject(String url, T request);
+    ResponseEntity<U> postForObjects(String url, T request);
+
+    ResponseEntity<U> getForObject(String url, T request, Class<U> responseType);
+    ResponseEntity<U> postForObjects(String url, T request, Class<U> responseType);
+
 }

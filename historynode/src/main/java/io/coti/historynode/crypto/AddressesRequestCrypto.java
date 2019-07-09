@@ -1,7 +1,7 @@
 package io.coti.historynode.crypto;
 
 import io.coti.basenode.crypto.CryptoHelper;
-import io.coti.basenode.crypto.SignatureValidationCrypto;
+import io.coti.basenode.crypto.SignatureCrypto;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.GetAddressesRequest;
 import org.springframework.stereotype.Service;
@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 import java.util.Set;
 
 @Service
-public class AddressesRequestCrypto extends SignatureValidationCrypto<GetAddressesRequest> {
+public class AddressesRequestCrypto extends SignatureCrypto<GetAddressesRequest> {
 
     @Override
     public byte[] getSignatureMessage(GetAddressesRequest getAddressesRequest) {
