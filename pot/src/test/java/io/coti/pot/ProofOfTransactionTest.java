@@ -1,4 +1,5 @@
-import io.coti.pot.ProofOfTrust;
+package io.coti.pot;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

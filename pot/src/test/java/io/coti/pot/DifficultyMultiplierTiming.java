@@ -1,3 +1,5 @@
+package io.coti.pot;
+
 import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;

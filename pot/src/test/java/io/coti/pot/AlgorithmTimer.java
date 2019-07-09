@@ -1,4 +1,5 @@
-import io.coti.pot.Algorithm;
+package io.coti.pot;
+
 import io.coti.pot.interfaces.IAlgorithm;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;

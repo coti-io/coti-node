@@ -1,4 +1,4 @@
-import io.coti.pot.ProofOfTrust;
+package io.coti.pot;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
