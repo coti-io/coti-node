@@ -8,6 +8,7 @@ import io.coti.basenode.services.interfaces.ICommunicationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.SpringApplication;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -65,7 +66,7 @@ public class InitializationService extends BaseNodeInitializationService {
             return networkNodeData;
         }
         log.error("Fee Data is invalid, please fix fee properties by following coti instructions. Shutting down the server!");
-        System.exit(-1);
+        System.exit(SpringApplication.exit(applicationContext));
         return null;
     }
 }

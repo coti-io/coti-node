@@ -11,6 +11,7 @@ import io.coti.basenode.services.interfaces.ICommunicationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.SpringApplication;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -50,7 +51,7 @@ public class InitializationService extends BaseNodeInitializationService {
         NetworkNodeData zerospendNetworkNodeData = networkService.getSingleNodeData(NodeType.ZeroSpendServer);
         if (zerospendNetworkNodeData == null) {
             log.error("No zerospend server exists in the network got from the node manager. Exiting from the application");
-            System.exit(-1);
+            System.exit(SpringApplication.exit(applicationContext));
         }
         networkService.setRecoveryServerAddress(zerospendNetworkNodeData.getHttpFullAddress());
         communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress(), NodeType.ZeroSpendServer);

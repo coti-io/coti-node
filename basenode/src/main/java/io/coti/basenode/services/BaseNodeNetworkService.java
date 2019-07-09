@@ -3,12 +3,15 @@ package io.coti.basenode.services;
 import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeRegistrationCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.exceptions.NetworkNodeValidationException;
 import io.coti.basenode.http.CustomHttpComponentsClientHttpRequestFactory;
 import io.coti.basenode.services.interfaces.ICommunicationService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +21,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.validation.ValidationException;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,6 +46,8 @@ public class BaseNodeNetworkService implements INetworkService {
     private NetworkNodeCrypto networkNodeCrypto;
     @Autowired
     private NodeRegistrationCrypto nodeRegistrationCrypto;
+    @Autowired
+    private ApplicationContext applicationContext;
     protected Map<NodeType, Map<Hash, NetworkNodeData>> multipleNodeMaps;
     protected Map<NodeType, NetworkNodeData> singleNodeNetworkDataMap;
     protected NetworkNodeData networkNodeData;
@@ -154,7 +160,7 @@ public class BaseNodeNetworkService implements INetworkService {
     }
 
     public boolean updateNetworkNode(NetworkNodeData networkNodeData) {
-        NetworkNodeData node = null;
+        NetworkNodeData node;
         if (!NodeTypeService.valueOf(networkNodeData.getNodeType().toString()).isMultipleNode()) {
             node = singleNodeNetworkDataMap.get(networkNodeData.getNodeType());
         } else {
@@ -176,26 +182,26 @@ public class BaseNodeNetworkService implements INetworkService {
     }
 
     @Override
-    public void validateNetworkNodeData(NetworkNodeData networkNodeData) throws Exception {
+    public void validateNetworkNodeData(NetworkNodeData networkNodeData) throws ValidationException {
         if (!networkNodeData.getNetworkType().equals(networkType)) {
             log.error("Invalid network type {} by node {}", networkNodeData.getNetworkType(), networkNodeData.getNodeHash());
-            throw new Exception(String.format(INVALID_NETWORK_TYPE, networkType, networkNodeData.getNetworkType()));
+            throw new NetworkNodeValidationException(String.format(INVALID_NETWORK_TYPE, networkType, networkNodeData.getNetworkType()));
         }
         if (!networkNodeCrypto.verifySignature(networkNodeData)) {
             log.error("Invalid signature by node {}", networkNodeData.getNodeHash());
-            throw new Exception(INVALID_SIGNATURE);
+            throw new NetworkNodeValidationException(INVALID_SIGNATURE);
         }
         if (!nodeRegistrationCrypto.verifySignature(networkNodeData.getNodeRegistrationData())) {
             log.error("Invalid node registration signature by node {}", networkNodeData.getNodeHash());
-            throw new Exception(INVALID_NODE_REGISTRATION_SIGNATURE);
+            throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_SIGNATURE);
         }
         if (!networkNodeData.getNodeRegistrationData().getRegistrarHash().toString().equals(kycServerPublicKey)) {
             log.error("Invalid registrar node hash for node {}", networkNodeData.getNodeHash());
-            throw new Exception(INVALID_NODE_REGISTRAR);
+            throw new NetworkNodeValidationException(INVALID_NODE_REGISTRAR);
         }
         if (networkNodeData.getNodeType().equals(NodeType.FullNode) && !validateFeeData(networkNodeData.getFeeData())) {
             log.error("Invalid fee data for full node {}", networkNodeData.getNodeHash());
-            throw new Exception(INVALID_FULL_NODE_FEE);
+            throw new NetworkNodeValidationException(INVALID_FULL_NODE_FEE);
         }
     }
 
@@ -361,6 +367,7 @@ public class BaseNodeNetworkService implements INetworkService {
 
     @Override
     public void connectToNetwork() {
+        log.info("Connecting to Coti network");
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.setRequestFactory(new CustomHttpComponentsClientHttpRequestFactory());
 
@@ -369,8 +376,8 @@ public class BaseNodeNetworkService implements INetworkService {
             ResponseEntity<String> response = restTemplate.exchange(connectToNetworkUrl, HttpMethod.PUT, entity, String.class);
             log.info("{}", response.getBody());
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            log.error("Node manager error: ", e.getResponseBodyAsString());
-            System.exit(-1);
+            log.error("Unable to connect to network. Node manager error: {}", e.getResponseBodyAsString());
+            System.exit(SpringApplication.exit(applicationContext));
         }
     }
 

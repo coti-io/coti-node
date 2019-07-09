@@ -5,6 +5,7 @@ import io.coti.basenode.data.ClusterStampData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.SignatureData;
+import io.coti.basenode.exceptions.ClusterStampValidationException;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IClusterStampService;
@@ -52,7 +53,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     protected INetworkService networkService;
 
     @Override
-    public void loadClusterStamp() throws Exception {
+    public void loadClusterStamp() {
         String clusterStampFileLocation = clusterStampFilePrefix + CLUSTERSTAMP_FILE_SUFFIX;
         File clusterstampFile = new File(clusterStampFileLocation);
         ClusterStampData clusterStampData = new ClusterStampData();
@@ -69,12 +70,12 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                 relevantLineNumber++;
                 if (line.isEmpty()) {
                     if (relevantLineNumber < NUMBER_OF_GENESIS_ADDRESSES_MIN_LINES) {
-                        throw new Exception(BAD_CSV_FILE_FORMAT);
+                        throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
                     } else {
                         if (!finishedBalances)
                             finishedBalances = true;
                         else
-                            throw new Exception(BAD_CSV_FILE_FORMAT);
+                            throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
                     }
                 } else {
                     if (!finishedBalances) {
@@ -82,7 +83,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                     } else {
                         if (!reachedSignatureSection) {
                             if (!line.contentEquals(SIGNATURE_LINE_TOKEN))
-                                throw new Exception(BAD_CSV_FILE_FORMAT);
+                                throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
                             else
                                 reachedSignatureSection = true;
                         } else {
@@ -96,7 +97,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             if (signatureRelevantLines == 0) {
                 handleClusterStampWithoutSignature(clusterStampData);
             } else if (signatureRelevantLines == 1) {
-                throw new Exception(BAD_CSV_FILE_FORMAT);
+                throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
             } else {
                 handleClusterStampWithSignature(clusterStampData);
             }
@@ -104,15 +105,15 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             log.info("Clusterstamp is loaded");
         } catch (Exception e) {
             log.error("Errors on clusterstamp loading");
-            throw e;
+            throw new ClusterStampValidationException(e.getMessage());
         }
     }
 
-    private void fillBalanceFromLine(ClusterStampData clusterStampData, String line) throws Exception {
+    private void fillBalanceFromLine(ClusterStampData clusterStampData, String line) {
         String[] addressDetails;
         addressDetails = line.split(",");
         if (addressDetails.length != NUMBER_OF_ADDRESS_LINE_DETAILS) {
-            throw new Exception(BAD_CSV_FILE_FORMAT);
+            throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
         }
         Hash addressHash = new Hash(addressDetails[ADDRESS_DETAILS_HASH_PLACEMENT]);
         BigDecimal addressAmount = new BigDecimal(addressDetails[ADDRESS_DETAILS_AMOUNT_PLACEMENT]);
@@ -126,19 +127,19 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         clusterStampData.incrementMessageByteSize(balanceInBytes.length);
     }
 
-    private void fillSignatureDataFromLine(ClusterStampData clusterStampData, String line, int signatureRelevantLines) throws Exception {
+    private void fillSignatureDataFromLine(ClusterStampData clusterStampData, String line, int signatureRelevantLines) {
         if (signatureRelevantLines > 2) {
-            throw new Exception(BAD_CSV_FILE_FORMAT);
+            throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
         }
 
         String[] signatureDetails;
         signatureDetails = line.split(",");
         if (signatureDetails.length != NUMBER_OF_SIGNATURE_LINE_DETAILS) {
-            throw new Exception(BAD_CSV_FILE_FORMAT);
+            throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
         }
         String signaturePrefix = (signatureRelevantLines == 1) ? "r" : "s";
         if (!signatureDetails[0].equalsIgnoreCase(signaturePrefix)) {
-            throw new Exception(BAD_CSV_FILE_FORMAT);
+            throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
         }
 
         if (signatureRelevantLines == 1) {
@@ -149,15 +150,15 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             clusterStampData.getSignature().setS(signatureDetails[1]);
     }
 
-    protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData) throws Exception {
-        throw new Exception(BAD_CSV_FILE_FORMAT);
+    protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData) {
+        throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
     }
 
-    private void handleClusterStampWithSignature(ClusterStampData clusterStampData) throws Exception {
+    private void handleClusterStampWithSignature(ClusterStampData clusterStampData) {
         setClusterStampSignerHash(clusterStampData);
         if (!clusterStampCrypto.verifySignature(clusterStampData)) {
             log.error("Clusterstamp invalid signature");
-            throw new Exception(BAD_CSV_FILE_FORMAT);
+            throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
         }
     }
 

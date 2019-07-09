@@ -7,6 +7,7 @@ import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeRegistrationCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
+import io.coti.basenode.exceptions.TransactionSyncException;
 import io.coti.basenode.http.CustomHttpComponentsClientHttpRequestFactory;
 import io.coti.basenode.http.GetNodeRegistrationRequest;
 import io.coti.basenode.http.GetNodeRegistrationResponse;
@@ -18,6 +19,8 @@ import io.coti.basenode.services.liveview.LiveViewService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -104,6 +107,8 @@ public abstract class BaseNodeInitializationService {
     private IClusterStampService clusterStampService;
     @Autowired
     private JacksonSerializer jacksonSerializer;
+    @Autowired
+    protected ApplicationContext applicationContext;
 
     public void init() {
         try {
@@ -125,8 +130,9 @@ public abstract class BaseNodeInitializationService {
 
             monitorService.init();
         } catch (Exception e) {
-            log.error("Errors at {} : ", this.getClass().getSimpleName(), e);
-            System.exit(-1);
+            log.error("Errors at {}", this.getClass().getSimpleName());
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
+            System.exit(SpringApplication.exit(applicationContext));
         }
     }
 
@@ -158,8 +164,7 @@ public abstract class BaseNodeInitializationService {
             clusterService.finalizeInit();
 
         } catch (Exception e) {
-            log.error("Fatal error in initialization", e);
-            System.exit(-1);
+            throw new TransactionSyncException(e.getMessage());
         }
     }
 
@@ -235,7 +240,7 @@ public abstract class BaseNodeInitializationService {
                         }
 
                     } catch (Exception e) {
-                        throw new RuntimeException(e);
+                        throw new TransactionSyncException(e.getMessage());
                     }
                 }
                 return null;
@@ -252,7 +257,7 @@ public abstract class BaseNodeInitializationService {
             log.info("Finished to get missing transactions");
         } catch (Exception e) {
             log.error("Error at missing transactions from recovery Node");
-            throw new RuntimeException(e);
+            throw new TransactionSyncException(e.getMessage());
         }
 
     }
@@ -349,24 +354,24 @@ public abstract class BaseNodeInitializationService {
             }
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             log.error("Error at registration of node. Registrar response: \n {}", e.getResponseBodyAsString());
-            System.exit(-1);
+            System.exit(SpringApplication.exit(applicationContext));
         }
     }
 
     protected boolean validateNodeRegistrationResponse(NodeRegistrationData nodeRegistrationData, NetworkNodeData networkNodeData) {
         if (!nodeRegistrationData.getSignerHash().toString().equals(kycServerPublicKey)) {
             log.error("Invalid kyc server public key.");
-            System.exit(-1);
+            System.exit(SpringApplication.exit(applicationContext));
         }
         if (!networkNodeData.getNodeHash().equals(nodeRegistrationData.getNodeHash()) || !networkNodeData.getNodeType().equals(nodeRegistrationData.getNodeType())) {
             log.error("Node registration response has invalid fields! Shutting down server.");
-            System.exit(-1);
+            System.exit(SpringApplication.exit(applicationContext));
 
         }
 
         if (!nodeRegistrationCrypto.verifySignature(nodeRegistrationData)) {
             log.error("Node registration failed signature validation! Shutting down server");
-            System.exit(-1);
+            System.exit(SpringApplication.exit(applicationContext));
         }
 
         return true;

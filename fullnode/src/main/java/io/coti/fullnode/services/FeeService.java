@@ -85,8 +85,8 @@ public class FeeService {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new FullNodeFeeResponse(fullNodeFeeResponseData));
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
         }
     }
 

@@ -1,4 +1,5 @@
-import io.coti.pot.ProofOfTrust;
+package io.coti.pot;
+
 import io.coti.pot.interfaces.IAlgorithm.AlgorithmTypes;
 import org.junit.jupiter.api.Test;
 

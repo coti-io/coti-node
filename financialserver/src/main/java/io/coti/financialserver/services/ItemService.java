@@ -58,7 +58,7 @@ public class ItemService {
             try {
                 DisputeItemStatusService.valueOf(disputeUpdateItemData.getStatus().toString()).changeStatus(disputeData, itemId, actionSide);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("{}: {}", e.getClass().getName(), e.getMessage());
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(e.getMessage(), STATUS_ERROR));
             }
         }
@@ -109,7 +109,7 @@ public class ItemService {
         try {
             disputeService.updateAfterVote(disputeData, disputeItemData);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(e.getMessage(), STATUS_ERROR));
         }
 

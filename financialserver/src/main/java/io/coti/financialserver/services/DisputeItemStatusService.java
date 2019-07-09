@@ -6,6 +6,7 @@ import io.coti.financialserver.data.ActionSide;
 import io.coti.financialserver.data.DisputeData;
 import io.coti.financialserver.data.DisputeItemData;
 import io.coti.financialserver.data.DisputeItemStatus;
+import io.coti.financialserver.exceptions.DisputeItemChangeStatusException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -130,24 +131,24 @@ public enum DisputeItemStatusService {
 
     public void changeStatus(DisputeData disputeData, Long itemId, ActionSide actionSide) throws Exception {
         if (!isActionSideValid(actionSide)) {
-            throw new Exception(String.format(DISPUTE_ITEM_STATUS_INVALID_ACTIONSIDE, actionSide.toString(), toString()));
+            throw new DisputeItemChangeStatusException(String.format(DISPUTE_ITEM_STATUS_INVALID_ACTIONSIDE, actionSide.toString(), toString()));
         }
         DisputeItemData disputeItemData = disputeData.getDisputeItem(itemId);
         if (disputeItemData == null) {
-            throw new Exception(DISPUTE_ITEM_NOT_FOUND);
+            throw new DisputeItemChangeStatusException(DISPUTE_ITEM_NOT_FOUND);
         }
         if (!disputeItemData.getStatus().equals(DisputeItemStatus.Recall) && valueOf(disputeItemData.getStatus().toString()).isFinalStatus()) {
-            throw new Exception(DISPUTE_ITEM_STATUS_FINAL);
+            throw new DisputeItemChangeStatusException(DISPUTE_ITEM_STATUS_FINAL);
         }
         if (!previousDisputeItemStatuses.contains(disputeItemData.getStatus())) {
-            throw new Exception(DISPUTE_ITEM_STATUS_INVALID_CHANGE);
+            throw new DisputeItemChangeStatusException(DISPUTE_ITEM_STATUS_INVALID_CHANGE);
         }
         changeStatus(disputeItemData);
         webSocketService.notifyOnItemStatusChange(disputeData, itemId, actionSide);
         changeDisputeItemsStatuses(disputeData);
-        if (isFinalStatusForAllItems(disputeData)) {
-            //   createChargeBackTransaction(disputeData);
-        }
+//        if (isFinalStatusForAllItems(disputeData)) {
+//               createChargeBackTransaction(disputeData);
+//        }
 
         changeDisputeStatus(disputeData);
     }

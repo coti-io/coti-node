@@ -6,6 +6,6 @@ package io.coti.basenode.services.interfaces;
  */
 public interface IClusterStampService {
 
-    void loadClusterStamp() throws Exception;
+    void loadClusterStamp();
 
 }

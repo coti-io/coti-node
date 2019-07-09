@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentMap;
 @Slf4j
 @Service
 public class DspVoteService extends BaseNodeDspVoteService {
+
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
@@ -36,8 +37,6 @@ public class DspVoteService extends BaseNodeDspVoteService {
     private DspConsensusCrypto dspConsensusCrypto;
     @Autowired
     private INetworkService networkService;
-
-
     private ConcurrentMap<Hash, List<DspVote>> transactionHashToVotesListMapping;
 
     @Override

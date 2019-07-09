@@ -11,7 +11,6 @@ mvn initialize && mvn clean compile && mvn package
 
 java -jar zerospend/target/zerospend-0.0.1-SNAPSHOT.jar --spring.config.additional-location=zerospend.properties
 
-
 ## using docker 
 There is a dockerfile and docker compose in this folder
 

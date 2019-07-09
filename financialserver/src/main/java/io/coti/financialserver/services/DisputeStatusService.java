@@ -3,6 +3,7 @@ package io.coti.financialserver.services;
 import io.coti.financialserver.data.ActionSide;
 import io.coti.financialserver.data.DisputeData;
 import io.coti.financialserver.data.DisputeStatus;
+import io.coti.financialserver.exceptions.DisputeChangeStatusException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -39,10 +40,10 @@ public enum DisputeStatusService {
 
     public void changeStatus(DisputeData disputeData) throws Exception {
         if (!disputeData.getDisputeStatus().equals(DisputeStatus.Recall) && valueOf(disputeData.getDisputeStatus().toString()).isFinalStatus()) {
-            throw new Exception(DISPUTE_STATUS_FINAL);
+            throw new DisputeChangeStatusException(DISPUTE_STATUS_FINAL);
         }
         if (!previousDisputeStatuses.contains(disputeData.getDisputeStatus())) {
-            throw new Exception(DISPUTE_STATUS_INVALID_CHANGE);
+            throw new DisputeChangeStatusException(DISPUTE_STATUS_INVALID_CHANGE);
         }
 
         disputeData.setDisputeStatus(newDisputeStatus);

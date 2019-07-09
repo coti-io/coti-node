@@ -2,6 +2,7 @@ package io.coti.zerospend.services;
 
 import io.coti.basenode.data.ClusterStampData;
 import io.coti.basenode.data.SignatureData;
+import io.coti.basenode.exceptions.ClusterStampValidationException;
 import io.coti.basenode.services.BaseNodeClusterStampService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,12 +20,12 @@ import java.io.IOException;
 public class ClusterStampService extends BaseNodeClusterStampService {
 
     @Override
-    protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData) throws Exception {
+    protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData) {
         clusterStampCrypto.signMessage(clusterStampData);
         updateClusterStampFileWithSignature(clusterStampData.getSignature());
     }
 
-    private void updateClusterStampFileWithSignature(SignatureData signature) throws Exception {
+    private void updateClusterStampFileWithSignature(SignatureData signature) {
         try {
             String clusterstampFileLocation = clusterStampFilePrefix + CLUSTERSTAMP_FILE_SUFFIX;
             FileWriter clusterstampFileWriter = new FileWriter(clusterstampFileLocation, true);
@@ -38,8 +39,8 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             clusterStampBufferedWriter.append("s," + signature.getS());
             clusterStampBufferedWriter.close();
         } catch (IOException e) {
-            e.printStackTrace();
-            throw new Exception(BAD_CSV_FILE_FORMAT);
+            log.error("Exception at clusterstamp signing");
+            throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
         }
     }
 
