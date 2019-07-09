@@ -14,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -185,16 +184,14 @@ public abstract class EntityStorageService implements IEntityStorageService
     @Override
     public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(List<Hash> hashes)
     {
-//        HashMap<Hash, ResponseEntity<IResponse>> responsesMap = new HashMap<>();
         HashMap<Hash, String> responsesMap = new HashMap<>();
-        GetEntitiesBulkResponse entitiesBulkResponse = new GetEntitiesBulkResponse(responsesMap);
+        GetEntitiesBulkResponse entitiesBulkResponse = new GetEntitiesBulkResponse();
 
         // Retrieve data from ongoing storage system
         ResponseEntity<IResponse> objectsByHashResponse = objectService.getMultiObjectsFromDb(hashes, false, objectType);
 
-        if( !isResponseOK(objectsByHashResponse) )
-        {
-            responsesMap.put(null, null);
+        if( !isResponseOK(objectsByHashResponse)){
+            responsesMap.put(null,null);
             entitiesBulkResponse.setEntitiesBulkResponses(responsesMap);
             return ResponseEntity.status(objectsByHashResponse.getStatusCode()).body(entitiesBulkResponse);
         }
