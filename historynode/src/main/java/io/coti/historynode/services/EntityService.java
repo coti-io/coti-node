@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.http.AddEntitiesBulkRequest;
 import io.coti.historynode.http.StoreEntitiesToStorageResponse;
-import io.coti.historynode.services.interfaces.IStorageConnector;
 import io.coti.historynode.services.interfaces.IEntityService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,11 +37,11 @@ public abstract class EntityService implements IEntityService {
         );
 
         storeEntitiesByType(storageServerAddress + endpoint, addEntitiesBulkRequest);
-        ResponseEntity<StoreEntitiesToStorageResponse> storeEntitiesToStorageResponse = storageConnector.putObject(storageServerAddress + endpoint, addEntitiesBulkRequest);
+        ResponseEntity<StoreEntitiesToStorageResponse> storeEntitiesToStorageResponse = storeEntitiesByType(storageServerAddress + endpoint, addEntitiesBulkRequest);
         return storeEntitiesToStorageResponse;
     }
 
-    protected abstract void storeEntitiesByType(String s, AddEntitiesBulkRequest addEntitiesBulkRequest);
+    protected abstract ResponseEntity<StoreEntitiesToStorageResponse> storeEntitiesByType(String url, AddEntitiesBulkRequest addEntitiesBulkRequest);
 
 
 }
