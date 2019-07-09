@@ -21,7 +21,6 @@ import io.coti.historynode.database.HistoryRocksDBConnector;
 import io.coti.historynode.http.GetTransactionsByAddressRequest;
 import io.coti.historynode.http.GetTransactionsByDateRequest;
 import io.coti.historynode.http.HistoryTransactionResponse;
-import io.coti.historynode.services.interfaces.IStorageConnector;
 import io.coti.historynode.model.AddressTransactionsByAddresses;
 import io.coti.historynode.model.AddressTransactionsByDates;
 import org.junit.Assert;
@@ -29,8 +28,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
@@ -45,11 +44,12 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Value;
-
-import static utils.TestUtils.*;
+import static utils.TestUtils.createRandomTransaction;
 import static utils.TestUtils.generateRandomHash;
 
 @ContextConfiguration(classes = {HistoryTransactionService.class,
@@ -57,7 +57,7 @@ import static utils.TestUtils.generateRandomHash;
         Transactions.class,
         AddressTransactionsByDates.class, AddressTransactionsByAddresses.class,
         IDatabaseConnector.class, BaseNodeRocksDBConnector.class, HistoryTransactionService.class,
-        TransactionsRequestCrypto.class
+        TransactionsRequestCrypto.class, HistoryTransactionStorageConnector.class
 })
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
@@ -76,8 +76,8 @@ public class HistoryTransactionServiceTest {
     @Autowired
     private Transactions transactions;
 
-    @MockBean
-    private IStorageConnector storageConnector;
+    @Autowired
+    private HistoryTransactionStorageConnector storageConnector;
 
     @Autowired
     private AddressTransactionsByDates addressTransactionsByDates;

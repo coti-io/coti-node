@@ -8,7 +8,6 @@ import io.coti.historynode.http.StoreEntitiesToStorageResponse;
 import io.coti.historynode.services.interfaces.IStorageConnector;
 import io.coti.historynode.services.interfaces.IEntityService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -18,9 +17,6 @@ import java.util.List;
 @Slf4j
 @Service
 public abstract class EntityService implements IEntityService {
-
-    @Autowired
-    protected IStorageConnector storageConnector;
 
     protected String endpoint = null;
 
@@ -40,7 +36,13 @@ public abstract class EntityService implements IEntityService {
                     }
                 }
         );
+
+        storeEntitiesByType(storageServerAddress + endpoint, addEntitiesBulkRequest);
         ResponseEntity<StoreEntitiesToStorageResponse> storeEntitiesToStorageResponse = storageConnector.putObject(storageServerAddress + endpoint, addEntitiesBulkRequest);
         return storeEntitiesToStorageResponse;
     }
+
+    protected abstract void storeEntitiesByType(String s, AddEntitiesBulkRequest addEntitiesBulkRequest);
+
+
 }
