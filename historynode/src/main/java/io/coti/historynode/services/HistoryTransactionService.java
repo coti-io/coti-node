@@ -10,6 +10,7 @@ import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.ReceiverBaseTransactionData;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.http.AddEntitiesBulkRequest;
 import io.coti.basenode.http.GetEntitiesBulkRequest;
 import io.coti.basenode.http.GetEntitiesBulkResponse;
 import io.coti.basenode.http.Response;
@@ -22,14 +23,14 @@ import io.coti.historynode.http.GetTransactionsByAddressRequest;
 import io.coti.historynode.http.GetTransactionsByDateRequest;
 import io.coti.historynode.http.HistoryTransactionResponse;
 import io.coti.historynode.http.data.HistoryTransactionResponseData;
-import io.coti.historynode.services.interfaces.IStorageConnector;
 import io.coti.historynode.model.AddressTransactionsByAddresses;
 import io.coti.historynode.model.AddressTransactionsByDates;
 import io.coti.historynode.services.interfaces.IHistoryTransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -44,7 +45,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.EMPTY_SEARCH_RESULT;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.TRANSACTIONS_NOT_FOUND;
 
 @Slf4j
 @Service
@@ -56,7 +58,7 @@ public class HistoryTransactionService extends EntityService implements IHistory
     @Autowired
     private Transactions transactions;
     @Autowired
-    private IStorageConnector storageConnector;
+    private HistoryTransactionStorageConnector storageConnector;
 
     @Autowired
     private AddressTransactionsByAddresses addressTransactionsByAddresses;
@@ -410,6 +412,11 @@ public class HistoryTransactionService extends EntityService implements IHistory
     public LocalDate calculateInstantLocalDate(Instant date) {
         LocalDateTime ldt = LocalDateTime.ofInstant(date, ZoneOffset.UTC);
         return LocalDate.of(ldt.getYear(), ldt.getMonth(),ldt.getDayOfMonth());
+    }
+
+    @Override
+    protected void storeEntitiesByType(String s, AddEntitiesBulkRequest addEntitiesBulkRequest) {
+        storageConnector.postForObjects(storageServerAddress + endpoint, addEntitiesBulkRequest);
     }
 
 }

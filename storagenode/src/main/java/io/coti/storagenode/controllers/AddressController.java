@@ -1,18 +1,24 @@
 package io.coti.storagenode.controllers;
 
-import io.coti.basenode.http.GetEntitiesBulkRequest;
+import io.coti.basenode.data.AddressData;
+import io.coti.basenode.data.Hash;
+import io.coti.basenode.http.GetAddressesRequest;
+import io.coti.basenode.http.GetAddressesResponse;
 import io.coti.basenode.http.GetEntityRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.services.AddressStorageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
@@ -28,11 +34,21 @@ public class AddressController {
         return addressStorageService.retrieveObjectFromStorage(getEntityRequest.getHash());
     }
 
-    @PutMapping(value = "/addresses")
-//    public Map<Hash, ResponseEntity<IResponse>> getAddressesFromStorage(@Valid @RequestBody GetEntitiesBulkRequest getEntitiesBulkRequest) {
-    public ResponseEntity<IResponse> getAddressesFromStorage(@Valid @RequestBody GetEntitiesBulkRequest getEntitiesBulkRequest) {
-        log.info(" Reached getAddressesFromStorage with getEntitiesBulkRequest = {}", getEntitiesBulkRequest.toString());
-        return addressStorageService.retrieveMultipleObjectsFromStorage(getEntitiesBulkRequest.getHashes());
+    @PostMapping(value = "/addresses")
+    public ResponseEntity<GetAddressesResponse> getAddressesFromStorage(@Valid @RequestBody GetAddressesRequest getAddressesRequest) {
+        log.info(" Reached getAddressesFromStorage with getEntitiesBulkRequest = {}", getAddressesRequest.toString());
+//        return ResponseEntity
+//                .status(HttpStatus.UNAUTHORIZED)
+//                .body(new AddTransactionResponse(
+//                        STATUS_ERROR,
+//                        TRANSACTION_ALREADY_EXIST_MESSAGE));
+        Map<Hash, AddressData> map = new HashMap();
+
+        map.put(new Hash(0),new AddressData(new Hash(0)));
+        map.put(new Hash(1),new AddressData(new Hash(1)));
+        ResponseEntity<GetAddressesResponse> response =  ResponseEntity.status(HttpStatus.OK).body(new GetAddressesResponse(map,"a","b")); //GetAddressesResponse();
+        return response;
+//        return addressStorageService.retrieveMultipleObjectsFromStorage(new ArrayList(getAddressesRequest.getAddressesHash()));
     }
 
 //    @RequestMapping(value = "/address", method = PUT)
