@@ -8,6 +8,7 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Addresses;
 import io.coti.historynode.crypto.AddressesRequestCrypto;
 import io.coti.historynode.crypto.HistoryAddressCrypto;
+import io.coti.historynode.http.StoreEntitiesToStorageResponse;
 import io.coti.historynode.services.interfaces.IHistoryAddressService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,7 +87,7 @@ public class HistoryAddressService extends EntityService implements IHistoryAddr
     }
 
     @Override
-    protected void storeEntitiesByType(String s, AddEntitiesBulkRequest addEntitiesBulkRequest) {
-        storageConnector.postForObjects(storageServerAddress + endpoint, addEntitiesBulkRequest);
+    protected ResponseEntity<StoreEntitiesToStorageResponse> storeEntitiesByType(String url, AddEntitiesBulkRequest addEntitiesBulkRequest) {
+        return storageConnector.postForObjects(storageServerAddress + endpoint, addEntitiesBulkRequest);
     }
 }
