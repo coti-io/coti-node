@@ -48,11 +48,12 @@ public class HistoryAddressService extends EntityService implements IHistoryAddr
         Map<Hash,AddressData> addressToAddressDataResponse = populateAndRemoveFoundAddresses(addressesHashes);
         ResponseEntity<GetAddressesResponse> storageResponse = getAddressesFromStorage(addressesHashes);
 
-        if(!addressCrypto.getAddressResponseSignatureMessage((GetAddressesResponse) storageResponse.getBody())) {
+        //TODO 7/9/2019 astolia: handle null signature and signer hash? even thought shouldn't happend? exception thrown when these fields are null.
+        if(!addressCrypto.getAddressResponseSignatureMessage( storageResponse.getBody())) {
             return generateResponse(HttpStatus.UNAUTHORIZED, new GetAddressesResponse(new HashMap<>(),BaseNodeHttpStringConstants.INVALID_SIGNATURE, BaseNodeHttpStringConstants.STATUS_ERROR));
         }
 
-        addressToAddressDataResponse.putAll(((GetAddressesResponse)storageResponse.getBody()).getAddressHashesToAddresses());
+        addressToAddressDataResponse.putAll((storageResponse.getBody()).getAddressHashesToAddresses());
         //TODO 7/2/2019 astolia: What message should be set as argument for GetAddressesResponse?
         return generateResponse(HttpStatus.OK, new GetAddressesResponse(addressToAddressDataResponse, BaseNodeHttpStringConstants.STATUS_SUCCESS, BaseNodeHttpStringConstants.STATUS_SUCCESS));
     }
