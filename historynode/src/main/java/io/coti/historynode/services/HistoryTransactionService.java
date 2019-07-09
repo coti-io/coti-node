@@ -22,6 +22,7 @@ import io.coti.historynode.data.AddressTransactionsByDate;
 import io.coti.historynode.http.GetTransactionsByAddressRequest;
 import io.coti.historynode.http.GetTransactionsByDateRequest;
 import io.coti.historynode.http.HistoryTransactionResponse;
+import io.coti.historynode.http.StoreEntitiesToStorageResponse;
 import io.coti.historynode.http.data.HistoryTransactionResponseData;
 import io.coti.historynode.model.AddressTransactionsByAddresses;
 import io.coti.historynode.model.AddressTransactionsByDates;
@@ -415,8 +416,8 @@ public class HistoryTransactionService extends EntityService implements IHistory
     }
 
     @Override
-    protected void storeEntitiesByType(String s, AddEntitiesBulkRequest addEntitiesBulkRequest) {
-        storageConnector.postForObjects(storageServerAddress + endpoint, addEntitiesBulkRequest);
+    protected ResponseEntity<StoreEntitiesToStorageResponse> storeEntitiesByType(String url, AddEntitiesBulkRequest addEntitiesBulkRequest) {
+        return storageConnector.postForObjects(storageServerAddress + endpoint, addEntitiesBulkRequest);
     }
 
 }
