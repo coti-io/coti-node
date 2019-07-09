@@ -1,12 +1,14 @@
 package utils;
 
 import io.coti.basenode.data.*;
+import io.coti.basenode.http.GetAddressesRequest;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class TestUtils {
@@ -60,5 +62,13 @@ public class TestUtils {
 
     private static Double generateRandomTrustScore() {
         return Math.random() * 100;
+    }
+
+    public static GetAddressesRequest generateGetAddressesRequest(){
+        Set<Hash> hashes = new HashSet<>();
+        for(int i = 0 ; i < 20 ; i++){
+            hashes.add(generateRandomHash());
+        }
+        return new GetAddressesRequest(hashes);
     }
 }
