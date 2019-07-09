@@ -1,7 +1,5 @@
 package io.coti.storagenode.controllers;
 
-import io.coti.basenode.data.AddressData;
-import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.GetAddressesRequest;
 import io.coti.basenode.http.GetAddressesResponse;
 import io.coti.basenode.http.GetEntityRequest;
@@ -9,7 +7,6 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.services.AddressStorageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,8 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
 
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
@@ -36,19 +32,12 @@ public class AddressController {
 
     @PostMapping(value = "/addresses")
     public ResponseEntity<GetAddressesResponse> getAddressesFromStorage(@Valid @RequestBody GetAddressesRequest getAddressesRequest) {
-        log.info(" Reached getAddressesFromStorage with getEntitiesBulkRequest = {}", getAddressesRequest.toString());
-//        return ResponseEntity
-//                .status(HttpStatus.UNAUTHORIZED)
-//                .body(new AddTransactionResponse(
-//                        STATUS_ERROR,
-//                        TRANSACTION_ALREADY_EXIST_MESSAGE));
-        Map<Hash, AddressData> map = new HashMap();
-
-        map.put(new Hash(0),new AddressData(new Hash(0)));
-        map.put(new Hash(1),new AddressData(new Hash(1)));
-        ResponseEntity<GetAddressesResponse> response =  ResponseEntity.status(HttpStatus.OK).body(new GetAddressesResponse(map,"a","b")); //GetAddressesResponse();
-        return response;
-//        return addressStorageService.retrieveMultipleObjectsFromStorage(new ArrayList(getAddressesRequest.getAddressesHash()));
+//        for testing purposes
+//        Map<Hash, AddressData> map = new HashMap();
+//        map.put(new Hash(0),new AddressData(new Hash(0)));
+//        map.put(new Hash(1),new AddressData(new Hash(1)));
+//        ResponseEntity<GetAddressesResponse> response =  ResponseEntity.status(HttpStatus.OK).body(new GetAddressesResponse(map,"a","b")); //GetAddressesResponse();
+        return addressStorageService.retrieveMultipleObjectsFromStorage(new ArrayList(getAddressesRequest.getAddressesHash()));
     }
 
 //    @RequestMapping(value = "/address", method = PUT)
