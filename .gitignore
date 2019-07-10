@@ -14,6 +14,8 @@ trustscore*.properties
 zerospend*.properties
 financialserver*.properties
 nodemanager*.properties
+history*.properties
+storage*.properties
 *.csv
 *.json
 *.txt
@@ -52,6 +54,7 @@ initialDatabase/
 ZeroSpendServerrocksDB*/
 FinancialServerrocksDB*/
 NodeManagerrocksDB*/
+HistoryNoderocksDB*/
 
 *.jar
 *.class
