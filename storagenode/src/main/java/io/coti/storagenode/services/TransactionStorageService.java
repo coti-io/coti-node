@@ -7,11 +7,10 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.http.GetEntitiesBulkResponse;
+import io.coti.basenode.http.GetTransactionsBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.storagenode.data.enums.ElasticSearchData;
-import io.coti.storagenode.model.ObjectService;
 import io.coti.storagenode.services.interfaces.ITransactionStorageValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -69,7 +68,7 @@ public class TransactionStorageService extends EntityStorageService implements I
     }
 
     public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(List<Hash> hashes) {
-        return super.retrieveMultipleObjectsFromStorage(hashes);
+        return super.retrieveMultipleObjectsFromStorage(hashes, new GetTransactionsBulkResponse());
     }
 
 }

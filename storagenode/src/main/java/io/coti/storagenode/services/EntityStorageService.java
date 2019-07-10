@@ -1,8 +1,7 @@
 package io.coti.storagenode.services;
 
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.BaseResponse;
-import io.coti.basenode.http.GetEntitiesBulkResponse;
+import io.coti.basenode.http.*;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.http.GetEntitiesBulkJsonResponse;
@@ -24,11 +23,13 @@ import java.util.Map;
 public abstract class EntityStorageService implements IEntityStorageService
 {
 
-    @Autowired
-    private HistoryNodesConsensusService historyNodesConsensusService;
+    public static final String TRANSACTION_DATA = "transactionData";
 
     @Autowired
     private ObjectService objectService;
+
+    @Autowired
+    private AddressStorageService addressStorageService;
 
     protected ElasticSearchData objectType;
 
@@ -182,17 +183,21 @@ public abstract class EntityStorageService implements IEntityStorageService
 
 
     @Override
-    public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(List<Hash> hashes)
+    public <G extends BaseResponse> ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(List<Hash> hashes, G entitiesBulkResponse)
     {
         HashMap<Hash, String> responsesMap = new HashMap<>();
-        GetEntitiesBulkResponse entitiesBulkResponse = new GetEntitiesBulkResponse();
+//        GetBulkResponse entitiesBulkResponse = new GetBulkResponse();
 
         // Retrieve data from ongoing storage system
         ResponseEntity<IResponse> objectsByHashResponse = objectService.getMultiObjectsFromDb(hashes, false, objectType);
 
         if( !isResponseOK(objectsByHashResponse)){
             responsesMap.put(null,null);
-            entitiesBulkResponse.setEntitiesBulkResponses(responsesMap);
+            if(objectType.getObjectName().equals(TRANSACTION_DATA)) {
+                ((GetTransactionsBulkResponse)entitiesBulkResponse).setEntitiesBulkResponses(responsesMap);
+            } else {
+                ((GetAddressesBulkResponse)entitiesBulkResponse).setAddressHashesToAddresses(addressStorageService.getObjectsMapFromJsonMap(responsesMap));
+            }
             return ResponseEntity.status(objectsByHashResponse.getStatusCode()).body(entitiesBulkResponse);
         }
 
@@ -208,6 +213,11 @@ public abstract class EntityStorageService implements IEntityStorageService
                     }
                 }
         );
+        if(objectType.getObjectName().equals(TRANSACTION_DATA)) {
+            ((GetTransactionsBulkResponse)entitiesBulkResponse).setEntitiesBulkResponses(responsesMap);
+        } else {
+            ((GetAddressesBulkResponse)entitiesBulkResponse).setAddressHashesToAddresses(addressStorageService.getObjectsMapFromJsonMap(responsesMap));
+        }
         return ResponseEntity.status(HttpStatus.OK).body(entitiesBulkResponse);
     }
 
