@@ -9,7 +9,7 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.coti.basenode.crypto.*;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.BaseResponse;
-import io.coti.basenode.http.GetEntitiesBulkResponse;
+import io.coti.basenode.http.GetTransactionsBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeValidationService;
@@ -22,7 +22,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Matchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -45,7 +44,8 @@ import static testUtils.TestUtils.*;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 @ContextConfiguration(classes = {ObjectService.class, DbConnectorService.class, TransactionStorageService.class,
-        HistoryNodesConsensusService.class, CryptoHelper.class})
+        CryptoHelper.class, AddressStorageService.class
+})
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -62,9 +62,6 @@ public class TransactionServiceTest {
     @Autowired
     private TransactionStorageService transactionStorageValidationService;
 
-//    @MockBean
-//    private HistoryNodeConsensusCrypto mockHistoryNodeConsensusCrypto;
-
     @MockBean
     private BaseNodeValidationService mockValidationService; // mockValidationService
 
@@ -74,8 +71,8 @@ public class TransactionServiceTest {
     @MockBean
     private CryptoHelper mockCryptoHelper;
 
-    @MockBean
-    private HistoryNodesConsensusService mockHistoryNodesConsensusService;
+    @Autowired
+    private AddressStorageService addressStorageService;
 
 
     private ObjectMapper mapper;
@@ -182,8 +179,8 @@ public class TransactionServiceTest {
         // Mocks set-ups
 //        when(mockHistoryNodeConsensusCrypto.verifySignature(any(HistoryNodeConsensusResult.class))).thenReturn(true);
         ResponseEntity<IResponse> mockedResponse = new ResponseEntity(HttpStatus.OK);
-        when(mockHistoryNodesConsensusService.validateStoreMultipleObjectsConsensus(Matchers.<Map<Hash, String>> any())).thenReturn(mockedResponse);
-        when(mockHistoryNodesConsensusService.validateRetrieveMultipleObjectsConsensus(Matchers.anyList())).thenReturn(mockedResponse);
+//        when(mockHistoryNodesConsensusService.validateStoreMultipleObjectsConsensus(Matchers.<Map<Hash, String>> any())).thenReturn(mockedResponse);
+//        when(mockHistoryNodesConsensusService.validateRetrieveMultipleObjectsConsensus(Matchers.anyList())).thenReturn(mockedResponse);
         when(mockValidationService.validateTransactionDataIntegrity(any())).thenReturn(true); // TransactionData.class // to catch also null values
 
         TransactionData transactionData1 = createRandomTransaction();
@@ -229,8 +226,8 @@ public class TransactionServiceTest {
 
 //        when(mockHistoryNodeConsensusCrypto.verifySignature(any(HistoryNodeConsensusResult.class))).thenReturn(true);
         ResponseEntity<IResponse> mockedResponse = new ResponseEntity(HttpStatus.OK);;
-        when(mockHistoryNodesConsensusService.validateStoreMultipleObjectsConsensus(Matchers.<Map<Hash, String>> any())).thenReturn(mockedResponse);
-        when(mockHistoryNodesConsensusService.validateRetrieveMultipleObjectsConsensus(Matchers.anyList())).thenReturn(mockedResponse);
+//        when(mockHistoryNodesConsensusService.validateStoreMultipleObjectsConsensus(Matchers.<Map<Hash, String>> any())).thenReturn(mockedResponse);
+//        when(mockHistoryNodesConsensusService.validateRetrieveMultipleObjectsConsensus(Matchers.anyList())).thenReturn(mockedResponse);
         when(mockValidationService.validateTransactionDataIntegrity(any())).thenReturn(true); // TransactionData.class // to catch also null values
 
         TransactionData transactionData1 = createRandomTransaction();
@@ -278,7 +275,7 @@ public class TransactionServiceTest {
 //        ResponseEntity<IResponse> responseEntity4 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData2.getHash(), historyNodeConsensusResult2);
 
 //        Map<Hash, ResponseEntity<IResponse>> hashResponseEntityMap = transactionStorageValidationService.retrieveMultipleObjectsFromStorage(hashes, TRANSACTION_OBJECT_NAME);
-        GetEntitiesBulkResponse entitiesBulkResponse = (GetEntitiesBulkResponse) transactionStorageValidationService.retrieveMultipleObjectsFromStorage(hashes).getBody();
+        GetTransactionsBulkResponse entitiesBulkResponse = (GetTransactionsBulkResponse) transactionStorageValidationService.retrieveMultipleObjectsFromStorage(hashes).getBody();
 
 
         String entityAsJsonFromES3 = String.valueOf( entitiesBulkResponse.getEntitiesBulkResponses().get( transactionData1.getHash() ) );

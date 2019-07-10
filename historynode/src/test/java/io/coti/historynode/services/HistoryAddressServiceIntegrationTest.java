@@ -4,7 +4,7 @@ import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
-import io.coti.basenode.http.GetAddressesRequest;
+import io.coti.basenode.http.GetAddressesBulkRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Addresses;
 import io.coti.historynode.crypto.AddressesRequestCrypto;
@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
-@ContextConfiguration(classes = {HistoryAddressService.class, HistoryAddressStorageConnector.class, Addresses.class, HistoryRocksDBConnector.class, AddressesRequestCrypto.class, NodeCryptoHelper.class
+@ContextConfiguration(classes = {HistoryAddressService.class, Addresses.class, HistoryRocksDBConnector.class, AddressesRequestCrypto.class, NodeCryptoHelper.class
 , HistoryAddressCrypto.class, AddressesRequestCrypto.class, AddressesResponseCrypto.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
@@ -45,22 +45,22 @@ public class HistoryAddressServiceIntegrationTest {
     @Autowired
     private HistoryRocksDBConnector historyRocksDBConnector;
     @Autowired
-    public IDatabaseConnector databaseConnector;
+    private IDatabaseConnector databaseConnector;
     @Autowired
     private Addresses addressesCollection;
     @Autowired
-    AddressesRequestCrypto addressesRequestCrypto;
+    private AddressesRequestCrypto addressesRequestCrypto;
 
-    private GetAddressesRequest getAddressesRequest;
+    private GetAddressesBulkRequest getAddressesBulkRequest;
 
     private Hash insertedHash;
 
     @Before
     public void setUp() throws Exception {
         databaseConnector.init();
-        getAddressesRequest = TestUtils.generateGetAddressesRequest();
-        addressesRequestCrypto.signMessage(getAddressesRequest);
-        insertedHash = getAddressesRequest.getAddressesHash().iterator().next();
+        getAddressesBulkRequest = TestUtils.generateGetAddressesRequest();
+        addressesRequestCrypto.signMessage(getAddressesBulkRequest);
+        insertedHash = getAddressesBulkRequest.getAddressesHash().iterator().next();
         insertAddressDataToRocksDB(insertedHash);
     }
 
@@ -71,7 +71,7 @@ public class HistoryAddressServiceIntegrationTest {
 
     @Test
     public void getAddressesTestTemp(){
-        historyAddressService.getAddresses(getAddressesRequest);
+        historyAddressService.getAddresses(getAddressesBulkRequest);
     }
 
     @Test
