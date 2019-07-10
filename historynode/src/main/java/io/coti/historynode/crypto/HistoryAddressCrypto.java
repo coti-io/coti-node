@@ -1,7 +1,7 @@
 package io.coti.historynode.crypto;
 
-import io.coti.basenode.http.GetAddressesRequest;
-import io.coti.basenode.http.GetAddressesResponse;
+import io.coti.basenode.http.GetAddressesBulkRequest;
+import io.coti.basenode.http.GetAddressesBulkResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,10 +13,10 @@ public class HistoryAddressCrypto {
     @Autowired
     private AddressesRequestCrypto addressesRequestCrypto;
 
-    public boolean getAddressResponseSignatureMessage(GetAddressesResponse getAddressesResponse){
-        return addressesResponseCrypto.verifySignature(getAddressesResponse);
+    public boolean getAddressResponseSignatureMessage(GetAddressesBulkResponse getAddressesBulkResponse){
+        return addressesResponseCrypto.verifySignature(getAddressesBulkResponse);
     }
-    public boolean verifyGetAddressRequestSignatureMessage(GetAddressesRequest getAddressesRequest){
-        return addressesRequestCrypto.verifySignature(getAddressesRequest);
+    public boolean verifyGetAddressRequestSignatureMessage(GetAddressesBulkRequest getAddressesBulkRequest){
+        return addressesRequestCrypto.verifySignature(getAddressesBulkRequest);
     }
 }

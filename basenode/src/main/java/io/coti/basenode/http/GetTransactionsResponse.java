@@ -11,7 +11,7 @@ import java.util.List;
 
 @Slf4j
 @Data
-public class GetTransactionsResponse extends Response {
+public class GetTransactionsResponse extends BaseResponse {
 
     protected List<TransactionResponseData> transactionsData;
 

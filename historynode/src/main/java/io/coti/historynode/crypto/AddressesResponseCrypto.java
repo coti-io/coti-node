@@ -4,17 +4,17 @@ import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.SignatureValidationCrypto;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.GetAddressesResponse;
+import io.coti.basenode.http.GetAddressesBulkResponse;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
 
 @Service
-public class AddressesResponseCrypto extends SignatureValidationCrypto<GetAddressesResponse> {
+public class AddressesResponseCrypto extends SignatureValidationCrypto<GetAddressesBulkResponse> {
     @Override
-    public byte[] getSignatureMessage(GetAddressesResponse getAddressesResponse) {
-        Map<Hash, AddressData> addressHashesToAddresses = getAddressesResponse.getAddressHashesToAddresses();
+    public byte[] getSignatureMessage(GetAddressesBulkResponse getAddressesBulkResponse) {
+        Map<Hash, AddressData> addressHashesToAddresses = getAddressesBulkResponse.getAddressHashesToAddresses();
         Hash firstKey = addressHashesToAddresses.entrySet().iterator().next().getKey();
         int byteBufferSize = getByteBufferSize(addressHashesToAddresses.get(firstKey), addressHashesToAddresses.size());
         ByteBuffer addressesResponseBuffer = ByteBuffer.allocate(byteBufferSize);
