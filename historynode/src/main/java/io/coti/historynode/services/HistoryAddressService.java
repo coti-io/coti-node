@@ -26,7 +26,7 @@ import java.util.Set;
 @Service
 public class HistoryAddressService extends EntityService implements IHistoryAddressService {
     @Autowired
-    protected HistoryAddressStorageConnector storageConnector;
+    protected StorageConnector storageConnector;
     @Autowired
     private Addresses addresses;
     @Autowired
@@ -39,23 +39,24 @@ public class HistoryAddressService extends EntityService implements IHistoryAddr
         mapper = new ObjectMapper();
     }
 
-    public ResponseEntity<GetAddressesResponse> getAddresses(GetAddressesRequest getAddressesRequest) {
-        if(!addressCrypto.verifyGetAddressRequestSignatureMessage(getAddressesRequest)) {
-            return generateResponse(HttpStatus.UNAUTHORIZED, new GetAddressesResponse(new HashMap<>(),BaseNodeHttpStringConstants.INVALID_SIGNATURE, BaseNodeHttpStringConstants.STATUS_ERROR));
+    public ResponseEntity<GetAddressesBulkResponse> getAddresses(GetAddressesBulkRequest getAddressesBulkRequest) {
+        if(!addressCrypto.verifyGetAddressRequestSignatureMessage(getAddressesBulkRequest)) {
+            return generateResponse(HttpStatus.UNAUTHORIZED, new GetAddressesBulkResponse(new HashMap<>(),BaseNodeHttpStringConstants.INVALID_SIGNATURE, BaseNodeHttpStringConstants.STATUS_ERROR));
         }
 
-        Set<Hash> addressesHashes = getAddressesRequest.getAddressesHash();
+        Set<Hash> addressesHashes = getAddressesBulkRequest.getAddressesHash();
         Map<Hash,AddressData> addressToAddressDataResponse = populateAndRemoveFoundAddresses(addressesHashes);
-        ResponseEntity<GetAddressesResponse> storageResponse = getAddressesFromStorage(addressesHashes);
+        ResponseEntity<GetAddressesBulkResponse> storageResponse = getAddressesFromStorage(addressesHashes);
 
         //TODO 7/9/2019 astolia: handle null signature and signer hash? even thought shouldn't happend? exception thrown when these fields are null.
+
         if(!addressCrypto.getAddressResponseSignatureMessage( storageResponse.getBody())) {
-            return generateResponse(HttpStatus.UNAUTHORIZED, new GetAddressesResponse(new HashMap<>(),BaseNodeHttpStringConstants.INVALID_SIGNATURE, BaseNodeHttpStringConstants.STATUS_ERROR));
+            return generateResponse(HttpStatus.UNAUTHORIZED, new GetAddressesBulkResponse(new HashMap<>(),BaseNodeHttpStringConstants.INVALID_SIGNATURE, BaseNodeHttpStringConstants.STATUS_ERROR));
         }
 
         addressToAddressDataResponse.putAll((storageResponse.getBody()).getAddressHashesToAddresses());
-        //TODO 7/2/2019 astolia: What message should be set as argument for GetAddressesResponse?
-        return generateResponse(HttpStatus.OK, new GetAddressesResponse(addressToAddressDataResponse, BaseNodeHttpStringConstants.STATUS_SUCCESS, BaseNodeHttpStringConstants.STATUS_SUCCESS));
+        //TODO 7/2/2019 astolia: What message should be set as argument for GetAddressesBulkResponse?
+        return generateResponse(HttpStatus.OK, new GetAddressesBulkResponse(addressToAddressDataResponse, BaseNodeHttpStringConstants.STATUS_SUCCESS, BaseNodeHttpStringConstants.STATUS_SUCCESS));
     }
 
     private Map<Hash,AddressData> populateAndRemoveFoundAddresses(Set<Hash> addressesHashes){
@@ -71,10 +72,10 @@ public class HistoryAddressService extends EntityService implements IHistoryAddr
         return addressesFoundInRocksDb;
     }
 
-    private ResponseEntity<GetAddressesResponse> getAddressesFromStorage(Set<Hash> addressesHashes) {
-        GetAddressesRequest getAddressesRequest = new GetAddressesRequest(addressesHashes);
-        addressesRequestCrypto.signMessage(getAddressesRequest);
-        return  storageConnector.postForObjects(storageServerAddress + "/addresses",getAddressesRequest, GetAddressesResponse.class);
+    private ResponseEntity<GetAddressesBulkResponse> getAddressesFromStorage(Set<Hash> addressesHashes) {
+        GetAddressesBulkRequest getAddressesBulkRequest = new GetAddressesBulkRequest(addressesHashes);
+        addressesRequestCrypto.signMessage(getAddressesBulkRequest);
+        return  storageConnector.postForObjects(storageServerAddress + "/addresses",getAddressesBulkRequest, GetAddressesBulkResponse.class);
 //        return  storageConnector.postForObjects(storageServerAddress + "/addresses",getAddressesRequest);
     }
 

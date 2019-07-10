@@ -1,7 +1,7 @@
 package io.coti.historynode.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.coti.basenode.http.GetAddressesRequest;
+import io.coti.basenode.http.GetAddressesBulkRequest;
 import io.coti.historynode.crypto.AddressesRequestCrypto;
 import io.coti.historynode.services.HistoryAddressService;
 import lombok.extern.slf4j.Slf4j;
@@ -69,9 +69,9 @@ public class AddressControllerTest {
     public void getAddressesTest() throws Exception {
 
         String url = /*BASE_URL + */ "/addresses";
-        GetAddressesRequest getAddressesRequest = TestUtils.generateGetAddressesRequest();
+        GetAddressesBulkRequest getAddressesBulkRequest = TestUtils.generateGetAddressesRequest();
         //addressesRequestCrypto.signMessage(getAddressesRequest);
-        String addressAsJson = mapper.writeValueAsString(getAddressesRequest);
+        String addressAsJson = mapper.writeValueAsString(getAddressesBulkRequest);
         log.info(addressAsJson);
         this.mockMvc.perform(put(url).content(addressAsJson)).andDo(print()).andExpect(status().isOk());
 //                .andExpect(content().string(containsString("Hello World")));

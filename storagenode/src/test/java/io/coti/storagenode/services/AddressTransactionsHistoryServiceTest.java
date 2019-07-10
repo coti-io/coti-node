@@ -9,7 +9,7 @@ import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.BaseResponse;
-import io.coti.basenode.http.GetEntitiesBulkResponse;
+import io.coti.basenode.http.GetAddressesBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.storagenode.data.enums.ElasticSearchData;
@@ -21,7 +21,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Matchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -45,7 +44,7 @@ import static testUtils.TestUtils.generateRandomHash;
 
 @Deprecated
 @ContextConfiguration(classes = {ObjectService.class, DbConnectorService.class, AddressStorageService.class,
-        HistoryNodesConsensusService.class, CryptoHelper.class})
+        CryptoHelper.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -64,17 +63,11 @@ public class AddressTransactionsHistoryServiceTest {
     @Autowired
     private AddressStorageService addressStorageValidationService;
 
-//    @MockBean
-//    private HistoryNodeConsensusCrypto mockHistoryNodeConsensusCrypto;
-
     @MockBean
     private BaseNodeValidationService mockValidationService;
 
     @MockBean
     private CryptoHelper mockCryptoHelper;
-
-    @MockBean
-    private HistoryNodesConsensusService mockHistoryNodesConsensusService;
 
     @Before
     public void init() {
@@ -135,8 +128,8 @@ public class AddressTransactionsHistoryServiceTest {
         // Mocks set-ups
 //        when(mockHistoryNodeConsensusCrypto.verifySignature(any(HistoryNodeConsensusResult.class))).thenReturn(true);
         ResponseEntity<IResponse> mockedResponse = new ResponseEntity(HttpStatus.OK);
-        when(mockHistoryNodesConsensusService.validateStoreMultipleObjectsConsensus(Matchers.<Map<Hash, String>> any())).thenReturn(mockedResponse);
-        when(mockHistoryNodesConsensusService.validateRetrieveMultipleObjectsConsensus(Matchers.anyList())).thenReturn(mockedResponse);
+//        when(mockHistoryNodesConsensusService.validateStoreMultipleObjectsConsensus(Matchers.<Map<Hash, String>> any())).thenReturn(mockedResponse);
+//        when(mockHistoryNodesConsensusService.validateRetrieveMultipleObjectsConsensus(Matchers.anyList())).thenReturn(mockedResponse);
         when(mockValidationService.validateAddress(any(Hash.class))).thenReturn(Boolean.TRUE);
 
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -173,8 +166,8 @@ public class AddressTransactionsHistoryServiceTest {
         // Mocks set-ups
 //        when(mockHistoryNodeConsensusCrypto.verifySignature(any(HistoryNodeConsensusResult.class))).thenReturn(true);
         ResponseEntity<IResponse> mockedResponse = new ResponseEntity(HttpStatus.OK);
-        when(mockHistoryNodesConsensusService.validateStoreMultipleObjectsConsensus(Matchers.<Map<Hash, String>> any())).thenReturn(mockedResponse);
-        when(mockHistoryNodesConsensusService.validateRetrieveMultipleObjectsConsensus(Matchers.anyList())).thenReturn(mockedResponse);
+//        when(mockHistoryNodesConsensusService.validateStoreMultipleObjectsConsensus(Matchers.<Map<Hash, String>> any())).thenReturn(mockedResponse);
+//        when(mockHistoryNodesConsensusService.validateRetrieveMultipleObjectsConsensus(Matchers.anyList())).thenReturn(mockedResponse);
         when(mockValidationService.validateAddress(any(Hash.class))).thenReturn(Boolean.TRUE);
 
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -207,14 +200,14 @@ public class AddressTransactionsHistoryServiceTest {
         Hash hash2 = addressTxsHistories.get(2).getHash();
         addressesToGet.add(hash1);
         addressesToGet.add(hash2);
-        GetEntitiesBulkResponse hashResponseEntities = (GetEntitiesBulkResponse)addressStorageValidationService.retrieveMultipleObjectsFromStorage(addressesToGet).getBody();
-        Assert.assertNotNull(hashResponseEntities.getEntitiesBulkResponses().get(hash1) );
-        Assert.assertNotNull( hashResponseEntities.getEntitiesBulkResponses().get(hash2) );
-        AddressData retrievedAddress1 = mapper.readValue(String.valueOf( hashResponseEntities.getEntitiesBulkResponses().get(hash1)), AddressData.class);
-        AddressData retrievedAddress2 = mapper.readValue(String.valueOf( hashResponseEntities.getEntitiesBulkResponses().get(hash2)), AddressData.class);
+        GetAddressesBulkResponse hashResponseEntities = (GetAddressesBulkResponse)addressStorageValidationService.retrieveMultipleObjectsFromStorage(addressesToGet).getBody();
+        Assert.assertNotNull(hashResponseEntities.getAddressHashesToAddresses().get(hash1) );
+        Assert.assertNotNull( hashResponseEntities.getAddressHashesToAddresses().get(hash2) );
+//        AddressData retrievedAddress1 = mapper.readValue(String.valueOf( hashResponseEntities.getAddressHashesToAddresses().get(hash1)), AddressData.class);
+//        AddressData retrievedAddress2 = mapper.readValue(String.valueOf( hashResponseEntities.getAddressHashesToAddresses().get(hash2)), AddressData.class);
 
-        Assert.assertTrue( retrievedAddress1.equals(addressTxsHistories.get(1)) );
-        Assert.assertTrue( retrievedAddress2.equals(addressTxsHistories.get(2)) );
+        Assert.assertTrue( hashResponseEntities.getAddressHashesToAddresses().get(hash1).equals(addressTxsHistories.get(1)) );
+        Assert.assertTrue( hashResponseEntities.getAddressHashesToAddresses().get(hash2).equals(addressTxsHistories.get(2)) );
     }
 
 

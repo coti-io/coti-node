@@ -1,9 +1,6 @@
 package io.coti.storagenode.controllers;
 
-import io.coti.basenode.http.AddEntitiesBulkRequest;
-import io.coti.basenode.http.AddEntityRequest;
-import io.coti.basenode.http.GetEntitiesBulkRequest;
-import io.coti.basenode.http.GetEntityRequest;
+import io.coti.basenode.http.*;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.services.TransactionStorageService;
@@ -47,8 +44,8 @@ public class TransactionController {
     }
 
     @RequestMapping(value = "/transactions", method = POST)
-        public ResponseEntity<IResponse> getMultipleTransactionsFromStorage(@Valid @RequestBody GetEntitiesBulkRequest getEntitiesBulkRequest) {
-        ResponseEntity<IResponse> responseResponseEntity = transactionStorageService.retrieveMultipleObjectsFromStorage(getEntitiesBulkRequest.getHashes());
+        public ResponseEntity<IResponse> getMultipleTransactionsFromStorage(@Valid @RequestBody GetTransactionsBulkRequest getTransactionsBulkRequest) {
+        ResponseEntity<IResponse> responseResponseEntity = transactionStorageService.retrieveMultipleObjectsFromStorage(getTransactionsBulkRequest.getHashes());
         return responseResponseEntity;
     }
 
