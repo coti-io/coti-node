@@ -9,6 +9,7 @@ import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.BaseResponse;
+import io.coti.basenode.http.GetAddressesBulkResponse;
 import io.coti.basenode.http.GetEntitiesBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeValidationService;
@@ -207,7 +208,8 @@ public class AddressTransactionsHistoryServiceTest {
         Hash hash2 = addressTxsHistories.get(2).getHash();
         addressesToGet.add(hash1);
         addressesToGet.add(hash2);
-        GetEntitiesBulkResponse hashResponseEntities = (GetEntitiesBulkResponse)addressStorageValidationService.retrieveMultipleObjectsFromStorage(addressesToGet).getBody();
+//        GetEntitiesBulkResponse hashResponseEntities = (GetEntitiesBulkResponse)addressStorageValidationService.retrieveMultipleObjectsFromStorage(addressesToGet).getBody();
+        GetAddressesBulkResponse hashResponseEntities = (GetAddressesBulkResponse)addressStorageValidationService.retrieveMultipleObjectsFromStorage(addressesToGet, new GetAddressesBulkResponse()).getBody();
         Assert.assertNotNull(hashResponseEntities.getEntitiesBulkResponses().get(hash1) );
         Assert.assertNotNull( hashResponseEntities.getEntitiesBulkResponses().get(hash2) );
         AddressData retrievedAddress1 = mapper.readValue(String.valueOf( hashResponseEntities.getEntitiesBulkResponses().get(hash1)), AddressData.class);

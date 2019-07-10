@@ -5,6 +5,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.GetEntitiesBulkRequest;
 import io.coti.basenode.http.GetEntityRequest;
 import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.historynode.http.storageConnector.StorageConnector;
 import io.coti.historynode.http.storageConnector.interaces.IStorageConnector;
 import io.coti.historynode.services.interfaces.IHistoryAddressService;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +20,7 @@ import java.util.List;
 @Service
 public class HistoryAddressService extends EntityService implements IHistoryAddressService {
     @Autowired
-    protected IStorageConnector storageConnector;
+    protected StorageConnector storageConnector;
 
     @PostConstruct
     public void init() {

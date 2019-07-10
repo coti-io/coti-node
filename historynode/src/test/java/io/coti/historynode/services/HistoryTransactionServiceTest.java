@@ -21,6 +21,7 @@ import io.coti.historynode.database.HistoryRocksDBConnector;
 import io.coti.historynode.http.GetTransactionsByAddressRequest;
 import io.coti.historynode.http.GetTransactionsByDateRequest;
 import io.coti.historynode.http.HistoryTransactionResponse;
+import io.coti.historynode.http.storageConnector.StorageConnector;
 import io.coti.historynode.http.storageConnector.interaces.IStorageConnector;
 import io.coti.historynode.model.AddressTransactionsByAddresses;
 import io.coti.historynode.model.AddressTransactionsByDates;
@@ -57,7 +58,7 @@ import static utils.TestUtils.generateRandomHash;
         Transactions.class,
         AddressTransactionsByDates.class, AddressTransactionsByAddresses.class,
         IDatabaseConnector.class, BaseNodeRocksDBConnector.class, HistoryTransactionService.class,
-        TransactionsRequestCrypto.class
+        TransactionsRequestCrypto.class, StorageConnector.class, TransactionStorageConnector.class
 })
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
@@ -76,8 +77,8 @@ public class HistoryTransactionServiceTest {
     @Autowired
     private Transactions transactions;
 
-    @MockBean
-    private IStorageConnector storageConnector;
+    @Autowired
+    private TransactionStorageConnector storageConnector;
 
     @Autowired
     private AddressTransactionsByDates addressTransactionsByDates;

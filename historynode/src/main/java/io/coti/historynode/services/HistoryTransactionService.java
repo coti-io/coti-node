@@ -10,9 +10,7 @@ import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.ReceiverBaseTransactionData;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.http.GetEntitiesBulkRequest;
-import io.coti.basenode.http.GetEntitiesBulkResponse;
-import io.coti.basenode.http.Response;
+import io.coti.basenode.http.*;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
 import io.coti.historynode.crypto.TransactionsRequestCrypto;
@@ -22,7 +20,7 @@ import io.coti.historynode.http.GetTransactionsByAddressRequest;
 import io.coti.historynode.http.GetTransactionsByDateRequest;
 import io.coti.historynode.http.HistoryTransactionResponse;
 import io.coti.historynode.http.data.HistoryTransactionResponseData;
-import io.coti.historynode.http.storageConnector.interaces.IStorageConnector;
+//import io.coti.historynode.http.storageConnector.interaces.IStorageConnector;
 import io.coti.historynode.model.AddressTransactionsByAddresses;
 import io.coti.historynode.model.AddressTransactionsByDates;
 import io.coti.historynode.services.interfaces.IHistoryTransactionService;
@@ -31,7 +29,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
@@ -56,7 +53,7 @@ public class HistoryTransactionService extends EntityService implements IHistory
     @Autowired
     private Transactions transactions;
     @Autowired
-    private IStorageConnector storageConnector;
+    private TransactionStorageConnector transactionStorageConnector; // storageConnector;
 
     @Autowired
     private AddressTransactionsByAddresses addressTransactionsByAddresses;
@@ -210,7 +207,9 @@ public class HistoryTransactionService extends EntityService implements IHistory
         HashMap<Hash, TransactionData> retrievedTransactionsFromStorage = new HashMap<>();
         Map<Hash, String> entitiesBulkResponses = null;
         if(!transactionsHashesToRetrieveFromStorage.isEmpty()) {
-            entitiesBulkResponses = getTransactionsDataFromElasticSearch(transactionsHashesToRetrieveFromStorage).getBody().getEntitiesBulkResponses();
+//            ResponseEntity<GetEntitiesBulkResponse> transactionsDataFromElasticSearch = getTransactionsDataFromElasticSearch(transactionsHashesToRetrieveFromStorage);
+            ResponseEntity<GetTransactionsBulkResponse> transactionsDataFromElasticSearch = getTransactionsDataFromElasticSearch(transactionsHashesToRetrieveFromStorage);
+            entitiesBulkResponses = transactionsDataFromElasticSearch.getBody().getEntitiesBulkResponses();
             if(entitiesBulkResponses == null || entitiesBulkResponses.isEmpty()) {
                 log.error("No transactions were retrieved from storage");
                 for(Hash transactionHash : transactionsHashesToRetrieveFromStorage) {
@@ -259,14 +258,14 @@ public class HistoryTransactionService extends EntityService implements IHistory
 //        return ResponseEntity.status(HttpStatus.OK).body( new HistoryTransactionResponse(new HistoryTransactionResponseData(retrievedTransactions)));
     }
 
-    private ResponseEntity<GetEntitiesBulkResponse> getTransactionsDataFromElasticSearch(List<Hash> transactionsHashes) {
+    private ResponseEntity<GetTransactionsBulkResponse> getTransactionsDataFromElasticSearch(List<Hash> transactionsHashes) {
         // Retrieve transactions from storage
-        GetEntitiesBulkRequest getEntitiesBulkRequest = new GetEntitiesBulkRequest(transactionsHashes);
-        RestTemplate restTemplate = new RestTemplate();
+        GetTransactionsBulkRequest getTransactionsBulkRequest = new GetTransactionsBulkRequest(transactionsHashes);
+//        RestTemplate restTemplate = new RestTemplate();
         endpoint = "/transactions";
         //TODO 7/1/2019 tomer: update according to IStorageConnector after refactoring
 
-        return restTemplate.postForEntity(storageServerAddress + endpoint,  getEntitiesBulkRequest,   GetEntitiesBulkResponse.class);
+        return transactionStorageConnector.postEntitiesBulk(storageServerAddress + endpoint, getTransactionsBulkRequest);
     }
 
 

@@ -32,9 +32,9 @@ public class AddressController {
 
     @GetMapping(value = "/addresses")
 //    public Map<Hash, ResponseEntity<IResponse>> getAddressesFromStorage(@Valid @RequestBody GetEntitiesBulkRequest getEntitiesBulkRequest) {
-    public ResponseEntity<IResponse> getAddressesFromStorage(GetEntitiesBulkRequest getEntitiesBulkRequest) {
-        log.info(" Reached getAddressesFromStorage with getEntitiesBulkRequest = {}", getEntitiesBulkRequest.toString());
-        return addressStorageService.retrieveMultipleObjectsFromStorage(getEntitiesBulkRequest.getHashes());
+    public ResponseEntity<IResponse> getAddressesFromStorage(GetAddressesBulkRequest getAddressesBulkRequest) {
+        log.info(" Reached getAddressesFromStorage with getEntitiesBulkRequest = {}", getAddressesBulkRequest.toString());
+        return addressStorageService.retrieveMultipleObjectsFromStorage(getAddressesBulkRequest.getHashes(), new GetAddressesBulkResponse());
     }
 
     @RequestMapping(value = "/address", method = PUT)

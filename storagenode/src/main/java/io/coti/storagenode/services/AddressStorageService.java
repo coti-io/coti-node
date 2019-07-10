@@ -7,6 +7,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.http.GetAddressesBulkResponse;
 import io.coti.basenode.http.GetEntitiesBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeValidationService;
@@ -66,7 +67,7 @@ public class AddressStorageService extends EntityStorageService implements IAddr
 
 
     public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(List<Hash> hashes) {
-        return super.retrieveMultipleObjectsFromStorage(hashes);
+        return super.retrieveMultipleObjectsFromStorage(hashes, new GetAddressesBulkResponse());
     }
 
 }

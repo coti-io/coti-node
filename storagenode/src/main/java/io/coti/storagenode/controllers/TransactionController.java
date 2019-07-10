@@ -44,8 +44,9 @@ public class TransactionController {
     }
 
     @RequestMapping(value = "/transactions", method = POST)
-        public ResponseEntity<IResponse> getMultipleTransactionsFromStorage(@Valid @RequestBody GetEntitiesBulkRequest getEntitiesBulkRequest) {
-        ResponseEntity<IResponse> responseResponseEntity = transactionStorageService.retrieveMultipleObjectsFromStorage(getEntitiesBulkRequest.getHashes());
+        public ResponseEntity<IResponse> getMultipleTransactionsFromStorage(@Valid @RequestBody GetTransactionsBulkRequest getTransactionsBulkRequest) {
+        GetTransactionsBulkResponse getTransactionsBulkResponseTest = new GetTransactionsBulkResponse();
+        ResponseEntity<IResponse> responseResponseEntity = transactionStorageService.retrieveMultipleObjectsFromStorage(getTransactionsBulkRequest.getHashes(), getTransactionsBulkResponseTest);
         return responseResponseEntity;
     }
 

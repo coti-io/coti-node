@@ -10,6 +10,7 @@ import io.coti.basenode.crypto.*;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.GetEntitiesBulkResponse;
+import io.coti.basenode.http.GetTransactionsBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeValidationService;
@@ -278,7 +279,8 @@ public class TransactionServiceTest {
 //        ResponseEntity<IResponse> responseEntity4 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData2.getHash(), historyNodeConsensusResult2);
 
 //        Map<Hash, ResponseEntity<IResponse>> hashResponseEntityMap = transactionStorageValidationService.retrieveMultipleObjectsFromStorage(hashes, TRANSACTION_OBJECT_NAME);
-        GetEntitiesBulkResponse entitiesBulkResponse = (GetEntitiesBulkResponse) transactionStorageValidationService.retrieveMultipleObjectsFromStorage(hashes).getBody();
+//        GetEntitiesBulkResponse entitiesBulkResponse = (GetEntitiesBulkResponse) transactionStorageValidationService.retrieveMultipleObjectsFromStorage(hashes).getBody();
+        GetTransactionsBulkResponse entitiesBulkResponse = (GetTransactionsBulkResponse) transactionStorageValidationService.retrieveMultipleObjectsFromStorage(hashes, new GetTransactionsBulkResponse()).getBody();
 
 
         String entityAsJsonFromES3 = String.valueOf( entitiesBulkResponse.getEntitiesBulkResponses().get( transactionData1.getHash() ) );

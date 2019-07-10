@@ -1,8 +1,7 @@
 package io.coti.storagenode.services;
 
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.BaseResponse;
-import io.coti.basenode.http.GetEntitiesBulkResponse;
+import io.coti.basenode.http.*;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.http.GetEntitiesBulkJsonResponse;
@@ -182,12 +181,18 @@ public abstract class EntityStorageService implements IEntityStorageService
     }
 
 
-    @Override
-    public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(List<Hash> hashes)
+//    @Override
+    public <G extends Response> ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(List<Hash> hashes, G entitiesBulkResponse)
     {
 //        HashMap<Hash, ResponseEntity<IResponse>> responsesMap = new HashMap<>();
         HashMap<Hash, String> responsesMap = new HashMap<>();
-        GetEntitiesBulkResponse entitiesBulkResponse = new GetEntitiesBulkResponse(responsesMap);
+//        GetEntitiesBulkResponse entitiesBulkResponse;
+        //TODO 7/9/2019 tomer: debug and arrange this
+//        if(objectType.getObjectName() != "Address") {
+//            GetTransactionsBulkResponse entitiesBulkResponse = new GetTransactionsBulkResponse(responsesMap);
+//        } else {
+//            GetAddressesBulkResponse entitiesBulkResponse = new GetAddressesBulkResponse(responsesMap);
+//        }
 
         // Retrieve data from ongoing storage system
         ResponseEntity<IResponse> objectsByHashResponse = objectService.getMultiObjectsFromDb(hashes, false, objectType);
@@ -195,8 +200,16 @@ public abstract class EntityStorageService implements IEntityStorageService
         if( !isResponseOK(objectsByHashResponse) )
         {
             responsesMap.put(null, null);
-            entitiesBulkResponse.setEntitiesBulkResponses(responsesMap);
-            return ResponseEntity.status(objectsByHashResponse.getStatusCode()).body(entitiesBulkResponse);
+            //TODO 7/9/2019 tomer: debug and arrange this
+            if(objectType.getObjectName() != "Address") {
+                ((GetTransactionsBulkResponse)entitiesBulkResponse).setEntitiesBulkResponses(responsesMap);
+                return ResponseEntity.status(objectsByHashResponse.getStatusCode()).body(entitiesBulkResponse);
+            } else {
+                ((GetAddressesBulkResponse)entitiesBulkResponse).setEntitiesBulkResponses(responsesMap);
+                return ResponseEntity.status(objectsByHashResponse.getStatusCode()).body(entitiesBulkResponse);
+            }
+//            entitiesBulkResponse.setEntitiesBulkResponses(responsesMap);
+//            return ResponseEntity.status(objectsByHashResponse.getStatusCode()).body(entitiesBulkResponse);
         }
 
         // For successfully retrieved data, perform also data-integrity checks
@@ -211,7 +224,15 @@ public abstract class EntityStorageService implements IEntityStorageService
                     }
                 }
         );
-        return ResponseEntity.status(HttpStatus.OK).body(entitiesBulkResponse);
+        if(objectType.getObjectName() != "Address") {
+            ((GetTransactionsBulkResponse)entitiesBulkResponse).setEntitiesBulkResponses(responsesMap);
+            return ResponseEntity.status(HttpStatus.OK).body(entitiesBulkResponse);
+        } else {
+            ((GetAddressesBulkResponse)entitiesBulkResponse).setEntitiesBulkResponses(responsesMap);
+            ResponseEntity.status(HttpStatus.OK).body(entitiesBulkResponse);
+        }
+//        return ResponseEntity.status(HttpStatus.OK).body(entitiesBulkResponse);
+        return null;
     }
 
 

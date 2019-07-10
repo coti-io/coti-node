@@ -7,6 +7,7 @@ import io.coti.basenode.http.GetEntityRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.historynode.http.GetAddressBatchResponse;
 import io.coti.historynode.http.GetAddressResponse;
+import io.coti.historynode.http.storageConnector.StorageConnector;
 import io.coti.historynode.http.storageConnector.interaces.IStorageConnector;
 import io.coti.historynode.services.interfaces.IHistoryAddressService;
 import org.junit.Assert;
@@ -42,7 +43,7 @@ public class HistoryAddressServiceTest {
     private IHistoryAddressService addressService;
 
     @MockBean
-    private IStorageConnector storageConnector;
+    private StorageConnector storageConnector;
 
     @Before
     public void setUp() throws Exception {
