@@ -7,7 +7,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.GetEntitiesBulkResponse;
+import io.coti.basenode.http.GetAddressesBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.storagenode.data.enums.ElasticSearchData;
@@ -20,7 +20,10 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Data
 @Service
@@ -66,7 +69,19 @@ public class AddressStorageService extends EntityStorageService implements IAddr
 
 
     public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(List<Hash> hashes) {
-        return super.retrieveMultipleObjectsFromStorage(hashes);
+        return super.retrieveMultipleObjectsFromStorage(hashes, new GetAddressesBulkResponse());
     }
 
+    public Map<Hash, AddressData> getObjectsMapFromJsonMap(HashMap<Hash, String> responsesMap) {
+        Map<Hash, AddressData> hashAddressDataMap = responsesMap.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> {
+            try {
+                return mapper.readValue(e.getValue(), AddressData.class);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+                return null;
+            }
+        }));
+
+        return hashAddressDataMap;
+    }
 }

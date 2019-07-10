@@ -1,7 +1,7 @@
 package utils;
 
 import io.coti.basenode.data.*;
-import io.coti.basenode.http.GetAddressesRequest;
+import io.coti.basenode.http.GetAddressesBulkRequest;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -64,11 +64,11 @@ public class TestUtils {
         return Math.random() * 100;
     }
 
-    public static GetAddressesRequest generateGetAddressesRequest(){
+    public static GetAddressesBulkRequest generateGetAddressesRequest(){
         Set<Hash> hashes = new HashSet<>();
         for(int i = 0 ; i < 20 ; i++){
             hashes.add(generateRandomHash());
         }
-        return new GetAddressesRequest(hashes);
+        return new GetAddressesBulkRequest(hashes);
     }
 }

@@ -1,7 +1,7 @@
 package io.coti.storagenode.controllers;
 
-import io.coti.basenode.http.GetAddressesRequest;
-import io.coti.basenode.http.GetAddressesResponse;
+import io.coti.basenode.http.GetAddressesBulkRequest;
+import io.coti.basenode.http.GetAddressesBulkResponse;
 import io.coti.basenode.http.GetEntityRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.services.AddressStorageService;
@@ -31,13 +31,13 @@ public class AddressController {
     }
 
     @PostMapping(value = "/addresses")
-    public ResponseEntity<GetAddressesResponse> getAddressesFromStorage(@Valid @RequestBody GetAddressesRequest getAddressesRequest) {
+    public ResponseEntity<GetAddressesBulkResponse> getAddressesFromStorage(@Valid @RequestBody GetAddressesBulkRequest getAddressesBulkRequest) {
 //        for testing purposes
 //        Map<Hash, AddressData> map = new HashMap();
 //        map.put(new Hash(0),new AddressData(new Hash(0)));
 //        map.put(new Hash(1),new AddressData(new Hash(1)));
-//        ResponseEntity<GetAddressesResponse> response =  ResponseEntity.status(HttpStatus.OK).body(new GetAddressesResponse(map,"a","b")); //GetAddressesResponse();
-        return addressStorageService.retrieveMultipleObjectsFromStorage(new ArrayList(getAddressesRequest.getAddressesHash()));
+//        ResponseEntity<GetAddressesBulkResponse> response =  ResponseEntity.status(HttpStatus.OK).body(new GetAddressesBulkResponse(map,"a","b")); //GetAddressesBulkResponse();
+        return addressStorageService.retrieveMultipleObjectsFromStorage(new ArrayList(getAddressesBulkRequest.getAddressesHash()));
     }
 
 //    @RequestMapping(value = "/address", method = PUT)

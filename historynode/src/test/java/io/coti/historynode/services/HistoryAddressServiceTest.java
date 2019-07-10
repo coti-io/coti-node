@@ -2,7 +2,7 @@ package io.coti.historynode.services;
 
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.GetAddressesRequest;
+import io.coti.basenode.http.GetAddressesBulkRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Addresses;
 import io.coti.historynode.http.GetAddressResponse;
@@ -45,14 +45,14 @@ public class HistoryAddressServiceTest {
 
     private Hash hash;
     private Set<Hash> hashes;
-    private GetAddressesRequest getAddressesRequest;
+    private GetAddressesBulkRequest getAddressesBulkRequest;
 
     @BeforeClass
     public void setUpOnce() throws Exception {
         hash = TestUtils.generateRandomHash();
         hashes = new HashSet<>();
         hashes.add(hash);
-        getAddressesRequest = new GetAddressesRequest(hashes);
+        getAddressesBulkRequest = new GetAddressesBulkRequest(hashes);
     }
 
     /** getAddress
@@ -77,30 +77,30 @@ public class HistoryAddressServiceTest {
         ResponseEntity<IResponse> expectedResponse = ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new GetAddressResponse(hash,addressData));
-        Assert.assertEquals(expectedResponse, addressService.getAddresses(getAddressesRequest));
+        Assert.assertEquals(expectedResponse, addressService.getAddresses(getAddressesBulkRequest));
     }
 
     public void getAddress_AddressNotInRocksDb_returnFoundAddress() {
         AddressData addressData = new AddressData(hash);
         when(addresses.getByHash(hash)).thenReturn(null);
-        Assert.assertEquals(null, addressService.getAddresses(getAddressesRequest));
+        Assert.assertEquals(null, addressService.getAddresses(getAddressesBulkRequest));
         ResponseEntity<IResponse> expectedResponse = ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new GetAddressResponse(hash,addressData));
 //        when(addressService.getAddressFromStorage(hash)).thenReturn(response);
-        Assert.assertEquals(expectedResponse, addressService.getAddresses(getAddressesRequest));
+        Assert.assertEquals(expectedResponse, addressService.getAddresses(getAddressesBulkRequest));
     }
 
     public void getAddress_AddressNotInRocksDbOrStorage_returnNotFoundAddress() {
         Hash hash = TestUtils.generateRandomHash();
         AddressData addressData = new AddressData(hash);
         when(addresses.getByHash(hash)).thenReturn(null);
-        Assert.assertEquals(null, addressService.getAddresses(getAddressesRequest));
+        Assert.assertEquals(null, addressService.getAddresses(getAddressesBulkRequest));
         ResponseEntity<IResponse> expectedResponse = ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new GetAddressResponse(hash,null));
         //when(addressService.getAddressFromStorage(hash)).thenReturn(response);
-        Assert.assertEquals(expectedResponse, addressService.getAddresses(getAddressesRequest));
+        Assert.assertEquals(expectedResponse, addressService.getAddresses(getAddressesBulkRequest));
     }
 
 //    @Test
