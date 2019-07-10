@@ -7,12 +7,9 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.GetEntitiesBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.storagenode.data.enums.ElasticSearchData;
-import io.coti.storagenode.services.interfaces.IAddressStorageService;
-
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +21,7 @@ import java.util.List;
 
 @Data
 @Service
-public class AddressStorageService extends EntityStorageService implements IAddressStorageService {
+public class AddressStorageService extends EntityStorageService {
 
     private ObjectMapper mapper;
 
