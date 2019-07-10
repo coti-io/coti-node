@@ -10,10 +10,7 @@ import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.ReceiverBaseTransactionData;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.http.AddEntitiesBulkRequest;
-import io.coti.basenode.http.GetEntitiesBulkRequest;
-import io.coti.basenode.http.GetEntitiesBulkResponse;
-import io.coti.basenode.http.Response;
+import io.coti.basenode.http.*;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
 import io.coti.historynode.crypto.TransactionsRequestCrypto;
@@ -59,7 +56,7 @@ public class HistoryTransactionService extends EntityService implements IHistory
     @Autowired
     private Transactions transactions;
     @Autowired
-    private HistoryTransactionStorageConnector storageConnector;
+    private StorageConnector storageConnector;
 
     @Autowired
     private AddressTransactionsByAddresses addressTransactionsByAddresses;
@@ -85,7 +82,7 @@ public class HistoryTransactionService extends EntityService implements IHistory
 //    public ResponseEntity<IResponse> getTransactionsDetails(GetTransactionsRequestOld getTransactionRequest) {
 //        List<TransactionData> transactionsList = new ArrayList<>();
 //        List<Hash> hashList = new ArrayList<>();
-//        GetEntitiesBulkRequest getEntitiesBulkRequest = new GetEntitiesBulkRequest(hashList);
+//        GetBulkRequest getEntitiesBulkRequest = new GetBulkRequest(hashList);
 //
 //        List<Hash> transactionHashes = getTransactionsHashesByAddresses(getTransactionRequest);
 //        for (Hash transactionHash : transactionHashes) {
@@ -149,7 +146,7 @@ public class HistoryTransactionService extends EntityService implements IHistory
         });
     }
 
-//    private List<TransactionData> getTransactionsDetailsFromStorage(GetEntitiesBulkRequest getEntitiesBulkRequest) {
+//    private List<TransactionData> getTransactionsDetailsFromStorage(GetBulkRequest getEntitiesBulkRequest) {
 //        List<TransactionData> transactionsList = new ArrayList<>();
 //        if (!getEntitiesBulkRequest.getHashes().isEmpty()) {
 //            ResponseEntity<IResponse> response
@@ -259,17 +256,18 @@ public class HistoryTransactionService extends EntityService implements IHistory
             }
         });
         return retrievedTransactions;
-//        return ResponseEntity.status(HttpStatus.OK).body( new HistoryTransactionResponse(new HistoryTransactionResponseData(retrievedTransactions)));
     }
 
-    private ResponseEntity<GetEntitiesBulkResponse> getTransactionsDataFromElasticSearch(List<Hash> transactionsHashes) {
+    private ResponseEntity<GetTransactionsBulkResponse> getTransactionsDataFromElasticSearch(List<Hash> transactionsHashes) {
         // Retrieve transactions from storage
-        GetEntitiesBulkRequest getEntitiesBulkRequest = new GetEntitiesBulkRequest(transactionsHashes);
+        GetTransactionsBulkRequest getTransactionsBulkRequest = new GetTransactionsBulkRequest(transactionsHashes);
         RestTemplate restTemplate = new RestTemplate();
         endpoint = "/transactions";
         //TODO 7/1/2019 tomer: update according to IStorageConnector after refactoring
 
-        return restTemplate.postForEntity(storageServerAddress + endpoint,  getEntitiesBulkRequest,   GetEntitiesBulkResponse.class);
+
+//        return restTemplate.postForEntity(storageServerAddress + endpoint,  getTransactionsBulkRequest,   GetTransactionsBulkResponse.class);
+        return storageConnector.postForObjects(storageServerAddress + endpoint, getTransactionsBulkRequest,   GetTransactionsBulkResponse.class);
     }
 
 
