@@ -57,7 +57,7 @@ import static utils.TestUtils.generateRandomHash;
         Transactions.class,
         AddressTransactionsByDates.class, AddressTransactionsByAddresses.class,
         IDatabaseConnector.class, BaseNodeRocksDBConnector.class, HistoryTransactionService.class,
-        TransactionsRequestCrypto.class, HistoryTransactionStorageConnector.class
+        TransactionsRequestCrypto.class, /*HistoryTransactionStorageConnector.class*/ StorageConnector.class
 })
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
@@ -77,7 +77,8 @@ public class HistoryTransactionServiceTest {
     private Transactions transactions;
 
     @Autowired
-    private HistoryTransactionStorageConnector storageConnector;
+//    private HistoryTransactionStorageConnector storageConnector;
+    private StorageConnector storageConnector;
 
     @Autowired
     private AddressTransactionsByDates addressTransactionsByDates;
