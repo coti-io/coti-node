@@ -3,15 +3,19 @@ package io.coti.storagenode.controllers;
 import io.coti.basenode.http.*;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.data.enums.ElasticSearchData;
+import io.coti.storagenode.services.ChunkingService;
 import io.coti.storagenode.services.TransactionStorageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.io.IOException;
 
 import static org.springframework.web.bind.annotation.RequestMethod.*;
 
@@ -22,6 +26,9 @@ public class TransactionController {
 
     @Autowired
     private TransactionStorageService transactionStorageService;
+
+    @Autowired
+    private ChunkingService chunkingService;
 
     //TODO: old implementation, verify this
     @RequestMapping(value = "/transaction", method = PUT)
@@ -53,6 +60,12 @@ public class TransactionController {
     public ResponseEntity<IResponse> getMultipleTransactionsInBlocksFromStorage(@Valid @RequestBody GetTransactionsBulkRequest getTransactionsBulkRequest) {
         ResponseEntity<IResponse> responseResponseEntity = transactionStorageService.retrieveMultipleObjectsInBlocksFromStorage(getTransactionsBulkRequest);
         return responseResponseEntity;
+    }
+
+    //TODO 7/10/2019 astolia: Dummy controller for testing
+    @GetMapping(value = "/transactionsBatch")
+    public void getMultipleTransactionsFromStorageBatched(HttpServletResponse response) throws IOException {
+        chunkingService.getTransactionBatch(response);
     }
 
 }
