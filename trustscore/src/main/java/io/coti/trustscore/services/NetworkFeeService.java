@@ -126,18 +126,16 @@ public class NetworkFeeService {
     }
 
     private boolean isNetworkFeeValid(NetworkFeeData networkFeeData, FullNodeFeeData fullNodeFeeData, Hash userHash, boolean feeIncluded) {
-
+        BigDecimal reducedAmount = networkFeeData.getOriginalAmount().subtract(fullNodeFeeData.getAmount());
         return validationService.validateAmountField(networkFeeData.getAmount())
                 && networkFeeData.getOriginalAmount().equals(fullNodeFeeData.getOriginalAmount())
                 && (!feeIncluded || (validationService.validateAmountField(networkFeeData.getReducedAmount())
-                && networkFeeData.getReducedAmount().equals(networkFeeData.getOriginalAmount().subtract(fullNodeFeeData.getAmount()).stripTrailingZeros())
+                && networkFeeData.getReducedAmount().equals(reducedAmount.scale() > 0 ? reducedAmount.stripTrailingZeros() : reducedAmount)
                 && networkFeeData.getReducedAmount().compareTo(networkFeeData.getAmount()) > 0))
                 && isNetworkFeeValid(networkFeeData, userHash);
     }
 
     public boolean isNetworkFeeValid(NetworkFeeData networkFeeData, Hash userHash) {
-
-
         TrustScoreData trustScoreData = trustScores.getByHash(userHash);
         if (trustScoreData == null) {
             return false;

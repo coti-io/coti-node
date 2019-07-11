@@ -1,5 +1,6 @@
 package io.coti.basenode.communication;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,6 +21,7 @@ public class JacksonSerializer implements ISerializer {
         serializer = new ObjectMapper();
         serializer.registerModule(new JavaTimeModule());
         serializer.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        serializer.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }
 
     @Override
