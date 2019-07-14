@@ -1,18 +1,16 @@
 package io.coti.historynode.services;
 
 import io.coti.basenode.communication.JacksonSerializer;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.exceptions.TransactionSyncException;
-import javafx.util.Pair;
+import io.coti.basenode.http.GetHashToTransactioResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResponseExtractor;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
@@ -26,7 +24,7 @@ public class ChunkingService {
 
     private ResponseExtractor getTransactionResponseExtractor(){
         log.info("Starting to get missing transactions");
-        Map<Hash, TransactionData> bulkResponses = new HashMap<>(); //TODO 7/10/2019 astolia: should this be passed as argument??
+        List<GetHashToTransactioResponse> bulkResponses = new ArrayList<>();
 
         return response -> {
             byte[] buf = new byte[Math.toIntExact(MAXIMUM_BUFFER_SIZE)];
@@ -34,9 +32,13 @@ public class ChunkingService {
             int n;
             while ((n = response.getBody().read(buf, offset, buf.length)) > 0) {
                 try {
-                    Pair<Hash, TransactionData> retrievedHashAndTransaciton = jacksonSerializer.deserialize(buf);
+                    GetHashToTransactioResponse retrievedHashAndTransaciton = jacksonSerializer.deserialize(buf);
                     if (retrievedHashAndTransaciton != null) {
-                        bulkResponses.put(retrievedHashAndTransaciton.getKey(),retrievedHashAndTransaciton.getValue());
+                        bulkResponses.add(retrievedHashAndTransaciton);
+                        //TODO 7/10/2019 astolia: handled arrived data here
+
+                        log.info(retrievedHashAndTransaciton.getHash().toString());
+                        log.info(retrievedHashAndTransaciton.getTransactionData().toString());
 //                        receivedMissingTransactionNumber.incrementAndGet();
 //                        if (!insertMissingTransactionThread.isAlive()) {
 //                            insertMissingTransactionThread.start();
