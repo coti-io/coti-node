@@ -13,4 +13,6 @@ public interface IStorageConnector<T extends Request, U extends Response> {
     ResponseEntity<U> getForObject(String url, T request, Class<U> responseType);
     ResponseEntity<U> postForObjects(String url, T request, Class<U> responseType);
 
+    ResponseEntity<U> storeInStorage(String url, T request, Class<U> responseType);
+
 }

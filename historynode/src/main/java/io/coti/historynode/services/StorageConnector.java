@@ -62,4 +62,17 @@ public class StorageConnector<T extends Request, U extends Response> implements 
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.put(url, request);
     }
+
+    @Override
+    public ResponseEntity<U> storeInStorage(String url, T request, Class<U> responseType) {
+        RestTemplate restTemplate = new RestTemplate();
+        HttpEntity<AddEntitiesBulkRequest> requestEntity = new HttpEntity<>((AddEntitiesBulkRequest)request, getHttpHeaders());
+        return restTemplate.exchange(url,HttpMethod.PUT, requestEntity, responseType);
+    }
+
+    private HttpHeaders getHttpHeaders(){
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return headers;
+    }
 }

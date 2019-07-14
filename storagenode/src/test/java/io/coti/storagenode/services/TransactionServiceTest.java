@@ -15,7 +15,7 @@ import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.database.DbConnectorService;
-import io.coti.storagenode.http.GetEntitiesBulkJsonResponse;
+import io.coti.basenode.http.GetEntitiesBulkJsonResponse;
 import io.coti.storagenode.http.GetEntityJsonResponse;
 import io.coti.storagenode.model.ObjectService;
 import org.junit.Assert;
@@ -44,7 +44,7 @@ import static testUtils.TestUtils.*;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 @ContextConfiguration(classes = {ObjectService.class, DbConnectorService.class, TransactionStorageService.class,
-        CryptoHelper.class, AddressStorageService.class
+        CryptoHelper.class, AddressStorageService.class, TransactionStorageService.class
 })
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
@@ -73,6 +73,9 @@ public class TransactionServiceTest {
 
     @Autowired
     private AddressStorageService addressStorageService;
+
+    @Autowired
+    private TransactionStorageService transactionStorageService;
 
 
     private ObjectMapper mapper;

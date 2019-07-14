@@ -36,7 +36,7 @@ public abstract class EntityService implements IEntityService {
                 }
         );
 
-        storeEntitiesByType(storageServerAddress + endpoint, addEntitiesBulkRequest);
+//        storeEntitiesByType(storageServerAddress + endpoint, addEntitiesBulkRequest);
         ResponseEntity<StoreEntitiesToStorageResponse> storeEntitiesToStorageResponse = storeEntitiesByType(storageServerAddress + endpoint, addEntitiesBulkRequest);
         return storeEntitiesToStorageResponse;
     }

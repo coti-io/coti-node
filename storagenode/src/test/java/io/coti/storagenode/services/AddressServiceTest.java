@@ -7,7 +7,7 @@ import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.database.DbConnectorService;
-import io.coti.storagenode.http.GetEntitiesBulkJsonResponse;
+import io.coti.basenode.http.GetEntitiesBulkJsonResponse;
 import io.coti.storagenode.http.GetEntityJsonResponse;
 import io.coti.storagenode.model.ObjectService;
 import org.junit.Assert;

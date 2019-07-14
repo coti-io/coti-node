@@ -1,4 +1,4 @@
-package io.coti.storagenode.http;
+package io.coti.basenode.http;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.BaseResponse;
@@ -15,5 +15,8 @@ public class GetEntitiesBulkJsonResponse extends BaseResponse {
 
     public GetEntitiesBulkJsonResponse(Map<Hash, String> hashToEntitiesFromDbMap) {
         this.hashToEntitiesFromDbMap = hashToEntitiesFromDbMap;
+    }
+
+    public GetEntitiesBulkJsonResponse() {
     }
 }

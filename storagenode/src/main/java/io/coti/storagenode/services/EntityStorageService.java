@@ -4,7 +4,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.*;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.data.enums.ElasticSearchData;
-import io.coti.storagenode.http.GetEntitiesBulkJsonResponse;
+import io.coti.basenode.http.GetEntitiesBulkJsonResponse;
 import io.coti.storagenode.http.GetEntityJsonResponse;
 import io.coti.storagenode.model.ObjectService;
 import io.coti.storagenode.services.interfaces.IEntityStorageService;

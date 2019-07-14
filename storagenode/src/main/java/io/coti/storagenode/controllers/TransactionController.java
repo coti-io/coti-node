@@ -40,7 +40,8 @@ public class TransactionController {
 
     @RequestMapping(value = "/transactions", method = PUT)
     public ResponseEntity<IResponse> storeMultipleTransactionsToStorage(@Valid @RequestBody AddEntitiesBulkRequest addEntitiesBulkRequest) {
-        return transactionStorageService.storeMultipleObjectsToStorage(addEntitiesBulkRequest.getHashToEntityJsonDataMap());
+        ResponseEntity<IResponse> responseResponseEntity = transactionStorageService.storeMultipleObjectsToStorage(addEntitiesBulkRequest.getHashToEntityJsonDataMap());
+        return responseResponseEntity;
     }
 
     @RequestMapping(value = "/transactions", method = POST)
