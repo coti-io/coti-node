@@ -3,7 +3,9 @@ package io.coti.basenode.http;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.interfaces.IPropagatable;
+import lombok.Data;
 
+@Data
 public class GetHashToTransactioResponse implements IPropagatable {
     private TransactionData transactionData;
     private Hash hash;
