@@ -24,10 +24,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.*;
-
-import static ch.qos.logback.core.CoreConstants.MAX_POOL_SIZE;
+import java.util.List;
+import java.util.Map;
 //import jdk.nashorn.internal.parser.JSONParser;
 //import net.minidev.json.JSONObject;
 
@@ -106,6 +104,18 @@ public class TransactionStorageService extends EntityStorageService implements I
         //TODO 7/14/2019 tomer: Implement signature validation if needed - Disregard
 
         return super.retrieveMultipleObjectsFromStorage(getTransactionsBulkRequest.getHashes(), new GetTransactionsBulkResponse());
+    }
+
+
+    @Override
+    protected GetTransactionsBulkResponse getEmptyEntitiesBulkResponse() {
+        return new GetTransactionsBulkResponse();
+    }
+
+    @Override
+    protected GetTransactionsBulkResponse getEntitiesBulkResponse(Map<Hash, String> responsesMap) {
+        //TODO 7/15/2019 astolia:  GetTransactionsBulkResponse shouldn't be empty
+        return new GetTransactionsBulkResponse();
     }
 
     public ResponseEntity<IResponse> retrieveMultipleObjectsInBlocksFromStorage(GetTransactionsBulkRequest getTransactionsBulkRequest) {
