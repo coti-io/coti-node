@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.BaseResponse;
+import io.coti.basenode.http.EntitiesBulkJsonResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.database.DbConnectorService;
-import io.coti.storagenode.http.GetEntitiesBulkJsonResponse;
 import io.coti.storagenode.http.GetEntityJsonResponse;
 import io.coti.storagenode.model.ObjectService;
 import org.junit.Assert;
@@ -109,11 +109,11 @@ public class AddressServiceTest {
         GetHashes.add(AddressDataList.get(3).getHash());
 
         IResponse response = addressService.getMultiObjectsFromDb(GetHashes, true, ElasticSearchData.ADDRESSES).getBody();
-        Assert.assertTrue(((GetEntitiesBulkJsonResponse) response).getStatus().equals(STATUS_SUCCESS));
+        Assert.assertTrue(((EntitiesBulkJsonResponse) response).getStatus().equals(STATUS_SUCCESS));
 
         Assert.assertTrue(((BaseResponse) (response)).getStatus().equals(STATUS_SUCCESS)
-                && ((GetEntitiesBulkJsonResponse) deleteResponse).getHashToEntitiesFromDbMap().get(AddressDataList.get(0).getHash()).equals(STATUS_OK)
-                && ((GetEntitiesBulkJsonResponse) deleteResponse).getHashToEntitiesFromDbMap().get(AddressDataList.get(1).getHash()).equals(STATUS_OK));
+                && ((EntitiesBulkJsonResponse) deleteResponse).getHashToEntitiesFromDbMap().get(AddressDataList.get(0).getHash()).equals(STATUS_OK)
+                && ((EntitiesBulkJsonResponse) deleteResponse).getHashToEntitiesFromDbMap().get(AddressDataList.get(1).getHash()).equals(STATUS_OK));
     }
 
 
