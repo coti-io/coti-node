@@ -1,7 +1,6 @@
 package io.coti.storagenode.services.interfaces;
 
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +15,8 @@ public interface IEntityStorageService {
 
     ResponseEntity<IResponse> storeMultipleObjectsToStorage(Map<Hash, String> hashToObjectJsonDataMap);
 
-    <G extends BaseResponse> ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(List<Hash> hashes, G entitiesBulkResponse);
+    ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(List<Hash> hashes);
 
     boolean isObjectDIOK(Hash objectHash, String objectAsJson);
+
 }
