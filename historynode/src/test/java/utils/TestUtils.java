@@ -7,8 +7,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class TestUtils {
@@ -65,7 +64,7 @@ public class TestUtils {
     }
 
     public static GetAddressesBulkRequest generateGetAddressesRequest(){
-        Set<Hash> hashes = new HashSet<>();
+        List<Hash> hashes = new ArrayList<>();
         for(int i = 0 ; i < 20 ; i++){
             hashes.add(generateRandomHash());
         }
