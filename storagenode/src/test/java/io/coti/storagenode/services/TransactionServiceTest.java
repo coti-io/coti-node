@@ -9,6 +9,7 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.coti.basenode.crypto.*;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.BaseResponse;
+import io.coti.basenode.http.GetTransactionsBulkRequest;
 import io.coti.basenode.http.GetTransactionsBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
@@ -275,7 +276,8 @@ public class TransactionServiceTest {
 //        ResponseEntity<IResponse> responseEntity4 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData2.getHash(), historyNodeConsensusResult2);
 
 //        Map<Hash, ResponseEntity<IResponse>> hashResponseEntityMap = transactionStorageValidationService.retrieveMultipleObjectsFromStorage(hashes, TRANSACTION_OBJECT_NAME);
-        GetTransactionsBulkResponse entitiesBulkResponse = (GetTransactionsBulkResponse) transactionStorageValidationService.retrieveMultipleObjectsFromStorage(hashes).getBody();
+        GetTransactionsBulkRequest bulkRequest = new GetTransactionsBulkRequest(hashes);
+        GetTransactionsBulkResponse entitiesBulkResponse = (GetTransactionsBulkResponse) transactionStorageValidationService.retrieveMultipleObjectsFromStorage(bulkRequest).getBody();
 
 
         String entityAsJsonFromES3 = String.valueOf( entitiesBulkResponse.getEntitiesBulkResponses().get( transactionData1.getHash() ) );
