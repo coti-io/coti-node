@@ -85,7 +85,7 @@ public abstract class EntityStorageService implements IEntityStorageService
     }
 
 
-    private ResponseEntity<IResponse> verifyRetrievedSingleObject(Hash objectHash, String objectAsJson, boolean fromColdStorage, ElasticSearchData objectType)
+    protected ResponseEntity<IResponse> verifyRetrievedSingleObject(Hash objectHash, String objectAsJson, boolean fromColdStorage, ElasticSearchData objectType)
     {
         ResponseEntity response = ResponseEntity.status(HttpStatus.OK).body(objectAsJson);
 
@@ -202,9 +202,18 @@ public abstract class EntityStorageService implements IEntityStorageService
         }
 
         // For successfully retrieved data, perform also data-integrity checks
+        verifyEntitiesFromDbMap(responsesMap, objectsByHashResponse);
+        if(objectType.getObjectName().equals(TRANSACTION_DATA)) {
+            ((GetTransactionsBulkResponse)entitiesBulkResponse).setEntitiesBulkResponses(responsesMap);
+        } else {
+            ((GetAddressesBulkResponse)entitiesBulkResponse).setAddressHashesToAddresses(addressStorageService.getObjectsMapFromJsonMap(responsesMap));
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(entitiesBulkResponse);
+    }
+
+    protected void verifyEntitiesFromDbMap(HashMap<Hash, String> responsesMap, ResponseEntity<IResponse> objectsByHashResponse) {
         ((GetEntitiesBulkJsonResponse)objectsByHashResponse.getBody()).getHashToEntitiesFromDbMap().forEach( (hash, objectAsJsonString) ->
                 {
-                    //TODO: In case of error in retrieving valid value, return value as a null.
                     ResponseEntity<IResponse> verifyRetrievedSingleObject = verifyRetrievedSingleObject(hash, objectAsJsonString, false, objectType);
                     if (verifyRetrievedSingleObject.getStatusCode() != HttpStatus.OK) {
                         responsesMap.put(hash, null);
@@ -213,12 +222,6 @@ public abstract class EntityStorageService implements IEntityStorageService
                     }
                 }
         );
-        if(objectType.getObjectName().equals(TRANSACTION_DATA)) {
-            ((GetTransactionsBulkResponse)entitiesBulkResponse).setEntitiesBulkResponses(responsesMap);
-        } else {
-            ((GetAddressesBulkResponse)entitiesBulkResponse).setAddressHashesToAddresses(addressStorageService.getObjectsMapFromJsonMap(responsesMap));
-        }
-        return ResponseEntity.status(HttpStatus.OK).body(entitiesBulkResponse);
     }
 
 
