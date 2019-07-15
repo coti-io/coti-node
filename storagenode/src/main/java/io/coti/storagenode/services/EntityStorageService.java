@@ -1,10 +1,9 @@
 package io.coti.storagenode.services;
 
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.*;
+import io.coti.basenode.http.EntitiesBulkJsonResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.data.enums.ElasticSearchData;
-import io.coti.storagenode.http.GetEntitiesBulkJsonResponse;
 import io.coti.storagenode.http.GetEntityJsonResponse;
 import io.coti.storagenode.model.ObjectService;
 import io.coti.storagenode.services.interfaces.IEntityStorageService;
@@ -14,10 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 public abstract class EntityStorageService implements IEntityStorageService
@@ -26,7 +22,7 @@ public abstract class EntityStorageService implements IEntityStorageService
     public static final String TRANSACTION_DATA = "transactionData";
 
     @Autowired
-    private ObjectService objectService;
+    protected ObjectService objectService;
 
     @Autowired
     private AddressStorageService addressStorageService;
@@ -182,37 +178,63 @@ public abstract class EntityStorageService implements IEntityStorageService
     }
 
 
+//    @Override
+//    public <G extends BaseResponse> ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(List<Hash> hashes, G entitiesBulkResponse)
+//    {
+//        HashMap<Hash, String> responsesMap = new HashMap<>();
+//
+//        // Retrieve data from ongoing storage system
+//        ResponseEntity<IResponse> objectsByHashResponse = objectService.getMultiObjectsFromDb(hashes, false, objectType);
+//
+//        if( !isResponseOK(objectsByHashResponse)){
+//            responsesMap.put(null,null);
+//            if(objectType.getObjectName().equals(TRANSACTION_DATA)) {
+//                ((GetTransactionsBulkResponse)entitiesBulkResponse).setEntitiesBulkResponses(responsesMap);
+//            } else {
+//                ((GetAddressesBulkResponse)entitiesBulkResponse).setAddressHashesToAddresses(addressStorageService.getObjectsMapFromJsonMap(responsesMap));
+//            }
+//            return ResponseEntity.status(objectsByHashResponse.getStatusCode()).body(entitiesBulkResponse);
+//        }
+//
+//        // For successfully retrieved data, perform also data-integrity checks
+//        ((EntitiesBulkJsonResponse)objectsByHashResponse.getBody()).getHashToEntitiesFromDbMap().forEach( (hash, objectAsJsonString) ->
+//                {
+//                    //TODO: In case of error in retrieving valid value, return value as a null.
+//                    ResponseEntity<IResponse> verifyRetrievedSingleObject = verifyRetrievedSingleObject(hash, objectAsJsonString, false, objectType);
+//                    if (verifyRetrievedSingleObject.getStatusCode() != HttpStatus.OK) {
+//                        responsesMap.put(hash, null);
+//                    } else {
+//                        responsesMap.put(hash, objectAsJsonString);
+//                    }
+//                }
+//        );
+//        if(objectType.getObjectName().equals(TRANSACTION_DATA)) {
+//            ((GetTransactionsBulkResponse)entitiesBulkResponse).setEntitiesBulkResponses(responsesMap);
+//        } else {
+//            ((GetAddressesBulkResponse)entitiesBulkResponse).setAddressHashesToAddresses(addressStorageService.getObjectsMapFromJsonMap(responsesMap));
+//        }
+//        return ResponseEntity.status(HttpStatus.OK).body(entitiesBulkResponse);
+//    }
+
+
+    protected boolean isResponseOK(ResponseEntity<IResponse> iResponse) {
+        return iResponse != null && iResponse.getStatusCode().equals(HttpStatus.OK);
+//               && ((BaseResponse)iResponse.getBody()).getStatus().equals("Success");
+    }
+
     @Override
-    public <G extends BaseResponse> ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(List<Hash> hashes, G entitiesBulkResponse)
-    {
-        HashMap<Hash, String> responsesMap = new HashMap<>();
-//        GetBulkResponse entitiesBulkResponse = new GetBulkResponse();
+    public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(List<Hash> hashes) {
+        Map<Hash, String> responsesMap = new LinkedHashMap<>();
 
         // Retrieve data from ongoing storage system
         ResponseEntity<IResponse> objectsByHashResponse = objectService.getMultiObjectsFromDb(hashes, false, objectType);
 
         if( !isResponseOK(objectsByHashResponse)){
-            responsesMap.put(null,null);
-            if(objectType.getObjectName().equals(TRANSACTION_DATA)) {
-                ((GetTransactionsBulkResponse)entitiesBulkResponse).setEntitiesBulkResponses(responsesMap);
-            } else {
-                ((GetAddressesBulkResponse)entitiesBulkResponse).setAddressHashesToAddresses(addressStorageService.getObjectsMapFromJsonMap(responsesMap));
-            }
-            return ResponseEntity.status(objectsByHashResponse.getStatusCode()).body(entitiesBulkResponse);
+            return ResponseEntity.status(objectsByHashResponse.getStatusCode()).body(getEmptyEntitiesBulkResponse());
         }
 
         // For successfully retrieved data, perform also data-integrity checks
-        verifyEntitiesFromDbMap(responsesMap, objectsByHashResponse);
-        if(objectType.getObjectName().equals(TRANSACTION_DATA)) {
-            ((GetTransactionsBulkResponse)entitiesBulkResponse).setEntitiesBulkResponses(responsesMap);
-        } else {
-            ((GetAddressesBulkResponse)entitiesBulkResponse).setAddressHashesToAddresses(addressStorageService.getObjectsMapFromJsonMap(responsesMap));
-        }
-        return ResponseEntity.status(HttpStatus.OK).body(entitiesBulkResponse);
-    }
-
-    protected void verifyEntitiesFromDbMap(HashMap<Hash, String> responsesMap, ResponseEntity<IResponse> objectsByHashResponse) {
-        ((GetEntitiesBulkJsonResponse)objectsByHashResponse.getBody()).getHashToEntitiesFromDbMap().forEach( (hash, objectAsJsonString) ->
+        ((EntitiesBulkJsonResponse)objectsByHashResponse.getBody()).getHashToEntitiesFromDbMap().forEach( (hash, objectAsJsonString) ->
                 {
                     ResponseEntity<IResponse> verifyRetrievedSingleObject = verifyRetrievedSingleObject(hash, objectAsJsonString, false, objectType);
                     if (verifyRetrievedSingleObject.getStatusCode() != HttpStatus.OK) {
@@ -222,13 +244,13 @@ public abstract class EntityStorageService implements IEntityStorageService
                     }
                 }
         );
+        return ResponseEntity.status(HttpStatus.OK).body(getEntitiesBulkResponse(responsesMap));
+
     }
 
+    protected abstract IResponse getEmptyEntitiesBulkResponse();
 
-    protected boolean isResponseOK(ResponseEntity<IResponse> iResponse) {
-        return iResponse != null && iResponse.getStatusCode().equals(HttpStatus.OK);
-//               && ((BaseResponse)iResponse.getBody()).getStatus().equals("Success");
-    }
+    protected abstract IResponse getEntitiesBulkResponse(Map<Hash, String> responsesMap);
 
 
 }

@@ -6,17 +6,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
-import io.coti.basenode.crypto.*;
-import io.coti.basenode.data.*;
+import io.coti.basenode.crypto.CryptoHelper;
+import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.BaseResponse;
-import io.coti.basenode.http.GetTransactionsBulkRequest;
+import io.coti.basenode.http.EntitiesBulkJsonResponse;
 import io.coti.basenode.http.GetTransactionsBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.database.DbConnectorService;
-import io.coti.storagenode.http.GetEntitiesBulkJsonResponse;
 import io.coti.storagenode.http.GetEntityJsonResponse;
 import io.coti.storagenode.model.ObjectService;
 import org.junit.Assert;
@@ -31,6 +31,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,7 +42,7 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_SUCCESS;
 import static io.coti.storagenode.http.HttpStringConstants.STATUS_OK;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static testUtils.TestUtils.*;
+import static testUtils.TestUtils.createRandomTransaction;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 @ContextConfiguration(classes = {ObjectService.class, DbConnectorService.class, TransactionStorageService.class,
@@ -72,7 +73,7 @@ public class TransactionServiceTest {
     @MockBean
     private CryptoHelper mockCryptoHelper;
 
-    @Autowired
+    @MockBean
     private AddressStorageService addressStorageService;
 
 
@@ -115,7 +116,7 @@ public class TransactionServiceTest {
 
         Assert.assertTrue(insertResponse.getStatusCode().equals(HttpStatus.OK));
         Assert.assertTrue(((BaseResponse)insertResponse.getBody()).getStatus().equals("Success"));
-        Assert.assertTrue(((GetEntitiesBulkJsonResponse)insertResponse.getBody()).getHashToEntitiesFromDbMap().keySet().containsAll(hashToTransactionJsonDataMap.keySet()));
+        Assert.assertTrue(((EntitiesBulkJsonResponse)insertResponse.getBody()).getHashToEntitiesFromDbMap().keySet().containsAll(hashToTransactionJsonDataMap.keySet()));
 
         List<Hash> deleteHashes = new ArrayList<>();
         deleteHashes.add(TransactionDataList.get(0).getHash());
@@ -131,8 +132,8 @@ public class TransactionServiceTest {
 
         //TODO 6/27/2019 tomer: Investigate conditions below
         Assert.assertTrue(((BaseResponse) (response)).getStatus().equals(STATUS_SUCCESS)
-                && ((GetEntitiesBulkJsonResponse) deleteResponse).getHashToEntitiesFromDbMap().get(TransactionDataList.get(0).getHash()).equals(STATUS_OK)
-                && ((GetEntitiesBulkJsonResponse) deleteResponse).getHashToEntitiesFromDbMap().get(TransactionDataList.get(1).getHash()).equals(STATUS_OK));
+                && ((EntitiesBulkJsonResponse) deleteResponse).getHashToEntitiesFromDbMap().get(TransactionDataList.get(0).getHash()).equals(STATUS_OK)
+                && ((EntitiesBulkJsonResponse) deleteResponse).getHashToEntitiesFromDbMap().get(TransactionDataList.get(1).getHash()).equals(STATUS_OK));
     }
 
 //    @Test
@@ -248,7 +249,7 @@ public class TransactionServiceTest {
         ResponseEntity<IResponse> responseResponseEntity1 = transactionStorageValidationService.storeMultipleObjectsToStorage(txDataJsonToHash);
         Assert.assertTrue(responseResponseEntity1.getStatusCode().equals(HttpStatus.OK));
         Assert.assertTrue(((BaseResponse)responseResponseEntity1.getBody()).getStatus().equals("Success"));
-        Assert.assertTrue(((GetEntitiesBulkJsonResponse)responseResponseEntity1.getBody()).getHashToEntitiesFromDbMap().keySet().containsAll(txDataJsonToHash.keySet()));
+        Assert.assertTrue(((EntitiesBulkJsonResponse)responseResponseEntity1.getBody()).getHashToEntitiesFromDbMap().keySet().containsAll(txDataJsonToHash.keySet()));
 
         ResponseEntity<IResponse> responseEntity1 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData1.getHash(), ElasticSearchData.TRANSACTIONS);
         ResponseEntity<IResponse> responseEntity2 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData2.getHash(), ElasticSearchData.TRANSACTIONS);
@@ -265,7 +266,7 @@ public class TransactionServiceTest {
         responseResponseEntity1 = transactionStorageValidationService.storeMultipleObjectsToStorage(txDataJsonToHash);
         Assert.assertTrue(responseResponseEntity1.getStatusCode().equals(HttpStatus.OK));
         Assert.assertTrue(((BaseResponse)responseResponseEntity1.getBody()).getStatus().equals("Success"));
-        Assert.assertTrue(((GetEntitiesBulkJsonResponse)responseResponseEntity1.getBody()).getHashToEntitiesFromDbMap().keySet().containsAll(txDataJsonToHash.keySet()));
+        Assert.assertTrue(((EntitiesBulkJsonResponse)responseResponseEntity1.getBody()).getHashToEntitiesFromDbMap().keySet().containsAll(txDataJsonToHash.keySet()));
 
 
         List<Hash> hashes = new ArrayList<>();
