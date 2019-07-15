@@ -7,13 +7,12 @@ import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 
 @Data
-public class GetBulkRequest extends Request implements ISignable, ISignValidatable {
+public class BulkRequest extends Request implements ISignable, ISignValidatable {
 
     private Hash signerHash;
     private SignatureData signature;
 
-
-    public GetBulkRequest() {
+    public BulkRequest() {
     }
 
 }
