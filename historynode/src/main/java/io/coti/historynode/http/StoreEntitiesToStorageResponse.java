@@ -1,13 +1,13 @@
 package io.coti.historynode.http;
 
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.BaseResponse;
+import io.coti.basenode.http.BulkResponse;
 import lombok.Data;
 
 import java.util.HashMap;
 
 @Data
-public class StoreEntitiesToStorageResponse extends BaseResponse {
+public class StoreEntitiesToStorageResponse extends BulkResponse {
     public HashMap<Hash, Boolean> entitiesSentToStorage;
 
     public StoreEntitiesToStorageResponse(HashMap<Hash, Boolean> entitiesSentToStorage) {

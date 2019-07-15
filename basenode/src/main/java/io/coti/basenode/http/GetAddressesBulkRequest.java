@@ -1,24 +1,23 @@
 package io.coti.basenode.http;
 
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.SignatureData;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
-public class GetAddressesBulkRequest extends GetBulkRequest {
-    @NotNull(message = "Address hash must not be null")
-    private Set<Hash> addressesHash;
+public class GetAddressesBulkRequest extends BulkRequest {
 
+    @NotNull(message = "Address hash must not be null")
+    private List<Hash> addressesHash;
 
     public GetAddressesBulkRequest() {
-        this.addressesHash = new HashSet<>();
+        this.addressesHash = new ArrayList<>();
     }
 
-    public GetAddressesBulkRequest(@NotNull(message = "Address hash must not be null") Set<Hash> addressesHash) {
+    public GetAddressesBulkRequest(@NotNull(message = "Address hash must not be null") List<Hash> addressesHash) {
         this.addressesHash = addressesHash;
     }
 
