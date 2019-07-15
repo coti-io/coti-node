@@ -1,23 +1,29 @@
 package io.coti.historynode.services;
 
+import io.coti.basenode.crypto.AddressCrypto;
+import io.coti.basenode.crypto.AddressesRequestCrypto;
+import io.coti.basenode.crypto.AddressesResponseCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
+import io.coti.basenode.http.BaseNodeHttpStringConstants;
 import io.coti.basenode.http.GetAddressesBulkRequest;
+import io.coti.basenode.http.GetAddressesBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Addresses;
-import io.coti.historynode.crypto.AddressesRequestCrypto;
-import io.coti.historynode.crypto.AddressesResponseCrypto;
-import io.coti.historynode.crypto.HistoryAddressCrypto;
+import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.historynode.database.HistoryRocksDBConnector;
 import io.coti.historynode.http.GetAddressBatchResponse;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
@@ -30,7 +36,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 @ContextConfiguration(classes = {HistoryAddressService.class, Addresses.class, HistoryRocksDBConnector.class, AddressesRequestCrypto.class, NodeCryptoHelper.class
-, HistoryAddressCrypto.class, AddressesRequestCrypto.class, AddressesResponseCrypto.class})
+, AddressCrypto.class, AddressesRequestCrypto.class, AddressesResponseCrypto.class, StorageConnector.class, BaseNodeValidationService.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -50,6 +56,9 @@ public class HistoryAddressServiceIntegrationTest {
     private Addresses addressesCollection;
     @Autowired
     private AddressesRequestCrypto addressesRequestCrypto;
+
+    @MockBean
+    private BaseNodeValidationService baseNodeValidationService;
 
     private GetAddressesBulkRequest getAddressesBulkRequest;
 
@@ -71,7 +80,21 @@ public class HistoryAddressServiceIntegrationTest {
 
     @Test
     public void getAddressesTestTemp(){
+        testBadSignature();
         historyAddressService.getAddresses(getAddressesBulkRequest);
+    }
+
+
+    //TODO 7/14/2019 astolia: unit test
+    private void testBadSignature(){
+        getAddressesBulkRequest = TestUtils.generateGetAddressesRequest();
+        getAddressesBulkRequest.setSignerHash(new Hash(1));
+        getAddressesBulkRequest.setSignature(new SignatureData());
+        ResponseEntity<GetAddressesBulkResponse> response = historyAddressService.getAddresses(getAddressesBulkRequest);
+        Assert.assertEquals(HttpStatus.UNAUTHORIZED,response.getStatusCode());
+        Assert.assertEquals(BaseNodeHttpStringConstants.INVALID_SIGNATURE,response.getBody().getMessage());
+        Assert.assertEquals(BaseNodeHttpStringConstants.STATUS_ERROR,response.getBody().getStatus());
+
     }
 
     @Test

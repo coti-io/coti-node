@@ -82,7 +82,7 @@ public class HistoryTransactionService extends EntityService implements IHistory
 //    public ResponseEntity<IResponse> getTransactionsDetails(GetTransactionsRequestOld getTransactionRequest) {
 //        List<TransactionData> transactionsList = new ArrayList<>();
 //        List<Hash> hashList = new ArrayList<>();
-//        GetBulkRequest getEntitiesBulkRequest = new GetBulkRequest(hashList);
+//        BulkRequest getEntitiesBulkRequest = new BulkRequest(hashList);
 //
 //        List<Hash> transactionHashes = getTransactionsHashesByAddresses(getTransactionRequest);
 //        for (Hash transactionHash : transactionHashes) {
@@ -146,7 +146,7 @@ public class HistoryTransactionService extends EntityService implements IHistory
         });
     }
 
-//    private List<TransactionData> getTransactionsDetailsFromStorage(GetBulkRequest getEntitiesBulkRequest) {
+//    private List<TransactionData> getTransactionsDetailsFromStorage(BulkRequest getEntitiesBulkRequest) {
 //        List<TransactionData> transactionsList = new ArrayList<>();
 //        if (!getEntitiesBulkRequest.getHashes().isEmpty()) {
 //            ResponseEntity<IResponse> response
@@ -267,7 +267,7 @@ public class HistoryTransactionService extends EntityService implements IHistory
 
 
 //        return restTemplate.postForEntity(storageServerAddress + endpoint,  getTransactionsBulkRequest,   GetTransactionsBulkResponse.class);
-        return storageConnector.postForObjects(storageServerAddress + endpoint, getTransactionsBulkRequest,   GetTransactionsBulkResponse.class);
+        return storageConnector.storeInStorage(storageServerAddress + endpoint, getTransactionsBulkRequest,   GetTransactionsBulkResponse.class);
     }
 
 
@@ -415,7 +415,7 @@ public class HistoryTransactionService extends EntityService implements IHistory
 
     @Override
     protected ResponseEntity<StoreEntitiesToStorageResponse> storeEntitiesByType(String url, AddEntitiesBulkRequest addEntitiesBulkRequest) {
-        return storageConnector.postForObjects(storageServerAddress + endpoint, addEntitiesBulkRequest);
+        return storageConnector.storeInStorage(storageServerAddress + endpoint, addEntitiesBulkRequest, StoreEntitiesToStorageResponse.class);
     }
 
 }

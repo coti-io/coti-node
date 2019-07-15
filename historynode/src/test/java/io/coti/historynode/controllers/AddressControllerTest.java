@@ -1,8 +1,7 @@
 package io.coti.historynode.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.coti.basenode.http.GetAddressesBulkRequest;
-import io.coti.historynode.crypto.AddressesRequestCrypto;
+import io.coti.basenode.crypto.AddressesRequestCrypto;
 import io.coti.historynode.services.HistoryAddressService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
@@ -21,13 +20,8 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import utils.TestUtils;
 
 import javax.servlet.ServletContext;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Slf4j
 @ContextConfiguration(classes = {AddressController.class})
@@ -64,19 +58,5 @@ public class AddressControllerTest {
         Assert.assertTrue(servletContext instanceof MockServletContext);
         Assert.assertNotNull(appContext.getBean("addressController"));
     }
-
-    @Test
-    public void getAddressesTest() throws Exception {
-
-        String url = /*BASE_URL + */ "/addresses";
-        GetAddressesBulkRequest getAddressesBulkRequest = TestUtils.generateGetAddressesRequest();
-        //addressesRequestCrypto.signMessage(getAddressesRequest);
-        String addressAsJson = mapper.writeValueAsString(getAddressesBulkRequest);
-        log.info(addressAsJson);
-        this.mockMvc.perform(put(url).content(addressAsJson)).andDo(print()).andExpect(status().isOk());
-//                .andExpect(content().string(containsString("Hello World")));
-    }
-
-
 
 }

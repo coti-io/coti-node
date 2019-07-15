@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.Map;
 
 @Data
-public class GetTransactionsBulkResponse extends GetBulkResponse {
+public class GetTransactionsBulkResponse extends BulkResponse {
 
     public Map<Hash, String> entitiesBulkResponses;
 

@@ -9,7 +9,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 @Data
-public class AddEntitiesBulkRequest extends Request{
+public class AddEntitiesBulkRequest extends BulkRequest {
     @NotEmpty(message = "Entities must not be empty")
     private Map<Hash, String> hashToEntityJsonDataMap;
 
