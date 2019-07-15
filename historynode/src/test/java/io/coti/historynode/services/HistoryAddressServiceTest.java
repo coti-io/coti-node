@@ -1,14 +1,15 @@
 package io.coti.historynode.services;
 
+import io.coti.basenode.crypto.AddressCrypto;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.GetAddressesBulkRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Addresses;
+import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.historynode.http.GetAddressResponse;
-import io.coti.historynode.services.interfaces.IStorageConnector;
 import org.junit.Assert;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,12 +22,12 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import utils.TestUtils;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = HistoryAddressService.class)
+@ContextConfiguration(classes = {HistoryAddressService.class,StorageConnector.class, AddressCrypto.class, BaseNodeValidationService.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -38,19 +39,25 @@ public class HistoryAddressServiceTest {
     private HistoryAddressService addressService;
 
     @MockBean
-    private IStorageConnector storageConnector;
+    private StorageConnector storageConnector;
 
     @MockBean
     private Addresses addresses;
 
+    @MockBean
+    private AddressCrypto addressCrypto;
+
+    @MockBean
+    private BaseNodeValidationService baseNodeValidationService;
+
     private Hash hash;
-    private Set<Hash> hashes;
+    private List<Hash> hashes;
     private GetAddressesBulkRequest getAddressesBulkRequest;
 
-    @BeforeClass
+    @Before
     public void setUpOnce() throws Exception {
         hash = TestUtils.generateRandomHash();
-        hashes = new HashSet<>();
+        hashes = new ArrayList<>();
         hashes.add(hash);
         getAddressesBulkRequest = new GetAddressesBulkRequest(hashes);
     }
@@ -61,16 +68,8 @@ public class HistoryAddressServiceTest {
      *      addressData not in RocksDB and in StorageNode - returns response entity with addressData and hash, status ok
      *      addressData not in RocksDB and not in StorageNode - returns response entity with null as addressData and hash, status ok
     **/
+
     @Test
-    public void getAddress(){
-        // test signature validation
-        // test correctly splits set of hashes to found and not found
-        getAddress_AddressInRocksDb_returnFoundAddress();
-        getAddress_AddressNotInRocksDb_returnFoundAddress();
-        getAddress_AddressNotInRocksDbOrStorage_returnNotFoundAddress();
-
-    }
-
     public void getAddress_AddressInRocksDb_returnFoundAddress() {
         AddressData addressData = new AddressData(hash);
         when(addresses.getByHash(hash)).thenReturn(addressData);
@@ -80,6 +79,7 @@ public class HistoryAddressServiceTest {
         Assert.assertEquals(expectedResponse, addressService.getAddresses(getAddressesBulkRequest));
     }
 
+    @Test
     public void getAddress_AddressNotInRocksDb_returnFoundAddress() {
         AddressData addressData = new AddressData(hash);
         when(addresses.getByHash(hash)).thenReturn(null);
@@ -91,6 +91,7 @@ public class HistoryAddressServiceTest {
         Assert.assertEquals(expectedResponse, addressService.getAddresses(getAddressesBulkRequest));
     }
 
+    @Test
     public void getAddress_AddressNotInRocksDbOrStorage_returnNotFoundAddress() {
         Hash hash = TestUtils.generateRandomHash();
         AddressData addressData = new AddressData(hash);

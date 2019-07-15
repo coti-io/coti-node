@@ -2,15 +2,13 @@ package io.coti.basenode.http;
 
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.SignatureData;
-import io.coti.basenode.data.interfaces.ISignValidatable;
 import lombok.Data;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Data
-public class GetAddressesBulkResponse extends GetBulkResponse {
+public class GetAddressesBulkResponse extends BulkResponse {
     private Map<Hash, AddressData> addressHashesToAddresses;
 
     public GetAddressesBulkResponse(Map<Hash,AddressData> addressHashesToAddresses,String message, String status) {
@@ -20,11 +18,16 @@ public class GetAddressesBulkResponse extends GetBulkResponse {
     }
 
     public GetAddressesBulkResponse(){
-        addressHashesToAddresses = new HashMap<>();
+        this.addressHashesToAddresses = new LinkedHashMap<>();
     }
 
 
     public GetAddressesBulkResponse(Map<Hash, AddressData> addressHashesToAddresses) {
         this.addressHashesToAddresses = addressHashesToAddresses;
+    }
+
+    public GetAddressesBulkResponse(String message, String status){
+        super(message, status);
+        this.addressHashesToAddresses = new LinkedHashMap<>();
     }
 }
