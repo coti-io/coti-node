@@ -1,13 +1,13 @@
 package io.coti.storagenode.model;
 
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.http.EntitiesBulkJsonResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.data.MultiDbInsertionStatus;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.database.DbConnectorService;
 import io.coti.storagenode.http.AddEntityJsonResponse;
-import io.coti.storagenode.http.GetEntitiesBulkJsonResponse;
 import io.coti.storagenode.http.GetEntityJsonResponse;
 import io.coti.storagenode.model.interfaces.IObjectService;
 import javafx.util.Pair;
@@ -54,7 +54,7 @@ public class ObjectService implements IObjectService {
         }
         return ResponseEntity
                 .status(dbConnectorService.getHttpStatus(insertResponse.getKey()))
-                .body(new GetEntitiesBulkJsonResponse(insertResponse.getValue()));
+                .body(new EntitiesBulkJsonResponse(insertResponse.getValue()));
     }
 
     @Override
@@ -92,7 +92,7 @@ public class ObjectService implements IObjectService {
                             STATUS_ERROR));
         }
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new GetEntitiesBulkJsonResponse(hashToObjectFromDbMap));
+                .body(new EntitiesBulkJsonResponse(hashToObjectFromDbMap));
     }
 
     @Override
@@ -140,7 +140,7 @@ public class ObjectService implements IObjectService {
                             STATUS_ERROR));
         }
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new GetEntitiesBulkJsonResponse(hashToResponseMap));
+                .body(new EntitiesBulkJsonResponse(hashToResponseMap));
     }
 
     @Override

@@ -1,23 +1,22 @@
 package io.coti.storagenode.controllers;
 
-import io.coti.basenode.http.*;
+import io.coti.basenode.http.AddEntitiesBulkRequest;
+import io.coti.basenode.http.AddEntityRequest;
+import io.coti.basenode.http.GetTransactionsBulkRequest;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.services.ChunkingService;
 import io.coti.storagenode.services.TransactionStorageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import java.io.IOException;
 
-import static org.springframework.web.bind.annotation.RequestMethod.*;
+import static org.springframework.web.bind.annotation.RequestMethod.POST;
+import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 
 @Slf4j
@@ -35,13 +34,6 @@ public class TransactionController {
     public ResponseEntity<IResponse> storeTransactionToStorage(@Valid @RequestBody AddEntityRequest addAddEntityRequest) {
         return transactionStorageService.storeObjectToStorage(addAddEntityRequest.getHash(),
                 addAddEntityRequest.getEntityJson());
-    }
-
-    //TODO: old implementation, verify this
-    @RequestMapping(value = "/transaction", method = GET)
-    public ResponseEntity<IResponse> getTransactionFromStorage(@Valid @RequestBody GetEntityRequest getEntityRequest) {
-        return transactionStorageService.retrieveObjectFromStorage(getEntityRequest.getHash(), ElasticSearchData.TRANSACTIONS
-                );
     }
 
 
@@ -62,10 +54,10 @@ public class TransactionController {
         return responseResponseEntity;
     }
 
-    //TODO 7/10/2019 astolia: Dummy controller for testing
-    @GetMapping(value = "/transactionsBatch")
-    public void getMultipleTransactionsFromStorageBatched(HttpServletResponse response) throws IOException {
-        chunkingService.getTransactionBatch(response);
-    }
+//    //TODO 7/10/2019 astolia: Dummy controller for testing
+//    @GetMapping(value = "/transactionsBatch")
+//    public void getMultipleTransactionsFromStorageBatched(HttpServletResponse response) throws IOException {
+//        chunkingService.getTransactionBatch(response);
+//    }
 
 }
