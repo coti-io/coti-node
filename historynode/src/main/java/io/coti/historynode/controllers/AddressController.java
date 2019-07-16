@@ -1,8 +1,8 @@
 package io.coti.historynode.controllers;
 
-import io.coti.basenode.http.GetAddressesBulkRequest;
-import io.coti.basenode.http.GetAddressesBulkResponse;
-import io.coti.historynode.services.HistoryAddressService;
+import io.coti.basenode.http.GetHistoryAddressesRequest;
+import io.coti.basenode.http.GetHistoryAddressesResponse;
+import io.coti.historynode.services.AddressService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,11 +19,11 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 public class AddressController {
 
     @Autowired
-    private HistoryAddressService historyAddressService;
+    private AddressService addressService;
 
     @RequestMapping(value = "/addresses", method = POST)
-    public ResponseEntity<GetAddressesBulkResponse> getAddresses(@Valid @RequestBody GetAddressesBulkRequest getAddressesBulkRequest) {
-        return historyAddressService.getAddresses(getAddressesBulkRequest);
+    public ResponseEntity<GetHistoryAddressesResponse> getAddresses(@Valid @RequestBody GetHistoryAddressesRequest getHistoryAddressesRequest) {
+        return addressService.getAddresses(getHistoryAddressesRequest);
     }
 
 }
