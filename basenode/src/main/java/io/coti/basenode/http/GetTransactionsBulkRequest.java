@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class GetTransactionsBulkRequest extends BulkRequest {
+public class GetTransactionsBulkRequest extends Request {
     private List<Hash> hashes;
 
     public GetTransactionsBulkRequest() {

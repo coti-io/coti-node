@@ -2,7 +2,7 @@ package io.coti.basenode.crypto;
 
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.GetAddressesBulkResponse;
+import io.coti.basenode.http.GetHistoryAddressesResponse;
 import io.coti.basenode.utils.AddressTestUtils;
 import io.coti.basenode.utils.HashTestUtils;
 import org.hamcrest.core.IsEqual;
@@ -32,7 +32,7 @@ public class AddressesResponseCryptoTest {
         List<AddressData> addresses = AddressTestUtils.generateListOfRandomAddressData(size);
         Map<Hash, AddressData> addressHashesToAddresses = new LinkedHashMap<>();
         addresses.forEach( addressData -> addressHashesToAddresses.put(addressData.getHash(),addressData));
-        Hash hash = HashTestUtils.generateRandomHash();
+        Hash hash = HashTestUtils.generateRandomAddressHash();
         addressHashesToAddresses.put(hash,null);
 
         ByteBuffer addressesResponseBuffer = ByteBuffer.allocate(getByteBufferSize(addressHashesToAddresses));
@@ -43,10 +43,10 @@ public class AddressesResponseCryptoTest {
             }
         }
 
-        GetAddressesBulkResponse getAddressesBulkResponse = new GetAddressesBulkResponse(addressHashesToAddresses);
+        GetHistoryAddressesResponse getHistoryAddressesResponse = new GetHistoryAddressesResponse(addressHashesToAddresses);
         byte[] addressesResponseInBytes = addressesResponseBuffer.array();
         byte[] bytes = CryptoHelper.cryptoHash(addressesResponseInBytes).getBytes();
-        Assert.assertArrayEquals( bytes, addressesResponseCrypto.getSignatureMessage(getAddressesBulkResponse) );
+        Assert.assertArrayEquals( bytes, addressesResponseCrypto.getSignatureMessage(getHistoryAddressesResponse) );
     }
 
     @Test
@@ -56,7 +56,7 @@ public class AddressesResponseCryptoTest {
 
         Map<Hash, AddressData> addressHashesToAddressesOne = new LinkedHashMap<>();
         addresses.forEach( addressData -> addressHashesToAddressesOne.put(addressData.getHash(),addressData));
-        Hash hash = HashTestUtils.generateRandomHash();
+        Hash hash = HashTestUtils.generateRandomAddressHash();
         addressHashesToAddressesOne.put(hash,null);
 
         ByteBuffer addressesResponseBufferOne = ByteBuffer.allocate(getByteBufferSize(addressHashesToAddressesOne));
@@ -66,10 +66,10 @@ public class AddressesResponseCryptoTest {
                 addressesResponseBufferOne.putLong(entry.getValue().getCreationTime().toEpochMilli());
             }
         }
-        GetAddressesBulkResponse getAddressesBulkResponseOne = new GetAddressesBulkResponse(addressHashesToAddressesOne);
+        GetHistoryAddressesResponse getHistoryAddressesResponseOne = new GetHistoryAddressesResponse(addressHashesToAddressesOne);
         byte[] addressesResponseInBytesOne = addressesResponseBufferOne.array();
         byte[] bytesOne = CryptoHelper.cryptoHash(addressesResponseInBytesOne).getBytes();
-        Assert.assertArrayEquals( bytesOne, addressesResponseCrypto.getSignatureMessage(getAddressesBulkResponseOne) );
+        Assert.assertArrayEquals( bytesOne, addressesResponseCrypto.getSignatureMessage(getHistoryAddressesResponseOne) );
 
 
         //------------------------------
@@ -86,12 +86,12 @@ public class AddressesResponseCryptoTest {
                 addressesResponseBufferTwo.putLong(entry.getValue().getCreationTime().toEpochMilli());
             }
         }
-        GetAddressesBulkResponse getAddressesBulkResponseTwo = new GetAddressesBulkResponse(addressHashesToAddressesTwo);
+        GetHistoryAddressesResponse getHistoryAddressesResponseTwo = new GetHistoryAddressesResponse(addressHashesToAddressesTwo);
 
         byte[] addressesResponseInBytesTwo = addressesResponseBufferTwo.array();
         byte[] bytesTwo = CryptoHelper.cryptoHash(addressesResponseInBytesTwo).getBytes();
-        Assert.assertArrayEquals( bytesTwo, addressesResponseCrypto.getSignatureMessage(getAddressesBulkResponseTwo) );
-        Assert.assertThat(bytesTwo, IsNot.not(IsEqual.equalTo(addressesResponseCrypto.getSignatureMessage(getAddressesBulkResponseOne))));
+        Assert.assertArrayEquals( bytesTwo, addressesResponseCrypto.getSignatureMessage(getHistoryAddressesResponseTwo) );
+        Assert.assertThat(bytesTwo, IsNot.not(IsEqual.equalTo(addressesResponseCrypto.getSignatureMessage(getHistoryAddressesResponseOne))));
     }
 
     private int getByteBufferSize(Map<Hash, AddressData> addressHashesToAddresses){

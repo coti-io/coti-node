@@ -1,29 +1,26 @@
 package io.coti.basenode.crypto;
 
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.GetAddressesBulkRequest;
+import io.coti.basenode.http.GetHistoryAddressesRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
 import java.util.List;
 
 @Service
-public class AddressesRequestCrypto extends SignatureCrypto<GetAddressesBulkRequest> {
+@Slf4j
+public class AddressesRequestCrypto extends SignatureCrypto<GetHistoryAddressesRequest> {
+
+    private final int SIZE_OF_ADDRESS_HASH_IN_BYTES = 68;
 
     @Override
-    public byte[] getSignatureMessage(GetAddressesBulkRequest getAddressesBulkRequest) {
-        List<Hash> addressHashes = getAddressesBulkRequest.getAddressesHash();
-        ByteBuffer addressesRequestBuffer = ByteBuffer.allocate(getByteBufferSize(addressHashes));
+    public byte[] getSignatureMessage(GetHistoryAddressesRequest getHistoryAddressesRequest) {
+        List<Hash> addressHashes = getHistoryAddressesRequest.getAddressesHash();
+        ByteBuffer addressesRequestBuffer = ByteBuffer.allocate( SIZE_OF_ADDRESS_HASH_IN_BYTES * addressHashes.size());
         addressHashes.forEach(addressHash -> addressesRequestBuffer.put(addressHash.getBytes()));
         byte[] addressesRequestInBytes = addressesRequestBuffer.array();
         return CryptoHelper.cryptoHash(addressesRequestInBytes).getBytes();
     }
 
-    private int getByteBufferSize(List<Hash> addressHashes){
-        int size = 0;
-        for( Hash hash : addressHashes){
-            size += hash.getBytes().length;
-        }
-        return size;
-    }
 }
