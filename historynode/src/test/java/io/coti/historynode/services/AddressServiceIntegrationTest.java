@@ -1,6 +1,5 @@
 package io.coti.historynode.services;
 
-import io.coti.basenode.crypto.AddressCrypto;
 import io.coti.basenode.crypto.AddressesRequestCrypto;
 import io.coti.basenode.crypto.AddressesResponseCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
@@ -9,8 +8,8 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.http.BaseNodeHttpStringConstants;
-import io.coti.basenode.http.GetAddressesBulkRequest;
-import io.coti.basenode.http.GetAddressesBulkResponse;
+import io.coti.basenode.http.GetHistoryAddressesRequest;
+import io.coti.basenode.http.GetHistoryAddressesResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Addresses;
 import io.coti.basenode.services.BaseNodeValidationService;
@@ -35,17 +34,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
-@ContextConfiguration(classes = {HistoryAddressService.class, Addresses.class, HistoryRocksDBConnector.class, AddressesRequestCrypto.class, NodeCryptoHelper.class
-, AddressCrypto.class, AddressesRequestCrypto.class, AddressesResponseCrypto.class, StorageConnector.class, BaseNodeValidationService.class})
+@ContextConfiguration(classes = {AddressService.class, Addresses.class, HistoryRocksDBConnector.class, NodeCryptoHelper.class,
+        AddressesRequestCrypto.class, AddressesResponseCrypto.class, StorageConnector.class, BaseNodeValidationService.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class HistoryAddressServiceIntegrationTest {
+public class AddressServiceIntegrationTest {
 
     public static final int NUMBER_OF_ADDRESSES = 8;
 
     @Autowired
-    private HistoryAddressService historyAddressService;
+    private AddressService addressService;
     @Autowired
     private EntityService entityService;
     @Autowired
@@ -56,20 +55,22 @@ public class HistoryAddressServiceIntegrationTest {
     private Addresses addressesCollection;
     @Autowired
     private AddressesRequestCrypto addressesRequestCrypto;
+    @Autowired
+    private AddressesResponseCrypto addressesResponseCrypto;
 
     @MockBean
     private BaseNodeValidationService baseNodeValidationService;
 
-    private GetAddressesBulkRequest getAddressesBulkRequest;
+    private GetHistoryAddressesRequest getHistoryAddressesRequest;
 
     private Hash insertedHash;
 
     @Before
     public void setUp() throws Exception {
         databaseConnector.init();
-        getAddressesBulkRequest = TestUtils.generateGetAddressesRequest();
-        addressesRequestCrypto.signMessage(getAddressesBulkRequest);
-        insertedHash = getAddressesBulkRequest.getAddressesHash().iterator().next();
+        getHistoryAddressesRequest = TestUtils.generateGetAddressesRequest();
+        addressesRequestCrypto.signMessage(getHistoryAddressesRequest);
+        insertedHash = getHistoryAddressesRequest.getAddressesHash().iterator().next();
         insertAddressDataToRocksDB(insertedHash);
     }
 
@@ -80,21 +81,20 @@ public class HistoryAddressServiceIntegrationTest {
 
     @Test
     public void getAddressesTestTemp(){
-        testBadSignature();
-        historyAddressService.getAddresses(getAddressesBulkRequest);
+        addressService.getAddresses(getHistoryAddressesRequest);
     }
 
 
     //TODO 7/14/2019 astolia: unit test
-    private void testBadSignature(){
-        getAddressesBulkRequest = TestUtils.generateGetAddressesRequest();
-        getAddressesBulkRequest.setSignerHash(new Hash(1));
-        getAddressesBulkRequest.setSignature(new SignatureData());
-        ResponseEntity<GetAddressesBulkResponse> response = historyAddressService.getAddresses(getAddressesBulkRequest);
-        Assert.assertEquals(HttpStatus.UNAUTHORIZED,response.getStatusCode());
-        Assert.assertEquals(BaseNodeHttpStringConstants.INVALID_SIGNATURE,response.getBody().getMessage());
-        Assert.assertEquals(BaseNodeHttpStringConstants.STATUS_ERROR,response.getBody().getStatus());
-
+    @Test
+    public void testBadSignature() {
+            getHistoryAddressesRequest = TestUtils.generateGetAddressesRequest();
+            getHistoryAddressesRequest.setSignerHash(new Hash(1));
+            getHistoryAddressesRequest.setSignature(new SignatureData());
+            ResponseEntity<GetHistoryAddressesResponse> response = addressService.getAddresses(getHistoryAddressesRequest);
+            Assert.assertEquals(HttpStatus.UNAUTHORIZED,response.getStatusCode());
+            Assert.assertEquals(BaseNodeHttpStringConstants.INVALID_SIGNATURE,response.getBody().getMessage());
+            Assert.assertEquals(BaseNodeHttpStringConstants.STATUS_ERROR,response.getBody().getStatus());
     }
 
     @Test

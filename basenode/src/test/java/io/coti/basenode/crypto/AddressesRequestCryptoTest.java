@@ -1,7 +1,7 @@
 package io.coti.basenode.crypto;
 
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.GetAddressesBulkRequest;
+import io.coti.basenode.http.GetHistoryAddressesRequest;
 import io.coti.basenode.utils.HashTestUtils;
 import org.hamcrest.core.IsEqual;
 import org.hamcrest.core.IsNot;
@@ -29,27 +29,27 @@ public class AddressesRequestCryptoTest {
 
     @Test
     public void testGetSignatureEqual(){
-        List<Hash> addressHashes = HashTestUtils.generateListOfRandomHashes(10);
+        List<Hash> addressHashes = HashTestUtils.generateListOfRandomAddressHashes(10);
         ByteBuffer addressesRequestBuffer = ByteBuffer.allocate(getByteBufferSize(addressHashes));
         addressHashes.forEach(addressHash -> addressesRequestBuffer.put(addressHash.getBytes()));
         byte[] addressesRequestInBytes = addressesRequestBuffer.array();
         byte[] bytes = CryptoHelper.cryptoHash(addressesRequestInBytes).getBytes();
 
-        GetAddressesBulkRequest getAddressesBulkRequest = new GetAddressesBulkRequest(addressHashes);
-        Assert.assertArrayEquals( bytes, addressesRequestCrypto.getSignatureMessage(getAddressesBulkRequest) );
+        GetHistoryAddressesRequest getHistoryAddressesRequest = new GetHistoryAddressesRequest(addressHashes);
+        Assert.assertArrayEquals( bytes, addressesRequestCrypto.getSignatureMessage(getHistoryAddressesRequest) );
     }
 
     @Test
     public void testGetSignatureNotEqual(){
-        List<Hash> addressHashesOne = HashTestUtils.generateListOfRandomHashes(10);
+        List<Hash> addressHashesOne = HashTestUtils.generateListOfRandomAddressHashes(10);
         ByteBuffer addressesRequestBuffer = ByteBuffer.allocate(getByteBufferSize(addressHashesOne));
         addressHashesOne.forEach(addressHash -> addressesRequestBuffer.put(addressHash.getBytes()));
         byte[] addressesRequestInBytes = addressesRequestBuffer.array();
         byte[] bytes = CryptoHelper.cryptoHash(addressesRequestInBytes).getBytes();
 
         List<Hash> addressHashesTwo = HashTestUtils.generateListOfRandomHashes(10);
-        GetAddressesBulkRequest getAddressesBulkRequest = new GetAddressesBulkRequest(addressHashesTwo);
-        Assert.assertThat(bytes, IsNot.not(IsEqual.equalTo(addressesRequestCrypto.getSignatureMessage(getAddressesBulkRequest))));
+        GetHistoryAddressesRequest getHistoryAddressesRequest = new GetHistoryAddressesRequest(addressHashesTwo);
+        Assert.assertThat(bytes, IsNot.not(IsEqual.equalTo(addressesRequestCrypto.getSignatureMessage(getHistoryAddressesRequest))));
     }
 
     private int getByteBufferSize(List<Hash> addressHashes){

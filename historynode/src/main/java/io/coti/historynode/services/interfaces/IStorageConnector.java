@@ -1,10 +1,10 @@
 package io.coti.historynode.services.interfaces;
 
-import io.coti.basenode.http.BulkRequest;
-import io.coti.basenode.http.BulkResponse;
+import io.coti.basenode.http.Request;
+import io.coti.basenode.http.Response;
 import org.springframework.http.ResponseEntity;
 
-public interface IStorageConnector<T extends BulkRequest, U extends BulkResponse> {
+public interface IStorageConnector<T extends Request, U extends Response> {
 
     ResponseEntity<U> retrieveFromStorage(String url, T request, Class<U> responseType);
     ResponseEntity<U> storeInStorage(String url, T request, Class<U> responseType);

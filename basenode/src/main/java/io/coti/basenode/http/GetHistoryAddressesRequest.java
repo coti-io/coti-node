@@ -6,31 +6,32 @@ import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 
-@Data
-public class BulkResponse extends Response implements ISignValidatable, ISignable {
+import javax.validation.constraints.NotEmpty;
+import java.util.List;
 
-    //@NotNull
+@Data
+public class GetHistoryAddressesRequest extends Request implements ISignable, ISignValidatable {
+
+    @NotEmpty(message = "Address hash must not be null")
+    private List<Hash> addressesHash;
     private Hash signerHash;
-    //@NotNull
     private SignatureData signature;
 
-    public BulkResponse() {
-
+    private GetHistoryAddressesRequest() {
     }
 
-    public BulkResponse(String message, String status) {
-        super(message, status);
-
+    public GetHistoryAddressesRequest(List<Hash> addressesHash) {
+        this.addressesHash = addressesHash;
     }
 
     @Override
     public SignatureData getSignature() {
-        return this.signature;
+        return signature;
     }
 
     @Override
     public Hash getSignerHash() {
-        return this.signerHash;
+        return signerHash;
     }
 
     @Override
@@ -42,4 +43,5 @@ public class BulkResponse extends Response implements ISignValidatable, ISignabl
     public void setSignature(SignatureData signature) {
         this.signature = signature;
     }
+
 }
