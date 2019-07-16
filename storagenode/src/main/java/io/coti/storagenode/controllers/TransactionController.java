@@ -29,13 +29,6 @@ public class TransactionController {
     @Autowired
     private ChunkingService chunkingService;
 
-    //TODO: old implementation, verify this
-    @RequestMapping(value = "/transaction", method = PUT)
-    public ResponseEntity<IResponse> storeTransactionToStorage(@Valid @RequestBody AddEntityRequest addAddEntityRequest) {
-        return transactionStorageService.storeObjectToStorage(addAddEntityRequest.getHash(),
-                addAddEntityRequest.getEntityJson());
-    }
-
 
     @RequestMapping(value = "/transactions", method = PUT)
     public ResponseEntity<IResponse> storeMultipleTransactionsToStorage(@Valid @RequestBody AddEntitiesBulkRequest addEntitiesBulkRequest) {
