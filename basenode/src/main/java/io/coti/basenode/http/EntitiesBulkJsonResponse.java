@@ -4,11 +4,10 @@ import io.coti.basenode.data.Hash;
 import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Data
-public class EntitiesBulkJsonResponse extends BulkResponse {
+public class EntitiesBulkJsonResponse extends Response{
 
     @NotEmpty
     public Map<Hash, String> hashToEntitiesFromDbMap;
@@ -17,7 +16,12 @@ public class EntitiesBulkJsonResponse extends BulkResponse {
         this.hashToEntitiesFromDbMap = hashToEntitiesFromDbMap;
     }
 
-    public EntitiesBulkJsonResponse(){
-        hashToEntitiesFromDbMap = new LinkedHashMap<>();
+    public EntitiesBulkJsonResponse(Map<Hash, String> hashToEntitiesFromDbMap, String message, String status) {
+        super(message, status);
+        this.hashToEntitiesFromDbMap = hashToEntitiesFromDbMap;
+    }
+
+    private EntitiesBulkJsonResponse(){
+
     }
 }

@@ -191,7 +191,7 @@ public abstract class EntityStorageService implements IEntityStorageService
 //            if(objectType.getObjectName().equals(TRANSACTION_DATA)) {
 //                ((GetTransactionsBulkResponse)entitiesBulkResponse).setEntitiesBulkResponses(responsesMap);
 //            } else {
-//                ((GetAddressesBulkResponse)entitiesBulkResponse).setAddressHashesToAddresses(addressStorageService.getObjectsMapFromJsonMap(responsesMap));
+//                ((GetHistoryAddressesResponse)entitiesBulkResponse).setAddressHashesToAddresses(addressStorageService.getObjectsMapFromJsonMap(responsesMap));
 //            }
 //            return ResponseEntity.status(objectsByHashResponse.getStatusCode()).body(entitiesBulkResponse);
 //        }
@@ -211,7 +211,7 @@ public abstract class EntityStorageService implements IEntityStorageService
 //        if(objectType.getObjectName().equals(TRANSACTION_DATA)) {
 //            ((GetTransactionsBulkResponse)entitiesBulkResponse).setEntitiesBulkResponses(responsesMap);
 //        } else {
-//            ((GetAddressesBulkResponse)entitiesBulkResponse).setAddressHashesToAddresses(addressStorageService.getObjectsMapFromJsonMap(responsesMap));
+//            ((GetHistoryAddressesResponse)entitiesBulkResponse).setAddressHashesToAddresses(addressStorageService.getObjectsMapFromJsonMap(responsesMap));
 //        }
 //        return ResponseEntity.status(HttpStatus.OK).body(entitiesBulkResponse);
 //    }

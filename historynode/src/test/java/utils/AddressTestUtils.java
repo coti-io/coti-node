@@ -10,13 +10,13 @@ import java.util.Set;
 public class AddressTestUtils {
 
     public static AddressData generateRandomAddressData(){
-        return new AddressData(HashTestUtils.generateRandomHash());
+        return new AddressData(HashTestUtils.generateRandomAddressHash());
     }
 
     public static List<AddressData> generateListOfRandomAddressData(int listSize){
 
         List<AddressData> addresses = new ArrayList<>();
-        for (int i = 0 ; i <= listSize ; i++){
+        for (int i = 0 ; i < listSize ; i++){
             addresses.add(generateRandomAddressData());
         }
         return addresses;
