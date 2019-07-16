@@ -95,9 +95,9 @@ public class AddressStorageService extends EntityStorageService {
         return validationService.validateAddress(addressTxHistory.getHash()); // TODO add Validation for addressAsJson
     }
 
-    public ResponseEntity<IResponse> retrieveObjectFromStorage(Hash hash) {
-        return super.retrieveObjectFromStorage(hash, ElasticSearchData.ADDRESSES);
-    }
+//    public ResponseEntity<IResponse> retrieveObjectFromStorage(Hash hash) {
+//        return super.retrieveObjectFromStorage(hash, ElasticSearchData.ADDRESSES);
+//    }
 
     public Map<Hash, AddressData> getObjectsMapFromJsonMap(HashMap<Hash, String> responsesMap) {
         Map<Hash, AddressData> hashAddressDataMap = responsesMap.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> {

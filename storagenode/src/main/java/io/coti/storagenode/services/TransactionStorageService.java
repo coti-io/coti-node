@@ -12,7 +12,6 @@ import io.coti.basenode.http.GetTransactionsBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.storagenode.data.enums.ElasticSearchData;
-import io.coti.storagenode.http.GetEntitiesBulkJsonResponse;
 import io.coti.storagenode.model.ObjectService;
 import io.coti.storagenode.services.interfaces.ITransactionStorageValidationService;
 import javafx.util.Pair;
@@ -24,10 +23,11 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-//import jdk.nashorn.internal.parser.JSONParser;
-//import net.minidev.json.JSONObject;
+import java.util.concurrent.*;
 
 @Service
 public class TransactionStorageService extends EntityStorageService implements ITransactionStorageValidationService
@@ -96,16 +96,9 @@ public class TransactionStorageService extends EntityStorageService implements I
         return valid;
     }
 
-    public ResponseEntity<IResponse> retrieveObjectFromStorage(Hash hash) {
-        return retrieveObjectFromStorage(hash, ElasticSearchData.TRANSACTIONS);
-    }
-
-    public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(GetTransactionsBulkRequest getTransactionsBulkRequest) {
-        //TODO 7/14/2019 tomer: Implement signature validation if needed - Disregard
-
-        return super.retrieveMultipleObjectsFromStorage(getTransactionsBulkRequest.getHashes(), new GetTransactionsBulkResponse());
-    }
-
+//    public ResponseEntity<IResponse> retrieveObjectFromStorage(Hash hash) {
+//        return retrieveObjectFromStorage(hash, ElasticSearchData.TRANSACTIONS);
+//    }
 
     @Override
     protected GetTransactionsBulkResponse getEmptyEntitiesBulkResponse() {
@@ -118,9 +111,11 @@ public class TransactionStorageService extends EntityStorageService implements I
         return new GetTransactionsBulkResponse();
     }
 
-    public ResponseEntity<IResponse> retrieveMultipleObjectsInBlocksFromStorage(GetTransactionsBulkRequest getTransactionsBulkRequest) {
-    //TODO 7/14/2019 tomer: Implement signature validation if needed - Disregard
+    public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(GetTransactionsBulkRequest getTransactionsBulkRequest) {
+        return super.retrieveMultipleObjectsFromStorage(getTransactionsBulkRequest.getHashes());
+    }
 
+    public ResponseEntity<IResponse> retrieveMultipleObjectsInBlocksFromStorage(GetTransactionsBulkRequest getTransactionsBulkRequest) {
     return retrieveMultipleTransactionsInBlocksFromStorage(getTransactionsBulkRequest.getHashes(), new GetTransactionsBulkResponse());
 }
 
