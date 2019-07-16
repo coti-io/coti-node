@@ -234,6 +234,12 @@ public abstract class EntityStorageService implements IEntityStorageService
         }
 
         // For successfully retrieved data, perform also data-integrity checks
+        verifyEntitiesFromDbMap(responsesMap, objectsByHashResponse);
+        return ResponseEntity.status(HttpStatus.OK).body(getEntitiesBulkResponse(responsesMap));
+
+    }
+
+    protected void verifyEntitiesFromDbMap(Map<Hash, String> responsesMap, ResponseEntity<IResponse> objectsByHashResponse) {
         ((EntitiesBulkJsonResponse)objectsByHashResponse.getBody()).getHashToEntitiesFromDbMap().forEach( (hash, objectAsJsonString) ->
                 {
                     ResponseEntity<IResponse> verifyRetrievedSingleObject = verifyRetrievedSingleObject(hash, objectAsJsonString, false, objectType);
@@ -244,8 +250,6 @@ public abstract class EntityStorageService implements IEntityStorageService
                     }
                 }
         );
-        return ResponseEntity.status(HttpStatus.OK).body(getEntitiesBulkResponse(responsesMap));
-
     }
 
     protected abstract IResponse getEmptyEntitiesBulkResponse();
