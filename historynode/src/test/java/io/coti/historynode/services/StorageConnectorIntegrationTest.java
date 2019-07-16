@@ -1,12 +1,14 @@
 package io.coti.historynode.services;
 
 
+import io.coti.basenode.crypto.AddressesRequestCrypto;
+import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.AddAddressesBulkRequest;
 import io.coti.basenode.http.AddAddressesBulkResponse;
-import io.coti.basenode.http.GetAddressesBulkRequest;
-import io.coti.basenode.http.GetAddressesBulkResponse;
+import io.coti.basenode.http.GetHistoryAddressesRequest;
+import io.coti.basenode.http.GetHistoryAddressesResponse;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -35,24 +37,37 @@ import java.util.stream.Collectors;
  * what is desired result when storing an already stored address/transaction?
  * trying to retrieve non existing address/transaction
  */
-@ContextConfiguration(classes = {StorageConnector.class})
+@ContextConfiguration(classes = {StorageConnector.class, AddressesRequestCrypto.class, NodeCryptoHelper.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class StorageConnectorIntegrationTest {
 
     @Autowired
-    private  StorageConnector storageConnector;
+    private StorageConnector storageConnector;
 
-//    private static ObjectMapper mapper;
+    @Autowired
+    private AddressesRequestCrypto addressesRequestCrypto;
 
     @BeforeClass
     public static void setupOnce(){
-//        mapper = new ObjectMapper()
-//                .registerModule(new ParameterNamesModule())
-//                .registerModule(new Jdk8Module())
-//                .registerModule(new JavaTimeModule()); // new module, NOT JSR310Module
-//        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+    }
+
+    @Test
+    public void retrieveAddresses_notStoredInStorage_shouldReturnMapWithNullValues(){
+        int size = 2;
+        List<AddressData> addresses = AddressTestUtils.generateListOfRandomAddressData(size);
+        GetHistoryAddressesRequest request = new GetHistoryAddressesRequest(addresses.stream().map(addressData -> addressData.getHash()).collect(Collectors.toList()));
+        addressesRequestCrypto.signMessage(request);
+        ResponseEntity<GetHistoryAddressesResponse> retrieveResponse = storageConnector.retrieveFromStorage(TestConstants.getAddressesFromStorageUrl,request , GetHistoryAddressesResponse.class);
+        Assert.assertEquals(HttpStatus.OK, retrieveResponse.getStatusCode());
+        Map<Hash, AddressData> addressHashesToAddresses = retrieveResponse.getBody().getAddressHashesToAddresses();
+        Assert.assertEquals(size,addressHashesToAddresses.size());
+        for(Map.Entry<Hash,AddressData> entry : addressHashesToAddresses.entrySet()){
+            Assert.assertNull(entry.getValue());
+        }
+        Assert.assertTrue(addressHashesToAddresses.keySet().containsAll(addresses.stream().map( a -> a.getHash()).collect(Collectors.toSet())));
     }
 
     //TODO 7/14/2019 astolia: rename as convection
@@ -68,7 +83,7 @@ public class StorageConnectorIntegrationTest {
         storeResponse.getBody().getAddressHashesToStoreResult().values().forEach(storeResult -> Assert.assertEquals(true,storeResult));
 
         // get from elastic addresses that were stored above. make sure correct Http status, correct size, correct address data.
-        ResponseEntity<GetAddressesBulkResponse> retrieveResponse = storageConnector.retrieveFromStorage(TestConstants.getAddressesFromStorageUrl, new GetAddressesBulkRequest(addresses.stream().map(addressData -> addressData.getHash()).collect(Collectors.toList())),GetAddressesBulkResponse.class);
+        ResponseEntity<GetHistoryAddressesResponse> retrieveResponse = storageConnector.retrieveFromStorage(TestConstants.getAddressesFromStorageUrl, new GetHistoryAddressesRequest(addresses.stream().map(addressData -> addressData.getHash()).collect(Collectors.toList())), GetHistoryAddressesResponse.class);
         Assert.assertEquals(retrieveResponse.getStatusCode(),HttpStatus.OK);
         Map<Hash, AddressData> addressHashesToAddresses = retrieveResponse.getBody().getAddressHashesToAddresses();
         Assert.assertEquals(addressHashesToAddresses.size(),size);

@@ -3,12 +3,9 @@ package io.coti.basenode.services;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.crypto.TransactionSenderCrypto;
-import io.coti.basenode.data.BaseTransactionData;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.TransactionType;
+import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
-import io.coti.basenode.http.GetAddressesBulkResponse;
+import io.coti.basenode.http.GetHistoryAddressesResponse;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IPotService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
@@ -116,8 +113,9 @@ public class BaseNodeValidationService implements IValidationService {
     }
 
     @Override
-    public boolean validateGetAddressesResponse(GetAddressesBulkResponse getAddressesBulkResponse){
-        boolean foundNotValid = getAddressesBulkResponse.getAddressHashesToAddresses().entrySet().stream().anyMatch( entry ->
+    public boolean validateGetAddressesResponse(GetHistoryAddressesResponse getHistoryAddressesResponse, NodeType expectedNodetype){
+        //TODO 7/16/2019 astolia: verify expected node type
+        boolean foundNotValid = getHistoryAddressesResponse.getAddressHashesToAddresses().entrySet().stream().anyMatch(entry ->
                 entry.getValue() != null && !entry.getKey().equals(entry.getValue().getHash())
         );
         return !foundNotValid;

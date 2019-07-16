@@ -37,7 +37,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -66,6 +65,8 @@ public class HistoryTransactionServiceTest {
 
     @Value("${storage.server.address}")
     protected String storageServerAddress;
+
+
 
     public static final int NUMBER_OF_ADDRESSES_PER_SENDER = 8;
     public static final int NUMBER_OF_SENDERS = 3;

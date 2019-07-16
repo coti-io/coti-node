@@ -6,7 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
-import io.coti.basenode.crypto.AddressCrypto;
+import io.coti.basenode.crypto.AddressesRequestCrypto;
+import io.coti.basenode.crypto.AddressesResponseCrypto;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.*;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -37,7 +39,10 @@ public class AddressStorageService extends EntityStorageService {
     private BaseNodeValidationService validationService;
 
     @Autowired
-    private AddressCrypto addressCrypto;
+    private AddressesResponseCrypto addressesResponseCrypto;
+
+    @Autowired
+    private AddressesRequestCrypto addressesRequestCrypto;
 
     @PostConstruct
     public void init() {
@@ -49,11 +54,11 @@ public class AddressStorageService extends EntityStorageService {
         super.objectType = ElasticSearchData.ADDRESSES;
     }
 
-    public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(GetAddressesBulkRequest getAddressesBulkRequest){
-        if(!addressCrypto.verifyGetAddressRequestSignatureMessage(getAddressesBulkRequest)){
-            return generateResponse(HttpStatus.UNAUTHORIZED, new GetAddressesBulkResponse(new HashMap<>(), BaseNodeHttpStringConstants.INVALID_SIGNATURE, BaseNodeHttpStringConstants.STATUS_ERROR));
+    public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(GetHistoryAddressesRequest getHistoryAddressesRequest){
+        if(getHistoryAddressesRequest.getSignature() == null || getHistoryAddressesRequest.getSignerHash() == null || !addressesRequestCrypto.verifySignature(getHistoryAddressesRequest)){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body( new GetHistoryAddressesResponse(new HashMap<>(), BaseNodeHttpStringConstants.INVALID_SIGNATURE, BaseNodeHttpStringConstants.STATUS_ERROR));
         }
-        return super.retrieveMultipleObjectsFromStorage(getAddressesBulkRequest.getAddressesHash());
+        return super.retrieveMultipleObjectsFromStorage(getHistoryAddressesRequest.getAddressesHash());
     }
 
     //TODO 7/14/2019 astolia: if failed to map to json. dont continue to elastic. return some failed response
@@ -121,18 +126,29 @@ public class AddressStorageService extends EntityStorageService {
         }
     }
 
-    private <T extends BulkResponse> ResponseEntity<IResponse> generateResponse(HttpStatus httpStatus, T response){
-        return ResponseEntity.status(httpStatus).body(response);
+    @Override
+    protected GetHistoryAddressesResponse getEmptyEntitiesBulkResponse(){
+        return new GetHistoryAddressesResponse();
     }
 
     @Override
-    protected GetAddressesBulkResponse getEmptyEntitiesBulkResponse(){
-        return new GetAddressesBulkResponse();
+    protected GetHistoryAddressesResponse getEntitiesBulkResponse(Map<Hash, String> responsesMap){
+        Map<Hash,AddressData> respMap = new LinkedHashMap<>();
+        responsesMap.entrySet().forEach( entry -> {
+            respMap.put(entry.getKey(), entry.getValue() == null ? null : desrializeAddressData(entry.getValue()));
+        });
+        return new GetHistoryAddressesResponse(respMap);
     }
 
-    @Override
-    protected GetAddressesBulkResponse getEntitiesBulkResponse(Map<Hash, String> responsesMap){
-        //TODO 7/15/2019 astolia: String to AddressData
-        return new GetAddressesBulkResponse();
+    private AddressData desrializeAddressData(String addressDataJsonString){
+        AddressData addressData;
+        try {
+            addressData = mapper.readValue(addressDataJsonString, AddressData.class);
+        } catch (IOException e) {
+            //e.printStackTrace();
+            log.error("Failed to deserialize AddressData");
+            addressData = null;
+        }
+        return addressData;
     }
 }
