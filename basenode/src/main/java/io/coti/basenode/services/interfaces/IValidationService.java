@@ -2,9 +2,10 @@ package io.coti.basenode.services.interfaces;
 
 import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
-import io.coti.basenode.http.GetAddressesBulkResponse;
+import io.coti.basenode.http.GetHistoryAddressesResponse;
 
 import java.math.BigDecimal;
 
@@ -38,5 +39,5 @@ public interface IValidationService {
 
     boolean validateAmountField(BigDecimal amount);
 
-    boolean validateGetAddressesResponse(GetAddressesBulkResponse getAddressesBulkResponse);
+    boolean validateGetAddressesResponse(GetHistoryAddressesResponse getHistoryAddressesResponse, NodeType expectedNodetype);
 }

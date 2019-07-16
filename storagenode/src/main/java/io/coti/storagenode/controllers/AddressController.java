@@ -1,7 +1,7 @@
 package io.coti.storagenode.controllers;
 
 import io.coti.basenode.http.AddAddressesBulkRequest;
-import io.coti.basenode.http.GetAddressesBulkRequest;
+import io.coti.basenode.http.GetHistoryAddressesRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.services.AddressStorageService;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +22,8 @@ public class AddressController {
     private AddressStorageService addressStorageService;
 
     @PostMapping(value = "/addresses")
-    public ResponseEntity<IResponse> getAddressesFromStorage(@Valid @RequestBody GetAddressesBulkRequest getAddressesBulkRequest) {
-        return addressStorageService.retrieveMultipleObjectsFromStorage(getAddressesBulkRequest);
+    public ResponseEntity<IResponse> getAddressesFromStorage(@Valid @RequestBody GetHistoryAddressesRequest getHistoryAddressesRequest) {
+        return addressStorageService.retrieveMultipleObjectsFromStorage(getHistoryAddressesRequest);
     }
 
     @PutMapping(value = "/addresses")

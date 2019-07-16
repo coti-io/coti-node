@@ -25,7 +25,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Autowired
     private HistoryTransactionService historyTransactionService;
     @Autowired
-    private HistoryAddressService historyAddressService;
+    private AddressService addressService;
 
     public void newClusterStamp(ClusterStampData clusterStampData) {
         if (clusterStampCrypto.verifySignature(clusterStampData)) {
@@ -107,7 +107,8 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         }
 
         //TODO 7/7/2019 tomer: Add handling of response
-        historyAddressService.storeEntities(new ArrayList<>(unconfirmedTransactionsAddresses));
+        //historyAddressService.storeEntities(new ArrayList<>(unconfirmedTransactionsAddresses));
+        addressService.handleClusterStsmpAddressesStorage();
     }
 
 

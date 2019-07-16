@@ -5,13 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
-import io.coti.basenode.crypto.AddressCrypto;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.EntitiesBulkJsonResponse;
-import io.coti.basenode.http.GetAddressesBulkResponse;
+import io.coti.basenode.http.GetHistoryAddressesResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.storagenode.data.enums.ElasticSearchData;
@@ -45,7 +44,7 @@ import static testUtils.TestUtils.generateRandomHash;
 
 @Deprecated
 @ContextConfiguration(classes = {ObjectService.class, DbConnectorService.class, AddressStorageService.class,
-        CryptoHelper.class, AddressCrypto.class})
+        CryptoHelper.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -69,9 +68,6 @@ public class AddressTransactionsHistoryServiceTest {
 
     @MockBean
     private CryptoHelper mockCryptoHelper;
-
-    @MockBean
-    private AddressCrypto addressCrypto;
 
     @Before
     public void init() {
@@ -204,7 +200,7 @@ public class AddressTransactionsHistoryServiceTest {
         Hash hash2 = addressTxsHistories.get(2).getHash();
         addressesToGet.add(hash1);
         addressesToGet.add(hash2);
-        GetAddressesBulkResponse hashResponseEntities = (GetAddressesBulkResponse)addressStorageValidationService.retrieveMultipleObjectsFromStorage(addressesToGet).getBody();
+        GetHistoryAddressesResponse hashResponseEntities = (GetHistoryAddressesResponse)addressStorageValidationService.retrieveMultipleObjectsFromStorage(addressesToGet).getBody();
         Assert.assertNotNull(hashResponseEntities.getAddressHashesToAddresses().get(hash1) );
         Assert.assertNotNull( hashResponseEntities.getAddressHashesToAddresses().get(hash2) );
 //        AddressData retrievedAddress1 = mapper.readValue(String.valueOf( hashResponseEntities.getAddressHashesToAddresses().get(hash1)), AddressData.class);
