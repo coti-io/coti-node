@@ -21,7 +21,7 @@ public class EntitiesBulkJsonResponse extends Response{
         this.hashToEntitiesFromDbMap = hashToEntitiesFromDbMap;
     }
 
-    private EntitiesBulkJsonResponse(){
+    public EntitiesBulkJsonResponse(){
 
     }
 }

@@ -1,8 +1,7 @@
 package io.coti.storagenode.controllers;
 
 import io.coti.basenode.http.AddEntitiesBulkRequest;
-import io.coti.basenode.http.AddEntityRequest;
-import io.coti.basenode.http.GetTransactionsBulkRequest;
+import io.coti.basenode.http.GetHistoryTransactionsRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.services.ChunkingService;
 import io.coti.storagenode.services.TransactionStorageService;
@@ -36,14 +35,14 @@ public class TransactionController {
     }
 
     @RequestMapping(value = "/transactions", method = POST)
-        public ResponseEntity<IResponse> getMultipleTransactionsFromStorage(@Valid @RequestBody GetTransactionsBulkRequest getTransactionsBulkRequest) {
-        ResponseEntity<IResponse> responseResponseEntity = transactionStorageService.retrieveMultipleObjectsFromStorage(getTransactionsBulkRequest);
+        public ResponseEntity<IResponse> getMultipleTransactionsFromStorage(@Valid @RequestBody GetHistoryTransactionsRequest getHistoryTransactionsRequest) {
+        ResponseEntity<IResponse> responseResponseEntity = transactionStorageService.retrieveMultipleObjectsFromStorage(getHistoryTransactionsRequest);
         return responseResponseEntity;
     }
 
     @RequestMapping(value = "/transactionsInBlocks", method = POST)
-    public ResponseEntity<IResponse> getMultipleTransactionsInBlocksFromStorage(@Valid @RequestBody GetTransactionsBulkRequest getTransactionsBulkRequest) {
-        ResponseEntity<IResponse> responseResponseEntity = transactionStorageService.retrieveMultipleObjectsInBlocksFromStorage(getTransactionsBulkRequest);
+    public ResponseEntity<IResponse> getMultipleTransactionsInBlocksFromStorage(@Valid @RequestBody GetHistoryTransactionsRequest getHistoryTransactionsRequest) {
+        ResponseEntity<IResponse> responseResponseEntity = transactionStorageService.retrieveMultipleObjectsInBlocksFromStorage(getHistoryTransactionsRequest);
         return responseResponseEntity;
     }
 
