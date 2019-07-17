@@ -102,8 +102,8 @@ public abstract class EntityStorageService implements IEntityStorageService
         ResponseEntity<IResponse> coldStorageResponse = objectService.getObjectByHash(objectHash, true, objectType);
         if( isResponseOK(coldStorageResponse) )
         {
-            Hash coldObjectHash = ((Pair<Hash, String>) coldStorageResponse.getBody()).getKey();
-            String coldObjectAsJson = ((Pair<Hash, String>) coldStorageResponse.getBody()).getValue();
+            Hash coldObjectHash = ((GetEntityJsonResponse)coldStorageResponse.getBody()).getEntityJsonPair().getKey();
+            String coldObjectAsJson = ((GetEntityJsonResponse)coldStorageResponse.getBody()).getEntityJsonPair().getValue();
             // Check DI from cold storage, should never fail
             if( objectAsJson!=null && !isObjectDIOK(coldObjectHash, coldObjectAsJson) )
             {
@@ -151,6 +151,7 @@ public abstract class EntityStorageService implements IEntityStorageService
             if( !isResponseOK(response) )
                 return response; // TODO consider some retry mechanism, consider removing from ongoing storage
         }
+        //TODO 7/16/2019 tomer: Consider changing HashMap from String to Boolean here
         return response;
     }
 
@@ -189,7 +190,7 @@ public abstract class EntityStorageService implements IEntityStorageService
 //        if( !isResponseOK(objectsByHashResponse)){
 //            responsesMap.put(null,null);
 //            if(objectType.getObjectName().equals(TRANSACTION_DATA)) {
-//                ((GetTransactionsBulkResponse)entitiesBulkResponse).setEntitiesBulkResponses(responsesMap);
+//                ((GetHistoryTransactionsResponse)entitiesBulkResponse).setEntitiesBulkResponses(responsesMap);
 //            } else {
 //                ((GetHistoryAddressesResponse)entitiesBulkResponse).setAddressHashesToAddresses(addressStorageService.getObjectsMapFromJsonMap(responsesMap));
 //            }
@@ -209,7 +210,7 @@ public abstract class EntityStorageService implements IEntityStorageService
 //                }
 //        );
 //        if(objectType.getObjectName().equals(TRANSACTION_DATA)) {
-//            ((GetTransactionsBulkResponse)entitiesBulkResponse).setEntitiesBulkResponses(responsesMap);
+//            ((GetHistoryTransactionsResponse)entitiesBulkResponse).setEntitiesBulkResponses(responsesMap);
 //        } else {
 //            ((GetHistoryAddressesResponse)entitiesBulkResponse).setAddressHashesToAddresses(addressStorageService.getObjectsMapFromJsonMap(responsesMap));
 //        }
