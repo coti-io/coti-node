@@ -6,10 +6,8 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.IDspVoteService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
-import io.coti.basenode.services.interfaces.ITransactionService;
-import io.coti.basenode.services.interfaces.IValidationService;
+import io.coti.basenode.services.interfaces.*;
+import io.coti.basenode.services.liveview.LiveViewService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,6 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -33,6 +32,12 @@ public class BaseNodeTransactionService implements ITransactionService {
     private IValidationService validationService;
     @Autowired
     private IDspVoteService dspVoteService;
+    @Autowired
+    private IConfirmationService confirmationService;
+    @Autowired
+    private IClusterService clusterService;
+    @Autowired
+    private LiveViewService liveViewService;
     @Autowired
     private Transactions transactions;
     @Autowired
@@ -169,6 +174,48 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
         log.debug("Continue to handle propagated transaction {} by base node", transactionData.getHash());
+    }
+
+    public void handleMissingTransaction(TransactionData transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes) {
+
+        if (!transactionHelper.isTransactionExists(transactionData)) {
+
+            transactions.put(transactionData);
+            liveViewService.addTransaction(transactionData);
+            addToExplorerIndexes(transactionData);
+            transactionHelper.incrementTotalTransactions();
+
+            confirmationService.insertMissingTransaction(transactionData);
+            propagateMissingTransaction(transactionData);
+
+        } else {
+            transactions.put(transactionData);
+            confirmationService.insertMissingConfirmation(transactionData, trustChainUnconfirmedExistingTransactionHashes);
+        }
+        clusterService.addMissingTransactionOnInit(transactionData, trustChainUnconfirmedExistingTransactionHashes);
+
+    }
+
+    protected void propagateMissingTransaction(TransactionData transactionData) {
+        log.debug("Propagate missing transaction {} by base node", transactionData.getHash());
+    }
+
+    public Thread monitorTransactionThread(String type, AtomicLong transactionNumber, AtomicLong receivedTransactionNumber) {
+        return new Thread(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    Thread.sleep(5000);
+
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                if (receivedTransactionNumber != null) {
+                    log.info("Received {} transactions: {}, inserted transactions: {}", type, receivedTransactionNumber, transactionNumber);
+                } else {
+                    log.info("Inserted {} transactions: {}", type, transactionNumber);
+                }
+            }
+        });
     }
 
     public void addToExplorerIndexes(TransactionData transactionData) {

@@ -1,6 +1,5 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.crypto.GetNodeRegistrationRequestCrypto;
 import io.coti.basenode.crypto.NetworkNodeCrypto;
@@ -21,18 +20,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PreDestroy;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
@@ -41,9 +35,7 @@ public abstract class BaseNodeInitializationService {
 
     private final static String NODE_REGISTRATION = "/node/node_registration";
     private final static String NODE_MANAGER_NODES_ENDPOINT = "/nodes";
-    private final static String RECOVERY_NODE_GET_BATCH_ENDPOINT = "/transaction_batch";
-    private final static String STARTING_INDEX_URL_PARAM_ENDPOINT = "?starting_index=";
-    private final static long MAXIMUM_BUFFER_SIZE = 50000;
+
     @Autowired
     protected INetworkService networkService;
     @Value("${network}")
@@ -106,7 +98,7 @@ public abstract class BaseNodeInitializationService {
     @Autowired
     private IClusterStampService clusterStampService;
     @Autowired
-    private JacksonSerializer jacksonSerializer;
+    private ITransactionSynchronizationService transactionSynchronizationService;
     @Autowired
     protected ApplicationContext applicationContext;
 
@@ -141,7 +133,7 @@ public abstract class BaseNodeInitializationService {
             AtomicLong maxTransactionIndex = new AtomicLong(-1);
             log.info("Starting to read existing transactions");
             AtomicLong completedExistedTransactionNumber = new AtomicLong(0);
-            Thread monitorExistingTransactions = monitorTransactionThread("existing", completedExistedTransactionNumber, null);
+            Thread monitorExistingTransactions = transactionService.monitorTransactionThread("existing", completedExistedTransactionNumber, null);
             transactions.forEach(transactionData -> {
                 if (!monitorExistingTransactions.isAlive()) {
                     monitorExistingTransactions.start();
@@ -157,7 +149,7 @@ public abstract class BaseNodeInitializationService {
             log.info("Finished to read existing transactions");
 
             if (networkService.getRecoveryServerAddress() != null) {
-                requestMissingTransactions(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
+                transactionSynchronizationService.requestMissingTransactions(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
             }
             balanceService.validateBalances();
             log.info("Transactions Load completed");
@@ -187,128 +179,6 @@ public abstract class BaseNodeInitializationService {
 
         transactionService.addToExplorerIndexes(transactionData);
         transactionHelper.incrementTotalTransactions();
-    }
-
-    private void handleMissingTransaction(TransactionData transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes) {
-
-        if (!transactionHelper.isTransactionExists(transactionData)) {
-
-            transactions.put(transactionData);
-            liveViewService.addTransaction(transactionData);
-            transactionService.addToExplorerIndexes(transactionData);
-            transactionHelper.incrementTotalTransactions();
-
-            confirmationService.insertMissingTransaction(transactionData);
-            propagateMissingTransaction(transactionData);
-
-        } else {
-            transactions.put(transactionData);
-            confirmationService.insertMissingConfirmation(transactionData, trustChainUnconfirmedExistingTransactionHashes);
-        }
-        clusterService.addMissingTransactionOnInit(transactionData, trustChainUnconfirmedExistingTransactionHashes);
-
-
-    }
-
-    private void requestMissingTransactions(long firstMissingTransactionIndex) {
-        try {
-            log.info("Starting to get missing transactions");
-            List<TransactionData> missingTransactions = new ArrayList<>();
-            Set<Hash> trustChainUnconfirmedExistingTransactionHashes = clusterService.getTrustChainConfirmationTransactionHashes();
-            AtomicLong completedMissingTransactionNumber = new AtomicLong(0);
-            AtomicLong receivedMissingTransactionNumber = new AtomicLong(0);
-            AtomicBoolean finishedToReceive = new AtomicBoolean(false);
-            Thread monitorMissingTransactionThread = monitorTransactionThread("missing", completedMissingTransactionNumber, receivedMissingTransactionNumber);
-            Thread insertMissingTransactionThread = insertMissingTransactionThread(missingTransactions, trustChainUnconfirmedExistingTransactionHashes, completedMissingTransactionNumber, monitorMissingTransactionThread, finishedToReceive);
-            ResponseExtractor responseExtractor = response -> {
-                byte[] buf = new byte[Math.toIntExact(MAXIMUM_BUFFER_SIZE)];
-                int offset = 0;
-                int n;
-                while ((n = response.getBody().read(buf, offset, buf.length)) > 0) {
-                    try {
-                        TransactionData missingTransaction = jacksonSerializer.deserialize(buf);
-                        if (missingTransaction != null) {
-                            missingTransactions.add(missingTransaction);
-                            receivedMissingTransactionNumber.incrementAndGet();
-                            if (!insertMissingTransactionThread.isAlive()) {
-                                insertMissingTransactionThread.start();
-                            }
-                            Arrays.fill(buf, 0, offset + n, (byte) 0);
-                            offset = 0;
-                        } else {
-                            offset += n;
-                        }
-
-                    } catch (Exception e) {
-                        throw new TransactionSyncException(e.getMessage());
-                    }
-                }
-                return null;
-            };
-            restTemplate.execute(networkService.getRecoveryServerAddress() + RECOVERY_NODE_GET_BATCH_ENDPOINT
-                    + STARTING_INDEX_URL_PARAM_ENDPOINT + firstMissingTransactionIndex, HttpMethod.GET, null, responseExtractor);
-            if (insertMissingTransactionThread.isAlive()) {
-                log.info("Received all {} missing transactions from recovery server", receivedMissingTransactionNumber);
-                synchronized (finishedToReceive) {
-                    finishedToReceive.set(true);
-                    finishedToReceive.wait();
-                }
-            }
-            log.info("Finished to get missing transactions");
-        } catch (Exception e) {
-            log.error("Error at missing transactions from recovery Node");
-            throw new TransactionSyncException(e.getMessage());
-        }
-
-    }
-
-    private Thread insertMissingTransactionThread(List<TransactionData> missingTransactions, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, AtomicLong completedMissingTransactionNumber, Thread monitorMissingTransactionThread, AtomicBoolean finishedToReceive) throws Exception {
-        return new Thread(() -> {
-            Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap = new ConcurrentHashMap<>();
-            int offset = 0;
-            int nextOffSet;
-            int missingTransactionsSize;
-            monitorMissingTransactionThread.start();
-
-            while ((missingTransactionsSize = missingTransactions.size()) > offset || !finishedToReceive.get()) {
-                if (missingTransactionsSize - 1 > offset || (missingTransactionsSize - 1 == offset && missingTransactions.get(offset) != null)) {
-                    nextOffSet = offset + (finishedToReceive.get() ? missingTransactionsSize - offset : 1);
-                    for (int i = offset; i < nextOffSet; i++) {
-                        TransactionData transactionData = missingTransactions.get(i);
-                        handleMissingTransaction(transactionData, trustChainUnconfirmedExistingTransactionHashes);
-                        transactionHelper.updateAddressTransactionHistory(addressToTransactionsHistoryMap, transactionData);
-                        missingTransactions.set(i, null);
-                        completedMissingTransactionNumber.incrementAndGet();
-                    }
-                    offset = nextOffSet;
-                }
-            }
-            addressTransactionsHistories.putBatch(addressToTransactionsHistoryMap);
-            monitorMissingTransactionThread.interrupt();
-            synchronized (finishedToReceive) {
-                finishedToReceive.notify();
-            }
-
-        });
-
-    }
-
-    private Thread monitorTransactionThread(String type, AtomicLong transactionNumber, AtomicLong receivedTransactionNumber) {
-        return new Thread(() -> {
-            while (!Thread.currentThread().isInterrupted()) {
-                try {
-                    Thread.sleep(5000);
-
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                if (receivedTransactionNumber != null) {
-                    log.info("Received {} transactions: {}, inserted transactions: {}", type, receivedTransactionNumber, transactionNumber);
-                } else {
-                    log.info("Inserted {} transactions: {}", type, transactionNumber);
-                }
-            }
-        });
     }
 
     protected void createNetworkNodeData() {
