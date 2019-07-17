@@ -3,7 +3,7 @@ package io.coti.historynode.controllers;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.historynode.http.GetTransactionsByAddressRequest;
 import io.coti.historynode.http.GetTransactionsByDateRequest;
-import io.coti.historynode.services.HistoryTransactionService;
+import io.coti.historynode.services.TransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,15 +19,15 @@ import javax.validation.Valid;
 public class TransactionController {
 
     @Autowired
-    private HistoryTransactionService historyTransactionService;
+    private TransactionService transactionService;
 
     @PostMapping(path  = "/transactions")
     public ResponseEntity<IResponse> getTransactionsByAddress(@Valid @RequestBody GetTransactionsByAddressRequest getTransactionsByAddressRequest) {
-        return historyTransactionService.getTransactionsByAddress(getTransactionsByAddressRequest);
+        return transactionService.getTransactionsByAddress(getTransactionsByAddressRequest);
     }
 
     @PostMapping (path  = "/transactionsByDate")
     public ResponseEntity<IResponse> getTransactionsByDate(@Valid @RequestBody GetTransactionsByDateRequest getTransactionsByDateRequest) {
-        return historyTransactionService.getTransactionsByDate(getTransactionsByDateRequest);
+        return transactionService.getTransactionsByDate(getTransactionsByDateRequest);
     }
 }
