@@ -79,7 +79,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         // Get local unconfirmed transactions hashes
         transactionService.updateUnconfirmedTransactionsNotFromClusterStamp(unconfirmedTransactionHashesFromClusterStamp);
 
-        // Replace / update matching transactions in RocksDB with the entries from the cluster-stamp
+        // Replace / update matching transactions in DB with the entries from the cluster-stamp
         unconfirmedTransactionsFromClusterStamp.forEach(transactionData -> {
             if (transactions.getByHash(transactionData.getHash()) == null) {
                 transactionService.addToHistoryTransactionIndexes(transactionData);

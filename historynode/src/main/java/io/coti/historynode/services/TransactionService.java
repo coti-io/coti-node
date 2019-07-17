@@ -130,11 +130,11 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     protected void updateUnconfirmedTransactionsNotFromClusterStamp(List<Hash> unconfirmedTransactionHashesFromClusterStamp) {
-        List<Hash> unconfirmedTransactionsHashesFromRocksDB = getLocalTransactionsUnconfirmed();
+        List<Hash> unconfirmedTransactionsHashesFromDB = getLocalTransactionsUnconfirmed();
         // If any transaction is not in the unconfirmed transactions of the cluster-stamp, verify status from {?} recovery server and update accordingly
-        List<Hash> intersectionUnconfirmedTransactions = new ArrayList<>(unconfirmedTransactionsHashesFromRocksDB);
+        List<Hash> intersectionUnconfirmedTransactions = new ArrayList<>(unconfirmedTransactionsHashesFromDB);
         intersectionUnconfirmedTransactions.retainAll(unconfirmedTransactionHashesFromClusterStamp);
-        List<Hash> unconfirmedTransactionsHashesNotInClusterStamp = new ArrayList<>(unconfirmedTransactionsHashesFromRocksDB);
+        List<Hash> unconfirmedTransactionsHashesNotInClusterStamp = new ArrayList<>(unconfirmedTransactionsHashesFromDB);
         unconfirmedTransactionsHashesNotInClusterStamp.removeAll(intersectionUnconfirmedTransactions);
         unconfirmedTransactionsHashesNotInClusterStamp.forEach(unconfirmedTransactionHash -> {
             transactions.put(getTransactionFromRecovery(unconfirmedTransactionHash));
@@ -179,11 +179,11 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     private HashMap<Hash, TransactionData> retrieveTransactions(List<Hash> transactionsHashes) {
-        // Retrieve transactions from local RocksDB, Storage and merge results
+        // Retrieve transactions from local DB, Storage and merge results
         List<Hash> transactionsHashesToRetrieveFromStorage = new ArrayList<>();
-        HashMap<Hash, TransactionData> retrievedTransactionsFromRocksDB = getTransactionsFromLocal(transactionsHashes, transactionsHashesToRetrieveFromStorage);
+        HashMap<Hash, TransactionData> retrievedTransactionsFromDB = getTransactionsFromLocal(transactionsHashes, transactionsHashesToRetrieveFromStorage);
         HashMap<Hash, TransactionData> retrievedTransactionsFromElasticSearch = getTransactionFromElasticSearch(transactionsHashesToRetrieveFromStorage);
-        HashMap<Hash, TransactionData> collectedTransactions = new HashMap<>(retrievedTransactionsFromRocksDB);
+        HashMap<Hash, TransactionData> collectedTransactions = new HashMap<>(retrievedTransactionsFromDB);
         collectedTransactions.putAll(retrievedTransactionsFromElasticSearch);
         return collectedTransactions;
     }
