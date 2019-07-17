@@ -1,5 +1,6 @@
 package io.coti.basenode.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
@@ -46,14 +47,17 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
         }
     }
 
+    @JsonIgnore
     public String getHttpFullAddress() {
         return "http://" + address + ":" + httpPort;
     }
 
+    @JsonIgnore
     public String getPropagationFullAddress() {
         return "tcp://" + address + ":" + propagationPort;
     }
 
+    @JsonIgnore
     public String getReceivingFullAddress() {
         return "tcp://" + address + ":" + receivingPort;
     }
@@ -63,15 +67,19 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
         return Objects.hash(nodeType, nodeHash);
     }
 
+    @Override
+    @JsonIgnore
     public Hash getHash() {
         return nodeHash;
     }
 
+    @Override
     public void setHash(Hash hash) {
         nodeHash = hash;
     }
 
     @Override
+    @JsonIgnore
     public SignatureData getSignature() {
         return nodeSignature;
     }
@@ -82,6 +90,7 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
     }
 
     @Override
+    @JsonIgnore
     public Hash getSignerHash() {
         return nodeHash;
     }

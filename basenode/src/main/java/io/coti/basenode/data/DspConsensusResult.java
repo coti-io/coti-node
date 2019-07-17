@@ -1,5 +1,6 @@
 package io.coti.basenode.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
@@ -28,6 +29,7 @@ public class DspConsensusResult extends ConfirmationData implements IPropagatabl
     }
 
     @Override
+    @JsonIgnore
     public Hash getHash() {
         return transactionHash;
     }
@@ -38,11 +40,13 @@ public class DspConsensusResult extends ConfirmationData implements IPropagatabl
     }
 
     @Override
+    @JsonIgnore
     public SignatureData getSignature() {
         return zeroSpendSignature;
     }
 
     @Override
+    @JsonIgnore
     public Hash getSignerHash() {
         return zeroSpendServerHash;
     }

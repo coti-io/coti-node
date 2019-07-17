@@ -1,5 +1,6 @@
 package io.coti.basenode.data;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.services.NodeTypeService;
 import lombok.Data;
@@ -34,5 +35,10 @@ public class NetworkData implements IPropagatable {
     @Override
     public void setHash(Hash hash) {
 
+    }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public Map<NodeType, NetworkNodeData> getSingleNodeNetworkDataMap() {
+        return singleNodeNetworkDataMap;
     }
 }

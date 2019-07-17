@@ -1,5 +1,6 @@
 package io.coti.basenode.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.http.data.NetworkTypeName;
@@ -29,6 +30,7 @@ public class NodeRegistrationData implements IEntity, ISignValidatable {
     private SignatureData registrarSignature;
 
     @Override
+    @JsonIgnore
     public Hash getHash() {
         return nodeHash;
     }
@@ -39,11 +41,13 @@ public class NodeRegistrationData implements IEntity, ISignValidatable {
     }
 
     @Override
+    @JsonIgnore
     public Hash getSignerHash() {
         return registrarHash;
     }
 
     @Override
+    @JsonIgnore
     public SignatureData getSignature() {
         return registrarSignature;
     }
@@ -64,10 +68,12 @@ public class NodeRegistrationData implements IEntity, ISignValidatable {
         }
     }
 
+    @JsonIgnore
     public String getNode() {
         return NodeTypeName.valueOf(nodeType.toString()).getNode();
     }
 
+    @JsonIgnore
     public String getNetwork() {
         return NetworkTypeName.valueOf(networkType.toString()).getNetwork();
     }
