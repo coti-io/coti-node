@@ -6,14 +6,27 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import io.coti.basenode.communication.JacksonSerializer;
+import io.coti.basenode.crypto.NodeCryptoHelper;
+import io.coti.basenode.crypto.TransactionCrypto;
+import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.ReceiverBaseTransactionData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.http.AddEntitiesBulkRequest;
+import io.coti.basenode.http.EntitiesBulkJsonResponse;
 import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.basenode.model.AddressTransactionsHistories;
+import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
+import io.coti.basenode.services.*;
+import io.coti.basenode.services.interfaces.IBalanceService;
+import io.coti.basenode.services.interfaces.IClusterService;
+import io.coti.basenode.services.interfaces.IConfirmationService;
+import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.liveview.LiveViewService;
 import io.coti.historynode.crypto.TransactionsRequestCrypto;
 import io.coti.historynode.data.AddressTransactionsByAddress;
 import io.coti.historynode.data.AddressTransactionsByDate;
@@ -30,8 +43,10 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -51,12 +66,15 @@ import java.util.Map;
 import static utils.TestUtils.createRandomTransaction;
 import static utils.TestUtils.generateRandomHash;
 
-@ContextConfiguration(classes = {HistoryTransactionService.class,
+@ContextConfiguration(classes = {TransactionService.class,
         HistoryRocksDBConnector.class,
         Transactions.class,
         AddressTransactionsByDates.class, AddressTransactionsByAddresses.class,
-        IDatabaseConnector.class, BaseNodeRocksDBConnector.class, HistoryTransactionService.class,
-        TransactionsRequestCrypto.class, /*HistoryTransactionStorageConnector.class*/ StorageConnector.class
+        IDatabaseConnector.class, BaseNodeRocksDBConnector.class, TransactionService.class,
+        TransactionsRequestCrypto.class, TransactionHelper.class, StorageConnector.class,
+        AddressTransactionsHistories.class, TransactionCrypto.class, NodeCryptoHelper.class, BaseNodeBalanceService.class,
+        BaseNodeConfirmationService.class, LiveViewService.class, TransactionIndexService.class, TransactionIndexes.class,
+        ClusterService.class, JacksonSerializer.class
 })
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
@@ -72,7 +90,7 @@ public class HistoryTransactionServiceTest {
     public static final int NUMBER_OF_SENDERS = 3;
 
     @Autowired
-    private HistoryTransactionService historyTransactionService;
+    private TransactionService transactionService;
 
     @Autowired
     private Transactions transactions;
@@ -91,12 +109,25 @@ public class HistoryTransactionServiceTest {
     private BaseNodeRocksDBConnector baseNodeRocksDBConnector;
     @Autowired
     private HistoryRocksDBConnector historyRocksDBConnector;
-//    @Autowired
-//    private GetTransactionsByAddressRequest GetTransactionsByAddressRequest;
+    @Autowired
+    private ITransactionHelper transactionHelper;
+    @Autowired
+    private IBalanceService balanceService;
 
 
     @Autowired
     private TransactionsRequestCrypto transactionsRequestCrypto;
+
+    @MockBean
+    private LiveViewService liveViewService;
+    @MockBean
+    private IClusterService clusterService;
+    @MockBean
+    private TransactionTrustScoreCrypto transactionTrustScoreCrypto;
+    @MockBean
+    private BaseNodeValidationService baseNodeValidationService;
+    @MockBean
+    private BaseNodeDspVoteService baseNodeDspVoteService;
 
     private ObjectMapper mapper;
 
@@ -119,7 +150,7 @@ public class HistoryTransactionServiceTest {
 //            getTransactionsRequestOld.getAddressesHashes().add(senderAddress);
 //        });
 //
-////        ResponseEntity<IResponse> response = historyTransactionService.getTransactionsDetails(getTransactionsRequestOld);
+////        ResponseEntity<IResponse> response = transactionService.getTransactionsDetails(getTransactionsRequestOld);
 //        GetTransactionsResponse getTransactionsResponse = (GetTransactionsResponse) (response.getBody());
 //
 //        Assert.assertTrue(getTransactionsResponse.getTransactionsData().size() == NUMBER_OF_ADDRESSES_PER_SENDER * NUMBER_OF_SENDERS);
@@ -132,7 +163,7 @@ public class HistoryTransactionServiceTest {
         transactionsList.add(transactionData);
         transactions.put(transactionData);
 
-        historyTransactionService.deleteLocalUnconfirmedTransactions();
+        transactionService.deleteLocalUnconfirmedTransactions();
 
         Assert.assertNull(transactions.getByHash(transactionData.getHash()));
     }
@@ -166,13 +197,13 @@ public class HistoryTransactionServiceTest {
         transactionData.getBaseTransactions().add(receiverBaseTransaction);
         @NotNull Hash receiverAddressHash = receiverBaseTransaction.getAddressHash();
 
-        historyTransactionService.addToHistoryTransactionIndexes(transactionData);
+        transactionService.addToHistoryTransactionIndexes(transactionData);
 
-        Hash hashByDate = historyTransactionService.calculateHashByAttachmentTime(attachmentTime);
+        Hash hashByDate = transactionService.calculateHashByAttachmentTime(attachmentTime);
         AddressTransactionsByDate transactionHashesByDateAddress = addressTransactionsByDates.getByHash(hashByDate);
         Assert.assertTrue(transactionHashesByDateAddress.getTransactionsAddresses().contains(transactionData.getHash()));
 
-        LocalDate attachmentLocalDate = historyTransactionService.calculateInstantLocalDate(attachmentTime);
+        LocalDate attachmentLocalDate = transactionService.calculateInstantLocalDate(attachmentTime);
         AddressTransactionsByAddress transactionHashesBySenderAddress =
                 addressTransactionsByAddresses.getByHash(transactionData.getSenderHash());
         Assert.assertTrue(transactionHashesBySenderAddress.getTransactionHashesByDates().get(attachmentLocalDate).contains(transactionHash));
@@ -196,7 +227,7 @@ public class HistoryTransactionServiceTest {
         Instant startDate = transactionDataToRetrieve.getAttachmentTime();
         getTransactionsByDateRequest.setDate(startDate);
 
-        ResponseEntity<IResponse> transactionsByDatesResponse = historyTransactionService.getTransactionsByDate(getTransactionsByDateRequest);
+        ResponseEntity<IResponse> transactionsByDatesResponse = transactionService.getTransactionsByDate(getTransactionsByDateRequest);
 
         Assert.assertTrue(transactionsByDatesResponse.getStatusCode().equals(HttpStatus.OK));
 
@@ -218,7 +249,7 @@ public class HistoryTransactionServiceTest {
         Instant startDate = transactionDataToRetrieve.getAttachmentTime();
         getTransactionsByDateRequest.setDate(startDate);
 
-        ResponseEntity<IResponse> transactionsByDatesResponse = historyTransactionService.getTransactionsByDate(getTransactionsByDateRequest);
+        ResponseEntity<IResponse> transactionsByDatesResponse = transactionService.getTransactionsByDate(getTransactionsByDateRequest);
 
         Assert.assertTrue(transactionsByDatesResponse.getStatusCode().equals(HttpStatus.OK));
         Assert.assertTrue(((HistoryTransactionResponse)transactionsByDatesResponse.getBody()).getHistoryTransactionResponseData().getHistoryTransactionResults().containsValue(transactionDataToRetrieve));
@@ -239,7 +270,7 @@ public class HistoryTransactionServiceTest {
         Instant startDate = transactionDataToRetrieve.getAttachmentTime();
         getTransactionsByDateRequest.setDate(startDate);
 
-        ResponseEntity<IResponse> transactionsByDatesResponse = historyTransactionService.getTransactionsByDate(getTransactionsByDateRequest);
+        ResponseEntity<IResponse> transactionsByDatesResponse = transactionService.getTransactionsByDate(getTransactionsByDateRequest);
 
         Assert.assertTrue(transactionsByDatesResponse.getStatusCode().equals(HttpStatus.OK));
         generatedTransactionsData.forEach(transactionData -> {
@@ -264,7 +295,7 @@ public class HistoryTransactionServiceTest {
         getTransactionsRequestByDates.setStartDate(startDate);
         getTransactionsRequestByDates.setEndDate(endDate);
 
-        ResponseEntity<IResponse> transactionsByDatesResponse = historyTransactionService.getTransactionsByAddress(getTransactionsRequestByDates);
+        ResponseEntity<IResponse> transactionsByDatesResponse = transactionService.getTransactionsByAddress(getTransactionsRequestByDates);
 
         Assert.assertTrue(transactionsByDatesResponse.getStatusCode().equals(HttpStatus.OK));
         for( int i = 0 ; i<numberOfDays; i++) {
@@ -287,7 +318,7 @@ public class HistoryTransactionServiceTest {
         GetTransactionsByAddressRequest getTransactionsRequestByDates = new GetTransactionsByAddressRequest();
         getTransactionsRequestByDates.setAddress(generatedTransactionsData.get(0).getSenderHash());
 
-        ResponseEntity<IResponse> transactionsByDatesResponse = historyTransactionService.getTransactionsByAddress(getTransactionsRequestByDates);
+        ResponseEntity<IResponse> transactionsByDatesResponse = transactionService.getTransactionsByAddress(getTransactionsRequestByDates);
 
         Assert.assertTrue(transactionsByDatesResponse.getStatusCode().equals(HttpStatus.OK));
         for( int i = 0 ; i<numberOfDays; i++) {
@@ -312,7 +343,7 @@ public class HistoryTransactionServiceTest {
         getTransactionsByAddressRequest.setUserHash(userHash);
 
 
-        ResponseEntity<IResponse> transactionsByAddressResponse = historyTransactionService.getTransactionsByAddress(getTransactionsByAddressRequest);
+        ResponseEntity<IResponse> transactionsByAddressResponse = transactionService.getTransactionsByAddress(getTransactionsByAddressRequest);
         Assert.assertTrue(((HistoryTransactionResponse)transactionsByAddressResponse.getBody()).getHistoryTransactionResponseData()
                 .getHistoryTransactionResults().get(generatedTransactionsData.get(2).getHash()).equals(generatedTransactionsData.get(2)));
     }
@@ -333,7 +364,7 @@ public class HistoryTransactionServiceTest {
         getTransactionsRequestByDates.setStartDate(startDate);
         getTransactionsRequestByDates.setEndDate(endDate);
 
-        ResponseEntity<IResponse> transactionsByDatesResponse = historyTransactionService.getTransactionsByAddress(getTransactionsRequestByDates);
+        ResponseEntity<IResponse> transactionsByDatesResponse = transactionService.getTransactionsByAddress(getTransactionsRequestByDates);
         // Expected Address in request to not be null
         Assert.assertTrue(transactionsByDatesResponse.getStatusCode().equals(HttpStatus.NO_CONTENT));
     }
@@ -357,7 +388,7 @@ public class HistoryTransactionServiceTest {
 
         // Update indexing with generated transactions data
         for (TransactionData generatedTransactionData : generatedTransactionsData) {
-            historyTransactionService.addToHistoryTransactionIndexes(generatedTransactionData);
+            transactionService.addToHistoryTransactionIndexes(generatedTransactionData);
         }
 
         // Store some of the transactions data locally
@@ -378,7 +409,10 @@ public class HistoryTransactionServiceTest {
         String endpoint = "/transactions";
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         mapper.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
-        restTemplate.put(storageServerAddress + endpoint,  addEntitiesBulkRequest);
+        ResponseEntity<EntitiesBulkJsonResponse> storeResponseEntity = transactionService.storeEntitiesByType(storageServerAddress + endpoint, addEntitiesBulkRequest);
+        storeResponseEntity.getBody().getHashToEntitiesFromDbMap().entrySet().stream().forEach(entry -> {
+            Assert.assertTrue(entry.getValue().equals("CREATED") || entry.getValue().equals("UPDATED"));
+        });
     }
 
     private TransactionData generateTransactionDataWithRBTByAttachmentDate(Instant attachmentTime) {

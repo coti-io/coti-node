@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
-import io.coti.historynode.services.HistoryTransactionService;
+import io.coti.historynode.services.TransactionService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,7 +35,7 @@ public class TransactionControllerTest {
     protected String storageServerAddress;
 
     @MockBean
-    private HistoryTransactionService historyTransactionService;
+    private TransactionService transactionService;
 
     @Autowired
     private WebApplicationContext wac;

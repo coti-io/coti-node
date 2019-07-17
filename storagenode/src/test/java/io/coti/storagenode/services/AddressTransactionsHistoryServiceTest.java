@@ -5,7 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import io.coti.basenode.crypto.AddressesRequestCrypto;
+import io.coti.basenode.crypto.AddressesResponseCrypto;
 import io.coti.basenode.crypto.CryptoHelper;
+import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.BaseResponse;
@@ -44,7 +47,8 @@ import static testUtils.TestUtils.generateRandomHash;
 
 @Deprecated
 @ContextConfiguration(classes = {ObjectService.class, DbConnectorService.class, AddressStorageService.class,
-        CryptoHelper.class})
+        CryptoHelper.class, AddressesResponseCrypto.class, AddressesRequestCrypto.class, NodeCryptoHelper.class
+})
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -62,6 +66,18 @@ public class AddressTransactionsHistoryServiceTest {
 
     @Autowired
     private AddressStorageService addressStorageValidationService;
+
+    @Autowired
+    private BaseNodeValidationService validationService;
+
+    @Autowired
+    private AddressesResponseCrypto addressesResponseCrypto;
+
+    @Autowired
+    private AddressesRequestCrypto addressesRequestCrypto;
+
+    @Autowired
+    private NodeCryptoHelper nodeCryptoHelper;
 
     @MockBean
     private BaseNodeValidationService mockValidationService;
