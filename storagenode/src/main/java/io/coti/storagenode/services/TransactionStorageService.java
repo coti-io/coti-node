@@ -7,8 +7,9 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.http.GetTransactionsBulkRequest;
-import io.coti.basenode.http.GetTransactionsBulkResponse;
+import io.coti.basenode.http.EntitiesBulkJsonResponse;
+import io.coti.basenode.http.GetHistoryTransactionsRequest;
+import io.coti.basenode.http.GetHistoryTransactionsResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.storagenode.data.enums.ElasticSearchData;
@@ -101,37 +102,38 @@ public class TransactionStorageService extends EntityStorageService implements I
 //    }
 
     @Override
-    protected GetTransactionsBulkResponse getEmptyEntitiesBulkResponse() {
-        return new GetTransactionsBulkResponse();
+    protected GetHistoryTransactionsResponse getEmptyEntitiesBulkResponse() {
+        return new GetHistoryTransactionsResponse();
     }
 
     @Override
-    protected GetTransactionsBulkResponse getEntitiesBulkResponse(Map<Hash, String> responsesMap) {
-        //TODO 7/15/2019 astolia:  GetTransactionsBulkResponse shouldn't be empty
-        return new GetTransactionsBulkResponse();
+    protected EntitiesBulkJsonResponse getEntitiesBulkResponse(Map<Hash, String> responsesMap) {
+        EntitiesBulkJsonResponse entitiesBulkJsonResponse = new EntitiesBulkJsonResponse();
+        entitiesBulkJsonResponse.setHashToEntitiesFromDbMap(responsesMap);
+        return entitiesBulkJsonResponse;
     }
 
-    public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(GetTransactionsBulkRequest getTransactionsBulkRequest) {
-        return super.retrieveMultipleObjectsFromStorage(getTransactionsBulkRequest.getHashes());
+    public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(GetHistoryTransactionsRequest getHistoryTransactionsRequest) {
+        return super.retrieveMultipleObjectsFromStorage(getHistoryTransactionsRequest.getHashes());
     }
 
-    public ResponseEntity<IResponse> retrieveMultipleObjectsInBlocksFromStorage(GetTransactionsBulkRequest getTransactionsBulkRequest) {
-    return retrieveMultipleTransactionsInBlocksFromStorage(getTransactionsBulkRequest.getHashes(), new GetTransactionsBulkResponse());
+    public ResponseEntity<IResponse> retrieveMultipleObjectsInBlocksFromStorage(GetHistoryTransactionsRequest getHistoryTransactionsRequest) {
+    return retrieveMultipleTransactionsInBlocksFromStorage(getHistoryTransactionsRequest.getHashes(), new GetHistoryTransactionsResponse());
 }
 
-    private ResponseEntity<IResponse> retrieveMultipleTransactionsInBlocksFromStorage(List<Hash> hashes, GetTransactionsBulkResponse getTransactionsBulkResponse) {
+    private ResponseEntity<IResponse> retrieveMultipleTransactionsInBlocksFromStorage(List<Hash> hashes, GetHistoryTransactionsResponse getHistoryTransactionsResponse) {
         List<List<Hash>> blocksOfHashes = divideHashesToBlocks(hashes);
         if(blocksOfHashes==null) {
             //TODO 7/14/2019 tomer: Add to blocking queue
-//            return ResponseEntity.status(HttpStatus.OK).body(new GetTransactionsBulkResponse(new HashMap<>()));
-            return queueTransactionsDataBlock(new GetTransactionsBulkResponse(new HashMap<>()), HttpStatus.OK);
+//            return ResponseEntity.status(HttpStatus.OK).body(new GetHistoryTransactionsResponse(new HashMap<>()));
+            return queueTransactionsDataBlock(new GetHistoryTransactionsResponse(new HashMap<>()), HttpStatus.OK);
         }
 
         int blocksOfHashesAmount = blocksOfHashes.size();
         for( int blockNumber = 0 ; blockNumber < blocksOfHashesAmount ; blockNumber++) {
-            Runnable worker = new WorkerThread(getTransactionsBulkResponse, blocksOfHashes, blockNumber);
+            Runnable worker = new WorkerThread(getHistoryTransactionsResponse, blocksOfHashes, blockNumber);
             executorPool.execute(worker);
-//            getTransactionsDataBlock(getTransactionsBulkResponse, blocksOfHashes, blockNumber);
+//            getTransactionsDataBlock(getHistoryTransactionsResponse, blocksOfHashes, blockNumber);
         }
 
         try {
@@ -145,24 +147,24 @@ public class TransactionStorageService extends EntityStorageService implements I
         return null;
     }
 
-    private void getTransactionsDataBlock(GetTransactionsBulkResponse getTransactionsBulkResponse, List<List<Hash>> blocksOfHashes, int blockNumber) {
+    private void getTransactionsDataBlock(GetHistoryTransactionsResponse getHistoryTransactionsResponse, List<List<Hash>> blocksOfHashes, int blockNumber) {
         List<Hash> blockHashes = blocksOfHashes.get(blockNumber);
         HashMap<Hash, String> responsesMap = new HashMap<>();
         ResponseEntity<IResponse> objectsByHashResponse = objectService.getMultiObjectsFromDb(blockHashes, false, objectType);
         // For Unsuccessful retrieval of data
         if( !isResponseOK(objectsByHashResponse)){
             responsesMap.put(null,null);
-            getTransactionsBulkResponse.setEntitiesBulkResponses(responsesMap);
+            getHistoryTransactionsResponse.setEntitiesBulkResponses(responsesMap);
             //TODO 7/14/2019 tomer: Add to blocking queue
-            queueTransactionsDataBlock(getTransactionsBulkResponse, objectsByHashResponse.getStatusCode());
+            queueTransactionsDataBlock(getHistoryTransactionsResponse, objectsByHashResponse.getStatusCode());
             return;
         }
 
         // For successfully retrieved data, perform also data-integrity checks
         verifyEntitiesFromDbMap(responsesMap, objectsByHashResponse);
-        getTransactionsBulkResponse.setEntitiesBulkResponses(responsesMap);
+        getHistoryTransactionsResponse.setEntitiesBulkResponses(responsesMap);
         //TODO 7/14/2019 tomer: Add to blocking queue
-        queueTransactionsDataBlock(getTransactionsBulkResponse, HttpStatus.OK);
+        queueTransactionsDataBlock(getHistoryTransactionsResponse, HttpStatus.OK);
     }
 
     private List<List<Hash>> divideHashesToBlocks(List<Hash> hashes) {
@@ -173,16 +175,16 @@ public class TransactionStorageService extends EntityStorageService implements I
         return hashesBlocks;
     }
 
-    private ResponseEntity<IResponse> queueTransactionsDataBlock(GetTransactionsBulkResponse getTransactionsBulkResponse, HttpStatus httpStatus) {
-        if(getTransactionsBulkResponse==null || getTransactionsBulkResponse.getEntitiesBulkResponses() == null || !getTransactionsBulkResponse.getEntitiesBulkResponses().isEmpty()) {
-            return ResponseEntity.status(httpStatus).body(getTransactionsBulkResponse);
+    private ResponseEntity<IResponse> queueTransactionsDataBlock(GetHistoryTransactionsResponse getHistoryTransactionsResponse, HttpStatus httpStatus) {
+        if(getHistoryTransactionsResponse ==null || getHistoryTransactionsResponse.getEntitiesBulkResponses() == null || !getHistoryTransactionsResponse.getEntitiesBulkResponses().isEmpty()) {
+            return ResponseEntity.status(httpStatus).body(getHistoryTransactionsResponse);
         }
-        getTransactionsBulkResponse.getEntitiesBulkResponses().entrySet().forEach( entry -> {
+        getHistoryTransactionsResponse.getEntitiesBulkResponses().entrySet().forEach(entry -> {
             queueTransactionData(entry);
         });
 
 
-        return ResponseEntity.status(httpStatus).body(getTransactionsBulkResponse);
+        return ResponseEntity.status(httpStatus).body(getHistoryTransactionsResponse);
     }
 
     private void queueTransactionData(Map.Entry<Hash, String> entry) {
@@ -224,12 +226,12 @@ public class TransactionStorageService extends EntityStorageService implements I
 
 
     private class WorkerThread implements Runnable {
-        GetTransactionsBulkResponse getTransactionsBulkResponse;
+        GetHistoryTransactionsResponse getHistoryTransactionsResponse;
         List<List<Hash>> blocksOfHashes;
         int blockNumber;
 
-        public WorkerThread(GetTransactionsBulkResponse getTransactionsBulkResponse, List<List<Hash>> blocksOfHashes, int blockNumber) {
-            this.getTransactionsBulkResponse = getTransactionsBulkResponse;
+        public WorkerThread(GetHistoryTransactionsResponse getHistoryTransactionsResponse, List<List<Hash>> blocksOfHashes, int blockNumber) {
+            this.getHistoryTransactionsResponse = getHistoryTransactionsResponse;
             this.blocksOfHashes = blocksOfHashes;
             this.blockNumber = blockNumber;
         }
@@ -237,7 +239,7 @@ public class TransactionStorageService extends EntityStorageService implements I
         @Override
         public void run() {
             System.out.println(Thread.currentThread().getName()+" Starting block number = "+blockNumber);
-            getTransactionsDataBlock(getTransactionsBulkResponse, blocksOfHashes, blockNumber);
+            getTransactionsDataBlock(getHistoryTransactionsResponse, blocksOfHashes, blockNumber);
             System.out.println(Thread.currentThread().getName()+" End ");
 
         }

@@ -11,8 +11,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.EntitiesBulkJsonResponse;
-import io.coti.basenode.http.GetTransactionsBulkRequest;
-import io.coti.basenode.http.GetTransactionsBulkResponse;
+import io.coti.basenode.http.GetHistoryTransactionsRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeValidationService;
@@ -270,8 +269,8 @@ public class TransactionServiceTest {
         hashes.add( transactionData1.getHash() );
         hashes.add( transactionData2.getHash() );
 
-        GetTransactionsBulkRequest bulkRequest = new GetTransactionsBulkRequest(hashes);
-//        GetTransactionsBulkResponse entitiesBulkResponse = (GetTransactionsBulkResponse) transactionStorageValidationService.retrieveMultipleObjectsFromStorage(bulkRequest).getBody();
+        GetHistoryTransactionsRequest bulkRequest = new GetHistoryTransactionsRequest(hashes);
+//        GetHistoryTransactionsResponse entitiesBulkResponse = (GetHistoryTransactionsResponse) transactionStorageValidationService.retrieveMultipleObjectsFromStorage(bulkRequest).getBody();
         EntitiesBulkJsonResponse entitiesBulkResponse = (EntitiesBulkJsonResponse) transactionStorageValidationService.retrieveMultipleObjectsFromStorage(bulkRequest).getBody();
 
 
