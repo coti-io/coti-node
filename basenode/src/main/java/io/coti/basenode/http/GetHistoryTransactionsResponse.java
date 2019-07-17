@@ -6,18 +6,18 @@ import lombok.Data;
 import java.util.Map;
 
 @Data
-public class GetTransactionsBulkResponse extends Response {
+public class GetHistoryTransactionsResponse extends Response {
 
     public Map<Hash, String> entitiesBulkResponses;
 
-    public GetTransactionsBulkResponse() {
+    public GetHistoryTransactionsResponse() {
     }
 
-    public GetTransactionsBulkResponse(Map<Hash, String> entitiesBulkResponses) {
+    public GetHistoryTransactionsResponse(Map<Hash, String> entitiesBulkResponses) {
         this.entitiesBulkResponses = entitiesBulkResponses;
     }
 
-    public GetTransactionsBulkResponse(Map<Hash, String> entitiesBulkResponses, String message, String status) {
+    public GetHistoryTransactionsResponse(Map<Hash, String> entitiesBulkResponses, String message, String status) {
         super(message,status);
         this.entitiesBulkResponses = entitiesBulkResponses;
     }

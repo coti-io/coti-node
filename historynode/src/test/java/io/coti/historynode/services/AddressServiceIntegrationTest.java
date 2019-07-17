@@ -46,8 +46,6 @@ public class AddressServiceIntegrationTest {
     @Autowired
     private AddressService addressService;
     @Autowired
-    private EntityService entityService;
-    @Autowired
     private HistoryRocksDBConnector historyRocksDBConnector;
     @Autowired
     private IDatabaseConnector databaseConnector;
