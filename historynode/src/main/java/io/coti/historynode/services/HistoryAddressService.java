@@ -10,6 +10,7 @@ import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.historynode.http.StoreEntitiesToStorageResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -20,7 +21,7 @@ import java.util.*;
 
 @Slf4j
 @Service
-public class HistoryAddressService extends EntityService {
+public class HistoryAddressService /*extends EntityService*/ {
     @Autowired
     protected StorageConnector storageConnector;
     @Autowired
@@ -29,6 +30,12 @@ public class HistoryAddressService extends EntityService {
     private AddressCrypto addressCrypto;
     @Autowired
     private BaseNodeValidationService validationService;
+
+    protected String endpoint = null;
+
+    @Value("${storage.server.address}")
+    protected String storageServerAddress;
+    protected ObjectMapper mapper;
 
     @PostConstruct
     private void init() {
@@ -80,7 +87,6 @@ public class HistoryAddressService extends EntityService {
         return ResponseEntity.status(httpStatus).body(response);
     }
 
-    @Override
     protected ResponseEntity<StoreEntitiesToStorageResponse> storeEntitiesByType(String url, AddEntitiesBulkRequest addEntitiesBulkRequest) {
         return storageConnector.storeInStorage(storageServerAddress + endpoint, addEntitiesBulkRequest, StoreEntitiesToStorageResponse.class);
     }

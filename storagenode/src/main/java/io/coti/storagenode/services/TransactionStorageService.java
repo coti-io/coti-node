@@ -7,6 +7,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.http.EntitiesBulkJsonResponse;
 import io.coti.basenode.http.GetTransactionsBulkRequest;
 import io.coti.basenode.http.GetTransactionsBulkResponse;
 import io.coti.basenode.http.interfaces.IResponse;
@@ -106,9 +107,10 @@ public class TransactionStorageService extends EntityStorageService implements I
     }
 
     @Override
-    protected GetTransactionsBulkResponse getEntitiesBulkResponse(Map<Hash, String> responsesMap) {
-        //TODO 7/15/2019 astolia:  GetTransactionsBulkResponse shouldn't be empty
-        return new GetTransactionsBulkResponse();
+    protected EntitiesBulkJsonResponse getEntitiesBulkResponse(Map<Hash, String> responsesMap) {
+        EntitiesBulkJsonResponse entitiesBulkJsonResponse = new EntitiesBulkJsonResponse();
+        entitiesBulkJsonResponse.setHashToEntitiesFromDbMap(responsesMap);
+        return entitiesBulkJsonResponse;
     }
 
     public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(GetTransactionsBulkRequest getTransactionsBulkRequest) {

@@ -102,8 +102,8 @@ public abstract class EntityStorageService implements IEntityStorageService
         ResponseEntity<IResponse> coldStorageResponse = objectService.getObjectByHash(objectHash, true, objectType);
         if( isResponseOK(coldStorageResponse) )
         {
-            Hash coldObjectHash = ((Pair<Hash, String>) coldStorageResponse.getBody()).getKey();
-            String coldObjectAsJson = ((Pair<Hash, String>) coldStorageResponse.getBody()).getValue();
+            Hash coldObjectHash = ((GetEntityJsonResponse)coldStorageResponse.getBody()).getEntityJsonPair().getKey();
+            String coldObjectAsJson = ((GetEntityJsonResponse)coldStorageResponse.getBody()).getEntityJsonPair().getValue();
             // Check DI from cold storage, should never fail
             if( objectAsJson!=null && !isObjectDIOK(coldObjectHash, coldObjectAsJson) )
             {
@@ -138,19 +138,22 @@ public abstract class EntityStorageService implements IEntityStorageService
     {
         // Validation of the request itself
         ResponseEntity<IResponse> response = validateStoreMultipleObjectsToStorage(hashToObjectJsonDataMap);
-        if( !isResponseOK(response) )
+        if( !isResponseOK(response) ) {
             return response;
+        }
 
         // Store data from approved request into ongoing storage
         response = objectService.insertMultiObjects(hashToObjectJsonDataMap, false, objectType);
-        if( !isResponseOK(response) )
+        if( !isResponseOK(response) ) {
             return response; // TODO consider some retry mechanism
-        else
-        {
+        } else {
             response = objectService.insertMultiObjects(hashToObjectJsonDataMap, true, objectType);
-            if( !isResponseOK(response) )
+            if( !isResponseOK(response) ) {
                 return response; // TODO consider some retry mechanism, consider removing from ongoing storage
+            }
         }
+        //TODO 7/16/2019 tomer: Consider changing Hashmap from String to Boolean here
+
         return response;
     }
 

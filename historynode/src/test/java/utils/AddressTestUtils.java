@@ -16,7 +16,7 @@ public class AddressTestUtils {
     public static List<AddressData> generateListOfRandomAddressData(int listSize){
 
         List<AddressData> addresses = new ArrayList<>();
-        for (int i = 0 ; i <= listSize ; i++){
+        for (int i = 0 ; i < listSize ; i++){
             addresses.add(generateRandomAddressData());
         }
         return addresses;

@@ -19,7 +19,6 @@ import io.coti.historynode.data.AddressTransactionsByDate;
 import io.coti.historynode.http.GetTransactionsByAddressRequest;
 import io.coti.historynode.http.GetTransactionsByDateRequest;
 import io.coti.historynode.http.HistoryTransactionResponse;
-import io.coti.historynode.http.StoreEntitiesToStorageResponse;
 import io.coti.historynode.http.data.HistoryTransactionResponseData;
 import io.coti.historynode.model.AddressTransactionsByAddresses;
 import io.coti.historynode.model.AddressTransactionsByDates;
@@ -210,7 +209,7 @@ public class HistoryTransactionService extends EntityService implements IHistory
         HashMap<Hash, TransactionData> retrievedTransactionsFromStorage = new HashMap<>();
         Map<Hash, String> entitiesBulkResponses = null;
         if(!transactionsHashesToRetrieveFromStorage.isEmpty()) {
-            entitiesBulkResponses = getTransactionsDataFromElasticSearch(transactionsHashesToRetrieveFromStorage).getBody().getEntitiesBulkResponses();
+            entitiesBulkResponses = getTransactionsDataFromElasticSearch(transactionsHashesToRetrieveFromStorage).getBody().getHashToEntitiesFromDbMap();
             if(entitiesBulkResponses == null || entitiesBulkResponses.isEmpty()) {
                 log.error("No transactions were retrieved from storage");
                 for(Hash transactionHash : transactionsHashesToRetrieveFromStorage) {
@@ -258,7 +257,7 @@ public class HistoryTransactionService extends EntityService implements IHistory
         return retrievedTransactions;
     }
 
-    private ResponseEntity<GetTransactionsBulkResponse> getTransactionsDataFromElasticSearch(List<Hash> transactionsHashes) {
+    private ResponseEntity<EntitiesBulkJsonResponse> getTransactionsDataFromElasticSearch(List<Hash> transactionsHashes) {
         // Retrieve transactions from storage
         GetTransactionsBulkRequest getTransactionsBulkRequest = new GetTransactionsBulkRequest(transactionsHashes);
         RestTemplate restTemplate = new RestTemplate();
@@ -267,7 +266,10 @@ public class HistoryTransactionService extends EntityService implements IHistory
 
 
 //        return restTemplate.postForEntity(storageServerAddress + endpoint,  getTransactionsBulkRequest,   GetTransactionsBulkResponse.class);
-        return storageConnector.storeInStorage(storageServerAddress + endpoint, getTransactionsBulkRequest,   GetTransactionsBulkResponse.class);
+//        return storageConnector.storeInStorage(storageServerAddress + endpoint, getTransactionsBulkRequest,   EntitiesBulkJsonResponse.class);
+        ResponseEntity responseEntity = storageConnector.retrieveFromStorage(storageServerAddress + endpoint, getTransactionsBulkRequest, EntitiesBulkJsonResponse.class);
+//        ResponseEntity responseEntity = storageConnector.retrieveFromStorage(storageServerAddress + endpoint, getTransactionsBulkRequest, GetTransactionsBulkResponse.class);
+        return responseEntity;
     }
 
 
@@ -414,8 +416,9 @@ public class HistoryTransactionService extends EntityService implements IHistory
     }
 
     @Override
-    protected ResponseEntity<StoreEntitiesToStorageResponse> storeEntitiesByType(String url, AddEntitiesBulkRequest addEntitiesBulkRequest) {
-        return storageConnector.storeInStorage(storageServerAddress + endpoint, addEntitiesBulkRequest, StoreEntitiesToStorageResponse.class);
+    protected ResponseEntity<EntitiesBulkJsonResponse> storeEntitiesByType(String url, AddEntitiesBulkRequest addEntitiesBulkRequest) {
+//        return storageConnector.storeInStorage(storageServerAddress + endpoint, addEntitiesBulkRequest, StoreEntitiesToStorageResponse.class);
+        return storageConnector.storeInStorage(storageServerAddress + endpoint, addEntitiesBulkRequest, EntitiesBulkJsonResponse.class);
     }
 
 }

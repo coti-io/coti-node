@@ -132,7 +132,18 @@ public class AddressStorageService extends EntityStorageService {
 
     @Override
     protected GetAddressesBulkResponse getEntitiesBulkResponse(Map<Hash, String> responsesMap){
-        //TODO 7/15/2019 astolia: String to AddressData
-        return new GetAddressesBulkResponse();
+        GetAddressesBulkResponse getAddressesBulkResponse = new GetAddressesBulkResponse();
+        Map<Hash, AddressData> hashToAddressData = new HashMap<>();
+        responsesMap.entrySet().stream().forEach(entry-> {
+            AddressData addressData = null;
+            try {
+                addressData = mapper.readValue(entry.getValue(),AddressData.class);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            hashToAddressData.put(entry.getKey(), addressData);
+        } );
+        getAddressesBulkResponse.setAddressHashesToAddresses(hashToAddressData);
+        return getAddressesBulkResponse;
     }
 }

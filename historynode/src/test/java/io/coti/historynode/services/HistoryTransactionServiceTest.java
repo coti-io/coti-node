@@ -12,6 +12,7 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.http.AddEntitiesBulkRequest;
+import io.coti.basenode.http.EntitiesBulkJsonResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
 import io.coti.historynode.crypto.TransactionsRequestCrypto;
@@ -21,6 +22,7 @@ import io.coti.historynode.database.HistoryRocksDBConnector;
 import io.coti.historynode.http.GetTransactionsByAddressRequest;
 import io.coti.historynode.http.GetTransactionsByDateRequest;
 import io.coti.historynode.http.HistoryTransactionResponse;
+import io.coti.historynode.http.StoreEntitiesToStorageResponse;
 import io.coti.historynode.model.AddressTransactionsByAddresses;
 import io.coti.historynode.model.AddressTransactionsByDates;
 import org.junit.Assert;
@@ -377,7 +379,10 @@ public class HistoryTransactionServiceTest {
         String endpoint = "/transactions";
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         mapper.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
-        restTemplate.put(storageServerAddress + endpoint,  addEntitiesBulkRequest);
+        ResponseEntity<EntitiesBulkJsonResponse> storeResponseEntity = historyTransactionService.storeEntitiesByType(storageServerAddress + endpoint, addEntitiesBulkRequest);
+        storeResponseEntity.getBody().getHashToEntitiesFromDbMap().entrySet().stream().forEach(entry -> {
+            Assert.assertTrue(entry.getValue().equals("CREATED") || entry.getValue().equals("UPDATED"));
+        });
     }
 
     private TransactionData generateTransactionDataWithRBTByAttachmentDate(Instant attachmentTime) {

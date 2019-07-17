@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.http.AddEntitiesBulkRequest;
+import io.coti.basenode.http.EntitiesBulkJsonResponse;
 import io.coti.historynode.http.StoreEntitiesToStorageResponse;
 import io.coti.historynode.services.interfaces.IEntityService;
 import lombok.extern.slf4j.Slf4j;
@@ -17,13 +18,15 @@ import java.util.List;
 @Service
 public abstract class EntityService implements IEntityService {
 
+    //TODO 7/16/2019 tomer: move code to HistoryTransactionService and remove class and interface
+
     protected String endpoint = null;
 
     @Value("${storage.server.address}")
     protected String storageServerAddress;
     protected ObjectMapper mapper;
 
-    public ResponseEntity<StoreEntitiesToStorageResponse> storeEntities(List<? extends IEntity> entities) {
+    public ResponseEntity<EntitiesBulkJsonResponse> storeEntities(List<? extends IEntity> entities) {
 
         AddEntitiesBulkRequest addEntitiesBulkRequest = new AddEntitiesBulkRequest();
         entities.forEach(entity ->
@@ -36,11 +39,11 @@ public abstract class EntityService implements IEntityService {
                 }
         );
 
-        ResponseEntity<StoreEntitiesToStorageResponse> storeEntitiesToStorageResponse = storeEntitiesByType(storageServerAddress + endpoint, addEntitiesBulkRequest);
+        ResponseEntity<EntitiesBulkJsonResponse> storeEntitiesToStorageResponse = storeEntitiesByType(storageServerAddress + endpoint, addEntitiesBulkRequest);
         return storeEntitiesToStorageResponse;
     }
 
-    protected abstract ResponseEntity<StoreEntitiesToStorageResponse> storeEntitiesByType(String url, AddEntitiesBulkRequest addEntitiesBulkRequest);
+    protected abstract ResponseEntity<EntitiesBulkJsonResponse> storeEntitiesByType(String url, AddEntitiesBulkRequest addEntitiesBulkRequest);
 
 
 }
