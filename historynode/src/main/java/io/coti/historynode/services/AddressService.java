@@ -5,7 +5,6 @@ import io.coti.basenode.crypto.AddressesRequestCrypto;
 import io.coti.basenode.crypto.AddressesResponseCrypto;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.NodeType;
 import io.coti.basenode.http.BaseNodeHttpStringConstants;
 import io.coti.basenode.http.GetHistoryAddressesRequest;
 import io.coti.basenode.http.GetHistoryAddressesResponse;
@@ -67,7 +66,7 @@ public class AddressService extends BaseNodeAddressService{//extends EntityServi
 
     public ResponseEntity<GetHistoryAddressesResponse> getAddresses(GetHistoryAddressesRequest getHistoryAddressesRequest) {
         if(getHistoryAddressesRequest.getSignature() == null || getHistoryAddressesRequest.getSignerHash() == null || !addressesRequestCrypto.verifySignature(getHistoryAddressesRequest)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new GetHistoryAddressesResponse(new LinkedHashMap<>(),BaseNodeHttpStringConstants.INVALID_SIGNATURE, BaseNodeHttpStringConstants.STATUS_ERROR));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new GetHistoryAddressesResponse(new HashMap<>(),BaseNodeHttpStringConstants.INVALID_SIGNATURE, BaseNodeHttpStringConstants.STATUS_ERROR));
         }
 
         List<Hash> addressesHashesToGetFromStorage = getHistoryAddressesRequest.getAddressesHash();
@@ -77,12 +76,12 @@ public class AddressService extends BaseNodeAddressService{//extends EntityServi
         GetHistoryAddressesResponse getHistoryAddressesResponse =  storageResponse.getBody();
 
         //TODO 7/16/2019 astolia: check signed by storage
-        if(!validationService.validateGetAddressesResponse(getHistoryAddressesResponse, NodeType.StorageNode)){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new GetHistoryAddressesResponse(new LinkedHashMap<>(),"Response validation failed", BaseNodeHttpStringConstants.STATUS_ERROR));
+        if(getHistoryAddressesResponse.getSignature() == null || getHistoryAddressesResponse.getSignerHash() == null || !addressesResponseCrypto.verifySignature(getHistoryAddressesResponse)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new GetHistoryAddressesResponse(new HashMap<>(),BaseNodeHttpStringConstants.INVALID_SIGNATURE, BaseNodeHttpStringConstants.STATUS_ERROR));
         }
-        //TODO 7/15/2019 astolia: check if fields are null to avoid nullpointer
-        if(!addressesResponseCrypto.verifySignature(getHistoryAddressesResponse)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new GetHistoryAddressesResponse(new LinkedHashMap<>(),BaseNodeHttpStringConstants.INVALID_SIGNATURE, BaseNodeHttpStringConstants.STATUS_ERROR));
+
+        if(!validationService.validateGetAddressesResponse(getHistoryAddressesResponse)){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new GetHistoryAddressesResponse(new HashMap<>(),"Response validation failed", BaseNodeHttpStringConstants.STATUS_ERROR));
         }
 
         //addressToAddressDataResponse.putAll(reorderHashResponses(getHistoryAddressesRequest.getAddressesHash(), storageResponse.getBody().getAddressHashesToAddresses()));
@@ -124,6 +123,7 @@ public class AddressService extends BaseNodeAddressService{//extends EntityServi
     private ResponseEntity<GetHistoryAddressesResponse> getAddressesFromStorage(List<Hash> addressesHashes) {
         GetHistoryAddressesRequest getHistoryAddressesRequest = new GetHistoryAddressesRequest(addressesHashes);
         addressesRequestCrypto.signMessage(getHistoryAddressesRequest);
-        return  storageConnector.retrieveFromStorage(storageServerAddress + "/addresses", getHistoryAddressesRequest, GetHistoryAddressesResponse.class);
+        ResponseEntity<GetHistoryAddressesResponse> response = storageConnector.retrieveFromStorage(storageServerAddress + "/addresses", getHistoryAddressesRequest, GetHistoryAddressesResponse.class);
+        return response;
     }
 }
