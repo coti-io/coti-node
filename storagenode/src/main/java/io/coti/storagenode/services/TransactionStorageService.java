@@ -16,6 +16,7 @@ import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.model.ObjectService;
 import io.coti.storagenode.services.interfaces.ITransactionStorageValidationService;
 import javafx.util.Pair;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
+@Slf4j
 @Service
 public class TransactionStorageService extends EntityStorageService implements ITransactionStorageValidationService
 {
@@ -80,11 +82,9 @@ public class TransactionStorageService extends EntityStorageService implements I
     public boolean isObjectDIOK(Hash objectHash, String txAsJson)
     {
         //Check for Data Integrity of the Tx
-        // TODO specific difference for Tx from Address
-
-        TransactionData txDataDeserializedFromES = null;
+        TransactionData transactionDataDeserializedFromES = null;
         try {
-            txDataDeserializedFromES = mapper.readValue(txAsJson, TransactionData.class);
+            transactionDataDeserializedFromES = mapper.readValue(txAsJson, TransactionData.class);
             int temp = 7;
         } catch (IOException e) {
             e.printStackTrace();
@@ -92,14 +92,13 @@ public class TransactionStorageService extends EntityStorageService implements I
         }
 
         boolean valid = true; //TODO: Disabled for testing purposes
-//        boolean valid = validationService.validateTransactionDataIntegrity(txDataDeserializedFromES);
-
+//        boolean valid = validationService.validateTransactionDataIntegrity(transactionDataDeserializedFromES);
+        if(!valid) {
+            log.error("Failed verification for Transaction Data {}",transactionDataDeserializedFromES.getHash() );
+        }
         return valid;
     }
 
-//    public ResponseEntity<IResponse> retrieveObjectFromStorage(Hash hash) {
-//        return retrieveObjectFromStorage(hash, ElasticSearchData.TRANSACTIONS);
-//    }
 
     @Override
     protected GetHistoryTransactionsResponse getEmptyEntitiesBulkResponse() {
