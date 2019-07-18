@@ -80,7 +80,7 @@ public class NetworkFeeService {
             BigDecimal fee = calculateNetworkFeeAmount(getUserNetworkFeeByTrustScoreRange(userTrustScore), originalAmount);
 
             if (reducedAmount != null && reducedAmount.compareTo(fee) <= 0) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_REDUCED_AMOUNT_VS_NETWORK_FEE, STATUS_ERROR));
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(INVALID_REDUCED_AMOUNT_VS_NETWORK_FEE, fee.add(fullNodeFeeData.getAmount()).toPlainString()), STATUS_ERROR));
             }
 
             NetworkFeeData networkFeeData = new NetworkFeeData(networkFeeAddress, fee, originalAmount, reducedAmount, Instant.now());

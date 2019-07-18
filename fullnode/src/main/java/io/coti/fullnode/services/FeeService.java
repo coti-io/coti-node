@@ -75,7 +75,7 @@ public class FeeService {
                 amount = amount.stripTrailingZeros();
             }
             if (feeIncluded && originalAmount.compareTo(amount) <= 0) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_AMOUNT_VS_FULL_NODE_FEE, STATUS_ERROR));
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(INVALID_AMOUNT_VS_FULL_NODE_FEE, amount.toPlainString()), STATUS_ERROR));
             }
 
             FullNodeFeeData fullNodeFeeData = new FullNodeFeeData(address, amount, originalAmount, Instant.now());
