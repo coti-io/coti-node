@@ -57,7 +57,7 @@ public class StorageConnectorTest {
         List<AddressData> addresses = AddressTestUtils.generateListOfRandomAddressData(size);
         GetHistoryAddressesRequest request = new GetHistoryAddressesRequest(addresses.stream().map(addressData -> addressData.getHash()).collect(Collectors.toList()));
         addressesRequestCrypto.signMessage(request);
-        ResponseEntity<GetHistoryAddressesResponse> retrieveResponse = storageConnector.retrieveFromStorage(storageNodeUrl,request , GetHistoryAddressesResponse.class);
+        ResponseEntity<GetHistoryAddressesResponse> retrieveResponse = storageConnector.retrieveFromStorage(storageNodeUrl + "/addresses",request , GetHistoryAddressesResponse.class);
         Assert.assertEquals(HttpStatus.OK, retrieveResponse.getStatusCode());
         Map<Hash, AddressData> addressHashesToAddresses = retrieveResponse.getBody().getAddressHashesToAddresses();
         Assert.assertEquals(size,addressHashesToAddresses.size());
@@ -75,7 +75,7 @@ public class StorageConnectorTest {
         int size = 2;
         List<AddressData> addresses = AddressTestUtils.generateListOfRandomAddressData(size);
         GetHistoryAddressesRequest request = new GetHistoryAddressesRequest(addresses.stream().map(addressData -> addressData.getHash()).collect(Collectors.toList()));
-        ResponseEntity<GetHistoryAddressesResponse> retrieveResponse = storageConnector.retrieveFromStorage(storageNodeUrl,request , GetHistoryAddressesResponse.class);
+        ResponseEntity<GetHistoryAddressesResponse> retrieveResponse = storageConnector.retrieveFromStorage(storageNodeUrl + "/addresses",request , GetHistoryAddressesResponse.class);
         Assert.assertEquals(HttpStatus.OK, retrieveResponse.getStatusCode());
         Assert.assertEquals(BaseNodeHttpStringConstants.INVALID_SIGNATURE, retrieveResponse.getBody().getMessage());
         Assert.assertEquals(BaseNodeHttpStringConstants.STATUS_ERROR, retrieveResponse.getBody().getStatus());
@@ -87,7 +87,7 @@ public class StorageConnectorTest {
         int size = 3;
         List<AddressData> addresses = AddressTestUtils.generateListOfRandomAddressData(size);
         AddHistoryAddressesRequest request = new AddHistoryAddressesRequest(addresses);
-        ResponseEntity<AddHistoryEntitiesResponse> retrieveResponse = storageConnector.storeInStorage(storageNodeUrl, request, AddHistoryEntitiesResponse.class);
+        ResponseEntity<AddHistoryEntitiesResponse> retrieveResponse = storageConnector.storeInStorage(storageNodeUrl + "/addresses", request, AddHistoryEntitiesResponse.class);
         Assert.assertEquals(HttpStatus.OK, retrieveResponse.getStatusCode());
         Map<Hash, Boolean> addressHashesToStoreResult = retrieveResponse.getBody().getHashesToStoreResult();
         Assert.assertEquals(size,addressHashesToStoreResult.size());
@@ -101,7 +101,7 @@ public class StorageConnectorTest {
         int size = 2;
         List<AddressData> addresses = AddressTestUtils.generateListOfRandomAddressData(size);
         AddHistoryAddressesRequest request = new AddHistoryAddressesRequest(addresses);
-        ResponseEntity<AddHistoryEntitiesResponse> retrieveResponse = storageConnector.storeInStorage(storageNodeUrl, request, AddHistoryEntitiesResponse.class);
+        ResponseEntity<AddHistoryEntitiesResponse> retrieveResponse = storageConnector.storeInStorage(storageNodeUrl + "/addresses", request, AddHistoryEntitiesResponse.class);
         Assert.assertEquals(HttpStatus.OK, retrieveResponse.getStatusCode());
         Map<Hash, Boolean> addressHashesToStoreResult = retrieveResponse.getBody().getHashesToStoreResult();
         Assert.assertEquals(size,addressHashesToStoreResult.size());
@@ -109,7 +109,7 @@ public class StorageConnectorTest {
             Assert.assertTrue(entry.getValue());
         }
 
-        ResponseEntity<AddHistoryEntitiesResponse> secondRetrieveResponse = storageConnector.storeInStorage(storageNodeUrl, request, AddHistoryEntitiesResponse.class);
+        ResponseEntity<AddHistoryEntitiesResponse> secondRetrieveResponse = storageConnector.storeInStorage(storageNodeUrl + "/addresses", request, AddHistoryEntitiesResponse.class);
         Assert.assertEquals(HttpStatus.OK, secondRetrieveResponse.getStatusCode());
         Map<Hash, Boolean> secondAddressHashesToStoreResult = secondRetrieveResponse.getBody().getHashesToStoreResult();
         Assert.assertEquals(size,secondAddressHashesToStoreResult.size());
@@ -125,7 +125,7 @@ public class StorageConnectorTest {
         // Store in elastic and check correct size and correct result values.
         List<AddressData> addresses = AddressTestUtils.generateListOfRandomAddressData(size);
         AddHistoryAddressesRequest storeRequest = new AddHistoryAddressesRequest(addresses);
-        ResponseEntity<AddHistoryEntitiesResponse> storeResponse = storageConnector.storeInStorage(storageNodeUrl, storeRequest, AddHistoryEntitiesResponse.class);
+        ResponseEntity<AddHistoryEntitiesResponse> storeResponse = storageConnector.storeInStorage(storageNodeUrl + "/addresses", storeRequest, AddHistoryEntitiesResponse.class);
         Assert.assertEquals(storeResponse.getBody().getHashesToStoreResult().size(),size);
         Assert.assertEquals(HttpStatus.OK, storeResponse.getStatusCode());
         storeResponse.getBody().getHashesToStoreResult().values().forEach(storeResult -> Assert.assertTrue(storeResult));
@@ -133,7 +133,7 @@ public class StorageConnectorTest {
         // get from elastic addresses that were stored above. make sure correct Http status, correct size, correct address data.
         GetHistoryAddressesRequest retrieveRequest = new GetHistoryAddressesRequest(addresses.stream().map(addressData -> addressData.getHash()).collect(Collectors.toList()));
         addressesRequestCrypto.signMessage(retrieveRequest);
-        ResponseEntity<GetHistoryAddressesResponse> retrieveResponse = storageConnector.retrieveFromStorage(storageNodeUrl, retrieveRequest, GetHistoryAddressesResponse.class);
+        ResponseEntity<GetHistoryAddressesResponse> retrieveResponse = storageConnector.retrieveFromStorage(storageNodeUrl + "/addresses", retrieveRequest, GetHistoryAddressesResponse.class);
         Assert.assertEquals(retrieveResponse.getStatusCode(),HttpStatus.OK);
         Map<Hash, AddressData> addressHashesToAddresses = retrieveResponse.getBody().getAddressHashesToAddresses();
         Assert.assertEquals(addressHashesToAddresses.size(),size);
