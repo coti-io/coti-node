@@ -1,5 +1,6 @@
 package io.coti.basenode.utils;
 
+import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.Hash;
 
 import javax.xml.bind.DatatypeConverter;
@@ -69,41 +70,10 @@ public class HashTestUtils {
         return hashes;
     }
 
-
-
-
-
-    private static byte[] removeLeadingZerosFromAddress(byte[] addressBytesWithoutChecksum) {
-        byte[] xPart = Arrays.copyOfRange(addressBytesWithoutChecksum, 0, addressBytesWithoutChecksum.length / 2);
-        byte[] yPart = Arrays.copyOfRange(addressBytesWithoutChecksum, addressBytesWithoutChecksum.length / 2, addressBytesWithoutChecksum.length);
-
-        byte[] xPointPart = new byte[0];
-        byte[] yPointPart = new byte[0];
-
-        for (int i = 0; i < xPart.length; i++) {
-            if (xPart[i] != 0) {
-                xPointPart = Arrays.copyOfRange(xPart, i, xPart.length);
-                break;
-            }
-        }
-
-        for (int i = 0; i < yPart.length; i++) {
-            if (yPart[i] != 0) {
-                yPointPart = Arrays.copyOfRange(yPart, i, yPart.length);
-                break;
-            }
-        }
-
-        ByteBuffer addressBuffer = ByteBuffer.allocate(xPointPart.length + yPointPart.length);
-        addressBuffer.put(xPointPart);
-        addressBuffer.put(yPointPart);
-        return addressBuffer.array();
-    }
-
     private static byte[] getCrc32OfByteArray(byte[] array) {
         Checksum checksum = new CRC32();
 
-        byte[] addressWithoutPadding = removeLeadingZerosFromAddress(array);
+        byte[] addressWithoutPadding = CryptoHelper.removeLeadingZerosFromAddress(array);
         checksum.update(addressWithoutPadding, 0, addressWithoutPadding.length);
         byte[] checksumValue = ByteBuffer.allocate(4).putInt((int) checksum.getValue()).array();
         return checksumValue;

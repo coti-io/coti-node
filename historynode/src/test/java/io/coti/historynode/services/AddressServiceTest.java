@@ -23,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
+import utils.HashTestUtils;
 import utils.TestUtils;
 
 import java.util.ArrayList;
@@ -56,7 +57,7 @@ public class AddressServiceTest {
 
     @Before
     public void setUpOnce() throws Exception {
-        hash = TestUtils.generateRandomHash();
+        hash = HashTestUtils.generateRandomAddressHash();
         hashes = new ArrayList<>();
         hashes.add(hash);
         getHistoryAddressesRequest = new GetHistoryAddressesRequest(hashes);
