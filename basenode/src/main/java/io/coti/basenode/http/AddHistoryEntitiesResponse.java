@@ -7,34 +7,36 @@ import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Data
-public class AddAddressesBulkResponse extends Response implements ISignValidatable, ISignable {
+public class AddHistoryEntitiesResponse  extends Response implements ISignValidatable, ISignable {
 
     @NotEmpty
-    private Map<Hash, Boolean> addressHashesToStoreResult;
+    private Map<Hash, Boolean> hashesToStoreResult;
 
     private SignatureData signature;
 
     private Hash signerHash;
 
-    private AddAddressesBulkResponse(){
+    public AddHistoryEntitiesResponse(){
+        hashesToStoreResult = new HashMap<>();
     }
 
-    public AddAddressesBulkResponse(Map<Hash,Boolean> addressHashesToStoreResult, String message, String status) {
+    public AddHistoryEntitiesResponse(Map<Hash,Boolean> addressHashesToStoreResult, String message, String status) {
         super(message, status);
-        this.addressHashesToStoreResult = addressHashesToStoreResult;
+        this.hashesToStoreResult = addressHashesToStoreResult;
     }
 
-    public AddAddressesBulkResponse(Map<Hash, Boolean> addressHashesToStoreResult) {
-        this.addressHashesToStoreResult = addressHashesToStoreResult;
+    public AddHistoryEntitiesResponse(Map<Hash, Boolean> addressHashesToStoreResult) {
+        this.hashesToStoreResult = addressHashesToStoreResult;
     }
 
-    public AddAddressesBulkResponse(String message, String status) {
+    public AddHistoryEntitiesResponse(String message, String status) {
         super(message, status);
-        this.addressHashesToStoreResult = new LinkedHashMap<>();
+        this.hashesToStoreResult = new LinkedHashMap<>();
     }
 
     @Override
@@ -49,7 +51,7 @@ public class AddAddressesBulkResponse extends Response implements ISignValidatab
 
     @Override
     public void setSignerHash(Hash signerHash) {
-    this.signerHash = signerHash;
+        this.signerHash = signerHash;
     }
 
     @Override
