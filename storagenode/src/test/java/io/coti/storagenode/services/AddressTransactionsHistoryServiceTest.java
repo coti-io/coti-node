@@ -176,7 +176,7 @@ public class AddressTransactionsHistoryServiceTest {
     }
 
 
-    @Test
+//    @Test
     public void multipleAddressStoreRetrieveTest() throws IOException
     {
         // Mocks set-ups
@@ -200,6 +200,7 @@ public class AddressTransactionsHistoryServiceTest {
         // Store Addresses
         Hash hash0 = addressTxsHistories.get(0).getHash();
 //        HistoryNodeConsensusResult consensus = new HistoryNodeConsensusResult(hash0);
+        //TODO 7/18/2019 tomer: The call to storeMultipleObjectsToStorage should no longer be from Entity Service but from AddressStorageService
         ResponseEntity<IResponse> storeResponse = addressStorageValidationService.storeMultipleObjectsToStorage(hashToAddressTxsHistoryJsonDataMap);
         Assert.assertTrue( storeResponse.getStatusCode().equals(HttpStatus.OK) );
         Assert.assertTrue(((BaseResponse)storeResponse.getBody()).getStatus().equals("Success"));
