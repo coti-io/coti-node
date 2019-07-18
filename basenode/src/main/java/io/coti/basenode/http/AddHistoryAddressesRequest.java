@@ -12,18 +12,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class AddAddressesBulkRequest extends Request implements ISignable, ISignValidatable {
+public class AddHistoryAddressesRequest extends Request implements ISignable, ISignValidatable {
     @NotEmpty(message = "Entities must not be empty")
     private List<AddressData> addresses;
     private Hash signerHash;
     private SignatureData signature;
 
 
-    public AddAddressesBulkRequest(@NotEmpty(message = "Entities must not be empty") List<AddressData> addresses) {
+    public AddHistoryAddressesRequest(@NotEmpty(message = "Entities must not be empty") List<AddressData> addresses) {
         this.addresses = addresses;
     }
 
-    public AddAddressesBulkRequest() {
+    public AddHistoryAddressesRequest() {
         addresses = new ArrayList<>();
     }
 

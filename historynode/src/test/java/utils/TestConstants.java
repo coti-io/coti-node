@@ -7,8 +7,4 @@ public class TestConstants {
     public static final int SIZE_OF_BASE_TRANSACTION_HASH = 136;
     public static final String TRANSACTION_DESCRIPTION = "test";
     public static final int MAX_TRUST_SCORE = 100;
-
-    //ENDPOINTS
-    public static final String storeMultipleAddressToStorageUrl = "http://localhost:7041/addresses";
-    public static final String getAddressesFromStorageUrl = "http://localhost:7041/addresses";
 }
