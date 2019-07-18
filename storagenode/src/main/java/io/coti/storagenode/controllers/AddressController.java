@@ -1,6 +1,6 @@
 package io.coti.storagenode.controllers;
 
-import io.coti.basenode.http.AddAddressesBulkRequest;
+import io.coti.basenode.http.AddHistoryAddressesRequest;
 import io.coti.basenode.http.GetHistoryAddressesRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.services.AddressStorageService;
@@ -27,7 +27,7 @@ public class AddressController {
     }
 
     @PutMapping(value = "/addresses")
-    public ResponseEntity<IResponse> storeMultipleAddressToStorage(@Valid @RequestBody AddAddressesBulkRequest addAddressesRequest) {
+    public ResponseEntity<IResponse> storeMultipleAddressToStorage(@Valid @RequestBody AddHistoryAddressesRequest addAddressesRequest) {
         return addressStorageService.storeMultipleAddressesToStorage(addAddressesRequest);
     }
 
