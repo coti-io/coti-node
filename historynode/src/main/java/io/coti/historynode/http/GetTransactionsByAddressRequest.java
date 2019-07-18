@@ -16,11 +16,10 @@ import java.time.Instant;
 @Data
 public class GetTransactionsByAddressRequest extends Request implements ISignValidatable, ISignable {
 
-
-    private @NotEmpty Hash address;
+    @NotEmpty
+    private Hash address;
     private Instant startDate;
     private Instant endDate;
-
     @NotNull
     public @Valid Hash userHash;
     @NotNull

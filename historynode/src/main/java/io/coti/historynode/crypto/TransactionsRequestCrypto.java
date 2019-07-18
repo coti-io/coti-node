@@ -13,9 +13,11 @@ public class TransactionsRequestCrypto extends SignatureValidationCrypto<GetTran
     @Override
     public byte[] getSignatureMessage(GetTransactionsByAddressRequest getTransactionsByAddressRequest) {
         byte[] addressInBytes = getTransactionsByAddressRequest.getAddress().getBytes();
-        ByteBuffer transactionsRequestBuffer = ByteBuffer.allocate(addressInBytes.length+Long.BYTES+Long.BYTES).
-                put(addressInBytes).putLong(getTransactionsByAddressRequest.getStartDate().toEpochMilli()).
-                putLong(getTransactionsByAddressRequest.getEndDate().toEpochMilli());
+        byte[] startDateInBytes = getTransactionsByAddressRequest.getStartDate() != null ? ByteBuffer.allocate(Long.BYTES).putLong(getTransactionsByAddressRequest.getStartDate().toEpochMilli()).array() : new byte[0];
+        byte[] endDateInBytes = getTransactionsByAddressRequest.getEndDate() != null ? ByteBuffer.allocate(Long.BYTES).putLong(getTransactionsByAddressRequest.getEndDate().toEpochMilli()).array() : new byte[0];
+        ByteBuffer transactionsRequestBuffer = ByteBuffer.allocate(addressInBytes.length + startDateInBytes.length + endDateInBytes.length).
+                put(addressInBytes).put(startDateInBytes).
+                put(endDateInBytes);
         byte[] transactionsRequestInBytes = transactionsRequestBuffer.array();
         return CryptoHelper.cryptoHash(transactionsRequestInBytes).getBytes();
     }

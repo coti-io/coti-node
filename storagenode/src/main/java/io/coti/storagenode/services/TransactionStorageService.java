@@ -134,6 +134,16 @@ public class TransactionStorageService extends EntityStorageService implements I
             executorPool.execute(worker);
 //            getTransactionsDataBlock(getHistoryTransactionsResponse, blocksOfHashes, blockNumber);
         }
+        while(!Thread.currentThread().isInterrupted()) {
+            try {
+            Pair<Hash, TransactionData> hashTransactionDataPair = retrievedTransactions.take();
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+
 
         try {
             Thread.sleep(10000);

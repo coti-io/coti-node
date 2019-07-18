@@ -47,8 +47,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.EMPTY_SEARCH_RESULT;
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.TRANSACTIONS_NOT_FOUND;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 
 
 @Slf4j
@@ -99,7 +98,7 @@ public class TransactionService extends BaseNodeTransactionService {
         while (!transactionsToValidate.isEmpty()) {
             TransactionData transactionData = transactionsToValidate.remove();
             log.debug("History node Fully Checking transaction: {}", transactionData.getHash());
-            if( validationService.fullValidation(transactionData) ) {
+            if (validationService.fullValidation(transactionData)) {
                 // Update Indexing structures with details from the new transaction
                 addToHistoryTransactionIndexes(transactionData);
             }
@@ -151,13 +150,12 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
 
-
     public ResponseEntity<IResponse> getTransactionsByAddress(GetTransactionsByAddressRequest getTransactionsByAddressRequest) {
         //TODO 7/2/2019 tomer: Commented for initial integration testing, uncomment after adding signature in tests
         // Verify signature
-//        if(!transactionsRequestCrypto.verifySignature(getTransactionsByAddressRequest)) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
-//        }
+        if (!transactionsRequestCrypto.verifySignature(getTransactionsByAddressRequest)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
+        }
 
         List<Hash> transactionsHashes = getTransactionsHashesToRetrieve(getTransactionsByAddressRequest);
         return getTransactions(transactionsHashes);
@@ -165,7 +163,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
     public ResponseEntity<IResponse> getTransactionsByDate(GetTransactionsByDateRequest getTransactionsByDateRequest) {
 
-        List<Hash> transactionsHashes = getTransactionsHashesByDate(getTransactionsByDateRequest.getDate()) ;
+        List<Hash> transactionsHashes = getTransactionsHashesByDate(getTransactionsByDateRequest.getDate());
         return getTransactions(transactionsHashes);
     }
 
@@ -191,11 +189,11 @@ public class TransactionService extends BaseNodeTransactionService {
     private HashMap<Hash, TransactionData> getTransactionFromElasticSearch(List<Hash> transactionsHashesToRetrieveFromStorage) {
         HashMap<Hash, TransactionData> retrievedTransactionsFromStorage = new HashMap<>();
         Map<Hash, String> entitiesBulkResponses = null;
-        if(!transactionsHashesToRetrieveFromStorage.isEmpty()) {
+        if (!transactionsHashesToRetrieveFromStorage.isEmpty()) {
             entitiesBulkResponses = getTransactionsDataFromElasticSearch(transactionsHashesToRetrieveFromStorage).getBody().getHashToEntitiesFromDbMap();
-            if(entitiesBulkResponses == null || entitiesBulkResponses.isEmpty()) {
+            if (entitiesBulkResponses == null || entitiesBulkResponses.isEmpty()) {
                 log.error("No transactions were retrieved from storage");
-                for(Hash transactionHash : transactionsHashesToRetrieveFromStorage) {
+                for (Hash transactionHash : transactionsHashesToRetrieveFromStorage) {
                     retrievedTransactionsFromStorage.putIfAbsent(transactionHash, null);
                 }
             } else {
@@ -210,7 +208,7 @@ public class TransactionService extends BaseNodeTransactionService {
         HashMap<Hash, TransactionData> retrievedTransactionsFromLocal = new HashMap<>();
         for (Hash transactionsHash : transactionsHashes) {
             TransactionData localTransactionDataByHash = transactions.getByHash(transactionsHash);
-            if( localTransactionDataByHash != null) {
+            if (localTransactionDataByHash != null) {
                 retrievedTransactionsFromLocal.put(transactionsHash, localTransactionDataByHash);
             } else {
                 transactionsHashesToRetrieveFromElasticSearch.add(transactionsHash);
@@ -223,7 +221,7 @@ public class TransactionService extends BaseNodeTransactionService {
         HashMap<Hash, TransactionData> retrievedTransactions = new HashMap<>();
         transactionsHashes.forEach(transactionHash -> {
             String transactionRetrievedAsJson = entitiesBulkResponses.get(transactionHash);
-            if(transactionRetrievedAsJson != null ) {
+            if (transactionRetrievedAsJson != null) {
                 try {
                     TransactionData transactionData = mapper.readValue(transactionRetrievedAsJson, TransactionData.class);
                     retrievedTransactions.put(transactionHash, transactionData);
@@ -250,13 +248,9 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
 
-
-
     private List<Hash> getTransactionsHashesToRetrieve(GetTransactionsByAddressRequest getTransactionsByAddressRequest) {
-        if( getTransactionsByAddressRequest.getAddress()==null ) {
-            return new ArrayList<>();
-        }
-        if( getTransactionsByAddressRequest.getStartDate()==null || getTransactionsByAddressRequest.getEndDate()==null ) {
+
+        if (getTransactionsByAddressRequest.getStartDate() == null || getTransactionsByAddressRequest.getEndDate() == null) {
             return getTransactionsHashesByAddress(getTransactionsByAddressRequest.getAddress());
         }
         return getTransactionsHashesByAddressAndDates(getTransactionsByAddressRequest.getAddress(), getTransactionsByAddressRequest.getStartDate(), getTransactionsByAddressRequest.getEndDate());
@@ -264,18 +258,18 @@ public class TransactionService extends BaseNodeTransactionService {
 
 
     private List<Hash> getTransactionsHashesByDate(Instant date) {
-        if(date==null) {
+        if (date == null) {
             return new ArrayList<>();
         }
         AddressTransactionsByDate addressTransactionsByDate = addressTransactionsByDates.getByHash(getHashByLocalDate(getLocalDateByInstant(date)));
-        if(addressTransactionsByDate==null || addressTransactionsByDate.getTransactionsAddresses()==null || addressTransactionsByDate.getTransactionsAddresses().isEmpty()) {
+        if (addressTransactionsByDate == null || addressTransactionsByDate.getTransactionsAddresses() == null || addressTransactionsByDate.getTransactionsAddresses().isEmpty()) {
             return new ArrayList<>();
         }
         return addressTransactionsByDate.getTransactionsAddresses().stream().collect(Collectors.toList());
     }
 
     private List<Hash> getTransactionsHashesByDates(Instant startDate, Instant endDate) {
-        if(startDate==null || endDate==null || startDate.isAfter(endDate)) {
+        if (startDate == null || endDate == null || startDate.isAfter(endDate)) {
             return new ArrayList<>();
         }
         LocalDate localStartDate = getLocalDateByInstant(startDate);
@@ -294,7 +288,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
     private LocalDate getLocalDateByInstant(Instant date) {
         LocalDateTime ldt = LocalDateTime.ofInstant(date, ZoneOffset.UTC);
-        return LocalDate.of(ldt.getYear(), ldt.getMonth(),ldt.getDayOfMonth());
+        return LocalDate.of(ldt.getYear(), ldt.getMonth(), ldt.getDayOfMonth());
     }
 
     public static List<LocalDate> getLocalDatesBetween(LocalDate startDate, LocalDate endDate) {
@@ -307,7 +301,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
     private List<Hash> getTransactionsHashesByAddress(Hash address) {
         AddressTransactionsByAddress addressTransactionsByAddress = addressTransactionsByAddresses.getByHash(address);
-        if(addressTransactionsByAddress==null) {
+        if (addressTransactionsByAddress == null) {
             return new ArrayList<>();
         }
         HashMap<LocalDate, HashSet<Hash>> transactionHashesByDates = addressTransactionsByAddress.getTransactionHashesByDates();
@@ -316,13 +310,13 @@ public class TransactionService extends BaseNodeTransactionService {
 
     private List<Hash> getTransactionsHashesByAddressAndDates(Hash address, Instant startDate, Instant endDate) {
         AddressTransactionsByAddress addressTransactionsByAddress = addressTransactionsByAddresses.getByHash(address);
-        if(addressTransactionsByAddress==null) {
+        if (addressTransactionsByAddress == null) {
             return new ArrayList<>();
         }
         HashMap<LocalDate, HashSet<Hash>> transactionHashesByDates = addressTransactionsByAddress.getTransactionHashesByDates();
-        List<LocalDate> localDatesBetween = getLocalDatesBetween(getLocalDateByInstant(startDate),getLocalDateByInstant(endDate));
+        List<LocalDate> localDatesBetween = getLocalDatesBetween(getLocalDateByInstant(startDate), getLocalDateByInstant(endDate));
 
-        return localDatesBetween.stream().filter(localDate->  transactionHashesByDates.containsKey(localDate)).
+        return localDatesBetween.stream().filter(localDate -> transactionHashesByDates.containsKey(localDate)).
                 flatMap(localDate -> transactionHashesByDates.get(localDate).stream()).collect(Collectors.toList());
     }
 
@@ -334,7 +328,7 @@ public class TransactionService extends BaseNodeTransactionService {
         HashSet<Hash> relatedAddressHashes = getRelatedAddresses(transactionData);
 
         AddressTransactionsByDate transactionsByDateHash = addressTransactionsByDates.getByHash(hashByDate);
-        if(transactionsByDateHash== null) {
+        if (transactionsByDateHash == null) {
             HashSet<Hash> addresses = new HashSet<>();
             addresses.add(transactionData.getHash());
             addressTransactionsByDates.put(new AddressTransactionsByDate(attachmentTime, addresses));
@@ -344,19 +338,19 @@ public class TransactionService extends BaseNodeTransactionService {
         }
 
 
-        for(Hash transactionAddressHash : relatedAddressHashes) {
+        for (Hash transactionAddressHash : relatedAddressHashes) {
             HashMap<LocalDate, HashSet<Hash>> transactionHashesMap = new HashMap<>();
             AddressTransactionsByAddress transactionsByAddressHash = addressTransactionsByAddresses.getByHash(transactionAddressHash);
-            if(transactionsByAddressHash==null) {
+            if (transactionsByAddressHash == null) {
                 HashSet<Hash> transactionHashes = new HashSet<>();
-                if( !transactionHashes.add(transactionData.getHash()) ) {
+                if (!transactionHashes.add(transactionData.getHash())) {
                     log.info("{} was already present by address", transactionData);
                 }
                 transactionHashesMap.put(attachmentLocalDate, transactionHashes);
                 addressTransactionsByAddresses.put(new AddressTransactionsByAddress(transactionAddressHash, transactionHashesMap));
             } else {
                 HashSet<Hash> transactionsHashesByDate = transactionsByAddressHash.getTransactionHashesByDates().get(hashByDate);
-                if(transactionsHashesByDate == null) {
+                if (transactionsHashesByDate == null) {
                     HashSet<Hash> transactionsHashes = new HashSet<>();
                     transactionsHashes.add(transactionData.getHash());
                     transactionsByAddressHash.getTransactionHashesByDates().put(attachmentLocalDate, transactionsHashes);
@@ -369,12 +363,11 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
 
-
     private HashSet<Hash> getRelatedAddresses(TransactionData transactionData) {
         HashSet<Hash> hashes = new HashSet<>();
         hashes.add(transactionData.getSenderHash());
-        for(BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
-            if(baseTransactionData instanceof ReceiverBaseTransactionData) {
+        for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
+            if (baseTransactionData instanceof ReceiverBaseTransactionData) {
                 hashes.add(baseTransactionData.getAddressHash());
             }
         }
@@ -383,13 +376,13 @@ public class TransactionService extends BaseNodeTransactionService {
 
     protected Hash calculateHashByAttachmentTime(Instant date) {
         LocalDateTime ldt = LocalDateTime.ofInstant(date, ZoneOffset.UTC);
-        LocalDate localDate = LocalDate.of(ldt.getYear(), ldt.getMonth(),ldt.getDayOfMonth());
+        LocalDate localDate = LocalDate.of(ldt.getYear(), ldt.getMonth(), ldt.getDayOfMonth());
         return CryptoHelper.cryptoHash(localDate.atStartOfDay().toString().getBytes());
     }
 
     public LocalDate calculateInstantLocalDate(Instant date) {
         LocalDateTime ldt = LocalDateTime.ofInstant(date, ZoneOffset.UTC);
-        return LocalDate.of(ldt.getYear(), ldt.getMonth(),ldt.getDayOfMonth());
+        return LocalDate.of(ldt.getYear(), ldt.getMonth(), ldt.getDayOfMonth());
     }
 
     protected ResponseEntity<AddHistoryEntitiesResponse> storeEntitiesByType(String url, AddEntitiesBulkRequest addEntitiesBulkRequest) {
