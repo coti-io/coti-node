@@ -56,36 +56,33 @@ public class AddressStorageService extends EntityStorageService {
 
     public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(GetHistoryAddressesRequest getHistoryAddressesRequest){
         if(getHistoryAddressesRequest.getSignature() == null || getHistoryAddressesRequest.getSignerHash() == null || !addressesRequestCrypto.verifySignature(getHistoryAddressesRequest)){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body( new GetHistoryAddressesResponse(new HashMap<>(), BaseNodeHttpStringConstants.INVALID_SIGNATURE, BaseNodeHttpStringConstants.STATUS_ERROR));
+            return ResponseEntity.status(HttpStatus.OK).body( new GetHistoryAddressesResponse(new LinkedHashMap<>(), BaseNodeHttpStringConstants.INVALID_SIGNATURE, BaseNodeHttpStringConstants.STATUS_ERROR));
         }
         return super.retrieveMultipleObjectsFromStorage(getHistoryAddressesRequest.getAddressesHash());
     }
 
-    //TODO 7/14/2019 astolia: if failed to map to json. dont continue to elastic. return some failed response
-    public ResponseEntity<IResponse> storeMultipleAddressesToStorage(AddAddressesBulkRequest addresses) {
+    public ResponseEntity<IResponse> storeMultipleAddressesToStorage(AddHistoryAddressesRequest addresses) {
+        //TODO 7/17/2019 astolia: validate addresses
         Map<Hash,String> addressHashToJsonString = new HashMap<>();
         Map<Hash,Boolean> addressFailedConversionToFalse = new HashMap<>();
-        addresses.getAddresses().forEach( address -> {
-            String jsonStrAddress = getAddressJsonString(address);
-            if(jsonStrAddress != ""){
-                addressHashToJsonString.put(address.getHash(),jsonStrAddress);
-            }
-            else{
-                addressFailedConversionToFalse.put(address.getHash(),Boolean.FALSE);
-            }
 
-        });
+        addresses.getAddresses().forEach( address ->
+            mapAddressToStringAndFillMaps(address, addressHashToJsonString, addressFailedConversionToFalse));
+
+        if(addressFailedConversionToFalse.size() == addresses.getAddresses().size()){
+            return ResponseEntity.status(HttpStatus.OK).body(new AddHistoryEntitiesResponse());
+        }
+
         ResponseEntity<IResponse> response = objectService.insertMultiObjects(addressHashToJsonString, false, objectType);
         if(!isResponseOK(response)) {
-            return response; // TODO consider some retry mechanism
+            return super.convertResponseStatusToBooleanAndAddFailedHashes(response,addressFailedConversionToFalse); // TODO consider some retry mechanism
         }
         response = objectService.insertMultiObjects(addressHashToJsonString, true, objectType);
         if( !isResponseOK(response) ) {
-            return response; // TODO consider some retry mechanism, consider removing from ongoing storage
+            return super.convertResponseStatusToBooleanAndAddFailedHashes(response,addressFailedConversionToFalse); // TODO consider some retry mechanism, consider removing from ongoing storage
         }
-        //TODO 7/15/2019 astolia: add the failed conversion.
-        //TODO 7/15/2019 astolia: convert hash,string to hash,boolean
-        return response;
+
+        return super.convertResponseStatusToBooleanAndAddFailedHashes(response,addressFailedConversionToFalse);
     }
 
     public boolean isObjectDIOK(Hash addressHash, String addressAsJson) {
@@ -117,12 +114,13 @@ public class AddressStorageService extends EntityStorageService {
         return hashAddressDataMap;
     }
 
-    private String getAddressJsonString(AddressData address){
+    private void mapAddressToStringAndFillMaps(AddressData address, Map<Hash,String> addressHashToJsonString, Map<Hash,Boolean> addressFailedConversionToFalse){
         try {
-            return mapper.writeValueAsString(address);
+            String addressJsonString = mapper.writeValueAsString(address);
+            addressHashToJsonString.put(address.getHash(),addressJsonString);
         } catch (JsonProcessingException e) {
-            log.error("failed to generate json string for address data");
-            return "";
+            log.error("failed to generate json string for address data {}", address.getHash().toString());
+            addressFailedConversionToFalse.put(address.getHash(),Boolean.FALSE);
         }
     }
 
