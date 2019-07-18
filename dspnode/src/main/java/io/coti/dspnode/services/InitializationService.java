@@ -1,6 +1,5 @@
 package io.coti.dspnode.services;
 
-import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
@@ -32,8 +31,6 @@ public class InitializationService extends BaseNodeInitializationService {
     private AddressService addressService;
     @Autowired
     private ICommunicationService communicationService;
-    @Autowired
-    private IPropagationPublisher propagationPublisher;
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
@@ -82,8 +79,4 @@ public class InitializationService extends BaseNodeInitializationService {
         return networkNodeData;
     }
 
-    @Override
-    protected void propagateMissingTransaction(TransactionData transactionData) {
-        propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
-    }
 }

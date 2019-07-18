@@ -243,7 +243,6 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         try {
             if (propagationReceiver != null) {
                 log.info("Shutting down {}", this.getClass().getSimpleName());
-                propagationReceiver.close();
                 zeroMQContext.term();
                 propagationReceiverThread.interrupt();
                 propagationReceiverThread.join();

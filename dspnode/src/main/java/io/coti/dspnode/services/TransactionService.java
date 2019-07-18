@@ -104,4 +104,10 @@ public class TransactionService extends BaseNodeTransactionService {
         }
 
     }
+
+    @Override
+    protected void propagateMissingTransaction(TransactionData transactionData) {
+        log.debug("Propagate missing transaction {} by {} to {}", transactionData.getHash(), NodeType.DspNode, NodeType.FullNode);
+        propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
+    }
 }

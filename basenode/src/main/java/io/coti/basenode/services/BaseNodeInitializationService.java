@@ -10,7 +10,6 @@ import io.coti.basenode.exceptions.TransactionSyncException;
 import io.coti.basenode.http.CustomHttpComponentsClientHttpRequestFactory;
 import io.coti.basenode.http.GetNodeRegistrationRequest;
 import io.coti.basenode.http.GetNodeRegistrationResponse;
-import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.NodeRegistrations;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
@@ -55,8 +54,6 @@ public abstract class BaseNodeInitializationService {
     private String kycServerPublicKey;
     @Autowired
     private Transactions transactions;
-    @Autowired
-    private AddressTransactionsHistories addressTransactionsHistories;
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
@@ -248,10 +245,6 @@ public abstract class BaseNodeInitializationService {
     }
 
     protected abstract NetworkNodeData createNodeProperties();
-
-    protected void propagateMissingTransaction(TransactionData transactionData) {
-        log.debug("Propagate missing transaction by base node");
-    }
 
     @PreDestroy
     public void shutdown() {
