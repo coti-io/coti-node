@@ -5,7 +5,7 @@ import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.ClusterStampData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.http.EntitiesBulkJsonResponse;
+import io.coti.basenode.http.AddHistoryEntitiesResponse;
 import io.coti.basenode.services.BaseNodeClusterStampService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,11 +96,11 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         });
 
         //TODO 7/7/2019 tomer: Consider sending in groups of size..
-        ResponseEntity<EntitiesBulkJsonResponse> storeEntitiesToStorageResponse = transactionService.storeEntities(confirmedTransactionsToStore);
+        ResponseEntity<AddHistoryEntitiesResponse> storeEntitiesToStorageResponse = transactionService.storeEntities(confirmedTransactionsToStore);
         if (storeEntitiesToStorageResponse.getStatusCode().equals(HttpStatus.OK)) {
-            Map<Hash, String> entitiesSentToStorage = storeEntitiesToStorageResponse.getBody().getHashToEntitiesFromDbMap();
+            Map<Hash, Boolean> entitiesSentToStorage = storeEntitiesToStorageResponse.getBody().getHashesToStoreResult();
             entitiesSentToStorage.entrySet().forEach(pair -> {
-                if (pair.getValue().equals("CREATED") || pair.getValue().equals("UPDATED")) {
+                if (pair.getValue().equals(Boolean.TRUE)) {
                     transactions.deleteByHash(pair.getKey());
                 }
             });
