@@ -16,6 +16,7 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.http.AddEntitiesBulkRequest;
+import io.coti.basenode.http.AddHistoryEntitiesResponse;
 import io.coti.basenode.http.EntitiesBulkJsonResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.AddressTransactionsHistories;
@@ -86,8 +87,8 @@ public class HistoryTransactionServiceTest {
 
 
 
-    public static final int NUMBER_OF_ADDRESSES_PER_SENDER = 8;
-    public static final int NUMBER_OF_SENDERS = 3;
+//    public static final int NUMBER_OF_ADDRESSES_PER_SENDER = 8;
+//    public static final int NUMBER_OF_SENDERS = 3;
 
     @Autowired
     private TransactionService transactionService;
@@ -96,7 +97,6 @@ public class HistoryTransactionServiceTest {
     private Transactions transactions;
 
     @Autowired
-//    private HistoryTransactionStorageConnector storageConnector;
     private StorageConnector storageConnector;
 
     @Autowired
@@ -409,10 +409,8 @@ public class HistoryTransactionServiceTest {
         String endpoint = "/transactions";
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         mapper.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
-        ResponseEntity<EntitiesBulkJsonResponse> storeResponseEntity = transactionService.storeEntitiesByType(storageServerAddress + endpoint, addEntitiesBulkRequest);
-        storeResponseEntity.getBody().getHashToEntitiesFromDbMap().entrySet().stream().forEach(entry -> {
-            Assert.assertTrue(entry.getValue().equals("CREATED") || entry.getValue().equals("UPDATED"));
-        });
+        ResponseEntity<AddHistoryEntitiesResponse> storeResponseEntity = transactionService.storeEntitiesByType(storageServerAddress + endpoint, addEntitiesBulkRequest);
+        Assert.assertTrue(storeResponseEntity.getBody().getHashesToStoreResult().values().stream().allMatch(Boolean::booleanValue));
     }
 
     private TransactionData generateTransactionDataWithRBTByAttachmentDate(Instant attachmentTime) {
@@ -423,7 +421,6 @@ public class HistoryTransactionServiceTest {
         ReceiverBaseTransactionData receiverBaseTransaction =
                 new ReceiverBaseTransactionData(generateRandomHash(), new BigDecimal(7), new BigDecimal(8), Instant.now());
         transactionData.getBaseTransactions().add(receiverBaseTransaction);
-//        @NotNull Hash receiverAddressHash = receiverBaseTransaction.getAddressHash();
         return transactionData;
     }
 
