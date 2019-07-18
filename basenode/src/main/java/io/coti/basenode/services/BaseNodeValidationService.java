@@ -113,7 +113,7 @@ public class BaseNodeValidationService implements IValidationService {
     }
 
     @Override
-    public boolean validateGetAddressesResponse(GetHistoryAddressesResponse getHistoryAddressesResponse, NodeType expectedNodetype){
+    public boolean validateGetAddressesResponse(GetHistoryAddressesResponse getHistoryAddressesResponse){
         //TODO 7/16/2019 astolia: verify expected node type
         boolean foundNotValid = getHistoryAddressesResponse.getAddressHashesToAddresses().entrySet().stream().anyMatch(entry ->
                 entry.getValue() != null && !entry.getKey().equals(entry.getValue().getHash())

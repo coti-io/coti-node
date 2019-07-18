@@ -30,7 +30,7 @@ public class HashTestUtils {
 
     public static List<Hash> generateListOfRandomAddressHashes(int listSize){
         List<Hash> hashes = new ArrayList<>();
-        for (int i = 0 ; i <= listSize ; i++){
+        for (int i = 0 ; i < listSize ; i++){
             hashes.add(generateRandomAddressHash());
         }
         return hashes;
@@ -51,7 +51,7 @@ public class HashTestUtils {
 
     public static List<Hash> generateListOfRandomHashes(int listSize){
         List<Hash> hashes = new ArrayList<>();
-        for (int i = 0 ; i <= listSize ; i++){
+        for (int i = 0 ; i < listSize ; i++){
             hashes.add(generateRandomHash());
         }
         return hashes;
@@ -59,7 +59,7 @@ public class HashTestUtils {
 
     public static Set<Hash> generateSetOfRandomHashes(int listSize){
         Set<Hash> hashes = new HashSet<>();
-        for (int i = 0 ; i <= listSize ; i++){
+        for (int i = 0 ; i < listSize ; i++){
             hashes.add(generateRandomHash());
         }
         return hashes;
