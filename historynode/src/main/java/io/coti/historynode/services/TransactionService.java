@@ -392,11 +392,11 @@ public class TransactionService extends BaseNodeTransactionService {
         return LocalDate.of(ldt.getYear(), ldt.getMonth(),ldt.getDayOfMonth());
     }
 
-    protected ResponseEntity<EntitiesBulkJsonResponse> storeEntitiesByType(String url, AddEntitiesBulkRequest addEntitiesBulkRequest) {
-        return storageConnector.storeInStorage(storageServerAddress + endpoint, addEntitiesBulkRequest, EntitiesBulkJsonResponse.class);
+    protected ResponseEntity<AddHistoryEntitiesResponse> storeEntitiesByType(String url, AddEntitiesBulkRequest addEntitiesBulkRequest) {
+        return storageConnector.storeInStorage(storageServerAddress + endpoint, addEntitiesBulkRequest, AddHistoryEntitiesResponse.class);
     }
 
-    public ResponseEntity<EntitiesBulkJsonResponse> storeEntities(List<? extends IEntity> entities) {
+    public ResponseEntity<AddHistoryEntitiesResponse> storeEntities(List<? extends IEntity> entities) {
 
         AddEntitiesBulkRequest addEntitiesBulkRequest = new AddEntitiesBulkRequest();
         entities.forEach(entity ->
@@ -409,7 +409,7 @@ public class TransactionService extends BaseNodeTransactionService {
                 }
         );
 
-        ResponseEntity<EntitiesBulkJsonResponse> storeEntitiesToStorageResponse = storeEntitiesByType(storageServerAddress + endpoint, addEntitiesBulkRequest);
+        ResponseEntity<AddHistoryEntitiesResponse> storeEntitiesToStorageResponse = storeEntitiesByType(storageServerAddress + endpoint, addEntitiesBulkRequest);
         return storeEntitiesToStorageResponse;
     }
 

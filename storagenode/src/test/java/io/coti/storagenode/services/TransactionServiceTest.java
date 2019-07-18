@@ -9,6 +9,7 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.http.AddHistoryEntitiesResponse;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.EntitiesBulkJsonResponse;
 import io.coti.basenode.http.GetHistoryTransactionsRequest;
@@ -242,27 +243,27 @@ public class TransactionServiceTest {
         txDataJsonToHash.put(transactionData1.getHash(),transactionAsJson1);
         txDataJsonToHash.put(transactionData2.getHash(),transactionAsJson2);
 
-//        ResponseEntity<IResponse> responseResponseEntity1 = transactionStorageValidationService.storeMultipleObjectsToStorage(txDataJsonToHash);
-//        Assert.assertTrue(responseResponseEntity1.getStatusCode().equals(HttpStatus.OK));
-//        Assert.assertTrue(((BaseResponse)responseResponseEntity1.getBody()).getStatus().equals("Success"));
-//        Assert.assertTrue(((EntitiesBulkJsonResponse)responseResponseEntity1.getBody()).getHashToEntitiesFromDbMap().keySet().containsAll(txDataJsonToHash.keySet()));
-//
-//        ResponseEntity<IResponse> responseEntity1 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData1.getHash(), ElasticSearchData.TRANSACTIONS);
-//        ResponseEntity<IResponse> responseEntity2 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData2.getHash(), ElasticSearchData.TRANSACTIONS);
-//
-//        String entityAsJsonFromES1 = String.valueOf(responseEntity1.getBody());
-//        TransactionData txDataDeserializedFromES1 = mapper.readValue(entityAsJsonFromES1, TransactionData.class);
-//        String entityAsJsonFromES2 = String.valueOf(responseEntity2.getBody());
-//        TransactionData txDataDeserializedFromES2 = mapper.readValue(entityAsJsonFromES2, TransactionData.class);
-//
-//        Assert.assertTrue(txDataDeserializedFromES1.equals(transactionData1));
-//        Assert.assertTrue(txDataDeserializedFromES2.equals(transactionData2));
-
-        // Add entries again as after retrieval they were removed from cold-storage, which is currently the same as main-storage
         ResponseEntity<IResponse> responseResponseEntity1 = transactionStorageValidationService.storeMultipleObjectsToStorage(txDataJsonToHash);
         Assert.assertTrue(responseResponseEntity1.getStatusCode().equals(HttpStatus.OK));
         Assert.assertTrue(((BaseResponse)responseResponseEntity1.getBody()).getStatus().equals("Success"));
-        Assert.assertTrue(((EntitiesBulkJsonResponse)responseResponseEntity1.getBody()).getHashToEntitiesFromDbMap().keySet().containsAll(txDataJsonToHash.keySet()));
+        Assert.assertTrue(((AddHistoryEntitiesResponse)responseResponseEntity1.getBody()).getHashesToStoreResult().values().stream().allMatch(Boolean::booleanValue));
+
+        ResponseEntity<IResponse> responseEntity1 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData1.getHash(), ElasticSearchData.TRANSACTIONS);
+        ResponseEntity<IResponse> responseEntity2 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData2.getHash(), ElasticSearchData.TRANSACTIONS);
+
+        String entityAsJsonFromES1 = String.valueOf(responseEntity1.getBody());
+        TransactionData txDataDeserializedFromES1 = mapper.readValue(entityAsJsonFromES1, TransactionData.class);
+        String entityAsJsonFromES2 = String.valueOf(responseEntity2.getBody());
+        TransactionData txDataDeserializedFromES2 = mapper.readValue(entityAsJsonFromES2, TransactionData.class);
+
+        Assert.assertTrue(txDataDeserializedFromES1.equals(transactionData1));
+        Assert.assertTrue(txDataDeserializedFromES2.equals(transactionData2));
+
+        // Add entries again as after retrieval they were removed from cold-storage, which is currently the same as main-storage
+        responseResponseEntity1 = transactionStorageValidationService.storeMultipleObjectsToStorage(txDataJsonToHash);
+        Assert.assertTrue(responseResponseEntity1.getStatusCode().equals(HttpStatus.OK));
+        Assert.assertTrue(((BaseResponse)responseResponseEntity1.getBody()).getStatus().equals("Success"));
+        Assert.assertTrue(((AddHistoryEntitiesResponse)responseResponseEntity1.getBody()).getHashesToStoreResult().values().stream().allMatch(Boolean::booleanValue));
 
 
         List<Hash> hashes = new ArrayList<>();
@@ -270,7 +271,6 @@ public class TransactionServiceTest {
         hashes.add( transactionData2.getHash() );
 
         GetHistoryTransactionsRequest bulkRequest = new GetHistoryTransactionsRequest(hashes);
-//        GetHistoryTransactionsResponse entitiesBulkResponse = (GetHistoryTransactionsResponse) transactionStorageValidationService.retrieveMultipleObjectsFromStorage(bulkRequest).getBody();
         EntitiesBulkJsonResponse entitiesBulkResponse = (EntitiesBulkJsonResponse) transactionStorageValidationService.retrieveMultipleObjectsFromStorage(bulkRequest).getBody();
 
 

@@ -137,46 +137,55 @@ public abstract class EntityStorageService implements IEntityStorageService
     @Override
     public ResponseEntity<IResponse> storeMultipleObjectsToStorage(Map<Hash, String> hashToObjectJsonDataMap)
     {
-        Map<Hash,Boolean> entityFailedConversionHashToFalse = new HashMap<>();
+        Map<Hash,Boolean> entityFailedVerificationHashToFalse = new HashMap<>();
         // Validation of the request itself
-        ResponseEntity<IResponse> response = validateStoreMultipleObjectsToStorage(hashToObjectJsonDataMap);
-        if( !isResponseOK(response) )
-            return response;
+        ResponseEntity<IResponse> response = validateStoreMultipleObjectsToStorage(hashToObjectJsonDataMap, entityFailedVerificationHashToFalse);
+        if( !isResponseOK(response) ) {
+            return convertResponseStatusToBooleanAndAddFailedHashes(response, entityFailedVerificationHashToFalse);
+        }
 
         // Store data from approved request into ongoing storage
         response = objectService.insertMultiObjects(hashToObjectJsonDataMap, false, objectType);
-        if( !isResponseOK(response) )
-            return response; // TODO consider some retry mechanism
-        else
-        {
+        if( !isResponseOK(response) ) {
+            return convertResponseStatusToBooleanAndAddFailedHashes(response, entityFailedVerificationHashToFalse);
+        } else {
             response = objectService.insertMultiObjects(hashToObjectJsonDataMap, true, objectType);
-            if( !isResponseOK(response) )
-                return response; // TODO consider some retry mechanism, consider removing from ongoing storage
+            if( !isResponseOK(response) ) {
+                // TODO consider some retry mechanism, consider removing from ongoing storage
+                return convertResponseStatusToBooleanAndAddFailedHashes(response, entityFailedVerificationHashToFalse);
+            }
         }
-        //TODO 7/16/2019 tomer: Consider changing HashMap from String to Boolean here
-        return response;
+        return convertResponseStatusToBooleanAndAddFailedHashes(response, entityFailedVerificationHashToFalse);
     }
 
     private ResponseEntity<IResponse> validateStoreObjectToStorage(Hash hash, String objectJson)
     {
         Map<Hash, String> hashToObjectJsonDataMap = new HashMap<>();
+        Map<Hash,Boolean> entityFailedVerificationHashToFalse = new HashMap<>();
         hashToObjectJsonDataMap.put(hash, objectJson);
-        // Validate consensus decision on provided data from history nodes' master + Data Integrity
-        ResponseEntity<IResponse> response = validateStoreMultipleObjectsToStorage(hashToObjectJsonDataMap);
+        // Validate Data Integrity
+        ResponseEntity<IResponse> response = validateStoreMultipleObjectsToStorage(hashToObjectJsonDataMap, entityFailedVerificationHashToFalse);
         return response;
     }
 
 
-    private ResponseEntity<IResponse> validateStoreMultipleObjectsToStorage(Map<Hash, String> hashToObjectJsonDataMap)
+    private ResponseEntity<IResponse> validateStoreMultipleObjectsToStorage(Map<Hash, String> hashToObjectJsonDataMap, Map<Hash,Boolean> entityFailedVerificationHashToFalse)
     {
-        // Validate consensus decision on provided Transactions data from history nodes' master
         ResponseEntity<IResponse> response = new ResponseEntity(HttpStatus.OK);
 
-        // Additional Validations after consensus checks - Data integrity
-//        if( !hashToObjectJsonDataMap.entrySet().stream().allMatch( entry -> isObjectDIOK(entry.getKey(), entry.getValue()) ) )
-//        {
-//            response = new ResponseEntity(HttpStatus.EXPECTATION_FAILED);
-//        }
+        // Validations checks - Data integrity
+        hashToObjectJsonDataMap.entrySet().stream().forEach(entry-> {
+            if(!isObjectDIOK(entry.getKey(), entry.getValue())) {
+                entityFailedVerificationHashToFalse.put(entry.getKey(), Boolean.FALSE);
+            }
+        });
+        entityFailedVerificationHashToFalse.entrySet().stream().forEach(entry-> {
+            hashToObjectJsonDataMap.remove(entry.getKey());
+        });
+        if(hashToObjectJsonDataMap.isEmpty()) {
+            response = new ResponseEntity(HttpStatus.EXPECTATION_FAILED);
+        }
+
         return response;
     }
 
