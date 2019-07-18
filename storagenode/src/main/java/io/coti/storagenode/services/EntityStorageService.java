@@ -1,6 +1,7 @@
 package io.coti.storagenode.services;
 
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.http.AddHistoryEntitiesResponse;
 import io.coti.basenode.http.EntitiesBulkJsonResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.data.enums.ElasticSearchData;
@@ -136,6 +137,7 @@ public abstract class EntityStorageService implements IEntityStorageService
     @Override
     public ResponseEntity<IResponse> storeMultipleObjectsToStorage(Map<Hash, String> hashToObjectJsonDataMap)
     {
+        Map<Hash,Boolean> entityFailedConversionHashToFalse = new HashMap<>();
         // Validation of the request itself
         ResponseEntity<IResponse> response = validateStoreMultipleObjectsToStorage(hashToObjectJsonDataMap);
         if( !isResponseOK(response) )
@@ -251,6 +253,20 @@ public abstract class EntityStorageService implements IEntityStorageService
                     }
                 }
         );
+    }
+
+    protected ResponseEntity<IResponse> convertResponseStatusToBooleanAndAddFailedHashes(ResponseEntity<IResponse> entityResponse, Map<Hash,Boolean> entityFailedConversionHashToFalse){
+        Map<Hash, String> entityResponseBodyMap = ((EntitiesBulkJsonResponse)entityResponse.getBody()).getHashToEntitiesFromDbMap();
+        Map<Hash, Boolean> newResponseBody = new HashMap<>();
+        entityResponseBodyMap.entrySet().forEach( entry -> {
+            newResponseBody.put(entry.getKey(),convertElasticWriteStatusToBoolean(entry.getValue()));
+        });
+        newResponseBody.putAll(entityFailedConversionHashToFalse);
+        return ResponseEntity.status(entityResponse.getStatusCode()).body(new AddHistoryEntitiesResponse(newResponseBody));
+    }
+
+    private Boolean convertElasticWriteStatusToBoolean(String writeStatus){
+        return writeStatus.equals("CREATED") || writeStatus.equals("UPDATED") ? Boolean.TRUE : Boolean.FALSE;
     }
 
     protected abstract IResponse getEmptyEntitiesBulkResponse();

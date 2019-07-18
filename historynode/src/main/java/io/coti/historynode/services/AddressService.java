@@ -51,30 +51,29 @@ public class AddressService extends BaseNodeAddressService{//extends EntityServi
     }
 
     public void handleClusterStsmpAddressesStorage(){
-        // read all addresses from rocksdb
+        List<AddressData> addressesData = new ArrayList<>();
+        addresses.forEach(addressesData::add);
         // send all addresses to storage
         // Storage: store addresses
         // receive response from storage node.
         //delete addresses that were successfully stored.
-        List<AddressData> addressesData = new ArrayList<>();
-        addresses.forEach(addressesData::add);
 
         //TODO 7/15/2019 astolia: sign
         //TODO 7/15/2019 astolia: should be chunked.
 //        getAddressesFromStorage(addressesData);
-//        AddAddressesBulkRequest addAddressesBulkRequest = new AddAddressesBulkRequest(addressesData);
-//        ResponseEntity<AddAddressesBulkResponse> response = storageConnector.storeInStorage("TODO",addAddressesBulkRequest, AddAddressesBulkResponse.class);
+//        AddHistoryAddressesRequest addAddressesBulkRequest = new AddHistoryAddressesRequest(addressesData);
+//        ResponseEntity<AddHistoryAddressesResponse> response = storageConnector.storeInStorage("TODO",addAddressesBulkRequest, AddHistoryAddressesResponse.class);
     }
 
     public ResponseEntity<GetHistoryAddressesResponse> getAddresses(GetHistoryAddressesRequest getHistoryAddressesRequest) {
-//        if(!addressCrypto.verifyGetAddressRequestSignatureMessage(getHistoryAddressesRequest)) {
-        if(!addressesRequestCrypto.verifySignature(getHistoryAddressesRequest)) {
+        if(getHistoryAddressesRequest.getSignature() == null || getHistoryAddressesRequest.getSignerHash() == null || !addressesRequestCrypto.verifySignature(getHistoryAddressesRequest)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new GetHistoryAddressesResponse(new LinkedHashMap<>(),BaseNodeHttpStringConstants.INVALID_SIGNATURE, BaseNodeHttpStringConstants.STATUS_ERROR));
         }
 
-        List<Hash> addressesHashes = getHistoryAddressesRequest.getAddressesHash();
-        Map<Hash,AddressData> addressToAddressDataResponse = populateAndRemoveFoundAddresses(addressesHashes);
-        ResponseEntity<GetHistoryAddressesResponse> storageResponse = getAddressesFromStorage(addressesHashes);
+        List<Hash> addressesHashesToGetFromStorage = getHistoryAddressesRequest.getAddressesHash();
+        Map<Hash,AddressData> addressToAddressDataFromDB = populateAndRemoveFoundAddresses(addressesHashesToGetFromStorage);
+        ResponseEntity<GetHistoryAddressesResponse> storageResponse = getAddressesFromStorage(addressesHashesToGetFromStorage);
+
         GetHistoryAddressesResponse getHistoryAddressesResponse =  storageResponse.getBody();
 
         //TODO 7/16/2019 astolia: check signed by storage
@@ -86,8 +85,27 @@ public class AddressService extends BaseNodeAddressService{//extends EntityServi
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new GetHistoryAddressesResponse(new LinkedHashMap<>(),BaseNodeHttpStringConstants.INVALID_SIGNATURE, BaseNodeHttpStringConstants.STATUS_ERROR));
         }
 
-        addressToAddressDataResponse.putAll((storageResponse.getBody()).getAddressHashesToAddresses());
-        return ResponseEntity.status(HttpStatus.OK).body(new GetHistoryAddressesResponse(addressToAddressDataResponse, "Addresses successfully retrieved", BaseNodeHttpStringConstants.STATUS_SUCCESS));
+        //addressToAddressDataResponse.putAll(reorderHashResponses(getHistoryAddressesRequest.getAddressesHash(), storageResponse.getBody().getAddressHashesToAddresses()));
+        return ResponseEntity.
+                status(HttpStatus.OK).
+                body(new GetHistoryAddressesResponse(
+                        reorderHashResponses(getHistoryAddressesRequest.getAddressesHash(),
+                                addressToAddressDataFromDB,
+                                storageResponse.getBody().getAddressHashesToAddresses()),
+                        "Addresses successfully retrieved",
+                        BaseNodeHttpStringConstants.STATUS_SUCCESS));
+    }
+
+    private Map<Hash, AddressData> reorderHashResponses(List<Hash> originallyOrderedAddressHashes, Map<Hash, AddressData> addressHashesToAddressesFromDB, Map<Hash, AddressData> addressHashesToAddressesFromStorage) {
+        Map<Hash, AddressData> orderedResponse = new LinkedHashMap<>();
+        originallyOrderedAddressHashes.stream().forEach( hash -> {
+            AddressData addressData = addressHashesToAddressesFromDB.get(hash);
+            if(addressData == null){
+                addressData = addressHashesToAddressesFromStorage.get(hash);
+            }
+            orderedResponse.put(hash,addressData);
+        });
+        return orderedResponse;
     }
 
     private Map<Hash,AddressData> populateAndRemoveFoundAddresses(List<Hash> addressesHashes){
