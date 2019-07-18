@@ -7,6 +7,7 @@ import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -17,7 +18,8 @@ public class GetHistoryAddressesRequest extends Request implements ISignable, IS
     private Hash signerHash;
     private SignatureData signature;
 
-    private GetHistoryAddressesRequest() {
+    public GetHistoryAddressesRequest() {
+        this.addressesHash = new ArrayList<>();
     }
 
     public GetHistoryAddressesRequest(List<Hash> addressesHash) {
