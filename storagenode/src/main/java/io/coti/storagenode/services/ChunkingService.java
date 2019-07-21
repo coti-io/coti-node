@@ -3,7 +3,7 @@ package io.coti.storagenode.services;
 import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.http.GetHashToTransactioResponse;
+import io.coti.basenode.http.GetHashToTransactionResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,10 +25,21 @@ public class ChunkingService {
         try {
             ServletOutputStream output = response.getOutputStream();
             for(Map.Entry<Hash,TransactionData> entry : hashToTransactionData.entrySet()){
-                //TODO 7/10/2019 astolia: not sure about the  'GetHashToTransactioResponse' solution.
-                output.write(jacksonSerializer.serialize(new GetHashToTransactioResponse(entry.getKey(),entry.getValue())));
+                //TODO 7/10/2019 astolia: not sure about the  'GetHashToTransactionResponse' solution.
+                output.write(jacksonSerializer.serialize(new GetHashToTransactionResponse(entry.getKey(),entry.getValue())));
                 output.flush();
             }
+        }
+        catch (Exception e) {
+            log.error("Error sending transaction batch");
+            log.error(e.getMessage());
+        }
+    }
+
+    public void getTransaction(GetHashToTransactionResponse entry, ServletOutputStream output) {
+        try {
+            output.write(jacksonSerializer.serialize(entry));
+            output.flush();
         }
         catch (Exception e) {
             log.error("Error sending transaction batch");

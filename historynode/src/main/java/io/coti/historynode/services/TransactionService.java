@@ -31,7 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -47,8 +46,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.EMPTY_SEARCH_RESULT;
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.TRANSACTIONS_NOT_FOUND;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 
 
 @Slf4j
@@ -91,27 +89,30 @@ public class TransactionService extends BaseNodeTransactionService {
         endpoint = "/transactions";
     }
 
-    @Scheduled(fixedRate = 1000)
-    private void checkAttachedTransactions() {
-        if (!isValidatorRunning.compareAndSet(false, true)) {
-            return;
-        }
-        while (!transactionsToValidate.isEmpty()) {
-            TransactionData transactionData = transactionsToValidate.remove();
-            log.debug("History node Fully Checking transaction: {}", transactionData.getHash());
-            if( validationService.fullValidation(transactionData) ) {
-                // Update Indexing structures with details from the new transaction
-                addToHistoryTransactionIndexes(transactionData);
-            }
-        }
-        isValidatorRunning.set(false);
-    }
+//    @Scheduled(fixedRate = 1000)
+//    private void checkAttachedTransactions() {
+//        if (!isValidatorRunning.compareAndSet(false, true)) {
+//            return;
+//        }
+//        while (!transactionsToValidate.isEmpty()) {
+//            TransactionData transactionData = transactionsToValidate.remove();
+//            log.debug("History node Fully Checking transaction: {}", transactionData.getHash());
+//            if( validationService.fullValidation(transactionData) ) {
+//                // Update Indexing structures with details from the new transaction
+//                addToHistoryTransactionIndexes(transactionData);
+//            }
+//        }
+//        isValidatorRunning.set(false);
+//    }
 
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
         super.continueHandlePropagatedTransaction(transactionData);
         log.debug("Continue to handle propagated transaction {} by history node", transactionData.getHash());
-        transactionsToValidate.add(transactionData);
+        if( validationService.fullValidation(transactionData) ) {
+            // Update Indexing structures with details from the new transaction
+            addToHistoryTransactionIndexes(transactionData);
+        }
     }
 
     public List<Hash> getLocalTransactionsUnconfirmed() {
@@ -155,9 +156,9 @@ public class TransactionService extends BaseNodeTransactionService {
     public ResponseEntity<IResponse> getTransactionsByAddress(GetTransactionsByAddressRequest getTransactionsByAddressRequest) {
         //TODO 7/2/2019 tomer: Commented for initial integration testing, uncomment after adding signature in tests
         // Verify signature
-//        if(!transactionsRequestCrypto.verifySignature(getTransactionsByAddressRequest)) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
-//        }
+        if (!transactionsRequestCrypto.verifySignature(getTransactionsByAddressRequest)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
+        }
 
         List<Hash> transactionsHashes = getTransactionsHashesToRetrieve(getTransactionsByAddressRequest);
         return getTransactions(transactionsHashes);
