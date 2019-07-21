@@ -29,9 +29,11 @@ import io.coti.historynode.model.AddressTransactionsByDates;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
@@ -69,6 +71,8 @@ public class TransactionService extends BaseNodeTransactionService {
     private TransactionsRequestCrypto transactionsRequestCrypto;
     @Autowired
     private IValidationService validationService;
+    @Autowired
+    private ChunkingService chunkingService;
 
     protected String endpoint = null;
     private ObjectMapper mapper;
@@ -246,7 +250,17 @@ public class TransactionService extends BaseNodeTransactionService {
         GetHistoryTransactionsRequest getHistoryTransactionsRequest = new GetHistoryTransactionsRequest(transactionsHashes);
         RestTemplate restTemplate = new RestTemplate();
         endpoint = "/transactions";
-        ResponseEntity responseEntity = storageConnector.retrieveFromStorage(storageServerAddress + endpoint, getHistoryTransactionsRequest, EntitiesBulkJsonResponse.class);
+        //TODO 7/21/2019 tomer: Update to use chunking service
+        boolean notUsingChunksYet = true;
+        ResponseEntity responseEntity = null;
+        if(notUsingChunksYet) {
+            responseEntity = storageConnector.retrieveFromStorage(storageServerAddress + endpoint, getHistoryTransactionsRequest, EntitiesBulkJsonResponse.class);
+        } else {
+            ResponseExtractor transactionResponseExtractor = chunkingService.getTransactionResponseExtractor();
+            Object obj = restTemplate.execute(storageServerAddress + endpoint, HttpMethod.GET, null, transactionResponseExtractor);
+            //TODO 7/21/2019 tomer: how to return the data itself to the caller of the history node end-point
+        }
+
         return responseEntity;
     }
 
