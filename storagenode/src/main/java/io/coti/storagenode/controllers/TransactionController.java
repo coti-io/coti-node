@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
@@ -41,9 +42,8 @@ public class TransactionController {
     }
 
     @RequestMapping(value = "/transactionsInBlocks", method = POST)
-    public ResponseEntity<IResponse> getMultipleTransactionsInBlocksFromStorage(@Valid @RequestBody GetHistoryTransactionsRequest getHistoryTransactionsRequest) {
-        ResponseEntity<IResponse> responseResponseEntity = transactionStorageService.retrieveMultipleObjectsInBlocksFromStorage(getHistoryTransactionsRequest);
-        return responseResponseEntity;
+    public void getMultipleTransactionsInBlocksFromStorage(@Valid @RequestBody GetHistoryTransactionsRequest getHistoryTransactionsRequest, HttpServletResponse response) {
+       transactionStorageService.retrieveMultipleObjectsInBlocksFromStorage(getHistoryTransactionsRequest, response);
     }
 
 //    //TODO 7/10/2019 astolia: Dummy controller for testing

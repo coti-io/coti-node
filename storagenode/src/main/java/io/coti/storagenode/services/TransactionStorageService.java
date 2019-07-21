@@ -8,6 +8,7 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.EntitiesBulkJsonResponse;
+import io.coti.basenode.http.GetHashToTransactionResponse;
 import io.coti.basenode.http.GetHistoryTransactionsRequest;
 import io.coti.basenode.http.GetHistoryTransactionsResponse;
 import io.coti.basenode.http.interfaces.IResponse;
@@ -24,6 +25,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -47,9 +50,12 @@ public class TransactionStorageService extends EntityStorageService implements I
     private BaseNodeValidationService validationService;
     @Autowired
     private ObjectService objectService;
+    @Autowired
+    private ChunkingService chunkingService;
+
 
     private ObjectMapper mapper;
-    private BlockingQueue<Pair<Hash, TransactionData>> retrievedTransactions;
+    private BlockingQueue<GetHashToTransactionResponse> retrievedTransactions;
     private Thread retrievedTransactionsThread;
     private ThreadPoolExecutor executorPool;
 
@@ -66,8 +72,8 @@ public class TransactionStorageService extends EntityStorageService implements I
 
         //TODO 7/15/2019 tomer:
         retrievedTransactions = new LinkedBlockingDeque<>();
-        retrievedTransactionsThread = new Thread(this::updateRetrievedTransactions);
-        retrievedTransactionsThread.start();
+//        retrievedTransactionsThread = new Thread(this::updateRetrievedTransactions);
+//        retrievedTransactionsThread.start();
 
         ThreadFactory threadFactory = Executors.defaultThreadFactory();
         RejectedExecutionHandlerRetrievingBlocks rejectionHandler = new RejectedExecutionHandlerRetrievingBlocks();
@@ -116,35 +122,52 @@ public class TransactionStorageService extends EntityStorageService implements I
         return super.retrieveMultipleObjectsFromStorage(getHistoryTransactionsRequest.getHashes());
     }
 
-    public ResponseEntity<IResponse> retrieveMultipleObjectsInBlocksFromStorage(GetHistoryTransactionsRequest getHistoryTransactionsRequest) {
-    return retrieveMultipleTransactionsInBlocksFromStorage(getHistoryTransactionsRequest.getHashes(), new GetHistoryTransactionsResponse());
+    public void retrieveMultipleObjectsInBlocksFromStorage(GetHistoryTransactionsRequest getHistoryTransactionsRequest, HttpServletResponse response) {
+        retrieveMultipleTransactionsInBlocksFromStorage(getHistoryTransactionsRequest.getHashes(), new GetHistoryTransactionsResponse(), response);
 }
 
-    private ResponseEntity<IResponse> retrieveMultipleTransactionsInBlocksFromStorage(List<Hash> hashes, GetHistoryTransactionsResponse getHistoryTransactionsResponse) {
+    private void retrieveMultipleTransactionsInBlocksFromStorage(List<Hash> hashes, GetHistoryTransactionsResponse getHistoryTransactionsResponse, HttpServletResponse response) {
         List<List<Hash>> blocksOfHashes = divideHashesToBlocks(hashes);
         if(blocksOfHashes==null) {
-            //TODO 7/14/2019 tomer: Add to blocking queue
-//            return ResponseEntity.status(HttpStatus.OK).body(new GetHistoryTransactionsResponse(new HashMap<>()));
-            return queueTransactionsDataBlock(new GetHistoryTransactionsResponse(new HashMap<>()), HttpStatus.OK);
+            queueTransactionsDataBlock(new GetHistoryTransactionsResponse(new HashMap<>()), HttpStatus.OK);
+            return;
         }
 
         int blocksOfHashesAmount = blocksOfHashes.size();
         for( int blockNumber = 0 ; blockNumber < blocksOfHashesAmount ; blockNumber++) {
             Runnable worker = new WorkerThread(getHistoryTransactionsResponse, blocksOfHashes, blockNumber);
             executorPool.execute(worker);
-//            getTransactionsDataBlock(getHistoryTransactionsResponse, blocksOfHashes, blockNumber);
         }
+
+//        while(!Thread.currentThread().isInterrupted()) {
+//            try {
+//                Pair<Hash, TransactionData> hashTransactionDataPair = retrievedTransactions.take();
+//
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
 
         try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
+            ServletOutputStream output = response.getOutputStream();
+            retrievedTransactionsThread = new Thread(new updateRetrievedTransactionsThread(output));
+            retrievedTransactionsThread.start();
+        } catch (IOException e) {
             e.printStackTrace();
         }
+
         executorPool.shutdown();
+        try{
+            if(!executorPool.awaitTermination(500, TimeUnit.MILLISECONDS)) {
+                executorPool.shutdown();
+            }
+        } catch (InterruptedException e) {
+            executorPool.shutdown();
+        }
 
-
-        return null;
     }
+
+
 
     private void getTransactionsDataBlock(GetHistoryTransactionsResponse getHistoryTransactionsResponse, List<List<Hash>> blocksOfHashes, int blockNumber) {
         List<Hash> blockHashes = blocksOfHashes.get(blockNumber);
@@ -193,34 +216,13 @@ public class TransactionStorageService extends EntityStorageService implements I
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Pair<Hash, TransactionData> transactionDataPair = new Pair<>(entry.getKey(), transactionData);
+        GetHashToTransactionResponse transactionDataPair = new GetHashToTransactionResponse(entry.getKey(), transactionData);
 
         try {
             retrievedTransactions.put(transactionDataPair);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-    }
-
-    private void updateRetrievedTransactions() {
-        while(!Thread.currentThread().isInterrupted()) {
-            try {
-                Pair<Hash, TransactionData> transactionDataPair = retrievedTransactions.take();
-                sendTransactionDataPair(transactionDataPair);
-            } catch (InterruptedException e) {
-//                e.printStackTrace();
-                Thread.currentThread().interrupt();
-            }
-        }
-        LinkedList<Pair<Hash, TransactionData>> remainingTransactionDataPairs = new LinkedList<>();
-        retrievedTransactions.drainTo(remainingTransactionDataPairs);
-        if(!remainingTransactionDataPairs.isEmpty()) {
-            remainingTransactionDataPairs.forEach(this::sendTransactionDataPair);
-        }
-    }
-
-    private void sendTransactionDataPair(Pair<Hash, TransactionData> transactionDataPair) {
-        //TODO 7/15/2019 tomer: interface with methods for sending transactionDataPair in chunks to the history node
     }
 
 
@@ -248,6 +250,37 @@ public class TransactionStorageService extends EntityStorageService implements I
         @Override
         public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
             System.out.println(r.toString() + " is rejected");
+        }
+    }
+
+    private class updateRetrievedTransactionsThread implements Runnable {
+        ServletOutputStream output;
+
+        public updateRetrievedTransactionsThread(ServletOutputStream output) {
+            this.output = output;
+        }
+
+        @Override
+        public void run() {
+            updateRetrievedTransactions(this.output);
+        }
+    }
+
+    private void updateRetrievedTransactions(ServletOutputStream output) {
+        while(!Thread.currentThread().isInterrupted()) {
+            try {
+                GetHashToTransactionResponse transactionDataPair = retrievedTransactions.take();
+                chunkingService.getTransaction(transactionDataPair, output);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        LinkedList<GetHashToTransactionResponse> remainingTransactionDataPairs = new LinkedList<>();
+        retrievedTransactions.drainTo(remainingTransactionDataPairs);
+        if(!remainingTransactionDataPairs.isEmpty()) {
+            for (GetHashToTransactionResponse remainingTransactionDataPair : remainingTransactionDataPairs) {
+                chunkingService.getTransaction(remainingTransactionDataPair, output);
+            }
         }
     }
 }
