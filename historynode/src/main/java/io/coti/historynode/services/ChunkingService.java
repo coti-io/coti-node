@@ -2,7 +2,7 @@ package io.coti.historynode.services;
 
 import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.exceptions.TransactionSyncException;
-import io.coti.basenode.http.GetHashToTransactioResponse;
+import io.coti.basenode.http.GetHashToTransactionResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,7 +24,7 @@ public class ChunkingService {
 
     private ResponseExtractor getTransactionResponseExtractor(){
         log.info("Starting to get missing transactions");
-        List<GetHashToTransactioResponse> bulkResponses = new ArrayList<>();
+        List<GetHashToTransactionResponse> bulkResponses = new ArrayList<>();
 
         return response -> {
             byte[] buf = new byte[Math.toIntExact(MAXIMUM_BUFFER_SIZE)];
@@ -32,7 +32,7 @@ public class ChunkingService {
             int n;
             while ((n = response.getBody().read(buf, offset, buf.length)) > 0) {
                 try {
-                    GetHashToTransactioResponse retrievedHashAndTransaciton = jacksonSerializer.deserialize(buf);
+                    GetHashToTransactionResponse retrievedHashAndTransaciton = jacksonSerializer.deserialize(buf);
                     if (retrievedHashAndTransaciton != null) {
                         bulkResponses.add(retrievedHashAndTransaciton);
                         //TODO 7/10/2019 astolia: handled arrived data here

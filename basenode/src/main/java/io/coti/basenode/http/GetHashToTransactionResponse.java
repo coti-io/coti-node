@@ -6,14 +6,14 @@ import io.coti.basenode.data.interfaces.IPropagatable;
 import lombok.Data;
 
 @Data
-public class GetHashToTransactioResponse implements IPropagatable {
+public class GetHashToTransactionResponse implements IPropagatable {
     private TransactionData transactionData;
     private Hash hash;
 
-    public GetHashToTransactioResponse(){
+    public GetHashToTransactionResponse(){
     }
 
-    public GetHashToTransactioResponse(Hash hash, TransactionData transactionData){
+    public GetHashToTransactionResponse(Hash hash, TransactionData transactionData){
         this.hash = hash;
         this.transactionData = transactionData;
     }
