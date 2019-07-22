@@ -29,9 +29,11 @@ import io.coti.historynode.model.AddressTransactionsByDates;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
@@ -42,7 +44,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -69,17 +70,15 @@ public class TransactionService extends BaseNodeTransactionService {
     private TransactionsRequestCrypto transactionsRequestCrypto;
     @Autowired
     private IValidationService validationService;
+    @Autowired
+    private ChunkingService chunkingService;
 
     protected String endpoint = null;
     private ObjectMapper mapper;
 
-    private Queue<TransactionData> transactionsToValidate;
-    private AtomicBoolean isValidatorRunning;
 
     @PostConstruct
     public void init() {
-        transactionsToValidate = new PriorityQueue<>();
-        isValidatorRunning = new AtomicBoolean(false);
         super.init();
         mapper = new ObjectMapper()
                 .registerModule(new ParameterNamesModule())
@@ -89,21 +88,6 @@ public class TransactionService extends BaseNodeTransactionService {
         endpoint = "/transactions";
     }
 
-//    @Scheduled(fixedRate = 1000)
-//    private void checkAttachedTransactions() {
-//        if (!isValidatorRunning.compareAndSet(false, true)) {
-//            return;
-//        }
-//        while (!transactionsToValidate.isEmpty()) {
-//            TransactionData transactionData = transactionsToValidate.remove();
-//            log.debug("History node Fully Checking transaction: {}", transactionData.getHash());
-//            if( validationService.fullValidation(transactionData) ) {
-//                // Update Indexing structures with details from the new transaction
-//                addToHistoryTransactionIndexes(transactionData);
-//            }
-//        }
-//        isValidatorRunning.set(false);
-//    }
 
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
@@ -154,7 +138,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
 
     public ResponseEntity<IResponse> getTransactionsByAddress(GetTransactionsByAddressRequest getTransactionsByAddressRequest) {
-        //TODO 7/2/2019 tomer: Commented for initial integration testing, uncomment after adding signature in tests
+        //TODO 7/2/2019 tomer: Commented for initial integration testing, uncomment after adding signature in tests or adding mocks
         // Verify signature
         if (!transactionsRequestCrypto.verifySignature(getTransactionsByAddressRequest)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
@@ -183,9 +167,11 @@ public class TransactionService extends BaseNodeTransactionService {
         // Retrieve transactions from local DB, Storage and merge results
         List<Hash> transactionsHashesToRetrieveFromStorage = new ArrayList<>();
         HashMap<Hash, TransactionData> retrievedTransactionsFromDB = getTransactionsFromLocal(transactionsHashes, transactionsHashesToRetrieveFromStorage);
+        //TODO 7/22/2019 tomer: verify return in case of chunking, consider whether it should be streamed here as well
         HashMap<Hash, TransactionData> retrievedTransactionsFromElasticSearch = getTransactionFromElasticSearch(transactionsHashesToRetrieveFromStorage);
         HashMap<Hash, TransactionData> collectedTransactions = new HashMap<>(retrievedTransactionsFromDB);
         collectedTransactions.putAll(retrievedTransactionsFromElasticSearch);
+        //TODO 7/22/2019 tomer: consider matching results with expected transactions
         return collectedTransactions;
     }
 
@@ -230,7 +216,7 @@ public class TransactionService extends BaseNodeTransactionService {
                     retrievedTransactions.put(transactionHash, transactionData);
                 } catch (IOException e) {
                     log.error("Failed to read value for {}", transactionHash);
-                    e.printStackTrace();
+                    log.error("Context:", e);
                     retrievedTransactions.putIfAbsent(transactionHash, null);
                 }
             } else {
@@ -246,7 +232,17 @@ public class TransactionService extends BaseNodeTransactionService {
         GetHistoryTransactionsRequest getHistoryTransactionsRequest = new GetHistoryTransactionsRequest(transactionsHashes);
         RestTemplate restTemplate = new RestTemplate();
         endpoint = "/transactions";
-        ResponseEntity responseEntity = storageConnector.retrieveFromStorage(storageServerAddress + endpoint, getHistoryTransactionsRequest, EntitiesBulkJsonResponse.class);
+        //TODO 7/21/2019 tomer: Update to use chunking service
+        boolean notUsingChunksYet = true;
+        ResponseEntity responseEntity = null;
+        if(notUsingChunksYet) {
+            responseEntity = storageConnector.retrieveFromStorage(storageServerAddress + endpoint, getHistoryTransactionsRequest, EntitiesBulkJsonResponse.class);
+        } else {
+            ResponseExtractor transactionResponseExtractor = chunkingService.getTransactionResponseExtractor();
+            Object obj = restTemplate.execute(storageServerAddress + endpoint, HttpMethod.GET, null, transactionResponseExtractor);
+            //TODO 7/21/2019 tomer: how to return the data itself to the caller of the history node end-point
+        }
+
         return responseEntity;
     }
 
@@ -275,19 +271,6 @@ public class TransactionService extends BaseNodeTransactionService {
         return addressTransactionsByDate.getTransactionsAddresses().stream().collect(Collectors.toList());
     }
 
-    private List<Hash> getTransactionsHashesByDates(Instant startDate, Instant endDate) {
-        if(startDate==null || endDate==null || startDate.isAfter(endDate)) {
-            return new ArrayList<>();
-        }
-        LocalDate localStartDate = getLocalDateByInstant(startDate);
-        LocalDate localEndDate = getLocalDateByInstant(endDate);
-        List<LocalDate> localDatesBetween = getLocalDatesBetween(localStartDate, localEndDate);
-
-        List<Hash> collectedTransactionsHashes = localDatesBetween.stream().map(localDate -> addressTransactionsByDates.getByHash(getHashByLocalDate(localDate)))
-                .flatMap(transactionsByDate -> transactionsByDate.getTransactionsAddresses().stream())
-                .collect(Collectors.toList());
-        return collectedTransactionsHashes;
-    }
 
     private Hash getHashByLocalDate(LocalDate localDate) {
         return CryptoHelper.cryptoHash(localDate.atStartOfDay().toString().getBytes());
@@ -394,7 +377,7 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     protected ResponseEntity<AddHistoryEntitiesResponse> storeEntitiesByType(String url, AddEntitiesBulkRequest addEntitiesBulkRequest) {
-        return storageConnector.storeInStorage(storageServerAddress + endpoint, addEntitiesBulkRequest, AddHistoryEntitiesResponse.class);
+        return storageConnector.storeInStorage(url, addEntitiesBulkRequest, AddHistoryEntitiesResponse.class);
     }
 
     public ResponseEntity<AddHistoryEntitiesResponse> storeEntities(List<? extends IEntity> entities) {
