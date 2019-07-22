@@ -77,14 +77,11 @@ public class TransactionService extends BaseNodeTransactionService {
     protected String endpoint = null;
     private ObjectMapper mapper;
 
-    private Queue<TransactionData> transactionsToValidate;
-    private AtomicBoolean isValidatorRunning;
-
-    @PostConstruct
+    @Override
     public void init() {
+        super.init();
         transactionsToValidate = new PriorityQueue<>();
         isValidatorRunning = new AtomicBoolean(false);
-        super.init();
         mapper = new ObjectMapper()
                 .registerModule(new ParameterNamesModule())
                 .registerModule(new Jdk8Module())
@@ -92,22 +89,6 @@ public class TransactionService extends BaseNodeTransactionService {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         endpoint = "/transactions";
     }
-
-//    @Scheduled(fixedRate = 1000)
-//    private void checkAttachedTransactions() {
-//        if (!isValidatorRunning.compareAndSet(false, true)) {
-//            return;
-//        }
-//        while (!transactionsToValidate.isEmpty()) {
-//            TransactionData transactionData = transactionsToValidate.remove();
-//            log.debug("History node Fully Checking transaction: {}", transactionData.getHash());
-//            if( validationService.fullValidation(transactionData) ) {
-//                // Update Indexing structures with details from the new transaction
-//                addToHistoryTransactionIndexes(transactionData);
-//            }
-//        }
-//        isValidatorRunning.set(false);
-//    }
 
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
