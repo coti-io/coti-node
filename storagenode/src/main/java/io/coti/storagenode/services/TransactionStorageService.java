@@ -16,7 +16,6 @@ import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.model.ObjectService;
 import io.coti.storagenode.services.interfaces.ITransactionStorageValidationService;
-import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,7 +61,6 @@ public class TransactionStorageService extends EntityStorageService implements I
     @PostConstruct
     public void init()
     {
-//        mapper = new ObjectMapper();
         mapper = new ObjectMapper()
                 .registerModule(new ParameterNamesModule())
                 .registerModule(new Jdk8Module())
@@ -77,7 +75,6 @@ public class TransactionStorageService extends EntityStorageService implements I
 
         ThreadFactory threadFactory = Executors.defaultThreadFactory();
         RejectedExecutionHandlerRetrievingBlocks rejectionHandler = new RejectedExecutionHandlerRetrievingBlocks();
-
         executorPool = new
                 ThreadPoolExecutor(CORE_POOL_SIZE,MAX_POOL_SIZE,KEEP_ALIVE_TIME, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<Runnable>(BLOCKING_QUEUE_CAPACITY), threadFactory, rejectionHandler);
@@ -128,7 +125,7 @@ public class TransactionStorageService extends EntityStorageService implements I
 
     private void retrieveMultipleTransactionsInBlocksFromStorage(List<Hash> hashes, GetHistoryTransactionsResponse getHistoryTransactionsResponse, HttpServletResponse response) {
         List<List<Hash>> blocksOfHashes = divideHashesToBlocks(hashes);
-        if(blocksOfHashes==null) {
+        if(blocksOfHashes==null || blocksOfHashes.isEmpty()) {
             queueTransactionsDataBlock(new GetHistoryTransactionsResponse(new HashMap<>()), HttpStatus.OK);
             return;
         }
@@ -167,27 +164,6 @@ public class TransactionStorageService extends EntityStorageService implements I
 
     }
 
-
-
-    private void getTransactionsDataBlock(GetHistoryTransactionsResponse getHistoryTransactionsResponse, List<List<Hash>> blocksOfHashes, int blockNumber) {
-        List<Hash> blockHashes = blocksOfHashes.get(blockNumber);
-        HashMap<Hash, String> responsesMap = new HashMap<>();
-        ResponseEntity<IResponse> objectsByHashResponse = objectService.getMultiObjectsFromDb(blockHashes, false, objectType);
-        // For Unsuccessful retrieval of data
-        if( !isResponseOK(objectsByHashResponse)){
-            responsesMap.put(null,null);
-            getHistoryTransactionsResponse.setEntitiesBulkResponses(responsesMap);
-            //TODO 7/14/2019 tomer: Add to blocking queue
-            queueTransactionsDataBlock(getHistoryTransactionsResponse, objectsByHashResponse.getStatusCode());
-            return;
-        }
-
-        // For successfully retrieved data, perform also data-integrity checks
-        verifyEntitiesFromDbMap(responsesMap, objectsByHashResponse);
-        getHistoryTransactionsResponse.setEntitiesBulkResponses(responsesMap);
-        //TODO 7/14/2019 tomer: Add to blocking queue
-        queueTransactionsDataBlock(getHistoryTransactionsResponse, HttpStatus.OK);
-    }
 
     private List<List<Hash>> divideHashesToBlocks(List<Hash> hashes) {
         if( hashes == null || hashes.isEmpty() ) {
@@ -239,17 +215,36 @@ public class TransactionStorageService extends EntityStorageService implements I
 
         @Override
         public void run() {
-            System.out.println(Thread.currentThread().getName()+" Starting block number = "+blockNumber);
+            log.info("Thread {} ,Starting block number = {}", Thread.currentThread().getName(), blockNumber);
             getTransactionsDataBlock(getHistoryTransactionsResponse, blocksOfHashes, blockNumber);
             System.out.println(Thread.currentThread().getName()+" End ");
+        }
 
+        private void getTransactionsDataBlock(GetHistoryTransactionsResponse getHistoryTransactionsResponse, List<List<Hash>> blocksOfHashes, int blockNumber) {
+            List<Hash> blockHashes = blocksOfHashes.get(blockNumber);
+            HashMap<Hash, String> responsesMap = new HashMap<>();
+            ResponseEntity<IResponse> objectsByHashResponse = objectService.getMultiObjectsFromDb(blockHashes, false, objectType);
+            // For Unsuccessful retrieval of data
+            if( !isResponseOK(objectsByHashResponse)){
+                responsesMap.put(null,null);
+                getHistoryTransactionsResponse.setEntitiesBulkResponses(responsesMap);
+                //TODO 7/14/2019 tomer: Add to blocking queue
+                queueTransactionsDataBlock(getHistoryTransactionsResponse, objectsByHashResponse.getStatusCode());
+                return;
+            }
+
+            // For successfully retrieved data, perform also data-integrity checks
+            verifyEntitiesFromDbMap(responsesMap, objectsByHashResponse);
+            getHistoryTransactionsResponse.setEntitiesBulkResponses(responsesMap);
+            //TODO 7/14/2019 tomer: Add to blocking queue
+            queueTransactionsDataBlock(getHistoryTransactionsResponse, HttpStatus.OK);
         }
     }
 
     private class RejectedExecutionHandlerRetrievingBlocks implements RejectedExecutionHandler {
         @Override
         public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-            System.out.println(r.toString() + " is rejected");
+            log.info("Thread {} is rejected.", r.toString());
         }
     }
 
