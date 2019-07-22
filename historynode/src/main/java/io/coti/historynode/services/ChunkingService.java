@@ -1,6 +1,7 @@
 package io.coti.historynode.services;
 
 import io.coti.basenode.communication.JacksonSerializer;
+import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.exceptions.TransactionSyncException;
 import io.coti.basenode.http.GetHashToTransactionResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +23,8 @@ public class ChunkingService {
     @Autowired
     private JacksonSerializer jacksonSerializer;
 
-    private ResponseExtractor getTransactionResponseExtractor(){
-        log.info("Starting to get missing transactions");
+    protected ResponseExtractor getTransactionResponseExtractor(){
+        log.info("Starting to get stored transactions");
         List<GetHashToTransactionResponse> bulkResponses = new ArrayList<>();
 
         return response -> {
@@ -32,13 +33,23 @@ public class ChunkingService {
             int n;
             while ((n = response.getBody().read(buf, offset, buf.length)) > 0) {
                 try {
-                    GetHashToTransactionResponse retrievedHashAndTransaciton = jacksonSerializer.deserialize(buf);
-                    if (retrievedHashAndTransaciton != null) {
-                        bulkResponses.add(retrievedHashAndTransaciton);
-                        //TODO 7/10/2019 astolia: handled arrived data here
+                    GetHashToTransactionResponse retrievedHashAndTransaction = jacksonSerializer.deserialize(buf);
+                    if (retrievedHashAndTransaction != null) {
+                        //TODO 7/21/2019 tomer: introduce logic for cases with missing transaction data
+                        TransactionData transactionData = retrievedHashAndTransaction.getTransactionData();
+                        if (transactionData != null) {
+                            if(transactionData.getHash().equals(retrievedHashAndTransaction.getHash()))
+                            {
+                                //TODO 7/22/2019 tomer: Find how to access bulkResponses outside of extractor or change accordingly
+                                bulkResponses.add(retrievedHashAndTransaction);
+                                //TODO 7/10/2019 astolia: handled arrived data here
+                                log.info(retrievedHashAndTransaction.getHash().toString());
+                                log.info(retrievedHashAndTransaction.getTransactionData().toString());
+                            } else {
+                                log.error("Mismatched hashes {}, {}",transactionData.getHash(), retrievedHashAndTransaction.getHash());
+                            }
+                        }
 
-                        log.info(retrievedHashAndTransaciton.getHash().toString());
-                        log.info(retrievedHashAndTransaciton.getTransactionData().toString());
 //                        receivedMissingTransactionNumber.incrementAndGet();
 //                        if (!insertMissingTransactionThread.isAlive()) {
 //                            insertMissingTransactionThread.start();
