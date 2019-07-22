@@ -14,11 +14,15 @@ public class CustomHttpServletResponse extends HttpServletResponseWrapper {
     }
 
     public void printResponse(BaseResponse response, int status) throws IOException {
+        printResponse(new Gson().toJson(response), status);
+    }
+
+    public void printResponse(String string, int status) throws IOException {
         PrintWriter writer = this.getWriter();
         this.setStatus(status);
         this.setContentType("application/json");
         this.setCharacterEncoding("UTF-8");
-        writer.print(new Gson().toJson(response));
+        writer.print(string);
         writer.flush();
     }
 
