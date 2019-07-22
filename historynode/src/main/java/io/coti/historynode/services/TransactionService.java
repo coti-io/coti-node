@@ -11,7 +11,6 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.http.*;
-import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.historynode.crypto.TransactionsRequestCrypto;
@@ -19,8 +18,6 @@ import io.coti.historynode.data.AddressTransactionsByAddress;
 import io.coti.historynode.data.AddressTransactionsByDate;
 import io.coti.historynode.http.GetTransactionsByAddressRequest;
 import io.coti.historynode.http.GetTransactionsByDateRequest;
-import io.coti.historynode.http.HistoryTransactionResponse;
-import io.coti.historynode.http.data.HistoryTransactionResponseData;
 import io.coti.historynode.model.AddressTransactionsByAddresses;
 import io.coti.historynode.model.AddressTransactionsByDates;
 import lombok.extern.slf4j.Slf4j;
@@ -30,20 +27,23 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
+import javax.servlet.http.HttpServletResponse;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 
 
 @Slf4j
@@ -65,7 +65,9 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private TransactionsRequestCrypto transactionsRequestCrypto;
     @Autowired
-    private ChunkingService chunkingService;
+    private ChunkService chunkService;
+    @Autowired
+    private HttpJacksonSerializer jacksonSerializer;
     private ObjectMapper mapper;
 
     @Override
@@ -122,114 +124,77 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
 
-    public ResponseEntity<IResponse> getTransactionsByAddress(GetTransactionsByAddressRequest getTransactionsByAddressRequest) {
-        //TODO 7/2/2019 tomer: Commented for initial integration testing, uncomment after adding signature in tests or adding mocks
-        // Verify signature
-        if (!transactionsRequestCrypto.verifySignature(getTransactionsByAddressRequest)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
-        }
+    public void getTransactionsByAddress(GetTransactionsByAddressRequest getTransactionsByAddressRequest, HttpServletResponse response) {
+        try {
+            CustomHttpServletResponse customResponse = new CustomHttpServletResponse(response);
+            if (!transactionsRequestCrypto.verifySignature(getTransactionsByAddressRequest)) {
+                customResponse.printResponse(new Response(INVALID_SIGNATURE, STATUS_ERROR), HttpStatus.UNAUTHORIZED.value());
+                return;
+            }
+            List<Hash> transactionsHashes = getTransactionsHashesToRetrieve(getTransactionsByAddressRequest);
+            getTransactions(transactionsHashes, response);
+        } catch (Exception e) {
 
-        List<Hash> transactionsHashes = getTransactionsHashesToRetrieve(getTransactionsByAddressRequest);
-        return getTransactions(transactionsHashes);
+        }
     }
 
-    public ResponseEntity<IResponse> getTransactionsByDate(GetTransactionsByDateRequest getTransactionsByDateRequest) {
+    public void getTransactionsByDate(GetTransactionsByDateRequest getTransactionsByDateRequest, HttpServletResponse response) {
 
         List<Hash> transactionsHashes = getTransactionsHashesByDate(getTransactionsByDateRequest.getDate());
-        return getTransactions(transactionsHashes);
+        getTransactions(transactionsHashes, response);
     }
 
-    private ResponseEntity<IResponse> getTransactions(List<Hash> transactionsHashes) {
-        if (transactionsHashes.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new Response(TRANSACTIONS_NOT_FOUND, EMPTY_SEARCH_RESULT));
-        }
-        HashMap<Hash, TransactionData> collectedTransactions = retrieveTransactions(transactionsHashes);
-
-        return ResponseEntity.status(HttpStatus.OK).body(new HistoryTransactionResponse(new HistoryTransactionResponseData(collectedTransactions)));
-    }
-
-    private HashMap<Hash, TransactionData> retrieveTransactions(List<Hash> transactionsHashes) {
-        // Retrieve transactions from local DB, Storage and merge results
-        List<Hash> transactionsHashesToRetrieveFromStorage = new ArrayList<>();
-        HashMap<Hash, TransactionData> retrievedTransactionsFromDB = getTransactionsFromLocal(transactionsHashes, transactionsHashesToRetrieveFromStorage);
-        //TODO 7/22/2019 tomer: verify return in case of chunking, consider whether it should be streamed here as well
-        HashMap<Hash, TransactionData> retrievedTransactionsFromElasticSearch = getTransactionFromElasticSearch(transactionsHashesToRetrieveFromStorage);
-        HashMap<Hash, TransactionData> collectedTransactions = new HashMap<>(retrievedTransactionsFromDB);
-        collectedTransactions.putAll(retrievedTransactionsFromElasticSearch);
-        //TODO 7/22/2019 tomer: consider matching results with expected transactions
-        return collectedTransactions;
-    }
-
-    private HashMap<Hash, TransactionData> getTransactionFromElasticSearch(List<Hash> transactionsHashesToRetrieveFromStorage) {
-        HashMap<Hash, TransactionData> retrievedTransactionsFromStorage = new HashMap<>();
-        Map<Hash, String> entitiesBulkResponses = null;
-        if (!transactionsHashesToRetrieveFromStorage.isEmpty()) {
-            entitiesBulkResponses = getTransactionsDataFromElasticSearch(transactionsHashesToRetrieveFromStorage).getBody().getHashToEntitiesFromDbMap();
-            if (entitiesBulkResponses == null || entitiesBulkResponses.isEmpty()) {
-                log.error("No transactions were retrieved from storage");
-                for (Hash transactionHash : transactionsHashesToRetrieveFromStorage) {
-                    retrievedTransactionsFromStorage.putIfAbsent(transactionHash, null);
-                }
-            } else {
-                retrievedTransactionsFromStorage =
-                        getRetrievedTransactionsFromStorageResponseEntity(transactionsHashesToRetrieveFromStorage, entitiesBulkResponses);
+    private void getTransactions(List<Hash> transactionsHashes, HttpServletResponse response) {
+        try {
+            CustomHttpServletResponse customResponse = new CustomHttpServletResponse(response);
+            if (transactionsHashes.isEmpty()) {
+                customResponse.printResponse("[]", HttpStatus.OK.value());
             }
+            chunkService.startOfChunk(response);
+
+            retrieveTransactions(transactionsHashes, response);
+
+            chunkService.endOfChunk(response);
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return retrievedTransactionsFromStorage;
+
     }
 
-    private HashMap<Hash, TransactionData> getTransactionsFromLocal(List<Hash> transactionsHashes, List<Hash> transactionsHashesToRetrieveFromElasticSearch) {
-        HashMap<Hash, TransactionData> retrievedTransactionsFromLocal = new HashMap<>();
-        for (Hash transactionsHash : transactionsHashes) {
-            TransactionData localTransactionDataByHash = transactions.getByHash(transactionsHash);
-            if (localTransactionDataByHash != null) {
-                retrievedTransactionsFromLocal.put(transactionsHash, localTransactionDataByHash);
-            } else {
-                transactionsHashesToRetrieveFromElasticSearch.add(transactionsHash);
-            }
+    private void retrieveTransactions(List<Hash> transactionHashes, HttpServletResponse response) {
+        List<Hash> transactionsHashesToRetrieveFromElasticSearch = new ArrayList<>();
+        getTransactionsFromLocal(transactionHashes, transactionsHashesToRetrieveFromElasticSearch, response);
+        if (!transactionsHashesToRetrieveFromElasticSearch.isEmpty()) {
+            getTransactionFromElasticSearch(transactionsHashesToRetrieveFromElasticSearch, response);
         }
-        return retrievedTransactionsFromLocal;
     }
 
-    private HashMap<Hash, TransactionData> getRetrievedTransactionsFromStorageResponseEntity(List<Hash> transactionsHashes, Map<Hash, String> entitiesBulkResponses) {
-        HashMap<Hash, TransactionData> retrievedTransactions = new HashMap<>();
-        transactionsHashes.forEach(transactionHash -> {
-            String transactionRetrievedAsJson = entitiesBulkResponses.get(transactionHash);
-            if (transactionRetrievedAsJson != null) {
-                try {
-                    TransactionData transactionData = mapper.readValue(transactionRetrievedAsJson, TransactionData.class);
-                    retrievedTransactions.put(transactionHash, transactionData);
-                } catch (IOException e) {
-                    log.error("Failed to read value for {}", transactionHash);
-                    log.error("Context:", e);
-                    retrievedTransactions.putIfAbsent(transactionHash, null);
-                }
+    private void getTransactionFromElasticSearch(List<Hash> transactionsHashesToRetrieve, HttpServletResponse response) {
+
+        getTransactionsDataFromElasticSearch(transactionsHashesToRetrieve, response);
+    }
+
+    private void getTransactionsFromLocal(List<Hash> transactionHashes, List<Hash> transactionsHashesToRetrieveFromElasticSearch, HttpServletResponse response) {
+
+        transactionHashes.forEach(transactionHash -> {
+            TransactionData transactionData = transactions.getByHash(transactionHash);
+            if (transactionData != null) {
+                chunkService.transactionHandler(transactionData, response);
             } else {
-                retrievedTransactions.putIfAbsent(transactionHash, null);
-                log.error("Failed to retrieve value for {}", transactionHash);
+                transactionsHashesToRetrieveFromElasticSearch.add(transactionHash);
             }
         });
-        return retrievedTransactions;
     }
 
-    private ResponseEntity<EntitiesBulkJsonResponse> getTransactionsDataFromElasticSearch(List<Hash> transactionsHashes) {
-        // Retrieve transactions from storage
-        GetHistoryTransactionsRequest getHistoryTransactionsRequest = new GetHistoryTransactionsRequest(transactionsHashes);
+    private void getTransactionsDataFromElasticSearch(List<Hash> transactionsHashes, HttpServletResponse response) {
         RestTemplate restTemplate = new RestTemplate();
-        //TODO 7/21/2019 tomer: Update to use chunking service
-        boolean notUsingChunksYet = true;
-        ResponseEntity responseEntity = null;
-        if (notUsingChunksYet) {
-            responseEntity = storageConnector.retrieveFromStorage(storageServerAddress + END_POINT, getHistoryTransactionsRequest, EntitiesBulkJsonResponse.class);
-        } else {
-            ResponseExtractor transactionResponseExtractor = chunkingService.getTransactionResponseExtractor();
-            Object obj = restTemplate.execute(storageServerAddress + END_POINT, HttpMethod.GET, null, transactionResponseExtractor);
-            //TODO 7/21/2019 tomer: how to return the data itself to the caller of the history node end-point
-        }
+        CustomRequestCallBack requestCallBack = new CustomRequestCallBack(jacksonSerializer, new GetHistoryTransactionsRequest(transactionsHashes));
+        chunkService.transactionHandler(responseExtractor -> {
+            restTemplate.execute(storageServerAddress + END_POINT, HttpMethod.POST, requestCallBack, responseExtractor);
+        }, response);
 
-        return responseEntity;
     }
-
 
     private List<Hash> getTransactionsHashesToRetrieve(GetTransactionsByAddressRequest getTransactionsByAddressRequest) {
         if (getTransactionsByAddressRequest.getAddress() == null) {

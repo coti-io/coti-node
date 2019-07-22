@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class GetHistoryTransactionsRequest extends Request {
+public class GetHistoryTransactionsRequest extends SeriazableRequest {
     private List<Hash> hashes;
 
     public GetHistoryTransactionsRequest() {
