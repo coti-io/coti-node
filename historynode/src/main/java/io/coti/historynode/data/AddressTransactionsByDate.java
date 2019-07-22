@@ -14,23 +14,20 @@ import java.util.HashSet;
 @Data
 public class AddressTransactionsByDate implements IEntity {
 
+    private Hash hash;
     private Instant date;
-    private HashSet<Hash> transactionsAddresses;
+    private HashSet<Hash> transactionHashes;
 
-    public AddressTransactionsByDate(Instant date, HashSet<Hash> transactionsAddresses) {
+    public AddressTransactionsByDate(Instant date, HashSet<Hash> transactionHashes) {
         this.date = date;
-        this.transactionsAddresses = transactionsAddresses;
+        this.transactionHashes = transactionHashes;
+        initHashByDate();
     }
 
-    @Override
-    public Hash getHash() {
+    private void initHashByDate() {
         LocalDateTime ldt = LocalDateTime.ofInstant(date, ZoneOffset.UTC);
-        LocalDate localDate = LocalDate.of(ldt.getYear(), ldt.getMonth(),ldt.getDayOfMonth());
-        return CryptoHelper.cryptoHash(localDate.atStartOfDay().toString().getBytes());
-    }
-
-    @Override
-    public void setHash(Hash hash) {
+        LocalDate localDate = LocalDate.of(ldt.getYear(), ldt.getMonth(), ldt.getDayOfMonth());
+        this.hash = CryptoHelper.cryptoHash(localDate.toString().getBytes());
     }
 
 }
