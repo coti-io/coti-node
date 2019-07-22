@@ -8,7 +8,7 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.EntitiesBulkJsonResponse;
-import io.coti.basenode.http.GetHashToTransactionResponse;
+import io.coti.basenode.http.data.GetHashToTransactionData;
 import io.coti.basenode.http.GetHistoryTransactionsRequest;
 import io.coti.basenode.http.GetHistoryTransactionsResponse;
 import io.coti.basenode.http.interfaces.IResponse;
@@ -54,7 +54,7 @@ public class TransactionStorageService extends EntityStorageService implements I
 
 
     private ObjectMapper mapper;
-    private BlockingQueue<GetHashToTransactionResponse> retrievedTransactions;
+    private BlockingQueue<GetHashToTransactionData> retrievedTransactions;
     private Thread retrievedTransactionsThread;
     private ThreadPoolExecutor executorPool;
 
@@ -192,7 +192,7 @@ public class TransactionStorageService extends EntityStorageService implements I
         } catch (IOException e) {
             e.printStackTrace();
         }
-        GetHashToTransactionResponse transactionDataPair = new GetHashToTransactionResponse(entry.getKey(), transactionData);
+        GetHashToTransactionData transactionDataPair = new GetHashToTransactionData(entry.getKey(), transactionData);
 
         try {
             retrievedTransactions.put(transactionDataPair);
@@ -264,16 +264,16 @@ public class TransactionStorageService extends EntityStorageService implements I
     private void updateRetrievedTransactions(ServletOutputStream output) {
         while(!Thread.currentThread().isInterrupted()) {
             try {
-                GetHashToTransactionResponse transactionDataPair = retrievedTransactions.take();
+                GetHashToTransactionData transactionDataPair = retrievedTransactions.take();
                 chunkingService.getTransaction(transactionDataPair, output);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
-        LinkedList<GetHashToTransactionResponse> remainingTransactionDataPairs = new LinkedList<>();
+        LinkedList<GetHashToTransactionData> remainingTransactionDataPairs = new LinkedList<>();
         retrievedTransactions.drainTo(remainingTransactionDataPairs);
         if(!remainingTransactionDataPairs.isEmpty()) {
-            for (GetHashToTransactionResponse remainingTransactionDataPair : remainingTransactionDataPairs) {
+            for (GetHashToTransactionData remainingTransactionDataPair : remainingTransactionDataPairs) {
                 chunkingService.getTransaction(remainingTransactionDataPair, output);
             }
         }
