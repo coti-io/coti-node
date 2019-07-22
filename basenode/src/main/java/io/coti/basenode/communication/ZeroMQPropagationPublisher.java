@@ -3,6 +3,7 @@ package io.coti.basenode.communication;
 import io.coti.basenode.communication.data.ZeroMQMessageData;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.ISerializer;
+import io.coti.basenode.data.HeartBeatData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import lombok.extern.slf4j.Slf4j;
@@ -74,7 +75,8 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
         if (propagator != null) {
             String serverAddress = "tcp://" + publisherIp + ":" + propagationPort;
             if (!zeroMQContext.isClosed()) {
-                publishMessageQueue.add(new ZeroMQMessageData("HeartBeat " + serverAddress, serverAddress.getBytes()));
+                byte[] message = serializer.serialize(new HeartBeatData(serverAddress));
+                publishMessageQueue.add(new ZeroMQMessageData(Channel.getChannelString(HeartBeatData.class, serverAddress), message));
             }
         }
 

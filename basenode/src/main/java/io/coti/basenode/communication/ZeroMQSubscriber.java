@@ -5,6 +5,7 @@ import io.coti.basenode.communication.data.ZeroMQMessageData;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.communication.interfaces.ISerializer;
 import io.coti.basenode.communication.interfaces.ISubscriberHandler;
+import io.coti.basenode.data.HeartBeatData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.IPropagatable;
@@ -135,15 +136,15 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     private void propagationProcess(ZeroMQMessageData zeroMQMessageData) throws ClassNotFoundException {
         String channel = zeroMQMessageData.getChannel();
         byte[] message = zeroMQMessageData.getMessage();
-        if (channel.contains("HeartBeat")) {
-            String serverAddress = new String(message);
+        String[] channelArray = channel.split("-");
+        Class<? extends IPropagatable> propagatedMessageType = (Class<? extends IPropagatable>) Class.forName(channelArray[0]);
+        if (propagatedMessageType.getSimpleName().equals("HeartBeatData")) {
+            String serverAddress = new String(((HeartBeatData) serializer.deserialize(message)).getServerAddress().getBytes());
             updatePublisherLastConnectionTime(serverAddress);
         } else {
-            String[] channelArray = channel.split("-");
-            Class<? extends IPropagatable> propagatedMessageType = (Class<? extends IPropagatable>) Class.forName(channelArray[0]);
-            NodeType publisherNodeType = NodeType.valueOf(channelArray[1]);
-            String serverAddress = channelArray[3];
+            String serverAddress = channelArray[1];
             updatePublisherLastConnectionTime(serverAddress);
+            NodeType publisherNodeType = NodeType.valueOf(channelArray[2]);
             publisherNodeTypeToMessageTypesMap.get(publisherNodeType).forEach(messageType -> {
 
                 if (messageType.equals(propagatedMessageType)) {
@@ -186,7 +187,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     }
 
     private void subscribeAll(String publisherAddressAndPort, NodeType publisherNodeType) {
-        propagationReceiver.subscribe("HeartBeat " + publisherAddressAndPort);
+        propagationReceiver.subscribe(Channel.getChannelString(HeartBeatData.class, publisherAddressAndPort));
         publisherNodeTypeToMessageTypesMap.get(publisherNodeType).forEach(messageType ->
         {
             String channel = Channel.getChannelString(messageType, publisherNodeType, subscriberNodeType, publisherAddressAndPort);
@@ -209,7 +210,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     }
 
     private void unsubscribeAll(String publisherAddressAndPort, NodeType publisherNodeType) {
-        propagationReceiver.unsubscribe("HeartBeat " + publisherAddressAndPort);
+        propagationReceiver.unsubscribe(Channel.getChannelString(HeartBeatData.class, publisherAddressAndPort));
         publisherNodeTypeToMessageTypesMap.get(publisherNodeType).forEach(messageType ->
         {
             String channel = Channel.getChannelString(messageType, publisherNodeType, subscriberNodeType, publisherAddressAndPort);
