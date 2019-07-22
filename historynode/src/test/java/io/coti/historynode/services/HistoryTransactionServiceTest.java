@@ -17,7 +17,6 @@ import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.http.AddEntitiesBulkRequest;
 import io.coti.basenode.http.AddHistoryEntitiesResponse;
-import io.coti.basenode.http.EntitiesBulkJsonResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.TransactionIndexes;
@@ -25,7 +24,6 @@ import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.*;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IClusterService;
-import io.coti.basenode.services.interfaces.IConfirmationService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.liveview.LiveViewService;
 import io.coti.historynode.crypto.TransactionsRequestCrypto;
@@ -47,7 +45,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -201,7 +198,7 @@ public class HistoryTransactionServiceTest {
 
         Hash hashByDate = transactionService.calculateHashByAttachmentTime(attachmentTime);
         AddressTransactionsByDate transactionHashesByDateAddress = addressTransactionsByDates.getByHash(hashByDate);
-        Assert.assertTrue(transactionHashesByDateAddress.getTransactionsAddresses().contains(transactionData.getHash()));
+        Assert.assertTrue(transactionHashesByDateAddress.getTransactionHashes().contains(transactionData.getHash()));
 
         LocalDate attachmentLocalDate = transactionService.calculateInstantLocalDate(attachmentTime);
         AddressTransactionsByAddress transactionHashesBySenderAddress =
