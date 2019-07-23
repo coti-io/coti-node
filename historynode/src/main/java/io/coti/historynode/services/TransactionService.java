@@ -200,9 +200,10 @@ public class TransactionService extends BaseNodeTransactionService {
         if (getTransactionsByAddressRequest.getAddress() == null) {
             return new ArrayList<>();
         }
-        if (getTransactionsByAddressRequest.getStartDate() == null || getTransactionsByAddressRequest.getEndDate() == null) {
+        if (getTransactionsByAddressRequest.getStartDate() == null && getTransactionsByAddressRequest.getEndDate() == null) {
             return getTransactionsHashesByAddress(getTransactionsByAddressRequest.getAddress());
         }
+
         return getTransactionsHashesByAddressAndDates(getTransactionsByAddressRequest.getAddress(), getTransactionsByAddressRequest.getStartDate(), getTransactionsByAddressRequest.getEndDate());
     }
 
@@ -250,6 +251,10 @@ public class TransactionService extends BaseNodeTransactionService {
         if (addressTransactionsByAddress == null) {
             return new ArrayList<>();
         }
+
+        startDate = (startDate != null) ? startDate : addressTransactionsByAddress.getStartDate();
+        endDate = (endDate != null) ? endDate : Instant.now();
+
         HashMap<LocalDate, HashSet<Hash>> transactionHashesByDates = addressTransactionsByAddress.getTransactionHashesByDates();
         List<LocalDate> localDatesBetween = getLocalDatesBetween(getLocalDateByInstant(startDate), getLocalDateByInstant(endDate));
 
@@ -274,8 +279,12 @@ public class TransactionService extends BaseNodeTransactionService {
         relatedAddressHashes.forEach(transactionAddressHash -> {
             AddressTransactionsByAddress transactionsByAddress = addressTransactionsByAddresses.getByHash(transactionAddressHash);
             if (transactionsByAddress == null) {
-                transactionsByAddress = new AddressTransactionsByAddress(transactionAddressHash, new HashMap<>());
+                transactionsByAddress = new AddressTransactionsByAddress(transactionAddressHash, new HashMap<>(), attachmentTime);
             }
+            if (transactionsByAddress.getStartDate().isAfter(attachmentTime)) {
+                transactionsByAddress.setStartDate(attachmentTime);
+            }
+
             HashSet<Hash> transactionsHashesByDate = transactionsByAddress.getTransactionHashesByDates().get(attachmentLocalDate);
             if (transactionsHashesByDate == null) {
                 transactionsHashesByDate = new HashSet<>();
