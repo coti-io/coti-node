@@ -196,7 +196,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
     }
 
-    private List<Hash> getTransactionsHashesToRetrieve(GetTransactionsByAddressRequest getTransactionsByAddressRequest) {
+    public List<Hash> getTransactionsHashesToRetrieve(GetTransactionsByAddressRequest getTransactionsByAddressRequest) {
         if (getTransactionsByAddressRequest.getAddress() == null) {
             return new ArrayList<>();
         }
@@ -208,21 +208,17 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
 
-    private List<Hash> getTransactionsHashesByDate(Instant date) {
+    public List<Hash> getTransactionsHashesByDate(Instant date) {
         if (date == null) {
             return new ArrayList<>();
         }
-        AddressTransactionsByDate addressTransactionsByDate = addressTransactionsByDates.getByHash(getHashByLocalDate(getLocalDateByInstant(date)));
+        AddressTransactionsByDate addressTransactionsByDate = addressTransactionsByDates.getByHash(calculateHashByTime(date));
         if (addressTransactionsByDate == null || addressTransactionsByDate.getTransactionHashes() == null || addressTransactionsByDate.getTransactionHashes().isEmpty()) {
             return new ArrayList<>();
         }
         return addressTransactionsByDate.getTransactionHashes().stream().collect(Collectors.toList());
     }
 
-
-    private Hash getHashByLocalDate(LocalDate localDate) {
-        return CryptoHelper.cryptoHash(localDate.atStartOfDay().toString().getBytes());
-    }
 
     private LocalDate getLocalDateByInstant(Instant date) {
         LocalDateTime ldt = LocalDateTime.ofInstant(date, ZoneOffset.UTC);
@@ -265,7 +261,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
     public void addToHistoryTransactionIndexes(TransactionData transactionData) {
         Instant attachmentTime = transactionData.getAttachmentTime();
-        Hash hashByDate = calculateHashByAttachmentTime(attachmentTime);
+        Hash hashByDate = calculateHashByTime(attachmentTime);
         LocalDate attachmentLocalDate = calculateInstantLocalDate(attachmentTime);
         HashSet<Hash> relatedAddressHashes = getRelatedAddresses(transactionData);
 
@@ -301,7 +297,7 @@ public class TransactionService extends BaseNodeTransactionService {
         return hashes;
     }
 
-    protected Hash calculateHashByAttachmentTime(Instant date) {
+    protected Hash calculateHashByTime(Instant date) {
         LocalDate localDate = calculateInstantLocalDate(date);
         return CryptoHelper.cryptoHash(localDate.toString().getBytes());
     }
