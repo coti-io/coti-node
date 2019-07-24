@@ -77,6 +77,9 @@ public class TransactionServiceTest {
     @MockBean
     private AddressStorageService addressStorageService;
 
+    @MockBean
+    private ChunkingService chunkingService;
+
 
     private ObjectMapper mapper;
 
