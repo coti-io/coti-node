@@ -1,12 +1,13 @@
 package io.coti.historynode.services;
 
 import io.coti.basenode.crypto.AddressesRequestCrypto;
-import io.coti.basenode.crypto.AddressesResponseCrypto;
+import io.coti.basenode.crypto.GetHistoryAddressesResponseCrypto;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.BaseNodeHttpStringConstants;
 import io.coti.basenode.http.GetHistoryAddressesRequest;
 import io.coti.basenode.http.GetHistoryAddressesResponse;
+import io.coti.basenode.http.Response;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Addresses;
 import io.coti.basenode.services.BaseNodeAddressService;
 import io.coti.basenode.services.BaseNodeValidationService;
@@ -19,10 +20,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+
 
 @Slf4j
 @Service
-public class AddressService extends BaseNodeAddressService{
+public class AddressService extends BaseNodeAddressService {
     @Autowired
     protected StorageConnector storageConnector;
     @Autowired
@@ -30,13 +34,13 @@ public class AddressService extends BaseNodeAddressService{
     @Autowired
     private BaseNodeValidationService validationService;
     @Autowired
-    private AddressesResponseCrypto addressesResponseCrypto;
+    private GetHistoryAddressesResponseCrypto getHistoryAddressesResponseCrypto;
     @Autowired
     private AddressesRequestCrypto addressesRequestCrypto;
     @Value("${storage.server.address}")
     private String storageServerAddress;
 
-    public void handleClusterStampAddressesStorage(){
+    public void handleClusterStampAddressesStorage() {
         List<AddressData> addressesData = new ArrayList<>();
         addresses.forEach(addressesData::add);
         // send all addresses to storage
@@ -51,56 +55,47 @@ public class AddressService extends BaseNodeAddressService{
 //        ResponseEntity<AddHistoryAddressesResponse> response = storageConnector.storeInStorage("TODO",addAddressesBulkRequest, AddHistoryAddressesResponse.class);
     }
 
-    public ResponseEntity<GetHistoryAddressesResponse> getAddresses(GetHistoryAddressesRequest getHistoryAddressesRequest) {
-        if(!addressesRequestCrypto.verifySignature(getHistoryAddressesRequest)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new GetHistoryAddressesResponse(new HashMap<>(),BaseNodeHttpStringConstants.INVALID_SIGNATURE, BaseNodeHttpStringConstants.STATUS_ERROR));
+    public ResponseEntity<IResponse> getAddresses(GetHistoryAddressesRequest getHistoryAddressesRequest) {
+        if (!addressesRequestCrypto.verifySignature(getHistoryAddressesRequest)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
 
         List<Hash> addressesHashesToGetFromStorage = getHistoryAddressesRequest.getAddressHashes();
-        Map<Hash,AddressData> addressToAddressDataFromDB = populateAndRemoveFoundAddresses(addressesHashesToGetFromStorage);
+        Map<Hash, AddressData> addressToAddressDataFromDB = populateAndRemoveFoundAddresses(addressesHashesToGetFromStorage);
         ResponseEntity<GetHistoryAddressesResponse> storageResponse = getAddressesFromStorage(addressesHashesToGetFromStorage);
 
-        GetHistoryAddressesResponse getHistoryAddressesResponse =  storageResponse.getBody();
+        GetHistoryAddressesResponse getHistoryAddressesResponse = storageResponse.getBody();
 
-        //TODO 7/16/2019 astolia: check signed by storage node
-        //TODO BUG 7/25/2019 astolia: add test for verifying response signature as it is not tested yet and not implemented on storage node side.
-        if(!addressesResponseCrypto.verifySignature(getHistoryAddressesResponse)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new GetHistoryAddressesResponse(new HashMap<>(),BaseNodeHttpStringConstants.INVALID_SIGNATURE, BaseNodeHttpStringConstants.STATUS_ERROR));
+        if (!getHistoryAddressesResponseCrypto.verifySignature(getHistoryAddressesResponse)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new GetHistoryAddressesResponse(new HashMap<>(), INVALID_SIGNATURE, STATUS_ERROR));
         }
 
-        if(!validationService.validateGetAddressesResponse(getHistoryAddressesResponse)){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new GetHistoryAddressesResponse(new HashMap<>(),"Response validation failed", BaseNodeHttpStringConstants.STATUS_ERROR));
+        if (!validationService.validateGetAddressesResponse(getHistoryAddressesResponse)) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new GetHistoryAddressesResponse(new HashMap<>(), "Response validation failed", STATUS_ERROR));
         }
-
+        Map<Hash, AddressData> getHistoryAddressesResponseMap = reorderHashResponses(getHistoryAddressesRequest.getAddressHashes(), addressToAddressDataFromDB, storageResponse.getBody().getAddressHashesToAddresses());
         return ResponseEntity.
                 status(HttpStatus.OK).
                 body(new GetHistoryAddressesResponse(
-                        reorderHashResponses(getHistoryAddressesRequest.getAddressHashes(),
-                                addressToAddressDataFromDB,
-                                storageResponse.getBody().getAddressHashesToAddresses()),
-                        "Addresses successfully retrieved",
-                        BaseNodeHttpStringConstants.STATUS_SUCCESS));
+                        getHistoryAddressesResponseMap));
     }
 
     private Map<Hash, AddressData> reorderHashResponses(List<Hash> originallyOrderedAddressHashes, Map<Hash, AddressData> addressHashesToAddressesFromDB, Map<Hash, AddressData> addressHashesToAddressesFromStorage) {
         Map<Hash, AddressData> orderedResponse = new LinkedHashMap<>();
-        originallyOrderedAddressHashes.stream().forEach( hash -> {
-            AddressData addressData = addressHashesToAddressesFromDB.get(hash);
-            if(addressData == null){
-                addressData = addressHashesToAddressesFromStorage.get(hash);
-            }
-            orderedResponse.put(hash,addressData);
+        originallyOrderedAddressHashes.forEach(hash -> {
+            AddressData addressData = Optional.ofNullable(addressHashesToAddressesFromDB.get(hash)).orElse(addressHashesToAddressesFromStorage.get(hash));
+            orderedResponse.put(hash, addressData);
         });
         return orderedResponse;
     }
 
-    private Map<Hash,AddressData> populateAndRemoveFoundAddresses(List<Hash> addressesHashes){
-        Map<Hash,AddressData> addressesFoundInDb = new HashMap<>();
+    private Map<Hash, AddressData> populateAndRemoveFoundAddresses(List<Hash> addressesHashes) {
+        Map<Hash, AddressData> addressesFoundInDb = new HashMap<>();
 
         addressesHashes.removeIf(addressHash -> {
             AddressData addressData = addresses.getByHash(addressHash);
-            if(addressData != null){
-                addressesFoundInDb.put(addressHash,addressData);
+            if (addressData != null) {
+                addressesFoundInDb.put(addressHash, addressData);
                 return true;
             }
             return false;

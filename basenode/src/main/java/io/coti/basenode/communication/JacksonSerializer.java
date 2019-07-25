@@ -41,4 +41,12 @@ public class JacksonSerializer implements ISerializer {
             return null;
         }
     }
+
+    public <T extends IPropagatable> T deserialize(String string) {
+        try {
+            return (T) serializer.readValue(string, IPropagatable.class);
+        } catch (IOException e) {
+            return null;
+        }
+    }
 }

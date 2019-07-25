@@ -8,4 +8,6 @@ public interface ISerializer {
 
     <T extends IPropagatable> T deserialize(byte[] bytes);
 
+    <T extends IPropagatable> T deserialize(String string);
+
 }

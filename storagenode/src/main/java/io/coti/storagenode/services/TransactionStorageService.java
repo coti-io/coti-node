@@ -8,9 +8,9 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.EntitiesBulkJsonResponse;
-import io.coti.basenode.http.data.GetHashToTransactionData;
 import io.coti.basenode.http.GetHistoryTransactionsRequest;
 import io.coti.basenode.http.GetHistoryTransactionsResponse;
+import io.coti.basenode.http.data.GetHashToTransactionData;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.storagenode.data.enums.ElasticSearchData;
@@ -34,8 +34,7 @@ import java.util.concurrent.*;
 
 @Slf4j
 @Service
-public class TransactionStorageService extends EntityStorageService implements ITransactionStorageValidationService
-{
+public class TransactionStorageService extends EntityStorageService implements ITransactionStorageValidationService {
 
     public static final int BLOCK_SIZE = 100;
     private static final int CORE_POOL_SIZE = 5;
@@ -58,8 +57,7 @@ public class TransactionStorageService extends EntityStorageService implements I
     private ThreadPoolExecutor executorPool;
 
     @PostConstruct
-    public void init()
-    {
+    public void init() {
         mapper = new ObjectMapper()
                 .registerModule(new ParameterNamesModule())
                 .registerModule(new Jdk8Module())
@@ -75,28 +73,23 @@ public class TransactionStorageService extends EntityStorageService implements I
         ThreadFactory threadFactory = Executors.defaultThreadFactory();
         RejectedExecutionHandlerRetrievingBlocks rejectionHandler = new RejectedExecutionHandlerRetrievingBlocks();
         executorPool = new
-                ThreadPoolExecutor(CORE_POOL_SIZE,MAX_POOL_SIZE,KEEP_ALIVE_TIME, TimeUnit.SECONDS,
+                ThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_SIZE, KEEP_ALIVE_TIME, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<Runnable>(BLOCKING_QUEUE_CAPACITY), threadFactory, rejectionHandler);
     }
 
 
-
-    public boolean isObjectDIOK(Hash objectHash, String txAsJson)
-    {
-        //Check for Data Integrity of the Tx
-        TransactionData transactionDataDeserializedFromES = null;
+    public boolean validateObjectDataIntegrity(Hash objectHash, String txAsJson) {
+        TransactionData transactionData;
         try {
-            transactionDataDeserializedFromES = mapper.readValue(txAsJson, TransactionData.class);
-            int temp = 7;
+            transactionData = mapper.readValue(txAsJson, TransactionData.class);
         } catch (IOException e) {
             e.printStackTrace();
             return false;
         }
 
-        boolean valid = true; //TODO: Disabled for testing purposes
-//        boolean valid = validationService.validateTransactionDataIntegrity(transactionDataDeserializedFromES);
-        if(!valid) {
-            log.error("Failed verification for Transaction Data {}",transactionDataDeserializedFromES.getHash() );
+        boolean valid = validationService.validateTransactionDataIntegrity(transactionData);
+        if (!valid) {
+            log.error("Failed verification for Transaction Data {}", transactionData.getHash());
         }
         return valid;
     }
@@ -120,17 +113,17 @@ public class TransactionStorageService extends EntityStorageService implements I
 
     public void retrieveMultipleObjectsInBlocksFromStorage(GetHistoryTransactionsRequest getHistoryTransactionsRequest, HttpServletResponse response) {
         retrieveMultipleTransactionsInBlocksFromStorage(getHistoryTransactionsRequest.getHashes(), new GetHistoryTransactionsResponse(), response);
-}
+    }
 
     private void retrieveMultipleTransactionsInBlocksFromStorage(List<Hash> hashes, GetHistoryTransactionsResponse getHistoryTransactionsResponse, HttpServletResponse response) {
         List<List<Hash>> blocksOfHashes = divideHashesToBlocks(hashes);
-        if(blocksOfHashes==null || blocksOfHashes.isEmpty()) {
+        if (blocksOfHashes == null || blocksOfHashes.isEmpty()) {
             queueTransactionsDataBlock(new GetHistoryTransactionsResponse(new HashMap<>()), HttpStatus.OK);
             return;
         }
 
         int blocksOfHashesAmount = blocksOfHashes.size();
-        for( int blockNumber = 0 ; blockNumber < blocksOfHashesAmount ; blockNumber++) {
+        for (int blockNumber = 0; blockNumber < blocksOfHashesAmount; blockNumber++) {
             Runnable worker = new WorkerThread(getHistoryTransactionsResponse, blocksOfHashes, blockNumber);
             executorPool.execute(worker);
         }
@@ -153,8 +146,8 @@ public class TransactionStorageService extends EntityStorageService implements I
         }
 
         executorPool.shutdown();
-        try{
-            if(!executorPool.awaitTermination(500, TimeUnit.MILLISECONDS)) {
+        try {
+            if (!executorPool.awaitTermination(500, TimeUnit.MILLISECONDS)) {
                 executorPool.shutdown();
             }
         } catch (InterruptedException e) {
@@ -165,7 +158,7 @@ public class TransactionStorageService extends EntityStorageService implements I
 
 
     private List<List<Hash>> divideHashesToBlocks(List<Hash> hashes) {
-        if( hashes == null || hashes.isEmpty() ) {
+        if (hashes == null || hashes.isEmpty()) {
             return null;
         }
         List<List<Hash>> hashesBlocks = ListUtils.partition(hashes, BLOCK_SIZE);
@@ -173,7 +166,7 @@ public class TransactionStorageService extends EntityStorageService implements I
     }
 
     private ResponseEntity<IResponse> queueTransactionsDataBlock(GetHistoryTransactionsResponse getHistoryTransactionsResponse, HttpStatus httpStatus) {
-        if(getHistoryTransactionsResponse ==null || getHistoryTransactionsResponse.getEntitiesBulkResponses() == null || !getHistoryTransactionsResponse.getEntitiesBulkResponses().isEmpty()) {
+        if (getHistoryTransactionsResponse == null || getHistoryTransactionsResponse.getEntitiesBulkResponses() == null || !getHistoryTransactionsResponse.getEntitiesBulkResponses().isEmpty()) {
             return ResponseEntity.status(httpStatus).body(getHistoryTransactionsResponse);
         }
         getHistoryTransactionsResponse.getEntitiesBulkResponses().entrySet().forEach(entry -> {
@@ -216,7 +209,7 @@ public class TransactionStorageService extends EntityStorageService implements I
         public void run() {
             log.info("Thread {} ,Starting block number = {}", Thread.currentThread().getName(), blockNumber);
             getTransactionsDataBlock(getHistoryTransactionsResponse, blocksOfHashes, blockNumber);
-            System.out.println(Thread.currentThread().getName()+" End ");
+            System.out.println(Thread.currentThread().getName() + " End ");
         }
 
         private void getTransactionsDataBlock(GetHistoryTransactionsResponse getHistoryTransactionsResponse, List<List<Hash>> blocksOfHashes, int blockNumber) {
@@ -224,8 +217,8 @@ public class TransactionStorageService extends EntityStorageService implements I
             HashMap<Hash, String> responsesMap = new HashMap<>();
             ResponseEntity<IResponse> objectsByHashResponse = objectService.getMultiObjectsFromDb(blockHashes, false, objectType);
             // For Unsuccessful retrieval of data
-            if( !isResponseOK(objectsByHashResponse)){
-                responsesMap.put(null,null);
+            if (!isResponseOK(objectsByHashResponse)) {
+                responsesMap.put(null, null);
                 getHistoryTransactionsResponse.setEntitiesBulkResponses(responsesMap);
                 //TODO 7/14/2019 tomer: Add to blocking queue
                 queueTransactionsDataBlock(getHistoryTransactionsResponse, objectsByHashResponse.getStatusCode());
@@ -261,7 +254,7 @@ public class TransactionStorageService extends EntityStorageService implements I
     }
 
     private void updateRetrievedTransactions(ServletOutputStream output) {
-        while(!Thread.currentThread().isInterrupted()) {
+        while (!Thread.currentThread().isInterrupted()) {
             try {
                 GetHashToTransactionData transactionDataPair = retrievedTransactions.take();
                 chunkingService.getTransaction(transactionDataPair, output);
@@ -271,7 +264,7 @@ public class TransactionStorageService extends EntityStorageService implements I
         }
         LinkedList<GetHashToTransactionData> remainingTransactionDataPairs = new LinkedList<>();
         retrievedTransactions.drainTo(remainingTransactionDataPairs);
-        if(!remainingTransactionDataPairs.isEmpty()) {
+        if (!remainingTransactionDataPairs.isEmpty()) {
             for (GetHashToTransactionData remainingTransactionDataPair : remainingTransactionDataPairs) {
                 chunkingService.getTransaction(remainingTransactionDataPair, output);
             }
