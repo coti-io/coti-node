@@ -46,7 +46,7 @@ import static testUtils.TestUtils.createRandomTransaction;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 @ContextConfiguration(classes = {ObjectService.class, DbConnectorService.class, TransactionStorageService.class,
-        CryptoHelper.class, AddressService.class
+        CryptoHelper.class, AddressStorageService.class
 })
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
@@ -74,7 +74,7 @@ public class TransactionServiceTest {
     private CryptoHelper mockCryptoHelper;
 
     @MockBean
-    private AddressService addressService;
+    private AddressStorageService addressStorageService;
 
     @MockBean
     private ChunkingService chunkingService;

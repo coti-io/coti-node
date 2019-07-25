@@ -34,7 +34,7 @@ import java.util.*;
 import static org.mockito.Mockito.when;
 
 @ContextConfiguration(classes = {AddressService.class,StorageConnector.class, BaseNodeValidationService.class,
-        AddressesResponseCrypto.class, AddressesRequestCrypto.class, CryptoHelper.class, NodeCryptoHelper.class,
+        GetHistoryAddressesResponseCrypto.class, AddressesRequestCrypto.class, CryptoHelper.class, NodeCryptoHelper.class,
         Transactions.class,IPotService.class,TransactionSenderCrypto.class,TransactionCrypto.class,ITransactionHelper.class,
         IDatabaseConnector.class})
 @TestPropertySource(locations = "classpath:test.properties")
@@ -55,7 +55,7 @@ public class AddressServiceTest {
     private AddressesRequestCrypto addressesRequestCrypto;
 
     @MockBean
-    private AddressesResponseCrypto addressesResponseCrypto;
+    private GetHistoryAddressesResponseCrypto getHistoryAddressesResponseCrypto;
 
     // Unused, Just for mocking
     @MockBean
@@ -146,7 +146,7 @@ public class AddressServiceTest {
 
         when(storageConnector.retrieveFromStorage(storageNodeUrl + "/addresses", getHistoryAddressesRequestToStorageNode, GetHistoryAddressesResponse.class)).
                 thenReturn(ResponseEntity.status(HttpStatus.OK).body(responseFromStorage));
-        when(addressesResponseCrypto.verifySignature(responseFromStorage)).thenReturn(true);
+        when(getHistoryAddressesResponseCrypto.verifySignature(responseFromStorage)).thenReturn(true);
 
         ResponseEntity<GetHistoryAddressesResponse> responseFromGetAddresses = addressService.getAddresses(getHistoryAddressesRequestFromFullNode);
         ResponseEntity<GetHistoryAddressesResponse> expectedUnsignedResponseFromStorage = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new GetHistoryAddressesResponse(new HashMap<>(),"Response validation failed", BaseNodeHttpStringConstants.STATUS_ERROR));
@@ -214,7 +214,7 @@ public class AddressServiceTest {
     private void setResponseDummySignerHashAndSignature(GetHistoryAddressesResponse response){
         response.setSignature(new SignatureData("a","b"));
         response.setSignerHash(new Hash(1));
-        when(addressesResponseCrypto.verifySignature(response)).thenReturn(true);
+        when(getHistoryAddressesResponseCrypto.verifySignature(response)).thenReturn(true);
     }
 
 }
