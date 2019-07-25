@@ -108,7 +108,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
         //TODO 7/7/2019 tomer: Add handling of response
         //historyAddressService.storeEntities(new ArrayList<>(unconfirmedTransactionsAddresses));
-        addressService.handleClusterStsmpAddressesStorage();
+        addressService.handleClusterStampAddressesStorage();
     }
 
 

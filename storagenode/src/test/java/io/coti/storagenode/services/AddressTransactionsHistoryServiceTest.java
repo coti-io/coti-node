@@ -19,7 +19,6 @@ import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.database.DbConnectorService;
 import io.coti.storagenode.http.GetEntityJsonResponse;
-import io.coti.storagenode.model.ObjectService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,7 +45,7 @@ import static org.mockito.Mockito.when;
 import static testUtils.TestUtils.generateRandomHash;
 
 @Deprecated
-@ContextConfiguration(classes = {ObjectService.class, DbConnectorService.class, AddressStorageService.class,
+@ContextConfiguration(classes = {ObjectService.class, DbConnectorService.class, AddressService.class,
         CryptoHelper.class, AddressesResponseCrypto.class, AddressesRequestCrypto.class, NodeCryptoHelper.class
 })
 @TestPropertySource(locations = "classpath:test.properties")
@@ -65,7 +64,7 @@ public class AddressTransactionsHistoryServiceTest {
     private ObjectMapper mapper;
 
     @Autowired
-    private AddressStorageService addressStorageValidationService;
+    private AddressService addressStorageValidationService;
 
     @Autowired
     private BaseNodeValidationService validationService;
