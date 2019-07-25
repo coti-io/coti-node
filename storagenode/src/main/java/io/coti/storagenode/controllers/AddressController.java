@@ -3,7 +3,7 @@ package io.coti.storagenode.controllers;
 import io.coti.basenode.http.AddHistoryAddressesRequest;
 import io.coti.basenode.http.GetHistoryAddressesRequest;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.storagenode.services.AddressStorageService;
+import io.coti.storagenode.services.AddressService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,16 +19,16 @@ import javax.validation.Valid;
 public class AddressController {
 
     @Autowired
-    private AddressStorageService addressStorageService;
+    private AddressService addressService;
 
     @PostMapping(value = "/addresses")
     public ResponseEntity<IResponse> getAddressesFromStorage(@Valid @RequestBody GetHistoryAddressesRequest getHistoryAddressesRequest) {
-        return addressStorageService.retrieveMultipleObjectsFromStorage(getHistoryAddressesRequest);
+        return addressService.retrieveMultipleObjectsFromStorage(getHistoryAddressesRequest);
     }
 
     @PutMapping(value = "/addresses")
     public ResponseEntity<IResponse> storeMultipleAddressToStorage(@Valid @RequestBody AddHistoryAddressesRequest addAddressesRequest) {
-        return addressStorageService.storeMultipleAddressesToStorage(addAddressesRequest);
+        return addressService.storeMultipleAddressesToStorage(addAddressesRequest);
     }
 
 }

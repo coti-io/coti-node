@@ -14,7 +14,6 @@ import io.coti.basenode.http.GetHistoryTransactionsResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.storagenode.data.enums.ElasticSearchData;
-import io.coti.storagenode.model.ObjectService;
 import io.coti.storagenode.services.interfaces.ITransactionStorageValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;

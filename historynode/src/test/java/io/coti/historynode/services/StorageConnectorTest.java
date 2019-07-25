@@ -5,7 +5,10 @@ import io.coti.basenode.crypto.AddressesRequestCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.*;
+import io.coti.basenode.http.AddHistoryAddressesRequest;
+import io.coti.basenode.http.AddHistoryEntitiesResponse;
+import io.coti.basenode.http.GetHistoryAddressesRequest;
+import io.coti.basenode.http.GetHistoryAddressesResponse;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -66,21 +69,6 @@ public class StorageConnectorTest {
         }
         Assert.assertTrue(addressHashesToAddresses.keySet().containsAll(addresses.stream().map( a -> a.getHash()).collect(Collectors.toSet())));
     }
-
-    /**
-     * Send a request without signature.
-     */
-    @Test
-    public void retrieveAddresses_unsignedRequest_shouldReturnErrorStatusAndInvalidSignatureMsg(){
-        int size = 2;
-        List<AddressData> addresses = AddressTestUtils.generateListOfRandomAddressData(size);
-        GetHistoryAddressesRequest request = new GetHistoryAddressesRequest(addresses.stream().map(addressData -> addressData.getHash()).collect(Collectors.toList()));
-        ResponseEntity<GetHistoryAddressesResponse> retrieveResponse = storageConnector.retrieveFromStorage(storageNodeUrl + "/addresses",request , GetHistoryAddressesResponse.class);
-        Assert.assertEquals(HttpStatus.OK, retrieveResponse.getStatusCode());
-        Assert.assertEquals(BaseNodeHttpStringConstants.INVALID_SIGNATURE, retrieveResponse.getBody().getMessage());
-        Assert.assertEquals(BaseNodeHttpStringConstants.STATUS_ERROR, retrieveResponse.getBody().getStatus());
-    }
-
 
     @Test
     public void storeAddresses_notStoredInStorage_shouldReturnMapWithTrueValues(){
