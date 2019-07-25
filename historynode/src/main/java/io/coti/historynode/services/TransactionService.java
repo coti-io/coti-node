@@ -14,10 +14,12 @@ import io.coti.basenode.http.*;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.historynode.crypto.TransactionsRequestCrypto;
+import io.coti.historynode.data.AddressMissingTransactionsByHash;
 import io.coti.historynode.data.AddressTransactionsByAddress;
 import io.coti.historynode.data.AddressTransactionsByDate;
 import io.coti.historynode.http.GetTransactionsByAddressRequest;
 import io.coti.historynode.http.GetTransactionsByDateRequest;
+import io.coti.historynode.model.AddressMissingTransactionsByHashes;
 import io.coti.historynode.model.AddressTransactionsByAddresses;
 import io.coti.historynode.model.AddressTransactionsByDates;
 import lombok.extern.slf4j.Slf4j;
@@ -62,6 +64,8 @@ public class TransactionService extends BaseNodeTransactionService {
     private AddressTransactionsByAddresses addressTransactionsByAddresses;
     @Autowired
     private AddressTransactionsByDates addressTransactionsByDates;
+    @Autowired
+    private AddressMissingTransactionsByHashes addressMissingTransactionsByHashes;
     @Autowired
     private TransactionsRequestCrypto transactionsRequestCrypto;
     @Autowired
@@ -322,6 +326,16 @@ public class TransactionService extends BaseNodeTransactionService {
 
         ResponseEntity<AddHistoryEntitiesResponse> storeEntitiesToStorageResponse = storeEntitiesByType(storageServerAddress + END_POINT, addEntitiesBulkRequest);
         return storeEntitiesToStorageResponse;
+    }
+
+    private List<AddressMissingTransactionsByHash> getUnhandledMissingTransactions() {
+        List<AddressMissingTransactionsByHash> unhandledMissingTransactions = new ArrayList<>();
+        addressMissingTransactionsByHashes.forEach(entry-> {
+            if(entry.getLastTimeEncountered().isAfter(entry.getLastTimeUpdatedStatus())) {
+                unhandledMissingTransactions.add(entry);
+            }
+        });
+        return unhandledMissingTransactions;
     }
 
 }

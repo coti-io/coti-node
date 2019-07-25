@@ -1,17 +1,22 @@
 package io.coti.historynode.services;
 
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.CustomGson;
 import io.coti.basenode.http.data.GetHashToTransactionData;
 import io.coti.basenode.http.data.TransactionResponseData;
 import io.coti.basenode.services.BaseNodeChunkService;
+import io.coti.historynode.data.AddressMissingTransactionsByHash;
+import io.coti.historynode.model.AddressMissingTransactionsByHashes;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResponseExtractor;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.Instant;
 import java.util.function.Consumer;
 
 @Service
@@ -19,6 +24,9 @@ import java.util.function.Consumer;
 public class ChunkService extends BaseNodeChunkService {
 
     private final static int MAXIMUM_BUFFER_SIZE = 50000;
+
+    @Autowired
+    private AddressMissingTransactionsByHashes addressMissingTransactionsByHashes;
 
     public void startOfChunk(HttpServletResponse response) {
         try {
@@ -55,6 +63,15 @@ public class ChunkService extends BaseNodeChunkService {
                             sendChunk(new CustomGson().getInstance().toJson(new TransactionResponseData(transactionData)), output);
                         } else {
                             log.error("Mismatched hashes {}, {}", transactionData.getHash(), getHashToTransactionData.getHash());
+                        }
+                    } else {
+                        Hash missingTransactionHash = getHashToTransactionData.getHash();
+                        log.error("Missing transaction from storage {}", missingTransactionHash);
+                        AddressMissingTransactionsByHash addressMissingTransactionsByHash = addressMissingTransactionsByHashes.getByHash(missingTransactionHash);
+                        if (addressMissingTransactionsByHash != null) {
+                            addressMissingTransactionsByHash.setLastTimeEncountered(Instant.now());
+                        } else {
+                            addressMissingTransactionsByHashes.put(new AddressMissingTransactionsByHash(getHashToTransactionData.getHash(), Instant.now(), "Missing", Instant.now()));
                         }
                     }
                 } catch (Exception e) {

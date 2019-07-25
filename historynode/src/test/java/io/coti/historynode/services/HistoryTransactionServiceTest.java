@@ -34,6 +34,7 @@ import io.coti.historynode.data.AddressTransactionsByDate;
 import io.coti.historynode.database.HistoryRocksDBConnector;
 import io.coti.historynode.http.GetTransactionsByAddressRequest;
 import io.coti.historynode.http.GetTransactionsByDateRequest;
+import io.coti.historynode.model.AddressMissingTransactionsByHashes;
 import io.coti.historynode.model.AddressTransactionsByAddresses;
 import io.coti.historynode.model.AddressTransactionsByDates;
 import org.apache.commons.io.IOUtils;
@@ -74,7 +75,7 @@ import static utils.TestUtils.generateRandomHash;
 @ContextConfiguration(classes = {TransactionService.class,
         HistoryRocksDBConnector.class,
         Transactions.class,
-        AddressTransactionsByDates.class, AddressTransactionsByAddresses.class,
+        AddressTransactionsByDates.class, AddressTransactionsByAddresses.class, AddressMissingTransactionsByHashes.class,
         IDatabaseConnector.class, BaseNodeRocksDBConnector.class, TransactionService.class,
         TransactionsRequestCrypto.class, TransactionHelper.class, StorageConnector.class,
         AddressTransactionsHistories.class, TransactionCrypto.class, NodeCryptoHelper.class, BaseNodeBalanceService.class,
@@ -103,6 +104,8 @@ public class HistoryTransactionServiceTest {
     private AddressTransactionsByDates addressTransactionsByDates;
     @Autowired
     private AddressTransactionsByAddresses addressTransactionsByAddresses;
+    @Autowired
+    private AddressMissingTransactionsByHashes addressMissingTransactionsByHashes;
     @Autowired
     public IDatabaseConnector databaseConnector;
     @Autowired
