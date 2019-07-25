@@ -10,9 +10,13 @@ import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,6 +45,53 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
     private JacksonSerializer jacksonSerializer;
     @Autowired
     private RestTemplate restTemplate;
+    @Autowired
+    private WebClient webClient;
+
+    public void requestMissingTransactionsWithWebClient(long firstMissingTransactionIndex) {
+        try {
+            log.info("Starting to get missing transactions");
+            List<TransactionData> missingTransactions = new ArrayList<>();
+            Set<Hash> trustChainUnconfirmedExistingTransactionHashes = clusterService.getTrustChainConfirmationTransactionHashes();
+            AtomicLong completedMissingTransactionNumber = new AtomicLong(0);
+            AtomicLong receivedMissingTransactionNumber = new AtomicLong(0);
+            AtomicBoolean finishedToReceive = new AtomicBoolean(false);
+            Thread monitorMissingTransactionThread = transactionService.monitorTransactionThread("missing", completedMissingTransactionNumber, receivedMissingTransactionNumber);
+            Thread insertMissingTransactionThread = insertMissingTransactionThread(missingTransactions, trustChainUnconfirmedExistingTransactionHashes, completedMissingTransactionNumber, monitorMissingTransactionThread, finishedToReceive);
+            Flux<TransactionData> transactionDataFlux = webClient.get().uri(networkService.getRecoveryServerAddress() + RECOVERY_NODE_GET_BATCH_ENDPOINT
+                    + STARTING_INDEX_URL_PARAM_ENDPOINT + firstMissingTransactionIndex).accept(MediaType.APPLICATION_STREAM_JSON)
+                    .retrieve()
+                    .bodyToFlux(TransactionData.class);
+            transactionDataFlux.subscribeOn(Schedulers.single(), false).subscribe(transactionData -> {
+                        missingTransactions.add(transactionData);
+                        receivedMissingTransactionNumber.incrementAndGet();
+                        if (!insertMissingTransactionThread.isAlive()) {
+                            insertMissingTransactionThread.start();
+                        }
+                    }, (e) -> log.info("Error at getting missing transaction: {}", e.getMessage()),
+                    () -> {
+                        synchronized (finishedToReceive) {
+                            finishedToReceive.set(true);
+                            if (insertMissingTransactionThread.isAlive()) {
+                                log.info("Received all {} missing transactions from recovery server", receivedMissingTransactionNumber);
+                            } else {
+                                finishedToReceive.notify();
+                            }
+                        }
+                        log.info("Finished to get missing transactions");
+                    });
+            synchronized (finishedToReceive) {
+                if (!finishedToReceive.get() || insertMissingTransactionThread.isAlive()) {
+                    finishedToReceive.wait();
+                }
+            }
+
+        } catch (Exception e) {
+            log.error("Error at missing transactions from recovery Node");
+            throw new TransactionSyncException(e.getMessage());
+        }
+
+    }
 
     public void requestMissingTransactions(long firstMissingTransactionIndex) {
         try {
