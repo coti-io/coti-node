@@ -5,18 +5,15 @@ import io.coti.basenode.data.Hash;
 import io.coti.storagenode.data.MultiDbInsertionStatus;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.database.interfaces.IDbConnectorService;
+import io.coti.storagenode.exceptions.DbConnectorException;
 import javafx.util.Pair;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
-import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsRequest;
 import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsResponse;
-import org.elasticsearch.client.indices.CreateIndexRequest;
-import org.elasticsearch.client.indices.GetIndexRequest;
-import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -29,9 +26,13 @@ import org.elasticsearch.action.main.MainResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.client.indices.GetIndexRequest;
+import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.rest.RestStatus;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -84,7 +85,7 @@ public class DbConnectorService implements IDbConnectorService {
     }
 
     public void addIndexes(boolean fromColdStorage) throws IOException {
-        for(ElasticSearchData data: ElasticSearchData.values()){
+        for (ElasticSearchData data : ElasticSearchData.values()) {
             addIndex(data.getIndex(), data.getObjectName(), fromColdStorage);
         }
     }
@@ -119,23 +120,19 @@ public class DbConnectorService implements IDbConnectorService {
 
 
     @Override
-    public Map<String, Object> getObjectFromDbByHash(Hash hash, String index, boolean fromColdStorage) throws IOException {
+    public GetResponse getObjectFromDbByHash(Hash hash, String index, boolean fromColdStorage) {
         GetRequest request = new GetRequest(index, hash.toString());
 
         try {
             GetResponse getResponse;
-            if( fromColdStorage )
+            if (fromColdStorage) {
                 getResponse = restColdStorageClient.get(request, RequestOptions.DEFAULT);
-            else
+            } else {
                 getResponse = restClient.get(request, RequestOptions.DEFAULT);
-            if(!getResponse.isExists()) {
-                log.error("Failed to retrieve {} {}",index, hash );
-                return null;
             }
-            return getResponse.getSourceAsMap();
-        } catch (ElasticsearchException e) {
-            log.error(e.getMessage());
-            return null;
+            return getResponse;
+        } catch (Exception e) {
+            throw new DbConnectorException(String.format("Error at get object from db by hash : {}", e.getMessage()));
         }
     }
 
@@ -149,13 +146,13 @@ public class DbConnectorService implements IDbConnectorService {
 //                        .source(entry.getValue(), XContentType.JSON ));
             }
             BulkResponse bulkResponse;
-            if( fromColdStorage )
+            if (fromColdStorage)
                 bulkResponse = restColdStorageClient.bulk(request, RequestOptions.DEFAULT);
             else
                 bulkResponse = restClient.bulk(request, RequestOptions.DEFAULT);
 
             insertResponse = createMultiInsertResponse(bulkResponse);
-            if (insertResponse!=null && (insertResponse.getValue().size() != hashToObjectJsonDataMap.size() || !insertResponse.getKey().equals(MultiDbInsertionStatus.Success))) {
+            if (insertResponse != null && (insertResponse.getValue().size() != hashToObjectJsonDataMap.size() || !insertResponse.getKey().equals(MultiDbInsertionStatus.Success))) {
                 insertResponse = new Pair<>(MultiDbInsertionStatus.Failed, insertResponse.getValue());
             } else {
                 insertResponse = new Pair<>(insertResponse.getKey(), insertResponse.getValue());
@@ -186,69 +183,62 @@ public class DbConnectorService implements IDbConnectorService {
         return new Pair<>(insertionStatus, hashToResponseMap);
     }
 
-    private MultiGetResponse getMultiObjectsFromDb(List<Hash> hashes, String indexName, boolean fromColdStorage) throws Exception {
-        MultiGetResponse multiGetResponse = null;
+    private MultiGetResponse getMultiObjectsFromDb(List<Hash> hashes, String indexName, boolean fromColdStorage) {
         try {
-            MultiGetRequest request = new MultiGetRequest();
-            for (Hash hash : hashes) {
-                request.add(new MultiGetRequest.Item(
-                        indexName,
-                        hash.toString()));
-            }
-            if( fromColdStorage )
-                multiGetResponse = restColdStorageClient.mget(request, RequestOptions.DEFAULT);
-            else
-                multiGetResponse = restClient.mget(request, RequestOptions.DEFAULT);
+            MultiGetResponse multiGetResponse;
 
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new Exception(e.getMessage());
+            MultiGetRequest request = new MultiGetRequest();
+            hashes.forEach(hash ->
+                    request.add(new MultiGetRequest.Item(
+                            indexName,
+                            hash.toString()))
+            );
+            if (fromColdStorage) {
+                multiGetResponse = restColdStorageClient.mget(request, RequestOptions.DEFAULT);
+            } else {
+                multiGetResponse = restClient.mget(request, RequestOptions.DEFAULT);
+            }
+
+            return multiGetResponse;
+        } catch (IOException e) {
+            throw new DbConnectorException(String.format("Error at get multi objects from db: {}", e.getMessage()));
         }
-        return multiGetResponse;
 
     }
 
-    public Map<Hash, String> getMultiObjects(List<Hash> hashes, String indexName, boolean fromColdStorage, String fieldName) throws Exception {
+    @Override
+    public Map<Hash, String> getMultiObjects(List<Hash> hashes, String indexName, boolean fromColdStorage, String fieldName) {
         Map<Hash, String> hashToObjectsFromDbMap = new HashMap<>();
-        // TODO: 6/30/2019 handle exception that might be thrownW
         MultiGetResponse multiGetResponse = getMultiObjectsFromDb(hashes, indexName, fromColdStorage);
         for (MultiGetItemResponse multiGetItemResponse : multiGetResponse.getResponses()) {
-            if(multiGetItemResponse.getResponse().isExists()) {
+            if (multiGetItemResponse.getResponse().isExists()) {
                 hashToObjectsFromDbMap.put(new Hash(multiGetItemResponse.getId()),
-                        (String)multiGetItemResponse.getResponse().getSourceAsMap().get(fieldName));
+                        (String) multiGetItemResponse.getResponse().getSourceAsMap().get(fieldName));
             } else {
                 hashToObjectsFromDbMap.put(new Hash(multiGetItemResponse.getId()), null);
-
-
-
-                //TODO 6/30/2019 tomer: raise a flag for calling method in case of missing values
             }
         }
         return hashToObjectsFromDbMap;
     }
 
     @Override
-    public String insertObjectToDb(Hash hash, String objectAsJsonString, String index, String objectName, boolean fromColdStorage) {
-        IndexResponse indexResponse = null;
+    public IndexResponse insertObjectToDb(Hash hash, String objectAsJsonString, String index, String objectName, boolean fromColdStorage) {
+        IndexResponse indexResponse;
         try {
             IndexRequest request = new IndexRequest(index);
             request.id(hash.toString());
-//            request.source(objectAsJsonString, XContentType.JSON);
             request.source((jsonBuilder()
                     .startObject()
                     .field(objectName, objectAsJsonString)
                     .endObject()));
-            if( fromColdStorage )
+            if (fromColdStorage) {
                 indexResponse = restColdStorageClient.index(request, RequestOptions.DEFAULT);
-            else
+            } else {
                 indexResponse = restClient.index(request, RequestOptions.DEFAULT);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-        } finally {
-            if(indexResponse!= null && !hash.toString().equals(indexResponse.getId())) {
-                log.error("mismatch between expected hash {} and stored ID {}", hash, indexResponse.getId());
             }
-            return indexResponse == null ? null : indexResponse.toString();
+            return indexResponse;
+        } catch (Exception e) {
+            throw new DbConnectorException(String.format("Error at insert object to db: {}", e.getMessage());
         }
     }
 
@@ -268,7 +258,7 @@ public class DbConnectorService implements IDbConnectorService {
                 .put("index.number_of_replicas", INDEX_NUMBER_OF_REPLICAS)
         );
 
-        if( fromColdStorage )
+        if (fromColdStorage)
             restColdStorageClient.indices().create(request, RequestOptions.DEFAULT);
         else
             restClient.indices().create(request, RequestOptions.DEFAULT);
@@ -292,7 +282,7 @@ public class DbConnectorService implements IDbConnectorService {
         PutMappingRequest request = new PutMappingRequest(index);
 //        request.type(INDEX_TYPE);
         request.source(builder);
-        if( fromColdStorage )
+        if (fromColdStorage)
             restColdStorageClient.indices().putMapping(request, RequestOptions.DEFAULT);
         else
             restClient.indices().putMapping(request, RequestOptions.DEFAULT);
@@ -303,27 +293,26 @@ public class DbConnectorService implements IDbConnectorService {
 
         GetIndexRequest getIndexRequest = new GetIndexRequest(indexName);
 
-        if( fromColdStorage )
+        if (fromColdStorage)
             return restColdStorageClient.indices().exists(getIndexRequest, RequestOptions.DEFAULT);
         else
             return restClient.indices().exists(getIndexRequest, RequestOptions.DEFAULT);
     }
 
-    public String deleteObject(Hash hash, String indexName, boolean fromColdStorage) {
+    public DeleteResponse deleteObject(Hash hash, String indexName, boolean fromColdStorage) {
         DeleteRequest request = new DeleteRequest(
                 indexName,
                 hash.toString());
         try {
             DeleteResponse deleteResponse;
-            if( fromColdStorage )
+            if (fromColdStorage)
                 deleteResponse = restColdStorageClient.delete(request, RequestOptions.DEFAULT);
             else
                 deleteResponse = restClient.delete(request, RequestOptions.DEFAULT);
 
-            return deleteResponse.status().name();
+            return deleteResponse;
         } catch (IOException e) {
-            log.error(e.getMessage());
-            return e.getMessage();
+            throw new DbConnectorException(e.getMessage());
         }
     }
 }

@@ -20,11 +20,11 @@ import java.util.List;
 import java.util.Map;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes={AddressesResponseCrypto.class, CryptoHelper.class})
+@SpringBootTest(classes={GetHistoryAddressesResponseCrypto.class, CryptoHelper.class})
 public class AddressesResponseCryptoTest {
 
     @Autowired
-    private AddressesResponseCrypto addressesResponseCrypto;
+    private GetHistoryAddressesResponseCrypto getHistoryAddressesResponseCrypto;
 
     @Test
     public void testGetSignature(){
@@ -46,7 +46,7 @@ public class AddressesResponseCryptoTest {
         GetHistoryAddressesResponse getHistoryAddressesResponse = new GetHistoryAddressesResponse(addressHashesToAddresses);
         byte[] addressesResponseInBytes = addressesResponseBuffer.array();
         byte[] bytes = CryptoHelper.cryptoHash(addressesResponseInBytes).getBytes();
-        Assert.assertArrayEquals( bytes, addressesResponseCrypto.getSignatureMessage(getHistoryAddressesResponse) );
+        Assert.assertArrayEquals( bytes, getHistoryAddressesResponseCrypto.getSignatureMessage(getHistoryAddressesResponse) );
     }
 
     @Test
@@ -69,7 +69,7 @@ public class AddressesResponseCryptoTest {
         GetHistoryAddressesResponse getHistoryAddressesResponseOne = new GetHistoryAddressesResponse(addressHashesToAddressesOne);
         byte[] addressesResponseInBytesOne = addressesResponseBufferOne.array();
         byte[] bytesOne = CryptoHelper.cryptoHash(addressesResponseInBytesOne).getBytes();
-        Assert.assertArrayEquals( bytesOne, addressesResponseCrypto.getSignatureMessage(getHistoryAddressesResponseOne) );
+        Assert.assertArrayEquals( bytesOne, getHistoryAddressesResponseCrypto.getSignatureMessage(getHistoryAddressesResponseOne) );
 
 
         //------------------------------
@@ -90,8 +90,8 @@ public class AddressesResponseCryptoTest {
 
         byte[] addressesResponseInBytesTwo = addressesResponseBufferTwo.array();
         byte[] bytesTwo = CryptoHelper.cryptoHash(addressesResponseInBytesTwo).getBytes();
-        Assert.assertArrayEquals( bytesTwo, addressesResponseCrypto.getSignatureMessage(getHistoryAddressesResponseTwo) );
-        Assert.assertThat(bytesTwo, IsNot.not(IsEqual.equalTo(addressesResponseCrypto.getSignatureMessage(getHistoryAddressesResponseOne))));
+        Assert.assertArrayEquals( bytesTwo, getHistoryAddressesResponseCrypto.getSignatureMessage(getHistoryAddressesResponseTwo) );
+        Assert.assertThat(bytesTwo, IsNot.not(IsEqual.equalTo(getHistoryAddressesResponseCrypto.getSignatureMessage(getHistoryAddressesResponseOne))));
     }
 
     private int getByteBufferSize(Map<Hash, AddressData> addressHashesToAddresses){
