@@ -1,4 +1,4 @@
-package io.coti.storagenode.model;
+package io.coti.storagenode.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.EntitiesBulkJsonResponse;
@@ -79,7 +79,7 @@ public class ObjectService implements IObjectService {
 
     @Override
     public ResponseEntity<IResponse> getMultiObjectsFromDb(List<Hash> hashes, boolean fromColdStorage, ElasticSearchData objectType) {
-        Map<Hash, String> hashToObjectFromDbMap = null;
+        Map<Hash, String> hashToObjectFromDbMap;
         //TODO: Define logic.
         try {
             hashToObjectFromDbMap = dbConnectorService.getMultiObjects(hashes, objectType.getIndex(), fromColdStorage, objectType.getObjectName());
@@ -97,10 +97,9 @@ public class ObjectService implements IObjectService {
 
     @Override
     public ResponseEntity<IResponse> getObjectByHash(Hash hash, boolean fromColdStorage, ElasticSearchData objectType) {
-        Map<String, Object> objectAsJsonMap = null;
-        String objectAsJson = null;
+        Map<String, Object> objectAsJsonMap;
+        String objectAsJson;
         try {
-//            objectAsJson = dbConnectorService.getObjectFromDbByHash(hash, indexName, fromColdStorage);
             objectAsJsonMap = dbConnectorService.getObjectFromDbByHash(hash, objectType.getIndex(), fromColdStorage);
             objectAsJson = (String)objectAsJsonMap.get(objectType.getObjectName());
         } catch (Exception e) {

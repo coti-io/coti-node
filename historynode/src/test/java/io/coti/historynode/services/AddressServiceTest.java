@@ -57,11 +57,11 @@ public class AddressServiceTest {
     @MockBean
     private AddressesResponseCrypto addressesResponseCrypto;
 
-    @Autowired
-    private BaseNodeValidationService baseNodeValidationService;
-    //
+    // Unused, Just for mocking
     @MockBean
     private ITransactionHelper transactionHelper;
+    @Autowired
+    private BaseNodeValidationService baseNodeValidationService;
     @MockBean
     private TransactionCrypto transactionCrypto;
     @MockBean
@@ -102,7 +102,7 @@ public class AddressServiceTest {
     @Test
     //TODO 7/18/2019 astolia: add validation that signer is full node
     public void getAddress_testUnsignedRequestFromFullNode_shouldFailInValidation(){
-        GetHistoryAddressesRequest getHistoryAddressesRequest = new GetHistoryAddressesRequest();
+        GetHistoryAddressesRequest getHistoryAddressesRequest = new GetHistoryAddressesRequest(new ArrayList<>());
         //create request without signer hash and signature
         ResponseEntity<IResponse> expectedResponse = ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
@@ -158,10 +158,9 @@ public class AddressServiceTest {
     }
 
     @Test
-    //TODO 7/18/2019 astolia: not working yet
     public void getAddress_testResponseFromStorageOrderNotCorrect_shouldReturnOrderedResponse() {
-        List<Hash> addressesHashFromStorage1 = HashTestUtils.generateListOfRandomAddressHashes(3);
-        List<Hash> addressesHashFromStorage2 = HashTestUtils.generateListOfRandomAddressHashes(3);
+        List<Hash> addressesHashFromStorage1 = HashTestUtils.generateListOfRandomAddressHashes(15);
+        List<Hash> addressesHashFromStorage2 = HashTestUtils.generateListOfRandomAddressHashes(15);
         List<Hash> addressesHashFromStorage = new ArrayList<>();
         addressesHashFromStorage.addAll(addressesHashFromStorage1);
         addressesHashFromStorage.add(hashInRocks);
@@ -202,6 +201,7 @@ public class AddressServiceTest {
         while (responseIterator.hasNext()) {
             Map.Entry<Hash, AddressData> entry = responseIterator.next();
             Assert.assertEquals(orderedList.get(i),entry.getKey());
+            i++;
         }
     }
 

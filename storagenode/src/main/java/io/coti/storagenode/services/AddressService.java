@@ -31,8 +31,9 @@ import java.util.stream.Collectors;
 @Data
 @Service
 @Slf4j
-public class AddressStorageService extends EntityStorageService {
+public class AddressService extends EntityStorageService {
 
+    //TODO 7/25/2019 astolia: use JacksonSerializer instead
     private ObjectMapper mapper;
 
     @Autowired
@@ -55,10 +56,10 @@ public class AddressStorageService extends EntityStorageService {
     }
 
     public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(GetHistoryAddressesRequest getHistoryAddressesRequest){
-        if(getHistoryAddressesRequest.getSignature() == null || getHistoryAddressesRequest.getSignerHash() == null || !addressesRequestCrypto.verifySignature(getHistoryAddressesRequest)){
+        if(!addressesRequestCrypto.verifySignature(getHistoryAddressesRequest)){
             return ResponseEntity.status(HttpStatus.OK).body( new GetHistoryAddressesResponse(new LinkedHashMap<>(), BaseNodeHttpStringConstants.INVALID_SIGNATURE, BaseNodeHttpStringConstants.STATUS_ERROR));
         }
-        return super.retrieveMultipleObjectsFromStorage(getHistoryAddressesRequest.getAddressesHash());
+        return super.retrieveMultipleObjectsFromStorage(getHistoryAddressesRequest.getAddressHashes());
     }
 
     public ResponseEntity<IResponse> storeMultipleAddressesToStorage(AddHistoryAddressesRequest addresses) {
@@ -143,7 +144,6 @@ public class AddressStorageService extends EntityStorageService {
         try {
             addressData = mapper.readValue(addressDataJsonString, AddressData.class);
         } catch (IOException e) {
-            //e.printStackTrace();
             log.error("Failed to deserialize AddressData");
             addressData = null;
         }
