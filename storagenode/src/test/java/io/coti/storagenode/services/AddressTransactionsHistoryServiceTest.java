@@ -6,7 +6,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.coti.basenode.crypto.AddressesRequestCrypto;
-import io.coti.basenode.crypto.AddressesResponseCrypto;
+import io.coti.basenode.crypto.GetHistoryAddressesResponseCrypto;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.AddressData;
@@ -45,8 +45,8 @@ import static org.mockito.Mockito.when;
 import static testUtils.TestUtils.generateRandomHash;
 
 @Deprecated
-@ContextConfiguration(classes = {ObjectService.class, DbConnectorService.class, AddressService.class,
-        CryptoHelper.class, AddressesResponseCrypto.class, AddressesRequestCrypto.class, NodeCryptoHelper.class
+@ContextConfiguration(classes = {ObjectService.class, DbConnectorService.class, AddressStorageService.class,
+        CryptoHelper.class, GetHistoryAddressesResponseCrypto.class, AddressesRequestCrypto.class, NodeCryptoHelper.class
 })
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
@@ -64,13 +64,13 @@ public class AddressTransactionsHistoryServiceTest {
     private ObjectMapper mapper;
 
     @Autowired
-    private AddressService addressStorageValidationService;
+    private AddressStorageService addressStorageValidationService;
 
     @Autowired
     private BaseNodeValidationService validationService;
 
     @Autowired
-    private AddressesResponseCrypto addressesResponseCrypto;
+    private GetHistoryAddressesResponseCrypto getHistoryAddressesResponseCrypto;
 
     @Autowired
     private AddressesRequestCrypto addressesRequestCrypto;

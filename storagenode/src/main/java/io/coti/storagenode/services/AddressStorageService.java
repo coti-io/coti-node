@@ -6,8 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.crypto.AddressesRequestCrypto;
-import io.coti.basenode.crypto.AddressesResponseCrypto;
+import io.coti.basenode.crypto.GetHistoryAddressesResponseCrypto;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.*;
@@ -28,19 +29,23 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+
 @Data
 @Service
 @Slf4j
-public class AddressService extends EntityStorageService {
+public class AddressStorageService extends EntityStorageService {
 
     //TODO 7/25/2019 astolia: use JacksonSerializer instead
     private ObjectMapper mapper;
-
+    @Autowired
+    private JacksonSerializer jacksonSerializer;
     @Autowired
     private BaseNodeValidationService validationService;
 
     @Autowired
-    private AddressesResponseCrypto addressesResponseCrypto;
+    private GetHistoryAddressesResponseCrypto getHistoryAddressesResponseCrypto;
 
     @Autowired
     private AddressesRequestCrypto addressesRequestCrypto;
@@ -55,38 +60,46 @@ public class AddressService extends EntityStorageService {
         super.objectType = ElasticSearchData.ADDRESSES;
     }
 
-    public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(GetHistoryAddressesRequest getHistoryAddressesRequest){
-        if(!addressesRequestCrypto.verifySignature(getHistoryAddressesRequest)){
-            return ResponseEntity.status(HttpStatus.OK).body( new GetHistoryAddressesResponse(new LinkedHashMap<>(), BaseNodeHttpStringConstants.INVALID_SIGNATURE, BaseNodeHttpStringConstants.STATUS_ERROR));
+    public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(GetHistoryAddressesRequest getHistoryAddressesRequest) {
+        try {
+            if (!addressesRequestCrypto.verifySignature(getHistoryAddressesRequest)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
+            }
+            Map<Hash, AddressData> hashToAddressDataMap = new HashMap<>();
+            super.retrieveMultipleObjectsFromStorage(getHistoryAddressesRequest.getAddressHashes()).forEach((hash, addressString) -> hashToAddressDataMap.put(hash, jacksonSerializer.deserialize(addressString)));
+            GetHistoryAddressesResponse getHistoryAddressesResponse = new GetHistoryAddressesResponse(hashToAddressDataMap);
+            getHistoryAddressesResponseCrypto.signMessage(getHistoryAddressesResponse);
+            return ResponseEntity.ok(getHistoryAddressesResponse);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
         }
-        return super.retrieveMultipleObjectsFromStorage(getHistoryAddressesRequest.getAddressHashes());
     }
 
     public ResponseEntity<IResponse> storeMultipleAddressesToStorage(AddHistoryAddressesRequest addresses) {
         //TODO 7/17/2019 astolia: validate addresses
-        Map<Hash,String> addressHashToJsonString = new HashMap<>();
-        Map<Hash,Boolean> addressFailedConversionToFalse = new HashMap<>();
+        Map<Hash, String> addressHashToJsonString = new HashMap<>();
+        Map<Hash, Boolean> addressFailedConversionToFalse = new HashMap<>();
 
-        addresses.getAddresses().forEach( address ->
-            mapAddressToStringAndFillMaps(address, addressHashToJsonString, addressFailedConversionToFalse));
+        addresses.getAddresses().forEach(address ->
+                mapAddressToStringAndFillMaps(address, addressHashToJsonString, addressFailedConversionToFalse));
 
-        if(addressFailedConversionToFalse.size() == addresses.getAddresses().size()){
+        if (addressFailedConversionToFalse.size() == addresses.getAddresses().size()) {
             return ResponseEntity.status(HttpStatus.OK).body(new AddHistoryEntitiesResponse());
         }
 
         ResponseEntity<IResponse> response = objectService.insertMultiObjects(addressHashToJsonString, false, objectType);
-        if(!isResponseOK(response)) {
-            return super.convertResponseStatusToBooleanAndAddFailedHashes(response,addressFailedConversionToFalse); // TODO consider some retry mechanism
+        if (!isResponseOK(response)) {
+            return super.convertResponseStatusToBooleanAndAddFailedHashes(response, addressFailedConversionToFalse); // TODO consider some retry mechanism
         }
         response = objectService.insertMultiObjects(addressHashToJsonString, true, objectType);
-        if( !isResponseOK(response) ) {
-            return super.convertResponseStatusToBooleanAndAddFailedHashes(response,addressFailedConversionToFalse); // TODO consider some retry mechanism, consider removing from ongoing storage
+        if (!isResponseOK(response)) {
+            return super.convertResponseStatusToBooleanAndAddFailedHashes(response, addressFailedConversionToFalse); // TODO consider some retry mechanism, consider removing from ongoing storage
         }
 
-        return super.convertResponseStatusToBooleanAndAddFailedHashes(response,addressFailedConversionToFalse);
+        return super.convertResponseStatusToBooleanAndAddFailedHashes(response, addressFailedConversionToFalse);
     }
 
-    public boolean isObjectDIOK(Hash addressHash, String addressAsJson) {
+    public boolean validateObjectDataIntegrity(Hash addressHash, String addressAsJson) {
         AddressData addressTxHistory = null;
         try {
             addressTxHistory = mapper.readValue(addressAsJson, AddressData.class);
@@ -115,31 +128,31 @@ public class AddressService extends EntityStorageService {
         return hashAddressDataMap;
     }
 
-    private void mapAddressToStringAndFillMaps(AddressData address, Map<Hash,String> addressHashToJsonString, Map<Hash,Boolean> addressFailedConversionToFalse){
+    private void mapAddressToStringAndFillMaps(AddressData address, Map<Hash, String> addressHashToJsonString, Map<Hash, Boolean> addressFailedConversionToFalse) {
         try {
             String addressJsonString = mapper.writeValueAsString(address);
-            addressHashToJsonString.put(address.getHash(),addressJsonString);
+            addressHashToJsonString.put(address.getHash(), addressJsonString);
         } catch (JsonProcessingException e) {
             log.error("failed to generate json string for address data {}", address.getHash().toString());
-            addressFailedConversionToFalse.put(address.getHash(),Boolean.FALSE);
+            addressFailedConversionToFalse.put(address.getHash(), Boolean.FALSE);
         }
     }
 
     @Override
-    protected GetHistoryAddressesResponse getEmptyEntitiesBulkResponse(){
+    protected GetHistoryAddressesResponse getEmptyEntitiesBulkResponse() {
         return new GetHistoryAddressesResponse();
     }
 
     @Override
-    protected GetHistoryAddressesResponse getEntitiesBulkResponse(Map<Hash, String> responsesMap){
-        Map<Hash,AddressData> respMap = new LinkedHashMap<>();
-        responsesMap.entrySet().forEach( entry -> {
+    protected GetHistoryAddressesResponse getEntitiesBulkResponse(Map<Hash, String> responsesMap) {
+        Map<Hash, AddressData> respMap = new LinkedHashMap<>();
+        responsesMap.entrySet().forEach(entry -> {
             respMap.put(entry.getKey(), entry.getValue() == null ? null : desrializeAddressData(entry.getValue()));
         });
         return new GetHistoryAddressesResponse(respMap);
     }
 
-    private AddressData desrializeAddressData(String addressDataJsonString){
+    private AddressData desrializeAddressData(String addressDataJsonString) {
         AddressData addressData;
         try {
             addressData = mapper.readValue(addressDataJsonString, AddressData.class);

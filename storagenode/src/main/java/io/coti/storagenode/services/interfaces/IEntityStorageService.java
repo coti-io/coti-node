@@ -15,8 +15,8 @@ public interface IEntityStorageService {
 
     ResponseEntity<IResponse> storeMultipleObjectsToStorage(Map<Hash, String> hashToObjectJsonDataMap);
 
-    ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(List<Hash> hashes);
+    Map<Hash, String> retrieveMultipleObjectsFromStorage(List<Hash> hashes);
 
-    boolean isObjectDIOK(Hash objectHash, String objectAsJson);
+    boolean validateObjectDataIntegrity(Hash objectHash, String objectAsJson);
 
 }

@@ -109,7 +109,7 @@ public class DbConnectorServiceTest {
         return hashToObjectJsonDataMap.size() == hashToObjectsFromDbMap.size();
     }
 
-    private Map<Hash, String> getMultiObjectsFromDb(String indexName, List<Hash> hashes, String fieldName) throws Exception {
+    private Map<Hash, String> getMultiObjectsFromDb(String indexName, List<Hash> hashes, String fieldName) {
         return dbConnectorService.getMultiObjects(hashes, indexName, false, fieldName);
     }
 
