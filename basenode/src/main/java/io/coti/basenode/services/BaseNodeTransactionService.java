@@ -11,6 +11,7 @@ import io.coti.basenode.services.liveview.LiveViewService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.FluxSink;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
@@ -81,6 +82,37 @@ public class BaseNodeTransactionService implements ITransactionService {
 
         } catch (Exception e) {
             log.error("Error sending transaction batch");
+            log.error(e.getMessage());
+        } finally {
+            if (monitorTransactionBatch.isAlive()) {
+                monitorTransactionBatch.interrupt();
+            }
+        }
+    }
+
+    @Override
+    public void getTransactionBatch(long startingIndex, FluxSink sink) {
+        AtomicLong transactionNumber = new AtomicLong(0);
+        Thread monitorTransactionBatch = monitorTransactionBatch(Thread.currentThread().getId(), transactionNumber);
+
+        try {
+            monitorTransactionBatch.start();
+
+            if (startingIndex <= transactionIndexService.getLastTransactionIndexData().getIndex()) {
+                for (long i = startingIndex; i <= transactionIndexService.getLastTransactionIndexData().getIndex(); i++) {
+                    sink.next((jacksonSerializer.serialize(transactions.getByHash(transactionIndexes.getByHash(new Hash(i)).getTransactionHash()))));
+                    transactionNumber.incrementAndGet();
+                }
+            }
+
+            for (Hash hash : transactionHelper.getNoneIndexedTransactionHashes()) {
+                sink.next(jacksonSerializer.serialize((transactions.getByHash(hash))));
+                transactionNumber.incrementAndGet();
+
+            }
+            sink.complete();
+        } catch (Exception e) {
+            log.error("Error sending reactive transaction batch");
             log.error(e.getMessage());
         } finally {
             if (monitorTransactionBatch.isAlive()) {

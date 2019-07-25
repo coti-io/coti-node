@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @Slf4j
 public class TransactionSynchronizationService implements ITransactionSynchronizationService {
 
-    private final static String RECOVERY_NODE_GET_BATCH_ENDPOINT = "/transaction_batch";
+    private final static String RECOVERY_NODE_GET_BATCH_ENDPOINT = "/transaction_batch/reactive";
     private final static String STARTING_INDEX_URL_PARAM_ENDPOINT = "?starting_index=";
     private final static long MAXIMUM_BUFFER_SIZE = 50000;
 
