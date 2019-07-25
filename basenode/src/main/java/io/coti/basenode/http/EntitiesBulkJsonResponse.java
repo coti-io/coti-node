@@ -7,7 +7,7 @@ import javax.validation.constraints.NotEmpty;
 import java.util.Map;
 
 @Data
-public class EntitiesBulkJsonResponse extends Response{
+public class EntitiesBulkJsonResponse extends BaseResponse {
 
     @NotEmpty
     public Map<Hash, String> hashToEntitiesFromDbMap;
@@ -16,12 +16,7 @@ public class EntitiesBulkJsonResponse extends Response{
         this.hashToEntitiesFromDbMap = hashToEntitiesFromDbMap;
     }
 
-    public EntitiesBulkJsonResponse(Map<Hash, String> hashToEntitiesFromDbMap, String message, String status) {
-        super(message, status);
-        this.hashToEntitiesFromDbMap = hashToEntitiesFromDbMap;
-    }
-
-    public EntitiesBulkJsonResponse(){
+    public EntitiesBulkJsonResponse() {
 
     }
 }

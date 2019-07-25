@@ -9,11 +9,10 @@ import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Data
-public class GetHistoryAddressesResponse extends Response implements ISignValidatable, ISignable {
+public class GetHistoryAddressesResponse extends BaseResponse implements ISignValidatable, ISignable {
     @NotEmpty
     private Map<Hash, AddressData> addressHashesToAddresses;
     @NotNull
@@ -21,43 +20,12 @@ public class GetHistoryAddressesResponse extends Response implements ISignValida
     @NotNull
     private Hash signerHash;
 
-    public GetHistoryAddressesResponse(Map<Hash,AddressData> addressHashesToAddresses, String message, String status) {
-        super(message, status);
-        this.addressHashesToAddresses = addressHashesToAddresses;
-
-    }
-
-    public GetHistoryAddressesResponse(){
-        this.addressHashesToAddresses = new LinkedHashMap<>();
-    }
-
-
     public GetHistoryAddressesResponse(Map<Hash, AddressData> addressHashesToAddresses) {
         this.addressHashesToAddresses = addressHashesToAddresses;
+
     }
 
-    public GetHistoryAddressesResponse(String message, String status){
-        super(message, status);
-        this.addressHashesToAddresses = new LinkedHashMap<>();
-    }
+    public GetHistoryAddressesResponse() {
 
-    @Override
-    public SignatureData getSignature() {
-        return signature;
-    }
-
-    @Override
-    public Hash getSignerHash() {
-        return signerHash;
-    }
-
-    @Override
-    public void setSignerHash(Hash signerHash) {
-        this.signerHash = signerHash;
-    }
-
-    @Override
-    public void setSignature(SignatureData signature) {
-        this.signature = signature;
     }
 }

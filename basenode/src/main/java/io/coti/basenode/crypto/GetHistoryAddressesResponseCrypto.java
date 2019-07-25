@@ -9,7 +9,7 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 
 @Service
-public class AddressesResponseCrypto extends SignatureValidationCrypto<GetHistoryAddressesResponse> {
+public class GetHistoryAddressesResponseCrypto extends SignatureCrypto<GetHistoryAddressesResponse> {
 
     private final int SIZE_OF_ADDRESS_HASH_IN_BYTES = 68;
 
@@ -18,10 +18,10 @@ public class AddressesResponseCrypto extends SignatureValidationCrypto<GetHistor
         Map<Hash, AddressData> addressHashesToAddresses = getHistoryAddressesResponse.getAddressHashesToAddresses();
         int byteBufferSize = getByteBufferSize(addressHashesToAddresses);
         ByteBuffer addressesResponseBuffer = ByteBuffer.allocate(byteBufferSize);
-        addressHashesToAddresses.forEach((hash,addressHash) -> {
+        addressHashesToAddresses.forEach((hash, addressHash) -> {
             addressesResponseBuffer.
                     put(hash.getBytes());
-            if(addressHash != null){
+            if (addressHash != null) {
                 addressesResponseBuffer.putLong(addressHash.getCreationTime().toEpochMilli());
 
             }
@@ -30,14 +30,14 @@ public class AddressesResponseCrypto extends SignatureValidationCrypto<GetHistor
         return CryptoHelper.cryptoHash(addressesResponseInBytes).getBytes();
     }
 
-    private int getByteBufferSize(Map<Hash, AddressData> addressHashesToAddresses){
+    private int getByteBufferSize(Map<Hash, AddressData> addressHashesToAddresses) {
         int size = 0;
-        for( Map.Entry<Hash, AddressData> entry : addressHashesToAddresses.entrySet()){
-            if(entry.getValue() != null){
+        for (Map.Entry<Hash, AddressData> entry : addressHashesToAddresses.entrySet()) {
+            if (entry.getValue() != null) {
                 size += Long.BYTES;
             }
         }
-        size += ( SIZE_OF_ADDRESS_HASH_IN_BYTES * addressHashesToAddresses.size());
+        size += (SIZE_OF_ADDRESS_HASH_IN_BYTES * addressHashesToAddresses.size());
         return size;
     }
 }
