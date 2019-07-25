@@ -6,9 +6,7 @@ import io.coti.basenode.http.EntitiesBulkJsonResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.http.GetEntityJsonResponse;
-import io.coti.storagenode.model.ObjectService;
 import io.coti.storagenode.services.interfaces.IEntityStorageService;
-import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,7 +24,7 @@ public abstract class EntityStorageService implements IEntityStorageService
     protected ObjectService objectService;
 
     @Autowired
-    private AddressStorageService addressStorageService;
+    private AddressService addressService;
 
     protected ElasticSearchData objectType;
 

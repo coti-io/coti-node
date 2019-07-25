@@ -8,6 +8,7 @@ import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -15,9 +16,9 @@ import java.util.Map;
 public class GetHistoryAddressesResponse extends Response implements ISignValidatable, ISignable {
     @NotEmpty
     private Map<Hash, AddressData> addressHashesToAddresses;
-
+    @NotNull
     private SignatureData signature;
-
+    @NotNull
     private Hash signerHash;
 
     public GetHistoryAddressesResponse(Map<Hash,AddressData> addressHashesToAddresses, String message, String status) {

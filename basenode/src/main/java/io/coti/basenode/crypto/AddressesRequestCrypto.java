@@ -16,7 +16,7 @@ public class AddressesRequestCrypto extends SignatureCrypto<GetHistoryAddressesR
 
     @Override
     public byte[] getSignatureMessage(GetHistoryAddressesRequest getHistoryAddressesRequest) {
-        List<Hash> addressHashes = getHistoryAddressesRequest.getAddressesHash();
+        List<Hash> addressHashes = getHistoryAddressesRequest.getAddressHashes();
         ByteBuffer addressesRequestBuffer = ByteBuffer.allocate( SIZE_OF_ADDRESS_HASH_IN_BYTES * addressHashes.size());
         addressHashes.forEach(addressHash -> addressesRequestBuffer.put(addressHash.getBytes()));
         byte[] addressesRequestInBytes = addressesRequestBuffer.array();
