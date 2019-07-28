@@ -11,7 +11,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
@@ -38,14 +37,14 @@ public class TransactionController {
     }
 
     @RequestMapping(value = "/transactionsOld", method = POST)
-        public ResponseEntity<IResponse> getMultipleTransactionsFromStorage(@Valid @RequestBody GetHistoryTransactionsRequest getHistoryTransactionsRequest) {
+    public ResponseEntity<IResponse> getMultipleTransactionsFromStorage(@Valid @RequestBody GetHistoryTransactionsRequest getHistoryTransactionsRequest) {
         ResponseEntity<IResponse> responseResponseEntity = transactionStorageService.retrieveMultipleObjectsFromStorage(getHistoryTransactionsRequest);
         return responseResponseEntity;
     }
 
     @RequestMapping(value = "/transactions", method = POST, consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE, MediaType.APPLICATION_JSON_UTF8_VALUE})
     public void getMultipleTransactionsInBlocksFromStorage(@Valid @RequestBody /*@RequestParam*/ GetHistoryTransactionsRequest getHistoryTransactionsRequest, HttpServletResponse response) {
-       transactionStorageService.retrieveMultipleObjectsInBlocksFromStorage(getHistoryTransactionsRequest, response);
+        transactionStorageService.retrieveMultipleObjectsInBlocksFromStorage(getHistoryTransactionsRequest, response);
     }
 
 //    //TODO 7/10/2019 astolia: Dummy controller for testing

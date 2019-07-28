@@ -9,7 +9,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 @Data
-public class AddEntitiesBulkRequest extends Request{
+public class AddEntitiesBulkRequest extends Request {
     @NotEmpty(message = "Entities must not be empty")
     private Map<Hash, String> hashToEntityJsonDataMap;
 
@@ -18,8 +18,7 @@ public class AddEntitiesBulkRequest extends Request{
     }
 
     // TODO consider removing this, adding it to check deserialization issues
-    public AddEntitiesBulkRequest()
-    {
+    public AddEntitiesBulkRequest() {
         hashToEntityJsonDataMap = new Hashtable<>();
     }
 

@@ -3,7 +3,10 @@ package io.coti.basenode.services;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.crypto.TransactionSenderCrypto;
-import io.coti.basenode.data.*;
+import io.coti.basenode.data.BaseTransactionData;
+import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 import io.coti.basenode.http.GetHistoryAddressesResponse;
 import io.coti.basenode.model.Transactions;
@@ -113,11 +116,10 @@ public class BaseNodeValidationService implements IValidationService {
     }
 
     @Override
-    public boolean validateGetAddressesResponse(GetHistoryAddressesResponse getHistoryAddressesResponse){
-        boolean foundNotValid = getHistoryAddressesResponse.getAddressHashesToAddresses().entrySet().stream().anyMatch(entry ->
+    public boolean validateGetAddressesResponse(GetHistoryAddressesResponse getHistoryAddressesResponse) {
+        return !getHistoryAddressesResponse.getAddressHashesToAddresses().entrySet().stream().anyMatch(entry ->
                 entry.getValue() != null && !entry.getKey().equals(entry.getValue().getHash())
         );
-        return !foundNotValid;
     }
 
 

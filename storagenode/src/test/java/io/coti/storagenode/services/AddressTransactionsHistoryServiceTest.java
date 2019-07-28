@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
-import io.coti.basenode.crypto.AddressesRequestCrypto;
-import io.coti.basenode.crypto.GetHistoryAddressesResponseCrypto;
+import io.coti.basenode.crypto.GetHistoryAddressesRequestCrypto;
 import io.coti.basenode.crypto.CryptoHelper;
+import io.coti.basenode.crypto.GetHistoryAddressesResponseCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
@@ -46,7 +46,7 @@ import static testUtils.TestUtils.generateRandomHash;
 
 @Deprecated
 @ContextConfiguration(classes = {ObjectService.class, DbConnectorService.class, AddressStorageService.class,
-        CryptoHelper.class, GetHistoryAddressesResponseCrypto.class, AddressesRequestCrypto.class, NodeCryptoHelper.class
+        CryptoHelper.class, GetHistoryAddressesResponseCrypto.class, GetHistoryAddressesRequestCrypto.class, NodeCryptoHelper.class
 })
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
@@ -73,7 +73,7 @@ public class AddressTransactionsHistoryServiceTest {
     private GetHistoryAddressesResponseCrypto getHistoryAddressesResponseCrypto;
 
     @Autowired
-    private AddressesRequestCrypto addressesRequestCrypto;
+    private GetHistoryAddressesRequestCrypto getHistoryAddressesRequestCrypto;
 
     @Autowired
     private NodeCryptoHelper nodeCryptoHelper;
@@ -138,8 +138,7 @@ public class AddressTransactionsHistoryServiceTest {
     }
 
     @Test
-    public void singleAddressStoreRetrieveTest() throws IOException
-    {
+    public void singleAddressStoreRetrieveTest() throws IOException {
         // Mocks set-ups
 //        when(mockHistoryNodeConsensusCrypto.verifySignature(any(HistoryNodeConsensusResult.class))).thenReturn(true);
         ResponseEntity<IResponse> mockedResponse = new ResponseEntity(HttpStatus.OK);
@@ -162,22 +161,21 @@ public class AddressTransactionsHistoryServiceTest {
 //        HistoryNodeConsensusResult consensus = new HistoryNodeConsensusResult(addressTxsHistories.get(0).getHash());
         ResponseEntity<IResponse> storeResponse = addressStorageValidationService.storeObjectToStorage(addressTxsHistories.get(0).getHash(),
                 hashToAddressTxsHistoryJsonDataMap.get(addressTxsHistories.get(0).getHash()));
-        Assert.assertTrue( storeResponse.getStatusCode().equals(HttpStatus.OK) );
+        Assert.assertTrue(storeResponse.getStatusCode().equals(HttpStatus.OK));
 
         // Retrieve Address
         ResponseEntity<IResponse> retrievedAddressResponse = addressStorageValidationService.retrieveObjectFromStorage(addressTxsHistories.get(0).getHash(), ElasticSearchData.ADDRESSES);
-        Assert.assertTrue( retrievedAddressResponse.getStatusCode().equals(HttpStatus.OK) );
+        Assert.assertTrue(retrievedAddressResponse.getStatusCode().equals(HttpStatus.OK));
         AddressData retrievedAddress = mapper.readValue(String.valueOf(retrievedAddressResponse.getBody()), AddressData.class);
 
-        Assert.assertTrue( retrievedAddress.equals(addressTxsHistories.get(0)) );
+        Assert.assertTrue(retrievedAddress.equals(addressTxsHistories.get(0)));
 
         boolean bPause = true;
     }
 
 
-//    @Test
-    public void multipleAddressStoreRetrieveTest() throws IOException
-    {
+    //    @Test
+    public void multipleAddressStoreRetrieveTest() throws IOException {
         // Mocks set-ups
 //        when(mockHistoryNodeConsensusCrypto.verifySignature(any(HistoryNodeConsensusResult.class))).thenReturn(true);
         ResponseEntity<IResponse> mockedResponse = new ResponseEntity(HttpStatus.OK);
@@ -201,29 +199,29 @@ public class AddressTransactionsHistoryServiceTest {
 //        HistoryNodeConsensusResult consensus = new HistoryNodeConsensusResult(hash0);
         //TODO 7/18/2019 tomer: The call to storeMultipleObjectsToStorage should no longer be from Entity Service but from AddressStorageService
         ResponseEntity<IResponse> storeResponse = addressStorageValidationService.storeMultipleObjectsToStorage(hashToAddressTxsHistoryJsonDataMap);
-        Assert.assertTrue( storeResponse.getStatusCode().equals(HttpStatus.OK) );
-        Assert.assertTrue(((BaseResponse)storeResponse.getBody()).getStatus().equals("Success"));
-        Assert.assertTrue(((EntitiesBulkJsonResponse)storeResponse.getBody()).getHashToEntitiesFromDbMap().keySet().containsAll(hashToAddressTxsHistoryJsonDataMap.keySet()));
+        Assert.assertTrue(storeResponse.getStatusCode().equals(HttpStatus.OK));
+        Assert.assertTrue(((BaseResponse) storeResponse.getBody()).getStatus().equals("Success"));
+        Assert.assertTrue(((EntitiesBulkJsonResponse) storeResponse.getBody()).getHashToEntitiesFromDbMap().keySet().containsAll(hashToAddressTxsHistoryJsonDataMap.keySet()));
 
         // Retrieve Addresses
         ResponseEntity<IResponse> retrievedAddressResponse = addressStorageValidationService.retrieveObjectFromStorage(hash0, ElasticSearchData.ADDRESSES);
-        Assert.assertTrue( retrievedAddressResponse.getStatusCode().equals(HttpStatus.OK) );
+        Assert.assertTrue(retrievedAddressResponse.getStatusCode().equals(HttpStatus.OK));
         AddressData retrievedAddress = mapper.readValue(String.valueOf(retrievedAddressResponse.getBody()), AddressData.class);
-        Assert.assertTrue( retrievedAddress.equals(addressTxsHistories.get(0)) );
+        Assert.assertTrue(retrievedAddress.equals(addressTxsHistories.get(0)));
 
         List<Hash> addressesToGet = new ArrayList<>();
         Hash hash1 = addressTxsHistories.get(1).getHash();
         Hash hash2 = addressTxsHistories.get(2).getHash();
         addressesToGet.add(hash1);
         addressesToGet.add(hash2);
-        GetHistoryAddressesResponse hashResponseEntities = (GetHistoryAddressesResponse)addressStorageValidationService.retrieveMultipleObjectsFromStorage(addressesToGet).getBody();
-        Assert.assertNotNull(hashResponseEntities.getAddressHashesToAddresses().get(hash1) );
-        Assert.assertNotNull( hashResponseEntities.getAddressHashesToAddresses().get(hash2) );
+        GetHistoryAddressesResponse hashResponseEntities = (GetHistoryAddressesResponse) addressStorageValidationService.retrieveMultipleObjectsFromStorage(addressesToGet).getBody();
+        Assert.assertNotNull(hashResponseEntities.getAddressHashesToAddresses().get(hash1));
+        Assert.assertNotNull(hashResponseEntities.getAddressHashesToAddresses().get(hash2));
 //        AddressData retrievedAddress1 = mapper.readValue(String.valueOf( hashResponseEntities.getAddressHashesToAddresses().get(hash1)), AddressData.class);
 //        AddressData retrievedAddress2 = mapper.readValue(String.valueOf( hashResponseEntities.getAddressHashesToAddresses().get(hash2)), AddressData.class);
 
-        Assert.assertTrue( hashResponseEntities.getAddressHashesToAddresses().get(hash1).equals(addressTxsHistories.get(1)) );
-        Assert.assertTrue( hashResponseEntities.getAddressHashesToAddresses().get(hash2).equals(addressTxsHistories.get(2)) );
+        Assert.assertTrue(hashResponseEntities.getAddressHashesToAddresses().get(hash1).equals(addressTxsHistories.get(1)));
+        Assert.assertTrue(hashResponseEntities.getAddressHashesToAddresses().get(hash2).equals(addressTxsHistories.get(2)));
     }
 
 

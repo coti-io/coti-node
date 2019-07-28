@@ -5,7 +5,6 @@ import io.coti.basenode.data.TransactionData;
 import lombok.Data;
 
 import java.util.HashMap;
-import java.util.List;
 
 @Data
 public class HistoryTransactionResponseData {
