@@ -1,30 +1,22 @@
 package io.coti.storagenode.services;
 
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.EntitiesBulkJsonResponse;
-import io.coti.basenode.http.Response;
-import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.storagenode.data.MultiDbInsertionStatus;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.database.DbConnectorService;
 import io.coti.storagenode.services.interfaces.IObjectService;
-import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.rest.RestStatus;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.SERVER_ERROR;
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 
 @Service
 @Slf4j
@@ -39,21 +31,12 @@ public class ObjectService implements IObjectService {
         dbConnectorService.addIndexes(false);
     }
 
-    public ResponseEntity<IResponse> insertMultiObjects(Map<Hash, String> hashToObjectJsonDataMap, boolean fromColdStorage, ElasticSearchData objectType) {
-        Pair<MultiDbInsertionStatus, Map<Hash, String>> insertResponse;
-        try {
-            insertResponse = dbConnectorService.insertMultiObjectsToDb(objectType.getIndex(), objectType.getObjectName(), hashToObjectJsonDataMap, fromColdStorage);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new Response(
-                            e.getMessage(),
-                            STATUS_ERROR));
-        }
-        return ResponseEntity
-                .status(dbConnectorService.getHttpStatus(insertResponse.getKey()))
-                .body(new EntitiesBulkJsonResponse(insertResponse.getValue()));
+    @Override
+    public Map<Hash, RestStatus> insertMultiObjects(Map<Hash, String> hashToObjectJsonDataMap, boolean fromColdStorage, ElasticSearchData objectType) {
+        Map<Hash, RestStatus> hashToRestStatusMap = new HashMap<>();
+        BulkResponse insertResponse = dbConnectorService.insertMultiObjectsToDb(objectType.getIndex(), objectType.getObjectName(), hashToObjectJsonDataMap, fromColdStorage);
+        Arrays.asList(insertResponse.getItems()).forEach(bulkItemResponse -> hashToRestStatusMap.put(new Hash(bulkItemResponse.getId()), bulkItemResponse.status()));
+        return hashToRestStatusMap;
     }
 
     @Override
@@ -74,28 +57,11 @@ public class ObjectService implements IObjectService {
     }
 
     @Override
-    public ResponseEntity<IResponse> deleteMultiObjectsFromDb(List<Hash> hashes, boolean fromColdStorage, ElasticSearchData objectType) {
-        Map<Hash, String> hashToResponseMap = new HashMap<>();
-        try {
-            for (Hash hash : hashes) {
+    public Map<Hash, RestStatus> deleteMultiObjectsFromDb(List<Hash> hashes, boolean fromColdStorage, ElasticSearchData objectType) {
+        Map<Hash, RestStatus> hashToResponseMap = new HashMap<>();
 
-                try {
-                    hashToResponseMap.put(hash, dbConnectorService.deleteObject(hash, objectType.getIndex(), fromColdStorage));
-                } catch (Exception e) {
-
-                }
-            }
-
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new Response(
-                            SERVER_ERROR,
-                            STATUS_ERROR));
-        }
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(new EntitiesBulkJsonResponse(hashToResponseMap));
+        hashes.forEach(hash -> hashToResponseMap.put(hash, this.deleteObjectByHash(hash, fromColdStorage, objectType)));
+        return hashToResponseMap;
     }
 
     @Override
