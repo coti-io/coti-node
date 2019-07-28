@@ -100,20 +100,15 @@ public class AddressStorageService extends EntityStorageService {
     }
 
     public boolean validateObjectDataIntegrity(Hash addressHash, String addressAsJson) {
-        AddressData addressTxHistory = null;
+        AddressData addressTxHistory;
         try {
             addressTxHistory = mapper.readValue(addressAsJson, AddressData.class);
         } catch (IOException e) {
             e.printStackTrace();
             return false;
         }
-        // TODO: Commented actual check until Addresses are properly signed
-        return validationService.validateAddress(addressTxHistory.getHash()); // TODO add Validation for addressAsJson
+        return validationService.validateAddress(addressTxHistory.getHash());
     }
-
-//    public ResponseEntity<IResponse> retrieveObjectFromStorage(Hash hash) {
-//        return super.retrieveObjectFromStorage(hash, ElasticSearchData.ADDRESSES);
-//    }
 
     public Map<Hash, AddressData> getObjectsMapFromJsonMap(HashMap<Hash, String> responsesMap) {
         Map<Hash, AddressData> hashAddressDataMap = responsesMap.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> {

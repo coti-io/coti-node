@@ -1,24 +1,18 @@
 package io.coti.storagenode.services;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.EntitiesBulkJsonResponse;
 import io.coti.basenode.http.GetHistoryTransactionsRequest;
 import io.coti.basenode.http.GetHistoryTransactionsResponse;
 import io.coti.basenode.http.data.GetHashToTransactionData;
-import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.services.interfaces.ITransactionStorageValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +20,6 @@ import javax.annotation.PostConstruct;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -42,27 +35,20 @@ public class TransactionStorageService extends EntityStorageService implements I
     private static final int KEEP_ALIVE_TIME = 30;
     private static final int BLOCKING_QUEUE_CAPACITY = 1000;
 
-
     @Autowired
     private BaseNodeValidationService validationService;
     @Autowired
     private ObjectService objectService;
     @Autowired
     private ChunkingService chunkingService;
-
-
-    private ObjectMapper mapper;
+    @Autowired
+    private JacksonSerializer jacksonSerializer;
     private BlockingQueue<GetHashToTransactionData> retrievedTransactions;
     private Thread retrievedTransactionsThread;
     private ThreadPoolExecutor executorPool;
 
     @PostConstruct
     public void init() {
-        mapper = new ObjectMapper()
-                .registerModule(new ParameterNamesModule())
-                .registerModule(new Jdk8Module())
-                .registerModule(new JavaTimeModule()); // new module, NOT JSR310Module
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         super.objectType = ElasticSearchData.TRANSACTIONS;
 
         //TODO 7/15/2019 tomer:
@@ -80,10 +66,9 @@ public class TransactionStorageService extends EntityStorageService implements I
 
     public boolean validateObjectDataIntegrity(Hash objectHash, String txAsJson) {
         TransactionData transactionData;
-        try {
-            transactionData = mapper.readValue(txAsJson, TransactionData.class);
-        } catch (IOException e) {
-            e.printStackTrace();
+
+        transactionData = jacksonSerializer.deserialize(txAsJson);
+        if (transactionData == null) {
             return false;
         }
 
@@ -107,23 +92,11 @@ public class TransactionStorageService extends EntityStorageService implements I
         return entitiesBulkJsonResponse;
     }
 
-    public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(GetHistoryTransactionsRequest getHistoryTransactionsRequest) {
-        return super.retrieveMultipleObjectsFromStorage(getHistoryTransactionsRequest.getHashes());
-    }
-
     public void retrieveMultipleObjectsInBlocksFromStorage(GetHistoryTransactionsRequest getHistoryTransactionsRequest, HttpServletResponse response) {
-        retrieveMultipleTransactionsInBlocksFromStorage(getHistoryTransactionsRequest.getHashes(), new GetHistoryTransactionsResponse(), response);
-    }
+        List<Hash> transactionHashes = getHistoryTransactionsRequest.getTransactionHashes();
+        List<List<Hash>> blocksOfHashes = divideHashesToBlocks(transactionHashes);
 
-    private void retrieveMultipleTransactionsInBlocksFromStorage(List<Hash> hashes, GetHistoryTransactionsResponse getHistoryTransactionsResponse, HttpServletResponse response) {
-        List<List<Hash>> blocksOfHashes = divideHashesToBlocks(hashes);
-        if (blocksOfHashes == null || blocksOfHashes.isEmpty()) {
-            queueTransactionsDataBlock(new GetHistoryTransactionsResponse(new HashMap<>()), HttpStatus.OK);
-            return;
-        }
-
-        int blocksOfHashesAmount = blocksOfHashes.size();
-        for (int blockNumber = 0; blockNumber < blocksOfHashesAmount; blockNumber++) {
+        for (int blockNumber = 0; blockNumber < blocksOfHashes.size(); blockNumber++) {
             Runnable worker = new WorkerThread(getHistoryTransactionsResponse, blocksOfHashes, blockNumber);
             executorPool.execute(worker);
         }
@@ -165,7 +138,7 @@ public class TransactionStorageService extends EntityStorageService implements I
         return hashesBlocks;
     }
 
-    private ResponseEntity<IResponse> queueTransactionsDataBlock(GetHistoryTransactionsResponse getHistoryTransactionsResponse, HttpStatus httpStatus) {
+    private void queueTransactionsDataBlock(Map<Hash, String> transactionMap) {
         if (getHistoryTransactionsResponse == null || getHistoryTransactionsResponse.getEntitiesBulkResponses() == null || !getHistoryTransactionsResponse.getEntitiesBulkResponses().isEmpty()) {
             return ResponseEntity.status(httpStatus).body(getHistoryTransactionsResponse);
         }
@@ -178,12 +151,8 @@ public class TransactionStorageService extends EntityStorageService implements I
     }
 
     private void queueTransactionData(Map.Entry<Hash, String> entry) {
-        TransactionData transactionData = null;
-        try {
-            transactionData = mapper.readValue(entry.getValue(), TransactionData.class);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        TransactionData transactionData = jacksonSerializer.deserialize(entry.getValue());
+
         GetHashToTransactionData transactionDataPair = new GetHashToTransactionData(entry.getKey(), transactionData);
 
         try {
@@ -195,63 +164,55 @@ public class TransactionStorageService extends EntityStorageService implements I
 
 
     private class WorkerThread implements Runnable {
-        GetHistoryTransactionsResponse getHistoryTransactionsResponse;
-        List<List<Hash>> blocksOfHashes;
-        int blockNumber;
+        private List<Hash> transactionHashes;
+        private int blockNumber;
 
-        public WorkerThread(GetHistoryTransactionsResponse getHistoryTransactionsResponse, List<List<Hash>> blocksOfHashes, int blockNumber) {
-            this.getHistoryTransactionsResponse = getHistoryTransactionsResponse;
-            this.blocksOfHashes = blocksOfHashes;
+        public WorkerThread(List<Hash> transactionHashes, int blockNumber) {
+            this.transactionHashes = transactionHashes;
             this.blockNumber = blockNumber;
         }
 
         @Override
         public void run() {
-            log.info("Thread {} ,Starting block number = {}", Thread.currentThread().getName(), blockNumber);
-            getTransactionsDataBlock(getHistoryTransactionsResponse, blocksOfHashes, blockNumber);
-            System.out.println(Thread.currentThread().getName() + " End ");
+            log.info("Thread {} ,Starting block number = {}", Thread.currentThread().getId(), blockNumber);
+            getTransactionsDataBlock(transactionHashes);
+            log.info("Thread {} ,Ended block number = {}", Thread.currentThread().getId(), blockNumber);
         }
 
-        private void getTransactionsDataBlock(GetHistoryTransactionsResponse getHistoryTransactionsResponse, List<List<Hash>> blocksOfHashes, int blockNumber) {
-            List<Hash> blockHashes = blocksOfHashes.get(blockNumber);
-            HashMap<Hash, String> responsesMap = new HashMap<>();
-            ResponseEntity<IResponse> objectsByHashResponse = objectService.getMultiObjectsFromDb(blockHashes, false, objectType);
-            // For Unsuccessful retrieval of data
-            if (!isResponseOK(objectsByHashResponse)) {
-                responsesMap.put(null, null);
-                getHistoryTransactionsResponse.setEntitiesBulkResponses(responsesMap);
-                //TODO 7/14/2019 tomer: Add to blocking queue
-                queueTransactionsDataBlock(getHistoryTransactionsResponse, objectsByHashResponse.getStatusCode());
-                return;
+        private void getTransactionsDataBlock(List<Hash> transactionHashes) {
+
+            try {
+                Map<Hash, String> transactionsMap = objectService.getMultiObjectsFromDb(transactionHashes, false, objectType);
+
+                queueTransactionsDataBlock(transactionsMap);
+            } catch (Exception e) {
+                log.error("{}: {}", e.getClass().getName(), e.getMessage());
             }
 
-            // For successfully retrieved data, perform also data-integrity checks
-            verifyEntitiesFromDbMap(responsesMap, objectsByHashResponse);
-            getHistoryTransactionsResponse.setEntitiesBulkResponses(responsesMap);
-            //TODO 7/14/2019 tomer: Add to blocking queue
-            queueTransactionsDataBlock(getHistoryTransactionsResponse, HttpStatus.OK);
         }
     }
+}
 
-    private class RejectedExecutionHandlerRetrievingBlocks implements RejectedExecutionHandler {
-        @Override
-        public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-            log.info("Thread {} is rejected.", r.toString());
-        }
+private class RejectedExecutionHandlerRetrievingBlocks implements RejectedExecutionHandler {
+    @Override
+    public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+        log.info("Thread {} is rejected.", r.toString());
+    }
+}
+
+private class updateRetrievedTransactionsThread implements Runnable {
+    ServletOutputStream output;
+
+    public updateRetrievedTransactionsThread(ServletOutputStream output) {
+        this.output = output;
     }
 
-    private class updateRetrievedTransactionsThread implements Runnable {
-        ServletOutputStream output;
-
-        public updateRetrievedTransactionsThread(ServletOutputStream output) {
-            this.output = output;
-        }
-
-        @Override
-        public void run() {
-            updateRetrievedTransactions(this.output);
-        }
+    @Override
+    public void run() {
+        updateRetrievedTransactions(this.output);
     }
+
+}
 
     private void updateRetrievedTransactions(ServletOutputStream output) {
         while (!Thread.currentThread().isInterrupted()) {

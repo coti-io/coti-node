@@ -76,7 +76,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         // TODO: later construct consensus based on algorithm
 
         //TODO 7/4/2019 tomer:
-        // Get local unconfirmed transactions hashes
+        // Get local unconfirmed transactions transactionHashes
         transactionService.updateUnconfirmedTransactionsNotFromClusterStamp(unconfirmedTransactionHashesFromClusterStamp);
 
         // Replace / update matching transactions in DB with the entries from the cluster-stamp

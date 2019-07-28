@@ -1,11 +1,13 @@
 package io.coti.storagenode.services;
 
+import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.http.AddHistoryEntitiesResponse;
 import io.coti.basenode.http.EntitiesBulkJsonResponse;
+import io.coti.basenode.http.SeriazableResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.data.enums.ElasticSearchData;
-import io.coti.storagenode.http.GetEntityJsonResponse;
 import io.coti.storagenode.services.interfaces.IEntityStorageService;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.rest.RestStatus;
@@ -13,70 +15,40 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.storagenode.http.HttpStringConstants.*;
+
 @Slf4j
 public abstract class EntityStorageService implements IEntityStorageService {
 
-    public static final String TRANSACTION_DATA = "transactionData";
-
     @Autowired
     protected ObjectService objectService;
-
     @Autowired
-    private AddressStorageService addressStorageService;
-
+    protected JacksonSerializer jacksonSerializer;
     protected ElasticSearchData objectType;
 
-    @Override
-    public ResponseEntity<IResponse> storeObjectToStorage(Hash hash, String objectAsJsonString) {
-        // Validation of the request itself
-        ResponseEntity<IResponse> response = validateStoreObjectToStorage(hash, objectAsJsonString);
-        if (!isResponseOK(response))
-            return response;
-
-        // Store data in ongoing storage system
-        response = objectService.insertObjectJson(hash, objectAsJsonString, false, objectType);
-        if (!isResponseOK(response))
-            return response; // TODO consider some retry mechanism,
-        else {
-            // Store data also in cold-storage
-            response = objectService.insertObjectJson(hash, objectAsJsonString, true, objectType);
-            if (!isResponseOK(response))
-                return response; // TODO consider some retry mechanism,
-        }
-        return response;
-    }
-
 
     @Override
-    public ResponseEntity<IResponse> retrieveObjectFromStorage(Hash hash, ElasticSearchData objectType) {
-        // Validation of the request itself
-        ResponseEntity<IResponse> response = validateRetrieveObjectToStorage(hash);
-        if (!isResponseOK(response))
-            return response;
-
-        // Retrieve data from ongoing storage system, including data integrity checks
+    public <T extends IPropagatable> T retrieveObjectFromStorage(Hash hash) {
         boolean fromColdStorage = false;
-        ResponseEntity<IResponse> objectByHashResponse = objectService.getObjectByHash(hash, fromColdStorage, objectType);
+        String objectAsJson = objectService.getObjectByHash(hash, fromColdStorage, objectType);
 
-        if (!isResponseOK(objectByHashResponse)) {
+        if (objectAsJson == null) {
             fromColdStorage = true;
-            objectByHashResponse = objectService.getObjectByHash(hash, fromColdStorage, objectType);
-            if (!isResponseOK(objectByHashResponse))
-                return objectByHashResponse;   // Failed to retrieve from both repositories
+            objectAsJson = objectService.getObjectByHash(hash, fromColdStorage, objectType);
+            if (objectAsJson == null) {
+                return null;
+            }
         }
 
-
-        String objectAsJson = ((GetEntityJsonResponse) objectByHashResponse.getBody()).getEntityJsonPair().getValue();
-        Hash objectHash = ((GetEntityJsonResponse) objectByHashResponse.getBody()).getEntityJsonPair().getKey();
-//        Hash objectHash = ((Pair<Hash, String>) objectByHashResponse.getBody()).getKey();
-//        String objectAsJson = ((Pair<Hash, String>) objectByHashResponse.getBody()).getValue();
-
-        return verifyRetrievedSingleObject(objectHash, objectAsJson, fromColdStorage, objectType);
+        if (verifyRetrievedSingleObject(hash, objectAsJson, fromColdStorage, objectType)) {
+            return jacksonSerializer.deserialize(objectAsJson);
+        }
+        return null;
     }
 
 
@@ -117,112 +89,60 @@ public abstract class EntityStorageService implements IEntityStorageService {
         }
     }
 
+    @Override
+    public ResponseEntity<IResponse> storeObjectToStorage(Hash hash, String objectAsJsonString) {
+        try {
+            if (!validateObjectDataIntegrity(hash, objectAsJsonString)) {
+                return ResponseEntity.badRequest().body(new SeriazableResponse(INVALID_OBJECT, STATUS_ERROR));
+            }
 
-    private ResponseEntity<IResponse> validateRetrieveObjectToStorage(Hash hash) {
-        List<Hash> hashToObjectJsonStringList = new ArrayList<>();
-        hashToObjectJsonStringList.add(hash);
-
-        //TODO: implement or remove method
-        ResponseEntity<IResponse> responsesEntity = new ResponseEntity(HttpStatus.OK);
-        return responsesEntity;
+            RestStatus insertStatus = objectService.insertObjectJson(hash, objectAsJsonString, false, objectType);
+            if (!insertStatus.equals(RestStatus.CREATED)) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SeriazableResponse(String.format(INSERT_OBJECT_ERROR, insertStatus.toString()), STATUS_ERROR));
+            } else {
+                objectService.insertObjectJson(hash, objectAsJsonString, true, objectType);
+            }
+            return ResponseEntity.ok().body(new SeriazableResponse(String.format(INSERT_OBJECT_SUCCESS, hash.toString())));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SeriazableResponse(e.getMessage(), STATUS_ERROR));
+        }
     }
-
 
     @Override
     public ResponseEntity<IResponse> storeMultipleObjectsToStorage(Map<Hash, String> hashToObjectJsonDataMap) {
-        Map<Hash, Boolean> entityFailedVerificationHashToFalse = new HashMap<>();
-        // Validation of the request itself
-        ResponseEntity<IResponse> response = validateStoreMultipleObjectsToStorage(hashToObjectJsonDataMap, entityFailedVerificationHashToFalse);
-        if (!isResponseOK(response)) {
-            return convertResponseStatusToBooleanAndAddFailedHashes(response, entityFailedVerificationHashToFalse);
+
+        Map<Hash, Boolean> entityFailedVerificationMap = validateStoreMultipleObjectsToStorage(hashToObjectJsonDataMap);
+        if (!entityFailedVerificationMap.isEmpty()) {
+            return convertResponseStatusToBooleanAndAddFailedHashes(entityFailedVerificationMap);
         }
 
-        // Store data from approved request into ongoing storage
-        response = objectService.insertMultiObjects(hashToObjectJsonDataMap, false, objectType);
-        if (!isResponseOK(response)) {
-            return convertResponseStatusToBooleanAndAddFailedHashes(response, entityFailedVerificationHashToFalse);
-        } else {
-            response = objectService.insertMultiObjects(hashToObjectJsonDataMap, true, objectType);
-            if (!isResponseOK(response)) {
-                // TODO consider some retry mechanism, consider removing from ongoing storage
-                return convertResponseStatusToBooleanAndAddFailedHashes(response, entityFailedVerificationHashToFalse);
+        Map<Hash, RestStatus> insertResponseMap = objectService.insertMultiObjects(hashToObjectJsonDataMap, false, objectType);
+        Map<Hash, String> hashToColdStorageObjectJsonDataMap = new HashMap<>();
+        insertResponseMap.forEach((hash, restStatus) -> {
+            if (restStatus.equals(RestStatus.CREATED)) {
+                hashToColdStorageObjectJsonDataMap.put(hash, hashToObjectJsonDataMap.get(hash));
             }
+        });
+        if (!insertResponseMap.isEmpty()) {
+            objectService.insertMultiObjects(hashToColdStorageObjectJsonDataMap, true, objectType);
         }
         return convertResponseStatusToBooleanAndAddFailedHashes(response, entityFailedVerificationHashToFalse);
     }
 
-    private ResponseEntity<IResponse> validateStoreObjectToStorage(Hash hash, String objectJson) {
-        Map<Hash, String> hashToObjectJsonDataMap = new HashMap<>();
-        Map<Hash, Boolean> entityFailedVerificationHashToFalse = new HashMap<>();
-        hashToObjectJsonDataMap.put(hash, objectJson);
-        // Validate Data Integrity
-        ResponseEntity<IResponse> response = validateStoreMultipleObjectsToStorage(hashToObjectJsonDataMap, entityFailedVerificationHashToFalse);
-        return response;
-    }
 
+    private Map<Hash, Boolean> validateStoreMultipleObjectsToStorage(Map<Hash, String> hashToObjectJsonDataMap) {
 
-    private ResponseEntity<IResponse> validateStoreMultipleObjectsToStorage(Map<Hash, String> hashToObjectJsonDataMap, Map<Hash, Boolean> entityFailedVerificationHashToFalse) {
-        ResponseEntity<IResponse> response = new ResponseEntity(HttpStatus.OK);
-
-        // Validations checks - Data integrity
-        hashToObjectJsonDataMap.entrySet().stream().forEach(entry -> {
+        Map<Hash, Boolean> entityFailedVerificationMap = new HashMap<>();
+        hashToObjectJsonDataMap.entrySet().forEach(entry -> {
             if (!validateObjectDataIntegrity(entry.getKey(), entry.getValue())) {
-                entityFailedVerificationHashToFalse.put(entry.getKey(), Boolean.FALSE);
+                entityFailedVerificationMap.put(entry.getKey(), Boolean.FALSE);
             }
         });
-        entityFailedVerificationHashToFalse.entrySet().stream().forEach(entry -> {
-            hashToObjectJsonDataMap.remove(entry.getKey());
-        });
-        if (hashToObjectJsonDataMap.isEmpty()) {
-            response = new ResponseEntity(HttpStatus.EXPECTATION_FAILED);
-        }
-
-        return response;
+        return entityFailedVerificationMap;
     }
-
-
-//    @Override
-//    public <G extends BaseResponse> ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(List<Hash> hashes, G entitiesBulkResponse)
-//    {
-//        HashMap<Hash, String> responsesMap = new HashMap<>();
-//
-//        // Retrieve data from ongoing storage system
-//        ResponseEntity<IResponse> objectsByHashResponse = objectService.getMultiObjectsFromDb(hashes, false, objectType);
-//
-//        if( !isResponseOK(objectsByHashResponse)){
-//            responsesMap.put(null,null);
-//            if(objectType.getObjectName().equals(TRANSACTION_DATA)) {
-//                ((GetHistoryTransactionsResponse)entitiesBulkResponse).setEntitiesBulkResponses(responsesMap);
-//            } else {
-//                ((GetHistoryAddressesResponse)entitiesBulkResponse).setAddressHashesToAddresses(addressStorageService.getObjectsMapFromJsonMap(responsesMap));
-//            }
-//            return ResponseEntity.status(objectsByHashResponse.getStatusCode()).body(entitiesBulkResponse);
-//        }
-//
-//        // For successfully retrieved data, perform also data-integrity checks
-//        ((EntitiesBulkJsonResponse)objectsByHashResponse.getBody()).getHashToEntitiesFromDbMap().forEach( (hash, objectAsJsonString) ->
-//                {
-//                    //TODO: In case of error in retrieving valid value, return value as a null.
-//                    ResponseEntity<IResponse> verifyRetrievedSingleObject = verifyRetrievedSingleObject(hash, objectAsJsonString, false, objectType);
-//                    if (verifyRetrievedSingleObject.getStatusCode() != HttpStatus.OK) {
-//                        responsesMap.put(hash, null);
-//                    } else {
-//                        responsesMap.put(hash, objectAsJsonString);
-//                    }
-//                }
-//        );
-//        if(objectType.getObjectName().equals(TRANSACTION_DATA)) {
-//            ((GetHistoryTransactionsResponse)entitiesBulkResponse).setEntitiesBulkResponses(responsesMap);
-//        } else {
-//            ((GetHistoryAddressesResponse)entitiesBulkResponse).setAddressHashesToAddresses(addressStorageService.getObjectsMapFromJsonMap(responsesMap));
-//        }
-//        return ResponseEntity.status(HttpStatus.OK).body(entitiesBulkResponse);
-//    }
-
 
     protected boolean isResponseOK(ResponseEntity<IResponse> iResponse) {
         return iResponse != null && iResponse.getStatusCode().equals(HttpStatus.OK);
-//               && ((BaseResponse)iResponse.getBody()).getStatus().equals("Success");
     }
 
     @Override
@@ -248,7 +168,7 @@ public abstract class EntityStorageService implements IEntityStorageService {
         );
     }
 
-    protected ResponseEntity<IResponse> convertResponseStatusToBooleanAndAddFailedHashes(ResponseEntity<IResponse> entityResponse, Map<Hash, Boolean> entityFailedConversionHashToFalse) {
+    protected ResponseEntity<IResponse> convertResponseStatusToBooleanAndAddFailedHashes(Map<Hash, Boolean> entityFailedConversionHashToFalse) {
         Map<Hash, String> entityResponseBodyMap = ((EntitiesBulkJsonResponse) entityResponse.getBody()).getHashToEntitiesFromDbMap();
         Map<Hash, Boolean> newResponseBody = new HashMap<>();
         entityResponseBodyMap.entrySet().forEach(entry -> {
@@ -258,8 +178,8 @@ public abstract class EntityStorageService implements IEntityStorageService {
         return ResponseEntity.status(entityResponse.getStatusCode()).body(new AddHistoryEntitiesResponse(newResponseBody));
     }
 
-    private Boolean convertElasticWriteStatusToBoolean(String writeStatus) {
-        return writeStatus.equals("CREATED") || writeStatus.equals("UPDATED") ? Boolean.TRUE : Boolean.FALSE;
+    private Boolean convertElasticWriteStatusToBoolean(RestStatus writeStatus) {
+        return writeStatus.equals(RestStatus.CREATED);
     }
 
     protected abstract IResponse getEmptyEntitiesBulkResponse();
