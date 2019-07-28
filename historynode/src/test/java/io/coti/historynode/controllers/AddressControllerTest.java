@@ -1,7 +1,7 @@
 package io.coti.historynode.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.coti.basenode.crypto.AddressesRequestCrypto;
+import io.coti.basenode.crypto.GetHistoryAddressesRequestCrypto;
 import io.coti.historynode.services.AddressService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
@@ -35,7 +35,7 @@ public class AddressControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private AddressesRequestCrypto addressesRequestCrypto;
+    private GetHistoryAddressesRequestCrypto getHistoryAddressesRequestCrypto;
 
     @MockBean
     private AddressService addressService;

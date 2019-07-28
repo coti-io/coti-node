@@ -44,7 +44,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static testUtils.TestUtils.createRandomTransaction;
 
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @ContextConfiguration(classes = {ObjectService.class, DbConnectorService.class, TransactionStorageService.class,
         CryptoHelper.class, AddressStorageService.class
 })
@@ -118,8 +118,8 @@ public class TransactionServiceTest {
         ResponseEntity<IResponse> insertResponse = transactionService.insertMultiObjects(hashToTransactionJsonDataMap, false, ElasticSearchData.TRANSACTIONS);
 
         Assert.assertTrue(insertResponse.getStatusCode().equals(HttpStatus.OK));
-        Assert.assertTrue(((BaseResponse)insertResponse.getBody()).getStatus().equals("Success"));
-        Assert.assertTrue(((EntitiesBulkJsonResponse)insertResponse.getBody()).getHashToEntitiesFromDbMap().keySet().containsAll(hashToTransactionJsonDataMap.keySet()));
+        Assert.assertTrue(((BaseResponse) insertResponse.getBody()).getStatus().equals("Success"));
+        Assert.assertTrue(((EntitiesBulkJsonResponse) insertResponse.getBody()).getHashToEntitiesFromDbMap().keySet().containsAll(hashToTransactionJsonDataMap.keySet()));
 
         List<Hash> deleteHashes = new ArrayList<>();
         deleteHashes.add(TransactionDataList.get(0).getHash());
@@ -179,8 +179,7 @@ public class TransactionServiceTest {
 //    }
 
     @Test
-    public void singleTxsStoreRetrieveTest() throws IOException
-    {
+    public void singleTxsStoreRetrieveTest() throws IOException {
         // Mocks set-ups
 //        when(mockHistoryNodeConsensusCrypto.verifySignature(any(HistoryNodeConsensusResult.class))).thenReturn(true);
         ResponseEntity<IResponse> mockedResponse = new ResponseEntity(HttpStatus.OK);
@@ -223,14 +222,14 @@ public class TransactionServiceTest {
     }
 
     @Test
-    public void multipleTxsStoreRetrieveTest() throws IOException
-    {
+    public void multipleTxsStoreRetrieveTest() throws IOException {
         // Setups and Mocks
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         mapper.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
 
 //        when(mockHistoryNodeConsensusCrypto.verifySignature(any(HistoryNodeConsensusResult.class))).thenReturn(true);
-        ResponseEntity<IResponse> mockedResponse = new ResponseEntity(HttpStatus.OK);;
+        ResponseEntity<IResponse> mockedResponse = new ResponseEntity(HttpStatus.OK);
+        ;
 //        when(mockHistoryNodesConsensusService.validateStoreMultipleObjectsConsensus(Matchers.<Map<Hash, String>> any())).thenReturn(mockedResponse);
 //        when(mockHistoryNodesConsensusService.validateRetrieveMultipleObjectsConsensus(Matchers.anyList())).thenReturn(mockedResponse);
         when(mockValidationService.validateTransactionDataIntegrity(any())).thenReturn(true); // TransactionData.class // to catch also null values
@@ -242,13 +241,13 @@ public class TransactionServiceTest {
         String transactionAsJson2 = mapper.writeValueAsString(transactionData2);
 
         Map<Hash, String> txDataJsonToHash = new HashMap<>();
-        txDataJsonToHash.put(transactionData1.getHash(),transactionAsJson1);
-        txDataJsonToHash.put(transactionData2.getHash(),transactionAsJson2);
+        txDataJsonToHash.put(transactionData1.getHash(), transactionAsJson1);
+        txDataJsonToHash.put(transactionData2.getHash(), transactionAsJson2);
 
         ResponseEntity<IResponse> responseResponseEntity1 = transactionStorageValidationService.storeMultipleObjectsToStorage(txDataJsonToHash);
         Assert.assertTrue(responseResponseEntity1.getStatusCode().equals(HttpStatus.OK));
-        Assert.assertTrue(((BaseResponse)responseResponseEntity1.getBody()).getStatus().equals("Success"));
-        Assert.assertTrue(((AddHistoryEntitiesResponse)responseResponseEntity1.getBody()).getHashesToStoreResult().values().stream().allMatch(Boolean::booleanValue));
+        Assert.assertTrue(((BaseResponse) responseResponseEntity1.getBody()).getStatus().equals("Success"));
+        Assert.assertTrue(((AddHistoryEntitiesResponse) responseResponseEntity1.getBody()).getHashesToStoreResult().values().stream().allMatch(Boolean::booleanValue));
 
         ResponseEntity<IResponse> responseEntity1 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData1.getHash(), ElasticSearchData.TRANSACTIONS);
         ResponseEntity<IResponse> responseEntity2 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData2.getHash(), ElasticSearchData.TRANSACTIONS);
@@ -264,21 +263,21 @@ public class TransactionServiceTest {
         // Add entries again as after retrieval they were removed from cold-storage, which is currently the same as main-storage
         responseResponseEntity1 = transactionStorageValidationService.storeMultipleObjectsToStorage(txDataJsonToHash);
         Assert.assertTrue(responseResponseEntity1.getStatusCode().equals(HttpStatus.OK));
-        Assert.assertTrue(((BaseResponse)responseResponseEntity1.getBody()).getStatus().equals("Success"));
-        Assert.assertTrue(((AddHistoryEntitiesResponse)responseResponseEntity1.getBody()).getHashesToStoreResult().values().stream().allMatch(Boolean::booleanValue));
+        Assert.assertTrue(((BaseResponse) responseResponseEntity1.getBody()).getStatus().equals("Success"));
+        Assert.assertTrue(((AddHistoryEntitiesResponse) responseResponseEntity1.getBody()).getHashesToStoreResult().values().stream().allMatch(Boolean::booleanValue));
 
 
         List<Hash> hashes = new ArrayList<>();
-        hashes.add( transactionData1.getHash() );
-        hashes.add( transactionData2.getHash() );
+        hashes.add(transactionData1.getHash());
+        hashes.add(transactionData2.getHash());
 
         GetHistoryTransactionsRequest bulkRequest = new GetHistoryTransactionsRequest(hashes);
         EntitiesBulkJsonResponse entitiesBulkResponse = (EntitiesBulkJsonResponse) transactionStorageValidationService.retrieveMultipleObjectsFromStorage(bulkRequest).getBody();
 
 
-        String entityAsJsonFromES3 = String.valueOf( entitiesBulkResponse.getHashToEntitiesFromDbMap().get( transactionData1.getHash() ) );
+        String entityAsJsonFromES3 = String.valueOf(entitiesBulkResponse.getHashToEntitiesFromDbMap().get(transactionData1.getHash()));
         TransactionData txDataDeserializedFromES3 = mapper.readValue(entityAsJsonFromES3, TransactionData.class);
-        String entityAsJsonFromES4 = String.valueOf( entitiesBulkResponse.getHashToEntitiesFromDbMap().get( transactionData2.getHash() ) );
+        String entityAsJsonFromES4 = String.valueOf(entitiesBulkResponse.getHashToEntitiesFromDbMap().get(transactionData2.getHash()));
         TransactionData txDataDeserializedFromES4 = mapper.readValue(entityAsJsonFromES4, TransactionData.class);
 
         Assert.assertTrue(txDataDeserializedFromES3.equals(transactionData1));

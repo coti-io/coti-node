@@ -55,6 +55,7 @@ public class AddressServiceTest {
             e.printStackTrace();
         }
     }
+
     @Test
     public void insertAndGetAddressTest() throws IOException {
         AddressData addressData1 = new AddressData(generateRandomHash());
@@ -63,7 +64,7 @@ public class AddressServiceTest {
         Assert.assertTrue(responseResponseEntity1.getStatusCode().equals(HttpStatus.OK));
         IResponse getResponse = addressService.getObjectByHash(addressData1.getHash(), true, ElasticSearchData.ADDRESSES).getBody();
         Assert.assertTrue(((BaseResponse) getResponse).getStatus().equals(STATUS_SUCCESS));
-        Assert.assertEquals(((GetEntityJsonResponse) getResponse).getEntityJsonPair().getValue(),addressAsJson);
+        Assert.assertEquals(((GetEntityJsonResponse) getResponse).getEntityJsonPair().getValue(), addressAsJson);
     }
 
 

@@ -7,5 +7,5 @@ public enum NodeType {
     ZeroSpendServer,
     FinancialServer,
     NodeManager,
-	HistoryNode
+    HistoryNode
 }

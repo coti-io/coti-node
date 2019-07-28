@@ -94,7 +94,7 @@ public class DbConnectorServiceTest {
         Assert.assertTrue(status.equals(STATUS_NOT_FOUND));
     }
 
-//    @Test
+    //    @Test
     public void deleteAddressByHash_hashExist() throws IOException {
         AddressAsObjectAndJsonString addressAsObjectAndJsonString = getRandomAddressAsObjectAndJsonString();
         dbConnectorService.insertObjectToDb(addressAsObjectAndJsonString.getHash(),

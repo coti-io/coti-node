@@ -14,7 +14,7 @@ public class GetAddressResponse extends Response {
 
     private AddressData address;
 
-    public GetAddressResponse(Hash addressesHash,AddressData address) {
+    public GetAddressResponse(Hash addressesHash, AddressData address) {
         this.addressesHash = addressesHash;
         this.address = address;
     }
