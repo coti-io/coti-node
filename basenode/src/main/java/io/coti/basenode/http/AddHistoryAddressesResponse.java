@@ -21,11 +21,11 @@ public class AddHistoryAddressesResponse extends Response implements ISignValida
 
     private Hash signerHash;
 
-    public AddHistoryAddressesResponse(){
+    public AddHistoryAddressesResponse() {
         addressHashesToStoreResult = new HashMap<>();
     }
 
-    public AddHistoryAddressesResponse(Map<Hash,Boolean> addressHashesToStoreResult, String message, String status) {
+    public AddHistoryAddressesResponse(Map<Hash, Boolean> addressHashesToStoreResult, String message, String status) {
         super(message, status);
         this.addressHashesToStoreResult = addressHashesToStoreResult;
     }
@@ -51,7 +51,7 @@ public class AddHistoryAddressesResponse extends Response implements ISignValida
 
     @Override
     public void setSignerHash(Hash signerHash) {
-    this.signerHash = signerHash;
+        this.signerHash = signerHash;
     }
 
     @Override

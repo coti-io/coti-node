@@ -31,17 +31,17 @@ public class TransactionTestUtils {
         return Math.random() * TestConstants.MAX_TRUST_SCORE;
     }
 
-    public static List<TransactionData> generateListOfRandomTransactionData(int listSize){
+    public static List<TransactionData> generateListOfRandomTransactionData(int listSize) {
         List<TransactionData> transactions = new ArrayList<>();
-        for (int i = 0 ; i <= listSize ; i++){
+        for (int i = 0; i <= listSize; i++) {
             transactions.add(createRandomTransaction());
         }
         return transactions;
     }
 
-    public static Set<TransactionData> generateSetOfRandomTransactionData(int listSize){
+    public static Set<TransactionData> generateSetOfRandomTransactionData(int listSize) {
         Set<TransactionData> transactions = new HashSet<>();
-        for (int i = 0 ; i < listSize ; i++){
+        for (int i = 0; i < listSize; i++) {
             transactions.add(createRandomTransaction());
         }
         return transactions;

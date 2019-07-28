@@ -7,7 +7,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.coti.basenode.communication.JacksonSerializer;
-import io.coti.basenode.crypto.AddressesRequestCrypto;
+import io.coti.basenode.crypto.GetHistoryAddressesRequestCrypto;
 import io.coti.basenode.crypto.GetHistoryAddressesResponseCrypto;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
@@ -48,7 +48,7 @@ public class AddressStorageService extends EntityStorageService {
     private GetHistoryAddressesResponseCrypto getHistoryAddressesResponseCrypto;
 
     @Autowired
-    private AddressesRequestCrypto addressesRequestCrypto;
+    private GetHistoryAddressesRequestCrypto getHistoryAddressesRequestCrypto;
 
     @PostConstruct
     public void init() {
@@ -62,8 +62,8 @@ public class AddressStorageService extends EntityStorageService {
 
     public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(GetHistoryAddressesRequest getHistoryAddressesRequest) {
         try {
-            if (!addressesRequestCrypto.verifySignature(getHistoryAddressesRequest)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
+            if (!getHistoryAddressesRequestCrypto.verifySignature(getHistoryAddressesRequest)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new SeriazableResponse(INVALID_SIGNATURE, STATUS_ERROR));
             }
             Map<Hash, AddressData> hashToAddressDataMap = new HashMap<>();
             super.retrieveMultipleObjectsFromStorage(getHistoryAddressesRequest.getAddressHashes()).forEach((hash, addressString) -> hashToAddressDataMap.put(hash, jacksonSerializer.deserialize(addressString)));
@@ -71,7 +71,7 @@ public class AddressStorageService extends EntityStorageService {
             getHistoryAddressesResponseCrypto.signMessage(getHistoryAddressesResponse);
             return ResponseEntity.ok(getHistoryAddressesResponse);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SeriazableResponse(e.getMessage(), STATUS_ERROR));
         }
     }
 

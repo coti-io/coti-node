@@ -239,7 +239,7 @@ public abstract class EntityStorageService implements IEntityStorageService {
     protected void verifyEntitiesFromDbMap(Map<Hash, String> responsesMap, Map<Hash, String> objectsFromDBMap) {
         objectsFromDBMap.forEach((hash, objectAsJsonString) ->
                 {
-                    if (verifyRetrievedSingleObject(hash, objectAsJsonString, false, objectType)) {
+                    if (!verifyRetrievedSingleObject(hash, objectAsJsonString, false, objectType)) {
                         responsesMap.put(hash, replaceHotStorageObjectWithColdStorageObject(hash, objectType));
                     } else {
                         responsesMap.put(hash, objectAsJsonString);

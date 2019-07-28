@@ -1,6 +1,5 @@
 package io.coti.basenode.model;
 
-import io.coti.basenode.data.ClusterStampData;
 import io.coti.basenode.data.InitialFundData;
 import org.springframework.stereotype.Service;
 

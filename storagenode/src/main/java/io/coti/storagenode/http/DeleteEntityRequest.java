@@ -5,7 +5,6 @@ import io.coti.basenode.http.Request;
 import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 
 @Data
 public class DeleteEntityRequest extends Request {

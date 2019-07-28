@@ -5,7 +5,10 @@ import io.coti.basenode.data.Hash;
 
 import javax.xml.bind.DatatypeConverter;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
@@ -21,7 +24,7 @@ public class HashTestUtils {
 
     // Address Hash
 
-    public static Hash generateRandomAddressHash(){
+    public static Hash generateRandomAddressHash() {
         StringBuilder hexa = new StringBuilder();
         for (int i = 0; i < SIZE_OF_ADDRESS_HASH_IN_HEX; i++) {
             int randomNum = ThreadLocalRandom.current().nextInt(0, 16);
@@ -33,9 +36,9 @@ public class HashTestUtils {
         return new Hash(generatedPublicKey + DatatypeConverter.printHexBinary(crc32ToAdd));
     }
 
-    public static List<Hash> generateListOfRandomAddressHashes(int listSize){
+    public static List<Hash> generateListOfRandomAddressHashes(int listSize) {
         List<Hash> hashes = new ArrayList<>();
-        for (int i = 0 ; i <= listSize ; i++){
+        for (int i = 0; i <= listSize; i++) {
             hashes.add(generateRandomAddressHash());
         }
         return hashes;
@@ -54,17 +57,17 @@ public class HashTestUtils {
         return new Hash(hexa.toString());
     }
 
-    public static List<Hash> generateListOfRandomHashes(int listSize){
+    public static List<Hash> generateListOfRandomHashes(int listSize) {
         List<Hash> hashes = new ArrayList<>();
-        for (int i = 0 ; i <= listSize ; i++){
+        for (int i = 0; i <= listSize; i++) {
             hashes.add(generateRandomHash());
         }
         return hashes;
     }
 
-    public static Set<Hash> generateSetOfRandomHashes(int listSize){
+    public static Set<Hash> generateSetOfRandomHashes(int listSize) {
         Set<Hash> hashes = new HashSet<>();
-        for (int i = 0 ; i <= listSize ; i++){
+        for (int i = 0; i <= listSize; i++) {
             hashes.add(generateRandomHash());
         }
         return hashes;

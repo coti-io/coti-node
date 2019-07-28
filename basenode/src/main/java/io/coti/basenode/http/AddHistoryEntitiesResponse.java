@@ -12,7 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Data
-public class AddHistoryEntitiesResponse  extends Response implements ISignValidatable, ISignable {
+public class AddHistoryEntitiesResponse extends Response implements ISignValidatable, ISignable {
 
     @NotEmpty
     private Map<Hash, Boolean> hashesToStoreResult;
@@ -21,11 +21,11 @@ public class AddHistoryEntitiesResponse  extends Response implements ISignValida
 
     private Hash signerHash;
 
-    public AddHistoryEntitiesResponse(){
+    public AddHistoryEntitiesResponse() {
         hashesToStoreResult = new HashMap<>();
     }
 
-    public AddHistoryEntitiesResponse(Map<Hash,Boolean> addressHashesToStoreResult, String message, String status) {
+    public AddHistoryEntitiesResponse(Map<Hash, Boolean> addressHashesToStoreResult, String message, String status) {
         super(message, status);
         this.hashesToStoreResult = addressHashesToStoreResult;
     }
