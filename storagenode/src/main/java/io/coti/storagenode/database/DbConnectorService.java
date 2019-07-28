@@ -1,12 +1,10 @@
 package io.coti.storagenode.database;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.Hash;
 import io.coti.storagenode.data.MultiDbInsertionStatus;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.database.interfaces.IDbConnectorService;
 import io.coti.storagenode.exceptions.DbConnectorException;
-import javafx.util.Pair;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
@@ -14,7 +12,6 @@ import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsRequest;
 import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsResponse;
-import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -61,15 +58,12 @@ public class DbConnectorService implements IDbConnectorService {
     public static final int INDEX_NUMBER_OF_SHARDS = 1;
     public static final int INDEX_NUMBER_OF_REPLICAS = 2;
 
-
     private RestHighLevelClient restClient;
     private RestHighLevelClient restColdStorageClient;
-    private ObjectMapper mapper;
 
     @PostConstruct
     private void init() {
         try {
-            mapper = new ObjectMapper();
             restClient = new RestHighLevelClient(RestClient.builder(
                     new HttpHost(ELASTICSEARCH_HOST_IP, ELASTICSEARCH_HOST_PORT1),
                     new HttpHost(ELASTICSEARCH_HOST_IP, ELASTICSEARCH_HOST_PORT2)
@@ -135,51 +129,26 @@ public class DbConnectorService implements IDbConnectorService {
         }
     }
 
-    public Pair<MultiDbInsertionStatus, Map<Hash, String>> insertMultiObjectsToDb(String indexName, String objectName, Map<Hash, String> hashToObjectJsonDataMap, boolean fromColdStorage) throws Exception {
-        Pair<MultiDbInsertionStatus, Map<Hash, String>> insertResponse;
+    public BulkResponse insertMultiObjectsToDb(String indexName, String objectName, Map<Hash, String> hashToObjectJsonDataMap, boolean fromColdStorage) {
+
         try {
             BulkRequest request = new BulkRequest();
             for (Map.Entry<Hash, String> entry : hashToObjectJsonDataMap.entrySet()) {
                 request.add(new IndexRequest(indexName).id(entry.getKey().toString())
                         .source(XContentType.JSON, objectName, entry.getValue()));
-//                        .source(entry.getValue(), XContentType.JSON ));
             }
             BulkResponse bulkResponse;
-            if (fromColdStorage)
+            if (fromColdStorage) {
                 bulkResponse = restColdStorageClient.bulk(request, RequestOptions.DEFAULT);
-            else
+            } else {
                 bulkResponse = restClient.bulk(request, RequestOptions.DEFAULT);
-
-            insertResponse = createMultiInsertResponse(bulkResponse);
-            if (insertResponse != null && (insertResponse.getValue().size() != hashToObjectJsonDataMap.size() || !insertResponse.getKey().equals(MultiDbInsertionStatus.Success))) {
-                insertResponse = new Pair<>(MultiDbInsertionStatus.Failed, insertResponse.getValue());
-            } else {
-                insertResponse = new Pair<>(insertResponse.getKey(), insertResponse.getValue());
-            }
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new Exception(e.getMessage());
-        }
-        return insertResponse;
-
-    }
-
-    private Pair<MultiDbInsertionStatus, Map<Hash, String>> createMultiInsertResponse(BulkResponse bulkResponse) {
-        if (bulkResponse == null) {
-            return null;
-        }
-        MultiDbInsertionStatus insertionStatus = MultiDbInsertionStatus.Success;
-        Map<Hash, String> hashToResponseMap = new HashMap<>();
-        for (BulkItemResponse bulkItemResponse : bulkResponse.getItems()) {
-            if (bulkItemResponse.isFailed()) {
-                insertionStatus = MultiDbInsertionStatus.PartlyFailed;
-                hashToResponseMap.put(new Hash(bulkItemResponse.getId()), bulkItemResponse.getFailure().getMessage());
-            } else {
-                hashToResponseMap.put(new Hash(bulkItemResponse.getId()), bulkItemResponse.getResponse().getResult().name());
             }
 
+            return bulkResponse;
+        } catch (IOException e) {
+            throw new DbConnectorException(String.format("Error at insert multi objects to db: {}", e.getMessage()));
         }
-        return new Pair<>(insertionStatus, hashToResponseMap);
+
     }
 
     private MultiGetResponse getMultiObjectsFromDb(List<Hash> hashes, String indexName, boolean fromColdStorage) {

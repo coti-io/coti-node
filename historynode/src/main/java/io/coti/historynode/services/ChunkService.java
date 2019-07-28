@@ -54,7 +54,7 @@ public class ChunkService extends BaseNodeChunkService {
                             sendChunk(",", output);
                             sendChunk(new CustomGson().getInstance().toJson(new TransactionResponseData(transactionData)), output);
                         } else {
-                            log.error("Mismatched hashes {}, {}", transactionData.getHash(), getHashToTransactionData.getHash());
+                            log.error("Mismatched transactionHashes {}, {}", transactionData.getHash(), getHashToTransactionData.getHash());
                         }
                     }
                 } catch (Exception e) {

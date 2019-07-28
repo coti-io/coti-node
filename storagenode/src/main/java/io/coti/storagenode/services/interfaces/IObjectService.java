@@ -1,10 +1,8 @@
 package io.coti.storagenode.services.interfaces;
 
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import org.elasticsearch.rest.RestStatus;
-import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Map;
@@ -17,9 +15,9 @@ public interface IObjectService {
 
     Map<Hash, String> getMultiObjectsFromDb(List<Hash> hashes, boolean fromColdStorage, ElasticSearchData objectType);
 
-    ResponseEntity<IResponse> insertMultiObjects(Map<Hash, String> hashToObjectJsonDataMap, boolean fromColdStorage, ElasticSearchData objectType);
+    Map<Hash, RestStatus> insertMultiObjects(Map<Hash, String> hashToObjectJsonDataMap, boolean fromColdStorage, ElasticSearchData objectType);
 
-    ResponseEntity<IResponse> deleteMultiObjectsFromDb(List<Hash> hashes, boolean fromColdStorage, ElasticSearchData objectType);
+    Map<Hash, RestStatus> deleteMultiObjectsFromDb(List<Hash> hashes, boolean fromColdStorage, ElasticSearchData objectType);
 
     RestStatus deleteObjectByHash(Hash hash, boolean fromColdStorage, ElasticSearchData objectType);
 }
