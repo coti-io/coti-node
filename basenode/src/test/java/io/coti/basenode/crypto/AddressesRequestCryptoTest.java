@@ -18,17 +18,17 @@ import java.util.List;
 
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes={AddressesRequestCrypto.class, CryptoHelper.class})
+@SpringBootTest(classes = {GetHistoryAddressesRequestCrypto.class, CryptoHelper.class})
 public class AddressesRequestCryptoTest {
 
     @Autowired
-    private AddressesRequestCrypto addressesRequestCrypto;
+    private GetHistoryAddressesRequestCrypto getHistoryAddressesRequestCrypto;
 
     @MockBean
     private NodeCryptoHelper nodeCryptoHelper;
 
     @Test
-    public void testGetSignatureEqual(){
+    public void testGetSignatureEqual() {
         List<Hash> addressHashes = HashTestUtils.generateListOfRandomAddressHashes(10);
         ByteBuffer addressesRequestBuffer = ByteBuffer.allocate(getByteBufferSize(addressHashes));
         addressHashes.forEach(addressHash -> addressesRequestBuffer.put(addressHash.getBytes()));
@@ -36,11 +36,11 @@ public class AddressesRequestCryptoTest {
         byte[] bytes = CryptoHelper.cryptoHash(addressesRequestInBytes).getBytes();
 
         GetHistoryAddressesRequest getHistoryAddressesRequest = new GetHistoryAddressesRequest(addressHashes);
-        Assert.assertArrayEquals( bytes, addressesRequestCrypto.getSignatureMessage(getHistoryAddressesRequest) );
+        Assert.assertArrayEquals(bytes, getHistoryAddressesRequestCrypto.getSignatureMessage(getHistoryAddressesRequest));
     }
 
     @Test
-    public void testGetSignatureNotEqual(){
+    public void testGetSignatureNotEqual() {
         List<Hash> addressHashesOne = HashTestUtils.generateListOfRandomAddressHashes(10);
         ByteBuffer addressesRequestBuffer = ByteBuffer.allocate(getByteBufferSize(addressHashesOne));
         addressHashesOne.forEach(addressHash -> addressesRequestBuffer.put(addressHash.getBytes()));
@@ -49,12 +49,12 @@ public class AddressesRequestCryptoTest {
 
         List<Hash> addressHashesTwo = HashTestUtils.generateListOfRandomHashes(10);
         GetHistoryAddressesRequest getHistoryAddressesRequest = new GetHistoryAddressesRequest(addressHashesTwo);
-        Assert.assertThat(bytes, IsNot.not(IsEqual.equalTo(addressesRequestCrypto.getSignatureMessage(getHistoryAddressesRequest))));
+        Assert.assertThat(bytes, IsNot.not(IsEqual.equalTo(getHistoryAddressesRequestCrypto.getSignatureMessage(getHistoryAddressesRequest))));
     }
 
-    private int getByteBufferSize(List<Hash> addressHashes){
+    private int getByteBufferSize(List<Hash> addressHashes) {
         int size = 0;
-        for( Hash hash : addressHashes){
+        for (Hash hash : addressHashes) {
             size += hash.getBytes().length;
         }
         return size;

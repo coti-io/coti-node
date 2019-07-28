@@ -10,14 +10,14 @@ import java.util.List;
 
 @Service
 @Slf4j
-public class AddressesRequestCrypto extends SignatureCrypto<GetHistoryAddressesRequest> {
+public class GetHistoryAddressesRequestCrypto extends SignatureCrypto<GetHistoryAddressesRequest> {
 
     private final int SIZE_OF_ADDRESS_HASH_IN_BYTES = 68;
 
     @Override
     public byte[] getSignatureMessage(GetHistoryAddressesRequest getHistoryAddressesRequest) {
         List<Hash> addressHashes = getHistoryAddressesRequest.getAddressHashes();
-        ByteBuffer addressesRequestBuffer = ByteBuffer.allocate( SIZE_OF_ADDRESS_HASH_IN_BYTES * addressHashes.size());
+        ByteBuffer addressesRequestBuffer = ByteBuffer.allocate(SIZE_OF_ADDRESS_HASH_IN_BYTES * addressHashes.size());
         addressHashes.forEach(addressHash -> addressesRequestBuffer.put(addressHash.getBytes()));
         byte[] addressesRequestInBytes = addressesRequestBuffer.array();
         return CryptoHelper.cryptoHash(addressesRequestInBytes).getBytes();
