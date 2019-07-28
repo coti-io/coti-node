@@ -12,4 +12,8 @@ public class SeriazableResponse extends Response implements ISerializable {
     public SeriazableResponse(String message, String status) {
         super(message, status);
     }
+
+    public SeriazableResponse(String message) {
+        super(message);
+    }
 }
