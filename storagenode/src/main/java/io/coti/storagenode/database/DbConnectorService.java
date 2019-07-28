@@ -32,7 +32,6 @@ import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.rest.RestStatus;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -238,7 +237,7 @@ public class DbConnectorService implements IDbConnectorService {
             }
             return indexResponse;
         } catch (Exception e) {
-            throw new DbConnectorException(String.format("Error at insert object to db: {}", e.getMessage());
+            throw new DbConnectorException(String.format("Error at insert object to db: {}", e.getMessage()));
         }
     }
 

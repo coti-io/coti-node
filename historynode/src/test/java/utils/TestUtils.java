@@ -33,7 +33,7 @@ public class TestUtils {
         return createRandomTransaction(generateRandomHash(SIZE_OF_HASH));
     }
 
-    public static TransactionData createRandomTransactionWithSenderAddress () {
+    public static TransactionData createRandomTransactionWithSenderAddress() {
         TransactionData transactionData = createRandomTransaction(generateRandomHash(SIZE_OF_HASH));
         transactionData.setSenderHash(generateRandomHash());
         return transactionData;
@@ -63,9 +63,9 @@ public class TestUtils {
         return Math.random() * 100;
     }
 
-    public static GetHistoryAddressesRequest generateGetAddressesRequest(){
+    public static GetHistoryAddressesRequest generateGetAddressesRequest() {
         List<Hash> hashes = new ArrayList<>();
-        for(int i = 0 ; i < 20 ; i++){
+        for (int i = 0; i < 20; i++) {
             hashes.add(generateRandomHash());
         }
         return new GetHistoryAddressesRequest(hashes);

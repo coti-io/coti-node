@@ -18,11 +18,11 @@ public enum ElasticSearchData {
         this.object = object;
     }
 
-    public String getIndex(){
+    public String getIndex() {
         return index;
     }
 
-    public String getObjectName(){
+    public String getObjectName() {
         return object;
     }
 }

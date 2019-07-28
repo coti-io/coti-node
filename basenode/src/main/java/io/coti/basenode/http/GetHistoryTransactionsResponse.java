@@ -18,7 +18,7 @@ public class GetHistoryTransactionsResponse extends Response {
     }
 
     public GetHistoryTransactionsResponse(Map<Hash, String> entitiesBulkResponses, String message, String status) {
-        super(message,status);
+        super(message, status);
         this.entitiesBulkResponses = entitiesBulkResponses;
     }
 

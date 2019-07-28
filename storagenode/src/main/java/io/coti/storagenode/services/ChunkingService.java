@@ -24,13 +24,12 @@ public class ChunkingService {
         Map<Hash, TransactionData> hashToTransactionData = new HashMap<>(); //TODO 7/10/2019 astolia: get this from somewhere.
         try {
             ServletOutputStream output = response.getOutputStream();
-            for(Map.Entry<Hash,TransactionData> entry : hashToTransactionData.entrySet()){
+            for (Map.Entry<Hash, TransactionData> entry : hashToTransactionData.entrySet()) {
                 //TODO 7/10/2019 astolia: not sure about the  'GetHashToTransactionResponse' solution.
-                output.write(jacksonSerializer.serialize(new GetHashToTransactionData(entry.getKey(),entry.getValue())));
+                output.write(jacksonSerializer.serialize(new GetHashToTransactionData(entry.getKey(), entry.getValue())));
                 output.flush();
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error("Error sending transaction batch");
             log.error(e.getMessage());
         }
@@ -40,8 +39,7 @@ public class ChunkingService {
         try {
             output.write(jacksonSerializer.serialize(entry));
             output.flush();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error("Error sending transaction batch");
             log.error(e.getMessage());
         }

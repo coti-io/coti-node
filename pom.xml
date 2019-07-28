@@ -18,7 +18,7 @@
         <module>trustscore</module>
         <module>financialserver</module>
         <module>nodemanager</module>
-	<module>storagenode</module>
+        <module>storagenode</module>
         <module>historynode</module>
     </modules>
 
