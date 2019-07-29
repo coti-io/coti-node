@@ -76,9 +76,6 @@ public class TransactionServiceTest {
     @MockBean
     private AddressStorageService addressStorageService;
 
-    @MockBean
-    private ChunkingService chunkingService;
-
 
     private ObjectMapper mapper;
 
@@ -247,7 +244,7 @@ public class TransactionServiceTest {
         ResponseEntity<IResponse> responseResponseEntity1 = transactionStorageValidationService.storeMultipleObjectsToStorage(txDataJsonToHash);
         Assert.assertTrue(responseResponseEntity1.getStatusCode().equals(HttpStatus.OK));
         Assert.assertTrue(((BaseResponse) responseResponseEntity1.getBody()).getStatus().equals("Success"));
-        Assert.assertTrue(((AddHistoryEntitiesResponse) responseResponseEntity1.getBody()).getHashesToStoreResult().values().stream().allMatch(Boolean::booleanValue));
+        Assert.assertTrue(((AddHistoryEntitiesResponse) responseResponseEntity1.getBody()).getHashToStoreResultMap().values().stream().allMatch(Boolean::booleanValue));
 
         ResponseEntity<IResponse> responseEntity1 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData1.getHash(), ElasticSearchData.TRANSACTIONS);
         ResponseEntity<IResponse> responseEntity2 = transactionStorageValidationService.retrieveObjectFromStorage(transactionData2.getHash(), ElasticSearchData.TRANSACTIONS);
@@ -264,7 +261,7 @@ public class TransactionServiceTest {
         responseResponseEntity1 = transactionStorageValidationService.storeMultipleObjectsToStorage(txDataJsonToHash);
         Assert.assertTrue(responseResponseEntity1.getStatusCode().equals(HttpStatus.OK));
         Assert.assertTrue(((BaseResponse) responseResponseEntity1.getBody()).getStatus().equals("Success"));
-        Assert.assertTrue(((AddHistoryEntitiesResponse) responseResponseEntity1.getBody()).getHashesToStoreResult().values().stream().allMatch(Boolean::booleanValue));
+        Assert.assertTrue(((AddHistoryEntitiesResponse) responseResponseEntity1.getBody()).getHashToStoreResultMap().values().stream().allMatch(Boolean::booleanValue));
 
 
         List<Hash> hashes = new ArrayList<>();
