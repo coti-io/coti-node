@@ -121,12 +121,24 @@ public abstract class EntityStorageService implements IEntityStorageService {
         insertResponseMap.forEach((hash, restStatus) -> {
             if (restStatus.equals(RestStatus.CREATED)) {
                 hashToColdStorageObjectJsonDataMap.put(hash, hashToObjectJsonDataMap.get(hash));
+            } else {
+                entityFailedVerificationMap.put(hash,Boolean.FALSE);
             }
         });
-        if (!insertResponseMap.isEmpty()) {
-            objectService.insertMultiObjects(hashToColdStorageObjectJsonDataMap, true, objectType);
+
+        if (!entityFailedVerificationMap.isEmpty()) {
+            //TODO 7/29/2019 tomer: consider deleting partial entries that were stored, may return responses regarding only for part of the hashes
+            return convertResponseStatusToBooleanAndAddFailedHashes(entityFailedVerificationMap);
         }
-        return convertResponseStatusToBooleanAndAddFailedHashes(response, entityFailedVerificationHashToFalse);
+        Map<Hash, RestStatus> insertColdResponseMap = objectService.insertMultiObjects(hashToObjectJsonDataMap, true, objectType);
+        insertResponseMap.forEach((hash, restStatus) -> {
+            if (!restStatus.equals(RestStatus.CREATED)) {
+                entityFailedVerificationMap.put(hash,Boolean.FALSE);
+            } else {
+                entityFailedVerificationMap.putIfAbsent(hash, Boolean.TRUE);
+            }
+        });
+        return convertResponseStatusToBooleanAndAddFailedHashes(entityFailedVerificationMap);
     }
 
 
@@ -135,7 +147,7 @@ public abstract class EntityStorageService implements IEntityStorageService {
         Map<Hash, Boolean> entityFailedVerificationMap = new HashMap<>();
         hashToObjectJsonDataMap.entrySet().forEach(entry -> {
             if (!validateObjectDataIntegrity(entry.getKey(), entry.getValue())) {
-                entityFailedVerificationMap.put(entry.getKey(), Boolean.FALSE);
+                entityFailedVerificationMap.put(entry.getKey(), null);
             }
         });
         return entityFailedVerificationMap;
@@ -169,13 +181,7 @@ public abstract class EntityStorageService implements IEntityStorageService {
     }
 
     protected ResponseEntity<IResponse> convertResponseStatusToBooleanAndAddFailedHashes(Map<Hash, Boolean> entityFailedConversionHashToFalse) {
-        Map<Hash, String> entityResponseBodyMap = ((EntitiesBulkJsonResponse) entityResponse.getBody()).getHashToEntitiesFromDbMap();
-        Map<Hash, Boolean> newResponseBody = new HashMap<>();
-        entityResponseBodyMap.entrySet().forEach(entry -> {
-            newResponseBody.put(entry.getKey(), convertElasticWriteStatusToBoolean(entry.getValue()));
-        });
-        newResponseBody.putAll(entityFailedConversionHashToFalse);
-        return ResponseEntity.status(entityResponse.getStatusCode()).body(new AddHistoryEntitiesResponse(newResponseBody));
+        return ResponseEntity.status(HttpStatus.OK).body(new AddHistoryEntitiesResponse(entityFailedConversionHashToFalse));
     }
 
     private Boolean convertElasticWriteStatusToBoolean(RestStatus writeStatus) {
