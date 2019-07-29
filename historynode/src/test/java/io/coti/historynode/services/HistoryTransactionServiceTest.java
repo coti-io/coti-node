@@ -531,7 +531,7 @@ public class HistoryTransactionServiceTest {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         mapper.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
         ResponseEntity<AddHistoryEntitiesResponse> storeResponseEntity = transactionService.storeEntitiesByType(storageServerAddress + endpoint, addEntitiesBulkRequest);
-        Assert.assertTrue(storeResponseEntity.getBody().getHashesToStoreResult().values().stream().allMatch(Boolean::booleanValue));
+        Assert.assertTrue(storeResponseEntity.getBody().getHashToStoreResultMap().values().stream().allMatch(Boolean::booleanValue));
     }
 
     private TransactionData generateTransactionDataWithRBTByAttachmentDate(Instant attachmentTime) {
