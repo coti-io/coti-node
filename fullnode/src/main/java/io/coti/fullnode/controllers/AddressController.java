@@ -1,6 +1,5 @@
 package io.coti.fullnode.controllers;
 
-import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.AddressStatus;
 import io.coti.basenode.http.interfaces.IResponse;
@@ -19,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
-import java.util.List;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_ADDRESS;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
@@ -55,14 +53,6 @@ public class AddressController {
 
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<AddressesExistsResponse> addressExists(@Valid @RequestBody AddressBulkRequest addressRequest) {
-        List<Hash> addressHashes = addressRequest.getAddresses();
-        AddressesExistsResponse addressResponse = new AddressesExistsResponse();
-
-        addressHashes.forEach(addressHash -> {
-            boolean result = addressService.addressExists(addressHash);
-            addressResponse.addAddressToResult(addressHash.toHexString(), result);
-        });
-
-        return ResponseEntity.status(HttpStatus.OK).body(addressResponse);
+        return ResponseEntity.status(HttpStatus.OK).body(addressService.addressesExist(addressRequest));
     }
 }
