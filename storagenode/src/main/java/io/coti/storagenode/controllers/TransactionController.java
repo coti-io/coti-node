@@ -4,6 +4,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.AddEntitiesBulkRequest;
 import io.coti.basenode.http.GetHistoryTransactionsRequest;
+import io.coti.basenode.http.data.GetHashToPropagatable;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.services.TransactionStorageService;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
 
 import javax.servlet.http.HttpServletResponse;
@@ -41,15 +41,9 @@ public class TransactionController {
     }
 
     @PostMapping(value = "/transactions/reactive", produces = MediaType.APPLICATION_STREAM_JSON_VALUE, consumes = MediaType.APPLICATION_STREAM_JSON_VALUE)
-    public Flux<TransactionData> getTransactionsReactive(@RequestBody Flux<Hash> transactionHashes) {
-        Flux<TransactionData> flux = new Flux<TransactionData>() {
-            @Override
-            public void subscribe(CoreSubscriber coreSubscriber) {
-
-            }
-        };
-        //   transactionHashes.doOnNext(transactionHash -> flux.just(transactionStorageService.retrieveObjectFromStorage(transactionHash)));
-        transactionHashes.doOnNext(transactionHash -> flux.push(sink -> sink.next(transactionStorageService.retrieveObjectFromStorage(transactionHash))));
+    public Flux<GetHashToPropagatable<TransactionData>> getTransactionsReactive(@RequestBody Flux<Hash> transactionHashes) {
+        Flux<GetHashToPropagatable<TransactionData>> flux = Flux.empty();
+        transactionHashes.subscribe(transactionHash -> flux.push(sink -> sink.next(transactionStorageService.retrieveHashToObjectFromStorage(transactionHash))));
         return flux;
 
     }
