@@ -8,7 +8,7 @@ import javax.validation.constraints.NotEmpty;
 import java.util.List;
 
 @Data
-public class GetHistoryTransactionsRequest extends SeriazableRequest {
+public class GetHistoryTransactionsRequest extends SerializableRequest {
 
     @NotEmpty
     private List<@Valid Hash> transactionHashes;
