@@ -5,7 +5,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.GetHistoryTransactionsRequest;
 import io.coti.basenode.http.GetHistoryTransactionsResponse;
-import io.coti.basenode.http.data.GetHashToTransactionData;
+import io.coti.basenode.http.data.GetHashToPropagatable;
 import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import lombok.extern.slf4j.Slf4j;
@@ -53,7 +53,7 @@ public class TransactionStorageService extends EntityStorageService {
 
     public void retrieveMultipleObjectsInBlocksFromStorage(GetHistoryTransactionsRequest getHistoryTransactionsRequest, HttpServletResponse response) {
         try {
-            BlockingQueue<GetHashToTransactionData> retrievedTransactionQueue = new LinkedBlockingQueue<>();
+            BlockingQueue<GetHashToPropagatable<TransactionData>> retrievedTransactionQueue = new LinkedBlockingQueue<>();
 
             List<Hash> transactionHashes = getHistoryTransactionsRequest.getTransactionHashes();
             List<List<Hash>> blocksOfHashes = divideHashesToBlocks(transactionHashes);
@@ -68,10 +68,10 @@ public class TransactionStorageService extends EntityStorageService {
             int uncompletedTransactionCounter = transactionHashes.size();
 
             OutputStream output = response.getOutputStream();
-            
+
             while (!Thread.currentThread().isInterrupted() && uncompletedTransactionCounter > 0) {
                 try {
-                    GetHashToTransactionData getHashToTransactionData = retrievedTransactionQueue.take();
+                    GetHashToPropagatable<TransactionData> getHashToTransactionData = retrievedTransactionQueue.take();
                     output.write(jacksonSerializer.serialize(getHashToTransactionData));
                     output.flush();
                     uncompletedTransactionCounter--;
@@ -106,9 +106,9 @@ public class TransactionStorageService extends EntityStorageService {
     private class WorkerThread implements Runnable {
         private List<Hash> transactionHashes;
         private int blockNumber;
-        private BlockingQueue<GetHashToTransactionData> retrievedTransactionQueue;
+        private BlockingQueue<GetHashToPropagatable<TransactionData>> retrievedTransactionQueue;
 
-        public WorkerThread(List<Hash> transactionHashes, int blockNumber, BlockingQueue<GetHashToTransactionData> retrievedTransactionQueue) {
+        public WorkerThread(List<Hash> transactionHashes, int blockNumber, BlockingQueue<GetHashToPropagatable<TransactionData>> retrievedTransactionQueue) {
             this.transactionHashes = transactionHashes;
             this.blockNumber = blockNumber;
             this.retrievedTransactionQueue = retrievedTransactionQueue;
@@ -121,7 +121,7 @@ public class TransactionStorageService extends EntityStorageService {
             log.info("Thread {} ,Ended block number = {}", Thread.currentThread().getId(), blockNumber);
         }
 
-        private void getTransactionsDataBlock(List<Hash> transactionHashes, BlockingQueue<GetHashToTransactionData> retrievedTransactionQueue) {
+        private void getTransactionsDataBlock(List<Hash> transactionHashes, BlockingQueue<GetHashToPropagatable<TransactionData>> retrievedTransactionQueue) {
 
             try {
                 Map<Hash, String> transactionsMap = retrieveMultipleObjectsFromStorage(transactionHashes);
@@ -133,11 +133,11 @@ public class TransactionStorageService extends EntityStorageService {
 
         }
 
-        private void queueTransactionsDataBlock(Map<Hash, String> transactionMap, BlockingQueue<GetHashToTransactionData> retrievedTransactionQueue) {
+        private void queueTransactionsDataBlock(Map<Hash, String> transactionMap, BlockingQueue<GetHashToPropagatable<TransactionData>> retrievedTransactionQueue) {
 
             transactionMap.entrySet().forEach(entry -> {
                 TransactionData transactionData = jacksonSerializer.deserialize(entry.getValue());
-                GetHashToTransactionData transactionDataPair = new GetHashToTransactionData(entry.getKey(), transactionData);
+                GetHashToPropagatable<TransactionData> transactionDataPair = new GetHashToPropagatable<>(entry.getKey(), transactionData);
                 try {
                     retrievedTransactionQueue.put(transactionDataPair);
                 } catch (InterruptedException e) {

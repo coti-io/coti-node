@@ -5,6 +5,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.http.AddHistoryEntitiesResponse;
 import io.coti.basenode.http.SeriazableResponse;
+import io.coti.basenode.http.data.GetHashToPropagatable;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.services.interfaces.IEntityStorageService;
@@ -31,7 +32,11 @@ public abstract class EntityStorageService implements IEntityStorageService {
     protected ElasticSearchData objectType;
 
     @Override
-    public <T extends IPropagatable> T retrieveObjectFromStorage(Hash hash) {
+    public <T extends IPropagatable> GetHashToPropagatable<T> retrieveHashToObjectFromStorage(Hash hash) {
+        return new GetHashToPropagatable<>(hash, retrieveObjectFromStorage(hash));
+    }
+
+    private <T extends IPropagatable> T retrieveObjectFromStorage(Hash hash) {
         boolean fromColdStorage = false;
         String objectAsJson = objectService.getObjectByHash(hash, fromColdStorage, objectType);
 
