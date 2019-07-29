@@ -126,7 +126,7 @@ public abstract class EntityStorageService implements IEntityStorageService {
 
         Map<Hash, RestStatus> insertColdResponseMap = objectService.insertMultiObjects(hashToObjectJsonDataMap, true, objectType);
         insertColdResponseMap.forEach((hash, restStatus) -> {
-            if (!restStatus.equals(RestStatus.CREATED)) {
+            if (!restStatus.equals(RestStatus.CREATED) && !restStatus.equals(RestStatus.OK)) {
                 hashToStoreResultMap.put(hash, Boolean.FALSE);
             } else {
                 hashToStoreResultMap.putIfAbsent(hash, Boolean.TRUE);
