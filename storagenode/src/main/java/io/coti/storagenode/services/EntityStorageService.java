@@ -4,7 +4,6 @@ import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.http.AddHistoryEntitiesResponse;
-import io.coti.basenode.http.EntitiesBulkJsonResponse;
 import io.coti.basenode.http.SeriazableResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.data.enums.ElasticSearchData;
@@ -31,7 +30,6 @@ public abstract class EntityStorageService implements IEntityStorageService {
     protected JacksonSerializer jacksonSerializer;
     protected ElasticSearchData objectType;
 
-
     @Override
     public <T extends IPropagatable> T retrieveObjectFromStorage(Hash hash) {
         boolean fromColdStorage = false;
@@ -50,7 +48,6 @@ public abstract class EntityStorageService implements IEntityStorageService {
         }
         return null;
     }
-
 
     protected boolean verifyRetrievedSingleObject(Hash objectHash, String objectAsJson, boolean fromColdStorage, ElasticSearchData objectType) {
 
@@ -111,34 +108,31 @@ public abstract class EntityStorageService implements IEntityStorageService {
     @Override
     public ResponseEntity<IResponse> storeMultipleObjectsToStorage(Map<Hash, String> hashToObjectJsonDataMap) {
 
-        Map<Hash, Boolean> entityFailedVerificationMap = validateStoreMultipleObjectsToStorage(hashToObjectJsonDataMap);
-        if (!entityFailedVerificationMap.isEmpty()) {
-            return convertResponseStatusToBooleanAndAddFailedHashes(entityFailedVerificationMap);
+        Map<Hash, Boolean> entityValidationMap = validateStoreMultipleObjectsToStorage(hashToObjectJsonDataMap);
+        if (!entityValidationMap.isEmpty()) {
+            return ResponseEntity.badRequest().body(new AddHistoryEntitiesResponse(entityValidationMap));
         }
 
         Map<Hash, RestStatus> insertResponseMap = objectService.insertMultiObjects(hashToObjectJsonDataMap, false, objectType);
+        Map<Hash, Boolean> hashToStoreResultMap = new HashMap<>();
         Map<Hash, String> hashToColdStorageObjectJsonDataMap = new HashMap<>();
         insertResponseMap.forEach((hash, restStatus) -> {
             if (restStatus.equals(RestStatus.CREATED)) {
                 hashToColdStorageObjectJsonDataMap.put(hash, hashToObjectJsonDataMap.get(hash));
             } else {
-                entityFailedVerificationMap.put(hash,Boolean.FALSE);
+                hashToStoreResultMap.put(hash, Boolean.FALSE);
             }
         });
 
-        if (!entityFailedVerificationMap.isEmpty()) {
-            //TODO 7/29/2019 tomer: consider deleting partial entries that were stored, may return responses regarding only for part of the hashes
-            return convertResponseStatusToBooleanAndAddFailedHashes(entityFailedVerificationMap);
-        }
         Map<Hash, RestStatus> insertColdResponseMap = objectService.insertMultiObjects(hashToObjectJsonDataMap, true, objectType);
-        insertResponseMap.forEach((hash, restStatus) -> {
+        insertColdResponseMap.forEach((hash, restStatus) -> {
             if (!restStatus.equals(RestStatus.CREATED)) {
-                entityFailedVerificationMap.put(hash,Boolean.FALSE);
+                hashToStoreResultMap.put(hash, Boolean.FALSE);
             } else {
-                entityFailedVerificationMap.putIfAbsent(hash, Boolean.TRUE);
+                hashToStoreResultMap.putIfAbsent(hash, Boolean.TRUE);
             }
         });
-        return convertResponseStatusToBooleanAndAddFailedHashes(entityFailedVerificationMap);
+        return ResponseEntity.status(HttpStatus.OK).body(new AddHistoryEntitiesResponse(hashToStoreResultMap));
     }
 
 
@@ -151,10 +145,6 @@ public abstract class EntityStorageService implements IEntityStorageService {
             }
         });
         return entityFailedVerificationMap;
-    }
-
-    protected boolean isResponseOK(ResponseEntity<IResponse> iResponse) {
-        return iResponse != null && iResponse.getStatusCode().equals(HttpStatus.OK);
     }
 
     @Override
@@ -180,17 +170,6 @@ public abstract class EntityStorageService implements IEntityStorageService {
         );
     }
 
-    protected ResponseEntity<IResponse> convertResponseStatusToBooleanAndAddFailedHashes(Map<Hash, Boolean> entityFailedConversionHashToFalse) {
-        return ResponseEntity.status(HttpStatus.OK).body(new AddHistoryEntitiesResponse(entityFailedConversionHashToFalse));
-    }
-
-    private Boolean convertElasticWriteStatusToBoolean(RestStatus writeStatus) {
-        return writeStatus.equals(RestStatus.CREATED);
-    }
-
     protected abstract IResponse getEmptyEntitiesBulkResponse();
-
-    protected abstract IResponse getEntitiesBulkResponse(Map<Hash, String> responsesMap);
-
 
 }

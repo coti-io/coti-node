@@ -98,7 +98,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         //TODO 7/7/2019 tomer: Consider sending in groups of size..
         ResponseEntity<AddHistoryEntitiesResponse> storeEntitiesToStorageResponse = transactionService.storeEntities(confirmedTransactionsToStore);
         if (storeEntitiesToStorageResponse.getStatusCode().equals(HttpStatus.OK)) {
-            Map<Hash, Boolean> entitiesSentToStorage = storeEntitiesToStorageResponse.getBody().getHashesToStoreResult();
+            Map<Hash, Boolean> entitiesSentToStorage = storeEntitiesToStorageResponse.getBody().getHashToStoreResultMap();
             entitiesSentToStorage.entrySet().forEach(pair -> {
                 if (pair.getValue().equals(Boolean.TRUE)) {
                     transactions.deleteByHash(pair.getKey());
