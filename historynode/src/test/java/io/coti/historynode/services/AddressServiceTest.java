@@ -5,9 +5,10 @@ import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
-import io.coti.basenode.http.BaseNodeHttpStringConstants;
 import io.coti.basenode.http.GetHistoryAddressesRequest;
 import io.coti.basenode.http.GetHistoryAddressesResponse;
+import io.coti.basenode.http.HttpJacksonSerializer;
+import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Addresses;
 import io.coti.basenode.model.Transactions;
@@ -31,12 +32,17 @@ import utils.HashTestUtils;
 
 import java.util.*;
 
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_SUCCESS;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.historynode.http.HttpStringConstants.STORAGE_INVALID_SIGNATURE;
+import static io.coti.historynode.http.HttpStringConstants.STORAGE_RESPONSE_VALIDATION_ERROR;
 import static org.mockito.Mockito.when;
 
 @ContextConfiguration(classes = {AddressService.class, StorageConnector.class, BaseNodeValidationService.class,
         GetHistoryAddressesResponseCrypto.class, GetHistoryAddressesRequestCrypto.class, CryptoHelper.class, NodeCryptoHelper.class,
         Transactions.class, IPotService.class, TransactionSenderCrypto.class, TransactionCrypto.class, ITransactionHelper.class,
-        IDatabaseConnector.class})
+        IDatabaseConnector.class, HttpJacksonSerializer.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -106,7 +112,7 @@ public class AddressServiceTest {
         //create request without signer hash and signature
         ResponseEntity<IResponse> expectedResponse = ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
-                .body(new GetHistoryAddressesResponse(new HashMap<>(), BaseNodeHttpStringConstants.INVALID_SIGNATURE, BaseNodeHttpStringConstants.STATUS_ERROR));
+                .body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         Assert.assertEquals(expectedResponse, addressService.getAddresses(getHistoryAddressesRequest));
 
         //create request without signer hash
@@ -126,13 +132,11 @@ public class AddressServiceTest {
         when(storageConnector.retrieveFromStorage(storageNodeUrl + "/addresses", getHistoryAddressesRequestToStorageNode, GetHistoryAddressesResponse.class)).
                 thenReturn(ResponseEntity.status(HttpStatus.OK).body(new GetHistoryAddressesResponse(responseMap)));
 
-        ResponseEntity<GetHistoryAddressesResponse> responseFromGetAddresses = addressService.getAddresses(getHistoryAddressesRequestFromFullNode);
-        ResponseEntity<GetHistoryAddressesResponse> expectedUnsignedResponseFromStorage = ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new GetHistoryAddressesResponse(new HashMap<>(), BaseNodeHttpStringConstants.INVALID_SIGNATURE, BaseNodeHttpStringConstants.STATUS_ERROR));
+        ResponseEntity<IResponse> responseFromGetAddresses = addressService.getAddresses(getHistoryAddressesRequestFromFullNode);
+        ResponseEntity<IResponse> expectedUnsignedResponseFromStorage = ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(STORAGE_INVALID_SIGNATURE, STATUS_ERROR));
 
         Assert.assertEquals(expectedUnsignedResponseFromStorage.getStatusCode(), responseFromGetAddresses.getStatusCode());
-        Assert.assertEquals(expectedUnsignedResponseFromStorage.getBody().getAddressHashesToAddresses(), responseFromGetAddresses.getBody().getAddressHashesToAddresses());
-        Assert.assertEquals(expectedUnsignedResponseFromStorage.getBody().getMessage(), responseFromGetAddresses.getBody().getMessage());
-        Assert.assertEquals(expectedUnsignedResponseFromStorage.getBody().getStatus(), responseFromGetAddresses.getBody().getStatus());
+        Assert.assertEquals((expectedUnsignedResponseFromStorage.getBody()), (responseFromGetAddresses.getBody()));
     }
 
 
@@ -148,13 +152,11 @@ public class AddressServiceTest {
                 thenReturn(ResponseEntity.status(HttpStatus.OK).body(responseFromStorage));
         when(getHistoryAddressesResponseCrypto.verifySignature(responseFromStorage)).thenReturn(true);
 
-        ResponseEntity<GetHistoryAddressesResponse> responseFromGetAddresses = addressService.getAddresses(getHistoryAddressesRequestFromFullNode);
-        ResponseEntity<GetHistoryAddressesResponse> expectedUnsignedResponseFromStorage = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new GetHistoryAddressesResponse(new HashMap<>(), "Response validation failed", BaseNodeHttpStringConstants.STATUS_ERROR));
+        ResponseEntity<IResponse> responseFromGetAddresses = addressService.getAddresses(getHistoryAddressesRequestFromFullNode);
+        ResponseEntity<IResponse> expectedUnsignedResponseFromStorage = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(STORAGE_RESPONSE_VALIDATION_ERROR, STATUS_ERROR));
 
         Assert.assertEquals(expectedUnsignedResponseFromStorage.getStatusCode(), responseFromGetAddresses.getStatusCode());
-        Assert.assertEquals(expectedUnsignedResponseFromStorage.getBody().getAddressHashesToAddresses(), responseFromGetAddresses.getBody().getAddressHashesToAddresses());
-        Assert.assertEquals(expectedUnsignedResponseFromStorage.getBody().getMessage(), responseFromGetAddresses.getBody().getMessage());
-        Assert.assertEquals(expectedUnsignedResponseFromStorage.getBody().getStatus(), responseFromGetAddresses.getBody().getStatus());
+        Assert.assertEquals((expectedUnsignedResponseFromStorage.getBody()), (responseFromGetAddresses.getBody()));
     }
 
     @Test
@@ -181,28 +183,30 @@ public class AddressServiceTest {
         Map<Hash, AddressData> responseMap = new LinkedHashMap<>();
         addressesHashFromStorage2.stream().forEach(hash -> responseMap.put(hash, new AddressData(hash)));
         addressesHashFromStorage1.stream().forEach(hash -> responseMap.put(hash, new AddressData(hash)));
-        GetHistoryAddressesResponse unOrderedResponseFromStorage = new GetHistoryAddressesResponse(responseMap);
+        GetHistoryAddressesResponse unOrderedResponseFromStorage = new GetHistoryAddressesResponse(responseMap, STATUS_SUCCESS);
         setResponseDummySignerHashAndSignature(unOrderedResponseFromStorage);
 
         when(storageConnector.retrieveFromStorage(storageNodeUrl + "/addresses", getHistoryAddressesRequest, GetHistoryAddressesResponse.class)).
                 thenReturn(ResponseEntity.status(HttpStatus.OK).body(unOrderedResponseFromStorage));
 
-        ResponseEntity<GetHistoryAddressesResponse> responseFromGetAddresses = addressService.getAddresses(getHistoryAddressesRequestFromFullNode);
+        ResponseEntity<IResponse> responseFromGetAddresses = addressService.getAddresses(getHistoryAddressesRequestFromFullNode);
 
         Map<Hash, AddressData> orderedExpectedResponseMap = new LinkedHashMap<>();
         addressesHashFromStorage1.stream().forEach(hash -> orderedExpectedResponseMap.put(hash, new AddressData(hash)));
         orderedExpectedResponseMap.put(hashInRocks, new AddressData(hashInRocks));
         addressesHashFromStorage2.stream().forEach(hash -> orderedExpectedResponseMap.put(hash, new AddressData(hash)));
-        GetHistoryAddressesResponse expectedResponse = new GetHistoryAddressesResponse(orderedExpectedResponseMap, "Addresses successfully retrieved", BaseNodeHttpStringConstants.STATUS_SUCCESS);
-        ResponseEntity<GetHistoryAddressesResponse> expectedOrderedResponseFromStorage = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
+        GetHistoryAddressesResponse expectedResponse = new GetHistoryAddressesResponse(orderedExpectedResponseMap, STATUS_SUCCESS);
+        ResponseEntity<IResponse> expectedOrderedResponseFromStorage = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
 
-        Iterator<Map.Entry<Hash, AddressData>> responseIterator = expectedOrderedResponseFromStorage.getBody().getAddressHashesToAddresses().entrySet().iterator();
+        Iterator<Map.Entry<Hash, AddressData>> responseIterator = ((GetHistoryAddressesResponse)expectedOrderedResponseFromStorage.getBody()).getAddressHashesToAddresses().entrySet().iterator();
         int i = 0;
         while (responseIterator.hasNext()) {
             Map.Entry<Hash, AddressData> entry = responseIterator.next();
             Assert.assertEquals(orderedList.get(i), entry.getKey());
             i++;
         }
+        Assert.assertEquals(HttpStatus.OK,responseFromGetAddresses.getStatusCode());
+        Assert.assertEquals(expectedResponse.getStatus(),((GetHistoryAddressesResponse)responseFromGetAddresses.getBody()).getStatus());
     }
 
     private void setRequestDummySignerHashAndSignature(GetHistoryAddressesRequest getHistoryAddressesRequestFromFullNode) {
