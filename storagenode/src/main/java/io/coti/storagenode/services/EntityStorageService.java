@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -122,7 +123,7 @@ public abstract class EntityStorageService implements IEntityStorageService {
         Map<Hash, Boolean> hashToStoreResultMap = new HashMap<>();
         Map<Hash, String> hashToColdStorageObjectJsonDataMap = new HashMap<>();
         insertResponseMap.forEach((hash, restStatus) -> {
-            if (restStatus.equals(RestStatus.CREATED)) {
+            if (EnumSet.of(RestStatus.CREATED, RestStatus.OK).contains(restStatus)) {
                 hashToColdStorageObjectJsonDataMap.put(hash, hashToObjectJsonDataMap.get(hash));
             } else {
                 hashToStoreResultMap.put(hash, Boolean.FALSE);

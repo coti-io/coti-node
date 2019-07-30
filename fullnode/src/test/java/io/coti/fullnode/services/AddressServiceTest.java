@@ -100,11 +100,11 @@ public class AddressServiceTest {
         addressBulkRequest.setAddresses(addressHashes);
         AddressesExistsResponse response = addressService.addressesExist(addressBulkRequest);
 
-        LinkedHashMap<String,Boolean> responseMap = new LinkedHashMap<>();
-        responseMap.put(addressInLocalAddressesCollection.getHash().toHexString(),Boolean.TRUE);
+        LinkedHashMap<String, Boolean> responseMap = new LinkedHashMap<>();
+        responseMap.put(addressInLocalAddressesCollection.getHash().toHexString(), Boolean.TRUE);
         AddressesExistsResponse expectedResponse = new AddressesExistsResponse(responseMap);
 
-        Assert.assertTrue(equals(expectedResponse,response));
+        Assert.assertTrue(equals(expectedResponse, response));
     }
 
 
@@ -137,20 +137,20 @@ public class AddressServiceTest {
         addressBulkRequest.setAddresses(addressHashes);
         AddressesExistsResponse response = addressService.addressesExist(addressBulkRequest);
 
-        LinkedHashMap<String,Boolean> responseMap = new LinkedHashMap<>();
-        responseMap.put(addressInLocalAddressesCollection.getHash().toHexString(),Boolean.TRUE);
-        responseMap.put(addressInRequestedAddressesCollectionMoreThenTenMinutes.getHash().toHexString(),Boolean.FALSE); // should depend on response from history
+        LinkedHashMap<String, Boolean> responseMap = new LinkedHashMap<>();
+        responseMap.put(addressInLocalAddressesCollection.getHash().toHexString(), Boolean.TRUE);
+        responseMap.put(addressInRequestedAddressesCollectionMoreThenTenMinutes.getHash().toHexString(), Boolean.FALSE); // should depend on response from history
         AddressesExistsResponse expectedResponse = new AddressesExistsResponse(responseMap);
 
-        Assert.assertTrue(equals(expectedResponse,response));
+        Assert.assertTrue(equals(expectedResponse, response));
     }
 
-    private void mockNetworkService(){
+    private void mockNetworkService() {
         NetworkNodeData networkNodeData = new NetworkNodeData();
         networkNodeData.setAddress("localhost");
-        networkNodeData.setHttpPort("7031");
-        Map<Hash,NetworkNodeData> networkNodeDataMap = new HashMap<>();
-        networkNodeDataMap.put(new Hash("fake"),networkNodeData);
+        networkNodeData.setHttpPort("9030");
+        Map<Hash, NetworkNodeData> networkNodeDataMap = new HashMap<>();
+        networkNodeDataMap.put(new Hash("aaaa"), networkNodeData);
 
         when(networkService.getMapFromFactory(NodeType.HistoryNode)).thenReturn(networkNodeDataMap);
     }
@@ -161,10 +161,10 @@ public class AddressServiceTest {
         AddressesExistsResponse actualCasted = (AddressesExistsResponse) actual;
         Iterator<Map.Entry<String, Boolean>> thisItr = expected.getAddresses().entrySet().iterator();
         Iterator<Map.Entry<String, Boolean>> otherItr = actualCasted.getAddresses().entrySet().iterator();
-        while ( thisItr.hasNext() && otherItr.hasNext()) {
+        while (thisItr.hasNext() && otherItr.hasNext()) {
             Map.Entry<String, Boolean> thisEntry = thisItr.next();
             Map.Entry<String, Boolean> otherEntry = otherItr.next();
-            if (! thisEntry.equals(otherEntry))
+            if (!thisEntry.equals(otherEntry))
                 return false;
         }
         return !(thisItr.hasNext() || otherItr.hasNext());
