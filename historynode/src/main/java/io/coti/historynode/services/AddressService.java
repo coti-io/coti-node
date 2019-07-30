@@ -59,9 +59,7 @@ public class AddressService extends BaseNodeAddressService {
 
             List<Hash> addressesHashesToGetFromStorage = getHistoryAddressesRequest.getAddressHashes();
             Map<Hash, AddressData> addressToAddressDataFromDB = populateAndRemoveFoundAddresses(addressesHashesToGetFromStorage);
-            ResponseEntity<GetHistoryAddressesResponse> storageResponse = getAddressesFromStorage(addressesHashesToGetFromStorage);
-
-            GetHistoryAddressesResponse getHistoryAddressesResponseFromStorageNode = storageResponse.getBody();
+            GetHistoryAddressesResponse getHistoryAddressesResponseFromStorageNode = getAddressesFromStorage(addressesHashesToGetFromStorage).getBody();
 
             if (!getHistoryAddressesResponseCrypto.verifySignature(getHistoryAddressesResponseFromStorageNode)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new SerializableResponse(STORAGE_INVALID_SIGNATURE, STATUS_ERROR));
@@ -70,7 +68,7 @@ public class AddressService extends BaseNodeAddressService {
             if (!validationService.validateGetAddressesResponse(getHistoryAddressesResponseFromStorageNode)) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SerializableResponse(STORAGE_RESPONSE_VALIDATION_ERROR, STATUS_ERROR));
             }
-            Map<Hash, AddressData> getHistoryAddressesResponseMap = reorderHashResponses(getHistoryAddressesRequest.getAddressHashes(), addressToAddressDataFromDB, storageResponse.getBody().getAddressHashesToAddresses());
+            Map<Hash, AddressData> getHistoryAddressesResponseMap = reorderHashResponses(getHistoryAddressesRequest.getAddressHashes(), addressToAddressDataFromDB, getHistoryAddressesResponseFromStorageNode.getAddressHashesToAddresses());
 
             GetHistoryAddressesResponse getHistoryAddressesResponseToFullNode = new GetHistoryAddressesResponse(getHistoryAddressesResponseMap);
             getHistoryAddressesResponseCrypto.signMessage(getHistoryAddressesResponseToFullNode);
@@ -79,6 +77,8 @@ public class AddressService extends BaseNodeAddressService {
                     body(getHistoryAddressesResponseToFullNode);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SerializableResponse(String.format(STORAGE_ADDRESS_ERROR, ((SerializableResponse) jacksonSerializer.deserialize(e.getResponseBodyAsByteArray())).getMessage()), STATUS_ERROR));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SerializableResponse(e.getMessage(), STATUS_ERROR));
         }
     }
 
