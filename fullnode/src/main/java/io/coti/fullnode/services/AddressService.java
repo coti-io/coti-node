@@ -6,6 +6,8 @@ import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.GetHistoryAddressesRequest;
 import io.coti.basenode.http.GetHistoryAddressesResponse;
+import io.coti.basenode.http.HttpJacksonSerializer;
+import io.coti.basenode.http.SerializableResponse;
 import io.coti.basenode.model.Addresses;
 import io.coti.basenode.services.BaseNodeAddressService;
 import io.coti.fullnode.data.RequestedAddressHashData;
@@ -16,8 +18,9 @@ import io.coti.fullnode.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
@@ -29,6 +32,8 @@ import java.util.Map;
 @Slf4j
 @Service
 public class AddressService extends BaseNodeAddressService {
+
+    private final int TRUSTED_RESULT_MAX_DURATION_IN_MILLIS = 600_000;
 
     @Autowired
     private WebSocketSender webSocketSender;
@@ -44,8 +49,8 @@ public class AddressService extends BaseNodeAddressService {
     private GetHistoryAddressesResponseCrypto getHistoryAddressesResponseCrypto;
     @Value("${history.server.address}")
     private String historyServerAddress;
-
-    private final int TRUSTED_RESULT_MAX_DURATION_IN_MILLIS = 600_000;
+    @Autowired
+    private HttpJacksonSerializer jacksonSerializer;
 
     public boolean addAddress(Hash addressHash) {
         AddressData addressData = new AddressData(addressHash);
@@ -67,75 +72,75 @@ public class AddressService extends BaseNodeAddressService {
     public AddressesExistsResponse addressesExist(AddressBulkRequest addressRequest) {
 
         List<Hash> addressHashes = addressRequest.getAddresses();
-        LinkedHashMap<String,Boolean> addressHashesToFoundStatus = new LinkedHashMap<>();
+        LinkedHashMap<String, Boolean> addressHashToFoundStatusMap = new LinkedHashMap<>();
 
-        //TODO 7/29/2019 astolia: make sure this is orderd
-        addressHashes.removeIf( addressHash -> {
-            if(addresses.getByHash(addressHash) != null){
-                addressHashesToFoundStatus.put(addressHash.toHexString(), Boolean.TRUE);
+        addressHashes.removeIf(addressHash -> {
+            if (addresses.getByHash(addressHash) != null) {
+                addressHashToFoundStatusMap.put(addressHash.toHexString(), Boolean.TRUE);
                 return true;
             }
             RequestedAddressHashData requestedAddressHashData = requestedAddressHashes.getByHash(addressHash);
-            if(validateRequestedAddressHashExistsAndRelevant(requestedAddressHashData)){
-                addressHashesToFoundStatus.put(addressHash.toHexString(), Boolean.FALSE);
+            if (validateRequestedAddressHashExistsAndRelevant(requestedAddressHashData)) {
+                addressHashToFoundStatusMap.put(addressHash.toHexString(), Boolean.FALSE);
                 return true;
             }
-            addressHashesToFoundStatus.put(addressHash.toHexString(), null);
+            addressHashToFoundStatusMap.put(addressHash.toHexString(), null);
             return false;
         });
 
-        if(addressHashes.size() > 0){
-            fillUnknownAddressesFromHistoryResponse(addressHashes, addressHashesToFoundStatus);
+        if (addressHashes.size() > 0) {
+            fillUnknownAddressesFromHistoryResponse(addressHashes, addressHashToFoundStatusMap);
         }
 
-        return new AddressesExistsResponse(addressHashesToFoundStatus);
+        return new AddressesExistsResponse(addressHashToFoundStatusMap);
     }
 
-    private void fillUnknownAddressesFromHistoryResponse(List<Hash> addressHashesToFindInHistoryNode, Map<String,Boolean> addressHashesToFoundStatus){
-        GetHistoryAddressesRequest getHistoryAddressesRequestToHistory = new GetHistoryAddressesRequest(addressHashesToFindInHistoryNode);
-        getHistoryAddressesRequestCrypto.signMessage(getHistoryAddressesRequestToHistory);
+    private void fillUnknownAddressesFromHistoryResponse(List<Hash> addressHashesToFindInHistoryNode, Map<String, Boolean> addressHashesToFoundStatus) {
+        GetHistoryAddressesRequest getHistoryAddressesRequest = new GetHistoryAddressesRequest(addressHashesToFindInHistoryNode);
+        getHistoryAddressesRequestCrypto.signMessage(getHistoryAddressesRequest);
 
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<GetHistoryAddressesResponse> historyResponse =  restTemplate.postForEntity(historyServerAddress + "/addresses", getHistoryAddressesRequestToHistory, GetHistoryAddressesResponse.class);
 
-        if(!validateHistoryResponse(historyResponse)){
-            //TODO 7/29/2019 astolia: is this correct? put false if response from history is bad?
-            addressHashesToFindInHistoryNode.forEach( hash -> addressHashesToFoundStatus.put(hash.toHexString(),Boolean.FALSE));
-            return;
+        Map<Hash, AddressData> historyHashToAddressMap = null;
+        try {
+            GetHistoryAddressesResponse getHistoryAddressesResponse = restTemplate.postForEntity(historyServerAddress + "/addresses", getHistoryAddressesRequest, GetHistoryAddressesResponse.class).getBody();
+            if (validateHistoryResponse(getHistoryAddressesResponse)) {
+                historyHashToAddressMap.putAll(getHistoryAddressesResponse.getAddressHashesToAddresses());
+            }
+
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            log.error("{}: {}", e.getClass().getName(), ((SerializableResponse) jacksonSerializer.deserialize(e.getResponseBodyAsByteArray())).getMessage());
         }
 
-        historyResponse.getBody().getAddressHashesToAddresses().entrySet().forEach(
-                entry -> {
-                    Boolean isAddressUsed;
-                    if(entry.getValue() == null){
-                        isAddressUsed = Boolean.FALSE;
-                        requestedAddressHashes.put(new RequestedAddressHashData(entry.getKey()));
-                    }
-                    else{
-                        isAddressUsed = Boolean.TRUE;
-                        addresses.put(entry.getValue());
-                    }
-                    addressHashesToFoundStatus.put(entry.getKey().toHexString(), isAddressUsed);
-                });
+
+        addressHashesToFindInHistoryNode.forEach(addressHash -> {
+            if (historyHashToAddressMap == null) {
+                addressHashesToFoundStatus.put(addressHash.toString(), Boolean.FALSE);
+                return;
+            }
+            Boolean isAddressUsed;
+            AddressData addressData = historyHashToAddressMap.get(addressHash);
+            if (addressData == null) {
+                isAddressUsed = Boolean.FALSE;
+                requestedAddressHashes.put(new RequestedAddressHashData(addressHash));
+            } else {
+                isAddressUsed = Boolean.TRUE;
+                addresses.put(addressData);
+            }
+            addressHashesToFoundStatus.put(addressHash.toString(), isAddressUsed);
+        });
     }
 
-    private boolean validateHistoryResponse(ResponseEntity<GetHistoryAddressesResponse> historyResponse){
-        GetHistoryAddressesResponse responseBody = historyResponse.getBody();
-        if(!historyResponse.getStatusCode().is2xxSuccessful()){
-            log.error(String.format("Unsuccessful status code {} for {} response"), historyResponse.getStatusCode(), responseBody.getClass().getSimpleName());
+    private boolean validateHistoryResponse(GetHistoryAddressesResponse getHistoryAddressesResponse) {
+        if (!getHistoryAddressesResponseCrypto.verifySignature(getHistoryAddressesResponse)) {
+            log.error("Signature verification of history address response failed.");
             return false;
         }
-
-        if (!getHistoryAddressesResponseCrypto.verifySignature(responseBody)) {
-            log.error(String.format("Signature verification of {} failed."), responseBody.getClass().getSimpleName());
-            return false;
-        }
-
         return true;
     }
 
-    private boolean validateRequestedAddressHashExistsAndRelevant(RequestedAddressHashData requestedAddressHashData){
-        if(requestedAddressHashData != null){
+    private boolean validateRequestedAddressHashExistsAndRelevant(RequestedAddressHashData requestedAddressHashData) {
+        if (requestedAddressHashData != null) {
             long diffInMilliSeconds = Math.abs(Duration.between(Instant.now(), requestedAddressHashData.getLastUpdateTime()).toMillis());
             return diffInMilliSeconds <= TRUSTED_RESULT_MAX_DURATION_IN_MILLIS;
         }

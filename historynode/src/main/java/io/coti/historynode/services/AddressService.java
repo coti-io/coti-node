@@ -4,7 +4,10 @@ import io.coti.basenode.crypto.GetHistoryAddressesRequestCrypto;
 import io.coti.basenode.crypto.GetHistoryAddressesResponseCrypto;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.*;
+import io.coti.basenode.http.GetHistoryAddressesRequest;
+import io.coti.basenode.http.GetHistoryAddressesResponse;
+import io.coti.basenode.http.HttpJacksonSerializer;
+import io.coti.basenode.http.SerializableResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Addresses;
 import io.coti.basenode.services.BaseNodeAddressService;
@@ -51,7 +54,7 @@ public class AddressService extends BaseNodeAddressService {
     public ResponseEntity<IResponse> getAddresses(GetHistoryAddressesRequest getHistoryAddressesRequest) {
         try {
             if (!getHistoryAddressesRequestCrypto.verifySignature(getHistoryAddressesRequest)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new SerializableResponse(INVALID_SIGNATURE, STATUS_ERROR));
             }
 
             List<Hash> addressesHashesToGetFromStorage = getHistoryAddressesRequest.getAddressHashes();
@@ -61,11 +64,11 @@ public class AddressService extends BaseNodeAddressService {
             GetHistoryAddressesResponse getHistoryAddressesResponse = storageResponse.getBody();
 
             if (!getHistoryAddressesResponseCrypto.verifySignature(getHistoryAddressesResponse)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(STORAGE_INVALID_SIGNATURE, STATUS_ERROR));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new SerializableResponse(STORAGE_INVALID_SIGNATURE, STATUS_ERROR));
             }
 
             if (!validationService.validateGetAddressesResponse(getHistoryAddressesResponse)) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(STORAGE_RESPONSE_VALIDATION_ERROR, STATUS_ERROR));
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SerializableResponse(STORAGE_RESPONSE_VALIDATION_ERROR, STATUS_ERROR));
             }
             Map<Hash, AddressData> getHistoryAddressesResponseMap = reorderHashResponses(getHistoryAddressesRequest.getAddressHashes(), addressToAddressDataFromDB, storageResponse.getBody().getAddressHashesToAddresses());
             return ResponseEntity.
@@ -73,7 +76,7 @@ public class AddressService extends BaseNodeAddressService {
                     body(new GetHistoryAddressesResponse(
                             getHistoryAddressesResponseMap));
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(String.format(STORAGE_ADDRESS_ERROR, ((SeriazableResponse) jacksonSerializer.deserialize(e.getResponseBodyAsByteArray())).getMessage()), STATUS_ERROR));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SerializableResponse(String.format(STORAGE_ADDRESS_ERROR, ((SerializableResponse) jacksonSerializer.deserialize(e.getResponseBodyAsByteArray())).getMessage()), STATUS_ERROR));
         }
     }
 
