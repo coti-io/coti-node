@@ -4,6 +4,8 @@ import io.coti.basenode.crypto.GetHistoryAddressesRequestCrypto;
 import io.coti.basenode.crypto.GetHistoryAddressesResponseCrypto;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.NetworkNodeData;
+import io.coti.basenode.data.NodeType;
 import io.coti.basenode.http.GetHistoryAddressesRequest;
 import io.coti.basenode.http.GetHistoryAddressesResponse;
 import io.coti.basenode.http.HttpJacksonSerializer;
@@ -17,7 +19,6 @@ import io.coti.fullnode.model.RequestedAddressHashes;
 import io.coti.fullnode.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -47,8 +48,6 @@ public class AddressService extends BaseNodeAddressService {
     private GetHistoryAddressesRequestCrypto getHistoryAddressesRequestCrypto;
     @Autowired
     private GetHistoryAddressesResponseCrypto getHistoryAddressesResponseCrypto;
-    @Value("${history.server.address}")
-    private String historyServerAddress;
     @Autowired
     private HttpJacksonSerializer jacksonSerializer;
 
@@ -74,13 +73,14 @@ public class AddressService extends BaseNodeAddressService {
         List<Hash> addressHashes = addressRequest.getAddresses();
         LinkedHashMap<String, Boolean> addressHashToFoundStatusMap = new LinkedHashMap<>();
 
+        String historyNodeHttpAddress = getHistoryNodeHttpAddress();
         addressHashes.removeIf(addressHash -> {
             if (addresses.getByHash(addressHash) != null) {
                 addressHashToFoundStatusMap.put(addressHash.toHexString(), Boolean.TRUE);
                 return true;
             }
             RequestedAddressHashData requestedAddressHashData = requestedAddressHashes.getByHash(addressHash);
-            if (validateRequestedAddressHashExistsAndRelevant(requestedAddressHashData)) {
+            if (validateRequestedAddressHashExistsAndRelevant(requestedAddressHashData) || historyNodeHttpAddress == null) {
                 addressHashToFoundStatusMap.put(addressHash.toHexString(), Boolean.FALSE);
                 return true;
             }
@@ -89,13 +89,13 @@ public class AddressService extends BaseNodeAddressService {
         });
 
         if (addressHashes.size() > 0) {
-            fillUnknownAddressesFromHistoryResponse(addressHashes, addressHashToFoundStatusMap);
+            fillUnknownAddressesFromHistoryResponse(addressHashes, addressHashToFoundStatusMap, historyNodeHttpAddress);
         }
 
         return new AddressesExistsResponse(addressHashToFoundStatusMap);
     }
 
-    private void fillUnknownAddressesFromHistoryResponse(List<Hash> addressHashesToFindInHistoryNode, Map<String, Boolean> addressHashesToFoundStatus) {
+    private void fillUnknownAddressesFromHistoryResponse(List<Hash> addressHashesToFindInHistoryNode, Map<String, Boolean> addressHashesToFoundStatus, String historyNodeHttpAddress) {
         GetHistoryAddressesRequest getHistoryAddressesRequest = new GetHistoryAddressesRequest(addressHashesToFindInHistoryNode);
         getHistoryAddressesRequestCrypto.signMessage(getHistoryAddressesRequest);
 
@@ -103,7 +103,7 @@ public class AddressService extends BaseNodeAddressService {
 
         Map<Hash, AddressData> historyHashToAddressMap = null;
         try {
-            GetHistoryAddressesResponse getHistoryAddressesResponse = restTemplate.postForEntity(historyServerAddress + "/addresses", getHistoryAddressesRequest, GetHistoryAddressesResponse.class).getBody();
+            GetHistoryAddressesResponse getHistoryAddressesResponse = restTemplate.postForEntity(historyNodeHttpAddress + "/addresses", getHistoryAddressesRequest, GetHistoryAddressesResponse.class).getBody();
             if (validateHistoryResponse(getHistoryAddressesResponse)) {
                 historyHashToAddressMap.putAll(getHistoryAddressesResponse.getAddressHashesToAddresses());
             }
@@ -145,5 +145,13 @@ public class AddressService extends BaseNodeAddressService {
             return diffInMilliSeconds <= TRUSTED_RESULT_MAX_DURATION_IN_MILLIS;
         }
         return false;
+    }
+
+    private String getHistoryNodeHttpAddress() {
+        Map<Hash, NetworkNodeData> historyNodeMap = networkService.getMapFromFactory(NodeType.HistoryNode);
+        if (historyNodeMap.isEmpty()) {
+            return null;
+        }
+        return historyNodeMap.values().stream().findFirst().get().getHttpFullAddress();
     }
 }
