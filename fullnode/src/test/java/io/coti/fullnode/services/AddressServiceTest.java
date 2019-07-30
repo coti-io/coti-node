@@ -137,3 +137,25 @@ public class AddressServiceTest {
     }
 
 }
+//
+//    @Override
+//    public boolean equals(Object o) {
+//        if (this == o) return true;
+//        if (!(o instanceof AddressesExistsResponse)) return false;
+//        if (!super.equals(o)) return false;
+//        AddressesExistsResponse that = (AddressesExistsResponse) o;
+//        Iterator<Map.Entry<String, Boolean>> thisItr = getAddresses().entrySet().iterator();
+//        Iterator<Map.Entry<String, Boolean>> otherItr = ((AddressesExistsResponse) o).getAddresses().entrySet().iterator();
+//        while ( thisItr.hasNext() && otherItr.hasNext()) {
+//            Map.Entry<String, Boolean> thisEntry = thisItr.next();
+//            Map.Entry<String, Boolean> otherEntry = otherItr.next();
+//            if (! thisEntry.equals(otherEntry))
+//                return false;
+//        }
+//        return !(thisItr.hasNext() || otherItr.hasNext());
+//    }
+//
+//    @Override
+//    public int hashCode() {
+//        return Objects.hash(super.hashCode(), getAddresses());
+//    }
