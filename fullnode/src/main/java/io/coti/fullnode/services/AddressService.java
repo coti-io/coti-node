@@ -101,22 +101,21 @@ public class AddressService extends BaseNodeAddressService {
         getHistoryAddressesRequestCrypto.signMessage(getHistoryAddressesRequest);
 
         RestTemplate restTemplate = new RestTemplate();
-
-        //TODO 7/30/2019 astolia: java doesn't like this solution. change implementation
-        Map<Hash, AddressData> historyHashToAddressMap = null;
+        Map<Hash, AddressData> historyHashToAddressMap = new HashMap<>();
         try {
             GetHistoryAddressesResponse getHistoryAddressesResponse = restTemplate.postForEntity(historyNodeHttpAddress + "/addresses", getHistoryAddressesRequest, GetHistoryAddressesResponse.class).getBody();
             if (validateHistoryResponse(getHistoryAddressesResponse)) {
-                historyHashToAddressMap = new HashMap<>(); //TODO 7/30/2019 astolia: java doesn't like this solution. change implementation. without this - nullpointer
                 historyHashToAddressMap.putAll(getHistoryAddressesResponse.getAddressHashesToAddresses());
             }
 
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             log.error("{}: {}", e.getClass().getName(), ((SerializableResponse) jacksonSerializer.deserialize(e.getResponseBodyAsByteArray())).getMessage());
+        } catch (Exception e) {
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
         }
 
         addressHashesToFindInHistoryNode.forEach(addressHash -> {
-            if (historyHashToAddressMap == null) {
+            if (historyHashToAddressMap.isEmpty()) {
                 addressHashesToFoundStatus.put(addressHash.toString(), Boolean.FALSE);
                 return;
             }

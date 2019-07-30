@@ -7,7 +7,6 @@ import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
-import java.util.HashMap;
 import java.util.Map;
 
 @Data
@@ -17,13 +16,11 @@ public class AddHistoryAddressesRequest extends Request implements ISignable, IS
     private Hash signerHash;
     private SignatureData signature;
 
+    private AddHistoryAddressesRequest() {
+    }
 
     public AddHistoryAddressesRequest(@NotEmpty(message = "Entities must not be empty") Map<Hash, String> hashToAddressDataJsonMap) {
         this.hashToAddressDataJsonMap = hashToAddressDataJsonMap;
-    }
-
-    public AddHistoryAddressesRequest() {
-        hashToAddressDataJsonMap = new HashMap<>();
     }
 
     @Override
