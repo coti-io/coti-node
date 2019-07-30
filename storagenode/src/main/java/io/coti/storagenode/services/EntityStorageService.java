@@ -4,7 +4,7 @@ import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.http.AddHistoryEntitiesResponse;
-import io.coti.basenode.http.SeriazableResponse;
+import io.coti.basenode.http.SerializableResponse;
 import io.coti.basenode.http.data.GetHashToPropagatable;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.data.enums.ElasticSearchData;
@@ -95,18 +95,18 @@ public abstract class EntityStorageService implements IEntityStorageService {
     public ResponseEntity<IResponse> storeObjectToStorage(Hash hash, String objectAsJsonString) {
         try {
             if (!validateObjectDataIntegrity(hash, objectAsJsonString)) {
-                return ResponseEntity.badRequest().body(new SeriazableResponse(INVALID_OBJECT, STATUS_ERROR));
+                return ResponseEntity.badRequest().body(new SerializableResponse(INVALID_OBJECT, STATUS_ERROR));
             }
 
             RestStatus insertStatus = objectService.insertObjectJson(hash, objectAsJsonString, false, objectType);
             if (!insertStatus.equals(RestStatus.CREATED)) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SeriazableResponse(String.format(INSERT_OBJECT_ERROR, insertStatus.toString()), STATUS_ERROR));
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SerializableResponse(String.format(INSERT_OBJECT_ERROR, insertStatus.toString()), STATUS_ERROR));
             } else {
                 objectService.insertObjectJson(hash, objectAsJsonString, true, objectType);
             }
-            return ResponseEntity.ok().body(new SeriazableResponse(String.format(INSERT_OBJECT_SUCCESS, hash.toString())));
+            return ResponseEntity.ok().body(new SerializableResponse(String.format(INSERT_OBJECT_SUCCESS, hash.toString())));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SeriazableResponse(e.getMessage(), STATUS_ERROR));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SerializableResponse(e.getMessage(), STATUS_ERROR));
         }
     }
 

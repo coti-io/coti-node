@@ -123,7 +123,7 @@ public class RollingReserveService {
             ResponseEntity<GetMerchantRollingReserveAddressResponse> result = restTemplate.postForEntity(financialServerHttpAddress + MERCHANT_ADDRESS_END_POINT, getMerchantRollingReserveAddressRequest, GetMerchantRollingReserveAddressResponse.class);
             return result.getBody().getMerchantRollingReserveAddressData();
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            throw new Exception(String.format(MERCHANT_ADRRESS_GET_ERROR, ((SeriazableResponse) jacksonSerializer.deserialize(e.getResponseBodyAsByteArray())).getMessage()));
+            throw new Exception(String.format(MERCHANT_ADRRESS_GET_ERROR, ((SerializableResponse) jacksonSerializer.deserialize(e.getResponseBodyAsByteArray())).getMessage()));
         }
 
 

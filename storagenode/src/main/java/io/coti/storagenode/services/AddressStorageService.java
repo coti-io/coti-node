@@ -7,7 +7,7 @@ import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.GetHistoryAddressesRequest;
 import io.coti.basenode.http.GetHistoryAddressesResponse;
-import io.coti.basenode.http.SeriazableResponse;
+import io.coti.basenode.http.SerializableResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.storagenode.data.enums.ElasticSearchData;
@@ -50,7 +50,7 @@ public class AddressStorageService extends EntityStorageService {
     public ResponseEntity<IResponse> retrieveMultipleObjectsFromStorage(GetHistoryAddressesRequest getHistoryAddressesRequest) {
         try {
             if (!getHistoryAddressesRequestCrypto.verifySignature(getHistoryAddressesRequest)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new SeriazableResponse(INVALID_SIGNATURE, STATUS_ERROR));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new SerializableResponse(INVALID_SIGNATURE, STATUS_ERROR));
             }
             Map<Hash, AddressData> hashToAddressDataMap = new HashMap<>();
             super.retrieveMultipleObjectsFromStorage(getHistoryAddressesRequest.getAddressHashes()).forEach((hash, addressString) -> hashToAddressDataMap.put(hash, jacksonSerializer.deserialize(addressString)));
@@ -58,7 +58,7 @@ public class AddressStorageService extends EntityStorageService {
             getHistoryAddressesResponseCrypto.signMessage(getHistoryAddressesResponse);
             return ResponseEntity.ok(getHistoryAddressesResponse);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SeriazableResponse(e.getMessage(), STATUS_ERROR));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SerializableResponse(e.getMessage(), STATUS_ERROR));
         }
     }
 
