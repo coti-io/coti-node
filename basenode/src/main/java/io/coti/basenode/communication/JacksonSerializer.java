@@ -34,6 +34,16 @@ public class JacksonSerializer implements ISerializer {
         }
     }
 
+    @Override
+    public String serializeAsString(IPropagatable entity) {
+        try {
+            return serializer.writeValueAsString(entity);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public <T extends IPropagatable> T deserialize(byte[] bytes) {
         try {
             return (T) serializer.readValue(bytes, IPropagatable.class);
