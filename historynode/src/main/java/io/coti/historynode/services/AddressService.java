@@ -61,20 +61,22 @@ public class AddressService extends BaseNodeAddressService {
             Map<Hash, AddressData> addressToAddressDataFromDB = populateAndRemoveFoundAddresses(addressesHashesToGetFromStorage);
             ResponseEntity<GetHistoryAddressesResponse> storageResponse = getAddressesFromStorage(addressesHashesToGetFromStorage);
 
-            GetHistoryAddressesResponse getHistoryAddressesResponse = storageResponse.getBody();
+            GetHistoryAddressesResponse getHistoryAddressesResponseFromStorageNode = storageResponse.getBody();
 
-            if (!getHistoryAddressesResponseCrypto.verifySignature(getHistoryAddressesResponse)) {
+            if (!getHistoryAddressesResponseCrypto.verifySignature(getHistoryAddressesResponseFromStorageNode)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new SerializableResponse(STORAGE_INVALID_SIGNATURE, STATUS_ERROR));
             }
 
-            if (!validationService.validateGetAddressesResponse(getHistoryAddressesResponse)) {
+            if (!validationService.validateGetAddressesResponse(getHistoryAddressesResponseFromStorageNode)) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SerializableResponse(STORAGE_RESPONSE_VALIDATION_ERROR, STATUS_ERROR));
             }
             Map<Hash, AddressData> getHistoryAddressesResponseMap = reorderHashResponses(getHistoryAddressesRequest.getAddressHashes(), addressToAddressDataFromDB, storageResponse.getBody().getAddressHashesToAddresses());
+
+            GetHistoryAddressesResponse getHistoryAddressesResponseToFullNode = new GetHistoryAddressesResponse(getHistoryAddressesResponseMap);
+            getHistoryAddressesResponseCrypto.signMessage(getHistoryAddressesResponseToFullNode);
             return ResponseEntity.
                     status(HttpStatus.OK).
-                    body(new GetHistoryAddressesResponse(
-                            getHistoryAddressesResponseMap));
+                    body(getHistoryAddressesResponseToFullNode);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SerializableResponse(String.format(STORAGE_ADDRESS_ERROR, ((SerializableResponse) jacksonSerializer.deserialize(e.getResponseBodyAsByteArray())).getMessage()), STATUS_ERROR));
         }

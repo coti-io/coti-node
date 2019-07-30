@@ -26,6 +26,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -101,17 +102,18 @@ public class AddressService extends BaseNodeAddressService {
 
         RestTemplate restTemplate = new RestTemplate();
 
+        //TODO 7/30/2019 astolia: java doesn't like this solution. change implementation
         Map<Hash, AddressData> historyHashToAddressMap = null;
         try {
             GetHistoryAddressesResponse getHistoryAddressesResponse = restTemplate.postForEntity(historyNodeHttpAddress + "/addresses", getHistoryAddressesRequest, GetHistoryAddressesResponse.class).getBody();
             if (validateHistoryResponse(getHistoryAddressesResponse)) {
+                historyHashToAddressMap = new HashMap<>(); //TODO 7/30/2019 astolia: java doesn't like this solution. change implementation. without this - nullpointer
                 historyHashToAddressMap.putAll(getHistoryAddressesResponse.getAddressHashesToAddresses());
             }
 
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             log.error("{}: {}", e.getClass().getName(), ((SerializableResponse) jacksonSerializer.deserialize(e.getResponseBodyAsByteArray())).getMessage());
         }
-
 
         addressHashesToFindInHistoryNode.forEach(addressHash -> {
             if (historyHashToAddressMap == null) {
