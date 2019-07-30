@@ -53,7 +53,8 @@ public class AddressStorageService extends EntityStorageService {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new SerializableResponse(INVALID_SIGNATURE, STATUS_ERROR));
             }
             Map<Hash, AddressData> hashToAddressDataMap = new HashMap<>();
-            super.retrieveMultipleObjectsFromStorage(getHistoryAddressesRequest.getAddressHashes()).forEach((hash, addressString) -> hashToAddressDataMap.put(hash, jacksonSerializer.deserialize(addressString)));
+            super.retrieveMultipleObjectsFromStorage(getHistoryAddressesRequest.getAddressHashes()).forEach((hash, addressString) ->
+                    hashToAddressDataMap.put(hash, addressString != null ? jacksonSerializer.deserialize(addressString) : null));
             GetHistoryAddressesResponse getHistoryAddressesResponse = new GetHistoryAddressesResponse(hashToAddressDataMap);
             getHistoryAddressesResponseCrypto.signMessage(getHistoryAddressesResponse);
             return ResponseEntity.ok(getHistoryAddressesResponse);
