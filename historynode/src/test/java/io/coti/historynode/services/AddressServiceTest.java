@@ -183,7 +183,7 @@ public class AddressServiceTest {
         Map<Hash, AddressData> responseMap = new LinkedHashMap<>();
         addressesHashFromStorage2.stream().forEach(hash -> responseMap.put(hash, new AddressData(hash)));
         addressesHashFromStorage1.stream().forEach(hash -> responseMap.put(hash, new AddressData(hash)));
-        GetHistoryAddressesResponse unOrderedResponseFromStorage = new GetHistoryAddressesResponse(responseMap, STATUS_SUCCESS);
+        GetHistoryAddressesResponse unOrderedResponseFromStorage = new GetHistoryAddressesResponse(responseMap);
         setResponseDummySignerHashAndSignature(unOrderedResponseFromStorage);
 
         when(storageConnector.retrieveFromStorage(storageNodeUrl + "/addresses", getHistoryAddressesRequest, GetHistoryAddressesResponse.class)).
@@ -195,7 +195,7 @@ public class AddressServiceTest {
         addressesHashFromStorage1.stream().forEach(hash -> orderedExpectedResponseMap.put(hash, new AddressData(hash)));
         orderedExpectedResponseMap.put(hashInRocks, new AddressData(hashInRocks));
         addressesHashFromStorage2.stream().forEach(hash -> orderedExpectedResponseMap.put(hash, new AddressData(hash)));
-        GetHistoryAddressesResponse expectedResponse = new GetHistoryAddressesResponse(orderedExpectedResponseMap, STATUS_SUCCESS);
+        GetHistoryAddressesResponse expectedResponse = new GetHistoryAddressesResponse(orderedExpectedResponseMap);
         ResponseEntity<IResponse> expectedOrderedResponseFromStorage = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
 
         Iterator<Map.Entry<Hash, AddressData>> responseIterator = ((GetHistoryAddressesResponse)expectedOrderedResponseFromStorage.getBody()).getAddressHashesToAddresses().entrySet().iterator();

@@ -530,7 +530,9 @@ public class HistoryTransactionServiceTest {
         String endpoint = "/transactions";
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         mapper.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
+        //TODO 7/29/2019 tomer: Will fail on verification
         ResponseEntity<AddHistoryEntitiesResponse> storeResponseEntity = transactionService.storeEntitiesByType(storageServerAddress + endpoint, addEntitiesBulkRequest);
+        Assert.assertTrue(storeResponseEntity.getBody().getHashToStoreResultMap().size()==addEntitiesBulkRequest.getHashToEntityJsonDataMap().size());
         Assert.assertTrue(storeResponseEntity.getBody().getHashToStoreResultMap().values().stream().allMatch(Boolean::booleanValue));
     }
 
