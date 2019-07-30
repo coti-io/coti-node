@@ -73,6 +73,14 @@ public class TransactionService extends BaseNodeTransactionService {
         super.init();
     }
 
+    public TransactionResponseData retrieveTransactionByHash(Hash transactionHash) {
+        try {
+            return new TransactionResponseData(transactions.getByHash(transactionHash));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public ResponseEntity<Response> addNewTransaction(AddTransactionRequest request) {
         TransactionData transactionData =
                 new TransactionData(
