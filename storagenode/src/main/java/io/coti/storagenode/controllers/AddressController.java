@@ -27,8 +27,8 @@ public class AddressController {
     }
 
     @PutMapping(value = "/addresses")
-    public ResponseEntity<IResponse> storeMultipleAddressToStorage(@Valid @RequestBody AddHistoryAddressesRequest addAddressesRequest) {
-        return addressStorageService.storeMultipleAddressesToStorage(addAddressesRequest);
+    public  ResponseEntity<IResponse> storeMultipleAddressToStorage(@Valid @RequestBody AddHistoryAddressesRequest addAddressesRequest) {
+        return addressStorageService.storeMultipleObjectsToStorage(addAddressesRequest.getHashToAddressDataJsonMap());
     }
 
 }

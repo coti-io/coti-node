@@ -1,6 +1,7 @@
 package io.coti.historynode.services;
 
 
+import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.crypto.GetHistoryAddressesRequestCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.AddressData;
@@ -23,12 +24,13 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import utils.AddressTestUtils;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@ContextConfiguration(classes = {StorageConnector.class, GetHistoryAddressesRequestCrypto.class, NodeCryptoHelper.class})
+@ContextConfiguration(classes = {StorageConnector.class, GetHistoryAddressesRequestCrypto.class, NodeCryptoHelper.class, JacksonSerializer.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -39,6 +41,9 @@ public class StorageConnectorTest {
 
     @Autowired
     private GetHistoryAddressesRequestCrypto getHistoryAddressesRequestCrypto;
+
+    @Autowired
+    private JacksonSerializer jacksonSerializer;
 
     @Value("${storage.server.address}")
     private String storageNodeUrl;
@@ -74,7 +79,11 @@ public class StorageConnectorTest {
     public void storeAddresses_notStoredInStorage_shouldReturnMapWithTrueValues() {
         int size = 3;
         List<AddressData> addresses = AddressTestUtils.generateListOfRandomAddressData(size);
-        AddHistoryAddressesRequest request = new AddHistoryAddressesRequest(addresses);
+        Map<Hash, String> hashToAddressDataJsonMap = new HashMap<>();
+        addresses.stream().forEach(addressData -> {
+            hashToAddressDataJsonMap.put(addressData.getHash(), jacksonSerializer.serializeAsString(addressData));
+        });
+        AddHistoryAddressesRequest request = new AddHistoryAddressesRequest(hashToAddressDataJsonMap);
         ResponseEntity<AddHistoryEntitiesResponse> retrieveResponse = storageConnector.storeInStorage(storageNodeUrl + "/addresses", request, AddHistoryEntitiesResponse.class);
         Assert.assertEquals(HttpStatus.OK, retrieveResponse.getStatusCode());
         Map<Hash, Boolean> addressHashesToStoreResult = retrieveResponse.getBody().getHashToStoreResultMap();
@@ -88,7 +97,11 @@ public class StorageConnectorTest {
     public void storeAddresses_storeExistingAddresses_shouldReturnMapWithTrueValues() {
         int size = 2;
         List<AddressData> addresses = AddressTestUtils.generateListOfRandomAddressData(size);
-        AddHistoryAddressesRequest request = new AddHistoryAddressesRequest(addresses);
+        Map<Hash, String> hashToAddressDataJsonMap = new HashMap<>();
+        addresses.stream().forEach(addressData -> {
+            hashToAddressDataJsonMap.put(addressData.getHash(), jacksonSerializer.serializeAsString(addressData));
+        });
+        AddHistoryAddressesRequest request = new AddHistoryAddressesRequest(hashToAddressDataJsonMap);
         ResponseEntity<AddHistoryEntitiesResponse> retrieveResponse = storageConnector.storeInStorage(storageNodeUrl + "/addresses", request, AddHistoryEntitiesResponse.class);
         Assert.assertEquals(HttpStatus.OK, retrieveResponse.getStatusCode());
         Map<Hash, Boolean> addressHashesToStoreResult = retrieveResponse.getBody().getHashToStoreResultMap();
@@ -109,10 +122,13 @@ public class StorageConnectorTest {
     @Test
     public void storeAndRetrieveAddresses() {
         int size = 2;
-
         // Store in elastic and check correct size and correct result values.
         List<AddressData> addresses = AddressTestUtils.generateListOfRandomAddressData(size);
-        AddHistoryAddressesRequest storeRequest = new AddHistoryAddressesRequest(addresses);
+        Map<Hash, String> hashToAddressDataJsonMap = new HashMap<>();
+        addresses.stream().forEach(addressData -> {
+            hashToAddressDataJsonMap.put(addressData.getHash(), jacksonSerializer.serializeAsString(addressData));
+        });
+        AddHistoryAddressesRequest storeRequest = new AddHistoryAddressesRequest(hashToAddressDataJsonMap);
         ResponseEntity<AddHistoryEntitiesResponse> storeResponse = storageConnector.storeInStorage(storageNodeUrl + "/addresses", storeRequest, AddHistoryEntitiesResponse.class);
         Assert.assertEquals(storeResponse.getBody().getHashToStoreResultMap().size(), size);
         Assert.assertEquals(HttpStatus.OK, storeResponse.getStatusCode());

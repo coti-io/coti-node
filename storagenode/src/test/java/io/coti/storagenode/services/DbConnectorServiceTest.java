@@ -8,6 +8,10 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.database.DbConnectorService;
 import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsResponse;
+import org.elasticsearch.action.delete.DeleteResponse;
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.rest.RestStatus;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,8 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.coti.storagenode.http.HttpStringConstants.STATUS_NOT_FOUND;
-import static io.coti.storagenode.http.HttpStringConstants.STATUS_OK;
 import static testUtils.TestUtils.*;
 
 @ContextConfiguration(classes = DbConnectorService.class)
@@ -60,12 +62,13 @@ public class DbConnectorServiceTest {
     @Test
     public void testTransactions() throws IOException {
         TransactionAsObjectAndJsonString transactionAsObjectAndJsonString = getRandomTransactionAsObjectAndJsonString();
-        String response = dbConnectorService.insertObjectToDb(transactionAsObjectAndJsonString.getHash(),
+        IndexResponse indexResponse = dbConnectorService.insertObjectToDb(transactionAsObjectAndJsonString.getHash(),
                 transactionAsObjectAndJsonString.getTransactionAsJsonString(),
                 TRANSACTION_INDEX_NAME,
                 TRANSACTION_OBJECT_NAME, false);
-        Map<String, Object> transactions = dbConnectorService.getObjectFromDbByHash(transactionAsObjectAndJsonString.getHash(), TRANSACTION_INDEX_NAME, false);
-        Object transactionAsJsonFromDb = transactions.get(TRANSACTION_OBJECT_NAME);
+        Assert.assertTrue(indexResponse.getResult().getLowercase().equals("created"));
+        GetResponse objectFromDbByHashResponse = dbConnectorService.getObjectFromDbByHash(transactionAsObjectAndJsonString.getHash(), TRANSACTION_INDEX_NAME, false);
+        Object transactionAsJsonFromDb = objectFromDbByHashResponse.getSourceAsMap().get(TRANSACTION_OBJECT_NAME);
         Assert.assertNotNull(transactionAsJsonFromDb);
     }
 
@@ -76,8 +79,8 @@ public class DbConnectorServiceTest {
                 addressAsObjectAndJsonString.getAddressAsJsonString(),
                 ADDRESS_INDEX_NAME,
                 ADDRESS_OBJECT_NAME, false);
-        Map<String, Object> addresses = dbConnectorService.getObjectFromDbByHash(addressAsObjectAndJsonString.getHash(), ADDRESS_INDEX_NAME, false);
-        Object addressAsJsonFromDb = addresses.get(ElasticSearchData.ADDRESSES.getObjectName());
+        GetResponse objectFromDbByHashResponse = dbConnectorService.getObjectFromDbByHash(addressAsObjectAndJsonString.getHash(), ADDRESS_INDEX_NAME, false);
+        Object addressAsJsonFromDb = objectFromDbByHashResponse.getSourceAsMap().get(ADDRESS_OBJECT_NAME);
         Assert.assertNotNull(addressAsJsonFromDb);
     }
 
@@ -90,19 +93,19 @@ public class DbConnectorServiceTest {
 
     @Test
     public void deleteAddressByHash_hashNotExist() {
-        String status = dbConnectorService.deleteObject(generateRandomHash(), ElasticSearchData.ADDRESSES.getIndex(), false);
-        Assert.assertTrue(status.equals(STATUS_NOT_FOUND));
+        DeleteResponse deleteResponse = dbConnectorService.deleteObject(generateRandomHash(), ElasticSearchData.ADDRESSES.getIndex(), false);
+        Assert.assertTrue(deleteResponse.status().equals(RestStatus.NOT_FOUND));
     }
 
-    //    @Test
+    @Test
     public void deleteAddressByHash_hashExist() throws IOException {
         AddressAsObjectAndJsonString addressAsObjectAndJsonString = getRandomAddressAsObjectAndJsonString();
         dbConnectorService.insertObjectToDb(addressAsObjectAndJsonString.getHash(),
                 addressAsObjectAndJsonString.getAddressAsJsonString(),
                 ADDRESS_INDEX_NAME,
                 ElasticSearchData.ADDRESSES.getObjectName(), false);
-        String status = dbConnectorService.deleteObject(addressAsObjectAndJsonString.getHash(), ElasticSearchData.ADDRESSES.getIndex(), false);
-        Assert.assertTrue(status.equals(STATUS_OK));
+        DeleteResponse deleteResponse = dbConnectorService.deleteObject(addressAsObjectAndJsonString.getHash(), ElasticSearchData.ADDRESSES.getIndex(), false);
+        Assert.assertTrue(deleteResponse.status().equals(RestStatus.OK));
     }
 
     private boolean insertedObjectsEqualToObjectsFromDb(Map<Hash, String> hashToObjectJsonDataMap, Map<Hash, String> hashToObjectsFromDbMap) {
