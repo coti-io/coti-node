@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.FluxSink;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
@@ -49,6 +50,16 @@ public class TransactionStorageService extends EntityStorageService {
     @Override
     protected GetHistoryTransactionsResponse getEmptyEntitiesBulkResponse() {
         return new GetHistoryTransactionsResponse();
+    }
+
+    public void retrieveMultipleObjectsInReactiveFromStorage(GetHistoryTransactionsRequest getHistoryTransactionsRequest, FluxSink sink) {
+        try {
+            getHistoryTransactionsRequest.getTransactionHashes().forEach(transactionHash -> sink.next(retrieveHashToObjectFromStorage(transactionHash)));
+        } catch (Exception e) {
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
+        } finally {
+            sink.complete();
+        }
     }
 
     public void retrieveMultipleObjectsInBlocksFromStorage(GetHistoryTransactionsRequest getHistoryTransactionsRequest, HttpServletResponse response) {
