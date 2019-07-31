@@ -1,20 +1,9 @@
 package io.coti.historynode.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.coti.basenode.communication.JacksonSerializer;
-import io.coti.basenode.crypto.NodeCryptoHelper;
-import io.coti.basenode.crypto.TransactionCrypto;
-import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.InputBaseTransactionData;
-import io.coti.basenode.data.ReceiverBaseTransactionData;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.crypto.*;
+import io.coti.basenode.data.*;
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.http.AddEntitiesBulkRequest;
@@ -36,7 +25,6 @@ import io.coti.historynode.http.GetTransactionsByAddressRequest;
 import io.coti.historynode.http.GetTransactionsByDateRequest;
 import io.coti.historynode.model.AddressTransactionsByAddresses;
 import io.coti.historynode.model.AddressTransactionsByDates;
-import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,7 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -53,9 +40,12 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.ContentCachingResponseWrapper;
+import utils.HashTestUtils;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -65,7 +55,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static utils.TestUtils.createRandomTransaction;
@@ -79,7 +68,7 @@ import static utils.TestUtils.generateRandomHash;
         TransactionsRequestCrypto.class, TransactionHelper.class, StorageConnector.class,
         AddressTransactionsHistories.class, TransactionCrypto.class, NodeCryptoHelper.class, BaseNodeBalanceService.class,
         BaseNodeConfirmationService.class, LiveViewService.class, TransactionIndexService.class, TransactionIndexes.class,
-        ClusterService.class, JacksonSerializer.class, ChunkService.class, HttpJacksonSerializer.class
+        ClusterService.class, JacksonSerializer.class, ChunkService.class, HttpJacksonSerializer.class, NodeCryptoHelper.class
 })
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
@@ -88,17 +77,18 @@ public class HistoryTransactionServiceTest {
 
     @Value("${storage.server.address}")
     protected String storageServerAddress;
+    @Value("${global.private.key}")
+    protected String globalPrivateKey;
+//    @Value("${historynode.seed}")
+//    private String seed;
 
 
     @Autowired
     private TransactionService transactionService;
-
     @Autowired
     private Transactions transactions;
-
     @Autowired
     private StorageConnector storageConnector;
-
     @Autowired
     private AddressTransactionsByDates addressTransactionsByDates;
     @Autowired
@@ -113,6 +103,10 @@ public class HistoryTransactionServiceTest {
     private ITransactionHelper transactionHelper;
     @Autowired
     private IBalanceService balanceService;
+    @Autowired
+    private TransactionCrypto transactionCrypto;
+    @Autowired
+    private NodeCryptoHelper nodeCryptoHelper;
 
 
     @MockBean
@@ -136,14 +130,14 @@ public class HistoryTransactionServiceTest {
     private BaseNodeDspVoteService baseNodeDspVoteService;
 
 
-    private ObjectMapper mapper;
+//    private ObjectMapper mapper;
 
     @Before
     public void init() {
-        mapper = new ObjectMapper()
-                .registerModule(new ParameterNamesModule())
-                .registerModule(new Jdk8Module())
-                .registerModule(new JavaTimeModule()); // new module, NOT JSR310Module
+//        mapper = new ObjectMapper()
+//                .registerModule(new ParameterNamesModule())
+//                .registerModule(new Jdk8Module())
+//                .registerModule(new JavaTimeModule()); // new module, NOT JSR310Module
         historyRocksDBConnector.setColumnFamily();
         databaseConnector.init();
     }
@@ -267,8 +261,8 @@ public class HistoryTransactionServiceTest {
         // Mocks
         when(transactionsRequestCrypto.verifySignature(any())).thenReturn(Boolean.TRUE);
         // Generate transactions data
-        int numberOfDays = 4;
-        int numberOfLocalTransactions = 1;
+        int numberOfDays = 1; //4
+        int numberOfLocalTransactions = 0; //1
 
         ArrayList<TransactionData> generatedTransactionsData = new ArrayList<>();
         generateIndexAndStoreTransactions(numberOfDays, generatedTransactionsData, numberOfLocalTransactions, true, false);
@@ -283,23 +277,11 @@ public class HistoryTransactionServiceTest {
 //        HttpServletResponse response = null;
         transactionService.getTransactionsByDate(getTransactionsByDateRequest, response);
 
-
-        //TODO 7/23/2019 tomer: Retrieve actual data to compare
         ContentCachingResponseWrapper responseWrapper = new ContentCachingResponseWrapper(response);
         HttpStatus responseStatus = HttpStatus.valueOf(responseWrapper.getStatusCode());
-
-        HttpHeaders responseHeaders = new HttpHeaders();
-        for (String headerName : responseWrapper.getHeaderNames()) {
-            responseHeaders.add(headerName, responseWrapper.getHeader(headerName));
-        }
-        String responseBody = IOUtils.toString(responseWrapper.getContentInputStream(), UTF_8);
-        JsonNode responseJson = mapper.readTree(responseBody);
-        ResponseEntity<JsonNode> responseEntity = new ResponseEntity<>(responseJson, responseHeaders, responseStatus);
-//        LOGGER.info(appendFields(responseEntity),"Logging Http Response");
-        responseWrapper.copyBodyToResponse();
-
         Assert.assertTrue(responseStatus.equals(HttpStatus.OK));
 
+        //TODO 7/23/2019 tomer: fix below
 //        Assert.assertTrue(((HistoryTransactionResponse)transactionsByDatesResponse.getBody()).getHistoryTransactionResponseData().getHistoryTransactionResults().containsValue(transactionDataToRetrieve));
     }
 
@@ -520,7 +502,7 @@ public class HistoryTransactionServiceTest {
         Map<Hash, String> hashToEntityJsonDataMap = new HashMap<>();
 
         for (int j = numberOfLocalTransactions; j < numberOfDays; j++) {
-            hashToEntityJsonDataMap.put(generatedTransactionsData.get(j).getHash(), mapper.writeValueAsString(generatedTransactionsData.get(j)));
+            hashToEntityJsonDataMap.put(generatedTransactionsData.get(j).getHash(), jacksonSerializer.serializeAsString(generatedTransactionsData.get(j)));
         }
         if (hashToEntityJsonDataMap.isEmpty()) {
             return;
@@ -528,11 +510,9 @@ public class HistoryTransactionServiceTest {
         addEntitiesBulkRequest.setHashToEntityJsonDataMap(hashToEntityJsonDataMap);
 
         String endpoint = "/transactions";
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        mapper.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
         //TODO 7/29/2019 tomer: Will fail on verification
         ResponseEntity<AddHistoryEntitiesResponse> storeResponseEntity = transactionService.storeEntitiesByType(storageServerAddress + endpoint, addEntitiesBulkRequest);
-        Assert.assertTrue(storeResponseEntity.getBody().getHashToStoreResultMap().size()==addEntitiesBulkRequest.getHashToEntityJsonDataMap().size());
+        Assert.assertTrue(storeResponseEntity.getBody().getHashToStoreResultMap().size() == addEntitiesBulkRequest.getHashToEntityJsonDataMap().size());
         Assert.assertTrue(storeResponseEntity.getBody().getHashToStoreResultMap().values().stream().allMatch(Boolean::booleanValue));
     }
 
@@ -540,11 +520,78 @@ public class HistoryTransactionServiceTest {
         TransactionData transactionData = createRandomTransaction();
 
         transactionData.setAttachmentTime(attachmentTime);
+//        Hash hash = nodeCryptoHelper.generateAddress(seed, 0);
+//        try {
+//            BaseTransactionCrypto.valueOf(transactionData.getInputBaseTransactions().get(0).getClass().getSimpleName())
+//                    .signMessage(transactionData, transactionData.getInputBaseTransactions().get(0), 0);
+//        } catch (ClassNotFoundException e) {
+//            e.printStackTrace();
+//        }
         transactionData.setSenderHash(generateRandomHash());
+
+        BigDecimal originalAmount = new BigDecimal(12); // the same for all
+        BigDecimal amount = new BigDecimal(4);
+        BigDecimal reducedAmount = new BigDecimal(8);
+
+        FullNodeFeeData fullNodeFeeBaseTransaction =
+                new FullNodeFeeData(HashTestUtils.generateRandomAddressHash(), amount, originalAmount, Instant.now());
+        byte[] bytesToHash = new byte[0];
+        try {
+            bytesToHash = getOutputMessageInBytes(fullNodeFeeBaseTransaction);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        fullNodeFeeBaseTransaction.setHash(CryptoHelper.cryptoHash(bytesToHash));
+        transactionData.getBaseTransactions().add(fullNodeFeeBaseTransaction);
+
+        NetworkFeeData networkFeeBaseTransaction =
+                new NetworkFeeData(HashTestUtils.generateRandomAddressHash(), new BigDecimal(7), originalAmount, reducedAmount, Instant.now());
+        bytesToHash = BaseTransactionCrypto.valueOf(networkFeeBaseTransaction.getClass().getSimpleName()).getMessageInBytes(networkFeeBaseTransaction);
+        networkFeeBaseTransaction.setHash(CryptoHelper.cryptoHash(bytesToHash));
+        transactionData.getBaseTransactions().add(networkFeeBaseTransaction);
+
         ReceiverBaseTransactionData receiverBaseTransaction =
-                new ReceiverBaseTransactionData(generateRandomHash(), new BigDecimal(7), new BigDecimal(8), Instant.now());
+                new ReceiverBaseTransactionData(HashTestUtils.generateRandomAddressHash(), amount, originalAmount, Instant.now());
+        bytesToHash = BaseTransactionCrypto.valueOf(receiverBaseTransaction.getClass().getSimpleName()).getMessageInBytes(receiverBaseTransaction);
+        receiverBaseTransaction.setHash(CryptoHelper.cryptoHash(bytesToHash));
         transactionData.getBaseTransactions().add(receiverBaseTransaction);
+
+        transactionData.setHash(transactionCrypto.getHashFromBaseTransactionHashesData(transactionData));
+
+
+        //TODO 7/30/2019 tomer: Add signature
+        transactionData.setSignerHash(new Hash(globalPrivateKey));
+        transactionCrypto.signMessage(transactionData);
+
+
         return transactionData;
+    }
+
+    protected <T extends OutputBaseTransactionData> byte[] getOutputMessageInBytes(T outputBaseTransactionData) throws ClassNotFoundException {
+
+        byte[] baseMessageInBytes = getBaseMessageInBytes(outputBaseTransactionData);
+
+        String decimalOriginalAmountRepresentation = outputBaseTransactionData.getOriginalAmount().stripTrailingZeros().toPlainString();
+        byte[] bytesOfOriginalAmount = decimalOriginalAmountRepresentation.getBytes(StandardCharsets.UTF_8);
+
+        ByteBuffer outputBaseTransactionBuffer = ByteBuffer.allocate(baseMessageInBytes.length + bytesOfOriginalAmount.length).
+                put(baseMessageInBytes).put(bytesOfOriginalAmount);
+
+        return outputBaseTransactionBuffer.array();
+    }
+
+    protected byte[] getBaseMessageInBytes(BaseTransactionData baseTransactionData) {
+        byte[] addressBytes = baseTransactionData.getAddressHash().getBytes();
+        String decimalStringRepresentation = baseTransactionData.getAmount().stripTrailingZeros().toPlainString();
+        byte[] bytesOfAmount = decimalStringRepresentation.getBytes(StandardCharsets.UTF_8);
+
+        Instant createTime = baseTransactionData.getCreateTime();
+        byte[] createTimeInBytes = ByteBuffer.allocate(Long.BYTES).putLong(createTime.toEpochMilli()).array();
+
+        ByteBuffer baseTransactionBuffer = ByteBuffer.allocate(addressBytes.length + bytesOfAmount.length + createTimeInBytes.length).
+                put(addressBytes).put(bytesOfAmount).put(createTimeInBytes);
+
+        return baseTransactionBuffer.array();
     }
 
 }
