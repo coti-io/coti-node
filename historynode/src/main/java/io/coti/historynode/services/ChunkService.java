@@ -1,8 +1,9 @@
 package io.coti.historynode.services;
 
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.exceptions.ChunkException;
 import io.coti.basenode.http.CustomGson;
-import io.coti.basenode.http.data.GetHashToTransactionData;
+import io.coti.basenode.http.data.GetHashToPropagatable;
 import io.coti.basenode.http.data.TransactionResponseData;
 import io.coti.basenode.services.BaseNodeChunkService;
 import lombok.extern.slf4j.Slf4j;
@@ -47,8 +48,8 @@ public class ChunkService extends BaseNodeChunkService {
 
             extractorConsumer.accept(super.getResponseExtractor(chunkedData -> {
                 try {
-                    GetHashToTransactionData getHashToTransactionData = (GetHashToTransactionData) chunkedData;
-                    TransactionData transactionData = getHashToTransactionData.getTransactionData();
+                    GetHashToPropagatable<TransactionData> getHashToTransactionData = (GetHashToPropagatable<TransactionData>) chunkedData;
+                    TransactionData transactionData = getHashToTransactionData.getData();
                     if (transactionData != null) {
                         if (transactionData.getHash().equals(getHashToTransactionData.getHash())) {
                             sendChunk(",", output);
@@ -58,11 +59,11 @@ public class ChunkService extends BaseNodeChunkService {
                         }
                     }
                 } catch (Exception e) {
-
+                    throw new ChunkException(e.getMessage());
                 }
             }, MAXIMUM_BUFFER_SIZE));
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
         }
 
     }

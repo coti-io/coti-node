@@ -1,6 +1,5 @@
 package io.coti.storagenode.controllers;
 
-import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.AddEntitiesBulkRequest;
 import io.coti.basenode.http.GetHistoryTransactionsRequest;
@@ -40,11 +39,10 @@ public class TransactionController {
         transactionStorageService.retrieveMultipleObjectsInBlocksFromStorage(getHistoryTransactionsRequest, response);
     }
 
-    @PostMapping(value = "/transactions/reactive", produces = MediaType.APPLICATION_STREAM_JSON_VALUE, consumes = MediaType.APPLICATION_STREAM_JSON_VALUE)
-    public Flux<GetHashToPropagatable<TransactionData>> getTransactionsReactive(@RequestBody Flux<Hash> transactionHashes) {
-        Flux<GetHashToPropagatable<TransactionData>> flux = Flux.empty();
-        transactionHashes.subscribe(transactionHash -> flux.push(sink -> sink.next(transactionStorageService.retrieveHashToObjectFromStorage(transactionHash))));
-        return flux;
+    @PostMapping(value = "/transactions/reactive", produces = MediaType.APPLICATION_STREAM_JSON_VALUE)
+    public Flux<GetHashToPropagatable<TransactionData>> getTransactionsReactive(@Valid @RequestBody GetHistoryTransactionsRequest getHistoryTransactionsRequest) {
+        return Flux.create(fluxSink -> transactionStorageService.retrieveMultipleObjectsInReactiveFromStorage(getHistoryTransactionsRequest, fluxSink));
+
 
     }
 }
