@@ -50,7 +50,8 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 @Service
 public class TransactionService extends BaseNodeTransactionService {
 
-    private final String END_POINT = "/transactions";
+    private final String END_POINT_STORE = "/transactions";
+    private final String END_POINT_RETRIEVE = "/transactions/reactive";
 
     @Value("${storage.server.address}")
     protected String storageServerAddress;
@@ -187,7 +188,7 @@ public class TransactionService extends BaseNodeTransactionService {
         RestTemplate restTemplate = new RestTemplate();
         CustomRequestCallBack requestCallBack = new CustomRequestCallBack(jacksonSerializer, new GetHistoryTransactionsRequest(transactionsHashes));
         chunkService.transactionHandler(responseExtractor -> {
-            restTemplate.execute(storageServerAddress + END_POINT, HttpMethod.POST, requestCallBack, responseExtractor);
+            restTemplate.execute(storageServerAddress + END_POINT_RETRIEVE, HttpMethod.POST, requestCallBack, responseExtractor);
         }, response);
 
     }
@@ -320,7 +321,7 @@ public class TransactionService extends BaseNodeTransactionService {
                 }
         );
 
-        ResponseEntity<AddHistoryEntitiesResponse> storeEntitiesToStorageResponse = storeEntitiesByType(storageServerAddress + END_POINT, addEntitiesBulkRequest);
+        ResponseEntity<AddHistoryEntitiesResponse> storeEntitiesToStorageResponse = storeEntitiesByType(storageServerAddress + END_POINT_STORE, addEntitiesBulkRequest);
         return storeEntitiesToStorageResponse;
     }
 
