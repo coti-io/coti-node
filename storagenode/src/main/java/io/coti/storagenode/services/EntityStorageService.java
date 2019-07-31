@@ -113,9 +113,7 @@ public abstract class EntityStorageService implements IEntityStorageService {
 
     @Override
     public ResponseEntity<IResponse> storeMultipleObjectsToStorage(Map<Hash, String> hashToObjectJsonDataMap) {
-//TODO 7/31/2019 tomer: temporary commented for integration tests
-//        Map<Hash, Boolean> entityValidationMap = validateStoreMultipleObjectsToStorage(hashToObjectJsonDataMap);
-        Map<Hash, Boolean> entityValidationMap = new HashMap<>();
+        Map<Hash, Boolean> entityValidationMap = validateStoreMultipleObjectsToStorage(hashToObjectJsonDataMap);
         if (!entityValidationMap.isEmpty()) {
             return ResponseEntity.badRequest().body(new AddHistoryEntitiesResponse(entityValidationMap));
         }
@@ -131,7 +129,7 @@ public abstract class EntityStorageService implements IEntityStorageService {
             }
         });
 
-        Map<Hash, RestStatus> insertColdResponseMap = objectService.insertMultiObjects(hashToObjectJsonDataMap, true, objectType);
+        Map<Hash, RestStatus> insertColdResponseMap = objectService.insertMultiObjects(hashToColdStorageObjectJsonDataMap, true, objectType);
         insertColdResponseMap.forEach((hash, restStatus) -> {
             if (!restStatus.equals(RestStatus.CREATED) && !restStatus.equals(RestStatus.OK)) {
                 hashToStoreResultMap.put(hash, Boolean.FALSE);
