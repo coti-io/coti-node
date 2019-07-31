@@ -1,5 +1,6 @@
 package io.coti.basenode.http;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.web.client.RequestCallback;
 
@@ -17,6 +18,7 @@ public class CustomRequestCallBack implements RequestCallback {
 
     @Override
     public void doWithRequest(ClientHttpRequest clientHttpRequest) throws IOException {
+        clientHttpRequest.getHeaders().set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
         clientHttpRequest.getBody().write(jacksonSerializer.serialize(request));
     }
 
