@@ -23,4 +23,7 @@ public class AddHistoryEntitiesResponse extends BaseResponse implements ISignVal
     public AddHistoryEntitiesResponse(Map<Hash, Boolean> addressHashesToStoreResult) {
         this.hashToStoreResultMap = addressHashesToStoreResult;
     }
+
+    public AddHistoryEntitiesResponse() {
+    }
 }
