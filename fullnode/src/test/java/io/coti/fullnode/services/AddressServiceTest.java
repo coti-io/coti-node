@@ -17,10 +17,7 @@ import io.coti.fullnode.http.AddressBulkRequest;
 import io.coti.fullnode.http.AddressesExistsResponse;
 import io.coti.fullnode.model.RequestedAddressHashes;
 import io.coti.fullnode.websocket.WebSocketSender;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -44,14 +41,10 @@ public class AddressServiceTest {
 
     @Autowired
     private AddressService addressService;
-
-    //TODO 7/30/2019 astolia: maybe mock this?
-    @Autowired
+    @MockBean
     private GetHistoryAddressesRequestCrypto getHistoryAddressesRequestCrypto;
-    //TODO 7/30/2019 astolia: maybe mock this?
-    @Autowired
+    @MockBean
     private GetHistoryAddressesResponseCrypto getHistoryAddressesResponseCrypto;
-    //TODO 7/30/2019 astolia: maybe mock this?
     @MockBean
     private NetworkService networkService;
     @MockBean
@@ -59,79 +52,101 @@ public class AddressServiceTest {
     @MockBean
     private RequestedAddressHashes requestedAddressHashes;
 
-    //
+    // Unused but required for compilation
     @MockBean
     private WebSocketSender webSocketSender;
     @MockBean
     private IValidationService validationService;
     //
 
-    private AddressData addressInLocalAddressesCollection;
-    private RequestedAddressHashData addressInRequestedAddressesCollectionLessThenTenMinutes;
-    private RequestedAddressHashData addressInRequestedAddressesCollectionMoreThenTenMinutes;
+    private AddressData addressInLocalAddressesCollection = AddressTestUtils.generateRandomAddressData();
+    private RequestedAddressHashData addressInRequestedAddressesCollectionLessThenTenMinutes = new RequestedAddressHashData(HashTestUtils.generateRandomAddressHash());
+    private RequestedAddressHashData addressInRequestedAddressesCollectionMoreThenTenMinutesInHistory = new RequestedAddressHashData(HashTestUtils.generateRandomAddressHash());
+    private RequestedAddressHashData addressInRequestedAddressesCollectionMoreThenTenMinutesNotInHistory = new RequestedAddressHashData(HashTestUtils.generateRandomAddressHash());
+    private RequestedAddressHashData addressNotFoundInFullNodeAndFoundInHistory = new RequestedAddressHashData(HashTestUtils.generateRandomAddressHash());
+    private RequestedAddressHashData addressNotFoundInFullNodeAndNotFoundInHistory = new RequestedAddressHashData(HashTestUtils.generateRandomAddressHash());
 
     @Before
-    public void setUpBeforeEachTest() {
-        addressInLocalAddressesCollection = AddressTestUtils.generateRandomAddressData();
+    public void setUp(){
+        // Hash that is mocked to be found in local RocksDB addresses collection
         when(addresses.getByHash(addressInLocalAddressesCollection.getHash())).thenReturn(addressInLocalAddressesCollection);
 
-        addressInRequestedAddressesCollectionLessThenTenMinutes = new RequestedAddressHashData(HashTestUtils.generateRandomAddressHash());
-        addressInRequestedAddressesCollectionLessThenTenMinutes.setLastUpdateTime(Instant.now().minusMillis(300_000)); //Mock insertion 5 minutes ago
-        when(requestedAddressHashes.getByHash(addressInRequestedAddressesCollectionLessThenTenMinutes.getHash())).thenReturn(addressInRequestedAddressesCollectionLessThenTenMinutes);
+        // Hash that is mocked to be found in local RocksDB requested addresses collection inserted less then 10 minutes ago.
+        setTimeAndMock(addressInRequestedAddressesCollectionLessThenTenMinutes, 300_000);
 
-        addressInRequestedAddressesCollectionMoreThenTenMinutes = new RequestedAddressHashData(HashTestUtils.generateRandomAddressHash());
-        addressInRequestedAddressesCollectionMoreThenTenMinutes.setLastUpdateTime(Instant.now().minusMillis(660_000)); //Mock insertion 11 minutes ago
-        when(requestedAddressHashes.getByHash(addressInRequestedAddressesCollectionMoreThenTenMinutes.getHash())).thenReturn(addressInRequestedAddressesCollectionMoreThenTenMinutes);
+        // Hash that is mocked to be found in local RocksDB requested addresses collection inserted more then 10 minutes ago and will be returned by history node upon request.
+        setTimeAndMock(addressInRequestedAddressesCollectionMoreThenTenMinutesInHistory, 660_000);
+
+        // Hash that is mocked to be found in local RocksDB requested addresses collection inserted more then 10 minutes ago and will not be returned by history node upon request.
+        setTimeAndMock(addressInRequestedAddressesCollectionMoreThenTenMinutesNotInHistory, 660_000);
+
+        // Hash that is mocked to be found in local RocksDB requested addresses collection inserted more then 10 minutes ago and will not be returned by history node upon request.
+        setTimeAndMock(addressNotFoundInFullNodeAndFoundInHistory, 660_000);
+
+        // Hash that is mocked to be found in local RocksDB requested addresses collection inserted more then 10 minutes ago and will not be returned by history node upon request.
+        setTimeAndMock(addressNotFoundInFullNodeAndNotFoundInHistory, 660_000);
 
         mockNetworkService();
+
     }
 
-    @After
-    public void clearUpAfterEachTest() {
-        addresses.delete(addressInLocalAddressesCollection);
+    private void setTimeAndMock(RequestedAddressHashData requestedAddressHashData, long insertionTime){
+        requestedAddressHashData.setLastUpdateTime(Instant.now().minusMillis(insertionTime));
+        when(requestedAddressHashes.getByHash(requestedAddressHashData.getHash())).thenReturn(requestedAddressHashData);
     }
 
     @Test
     public void addressesExist_hashInLocalDB_shouldReturnHashAndTrue() {
-        List<Hash> addressHashes = new ArrayList<>();
-        addressHashes.add(addressInLocalAddressesCollection.getHash());
-
-        AddressBulkRequest addressBulkRequest = new AddressBulkRequest();
-        addressBulkRequest.setAddresses(addressHashes);
+        AddressBulkRequest addressBulkRequest = generateAddressBulkRequest(addressInLocalAddressesCollection.getHash());
         AddressesExistsResponse response = addressService.addressesExist(addressBulkRequest);
-
-        LinkedHashMap<String, Boolean> responseMap = new LinkedHashMap<>();
-        responseMap.put(addressInLocalAddressesCollection.getHash().toHexString(), Boolean.TRUE);
-        AddressesExistsResponse expectedResponse = new AddressesExistsResponse(responseMap);
-
+        AddressesExistsResponse expectedResponse = generateExpectedResponse(initMapWithHashes(addressInLocalAddressesCollection.getHash()), Boolean.TRUE);
         Assert.assertTrue(equals(expectedResponse, response));
     }
 
-
     @Test
     public void addressesExist_hashInLocalDbAndUpdatedFromHistoryLessThenTenMinutes_shouldReturnTrueAndFalseResults() {
-        List<Hash> addressHashes = new ArrayList<>();
-        addressHashes.add(addressInLocalAddressesCollection.getHash());
-        addressHashes.add(addressInRequestedAddressesCollectionLessThenTenMinutes.getHash());
+        AddressBulkRequest addressBulkRequest = generateAddressBulkRequest(
+                addressInLocalAddressesCollection.getHash(),
+                addressInRequestedAddressesCollectionLessThenTenMinutes.getHash());
 
-        AddressBulkRequest addressBulkRequest = new AddressBulkRequest();
-        addressBulkRequest.setAddresses(addressHashes);
         AddressesExistsResponse response = addressService.addressesExist(addressBulkRequest);
 
-        LinkedHashMap<String,Boolean> responseMap = new LinkedHashMap<>();
-        responseMap.put(addressInLocalAddressesCollection.getHash().toHexString(),Boolean.TRUE);
-        responseMap.put(addressInRequestedAddressesCollectionLessThenTenMinutes.getHash().toHexString(),Boolean.FALSE);
-        AddressesExistsResponse expectedResponse = new AddressesExistsResponse(responseMap);
+        AddressesExistsResponse expectedResponse = generateExpectedResponse(
+                initMapWithHashes(
+                        addressInLocalAddressesCollection.getHash(),
+                addressInRequestedAddressesCollectionLessThenTenMinutes.getHash()),
+                Boolean.TRUE,
+                Boolean.FALSE);
 
-        Assert.assertTrue(equals(expectedResponse,response));
+        Assert.assertTrue(equals(expectedResponse, response));
     }
 
     // History and Storage should be running for this.
     @Test
     public void addressesExist_hashInLocalDbAndUpdatedFromHistoryMoreThenTenMinutes_shouldGetResponseFromHistoryNode_IT() {
+        AddressBulkRequest addressBulkRequest = generateAddressBulkRequest(
+                addressInLocalAddressesCollection.getHash(),
+                addressInRequestedAddressesCollectionMoreThenTenMinutesInHistory.getHash());
+        AddressesExistsResponse response = addressService.addressesExist(addressBulkRequest);
+
+        AddressesExistsResponse expectedResponse = generateExpectedResponse(
+                initMapWithHashes(
+                        addressInLocalAddressesCollection.getHash(),
+                        addressInRequestedAddressesCollectionMoreThenTenMinutesInHistory.getHash()),
+                Boolean.TRUE,
+                Boolean.FALSE);
+
+        Assert.assertTrue(equals(expectedResponse, response));
+    }
+
+    @Test
+    public void addressesExist_hashInLocalDbAndUpdatedFromHistoryMoreThenTenMinutesAndInStorageNode_shouldGetResponseFromHistoryNode_IT() {
+        Hash addressHash = new Hash("9aaf17d8b83748d4e7a10e7a8ae02039d6557bf1825220e45965b25d03b5958fbd727548bcb5ca80f8af39cb078d7d8970d3331d508510776a8874450a12cd6395d51885");
+        RequestedAddressHashData requestedAddressHashData = new RequestedAddressHashData(addressHash); //same hash as in storage node elastic search
+
         List<Hash> addressHashes = new ArrayList<>();
         addressHashes.add(addressInLocalAddressesCollection.getHash());
-        addressHashes.add(addressInRequestedAddressesCollectionMoreThenTenMinutes.getHash());
+        addressHashes.add(requestedAddressHashData.getHash());
 
         AddressBulkRequest addressBulkRequest = new AddressBulkRequest();
         addressBulkRequest.setAddresses(addressHashes);
@@ -139,7 +154,7 @@ public class AddressServiceTest {
 
         LinkedHashMap<String, Boolean> responseMap = new LinkedHashMap<>();
         responseMap.put(addressInLocalAddressesCollection.getHash().toHexString(), Boolean.TRUE);
-        responseMap.put(addressInRequestedAddressesCollectionMoreThenTenMinutes.getHash().toHexString(), Boolean.FALSE); // should depend on response from history
+        responseMap.put(requestedAddressHashData.getHash().toHexString(), Boolean.TRUE);
         AddressesExistsResponse expectedResponse = new AddressesExistsResponse(responseMap);
 
         Assert.assertTrue(equals(expectedResponse, response));
@@ -148,14 +163,14 @@ public class AddressServiceTest {
     private void mockNetworkService() {
         NetworkNodeData networkNodeData = new NetworkNodeData();
         networkNodeData.setAddress("localhost");
-        networkNodeData.setHttpPort("9030");
+        networkNodeData.setHttpPort("7031");
         Map<Hash, NetworkNodeData> networkNodeDataMap = new HashMap<>();
         networkNodeDataMap.put(new Hash("aaaa"), networkNodeData);
 
         when(networkService.getMapFromFactory(NodeType.HistoryNode)).thenReturn(networkNodeDataMap);
     }
 
-    public boolean equals(AddressesExistsResponse expected, Object actual) {
+    private boolean equals(AddressesExistsResponse expected, Object actual) {
         if (expected == actual) return true;
         if (!(actual instanceof AddressesExistsResponse)) return false;
         AddressesExistsResponse actualCasted = (AddressesExistsResponse) actual;
@@ -168,6 +183,30 @@ public class AddressServiceTest {
                 return false;
         }
         return !(thisItr.hasNext() || otherItr.hasNext());
+    }
+
+    private LinkedHashMap<String, Boolean> initMapWithHashes(Hash... addressHashes){
+        LinkedHashMap<String, Boolean> responseMap = new LinkedHashMap<>();
+        Arrays.stream(addressHashes).forEach(addreassHash -> responseMap.put(addreassHash.toHexString(),null));
+        return responseMap;
+    }
+
+    private AddressesExistsResponse generateExpectedResponse(LinkedHashMap<String, Boolean> responseMapHashInitiated, Boolean... addressUsageStatuses) {
+        int i = 0;
+        for(Map.Entry<String,Boolean> entry: responseMapHashInitiated.entrySet()){
+            entry.setValue(addressUsageStatuses[i]);
+            i++;
+        }
+        return new AddressesExistsResponse(responseMapHashInitiated);
+    }
+
+    private AddressBulkRequest generateAddressBulkRequest(Hash... addressHashes){
+        List<Hash> addressHashesList = new ArrayList<>();
+        Arrays.stream(addressHashes).forEach(addressHash -> addressHashesList.add(addressHash));
+
+        AddressBulkRequest addressBulkRequest = new AddressBulkRequest();
+        addressBulkRequest.setAddresses(addressHashesList);
+        return addressBulkRequest;
     }
 
 }
