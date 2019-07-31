@@ -245,16 +245,21 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     @Override
     public boolean verifySignature(TransactionData transactionData, BaseTransactionData baseTransactionData) throws ClassNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException {
 
-        if (ITrustScoreNodeValidatable.class.isAssignableFrom(Class.forName(packagePath + name()))) {
-            ITrustScoreNodeValidatable trustScoreNodeValidatable = (ITrustScoreNodeValidatable) baseTransactionData;
-            for (TrustScoreNodeResultData trustScoreNodeResultData : trustScoreNodeValidatable.getTrustScoreNodeResult()) {
-                if (!CryptoHelper.verifyByPublicKey(getSignatureMessage(transactionData, trustScoreNodeResultData), trustScoreNodeResultData.getSignature().getR(), trustScoreNodeResultData.getSignature().getS(), getPublicKey(trustScoreNodeResultData))) {
-                    return false;
+        try {
+            if (ITrustScoreNodeValidatable.class.isAssignableFrom(Class.forName(packagePath + name()))) {
+                ITrustScoreNodeValidatable trustScoreNodeValidatable = (ITrustScoreNodeValidatable) baseTransactionData;
+                for (TrustScoreNodeResultData trustScoreNodeResultData : trustScoreNodeValidatable.getTrustScoreNodeResult()) {
+                    if (!CryptoHelper.verifyByPublicKey(getSignatureMessage(transactionData, trustScoreNodeResultData), trustScoreNodeResultData.getSignature().getR(), trustScoreNodeResultData.getSignature().getS(), getPublicKey(trustScoreNodeResultData))) {
+                        return false;
+                    }
                 }
+                return true;
             }
-            return true;
+            return CryptoHelper.verifyByPublicKey(getSignatureMessage(transactionData), baseTransactionData.getSignatureData().getR(), baseTransactionData.getSignatureData().getS(), getPublicKey(baseTransactionData));
+        } catch (ClassNotFoundException | InvalidKeySpecException | NoSuchAlgorithmException e) {
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
+            return false;
         }
-        return CryptoHelper.verifyByPublicKey(getSignatureMessage(transactionData), baseTransactionData.getSignatureData().getR(), baseTransactionData.getSignatureData().getS(), getPublicKey(baseTransactionData));
 
     }
 
