@@ -18,6 +18,10 @@ public class AddressesExistsResponse extends BaseResponse {
         this.addresses = addresses;
     }
 
+    public void addAddressToResult(String addressHash, Boolean isExists) {
+        addresses.putIfAbsent(addressHash, isExists);
+    }
+
 }
 
 
