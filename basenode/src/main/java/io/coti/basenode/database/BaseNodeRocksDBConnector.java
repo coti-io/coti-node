@@ -3,6 +3,7 @@ package io.coti.basenode.database;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
+import io.coti.basenode.exceptions.DataBaseException;
 import io.coti.basenode.model.*;
 import io.coti.basenode.model.Collection;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +14,6 @@ import org.springframework.util.SerializationUtils;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -55,8 +55,8 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         this.dbPath = dbPath;
 
         initColumnFamilyClasses();
-        initiateColumnFamilyDescriptors();
         try {
+            initiateColumnFamilyDescriptors();
             loadLibrary();
             createLogsPath();
             DBOptions options = new DBOptions();
@@ -65,8 +65,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             db = RocksDB.open(options, dbPath, columnFamilyDescriptors, columnFamilyHandles);
             populateColumnFamilies();
         } catch (Exception e) {
-            log.error("Error initiating Rocks DB");
-            e.printStackTrace();
+            throw new DataBaseException(String.format("Error initiating Rocks DB. Class: %s, Exception message: %s", e.getClass(), e.getMessage()));
         }
     }
 
@@ -74,8 +73,8 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         for (int i = 1; i < columnFamilyClassNames.size(); i++) {
             try {
                 ((Constructor<? extends Collection<? extends IEntity>>) Class.forName(columnFamilyClassNames.get(i)).getConstructor()).newInstance().init();
-            } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                throw new DataBaseException(String.format("Error at init column family classes. Class: %s, Exception message: %s", e.getClass(), e.getMessage()));
             }
         }
 
