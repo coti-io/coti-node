@@ -9,8 +9,10 @@ import io.coti.basenode.exceptions.TransactionValidationException;
 import io.coti.basenode.http.CustomGson;
 import io.coti.basenode.http.GetTransactionsResponse;
 import io.coti.basenode.http.Response;
+import io.coti.basenode.http.data.ReducedTransactionResponseData;
 import io.coti.basenode.http.data.TransactionResponseData;
 import io.coti.basenode.http.data.TransactionStatus;
+import io.coti.basenode.http.data.interfaces.ITransactionResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.Transactions;
@@ -32,9 +34,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
@@ -230,6 +232,24 @@ public class TransactionService extends BaseNodeTransactionService {
 
     }
 
+    public void getTransactions(GetTransactionsRequest getTransactionsRequest, HttpServletResponse response) {
+        try {
+            List<Hash> transactionHashes = getTransactionsRequest.getTransactionHashes();
+            PrintWriter output = response.getWriter();
+            output.write("[");
+            output.flush();
+            AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
+            transactionHashes.forEach(transactionHash ->
+                    sendTransactionResponse(transactionHash, firstTransactionSent, output, false)
+            );
+
+            output.write("]");
+            output.flush();
+        } catch (Exception e) {
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
+        }
+    }
+
     public ResponseEntity<IResponse> getAddressTransactions(Hash addressHash) {
         List<TransactionData> transactionsDataList = new ArrayList<>();
         AddressTransactionsHistory addressTransactionsHistory = addressTransactionHistories.getByHash(addressHash);
@@ -252,42 +272,46 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
-    public void getAddressTransactionBatch(GetAddressTransactionBatchRequest getAddressTransactionBatchRequest, HttpServletResponse response) {
+    public void getAddressTransactionBatch(GetAddressTransactionBatchRequest getAddressTransactionBatchRequest, HttpServletResponse response, boolean reduced) {
         try {
             List<Hash> addressHashList = getAddressTransactionBatchRequest.getAddresses();
             PrintWriter output = response.getWriter();
             output.write("[");
             output.flush();
 
-            Iterator<Hash> addressHashIterator = addressHashList.iterator();
-            boolean isPreviousAddressTransactionExist = false;
-            boolean isAddressTransactionExist;
-            while (addressHashIterator.hasNext()) {
-                isAddressTransactionExist = false;
-                Hash addressHash = addressHashIterator.next();
+            AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
+            addressHashList.forEach(addressHash -> {
                 AddressTransactionsHistory addressTransactionsHistory = addressTransactionHistories.getByHash(addressHash);
                 if (addressTransactionsHistory != null) {
-                    Iterator<Hash> transactionHashIterator = addressTransactionsHistory.getTransactionsHistory().iterator();
-                    while (transactionHashIterator.hasNext()) {
-                        Hash transactionHash = transactionHashIterator.next();
-                        TransactionData transactionData = transactions.getByHash(transactionHash);
-                        if (transactionData != null) {
-                            if (isPreviousAddressTransactionExist || isAddressTransactionExist) {
-                                output.write(",");
-                                output.flush();
-                            }
-                            isAddressTransactionExist = true;
-                            output.write(new CustomGson().getInstance().toJson(new TransactionResponseData(transactionData)));
-                            output.flush();
-                        }
-                    }
+                    addressTransactionsHistory.getTransactionsHistory().forEach(transactionHash ->
+                            sendTransactionResponse(transactionHash, firstTransactionSent, output, reduced)
+                    );
                 }
-                isPreviousAddressTransactionExist = isAddressTransactionExist ? isAddressTransactionExist : isPreviousAddressTransactionExist;
-            }
+            });
             output.write("]");
             output.flush();
         } catch (Exception e) {
             log.error("Error sending address transaction batch");
+            log.error(e.getMessage());
+        }
+    }
+
+    private void sendTransactionResponse(Hash transactionHash, AtomicBoolean firstTransactionSent, PrintWriter output, boolean reduced) {
+        try {
+            TransactionData transactionData = transactions.getByHash(transactionHash);
+            if (transactionData != null) {
+                ITransactionResponseData transactionResponseData = !reduced ? new TransactionResponseData(transactionData) : new ReducedTransactionResponseData(transactionData);
+                if (firstTransactionSent.get()) {
+                    output.write(",");
+                    output.flush();
+                } else {
+                    firstTransactionSent.set(true);
+                }
+                output.write(new CustomGson().getInstance().toJson(transactionResponseData));
+                output.flush();
+            }
+        } catch (Exception e) {
+            log.error("Error at transaction response data for {}", transactionHash.toString());
             log.error(e.getMessage());
         }
     }
