@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.PrintWriter;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -132,8 +133,8 @@ public class TransactionService extends BaseNodeTransactionService {
                 customResponse.printResponse(new Response(INVALID_SIGNATURE, STATUS_ERROR), HttpStatus.UNAUTHORIZED.value());
                 return;
             }
-            List<Hash> transactionsHashes = getTransactionsHashesToRetrieve(getTransactionsByAddressRequest);
-            getTransactions(transactionsHashes, response);
+            List<Hash> transactionHashes = getTransactionHashesToRetrieve(getTransactionsByAddressRequest);
+            getTransactions(transactionHashes, response);
         } catch (Exception e) {
 
         }
@@ -141,71 +142,72 @@ public class TransactionService extends BaseNodeTransactionService {
 
     public void getTransactionsByDate(GetTransactionsByDateRequest getTransactionsByDateRequest, HttpServletResponse response) {
 
-        List<Hash> transactionsHashes = getTransactionsHashesByDate(getTransactionsByDateRequest.getDate());
-        getTransactions(transactionsHashes, response);
+        List<Hash> transactionHashes = getTransactionHashesByDate(getTransactionsByDateRequest.getDate());
+        getTransactions(transactionHashes, response);
     }
 
-    private void getTransactions(List<Hash> transactionsHashes, HttpServletResponse response) {
+    private void getTransactions(List<Hash> transactionHashes, HttpServletResponse response) {
         try {
             CustomHttpServletResponse customResponse = new CustomHttpServletResponse(response);
-            if (transactionsHashes.isEmpty()) {
+            PrintWriter output = response.getWriter();
+            if (transactionHashes.isEmpty()) {
                 customResponse.printResponse("[]", HttpStatus.OK.value());
             }
-            chunkService.startOfChunk(response);
+            chunkService.startOfChunk(output);
 
-            retrieveTransactions(transactionsHashes, response);
+            retrieveTransactions(transactionHashes, output);
 
-            chunkService.endOfChunk(response);
+            chunkService.endOfChunk(output);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
         }
 
     }
 
-    private void retrieveTransactions(List<Hash> transactionHashes, HttpServletResponse response) {
-        List<Hash> transactionsHashesToRetrieveFromElasticSearch = new ArrayList<>();
-        getTransactionsFromLocal(transactionHashes, transactionsHashesToRetrieveFromElasticSearch, response);
-        if (!transactionsHashesToRetrieveFromElasticSearch.isEmpty()) {
-            getTransactionFromElasticSearch(transactionsHashesToRetrieveFromElasticSearch, response);
+    private void retrieveTransactions(List<Hash> transactionHashes, PrintWriter output) {
+        List<Hash> transactionHashesToRetrieveFromElasticSearch = new ArrayList<>();
+        getTransactionsFromLocal(transactionHashes, transactionHashesToRetrieveFromElasticSearch, output);
+        if (!transactionHashesToRetrieveFromElasticSearch.isEmpty()) {
+            getTransactionFromElasticSearch(transactionHashesToRetrieveFromElasticSearch, output);
         }
     }
 
 
-    private void getTransactionsFromLocal(List<Hash> transactionHashes, List<Hash> transactionsHashesToRetrieveFromElasticSearch, HttpServletResponse response) {
+    private void getTransactionsFromLocal(List<Hash> transactionHashes, List<Hash> transactionsHashesToRetrieveFromElasticSearch, PrintWriter output) {
 
         transactionHashes.forEach(transactionHash -> {
             TransactionData transactionData = transactions.getByHash(transactionHash);
             if (transactionData != null) {
-                chunkService.transactionHandler(transactionData, response);
+                chunkService.transactionHandler(transactionData, output);
             } else {
                 transactionsHashesToRetrieveFromElasticSearch.add(transactionHash);
             }
         });
     }
 
-    private void getTransactionFromElasticSearch(List<Hash> transactionsHashes, HttpServletResponse response) {
+    private void getTransactionFromElasticSearch(List<Hash> transactionsHashes, PrintWriter output) {
         RestTemplate restTemplate = new RestTemplate();
         CustomRequestCallBack requestCallBack = new CustomRequestCallBack(jacksonSerializer, new GetHistoryTransactionsRequest(transactionsHashes));
-        chunkService.transactionHandler(responseExtractor -> {
-            restTemplate.execute(storageServerAddress + END_POINT_RETRIEVE, HttpMethod.POST, requestCallBack, responseExtractor);
-        }, response);
+        chunkService.transactionHandler(responseExtractor ->
+                        restTemplate.execute(storageServerAddress + END_POINT_RETRIEVE, HttpMethod.POST, requestCallBack, responseExtractor)
+                , output);
 
     }
 
-    public List<Hash> getTransactionsHashesToRetrieve(GetTransactionsByAddressRequest getTransactionsByAddressRequest) {
+    public List<Hash> getTransactionHashesToRetrieve(GetTransactionsByAddressRequest getTransactionsByAddressRequest) {
         if (getTransactionsByAddressRequest.getAddress() == null) {
             return new ArrayList<>();
         }
         if (getTransactionsByAddressRequest.getStartDate() == null && getTransactionsByAddressRequest.getEndDate() == null) {
-            return getTransactionsHashesByAddress(getTransactionsByAddressRequest.getAddress());
+            return getTransactionHashesByAddress(getTransactionsByAddressRequest.getAddress());
         }
 
-        return getTransactionsHashesByAddressAndDates(getTransactionsByAddressRequest.getAddress(), getTransactionsByAddressRequest.getStartDate(), getTransactionsByAddressRequest.getEndDate());
+        return getTransactionHashesByAddressAndDates(getTransactionsByAddressRequest.getAddress(), getTransactionsByAddressRequest.getStartDate(), getTransactionsByAddressRequest.getEndDate());
     }
 
 
-    public List<Hash> getTransactionsHashesByDate(Instant date) {
+    public List<Hash> getTransactionHashesByDate(Instant date) {
         if (date == null) {
             return new ArrayList<>();
         }
@@ -230,7 +232,7 @@ public class TransactionService extends BaseNodeTransactionService {
                 .collect(Collectors.toList());
     }
 
-    private List<Hash> getTransactionsHashesByAddress(Hash address) {
+    private List<Hash> getTransactionHashesByAddress(Hash address) {
         AddressTransactionsByAddress addressTransactionsByAddress = addressTransactionsByAddresses.getByHash(address);
         if (addressTransactionsByAddress == null) {
             return new ArrayList<>();
@@ -239,7 +241,7 @@ public class TransactionService extends BaseNodeTransactionService {
         return transactionHashesByDates.keySet().stream().flatMap(key -> transactionHashesByDates.get(key).stream()).collect(Collectors.toList());
     }
 
-    private List<Hash> getTransactionsHashesByAddressAndDates(Hash address, Instant startDate, Instant endDate) {
+    private List<Hash> getTransactionHashesByAddressAndDates(Hash address, Instant startDate, Instant endDate) {
         AddressTransactionsByAddress addressTransactionsByAddress = addressTransactionsByAddresses.getByHash(address);
         if (addressTransactionsByAddress == null) {
             return new ArrayList<>();

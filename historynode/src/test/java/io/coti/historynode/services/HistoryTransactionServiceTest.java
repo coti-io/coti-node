@@ -201,12 +201,12 @@ public class HistoryTransactionServiceTest {
         GetTransactionsByDateRequest request = new GetTransactionsByDateRequest();
         request.setDate(Instant.now());
 
-        List<Hash> transactionsHashesToRetrieve = transactionService.getTransactionsHashesByDate(request.getDate());
+        List<Hash> transactionsHashesToRetrieve = transactionService.getTransactionHashesByDate(request.getDate());
         Assert.assertTrue(transactionsHashesToRetrieve.containsAll(generatedTransactionsData.stream().map(TransactionData::getHash).collect(Collectors.toList())));
 
         generateIndexAndStoreTransactions(numberOfDays, generatedTransactionsData, numberOfLocalTransactions, false, false);
         generatedTransactionsData.forEach(transactionData -> {
-            List<Hash> transactionsHashesToRetrieve2 = transactionService.getTransactionsHashesByDate(transactionData.getAttachmentTime());
+            List<Hash> transactionsHashesToRetrieve2 = transactionService.getTransactionHashesByDate(transactionData.getAttachmentTime());
             Assert.assertTrue(transactionsHashesToRetrieve2.contains(transactionData.getHash()));
         });
     }
@@ -228,31 +228,31 @@ public class HistoryTransactionServiceTest {
         request.setAddress(address);
         request.setStartDate(startDate);
         request.setEndDate(null);
-        List<Hash> transactionsHashesToRetrieve = transactionService.getTransactionsHashesToRetrieve(request);
+        List<Hash> transactionsHashesToRetrieve = transactionService.getTransactionHashesToRetrieve(request);
         Assert.assertEquals(numberOfDays - 1, transactionsHashesToRetrieve.size());
 
         request.setAddress(address);
         request.setStartDate(null);
         request.setEndDate(endDate);
-        transactionsHashesToRetrieve = transactionService.getTransactionsHashesToRetrieve(request);
+        transactionsHashesToRetrieve = transactionService.getTransactionHashesToRetrieve(request);
         Assert.assertEquals(numberOfDays - 1, transactionsHashesToRetrieve.size());
 
         request.setAddress(address);
         request.setStartDate(startDate);
         request.setEndDate(endDate);
-        transactionsHashesToRetrieve = transactionService.getTransactionsHashesToRetrieve(request);
+        transactionsHashesToRetrieve = transactionService.getTransactionHashesToRetrieve(request);
         Assert.assertEquals(numberOfDays - 1 - 1, transactionsHashesToRetrieve.size());
 
         request.setAddress(address);
         request.setStartDate(null);
         request.setEndDate(null);
-        transactionsHashesToRetrieve = transactionService.getTransactionsHashesToRetrieve(request);
+        transactionsHashesToRetrieve = transactionService.getTransactionHashesToRetrieve(request);
         Assert.assertEquals(numberOfDays, transactionsHashesToRetrieve.size());
 
         request.setAddress(null);
         request.setStartDate(startDate);
         request.setEndDate(endDate);
-        transactionsHashesToRetrieve = transactionService.getTransactionsHashesToRetrieve(request);
+        transactionsHashesToRetrieve = transactionService.getTransactionHashesToRetrieve(request);
         Assert.assertEquals(0, transactionsHashesToRetrieve.size());
     }
 

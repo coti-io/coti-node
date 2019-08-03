@@ -20,6 +20,7 @@ import java.util.List;
 @Service
 @Slf4j
 public class InitializationService extends BaseNodeInitializationService {
+
     @Autowired
     private ICommunicationService communicationService;
     @Value("${server.port}")
@@ -36,25 +37,31 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @PostConstruct
     public void init() {
-        super.initDB();
-        super.createNetworkNodeData();
-        super.getNetwork();
+        try {
+            super.initDB();
+            super.createNetworkNodeData();
+            super.getNetwork();
 
-        publisherNodeTypeToMessageTypesMap.put(NodeType.DspNode, Arrays.asList(TransactionData.class, AddressData.class, DspConsensusResult.class));
+            publisherNodeTypeToMessageTypesMap.put(NodeType.DspNode, Arrays.asList(TransactionData.class, AddressData.class, DspConsensusResult.class));
 
-        communicationService.initSubscriber(NodeType.FullNode, publisherNodeTypeToMessageTypesMap);
+            communicationService.initSubscriber(NodeType.FullNode, publisherNodeTypeToMessageTypesMap);
 
-        List<NetworkNodeData> dspNetworkNodeData = networkService.getShuffledNetworkNodeDataListFromMapValues(NodeType.DspNode);
-        if (!dspNetworkNodeData.isEmpty()) {
-            networkService.setRecoveryServerAddress(dspNetworkNodeData.get(0).getHttpFullAddress());
+            List<NetworkNodeData> dspNetworkNodeData = networkService.getShuffledNetworkNodeDataListFromMapValues(NodeType.DspNode);
+            if (!dspNetworkNodeData.isEmpty()) {
+                networkService.setRecoveryServerAddress(dspNetworkNodeData.get(0).getHttpFullAddress());
+            }
+            for (int i = 0; i < dspNetworkNodeData.size() && i < 2; i++) {
+                communicationService.addSubscription(dspNetworkNodeData.get(i).getPropagationFullAddress(), NodeType.DspNode);
+                communicationService.addSender(dspNetworkNodeData.get(i).getReceivingFullAddress());
+                ((NetworkService) networkService).addToConnectedDspNodes(dspNetworkNodeData.get(i));
+            }
+
+            super.init();
+        } catch (Exception e) {
+            log.error("Errors at {}", this.getClass().getSimpleName());
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
+            System.exit(SpringApplication.exit(applicationContext));
         }
-        for (int i = 0; i < dspNetworkNodeData.size() && i < 2; i++) {
-            communicationService.addSubscription(dspNetworkNodeData.get(i).getPropagationFullAddress(), NodeType.DspNode);
-            communicationService.addSender(dspNetworkNodeData.get(i).getReceivingFullAddress());
-            ((NetworkService) networkService).addToConnectedDspNodes(dspNetworkNodeData.get(i));
-        }
-
-        super.init();
     }
 
     protected NetworkNodeData createNodeProperties() {
