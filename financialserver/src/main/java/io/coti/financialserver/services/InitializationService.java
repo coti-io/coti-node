@@ -39,28 +39,34 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @PostConstruct
     public void init() {
-        super.initDB();
-        super.createNetworkNodeData();
-        super.getNetwork();
+        try {
+            super.initDB();
+            super.createNetworkNodeData();
+            super.getNetwork();
 
-        publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(TransactionData.class, DspConsensusResult.class));
-        communicationService.initSubscriber(NodeType.FinancialServer, publisherNodeTypeToMessageTypesMap);
+            publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(TransactionData.class, DspConsensusResult.class));
+            communicationService.initSubscriber(NodeType.FinancialServer, publisherNodeTypeToMessageTypesMap);
 
-        communicationService.initPublisher(propagationPort, NodeType.FinancialServer);
+            communicationService.initPublisher(propagationPort, NodeType.FinancialServer);
 
-        NetworkNodeData zerospendNetworkNodeData = networkService.getSingleNodeData(NodeType.ZeroSpendServer);
-        if (zerospendNetworkNodeData == null) {
-            log.error("No zerospend server exists in the network got from the node manager. Exiting from the application");
+            NetworkNodeData zerospendNetworkNodeData = networkService.getSingleNodeData(NodeType.ZeroSpendServer);
+            if (zerospendNetworkNodeData == null) {
+                log.error("No zerospend server exists in the network got from the node manager. Exiting from the application");
+                System.exit(SpringApplication.exit(applicationContext));
+            }
+            networkService.setRecoveryServerAddress(zerospendNetworkNodeData.getHttpFullAddress());
+            communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress(), NodeType.ZeroSpendServer);
+            networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.DspNode).values());
+
+            super.init();
+
+            distributionService.distributeToInitialFunds();
+            fundDistributionService.initReservedBalance();
+        } catch (Exception e) {
+            log.error("Errors at {}", this.getClass().getSimpleName());
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
             System.exit(SpringApplication.exit(applicationContext));
         }
-        networkService.setRecoveryServerAddress(zerospendNetworkNodeData.getHttpFullAddress());
-        communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress(), NodeType.ZeroSpendServer);
-        networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.DspNode).values());
-
-        super.init();
-
-        distributionService.distributeToInitialFunds();
-        fundDistributionService.initReservedBalance();
     }
 
     @Override

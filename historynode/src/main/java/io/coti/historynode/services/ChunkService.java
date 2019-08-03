@@ -10,9 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResponseExtractor;
 
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 @Service
@@ -21,30 +20,9 @@ public class ChunkService extends BaseNodeChunkService {
 
     private final static int MAXIMUM_BUFFER_SIZE = 50000;
 
-    public void startOfChunk(HttpServletResponse response) {
+    public void transactionHandler(Consumer<ResponseExtractor> extractorConsumer, PrintWriter output) {
         try {
-            sendChunk("[", response.getWriter());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void endOfChunk(HttpServletResponse response) {
-        try {
-            sendChunk("]", response.getWriter());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void sendChunk(String string, PrintWriter output) {
-        output.write(string);
-        output.flush();
-    }
-
-    public void transactionHandler(Consumer<ResponseExtractor> extractorConsumer, HttpServletResponse response) {
-        try {
-            PrintWriter output = response.getWriter();
+            AtomicBoolean firstTransactionArrived = new AtomicBoolean(false);
 
             extractorConsumer.accept(super.getResponseExtractor(chunkedData -> {
                 try {
@@ -52,8 +30,12 @@ public class ChunkService extends BaseNodeChunkService {
                     TransactionData transactionData = getHashToTransactionData.getData();
                     if (transactionData != null) {
                         if (transactionData.getHash().equals(getHashToTransactionData.getHash())) {
-                            sendChunk(",", output);
-                            sendChunk(new CustomGson().getInstance().toJson(new TransactionResponseData(transactionData)), output);
+                            if (firstTransactionArrived.get() == true) {
+                                sendChunk(",", output);
+                            } else {
+                                firstTransactionArrived.set(true);
+                            }
+                            transactionHandler(transactionData, output);
                         } else {
                             log.error("Mismatched transactionHashes {}, {}", transactionData.getHash(), getHashToTransactionData.getHash());
                         }
@@ -68,12 +50,11 @@ public class ChunkService extends BaseNodeChunkService {
 
     }
 
-    public void transactionHandler(TransactionData transactionData, HttpServletResponse response) {
+    public void transactionHandler(TransactionData transactionData, PrintWriter output) {
         try {
-            PrintWriter output = response.getWriter();
             sendChunk(new CustomGson().getInstance().toJson(new TransactionResponseData(transactionData)), output);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
         }
     }
 

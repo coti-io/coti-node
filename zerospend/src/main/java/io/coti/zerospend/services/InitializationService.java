@@ -9,16 +9,20 @@ import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.interfaces.ICommunicationService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.SpringApplication;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.function.Consumer;
 
+@Slf4j
 @Service
 public class InitializationService extends BaseNodeInitializationService {
+
     @Value("${receiving.port}")
     private String receivingPort;
     @Value("${propagation.port}")
@@ -39,34 +43,40 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @PostConstruct
     public void init() {
-        super.initDB();
-        super.createNetworkNodeData();
-        super.getNetwork();
+        try {
+            super.initDB();
+            super.createNetworkNodeData();
+            super.getNetwork();
 
-        publisherNodeTypeToMessageTypesMap.put(NodeType.FinancialServer, Arrays.asList(TransactionData.class));
+            publisherNodeTypeToMessageTypesMap.put(NodeType.FinancialServer, Arrays.asList(TransactionData.class));
 
-        communicationService.initSubscriber(NodeType.ZeroSpendServer, publisherNodeTypeToMessageTypesMap);
+            communicationService.initSubscriber(NodeType.ZeroSpendServer, publisherNodeTypeToMessageTypesMap);
 
-        HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping = new HashMap<>();
-        classNameToReceiverHandlerMapping.put(
-                DspVote.class.getName(), data ->
-                        dspVoteService.receiveDspVote((DspVote) data));
-        communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
+            HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping = new HashMap<>();
+            classNameToReceiverHandlerMapping.put(
+                    DspVote.class.getName(), data ->
+                            dspVoteService.receiveDspVote((DspVote) data));
+            communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
 
-        communicationService.initPublisher(propagationPort, NodeType.ZeroSpendServer);
+            communicationService.initPublisher(propagationPort, NodeType.ZeroSpendServer);
 
-        networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.DspNode).values());
-        if (networkService.getSingleNodeData(NodeType.FinancialServer) != null) {
-            networkService.addListToSubscription(new ArrayList<>(Arrays.asList(networkService.getSingleNodeData(NodeType.FinancialServer))));
-        }
-        if (!recoveryServerAddress.isEmpty()) {
-            networkService.setRecoveryServerAddress(recoveryServerAddress);
-        }
+            networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.DspNode).values());
+            if (networkService.getSingleNodeData(NodeType.FinancialServer) != null) {
+                networkService.addListToSubscription(new ArrayList<>(Arrays.asList(networkService.getSingleNodeData(NodeType.FinancialServer))));
+            }
+            if (!recoveryServerAddress.isEmpty()) {
+                networkService.setRecoveryServerAddress(recoveryServerAddress);
+            }
 
-        super.init();
+            super.init();
 
-        if (transactions.isEmpty()) {
-            transactionCreationService.createGenesisTransactions();
+            if (transactions.isEmpty()) {
+                transactionCreationService.createGenesisTransactions();
+            }
+        } catch (Exception e) {
+            log.error("Errors at {}", this.getClass().getSimpleName());
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
+            System.exit(SpringApplication.exit(applicationContext));
         }
 
     }
