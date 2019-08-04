@@ -46,8 +46,8 @@ public class TransactionResponseData implements ITransactionResponseData {
         type = transactionData.getType();
         baseTransactions = new ArrayList<>();
         if (transactionData.getBaseTransactions() != null) {
-            for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()
-                    ) {
+            transactionData.getBaseTransactions().forEach(baseTransactionData ->
+            {
                 try {
                     Class<? extends BaseTransactionResponseData> baseTransactionResponseDataClass = BaseTransactionResponseClass.valueOf(BaseTransactionName.getName(baseTransactionData.getClass()).name()).getBaseTransactionResponseClass();
                     Constructor<? extends BaseTransactionResponseData> constructor = baseTransactionResponseDataClass.getConstructor(BaseTransactionData.class);
@@ -56,7 +56,7 @@ public class TransactionResponseData implements ITransactionResponseData {
                     e.printStackTrace();
                     throw new TransactionException(TRANSACTION_RESPONSE_ERROR);
                 }
-            }
+            });
         }
         leftParentHash = transactionData.getLeftParentHash() == null ? null : transactionData.getLeftParentHash().toHexString();
         rightParentHash = transactionData.getRightParentHash() == null ? null : transactionData.getRightParentHash().toHexString();

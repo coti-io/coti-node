@@ -240,7 +240,7 @@ public class TransactionService extends BaseNodeTransactionService {
             output.flush();
             AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
             transactionHashes.forEach(transactionHash ->
-                    sendTransactionResponse(transactionHash, firstTransactionSent, output, false)
+                    sendTransactionResponse(transactionHash, firstTransactionSent, output)
             );
 
             output.write("]");
@@ -284,7 +284,7 @@ public class TransactionService extends BaseNodeTransactionService {
                 AddressTransactionsHistory addressTransactionsHistory = addressTransactionHistories.getByHash(addressHash);
                 if (addressTransactionsHistory != null) {
                     addressTransactionsHistory.getTransactionsHistory().forEach(transactionHash ->
-                            sendTransactionResponse(transactionHash, firstTransactionSent, output, reduced)
+                            sendTransactionResponse(transactionHash, firstTransactionSent, output, addressHash, reduced)
                     );
                 }
             });
@@ -296,11 +296,15 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
-    private void sendTransactionResponse(Hash transactionHash, AtomicBoolean firstTransactionSent, PrintWriter output, boolean reduced) {
+    private void sendTransactionResponse(Hash transactionHash, AtomicBoolean firstTransactionSent, PrintWriter output) {
+        sendTransactionResponse(transactionHash, firstTransactionSent, output, null, false);
+    }
+
+    private void sendTransactionResponse(Hash transactionHash, AtomicBoolean firstTransactionSent, PrintWriter output, Hash addressHash, boolean reduced) {
         try {
             TransactionData transactionData = transactions.getByHash(transactionHash);
             if (transactionData != null) {
-                ITransactionResponseData transactionResponseData = !reduced ? new TransactionResponseData(transactionData) : new ReducedTransactionResponseData(transactionData);
+                ITransactionResponseData transactionResponseData = !reduced ? new TransactionResponseData(transactionData) : new ReducedTransactionResponseData(transactionData, addressHash);
                 if (firstTransactionSent.get()) {
                     output.write(",");
                     output.flush();
