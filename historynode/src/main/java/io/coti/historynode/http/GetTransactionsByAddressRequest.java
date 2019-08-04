@@ -11,16 +11,17 @@ import lombok.Data;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import java.time.Instant;
+import java.time.LocalDate;
 
 @Data
 public class GetTransactionsByAddressRequest extends Request implements ISignValidatable, ISignable {
 
     @NotEmpty
     private Hash address;
-    private Instant startDate;
-    private Instant endDate;
-
+    @Valid
+    private LocalDate startDate;
+    @Valid
+    private LocalDate endDate;
     @NotNull
     public @Valid Hash userHash;
     @NotNull

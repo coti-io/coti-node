@@ -15,7 +15,7 @@ import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.*;
 import io.coti.basenode.services.interfaces.*;
 import io.coti.basenode.services.liveview.LiveViewService;
-import io.coti.historynode.crypto.TransactionsRequestCrypto;
+import io.coti.historynode.crypto.GetTransactionsByAddressRequestCrypto;
 import io.coti.historynode.data.AddressTransactionsByAddress;
 import io.coti.historynode.data.AddressTransactionsByDate;
 import io.coti.historynode.database.HistoryRocksDBConnector;
@@ -68,7 +68,7 @@ import static utils.TransactionTestUtils.generateRandomTrustScore;
         Transactions.class,
         AddressTransactionsByDates.class, AddressTransactionsByAddresses.class,
         IDatabaseConnector.class, BaseNodeRocksDBConnector.class, TransactionService.class,
-        TransactionsRequestCrypto.class, TransactionHelper.class, StorageConnector.class,
+        GetTransactionsByAddressRequestCrypto.class, TransactionHelper.class, StorageConnector.class,
         AddressTransactionsHistories.class, TransactionCrypto.class, NodeCryptoHelper.class, BaseNodeBalanceService.class,
         BaseNodeConfirmationService.class, LiveViewService.class, TransactionIndexService.class, TransactionIndexes.class,
         ClusterService.class, JacksonSerializer.class, ChunkService.class, HttpJacksonSerializer.class, NodeCryptoHelper.class,
@@ -126,7 +126,7 @@ public class HistoryTransactionServiceTest {
 
 
     @Autowired
-    private TransactionsRequestCrypto transactionsRequestCrypto;
+    private GetTransactionsByAddressRequestCrypto getTransactionsByAddressRequestCrypto;
     @Autowired
     private ChunkService chunkService;
     @Autowired
@@ -303,7 +303,7 @@ public class HistoryTransactionServiceTest {
     @Test
     public void getTransactionsByDate_storeAndRetrieveByDateFromElasticSearch_singleTransactionsMatched() throws IOException {
         // Mocks
-        when(transactionsRequestCrypto.verifySignature(any())).thenReturn(Boolean.TRUE);
+        when(getTransactionsByAddressRequestCrypto.verifySignature(any())).thenReturn(Boolean.TRUE);
         // Generate transactions data
         int numberOfDays = 4;
         int numberOfLocalTransactions = 1;
@@ -332,7 +332,7 @@ public class HistoryTransactionServiceTest {
     @Test
     public void getTransactionsByDate_storeAndRetrieveByDate_multipleTransactionsMatched() throws IOException {
         // Mocks
-        when(transactionsRequestCrypto.verifySignature(any())).thenReturn(Boolean.TRUE);
+        when(getTransactionsByAddressRequestCrypto.verifySignature(any())).thenReturn(Boolean.TRUE);
         // Generate transactions data
         int numberOfDays = 4;
         int numberOfLocalTransactions = 1;
@@ -363,7 +363,7 @@ public class HistoryTransactionServiceTest {
     @Test
     public void getTransactionsByAddress_storeAndRetrieveByAddressAndDates_multipleTransactionsMatched() throws IOException {
         // Mocks
-        when(transactionsRequestCrypto.verifySignature(any())).thenReturn(Boolean.TRUE);
+        when(getTransactionsByAddressRequestCrypto.verifySignature(any())).thenReturn(Boolean.TRUE);
         // Generate transactions data
         int numberOfDays = 4;
         int numberOfLocalTransactions = 1;
@@ -399,7 +399,7 @@ public class HistoryTransactionServiceTest {
     @Test
     public void getTransactionsByAddress_storeAndRetrieveByAddress_multipleTransactionsMatched() throws IOException {
         // Mocks
-        when(transactionsRequestCrypto.verifySignature(any())).thenReturn(Boolean.TRUE);
+        when(getTransactionsByAddressRequestCrypto.verifySignature(any())).thenReturn(Boolean.TRUE);
         // Generate transactions data
         int numberOfDays = 4;
         int numberOfLocalTransactions = 1;
@@ -429,7 +429,7 @@ public class HistoryTransactionServiceTest {
     @Test
     public void getTransactionsByAddress_storeAndRetrieveByAddress_singleTransactionsMatched() throws IOException {
         // Mocks
-        when(transactionsRequestCrypto.verifySignature(any())).thenReturn(Boolean.TRUE);
+        when(getTransactionsByAddressRequestCrypto.verifySignature(any())).thenReturn(Boolean.TRUE);
         // Generate transactions data
         int numberOfDays = 4;
         int numberOfLocalTransactions = 1;
@@ -460,7 +460,7 @@ public class HistoryTransactionServiceTest {
     @Test
     public void getTransactionsByAddress_storeAndRetrieveByDatesNoAddress_noTransactionsMatched() throws IOException {
         // Mocks
-        when(transactionsRequestCrypto.verifySignature(any())).thenReturn(Boolean.TRUE);
+        when(getTransactionsByAddressRequestCrypto.verifySignature(any())).thenReturn(Boolean.TRUE);
         // Generate transactions data
         int numberOfDays = 4;
         int numberOfLocalTransactions = 1;
@@ -535,9 +535,10 @@ public class HistoryTransactionServiceTest {
 
     private TransactionData generateInitialTransactionByAttachmentDate(Instant attachmentTime) {
         BigDecimal amount = new BigDecimal(4);
-        Hash cotiGenesisAddress = HashTestUtils.generateRandomAddressHash();
-        Hash fundAddress = HashTestUtils.generateRandomAddressHash();
         int genesisAddressIndex = 2;
+        Hash cotiGenesisAddress = nodeCryptoHelper.generateAddress(seed, genesisAddressIndex);
+        Hash fundAddress = HashTestUtils.generateRandomAddressHash();
+
 
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
 
@@ -558,8 +559,7 @@ public class HistoryTransactionServiceTest {
 
         Map<Hash, Integer> addressHashToAddressIndexMap = new HashMap<>();
         addressHashToAddressIndexMap.put(cotiGenesisAddress, genesisAddressIndex);
-        indexCount = indexCount++;
-        nodeCryptoHelper.generateAddress(seed, indexCount);
+
         signBaseTransactions(initialTransactionData, addressHashToAddressIndexMap);
         transactionCrypto.signMessage(initialTransactionData);
         transactionHelper.attachTransactionToCluster(initialTransactionData);
