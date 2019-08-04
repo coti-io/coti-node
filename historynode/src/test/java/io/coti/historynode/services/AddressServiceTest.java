@@ -205,12 +205,13 @@ public class AddressServiceTest {
     }
 
     @Test
-    public void getAddresses_retrieveAddressNotInStorageTwice(){
+    public void getAddresses_retrieveAddressNotInStorage(){
         Hash addressHashInHistory = HashTestUtils.generateRandomAddressHash();
-        addresses.put(new AddressData(addressHashInHistory));
         Hash addressHashNotFound = HashTestUtils.generateRandomAddressHash();
+        when(addresses.getByHash(addressHashInHistory)).thenReturn(new AddressData(addressHashInHistory));
+        when(requestedAddressHashes.getByHash(addressHashInHistory)).thenReturn(null);
         retrieveAddressNotInStorage(addressHashInHistory,addressHashNotFound);
-        retrieveAddressNotInStorage(addressHashInHistory, addressHashNotFound);
+
 
     }
     private void retrieveAddressNotInStorage(Hash addressHashInHistory, Hash addressHashNotFound){
@@ -221,6 +222,17 @@ public class AddressServiceTest {
 
         GetHistoryAddressesRequest getHistoryAddressesRequest = new GetHistoryAddressesRequest(addressHashes);
         getHistoryAddressesRequestCrypto.signMessage(getHistoryAddressesRequest);
+
+        when(getHistoryAddressesRequestCrypto.verifySignature(getHistoryAddressesRequest)).thenReturn(true);
+
+        Map<Hash, AddressData> addressHashesToAddresses = new HashMap<>();
+        addressHashesToAddresses.put(addressHashNotFound,null);
+        GetHistoryAddressesResponse getHistoryAddressesResponseFromStorageNode = new GetHistoryAddressesResponse(addressHashesToAddresses);
+
+        GetHistoryAddressesRequest getHistoryAddressesRequestToStorage = new GetHistoryAddressesRequest(Arrays.asList(addressHashNotFound));
+        getHistoryAddressesRequestCrypto.signMessage(getHistoryAddressesRequestToStorage);
+        when(storageConnector.retrieveFromStorage(storageNodeUrl + "/addresses", getHistoryAddressesRequestToStorage, GetHistoryAddressesResponse.class)).thenReturn(ResponseEntity.status(HttpStatus.OK).body(getHistoryAddressesResponseFromStorageNode));
+        when(getHistoryAddressesResponseCrypto.verifySignature(getHistoryAddressesResponseFromStorageNode)).thenReturn(true);
 
         GetHistoryAddressesResponse actualResponse = (GetHistoryAddressesResponse)addressService.getAddresses(getHistoryAddressesRequest).getBody();
 
