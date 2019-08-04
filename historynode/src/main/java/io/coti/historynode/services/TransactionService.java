@@ -200,11 +200,11 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
 
-    public List<Hash> getTransactionHashesByDate(Instant date) {
+    public List<Hash> getTransactionHashesByDate(LocalDate date) {
         if (date == null) {
             return new ArrayList<>();
         }
-        AddressTransactionsByDate addressTransactionsByDate = addressTransactionsByDates.getByHash(calculateHashByTime(date));
+        AddressTransactionsByDate addressTransactionsByDate = addressTransactionsByDates.getByHash(calculateHashByLocalDate(date));
         if (addressTransactionsByDate == null || addressTransactionsByDate.getTransactionHashes() == null || addressTransactionsByDate.getTransactionHashes().isEmpty()) {
             return new ArrayList<>();
         }
