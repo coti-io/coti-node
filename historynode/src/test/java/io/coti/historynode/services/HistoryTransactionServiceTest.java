@@ -13,9 +13,7 @@ import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.*;
-import io.coti.basenode.services.interfaces.IBalanceService;
-import io.coti.basenode.services.interfaces.IClusterService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.interfaces.*;
 import io.coti.basenode.services.liveview.LiveViewService;
 import io.coti.historynode.crypto.TransactionsRequestCrypto;
 import io.coti.historynode.data.AddressTransactionsByAddress;
@@ -35,6 +33,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -57,8 +57,11 @@ import java.util.stream.Collectors;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static utils.TestConstants.MAX_TRUST_SCORE;
+import static utils.TestConstants.TRANSACTION_DESCRIPTION;
 import static utils.TestUtils.createRandomTransaction;
 import static utils.TestUtils.generateRandomHash;
+import static utils.TransactionTestUtils.generateRandomTrustScore;
 
 @ContextConfiguration(classes = {TransactionService.class,
         HistoryRocksDBConnector.class,
@@ -68,7 +71,10 @@ import static utils.TestUtils.generateRandomHash;
         TransactionsRequestCrypto.class, TransactionHelper.class, StorageConnector.class,
         AddressTransactionsHistories.class, TransactionCrypto.class, NodeCryptoHelper.class, BaseNodeBalanceService.class,
         BaseNodeConfirmationService.class, LiveViewService.class, TransactionIndexService.class, TransactionIndexes.class,
-        ClusterService.class, JacksonSerializer.class, ChunkService.class, HttpJacksonSerializer.class, NodeCryptoHelper.class
+        ClusterService.class, JacksonSerializer.class, ChunkService.class, HttpJacksonSerializer.class, NodeCryptoHelper.class,
+        TransactionTrustScoreCrypto.class, BaseNodeValidationService.class, TransactionSenderCrypto.class, BaseNodePotService.class,
+        LiveViewService.class, ClusterService.class, SimpMessagingTemplate.class, MessageChannel.class, SourceSelector.class,
+        TrustChainConfirmationService.class, ClusterHelper.class
 })
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
@@ -79,8 +85,8 @@ public class HistoryTransactionServiceTest {
     protected String storageServerAddress;
     @Value("${global.private.key}")
     protected String globalPrivateKey;
-//    @Value("${historynode.seed}")
-//    private String seed;
+    @Value("${historynode.seed}")
+    private String seed;
 
 
     @Autowired
@@ -107,9 +113,19 @@ public class HistoryTransactionServiceTest {
     private TransactionCrypto transactionCrypto;
     @Autowired
     private NodeCryptoHelper nodeCryptoHelper;
+    @Autowired
+    private TransactionSenderCrypto transactionSenderCrypto;
+    @Autowired
+    private IPotService potService;
+    @Autowired
+    private ISourceSelector sourceSelector;
+    @Autowired
+    private TrustChainConfirmationService trustChainConfirmationService;
+    @Autowired
+    private IClusterHelper clusterHelper;
 
 
-    @MockBean
+    @Autowired
     private TransactionsRequestCrypto transactionsRequestCrypto;
     @Autowired
     private ChunkService chunkService;
@@ -118,28 +134,27 @@ public class HistoryTransactionServiceTest {
     @Autowired
     private HttpJacksonSerializer httpJacksonSerializer;
 
-    @MockBean
+    @Autowired
     private LiveViewService liveViewService;
-    @MockBean
+    @Autowired
     private IClusterService clusterService;
-    @MockBean
+    @Autowired
     private TransactionTrustScoreCrypto transactionTrustScoreCrypto;
-    @MockBean
+    @Autowired
     private BaseNodeValidationService baseNodeValidationService;
     @MockBean
     private BaseNodeDspVoteService baseNodeDspVoteService;
+    @MockBean
+    private SimpMessagingTemplate messagingSender;
 
 
-//    private ObjectMapper mapper;
+    private int indexCount;
 
     @Before
     public void init() {
-//        mapper = new ObjectMapper()
-//                .registerModule(new ParameterNamesModule())
-//                .registerModule(new Jdk8Module())
-//                .registerModule(new JavaTimeModule()); // new module, NOT JSR310Module
         historyRocksDBConnector.setColumnFamily();
         databaseConnector.init();
+        indexCount = 0;
     }
 
 
@@ -259,7 +274,7 @@ public class HistoryTransactionServiceTest {
     @Test
     public void getTransactionsByDate_storeAndRetrieveByDateFromLocal_singleTransactionsMatched() throws IOException {
         // Mocks
-        when(transactionsRequestCrypto.verifySignature(any())).thenReturn(Boolean.TRUE);
+//        when(transactionsRequestCrypto.verifySignature(any())).thenReturn(Boolean.TRUE);
         // Generate transactions data
         int numberOfDays = 1; //4
         int numberOfLocalTransactions = 0; //1
@@ -474,7 +489,8 @@ public class HistoryTransactionServiceTest {
     private void generateIndexAndStoreTransactions(int numberOfDays, ArrayList<TransactionData> generatedTransactionsData, int numberOfLocalTransactions, boolean singleAddress, boolean singleAttachmentDate) throws JsonProcessingException {
         Instant attachmentTime = Instant.now();
         for (int days = 0; days < numberOfDays; days++) {
-            generatedTransactionsData.add(generateTransactionDataWithRBTByAttachmentDate(attachmentTime.minus(days, ChronoUnit.DAYS)));
+            generatedTransactionsData.add(generateInitialTransactionByAttachmentDate(attachmentTime.minus(days, ChronoUnit.DAYS)));
+//            generatedTransactionsData.add(generateTransactionDataWithRBTByAttachmentDate(attachmentTime.minus(days, ChronoUnit.DAYS)));
         }
 
         if (singleAddress) {
@@ -514,6 +530,93 @@ public class HistoryTransactionServiceTest {
         ResponseEntity<AddHistoryEntitiesResponse> storeResponseEntity = transactionService.storeEntitiesByType(storageServerAddress + endpoint, addEntitiesBulkRequest);
         Assert.assertTrue(storeResponseEntity.getBody().getHashToStoreResultMap().size() == addEntitiesBulkRequest.getHashToEntityJsonDataMap().size());
         Assert.assertTrue(storeResponseEntity.getBody().getHashToStoreResultMap().values().stream().allMatch(Boolean::booleanValue));
+    }
+
+
+    private TransactionData generateInitialTransactionByAttachmentDate(Instant attachmentTime) {
+        BigDecimal amount = new BigDecimal(4);
+        Hash cotiGenesisAddress = HashTestUtils.generateRandomAddressHash();
+        Hash fundAddress = HashTestUtils.generateRandomAddressHash();
+        int genesisAddressIndex = 2;
+
+        List<BaseTransactionData> baseTransactions = new ArrayList<>();
+
+        InputBaseTransactionData ibt = new InputBaseTransactionData(cotiGenesisAddress, amount.multiply(new BigDecimal(-1)), Instant.now());
+
+        ReceiverBaseTransactionData rbt = new ReceiverBaseTransactionData(fundAddress, amount, amount, Instant.now());
+        baseTransactions.add(ibt);
+        baseTransactions.add(rbt);
+
+        double trustScore = MAX_TRUST_SCORE;
+        TransactionData initialTransactionData = new TransactionData(baseTransactions, TransactionType.Initial.toString(), trustScore, Instant.now(), TransactionType.Initial);
+
+//        if (!balanceService.checkBalancesAndAddToPreBalance(initialTransactionData.getBaseTransactions())) {
+//            throw new TransactionValidationException("Balance check failed");
+//        }
+        clusterService.selectSources(initialTransactionData);
+        initialTransactionData.setAttachmentTime(attachmentTime);
+
+        Map<Hash, Integer> addressHashToAddressIndexMap = new HashMap<>();
+        addressHashToAddressIndexMap.put(cotiGenesisAddress, genesisAddressIndex);
+        indexCount = indexCount++;
+        nodeCryptoHelper.generateAddress(seed, indexCount);
+        signBaseTransactions(initialTransactionData, addressHashToAddressIndexMap);
+        transactionCrypto.signMessage(initialTransactionData);
+        transactionHelper.attachTransactionToCluster(initialTransactionData);
+
+//        propagationPublisher.propagate(initialTransactionData, Arrays.asList(NodeType.ZeroSpendServer, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.DspNode, NodeType.HistoryNode));
+
+        return initialTransactionData;
+    }
+
+    public void signBaseTransactions(TransactionData transactionData, Map<Hash, Integer> addressHashToAddressIndexMap) {
+
+        try {
+            if (transactionData.getHash() == null) {
+                transactionCrypto.setTransactionHash(transactionData);
+            }
+            for (BaseTransactionData baseTransactionData : transactionData.getInputBaseTransactions()) {
+                BaseTransactionCrypto.valueOf(baseTransactionData.getClass().getSimpleName()).signMessage(transactionData, baseTransactionData, addressHashToAddressIndexMap.get(baseTransactionData.getAddressHash()));
+            }
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private TransactionData generateTransactionDataInitialByAttachmentDate(Instant attachmentTime) {
+
+
+        ArrayList<BaseTransactionData> baseTransactions = new ArrayList<>();
+
+        BigDecimal originalAmount = new BigDecimal(12); // the same for all
+        BigDecimal amount = new BigDecimal(4);
+        ReceiverBaseTransactionData receiverBaseTransaction =
+                new ReceiverBaseTransactionData(HashTestUtils.generateRandomAddressHash(), amount, originalAmount, Instant.now());
+        byte[] bytesToHash = BaseTransactionCrypto.valueOf(receiverBaseTransaction.getClass().getSimpleName()).getMessageInBytes(receiverBaseTransaction);
+        receiverBaseTransaction.setHash(CryptoHelper.cryptoHash(bytesToHash));
+        baseTransactions.add(receiverBaseTransaction);
+
+        InputBaseTransactionData inputBaseTransaction = new InputBaseTransactionData(HashTestUtils.generateRandomAddressHash(), amount, Instant.now());
+        bytesToHash = BaseTransactionCrypto.valueOf(inputBaseTransaction.getClass().getSimpleName()).getMessageInBytes(inputBaseTransaction);
+        inputBaseTransaction.setHash(CryptoHelper.cryptoHash(bytesToHash));
+
+        TransactionData transactionData = new TransactionData(baseTransactions,
+                generateRandomHash(),
+                TRANSACTION_DESCRIPTION,
+                generateRandomTrustScore(),
+                Instant.now(),
+                TransactionType.Initial);
+
+        transactionData.getBaseTransactions().add(receiverBaseTransaction);
+        transactionData.getBaseTransactions().add(inputBaseTransaction);
+
+        transactionData.setHash(transactionCrypto.getHashFromBaseTransactionHashesData(transactionData));
+
+        transactionData.setAttachmentTime(attachmentTime);
+
+        return transactionData;
+
+
     }
 
     private TransactionData generateTransactionDataWithRBTByAttachmentDate(Instant attachmentTime) {
