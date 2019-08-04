@@ -18,7 +18,7 @@ import io.coti.basenode.services.liveview.LiveViewService;
 import io.coti.historynode.crypto.GetTransactionsByAddressRequestCrypto;
 import io.coti.historynode.data.AddressTransactionsByAddress;
 import io.coti.historynode.data.AddressTransactionsByDate;
-import io.coti.historynode.database.HistoryRocksDBConnector;
+import io.coti.historynode.database.RocksDBConnector;
 import io.coti.historynode.http.GetTransactionsByAddressRequest;
 import io.coti.historynode.http.GetTransactionsByDateRequest;
 import io.coti.historynode.model.AddressTransactionsByAddresses;
@@ -64,7 +64,7 @@ import static utils.TestUtils.generateRandomHash;
 import static utils.TransactionTestUtils.generateRandomTrustScore;
 
 @ContextConfiguration(classes = {TransactionService.class,
-        HistoryRocksDBConnector.class,
+        RocksDBConnector.class,
         Transactions.class,
         AddressTransactionsByDates.class, AddressTransactionsByAddresses.class,
         IDatabaseConnector.class, BaseNodeRocksDBConnector.class, TransactionService.class,
@@ -104,7 +104,7 @@ public class HistoryTransactionServiceTest {
     @Autowired
     private BaseNodeRocksDBConnector baseNodeRocksDBConnector;
     @Autowired
-    private HistoryRocksDBConnector historyRocksDBConnector;
+    private RocksDBConnector rocksDBConnector;
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -152,7 +152,7 @@ public class HistoryTransactionServiceTest {
 
     @Before
     public void init() {
-        historyRocksDBConnector.setColumnFamily();
+        rocksDBConnector.setColumnFamily();
         databaseConnector.init();
         indexCount = 0;
     }

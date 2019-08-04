@@ -1,7 +1,6 @@
-package io.coti.fullnode.model;
+package io.coti.basenode.model;
 
-import io.coti.basenode.model.Collection;
-import io.coti.fullnode.data.RequestedAddressHashData;
+import io.coti.basenode.data.RequestedAddressHashData;
 import org.springframework.stereotype.Service;
 
 @Service
