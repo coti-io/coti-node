@@ -2,20 +2,16 @@ package io.coti.fullnode.services;
 
 import io.coti.basenode.crypto.GetHistoryAddressesRequestCrypto;
 import io.coti.basenode.crypto.GetHistoryAddressesResponseCrypto;
-import io.coti.basenode.data.AddressData;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.NetworkNodeData;
-import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.*;
 import io.coti.basenode.http.GetHistoryAddressesRequest;
 import io.coti.basenode.http.GetHistoryAddressesResponse;
 import io.coti.basenode.http.HttpJacksonSerializer;
 import io.coti.basenode.http.SerializableResponse;
 import io.coti.basenode.model.Addresses;
+import io.coti.basenode.model.RequestedAddressHashes;
 import io.coti.basenode.services.BaseNodeAddressService;
-import io.coti.fullnode.data.RequestedAddressHashData;
 import io.coti.fullnode.http.AddressBulkRequest;
 import io.coti.fullnode.http.AddressesExistsResponse;
-import io.coti.fullnode.model.RequestedAddressHashes;
 import io.coti.fullnode.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +20,6 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -34,8 +28,6 @@ import java.util.Map;
 @Slf4j
 @Service
 public class AddressService extends BaseNodeAddressService {
-
-    private final int TRUSTED_RESULT_MAX_DURATION_IN_MILLIS = 600_000;
 
     @Autowired
     private WebSocketSender webSocketSender;
@@ -138,14 +130,6 @@ public class AddressService extends BaseNodeAddressService {
             return false;
         }
         return true;
-    }
-
-    private boolean validateRequestedAddressHashExistsAndRelevant(RequestedAddressHashData requestedAddressHashData) {
-        if (requestedAddressHashData != null) {
-            long diffInMilliSeconds = Math.abs(Duration.between(Instant.now(), requestedAddressHashData.getLastUpdateTime()).toMillis());
-            return diffInMilliSeconds <= TRUSTED_RESULT_MAX_DURATION_IN_MILLIS;
-        }
-        return false;
     }
 
     private String getHistoryNodeHttpAddress() {

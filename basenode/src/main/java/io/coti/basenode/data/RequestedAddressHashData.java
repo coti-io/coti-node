@@ -1,6 +1,5 @@
-package io.coti.fullnode.data;
+package io.coti.basenode.data;
 
-import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
 import lombok.Data;
 

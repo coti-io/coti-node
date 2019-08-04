@@ -4,12 +4,14 @@ import io.coti.basenode.crypto.GetHistoryAddressesRequestCrypto;
 import io.coti.basenode.crypto.GetHistoryAddressesResponseCrypto;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.RequestedAddressHashData;
 import io.coti.basenode.http.GetHistoryAddressesRequest;
 import io.coti.basenode.http.GetHistoryAddressesResponse;
 import io.coti.basenode.http.HttpJacksonSerializer;
 import io.coti.basenode.http.SerializableResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Addresses;
+import io.coti.basenode.model.RequestedAddressHashes;
 import io.coti.basenode.services.BaseNodeAddressService;
 import io.coti.basenode.services.BaseNodeValidationService;
 import lombok.extern.slf4j.Slf4j;
@@ -31,12 +33,15 @@ import static io.coti.historynode.http.HttpStringConstants.*;
 @Slf4j
 @Service
 public class AddressService extends BaseNodeAddressService {
+
     @Autowired
     private StorageConnector storageConnector;
     @Autowired
     private HttpJacksonSerializer jacksonSerializer;
     @Autowired
     private Addresses addresses;
+    @Autowired
+    private RequestedAddressHashes requestedAddressHashes;
     @Autowired
     private BaseNodeValidationService validationService;
     @Autowired
@@ -57,18 +62,25 @@ public class AddressService extends BaseNodeAddressService {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new SerializableResponse(INVALID_SIGNATURE, STATUS_ERROR));
             }
 
-            List<Hash> addressesHashesToGetFromStorage = getHistoryAddressesRequest.getAddressHashes();
-            Map<Hash, AddressData> addressToAddressDataFromDB = populateAndRemoveFoundAddresses(addressesHashesToGetFromStorage);
-            GetHistoryAddressesResponse getHistoryAddressesResponseFromStorageNode = getAddressesFromStorage(addressesHashesToGetFromStorage).getBody();
+            List<Hash> addressesHashesToGetFromStorage = new ArrayList<>();
+            addressesHashesToGetFromStorage.addAll(getHistoryAddressesRequest.getAddressHashes());
 
-            if (!getHistoryAddressesResponseCrypto.verifySignature(getHistoryAddressesResponseFromStorageNode)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new SerializableResponse(STORAGE_INVALID_SIGNATURE, STATUS_ERROR));
+            LinkedHashMap<Hash, AddressData> addressToAddressDataFromDB = populateAndRemoveFoundAddresses(addressesHashesToGetFromStorage);
+            LinkedHashMap<Hash, AddressData> getHistoryAddressesResponseMap;
+
+            if(!addressesHashesToGetFromStorage.isEmpty()){
+                GetHistoryAddressesResponse getHistoryAddressesResponseFromStorageNode = getAddressesFromStorage(addressesHashesToGetFromStorage);
+                Optional<ResponseEntity> responseValidationResult = validateStorageResponse(getHistoryAddressesResponseFromStorageNode);
+                if(responseValidationResult.isPresent()){
+                    return responseValidationResult.get();
+                }
+                Map<Hash, AddressData> addressHashesToAddressesFromStorage = getHistoryAddressesResponseFromStorageNode.getAddressHashesToAddresses();
+                getHistoryAddressesResponseMap = reorderHashResponses(getHistoryAddressesRequest.getAddressHashes(), addressToAddressDataFromDB, addressHashesToAddressesFromStorage);
+            }
+            else{
+                getHistoryAddressesResponseMap = addressToAddressDataFromDB;
             }
 
-            if (!validationService.validateGetAddressesResponse(getHistoryAddressesResponseFromStorageNode)) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SerializableResponse(STORAGE_RESPONSE_VALIDATION_ERROR, STATUS_ERROR));
-            }
-            Map<Hash, AddressData> getHistoryAddressesResponseMap = reorderHashResponses(getHistoryAddressesRequest.getAddressHashes(), addressToAddressDataFromDB, getHistoryAddressesResponseFromStorageNode.getAddressHashesToAddresses());
 
             GetHistoryAddressesResponse getHistoryAddressesResponseToFullNode = new GetHistoryAddressesResponse(getHistoryAddressesResponseMap);
             getHistoryAddressesResponseCrypto.signMessage(getHistoryAddressesResponseToFullNode);
@@ -82,22 +94,33 @@ public class AddressService extends BaseNodeAddressService {
         }
     }
 
-    private Map<Hash, AddressData> reorderHashResponses(List<Hash> originallyOrderedAddressHashes, Map<Hash, AddressData> addressHashesToAddressesFromDB, Map<Hash, AddressData> addressHashesToAddressesFromStorage) {
-        Map<Hash, AddressData> orderedResponse = new LinkedHashMap<>();
+    private LinkedHashMap<Hash, AddressData> reorderHashResponses(List<Hash> originallyOrderedAddressHashes, LinkedHashMap<Hash, AddressData> addressHashesToAddressesFromDB, Map<Hash, AddressData> addressHashesToAddressesFromStorage) {
+        LinkedHashMap<Hash, AddressData> orderedResponse = new LinkedHashMap<>();
         originallyOrderedAddressHashes.forEach(hash -> {
             AddressData addressData = Optional.ofNullable(addressHashesToAddressesFromDB.get(hash)).orElse(addressHashesToAddressesFromStorage.get(hash));
+            if(addressHashesToAddressesFromStorage.containsKey(hash) && addressData != null){
+                addresses.put(new RequestedAddressHashData(hash));
+            }
+            if(addressHashesToAddressesFromStorage.containsKey(hash) && addressData == null){
+                requestedAddressHashes.put(new RequestedAddressHashData(hash));
+            }
             orderedResponse.put(hash, addressData);
         });
         return orderedResponse;
     }
 
-    private Map<Hash, AddressData> populateAndRemoveFoundAddresses(List<Hash> addressesHashes) {
-        Map<Hash, AddressData> addressesFoundInDb = new HashMap<>();
+    private LinkedHashMap<Hash, AddressData> populateAndRemoveFoundAddresses(List<Hash> addressesHashes) {
+        LinkedHashMap<Hash, AddressData> addressesFoundInDb = new LinkedHashMap<>();
 
         addressesHashes.removeIf(addressHash -> {
             AddressData addressData = addresses.getByHash(addressHash);
             if (addressData != null) {
                 addressesFoundInDb.put(addressHash, addressData);
+                return true;
+            }
+            RequestedAddressHashData requestedAddressHashData = requestedAddressHashes.getByHash(addressHash);
+            if (validateRequestedAddressHashExistsAndRelevant(requestedAddressHashData)) {
+                addressesFoundInDb.put(addressHash, null);
                 return true;
             }
             return false;
@@ -106,9 +129,34 @@ public class AddressService extends BaseNodeAddressService {
         return addressesFoundInDb;
     }
 
-    private ResponseEntity<GetHistoryAddressesResponse> getAddressesFromStorage(List<Hash> addressesHashes) {
+    private GetHistoryAddressesResponse getAddressesFromStorage(List<Hash> addressesHashes) {
         GetHistoryAddressesRequest getHistoryAddressesRequest = new GetHistoryAddressesRequest(addressesHashes);
         getHistoryAddressesRequestCrypto.signMessage(getHistoryAddressesRequest);
-        return storageConnector.retrieveFromStorage(storageServerAddress + "/addresses", getHistoryAddressesRequest, GetHistoryAddressesResponse.class);
+        GetHistoryAddressesResponse getHistoryAddressesResponse = null;
+        try{
+            getHistoryAddressesResponse = ((GetHistoryAddressesResponse)storageConnector.retrieveFromStorage(storageServerAddress + "/addresses", getHistoryAddressesRequest, GetHistoryAddressesResponse.class).getBody());
+        }
+        catch (HttpClientErrorException | HttpServerErrorException e) {
+            log.error("{}: {}", e.getClass().getName(), ((SerializableResponse) jacksonSerializer.deserialize(e.getResponseBodyAsByteArray())).getMessage());
+        }
+        catch (Exception e) {
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
+        }
+        return getHistoryAddressesResponse;
+    }
+
+    private Optional<ResponseEntity> validateStorageResponse(GetHistoryAddressesResponse getHistoryAddressesResponseFromStorageNode){
+        if(getHistoryAddressesResponseFromStorageNode == null){
+            return Optional.of(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SerializableResponse(STORAGE_RESPONSE_VALIDATION_ERROR, STATUS_ERROR)));
+        }
+
+        if (!getHistoryAddressesResponseCrypto.verifySignature(getHistoryAddressesResponseFromStorageNode)) {
+            return Optional.of(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new SerializableResponse(STORAGE_INVALID_SIGNATURE, STATUS_ERROR)));
+        }
+
+        if (!validationService.validateGetAddressesResponse(getHistoryAddressesResponseFromStorageNode)) {
+            return Optional.of(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SerializableResponse(STORAGE_RESPONSE_VALIDATION_ERROR, STATUS_ERROR)));
+        }
+        return Optional.empty();
     }
 }
