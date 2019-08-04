@@ -214,14 +214,14 @@ public class HistoryTransactionServiceTest {
         generateIndexAndStoreTransactions(numberOfDays, generatedTransactionsData, numberOfLocalTransactions, true, true);
 
         GetTransactionsByDateRequest request = new GetTransactionsByDateRequest();
-        request.setDate(Instant.now());
+        request.setDate(transactionService.calculateInstantLocalDate(Instant.now()));
 
         List<Hash> transactionsHashesToRetrieve = transactionService.getTransactionHashesByDate(request.getDate());
         Assert.assertTrue(transactionsHashesToRetrieve.containsAll(generatedTransactionsData.stream().map(TransactionData::getHash).collect(Collectors.toList())));
 
         generateIndexAndStoreTransactions(numberOfDays, generatedTransactionsData, numberOfLocalTransactions, false, false);
         generatedTransactionsData.forEach(transactionData -> {
-            List<Hash> transactionsHashesToRetrieve2 = transactionService.getTransactionHashesByDate(transactionData.getAttachmentTime());
+            List<Hash> transactionsHashesToRetrieve2 = transactionService.getTransactionHashesByDate(transactionService.calculateInstantLocalDate(transactionData.getAttachmentTime()));
             Assert.assertTrue(transactionsHashesToRetrieve2.contains(transactionData.getHash()));
         });
     }
@@ -236,8 +236,8 @@ public class HistoryTransactionServiceTest {
         generateIndexAndStoreTransactions(numberOfDays, generatedTransactionsData, numberOfLocalTransactions, true, false);
 
         Hash address = generatedTransactionsData.get(0).getBaseTransactions().get(0).getAddressHash();
-        Instant startDate = generatedTransactionsData.get(numberOfDays - 2).getAttachmentTime();
-        Instant endDate = generatedTransactionsData.get(1).getAttachmentTime();
+        LocalDate startDate = transactionService.calculateInstantLocalDate(generatedTransactionsData.get(numberOfDays - 2).getAttachmentTime());
+        LocalDate endDate = transactionService.calculateInstantLocalDate(generatedTransactionsData.get(1).getAttachmentTime());
 
         GetTransactionsByAddressRequest request = new GetTransactionsByAddressRequest();
         request.setAddress(address);
@@ -285,7 +285,7 @@ public class HistoryTransactionServiceTest {
         // Retrieve transactions according to various criteria
         GetTransactionsByDateRequest getTransactionsByDateRequest = new GetTransactionsByDateRequest();
         TransactionData transactionDataToRetrieve = generatedTransactionsData.get(0);
-        Instant startDate = transactionDataToRetrieve.getAttachmentTime();
+        LocalDate startDate = transactionService.calculateInstantLocalDate(transactionDataToRetrieve.getAttachmentTime());
         getTransactionsByDateRequest.setDate(startDate);
 
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -314,7 +314,7 @@ public class HistoryTransactionServiceTest {
         // Retrieve transactions according to various criteria
         GetTransactionsByDateRequest getTransactionsByDateRequest = new GetTransactionsByDateRequest();
         TransactionData transactionDataToRetrieve = generatedTransactionsData.get(generatedTransactionsData.size() - 1);
-        Instant startDate = transactionDataToRetrieve.getAttachmentTime();
+        LocalDate startDate = transactionService.calculateInstantLocalDate(transactionDataToRetrieve.getAttachmentTime());
         getTransactionsByDateRequest.setDate(startDate);
 
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -343,7 +343,7 @@ public class HistoryTransactionServiceTest {
         // Retrieve transactions according to various criteria
         GetTransactionsByDateRequest getTransactionsByDateRequest = new GetTransactionsByDateRequest();
         TransactionData transactionDataToRetrieve = generatedTransactionsData.get(generatedTransactionsData.size() - 1);
-        Instant startDate = transactionDataToRetrieve.getAttachmentTime();
+        LocalDate startDate = transactionService.calculateInstantLocalDate(transactionDataToRetrieve.getAttachmentTime());
         getTransactionsByDateRequest.setDate(startDate);
 
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -373,8 +373,8 @@ public class HistoryTransactionServiceTest {
 
         // Retrieve transactions according to various criteria
         GetTransactionsByAddressRequest getTransactionsRequestByDates = new GetTransactionsByAddressRequest();
-        Instant startDate = generatedTransactionsData.get(generatedTransactionsData.size() - 1).getAttachmentTime();
-        Instant endDate = generatedTransactionsData.get(0).getAttachmentTime();
+        LocalDate startDate = transactionService.calculateInstantLocalDate(generatedTransactionsData.get(generatedTransactionsData.size() - 1).getAttachmentTime());
+        LocalDate endDate = transactionService.calculateInstantLocalDate(generatedTransactionsData.get(0).getAttachmentTime());
         getTransactionsRequestByDates.setAddress(generatedTransactionsData.get(0).getBaseTransactions().get(0).getAddressHash());
         getTransactionsRequestByDates.setStartDate(startDate);
         getTransactionsRequestByDates.setEndDate(endDate);
@@ -470,8 +470,8 @@ public class HistoryTransactionServiceTest {
 
         // Retrieve transactions according to various criteria
         GetTransactionsByAddressRequest getTransactionsRequestByDates = new GetTransactionsByAddressRequest();
-        Instant startDate = generatedTransactionsData.get(generatedTransactionsData.size() - 1).getAttachmentTime();
-        Instant endDate = generatedTransactionsData.get(0).getAttachmentTime();
+        LocalDate startDate = transactionService.calculateInstantLocalDate(generatedTransactionsData.get(generatedTransactionsData.size() - 1).getAttachmentTime());
+        LocalDate endDate = transactionService.calculateInstantLocalDate(generatedTransactionsData.get(0).getAttachmentTime());
         getTransactionsRequestByDates.setStartDate(startDate);
         getTransactionsRequestByDates.setEndDate(endDate);
 
