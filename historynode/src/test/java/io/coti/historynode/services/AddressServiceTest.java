@@ -36,10 +36,8 @@ import static io.coti.historynode.http.HttpStringConstants.STORAGE_INVALID_SIGNA
 import static io.coti.historynode.http.HttpStringConstants.STORAGE_RESPONSE_VALIDATION_ERROR;
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {AddressService.class, StorageConnector.class, BaseNodeValidationService.class,
-        GetHistoryAddressesResponseCrypto.class, GetHistoryAddressesRequestCrypto.class, CryptoHelper.class, NodeCryptoHelper.class,
-        Transactions.class, IPotService.class, TransactionSenderCrypto.class, TransactionCrypto.class, ITransactionHelper.class,
-        IDatabaseConnector.class, HttpJacksonSerializer.class})
+@ContextConfiguration(classes = {AddressService.class, BaseNodeValidationService.class,
+        CryptoHelper.class, NodeCryptoHelper.class, Transactions.class, HttpJacksonSerializer.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
 @SpringBootTest

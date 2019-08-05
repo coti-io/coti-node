@@ -32,10 +32,9 @@ import java.util.Map;
 
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {AddressService.class, Addresses.class, IValidationService.class, IDatabaseConnector.class,
+@ContextConfiguration(classes = {AddressService.class, IDatabaseConnector.class,
         HttpJacksonSerializer.class, GetHistoryAddressesRequestCrypto.class, CryptoHelper.class, NodeCryptoHelper.class,
-        GetHistoryAddressesResponseCrypto.class, IDatabaseConnector.class, RocksDBConnector.class, RequestedAddressHashes.class,
-Addresses.class})
+        GetHistoryAddressesResponseCrypto.class, IDatabaseConnector.class, RocksDBConnector.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
 @SpringBootTest
