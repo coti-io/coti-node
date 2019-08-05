@@ -98,6 +98,7 @@ public class TransactionService extends BaseNodeTransactionService {
             PrintWriter output = response.getWriter();
             if (transactionHashes.isEmpty()) {
                 customResponse.printResponse("[]", HttpStatus.OK.value());
+                return;
             }
             chunkService.startOfChunk(output);
 
