@@ -35,7 +35,7 @@ import static testUtils.TestUtils.*;
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @RunWith(SpringRunner.class)
-public class DbConnectorServiceITest {
+public class DbConnectorServiceIntegrationTest {
 
     private final static int NUMBER_OF_OBJECTS = 6;
 

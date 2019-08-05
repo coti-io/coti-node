@@ -25,6 +25,7 @@ import io.coti.historynode.model.AddressTransactionsByAddresses;
 import io.coti.historynode.model.AddressTransactionsByDates;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -148,7 +149,7 @@ public class HistoryTransactionServiceIntegrationTest {
     }
 
 
-    //        @Test
+//            @Test
     public void indexTransactions_differentBaseTransactionsTypes_indexOfTransactionsMatch() {
         TransactionData transactionData = createRandomTransaction();
         Hash transactionHash = transactionData.getHash();
@@ -181,7 +182,7 @@ public class HistoryTransactionServiceIntegrationTest {
         Assert.assertTrue(transactionHashesByReceiverAddress.getTransactionHashesByDates().get(attachmentLocalDate).contains(transactionHash));
     }
 
-    //        @Test
+//            @Test
     public void indexTransactions_getTransactionsHashesByDate_indexOfTransactionsMatch() throws JsonProcessingException {
         // Generate transactions data
         int numberOfDays = 5;
@@ -203,7 +204,7 @@ public class HistoryTransactionServiceIntegrationTest {
         });
     }
 
-    //        @Test
+//            @Test
     public void indexTransactions_getTransactionsHashesToRetrieve_indexOfTransactionsMatch() throws JsonProcessingException {
         // Generate transactions data
         int numberOfDays = 5;
@@ -248,11 +249,11 @@ public class HistoryTransactionServiceIntegrationTest {
         Assert.assertEquals(0, transactionsHashesToRetrieve.size());
     }
 
-    //        @Test
+//            @Test
     public void getTransactionsByDate_storeAndRetrieveByDateFromLocal_singleTransactionsMatched() throws IOException {
         // Generate transactions data
-        int numberOfDays = 1; //4
-        int numberOfLocalTransactions = 0; //1
+        int numberOfDays = 4;
+        int numberOfLocalTransactions = 1;
 
         ArrayList<TransactionData> generatedTransactionsData = new ArrayList<>();
         generateIndexAndStoreTransactions(numberOfDays, generatedTransactionsData, numberOfLocalTransactions, true, false);
@@ -274,7 +275,7 @@ public class HistoryTransactionServiceIntegrationTest {
 //        Assert.assertTrue(((HistoryTransactionResponse)transactionsByDatesResponse.getBody()).getHistoryTransactionResponseData().getHistoryTransactionResults().containsValue(transactionDataToRetrieve));
     }
 
-    //        @Test
+//            @Test
     public void getTransactionsByDate_storeAndRetrieveByDateFromElasticSearch_singleTransactionsMatched() throws IOException {
         // Generate transactions data
         int numberOfDays = 4;
@@ -300,7 +301,7 @@ public class HistoryTransactionServiceIntegrationTest {
 //        Assert.assertTrue(((HistoryTransactionResponse)transactionsByDatesResponse.getBody()).getHistoryTransactionResponseData().getHistoryTransactionResults().containsValue(transactionDataToRetrieve));
     }
 
-    //        @Test
+//            @Test
     public void getTransactionsByDate_storeAndRetrieveByDate_multipleTransactionsMatched() throws IOException {
         // Generate transactions data
         int numberOfDays = 4;
@@ -328,7 +329,7 @@ public class HistoryTransactionServiceIntegrationTest {
 //                });
     }
 
-    //        @Test
+//            @Test
     public void getTransactionsByAddress_storeAndRetrieveByAddressAndDates_multipleTransactionsMatched() throws IOException {
         // Generate transactions data
         int numberOfDays = 4;
@@ -362,7 +363,7 @@ public class HistoryTransactionServiceIntegrationTest {
     }
 
 
-    //        @Test
+//            @Test
     public void getTransactionsByAddress_storeAndRetrieveByAddress_multipleTransactionsMatched() throws IOException {
         // Generate transactions data
         int numberOfDays = 4;
@@ -389,7 +390,7 @@ public class HistoryTransactionServiceIntegrationTest {
 //        }
     }
 
-    //        @Test
+//            @Test
     public void getTransactionsByAddress_storeAndRetrieveByAddress_singleTransactionsMatched() throws IOException {
         // Generate transactions data
         int numberOfDays = 4;
@@ -400,7 +401,7 @@ public class HistoryTransactionServiceIntegrationTest {
 
         // Retrieve transactions according to various criteria
         GetTransactionsByAddressRequest getTransactionsByAddressRequest = new GetTransactionsByAddressRequest();
-        getTransactionsByAddressRequest.setAddress(generatedTransactionsData.get(2).getBaseTransactions().get(0).getAddressHash());
+        getTransactionsByAddressRequest.setAddress(generatedTransactionsData.get(2).getBaseTransactions().get(1).getAddressHash());
         Hash userHash = generateRandomHash();
         getTransactionsByAddressRequest.setUserHash(userHash);
 
@@ -416,7 +417,7 @@ public class HistoryTransactionServiceIntegrationTest {
 //                .getHistoryTransactionResults().get(generatedTransactionsData.get(2).getHash()).equals(generatedTransactionsData.get(2)));
     }
 
-    //        @Test
+//            @Test
     public void getTransactionsByAddress_storeAndRetrieveByDatesNoAddress_noTransactionsMatched() throws IOException {
         // Generate transactions data
         int numberOfDays = 4;
@@ -438,7 +439,7 @@ public class HistoryTransactionServiceIntegrationTest {
         // Expected Address in request to not be null
         ContentCachingResponseWrapper responseWrapper = new ContentCachingResponseWrapper(response);
         HttpStatus responseStatus = HttpStatus.valueOf(responseWrapper.getStatusCode());
-        Assert.assertTrue(responseStatus.equals(HttpStatus.NO_CONTENT));
+        Assert.assertTrue(responseStatus.equals(HttpStatus.OK));
     }
 
 
@@ -448,10 +449,10 @@ public class HistoryTransactionServiceIntegrationTest {
             generatedTransactionsData.add(generateInitialTransactionByAttachmentDate(attachmentTime.minus(days, ChronoUnit.DAYS)));
         }
 
-        if (singleAddress) {
-            Hash rbtAddress = generatedTransactionsData.get(0).getBaseTransactions().get(1).getAddressHash();
-            generatedTransactionsData.forEach(transactionData -> transactionData.getBaseTransactions().get(1).setAddressHash(rbtAddress));
-        }
+//        if (singleAddress) {
+//            Hash rbtAddress = generatedTransactionsData.get(0).getBaseTransactions().get(1).getAddressHash();
+//            generatedTransactionsData.forEach(transactionData -> transactionData.getBaseTransactions().get(1).setAddressHash(rbtAddress));
+//        }
 
         if (singleAttachmentDate) {
             Instant onlyAttachmentTime = generatedTransactionsData.get(0).getAttachmentTime();
