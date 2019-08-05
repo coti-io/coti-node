@@ -114,6 +114,7 @@ public class BaseNodeAddressService implements IAddressService {
         }
     }
 
+    @Override
     public ResponseEntity<IResponse> uploadAddressBatch(AddressFileRequest request) {
         MultipartFile multiPartFile = request.getFile();
 
@@ -148,6 +149,7 @@ public class BaseNodeAddressService implements IAddressService {
         return ResponseEntity.status(HttpStatus.OK).body(new Response(ADDRESS_BATCH_UPLOADED));
     }
 
+    @Override
     public boolean validateRequestedAddressHashExistsAndRelevant(RequestedAddressHashData requestedAddressHashData) {
         if (requestedAddressHashData != null) {
             long diffInMilliSeconds = Math.abs(Duration.between(Instant.now(), requestedAddressHashData.getLastUpdateTime()).toMillis());

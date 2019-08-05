@@ -2,6 +2,7 @@ package io.coti.basenode.services.interfaces;
 
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.RequestedAddressHashData;
 import io.coti.basenode.http.AddressFileRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import org.springframework.http.ResponseEntity;
@@ -22,4 +23,6 @@ public interface IAddressService {
     void getAddressBatch(HttpServletResponse response);
 
     ResponseEntity<IResponse> uploadAddressBatch(AddressFileRequest request);
+
+    boolean validateRequestedAddressHashExistsAndRelevant(RequestedAddressHashData requestedAddressHashData);
 }
