@@ -33,7 +33,7 @@ import java.util.Map;
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @RunWith(SpringRunner.class)
-public class AddressStorageServiceITest {
+public class AddressStorageServiceIntegrationTest {
 
     private final int NUMBER_OF_ADDRESSES = 4;
 
