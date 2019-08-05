@@ -45,7 +45,7 @@ import static testUtils.TestUtils.createRandomTransaction;
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @RunWith(SpringRunner.class)
-public class TransactionServiceTest {
+public class TransactionServiceITest {
 
     private static final int NUMBER_OF_TRANSACTIONS = 4;
 
@@ -78,7 +78,7 @@ public class TransactionServiceTest {
     public void init() {
     }
 
-    @Test
+    //    @Test
     public void transactionTest() {
         TransactionData transactionData1 = createRandomTransaction();
         TransactionData transactionData2 = createRandomTransaction();
@@ -92,7 +92,7 @@ public class TransactionServiceTest {
         Assert.assertTrue(jacksonSerializer.deserialize(objectJsonByHash).equals(transactionData1));
     }
 
-    @Test
+    //    @Test
     public void insertMultiObjects_sameAttachmentDate() {
         Map<Hash, String> hashToTransactionJsonDataMap = new HashMap<>();
         List<TransactionData> TransactionDataList = new ArrayList<>();
@@ -113,7 +113,7 @@ public class TransactionServiceTest {
         Assert.assertTrue(hashToRestStatusGetResponseMap.entrySet().stream().allMatch(entry -> TransactionDataList.contains(jacksonSerializer.deserialize(entry.getValue()))));
     }
 
-    @Test
+    //    @Test
     public void multiTransactionTest() {
         Map<Hash, String> hashToTransactionJsonDataMap = new HashMap<>();
         List<TransactionData> TransactionDataList = new ArrayList<>();
@@ -143,7 +143,7 @@ public class TransactionServiceTest {
         Assert.assertTrue(hashToRestStatusGetResponseMap.keySet().stream().allMatch(hash -> getHashes.contains(hash)));
     }
 
-    @Test
+    //    @Test
     public void singleTxsStoreRetrieveTest() {
         when(mockValidationService.validateTransactionDataIntegrity(any())).thenReturn(true); // TransactionData.class // to catch also null values
 
@@ -168,7 +168,7 @@ public class TransactionServiceTest {
         Assert.assertTrue(retrievedTransactionData2.equals(transactionData2));
     }
 
-    @Test
+    //    @Test
     public void multipleTxsStoreRetrieveTest() {
         // Setups and Mocks
         when(mockValidationService.validateTransactionDataIntegrity(any())).thenReturn(true); // TransactionData.class // to catch also null values

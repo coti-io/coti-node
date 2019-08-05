@@ -14,7 +14,6 @@ import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.rest.RestStatus;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,7 +35,7 @@ import static testUtils.TestUtils.*;
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @RunWith(SpringRunner.class)
-public class DbConnectorServiceTest {
+public class DbConnectorServiceITest {
 
     private final static int NUMBER_OF_OBJECTS = 6;
 
@@ -53,13 +52,13 @@ public class DbConnectorServiceTest {
         dbConnectorService.addIndexes(false);
     }
 
-    @Test
+    //    @Test
     public void getClusterDetails_noException() throws IOException {
         ClusterGetSettingsResponse clusterDetails = dbConnectorService.getClusterDetails(indexes.keySet());
         Assert.assertNotNull(clusterDetails);
     }
 
-    @Test
+    //    @Test
     public void testTransactions() throws IOException {
         TransactionAsObjectAndJsonString transactionAsObjectAndJsonString = getRandomTransactionAsObjectAndJsonString();
         IndexResponse indexResponse = dbConnectorService.insertObjectToDb(transactionAsObjectAndJsonString.getHash(),
@@ -72,7 +71,7 @@ public class DbConnectorServiceTest {
         Assert.assertNotNull(transactionAsJsonFromDb);
     }
 
-    @Test
+    //    @Test
     public void testAddresses() throws IOException {
         AddressAsObjectAndJsonString addressAsObjectAndJsonString = getRandomAddressAsObjectAndJsonString();
         dbConnectorService.insertObjectToDb(addressAsObjectAndJsonString.getHash(),
@@ -84,20 +83,20 @@ public class DbConnectorServiceTest {
         Assert.assertNotNull(addressAsJsonFromDb);
     }
 
-    @Test
+    //    @Test
     public void insertAndGetMultiObjects() throws Exception {
         Map<Hash, String> hashToObjectJsonDataMap = insertAddressBulk();
         Map<Hash, String> hashToObjectsFromDbMap = getMultiObjectsFromDb(ElasticSearchData.ADDRESSES.getIndex(), new ArrayList<>(hashToObjectJsonDataMap.keySet()), ElasticSearchData.ADDRESSES.getObjectName());
         Assert.assertTrue(insertedObjectsEqualToObjectsFromDb(hashToObjectJsonDataMap, hashToObjectsFromDbMap));
     }
 
-    @Test
+    //    @Test
     public void deleteAddressByHash_hashNotExist() {
         DeleteResponse deleteResponse = dbConnectorService.deleteObject(generateRandomHash(), ElasticSearchData.ADDRESSES.getIndex(), false);
         Assert.assertTrue(deleteResponse.status().equals(RestStatus.NOT_FOUND));
     }
 
-    @Test
+    //    @Test
     public void deleteAddressByHash_hashExist() throws IOException {
         AddressAsObjectAndJsonString addressAsObjectAndJsonString = getRandomAddressAsObjectAndJsonString();
         dbConnectorService.insertObjectToDb(addressAsObjectAndJsonString.getHash(),
