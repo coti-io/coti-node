@@ -1,15 +1,8 @@
 package io.coti.historynode.services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.http.*;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
@@ -49,7 +42,6 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 @Service
 public class TransactionService extends BaseNodeTransactionService {
 
-    private final String END_POINT_STORE = "/transactions";
     private final String END_POINT_RETRIEVE = "/transactions/reactive";
 
     @Value("${storage.server.address}")
@@ -68,59 +60,17 @@ public class TransactionService extends BaseNodeTransactionService {
     private ChunkService chunkService;
     @Autowired
     private HttpJacksonSerializer jacksonSerializer;
-    private ObjectMapper mapper;
 
     @Override
     public void init() {
         super.init();
-        mapper = new ObjectMapper()
-                .registerModule(new ParameterNamesModule())
-                .registerModule(new Jdk8Module())
-                .registerModule(new JavaTimeModule()); // new module, NOT JSR310Module
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
-
 
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
         log.debug("Continue to handle propagated transaction {} by history node", transactionData.getHash());
         addToHistoryTransactionIndexes(transactionData);
     }
-
-    public List<Hash> getLocalTransactionsUnconfirmed() {
-        ArrayList<Hash> localTransactionsUnconfirmed = new ArrayList<>();
-        transactions.forEach(transactionData -> {
-            if (!transactionData.isTrustChainConsensus() || !transactionData.getDspConsensusResult().isDspConsensus()) {
-                localTransactionsUnconfirmed.add(transactionData.getHash());
-            }
-        });
-        return localTransactionsUnconfirmed;
-    }
-
-    public TransactionData getTransactionFromRecovery(Hash unconfirmedTransactionHash) {
-        return transactions.getByHash(unconfirmedTransactionHash);
-    }
-
-    protected void updateUnconfirmedTransactionsNotFromClusterStamp(List<Hash> unconfirmedTransactionHashesFromClusterStamp) {
-        List<Hash> unconfirmedTransactionsHashesFromDB = getLocalTransactionsUnconfirmed();
-        List<Hash> intersectionUnconfirmedTransactions = new ArrayList<>(unconfirmedTransactionsHashesFromDB);
-        intersectionUnconfirmedTransactions.retainAll(unconfirmedTransactionHashesFromClusterStamp);
-        List<Hash> unconfirmedTransactionsHashesNotInClusterStamp = new ArrayList<>(unconfirmedTransactionsHashesFromDB);
-        unconfirmedTransactionsHashesNotInClusterStamp.removeAll(intersectionUnconfirmedTransactions);
-        unconfirmedTransactionsHashesNotInClusterStamp.forEach(unconfirmedTransactionHash -> {
-            transactions.put(getTransactionFromRecovery(unconfirmedTransactionHash));
-        });
-    }
-
-
-    public void deleteLocalUnconfirmedTransactions() {
-        transactions.forEach(transactionData -> {
-            if (!transactionData.isTrustChainConsensus() || !transactionData.getDspConsensusResult().isDspConsensus()) {
-                transactions.deleteByHash(transactionData.getHash());
-            }
-        });
-    }
-
 
     public void getTransactionsByAddress(GetTransactionsByAddressRequest getTransactionsByAddressRequest, HttpServletResponse response) {
         try {
@@ -132,7 +82,7 @@ public class TransactionService extends BaseNodeTransactionService {
             List<Hash> transactionHashes = getTransactionHashesToRetrieve(getTransactionsByAddressRequest);
             getTransactions(transactionHashes, response);
         } catch (Exception e) {
-
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
         }
     }
 
@@ -158,7 +108,6 @@ public class TransactionService extends BaseNodeTransactionService {
         } catch (Exception e) {
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
         }
-
     }
 
     private void retrieveTransactions(List<Hash> transactionHashes, PrintWriter output) {
@@ -168,7 +117,6 @@ public class TransactionService extends BaseNodeTransactionService {
             getTransactionFromElasticSearch(transactionHashesToRetrieveFromElasticSearch, output);
         }
     }
-
 
     private void getTransactionsFromLocal(List<Hash> transactionHashes, List<Hash> transactionsHashesToRetrieveFromElasticSearch, PrintWriter output) {
 
@@ -223,7 +171,10 @@ public class TransactionService extends BaseNodeTransactionService {
 
         HashMap<LocalDate, HashSet<Hash>> transactionHashesByDates = addressTransactionsByAddress.getTransactionHashesByDates();
         while (!startDate.isAfter(endDate)) {
-            transactionHashesByDates.get(startDate).forEach(transactionHash -> transactionHashes.add(transactionHash));
+            HashSet<Hash> hashesOfDate = transactionHashesByDates.get(startDate);
+            if (hashesOfDate != null) {
+                hashesOfDate.forEach(transactionHash -> transactionHashes.add(transactionHash));
+            }
             startDate = startDate.plusDays(1);
         }
         return transactionHashes;
@@ -284,23 +235,6 @@ public class TransactionService extends BaseNodeTransactionService {
 
     protected ResponseEntity<AddHistoryEntitiesResponse> storeEntitiesByType(String url, AddEntitiesBulkRequest addEntitiesBulkRequest) {
         return storageConnector.storeInStorage(url, addEntitiesBulkRequest, AddHistoryEntitiesResponse.class);
-    }
-
-    public ResponseEntity<AddHistoryEntitiesResponse> storeEntities(List<? extends IEntity> entities) {
-
-        AddEntitiesBulkRequest addEntitiesBulkRequest = new AddEntitiesBulkRequest();
-        entities.forEach(entity ->
-                {
-                    try {
-                        addEntitiesBulkRequest.getHashToEntityJsonDataMap().put(entity.getHash(), mapper.writeValueAsString(entity));
-                    } catch (JsonProcessingException e) {
-                        log.error(e.getMessage());
-                    }
-                }
-        );
-
-        ResponseEntity<AddHistoryEntitiesResponse> storeEntitiesToStorageResponse = storeEntitiesByType(storageServerAddress + END_POINT_STORE, addEntitiesBulkRequest);
-        return storeEntitiesToStorageResponse;
     }
 
 }
