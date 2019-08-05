@@ -12,7 +12,6 @@ import io.coti.basenode.http.GetHistoryAddressesRequest;
 import io.coti.basenode.http.GetHistoryAddressesResponse;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -59,7 +58,7 @@ public class StorageConnectorITest {
      * Retrieve addresses that aren't found in storage.
      * Should return map with hash as keys and null as values.
      */
-    @Test
+    //@Test
     public void retrieveAddresses_notStoredInStorage_shouldReturnMapWithNullValues() {
         int size = 3;
         List<AddressData> addresses = AddressTestUtils.generateListOfRandomAddressData(size);
@@ -75,7 +74,7 @@ public class StorageConnectorITest {
         Assert.assertTrue(addressHashesToAddresses.keySet().containsAll(addresses.stream().map(a -> a.getHash()).collect(Collectors.toSet())));
     }
 
-    @Test
+    //@Test
     public void storeAddresses_notStoredInStorage_shouldReturnMapWithTrueValues() {
         int size = 3;
         List<AddressData> addresses = AddressTestUtils.generateListOfRandomAddressData(size);
@@ -93,7 +92,7 @@ public class StorageConnectorITest {
         }
     }
 
-    @Test
+    //@Test
     public void storeAddresses_storeExistingAddresses_shouldReturnMapWithTrueValues() {
         int size = 2;
         List<AddressData> addresses = AddressTestUtils.generateListOfRandomAddressData(size);
@@ -119,7 +118,7 @@ public class StorageConnectorITest {
         }
     }
 
-    @Test
+    //@Test
     public void storeAndRetrieveAddresses() {
         int size = 2;
         // Store in elastic and check correct size and correct result values.
