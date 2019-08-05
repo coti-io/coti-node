@@ -6,6 +6,8 @@ import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.crypto.TransactionSenderCrypto;
 import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.http.HttpJacksonSerializer;
@@ -36,13 +38,16 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
+import utils.TransactionTestUtils;
 
+import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -66,6 +71,7 @@ import static utils.TransactionTestUtils.generateRandomHash;
 @SpringBootTest
 public class HistoryTransactionServiceTest {
 
+    public static final String EMPTY_OUTPUT = "[]";
     @Value("${storage.server.address}")
     protected String storageServerAddress;
     @Value("${global.private.key}")
@@ -83,7 +89,9 @@ public class HistoryTransactionServiceTest {
     @Autowired
     private ChunkService chunkService;
     @Autowired
-    private HttpJacksonSerializer jacksonSerializer;
+    private HttpJacksonSerializer httpJacksonSerializer;
+    @Autowired
+    private JacksonSerializer jacksonSerializer;
     @Autowired
     private LiveViewService liveViewService;
     @Autowired
@@ -232,21 +240,38 @@ public class HistoryTransactionServiceTest {
 
         transactionService.getTransactionsByAddress(request, response);
         Assert.assertEquals(response.getStatus(), HttpStatus.UNAUTHORIZED.value());
-
-        response = new MockHttpServletResponse();
-        when(getTransactionsByAddressRequestCrypto.verifySignature(any(GetTransactionsByAddressRequest.class))).thenReturn(Boolean.TRUE);
-        transactionService.getTransactionsByAddress(request, response);
-        Assert.assertEquals(response.getStatus(), HttpStatus.OK.value());
     }
 
     @Test
-    public void getTransactionsByAddress_validSignature_authorized() {
+    public void getTransactionsByAddress_validSignatureNoAddress_authorizedEmptyResponse() throws UnsupportedEncodingException {
         GetTransactionsByAddressRequest request = new GetTransactionsByAddressRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
         when(getTransactionsByAddressRequestCrypto.verifySignature(any(GetTransactionsByAddressRequest.class))).thenReturn(Boolean.TRUE);
         transactionService.getTransactionsByAddress(request, response);
         Assert.assertEquals(response.getStatus(), HttpStatus.OK.value());
+        Assert.assertEquals(response.getContentAsString(), EMPTY_OUTPUT);
+    }
 
+    @Test
+    public void getTransactionsByAddress_validSignatureWithAddress_authorizedEmptyResponse() throws UnsupportedEncodingException {
+        GetTransactionsByAddressRequest request = new GetTransactionsByAddressRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        when(getTransactionsByAddressRequestCrypto.verifySignature(any(GetTransactionsByAddressRequest.class))).thenReturn(Boolean.TRUE);
+
+        int amountOfDaysBack = 1;
+        Hash address = generateRandomAddressHash();
+        LocalDate startDate = transactionService.calculateInstantLocalDate(Instant.now().minus(amountOfDaysBack, ChronoUnit.DAYS));
+
+        HashSet<Hash> transactionHashes = getTransactionHashesMocked(amountOfDaysBack, address, startDate);
+
+        request.setAddress(address);
+        TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
+        when(transactions.getByHash((transactionHashes.stream().collect(Collectors.toList())).get(0))).thenReturn(transactionData);
+        transactionService.getTransactionsByAddress(request, response);
+        Assert.assertEquals(response.getStatus(), HttpStatus.OK.value());
+
+//        IPropagatable deserializeTransaction = jacksonSerializer.deserialize(response.getContentAsString());
+        Assert.assertNotEquals(response.getContentAsString(), EMPTY_OUTPUT);
     }
 
 
