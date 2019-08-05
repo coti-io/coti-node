@@ -51,11 +51,6 @@ public class AddressService extends BaseNodeAddressService {
     @Value("${storage.server.address}")
     private String storageServerAddress;
 
-    public void handleClusterStampAddressesStorage() {
-        List<AddressData> addressesData = new ArrayList<>();
-        addresses.forEach(addressesData::add);
-    }
-
     public ResponseEntity<IResponse> getAddresses(GetHistoryAddressesRequest getHistoryAddressesRequest) {
         try {
             if (!getHistoryAddressesRequestCrypto.verifySignature(getHistoryAddressesRequest)) {
@@ -65,19 +60,18 @@ public class AddressService extends BaseNodeAddressService {
             List<Hash> addressesHashesToGetFromStorage = new ArrayList<>();
             addressesHashesToGetFromStorage.addAll(getHistoryAddressesRequest.getAddressHashes());
 
-            LinkedHashMap<Hash, AddressData> addressToAddressDataFromDB = populateAndRemoveFoundAddresses(addressesHashesToGetFromStorage);
-            LinkedHashMap<Hash, AddressData> getHistoryAddressesResponseMap;
+            HashMap<Hash, AddressData> addressToAddressDataFromDB = populateAndRemoveFoundAddresses(addressesHashesToGetFromStorage);
+            Map<Hash, AddressData> getHistoryAddressesResponseMap;
 
-            if(!addressesHashesToGetFromStorage.isEmpty()){
+            if (!addressesHashesToGetFromStorage.isEmpty()) {
                 GetHistoryAddressesResponse getHistoryAddressesResponseFromStorageNode = getAddressesFromStorage(addressesHashesToGetFromStorage);
                 Optional<ResponseEntity> responseValidationResult = validateStorageResponse(getHistoryAddressesResponseFromStorageNode);
-                if(responseValidationResult.isPresent()){
+                if (responseValidationResult.isPresent()) {
                     return responseValidationResult.get();
                 }
                 Map<Hash, AddressData> addressHashesToAddressesFromStorage = getHistoryAddressesResponseFromStorageNode.getAddressHashesToAddresses();
                 getHistoryAddressesResponseMap = reorderHashResponses(getHistoryAddressesRequest.getAddressHashes(), addressToAddressDataFromDB, addressHashesToAddressesFromStorage);
-            }
-            else{
+            } else {
                 getHistoryAddressesResponseMap = addressToAddressDataFromDB;
             }
 
@@ -94,14 +88,11 @@ public class AddressService extends BaseNodeAddressService {
         }
     }
 
-    private LinkedHashMap<Hash, AddressData> reorderHashResponses(List<Hash> originallyOrderedAddressHashes, LinkedHashMap<Hash, AddressData> addressHashesToAddressesFromDB, Map<Hash, AddressData> addressHashesToAddressesFromStorage) {
-        LinkedHashMap<Hash, AddressData> orderedResponse = new LinkedHashMap<>();
+    private Map<Hash, AddressData> reorderHashResponses(List<Hash> originallyOrderedAddressHashes, Map<Hash, AddressData> addressHashesToAddressesFromDB, Map<Hash, AddressData> addressHashesToAddressesFromStorage) {
+        Map<Hash, AddressData> orderedResponse = new LinkedHashMap<>();
         originallyOrderedAddressHashes.forEach(hash -> {
             AddressData addressData = Optional.ofNullable(addressHashesToAddressesFromDB.get(hash)).orElse(addressHashesToAddressesFromStorage.get(hash));
-            if(addressHashesToAddressesFromStorage.containsKey(hash) && addressData != null){
-                addresses.put(new RequestedAddressHashData(hash));
-            }
-            if(addressHashesToAddressesFromStorage.containsKey(hash) && addressData == null){
+            if (addressHashesToAddressesFromStorage.containsKey(hash) && addressData == null) {
                 requestedAddressHashes.put(new RequestedAddressHashData(hash));
             }
             orderedResponse.put(hash, addressData);
@@ -109,8 +100,8 @@ public class AddressService extends BaseNodeAddressService {
         return orderedResponse;
     }
 
-    private LinkedHashMap<Hash, AddressData> populateAndRemoveFoundAddresses(List<Hash> addressesHashes) {
-        LinkedHashMap<Hash, AddressData> addressesFoundInDb = new LinkedHashMap<>();
+    private HashMap<Hash, AddressData> populateAndRemoveFoundAddresses(List<Hash> addressesHashes) {
+        HashMap<Hash, AddressData> addressesFoundInDb = new HashMap<>();
 
         addressesHashes.removeIf(addressHash -> {
             AddressData addressData = addresses.getByHash(addressHash);
@@ -133,20 +124,18 @@ public class AddressService extends BaseNodeAddressService {
         GetHistoryAddressesRequest getHistoryAddressesRequest = new GetHistoryAddressesRequest(addressesHashes);
         getHistoryAddressesRequestCrypto.signMessage(getHistoryAddressesRequest);
         GetHistoryAddressesResponse getHistoryAddressesResponse = null;
-        try{
-            getHistoryAddressesResponse = ((GetHistoryAddressesResponse)storageConnector.retrieveFromStorage(storageServerAddress + "/addresses", getHistoryAddressesRequest, GetHistoryAddressesResponse.class).getBody());
-        }
-        catch (HttpClientErrorException | HttpServerErrorException e) {
+        try {
+            getHistoryAddressesResponse = ((GetHistoryAddressesResponse) storageConnector.retrieveFromStorage(storageServerAddress + "/addresses", getHistoryAddressesRequest, GetHistoryAddressesResponse.class).getBody());
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
             log.error("{}: {}", e.getClass().getName(), ((SerializableResponse) jacksonSerializer.deserialize(e.getResponseBodyAsByteArray())).getMessage());
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
         }
         return getHistoryAddressesResponse;
     }
 
-    private Optional<ResponseEntity> validateStorageResponse(GetHistoryAddressesResponse getHistoryAddressesResponseFromStorageNode){
-        if(getHistoryAddressesResponseFromStorageNode == null){
+    private Optional<ResponseEntity> validateStorageResponse(GetHistoryAddressesResponse getHistoryAddressesResponseFromStorageNode) {
+        if (getHistoryAddressesResponseFromStorageNode == null) {
             return Optional.of(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SerializableResponse(STORAGE_RESPONSE_VALIDATION_ERROR, STATUS_ERROR)));
         }
 
@@ -158,5 +147,15 @@ public class AddressService extends BaseNodeAddressService {
             return Optional.of(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SerializableResponse(STORAGE_RESPONSE_VALIDATION_ERROR, STATUS_ERROR)));
         }
         return Optional.empty();
+    }
+
+    @Override
+    public boolean validateRequestedAddressHashExistsAndRelevant(RequestedAddressHashData requestedAddressHashData) {
+        return requestedAddressHashData != null;
+    }
+
+    @Override
+    protected void continueHandleGeneratedAddress(AddressData addressData) {
+        requestedAddressHashes.delete(addressData);
     }
 }

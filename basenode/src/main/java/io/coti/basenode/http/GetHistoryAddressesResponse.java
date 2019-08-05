@@ -22,7 +22,6 @@ public class GetHistoryAddressesResponse extends BaseResponse implements ISignVa
 
     public GetHistoryAddressesResponse(Map<Hash, AddressData> addressHashesToAddresses) {
         this.addressHashesToAddresses = addressHashesToAddresses;
-
     }
 
     public GetHistoryAddressesResponse() {

@@ -38,7 +38,7 @@ import static org.mockito.Mockito.when;
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class AddressServiceITest {
+public class AddressServiceIntegrationTest {
 
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // need to add a tests in Storage node and in history node that will prepare for tests in this class -

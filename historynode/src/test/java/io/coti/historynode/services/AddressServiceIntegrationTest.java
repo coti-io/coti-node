@@ -24,7 +24,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class AddressServiceITest {
+public class AddressServiceIntegrationTest {
 
     @Autowired
     private Addresses addresses;
