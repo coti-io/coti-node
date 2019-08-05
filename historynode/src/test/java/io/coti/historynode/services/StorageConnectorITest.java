@@ -29,7 +29,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@ContextConfiguration(classes = {StorageConnector.class, GetHistoryAddressesRequestCrypto.class, NodeCryptoHelper.class, JacksonSerializer.class})
+@ContextConfiguration(classes = {StorageConnector.class, GetHistoryAddressesRequestCrypto.class, NodeCryptoHelper.class,
+        JacksonSerializer.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
 @SpringBootTest
