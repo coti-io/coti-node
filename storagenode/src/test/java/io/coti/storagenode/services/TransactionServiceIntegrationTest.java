@@ -45,7 +45,7 @@ import static testUtils.TestUtils.createRandomTransaction;
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @RunWith(SpringRunner.class)
-public class TransactionServiceITest {
+public class TransactionServiceIntegrationTest {
 
     private static final int NUMBER_OF_TRANSACTIONS = 4;
 

@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class StorageConnectorITest {
+public class StorageConnectorIntegrationTest {
 
     @Autowired
     private StorageConnector storageConnector;
