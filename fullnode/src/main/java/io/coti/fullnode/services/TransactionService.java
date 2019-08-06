@@ -416,6 +416,7 @@ public class TransactionService extends BaseNodeTransactionService {
             try {
                 ReducedTransactionData reducedTransactionData = explorerIndexQueue.take();
                 explorerIndexedTransactionSet.add(reducedTransactionData);
+                webSocketSender.notifyTotalTransactionsChange(explorerIndexedTransactionSet.size());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
