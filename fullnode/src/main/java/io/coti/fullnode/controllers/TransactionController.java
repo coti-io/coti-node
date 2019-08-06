@@ -8,14 +8,19 @@ import io.coti.fullnode.services.TransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
+
+import static io.coti.fullnode.http.HttpStringConstants.EXPLORER_TRANSACTION_PAGE_INVALID;
 
 @Slf4j
 @RestController
 @RequestMapping("/transaction")
+@Validated
 public class TransactionController {
 
     @Autowired
@@ -57,6 +62,16 @@ public class TransactionController {
     @GetMapping(value = "/lastTransactions")
     public ResponseEntity<IResponse> getLastTransactions() {
         return transactionService.getLastTransactions();
+    }
+
+    @GetMapping(value = "/total")
+    public ResponseEntity<IResponse> getTotalTransactions() {
+        return transactionService.getTotalTransactions();
+    }
+
+    @GetMapping()
+    public ResponseEntity<IResponse> getTransactionsByPage(@RequestParam @Positive(message = EXPLORER_TRANSACTION_PAGE_INVALID) int page) {
+        return transactionService.getTransactionsByPage(page);
     }
 
     @GetMapping(value = "/index")

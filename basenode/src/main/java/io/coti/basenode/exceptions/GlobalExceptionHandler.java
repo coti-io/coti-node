@@ -15,15 +15,17 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import javax.validation.ConstraintViolationException;
+
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 
 @Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity handleArgumentNotValid(MethodArgumentNotValidException e) {
-        log.info("Received a request with missing parameters.");
+    @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class})
+    public ResponseEntity handleArgumentNotValid(Exception e) {
+        log.info("Received a request with missing or invalid parameters.");
         log.info("Exception message: " + e);
         ResponseEntity responseEntity = new ResponseEntity(
                 new ExceptionResponse(INVALID_PARAMETERS_MESSAGE, API_CLIENT_ERROR), HttpStatus.BAD_REQUEST);

@@ -43,12 +43,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
+import static io.coti.fullnode.http.HttpStringConstants.EXPLORER_TRANSACTION_PAGE_ERROR;
 
 @Slf4j
 @Service
 public class TransactionService extends BaseNodeTransactionService {
 
-    private static final int EXPLORER_LAST_TRANSACTIONS_AMOUNT = 20;
+    private static final int EXPLORER_LAST_TRANSACTIONS_NUMBER = 20;
+    private static final int EXPLORER_TRANSACTION_NUMBER_BY_PAGE = 10;
 
     @Autowired
     private ITransactionHelper transactionHelper;
@@ -331,7 +333,7 @@ public class TransactionService extends BaseNodeTransactionService {
         Iterator<ReducedTransactionData> iterator = explorerIndexedTransactionSet.descendingIterator();
         int count = 0;
 
-        while (count < EXPLORER_LAST_TRANSACTIONS_AMOUNT && iterator.hasNext()) {
+        while (count < EXPLORER_LAST_TRANSACTIONS_NUMBER && iterator.hasNext()) {
             ReducedTransactionData reducedTransactionData = iterator.next();
             transactionsDataList.add(transactions.getByHash(reducedTransactionData.getTransactionHash()));
             count++;
@@ -347,6 +349,27 @@ public class TransactionService extends BaseNodeTransactionService {
                             ADDRESS_TRANSACTIONS_SERVER_ERROR,
                             STATUS_ERROR));
         }
+    }
+
+    public ResponseEntity<IResponse> getTotalTransactions() {
+        return ResponseEntity.ok(new GetTotalTransactionsResponse(explorerIndexedTransactionSet.size()));
+    }
+
+    public ResponseEntity<IResponse> getTransactionsByPage(int page) {
+        int totalTransactionsNumber = explorerIndexedTransactionSet.size();
+        int index = totalTransactionsNumber - (page - 1) * EXPLORER_TRANSACTION_NUMBER_BY_PAGE;
+        if (index < 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(EXPLORER_TRANSACTION_PAGE_ERROR, STATUS_ERROR));
+        }
+        List<TransactionData> transactionDataList = new ArrayList<>();
+        int endOfIndex = index - EXPLORER_TRANSACTION_NUMBER_BY_PAGE;
+        while (index > endOfIndex && index >= 0) {
+            TransactionData transactionData = transactions.getByHash(explorerIndexedTransactionSet.exact(index).getTransactionHash());
+            transactionDataList.add(transactionData);
+            index--;
+        }
+        return ResponseEntity.ok(new GetTransactionsResponse(transactionDataList));
+
     }
 
     public ResponseEntity<IResponse> getTransactionDetails(Hash transactionHash) {

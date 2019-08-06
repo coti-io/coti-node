@@ -15,7 +15,7 @@ public class GetTransactionsResponse extends BaseResponse {
 
     protected List<TransactionResponseData> transactionsData;
 
-    public GetTransactionsResponse(List<TransactionData> transactionsData) throws Exception {
+    public GetTransactionsResponse(List<TransactionData> transactionsData) {
         super();
 
         this.transactionsData = new ArrayList<>();
@@ -25,5 +25,6 @@ public class GetTransactionsResponse extends BaseResponse {
         }
 
     }
+
 }
 
