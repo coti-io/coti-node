@@ -213,7 +213,6 @@ public class BaseNodeTransactionService implements ITransactionService {
         if (!transactionHelper.isTransactionExists(transactionData)) {
 
             transactions.put(transactionData);
-            liveViewService.addTransaction(transactionData);
             addToExplorerIndexes(transactionData);
             transactionHelper.incrementTotalTransactions();
 

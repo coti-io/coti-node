@@ -171,7 +171,6 @@ public abstract class BaseNodeInitializationService {
     private void handleExistingTransaction(AtomicLong maxTransactionIndex, TransactionData transactionData) {
         clusterService.addExistingTransactionOnInit(transactionData);
 
-        liveViewService.addTransaction(transactionData);
         confirmationService.insertSavedTransaction(transactionData, maxTransactionIndex);
 
         transactionService.addToExplorerIndexes(transactionData);
