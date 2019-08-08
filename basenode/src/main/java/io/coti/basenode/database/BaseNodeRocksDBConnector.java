@@ -7,13 +7,13 @@ import io.coti.basenode.model.*;
 import io.coti.basenode.model.Collection;
 import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
 
 import java.io.File;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -30,6 +30,8 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     private RocksDB db;
     private Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
     private List<ColumnFamilyHandle> columnFamilyHandles = new ArrayList<>();
+    @Autowired
+    private ApplicationContext ctx;
 
     public void init() {
         setColumnFamily();
@@ -73,8 +75,8 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     private void initColumnFamilyClasses() {
         for (int i = 1; i < columnFamilyClassNames.size(); i++) {
             try {
-                ((Constructor<? extends Collection<? extends IEntity>>) Class.forName(columnFamilyClassNames.get(i)).getConstructor()).newInstance().init();
-            } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
+                ((Collection) ctx.getBean(Class.forName(columnFamilyClassNames.get(i)))).init();
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }

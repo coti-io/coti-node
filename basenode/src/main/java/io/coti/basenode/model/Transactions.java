@@ -10,5 +10,6 @@ public class Transactions extends Collection<TransactionData> {
 
     public void init() {
         super.init();
+        generateLockObjects();
     }
 }

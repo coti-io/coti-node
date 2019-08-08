@@ -118,14 +118,15 @@ public class ClusterService implements IClusterService {
 
     private void updateSingleParent(TransactionData transactionData, Hash parentHash) {
         if (parentHash != null) {
-            TransactionData parentTransactionData = transactions.getByHash(parentHash);
-            if (parentTransactionData != null && !parentTransactionData.getChildrenTransactionHashes().contains(transactionData.getHash())) {
-                parentTransactionData.addToChildrenTransactions(transactionData.getHash());
-                if (trustChainConfirmationCluster.containsKey(parentTransactionData.getHash())) {
-                    trustChainConfirmationCluster.put(parentTransactionData.getHash(), parentTransactionData);
+            transactions.lockAndGetByHash(parentHash, parentTransactionData -> {
+                if (parentTransactionData != null && !parentTransactionData.getChildrenTransactionHashes().contains(transactionData.getHash())) {
+                    parentTransactionData.addToChildrenTransactions(transactionData.getHash());
+                    if (trustChainConfirmationCluster.containsKey(parentTransactionData.getHash())) {
+                        trustChainConfirmationCluster.put(parentTransactionData.getHash(), parentTransactionData);
+                    }
+                    transactions.put(parentTransactionData);
                 }
-                transactions.put(parentTransactionData);
-            }
+            });
         }
     }
 
@@ -141,7 +142,6 @@ public class ClusterService implements IClusterService {
     private void removeTransactionFromSources(Hash transactionHash) {
         TransactionData transactionData = transactions.getByHash(transactionHash);
         if (transactionData != null && sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).remove(transactionData)) {
-            liveViewService.updateTransactionStatus(transactionData, 1);
             totalSources.decrementAndGet();
         }
     }

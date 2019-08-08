@@ -112,26 +112,28 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     private void updateConfirmedTransactionHandler(ConfirmationData confirmationData) {
-        TransactionData transactionData = transactions.getByHash(confirmationData.getHash());
-        if (confirmationData instanceof TccInfo) {
-            transactionData.setTrustChainConsensus(true);
-            transactionData.setTrustChainConsensusTime(((TccInfo) confirmationData).getTrustChainConsensusTime());
-            transactionData.setTrustChainTrustScore(((TccInfo) confirmationData).getTrustChainTrustScore());
-            trustChainConfirmed.incrementAndGet();
-        } else if (confirmationData instanceof DspConsensusResult) {
-            transactionData.setDspConsensusResult((DspConsensusResult) confirmationData);
-            if (!insertNewTransactionIndex(transactionData)) {
-                return;
+        transactions.lockAndGetByHash(confirmationData.getHash(), transactionData -> {
+            if (confirmationData instanceof TccInfo) {
+                transactionData.setTrustChainConsensus(true);
+                transactionData.setTrustChainConsensusTime(((TccInfo) confirmationData).getTrustChainConsensusTime());
+                transactionData.setTrustChainTrustScore(((TccInfo) confirmationData).getTrustChainTrustScore());
+                trustChainConfirmed.incrementAndGet();
+            } else if (confirmationData instanceof DspConsensusResult) {
+                transactionData.setDspConsensusResult((DspConsensusResult) confirmationData);
+                if (!insertNewTransactionIndex(transactionData)) {
+                    return;
+                }
+                if (transactionHelper.isDspConfirmed(transactionData)) {
+                    continueHandleDSPConfirmedTransaction(transactionData);
+                    dspConfirmed.incrementAndGet();
+                }
             }
-            if (transactionHelper.isDspConfirmed(transactionData)) {
-                continueHandleDSPConfirmedTransaction(transactionData);
-                dspConfirmed.incrementAndGet();
+            if (transactionHelper.isConfirmed(transactionData)) {
+                processConfirmedTransaction(transactionData);
             }
-        }
-        if (transactionHelper.isConfirmed(transactionData)) {
-            processConfirmedTransaction(transactionData);
-        }
-        transactions.put(transactionData);
+            transactions.put(transactionData);
+        });
+
     }
 
     protected boolean insertNewTransactionIndex(TransactionData transactionData) {
@@ -161,8 +163,6 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         transactionData.setTransactionConsensusUpdateTime(transactionConsensusUpdateTime);
         transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount()));
         totalConfirmed.incrementAndGet();
-
-        liveViewService.updateTransactionStatus(transactionData, 2);
 
         transactionData.getBaseTransactions().forEach(baseTransactionData -> {
             Hash addressHash = baseTransactionData.getAddressHash();
