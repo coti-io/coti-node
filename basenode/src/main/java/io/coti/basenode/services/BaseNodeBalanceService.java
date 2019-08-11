@@ -21,8 +21,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class BaseNodeBalanceService implements IBalanceService {
 
-    protected Map<Hash, BigDecimal> balanceMap;
-    protected Map<Hash, BigDecimal> preBalanceMap;
+    protected Map<Hash, Map<Hash, BigDecimal>> balanceMap;
+    protected Map<Hash, Map<Hash, BigDecimal>> preBalanceMap;
 
     public void init() {
         balanceMap = new ConcurrentHashMap<>();
@@ -32,25 +32,31 @@ public class BaseNodeBalanceService implements IBalanceService {
 
     @Override
     public synchronized boolean checkBalancesAndAddToPreBalance(List<BaseTransactionData> baseTransactions) {
-        Map<Hash, BigDecimal> balanceInChangeMap = new HashMap<>();
-        Map<Hash, BigDecimal> preBalanceInChangeMap = new HashMap<>();
+        Map<Hash, Map<Hash, BigDecimal>> balanceInChangeMap = new HashMap<>();
+        Map<Hash, Map<Hash, BigDecimal>> preBalanceInChangeMap = new HashMap<>();
         for (BaseTransactionData baseTransactionData : baseTransactions) {
+
+            Hash currencyHash = baseTransactionData.getCurrencyHash();
+            balanceMap.putIfAbsent(currencyHash, new HashMap<>());
+            preBalanceMap.putIfAbsent(currencyHash, new HashMap<>());
+            balanceInChangeMap.putIfAbsent(currencyHash, new HashMap<>());
+            preBalanceInChangeMap.putIfAbsent(currencyHash, new HashMap<>());
 
             BigDecimal amount = baseTransactionData.getAmount();
             Hash addressHash = baseTransactionData.getAddressHash();
-            balanceInChangeMap.putIfAbsent(addressHash, balanceMap.containsKey(addressHash) ? balanceMap.get(addressHash) : BigDecimal.ZERO);
-            preBalanceInChangeMap.putIfAbsent(addressHash, preBalanceMap.containsKey(addressHash) ? preBalanceMap.get(addressHash) : BigDecimal.ZERO);
-            if (amount.add(balanceInChangeMap.get(addressHash)).signum() < 0) {
+            balanceInChangeMap.get(currencyHash).putIfAbsent(addressHash, balanceMap.containsKey(addressHash) ? balanceMap.get(currencyHash).get(addressHash) : BigDecimal.ZERO);
+            preBalanceInChangeMap.get(currencyHash).putIfAbsent(addressHash, preBalanceMap.containsKey(addressHash) ? preBalanceMap.get(currencyHash).get(addressHash) : BigDecimal.ZERO);
+            if (amount.add(balanceInChangeMap.get(currencyHash).get(addressHash)).signum() < 0) {
                 log.error("Error in Balance check. Address {}  amount {} current Balance {} ", addressHash,
                         amount, balanceInChangeMap.get(addressHash));
                 return false;
             }
-            if (amount.add(preBalanceInChangeMap.get(addressHash)).signum() < 0) {
+            if (amount.add(preBalanceInChangeMap.get(currencyHash).get(addressHash)).signum() < 0) {
                 log.error("Error in PreBalance check. Address {}  amount {} current PreBalance {} ", addressHash,
                         amount, preBalanceInChangeMap.get(addressHash));
                 return false;
             }
-            preBalanceInChangeMap.put(addressHash, amount.add(preBalanceInChangeMap.get(addressHash)));
+            preBalanceInChangeMap.get(currencyHash).put(addressHash, amount.add(preBalanceInChangeMap.get(currencyHash).get(addressHash)));
         }
         preBalanceInChangeMap.forEach((addressHash, preBalanceInChange) -> {
             preBalanceMap.put(addressHash, preBalanceInChange);
@@ -66,8 +72,9 @@ public class BaseNodeBalanceService implements IBalanceService {
     @Override
     public ResponseEntity<GetBalancesResponse> getBalances(GetBalancesRequest getBalancesRequest) {
         GetBalancesResponse getBalancesResponse = new GetBalancesResponse();
-        BigDecimal balance;
-        BigDecimal preBalance;
+        Map<Hash, BigDecimal> balance;
+        Map<Hash, BigDecimal> preBalance;
+        //TODO 8/11/2019 tomer: continue from here,
         for (Hash hash : getBalancesRequest.getAddresses()) {
             balance = balanceMap.containsKey(hash) ? balanceMap.get(hash) : new BigDecimal(0);
             preBalance = preBalanceMap.containsKey(hash) ? preBalanceMap.get(hash) : new BigDecimal(0);

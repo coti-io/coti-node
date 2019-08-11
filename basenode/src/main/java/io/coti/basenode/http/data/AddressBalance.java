@@ -1,16 +1,18 @@
 package io.coti.basenode.http.data;
 
+import io.coti.basenode.data.Hash;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 @Data
 public class AddressBalance {
 
-    public BigDecimal addressBalance;
-    public BigDecimal addressPreBalance;
+    public Map<Hash, BigDecimal> addressBalance;
+    public Map<Hash, BigDecimal> addressPreBalance;
 
-    public AddressBalance(BigDecimal addressBalance, BigDecimal addressPreBalance) {
+    public AddressBalance(Map<Hash, BigDecimal> addressBalance, Map<Hash, BigDecimal> addressPreBalance) {
         this.addressBalance = addressBalance;
         this.addressPreBalance = addressPreBalance;
     }
