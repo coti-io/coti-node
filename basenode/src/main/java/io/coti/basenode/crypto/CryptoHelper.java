@@ -173,7 +173,11 @@ public class CryptoHelper {
     }
 
     public static Hash cryptoHash(byte[] input) {
-        Keccak.Digest256 digest = new Keccak.Digest256();
+        return cryptoHash(input, 256);
+    }
+
+    public static Hash cryptoHash(byte[] input, int bit) {
+        Keccak.DigestKeccak digest = new Keccak.DigestKeccak(bit);
         digest.update(input);
         Hash hash = new Hash(digest.digest());
         return hash;
