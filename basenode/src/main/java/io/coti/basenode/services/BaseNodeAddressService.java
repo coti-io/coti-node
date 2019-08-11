@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.RequestedAddressHashData;
 import io.coti.basenode.http.AddressFileRequest;
 import io.coti.basenode.http.CustomGson;
 import io.coti.basenode.http.Response;
@@ -24,6 +25,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.ADDRESS_BATCH_UPLOADED;
@@ -32,6 +35,8 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.ADDRESS_BATCH_UP
 @Slf4j
 @Service
 public class BaseNodeAddressService implements IAddressService {
+
+    protected final int TRUSTED_RESULT_MAX_DURATION_IN_MILLIS = 600_000;
     @Autowired
     private Addresses addresses;
     @Autowired
@@ -109,6 +114,7 @@ public class BaseNodeAddressService implements IAddressService {
         }
     }
 
+    @Override
     public ResponseEntity<IResponse> uploadAddressBatch(AddressFileRequest request) {
         MultipartFile multiPartFile = request.getFile();
 
@@ -141,5 +147,14 @@ public class BaseNodeAddressService implements IAddressService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(String.format(ADDRESS_BATCH_UPLOAD_ERROR, e.getMessage())));
         }
         return ResponseEntity.status(HttpStatus.OK).body(new Response(ADDRESS_BATCH_UPLOADED));
+    }
+
+    @Override
+    public boolean validateRequestedAddressHashExistsAndRelevant(RequestedAddressHashData requestedAddressHashData) {
+        if (requestedAddressHashData != null) {
+            long diffInMilliSeconds = Math.abs(Duration.between(Instant.now(), requestedAddressHashData.getLastUpdateTime()).toMillis());
+            return diffInMilliSeconds <= TRUSTED_RESULT_MAX_DURATION_IN_MILLIS;
+        }
+        return false;
     }
 }

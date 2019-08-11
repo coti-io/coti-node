@@ -6,6 +6,10 @@ public interface ISerializer {
 
     byte[] serialize(IPropagatable entity);
 
+    String serializeAsString(IPropagatable entity);
+
     <T extends IPropagatable> T deserialize(byte[] bytes);
+
+    <T extends IPropagatable> T deserialize(String string);
 
 }

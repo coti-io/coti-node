@@ -8,6 +8,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
+import io.coti.basenode.http.GetHistoryAddressesResponse;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IPotService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
@@ -113,4 +114,13 @@ public class BaseNodeValidationService implements IValidationService {
     public boolean validateAmountField(BigDecimal amount) {
         return amount != null && (amount.scale() <= 0 || amount.stripTrailingZeros().equals(amount)) && amount.scale() <= 8;
     }
+
+    @Override
+    public boolean validateGetAddressesResponse(GetHistoryAddressesResponse getHistoryAddressesResponse) {
+        return !getHistoryAddressesResponse.getAddressHashesToAddresses().entrySet().stream().anyMatch(entry ->
+                entry.getValue() != null && !entry.getKey().equals(entry.getValue().getHash())
+        );
+    }
+
+
 }

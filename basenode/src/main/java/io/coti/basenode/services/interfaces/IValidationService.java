@@ -4,6 +4,7 @@ import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
+import io.coti.basenode.http.GetHistoryAddressesResponse;
 
 import java.math.BigDecimal;
 
@@ -36,4 +37,6 @@ public interface IValidationService {
     boolean validateTransactionTimeFields(TransactionData transactionData);
 
     boolean validateAmountField(BigDecimal amount);
+
+    boolean validateGetAddressesResponse(GetHistoryAddressesResponse getHistoryAddressesResponse);
 }

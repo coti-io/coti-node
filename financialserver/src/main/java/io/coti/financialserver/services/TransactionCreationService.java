@@ -99,7 +99,7 @@ public class TransactionCreationService {
         transactionCrypto.signMessage(initialTransactionData);
         transactionHelper.attachTransactionToCluster(initialTransactionData);
 
-        propagationPublisher.propagate(initialTransactionData, Arrays.asList(NodeType.ZeroSpendServer, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.DspNode));
+        propagationPublisher.propagate(initialTransactionData, Arrays.asList(NodeType.ZeroSpendServer, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.DspNode, NodeType.HistoryNode));
 
         return initialTransactionData.getHash();
     }

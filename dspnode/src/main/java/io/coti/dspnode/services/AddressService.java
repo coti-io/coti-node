@@ -32,7 +32,8 @@ public class AddressService extends BaseNodeAddressService {
                 NodeType.TrustScoreNode,
                 NodeType.DspNode,
                 NodeType.ZeroSpendServer,
-                NodeType.FinancialServer));
+                NodeType.FinancialServer,
+                NodeType.HistoryNode));
     }
 
     @Override

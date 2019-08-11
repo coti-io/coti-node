@@ -2,6 +2,7 @@ package io.coti.fullnode.database;
 
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.fullnode.model.ExplorerIndexes;
+import io.coti.basenode.model.RequestedAddressHashes;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +16,9 @@ public class RocksDBConnector extends BaseNodeRocksDBConnector {
     public void setColumnFamily() {
         super.setColumnFamily();
         columnFamilyClassNames.addAll(Arrays.asList(
-                ExplorerIndexes.class.getName()
+                ExplorerIndexes.class.getName(),
+                RequestedAddressHashes.class.getName()
+
         ));
     }
 }

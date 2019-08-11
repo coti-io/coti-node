@@ -64,12 +64,16 @@ public abstract class Collection<T extends IEntity> {
 
     public void forEach(Consumer<T> consumer) {
         RocksIterator iterator = databaseConnector.getIterator(columnFamilyName);
-        iterator.seekToFirst();
-        while (iterator.isValid()) {
-            T deserialized = (T) SerializationUtils.deserialize(iterator.value());
-            deserialized.setHash(new Hash(iterator.key()));
-            consumer.accept(deserialized);
-            iterator.next();
+        try {
+            iterator.seekToFirst();
+            while (iterator.isValid()) {
+                T deserialized = (T) SerializationUtils.deserialize(iterator.value());
+                deserialized.setHash(new Hash(iterator.key()));
+                consumer.accept(deserialized);
+                iterator.next();
+            }
+        } finally {
+            iterator.close();
         }
     }
 
@@ -97,8 +101,29 @@ public abstract class Collection<T extends IEntity> {
 
     public boolean isEmpty() {
         RocksIterator iterator = databaseConnector.getIterator(columnFamilyName);
-        iterator.seekToFirst();
-        return !iterator.isValid();
+        try {
+            iterator.seekToFirst();
+            return !iterator.isValid();
+        } finally {
+            iterator.close();
+        }
+    }
+
+    public void deleteByHash(Hash hash) {
+        databaseConnector.delete(columnFamilyName, hash.getBytes());
+    }
+
+    public void deleteAll() {
+        RocksIterator iterator = databaseConnector.getIterator(columnFamilyName);
+        try {
+            iterator.seekToFirst();
+            while (iterator.isValid()) {
+                databaseConnector.delete(columnFamilyName, iterator.key());
+                iterator.next();
+            }
+        } finally {
+            iterator.close();
+        }
     }
 
     protected void generateLockObjects() {

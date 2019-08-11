@@ -16,7 +16,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest
+@SpringBootTest(classes = {CryptoHelper.class})
 public class CryptoHelperTests {
 
 
