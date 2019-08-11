@@ -11,7 +11,7 @@ public class AddressesExistsResponse extends BaseResponse {
     public LinkedHashMap<String, Boolean> addresses;
 
     public AddressesExistsResponse() {
-
+        addresses = new LinkedHashMap<>();
     }
 
     public AddressesExistsResponse(LinkedHashMap<String, Boolean> addresses) {
