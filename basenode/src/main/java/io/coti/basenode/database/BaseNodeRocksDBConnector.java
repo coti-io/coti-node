@@ -3,8 +3,8 @@ package io.coti.basenode.database;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
-import io.coti.basenode.model.*;
 import io.coti.basenode.model.Collection;
+import io.coti.basenode.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +48,9 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
                 AddressTransactionsHistories.class.getName(),
                 TransactionIndexes.class.getName(),
                 TransactionVotes.class.getName(),
-                NodeRegistrations.class.getName()
+                NodeRegistrations.class.getName(),
+                Currencies.class.getName(),
+                ClusterStampNames.class.getName()
         ));
 
     }
