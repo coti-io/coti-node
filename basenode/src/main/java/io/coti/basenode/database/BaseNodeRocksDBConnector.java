@@ -8,13 +8,12 @@ import io.coti.basenode.model.*;
 import io.coti.basenode.model.Collection;
 import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -28,16 +27,85 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     private String applicationName;
     private String dbPath;
     private List<ColumnFamilyDescriptor> columnFamilyDescriptors = new ArrayList<>();
-    private RocksDB db;
     private Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
     private List<ColumnFamilyHandle> columnFamilyHandles = new ArrayList<>();
-    @Autowired
-    private ApplicationContext ctx;
+
+    private RocksDB db;
+    private BackupEngine rocksBackupEngine;
+    private BackupableDBOptions backupableDBOptions;
 
     public void init() {
         setColumnFamily();
         init(applicationName + databaseFolderName);
+
+        String backupFolderPath = applicationName + databaseFolderName+ "/backups";
+        createBackupFolderIfDoesntExsit(backupFolderPath);
+        backupableDBOptions = new BackupableDBOptions(backupFolderPath);
+        try {
+            rocksBackupEngine = BackupEngine.open(Env.getDefault(), backupableDBOptions);
+        } catch (RocksDBException e) {
+            log.error("Failed to open backup engine");
+            e.printStackTrace();
+        }
+        log.info("Created folder and backup engine");
         log.info("{} is up", this.getClass().getSimpleName());
+
+    }
+
+    public void backUpDb(){
+        // Not thread safe!!!!
+        log.info("Trying to back up database");
+        try {
+
+            //TODO 8/11/2019 astolia: not sure about true or false
+            rocksBackupEngine.createNewBackup(db, false);
+            rocksBackupEngine.createNewBackup(db, true);
+            //rocksBackupEngine.close();
+
+            log.info("db backup finished. number of backed up databases: {}", rocksBackupEngine.getBackupInfo().size());
+        } catch (RocksDBException e) {
+            log.info("db backup failed");
+            e.printStackTrace();
+        }
+    }
+
+    private void createBackupFolderIfDoesntExsit(String backupFolderPath){
+        File directory = new File(backupFolderPath);
+        if (! directory.exists()){
+            directory.mkdir();
+        }
+    }
+
+    public void restoreUpDb(){
+        log.info("Trying to restore database");
+        try {
+            db.close();
+            db = null;
+
+            //rocksBackupEngine = BackupEngine.open(Env.getDefault(), backupableDBOptions);
+
+            //TODO 8/11/2019 astolia: true or false?
+            RestoreOptions restoreOpt = new RestoreOptions(false);
+            //TODO 8/11/2019 astolia: maybe need to get backup id and add it as first argument
+//            rocksBackupEngine.restoreDbFromBackup(1,applicationName + databaseFolderName,applicationName + databaseFolderName,restoreOpt);
+            rocksBackupEngine.restoreDbFromLatestBackup(applicationName + databaseFolderName, applicationName + databaseFolderName, restoreOpt);
+            rocksBackupEngine.close();
+
+
+            DBOptions options = new DBOptions();
+            options.setCreateIfMissing(true);
+            options.setCreateMissingColumnFamilies(true);
+            options.setEnv(Env.getDefault());
+            db = RocksDB.open(options, dbPath, columnFamilyDescriptors, columnFamilyHandles);
+            populateColumnFamilies();
+
+
+//            db = RocksDB.open(new Options().setCreateIfMissing(true), applicationName + databaseFolderName);
+            log.info("db restore finished");
+        } catch (RocksDBException e) {
+            log.info("db restore failed");
+            e.printStackTrace();
+        }
     }
 
 
@@ -75,7 +143,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     private void initColumnFamilyClasses() {
         for (int i = 1; i < columnFamilyClassNames.size(); i++) {
             try {
-                ((Collection) ctx.getBean(Class.forName(columnFamilyClassNames.get(i)))).init();
+                ((Constructor<? extends Collection<? extends IEntity>>) Class.forName(columnFamilyClassNames.get(i)).getConstructor()).newInstance().init();
             } catch (Exception e) {
                 throw new DataBaseException(String.format("Error at init column family classes. Class: %s, Exception message: %s", e.getClass(), e.getMessage()));
             }
