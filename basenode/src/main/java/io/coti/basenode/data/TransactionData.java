@@ -38,6 +38,7 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
     private Boolean valid;
     private transient boolean isVisit;
     private String transactionDescription;
+    private String transactionTest;
     private DspConsensusResult dspConsensusResult;
     private List<TransactionTrustScoreData> trustScoreResults;
     private int[] nonces;

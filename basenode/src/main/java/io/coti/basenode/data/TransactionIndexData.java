@@ -10,6 +10,7 @@ public class TransactionIndexData implements IEntity {
     private Hash transactionHash;
     private long index;
     private byte[] accumulatedHash;
+    private String testTransaction;
 
     private TransactionIndexData() {
     }

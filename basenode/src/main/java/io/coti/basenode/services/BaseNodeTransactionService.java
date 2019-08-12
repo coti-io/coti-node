@@ -144,6 +144,7 @@ public class BaseNodeTransactionService implements ITransactionService {
         try {
             transactionHelper.startHandleTransaction(transactionData);
             while (hasOneOfParentsProcessing(transactionData)) {
+                transactionData.setTransactionTest(transactionData.getTransactionTest()+"-TrS-"); // catcher
                 parentProcessingTransactions.put(transactionData.getHash(), transactionData);
                 synchronized (transactionData) {
                     transactionData.wait();
@@ -212,6 +213,7 @@ public class BaseNodeTransactionService implements ITransactionService {
 
         if (!transactionHelper.isTransactionExists(transactionData)) {
 
+            transactionData.setTransactionTest(transactionData.getTransactionTest()+"-IS1-"); // catcher
             transactions.put(transactionData);
             addToExplorerIndexes(transactionData);
             transactionHelper.incrementTotalTransactions();
@@ -220,6 +222,7 @@ public class BaseNodeTransactionService implements ITransactionService {
             propagateMissingTransaction(transactionData);
 
         } else {
+            transactionData.setTransactionTest(transactionData.getTransactionTest()+"-IS2-"); // catcher
             transactions.put(transactionData);
             confirmationService.insertMissingConfirmation(transactionData, trustChainUnconfirmedExistingTransactionHashes);
         }
