@@ -1,6 +1,8 @@
 package io.coti.historynode.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.*;
 import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.crypto.*;
 import io.coti.basenode.data.*;
@@ -8,6 +10,7 @@ import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.http.AddEntitiesBulkRequest;
 import io.coti.basenode.http.AddHistoryEntitiesResponse;
+import io.coti.basenode.http.CustomGson;
 import io.coti.basenode.http.HttpJacksonSerializer;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.TransactionIndexes;
@@ -39,18 +42,18 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.util.SerializationUtils;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 import utils.HashTestUtils;
+import utils.TransactionTestUtils;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static utils.TestConstants.MAX_TRUST_SCORE;
@@ -149,7 +152,7 @@ public class HistoryTransactionServiceIntegrationTest {
     }
 
 
-//            @Test
+    //            @Test
     public void indexTransactions_differentBaseTransactionsTypes_indexOfTransactionsMatch() {
         TransactionData transactionData = createRandomTransaction();
         Hash transactionHash = transactionData.getHash();
@@ -182,7 +185,7 @@ public class HistoryTransactionServiceIntegrationTest {
         Assert.assertTrue(transactionHashesByReceiverAddress.getTransactionHashesByDates().get(attachmentLocalDate).contains(transactionHash));
     }
 
-//            @Test
+    //            @Test
     public void indexTransactions_getTransactionsHashesByDate_indexOfTransactionsMatch() throws JsonProcessingException {
         // Generate transactions data
         int numberOfDays = 5;
@@ -204,7 +207,7 @@ public class HistoryTransactionServiceIntegrationTest {
         });
     }
 
-//            @Test
+    //            @Test
     public void indexTransactions_getTransactionsHashesToRetrieve_indexOfTransactionsMatch() throws JsonProcessingException {
         // Generate transactions data
         int numberOfDays = 5;
@@ -249,7 +252,7 @@ public class HistoryTransactionServiceIntegrationTest {
         Assert.assertEquals(0, transactionsHashesToRetrieve.size());
     }
 
-//            @Test
+    //            @Test
     public void getTransactionsByDate_storeAndRetrieveByDateFromLocal_singleTransactionsMatched() throws IOException {
         // Generate transactions data
         int numberOfDays = 4;
@@ -275,7 +278,7 @@ public class HistoryTransactionServiceIntegrationTest {
 //        Assert.assertTrue(((HistoryTransactionResponse)transactionsByDatesResponse.getBody()).getHistoryTransactionResponseData().getHistoryTransactionResults().containsValue(transactionDataToRetrieve));
     }
 
-//            @Test
+    //            @Test
     public void getTransactionsByDate_storeAndRetrieveByDateFromElasticSearch_singleTransactionsMatched() throws IOException {
         // Generate transactions data
         int numberOfDays = 4;
@@ -301,7 +304,7 @@ public class HistoryTransactionServiceIntegrationTest {
 //        Assert.assertTrue(((HistoryTransactionResponse)transactionsByDatesResponse.getBody()).getHistoryTransactionResponseData().getHistoryTransactionResults().containsValue(transactionDataToRetrieve));
     }
 
-//            @Test
+    //            @Test
     public void getTransactionsByDate_storeAndRetrieveByDate_multipleTransactionsMatched() throws IOException {
         // Generate transactions data
         int numberOfDays = 4;
@@ -329,7 +332,7 @@ public class HistoryTransactionServiceIntegrationTest {
 //                });
     }
 
-//            @Test
+    //            @Test
     public void getTransactionsByAddress_storeAndRetrieveByAddressAndDates_multipleTransactionsMatched() throws IOException {
         // Generate transactions data
         int numberOfDays = 4;
@@ -363,7 +366,7 @@ public class HistoryTransactionServiceIntegrationTest {
     }
 
 
-//            @Test
+    //            @Test
     public void getTransactionsByAddress_storeAndRetrieveByAddress_multipleTransactionsMatched() throws IOException {
         // Generate transactions data
         int numberOfDays = 4;
@@ -390,7 +393,7 @@ public class HistoryTransactionServiceIntegrationTest {
 //        }
     }
 
-//            @Test
+    //            @Test
     public void getTransactionsByAddress_storeAndRetrieveByAddress_singleTransactionsMatched() throws IOException {
         // Generate transactions data
         int numberOfDays = 4;
@@ -417,7 +420,7 @@ public class HistoryTransactionServiceIntegrationTest {
 //                .getHistoryTransactionResults().get(generatedTransactionsData.get(2).getHash()).equals(generatedTransactionsData.get(2)));
     }
 
-//            @Test
+    //            @Test
     public void getTransactionsByAddress_storeAndRetrieveByDatesNoAddress_noTransactionsMatched() throws IOException {
         // Generate transactions data
         int numberOfDays = 4;
@@ -534,6 +537,60 @@ public class HistoryTransactionServiceIntegrationTest {
             }
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
+        }
+    }
+
+//    @Test
+    public void serializationFromRocksDB() throws JsonProcessingException {
+        TransactionData generatedTransactionData = TransactionTestUtils.createRandomTransaction();
+        Hash generatedHash = generatedTransactionData.getHash();
+        transactions.put(generatedTransactionData);
+        TransactionData retrievedTransactionData = transactions.getByHash(generatedTransactionData.getHash());
+        Assert.assertEquals(generatedTransactionData, retrievedTransactionData);
+
+        String columnFamilyName = transactions.getClass().getName();
+        byte[] transactionDataFromRocksDBInBytes = databaseConnector.getByKey(columnFamilyName, generatedHash.getBytes());
+        TransactionData deserializeTransactionData = (TransactionData) SerializationUtils.deserialize(transactionDataFromRocksDBInBytes);
+        Assert.assertEquals(generatedTransactionData, deserializeTransactionData);
+
+        ObjectMapper mapper = new ObjectMapper();
+        Object deserializeObject = SerializationUtils.deserialize(transactionDataFromRocksDBInBytes);
+        String jsonString = mapper.writeValueAsString(deserializeObject);
+
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeAdapter(TransactionData.class, new TransactionDataV1ToV2Deserializer());
+        Gson gson = gsonBuilder.create();
+        TransactionData transactionDataFromJson = gson.fromJson(jsonString, TransactionData.class);
+        Assert.assertEquals(generatedHash, transactionDataFromJson.getHash());
+
+
+        String s1 = SerializationUtils.deserialize(transactionDataFromRocksDBInBytes).toString();
+
+        String s = Base64.getEncoder().encodeToString(transactionDataFromRocksDBInBytes);
+        String jsonTransactionDataFromBytes = new CustomGson().getInstance().toJson(transactionDataFromRocksDBInBytes);
+
+        int iPause = 7;
+
+    }
+
+    public class TransactionDataV1ToV2Deserializer implements JsonDeserializer<TransactionData> {
+        @Override
+        public TransactionData deserialize(JsonElement transactionDataStr, Type typeOfSrc, JsonDeserializationContext context) {
+            JsonObject hashJsonObject = transactionDataStr.getAsJsonObject().getAsJsonObject("hash");
+            BigDecimal amount = transactionDataStr.getAsJsonObject().get("amount").getAsBigDecimal();
+            List<BaseTransactionData> baseTransactions = new ArrayList<>();
+            ObjectMapper mapper = new ObjectMapper();
+            BaseTransactionData baseTransactionData = null;
+            try {
+                baseTransactionData =
+                        mapper.readValue(transactionDataStr.getAsJsonObject().get("baseTransactions").getAsJsonArray().get(0).toString(), BaseTransactionData.class);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            baseTransactions.add(baseTransactionData);
+            TransactionData randomTransaction = new TransactionData(baseTransactions);
+//            randomTransaction.setHash(new Hash(hashJsonObject.getAsString()));
+            return randomTransaction;
         }
     }
 
