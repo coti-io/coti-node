@@ -10,9 +10,7 @@ import org.rocksdb.WriteOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.SerializationUtils;
 
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -60,6 +58,20 @@ public abstract class Collection<T extends IEntity> {
             deserialized.setHash(hash);
         }
         return deserialized;
+    }
+
+    public List<T> getByPrefix(String strPrefix) {
+        List<T> result = new ArrayList<>();
+        RocksIterator iterator = databaseConnector.getIterator(columnFamilyName);
+        for (iterator.seek(strPrefix.getBytes()); iterator.isValid(); iterator.next()) {
+            String key = new String(iterator.key());
+            if (!key.startsWith(strPrefix)) {
+                break;
+            }
+            T deserialized = (T) SerializationUtils.deserialize(iterator.value());
+            result.add(deserialized);
+        }
+        return result;
     }
 
     public void forEach(Consumer<T> consumer) {
