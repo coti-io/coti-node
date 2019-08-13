@@ -19,9 +19,12 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.EnumSet;
 
+import static io.coti.basenode.services.TransactionHelper.CURRENCY_SCALE;
+
 
 @Service
 public class BaseNodeValidationService implements IValidationService {
+
     @Autowired
     private Transactions transactions;
     @Autowired
@@ -112,7 +115,7 @@ public class BaseNodeValidationService implements IValidationService {
 
     @Override
     public boolean validateAmountField(BigDecimal amount) {
-        return amount != null && (amount.scale() <= 0 || amount.stripTrailingZeros().equals(amount)) && amount.scale() <= 8;
+        return amount != null && (amount.scale() <= 0 || amount.stripTrailingZeros().equals(amount)) && amount.scale() <= CURRENCY_SCALE;
     }
 
     @Override
@@ -121,6 +124,5 @@ public class BaseNodeValidationService implements IValidationService {
                 entry.getValue() != null && !entry.getKey().equals(entry.getValue().getHash())
         );
     }
-
 
 }

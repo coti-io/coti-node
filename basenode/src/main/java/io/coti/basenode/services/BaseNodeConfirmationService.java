@@ -6,7 +6,6 @@ import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IConfirmationService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
-import io.coti.basenode.services.liveview.LiveViewService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,8 +23,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @Slf4j
 @Service
 public class BaseNodeConfirmationService implements IConfirmationService {
-    @Autowired
-    private LiveViewService liveViewService;
+
     @Autowired
     private IBalanceService balanceService;
     @Autowired

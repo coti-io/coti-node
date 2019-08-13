@@ -10,16 +10,16 @@ import java.util.Map;
 
 @Data
 public class AddEntitiesBulkRequest extends Request {
+
     @NotEmpty(message = "Entities must not be empty")
     private Map<Hash, String> hashToEntityJsonDataMap;
 
-    public AddEntitiesBulkRequest(Map<Hash, String> hashToEntityJsonDataMap) {
-        this.hashToEntityJsonDataMap = hashToEntityJsonDataMap;
-    }
-
-    // TODO consider removing this, adding it to check deserialization issues
     public AddEntitiesBulkRequest() {
         hashToEntityJsonDataMap = new Hashtable<>();
+    }
+
+    public AddEntitiesBulkRequest(Map<Hash, String> hashToEntityJsonDataMap) {
+        this.hashToEntityJsonDataMap = hashToEntityJsonDataMap;
     }
 
 }

@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 @Service
 public class BaseNodeDspVoteService implements IDspVoteService {
+
     @Autowired
     protected ITransactionHelper transactionHelper;
     @Autowired

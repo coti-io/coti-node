@@ -19,5 +19,4 @@ public class PaymentItemData implements Serializable {
     @NotNull
     private int itemQuantity;
 
-
 }

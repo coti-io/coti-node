@@ -13,6 +13,7 @@ import java.util.Arrays;
 @Slf4j
 @Service
 public class AddressService extends BaseNodeAddressService {
+
     @Autowired
     private IPropagationPublisher propagationPublisher;
 

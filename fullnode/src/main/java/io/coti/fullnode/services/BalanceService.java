@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class BalanceService extends BaseNodeBalanceService {
+
     @Autowired
     private WebSocketSender webSocketSender;
 

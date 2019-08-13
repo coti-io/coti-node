@@ -12,9 +12,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 
-/**
- * A service that provides Cluster Stamp functionality for Zero Spend node.
- */
 @Slf4j
 @Service
 public class ClusterStampService extends BaseNodeClusterStampService {

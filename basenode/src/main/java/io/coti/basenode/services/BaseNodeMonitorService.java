@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class BaseNodeMonitorService implements IMonitorService {
+
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -23,7 +24,6 @@ public class BaseNodeMonitorService implements IMonitorService {
     private ITransactionService transactionService;
     @Autowired
     private IPropagationSubscriber propagationSubscriber;
-
     @Value("${allow.transaction.monitoring}")
     private boolean allowTransactionMonitoring;
 

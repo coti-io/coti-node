@@ -21,10 +21,6 @@ import java.io.FileReader;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 
-
-/**
- * An abstract class that provides basic Cluster Stamp functionality for all nodes that take part in cluster stamp flow.
- */
 @Slf4j
 @Service
 public class BaseNodeClusterStampService implements IClusterStampService {
@@ -32,7 +28,6 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     @Value("${logging.file.name}")
     protected String clusterStampFilePrefix;
     protected static final String CLUSTERSTAMP_FILE_SUFFIX = "_clusterstamp.csv";
-
     private static final int NUMBER_OF_GENESIS_ADDRESSES_MIN_LINES = 1; // Genesis One and Two + heading
     private static final int NUMBER_OF_ADDRESS_LINE_DETAILS = 2;
     private static final int ADDRESS_DETAILS_HASH_PLACEMENT = 0;
@@ -40,7 +35,6 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     protected static final String BAD_CSV_FILE_FORMAT = "Bad csv file format";
     private static final String SIGNATURE_LINE_TOKEN = "# Signature";
     private static final int NUMBER_OF_SIGNATURE_LINE_DETAILS = 2;
-
     @Autowired
     protected IBalanceService balanceService;
     @Autowired

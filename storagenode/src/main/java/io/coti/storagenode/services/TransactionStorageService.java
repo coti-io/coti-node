@@ -27,7 +27,6 @@ public class TransactionStorageService extends EntityStorageService {
 
     private static final int BLOCK_SIZE = 100;
     private static final int POOL_MAX_SIZE = 20;
-
     @Autowired
     private BaseNodeValidationService validationService;
     @Autowired

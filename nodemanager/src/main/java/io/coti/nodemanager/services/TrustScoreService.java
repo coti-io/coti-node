@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 public class TrustScoreService implements ITrustScoreService {
 
     private static final String GET_TRUSTSCORE_ENDPOINT = "/usertrustscore";
-
     private static final int NUM_OF_TRUSTSCORE_NODES = 3;
     public static final String TRUSTSCORE_DATA_ENDPOINT = "/trustscore_data";
     public static final String TRUSTSCORE_AGGREGATION_DATA_ENDPOINT = "/trustscore_aggregation_data";

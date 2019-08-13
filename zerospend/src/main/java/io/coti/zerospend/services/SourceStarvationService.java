@@ -22,9 +22,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 @Service
 public class SourceStarvationService {
+
     private final long MINIMUM_WAIT_TIME_IN_SECONDS = 10;
     private final long SOURCE_STARVATION_CHECK_TASK_DELAY = 10000;
-
     @Autowired
     private IClusterService clusterService;
     @Autowired

@@ -5,7 +5,6 @@ import io.coti.storagenode.data.MultiDbInsertionStatus;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.database.interfaces.IDbConnectorService;
 import io.coti.storagenode.exceptions.DbConnectorException;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
@@ -29,11 +28,11 @@ import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -44,25 +43,39 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 
 @Slf4j
-@Data
 @Service
 public class DbConnectorService implements IDbConnectorService {
-    private static final String INDEX_TYPE = "json";
-    private static final String ELASTICSEARCH_HOST_IP = "localhost";
-    private static final int ELASTICSEARCH_HOST_PORT1 = 9200;
-    private static final int ELASTICSEARCH_HOST_PORT2 = 9201;
 
-    private static final String ELASTICSEARCH_SECONDARY_HOST_IP = "localhost";
-    private static final int ELASTICSEARCH_SECONDARY_HOST_PORT1 = 9200;
-    private static final int ELASTICSEARCH_SECONDARY_HOST_PORT2 = 9201;
+    private static final String INDEX_TYPE = "json";
     public static final int INDEX_NUMBER_OF_SHARDS = 1;
     public static final int INDEX_NUMBER_OF_REPLICAS = 2;
-
+    private final String ELASTICSEARCH_HOST_IP;
+    private final int ELASTICSEARCH_HOST_PORT1;
+    private final int ELASTICSEARCH_HOST_PORT2;
+    private final String ELASTICSEARCH_SECONDARY_HOST_IP;
+    private final int ELASTICSEARCH_SECONDARY_HOST_PORT1;
+    private final int ELASTICSEARCH_SECONDARY_HOST_PORT2;
     private RestHighLevelClient restClient;
     private RestHighLevelClient restColdStorageClient;
 
-    @PostConstruct
-    private void init() {
+    private DbConnectorService(@Value("${elasticsearch.host.ip}") final String ELASTICSEARCH_HOST_IP,
+                               @Value("${elasticsearch.host.port1}") final int ELASTICSEARCH_HOST_PORT1,
+                               @Value("${elasticsearch.host.port2}") final int ELASTICSEARCH_HOST_PORT2,
+                               @Value("${elasticsearch.secondary.host.ip}") final String ELASTICSEARCH_SECONDARY_HOST_IP,
+                               @Value("${elasticsearch.secondary.host.port1}") final int ELASTICSEARCH_SECONDARY_HOST_PORT1,
+                               @Value("${elasticsearch.secondary.host.port2}") final int ELASTICSEARCH_SECONDARY_HOST_PORT2
+
+    ) {
+        this.ELASTICSEARCH_HOST_IP = ELASTICSEARCH_HOST_IP;
+        this.ELASTICSEARCH_HOST_PORT1 = ELASTICSEARCH_HOST_PORT1;
+        this.ELASTICSEARCH_HOST_PORT2 = ELASTICSEARCH_HOST_PORT2;
+        this.ELASTICSEARCH_SECONDARY_HOST_IP = ELASTICSEARCH_SECONDARY_HOST_IP;
+        this.ELASTICSEARCH_SECONDARY_HOST_PORT1 = ELASTICSEARCH_SECONDARY_HOST_PORT1;
+        this.ELASTICSEARCH_SECONDARY_HOST_PORT2 = ELASTICSEARCH_SECONDARY_HOST_PORT2;
+
+    }
+
+    public void init() {
         try {
             restClient = new RestHighLevelClient(RestClient.builder(
                     new HttpHost(ELASTICSEARCH_HOST_IP, ELASTICSEARCH_HOST_PORT1),
@@ -73,17 +86,17 @@ public class DbConnectorService implements IDbConnectorService {
                     new HttpHost(ELASTICSEARCH_SECONDARY_HOST_IP, ELASTICSEARCH_SECONDARY_HOST_PORT2)
             ));
         } catch (Exception e) {
-            log.error(e.getMessage());
+            throw new DbConnectorException(e.getMessage());
         }
     }
 
-    public void addIndexes(boolean fromColdStorage) throws IOException {
+    public void addIndexes(boolean fromColdStorage) {
         for (ElasticSearchData data : ElasticSearchData.values()) {
             addIndex(data.getIndex(), data.getObjectName(), fromColdStorage);
         }
     }
 
-    private void addIndex(String indexName, String objectName, boolean fromColdStorage) throws IOException {
+    private void addIndex(String indexName, String objectName, boolean fromColdStorage) {
         if (!ifIndexExist(indexName, fromColdStorage)) {
             sendCreateIndexRequest(indexName, fromColdStorage);
             createMapping(indexName, objectName, fromColdStorage);
@@ -219,52 +232,66 @@ public class DbConnectorService implements IDbConnectorService {
         return HttpStatus.MULTI_STATUS;
     }
 
-    private void sendCreateIndexRequest(String index, boolean fromColdStorage) throws IOException {
-        CreateIndexRequest request = new CreateIndexRequest(index);
-        request.settings(Settings.builder()
-                .put("index.number_of_shards", INDEX_NUMBER_OF_SHARDS)
-                .put("index.number_of_replicas", INDEX_NUMBER_OF_REPLICAS)
-        );
+    private void sendCreateIndexRequest(String index, boolean fromColdStorage) {
+        try {
+            CreateIndexRequest request = new CreateIndexRequest(index);
+            request.settings(Settings.builder()
+                    .put("index.number_of_shards", INDEX_NUMBER_OF_SHARDS)
+                    .put("index.number_of_replicas", INDEX_NUMBER_OF_REPLICAS)
+            );
 
-        if (fromColdStorage)
-            restColdStorageClient.indices().create(request, RequestOptions.DEFAULT);
-        else
-            restClient.indices().create(request, RequestOptions.DEFAULT);
+            if (fromColdStorage)
+                restColdStorageClient.indices().create(request, RequestOptions.DEFAULT);
+            else
+                restClient.indices().create(request, RequestOptions.DEFAULT);
+        } catch (Exception e) {
+            throw new DbConnectorException(String.format("Error at creating index. %s: %s", e.getClass().getName(), e.getMessage()));
+        }
     }
 
-    private void createMapping(String index, String objectName, boolean fromColdStorage) throws IOException {
-        XContentBuilder builder = jsonBuilder();
-        builder.startObject();
-        {
-            builder.startObject("properties");
+    private void createMapping(String index, String objectName, boolean fromColdStorage) {
+        try {
+            XContentBuilder builder = jsonBuilder();
+            builder.startObject();
             {
-                builder.startObject(objectName);
+                builder.startObject("properties");
                 {
-                    builder.field("type", "text");
+                    builder.startObject(objectName);
+                    {
+                        builder.field("type", "text");
+                    }
+                    builder.endObject();
                 }
                 builder.endObject();
             }
             builder.endObject();
-        }
-        builder.endObject();
-        PutMappingRequest request = new PutMappingRequest(index);
+            PutMappingRequest request = new PutMappingRequest(index);
 //        request.type(INDEX_TYPE);
-        request.source(builder);
-        if (fromColdStorage)
-            restColdStorageClient.indices().putMapping(request, RequestOptions.DEFAULT);
-        else
-            restClient.indices().putMapping(request, RequestOptions.DEFAULT);
+            request.source(builder);
+            if (fromColdStorage) {
+                restColdStorageClient.indices().putMapping(request, RequestOptions.DEFAULT);
+            } else {
+                restClient.indices().putMapping(request, RequestOptions.DEFAULT);
+            }
+        } catch (Exception e) {
+            throw new DbConnectorException(String.format("Error at creating mapping. %s: %s", e.getClass().getName(), e.getMessage()));
+        }
     }
 
 
-    private boolean ifIndexExist(String indexName, boolean fromColdStorage) throws IOException {
+    private boolean ifIndexExist(String indexName, boolean fromColdStorage) {
 
-        GetIndexRequest getIndexRequest = new GetIndexRequest(indexName);
+        try {
+            GetIndexRequest getIndexRequest = new GetIndexRequest(indexName);
 
-        if (fromColdStorage)
-            return restColdStorageClient.indices().exists(getIndexRequest, RequestOptions.DEFAULT);
-        else
-            return restClient.indices().exists(getIndexRequest, RequestOptions.DEFAULT);
+            if (fromColdStorage) {
+                return restColdStorageClient.indices().exists(getIndexRequest, RequestOptions.DEFAULT);
+            } else {
+                return restClient.indices().exists(getIndexRequest, RequestOptions.DEFAULT);
+            }
+        } catch (IOException e) {
+            throw new DbConnectorException(String.format("Error at getting index. %s: %s", e.getClass().getName(), e.getMessage()));
+        }
     }
 
     public DeleteResponse deleteObject(Hash hash, String indexName, boolean fromColdStorage) {

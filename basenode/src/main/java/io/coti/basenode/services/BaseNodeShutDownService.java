@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class BaseNodeShutDownService implements IShutDownService {
+
     @Autowired
     protected IConfirmationService confirmationService;
     @Autowired

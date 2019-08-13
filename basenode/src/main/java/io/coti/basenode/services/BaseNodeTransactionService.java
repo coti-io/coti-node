@@ -7,7 +7,6 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
-import io.coti.basenode.services.liveview.LiveViewService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,8 +36,6 @@ public class BaseNodeTransactionService implements ITransactionService {
     private IConfirmationService confirmationService;
     @Autowired
     private IClusterService clusterService;
-    @Autowired
-    private LiveViewService liveViewService;
     @Autowired
     private Transactions transactions;
     @Autowired

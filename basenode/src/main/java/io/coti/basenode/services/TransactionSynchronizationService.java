@@ -26,7 +26,6 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
     private final static String RECOVERY_NODE_GET_BATCH_ENDPOINT = "/transaction_batch";
     private final static String STARTING_INDEX_URL_PARAM_ENDPOINT = "?starting_index=";
     private final static long MAXIMUM_BUFFER_SIZE = 50000;
-
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired

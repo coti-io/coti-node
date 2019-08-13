@@ -13,6 +13,8 @@ import java.util.Set;
 
 public interface IDbConnectorService {
 
+    void init();
+
     ClusterGetSettingsResponse getClusterDetails(Set<String> indexes) throws IOException;
 
     GetResponse getObjectFromDbByHash(Hash hash, String index, boolean fromColdStorage);

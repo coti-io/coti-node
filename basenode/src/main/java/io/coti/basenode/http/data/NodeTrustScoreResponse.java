@@ -13,6 +13,7 @@ import java.util.List;
 
 @Data
 public class NodeTrustScoreResponse extends Response implements ISignable, ISignValidatable {
+
     @NotNull
     private List<NodeTrustScoreData> nodeTrustScoreDataList;
     @NotNull

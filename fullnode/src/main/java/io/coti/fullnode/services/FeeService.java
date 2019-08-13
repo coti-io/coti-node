@@ -27,10 +27,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
+import static io.coti.basenode.services.TransactionHelper.CURRENCY_SCALE;
 
 @Slf4j
 @Service
 public class FeeService {
+
     private static final int FULL_NODE_FEE_ADDRESS_INDEX = 0;
     @Value("#{'${zero.fee.user.hashes}'.split(',')}")
     private List<String> zeroFeeUserHashes;
@@ -68,8 +70,8 @@ public class FeeService {
                 amount = (fee.compareTo(minimumFee) <= 0 ? minimumFee : fee.compareTo(maximumFee) >= 0 ? maximumFee : fee);
             }
 
-            if (amount.scale() > 8) {
-                amount = amount.setScale(8, RoundingMode.DOWN);
+            if (amount.scale() > CURRENCY_SCALE) {
+                amount = amount.setScale(CURRENCY_SCALE, RoundingMode.DOWN);
             }
             if (amount.scale() > 0) {
                 amount = amount.stripTrailingZeros();

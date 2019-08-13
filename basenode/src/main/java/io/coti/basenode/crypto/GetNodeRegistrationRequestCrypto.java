@@ -17,7 +17,6 @@ public class GetNodeRegistrationRequestCrypto extends SignatureCreationCrypto<Ge
         return CryptoHelper.cryptoHash(nodeRegistrationBuffer.array()).getBytes();
     }
 
-
 }
 
 

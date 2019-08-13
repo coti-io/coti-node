@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.services.TransactionHelper.CURRENCY_SCALE;
 import static io.coti.trustscore.http.HttpStringConstants.*;
 
 @Slf4j
@@ -186,8 +187,8 @@ public class NetworkFeeService {
     private BigDecimal calculateNetworkFeeAmount(UserNetworkFeeByTrustScoreRange userNetworkFeeByTrustScoreRange, BigDecimal amount) {
         BigDecimal fee = ((amount.multiply(userNetworkFeeByTrustScoreRange.getFeeRate())).divide(new BigDecimal(100)).max(userNetworkFeeByTrustScoreRange.getMinRate())).
                 min(userNetworkFeeByTrustScoreRange.getMaxRate());
-        if (fee.scale() > 8) {
-            fee = fee.setScale(8, RoundingMode.DOWN);
+        if (fee.scale() > CURRENCY_SCALE) {
+            fee = fee.setScale(CURRENCY_SCALE, RoundingMode.DOWN);
         }
         if (fee.scale() > 0) {
             fee = fee.stripTrailingZeros();

@@ -5,7 +5,10 @@ import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
-import io.coti.basenode.http.*;
+import io.coti.basenode.http.GetHistoryAddressesRequest;
+import io.coti.basenode.http.GetHistoryAddressesResponse;
+import io.coti.basenode.http.HttpJacksonSerializer;
+import io.coti.basenode.http.SerializableResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Addresses;
 import io.coti.basenode.model.RequestedAddressHashes;
@@ -99,7 +102,6 @@ public class AddressServiceTest {
     }
 
     @Test
-    //TODO 7/18/2019 astolia: add validation that signer is full node
     public void getAddress_testUnsignedRequestFromFullNode_shouldFailInValidation() {
         GetHistoryAddressesRequest getHistoryAddressesRequest = new GetHistoryAddressesRequest(new ArrayList<>());
         //create request without signer hash and signature
@@ -118,7 +120,6 @@ public class AddressServiceTest {
     }
 
     @Test
-    //TODO 7/18/2019 astolia: add validation that signer is storage node
     public void getAddress_testUnsignedResponseFromStorage_shouldFailInValidation() {
         Map<Hash, AddressData> responseMap = new HashMap<>();
         responseMap.put(hashInStorage, addressDataFromStorage);
@@ -191,28 +192,29 @@ public class AddressServiceTest {
         GetHistoryAddressesResponse expectedResponse = new GetHistoryAddressesResponse(orderedExpectedResponseMap);
         ResponseEntity<IResponse> expectedOrderedResponseFromStorage = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
 
-        Iterator<Map.Entry<Hash, AddressData>> responseIterator = ((GetHistoryAddressesResponse)expectedOrderedResponseFromStorage.getBody()).getAddressHashesToAddresses().entrySet().iterator();
+        Iterator<Map.Entry<Hash, AddressData>> responseIterator = ((GetHistoryAddressesResponse) expectedOrderedResponseFromStorage.getBody()).getAddressHashesToAddresses().entrySet().iterator();
         int i = 0;
         while (responseIterator.hasNext()) {
             Map.Entry<Hash, AddressData> entry = responseIterator.next();
             Assert.assertEquals(orderedList.get(i), entry.getKey());
             i++;
         }
-        Assert.assertEquals(HttpStatus.OK,responseFromGetAddresses.getStatusCode());
-        Assert.assertEquals(expectedResponse.getStatus(),((GetHistoryAddressesResponse)responseFromGetAddresses.getBody()).getStatus());
+        Assert.assertEquals(HttpStatus.OK, responseFromGetAddresses.getStatusCode());
+        Assert.assertEquals(expectedResponse.getStatus(), ((GetHistoryAddressesResponse) responseFromGetAddresses.getBody()).getStatus());
     }
 
     @Test
-    public void getAddresses_retrieveAddressNotInStorage(){
+    public void getAddresses_retrieveAddressNotInStorage() {
         Hash addressHashInHistory = HashTestUtils.generateRandomAddressHash();
         Hash addressHashNotFound = HashTestUtils.generateRandomAddressHash();
         when(addresses.getByHash(addressHashInHistory)).thenReturn(new AddressData(addressHashInHistory));
         when(requestedAddressHashes.getByHash(addressHashInHistory)).thenReturn(null);
-        retrieveAddressNotInStorage(addressHashInHistory,addressHashNotFound);
+        retrieveAddressNotInStorage(addressHashInHistory, addressHashNotFound);
 
 
     }
-    private void retrieveAddressNotInStorage(Hash addressHashInHistory, Hash addressHashNotFound){
+
+    private void retrieveAddressNotInStorage(Hash addressHashInHistory, Hash addressHashNotFound) {
 
         List<Hash> addressHashes = new ArrayList<>();
         addressHashes.add(addressHashInHistory);
@@ -224,7 +226,7 @@ public class AddressServiceTest {
         when(getHistoryAddressesRequestCrypto.verifySignature(getHistoryAddressesRequest)).thenReturn(true);
 
         Map<Hash, AddressData> addressHashesToAddresses = new HashMap<>();
-        addressHashesToAddresses.put(addressHashNotFound,null);
+        addressHashesToAddresses.put(addressHashNotFound, null);
         GetHistoryAddressesResponse getHistoryAddressesResponseFromStorageNode = new GetHistoryAddressesResponse(addressHashesToAddresses);
 
         GetHistoryAddressesRequest getHistoryAddressesRequestToStorage = new GetHistoryAddressesRequest(Arrays.asList(addressHashNotFound));
@@ -232,32 +234,30 @@ public class AddressServiceTest {
         when(storageConnector.retrieveFromStorage(storageNodeUrl + "/addresses", getHistoryAddressesRequestToStorage, GetHistoryAddressesResponse.class)).thenReturn(ResponseEntity.status(HttpStatus.OK).body(getHistoryAddressesResponseFromStorageNode));
         when(getHistoryAddressesResponseCrypto.verifySignature(getHistoryAddressesResponseFromStorageNode)).thenReturn(true);
 
-        GetHistoryAddressesResponse actualResponse = (GetHistoryAddressesResponse)addressService.getAddresses(getHistoryAddressesRequest).getBody();
+        GetHistoryAddressesResponse actualResponse = (GetHistoryAddressesResponse) addressService.getAddresses(getHistoryAddressesRequest).getBody();
 
-        LinkedHashMap<Hash,AddressData> expectedResponseMap = new LinkedHashMap<>();
-        expectedResponseMap.put(addressHashInHistory,new AddressData(addressHashInHistory));
-        expectedResponseMap.put(addressHashNotFound,null);
+        LinkedHashMap<Hash, AddressData> expectedResponseMap = new LinkedHashMap<>();
+        expectedResponseMap.put(addressHashInHistory, new AddressData(addressHashInHistory));
+        expectedResponseMap.put(addressHashNotFound, null);
 
-        assertResponsesMapsEqual(expectedResponseMap,actualResponse.getAddressHashesToAddresses());
+        assertResponsesMapsEqual(expectedResponseMap, actualResponse.getAddressHashesToAddresses());
     }
 
-    private void assertResponsesMapsEqual(Map<Hash,AddressData> expectedResponseMap, Map<Hash,AddressData> actualResponseMap){
-        Assert.assertEquals(expectedResponseMap.size(),actualResponseMap.size());
+    private void assertResponsesMapsEqual(Map<Hash, AddressData> expectedResponseMap, Map<Hash, AddressData> actualResponseMap) {
+        Assert.assertEquals(expectedResponseMap.size(), actualResponseMap.size());
         Iterator expectedIterator = expectedResponseMap.entrySet().iterator();
         Iterator actualIterator = actualResponseMap.entrySet().iterator();
-        while(expectedIterator.hasNext()){
-            Map.Entry<Hash,AddressData> expectedEntry = (Map.Entry<Hash,AddressData>)expectedIterator.next();
-            Map.Entry<Hash,AddressData> actualEntry = (Map.Entry<Hash,AddressData>)actualIterator.next();
+        while (expectedIterator.hasNext()) {
+            Map.Entry<Hash, AddressData> expectedEntry = (Map.Entry<Hash, AddressData>) expectedIterator.next();
+            Map.Entry<Hash, AddressData> actualEntry = (Map.Entry<Hash, AddressData>) actualIterator.next();
             Assert.assertTrue(expectedEntry.getKey().equals(actualEntry.getKey()));
             Assert.assertTrue(expectedEntry.getKey().equals(actualEntry.getKey()));
-            if(expectedEntry.getValue() == null){
-                Assert.assertEquals(null,actualEntry.getValue());
-            }
-            else if(actualEntry.getValue() == null){
-                Assert.assertEquals(expectedEntry.getValue(),null);
-            }
-            else{
-                Assert.assertEquals(expectedEntry.getValue().getHash(),actualEntry.getValue().getHash());
+            if (expectedEntry.getValue() == null) {
+                Assert.assertEquals(null, actualEntry.getValue());
+            } else if (actualEntry.getValue() == null) {
+                Assert.assertEquals(expectedEntry.getValue(), null);
+            } else {
+                Assert.assertEquals(expectedEntry.getValue().getHash(), actualEntry.getValue().getHash());
             }
         }
 

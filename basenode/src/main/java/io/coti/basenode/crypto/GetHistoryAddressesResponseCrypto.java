@@ -8,10 +8,10 @@ import org.springframework.stereotype.Service;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
+import static io.coti.basenode.crypto.CryptoHelper.ADDRESS_SIZE_IN_BYTES;
+
 @Service
 public class GetHistoryAddressesResponseCrypto extends SignatureCrypto<GetHistoryAddressesResponse> {
-
-    private final int SIZE_OF_ADDRESS_HASH_IN_BYTES = 68;
 
     @Override
     public byte[] getSignatureMessage(GetHistoryAddressesResponse getHistoryAddressesResponse) {
@@ -37,7 +37,7 @@ public class GetHistoryAddressesResponseCrypto extends SignatureCrypto<GetHistor
                 size += Long.BYTES;
             }
         }
-        size += (SIZE_OF_ADDRESS_HASH_IN_BYTES * addressHashesToAddresses.size());
+        size += (ADDRESS_SIZE_IN_BYTES * addressHashesToAddresses.size());
         return size;
     }
 }

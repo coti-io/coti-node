@@ -25,7 +25,6 @@ public class TransactionController {
 
     @Autowired
     private TransactionService transactionService;
-
     @Autowired
     private TransactionIndexService transactionIndexService;
 

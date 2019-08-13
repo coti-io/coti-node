@@ -46,7 +46,6 @@ public class FundDistributionService {
     private static final String DAILY_DISTRIBUTION_RESULT_FILE_PREFIX = "distribution_results_";
     private static final String DAILY_DISTRIBUTION_RESULT_FILE_SUFFIX = ".csv";
     private static final String COMMA_SEPARATOR = ",";
-
     @Value("${financialserver.seed}")
     private String seed;
     @Value("${kycserver.public.key}")

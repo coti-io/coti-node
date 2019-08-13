@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 @Service
 public class ClusterHelper implements IClusterHelper {
+
     @Autowired
     private Transactions transactions;
 

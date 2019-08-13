@@ -23,6 +23,7 @@ import java.util.function.Consumer;
 @Slf4j
 @Service
 public class CommunicationService implements ICommunicationService {
+
     @Autowired
     protected IReceiver receiver;
     @Autowired

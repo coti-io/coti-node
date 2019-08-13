@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 
 @Component
 public class DspVoteCrypto extends SignatureCrypto<DspVote> {
+
     @Override
     public byte[] getSignatureMessage(DspVote dspVote) {
 

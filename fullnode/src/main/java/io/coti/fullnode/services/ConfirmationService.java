@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class ConfirmationService extends BaseNodeConfirmationService {
+
     @Autowired
     private WebSocketSender webSocketSender;
 

@@ -8,16 +8,16 @@ import org.springframework.stereotype.Service;
 import java.nio.ByteBuffer;
 import java.util.List;
 
+import static io.coti.basenode.crypto.CryptoHelper.ADDRESS_SIZE_IN_BYTES;
+
 @Service
 @Slf4j
 public class GetHistoryAddressesRequestCrypto extends SignatureCrypto<GetHistoryAddressesRequest> {
 
-    private final int SIZE_OF_ADDRESS_HASH_IN_BYTES = 68;
-
     @Override
     public byte[] getSignatureMessage(GetHistoryAddressesRequest getHistoryAddressesRequest) {
         List<Hash> addressHashes = getHistoryAddressesRequest.getAddressHashes();
-        ByteBuffer addressesRequestBuffer = ByteBuffer.allocate(SIZE_OF_ADDRESS_HASH_IN_BYTES * addressHashes.size());
+        ByteBuffer addressesRequestBuffer = ByteBuffer.allocate(ADDRESS_SIZE_IN_BYTES * addressHashes.size());
         addressHashes.forEach(addressHash -> addressesRequestBuffer.put(addressHash.getBytes()));
         byte[] addressesRequestInBytes = addressesRequestBuffer.array();
         return CryptoHelper.cryptoHash(addressesRequestInBytes).getBytes();

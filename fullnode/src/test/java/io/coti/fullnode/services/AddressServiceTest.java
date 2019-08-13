@@ -99,7 +99,7 @@ public class AddressServiceTest {
     @Test
     public void addressesExist_addressInLocalDbAndUpdatedFromHistoryLessThenTenMinutes_shouldReturnTrueAndFalse() {
         AddressBulkRequest addressBulkRequest = AddressTestUtils.generateAddressBulkRequest(
-                addressInLocalAddressesCollection.getHash(),addressInRequestedAddressesCollectionLessThenTenMinutes.getHash());
+                addressInLocalAddressesCollection.getHash(), addressInRequestedAddressesCollectionLessThenTenMinutes.getHash());
         AddressesExistsResponse actualResponse = addressService.addressesExist(addressBulkRequest);
 
         AddressesExistsResponse expectedResponse = AddressTestUtils.generateExpectedResponse(
@@ -113,7 +113,7 @@ public class AddressServiceTest {
     }
 
 
-    private void setTimeAndMock(RequestedAddressHashData requestedAddressHashData, long insertionTime){
+    private void setTimeAndMock(RequestedAddressHashData requestedAddressHashData, long insertionTime) {
         requestedAddressHashData.setLastUpdateTime(Instant.now().minusMillis(insertionTime));
         when(requestedAddressHashes.getByHash(requestedAddressHashData.getHash())).thenReturn(requestedAddressHashData);
     }

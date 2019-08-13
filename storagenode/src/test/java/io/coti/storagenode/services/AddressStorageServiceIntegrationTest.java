@@ -69,8 +69,6 @@ public class AddressStorageServiceIntegrationTest {
     private NodeCryptoHelper nodeCryptoHelper;
 
 
-
-
     // @Test
     public void insertAndGetAddressTest() {
         AddressData addressData1 = new AddressData(HashTestUtils.generateRandomAddressHash());

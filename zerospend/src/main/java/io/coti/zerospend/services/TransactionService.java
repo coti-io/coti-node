@@ -29,6 +29,7 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 @Service
 @Slf4j
 public class TransactionService extends BaseNodeTransactionService {
+
     @Autowired
     private DspVoteService dspVoteService;
     @Autowired

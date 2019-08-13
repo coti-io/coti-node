@@ -22,13 +22,10 @@ public class AwsService {
 
     @Value("${aws.s3.bucket.name}")
     private String BUCKET_NAME;
-
     @Value("${aws.s3.bucket.region}")
     private String REGION;
-
     @Value("${aws.s3.bucket.name.distribution}")
     private String BUCKET_NAME_DISTRIBUTION;
-
 
     private AmazonS3 getS3Client() {
         return AmazonS3ClientBuilder.standard().withRegion(REGION)
@@ -82,7 +79,7 @@ public class AwsService {
             FileOutputStream fileOutputStream = new FileOutputStream(file);
             BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(fileOutputStream));
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fullObject.getObjectContent()));
-            String line = null;
+            String line;
             while ((line = bufferedReader.readLine()) != null) {
                 bufferedWriter.write(line);
                 bufferedWriter.newLine();

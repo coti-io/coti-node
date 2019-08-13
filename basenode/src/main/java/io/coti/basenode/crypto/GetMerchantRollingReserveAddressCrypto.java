@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class GetMerchantRollingReserveAddressCrypto extends SignatureCrypto<GetMerchantRollingReserveAddressRequest> {
+
     @Override
     public byte[] getSignatureMessage(GetMerchantRollingReserveAddressRequest signable) {
         return signable.getMerchantHash().getBytes();

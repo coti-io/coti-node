@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.jsontype.impl.TypeIdResolverBase;
 
 public class BaseTransactionDataResolver extends TypeIdResolverBase {
+
     @Override
     public String idFromValue(Object value) {
         return idFromValueAndType(value, value.getClass());

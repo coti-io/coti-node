@@ -30,6 +30,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 @Slf4j
 @Service
 public class ZeroMQSubscriber implements IPropagationSubscriber {
+
     private final int HEARTBEAT_INTERVAL = 10000;
     private final int INITIAL_DELAY = 5000;
     private final int FIXED_DELAY = 5000;

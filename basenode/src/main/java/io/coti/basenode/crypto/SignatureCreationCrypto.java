@@ -4,6 +4,7 @@ import io.coti.basenode.data.interfaces.ISignable;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class SignatureCreationCrypto<T extends ISignable> {
+
     @Autowired
     private NodeCryptoHelper nodeCryptoHelper;
 

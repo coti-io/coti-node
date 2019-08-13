@@ -1,12 +1,13 @@
 package io.coti.basenode.crypto;
 
 import io.coti.basenode.data.TransactionTrustScoreData;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;
 
-@Service
+@Component
 public class TransactionTrustScoreCrypto extends SignatureCrypto<TransactionTrustScoreData> {
+
     @Override
     public byte[] getSignatureMessage(TransactionTrustScoreData transactionTrustScoreData) {
         byte[] userHashInBytes = transactionTrustScoreData.getUserHash().getBytes();
@@ -23,6 +24,5 @@ public class TransactionTrustScoreCrypto extends SignatureCrypto<TransactionTrus
         byte[] cryptoHashedMessage = CryptoHelper.cryptoHash(trustScoreMessageInBytes).getBytes();
         return cryptoHashedMessage;
     }
-
 
 }

@@ -38,10 +38,8 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 public class DisputeService {
 
     private static final int COUNT_ARBITRATORS_PER_DISPUTE = 2;
-
     @Value("#{'${arbitrators.userHashes}'.split(',')}")
-    private List<String> ARBITRATOR_USER_HASHES;
-
+    private List<String> arbitratorUserHashes;
     @Autowired
     private GetDisputesCrypto getDisputesCrypto;
     @Autowired
@@ -297,7 +295,7 @@ public class DisputeService {
 
         int random;
 
-        List<String> arbitratorUserHashes = new ArrayList<>(ARBITRATOR_USER_HASHES);
+        List<String> arbitratorUserHashes = new ArrayList<>(this.arbitratorUserHashes);
         for (int i = 0; i < COUNT_ARBITRATORS_PER_DISPUTE; i++) {
 
             random = (int) ((Math.random() * arbitratorUserHashes.size()));

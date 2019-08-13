@@ -4,10 +4,13 @@ import io.coti.basenode.data.Hash;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import org.elasticsearch.rest.RestStatus;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 public interface IObjectService {
+
+    void init() throws IOException;
 
     RestStatus insertObjectJson(Hash hash, String objectAsJson, boolean fromColdStorage, ElasticSearchData objectType);
 

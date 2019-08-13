@@ -29,6 +29,7 @@ import static io.coti.financialserver.http.HttpStringConstants.INVALID_SIGNATURE
 @Slf4j
 @Service
 public class EventService {
+
     @Autowired
     private GetUnreadEventsCrypto getUnreadEventsCrypto;
     @Autowired

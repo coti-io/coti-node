@@ -19,7 +19,6 @@ import java.util.function.Consumer;
 public abstract class Collection<T extends IEntity> {
 
     private static final int LOCK_BYTE_ARRAY_SIZE = 2;
-
     @Autowired
     public IDatabaseConnector databaseConnector;
     protected String columnFamilyName = getClass().getName();

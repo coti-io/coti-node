@@ -11,7 +11,6 @@ import org.elasticsearch.rest.RestStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -25,8 +24,8 @@ public class ObjectService implements IObjectService {
     @Autowired
     protected DbConnectorService dbConnectorService;
 
-    @PostConstruct
-    private void init() throws IOException {
+    @Override
+    public void init() throws IOException {
         dbConnectorService.addIndexes(true);
         dbConnectorService.addIndexes(false);
     }

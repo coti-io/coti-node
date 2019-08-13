@@ -11,6 +11,7 @@ import java.util.Map;
 
 @Data
 public class AddHistoryAddressesRequest extends Request implements ISignable, ISignValidatable {
+
     @NotEmpty(message = "Entities must not be empty")
     private Map<Hash, String> hashToAddressDataJsonMap;
     private Hash signerHash;
@@ -19,28 +20,9 @@ public class AddHistoryAddressesRequest extends Request implements ISignable, IS
     private AddHistoryAddressesRequest() {
     }
 
-    public AddHistoryAddressesRequest(@NotEmpty(message = "Entities must not be empty") Map<Hash, String> hashToAddressDataJsonMap) {
+    public AddHistoryAddressesRequest(Map<Hash, String> hashToAddressDataJsonMap) {
         this.hashToAddressDataJsonMap = hashToAddressDataJsonMap;
     }
 
-    @Override
-    public SignatureData getSignature() {
-        return signature;
-    }
-
-    @Override
-    public Hash getSignerHash() {
-        return signerHash;
-    }
-
-    @Override
-    public void setSignerHash(Hash signerHash) {
-        this.signerHash = signerHash;
-    }
-
-    @Override
-    public void setSignature(SignatureData signature) {
-        this.signature = signature;
-    }
 }
 

@@ -7,6 +7,8 @@ import lombok.Data;
 
 @Data
 public class DspVote implements IPropagatable, ISignable, ISignValidatable {
+
+    private static final long serialVersionUID = -2950462664712850605L;
     public Hash voterDspHash;
     public Hash transactionHash;
     public boolean validTransaction;
@@ -28,11 +30,6 @@ public class DspVote implements IPropagatable, ISignable, ISignValidatable {
     @Override
     public void setHash(Hash hash) {
         this.transactionHash = hash;
-    }
-
-    @Override
-    public SignatureData getSignature() {
-        return signature;
     }
 
     @Override
