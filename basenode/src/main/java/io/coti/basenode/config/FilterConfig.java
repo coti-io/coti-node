@@ -11,6 +11,7 @@ import java.util.HashSet;
 
 @Configuration
 public class FilterConfig {
+
     @Value("${whitelist.ips}")
     private String whitelistIps;
 

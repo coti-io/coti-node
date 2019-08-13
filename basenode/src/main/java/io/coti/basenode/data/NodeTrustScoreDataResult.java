@@ -9,5 +9,4 @@ public class NodeTrustScoreDataResult {
     private boolean valid;
     private SignatureData signatureData;
 
-
 }

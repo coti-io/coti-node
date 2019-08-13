@@ -17,6 +17,7 @@ import java.util.function.Function;
 
 @Component
 public class ZeroMQSubscriberHandler implements ISubscriberHandler {
+
     private Map<String, Function<NodeType, Consumer<Object>>> messageTypeToSubscriberHandlerMap;
     @Autowired
     private ITransactionService transactionService;

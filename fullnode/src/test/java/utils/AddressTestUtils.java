@@ -45,22 +45,22 @@ public class AddressTestUtils {
         return !(thisItr.hasNext() || otherItr.hasNext());
     }
 
-    public static LinkedHashMap<String, Boolean> initMapWithHashes(Hash... addressHashes){
+    public static LinkedHashMap<String, Boolean> initMapWithHashes(Hash... addressHashes) {
         LinkedHashMap<String, Boolean> responseMap = new LinkedHashMap<>();
-        Arrays.stream(addressHashes).forEach(addreassHash -> responseMap.put(addreassHash.toHexString(),null));
+        Arrays.stream(addressHashes).forEach(addreassHash -> responseMap.put(addreassHash.toHexString(), null));
         return responseMap;
     }
 
     public static AddressesExistsResponse generateExpectedResponse(LinkedHashMap<String, Boolean> responseMapHashInitiated, Boolean... expectedAddressUsageStatuses) {
         int i = 0;
-        for(Map.Entry<String,Boolean> entry: responseMapHashInitiated.entrySet()){
+        for (Map.Entry<String, Boolean> entry : responseMapHashInitiated.entrySet()) {
             entry.setValue(expectedAddressUsageStatuses[i]);
             i++;
         }
         return new AddressesExistsResponse(responseMapHashInitiated);
     }
 
-    public static AddressBulkRequest generateAddressBulkRequest(Hash... addressHashes){
+    public static AddressBulkRequest generateAddressBulkRequest(Hash... addressHashes) {
         List<Hash> addressHashesList = new ArrayList<>();
         Arrays.stream(addressHashes).forEach(addressHash -> addressHashesList.add(addressHash));
 

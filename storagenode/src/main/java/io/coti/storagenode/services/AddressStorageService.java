@@ -35,10 +35,8 @@ public class AddressStorageService extends EntityStorageService {
     private JacksonSerializer jacksonSerializer;
     @Autowired
     private BaseNodeValidationService validationService;
-
     @Autowired
     private GetHistoryAddressesResponseCrypto getHistoryAddressesResponseCrypto;
-
     @Autowired
     private GetHistoryAddressesRequestCrypto getHistoryAddressesRequestCrypto;
 

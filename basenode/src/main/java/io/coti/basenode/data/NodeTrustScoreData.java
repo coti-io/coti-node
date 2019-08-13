@@ -7,7 +7,9 @@ import java.util.List;
 
 @Data
 public class NodeTrustScoreData extends Request {
+
     private Hash nodeHash;
     private Double trustScore;
     private List<NodeTrustScoreDataResult> trustScoreDataResults;
+
 }

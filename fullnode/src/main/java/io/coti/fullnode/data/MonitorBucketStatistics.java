@@ -1,4 +1,4 @@
-package io.coti.fullnode.services;
+package io.coti.fullnode.data;
 
 import lombok.Data;
 

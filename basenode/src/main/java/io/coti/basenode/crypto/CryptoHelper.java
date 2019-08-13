@@ -28,11 +28,13 @@ import java.util.zip.Checksum;
 
 public class CryptoHelper {
 
-    private static final String ecSpec = "secp256k1";
-    private static final String ecAlgorithm = "ECDSA";
-    private static final X9ECParameters curve = SECNamedCurves.getByName(ecSpec);
+    private static final String EC_SPEC = "secp256k1";
+    private static final String EC_ALGORITHM = "ECDSA";
+    private static final X9ECParameters curve = SECNamedCurves.getByName(EC_SPEC);
     private static final ECDomainParameters domain = new ECDomainParameters(curve.getCurve(), curve.getG(), curve.getN(), curve.getH());
     private static final ECParameterSpec spec = new ECParameterSpec(curve.getCurve(), curve.getG(), curve.getN(), curve.getH());
+    public static final int ADDRESS_SIZE_IN_BYTES = 68;
+    public static final int ADDRESS_CHECKSUM_SIZE_IN_BYTES = 4;
 
     public static PublicKey getPublicKeyFromHexString(String pubKeyHex) throws NoSuchAlgorithmException, InvalidKeySpecException {
         String pointX = pubKeyHex.substring(0, (pubKeyHex.length() / 2));
@@ -43,7 +45,7 @@ public class CryptoHelper {
 
         ECPoint point = curve.getCurve().createPoint(p256_xp, p256_yp);
         ECPublicKeySpec publicSpec = new ECPublicKeySpec(point, spec);
-        KeyFactory keyfac = KeyFactory.getInstance(ecAlgorithm, new BouncyCastleProvider());
+        KeyFactory keyfac = KeyFactory.getInstance(EC_ALGORITHM, new BouncyCastleProvider());
 
         PublicKey pubKey = keyfac.generatePublic(publicSpec);
         return pubKey;
@@ -123,14 +125,14 @@ public class CryptoHelper {
 
     public static boolean isAddressValid(Hash addressHash) {
         byte[] addressBytes = addressHash.getBytes();
-        if (addressBytes.length != 68)
+        if (addressBytes.length != ADDRESS_SIZE_IN_BYTES)
             return false;
 
         Checksum checksum = new CRC32();
-        byte[] addressWithoutCheckSum = Arrays.copyOfRange(addressBytes, 0, addressBytes.length - 4);
+        byte[] addressWithoutCheckSum = Arrays.copyOfRange(addressBytes, 0, addressBytes.length - ADDRESS_CHECKSUM_SIZE_IN_BYTES);
         byte[] addressWithoutPadding = CryptoHelper.removeLeadingZerosFromAddress(addressWithoutCheckSum);
 
-        byte[] addressCheckSum = Arrays.copyOfRange(addressBytes, addressBytes.length - 4, addressBytes.length);
+        byte[] addressCheckSum = Arrays.copyOfRange(addressBytes, addressBytes.length - ADDRESS_CHECKSUM_SIZE_IN_BYTES, addressBytes.length);
         checksum.update(addressWithoutPadding, 0, addressWithoutPadding.length);
 
         byte[] checksumValue = ByteBuffer.allocate(4).putInt((int) checksum.getValue()).array();

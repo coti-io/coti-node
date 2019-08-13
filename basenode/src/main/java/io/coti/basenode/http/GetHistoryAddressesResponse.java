@@ -13,6 +13,7 @@ import java.util.Map;
 
 @Data
 public class GetHistoryAddressesResponse extends BaseResponse implements ISignValidatable, ISignable {
+
     @NotEmpty
     private Map<Hash, AddressData> addressHashesToAddresses;
     @NotNull
@@ -20,11 +21,11 @@ public class GetHistoryAddressesResponse extends BaseResponse implements ISignVa
     @NotNull
     private Hash signerHash;
 
+    public GetHistoryAddressesResponse() {
+    }
+
     public GetHistoryAddressesResponse(Map<Hash, AddressData> addressHashesToAddresses) {
         this.addressHashesToAddresses = addressHashesToAddresses;
     }
 
-    public GetHistoryAddressesResponse() {
-
-    }
 }

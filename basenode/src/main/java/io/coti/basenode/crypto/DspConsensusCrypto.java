@@ -8,6 +8,7 @@ import java.time.Instant;
 
 @Component
 public class DspConsensusCrypto extends SignatureCrypto<DspConsensusResult> {
+
     @Override
     public byte[] getSignatureMessage(DspConsensusResult dspConsensusResult) {
         byte[] transactionHashInBytes = dspConsensusResult.getTransactionHash().getBytes();

@@ -14,6 +14,7 @@ import java.io.IOException;
 
 @Service
 public class JacksonSerializer implements ISerializer {
+
     private ObjectMapper serializer;
 
     @PostConstruct

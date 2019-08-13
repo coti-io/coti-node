@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 
 @Component
 public class NetworkNodeCrypto extends SignatureCrypto<NetworkNodeData> {
+
     @Override
     public byte[] getSignatureMessage(NetworkNodeData networkNodeData) {
 

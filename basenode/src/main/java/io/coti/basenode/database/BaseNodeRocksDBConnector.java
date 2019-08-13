@@ -21,6 +21,7 @@ import java.util.*;
 @Slf4j
 @Service
 public class BaseNodeRocksDBConnector implements IDatabaseConnector {
+
     @Value("${database.folder.name}")
     private String databaseFolderName;
     protected List<String> columnFamilyClassNames;

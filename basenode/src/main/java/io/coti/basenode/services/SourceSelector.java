@@ -21,7 +21,6 @@ public class SourceSelector implements ISourceSelector {
 
     @Value("${min.source.percentage}")
     private int minSourcePercentage;
-
     @Value("${max.neighbourhood.radius}")
     private int maxNeighbourhoodRadius;
 

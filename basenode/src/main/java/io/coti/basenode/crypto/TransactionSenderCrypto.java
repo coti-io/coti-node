@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 
 @Component
 public class TransactionSenderCrypto extends SignatureValidationCrypto<TransactionData> {
+
     @Override
     public byte[] getSignatureMessage(TransactionData transactionData) {
         byte[] transactionHashInBytes = transactionData.getHash().getBytes();

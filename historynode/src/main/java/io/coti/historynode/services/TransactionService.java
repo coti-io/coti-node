@@ -43,7 +43,6 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 public class TransactionService extends BaseNodeTransactionService {
 
     private final String END_POINT_RETRIEVE = "/transactions/reactive";
-
     @Value("${storage.server.address}")
     protected String storageServerAddress;
     @Autowired

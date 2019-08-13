@@ -8,7 +8,6 @@ import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.basenode.services.interfaces.IConfirmationService;
 import io.coti.basenode.services.interfaces.ISourceSelector;
-import io.coti.basenode.services.liveview.LiveViewService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.SerializationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +26,8 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class ClusterService implements IClusterService {
-    private List<Set<TransactionData>> sourceListsByTrustScore = new ArrayList<>();
 
+    private List<Set<TransactionData>> sourceListsByTrustScore = new ArrayList<>();
     @Autowired
     private Transactions transactions;
     @Autowired
@@ -37,8 +36,6 @@ public class ClusterService implements IClusterService {
     private ISourceSelector sourceSelector;
     @Autowired
     private TrustChainConfirmationService trustChainConfirmationService;
-    @Autowired
-    private LiveViewService liveViewService;
     private boolean isStarted;
     private ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster;
     private AtomicLong totalSources = new AtomicLong(0);

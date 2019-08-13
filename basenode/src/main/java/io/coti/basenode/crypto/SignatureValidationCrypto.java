@@ -8,6 +8,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
 public abstract class SignatureValidationCrypto<T extends ISignValidatable> {
+
     public abstract byte[] getSignatureMessage(T signValidatable);
 
     public boolean verifySignature(T signValidatable) {

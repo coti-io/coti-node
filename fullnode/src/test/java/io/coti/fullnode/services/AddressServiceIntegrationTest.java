@@ -136,7 +136,7 @@ public class AddressServiceIntegrationTest {
 
     //TODO 8/4/2019 astolia: change to @BeforeClass
     @Before
-    public void setUp(){
+    public void setUp() {
 //        rocksDBConnector.setColumnFamily();
 //        databaseConnector.init();
 
@@ -154,12 +154,12 @@ public class AddressServiceIntegrationTest {
 
     }
 
-    private void setTimeAndMock(RequestedAddressHashData requestedAddressHashData, long insertionTime){
+    private void setTimeAndMock(RequestedAddressHashData requestedAddressHashData, long insertionTime) {
         requestedAddressHashData.setLastUpdateTime(Instant.now().minusMillis(insertionTime));
         when(requestedAddressHashes.getByHash(requestedAddressHashData.getHash())).thenReturn(requestedAddressHashData);
     }
 
-    private void mockNotFound(RequestedAddressHashData requestedAddressHashData){
+    private void mockNotFound(RequestedAddressHashData requestedAddressHashData) {
         when(requestedAddressHashes.getByHash(requestedAddressHashData.getHash())).thenReturn(null);
     }
 

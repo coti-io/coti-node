@@ -31,6 +31,7 @@ import static io.coti.basenode.data.TransactionState.*;
 @Service
 public class TransactionHelper implements ITransactionHelper {
 
+    public static final int CURRENCY_SCALE = 8;
     @Autowired
     private AddressTransactionsHistories addressTransactionsHistories;
     @Autowired

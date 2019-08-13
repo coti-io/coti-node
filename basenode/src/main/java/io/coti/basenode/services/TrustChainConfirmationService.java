@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 @Configurable
 public class TrustChainConfirmationService {
+
     @Value("${cluster.trust.chain.threshold}")
     private int threshold;
     private ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster;

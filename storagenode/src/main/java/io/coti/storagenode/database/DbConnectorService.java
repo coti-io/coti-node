@@ -47,17 +47,16 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 @Data
 @Service
 public class DbConnectorService implements IDbConnectorService {
+
     private static final String INDEX_TYPE = "json";
     private static final String ELASTICSEARCH_HOST_IP = "localhost";
     private static final int ELASTICSEARCH_HOST_PORT1 = 9200;
     private static final int ELASTICSEARCH_HOST_PORT2 = 9201;
-
     private static final String ELASTICSEARCH_SECONDARY_HOST_IP = "localhost";
-    private static final int ELASTICSEARCH_SECONDARY_HOST_PORT1 = 9200;
-    private static final int ELASTICSEARCH_SECONDARY_HOST_PORT2 = 9201;
+    private static final int ELASTICSEARCH_SECONDARY_HOST_PORT1 = 9202;
+    private static final int ELASTICSEARCH_SECONDARY_HOST_PORT2 = 9203;
     public static final int INDEX_NUMBER_OF_SHARDS = 1;
     public static final int INDEX_NUMBER_OF_REPLICAS = 2;
-
     private RestHighLevelClient restClient;
     private RestHighLevelClient restColdStorageClient;
 

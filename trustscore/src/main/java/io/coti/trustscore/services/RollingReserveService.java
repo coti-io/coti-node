@@ -33,11 +33,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.services.TransactionHelper.CURRENCY_SCALE;
 import static io.coti.trustscore.http.HttpStringConstants.*;
 
 @Slf4j
 @Service
 public class RollingReserveService {
+
     private static final double MAX_ROLLING_RESERVE_RATE = 100;
     private static final String MERCHANT_ADDRESS_END_POINT = "/rollingReserve/merchantReserveAddress";
     @Autowired
@@ -56,8 +58,6 @@ public class RollingReserveService {
     private HttpJacksonSerializer jacksonSerializer;
     @Autowired
     private IValidationService validationService;
-
-
     @Autowired
     private TrustScoreService trustScoreService;
 
@@ -187,8 +187,8 @@ public class RollingReserveService {
     private BigDecimal calculateRollingReserveAmount(BigDecimal reducedAmount, double trustScore) {
         double reserveRate = (trustScore == 0) ? MAX_ROLLING_RESERVE_RATE : Math.min(MAX_ROLLING_RESERVE_RATE / trustScore, MAX_ROLLING_RESERVE_RATE);
         BigDecimal rollingReserveAmount = reducedAmount.multiply(new BigDecimal(reserveRate / 100));
-        if (rollingReserveAmount.scale() > 8) {
-            rollingReserveAmount = rollingReserveAmount.setScale(8, RoundingMode.DOWN);
+        if (rollingReserveAmount.scale() > CURRENCY_SCALE) {
+            rollingReserveAmount = rollingReserveAmount.setScale(CURRENCY_SCALE, RoundingMode.DOWN);
         }
         if (rollingReserveAmount.scale() > 0) {
             rollingReserveAmount = rollingReserveAmount.stripTrailingZeros();

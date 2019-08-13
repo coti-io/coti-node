@@ -11,7 +11,7 @@ import java.util.List;
 @Component
 public class TransactionCrypto extends SignatureCrypto<TransactionData> {
 
-    private final static int baseTransactionHashSize = 32;
+    private final static int BASE_TRANSACTION_HASH_SIZE = 32;
 
     @Override
     public byte[] getSignatureMessage(TransactionData transactionData) {
@@ -34,7 +34,7 @@ public class TransactionCrypto extends SignatureCrypto<TransactionData> {
 
     private byte[] getBaseTransactionsHashesBytes(TransactionData transactionData) {
         List<BaseTransactionData> baseTransactions = transactionData.getBaseTransactions();
-        ByteBuffer baseTransactionHashBuffer = ByteBuffer.allocate(baseTransactions.size() * baseTransactionHashSize);
+        ByteBuffer baseTransactionHashBuffer = ByteBuffer.allocate(baseTransactions.size() * BASE_TRANSACTION_HASH_SIZE);
         baseTransactions.forEach(baseTransaction -> {
             byte[] baseTransactionHashBytes = baseTransaction.getHash().getBytes();
             baseTransactionHashBuffer.put(baseTransactionHashBytes);

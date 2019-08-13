@@ -22,6 +22,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 @Slf4j
 @Service
 public class ZeroMQPropagationPublisher implements IPropagationPublisher {
+
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket propagator;
     private String propagationPort;

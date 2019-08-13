@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 
 @Component
 public class FullNodeFeeRequestCrypto extends SignatureValidationCrypto<FullNodeFeeRequest> {
+
     @Override
     public byte[] getSignatureMessage(FullNodeFeeRequest fullNodeFeeRequest) {
         String decimalOriginalAmountRepresentation = fullNodeFeeRequest.getOriginalAmount().stripTrailingZeros().toPlainString();

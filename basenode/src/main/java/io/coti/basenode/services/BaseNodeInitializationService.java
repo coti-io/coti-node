@@ -13,7 +13,6 @@ import io.coti.basenode.http.GetNodeRegistrationResponse;
 import io.coti.basenode.model.NodeRegistrations;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
-import io.coti.basenode.services.liveview.LiveViewService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,7 +33,6 @@ public abstract class BaseNodeInitializationService {
 
     private final static String NODE_REGISTRATION = "/node/node_registration";
     private final static String NODE_MANAGER_NODES_ENDPOINT = "/nodes";
-
     @Autowired
     protected INetworkService networkService;
     @Value("${network}")
@@ -64,8 +62,6 @@ public abstract class BaseNodeInitializationService {
     private IClusterService clusterService;
     @Autowired
     private IMonitorService monitorService;
-    @Autowired
-    private LiveViewService liveViewService;
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired

@@ -15,6 +15,7 @@ import javax.validation.Valid;
 @RestController
 @RequestMapping("/admin")
 public class BaseNodeAdminController {
+
     @Autowired
     private IAddressService addressService;
 
