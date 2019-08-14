@@ -10,6 +10,7 @@ import io.coti.basenode.exceptions.TransactionSyncException;
 import io.coti.basenode.http.CustomHttpComponentsClientHttpRequestFactory;
 import io.coti.basenode.http.GetNodeRegistrationRequest;
 import io.coti.basenode.http.GetNodeRegistrationResponse;
+import io.coti.basenode.model.Currencies;
 import io.coti.basenode.model.NodeRegistrations;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
@@ -25,6 +26,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PreDestroy;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
@@ -94,10 +96,15 @@ public abstract class BaseNodeInitializationService {
     private ITransactionSynchronizationService transactionSynchronizationService;
     @Autowired
     protected ApplicationContext applicationContext;
+    @Autowired
+    private BaseNodeCurrenciesService baseNodeCurrenciesService;
+    @Autowired
+    private CurrencySynchronizationService currencySynchronizationService;
 
     public void init() {
         try {
             addressService.init();
+            baseNodeCurrenciesService.init();
             balanceService.init();
             clusterStampService.loadClusterStamp();
             confirmationService.init();
@@ -109,6 +116,8 @@ public abstract class BaseNodeInitializationService {
             log.info("The communication initialization is done");
             initTransactionSync();
             log.info("The transaction sync initialization is done");
+            initCurrenciesSync();
+
             networkService.setConnectToNetworkUrl(nodeManagerHttpAddress + NODE_MANAGER_NODES_ENDPOINT);
             networkService.connectToNetwork();
             propagationSubscriber.initPropagationHandler();
@@ -150,6 +159,13 @@ public abstract class BaseNodeInitializationService {
 
         } catch (Exception e) {
             throw new TransactionSyncException(e.getMessage());
+        }
+    }
+
+    private void initCurrenciesSync() {
+        if (networkService.getRecoveryServerAddress() != null) {
+            currencySynchronizationService.requestMissingCurrencies();
+            log.info("Currencies sync completed");
         }
     }
 
