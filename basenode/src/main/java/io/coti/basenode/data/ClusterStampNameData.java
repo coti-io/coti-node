@@ -11,17 +11,10 @@ public class ClusterStampNameData implements IEntity {
     private Hash hash;
 
     public ClusterStampType getType(){
-        return name.substring(0,1) == "m" ? ClusterStampType.MAJOR : ClusterStampType.TOKEN;
+        return name.substring(0,14) == "clusterstamp_m" ? ClusterStampType.MAJOR : ClusterStampType.TOKEN;
     }
 
-
-    @Override
-    public Hash getHash() {
-         return hash;
-    }
-
-    @Override
-    public void setHash(Hash hash) {
-        this.hash = hash;
+    public ClusterStampNameData(String name){
+        this.name = name;
     }
 }
