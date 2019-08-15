@@ -7,30 +7,23 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.DOCUMENT_NOT_FOUND;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.S3_NOT_REACHABLE;
+import static io.coti.basenode.services.BaseNodeInjectionService.AWS_REGION;
+import static io.coti.basenode.services.BaseNodeInjectionService.CLUSTER_STAMP_BUCKET_NAME;
 
 @Slf4j
 @Service
-public class BaseNodeAwsService implements IAwsService{
+public class BaseNodeAwsService implements IAwsService {
 
-    @Value("${aws.s3.bucket.region}")
-    private String REGION;
-
-    @Value("${aws.s3.bucket.name.clusterstamp}")
-    private String clusterStampBucketName;
-
-    @Value("clusterstamps/")
-    private String clusterStampFolder;
-
+    protected final String CLUSTER_STAMP_FOLDER = "clusterstamps/";
 
     protected AmazonS3 getS3Client() {
-        return AmazonS3ClientBuilder.standard().withRegion(REGION)
+        return AmazonS3ClientBuilder.standard().withRegion(AWS_REGION)
                 .withCredentials(new ProfileCredentialsProvider())
                 .build();
     }
@@ -48,7 +41,7 @@ public class BaseNodeAwsService implements IAwsService{
 
         BufferedReader bufferedReader = null;
         try (FileOutputStream fileOutputStream = new FileOutputStream(file);
-                BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(fileOutputStream))){
+             BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(fileOutputStream))) {
             fullObject = getS3Client().getObject(new GetObjectRequest(bucketName, fileName));
             bufferedReader = new BufferedReader(new InputStreamReader(fullObject.getObjectContent()));
             // Save file locally
@@ -65,7 +58,7 @@ public class BaseNodeAwsService implements IAwsService{
             e.printStackTrace();
             log.error(S3_NOT_REACHABLE, e);
         } finally {
-            if(bufferedReader != null){
+            if (bufferedReader != null) {
                 bufferedReader.close();
             }
             // To ensure that the network connection doesn't remain open, close any open input streams.
@@ -75,14 +68,14 @@ public class BaseNodeAwsService implements IAwsService{
 
     @Override
     public void downloadClusterStampFile(String fileName) throws IOException {
-        String pathAndFileName = clusterStampFolder + fileName;
+        String pathAndFileName = CLUSTER_STAMP_FOLDER + fileName;
         File file = new File(pathAndFileName);
-        if(!file.getParentFile().mkdirs()){
+        if (!file.getParentFile().mkdirs()) {
             log.error("Failed to create {} folder", file.getParentFile());
         }
-        if(!file.createNewFile()){
+        if (!file.createNewFile()) {
             log.error("Failed to create {} file", fileName);
         }
-        downloadFile(pathAndFileName, clusterStampBucketName);
+        downloadFile(pathAndFileName, CLUSTER_STAMP_BUCKET_NAME);
     }
 }

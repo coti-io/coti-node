@@ -4,28 +4,22 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.services.BaseNodeAwsService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
 
 import static io.coti.financialserver.http.HttpStringConstants.*;
-
+import static io.coti.financialserver.services.InjectionService.BUCKET_NAME;
+import static io.coti.financialserver.services.InjectionService.BUCKET_NAME_DISTRIBUTION;
 
 @Slf4j
 @Service
 public class AwsService extends BaseNodeAwsService {
 
-    @Value("${aws.s3.bucket.name}")
-    private String BUCKET_NAME;
-
-    @Value("${aws.s3.bucket.name.distribution}")
-    private String BUCKET_NAME_DISTRIBUTION;
 
     public String uploadDisputeDocument(Hash documentHash, File file, String contentType) {
         String fileName = documentHash.toString();
@@ -57,8 +51,8 @@ public class AwsService extends BaseNodeAwsService {
         return getS3Client().getObject(BUCKET_NAME, fileName);
     }
 
-    public S3ObjectInputStream downloadFundDistributionFile(String fileName) throws IOException {
-        return downloadFile(fileName, BUCKET_NAME_DISTRIBUTION);
+    public void downloadFundDistributionFile(String fileName) throws IOException {
+        downloadFile(fileName, BUCKET_NAME_DISTRIBUTION);
     }
 
     public String uploadFundDistributionResultFile(String fileName, File file, String contentType) {

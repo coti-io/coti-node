@@ -27,6 +27,8 @@ import org.springframework.web.client.RestTemplate;
 import javax.annotation.PreDestroy;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static io.coti.basenode.services.BaseNodeInjectionService.NETWORK_TYPE;
+
 @Slf4j
 @Service
 public abstract class BaseNodeInitializationService {
@@ -35,10 +37,8 @@ public abstract class BaseNodeInitializationService {
     private final static String NODE_MANAGER_NODES_ENDPOINT = "/nodes";
     @Autowired
     protected INetworkService networkService;
-    @Value("${network}")
-    protected NetworkType networkType;
     @Value("${server.ip}")
-    protected String nodeIp;
+    protected String NODE_IP;
     @Value("${node.manager.ip}")
     private String nodeManagerIp;
     @Value("${node.manager.port}")
@@ -199,7 +199,7 @@ public abstract class BaseNodeInitializationService {
     private void getNodeRegistration(NetworkNodeData networkNodeData) {
         try {
             restTemplate.setRequestFactory(new CustomHttpComponentsClientHttpRequestFactory());
-            GetNodeRegistrationRequest getNodeRegistrationRequest = new GetNodeRegistrationRequest(networkNodeData.getNodeType(), networkType);
+            GetNodeRegistrationRequest getNodeRegistrationRequest = new GetNodeRegistrationRequest(networkNodeData.getNodeType(), NETWORK_TYPE);
             getNodeRegistrationRequestCrypto.signMessage(getNodeRegistrationRequest);
 
             ResponseEntity<GetNodeRegistrationResponse> getNodeRegistrationResponseEntity =

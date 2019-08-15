@@ -67,7 +67,7 @@ public class InitializationService extends BaseNodeInitializationService {
     protected NetworkNodeData createNodeProperties() {
         FeeData feeData = new FeeData(nodeFee, minimumFee, maximumFee);
         if (networkService.validateFeeData(feeData)) {
-            NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType);
+            NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, NODE_IP, serverPort, NodeCryptoHelper.getNodeHash(), NETWORK_TYPE);
             networkNodeData.setFeeData(feeData);
             networkNodeData.setWebServerUrl(webServerUrl);
             return networkNodeData;
