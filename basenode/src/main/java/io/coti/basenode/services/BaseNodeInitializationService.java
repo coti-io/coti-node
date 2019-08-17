@@ -27,6 +27,8 @@ import org.springframework.web.client.RestTemplate;
 import javax.annotation.PreDestroy;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static io.coti.basenode.constants.BaseNodeApplicationConstant.*;
+
 @Slf4j
 @Service
 public abstract class BaseNodeInitializationService {
@@ -35,16 +37,6 @@ public abstract class BaseNodeInitializationService {
     private final static String NODE_MANAGER_NODES_ENDPOINT = "/nodes";
     @Autowired
     protected INetworkService networkService;
-    @Value("${network}")
-    protected NetworkType networkType;
-    @Value("${server.ip}")
-    protected String nodeIp;
-    @Value("${node.manager.ip}")
-    private String nodeManagerIp;
-    @Value("${node.manager.port}")
-    private String nodeManagerPort;
-    @Value("${node.manager.propagation.port}")
-    private String nodeManagerPropagationPort;
     private String nodeManagerHttpAddress;
     @Value("${kycserver.url}")
     private String kycServerAddress;
@@ -154,7 +146,7 @@ public abstract class BaseNodeInitializationService {
     }
 
     private void initCommunication() {
-        networkService.setNodeManagerPropagationAddress("tcp://" + nodeManagerIp + ":" + nodeManagerPropagationPort);
+        networkService.setNodeManagerPropagationAddress("tcp://" + NODE_MANAGER_IP + ":" + NODE_MANAGER_PROPAGATION_PORT);
 
         propagationSubscriber.connectAndSubscribeToServer(networkService.getNodeManagerPropagationAddress(), NodeType.NodeManager);
         propagationSubscriber.startListening();
@@ -188,7 +180,7 @@ public abstract class BaseNodeInitializationService {
 
     protected void getNetwork() {
 
-        nodeManagerHttpAddress = "http://" + nodeManagerIp + ":" + nodeManagerPort;
+        nodeManagerHttpAddress = "http://" + NODE_MANAGER_IP + ":" + NODE_MANAGER_PORT;
         networkService.setNetworkData(getNetworkDetailsFromNodeManager());
     }
 
@@ -199,12 +191,12 @@ public abstract class BaseNodeInitializationService {
     private void getNodeRegistration(NetworkNodeData networkNodeData) {
         try {
             restTemplate.setRequestFactory(new CustomHttpComponentsClientHttpRequestFactory());
-            GetNodeRegistrationRequest getNodeRegistrationRequest = new GetNodeRegistrationRequest(networkNodeData.getNodeType(), networkType);
+            GetNodeRegistrationRequest getNodeRegistrationRequest = new GetNodeRegistrationRequest(networkNodeData.getNodeType(), NETWORK_TYPE);
             getNodeRegistrationRequestCrypto.signMessage(getNodeRegistrationRequest);
 
             ResponseEntity<GetNodeRegistrationResponse> getNodeRegistrationResponseEntity =
                     restTemplate.postForEntity(
-                            kycServerAddress + NODE_REGISTRATION,
+                            KYC_SERVER_ADDRESS + NODE_REGISTRATION,
                             getNodeRegistrationRequest,
                             GetNodeRegistrationResponse.class);
             log.info("Node registration received");

@@ -20,6 +20,9 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 
+import static io.coti.basenode.constants.BaseNodeApplicationConstant.NETWORK_TYPE;
+import static io.coti.basenode.constants.BaseNodeApplicationConstant.NODE_IP;
+
 @Slf4j
 @Service
 public class InitializationService extends BaseNodeInitializationService {
@@ -66,7 +69,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @Override
     protected NetworkNodeData createNodeProperties() {
-        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.HistoryNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType);
+        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.HistoryNode, NODE_IP, serverPort, NodeCryptoHelper.getNodeHash(), NETWORK_TYPE);
         networkNodeData.setWebServerUrl(webServerUrl);
         return networkNodeData;
     }

@@ -17,6 +17,9 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 
+import static io.coti.basenode.constants.BaseNodeApplicationConstant.NETWORK_TYPE;
+import static io.coti.basenode.constants.BaseNodeApplicationConstant.NODE_IP;
+
 @Service
 @Slf4j
 public class InitializationService extends BaseNodeInitializationService {
@@ -67,7 +70,7 @@ public class InitializationService extends BaseNodeInitializationService {
     protected NetworkNodeData createNodeProperties() {
         FeeData feeData = new FeeData(nodeFee, minimumFee, maximumFee);
         if (networkService.validateFeeData(feeData)) {
-            NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType);
+            NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, NODE_IP, serverPort, NodeCryptoHelper.getNodeHash(), NETWORK_TYPE);
             networkNodeData.setFeeData(feeData);
             networkNodeData.setWebServerUrl(webServerUrl);
             return networkNodeData;

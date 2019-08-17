@@ -16,6 +16,9 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static io.coti.basenode.constants.BaseNodeApplicationConstant.NETWORK_TYPE;
+import static io.coti.basenode.constants.BaseNodeApplicationConstant.NODE_IP;
+
 @Slf4j
 @Service
 public class InitializationService extends BaseNodeInitializationService {
@@ -80,7 +83,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @Override
     protected NetworkNodeData createNodeProperties() {
-        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.DspNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType);
+        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.DspNode, NODE_IP, serverPort, NodeCryptoHelper.getNodeHash(), NETWORK_TYPE);
         networkNodeData.setPropagationPort(propagationPort);
         networkNodeData.setReceivingPort(receivingPort);
         return networkNodeData;
