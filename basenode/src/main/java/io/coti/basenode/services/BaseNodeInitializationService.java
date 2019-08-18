@@ -82,6 +82,10 @@ public abstract class BaseNodeInitializationService {
     @Autowired
     protected ApplicationContext applicationContext;
 
+    private BaseNodeInitializationService() {
+        log.info("bogus");
+    }
+
     public void init() {
         try {
             addressService.init();

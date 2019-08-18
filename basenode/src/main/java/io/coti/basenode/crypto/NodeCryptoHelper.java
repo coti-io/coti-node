@@ -1,7 +1,10 @@
 package io.coti.basenode.crypto;
 
+import io.coti.basenode.constants.BaseNodeApplicationConstant;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import static io.coti.basenode.constants.BaseNodeApplicationConstant.NODE_PRIVATE_KEY;
@@ -9,11 +12,15 @@ import static io.coti.basenode.constants.BaseNodeApplicationConstant.NODE_PRIVAT
 @Service
 public class NodeCryptoHelper {
 
+    @Autowired
+    private static BaseNodeApplicationConstant applicationConstant;
     private static String NODE_PUBLIC_KEY;
     private static String seed;
+    @Autowired
+    private static ApplicationContext applicationContext;
 
     private NodeCryptoHelper() {
-        NODE_PUBLIC_KEY = CryptoHelper.getPublicKeyFromPrivateKey(NODE_PRIVATE_KEY);
+        NODE_PUBLIC_KEY = CryptoHelper.getPublicKeyFromPrivateKey(((BaseNodeApplicationConstant) applicationContext.getBean(BaseNodeApplicationConstant.class)).NODE_PRIVATE_KEY);
     }
 
     public static SignatureData signMessage(byte[] message) {

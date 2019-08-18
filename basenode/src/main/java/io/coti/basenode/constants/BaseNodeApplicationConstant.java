@@ -1,31 +1,14 @@
 package io.coti.basenode.constants;
 
 import io.coti.basenode.data.NetworkType;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 public class BaseNodeApplicationConstant {
 
-    @Autowired
-    private static BaseNodeConstantInjector inj;
-    public static final NetworkType NETWORK_TYPE = ConstantInjector.networkType;
-    public static final String NETWORK_DIFFICULTY = ConstantInjector.networkDifficulty;
-    public static final String NODE_IP = ConstantInjector.nodeIp;
-    public static final String NODE_PORT = ConstantInjector.nodePort;
-    public static final String WEB_SERVER_URL = ConstantInjector.webServerUrl;
-    public static final String NODE_MANAGER_IP = ConstantInjector.nodeManagerIp;
-    public static final String NODE_MANAGER_PORT = ConstantInjector.nodeManagerPort;
-    public static final String NODE_MANAGER_PROPAGATION_PORT = ConstantInjector.nodeManagerPropagationPort;
-    public static final String KYC_SERVER_ADDRESS = ConstantInjector.kycServerAddress;
-    public static final String KYC_SERVER_PUBLIC_KEY = ConstantInjector.kycServerPublicKey;
-    public static final String NODE_PRIVATE_KEY = inj.nodePrivateKey;
-    public static final int MIN_SOURCE_PERCENTAGE = ConstantInjector.minSourcePercentage;
-    public static final int MAX_NEIGHBOURHOOD_RADIUS = ConstantInjector.maxNeighbourhoodRadius;
-    public static final int TRUST_CHAIN_THRESHOLD = ConstantInjector.trustChainThreshold;
-    public static final String LOGGING_FILE_NAME = ConstantInjector.loggingFileName;
-    public static final boolean ALLOW_TRANSACTION_MONITORING = ConstantInjector.allowTransactionMonitoring;
+    //    @Autowired
+//    private static BaseNodeConstantInjector inj;
 
     private static class ConstantInjector {
 
@@ -82,5 +65,22 @@ public class BaseNodeApplicationConstant {
 
         }
     }
+
+    public static final NetworkType NETWORK_TYPE = ConstantInjector.networkType;
+    public static final String NETWORK_DIFFICULTY = ConstantInjector.networkDifficulty;
+    public static final String NODE_IP = ConstantInjector.nodeIp;
+    public static final String NODE_PORT = ConstantInjector.nodePort;
+    public static final String WEB_SERVER_URL = ConstantInjector.webServerUrl;
+    public static final String NODE_MANAGER_IP = ConstantInjector.nodeManagerIp;
+    public static final String NODE_MANAGER_PORT = ConstantInjector.nodeManagerPort;
+    public static final String NODE_MANAGER_PROPAGATION_PORT = ConstantInjector.nodeManagerPropagationPort;
+    public static final String KYC_SERVER_ADDRESS = ConstantInjector.kycServerAddress;
+    public static final String KYC_SERVER_PUBLIC_KEY = ConstantInjector.kycServerPublicKey;
+    public static final String NODE_PRIVATE_KEY = ConstantInjector.nodePrivateKey;
+    public static final int MIN_SOURCE_PERCENTAGE = ConstantInjector.minSourcePercentage;
+    public static final int MAX_NEIGHBOURHOOD_RADIUS = ConstantInjector.maxNeighbourhoodRadius;
+    public static final int TRUST_CHAIN_THRESHOLD = ConstantInjector.trustChainThreshold;
+    public static final String LOGGING_FILE_NAME = ConstantInjector.loggingFileName;
+    public static final boolean ALLOW_TRANSACTION_MONITORING = ConstantInjector.allowTransactionMonitoring;
 
 }
