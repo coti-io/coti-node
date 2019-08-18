@@ -13,7 +13,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
-//TODO 7/16/2019 astolia: use crypto. don't copy it to here.
 public class HashTestUtils {
 
     private static String[] hexaOptions = TestConstants.hexaOptions;
@@ -21,8 +20,6 @@ public class HashTestUtils {
     public static final int SIZE_OF_ADDRESS_HASH_IN_BYTES = 68;
     public static final int SIZE_OF_ADDRESS_HASH_IN_HEX_WITH_CRC = 136;
     public static final int SIZE_OF_ADDRESS_HASH_IN_HEX = 128;
-
-    // Address Hash
 
     public static Hash generateRandomAddressHash() {
         StringBuilder hexa = new StringBuilder();

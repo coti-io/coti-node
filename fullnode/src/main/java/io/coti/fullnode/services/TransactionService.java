@@ -20,6 +20,7 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
+import io.coti.basenode.services.interfaces.IChunkService;
 import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
@@ -51,7 +52,6 @@ public class TransactionService extends BaseNodeTransactionService {
 
     private static final int EXPLORER_LAST_TRANSACTIONS_NUMBER = 20;
     private static final int EXPLORER_TRANSACTION_NUMBER_BY_PAGE = 10;
-
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -68,6 +68,8 @@ public class TransactionService extends BaseNodeTransactionService {
     private WebSocketSender webSocketSender;
     @Autowired
     private INetworkService networkService;
+    @Autowired
+    private IChunkService chunkService;
     @Autowired
     private PotService potService;
     private BlockingQueue<ReducedTransactionData> explorerIndexQueue;
@@ -244,15 +246,13 @@ public class TransactionService extends BaseNodeTransactionService {
         try {
             List<Hash> transactionHashes = getTransactionsRequest.getTransactionHashes();
             PrintWriter output = response.getWriter();
-            output.write("[");
-            output.flush();
+            chunkService.startOfChunk(output);
             AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
             transactionHashes.forEach(transactionHash ->
                     sendTransactionResponse(transactionHash, firstTransactionSent, output)
             );
 
-            output.write("]");
-            output.flush();
+            chunkService.endOfChunk(output);
         } catch (Exception e) {
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
         }
@@ -284,8 +284,7 @@ public class TransactionService extends BaseNodeTransactionService {
         try {
             List<Hash> addressHashList = getAddressTransactionBatchRequest.getAddresses();
             PrintWriter output = response.getWriter();
-            output.write("[");
-            output.flush();
+            chunkService.startOfChunk(output);
 
             AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
             addressHashList.forEach(addressHash -> {
@@ -296,8 +295,7 @@ public class TransactionService extends BaseNodeTransactionService {
                     );
                 }
             });
-            output.write("]");
-            output.flush();
+            chunkService.endOfChunk(output);
         } catch (Exception e) {
             log.error("Error sending address transaction batch");
             log.error(e.getMessage());
@@ -314,13 +312,11 @@ public class TransactionService extends BaseNodeTransactionService {
             if (transactionData != null) {
                 ITransactionResponseData transactionResponseData = !reduced ? new TransactionResponseData(transactionData) : new ReducedTransactionResponseData(transactionData, addressHash);
                 if (firstTransactionSent.get()) {
-                    output.write(",");
-                    output.flush();
+                    chunkService.sendChunk(",", output);
                 } else {
                     firstTransactionSent.set(true);
                 }
-                output.write(new CustomGson().getInstance().toJson(transactionResponseData));
-                output.flush();
+                chunkService.sendChunk(new CustomGson().getInstance().toJson(transactionResponseData), output);
             }
         } catch (Exception e) {
             log.error("Error at transaction response data for {}", transactionHash.toString());

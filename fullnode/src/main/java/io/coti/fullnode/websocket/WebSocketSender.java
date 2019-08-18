@@ -38,6 +38,7 @@ public class WebSocketSender {
             messagingSender.convertAndSend("/topic/addressTransactions/" + baseTransactionData.getAddressHash().toString(), notifyTransactionChange);
         });
         messagingSender.convertAndSend("/topic/transactions", notifyTransactionChange);
+        messagingSender.convertAndSend("/topic/transaction/" + transactionData.getHash().toString(), notifyTransactionChange);
     }
 
     public void notifyGeneratedAddress(Hash addressHash) {
@@ -47,7 +48,7 @@ public class WebSocketSender {
     }
 
     public void notifyTotalTransactionsChange(int totalTransactions) {
-        log.debug("Total trasnactions number {} is about to be sent to the subscribed user", totalTransactions);
+        log.debug("Total transactions number {} is about to be sent to the subscribed user", totalTransactions);
         messagingSender.convertAndSend("/topic/transaction/total",
                 new TotalTransactionsMessage(totalTransactions));
     }

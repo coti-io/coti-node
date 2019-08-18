@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 @Slf4j
 public class ChunkService extends BaseNodeChunkService {
 
-    private final static int MAXIMUM_BUFFER_SIZE = 50000;
+    private static final int MAXIMUM_BUFFER_SIZE = 50000;
 
     public void transactionHandler(Consumer<ResponseExtractor> extractorConsumer, PrintWriter output) {
         try {
