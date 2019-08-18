@@ -7,7 +7,6 @@ import io.coti.basenode.services.interfaces.IClusterHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -16,13 +15,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.coti.basenode.constants.BaseNodeApplicationConstant.TRUST_CHAIN_THRESHOLD;
+
 @Slf4j
 @Service
 @Configurable
 public class TrustChainConfirmationService {
 
-    @Value("${cluster.trust.chain.threshold}")
-    private int threshold;
     private ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster;
     private LinkedList<TransactionData> topologicalOrderedGraph;
     @Autowired
@@ -61,7 +60,7 @@ public class TrustChainConfirmationService {
         LinkedList<TccInfo> trustChainConfirmations = new LinkedList<>();
         for (TransactionData transactionData : topologicalOrderedGraph) {
             setTotalTrustScore(transactionData);
-            if (transactionData.getTrustChainTrustScore() >= threshold && !transactionData.isTrustChainConsensus()) {
+            if (transactionData.getTrustChainTrustScore() >= TRUST_CHAIN_THRESHOLD && !transactionData.isTrustChainConsensus()) {
                 Instant trustScoreConsensusTime = Optional.ofNullable(transactionData.getTrustChainConsensusTime()).orElse(Instant.now());
                 TccInfo tccInfo = new TccInfo(transactionData.getHash(), transactionData.getTrustChainTrustScore(), trustScoreConsensusTime);
                 trustChainConfirmations.addFirst(tccInfo);

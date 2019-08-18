@@ -3,7 +3,6 @@ package io.coti.basenode.services;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.services.interfaces.ISourceSelector;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -13,16 +12,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
+import static io.coti.basenode.constants.BaseNodeApplicationConstant.MAX_NEIGHBOURHOOD_RADIUS;
+import static io.coti.basenode.constants.BaseNodeApplicationConstant.MIN_SOURCE_PERCENTAGE;
 import static java.util.stream.Collectors.toList;
 
 @Slf4j
 @Component
 public class SourceSelector implements ISourceSelector {
-
-    @Value("${min.source.percentage}")
-    private int minSourcePercentage;
-    @Value("${max.neighbourhood.radius}")
-    private int maxNeighbourhoodRadius;
 
     @Override
     public List<TransactionData> selectSourcesForAttachment(
@@ -47,14 +43,14 @@ public class SourceSelector implements ISourceSelector {
         List<TransactionData> neighbourSources = new LinkedList<>();
         neighbourSources.addAll(trustScoreToSourceListMapping.get(roundedTrustScore));
 
-        for (int trustScoreDifference = 0; trustScoreDifference < maxNeighbourhoodRadius; trustScoreDifference++) {
+        for (int trustScoreDifference = 0; trustScoreDifference < MAX_NEIGHBOURHOOD_RADIUS; trustScoreDifference++) {
             if (lowIndex >= 0) {
                 neighbourSources.addAll(trustScoreToSourceListMapping.get(lowIndex));
             }
             if (highIndex <= 100) {
                 neighbourSources.addAll(trustScoreToSourceListMapping.get(highIndex));
             }
-            if ((double) neighbourSources.size() / numberOfSources > (double) minSourcePercentage / 100) {
+            if ((double) neighbourSources.size() / numberOfSources > (double) MIN_SOURCE_PERCENTAGE / 100) {
                 break;
             }
             lowIndex--;

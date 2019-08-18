@@ -15,7 +15,6 @@ import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.ResponseEntity;
@@ -38,10 +37,6 @@ public abstract class BaseNodeInitializationService {
     @Autowired
     protected INetworkService networkService;
     private String nodeManagerHttpAddress;
-    @Value("${kycserver.url}")
-    private String kycServerAddress;
-    @Value("${kycserver.public.key}")
-    private String kycServerPublicKey;
     @Autowired
     private Transactions transactions;
     @Autowired
@@ -213,7 +208,7 @@ public abstract class BaseNodeInitializationService {
     }
 
     protected boolean validateNodeRegistrationResponse(NodeRegistrationData nodeRegistrationData, NetworkNodeData networkNodeData) {
-        if (!nodeRegistrationData.getSignerHash().toString().equals(kycServerPublicKey)) {
+        if (!nodeRegistrationData.getSignerHash().toString().equals(KYC_SERVER_PUBLIC_KEY)) {
             log.error("Invalid kyc server public key.");
             System.exit(SpringApplication.exit(applicationContext));
         }

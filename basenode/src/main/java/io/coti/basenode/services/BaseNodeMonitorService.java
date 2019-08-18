@@ -4,9 +4,10 @@ import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+
+import static io.coti.basenode.constants.BaseNodeApplicationConstant.ALLOW_TRANSACTION_MONITORING;
 
 @Slf4j
 @Service
@@ -24,8 +25,6 @@ public class BaseNodeMonitorService implements IMonitorService {
     private ITransactionService transactionService;
     @Autowired
     private IPropagationSubscriber propagationSubscriber;
-    @Value("${allow.transaction.monitoring}")
-    private boolean allowTransactionMonitoring;
 
     public void init() {
         log.info("{} is up", this.getClass().getSimpleName());
@@ -33,7 +32,7 @@ public class BaseNodeMonitorService implements IMonitorService {
 
     @Scheduled(initialDelay = 1000, fixedDelay = 5000)
     public void lastState() {
-        if (allowTransactionMonitoring) {
+        if (ALLOW_TRANSACTION_MONITORING) {
             log.info("Transactions = {}, TccConfirmed = {}, DspConfirmed = {}, Confirmed = {}, LastIndex = {}, Sources = {}, PostponedTransactions = {}, PropagationQueue = {}",
                     transactionHelper.getTotalTransactions(),
                     confirmationService.getTrustChainConfirmed(),

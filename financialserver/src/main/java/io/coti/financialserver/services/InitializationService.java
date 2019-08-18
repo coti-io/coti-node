@@ -19,8 +19,7 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 
-import static io.coti.basenode.constants.BaseNodeApplicationConstant.NETWORK_TYPE;
-import static io.coti.basenode.constants.BaseNodeApplicationConstant.NODE_IP;
+import static io.coti.basenode.constants.BaseNodeApplicationConstant.*;
 
 @Slf4j
 @Service
@@ -28,10 +27,6 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @Value("${propagation.port}")
     private String propagationPort;
-    @Value("${server.port}")
-    private String serverPort;
-    @Value("${server.url}")
-    private String webServerUrl;
     @Autowired
     private ICommunicationService communicationService;
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
@@ -74,9 +69,9 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @Override
     protected NetworkNodeData createNodeProperties() {
-        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FinancialServer, NODE_IP, serverPort, NodeCryptoHelper.getNodeHash(), NETWORK_TYPE);
+        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FinancialServer, NODE_IP, NODE_PORT, NodeCryptoHelper.getNodeHash(), NETWORK_TYPE);
         networkNodeData.setPropagationPort(propagationPort);
-        networkNodeData.setWebServerUrl(webServerUrl);
+        networkNodeData.setWebServerUrl(WEB_SERVER_URL);
         return networkNodeData;
 
     }

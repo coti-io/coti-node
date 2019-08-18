@@ -19,8 +19,7 @@ import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.function.Consumer;
 
-import static io.coti.basenode.constants.BaseNodeApplicationConstant.NETWORK_TYPE;
-import static io.coti.basenode.constants.BaseNodeApplicationConstant.NODE_IP;
+import static io.coti.basenode.constants.BaseNodeApplicationConstant.*;
 
 @Slf4j
 @Service
@@ -30,8 +29,6 @@ public class InitializationService extends BaseNodeInitializationService {
     private String receivingPort;
     @Value("${propagation.port}")
     private String propagationPort;
-    @Value("${server.port}")
-    private String serverPort;
     @Value("${recovery.server.address}")
     private String recoveryServerAddress;
     @Autowired
@@ -85,7 +82,7 @@ public class InitializationService extends BaseNodeInitializationService {
     }
 
     protected NetworkNodeData createNodeProperties() {
-        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.ZeroSpendServer, NODE_IP, serverPort, NodeCryptoHelper.getNodeHash(), NETWORK_TYPE);
+        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.ZeroSpendServer, NODE_IP, NODE_PORT, NodeCryptoHelper.getNodeHash(), NETWORK_TYPE);
         networkNodeData.setPropagationPort(propagationPort);
         networkNodeData.setReceivingPort(receivingPort);
         return networkNodeData;

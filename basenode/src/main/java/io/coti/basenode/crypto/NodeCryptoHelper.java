@@ -2,24 +2,22 @@ package io.coti.basenode.crypto;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import static io.coti.basenode.constants.BaseNodeApplicationConstant.NODE_PRIVATE_KEY;
 
 @Service
 public class NodeCryptoHelper {
 
-    private static String nodePrivateKey;
-    private static String nodePublicKey;
+    private static String NODE_PUBLIC_KEY;
     private static String seed;
 
-    @Value("#{'${global.private.key}'}")
-    private void nodePrivateKey(String privateKey) {
-        nodePrivateKey = privateKey;
-        nodePublicKey = CryptoHelper.getPublicKeyFromPrivateKey(nodePrivateKey);
+    private NodeCryptoHelper() {
+        NODE_PUBLIC_KEY = CryptoHelper.getPublicKeyFromPrivateKey(NODE_PRIVATE_KEY);
     }
 
     public static SignatureData signMessage(byte[] message) {
-        return CryptoHelper.signBytes(message, nodePrivateKey);
+        return CryptoHelper.signBytes(message, NODE_PRIVATE_KEY);
     }
 
     public static SignatureData signMessage(byte[] message, Integer index) {
@@ -34,10 +32,10 @@ public class NodeCryptoHelper {
     }
 
     public static Hash getNodeHash() {
-        return new Hash(nodePublicKey);
+        return new Hash(NODE_PUBLIC_KEY);
     }
 
     public static Hash getNodeAddress() {
-        return CryptoHelper.getAddressFromPrivateKey(nodePrivateKey);
+        return CryptoHelper.getAddressFromPrivateKey(NODE_PRIVATE_KEY);
     }
 }

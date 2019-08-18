@@ -9,7 +9,6 @@ import io.coti.basenode.services.interfaces.ICommunicationService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpEntity;
@@ -26,6 +25,8 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.coti.basenode.constants.BaseNodeApplicationConstant.KYC_SERVER_PUBLIC_KEY;
+import static io.coti.basenode.constants.BaseNodeApplicationConstant.NETWORK_TYPE;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 
 
@@ -34,10 +35,6 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 public class BaseNodeNetworkService implements INetworkService {
 
     protected String recoveryServerAddress;
-    @Value("${kycserver.public.key}")
-    private String kycServerPublicKey;
-    @Value("${network}")
-    protected NetworkType networkType;
     private String nodeManagerPropagationAddress;
     private String connectToNetworkUrl;
     @Autowired
@@ -183,9 +180,9 @@ public class BaseNodeNetworkService implements INetworkService {
 
     @Override
     public void validateNetworkNodeData(NetworkNodeData networkNodeData) throws ValidationException {
-        if (!networkNodeData.getNetworkType().equals(networkType)) {
+        if (!networkNodeData.getNetworkType().equals(NETWORK_TYPE)) {
             log.error("Invalid network type {} by node {}", networkNodeData.getNetworkType(), networkNodeData.getNodeHash());
-            throw new NetworkNodeValidationException(String.format(INVALID_NETWORK_TYPE, networkType, networkNodeData.getNetworkType()));
+            throw new NetworkNodeValidationException(String.format(INVALID_NETWORK_TYPE, NETWORK_TYPE, networkNodeData.getNetworkType()));
         }
         if (!networkNodeCrypto.verifySignature(networkNodeData)) {
             log.error("Invalid signature by node {}", networkNodeData.getNodeHash());
@@ -195,7 +192,7 @@ public class BaseNodeNetworkService implements INetworkService {
             log.error("Invalid node registration signature by node {}", networkNodeData.getNodeHash());
             throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_SIGNATURE);
         }
-        if (!networkNodeData.getNodeRegistrationData().getRegistrarHash().toString().equals(kycServerPublicKey)) {
+        if (!networkNodeData.getNodeRegistrationData().getRegistrarHash().toString().equals(KYC_SERVER_PUBLIC_KEY)) {
             log.error("Invalid registrar node hash for node {}", networkNodeData.getNodeHash());
             throw new NetworkNodeValidationException(INVALID_NODE_REGISTRAR);
         }
@@ -207,7 +204,7 @@ public class BaseNodeNetworkService implements INetworkService {
 
     @Override
     public boolean validateFeeData(FeeData feeData) {
-        return feeData.getFeePercentage().compareTo(new BigDecimal("0")) >= 0 && feeData.getFeePercentage().compareTo(new BigDecimal("100")) < 100 &&
+        return feeData.getFeePercentage().compareTo(new BigDecimal("0")) >= 0 && feeData.getFeePercentage().compareTo(new BigDecimal("100")) < 0 &&
                 feeData.getMinimumFee().compareTo(feeData.getMaximumFee()) <= 0;
     }
 

@@ -12,7 +12,6 @@ import io.coti.basenode.services.interfaces.IClusterStampService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -21,13 +20,14 @@ import java.io.FileReader;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 
+import static io.coti.basenode.constants.BaseNodeApplicationConstant.LOGGING_FILE_NAME;
+
 @Slf4j
 @Service
 public class BaseNodeClusterStampService implements IClusterStampService {
 
-    @Value("${logging.file.name}")
-    protected String clusterStampFilePrefix;
-    protected static final String CLUSTERSTAMP_FILE_SUFFIX = "_clusterstamp.csv";
+    protected static final String CLUSTER_STAMP_FILE_PREFIX = LOGGING_FILE_NAME;
+    protected static final String CLUSTER_STAMP_FILE_SUFFIX = "_clusterstamp.csv";
     private static final int NUMBER_OF_GENESIS_ADDRESSES_MIN_LINES = 1; // Genesis One and Two + heading
     private static final int NUMBER_OF_ADDRESS_LINE_DETAILS = 2;
     private static final int ADDRESS_DETAILS_HASH_PLACEMENT = 0;
@@ -48,7 +48,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     @Override
     public void loadClusterStamp() {
-        String clusterStampFileLocation = clusterStampFilePrefix + CLUSTERSTAMP_FILE_SUFFIX;
+        String clusterStampFileLocation = CLUSTER_STAMP_FILE_PREFIX + CLUSTER_STAMP_FILE_SUFFIX;
         File clusterstampFile = new File(clusterStampFileLocation);
         ClusterStampData clusterStampData = new ClusterStampData();
 

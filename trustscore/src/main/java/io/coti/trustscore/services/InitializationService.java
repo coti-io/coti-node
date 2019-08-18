@@ -10,7 +10,6 @@ import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.interfaces.ICommunicationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.stereotype.Service;
 
@@ -20,8 +19,7 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 
-import static io.coti.basenode.constants.BaseNodeApplicationConstant.NETWORK_TYPE;
-import static io.coti.basenode.constants.BaseNodeApplicationConstant.NODE_IP;
+import static io.coti.basenode.constants.BaseNodeApplicationConstant.*;
 
 @Service
 @Slf4j
@@ -29,10 +27,6 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @Autowired
     private ICommunicationService communicationService;
-    @Value("${server.port}")
-    private String serverPort;
-    @Value("${server.url}")
-    private String webServerUrl;
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
@@ -69,8 +63,8 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @Override
     protected NetworkNodeData createNodeProperties() {
-        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.TrustScoreNode, NODE_IP, serverPort, NodeCryptoHelper.getNodeHash(), NETWORK_TYPE);
-        networkNodeData.setWebServerUrl(webServerUrl);
+        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.TrustScoreNode, NODE_IP, NODE_PORT, NodeCryptoHelper.getNodeHash(), NETWORK_TYPE);
+        networkNodeData.setWebServerUrl(WEB_SERVER_URL);
         return networkNodeData;
 
     }

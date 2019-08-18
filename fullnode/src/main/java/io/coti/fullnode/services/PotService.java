@@ -39,7 +39,7 @@ public class PotService extends BaseNodePotService {
             throw new IllegalArgumentException("Illegal trust score");
         }
         ((PriorityExecutor) queuesPot.get(bucketChoice)).changeCorePoolSize();
-        queuesPot.get(bucketChoice).submit(new ComparableFutureTask(new PotRunnableTask(transactionData, targetDifficulty)));
+        queuesPot.get(bucketChoice).submit(new ComparableFutureTask(new PotRunnableTask(transactionData, TARGET_DIFFICULTY)));
         Instant starts = Instant.now();
         synchronized (transactionData) {
             try {

@@ -17,8 +17,7 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 
-import static io.coti.basenode.constants.BaseNodeApplicationConstant.NETWORK_TYPE;
-import static io.coti.basenode.constants.BaseNodeApplicationConstant.NODE_IP;
+import static io.coti.basenode.constants.BaseNodeApplicationConstant.*;
 
 @Service
 @Slf4j
@@ -26,16 +25,12 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @Autowired
     private ICommunicationService communicationService;
-    @Value("${server.port}")
-    private String serverPort;
     @Value("${minimumFee}")
     private BigDecimal minimumFee;
     @Value("${maximumFee}")
     private BigDecimal maximumFee;
     @Value("${fee.percentage}")
     private BigDecimal nodeFee;
-    @Value("${server.url}")
-    private String webServerUrl;
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
@@ -70,12 +65,12 @@ public class InitializationService extends BaseNodeInitializationService {
     protected NetworkNodeData createNodeProperties() {
         FeeData feeData = new FeeData(nodeFee, minimumFee, maximumFee);
         if (networkService.validateFeeData(feeData)) {
-            NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, NODE_IP, serverPort, NodeCryptoHelper.getNodeHash(), NETWORK_TYPE);
+            NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, NODE_IP, NODE_PORT, NodeCryptoHelper.getNodeHash(), NETWORK_TYPE);
             networkNodeData.setFeeData(feeData);
-            networkNodeData.setWebServerUrl(webServerUrl);
+            networkNodeData.setWebServerUrl(WEB_SERVER_URL);
             return networkNodeData;
         }
-        log.error("Fee Data is invalid, please fix fee properties by following coti instructions. Shutting down the server!");
+        log.error("Fee Data is invalid, please fix fee properties by following Coti instructions. Shutting down the server!");
         System.exit(SpringApplication.exit(applicationContext));
         return null;
     }

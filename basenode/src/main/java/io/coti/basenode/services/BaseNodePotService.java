@@ -4,21 +4,18 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.services.interfaces.IPotService;
 import io.coti.pot.ProofOfTrust;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import static io.coti.basenode.constants.BaseNodeApplicationConstant.NETWORK_DIFFICULTY;
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 
 @Slf4j
 @Service
 public class BaseNodePotService implements IPotService {
 
-    @Value("${network.difficulty}")
-    protected String difficulty;
-    protected static byte[] targetDifficulty;
+    protected final static byte[] TARGET_DIFFICULTY = parseHexBinary(NETWORK_DIFFICULTY);
 
     public void init() {
-        targetDifficulty = parseHexBinary(difficulty);
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
@@ -27,7 +24,7 @@ public class BaseNodePotService implements IPotService {
         ProofOfTrust pot = new ProofOfTrust(
                 transactionData.getRoundedSenderTrustScore());
         boolean valid = pot.verify(transactionData.getHash().
-                getBytes(), transactionData.getNonces(), targetDifficulty);
+                getBytes(), transactionData.getNonces(), TARGET_DIFFICULTY);
         return valid;
     }
 }
