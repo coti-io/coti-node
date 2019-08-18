@@ -12,15 +12,15 @@ import static io.coti.basenode.constants.BaseNodeApplicationConstant.NODE_PRIVAT
 @Service
 public class NodeCryptoHelper {
 
-    @Autowired
     private static BaseNodeApplicationConstant applicationConstant;
     private static String NODE_PUBLIC_KEY;
     private static String seed;
     @Autowired
     private static ApplicationContext applicationContext;
 
-    private NodeCryptoHelper() {
-        NODE_PUBLIC_KEY = CryptoHelper.getPublicKeyFromPrivateKey(((BaseNodeApplicationConstant) applicationContext.getBean(BaseNodeApplicationConstant.class)).NODE_PRIVATE_KEY);
+    @Autowired
+    private NodeCryptoHelper(BaseNodeApplicationConstant applicationConstant) {
+        NODE_PUBLIC_KEY = CryptoHelper.getPublicKeyFromPrivateKey(applicationConstant.NODE_PRIVATE_KEY);
     }
 
     public static SignatureData signMessage(byte[] message) {

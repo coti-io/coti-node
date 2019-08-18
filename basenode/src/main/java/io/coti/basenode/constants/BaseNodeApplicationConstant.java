@@ -1,6 +1,7 @@
 package io.coti.basenode.constants;
 
 import io.coti.basenode.data.NetworkType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -9,7 +10,7 @@ public class BaseNodeApplicationConstant {
 
     //    @Autowired
 //    private static BaseNodeConstantInjector inj;
-
+    @Component
     private static class ConstantInjector {
 
         private static NetworkType networkType;
@@ -29,6 +30,7 @@ public class BaseNodeApplicationConstant {
         private static String loggingFileName;
         private static boolean allowTransactionMonitoring;
 
+        @Autowired
         private ConstantInjector(@Value("${network}") NetworkType networkType,
                                  @Value("${network.difficulty}") String networkDifficulty,
                                  @Value("${server.ip}") String nodeIp,
@@ -66,6 +68,8 @@ public class BaseNodeApplicationConstant {
         }
     }
 
+    @Autowired
+    private static BaseNodeConstantInjector inj;
     public static final NetworkType NETWORK_TYPE = ConstantInjector.networkType;
     public static final String NETWORK_DIFFICULTY = ConstantInjector.networkDifficulty;
     public static final String NODE_IP = ConstantInjector.nodeIp;
@@ -76,11 +80,20 @@ public class BaseNodeApplicationConstant {
     public static final String NODE_MANAGER_PROPAGATION_PORT = ConstantInjector.nodeManagerPropagationPort;
     public static final String KYC_SERVER_ADDRESS = ConstantInjector.kycServerAddress;
     public static final String KYC_SERVER_PUBLIC_KEY = ConstantInjector.kycServerPublicKey;
-    public static final String NODE_PRIVATE_KEY = ConstantInjector.nodePrivateKey;
+    public static final String NODE_PRIVATE_KEY;
     public static final int MIN_SOURCE_PERCENTAGE = ConstantInjector.minSourcePercentage;
     public static final int MAX_NEIGHBOURHOOD_RADIUS = ConstantInjector.maxNeighbourhoodRadius;
     public static final int TRUST_CHAIN_THRESHOLD = ConstantInjector.trustChainThreshold;
     public static final String LOGGING_FILE_NAME = ConstantInjector.loggingFileName;
     public static final boolean ALLOW_TRANSACTION_MONITORING = ConstantInjector.allowTransactionMonitoring;
+
+    static {
+        NODE_PRIVATE_KEY = ConstantInjector.nodePrivateKey;
+    }
+//    @Autowired
+//    private BaseNodeApplicationConstant(BaseNodeConstantInjector inj) {
+//        this.inj = inj;
+//        NODE_PRIVATE_KEY = inj.nodePrivateKey;
+//    }
 
 }
