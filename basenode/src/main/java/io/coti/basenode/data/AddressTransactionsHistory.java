@@ -17,7 +17,6 @@ public class AddressTransactionsHistory implements IEntity {
     private Instant creationTime;
     private Set<Hash> transactionsHistory;
 
-
     public AddressTransactionsHistory(Hash hash) {
         this.hash = hash;
         creationTime = Instant.now();
@@ -26,16 +25,6 @@ public class AddressTransactionsHistory implements IEntity {
 
     public boolean addTransactionHashToHistory(Hash transactionHash) {
         return transactionsHistory.add(transactionHash);
-    }
-
-    @Override
-    public Hash getHash() {
-        return hash;
-    }
-
-    @Override
-    public void setHash(Hash hash) {
-        this.hash = hash;
     }
 
     @Override
