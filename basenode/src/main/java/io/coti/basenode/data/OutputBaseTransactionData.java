@@ -10,6 +10,7 @@ import java.time.Instant;
 public abstract class OutputBaseTransactionData extends BaseTransactionData {
 
     private static final long serialVersionUID = 5660628603489226186L;
+    protected Hash originalCurrencyHash;
     @Positive
     protected BigDecimal originalAmount;
 
@@ -17,8 +18,9 @@ public abstract class OutputBaseTransactionData extends BaseTransactionData {
         super();
     }
 
-    protected OutputBaseTransactionData(Hash addressHash, BigDecimal amount, BigDecimal originalAmount, Instant createTime) {
-        super(addressHash, amount, createTime);
+    protected OutputBaseTransactionData(Hash addressHash, Hash currencyHash, BigDecimal amount, Hash originalCurrencyHash, BigDecimal originalAmount, Instant createTime) {
+        super(addressHash, currencyHash, amount, createTime);
+        this.originalCurrencyHash = originalCurrencyHash;
         this.setOriginalAmount(originalAmount);
     }
 

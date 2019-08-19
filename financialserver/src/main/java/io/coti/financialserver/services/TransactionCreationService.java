@@ -17,11 +17,14 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.*;
 
+import static io.coti.basenode.services.CurrencyService.NATIVE_CURRENCY_HASH;
+
 @Slf4j
 @Service
 public class TransactionCreationService {
 
     public static final int MAX_TRUST_SCORE = 100;
+
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
@@ -41,13 +44,13 @@ public class TransactionCreationService {
 
     public void createNewChargebackTransaction(BigDecimal amount, Hash merchantRollingReserveAddress, Hash consumerAddress, BigDecimal poolAmount) {
 
-        InputBaseTransactionData ibt = new InputBaseTransactionData(merchantRollingReserveAddress, amount.multiply(new BigDecimal(-1)), Instant.now());
-        ReceiverBaseTransactionData rbt = new ReceiverBaseTransactionData(consumerAddress, amount, amount, Instant.now());
+        InputBaseTransactionData ibt = new InputBaseTransactionData(merchantRollingReserveAddress, NATIVE_CURRENCY_HASH, amount.multiply(new BigDecimal(-1)), Instant.now());
+        ReceiverBaseTransactionData rbt = new ReceiverBaseTransactionData(consumerAddress, NATIVE_CURRENCY_HASH, amount, NATIVE_CURRENCY_HASH, amount, Instant.now());
 
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
 
         if (!poolAmount.equals(new BigDecimal(0))) {
-            InputBaseTransactionData ibtCotiPool = new InputBaseTransactionData(rollingReserveService.getCotiRollingReserveAddress(), poolAmount.multiply(new BigDecimal(-1)), Instant.now());
+            InputBaseTransactionData ibtCotiPool = new InputBaseTransactionData(rollingReserveService.getCotiRollingReserveAddress(), NATIVE_CURRENCY_HASH, poolAmount.multiply(new BigDecimal(-1)), Instant.now());
             baseTransactions.add(ibtCotiPool);
         }
 
@@ -78,9 +81,9 @@ public class TransactionCreationService {
 
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
 
-        InputBaseTransactionData ibt = new InputBaseTransactionData(cotiGenesisAddress, amount.multiply(new BigDecimal(-1)), Instant.now());
+        InputBaseTransactionData ibt = new InputBaseTransactionData(cotiGenesisAddress, NATIVE_CURRENCY_HASH, amount.multiply(new BigDecimal(-1)), Instant.now());
 
-        ReceiverBaseTransactionData rbt = new ReceiverBaseTransactionData(fundAddress, amount, amount, Instant.now());
+        ReceiverBaseTransactionData rbt = new ReceiverBaseTransactionData(fundAddress, NATIVE_CURRENCY_HASH, amount, NATIVE_CURRENCY_HASH, amount, Instant.now());
         baseTransactions.add(ibt);
         baseTransactions.add(rbt);
 

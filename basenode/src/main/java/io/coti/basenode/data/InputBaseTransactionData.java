@@ -15,8 +15,8 @@ public class InputBaseTransactionData extends BaseTransactionData {
         super();
     }
 
-    public InputBaseTransactionData(Hash addressHash, BigDecimal amount, Instant createTime) {
-        super(addressHash, amount, createTime);
+    public InputBaseTransactionData(Hash addressHash, Hash currencyHash, BigDecimal amount, Instant createTime) {
+        super(addressHash, currencyHash, amount, createTime);
     }
 
     public void setAmount(BigDecimal amount) {

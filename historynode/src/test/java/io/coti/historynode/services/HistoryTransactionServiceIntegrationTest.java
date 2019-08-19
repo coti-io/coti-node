@@ -25,7 +25,6 @@ import io.coti.historynode.model.AddressTransactionsByAddresses;
 import io.coti.historynode.model.AddressTransactionsByDates;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static io.coti.basenode.services.CurrencyService.NATIVE_CURRENCY_HASH;
 import static utils.TestConstants.MAX_TRUST_SCORE;
 import static utils.TransactionTestUtils.createRandomTransaction;
 import static utils.TransactionTestUtils.generateRandomHash;
@@ -149,7 +149,7 @@ public class HistoryTransactionServiceIntegrationTest {
     }
 
 
-//            @Test
+    //            @Test
     public void indexTransactions_differentBaseTransactionsTypes_indexOfTransactionsMatch() {
         TransactionData transactionData = createRandomTransaction();
         Hash transactionHash = transactionData.getHash();
@@ -158,12 +158,12 @@ public class HistoryTransactionServiceIntegrationTest {
         transactionData.setSenderHash(generateRandomHash());
 
         ReceiverBaseTransactionData receiverBaseTransaction =
-                new ReceiverBaseTransactionData(generateRandomHash(), new BigDecimal(7), new BigDecimal(8), Instant.now());
+                new ReceiverBaseTransactionData(generateRandomHash(), NATIVE_CURRENCY_HASH, new BigDecimal(7), NATIVE_CURRENCY_HASH, new BigDecimal(8), Instant.now());
         transactionData.getBaseTransactions().add(receiverBaseTransaction);
         Hash receiverBaseTransactionAddressHash = receiverBaseTransaction.getAddressHash();
 
         InputBaseTransactionData inputBaseTransaction =
-                new InputBaseTransactionData(generateRandomHash(), new BigDecimal(-6), Instant.now());
+                new InputBaseTransactionData(generateRandomHash(), NATIVE_CURRENCY_HASH, new BigDecimal(-6), Instant.now());
         transactionData.getBaseTransactions().add(inputBaseTransaction);
         Hash inputBaseTransactionAddressHash = receiverBaseTransaction.getAddressHash();
 
@@ -182,7 +182,7 @@ public class HistoryTransactionServiceIntegrationTest {
         Assert.assertTrue(transactionHashesByReceiverAddress.getTransactionHashesByDates().get(attachmentLocalDate).contains(transactionHash));
     }
 
-//            @Test
+    //            @Test
     public void indexTransactions_getTransactionsHashesByDate_indexOfTransactionsMatch() throws JsonProcessingException {
         // Generate transactions data
         int numberOfDays = 5;
@@ -204,7 +204,7 @@ public class HistoryTransactionServiceIntegrationTest {
         });
     }
 
-//            @Test
+    //            @Test
     public void indexTransactions_getTransactionsHashesToRetrieve_indexOfTransactionsMatch() throws JsonProcessingException {
         // Generate transactions data
         int numberOfDays = 5;
@@ -249,7 +249,7 @@ public class HistoryTransactionServiceIntegrationTest {
         Assert.assertEquals(0, transactionsHashesToRetrieve.size());
     }
 
-//            @Test
+    //            @Test
     public void getTransactionsByDate_storeAndRetrieveByDateFromLocal_singleTransactionsMatched() throws IOException {
         // Generate transactions data
         int numberOfDays = 4;
@@ -275,7 +275,7 @@ public class HistoryTransactionServiceIntegrationTest {
 //        Assert.assertTrue(((HistoryTransactionResponse)transactionsByDatesResponse.getBody()).getHistoryTransactionResponseData().getHistoryTransactionResults().containsValue(transactionDataToRetrieve));
     }
 
-//            @Test
+    //            @Test
     public void getTransactionsByDate_storeAndRetrieveByDateFromElasticSearch_singleTransactionsMatched() throws IOException {
         // Generate transactions data
         int numberOfDays = 4;
@@ -301,7 +301,7 @@ public class HistoryTransactionServiceIntegrationTest {
 //        Assert.assertTrue(((HistoryTransactionResponse)transactionsByDatesResponse.getBody()).getHistoryTransactionResponseData().getHistoryTransactionResults().containsValue(transactionDataToRetrieve));
     }
 
-//            @Test
+    //            @Test
     public void getTransactionsByDate_storeAndRetrieveByDate_multipleTransactionsMatched() throws IOException {
         // Generate transactions data
         int numberOfDays = 4;
@@ -329,7 +329,7 @@ public class HistoryTransactionServiceIntegrationTest {
 //                });
     }
 
-//            @Test
+    //            @Test
     public void getTransactionsByAddress_storeAndRetrieveByAddressAndDates_multipleTransactionsMatched() throws IOException {
         // Generate transactions data
         int numberOfDays = 4;
@@ -363,7 +363,7 @@ public class HistoryTransactionServiceIntegrationTest {
     }
 
 
-//            @Test
+    //            @Test
     public void getTransactionsByAddress_storeAndRetrieveByAddress_multipleTransactionsMatched() throws IOException {
         // Generate transactions data
         int numberOfDays = 4;
@@ -390,7 +390,7 @@ public class HistoryTransactionServiceIntegrationTest {
 //        }
     }
 
-//            @Test
+    //            @Test
     public void getTransactionsByAddress_storeAndRetrieveByAddress_singleTransactionsMatched() throws IOException {
         // Generate transactions data
         int numberOfDays = 4;
@@ -417,7 +417,7 @@ public class HistoryTransactionServiceIntegrationTest {
 //                .getHistoryTransactionResults().get(generatedTransactionsData.get(2).getHash()).equals(generatedTransactionsData.get(2)));
     }
 
-//            @Test
+    //            @Test
     public void getTransactionsByAddress_storeAndRetrieveByDatesNoAddress_noTransactionsMatched() throws IOException {
         // Generate transactions data
         int numberOfDays = 4;
@@ -497,9 +497,9 @@ public class HistoryTransactionServiceIntegrationTest {
 
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
 
-        InputBaseTransactionData ibt = new InputBaseTransactionData(cotiGenesisAddress, amount.multiply(new BigDecimal(-1)), Instant.now());
+        InputBaseTransactionData ibt = new InputBaseTransactionData(cotiGenesisAddress, NATIVE_CURRENCY_HASH, amount.multiply(new BigDecimal(-1)), Instant.now());
 
-        ReceiverBaseTransactionData rbt = new ReceiverBaseTransactionData(fundAddress, amount, amount, Instant.now());
+        ReceiverBaseTransactionData rbt = new ReceiverBaseTransactionData(fundAddress, NATIVE_CURRENCY_HASH, amount, NATIVE_CURRENCY_HASH, amount, Instant.now());
         baseTransactions.add(ibt);
         baseTransactions.add(rbt);
 
