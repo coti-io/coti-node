@@ -25,4 +25,6 @@ public interface IDatabaseConnector {
     void init();
 
     void shutdown();
+
+    void restoreUpDb();
 }

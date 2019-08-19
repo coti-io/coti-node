@@ -77,7 +77,7 @@ public abstract class BaseNodeInitializationService {
     @Autowired
     private IPotService potService;
     @Autowired
-    private IDatabaseConnector databaseConnector;
+    protected IDatabaseConnector databaseConnector;
     @Autowired
     private IPropagationSubscriber propagationSubscriber;
     @Autowired

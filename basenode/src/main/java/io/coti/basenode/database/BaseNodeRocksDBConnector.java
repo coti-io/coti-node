@@ -37,6 +37,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     public void init() {
         setColumnFamily();
         init(applicationName + databaseFolderName);
+        //init(applicationName + databaseFolderName+ "/backups/shared" ); //backup
 
         String backupFolderPath = applicationName + databaseFolderName+ "/backups";
         createBackupFolderIfDoesntExsit(backupFolderPath);
@@ -79,13 +80,17 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     public void restoreUpDb(){
         log.info("Trying to restore database");
         try {
+
             db.close();
             db = null;
-
+            String backupFolderPath = applicationName + databaseFolderName+ "/backups";
+            createBackupFolderIfDoesntExsit(backupFolderPath);
+            backupableDBOptions = new BackupableDBOptions(backupFolderPath);
+            rocksBackupEngine = BackupEngine.open(Env.getDefault(), backupableDBOptions);
             //rocksBackupEngine = BackupEngine.open(Env.getDefault(), backupableDBOptions);
 
             //TODO 8/11/2019 astolia: true or false?
-            RestoreOptions restoreOpt = new RestoreOptions(false);
+            RestoreOptions restoreOpt = new RestoreOptions(true);
             //TODO 8/11/2019 astolia: maybe need to get backup id and add it as first argument
 //            rocksBackupEngine.restoreDbFromBackup(1,applicationName + databaseFolderName,applicationName + databaseFolderName,restoreOpt);
             rocksBackupEngine.restoreDbFromLatestBackup(applicationName + databaseFolderName, applicationName + databaseFolderName, restoreOpt);
@@ -96,6 +101,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             options.setCreateIfMissing(true);
             options.setCreateMissingColumnFamilies(true);
             options.setEnv(Env.getDefault());
+            columnFamilyHandles = new ArrayList<>();
             db = RocksDB.open(options, dbPath, columnFamilyDescriptors, columnFamilyHandles);
             populateColumnFamilies();
 
@@ -136,7 +142,8 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             db = RocksDB.open(options, dbPath, columnFamilyDescriptors, columnFamilyHandles);
             populateColumnFamilies();
         } catch (Exception e) {
-            throw new DataBaseException(String.format("Error initiating Rocks DB. Class: %s, Exception message: %s", e.getClass(), e.getMessage()));
+            restoreUpDb();
+            //throw new DataBaseException(String.format("Error initiating Rocks DB. Class: %s, Exception message: %s", e.getClass(), e.getMessage()));
         }
     }
 

@@ -73,7 +73,8 @@ public class InitializationService extends BaseNodeInitializationService {
         } catch (Exception e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
-            System.exit(SpringApplication.exit(applicationContext));
+            databaseConnector.restoreUpDb();
+            //System.exit(SpringApplication.exit(applicationContext));
         }
     }
 
