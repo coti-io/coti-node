@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
+import static io.coti.basenode.services.CurrencyService.NATIVE_CURRENCY_HASH;
 import static io.coti.basenode.services.TransactionHelper.CURRENCY_SCALE;
 
 @Slf4j
@@ -80,7 +81,7 @@ public class FeeService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(INVALID_AMOUNT_VS_FULL_NODE_FEE, amount.toPlainString()), STATUS_ERROR));
             }
 
-            FullNodeFeeData fullNodeFeeData = new FullNodeFeeData(address, amount, originalAmount, Instant.now());
+            FullNodeFeeData fullNodeFeeData = new FullNodeFeeData(address, NATIVE_CURRENCY_HASH, amount, NATIVE_CURRENCY_HASH, originalAmount, Instant.now());
             setFullNodeFeeHash(fullNodeFeeData);
             signFullNodeFee(fullNodeFeeData);
             FullNodeFeeResponseData fullNodeFeeResponseData = new FullNodeFeeResponseData(fullNodeFeeData);
