@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static io.coti.basenode.services.CurrencyService.NATIVE_CURRENCY_HASH;
 import static utils.TestConstants.*;
 
 public class TransactionTestUtils {
@@ -55,6 +56,7 @@ public class TransactionTestUtils {
         ArrayList<BaseTransactionData> baseTransactions = new ArrayList<>(
                 Collections.singletonList(new InputBaseTransactionData
                         (HashTestUtils.generateRandomAddressHash(),
+                                NATIVE_CURRENCY_HASH,
                                 new BigDecimal(0),
                                 Instant.now())));
         byte[] bytesToHash = getBaseMessageInBytes(baseTransactions.get(0));
