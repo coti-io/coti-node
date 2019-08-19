@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.services.CurrencyService.NATIVE_CURRENCY_HASH;
 import static io.coti.basenode.services.TransactionHelper.CURRENCY_SCALE;
 import static io.coti.trustscore.http.HttpStringConstants.*;
 
@@ -84,7 +85,7 @@ public class NetworkFeeService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(INVALID_REDUCED_AMOUNT_VS_NETWORK_FEE, fee.add(fullNodeFeeData.getAmount()).toPlainString()), STATUS_ERROR));
             }
 
-            NetworkFeeData networkFeeData = new NetworkFeeData(networkFeeAddress, fee, originalAmount, reducedAmount, Instant.now());
+            NetworkFeeData networkFeeData = new NetworkFeeData(networkFeeAddress, NATIVE_CURRENCY_HASH, fee, NATIVE_CURRENCY_HASH, originalAmount, reducedAmount, Instant.now());
             setNetworkFeeHash(networkFeeData);
             signNetworkFee(networkFeeData, true);
             NetworkFeeResponseData networkFeeResponseData = new NetworkFeeResponseData(networkFeeData);

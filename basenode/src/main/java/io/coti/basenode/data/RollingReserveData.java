@@ -20,8 +20,8 @@ public class RollingReserveData extends OutputBaseTransactionData implements ITr
         super();
     }
 
-    public RollingReserveData(Hash addressHash, BigDecimal amount, BigDecimal originalAmount, BigDecimal reducedAmount, Instant createTime) {
-        super(addressHash, amount, originalAmount, createTime);
+    public RollingReserveData(Hash addressHash, Hash currencyHash, BigDecimal amount, Hash originalCurrencyHash, BigDecimal originalAmount, BigDecimal reducedAmount, Instant createTime) {
+        super(addressHash, currencyHash, amount, originalCurrencyHash, originalAmount, createTime);
         this.setReducedAmount(reducedAmount);
     }
 

@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 public class FullNodeFeeRequest extends Request implements ISignValidatable {
 
     private boolean feeIncluded;
+    private Hash originalCurrencyHash;
     @Positive
     private BigDecimal originalAmount;
     @NotNull

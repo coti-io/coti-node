@@ -15,8 +15,8 @@ public class ReceiverBaseTransactionData extends OutputBaseTransactionData {
         super();
     }
 
-    public ReceiverBaseTransactionData(Hash addressHash, BigDecimal amount, BigDecimal originalAmount, Instant createTime) {
-        super(addressHash, amount, originalAmount, createTime);
+    public ReceiverBaseTransactionData(Hash addressHash, Hash currencyHash, BigDecimal amount, Hash originalCurrencyHash, BigDecimal originalAmount, Instant createTime) {
+        super(addressHash, currencyHash, amount, originalCurrencyHash, originalAmount, createTime);
     }
 
 }
