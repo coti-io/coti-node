@@ -11,6 +11,7 @@ public class RollingReserveRequest {
 
     @NotNull
     private Hash merchantHash;
+    private Hash currencyHash;
     @NotNull
     private NetworkFeeData networkFeeData;
 
