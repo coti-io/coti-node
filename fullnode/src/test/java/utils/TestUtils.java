@@ -10,6 +10,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static io.coti.basenode.services.CurrencyService.NATIVE_CURRENCY_HASH;
+
 public class TestUtils {
 
     private static final String[] hexaOptions = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
@@ -49,6 +51,7 @@ public class TestUtils {
         ArrayList<BaseTransactionData> baseTransactions = new ArrayList<>(
                 Collections.singletonList(new InputBaseTransactionData
                         (generateRandomHash(SIZE_OF_HASH),
+                                NATIVE_CURRENCY_HASH,
                                 new BigDecimal(0),
                                 Instant.now())));
         return new TransactionData(baseTransactions,
