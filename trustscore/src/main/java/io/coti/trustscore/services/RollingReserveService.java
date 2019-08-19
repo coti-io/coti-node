@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.services.CurrencyService.NATIVE_CURRENCY_HASH;
 import static io.coti.basenode.services.TransactionHelper.CURRENCY_SCALE;
 import static io.coti.trustscore.http.HttpStringConstants.*;
 
@@ -89,7 +90,7 @@ public class RollingReserveService {
             Hash rollingReserveAddress = getMerchantRollingReserveAddress(rollingReserveRequest.getMerchantHash());
             BigDecimal rollingReserveAmount = calculateRollingReserveAmount(reducedAmount, trustScoreService.calculateUserTrustScore(trustScoreData));
 
-            RollingReserveData rollingReserveData = new RollingReserveData(rollingReserveAddress, rollingReserveAmount, originalAmount, reducedAmount, Instant.now());
+            RollingReserveData rollingReserveData = new RollingReserveData(rollingReserveAddress, NATIVE_CURRENCY_HASH, rollingReserveAmount, NATIVE_CURRENCY_HASH, originalAmount, reducedAmount, Instant.now());
             setRollingReserveNodeFeeHash(rollingReserveData);
             signRollingReserveFee(rollingReserveData, true);
             RollingReserveResponseData rollingReserveResponseData = new RollingReserveResponseData(rollingReserveData);
