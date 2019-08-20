@@ -66,6 +66,4 @@ public class BaseNodeAwsService {
         }
     }
 
-    protected boolean uploadFol
-
 }
