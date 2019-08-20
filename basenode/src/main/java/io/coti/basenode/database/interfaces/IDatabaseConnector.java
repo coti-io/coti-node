@@ -25,4 +25,8 @@ public interface IDatabaseConnector {
     void init();
 
     void shutdown();
+
+    void generateDataBaseBackup(String backupPath);
+
+    void restoreDataBase(String backupPath);
 }

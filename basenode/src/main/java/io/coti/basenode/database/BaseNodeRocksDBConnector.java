@@ -4,8 +4,8 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.exceptions.DataBaseException;
-import io.coti.basenode.model.*;
 import io.coti.basenode.model.Collection;
+import io.coti.basenode.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,16 +24,16 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
 
     @Value("${database.folder.name}")
     private String databaseFolderName;
-    protected List<String> columnFamilyClassNames;
     @Value("${application.name}")
     private String applicationName;
+    @Autowired
+    private ApplicationContext ctx;
+    protected List<String> columnFamilyClassNames;
     private String dbPath;
     private List<ColumnFamilyDescriptor> columnFamilyDescriptors = new ArrayList<>();
     private RocksDB db;
     private Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
     private List<ColumnFamilyHandle> columnFamilyHandles = new ArrayList<>();
-    @Autowired
-    private ApplicationContext ctx;
 
     public void init() {
         setColumnFamily();
@@ -41,6 +41,48 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
+    public void generateDataBaseBackup(String backupPath){
+        log.info("Starting database backup to {}",backupPath);
+        try (BackupableDBOptions backupableDBOptions = new BackupableDBOptions(backupPath);
+             BackupEngine rocksBackupEngine = BackupEngine.open(Env.getDefault(), backupableDBOptions)){
+
+            rocksBackupEngine.createNewBackup(db, false);
+            rocksBackupEngine.purgeOldBackups(2);
+
+            rocksBackupEngine.close();
+            backupableDBOptions.close();
+            log.info("Created folder and backup engine");
+        } catch (RocksDBException rocksDBException) {
+            log.error("Failed to open backup engine. error: {}",rocksDBException.getMessage());
+        }
+    }
+
+    public void restoreDataBase(String backupPath){
+        log.info("Starting database restore from {}",backupPath);
+        try(BackupableDBOptions backupableDBOptions = new BackupableDBOptions(backupPath);
+        BackupEngine rocksBackupEngine = BackupEngine.open(Env.getDefault(), backupableDBOptions);
+        RestoreOptions restoreOpt = new RestoreOptions(true)){
+
+            db.close();
+
+            rocksBackupEngine.restoreDbFromLatestBackup(applicationName + databaseFolderName, applicationName + databaseFolderName, restoreOpt);
+            restoreOpt.close();
+            rocksBackupEngine.close();
+            backupableDBOptions.close();
+
+            DBOptions options = new DBOptions();
+            options.setCreateIfMissing(true);
+            options.setCreateMissingColumnFamilies(true);
+            options.setEnv(Env.getDefault());
+            columnFamilyHandles = new ArrayList<>();
+            db = RocksDB.open(options, dbPath, columnFamilyDescriptors, columnFamilyHandles);
+            populateColumnFamilies();
+            log.info("db restore finished");
+        }
+        catch (RocksDBException e) {
+            e.printStackTrace();
+        }
+    }
 
     protected void setColumnFamily() {
         columnFamilyClassNames = new ArrayList<>(Arrays.asList(
@@ -52,12 +94,10 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
                 TransactionVotes.class.getName(),
                 NodeRegistrations.class.getName()
         ));
-
     }
 
     public void init(String dbPath) {
         this.dbPath = dbPath;
-
         initColumnFamilyClasses();
         try {
             initiateColumnFamilyDescriptors();
@@ -81,7 +121,6 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
                 throw new DataBaseException(String.format("Error at init column family classes. Class: %s, Exception message: %s", e.getClass(), e.getMessage()));
             }
         }
-
     }
 
     private void populateColumnFamilies() {
