@@ -78,17 +78,14 @@ public class BaseNodeRocksDBRecoveryService {
         if(backupFolders.size() == 0){
             baseNodeAwsService.createS3Folder(bucket, backupNodeHashS3Path);
         }
-        //upload to s3 from backups remote
-        //create the backup - upload to s3 delete previous backups. should remain two backups.
         File backupFolderToUpload = new File(remoteBackupFolderPath);
         baseNodeAwsService.uploadFolderAndContents(bucket, backupNodeHashS3Path, "backup-" + Instant.now().toEpochMilli(), backupFolderToUpload);
-
         deleteBackup(remoteBackupFolderPath);
+        //clean up s3 older backups.
 
     }
 
     private void deleteBackup(String backupFolderPath) {
-
         try {
             FileUtils.cleanDirectory(new File(backupFolderPath));
         } catch (IOException e) {
