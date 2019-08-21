@@ -1,7 +1,11 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.data.AddressData;
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
+import io.coti.basenode.model.Addresses;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -9,9 +13,8 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.time.Instant;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -35,8 +38,11 @@ public class BaseNodeRocksDBRecoveryService {
     private IDatabaseConnector rocksDBConnector;
     @Autowired
     private BaseNodeAwsService baseNodeAwsService;
+    @Autowired
+    private Addresses addresses;
     private String localBackupFolderPath;
     private String remoteBackupFolderPath;
+    private String backupNodeHashS3Path;
 
     @PostConstruct
     private void init(){
@@ -45,7 +51,15 @@ public class BaseNodeRocksDBRecoveryService {
         remoteBackupFolderPath = dbPath + "/backups/remote";
         createBackupFolder(localBackupFolderPath);
         createBackupFolder(remoteBackupFolderPath);
-        deleteBackup(remoteBackupFolderPath);
+        initBackupNodeHashS3Path();
+        // 1)
+        log.info("Addresses {} empty",addresses.isEmpty() ? "is" : "is not");
+        addresses.put(new AddressData(new Hash("aaaaaaaa")));
+        log.info("Added address: {}",addresses.getByHash(new Hash("aaaaaaaa")));
+        backupDB();
+
+        // 2)
+        //restoreDB();
     }
 
     private void createBackupFolder(String folderPath){
@@ -56,38 +70,58 @@ public class BaseNodeRocksDBRecoveryService {
     }
 
     private void backupDB() {
-        rocksDBConnector.generateDataBaseBackup(remoteBackupFolderPath);
+        if(!rocksDBConnector.generateDataBaseBackup(remoteBackupFolderPath)){
+            return;
+            //TODO 8/21/2019 astolia: should implement retry mechanism?
+        }
+        List<String> backupFolders = baseNodeAwsService.listS3Paths(bucket, backupNodeHashS3Path);
+        if(backupFolders.size() == 0){
+            baseNodeAwsService.createS3Folder(bucket, backupNodeHashS3Path);
+        }
         //upload to s3 from backups remote
-        //baseNodeAwsService.uploadFile(String sourceFolder);
+        //create the backup - upload to s3 delete previous backups. should remain two backups.
+        File backupFolderToUpload = new File(remoteBackupFolderPath);
+        baseNodeAwsService.uploadFolderAndContents(bucket, backupNodeHashS3Path, "backup-" + Instant.now().toEpochMilli(), backupFolderToUpload);
+
         deleteBackup(remoteBackupFolderPath);
 
     }
 
     private void deleteBackup(String backupFolderPath) {
+
         try {
-            Files.walk(Paths.get(backupFolderPath))
-                    .map(Path::toFile)
-                    .forEach(File::delete);
+            FileUtils.cleanDirectory(new File(backupFolderPath));
         } catch (IOException e) {
             log.error(e.getMessage());
         }
     }
 
-    private void restoreDB(){
+    private boolean restoreDB(){
         if(backupToLocalWhenRestoring){
             rocksDBConnector.generateDataBaseBackup(localBackupFolderPath);
         }
         // download from s3 to backups/remote
+        List<String> backupFolders = baseNodeAwsService.listS3Paths(bucket, backupNodeHashS3Path);
+        if(backupFolders.size() == 0){
+            log.info("Couldn't complete restore. No backups found at {}/{}",bucket, backupNodeHashS3Path);
+            return false;
+            //baseNodeAwsService.createS3Folder(bucket, backupNodeHashS3Path);
+        }
+//        try {
+////            baseNodeAwsService.downloadFile(sb.toString(),bucket); //TODO 8/20/2019 astolia: is this good for downloading folders?
+//        } catch (IOException e) {
+//            log.error(e.getMessage());
+//        }
+        rocksDBConnector.restoreDataBase(remoteBackupFolderPath);
+        deleteBackup(remoteBackupFolderPath);
+        return false; //TODO 8/21/2019 astolia: change
+    }
+
+    private void initBackupNodeHashS3Path(){
         String folderDelimiter = "/";
         StringBuilder sb = new StringBuilder(network);
         sb.append(folderDelimiter).append(applicationName).append(folderDelimiter).append(nodeHash);
-        try {
-            baseNodeAwsService.downloadFile(sb.toString(),bucket); //TODO 8/20/2019 astolia: is this good for downloading folders?
-        } catch (IOException e) {
-            log.error(e.getMessage());
-        }
-        rocksDBConnector.restoreDataBase(remoteBackupFolderPath);
-        deleteBackup(remoteBackupFolderPath);
+        backupNodeHashS3Path = sb.toString();
     }
 
 }

@@ -41,7 +41,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
-    public void generateDataBaseBackup(String backupPath){
+    public boolean generateDataBaseBackup(String backupPath){
         log.info("Starting database backup to {}",backupPath);
         try (BackupableDBOptions backupableDBOptions = new BackupableDBOptions(backupPath);
              BackupEngine rocksBackupEngine = BackupEngine.open(Env.getDefault(), backupableDBOptions)){
@@ -52,12 +52,14 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             rocksBackupEngine.close();
             backupableDBOptions.close();
             log.info("Created folder and backup engine");
+            return true;
         } catch (RocksDBException rocksDBException) {
             log.error("Failed to open backup engine. error: {}",rocksDBException.getMessage());
+            return false;
         }
     }
 
-    public void restoreDataBase(String backupPath){
+    public boolean restoreDataBase(String backupPath){
         log.info("Starting database restore from {}",backupPath);
         try(BackupableDBOptions backupableDBOptions = new BackupableDBOptions(backupPath);
         BackupEngine rocksBackupEngine = BackupEngine.open(Env.getDefault(), backupableDBOptions);
@@ -78,9 +80,11 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             db = RocksDB.open(options, dbPath, columnFamilyDescriptors, columnFamilyHandles);
             populateColumnFamilies();
             log.info("db restore finished");
+            return  true;
         }
         catch (RocksDBException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
+            return false;
         }
     }
 
