@@ -1,5 +1,6 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.model.Addresses;
@@ -52,10 +53,10 @@ public class BaseNodeRocksDBRecoveryService {
         createBackupFolder(remoteBackupFolderPath);
         initBackupNodeHashS3Path();
         // 1)
-//        log.info("Addresses {} empty",addresses.isEmpty() ? "is" : "is not");
-//        addresses.put(new AddressData(new Hash("aaaaaaaa")));
-//        log.info("Added address: {}",addresses.getByHash(new Hash("aaaaaaaa")));
-//        backupDB();
+        log.info("Addresses {} empty",addresses.isEmpty() ? "is" : "is not");
+        addresses.put(new AddressData(new Hash("aaaaaaaa")));
+        log.info("Added address: {}",addresses.getByHash(new Hash("aaaaaaaa")));
+        backupDB();
 
         // 2)
         //delete
@@ -80,7 +81,7 @@ public class BaseNodeRocksDBRecoveryService {
             baseNodeAwsService.createS3Folder(bucket, backupNodeHashS3Path);
         }
         File backupFolderToUpload = new File(remoteBackupFolderPath);
-        baseNodeAwsService.uploadFolderAndContents(bucket, backupNodeHashS3Path + "backup-" + Instant.now().toEpochMilli(), backupFolderToUpload);
+        baseNodeAwsService.uploadFolderAndContents(bucket, backupNodeHashS3Path + "/backup-" + Instant.now().toEpochMilli(), backupFolderToUpload);
         deleteBackup(remoteBackupFolderPath);
         baseNodeAwsService.removeS3PreviousBackup(backupFolders,backupNodeHashS3Path, bucket);
     }
@@ -97,12 +98,13 @@ public class BaseNodeRocksDBRecoveryService {
         if(backupToLocalWhenRestoring){
             rocksDBConnector.generateDataBaseBackup(localBackupFolderPath);
         }
-        List<String> s3BackupFolders = baseNodeAwsService.listS3Paths(bucket, backupNodeHashS3Path);
-        if(s3BackupFolders.size() == 0){
+        List<String> s3BackupFolderAndContents = baseNodeAwsService.listS3Paths(bucket, backupNodeHashS3Path);
+        if(s3BackupFolderAndContents.size() == 0){
             log.debug("Couldn't complete restore. No backups found at {}/{}",bucket, backupNodeHashS3Path);
             return false;
         }
-        String latestS3Backup = baseNodeAwsService.getLatestS3Backup(s3BackupFolders, backupNodeHashS3Path);
+        String latestS3Backup = baseNodeAwsService.getLatestS3Backup(s3BackupFolderAndContents, backupNodeHashS3Path);
+//        s3BackupFolderAndContents.removeIf( fromBackupFolder -> !fromBackupFolder.startsWith(latestS3Backup));
         baseNodeAwsService.downloadFolderAndContents(bucket, latestS3Backup, remoteBackupFolderPath);
         rocksDBConnector.restoreDataBase(remoteBackupFolderPath);
         deleteBackup(remoteBackupFolderPath);

@@ -149,7 +149,14 @@ public class BaseNodeAwsService {
     }
 
     protected void removeS3PreviousBackup(List<String> remoteBackups, String backupNodeHashS3Path, String bucketName){
-        String backupToRemove = getOldestS3Backup(remoteBackups, backupNodeHashS3Path);
+        if(remoteBackups.isEmpty()){
+            return;
+        }
+        Set<Long> s3Backups = getS3BackupSet(remoteBackups);
+        if(s3Backups.size() != ALLOWED_NUMBER_OF_BACKUPS){
+            return;
+        }
+        String backupToRemove = backupNodeHashS3Path + "/backup-" + Collections.min(s3Backups).toString();
         List<DeleteObjectsRequest.KeyVersion> keysToDelete = new ArrayList<>();
         remoteBackups.forEach(backup -> {
             if(backup.startsWith(backupToRemove)){
@@ -167,22 +174,8 @@ public class BaseNodeAwsService {
     }
 
     protected String getLatestS3Backup(List<String> remoteBackups, String backupNodeHashS3Path){
-        return getS3Backup(remoteBackups, backupNodeHashS3Path, true);
-    }
-
-    protected String getOldestS3Backup(List<String> remoteBackups, String backupNodeHashS3Path){
-        return getS3Backup(remoteBackups, backupNodeHashS3Path, false);
-    }
-
-    private String getS3Backup(List<String> remoteBackups, String backupNodeHashS3Path, boolean latest){
         Set<Long> s3Backups = getS3BackupSet(remoteBackups);
-        Long backupTimeStamp;
-        if(latest){
-            backupTimeStamp = Collections.min(s3Backups);
-        }
-        else{
-            backupTimeStamp = Collections.max(s3Backups);
-        }
+        Long backupTimeStamp = Collections.max(s3Backups);
         return backupNodeHashS3Path + "/backup-" + backupTimeStamp.toString();
     }
 
