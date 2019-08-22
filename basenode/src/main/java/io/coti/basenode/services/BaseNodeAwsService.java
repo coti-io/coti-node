@@ -15,8 +15,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.DOCUMENT_NOT_FOUND;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.S3_NOT_REACHABLE;
@@ -25,6 +24,8 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.S3_NOT_REACHABLE
 @Slf4j
 public class BaseNodeAwsService {
 
+    private static final int ALLOWED_NUMBER_OF_BACKUPS = 2;
+    private static final int INDEX_OF_BACKUP_TIMESTAMP_IN_PATH = 3;
     @Value("${aws.s3.bucket.region}")
     private String REGION;
     private AmazonS3 s3Client;
@@ -50,14 +51,16 @@ public class BaseNodeAwsService {
     }
 
     protected void uploadFolderAndContents(String bucketName, String s3folderPath, String backupfolder, File directoryToUpload){
+        String backUpFolder = s3folderPath + "/" + backupfolder;
+        createS3Folder(bucketName,backUpFolder);
         TransferManager transferManager = TransferManagerBuilder.standard().withS3Client(s3Client).build();
 
         try {
             MultipleFileUpload multipleFileUpload = transferManager.uploadDirectory(bucketName,
-                    s3folderPath + "/" + backupfolder + "/", directoryToUpload, true);
+                    backUpFolder + "/", directoryToUpload, true);
             multipleFileUpload.waitForCompletion();
             if(multipleFileUpload.getProgress().getPercentTransferred() == 100){
-                log.info("Finished uploading database backup to s3");
+                log.debug("Finished uploading database backup to s3");
             }
         } catch (AmazonServiceException e) {
             log.error(e.getMessage());
@@ -66,7 +69,7 @@ public class BaseNodeAwsService {
         } catch (Exception e){
             log.error(e.getMessage());
         }
-        transferManager.shutdownNow();
+        //transferManager.shutdownNow();
     }
 
     protected List<String> listS3Paths(String bucketName, String path){
@@ -122,6 +125,35 @@ public class BaseNodeAwsService {
             }
             // To ensure that the network connection doesn't remain open, close any open input streams.
 
+        }
+    }
+
+    protected void removeS3PreviousBackup(List<String> remoteBackups, String backupNodeHashS3Path, String bucketName){
+        Set<Long> s3Backups = new HashSet<>();
+        remoteBackups.forEach(backup -> {
+            String[] backupPathArray = backup.split("/");
+            if(backupPathArray.length > INDEX_OF_BACKUP_TIMESTAMP_IN_PATH){
+                s3Backups.add(Long.parseLong(backupPathArray[INDEX_OF_BACKUP_TIMESTAMP_IN_PATH].substring(7)));
+            }
+        });
+        if(s3Backups.size() != ALLOWED_NUMBER_OF_BACKUPS){
+            return;
+        }
+        Long oldestBackup = Collections.min(s3Backups);
+        String backupToRemove = backupNodeHashS3Path + "/backup-" + oldestBackup.toString();
+        List<DeleteObjectsRequest.KeyVersion> keysToDelete = new ArrayList<>();
+        remoteBackups.forEach(backup -> {
+            if(backup.startsWith(backupToRemove)){
+                keysToDelete.add(new DeleteObjectsRequest.KeyVersion(backup));
+            }
+        });
+        try {
+            log.debug("deleting {}/{}", bucketName, backupToRemove);
+            DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(bucketName).withKeys(keysToDelete);
+            s3Client.deleteObjects(deleteObjectsRequest);
+        }
+        catch (Exception e){
+            log.error(e.getMessage());
         }
     }
 

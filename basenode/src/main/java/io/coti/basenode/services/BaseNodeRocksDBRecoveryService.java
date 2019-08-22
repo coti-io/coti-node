@@ -81,8 +81,7 @@ public class BaseNodeRocksDBRecoveryService {
         File backupFolderToUpload = new File(remoteBackupFolderPath);
         baseNodeAwsService.uploadFolderAndContents(bucket, backupNodeHashS3Path, "backup-" + Instant.now().toEpochMilli(), backupFolderToUpload);
         deleteBackup(remoteBackupFolderPath);
-        //clean up s3 older backups.
-
+        baseNodeAwsService.removeS3PreviousBackup(backupFolders,backupNodeHashS3Path, bucket);
     }
 
     private void deleteBackup(String backupFolderPath) {
@@ -100,7 +99,7 @@ public class BaseNodeRocksDBRecoveryService {
         // download from s3 to backups/remote
         List<String> backupFolders = baseNodeAwsService.listS3Paths(bucket, backupNodeHashS3Path);
         if(backupFolders.size() == 0){
-            log.info("Couldn't complete restore. No backups found at {}/{}",bucket, backupNodeHashS3Path);
+            log.debug("Couldn't complete restore. No backups found at {}/{}",bucket, backupNodeHashS3Path);
             return false;
             //baseNodeAwsService.createS3Folder(bucket, backupNodeHashS3Path);
         }
