@@ -6,10 +6,12 @@ import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.*;
+import com.amazonaws.services.s3.transfer.MultipleFileDownload;
 import com.amazonaws.services.s3.transfer.MultipleFileUpload;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -50,14 +52,13 @@ public class BaseNodeAwsService {
         s3Client.putObject(putObjectRequest);
     }
 
-    protected void uploadFolderAndContents(String bucketName, String s3folderPath, String backupfolder, File directoryToUpload){
-        String backUpFolder = s3folderPath + "/" + backupfolder;
-        createS3Folder(bucketName,backUpFolder);
+    protected void uploadFolderAndContents(String bucketName, String s3folderPath, File directoryToUpload){
+        createS3Folder(bucketName,s3folderPath);
         TransferManager transferManager = TransferManagerBuilder.standard().withS3Client(s3Client).build();
 
         try {
             MultipleFileUpload multipleFileUpload = transferManager.uploadDirectory(bucketName,
-                    backUpFolder + "/", directoryToUpload, true);
+                    s3folderPath + "/", directoryToUpload, true);
             multipleFileUpload.waitForCompletion();
             if(multipleFileUpload.getProgress().getPercentTransferred() == 100){
                 log.debug("Finished uploading database backup to s3");
@@ -69,7 +70,30 @@ public class BaseNodeAwsService {
         } catch (Exception e){
             log.error(e.getMessage());
         }
-        //transferManager.shutdownNow();
+    }
+
+    protected void downloadFolderAndContents(String bucketName, String s3folderPath, String directoryToDownload){
+        TransferManager transferManager = TransferManagerBuilder.standard().withS3Client(s3Client).build();
+        MultipleFileDownload multipleFileDownload =  transferManager.downloadDirectory(bucketName, s3folderPath, new File(directoryToDownload));
+        try {
+            multipleFileDownload.waitForCompletion();
+            if(multipleFileDownload.getProgress().getPercentTransferred() == 100){
+                log.debug("Finished downloading database backup to s3");
+            }
+            removeExcessFolderStructure(directoryToDownload + "/" + s3folderPath, directoryToDownload);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void removeExcessFolderStructure(String source, String destination){
+        try {
+            FileUtils.copyDirectory(new File(source), new File(destination));
+            String[] folderHierarchyToDelete = source.split("/");
+            FileUtils.deleteDirectory(new File(destination+ "/" + folderHierarchyToDelete[3]));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     protected List<String> listS3Paths(String bucketName, String path){
@@ -84,10 +108,6 @@ public class BaseNodeAwsService {
         List<S3ObjectSummary> summaries = objects.getObjectSummaries();
         summaries.forEach(s -> keys.add(s.getKey()));
         return keys;
-    }
-
-    protected void downloadFolder(String bucket, String s3SourcePath, String localDestinationPath){
-
     }
 
     protected void downloadFile(String filePathAndName, String bucketName) throws IOException {
@@ -129,18 +149,7 @@ public class BaseNodeAwsService {
     }
 
     protected void removeS3PreviousBackup(List<String> remoteBackups, String backupNodeHashS3Path, String bucketName){
-        Set<Long> s3Backups = new HashSet<>();
-        remoteBackups.forEach(backup -> {
-            String[] backupPathArray = backup.split("/");
-            if(backupPathArray.length > INDEX_OF_BACKUP_TIMESTAMP_IN_PATH){
-                s3Backups.add(Long.parseLong(backupPathArray[INDEX_OF_BACKUP_TIMESTAMP_IN_PATH].substring(7)));
-            }
-        });
-        if(s3Backups.size() != ALLOWED_NUMBER_OF_BACKUPS){
-            return;
-        }
-        Long oldestBackup = Collections.min(s3Backups);
-        String backupToRemove = backupNodeHashS3Path + "/backup-" + oldestBackup.toString();
+        String backupToRemove = getOldestS3Backup(remoteBackups, backupNodeHashS3Path);
         List<DeleteObjectsRequest.KeyVersion> keysToDelete = new ArrayList<>();
         remoteBackups.forEach(backup -> {
             if(backup.startsWith(backupToRemove)){
@@ -155,6 +164,37 @@ public class BaseNodeAwsService {
         catch (Exception e){
             log.error(e.getMessage());
         }
+    }
+
+    protected String getLatestS3Backup(List<String> remoteBackups, String backupNodeHashS3Path){
+        return getS3Backup(remoteBackups, backupNodeHashS3Path, true);
+    }
+
+    protected String getOldestS3Backup(List<String> remoteBackups, String backupNodeHashS3Path){
+        return getS3Backup(remoteBackups, backupNodeHashS3Path, false);
+    }
+
+    private String getS3Backup(List<String> remoteBackups, String backupNodeHashS3Path, boolean latest){
+        Set<Long> s3Backups = getS3BackupSet(remoteBackups);
+        Long backupTimeStamp;
+        if(latest){
+            backupTimeStamp = Collections.min(s3Backups);
+        }
+        else{
+            backupTimeStamp = Collections.max(s3Backups);
+        }
+        return backupNodeHashS3Path + "/backup-" + backupTimeStamp.toString();
+    }
+
+    private Set<Long> getS3BackupSet(List<String> remoteBackups){
+        Set<Long> s3Backups = new HashSet<>();
+        remoteBackups.forEach(backup -> {
+            String[] backupPathArray = backup.split("/");
+            if(backupPathArray.length > INDEX_OF_BACKUP_TIMESTAMP_IN_PATH){
+                s3Backups.add(Long.parseLong(backupPathArray[INDEX_OF_BACKUP_TIMESTAMP_IN_PATH].substring(7)));
+            }
+        });
+        return s3Backups;
     }
 
 }
