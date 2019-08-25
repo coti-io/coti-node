@@ -18,7 +18,7 @@ public class FullNodeFeeRequestCrypto extends SignatureValidationCrypto<FullNode
         byte[] originalAmountInBytes = decimalOriginalAmountRepresentation.getBytes(StandardCharsets.UTF_8);
 
         ByteBuffer fullNodeFeeBuffer = ByteBuffer.allocate(originalCurrencyHashInBytes.length + originalAmountInBytes.length)
-                .put(originalAmountInBytes).put(originalAmountInBytes);
+                .put(originalCurrencyHashInBytes).put(originalAmountInBytes);
         return CryptoHelper.cryptoHash(fullNodeFeeBuffer.array()).getBytes();
     }
 }
