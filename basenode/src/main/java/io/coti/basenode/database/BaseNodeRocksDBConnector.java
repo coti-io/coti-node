@@ -47,7 +47,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
              BackupEngine rocksBackupEngine = BackupEngine.open(Env.getDefault(), backupableDBOptions)){
 
             rocksBackupEngine.createNewBackup(db, false);
-            rocksBackupEngine.purgeOldBackups(2);
+//            rocksBackupEngine.purgeOldBackups(0);
 
             rocksBackupEngine.close();
             backupableDBOptions.close();
