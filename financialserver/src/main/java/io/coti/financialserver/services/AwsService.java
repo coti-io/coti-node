@@ -6,6 +6,7 @@ import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.*;
+import com.amazonaws.services.s3.transfer.TransferManager;
 import io.coti.basenode.data.Hash;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -88,6 +89,8 @@ public class AwsService {
                 bufferedWriter.newLine();
             }
             bufferedWriter.close();
+
+            TransferManager
 
             return fullObject.getObjectContent();
         } catch (SdkClientException e) {

@@ -26,6 +26,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PreDestroy;
+import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
@@ -98,10 +99,13 @@ public abstract class BaseNodeInitializationService {
     private ITransactionSynchronizationService transactionSynchronizationService;
     @Autowired
     protected ApplicationContext applicationContext;
+    @Autowired
+    private BaseNodeCurrencyService baseNodeCurrencyService;
 
     public void init() {
         try {
             addressService.init();
+            baseNodeCurrencyService.init();
             balanceService.init();
             clusterStampService.loadClusterStamp();
             confirmationService.init();
@@ -113,6 +117,8 @@ public abstract class BaseNodeInitializationService {
             log.info("The communication initialization is done");
             initTransactionSync();
             log.info("The transaction sync initialization is done");
+            initCurrenciesSync();
+
             networkService.setConnectToNetworkUrl(nodeManagerHttpAddress + NODE_MANAGER_NODES_ENDPOINT);
             networkService.connectToNetwork();
             propagationSubscriber.initPropagationHandler();
@@ -154,6 +160,22 @@ public abstract class BaseNodeInitializationService {
 
         } catch (Exception e) {
             throw new TransactionSyncException(e.getMessage());
+        }
+    }
+
+    private void initCurrenciesSync() {
+        if (networkService.getRecoveryServerAddress() != null) {
+            baseNodeCurrencyService.requestMissingCurrenciesFromRecoveryServer();
+            log.info("Currencies sync completed");
+        } else {
+            //TODO 8/14/2019 tomer: to be removed after initial testings
+            baseNodeCurrencyService.initTestCurrencyDataEntries();
+
+            HashSet<Hash> missingCurrencyDataHashes = baseNodeCurrencyService.getMissingCurrencyDataHashes();
+            if (!missingCurrencyDataHashes.isEmpty()) {
+                log.error("Identified {} invalid currency data hashes {}", missingCurrencyDataHashes.size(), missingCurrencyDataHashes.toString());
+            }
+
         }
     }
 

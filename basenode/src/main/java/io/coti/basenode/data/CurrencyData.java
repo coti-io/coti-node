@@ -21,6 +21,7 @@ public class CurrencyData implements IPropagatable, ISignable, ISignValidatable 
     private BigDecimal totalSupply;
     private int scale;
     private Instant creationTime;
+    private CurrencyTempType type;
     private Hash originatorHash;
     private SignatureData originatorSignature;
     private Hash registrarHash;
