@@ -7,6 +7,7 @@ import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 
+import javax.validation.constraints.NotEmpty;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.time.Instant;
@@ -15,8 +16,12 @@ import java.time.Instant;
 public class CurrencyData implements IPropagatable, ISignable, ISignValidatable {
 
     private Hash hash;
+    @NotEmpty
     private String name;
+    @NotEmpty
     private String symbol;
+    private CurrencyTypeData currencyTypeData;
+    @NotEmpty
     private String description;
     private BigDecimal totalSupply;
     private int scale;
@@ -26,22 +31,11 @@ public class CurrencyData implements IPropagatable, ISignable, ISignValidatable 
     private Hash registrarHash;
     private SignatureData registrarSignature;
 
-    @Override
-    public Hash getHash() {
-        return hash;
-    }
-
-    @Override
-    public void setHash(Hash hash) {
-        this.hash = hash;
-    }
-
     public void setHash() {
         byte[] nameInBytes = name.getBytes();
         byte[] symbolInBytes = symbol.getBytes();
         byte[] concatDataFields = ByteBuffer.allocate(nameInBytes.length + symbolInBytes.length).
                 put(nameInBytes).put(symbolInBytes).array();
-
         hash = CryptoHelper.cryptoHash(concatDataFields, 224);
     }
 
