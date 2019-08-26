@@ -8,7 +8,7 @@ public interface IDatabaseConnector {
 
     void init();
 
-    boolean generateDataBaseBackup(String backupPath);
+    void generateDataBaseBackup(String backupPath);
 
     boolean restoreDataBase(String backupPath);
 

@@ -55,7 +55,7 @@ public class AwsService extends BaseNodeAwsService {
         return s3Client.getObject(BUCKET_NAME, fileName);
     }
 
-    public void downloadFundDistributionFile(String fileName) throws IOException {
+    public void downloadFundDistributionFile(String fileName) {
         downloadFile(fileName, BUCKET_NAME_DISTRIBUTION);
     }
 

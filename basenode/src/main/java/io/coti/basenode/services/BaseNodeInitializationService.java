@@ -33,12 +33,6 @@ public abstract class BaseNodeInitializationService {
 
     private final static String NODE_REGISTRATION = "/node/node_registration";
     private final static String NODE_MANAGER_NODES_ENDPOINT = "/nodes";
-    @Autowired
-    protected INetworkService networkService;
-    @Autowired
-    private IAwsService awsService;
-    @Autowired
-    private IDBRecoveryService idbRecoveryService;
     @Value("${network}")
     protected NetworkType networkType;
     @Value("${server.ip}")
@@ -54,6 +48,14 @@ public abstract class BaseNodeInitializationService {
     private String kycServerAddress;
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
+    @Autowired
+    protected INetworkService networkService;
+    @Autowired
+    private IAwsService awsService;
+    @Autowired
+    private IDatabaseConnector databaseConnector;
+    @Autowired
+    private IDBRecoveryService dbRecoveryService;
     @Autowired
     private Transactions transactions;
     @Autowired
@@ -76,8 +78,6 @@ public abstract class BaseNodeInitializationService {
     private IDspVoteService dspVoteService;
     @Autowired
     private IPotService potService;
-    @Autowired
-    private IDatabaseConnector databaseConnector;
     @Autowired
     private IPropagationSubscriber propagationSubscriber;
     @Autowired
@@ -116,8 +116,6 @@ public abstract class BaseNodeInitializationService {
             networkService.setConnectToNetworkUrl(nodeManagerHttpAddress + NODE_MANAGER_NODES_ENDPOINT);
             networkService.connectToNetwork();
             propagationSubscriber.initPropagationHandler();
-            awsService.init();
-            idbRecoveryService.init();
             monitorService.init();
         } catch (Exception e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
@@ -167,6 +165,8 @@ public abstract class BaseNodeInitializationService {
 
     public void initDB() {
         databaseConnector.init();
+        awsService.init();
+        dbRecoveryService.init();
     }
 
     private void handleExistingTransaction(AtomicLong maxTransactionIndex, TransactionData transactionData) {

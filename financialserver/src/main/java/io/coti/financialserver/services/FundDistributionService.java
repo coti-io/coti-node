@@ -252,7 +252,7 @@ public class FundDistributionService {
     private ResponseEntity<IResponse> verifyDailyDistributionFileByName(List<FundDistributionData> fundDistributionFileDataEntries, FundDistributionFileData fundDistributionFileData, String fileName) {
         try {
             awsService.downloadFundDistributionFile(fileName);
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error(CANT_SAVE_FILE_ON_DISK, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(CANT_SAVE_FILE_ON_DISK, STATUS_ERROR));
         }
