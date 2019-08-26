@@ -24,16 +24,16 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
 
     @Value("${database.folder.name}")
     private String databaseFolderName;
-    protected List<String> columnFamilyClassNames;
     @Value("${application.name}")
     private String applicationName;
+    @Autowired
+    private ApplicationContext ctx;
+    protected List<String> columnFamilyClassNames;
     private String dbPath;
     private List<ColumnFamilyDescriptor> columnFamilyDescriptors = new ArrayList<>();
     private RocksDB db;
     private Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
     private List<ColumnFamilyHandle> columnFamilyHandles = new ArrayList<>();
-    @Autowired
-    private ApplicationContext ctx;
 
     public void init() {
         setColumnFamily();
@@ -41,6 +41,10 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
+    @Override
+    public String getDBPath(){
+        return dbPath;
+    }
 
     protected void setColumnFamily() {
         columnFamilyClassNames = new ArrayList<>(Arrays.asList(
@@ -52,25 +56,27 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
                 TransactionVotes.class.getName(),
                 NodeRegistrations.class.getName()
         ));
-
     }
 
     public void init(String dbPath) {
         this.dbPath = dbPath;
-
         initColumnFamilyClasses();
         try {
             initiateColumnFamilyDescriptors();
             loadLibrary();
             createLogsPath();
             DBOptions options = new DBOptions();
-            options.setCreateIfMissing(true);
-            options.setCreateMissingColumnFamilies(true);
-            db = RocksDB.open(options, dbPath, columnFamilyDescriptors, columnFamilyHandles);
-            populateColumnFamilies();
+            openDB(dbPath, options);
         } catch (Exception e) {
             throw new DataBaseException(String.format("Error initiating Rocks DB. Class: %s, Exception message: %s", e.getClass(), e.getMessage()));
         }
+    }
+
+    private void openDB(String dbPath, DBOptions options) throws RocksDBException {
+        options.setCreateIfMissing(true);
+        options.setCreateMissingColumnFamilies(true);
+        db = RocksDB.open(options, dbPath, columnFamilyDescriptors, columnFamilyHandles);
+        populateColumnFamilies();
     }
 
     private void initColumnFamilyClasses() {
@@ -81,7 +87,6 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
                 throw new DataBaseException(String.format("Error at init column family classes. Class: %s, Exception message: %s", e.getClass(), e.getMessage()));
             }
         }
-
     }
 
     private void populateColumnFamilies() {
@@ -95,6 +100,40 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         columnFamilyDescriptors.add(new ColumnFamilyDescriptor(RocksDB.DEFAULT_COLUMN_FAMILY));
         for (int i = 1; i < columnFamilyClassNames.size(); i++) {
             columnFamilyDescriptors.add(new ColumnFamilyDescriptor(columnFamilyClassNames.get(i).getBytes()));
+        }
+    }
+
+    @Override
+    public boolean generateDataBaseBackup(String backupPath) {
+        log.info("Starting database backup to {}", backupPath);
+        try (BackupableDBOptions backupableDBOptions = new BackupableDBOptions(backupPath);
+             BackupEngine rocksBackupEngine = BackupEngine.open(Env.getDefault(), backupableDBOptions)) {
+            rocksBackupEngine.createNewBackup(db, false);
+            log.info("DB backup finished");
+            return true;
+        } catch (RocksDBException rocksDBException) {
+            log.error("Failed to generate database backup. error: {}", rocksDBException.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public boolean restoreDataBase(String backupPath) {
+        log.info("Starting database restore from {}", backupPath);
+        try (BackupableDBOptions backupableDBOptions = new BackupableDBOptions(backupPath);
+             BackupEngine rocksBackupEngine = BackupEngine.open(Env.getDefault(), backupableDBOptions);
+             RestoreOptions restoreOpt = new RestoreOptions(false);
+             DBOptions options = new DBOptions()) {
+
+            db.close();
+            rocksBackupEngine.restoreDbFromLatestBackup(applicationName + databaseFolderName, applicationName + databaseFolderName, restoreOpt);
+            columnFamilyHandles = new ArrayList<>();
+            openDB(dbPath, options);
+            log.info("DB restore finished");
+            return true;
+        } catch (Exception e) {
+            log.error("Failed to restore database. Exception: {}, Error: {}", e.getClass().getName(), e.getMessage());
+            return false;
         }
     }
 

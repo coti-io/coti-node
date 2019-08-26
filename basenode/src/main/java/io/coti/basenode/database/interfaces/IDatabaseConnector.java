@@ -6,6 +6,14 @@ import org.rocksdb.WriteOptions;
 
 public interface IDatabaseConnector {
 
+    void init();
+
+    boolean generateDataBaseBackup(String backupPath);
+
+    boolean restoreDataBase(String backupPath);
+
+    String getDBPath();
+
     boolean put(String columnFamilyName, byte[] key, byte[] value);
 
     boolean put(String columnFamilyName, WriteOptions writeOptions, byte[] key, byte[] value);
@@ -22,7 +30,6 @@ public interface IDatabaseConnector {
 
     boolean isEmpty(String columnFamilyName);
 
-    void init();
-
     void shutdown();
+
 }

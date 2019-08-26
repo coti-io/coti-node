@@ -47,4 +47,7 @@ public class BaseNodeHttpStringConstants {
 
     public static final String TRANSACTIONS_NOT_FOUND = "No valid transaction was found";
     public static final String EMPTY_SEARCH_RESULT = "Search result is empty";
+
+    public static final String S3_NOT_REACHABLE = "S3 not reachable for a response";
+    public static final String DOCUMENT_NOT_FOUND = "Document not found";
 }

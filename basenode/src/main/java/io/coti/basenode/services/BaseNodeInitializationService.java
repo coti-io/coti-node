@@ -35,6 +35,10 @@ public abstract class BaseNodeInitializationService {
     private final static String NODE_MANAGER_NODES_ENDPOINT = "/nodes";
     @Autowired
     protected INetworkService networkService;
+    @Autowired
+    private IAwsService awsService;
+    @Autowired
+    private IDBRecoveryService idbRecoveryService;
     @Value("${network}")
     protected NetworkType networkType;
     @Value("${server.ip}")
@@ -112,7 +116,8 @@ public abstract class BaseNodeInitializationService {
             networkService.setConnectToNetworkUrl(nodeManagerHttpAddress + NODE_MANAGER_NODES_ENDPOINT);
             networkService.connectToNetwork();
             propagationSubscriber.initPropagationHandler();
-
+            awsService.init();
+            idbRecoveryService.init();
             monitorService.init();
         } catch (Exception e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
