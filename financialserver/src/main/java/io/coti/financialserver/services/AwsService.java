@@ -5,13 +5,13 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.exceptions.AwsException;
 import io.coti.basenode.services.BaseNodeAwsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.IOException;
 
 import static io.coti.financialserver.http.HttpStringConstants.*;
 
@@ -24,6 +24,14 @@ public class AwsService extends BaseNodeAwsService {
     private String BUCKET_NAME;
     @Value("${aws.s3.bucket.name.distribution}")
     private String BUCKET_NAME_DISTRIBUTION;
+
+    @Override
+    public void init() {
+        if (!buildS3ClientWithCredentials) {
+            throw new AwsException("AWS S3 client with credentials should be set to true");
+        }
+        super.init();
+    }
 
     public String uploadDisputeDocument(Hash documentHash, File file, String contentType) {
         String fileName = documentHash.toString();
@@ -55,7 +63,7 @@ public class AwsService extends BaseNodeAwsService {
         return s3Client.getObject(BUCKET_NAME, fileName);
     }
 
-    public void downloadFundDistributionFile(String fileName) throws IOException {
+    public void downloadFundDistributionFile(String fileName) {
         downloadFile(fileName, BUCKET_NAME_DISTRIBUTION);
     }
 

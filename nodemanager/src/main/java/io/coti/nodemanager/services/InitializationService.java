@@ -1,6 +1,8 @@
 package io.coti.nodemanager.services;
 
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
+import io.coti.basenode.services.interfaces.IAwsService;
+import io.coti.basenode.services.interfaces.IDBRecoveryService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.IShutDownService;
 import io.coti.nodemanager.model.ActiveNodes;
@@ -24,6 +26,10 @@ public class InitializationService {
     @Autowired
     private IDatabaseConnector databaseConnector;
     @Autowired
+    private IAwsService awsService;
+    @Autowired
+    private IDBRecoveryService dbRecoveryService;
+    @Autowired
     private IShutDownService shutDownService;
     @Autowired
     private ApplicationContext applicationContext;
@@ -32,6 +38,8 @@ public class InitializationService {
     private void init() {
         try {
             databaseConnector.init();
+            awsService.init();
+            dbRecoveryService.init();
             networkService.init();
             insertActiveNodesToMemory();
         } catch (Exception e) {

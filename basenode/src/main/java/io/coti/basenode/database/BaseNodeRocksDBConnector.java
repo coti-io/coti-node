@@ -42,7 +42,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     }
 
     @Override
-    public String getDBPath(){
+    public String getDBPath() {
         return dbPath;
     }
 
@@ -104,16 +104,14 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     }
 
     @Override
-    public boolean generateDataBaseBackup(String backupPath) {
+    public void generateDataBaseBackup(String backupPath) {
         log.info("Starting database backup to {}", backupPath);
         try (BackupableDBOptions backupableDBOptions = new BackupableDBOptions(backupPath);
              BackupEngine rocksBackupEngine = BackupEngine.open(Env.getDefault(), backupableDBOptions)) {
             rocksBackupEngine.createNewBackup(db, false);
             log.info("DB backup finished");
-            return true;
-        } catch (RocksDBException rocksDBException) {
-            log.error("Failed to generate database backup. error: {}", rocksDBException.getMessage());
-            return false;
+        } catch (Exception e) {
+            throw new DataBaseException(String.format("Failed to generate database backup. Class: %s, Exception message: %s", e.getClass(), e.getMessage()));
         }
     }
 

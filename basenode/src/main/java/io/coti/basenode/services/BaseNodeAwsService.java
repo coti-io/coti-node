@@ -1,13 +1,15 @@
 package io.coti.basenode.services;
 
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.SdkClientException;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.services.identitymanagement.AmazonIdentityManagement;
+import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClientBuilder;
+import com.amazonaws.services.identitymanagement.model.GetUserResult;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.services.s3.transfer.*;
 import io.coti.basenode.exceptions.AwsDataTransferException;
+import io.coti.basenode.exceptions.AwsException;
 import io.coti.basenode.services.interfaces.IAwsService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -15,10 +17,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.DOCUMENT_NOT_FOUND;
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.S3_NOT_REACHABLE;
 
 @Service
 @Slf4j
@@ -27,15 +29,16 @@ public class BaseNodeAwsService implements IAwsService {
     @Value("${aws.s3.bucket.region}")
     private String region;
     @Value("${aws.credentials}")
-    private boolean withCredentials;
+    protected boolean buildS3ClientWithCredentials;
     protected AmazonS3 s3Client;
 
     @Override
-    public void init(){
+    public void init() {
         s3Client = getS3Client();
     }
 
-    protected void createS3Folder(String bucketName, String folderPath){
+    @Override
+    public void createS3Folder(String bucketName, String folderPath) {
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentLength(0);
         InputStream emptyContent = new ByteArrayInputStream(new byte[0]);
@@ -43,7 +46,8 @@ public class BaseNodeAwsService implements IAwsService {
         s3Client.putObject(putObjectRequest);
     }
 
-    protected void uploadFolderAndContentsToS3(String bucketName, String s3folderPath, File directoryToUpload){
+    @Override
+    public void uploadFolderAndContentsToS3(String bucketName, String s3folderPath, File directoryToUpload) {
         TransferManager transferManager = TransferManagerBuilder.standard().withS3Client(s3Client).build();
 
         ObjectCannedAclProvider cannedAclProvider = file -> CannedAccessControlList.PublicRead;
@@ -52,99 +56,105 @@ public class BaseNodeAwsService implements IAwsService {
                     directoryToUpload, true, null, null, cannedAclProvider);
 
             multipleFileUpload.waitForCompletion();
-            if(multipleFileUpload.getProgress().getPercentTransferred() == 100){
-                log.debug("Finished uploading files");
+            if (multipleFileUpload.getProgress().getPercentTransferred() == 100) {
+                log.debug("Finished uploading files to S3");
             }
-        } catch (AmazonServiceException e) {
-            log.error(e.getMessage());
-            throw new AwsDataTransferException("Unable to upload files.");
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             log.error(e.getMessage());
             Thread.currentThread().interrupt();
-            throw new AwsDataTransferException("Unable to upload files.");
+            throw new AwsDataTransferException("Unable to upload folder and contents to S3. The thread is interrupted");
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new AwsDataTransferException(String.format("Unable to upload folder and contents to S3. Exception: %s, Error: %s", e.getClass().getName(), e.getMessage()));
         }
     }
 
-    protected void downloadFolderAndContents(String bucketName, String s3folderPath, String directoryToDownload){
+    @Override
+    public void downloadFolderAndContents(String bucketName, String s3folderPath, String directoryToDownload) {
         TransferManager transferManager = TransferManagerBuilder.standard().withS3Client(s3Client).build();
-        MultipleFileDownload multipleFileDownload =  transferManager.downloadDirectory(bucketName, s3folderPath, new File(directoryToDownload));
         try {
+            MultipleFileDownload multipleFileDownload = transferManager.downloadDirectory(bucketName, s3folderPath, new File(directoryToDownload));
             multipleFileDownload.waitForCompletion();
-            if(multipleFileDownload.getProgress().getPercentTransferred() == 100){
+            if (multipleFileDownload.getProgress().getPercentTransferred() == 100) {
                 log.debug("Finished downloading files");
             }
             removeExcessFolderStructure(directoryToDownload + "/" + s3folderPath, directoryToDownload);
         } catch (InterruptedException e) {
             log.error(e.getMessage());
             Thread.currentThread().interrupt();
-            throw new AwsDataTransferException("Unable to download files.");
+            throw new AwsDataTransferException("Unable to download folder and contents to S3. The thread is interrupted");
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new AwsDataTransferException(String.format("Unable to download folder and contents to S3. Exception: %s, Error: %s", e.getClass().getName(), e.getMessage()));
         }
     }
 
-    protected List<String> listS3Paths(String bucketName, String path){
-        ListObjectsRequest listObjectsRequest =
-                new ListObjectsRequest()
-                        .withBucketName(bucketName)
-                        .withPrefix(path + "/");
-        List<String> keys = new ArrayList<>();
-        ObjectListing objects = s3Client.listObjects(listObjectsRequest);
+    @Override
+    public List<String> listS3Paths(String bucketName, String path) {
+        try {
+            ListObjectsRequest listObjectsRequest =
+                    new ListObjectsRequest()
+                            .withBucketName(bucketName)
+                            .withPrefix(path + "/");
+            List<String> keys = new ArrayList<>();
+            ObjectListing objects = s3Client.listObjects(listObjectsRequest);
 
-        List<S3ObjectSummary> summaries = objects.getObjectSummaries();
-        summaries.forEach(s -> keys.add(s.getKey()));
-        return keys;
+            List<S3ObjectSummary> summaries = objects.getObjectSummaries();
+            summaries.forEach(s -> keys.add(s.getKey()));
+            return keys;
+        } catch (Exception e) {
+            throw new AwsDataTransferException(String.format("List S3 paths error. Exception: %s, Error: %s", e.getClass().getName(), e.getMessage()));
+        }
     }
 
-    protected void downloadFile(String filePathAndName, String bucketName) throws IOException {
-        S3Object fullObject;
+    @Override
+    public void downloadFile(String filePathAndName, String bucketName) {
 
         String[] filepathDelimited = filePathAndName.split("/");
         String fileName = filepathDelimited[filepathDelimited.length - 1];
+        boolean fileExists;
+        try {
+            fileExists = s3Client.doesObjectExist(bucketName, fileName);
+        } catch (Exception e) {
+            throw new AwsDataTransferException(String.format("S3 check object exist error. Exception: %s, Error: %s", e.getClass().getName(), e.getMessage()));
+        }
 
-        if (!getS3Client().doesObjectExist(bucketName, fileName)) {
-            log.error(DOCUMENT_NOT_FOUND);
+        if (!fileExists) {
+            throw new AwsDataTransferException(DOCUMENT_NOT_FOUND);
         }
         File file = new File(filePathAndName);
 
-        BufferedReader bufferedReader = null;
         try (FileOutputStream fileOutputStream = new FileOutputStream(file);
-             BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(fileOutputStream))){
-            fullObject = getS3Client().getObject(new GetObjectRequest(bucketName, fileName));
-            bufferedReader = new BufferedReader(new InputStreamReader(fullObject.getObjectContent()));
-            // Save file locally
+             BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(fileOutputStream));
+             S3Object fullObject = s3Client.getObject(new GetObjectRequest(bucketName, fileName));
+             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fullObject.getObjectContent()))) {
 
+            // Save file locally
             String line;
             while ((line = bufferedReader.readLine()) != null) {
                 bufferedWriter.write(line);
                 bufferedWriter.newLine();
             }
 
-        } catch (SdkClientException e) {
-            // Amazon S3 couldn't be contacted for a response, or the client
-            // couldn't parse the response from Amazon S3.
-            log.error(e.getMessage());
-            log.error(S3_NOT_REACHABLE, e);
-        } finally {
-            if(bufferedReader != null){
-                bufferedReader.close();
-            }
-            // To ensure that the network connection doesn't remain open, close any open input streams.
-
+        } catch (Exception e) {
+            throw new AwsDataTransferException(String.format("S3 download file error. Exception: %s, Error: %s", e.getClass().getName(), e.getMessage()));
         }
     }
 
-    protected void deleteFolderAndContentsFromS3(List<String> remoteBackups, String bucketName){
+    @Override
+    public void deleteFolderAndContentsFromS3(List<String> remoteBackups, String bucketName) {
         List<DeleteObjectsRequest.KeyVersion> keysToDelete = new ArrayList<>();
         remoteBackups.forEach(backup -> keysToDelete.add(new DeleteObjectsRequest.KeyVersion(backup)));
         try {
             DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(bucketName).withKeys(keysToDelete);
             s3Client.deleteObjects(deleteObjectsRequest);
-        }
-        catch (Exception e){
-            log.error(e.getMessage());
+        } catch (Exception e) {
+            throw new AwsDataTransferException(String.format("Delete folder and contents from S3 error. Exception: %s, Error: %s", e.getClass().getName(), e.getMessage()));
         }
     }
 
-    private void removeExcessFolderStructure(String source, String destination){
+    @Override
+    public void removeExcessFolderStructure(String source, String destination) {
         try {
             String delimiter = "/";
             FileUtils.copyDirectory(new File(source), new File(destination));
@@ -155,13 +165,25 @@ public class BaseNodeAwsService implements IAwsService {
         }
     }
 
+    @Override
+    public boolean isBuildS3ClientWithCredentials() {
+        return buildS3ClientWithCredentials;
+    }
+
     private AmazonS3 getS3Client() {
-        if(withCredentials){
-            return AmazonS3ClientBuilder.standard().withRegion(region).
-                    withCredentials(new ProfileCredentialsProvider()).build();
-        }
-        else {
-            return AmazonS3ClientBuilder.standard().withRegion(region).build();
+        try {
+            if (buildS3ClientWithCredentials) {
+                ProfileCredentialsProvider profileCredentialsProvider = new ProfileCredentialsProvider();
+                AmazonIdentityManagement iam = AmazonIdentityManagementClientBuilder.standard().withCredentials(profileCredentialsProvider).build();
+                GetUserResult getUserResult = iam.getUser();
+                log.info("Valid credentials for AWS username {}", getUserResult.getUser().getUserName());
+                return AmazonS3ClientBuilder.standard().withRegion(region).
+                        withCredentials(profileCredentialsProvider).build();
+            } else {
+                return AmazonS3ClientBuilder.standard().withRegion(region).build();
+            }
+        } catch (Exception e) {
+            throw new AwsException(String.format("Get S3 client error. Exception: %s, Error: %s", e.getClass().getName(), e.getMessage()));
         }
     }
 
