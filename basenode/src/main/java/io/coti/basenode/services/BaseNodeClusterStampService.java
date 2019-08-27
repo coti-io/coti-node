@@ -1,10 +1,7 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.crypto.ClusterStampCrypto;
-import io.coti.basenode.data.ClusterStampData;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.NodeType;
-import io.coti.basenode.data.SignatureData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.ClusterStampValidationException;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IBalanceService;
@@ -13,6 +10,8 @@ import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -29,9 +28,11 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     protected String clusterStampFilePrefix;
     protected static final String CLUSTERSTAMP_FILE_SUFFIX = "_clusterstamp.csv";
     private static final int NUMBER_OF_GENESIS_ADDRESSES_MIN_LINES = 1; // Genesis One and Two + heading
-    private static final int NUMBER_OF_ADDRESS_LINE_DETAILS = 2;
+    private static final int NUMBER_OF_ADDRESS_LINE_DETAILS = 3;
+    private static final int NUMBER_OF_ADDRESS_LINE_DETAILS_WITHOUT_CURRENCY_HASH = 2;
     private static final int ADDRESS_DETAILS_HASH_PLACEMENT = 0;
     private static final int ADDRESS_DETAILS_AMOUNT_PLACEMENT = 1;
+    private static final int CUREENCY_DATA_HASH_PLACEMENT = 2;
     protected static final String BAD_CSV_FILE_FORMAT = "Bad csv file format";
     private static final String SIGNATURE_LINE_TOKEN = "# Signature";
     private static final int NUMBER_OF_SIGNATURE_LINE_DETAILS = 2;
@@ -45,6 +46,10 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     protected ClusterStampCrypto clusterStampCrypto;
     @Autowired
     protected INetworkService networkService;
+    @Autowired
+    protected BaseNodeCurrencyService baseNodeCurrencyService;
+    @Autowired
+    protected ApplicationContext applicationContext;
 
     @Override
     public void loadClusterStamp() {
@@ -106,12 +111,32 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     private void fillBalanceFromLine(ClusterStampData clusterStampData, String line) {
         String[] addressDetails;
         addressDetails = line.split(",");
-        if (addressDetails.length != NUMBER_OF_ADDRESS_LINE_DETAILS) {
+        int numOfDetailsInLine = addressDetails.length;
+        if (numOfDetailsInLine != NUMBER_OF_ADDRESS_LINE_DETAILS && numOfDetailsInLine != NUMBER_OF_ADDRESS_LINE_DETAILS_WITHOUT_CURRENCY_HASH) {
             throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
         }
         Hash addressHash = new Hash(addressDetails[ADDRESS_DETAILS_HASH_PLACEMENT]);
         BigDecimal addressAmount = new BigDecimal(addressDetails[ADDRESS_DETAILS_AMOUNT_PLACEMENT]);
-        log.trace("The hash {} was loaded from the clusterstamp with amount {}", addressHash, addressAmount);
+        Hash currencyDataHash = numOfDetailsInLine == NUMBER_OF_ADDRESS_LINE_DETAILS ? new Hash(addressDetails[CUREENCY_DATA_HASH_PLACEMENT]) : null;
+
+        if (currencyDataHash != null) {
+            baseNodeCurrencyService.verifyCurrencyExists(currencyDataHash);
+//            baseNodeCurrencyService.updateMissingCurrencyDataHashesFromClusterStamp(currencyDataHash);
+            log.trace("The address hash {} for currency hash {} was loaded from the clusterstamp with amount {}", addressHash, currencyDataHash, addressAmount);
+        } else {
+            log.trace("The address hash {} was loaded from the clusterstamp with amount {}", addressHash, addressAmount);
+
+            //TODO 8/27/2019 tomer: Consider treating this only as Native currency
+            CurrencyData nativeCurrencyData = baseNodeCurrencyService.getNativeCurrencyData(); // Use this for
+            if (nativeCurrencyData == null) {
+                log.error("Failed to locate Currency {}", currencyDataHash);
+                System.exit(SpringApplication.exit(applicationContext));
+            }
+
+            //TODO 8/18/2019 tomer: to simulate multiple currency data
+//            Hash currencyDataHashForTests = new Hash(addressDetails[ADDRESS_DETAILS_HASH_PLACEMENT]);
+//            baseNodeCurrencyService.updateMissingCurrencyDataHashesFromClusterStamp(currencyDataHashForTests);
+        }
 
         balanceService.updateBalanceFromClusterStamp(addressHash, addressAmount);
         byte[] addressHashInBytes = addressHash.getBytes();
