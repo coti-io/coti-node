@@ -109,14 +109,14 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         try (BackupableDBOptions backupableDBOptions = new BackupableDBOptions(backupPath);
              BackupEngine rocksBackupEngine = BackupEngine.open(Env.getDefault(), backupableDBOptions)) {
             rocksBackupEngine.createNewBackup(db, false);
-            log.info("DB backup finished");
+            log.info("Finished database backup to {}", backupPath);
         } catch (Exception e) {
             throw new DataBaseException(String.format("Failed to generate database backup. Class: %s, Exception message: %s", e.getClass(), e.getMessage()));
         }
     }
 
     @Override
-    public boolean restoreDataBase(String backupPath) {
+    public void restoreDataBase(String backupPath) {
         log.info("Starting database restore from {}", backupPath);
         try (BackupableDBOptions backupableDBOptions = new BackupableDBOptions(backupPath);
              BackupEngine rocksBackupEngine = BackupEngine.open(Env.getDefault(), backupableDBOptions);
@@ -127,11 +127,9 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             rocksBackupEngine.restoreDbFromLatestBackup(applicationName + databaseFolderName, applicationName + databaseFolderName, restoreOpt);
             columnFamilyHandles = new ArrayList<>();
             openDB(dbPath, options);
-            log.info("DB restore finished");
-            return true;
+            log.info("Finished database restore from {}", backupPath);
         } catch (Exception e) {
-            log.error("Failed to restore database. Exception: {}, Error: {}", e.getClass().getName(), e.getMessage());
-            return false;
+            throw new DataBaseException(String.format("Failed to restore database. Class: %s, Exception message: %s", e.getClass(), e.getMessage()));
         }
     }
 

@@ -10,7 +10,7 @@ public interface IDatabaseConnector {
 
     void generateDataBaseBackup(String backupPath);
 
-    boolean restoreDataBase(String backupPath);
+    void restoreDataBase(String backupPath);
 
     String getDBPath();
 

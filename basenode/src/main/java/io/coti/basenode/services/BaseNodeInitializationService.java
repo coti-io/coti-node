@@ -101,6 +101,8 @@ public abstract class BaseNodeInitializationService {
 
     public void init() {
         try {
+            awsService.init();
+            dbRecoveryService.init();
             addressService.init();
             balanceService.init();
             clusterStampService.loadClusterStamp();
@@ -165,8 +167,6 @@ public abstract class BaseNodeInitializationService {
 
     public void initDB() {
         databaseConnector.init();
-        awsService.init();
-        dbRecoveryService.init();
     }
 
     private void handleExistingTransaction(AtomicLong maxTransactionIndex, TransactionData transactionData) {
