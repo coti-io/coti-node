@@ -35,6 +35,7 @@ public class InitializationService extends BaseNodeInitializationService {
     @PostConstruct
     public void init() {
         try {
+            super.init();
             super.initDB();
             super.createNetworkNodeData();
             super.getNetwork();
@@ -56,7 +57,7 @@ public class InitializationService extends BaseNodeInitializationService {
                 networkService.addListToSubscription(new ArrayList<>(Arrays.asList(networkService.getSingleNodeData(NodeType.FinancialServer))));
             }
 
-            super.init();
+            super.initServices();
         } catch (Exception e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
             log.error("{}: {}", e.getClass().getName(), e.getMessage());

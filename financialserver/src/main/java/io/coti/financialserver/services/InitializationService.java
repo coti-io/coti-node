@@ -40,6 +40,7 @@ public class InitializationService extends BaseNodeInitializationService {
     @PostConstruct
     public void init() {
         try {
+            super.init();
             super.initDB();
             super.createNetworkNodeData();
             super.getNetwork();
@@ -58,7 +59,7 @@ public class InitializationService extends BaseNodeInitializationService {
             communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress(), NodeType.ZeroSpendServer);
             networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.DspNode).values());
 
-            super.init();
+            super.initServices();
 
             distributionService.distributeToInitialFunds();
             fundDistributionService.initReservedBalance();

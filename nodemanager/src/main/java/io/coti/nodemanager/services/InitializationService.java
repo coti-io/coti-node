@@ -9,6 +9,7 @@ import io.coti.nodemanager.model.ActiveNodes;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
@@ -33,10 +34,13 @@ public class InitializationService {
     private IShutDownService shutDownService;
     @Autowired
     private ApplicationContext applicationContext;
+    @Autowired
+    private BuildProperties buildProperties;
 
     @PostConstruct
     private void init() {
         try {
+            log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());
             databaseConnector.init();
             awsService.init();
             dbRecoveryService.init();

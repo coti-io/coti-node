@@ -18,6 +18,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -57,6 +58,8 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private Hash restoreNodeHash;
     @Value("${db.restore.source}")
     private DbRestoreSource restoreSource;
+    @Autowired
+    private BuildProperties buildProperties;
     @Autowired
     private IDatabaseConnector dBConnector;
     @Autowired

@@ -44,6 +44,7 @@ public class InitializationService extends BaseNodeInitializationService {
     @PostConstruct
     public void init() {
         try {
+            super.init();
             super.initDB();
             super.createNetworkNodeData();
             super.getNetwork();
@@ -68,7 +69,7 @@ public class InitializationService extends BaseNodeInitializationService {
                 networkService.setRecoveryServerAddress(recoveryServerAddress);
             }
 
-            super.init();
+            super.initServices();
 
             if (transactions.isEmpty()) {
                 transactionCreationService.createGenesisTransactions();

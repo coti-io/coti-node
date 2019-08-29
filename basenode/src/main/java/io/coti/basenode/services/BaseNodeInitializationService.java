@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -98,8 +99,14 @@ public abstract class BaseNodeInitializationService {
     private ITransactionSynchronizationService transactionSynchronizationService;
     @Autowired
     protected ApplicationContext applicationContext;
+    @Autowired
+    private BuildProperties buildProperties;
 
     public void init() {
+        log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());
+    }
+
+    public void initServices() {
         try {
             awsService.init();
             dbRecoveryService.init();

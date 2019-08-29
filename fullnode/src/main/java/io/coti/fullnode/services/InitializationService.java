@@ -38,6 +38,7 @@ public class InitializationService extends BaseNodeInitializationService {
     @PostConstruct
     public void init() {
         try {
+            super.init();
             super.initDB();
             super.createNetworkNodeData();
             super.getNetwork();
@@ -56,7 +57,7 @@ public class InitializationService extends BaseNodeInitializationService {
                 ((NetworkService) networkService).addToConnectedDspNodes(dspNetworkNodeData.get(i));
             }
 
-            super.init();
+            super.initServices();
         } catch (Exception e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
