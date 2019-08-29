@@ -7,6 +7,9 @@ import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.exceptions.DataBaseRecoveryException;
 import io.coti.basenode.exceptions.DataBaseRestoreException;
+import io.coti.basenode.http.GetBackupBucketResponse;
+import io.coti.basenode.http.HttpJacksonSerializer;
+import io.coti.basenode.http.SerializableResponse;
 import io.coti.basenode.services.interfaces.IAwsService;
 import io.coti.basenode.services.interfaces.IDBRecoveryService;
 import io.coti.basenode.services.interfaces.INetworkService;
@@ -17,6 +20,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,6 +63,10 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private IAwsService awsService;
     @Autowired
     private INetworkService networkService;
+    @Autowired
+    private RestTemplate restTemplate;
+    @Autowired
+    private HttpJacksonSerializer jacksonSerializer;
     private String localBackupFolderPath;
     private String remoteBackupFolderPath;
     private String backupS3Path;
@@ -142,7 +152,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                 }
                 try {
                     deleteBackup(remoteBackupFolderPath);
-                    final String restoreBucket = getRestoreBucket();
+                    final String restoreBucket = getBackupBucketFromRestoreNode();
                     List<String> s3BackupFolderAndContents = awsService.listS3Paths(restoreBucket, restoreS3Path);
                     if (s3BackupFolderAndContents.isEmpty()) {
                         throw new DataBaseRestoreException(String.format("Couldn't complete restore. No backups found at %s/%s", restoreBucket, restoreS3Path));
@@ -162,7 +172,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
 
     }
 
-    private String getRestoreBucket() {
+    private String getBackupBucketFromRestoreNode() {
 
         if (NodeCryptoHelper.getNodeHash().equals(restoreNodeHash)) {
             return backupBucket;
@@ -172,7 +182,19 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
         if (networkNodeDataMap.isEmpty() || networkNodeDataMap.get(restoreNodeHash) == null) {
             throw new DataBaseRestoreException("Restore node is either not existing or not active in Coti Network");
         }
-        return null;
+        NetworkNodeData restoreNodeData = networkNodeDataMap.get(restoreNodeHash);
+        String restoreNodeHttpAddress = restoreNodeData.getHttpFullAddress();
+
+        try {
+            GetBackupBucketResponse getBackupBucketResponse = restTemplate.getForObject(restoreNodeHttpAddress + "/backup/bucket", GetBackupBucketResponse.class);
+            return getBackupBucketResponse.getBackupBucket();
+
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            throw new DataBaseRecoveryException(String.format("Get backup bucket from restore node error. Exception: %s, Error: %s", e.getClass(),
+                    ((SerializableResponse) jacksonSerializer.deserialize(e.getResponseBodyAsByteArray())).getMessage()));
+        } catch (Exception e) {
+            throw new DataBaseRecoveryException(String.format("Get backup bucket from restore node error. Exception: %s, Error: %s", e.getClass(), e.getMessage()));
+        }
 
     }
 

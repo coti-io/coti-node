@@ -18,7 +18,6 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
     private String httpPort;
     private String propagationPort;
     private String receivingPort;
-    private String recoveryServerAddress;
     private NetworkType networkType;
     private transient Double trustScore;
     private String webServerUrl;
@@ -105,7 +104,6 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
         httpPort = networkNodeData.getHttpPort();
         propagationPort = networkNodeData.getPropagationPort();
         receivingPort = networkNodeData.getReceivingPort();
-        recoveryServerAddress = networkNodeData.getRecoveryServerAddress();
         networkType = networkNodeData.getNetworkType();
         webServerUrl = networkNodeData.getWebServerUrl();
         feeData = networkNodeData.getFeeData();
