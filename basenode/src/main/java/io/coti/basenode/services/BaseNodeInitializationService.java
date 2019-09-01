@@ -94,10 +94,13 @@ public abstract class BaseNodeInitializationService {
     private ITransactionSynchronizationService transactionSynchronizationService;
     @Autowired
     protected ApplicationContext applicationContext;
+    @Autowired
+    private BaseNodeCurrencyService baseNodeCurrencyService;
 
     public void init() {
         try {
             addressService.init();
+            baseNodeCurrencyService.init();
             balanceService.init();
             clusterStampService.loadClusterStamp();
             confirmationService.init();

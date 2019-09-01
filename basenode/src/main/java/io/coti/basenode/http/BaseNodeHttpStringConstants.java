@@ -47,4 +47,7 @@ public class BaseNodeHttpStringConstants {
 
     public static final String TRANSACTIONS_NOT_FOUND = "No valid transaction was found";
     public static final String EMPTY_SEARCH_RESULT = "Search result is empty";
+
+    public static final String NATIVE_COIN_NOT_FOUND = "Native coin not found";
+    public static final String NO_VALID_NATIVE_COIN_NOT_FOUND = "No valid native coin was found";
 }

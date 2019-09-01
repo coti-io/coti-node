@@ -29,6 +29,10 @@ public class CurrencyData implements IPropagatable, ISignable, ISignValidatable 
     private Hash originatorHash;
     private SignatureData originatorSignature;
     private Hash registrarHash;
+
+    public CurrencyData() {
+    }
+
     private SignatureData registrarSignature;
 
     public void setHash() {
