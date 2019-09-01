@@ -10,6 +10,7 @@ import io.coti.basenode.exceptions.DataBaseRestoreException;
 import io.coti.basenode.http.GetBackupBucketResponse;
 import io.coti.basenode.http.HttpJacksonSerializer;
 import io.coti.basenode.http.SerializableResponse;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.IAwsService;
 import io.coti.basenode.services.interfaces.IDBRecoveryService;
 import io.coti.basenode.services.interfaces.INetworkService;
@@ -18,7 +19,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.info.BuildProperties;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -31,6 +33,9 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.NOT_BACKUP_NODE;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+
 @Slf4j
 @Service
 public class BaseNodeDBRecoveryService implements IDBRecoveryService {
@@ -42,7 +47,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private boolean backup;
     @Value("${db.backup.bucket}")
     private String backupBucket;
-    @Value("${db.backup.local}")
+    @Value("${db.restore.backup.local}")
     private boolean backupToLocalWhenRestoring;
     @Value("${db.backup.time}")
     private String backupTime;
@@ -58,8 +63,6 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private Hash restoreNodeHash;
     @Value("${db.restore.source}")
     private DbRestoreSource restoreSource;
-    @Autowired
-    private BuildProperties buildProperties;
     @Autowired
     private IDatabaseConnector dBConnector;
     @Autowired
@@ -89,6 +92,9 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                 restoreDB();
             }
         } catch (Exception e) {
+            if (e instanceof DataBaseRecoveryException) {
+                throw e;
+            }
             throw new DataBaseRecoveryException(e.getMessage());
         }
     }
@@ -107,7 +113,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                 throw new DataBaseRecoveryException("Restore node hash can not be empty when restore flag is set to true");
             }
             if (restoreSource.equals(DbRestoreSource.Remote) && NodeCryptoHelper.getNodeHash().equals(restoreNodeHash) && backupBucket.isEmpty()) {
-                throw new DataBaseRecoveryException("Aws backup bucket can not be empty when restore flag is set to true and remote restore is from  the node's own backup");
+                throw new DataBaseRecoveryException("Aws backup bucket can not be empty when restore flag is set to true and remote restore is from the node's own backup");
             }
         }
 
@@ -165,11 +171,17 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
 
                     awsService.downloadFolderAndContents(restoreBucket, latestS3Backup, remoteBackupFolderPath);
                     dBConnector.restoreDataBase(remoteBackupFolderPath);
+                } catch (Exception e) {
+                    dBConnector.restoreDataBase(localBackupFolderPath);
+                    throw new DataBaseRecoveryException(e.getMessage());
                 } finally {
                     deleteBackup(remoteBackupFolderPath);
                 }
             }
         } catch (Exception e) {
+            if (e instanceof DataBaseRecoveryException) {
+                throw new DataBaseRecoveryException("Restore database error. " + e.getMessage());
+            }
             throw new DataBaseRecoveryException(String.format("Restore database error. Exception: %s, Error: %s", e.getClass(), e.getMessage()));
         }
 
@@ -199,6 +211,15 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
             throw new DataBaseRecoveryException(String.format("Get backup bucket from restore node error. Exception: %s, Error: %s", e.getClass(), e.getMessage()));
         }
 
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getBackupBucket() {
+        if (!backup) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new SerializableResponse(NOT_BACKUP_NODE, STATUS_ERROR));
+        }
+
+        return ResponseEntity.ok(new GetBackupBucketResponse(backupBucket));
     }
 
     private void deleteBackup(String backupFolderPath) {

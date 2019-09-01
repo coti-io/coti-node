@@ -4,8 +4,8 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.exceptions.DataBaseException;
-import io.coti.basenode.model.*;
 import io.coti.basenode.model.Collection;
+import io.coti.basenode.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,18 +71,16 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             openDB();
         } catch (Exception e) {
             if (e instanceof DataBaseException) {
-                throw (DataBaseException) e;
+                throw new DataBaseException("Error initiating Rocks DB. " + e.getMessage());
             }
             throw new DataBaseException(String.format("Error initiating Rocks DB. Class: %s, Exception message: %s", e.getClass(), e.getMessage()));
         }
     }
 
     private void dropNotListedColumnFamilies() {
-        try (Options options = new Options()) {
-            List<byte[]> dbColumnFamilies = RocksDB.listColumnFamilies(options, dbPath);
-            List<String> notListedColumnFamilies = dbColumnFamilies.stream().map(dbColumnFamily -> new String(dbColumnFamily)).filter(dbColumnFamilyName ->
-                    !dbColumnFamilyName.equals(new String(RocksDB.DEFAULT_COLUMN_FAMILY)) && !columnFamilyClassNames.contains(dbColumnFamilyName)
-            ).collect(Collectors.toList());
+        try {
+            List<byte[]> dbColumnFamilies = getColumnFamiliesFromDB();
+            List<String> notListedColumnFamilies = getNotListedColumnFamilies(dbColumnFamilies);
 
             if (!notListedColumnFamilies.isEmpty()) {
                 openDB(dbColumnFamilies);
@@ -91,8 +89,25 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
                 closeDB();
             }
         } catch (Exception e) {
-            throw new DataBaseException(String.format("Error at dropping not listed column families Rocks DB. Class: %s, Exception message: %s", e.getClass(), e.getMessage()));
+            if (e instanceof DataBaseException) {
+                throw new DataBaseException("Error at dropping not listed Rocks DB column families. " + e.getMessage());
+            }
+            throw new DataBaseException(String.format("Error at dropping not listed Rocks DB column families. Class: %s, Exception message: %s", e.getClass(), e.getMessage()));
         }
+    }
+
+    private List<byte[]> getColumnFamiliesFromDB() {
+        try (Options options = new Options()) {
+            return RocksDB.listColumnFamilies(options, dbPath);
+        } catch (Exception e) {
+            throw new DataBaseException(String.format("Error at getting column families. Class: %s, Exception message: %s", e.getClass(), e.getMessage()));
+        }
+    }
+
+    private List<String> getNotListedColumnFamilies(List<byte[]> dbColumnFamilies) {
+        return dbColumnFamilies.stream().map(dbColumnFamily -> new String(dbColumnFamily)).filter(dbColumnFamilyName ->
+                !dbColumnFamilyName.equals(new String(RocksDB.DEFAULT_COLUMN_FAMILY)) && !columnFamilyClassNames.contains(dbColumnFamilyName)
+        ).collect(Collectors.toList());
     }
 
     private void openDB() {
@@ -110,9 +125,6 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             db = RocksDB.open(dbOptions, dbPath, columnFamilyDescriptors, columnFamilyHandles);
             populateColumnFamilies(dbColumnFamilies, columnFamilyHandles);
         } catch (Exception e) {
-            if (e instanceof DataBaseException) {
-                throw (DataBaseException) e;
-            }
             throw new DataBaseException(String.format("Error opening Rocks DB. Class: %s, Exception message: %s", e.getClass(), e.getMessage()));
         }
 
@@ -174,10 +186,22 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
 
             closeDB();
             rocksBackupEngine.restoreDbFromLatestBackup(applicationName + databaseFolderName, applicationName + databaseFolderName, restoreOpt);
+            checkIfBackupHasNotListedColumnFamilies();
             openDB();
             log.info("Finished database restore from {}", backupPath);
         } catch (Exception e) {
+            if (e instanceof DataBaseException) {
+                throw new DataBaseException("Failed to restore database. " + e.getMessage());
+            }
             throw new DataBaseException(String.format("Failed to restore database. Class: %s, Exception message: %s", e.getClass(), e.getMessage()));
+        }
+    }
+
+    private void checkIfBackupHasNotListedColumnFamilies() {
+        List<byte[]> dbColumnFamilies = getColumnFamiliesFromDB();
+        List<String> notListedColumnFamilies = getNotListedColumnFamilies(dbColumnFamilies);
+        if (!notListedColumnFamilies.isEmpty()) {
+            throw new DataBaseException("The backup database has column families that are not listed in the code. Please check your version");
         }
     }
 
