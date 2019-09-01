@@ -43,11 +43,11 @@
             <artifactId>spring-boot-starter-websocket</artifactId>
             <version>2.0.3.RELEASE</version>
         </dependency>
-        <dependency>
-            <groupId>org.rocksdb</groupId>
-            <artifactId>rocksdbjni</artifactId>
-            <version>5.7.3</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.rocksdb</groupId>-->
+<!--            <artifactId>rocksdbjni</artifactId>-->
+<!--            <version>5.7.3</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
@@ -148,6 +148,19 @@
                             <groupId>indexed-tree-map</groupId>
                             <artifactId>indexed-tree-map</artifactId>
                             <version>1.0</version>
+                            <packaging>jar</packaging>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <configuration>
+                            <file>${project.basedir}/../libs/rocksdbjni-5.7.3-withsnappy.jar</file>
+                            <groupId>org.rocksdb</groupId>
+                            <artifactId>rocksdbjni</artifactId>
+                            <version>5.7.3</version>
                             <packaging>jar</packaging>
                         </configuration>
                     </execution>
