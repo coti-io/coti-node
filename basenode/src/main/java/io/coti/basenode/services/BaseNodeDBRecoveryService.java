@@ -152,7 +152,9 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
 
     private void restoreDB() {
         try {
+            log.info("Starting DB restore flow");
             if (restoreSource.equals(DbRestoreSource.Local)) {
+                log.info("Restoring from local backup");
                 dBConnector.restoreDataBase(localBackupFolderPath);
             } else {
                 if (backupToLocalWhenRestoring) {
@@ -168,7 +170,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
 
                     }
                     String latestS3Backup = getLatestS3Backup(s3BackupFolderAndContents, restoreS3Path);
-
+                    log.info("Downloading remote backup from S3 bucket");
                     awsService.downloadFolderAndContents(restoreBucket, latestS3Backup, remoteBackupFolderPath);
                     dBConnector.restoreDataBase(remoteBackupFolderPath);
                 } catch (Exception e) {
@@ -178,6 +180,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                     deleteBackup(remoteBackupFolderPath);
                 }
             }
+            log.info("Finished DB restore flow");
         } catch (Exception e) {
             if (e instanceof DataBaseRecoveryException) {
                 throw new DataBaseRecoveryException("Restore database error. " + e.getMessage());
