@@ -1,11 +1,16 @@
 package io.coti.basenode.data;
 
 public enum ClusterStampType {
-    MAJOR,
-    TOKEN;
+    MAJOR("M"),
+    TOKEN("T");
 
-    public String getPrefix(){
-        return this.name().substring(0,1);
+    private String mark;
+
+    ClusterStampType(String mark) {
+        this.mark = mark;
     }
 
+    public String getMark() {
+        return mark;
+    }
 }

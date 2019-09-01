@@ -24,6 +24,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     private void updateClusterStampFileWithSignature(SignatureData signature) {
         try {
+            //TODO 8/29/2019 astolia: maybe pass file location as argument? any way need to change it.
             String clusterstampFileLocation = clusterStampFilePrefix + CLUSTERSTAMP_FILE_SUFFIX;
             FileWriter clusterstampFileWriter = new FileWriter(clusterstampFileLocation, true);
             BufferedWriter clusterStampBufferedWriter = new BufferedWriter(clusterstampFileWriter);
