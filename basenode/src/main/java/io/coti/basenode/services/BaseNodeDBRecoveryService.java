@@ -123,6 +123,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private void backupDB() {
         if (backup) {
             try {
+                log.info("Starting DB backup flow");
                 deleteBackup(remoteBackupFolderPath);
                 dBConnector.generateDataBaseBackup(remoteBackupFolderPath);
                 List<String> backupFiles = awsService.listS3Paths(backupBucket, backupS3Path);
@@ -131,6 +132,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                 }
                 File backupFolderToUpload = new File(remoteBackupFolderPath);
 
+                log.info("Uploading remote backup to S3 bucket");
                 awsService.uploadFolderAndContentsToS3(backupBucket, backupS3Path + "/backup-" + Instant.now().toEpochMilli(), backupFolderToUpload);
                 if (!backupFiles.isEmpty()) {
                     Set<Long> s3BackupTimeStampSet = getS3BackupTimeStampSet(backupFiles);
@@ -139,6 +141,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                         Collections.sort(s3BackupTimeStamps);
                         String[] backupFoldersToRemove = s3BackupTimeStamps.stream().limit(s3BackupTimeStampSet.size() - ALLOWED_NUMBER_OF_BACKUPS + 1).map(s3BackupTimeStamp -> backupS3Path + "/backup-" + s3BackupTimeStamp.toString()).toArray(String[]::new);
                         backupFiles = backupFiles.stream().filter(backupFile -> StringUtils.startsWithAny(backupFile, backupFoldersToRemove)).collect(Collectors.toList());
+                        log.info("Deleting old remote backup from S3 bucket");
                         awsService.deleteFolderAndContentsFromS3(backupFiles, backupBucket);
                     }
                 }
@@ -147,6 +150,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
             } finally {
                 deleteBackup(remoteBackupFolderPath);
             }
+            log.info("Finished DB backup flow");
         }
     }
 
