@@ -17,15 +17,14 @@ import java.io.IOException;
 public class ClusterStampService extends BaseNodeClusterStampService {
 
     @Override
-    protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData) {
+    protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData, String clusterstampFileLocation) {
         clusterStampCrypto.signMessage(clusterStampData);
-        updateClusterStampFileWithSignature(clusterStampData.getSignature());
+        updateClusterStampFileWithSignature(clusterStampData.getSignature(), clusterstampFileLocation);
     }
 
-    private void updateClusterStampFileWithSignature(SignatureData signature) {
+    private void updateClusterStampFileWithSignature(SignatureData signature, String clusterstampFileLocation) {
         try {
             //TODO 8/29/2019 astolia: maybe pass file location as argument? any way need to change it.
-            String clusterstampFileLocation = clusterStampFilePrefix + CLUSTERSTAMP_FILE_SUFFIX;
             FileWriter clusterstampFileWriter = new FileWriter(clusterstampFileLocation, true);
             BufferedWriter clusterStampBufferedWriter = new BufferedWriter(clusterstampFileWriter);
             clusterStampBufferedWriter.newLine();

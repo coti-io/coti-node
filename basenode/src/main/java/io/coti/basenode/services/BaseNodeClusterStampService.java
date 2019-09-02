@@ -39,7 +39,6 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.CLUSTERSTAMP_MAJ
 @Service
 public class BaseNodeClusterStampService implements IClusterStampService {
 
-    protected static final String CLUSTERSTAMP_FILE_SUFFIX = "_clusterstamp.csv";
     private static final int NUMBER_OF_GENESIS_ADDRESSES_MIN_LINES = 1; // Genesis One and Two + heading
     private static final int NUMBER_OF_ADDRESS_LINE_DETAILS = 2;
     private static final int ADDRESS_DETAILS_HASH_PLACEMENT = 0;
@@ -48,11 +47,8 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     private static final String SIGNATURE_LINE_TOKEN = "# Signature";
     private static final int NUMBER_OF_SIGNATURE_LINE_DETAILS = 2;
     private static Map<ClusterStampType, Map<Hash, ClusterStampNameData>> clusterStampTypeToHashToName;
-    private static String clusterStampsPath;
-    @Value("${logging.file.name}")
-    protected String clusterStampFilePrefix;
     @Value("${clusterstamp.folder}")
-    private String clusterStampFolderPostfix;
+    private String clusterStampsFolder;
     @Value("${aws.s3.bucket.name.clusterstamp}")
     private String clusterStampBucketName;
     @Value("${application.name}")
@@ -80,7 +76,6 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     @Override
     public void init() {
-        clusterStampsPath = applicationName + clusterStampFolderPostfix;
         createClusterStampFolder();
         fillClusterStampNamesMap();
         getClusterStampFromRecoveryServer(true);
@@ -88,7 +83,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     }
 
     private void createClusterStampFolder() {
-        File clusterStampFolder = new File(clusterStampsPath);
+        File clusterStampFolder = new File(clusterStampsFolder);
         if (!clusterStampFolder.exists()) {
             clusterStampFolder.mkdir();
         }
@@ -96,7 +91,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     private void fillClusterStampNamesMap() {
         initClusterStampNamesMap();
-        File folder = new File(clusterStampsPath);
+        File folder = new File(clusterStampsFolder);
         File[] listOfClusterStampFiles = folder.listFiles();
         boolean duplicateMajor = false;
         for(File clusterStampFile : listOfClusterStampFiles){
@@ -134,9 +129,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     }
 
     private void loadAllClusterStamps() {
-        loadClusterStamp(clusterStampsPath + clusterStampTypeToHashToName.get(ClusterStampType.MAJOR).values().iterator().next().getClusterStampFileName());
+        loadClusterStamp(clusterStampsFolder + clusterStampTypeToHashToName.get(ClusterStampType.MAJOR).values().iterator().next().getClusterStampFileName());
         clusterStampTypeToHashToName.get(ClusterStampType.TOKEN).values().forEach(clusterStampNameData ->
-                loadClusterStamp(clusterStampsPath + clusterStampNameData.getClusterStampFileName()));
+                loadClusterStamp(clusterStampsFolder + clusterStampNameData.getClusterStampFileName()));
     }
 
     private boolean validateMajorExistence() {
@@ -200,7 +195,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                 }
             }
             if (signatureRelevantLines == 0) {
-                handleClusterStampWithoutSignature(clusterStampData);
+                handleClusterStampWithoutSignature(clusterStampData, clusterStampFileLocation);
             } else if (signatureRelevantLines == 1) {
                 throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
             } else {
@@ -254,9 +249,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             downloadAndAddSingleClusterStamp(getClusterStampFileNamesResponse.getMajor());
             downloadAndAddClusterStamps(getClusterStampFileNamesResponse.getTokenClusterStampNames());
             if (!isStartup) {
-                loadClusterStamp(clusterStampsPath + getClusterStampFileNamesResponse.getMajor().getClusterStampFileName());
+                loadClusterStamp(clusterStampsFolder + getClusterStampFileNamesResponse.getMajor().getClusterStampFileName());
                 getClusterStampFileNamesResponse.getTokenClusterStampNames().forEach(clusterStampNameData ->
-                        loadClusterStamp(clusterStampsPath + clusterStampNameData.getClusterStampFileName()));
+                        loadClusterStamp(clusterStampsFolder + clusterStampNameData.getClusterStampFileName()));
             }
             return;
         }
@@ -266,7 +261,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     private void clearClusterStampNamesCollectionAndFiles() {
         initClusterStampNamesMap();
         try {
-            FileUtils.cleanDirectory(new File(clusterStampsPath));
+            FileUtils.cleanDirectory(new File(clusterStampsFolder));
         } catch (IOException e) {
             log.error("Failed deleting clusterstamp files. Please delete all clusterstamps and restart. Exception: {}, Error: {}", e.getClass().getName(), e.getMessage());
             System.exit(SpringApplication.exit(applicationContext));
@@ -281,7 +276,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             List<ClusterStampNameData> missingTokens = filterAndHandleMissingTokens(getClusterStampFileNamesResponse, localTokens);
             if (!isStartup) {
                 missingTokens.forEach(clusterStampNameData ->
-                        loadClusterStamp(clusterStampsPath + clusterStampNameData.getClusterStampFileName()));
+                        loadClusterStamp(clusterStampsFolder + clusterStampNameData.getClusterStampFileName()));
             }
         }
         //majors aren't equal. same version but update time changes (Major was updated)
@@ -290,9 +285,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             List<ClusterStampNameData> missingTokens = filterAndHandleMissingTokens(getClusterStampFileNamesResponse, localTokens);
             downloadAndAddSingleClusterStamp(majorFromRecovery);
             if (!isStartup) {
-                loadClusterStamp(clusterStampsPath + majorFromRecovery.getClusterStampFileName());
+                loadClusterStamp(clusterStampsFolder + majorFromRecovery.getClusterStampFileName());
                 missingTokens.forEach(clusterStampNameData ->
-                        loadClusterStamp(clusterStampsPath + clusterStampNameData.getClusterStampFileName()));
+                        loadClusterStamp(clusterStampsFolder + clusterStampNameData.getClusterStampFileName()));
             }
         } else {
             // if the version is different - remove all tokens and add everything new.
@@ -314,9 +309,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     private void removeClusterStampNameAndFile(ClusterStampNameData clusterStampNameData) {
         removeClusterStampName(clusterStampNameData);
         try {
-            Files.delete(Paths.get(clusterStampsPath + clusterStampNameData.getClusterStampFileName()));
+            Files.delete(Paths.get(clusterStampsFolder + clusterStampNameData.getClusterStampFileName()));
         } catch (IOException e) {
-            log.info("Failed to delete file {}. Please delete manually and restart. Error: {}", clusterStampsPath + clusterStampNameData.getClusterStampFileName(), e.getMessage());
+            log.info("Failed to delete file {}. Please delete manually and restart. Error: {}", clusterStampsFolder + clusterStampNameData.getClusterStampFileName(), e.getMessage());
             System.exit(SpringApplication.exit(applicationContext));
         }
     }
@@ -349,7 +344,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     private void downloadAndAddSingleClusterStamp(ClusterStampNameData clusterStampNameData) {
         try {
             addClusterStampName(clusterStampNameData);
-            String pathAndFileName = clusterStampsPath + clusterStampNameData.getClusterStampFileName();
+            String pathAndFileName = clusterStampsFolder + clusterStampNameData.getClusterStampFileName();
             File clusterStampFile = new File(pathAndFileName);
             if (!clusterStampFile.createNewFile()) {
                 log.error("Failed to create {} file.", clusterStampNameData.getClusterStampFileName());
@@ -453,7 +448,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             clusterStampData.getSignature().setS(signatureDetails[1]);
     }
 
-    protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData) {
+    protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData, String clusterstampFileLocation) {
         throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
     }
 
