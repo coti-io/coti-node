@@ -174,7 +174,7 @@ public class BaseNodeAwsService implements IAwsService {
         try {
             if (buildS3ClientWithCredentials) {
                 ProfileCredentialsProvider profileCredentialsProvider = new ProfileCredentialsProvider();
-                AmazonIdentityManagement iam = AmazonIdentityManagementClientBuilder.standard().withCredentials(profileCredentialsProvider).build();
+                AmazonIdentityManagement iam = AmazonIdentityManagementClientBuilder.standard().withRegion(region).withCredentials(profileCredentialsProvider).build();
                 GetUserResult getUserResult = iam.getUser();
                 log.info("Valid credentials for AWS username {}", getUserResult.getUser().getUserName());
                 return AmazonS3ClientBuilder.standard().withRegion(region).

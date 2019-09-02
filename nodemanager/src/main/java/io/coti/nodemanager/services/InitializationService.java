@@ -1,13 +1,14 @@
 package io.coti.nodemanager.services;
 
+import io.coti.basenode.data.NodeType;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
-import io.coti.basenode.services.interfaces.IAwsService;
-import io.coti.basenode.services.interfaces.IDBRecoveryService;
-import io.coti.basenode.services.interfaces.INetworkService;
-import io.coti.basenode.services.interfaces.IShutDownService;
+import io.coti.basenode.services.interfaces.*;
 import io.coti.nodemanager.model.ActiveNodes;
+import io.coti.nodemanager.services.interfaces.IHealthCheckService;
+import io.coti.nodemanager.services.interfaces.INodeManagementService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.ApplicationContext;
@@ -20,6 +21,8 @@ import javax.annotation.PreDestroy;
 @Service
 public class InitializationService {
 
+    @Value("${propagation.port}")
+    private String propagationPort;
     @Autowired
     private ActiveNodes activeNodes;
     @Autowired
@@ -32,6 +35,12 @@ public class InitializationService {
     private IDBRecoveryService dbRecoveryService;
     @Autowired
     private IShutDownService shutDownService;
+    @Autowired
+    private IHealthCheckService healthCheckService;
+    @Autowired
+    private INodeManagementService nodeManagementService;
+    @Autowired
+    private ICommunicationService communicationService;
     @Autowired
     private ApplicationContext applicationContext;
     @Autowired
@@ -46,6 +55,9 @@ public class InitializationService {
             dbRecoveryService.init();
             networkService.init();
             insertActiveNodesToMemory();
+            nodeManagementService.init();
+            communicationService.initPublisher(propagationPort, NodeType.NodeManager);
+            healthCheckService.init();
         } catch (Exception e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
             log.error("{}: {}", e.getClass().getName(), e.getMessage());

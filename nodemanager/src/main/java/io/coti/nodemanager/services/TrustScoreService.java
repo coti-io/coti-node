@@ -36,7 +36,6 @@ public class TrustScoreService implements ITrustScoreService {
     @Value("${global.private.key}")
     private String globalPrivateKey;
     private final RestTemplate httpRequest;
-
     private final NodeTrustScoreRequestCrypto trustScoreRequestCrypto;
 
     @Autowired

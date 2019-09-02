@@ -20,7 +20,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,10 +49,9 @@ public class NodeManagementService implements INodeManagementService {
     @Value("${propagation.port}")
     private String propagationPort;
 
-    @PostConstruct
-    private void init() {
+    @Override
+    public void init() {
         networkService.setNodeManagerPropagationAddress("tcp://" + nodeManagerIp + ":" + propagationPort);
-        propagationPublisher.init(propagationPort, NodeType.NodeManager);
     }
 
     public void propagateNetworkChanges() {

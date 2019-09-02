@@ -9,6 +9,8 @@ import java.util.Map;
 
 public interface INodeManagementService {
 
+    void init();
+
     void propagateNetworkChanges();
 
     ResponseEntity<String> addNode(NetworkNodeData networkNodeData);

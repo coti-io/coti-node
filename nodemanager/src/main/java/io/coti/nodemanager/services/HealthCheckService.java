@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -37,7 +36,7 @@ public class HealthCheckService implements IHealthCheckService {
     private INetworkService networkService;
     private Thread healthCheckThread;
 
-    @PostConstruct
+    @Override
     public void init() {
         healthCheckThread = new Thread(() -> nodesHealthCheck());
         healthCheckThread.start();
