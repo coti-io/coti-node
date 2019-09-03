@@ -123,6 +123,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private void backupDB() {
         if (backup) {
             try {
+                log.info("Starting DB backup flow");
                 deleteBackup(remoteBackupFolderPath);
                 dBConnector.generateDataBaseBackup(remoteBackupFolderPath);
                 List<String> backupFiles = awsService.listS3Paths(backupBucket, backupS3Path);
@@ -130,7 +131,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                     awsService.createS3Folder(backupBucket, backupS3Path);
                 }
                 File backupFolderToUpload = new File(remoteBackupFolderPath);
-
+                log.info("Uploading remote backup to S3 bucket");
                 awsService.uploadFolderAndContentsToS3(backupBucket, backupS3Path + "/backup-" + Instant.now().toEpochMilli(), backupFolderToUpload);
                 if (!backupFiles.isEmpty()) {
                     Set<Long> s3BackupTimeStampSet = getS3BackupTimeStampSet(backupFiles);
@@ -142,6 +143,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                         awsService.deleteFolderAndContentsFromS3(backupFiles, backupBucket);
                     }
                 }
+                log.info("Finished DB backup flow");
             } catch (Exception e) {
                 log.error(e.getMessage());
             } finally {
