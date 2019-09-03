@@ -74,7 +74,10 @@ public class BaseNodeAwsService implements IAwsService {
         TransferManager transferManager = TransferManagerBuilder.standard().withS3Client(s3Client).build();
         try {
             MultipleFileDownload multipleFileDownload = transferManager.downloadDirectory(bucketName, s3folderPath, new File(directoryToDownload));
+            Thread monitorTransferProgress = monitorTransferProgress(multipleFileDownload);
+            monitorTransferProgress.start();
             multipleFileDownload.waitForCompletion();
+            monitorTransferProgress.interrupt();
             if (multipleFileDownload.getProgress().getPercentTransferred() == 100) {
                 log.debug("Finished downloading files");
             }
@@ -185,6 +188,33 @@ public class BaseNodeAwsService implements IAwsService {
         } catch (Exception e) {
             throw new AwsException(String.format("Get S3 client error. Exception: %s, Error: %s", e.getClass().getName(), e.getMessage()));
         }
+    }
+
+    private Thread monitorTransferProgress(Transfer transfer) {
+        return new Thread(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    Thread.sleep(5000);
+                    logTransferProgress(transfer);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } catch (Exception e) {
+                    throw new AwsException(String.format("Monitor transfer progress error. Exception: %s, Error: %s", e.getClass().getName(), e.getMessage()));
+                }
+            }
+            logTransferProgress(transfer);
+        });
+    }
+
+    private void logTransferProgress(Transfer transfer) {
+        TransferProgress progress = transfer.getProgress();
+        long bytesTransferred = progress.getBytesTransferred();
+        long total = progress.getTotalBytesToTransfer();
+        Double percentDone = progress.getPercentTransferred();
+        log.info("Transfer progress: {}%", percentDone.intValue());
+        log.info("{} bytes transferred out of {}", bytesTransferred, total);
+        Transfer.TransferState transferState = transfer.getState();
+        log.info("Transfer state: " + transferState);
     }
 
 }
