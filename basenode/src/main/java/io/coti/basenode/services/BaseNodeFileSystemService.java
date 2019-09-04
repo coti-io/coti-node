@@ -6,7 +6,8 @@ import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,12 +18,12 @@ public class BaseNodeFileSystemService {
 
     public void createFolder(String folderPath) {
         try {
-            File folderPathFile = new File(folderPath);
-            if (!folderPathFile.exists()) {
-                folderPathFile.mkdir();
+            File folder = new File(folderPath);
+            if (!folder.exists()) {
+                folder.mkdir();
             }
         } catch (Exception e) {
-            throw new FileSystemException(String.format("Create folder error. Exception: %s, exception message: %s", e.getClass(), e.getMessage()));
+            throw new FileSystemException(String.format("Create folder error. %s: %s", e.getClass().getName(), e.getMessage()));
         }
     }
 
@@ -36,12 +37,24 @@ public class BaseNodeFileSystemService {
             File folder = new File(folderPath);
             return Arrays.stream(folder.listFiles()).map(file -> file.getName()).collect(Collectors.toList());
         } catch (Exception e) {
-            throw new FileSystemException(String.format("List folder file names error. Exception: %s, exception message: %s", e.getClass(), e.getMessage()));
+            throw new FileSystemException(String.format("List folder file names error. %s: %s", e.getClass().getName(), e.getMessage()));
         }
     }
 
-    public void removeFolderContents(String folderPath) throws IOException {
-        FileUtils.cleanDirectory(new File(folderPath));
+    public void removeFolderContents(String folderPath) {
+        try {
+            FileUtils.cleanDirectory(new File(folderPath));
+        } catch (Exception e) {
+            throw new FileSystemException(String.format("Remove folder contents error. %s: %s", e.getClass().getName(), e.getMessage()));
+        }
+    }
+
+    public void deleteFile(String filePath) {
+        try {
+            Files.delete(Paths.get(filePath));
+        } catch (Exception e) {
+            throw new FileSystemException(String.format("Delete file error. %s: %s", e.getClass().getName(), e.getMessage()));
+        }
     }
 
 }

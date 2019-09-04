@@ -16,12 +16,11 @@ public enum ClusterStampType {
         return mark;
     }
 
-    public static Optional<ClusterStampType> getTypeByMark(String clusterStampTypeMark){
-        if(clusterStampTypeMark.equals("M")){
-            return Optional.of(ClusterStampType.MAJOR);
-        }
-        else if(clusterStampTypeMark.equals("T")){
-            return Optional.of(ClusterStampType.TOKEN);
+    public static Optional<ClusterStampType> getTypeByMark(String clusterStampTypeMark) {
+        for (ClusterStampType clusterStampType : values()) {
+            if (clusterStampType.getMark().equals(clusterStampTypeMark)) {
+                return Optional.of(clusterStampType);
+            }
         }
         return Optional.empty();
     }
