@@ -1,11 +1,28 @@
 package io.coti.basenode.data;
 
-public enum ClusterStampType {
-    MAJOR,
-    TOKEN;
+import java.util.Optional;
 
-    public String getPrefix(){
-        return this.name().substring(0,1);
+public enum ClusterStampType {
+    MAJOR("M"),
+    TOKEN("T");
+
+    private String mark;
+
+    ClusterStampType(String mark) {
+        this.mark = mark;
     }
 
+    public String getMark() {
+        return mark;
+    }
+
+    public static Optional<ClusterStampType> getTypeByMark(String clusterStampTypeMark){
+        if(clusterStampTypeMark.equals("M")){
+            return Optional.of(ClusterStampType.MAJOR);
+        }
+        else if(clusterStampTypeMark.equals("T")){
+            return Optional.of(ClusterStampType.TOKEN);
+        }
+        return Optional.empty();
+    }
 }
