@@ -95,7 +95,7 @@ public abstract class BaseNodeInitializationService {
     @Autowired
     private NodeRegistrations nodeRegistrations;
     @Autowired
-    private IClusterStampService clusterStampService;
+    private BaseNodeClusterStampService clusterStampService;
     @Autowired
     private ITransactionSynchronizationService transactionSynchronizationService;
     @Autowired
@@ -110,28 +110,28 @@ public abstract class BaseNodeInitializationService {
     }
 
     public void initServices() {
-        awsService.init();
-        dbRecoveryService.init();
-        addressService.init();
-        balanceService.init();
-        clusterStampService.loadClusterStamp();
-        confirmationService.init();
-        transactionIndexService.init();
-        dspVoteService.init();
-        transactionService.init();
+            awsService.init();
+            dbRecoveryService.init();
+            addressService.init();
+            balanceService.init();
+            clusterStampService.init();
+            confirmationService.init();
+            transactionIndexService.init();
+            dspVoteService.init();
+            transactionService.init();
         transactionPropagationCheckService.init();
-        potService.init();
-        initCommunication();
-        log.info("The communication initialization is done");
-        initTransactionSync();
-        log.info("The transaction sync initialization is done");
-        networkService.setConnectToNetworkUrl(nodeManagerHttpAddress + NODE_MANAGER_NODES_ENDPOINT);
-        networkService.connectToNetwork();
-        propagationSubscriber.initPropagationHandler();
-        monitorService.init();
+            potService.init();
+            initCommunication();
+            log.info("The communication initialization is done");
+            initTransactionSync();
+            log.info("The transaction sync initialization is done");
+            networkService.setConnectToNetworkUrl(nodeManagerHttpAddress + NODE_MANAGER_NODES_ENDPOINT);
+            networkService.connectToNetwork();
+            propagationSubscriber.initPropagationHandler();
+            monitorService.init();
     }
 
-    private void initTransactionSync() {
+    public void initTransactionSync() {
         try {
             AtomicLong maxTransactionIndex = new AtomicLong(-1);
             log.info("Starting to read existing transactions");
