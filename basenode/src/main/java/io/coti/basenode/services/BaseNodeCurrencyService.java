@@ -6,6 +6,7 @@ import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.GetUpdatedCurrencyRequest;
 import io.coti.basenode.http.GetUpdatedCurrencyResponse;
 import io.coti.basenode.http.Response;
+import io.coti.basenode.http.data.GetHashToPropagatable;
 import io.coti.basenode.model.Currencies;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import reactor.core.publisher.FluxSink;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -183,6 +185,10 @@ public class BaseNodeCurrencyService {
         return nativeCurrencyData;
     }
 
+    public void getUpdatedCurrenciesReactive(GetUpdatedCurrencyRequest getUpdatedCurrencyRequest, FluxSink<GetHashToPropagatable<CurrencyData>> fluxSink) {
+
+    }
+
     public ResponseEntity<BaseResponse> getUpdatedCurrencies(GetUpdatedCurrencyRequest getUpdatedCurrencyRequest) {
         if (!getUpdatedCurrencyRequestCrypto.verifySignature(getUpdatedCurrencyRequest)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
@@ -313,6 +319,7 @@ public class BaseNodeCurrencyService {
         currencyCrypto.signMessage(currencyData);
         return currencyData;
     }
+
 
 
 }
