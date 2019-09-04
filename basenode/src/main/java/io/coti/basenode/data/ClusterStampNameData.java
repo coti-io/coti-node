@@ -1,5 +1,6 @@
 package io.coti.basenode.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.interfaces.IEntity;
 import lombok.Data;
@@ -15,8 +16,7 @@ public class ClusterStampNameData implements IEntity {
     private Long creationTimeMillis;
     private Hash hash;
 
-    public ClusterStampNameData() {
-
+    private ClusterStampNameData() {
     }
 
     public ClusterStampNameData(ClusterStampType type, String versionTimeMillis, String creationTimeMillis) {
@@ -40,25 +40,16 @@ public class ClusterStampNameData implements IEntity {
         generateAndSetHash();
     }
 
-    public String getClusterStampFileName() {
-        StringBuilder sb = new StringBuilder("Clusterstamp_");
-        sb.append(type.getMark()).append("_").append(versionTimeMillis.toString());
-        if (!versionTimeMillis.equals(creationTimeMillis)) {
-            sb.append("_").append(creationTimeMillis.toString());
-        }
-        return sb.append(".csv").toString();
-    }
-
-
     private void generateAndSetHash() {
         byte[] typeInBytes = Integer.toString(this.type.ordinal()).getBytes();
-        byte[] versionTimeInBytes = this.versionTimeMillis.toString().getBytes();
-        byte[] creationTimeInBytes = this.creationTimeMillis.toString().getBytes();
-        byte[] concatDataFields = ByteBuffer.allocate(typeInBytes.length + versionTimeInBytes.length + creationTimeInBytes.length)
-                .put(typeInBytes).put(versionTimeInBytes).put(creationTimeInBytes).array();
+        byte[] versionTimeMillisInBytes = ByteBuffer.allocate(Long.BYTES).putLong(this.versionTimeMillis).array();
+        byte[] creationTimeMillisInBytes = ByteBuffer.allocate(Long.BYTES).putLong(this.creationTimeMillis).array();
+        byte[] concatDataFields = ByteBuffer.allocate(typeInBytes.length + versionTimeMillisInBytes.length + creationTimeMillisInBytes.length)
+                .put(typeInBytes).put(versionTimeMillisInBytes).put(creationTimeMillisInBytes).array();
         this.hash = CryptoHelper.cryptoHash(concatDataFields);
     }
 
+    @JsonIgnore
     public boolean isMajor() {
         return type == ClusterStampType.MAJOR;
     }
