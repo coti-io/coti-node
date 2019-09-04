@@ -32,7 +32,7 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String DISTRIBUTION_REQUEST_HANDLED_PREVIOUSLY = "Distribution request handled previously";
 
     public static final String DOCUMENT_EXISTS_ERROR = "Document already exists";
-    public static final String DOCUMENT_NOT_FOUND = "Document not found";
+
     public static final String DOCUMENT_UPLOAD_ERROR = "Some error occurred during upload";
     public static final String COMMENT_NOT_FOUND = "Comment not found";
     public static final String ITEM_NOT_FOUND = "Item not found";
@@ -45,7 +45,7 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String HEADER_ATTACHMENT_PREFIX = "attachment; filename=";
     public static final String HEADER_CONTENT_TYPE = "Content-Type";
     public static final String S3_SUFFIX_METADATA_KEY = "x-amz-meta-suffix";
-    public static final String S3_NOT_REACHABLE = "S3 not reachable for a response";
+
 
     public static final String NOT_COTI_POOL = "Transaction receiver isn't Coti pool";
     public static final String ALREADY_GOT_THIS_RECOURSE_CLAIM = "Recourse claim transaction already processed";
