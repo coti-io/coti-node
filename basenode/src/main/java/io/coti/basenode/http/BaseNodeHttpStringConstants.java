@@ -63,6 +63,8 @@ public class BaseNodeHttpStringConstants {
 
     public static final String NOT_BACKUP_NODE = "The node is not a backup node";
 
+    public static final String CLUSTERSTAMP_MAJOR_NOT_FOUND = "Major cluster stamp not found";
+
     protected BaseNodeHttpStringConstants() {
 
     }
