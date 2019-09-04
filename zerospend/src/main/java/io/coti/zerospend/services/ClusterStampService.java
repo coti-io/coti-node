@@ -2,6 +2,7 @@ package io.coti.zerospend.services;
 
 import io.coti.basenode.data.ClusterStampData;
 import io.coti.basenode.data.SignatureData;
+import io.coti.basenode.exceptions.ClusterStampException;
 import io.coti.basenode.exceptions.ClusterStampValidationException;
 import io.coti.basenode.services.BaseNodeClusterStampService;
 import lombok.extern.slf4j.Slf4j;
@@ -17,13 +18,22 @@ import java.io.IOException;
 public class ClusterStampService extends BaseNodeClusterStampService {
 
     @Override
-    protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData) {
-        clusterStampCrypto.signMessage(clusterStampData);
-        updateClusterStampFileWithSignature(clusterStampData.getSignature());
+    protected void handleMissingMajor(){
+        throw new ClusterStampException("Unable to start zero spend server. Major clusterstamp not found.");
     }
 
-    private void updateClusterStampFileWithSignature(SignatureData signature) {
-        String clusterstampFileLocation = clusterStampFilePrefix + CLUSTERSTAMP_FILE_SUFFIX;
+    @Override
+    protected void handleMissingRecoveryServer(){
+        // Zero spend does nothing in this case.
+    }
+
+    @Override
+    protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData, String clusterstampFileLocation) {
+        clusterStampCrypto.signMessage(clusterStampData);
+        updateClusterStampFileWithSignature(clusterStampData.getSignature(), clusterstampFileLocation);
+    }
+
+    private void updateClusterStampFileWithSignature(SignatureData signature, String clusterstampFileLocation) {
         try (FileWriter clusterstampFileWriter = new FileWriter(clusterstampFileLocation, true);
              BufferedWriter clusterStampBufferedWriter = new BufferedWriter(clusterstampFileWriter)) {
             clusterStampBufferedWriter.newLine();
