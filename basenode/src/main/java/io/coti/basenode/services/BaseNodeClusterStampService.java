@@ -281,16 +281,40 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     }
 
     private void handleRequiredClusterStampFiles(GetClusterStampFileNamesResponse getClusterStampFileNamesResponse, boolean isStartup) {
+        if(!validateResponseVersionValidity(getClusterStampFileNamesResponse)){
+            throw new ClusterStampException("Recovery clusterstamp version is not valid");
+        }
         if (majorClusterStampName == null) {
-            clearClusterStampNamesAndFiles();
-            downloadAndAddSingleClusterStamp(getClusterStampFileNamesResponse.getMajor());
-            downloadAndAddClusterStamps(getClusterStampFileNamesResponse.getTokenClusterStampNames());
-            if (!isStartup) {
-                loadAllClusterStamps();
-            }
+            handleMissingClusterStampsWithMajorNotPresent(getClusterStampFileNamesResponse, isStartup);
             return;
         }
-        handleMissingClusterStampsWithMajorPresent(getClusterStampFileNamesResponse, majorClusterStampName, isStartup);
+        handleMissingClusterStampsWithMajorPresent(getClusterStampFileNamesResponse, isStartup);
+    }
+
+    private boolean validateResponseVersionValidity(GetClusterStampFileNamesResponse getClusterStampFileNamesResponse) {
+        LastClusterStampVersionData lastVersionData = lastClusterStampVersions.get();
+        if(!validateVersion(lastVersionData.getVersionTimeMillis(), getClusterStampFileNamesResponse.getMajor().getVersionTimeMillis())){
+            return false;
+        }
+        if(getClusterStampFileNamesResponse.getTokenClusterStampNames().stream().anyMatch(clusterStampNameData ->  !validateVersion(lastVersionData.getVersionTimeMillis(), clusterStampNameData.getVersionTimeMillis()))){
+            return false;
+        }
+        return true;
+    }
+
+
+    private boolean validateVersion(Long currentVersion, Long clusterStampFileVersion) {
+        return clusterStampFileVersion >= currentVersion;
+    }
+
+
+    private void  handleMissingClusterStampsWithMajorNotPresent(GetClusterStampFileNamesResponse getClusterStampFileNamesResponse, boolean isStartup){
+        clearClusterStampNamesAndFiles();
+        downloadAndAddSingleClusterStamp(getClusterStampFileNamesResponse.getMajor());
+        downloadAndAddClusterStamps(getClusterStampFileNamesResponse.getTokenClusterStampNames());
+        if (!isStartup) {
+            loadAllClusterStamps();
+        }
     }
 
     private void clearClusterStampNamesAndFiles() {
@@ -302,14 +326,14 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         }
     }
 
-    private void handleMissingClusterStampsWithMajorPresent(GetClusterStampFileNamesResponse getClusterStampFileNamesResponse, ClusterStampNameData localMajor, boolean isStartup) {
+    private void handleMissingClusterStampsWithMajorPresent(GetClusterStampFileNamesResponse getClusterStampFileNamesResponse, boolean isStartup) {
         ClusterStampNameData majorFromRecovery = getClusterStampFileNamesResponse.getMajor();
-        if (localMajor.equals(majorFromRecovery)) {
+        if (majorClusterStampName.equals(majorFromRecovery)) {
             handleMajorsEqual(getClusterStampFileNamesResponse, isStartup);
-        } else if (localMajor.getVersionTimeMillis().equals(majorFromRecovery.getVersionTimeMillis())) {
-            handleUpdatedMajor(getClusterStampFileNamesResponse, localMajor, isStartup);
+        } else if (majorClusterStampName.getVersionTimeMillis().equals(majorFromRecovery.getVersionTimeMillis())) {
+            handleUpdatedMajor(getClusterStampFileNamesResponse, isStartup);
         } else {
-            handleDifferentMajorVersions(getClusterStampFileNamesResponse, localMajor, isStartup);
+            handleDifferentMajorVersions(getClusterStampFileNamesResponse, isStartup);
         }
     }
 
@@ -322,9 +346,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         }
     }
 
-    private void handleUpdatedMajor(GetClusterStampFileNamesResponse getClusterStampFileNamesResponse, ClusterStampNameData localMajor, boolean isStartup) {
+    private void handleUpdatedMajor(GetClusterStampFileNamesResponse getClusterStampFileNamesResponse, boolean isStartup) {
         ClusterStampNameData majorFromRecovery = getClusterStampFileNamesResponse.getMajor();
-        removeClusterStampNameAndFile(localMajor);
+        removeClusterStampNameAndFile(majorClusterStampName);
         List<ClusterStampNameData> missingTokens = validateNoExcessTokensAndGetMissingTokens(getClusterStampFileNamesResponse);
         downloadAndAddSingleClusterStamp(majorFromRecovery);
         downloadAndAddClusterStamps(missingTokens);
@@ -335,8 +359,8 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         }
     }
 
-    private void handleDifferentMajorVersions(GetClusterStampFileNamesResponse getClusterStampFileNamesResponse, ClusterStampNameData localMajor, boolean isStartup) {
-        removeClusterStampNameAndFile(localMajor);
+    private void handleDifferentMajorVersions(GetClusterStampFileNamesResponse getClusterStampFileNamesResponse, boolean isStartup) {
+        removeClusterStampNameAndFile(majorClusterStampName);
         removeClusterStampNamesAndFiles(new ArrayList<>(tokenClusterStampHashToName.values()));
         downloadAndAddSingleClusterStamp(getClusterStampFileNamesResponse.getMajor());
         downloadAndAddClusterStamps(getClusterStampFileNamesResponse.getTokenClusterStampNames());
