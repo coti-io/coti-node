@@ -281,7 +281,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     }
 
     private void handleRequiredClusterStampFiles(GetClusterStampFileNamesResponse getClusterStampFileNamesResponse, boolean isStartup) {
-        if(!validateResponseVersionValidity(getClusterStampFileNamesResponse)){
+        if (!validateResponseVersionValidity(getClusterStampFileNamesResponse)) {
             throw new ClusterStampException("Recovery clusterstamp version is not valid");
         }
         if (majorClusterStampName == null) {
@@ -293,13 +293,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     private boolean validateResponseVersionValidity(GetClusterStampFileNamesResponse getClusterStampFileNamesResponse) {
         LastClusterStampVersionData lastVersionData = lastClusterStampVersions.get();
-        if(!validateVersion(lastVersionData.getVersionTimeMillis(), getClusterStampFileNamesResponse.getMajor().getVersionTimeMillis())){
-            return false;
-        }
-        if(getClusterStampFileNamesResponse.getTokenClusterStampNames().stream().anyMatch(clusterStampNameData ->  !validateVersion(lastVersionData.getVersionTimeMillis(), clusterStampNameData.getVersionTimeMillis()))){
-            return false;
-        }
-        return true;
+        return lastVersionData != null
+                && validateVersion(lastVersionData.getVersionTimeMillis(), getClusterStampFileNamesResponse.getMajor().getVersionTimeMillis())
+                && getClusterStampFileNamesResponse.getTokenClusterStampNames().stream().allMatch(clusterStampNameData -> validateVersion(lastVersionData.getVersionTimeMillis(), clusterStampNameData.getVersionTimeMillis()));
     }
 
 
@@ -308,7 +304,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     }
 
 
-    private void  handleMissingClusterStampsWithMajorNotPresent(GetClusterStampFileNamesResponse getClusterStampFileNamesResponse, boolean isStartup){
+    private void handleMissingClusterStampsWithMajorNotPresent(GetClusterStampFileNamesResponse getClusterStampFileNamesResponse, boolean isStartup) {
         clearClusterStampNamesAndFiles();
         downloadAndAddSingleClusterStamp(getClusterStampFileNamesResponse.getMajor());
         downloadAndAddClusterStamps(getClusterStampFileNamesResponse.getTokenClusterStampNames());
