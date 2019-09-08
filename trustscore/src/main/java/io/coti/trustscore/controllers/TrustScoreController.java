@@ -35,7 +35,7 @@ public class TrustScoreController {
 
     @RequestMapping(path = "/transactiontrustscore", method = RequestMethod.POST)
     public ResponseEntity<IResponse> getTransactionTrustScore(@Valid @RequestBody GetTransactionTrustScoreRequest request) {
-        return trustScoreService.getTransactionTrustScore(request.userHash, request.transactionHash, request.userSignature);
+        return trustScoreService.getTransactionTrustScore(request);
     }
 
 //    @RequestMapping(path = "/insertevent", method = RequestMethod.PUT)

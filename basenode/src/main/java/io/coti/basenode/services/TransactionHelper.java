@@ -1,8 +1,8 @@
 package io.coti.basenode.services;
 
 import com.google.common.collect.Sets;
+import io.coti.basenode.crypto.FullTransactionTrustScoreCrypto;
 import io.coti.basenode.crypto.TransactionCrypto;
-import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 import io.coti.basenode.model.AddressTransactionsHistories;
@@ -46,7 +46,7 @@ public class TransactionHelper implements ITransactionHelper {
     @Autowired
     private TransactionIndexes transactionIndexes;
     @Autowired
-    private TransactionTrustScoreCrypto transactionTrustScoreCrypto;
+    private FullTransactionTrustScoreCrypto fullTransactionTrustScoreCrypto;
     private Map<Hash, Stack<TransactionState>> transactionHashToTransactionStateStackMapping;
     private AtomicLong totalTransactions = new AtomicLong(0);
     private Set<Hash> noneIndexedTransactionHashes;
@@ -216,19 +216,21 @@ public class TransactionHelper implements ITransactionHelper {
 
     public boolean validateTrustScore(TransactionData transactionData) {
         Hash transactionHash = transactionData.getHash();
+        Hash senderHash = transactionData.getSenderHash();
         List<TransactionTrustScoreData> transactionTrustScores = transactionData.getTrustScoreResults();
         if (transactionTrustScores == null)
             return false;
         Map<Double, Integer> trustScoreResults = new HashMap<>();
         Set<Hash> transactionTrustScoreNodes = new HashSet<>();
         for (TransactionTrustScoreData transactionTrustScoreData : transactionTrustScores) {
-            if (transactionTrustScoreNodes.contains(transactionTrustScoreData.getSignerHash()) || !transactionTrustScoreData.getTransactionHash().equals(transactionHash) ||
-                    !transactionTrustScoreCrypto.verifySignature(transactionTrustScoreData))
+            FullTransactionTrustScoreData fullTransactionTrustScoreData = new FullTransactionTrustScoreData(senderHash, transactionHash, transactionTrustScoreData);
+            if (transactionTrustScoreNodes.contains(transactionTrustScoreData.getTrustScoreNodeHash()) ||
+                    !fullTransactionTrustScoreCrypto.verifySignature(fullTransactionTrustScoreData))
                 return false;
             Double transactionTrustScore = transactionTrustScoreData.getTrustScore();
             trustScoreResults.computeIfPresent(transactionTrustScore, (trustScore, currentAmount) -> currentAmount + 1);
             trustScoreResults.putIfAbsent(transactionTrustScore, 1);
-            transactionTrustScoreNodes.add(transactionTrustScoreData.getSignerHash());
+            transactionTrustScoreNodes.add(transactionTrustScoreData.getTrustScoreNodeHash());
         }
         transactionData.setSenderTrustScore(Collections.max(trustScoreResults.entrySet(), Map.Entry.comparingByValue()).getKey());
         return true;

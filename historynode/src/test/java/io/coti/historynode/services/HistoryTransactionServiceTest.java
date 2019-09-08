@@ -1,10 +1,10 @@
 package io.coti.historynode.services;
 
 import io.coti.basenode.communication.JacksonSerializer;
+import io.coti.basenode.crypto.FullTransactionTrustScoreCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.crypto.TransactionSenderCrypto;
-import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
@@ -63,7 +63,7 @@ import static utils.TransactionTestUtils.generateRandomHash;
         AddressTransactionsHistories.class, TransactionCrypto.class, NodeCryptoHelper.class, BaseNodeBalanceService.class,
         BaseNodeConfirmationService.class, LiveViewService.class, TransactionIndexService.class, TransactionIndexes.class,
         ClusterService.class, JacksonSerializer.class, ChunkService.class, HttpJacksonSerializer.class, NodeCryptoHelper.class,
-        TransactionTrustScoreCrypto.class, BaseNodeValidationService.class, TransactionSenderCrypto.class, BaseNodePotService.class,
+        FullTransactionTrustScoreCrypto.class, BaseNodeValidationService.class, TransactionSenderCrypto.class, BaseNodePotService.class,
         LiveViewService.class, ClusterService.class, SimpMessagingTemplate.class, MessageChannel.class, SourceSelector.class,
         TrustChainConfirmationService.class, ClusterHelper.class
 })

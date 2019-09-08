@@ -6,6 +6,7 @@ import lombok.Data;
 
 @Data
 public class GetTransactionTrustScoreResponse extends BaseResponse {
+
     private TransactionTrustScoreResponseData transactionTrustScoreData;
 
     public GetTransactionTrustScoreResponse(TransactionTrustScoreResponseData transactionTrustScoreData) {

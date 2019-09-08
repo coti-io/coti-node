@@ -1,14 +1,14 @@
 package io.coti.trustscore.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.coti.basenode.crypto.CryptoHelper;
-import io.coti.basenode.crypto.TransactionTrustScoreCrypto;
+import io.coti.basenode.crypto.FullTransactionTrustScoreCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.GetUserTrustScoreResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.TransactionTrustScoreResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.trustscore.config.rules.RulesData;
+import io.coti.trustscore.crypto.GetTransactionTrustScoreRequestCrypto;
 import io.coti.trustscore.crypto.TrustScoreCrypto;
 import io.coti.trustscore.crypto.TrustScoreEventCrypto;
 import io.coti.trustscore.crypto.TrustScoreUserTypeCrypto;
@@ -38,17 +38,12 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
-import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
 
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.API_SERVER_ERROR;
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNER;
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 import static io.coti.trustscore.http.HttpStringConstants.*;
 import static io.coti.trustscore.utils.BucketBuilder.buildTransactionDataRequest;
 
@@ -58,7 +53,7 @@ import static io.coti.trustscore.utils.BucketBuilder.buildTransactionDataRequest
 public class TrustScoreService {
 
     @Autowired
-    private TransactionTrustScoreCrypto transactionTrustScoreCrypto;
+    private FullTransactionTrustScoreCrypto fullTransactionTrustScoreCrypto;
 
     @Autowired
     private TrustScoreCrypto trustScoreCrypto;
@@ -93,6 +88,9 @@ public class TrustScoreService {
 
     @Autowired
     private BucketEvents bucketEvents;
+
+    @Autowired
+    private GetTransactionTrustScoreRequestCrypto getTransactionTrustScoreRequestCrypto;
 
     private List<IBucketEventService> bucketEventServiceList;
 
@@ -192,21 +190,15 @@ public class TrustScoreService {
     }
 
 
-    public ResponseEntity<IResponse> getTransactionTrustScore(Hash userHash, Hash transactionHash, SignatureData signatureData) {
+    public ResponseEntity<IResponse> getTransactionTrustScore(GetTransactionTrustScoreRequest getTransactionTrustScoreRequest) {
 
-        try {
-            PublicKey publicKey = CryptoHelper.getPublicKeyFromHexString(userHash.toHexString());
-            if (!CryptoHelper.verifyByPublicKey(transactionHash.getBytes(), signatureData.getR(), signatureData.getS(), publicKey)) {
-                return ResponseEntity
-                        .status(HttpStatus.BAD_REQUEST).body(new Response(BAD_SIGNATURE_ON_TRUST_SCORE_FOR_TRANSACTION));
-            }
-
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-            log.error("Exception happened while trying to get public key user hash {}", e);
-
+        if (!getTransactionTrustScoreRequestCrypto.verifySignature(getTransactionTrustScoreRequest)) {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST).body(new Response(BAD_SIGNATURE_ON_TRUST_SCORE_FOR_TRANSACTION));
         }
+
+        Hash userHash = getTransactionTrustScoreRequest.getUserHash();
+        Hash transactionHash = getTransactionTrustScoreRequest.getTransactionHash();
 
         TrustScoreData trustScoreData = trustScores.getByHash(userHash);
         if (trustScoreData == null) {
@@ -216,8 +208,9 @@ public class TrustScoreService {
         }
 
         double currentTransactionsTrustScore = calculateUserTrustScore(trustScoreData);
-        TransactionTrustScoreData transactionTrustScoreData = new TransactionTrustScoreData(userHash, transactionHash, currentTransactionsTrustScore);
-        transactionTrustScoreCrypto.signMessage(transactionTrustScoreData);
+        FullTransactionTrustScoreData fullTransactionTrustScoreData = new FullTransactionTrustScoreData(userHash, transactionHash, currentTransactionsTrustScore);
+        fullTransactionTrustScoreCrypto.signMessage(fullTransactionTrustScoreData);
+        TransactionTrustScoreData transactionTrustScoreData = new TransactionTrustScoreData(fullTransactionTrustScoreData);
         TransactionTrustScoreResponseData transactionTrustScoreResponseData = new TransactionTrustScoreResponseData(transactionTrustScoreData);
         GetTransactionTrustScoreResponse getTransactionTrustScoreResponse = new GetTransactionTrustScoreResponse(transactionTrustScoreResponseData);
         return ResponseEntity.status(HttpStatus.OK).body(getTransactionTrustScoreResponse);

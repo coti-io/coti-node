@@ -41,8 +41,6 @@ public class BucketUtil {
 
         List<@Valid TransactionTrustScoreData> trustScoreResults = new ArrayList<>();
         trustScoreResults.add(new TransactionTrustScoreData(
-                userHash,
-                transactionHash,
                 trustScore));
 
         TransactionData transactionData = new TransactionData(baseTransactions,

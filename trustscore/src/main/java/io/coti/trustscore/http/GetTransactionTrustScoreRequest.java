@@ -2,15 +2,29 @@ package io.coti.trustscore.http;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
+import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.http.Request;
+import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 
-public class GetTransactionTrustScoreRequest extends Request {
+@Data
+public class GetTransactionTrustScoreRequest extends Request implements ISignValidatable {
+
     @NotNull
-    public Hash userHash;
+    private Hash userHash;
     @NotNull
-    public Hash transactionHash;
+    private Hash transactionHash;
     @NotNull
-    public SignatureData userSignature;
+    private SignatureData userSignature;
+
+    @Override
+    public SignatureData getSignature() {
+        return userSignature;
+    }
+
+    @Override
+    public Hash getSignerHash() {
+        return userHash;
+    }
 }
