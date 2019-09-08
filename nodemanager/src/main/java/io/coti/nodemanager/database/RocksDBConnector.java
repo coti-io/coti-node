@@ -3,6 +3,7 @@ package io.coti.nodemanager.database;
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.nodemanager.model.ActiveNodes;
 import io.coti.nodemanager.model.NodeHistory;
+import org.rocksdb.RocksDB;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +17,7 @@ public class RocksDBConnector extends BaseNodeRocksDBConnector {
     @Override
     protected void setColumnFamily() {
         columnFamilyClassNames = Arrays.asList(
-                "DefaultColumnClassName",
+                new String(RocksDB.DEFAULT_COLUMN_FAMILY),
                 ActiveNodes.class.getName(),
                 NodeHistory.class.getName());
     }
