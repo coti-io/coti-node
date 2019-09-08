@@ -9,10 +9,6 @@ import java.nio.ByteBuffer;
 @Service
 public class GetClusterStampFileNamesCrypto extends SignatureCrypto<GetClusterStampFileNamesResponse>{
 
-    //TODO 8/28/2019 astolia: NOTE - i am using  ClusterStampNameData 'hash' field to make the signature.
-    // However, hash is not immutable and can be changed manually to wrong value. should i instead add every field of
-    // ClusterStampNameData to signature??
-
     @Override
     public byte[] getSignatureMessage(GetClusterStampFileNamesResponse getClusterStampFileNamesResponse) {
         ByteBuffer getClusterStampFileNamesByteBuffer = ByteBuffer.allocate(getByteBufferSize(getClusterStampFileNamesResponse));
