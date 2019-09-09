@@ -8,6 +8,7 @@ import lombok.Data;
 @Data
 public class RollingReserveResponse extends BaseResponse {
 
+    private static final long serialVersionUID = 7754255759986026761L;
     private RollingReserveResponseData rollingReserveData;
 
     public RollingReserveResponse(RollingReserveResponseData rollingReserveResponseData) {

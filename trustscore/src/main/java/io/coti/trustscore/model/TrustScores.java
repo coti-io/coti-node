@@ -13,3 +13,6 @@ public class TrustScores extends Collection<TrustScoreData> {
         super.init();
     }
 }
+
+
+//todo delete it

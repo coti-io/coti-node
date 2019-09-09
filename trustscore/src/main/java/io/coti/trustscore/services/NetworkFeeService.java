@@ -8,13 +8,13 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.TransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.trustscore.config.rules.UserNetworkFeeByTrustScoreRange;
-import io.coti.trustscore.data.Enums.TrustScoreRangeType;
-import io.coti.trustscore.data.TrustScoreData;
+import io.coti.trustscore.data.UserTrustScoreData;
+import io.coti.trustscore.data.scoreenums.TrustScoreRangeType;
 import io.coti.trustscore.http.NetworkFeeRequest;
 import io.coti.trustscore.http.NetworkFeeResponse;
 import io.coti.trustscore.http.NetworkFeeValidateRequest;
 import io.coti.trustscore.http.data.NetworkFeeResponseData;
-import io.coti.trustscore.model.TrustScores;
+import io.coti.trustscore.model.UserTrustScores;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,7 +44,7 @@ public class NetworkFeeService {
     @Autowired
     private TransactionHelper transactionHelper;
     @Autowired
-    private TrustScores trustScores;
+    private UserTrustScores userTrustScores;
     @Autowired
     private IValidationService validationService;
     @Autowired
@@ -72,11 +72,11 @@ public class NetworkFeeService {
                 }
             }
 
-            TrustScoreData trustScoreData = trustScores.getByHash(networkFeeRequest.getUserHash());
-            if (trustScoreData == null) {
+            UserTrustScoreData userTrustScoreData = userTrustScores.getByHash(networkFeeRequest.getUserHash());
+            if (userTrustScoreData == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(TRUST_SCORE_NOT_EXIST, networkFeeRequest.getUserHash()), STATUS_ERROR));
             }
-            double userTrustScore = trustScoreService.calculateUserTrustScore(trustScoreData);
+            double userTrustScore = trustScoreService.calculateUserTrustScore(userTrustScoreData);
 
             BigDecimal fee = calculateNetworkFeeAmount(getUserNetworkFeeByTrustScoreRange(userTrustScore), originalAmount);
 
@@ -137,11 +137,11 @@ public class NetworkFeeService {
     }
 
     public boolean isNetworkFeeValid(NetworkFeeData networkFeeData, Hash userHash) {
-        TrustScoreData trustScoreData = trustScores.getByHash(userHash);
-        if (trustScoreData == null) {
+        UserTrustScoreData userTrustScoreData = userTrustScores.getByHash(userHash);
+        if (userTrustScoreData == null) {
             return false;
         }
-        double userTrustScore = trustScoreService.calculateUserTrustScore(trustScoreData);
+        double userTrustScore = trustScoreService.calculateUserTrustScore(userTrustScoreData);
 
         BigDecimal calculatedNetworkFee = calculateNetworkFeeAmount(getUserNetworkFeeByTrustScoreRange(userTrustScore), networkFeeData.getOriginalAmount());
         int compareResult = networkFeeDifferenceValidation.compareTo(calculatedNetworkFee.subtract(networkFeeData.getAmount()).abs());

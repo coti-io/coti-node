@@ -8,14 +8,14 @@ import io.coti.basenode.http.*;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.IValidationService;
-import io.coti.trustscore.data.Enums.UserType;
-import io.coti.trustscore.data.TrustScoreData;
+import io.coti.trustscore.data.UserTrustScoreData;
+import io.coti.trustscore.data.scoreenums.UserType;
 import io.coti.trustscore.http.RollingReserveRequest;
 import io.coti.trustscore.http.RollingReserveResponse;
 import io.coti.trustscore.http.RollingReserveValidateRequest;
 import io.coti.trustscore.http.data.RollingReserveResponseData;
 import io.coti.trustscore.model.MerchantRollingReserveAddresses;
-import io.coti.trustscore.model.TrustScores;
+import io.coti.trustscore.model.UserTrustScores;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,7 +53,7 @@ public class RollingReserveService {
     @Autowired
     private MerchantRollingReserveAddresses merchantRollingReserveAddresses;
     @Autowired
-    private TrustScores trustScores;
+    private UserTrustScores userTrustScores;
     @Autowired
     private HttpJacksonSerializer jacksonSerializer;
     @Autowired
@@ -72,9 +72,9 @@ public class RollingReserveService {
                         .body(new Response(NETWORK_FEE_VALIDATION_ERROR, STATUS_ERROR));
             }
 
-            TrustScoreData trustScoreData = trustScores.getByHash(rollingReserveRequest.getMerchantHash());
+            UserTrustScoreData userTrustScoreData = userTrustScores.getByHash(rollingReserveRequest.getMerchantHash());
 
-            if (trustScoreData == null || !trustScoreData.getUserType().equals(UserType.MERCHANT)) {
+            if (userTrustScoreData == null || !userTrustScoreData.getUserType().equals(UserType.MERCHANT)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(USER_NOT_MERCHANT, rollingReserveRequest.getMerchantHash()), STATUS_ERROR));
             }
 
@@ -86,7 +86,7 @@ public class RollingReserveService {
             }
 
             Hash rollingReserveAddress = getMerchantRollingReserveAddress(rollingReserveRequest.getMerchantHash());
-            BigDecimal rollingReserveAmount = calculateRollingReserveAmount(reducedAmount, trustScoreService.calculateUserTrustScore(trustScoreData));
+            BigDecimal rollingReserveAmount = calculateRollingReserveAmount(reducedAmount, trustScoreService.calculateUserTrustScore(userTrustScoreData));
 
             RollingReserveData rollingReserveData = new RollingReserveData(rollingReserveAddress, rollingReserveAmount, originalAmount, reducedAmount, Instant.now());
             setRollingReserveNodeFeeHash(rollingReserveData);
@@ -138,10 +138,10 @@ public class RollingReserveService {
                         .status(HttpStatus.BAD_REQUEST)
                         .body(new Response(NETWORK_FEE_VALIDATION_ERROR, STATUS_ERROR));
             }
-            TrustScoreData trustScoreData = trustScores.getByHash(rollingReserveValidateRequest.getMerchantHash());
+            UserTrustScoreData userTrustScoreData = userTrustScores.getByHash(rollingReserveValidateRequest.getMerchantHash());
 
             RollingReserveData rollingReserveData = rollingReserveValidateRequest.getRollingReserveData();
-            boolean isValid = isRollingReserveValid(rollingReserveData, networkFeeData, trustScoreService.calculateUserTrustScore(trustScoreData), trustScoreData.getUserType());
+            boolean isValid = isRollingReserveValid(rollingReserveData, networkFeeData, trustScoreService.calculateUserTrustScore(userTrustScoreData), userTrustScoreData.getUserType());
             signRollingReserveFee(rollingReserveData, isValid);
 
             return ResponseEntity.status(HttpStatus.OK)
@@ -194,5 +194,13 @@ public class RollingReserveService {
             rollingReserveAmount = rollingReserveAmount.stripTrailingZeros();
         }
         return rollingReserveAmount;
+    }
+    public void purgeMerchantRollingReserveAddress(Hash userHash) {
+
+        MerchantRollingReserveAddressData merchantRollingReserveAddressData = merchantRollingReserveAddresses.getByHash(userHash);
+
+        if (merchantRollingReserveAddressData != null) {
+            merchantRollingReserveAddresses.delete(merchantRollingReserveAddressData);
+        }
     }
 }

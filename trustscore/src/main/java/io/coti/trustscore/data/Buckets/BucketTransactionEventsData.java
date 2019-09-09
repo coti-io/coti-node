@@ -7,9 +7,7 @@ import io.coti.trustscore.data.Events.TransactionEventData;
 import lombok.Data;
 
 import java.util.Date;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
 
 @Data
 public class BucketTransactionEventsData extends BucketEventData<TransactionEventData> implements IEntity {
@@ -23,7 +21,7 @@ public class BucketTransactionEventsData extends BucketEventData<TransactionEven
     private double currentDateTurnOverContribution;
     private double oldDateTurnOverContribution;
 
-    private Map<Date, BalanceCountAndContribution> currentMonthDayToBalanceCountAndContribution;
+    private ConcurrentHashMap<Date, BalanceCountAndContribution> currentMonthDayToBalanceCountAndContribution;
     private double currentMonthBalanceContribution;
     private double oldMonthBalanceContribution;
 
@@ -40,5 +38,5 @@ public class BucketTransactionEventsData extends BucketEventData<TransactionEven
 }
 
 
-
+//todo delete
 

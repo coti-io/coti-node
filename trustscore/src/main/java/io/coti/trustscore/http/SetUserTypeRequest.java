@@ -10,15 +10,10 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Data
-public class SetUserTypeRequest extends Request implements ISignValidatable {
+public class SetUserTypeRequest extends SignedRequest{
 
+    private static final long serialVersionUID = -4651323426356453376L;
     @NotNull
-    private String userType;
-    @NotNull
-    private Hash userHash;
-    @NotNull
-    private Hash signerHash;
-    @NotNull
-    private @Valid SignatureData signature;
+    public String userType;
 
 }

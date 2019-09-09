@@ -21,803 +21,407 @@
       "maxRate": "3"
     }
   ],
-  "user": [
+  "trustScores":
+  [
     {
-      "type": "consumer",
-      "addressMapping": "address -> userHash",
-      "initialTrustScore": {
-        "initialTrustScoreEventScoreList": [
-          {
-            "definition": "Calculated from the KYC identification data (very thin data)",
-            "range": {
-              "from": "0",
-              "to": "5"
-            },
-            "weight": "1.0",
-            "decay": "exp(-ln(2)/1095*T)",
-            "name": "KYC"
-          },
-          {
-            "definition": "Main questionnaire, not mandatory, but important for arbitrators (no way to have high enough TS from the beginning without it)",
-            "range": {
-              "from": "0",
-              "to": "25"
-            },
-            "weight": "1.0",
-            "decay": "exp(-ln(2)/1095*T)",
-            "name": "GeneralQuestionnaire"
-          }
-        ]
-      },
-      "behaviorCumulativeScores": {
-        "transactionEventScoreList": [
-          {
-            "idea": "More transactions - more TS",
-            "algorithm": "Day-by-day calculation",
-            "valueAdjusting": "Maximum contribution is 15, 80% of max contribution corresponds to 10,000 Txs permonth orN0.8 = 10,000 or rxN0.8 = 400 for day-by day",
-            "calculating": "N = count(outcomingTxForAllAddressesForTheUser) within a day",
-            "nonlinearFunction": "tanh(N/400*1.098612289)",
-            "weight": "0.75",
-            "decay": "exp(-ln(2)/30*T)",
-            "valueToStore": "TStnum",
-            "currentValue": "TStnum + tanh(N/400*1.098612289)",
-            "dayShift": "TStnum = TStnum * exp(-decay) + currentValue",
-            "issue": "When the day changes? It should be different for different locations?",
-            "name": "TransactionFrequency"
-          },
-          {
-            "idea": "More turnover - more TS",
-            "algorithm": "Day-by-day calculation",
-            "valueAdjusting": "Maximum contribution is 15, 80% of max contribution corresponds to 100,000 COTI permonth orT0.8 = 100,000 or rxT0.8 = 4,000 for day-by day calculation",
-            "calculating": "T = sum(outcomingTxForAllAddressesForTheUser) within a day",
-            "nonlinearFunction": "tanh(T/4000*1.098612289)",
-            "weight": "0.75",
-            "decay": "exp(-ln(2)/30*T)",
-            "valueToStore": "TStsum",
-            "currentValue": "TStsum + tanh(T/4000*1.098612289)",
-            "dayShift": "TStnum = TStsum * exp(-decay) + currentValue",
-            "issue": "When the day changes? It should be different for different locations?",
-            "name": "Turnover"
-          },
-          {
-            "idea": "Higher balance - higher TS",
-            "algorithm": "30 day deep day-by-day calculation",
-            "valueAdjusting": "Maximum contribution is 15, 80% of max contribution corresponds to 10,000 COTI avgbalance in month or B0.8 = 10,000 or rxB0.8 = 400 for day-by day calculation",
-            "valueToStore": [
-              "TSbalmonth",
-              "TSbal[0:29] 30 values"
-            ],
-            "newaddress": [
-              "Calculate TSbal_new_a[0:29] for the new address starting from the current balance backward",
-              "New address is unknown before address which is first time debited",
-              "There can be several TSbal_new_a within a day"
-            ],
-            "nonlinearFunction": "tanh(B/400*1.098612289)",
-            "decay": "exp(-ln(2)/30*T)",
-            "movingSum": "sum(exp(-decay*i) * nonlinearFunction(TSbal[i] + sum(TSbal_new_a[i] for all new addresses)) for  all stored days)",
-            "currentValue": "TSbalmonth + movingSum",
-            "dayShift": [
-              "TSbalmonth = TSbalmonth * exp(-decay) + TSbal[29]",
-              "TSbal[i+1] = TSbal[i] * exp(-decay) for i in 1:28",
-              "TSbal[1] = (TSbal[0] + sum(TSbal_new_a[0] for all new addresses) )* exp(-decay)",
-              "TSbal[0] = sum(Today balance for all addresses)"
-            ],
-            "weight": "0.75",
-            "issue": "When the day changes? It should be different for different locations?",
-            "name": "AverageBalance"
-          }
-        ]
-      },
-      "behaviorEventsScore": {
-        "suspiciousEventScoreList": [
-          {
-            "idea": "It is to be defined, how to catch it",
-            "algorithm": [
-              "Go through all events, apply weight and decay and summarize",
-              "After a limitation term, move events from actual table to archive"
-            ],
-            "contribution": "eventsNumber",
-            "term": "360",
-            "weight": "-2.0",
-            "decay": "exp(-ln(2)/30*T)",
-            "issue": "When the day changes? It should be different for different locations?",
-            "name": "IncorrectTransaction"
-          },
-          {
-            "idea": "It is to be defined, how to catch it",
-            "algorithm": [
-              "Go through all events, apply weight and decay and summarize",
-              "After a limitation term, move events from actual table to archive"
-            ],
-            "contribution": "eventsNumber",
-            "term": "360",
-            "weight": "-10.0",
-            "decay": "exp(-ln(2)/90*T)",
-            "issue": "When the day changes? It should be different for different locations?",
-            "name": "DoubleSpending"
-          },
-          {
-            "idea": "A person filling questionnaire too frequent is probably cheating",
-            "valueToStore": "TSquestfreq",
-            "algorithm": "Apply penalty if there are 3 events per current day, double if 6, triple if 9",
-            "contribution": "min(floor(eventsNumber/3),3)",
-            "weight": "-10.0",
-            "decay": "exp(-ln(2)/3*T)",
-            "dayShift": "Standard day-by-day decay",
-            "name": "FillingTheQuestionnaire"
-          }
-        ],
-        "compensableEventScore": [
-          {
-            "idea": "Deposited money should increase TS for the depositor",
-            "valueAdjusting": "Maximum contribution is 15 80% of max contribution corresponds to 1,000 deposited COTI",
-            "algorithm": "Go through all DepositedBalance and ClosedDeposits events and summarize. D=sum(amounts)",
-            "comment": "The algorithm will be changed to take into account how long deposits are kept and decay for old ones",
-            "amount": "The value of depositing transaction",
-            "contribution": "tanh(D*1.098612289/1000)",
-            "weight": "15.0",
-            "decay": "exp(-ln(2)/90*T)",
-            "calculation": "TSdeposits = tanh(D*1.098612289/1000)",
-            "name": "DepositedBalance"
-          },
-          {
-            "idea": "Not fulfilling a jury decision to pay or settle in other way",
-            "algorithm": "Go through all NonFulfillment and LateFulfillment events, apply weights and summarize related",
-            "term": "720",
-            "amount": "The value of the debt",
-            "weight": "1.0",
-            "weight1": "-20.0",
-            "weight2": "-10.0",
-            "contribution": "fine",
-            "fine": "(weight1*sign(Debt)+weight2*amount/10000)*1/365",
-            "decay": "exp(-ln(2)/90*T)",
-            "calculation": [
-              "TSnfevent = weight1 + weight2*amount/10^6",
-              "TSnf = TSnfevent + TSnfcompensation"
-            ],
-            "name": "NonFulfillment"
-          }
-        ],
-        "compensatingEventScore": [
-          {
-            "idea": "It is event of returning a deposit in all or in part, all description is in the parent event DepositedBalance",
-            "amount": "Value of the repaying transaction",
-            "parent": "link to a DepositedBalance event",
-            "name": "ClosedDeposits"
-          },
-          {
-            "idea": "Fulfilling a jury decision after compensated TS in part",
-            "calculation": "TSnfcompensation = weight1 + weight2*sum(amount for the same parent)/10^6",
-            "amount": "The value of the repayment",
-            "weight": "1.0",
-            "weight1": "49.0",
-            "weight2": "10.0",
-            "parent": "link to a DepositedBalance event",
-            "name": "LateFulfillment"
-          }
-        ]
-      },
-      "compensableEventsScore": {
-        "compensableEventScoreList": []
-      },
-      "behaviorHighFrequencyEventsScore": {
-        "comment": "It is not always real high frequency, but the processing for these events is frequency-based",
-        "highFrequencyEventsScoreList": [
-          {
-            "idea": "A person sending too much claims to the arbitration should be deprived",
-            "valueToStore": "TSclaims",
-            "nonlinearFunction": "tanh(C/30*1.098612289)",
-            "algorithm": "Count the number of claims for the last month, after apply nonlinear function, after add the stored value",
-            "weight": "-0.25",
-            "decay": "exp(-ln(2)/30*T)",
-            "dayShift": "Standard day-by-day decay",
-            "name": "Claim"
-          }
-        ]
-      }
+      "name": "KYCDocumentScoreData",
+      "users": [
+        {
+          "userType": "consumer",
+          "weight": 1.0,
+          "semiDecay": 1095
+        },
+        {
+          "userType": "merchant",
+          "weight": 1.0,
+          "semiDecay": 365
+        },
+        {
+          "userType": "arbitrator",
+          "weight": 1.0,
+          "semiDecay": 1095
+        },
+        {
+          "userType": "fullnode",
+          "weight": 0.4,
+          "semiDecay": 30
+        },
+        {
+          "userType": "dspnode",
+          "weight": 0.4,
+          "semiDecay": 365000
+        }
+      ]
     },
     {
-      "type": "arbitrator",
-      "addressMapping": "address -> userHash",
-      "initialTrustScore": {
-        "initialTrustScoreEventScoreList": [
-          {
-            "definition": "Calculated from the KYC identification data (very thin data)",
-            "range": {
-              "from": "0",
-              "to": "5"
-            },
-            "weight": "1.0",
-            "decay": "exp(-ln(2)/1095*T)",
-            "name": "KYC"
-          },
-          {
-            "definition": "Main questionnaire, not mandatory, but important for arbitrators (no way to have high enough TS from the beginning without it)",
-            "range": {
-              "from": "0",
-              "to": "25"
-            },
-            "weight": "1.0",
-            "decay": "exp(-ln(2)/1095*T)",
-            "name": "GeneralQuestionnaire"
-          }
-        ]
-      },
-      "behaviorCumulativeScores": {
-        "transactionEventScoreList": [
-          {
-            "idea": "More transactions - more TS",
-            "algorithm": "Day-by-day calculation",
-            "valueAdjusting": "Maximum contribution is 15, 80% of max contribution corresponds to 10,000 Txs permonth orN0.8 = 10,000 or rxN0.8 = 400 for day-by day",
-            "calculating": "N = count(outcomingTxForAllAddressesForTheUser) within a day",
-            "nonlinearFunction": "tanh(N/400*1.098612289)",
-            "weight": "0.75",
-            "decay": "exp(-ln(2)/30*T)",
-            "valueToStore": "TStnum",
-            "currentValue": "TStnum + tanh(N/400*1.098612289)",
-            "dayShift": "TStnum = TStnum * exp(-decay) + currentValue",
-            "issue": "When the day changes? It should be different for different locations?",
-            "name": "TransactionFrequency"
-          },
-          {
-            "idea": "More turnover - more TS",
-            "algorithm": "Day-by-day calculation",
-            "valueAdjusting": "Maximum contribution is 15, 80% of max contribution corresponds to 100,000 COTI permonth orT0.8 = 100,000 or rxT0.8 = 4,000 for day-by day calculation",
-            "calculating": "T = sum(outcomingTxForAllAddressesForTheUser) within a day",
-            "nonlinearFunction": "tanh(T/4000*1.098612289)",
-            "weight": "0.75",
-            "decay": "exp(-ln(2)/30*T)",
-            "valueToStore": "TStsum",
-            "currentValue": "TStsum + tanh(T/4000*1.098612289)",
-            "dayShift": "TStnum = TStsum * exp(-decay) + currentValue",
-            "issue": "When the day changes? It should be different for different locations?",
-            "name": "Turnover"
-          },
-          {
-            "idea": "Higher balance - higher TS",
-            "algorithm": "30 day deep day-by-day calculation",
-            "valueAdjusting": "Maximum contribution is 15, 80% of max contribution corresponds to 10,000 COTI avgbalance in month or B0.8 = 10,000 or rxB0.8 = 400 for day-by day calculation",
-            "valueToStore": [
-              "TSbalmonth",
-              "TSbal[0:29] 30 values"
-            ],
-            "newaddress": [
-              "Calculate TSbal_new_a[0:29] for the new address starting from the current balance backward",
-              "New address is unknown before address which is first time debited",
-              "There can be several TSbal_new_a within a day"
-            ],
-            "nonlinearFunction": "tanh(B/400*1.098612289)",
-            "decay": "exp(-ln(2)/30*T)",
-            "movingSum": "sum(exp(-decay*i) * nonlinearFunction(TSbal[i] + sum(TSbal_new_a[i] for all new addresses)) for  all stored days)",
-            "currentValue": "TSbalmonth + movingSum",
-            "dayShift": [
-              "TSbalmonth = TSbalmonth * exp(-decay) + TSbal[29]",
-              "TSbal[i+1] = TSbal[i] * exp(-decay) for i in 1:28",
-              "TSbal[1] = (TSbal[0] + sum(TSbal_new_a[0] for all new addresses) )* exp(-decay)",
-              "TSbal[0] = sum(Today balance for all addresses)"
-            ],
-            "weight": "0.75",
-            "issue": "When the day changes? It should be different for different locations?",
-            "name": "AverageBalance"
-          }
-        ]
-      },
-      "behaviorEventsScore": {
-        "suspiciousEventScoreList": [
-          {
-            "idea": "It is to be defined, how to catch it",
-            "algorithm": [
-              "Go through all events, apply weight and decay and summarize",
-              "After a limitation term, move events from actual table to archive"
-            ],
-            "contribution": "eventsNumber",
-            "term": "360",
-            "weight": "-2.0",
-            "decay": "exp(-ln(2)/30*T)",
-            "issue": "When the day changes? It should be different for different locations?",
-            "name": "IncorrectTransaction"
-          },
-          {
-            "idea": "It is to be defined, how to catch it",
-            "algorithm": [
-              "Go through all events, apply weight and decay and summarize",
-              "After a limitation term, move events from actual table to archive"
-            ],
-            "contribution": "eventsNumber",
-            "term": "360",
-            "weight": "-10.0",
-            "decay": "exp(-ln(2)/90*T)",
-            "issue": "When the day changes? It should be different for different locations?",
-            "name": "DoubleSpending"
-          },
-          {
-            "idea": "A person filling questionnaire too frequent is probably cheating",
-            "valueToStore": "TSquestfreq",
-            "algorithm": "Apply penalty if there are 3 events per current day, double if 6, triple if 9",
-            "contribution": "min(floor(eventsNumber/3),3)",
-            "weight": "-10.0",
-            "decay": "exp(-ln(2)/3*T)",
-            "dayShift": "Standard day-by-day decay",
-            "name": "FillingTheQuestionnaire"
-          }
-        ],
-        "compensableEventScore": [
-          {
-            "idea": "Deposited money should increase TS for the depositor",
-            "valueAdjusting": "Maximum contribution is 15 80% of max contribution corresponds to 1,000 deposited COTI",
-            "algorithm": "Go through all DepositedBalance and ClosedDeposits events and summarize. D=sum(amounts)",
-            "comment": "The algorithm will be changed to take into account how long deposits are kept and decay for old ones",
-            "amount": "The value of depositing transaction",
-            "contribution": "tanh(D*1.098612289/1000)",
-            "weight": "15.0",
-            "decay": "exp(-ln(2)/90*T)",
-            "calculation": "TSdeposits = tanh(D*1.098612289/1000)",
-            "name": "DepositedBalance"
-          },
-          {
-            "idea": "Not fulfilling a jury decision to pay or settle in other way",
-            "algorithm": "Go through all NonFulfillment and LateFulfillment events, apply weights and summarize related",
-            "term": "720",
-            "amount": "The value of the debt",
-            "weight": "1.0",
-            "weight1": "-20.0",
-            "weight2": "-10.0",
-            "contribution": "fine",
-            "fine": "(weight1*sign(Debt)+weight2*amount/10000)*1/365",
-            "decay": "exp(-ln(2)/90*T)",
-            "calculation": [
-              "TSnfevent = weight1 + weight2*amount/10^6",
-              "TSnf = TSnfevent + TSnfcompensation"
-            ],
-            "name": "NonFulfillment"
-          }
-        ],
-        "compensatingEventScore": [
-          {
-            "idea": "It is event of returning a deposit in all or in part, all description is in the parent event DepositedBalance",
-            "amount": "Value of the repaying transaction",
-            "parent": "link to a DepositedBalance event",
-            "name": "ClosedDeposits"
-          },
-          {
-            "idea": "Fulfilling a jury decision after compensated TS in part",
-            "calculation": "TSnfcompensation = weight1 + weight2*sum(amount for the same parent)/10^6",
-            "amount": "The value of the repayment",
-            "weight": "1.0",
-            "weight1": "49.0",
-            "weight2": "10.0",
-            "parent": "link to a DepositedBalance event",
-            "name": "LateFulfillment"
-          }
-        ]
-      },
-      "compensableEventsScore": {
-        "compensableEventScoreList": []
-      },
-      "behaviorHighFrequencyEventsScore": {
-        "comment": "It is not always real high frequency, but the processing for these events is frequency-based",
-        "highFrequencyEventsScoreList": [
-          {
-            "idea": "A person sending too much claims to the arbitration should be deprived",
-            "valueToStore": "TSclaims",
-            "nonlinearFunction": "tanh(C/30*1.098612289)",
-            "algorithm": "Count the number of claims for the last month, after apply nonlinear function, after add the stored value",
-            "weight": "-0.25",
-            "decay": "exp(-ln(2)/30*T)",
-            "dayShift": "Standard day-by-day decay",
-            "name": "Claim"
-          }
-        ]
-      }
+      "name": "Questionnaire1DocumentScoreData",
+      "users": [
+        {
+          "userType": "consumer",
+          "weight": 1.0,
+          "semiDecay": 1095
+        },
+        {
+          "userType": "merchant",
+          "weight": 0.6,
+          "semiDecay": 365
+        },
+        {
+          "userType": "arbitrator",
+          "weight": 1.0,
+          "semiDecay": 1095
+        }
+      ]
     },
     {
-      "type": "merchant",
-      "addressMapping": "address -> userHash",
-      "initialTrustScore": {
-        "initialTrustScoreEventScoreList": [
-          {
-            "definition": "Calculated from the KYC identification data (very thin data)",
-            "range": {
-              "from": "0",
-              "to": "5"
-            },
-            "weight": "1.0",
-            "decay": "exp(-ln(2)/365*T)",
-            "name": "KYC"
-          },
-          {
-            "definition": "Main questionnaire, not mandatory, but important for arbitrators (no way to have high enough TS from the beginning without it)",
-            "range": {
-              "from": "0",
-              "to": "25"
-            },
-            "weight": "0.6",
-            "decay": "exp(-ln(2)/365*T)",
-            "name": "GeneralQuestionnaire"
-          },
-          {
-            "definition": "Questionnaire for merchants, not mandatory but important to have a good TS and low RR from the beginning. It consists of business-related questions.",
-            "range": {
-              "from": "0",
-              "to": "20"
-            },
-            "weight": "1.0",
-            "decay": "exp(-ln(2)/365*T)",
-            "name": "MerchantQuestionnaire"
-          }
-        ]
-      },
-      "behaviorCumulativeScores": {
-        "transactionEventScoreList": [
-          {
-            "idea": "More transactions - more TS",
-            "algorithm": "Day-by-day calculation",
-            "valueAdjusting": "Maximum contribution is 15, 80% of max contribution corresponds to 10,000 Txs per month or  N0.8 = 10,000 or rxN0.8 = 400 for day-by day",
-            "calculating": "N = count(outcomingTxForAllAddressesForTheUser) within a day",
-            "nonlinearFunction": "tanh(N/400*1.098612289)",
-            "weight": "0.75",
-            "decay": "exp(-ln(2)/30*T)",
-            "valueToStore": "TStnum",
-            "currentValue": "TStnum + tanh(N/400*1.098612289)",
-            "dayShift": "TStnum = TStnum * exp(-decay) + currentValue",
-            "issue": "When the day changes? It should be different for different locations?",
-            "name": "TransactionFrequency"
-          },
-          {
-            "idea": "More turnover - more TS",
-            "algorithm": "Day-by-day calculation",
-            "valueAdjusting": "Maximum contribution is 15, 80% of max contribution corresponds to 100,000 COTI per month or T0.8 = 100,000 or rxT0.8 = 4,000 for day-by day calculation",
-            "calculating": "T = sum(outcomingTxForAllAddressesForTheUser) within a day",
-            "nonlinearFunction": "tanh(T/4000*1.098612289)",
-            "weight": "0.75",
-            "decay": "exp(-ln(2)/30*T)",
-            "valueToStore": "TStsum",
-            "currentValue": "TStsum + tanh(T/4000*1.098612289)",
-            "dayShift": "TStnum = TStsum * exp(-decay) + currentValue",
-            "issue": "When the day changes? It should be different for different locations?",
-            "name": "Turnover"
-          },
-          {
-            "idea": "Higher balance - higher TS",
-            "algorithm": "30 day deep day-by-day calculation",
-            "valueAdjusting": "Maximum contribution is 15, 80% of max contribution corresponds to 10,000 COTI avg balance in  month or B0.8 = 10,000 or rxB0.8 = 400 for day-by day calculation",
-            "valueToStore": [
-              "TSbalmonth",
-              "TSbal[0:29] 30 values"
-            ],
-            "newaddress": [
-              "Calculate TSbal_new_a[0:29] for the new address starting from the current balance backward",
-              "New address is unknown before address which is first time debited",
-              "There can be several TSbal_new_a within a day"
-            ],
-            "nonlinearFunction": "tanh(B/400*1.098612289)",
-            "decay": "exp(-ln(2)/30*T)",
-            "movingSum": "sum(exp(-decay*i) * nonlinearFunction(TSbal[i] + sum(TSbal_new_a[i] for all new addresses)) for all stored days)",
-            "currentValue": "TSbalmonth + movingSum",
-            "dayShift": [
-              "TSbalmonth = TSbalmonth * exp(-decay) + TSbal[29]",
-              "TSbal[i+1] = TSbal[i] * exp(-decay) for i in 1:28",
-              "TSbal[1] = (TSbal[0] + sum(TSbal_new_a[0] for all new addresses) )* exp(-decay)",
-              "TSbal[0] = sum(Today balance for all addresses)"
-            ],
-            "weight": "0.75",
-            "issue": "When the day changes? It should be different for different locations?",
-            "name": "AverageBalance"
-          }
-        ]
-      },
-      "compensableEventsScore": {
-        "compensableEventScoreList": [
-          {
-            "idea": "Deposited money should increase TS for the depositor",
-            "valueAdjusting": "Maximum contribution is 15 80% of max contribution corresponds to 1,000 deposited COTI",
-            "algorithm": "Go through all DepositedBalance and ClosedDeposits events and summarize. D=sum(amounts)",
-            "comment": "The algorithm will be changed to take into account how long deposits are kept and decay for old ones",
-            "amount": "The value of depositing transaction",
-            "contribution": "tanh(D*1.098612289/1000)",
-            "weight": "15.0",
-            "decay": "exp(-ln(2)/90*T)",
-            "calculation": "TSdeposits = tanh(D*1.098612289/1000)",
-            "name": "DepositedBalance"
-          },
-          {
-            "idea": "It is event of returning a deposit in all or in part, all description is in the parent event DepositedBalance",
-            "amount": "Value of the repaying transaction",
-            "parent": "link to a DepositedBalance event",
-            "name": "ClosedDeposits"
-          },
-          {
-            "idea": "Fulfilling a jury decision after compensated TS in part",
-            "calculation": "TSnfcompensation = weight1 + weight2*sum(amount for the same parent)/10^6",
-            "amount": "The value of the repayment",
-            "weight1": "49.0",
-            "weight2": "10.0",
-            "parent": "link to a DepositedBalance event",
-            "name": "LateFulfillment"
-          },
-          {
-            "idea": "Not fulfilling a jury decision to pay or settle in other way",
-            "algorithm": "Go through all NonFulfillment and LateFulfillment events, apply weights and summarize related",
-            "term": "720",
-            "amount": "The value of the debt",
-            "weight": "1",
-            "weight1": "-20.0",
-            "weight2": "-10.0",
-            "decay": "exp(-ln(2)/90*T)",
-            "contribution": "fine + tail",
-            "fine": "((weight1)*(currentDebt/abs(currentDebt)) + (weight2) * currentDebt/10000) * 1/365",
-            "fineDailyChange": "fine + (weight1*sign(currentDebt) + weight2 * currentDebt/10000 + fine) * 1/365",
-            "calculation": [
-              "TSnfevent = weight1 + weight2*amount/10^6",
-              "TSnf = TSnfevent + TSnfcompensation"
-            ],
-            "name": "NonFulfillment"
-          }
-        ]
-      },
-      "behaviorEventsScore": {
-        "suspiciousEventScoreList": [
-          {
-            "idea": "It is to be defined, how to catch it",
-            "algorithm": [
-              "Go through all events, apply weight and decay and summarize",
-              "After a limitation term, move events from actual table to archive"
-            ],
-            "contribution": "eventsNumber",
-            "term": "360",
-            "weight": "-2.0",
-            "decay": "exp(-ln(2)/30*T)",
-            "issue": "When the day changes? It should be different for different locations?",
-            "name": "IncorrectTransaction"
-          },
-          {
-            "idea": "It is to be defined, how to catch it",
-            "algorithm": [
-              "Go through all events, apply weight and decay and summarize",
-              "After a limitation term, move events from actual table to archive"
-            ],
-            "contribution": "eventsNumber",
-            "term": "360",
-            "weight": "-10.0",
-            "decay": "exp(-ln(2)/90*T)",
-            "issue": "When the day changes? It should be different for different locations?",
-            "name": "DoubleSpending"
-          },
-          {
-            "idea": "A person filling questionnaire too frequent is probably cheating",
-            "valueToStore": "TSquestfreq",
-            "algorithm": "Apply penalty if there are 3 events per current day, double if 6, triple if 9",
-            "contribution": "min(floor(eventsNumber/3),3)",
-            "weight": "-10.0",
-            "decay": "exp(-ln(2)/3*T)",
-            "dayShift": "Standard day-by-day decay",
-            "name": "FillingTheQuestionnaire"
-          }
-        ]
-      },
-      "behaviorHighFrequencyEventsScore": {
-        "comment": "It is not always real high frequency, but the processing for these events is frequency-based",
-        "highFrequencyEventsScoreList": [
-          {
-            "idea": "A person sending too much claims to the arbitration should be deprived",
-            "valueToStore": "TSclaims",
-            "nonlinearFunction": "tanh(C/30*1.098612289)",
-            "algorithm": "Count the number of claims for the last month, after apply nonlinear function, after add the stored value",
-            "weight": "-0.25",
-            "decay": "exp(-ln(2)/30*T)",
-            "dayShift": "Standard day-by-day decay",
-            "name": "Claim"
-          },
-          {
-            "idea": "Calculate chargeback rate dividing exponentially smoothed counters, apply the fine if it is larger than the standard(~2%)",
-            "decay": "exp(-ln(2)/30*T)",
-            "standardChargeBackRate": "0.02",
-            "contribution": "max((tail2Contribution+chargeBacksTodayAmount)/(tail1Contribution+paymentsTodayAmount) - standardChargeBackRate, 0)",
-            "tail1": "Acredits+tail1*exp(-decay)",
-            "tail2": "AchargeBacks+tail2*exp(-decay)",
-            "weight": "-5",
-            "name": "ChargeBackAmount"
-          },
-          {
-            "idea": "Calculate chargeback rate dividing exponentially smoothed counters, apply the fine if it is larger than the standard(~2%)",
-            "decay": "exp(-ln(2)/30*T)",
-            "standardChargeBackRate": "0.02",
-            "contribution": "max((tail2Contribution+chargeBacksTodayNumber)/(tail1Contribution+paymentsTodayNumber)  - standardChargeBackRate, 0)",
-            "tail1": "Ncredits+tail1*exp(-decay)",
-            "tail2": "NchargeBacks+tail2*exp(-decay)",
-            "weight": "-5",
-            "name": "ChargeBackNumber"
-          }
-        ]
-      }
+      "name": "Questionnaire2DocumentScoreData",
+      "users": [
+        {
+          "userType": "merchant",
+          "weight": 1.0,
+          "semiDecay": 365
+        }
+      ]
     },
     {
-      "type": "fullnode",
-      "addressMapping": "address -> userHash",
-      "initialTrustScore": {
-        "initialTrustScoreEventScoreList": [
-          {
-            "definition": "Borrow the TS from the owner",
-            "range": {
-              "from": "0",
-              "to": "100"
-            },
-            "weight": "0.4",
-            "decay": "exp(-ln(2)/365000*T)",
-            "name": "KYC"
-          }
-        ]
-      },
-      "behaviorCumulativeScores": {
-        "transactionEventScoreList": [
-          {
-            "idea": "More transactions - more TS",
-            "algorithm": "Day-by-day calculation",
-            "valueAdjusting": "Maximum contribution is 30 80% of max contribution corresponds to 1,000,000 Txs per month or N0.8 = 1,000,000 or rxN0.8 = 40,000 for day-by day",
-            "calculating": "N = count(outcomingTxForAllAddressesForTheUser) within a day",
-            "nonlinearFunction": "tanh(N/40000*1.098612289)",
-            "weight": "1.5",
-            "decay": "exp(-ln(2)/30*T)",
-            "valueToStore": "TStnum",
-            "currentValue": "TStnum + tanh(N/40000*1.098612289)",
-            "dayShift": "TStnum = TStnum * exp(-decay) + currentValue",
-            "issue": "When the day changes? It should be different for different locations?",
-            "name": "TransactionFrequency"
-          },
-          {
-            "idea": "More turnover - more TS",
-            "algorithm": "Day-by-day calculation",
-            "valueAdjusting": "Maximum contribution is 30 80% of max contribution corresponds to 100,000 COTI per month or T0.8 = 10,000,000 or rxT0.8 = 400,000 for day-by day calculation",
-            "calculating": "T = sum(outcomingTxForAllAddressesForTheUser) within a day",
-            "nonlinearFunction": "tanh(T/400000*1.098612289)",
-            "weight": "1.0",
-            "decay": "exp(-ln(2)/30*T)",
-            "valueToStore": "TStsum",
-            "currentValue": "TStsum + tanh(T/400000*1.098612289)",
-            "dayShift": "TStnum = TStsum * exp(-decay) + currentValue",
-            "issue": "When the day changes? It should be different for different locations?",
-            "name": "Turnover"
-          }
-        ]
-      },
-      "behaviorEventsScore": {
-        "suspiciousEventScoreList": [
-          {
-            "idea": "It is to be defined, how to catch it",
-            "algorithm": [
-              "Go through all events, apply weight and decay and summarize",
-              "After a limitation term, move events from actual table to archive"
-            ],
-            "contribution": "eventsNumber",
-            "term": "360",
-            "weight": "-2.0",
-            "decay": "exp(-ln(2)/30*T)",
-            "issue": "When the day changes? It should be different for different locations?",
-            "name": "IncorrectTransaction"
-          },
-          {
-            "idea": "It is to be defined, how to catch it",
-            "algorithm": [
-              "Go through all events, apply weight and decay and summarize",
-              "After a limitation term, move events from actual table to archive"
-            ],
-            "contribution": "eventsNumber",
-            "term": "360",
-            "weight": "-10.0",
-            "decay": "exp(-ln(2)/90*T)",
-            "issue": "When the day changes? It should be different for different locations?",
-            "name": "DoubleSpending"
-          },
-          {
-            "comment": "TBD",
-            "name": "ConfirmationEvading"
-          },
-          {
-            "comment": "TBD",
-            "name": "SmartContractExecutionEvading"
-          }
-        ]
-      },
-      "compensableEventsScore": {
-        "compensableEventScoreList": []
-      },
-      "behaviorHighFrequencyEventsScore": {
-        "highFrequencyEventsScoreList": []
-      }
+      "name": "Questionnaire3DocumentScoreData",
+      "users": [
+        {
+          "userType": "merchant",
+          "weight": 1.0,
+          "semiDecay": 365
+        }
+      ]
     },
     {
-      "type": "dspnode",
-      "addressMapping": "address -> userHash",
-      "initialTrustScore": {
-        "initialTrustScoreEventScoreList": [
-          {
-            "definition": "Borrow the TS from the owner",
-            "range": {
-              "from": "0",
-              "to": "100"
-            },
-            "weight": "0.4",
-            "decay": "exp(-ln(2)/365000*T)",
-            "name": "KYC"
-          }
-        ]
-      },
-      "behaviorCumulativeScores": {
-        "transactionEventScoreList": [
-          {
-            "idea": "More transactions - more TS",
-            "algorithm": "Day-by-day calculation",
-            "valueAdjusting": "Maximum contribution is 30 80% of max contribution corresponds to 1,000,000 Txs per month or N0.8 = 1,000,000 or rxN0.8 = 40,000 for day-by day",
-            "calculating": "N = count(outcomingTxForAllAddressesForTheUser) within a day",
-            "nonlinearFunction": "tanh(N/40000*1.098612289)",
-            "weight": "1.5",
-            "decay": "exp(-ln(2)/30*T)",
-            "valueToStore": "TStnum",
-            "currentValue": "TStnum + tanh(N/40000*1.098612289)",
-            "dayShift": "TStnum = TStnum * exp(-decay) + currentValue",
-            "issue": "When the day changes? It should be different for different locations?",
-            "name": "TransactionFrequency"
-          },
-          {
-            "idea": "More turnover - more TS",
-            "algorithm": "Day-by-day calculation",
-            "valueAdjusting": "Maximum contribution is 30 80% of max contribution corresponds to 100,000 COTI per month or T0.8 = 10,000,000 or rxT0.8 = 400,000 for day-by day calculation",
-            "calculating": "T = sum(outcomingTxForAllAddressesForTheUser) within a day",
-            "nonlinearFunction": "tanh(T/400000*1.098612289)",
-            "weight": "1.0",
-            "decay": "exp(-ln(2)/30*T)",
-            "valueToStore": "TStsum",
-            "currentValue": "TStsum + tanh(T/400000*1.098612289)",
-            "dayShift": "TStnum = TStsum * exp(-decay) + currentValue",
-            "issue": "When the day changes? It should be different for different locations?",
-            "name": "Turnover"
-          }
-        ]
-      },
-      "behaviorEventsScore": {
-        "suspiciousEventScoreList": [
-          {
-            "idea": "It is to be defined, how to catch it",
-            "algorithm": [
-              "Go through all events, apply weight and decay and summarize",
-              "After a limitation term, move events from actual table to archive"
-            ],
-            "contribution": "eventsNumber",
-            "term": "360",
-            "weight": "-2.0",
-            "decay": "exp(-ln(2)/30*T)",
-            "issue": "When the day changes? It should be different for different locations?",
-            "name": "IncorrectTransaction"
-          },
-          {
-            "idea": "It is to be defined, how to catch it",
-            "algorithm": [
-              "Go through all events, apply weight and decay and summarize",
-              "After a limitation term, move events from actual table to archive"
-            ],
-            "contribution": "eventsNumber",
-            "term": "360",
-            "weight": "-10.0",
-            "decay": "exp(-ln(2)/90*T)",
-            "issue": "When the day changes? It should be different for different locations?",
-            "name": "DoubleSpending"
-          },
-          {
-            "comment": "TBD",
-            "name": "ConfirmationEvading"
-          },
-          {
-            "comment": "TBD",
-            "name": "SmartContractExecutionEvading"
-          }
-        ]
-      },
-      "compensableEventsScore": {
-        "compensableEventScoreList": []
-      },
-      "behaviorHighFrequencyEventsScore": {
-        "highFrequencyEventsScoreList": []
-      }
+      "name": "FillQuestionnaireEventScoreData",
+      "users": [
+        {
+          "userType": "consumer",
+          "weight": -10.0,
+          "semiDecay": 3,
+          "term": 30
+        },
+        {
+          "userType": "merchant",
+          "weight": -10.0,
+          "semiDecay": 3,
+          "term": 30
+        },
+        {
+          "userType": "arbitrator",
+          "weight": -10.0,
+          "semiDecay": 3,
+          "term": 30
+        }
+      ]
+    },
+    {
+      "name": "FalseQuestionnaireEventScoreData",
+      "users": [
+        {
+          "userType": "consumer",
+          "term": 360,
+          "weight": -30.0,
+          "semiDecay": 3
+        },
+        {
+          "userType": "merchant",
+          "term": 360,
+          "weight": -30.0,
+          "semiDecay": 3
+        },
+        {
+          "userType": "arbitrator",
+          "term": 360,
+          "weight": -30.0,
+          "semiDecay": 3
+        }
+      ]
+    },
+    {
+      "name": "DoubleSpendingEventScoreData",
+      "users": [
+        {
+          "userType": "consumer",
+          "term": 360,
+          "weight": -10.0,
+          "semiDecay": 90
+        },
+        {
+          "userType": "merchant",
+          "term": 360,
+          "weight": -10.0,
+          "semiDecay": 90
+        },
+        {
+          "userType": "arbitrator",
+          "term": 360,
+          "weight": -10.0,
+          "semiDecay": 90
+        },
+        {
+          "userType": "fullnode",
+          "term": 360,
+          "weight": -10.0,
+          "semiDecay": 90
+        },
+        {
+          "userType": "dspnode",
+          "term": 360,
+          "weight": -10.0,
+          "semiDecay": 90
+        }
+      ]
+    },
+    {
+      "name": "InvalidTxEventScoreData",
+      "users": [
+        {
+          "userType": "consumer",
+          "term": 360,
+          "weight": -2.0,
+          "semiDecay": 30
+        },
+        {
+          "userType": "merchant",
+          "term": 360,
+          "weight": -2.0,
+          "semiDecay": 30
+        },
+        {
+          "userType": "arbitrator",
+          "term": 360,
+          "weight": -2.0,
+          "semiDecay": 30
+        },
+        {
+          "userType": "fullnode",
+          "term": 360,
+          "weight": -2.0,
+          "semiDecay": 30
+        },
+        {
+          "userType": "dspnode",
+          "term": 360,
+          "weight": -2.0,
+          "semiDecay": 30
+        }
+      ]
+    },
+    {
+      "name": "ChargeBackFrequencyBasedScoreData",
+      "users": [
+        {
+          "userType": "merchant",
+          "standardChargeBackRate": 0.01,
+          "amountSemiDecay": 30,
+          "amountWeight1": -5,
+          "amountWeight2": -0.25,
+          "numberSemiDecay": 30,
+          "numberWeight1": -5,
+          "numberWeight2": -0.25
+        }
+      ]
+    },
+    {
+      "name": "ClaimFrequencyBasedScoreData",
+      "users": [
+        {
+          "userType": "consumer",
+          "level08": 30,
+          "limit": 3,
+          "period": 30,
+          "term": 360,
+          "semiDecay": 30,
+          "weight": -0.25
+        },
+        {
+          "userType": "merchant",
+          "level08": 30,
+          "limit": 3,
+          "period": 30,
+          "term": 360,
+          "semiDecay": 30,
+          "weight": -0.25
+        },
+        {
+          "userType": "arbitrator",
+          "level08": 30,
+          "limit": 3,
+          "period": 30,
+          "term": 360,
+          "semiDecay": 30,
+          "weight": -0.25
+        },
+        {
+          "userType": "fullnode",
+          "level08": 30,
+          "limit": 3,
+          "period": 30,
+          "term": 360,
+          "semiDecay": 30,
+          "weight": -0.25
+        },
+        {
+          "userType": "dspnode",
+          "level08": 30,
+          "limit": 3,
+          "period": 30,
+          "term": 360,
+          "semiDecay": 30,
+          "weight": -0.25
+        }
+      ]
+    },
+    {
+      "name": "DebtBalanceBasedScoreData",
+      "users": [
+        {
+          "userType": "consumer",
+          "weight": 1.0,
+          "weight1": -20.0,
+          "weight2": -10.0,
+          "level08": 10000,
+          "semiDecay": 90
+        },
+        {
+          "userType": "merchant",
+          "weight": 1.0,
+          "weight1": -20.0,
+          "weight2": -10.0,
+          "level08": 10000,
+          "semiDecay": 90
+        },
+        {
+          "userType": "arbitrator",
+          "weight": 1.0,
+          "weight1": -20.0,
+          "weight2": -10.0,
+          "level08": 10000,
+          "semiDecay": 90
+        },
+        {
+          "userType": "fullnode",
+          "weight": 1.0,
+          "weight1": -20.0,
+          "weight2": -10.0,
+          "level08": 10000,
+          "semiDecay": 90
+        },
+        {
+          "userType": "dspnode",
+          "weight": 1.0,
+          "weight1": -20.0,
+          "weight2": -10.0,
+          "level08": 10000,
+          "semiDecay": 90
+        }
+      ]
+    },
+    {
+      "name": "DepositBalanceBasedScoreData",
+      "users": [
+        {
+          "userType": "consumer",
+          "weight": 1.0,
+          "weight1": 15.0,
+          "weight2": 5.0,
+          "level08": 10000,
+          "semiDecay": 90
+        },
+        {
+          "userType": "merchant",
+          "weight": 1.0,
+          "weight1": 15.0,
+          "weight2": 5.0,
+          "level08": 10000,
+          "semiDecay": 90
+        },
+        {
+          "userType": "arbitrator",
+          "weight": 1.0,
+          "weight1": 15.0,
+          "weight2": 5.0,
+          "level08": 10000,
+          "semiDecay": 90
+        },
+        {
+          "userType": "fullnode",
+          "weight": 1.0,
+          "weight1": 15.0,
+          "weight2": 5.0,
+          "level08": 10000,
+          "semiDecay": 90
+        },
+        {
+          "userType": "dspnode",
+          "weight": 1.0,
+          "weight1": 15.0,
+          "weight2": 5.0,
+          "level08": 10000,
+          "semiDecay": 90
+        }
+      ]
+    },
+    {
+      "name": "TransactionScoreData",
+      "users": [
+        {
+          "userType": "consumer",
+          "numberWeight": 0.75,
+          "numberLevel08": 400,
+          "numberSemiDecay": 30,
+          "turnoverWeight": 0.75,
+          "turnoverLevel08": 4000,
+          "turnoverSemiDecay": 30,
+          "balanceWeight": 0.75,
+          "balanceLevel08": 40000,
+          "balanceSemiDecay": 30
+        },
+        {
+          "userType": "merchant",
+          "numberWeight": 0.75,
+          "numberLevel08": 400,
+          "numberSemiDecay": 30,
+          "turnoverWeight": 0.75,
+          "turnoverLevel08": 4000,
+          "turnoverSemiDecay": 30,
+          "balanceWeight": 0.75,
+          "balanceLevel08": 40000,
+          "balanceSemiDecay": 30
+        },
+        {
+          "userType": "arbitrator",
+          "numberWeight": 0.75,
+          "numberLevel08": 400,
+          "numberSemiDecay": 30,
+          "turnoverWeight": 0.75,
+          "turnoverLevel08": 4000,
+          "turnoverSemiDecay": 30,
+          "balanceWeight": 0.75,
+          "balanceLevel08": 40000,
+          "balanceSemiDecay": 30
+        },
+        {
+          "userType": "fullnode",
+          "numberWeight": 1.5,
+          "numberLevel08": 40000,
+          "numberSemiDecay": 30,
+          "turnoverWeight": 1.0,
+          "turnoverLevel08": 400000,
+          "turnoverSemiDecay": 30
+        },
+        {
+          "userType": "dspnode",
+          "numberWeight": 1.5,
+          "numberLevel08": 40000,
+          "numberSemiDecay": 30,
+          "turnoverWeight": 1.0,
+          "turnoverLevel08": 400000,
+          "turnoverSemiDecay": 30
+        }
+      ]
     }
   ]
 }

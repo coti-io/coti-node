@@ -1,6 +1,5 @@
 package io.coti.trustscore.data.Enums;
 
-
 public enum EventType {
     TRANSACTION(0),
     HIGH_FREQUENCY_EVENTS(1),
@@ -18,4 +17,7 @@ public enum EventType {
         return value;
     }
 }
+
+// todo delete
+
 

@@ -3,8 +3,8 @@ package io.coti.trustscore.data.Buckets;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.trustscore.data.Enums.EventType;
 import io.coti.trustscore.data.Enums.InitialTrustScoreType;
-import io.coti.trustscore.data.Events.InitialTrustScoreData;
 import io.coti.trustscore.data.Events.InitialTrustScoreEventsData;
+import io.coti.trustscore.data.Events.InitialTrustScoreData;
 import lombok.Data;
 
 import java.util.Map;
@@ -21,3 +21,5 @@ public class BucketInitialTrustScoreEventsData extends BucketEventData<InitialTr
         initialTrustTypeToInitialTrustScoreDataMap = new ConcurrentHashMap<>();
     }
 }
+
+// TODO: delete

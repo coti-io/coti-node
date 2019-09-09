@@ -17,7 +17,7 @@ public enum InitialTrustScoreType {
                 return value;
             }
         }
-        throw new IllegalArgumentException(String.format("got event name {}, which not exists", text));
+        throw new IllegalArgumentException(String.format("Not existing event name {}", text));
     }
 
     @Override
@@ -25,3 +25,5 @@ public enum InitialTrustScoreType {
         return text;
     }
 }
+
+// todo delete

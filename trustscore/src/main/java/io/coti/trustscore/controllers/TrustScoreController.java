@@ -2,9 +2,7 @@ package io.coti.trustscore.controllers;
 
 import io.coti.basenode.http.GetTrustScoreRequest;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.trustscore.http.GetTransactionTrustScoreRequest;
-import io.coti.trustscore.http.SetKycTrustScoreRequest;
-import io.coti.trustscore.http.SetUserTypeRequest;
+import io.coti.trustscore.http.*;
 import io.coti.trustscore.services.TrustScoreService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,14 +36,39 @@ public class TrustScoreController {
         return trustScoreService.getTransactionTrustScore(request);
     }
 
-//    @RequestMapping(path = "/insertevent", method = RequestMethod.PUT)
-//    public ResponseEntity<IResponse> insertTrustScoreEvent(@Valid @RequestBody InsertEventRequest request) {
-//        return trustScoreService.addKycServerEvent(request);  //change the name
-//    }
+    @RequestMapping(path = "/insertdocument", method = RequestMethod.PUT)
+    public ResponseEntity<IResponse> insertDocumentScore(@Valid @RequestBody InsertDocumentScoreRequest request) {
+        return trustScoreService.insertDocumentScore(request);
+    }
+
+    @RequestMapping(path = "/insertevent", method = RequestMethod.PUT)
+    public ResponseEntity<IResponse> insertEventScore(@Valid @RequestBody InsertEventScoreRequest request) {
+        return trustScoreService.insertEventScore(request);
+    }
+
+    @RequestMapping(path = "/insertchargeback", method = RequestMethod.PUT)
+    public ResponseEntity<IResponse> insertChargeBackFrequencyBasedScore(@Valid @RequestBody InsertChargeBackFrequencyBasedScoreRequest request) {
+        return trustScoreService.insertChargeBackFrequencyBasedScore(request);
+    }
+
+    @RequestMapping(path = "/insertdebtscore", method = RequestMethod.PUT)
+    public ResponseEntity<IResponse> insertDebtBalanceBasedScore(@Valid @RequestBody InsertDebtBalanceBasedScoreRequest request) {
+        return trustScoreService.insertDebtBalanceBasedScore(request);
+    }
+
+    @RequestMapping(path = "/insertdepositscore", method = RequestMethod.PUT)
+    public ResponseEntity<IResponse> insertDepositBalanceBasedScore(@Valid @RequestBody InsertDepositBalanceBasedScoreRequest request) {
+        return trustScoreService.insertDepositBalanceBasedScore(request);
+    }
 
     @RequestMapping(path = "/usertype", method = RequestMethod.PUT)
     public ResponseEntity<IResponse> setUserType(@Valid @RequestBody SetUserTypeRequest request) {
         return trustScoreService.setUserType(request);
+    }
+
+    @RequestMapping(path = "/userzerotrustflag", method = RequestMethod.PUT)
+    public ResponseEntity<IResponse> setUserZeroTrustFlag(@Valid @RequestBody SetUserZeroTrustFlagSignedRequest request) {
+        return trustScoreService.setUserZeroTrustFlag(request);
     }
 
     @RequestMapping(path = "/usertscomponents", method = RequestMethod.POST)

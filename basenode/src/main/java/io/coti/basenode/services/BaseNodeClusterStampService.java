@@ -114,11 +114,15 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         log.trace("The hash {} was loaded from the clusterstamp with amount {}", addressHash, addressAmount);
 
         balanceService.updateBalanceFromClusterStamp(addressHash, addressAmount);
+        continueUpdateBalanceFromClusterStamp(addressHash, addressAmount);
         byte[] addressHashInBytes = addressHash.getBytes();
         byte[] addressAmountInBytes = addressAmount.stripTrailingZeros().toPlainString().getBytes();
         byte[] balanceInBytes = ByteBuffer.allocate(addressHashInBytes.length + addressAmountInBytes.length).put(addressHashInBytes).put(addressAmountInBytes).array();
         clusterStampData.getSignatureMessage().add(balanceInBytes);
         clusterStampData.incrementMessageByteSize(balanceInBytes.length);
+    }
+
+    public void continueUpdateBalanceFromClusterStamp(Hash addressHash, BigDecimal addressAmount) {
     }
 
     private void fillSignatureDataFromLine(ClusterStampData clusterStampData, String line, int signatureRelevantLines) {

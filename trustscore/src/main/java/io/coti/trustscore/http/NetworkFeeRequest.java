@@ -7,7 +7,7 @@ import lombok.Data;
 import javax.validation.constraints.NotNull;
 
 @Data
-public class NetworkFeeRequest {
+public class NetworkFeeRequest {  // todo why not extends request ?
 
     @NotNull
     private Hash userHash;

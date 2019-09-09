@@ -9,13 +9,10 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Data
-public class SetKycTrustScoreRequest extends Request {
-    @NotNull
-    public Hash userHash;
+public class SetKycTrustScoreRequest extends SignedRequest {
+    private static final long serialVersionUID = -1016176727037169880L;
     @NotNull
     public String userType;
-    @NotNull
-    public @Valid SignatureData signature;
     @NotNull
     public double kycTrustScore;
 }

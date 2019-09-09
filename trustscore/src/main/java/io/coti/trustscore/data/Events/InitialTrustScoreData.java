@@ -1,5 +1,6 @@
 package io.coti.trustscore.data.Events;
 
+
 import io.coti.trustscore.data.Enums.InitialTrustScoreType;
 import lombok.Data;
 
@@ -19,3 +20,5 @@ public class InitialTrustScoreData implements Serializable {
         this.decayedTrustScore = decayedTrustScore;
     }
 }
+
+// todo delete

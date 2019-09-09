@@ -1,7 +1,6 @@
 package io.coti.trustscore.config.rules;
 
-import io.coti.trustscore.data.Enums.TrustScoreRangeType;
-import io.coti.trustscore.data.Enums.UserType;
+import io.coti.trustscore.data.scoreenums.TrustScoreRangeType;
 import lombok.Data;
 
 import java.util.List;
@@ -11,20 +10,12 @@ import java.util.stream.Collectors;
 @Data
 public class RulesData {
 
-    private List<User> userList;
+    private List<ScoreRules> trustScores;
     private List<UserNetworkFeeByTrustScoreRange> userNetworkFeeByTrustScoreRangeList;
 
-    public void setUser(List<User> userList) {
-        this.userList = userList;
-    }
-
-    public User getUsersRules(UserType userType) {
-        return getUserTypeToUserScoreMap().get(userType);
-    }
-
-    public Map<UserType, User> getUserTypeToUserScoreMap() {
-        return userList.stream().collect(
-                Collectors.toMap(t -> UserType.enumFromString(t.getType()), t -> t));
+    public Map<String, ScoreRules> getClassToScoreRulesMap() {
+        return trustScores.stream().collect(
+                Collectors.toMap(t -> (t.getName()), t -> t));
     }
 
     public void setNetworkFee(List<UserNetworkFeeByTrustScoreRange> userNetworkFeeByTrustScoreRangeList) {

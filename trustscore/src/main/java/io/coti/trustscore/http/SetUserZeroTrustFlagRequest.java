@@ -9,6 +9,7 @@ import javax.validation.constraints.NotNull;
 @Data
 public class SetUserZeroTrustFlagRequest extends Request {
 
+    private static final long serialVersionUID = 8385199133967348787L;
     @NotNull
     private Hash userHash;
     @NotNull

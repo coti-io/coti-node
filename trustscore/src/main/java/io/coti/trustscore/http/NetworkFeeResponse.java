@@ -7,6 +7,7 @@ import lombok.Data;
 @Data
 public class NetworkFeeResponse extends BaseResponse {
 
+    private static final long serialVersionUID = -4983074251656926030L;
     private NetworkFeeResponseData networkFeeData;
 
     public NetworkFeeResponse(NetworkFeeResponseData networkFeeResponseData) {

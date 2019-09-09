@@ -4,8 +4,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.trustscore.data.Enums.EventType;
 import io.coti.trustscore.data.Enums.UserType;
-import io.coti.trustscore.data.Events.EventData;
-import io.coti.trustscore.utils.DatesCalculation;
+import io.coti.trustscore.data.scoreevents.EventData;
 import lombok.Data;
 
 import java.util.Date;
@@ -44,10 +43,6 @@ public abstract class BucketEventData<T extends EventData> implements IEntity {
         eventDataHashToEventDataMap.put(eventData.getUniqueIdentifier(), eventData);
     }
 
-    public boolean lastUpdateBeforeToday() {
-        return this.getLastUpdate().before(DatesCalculation.setDateOnBeginningOfDay(new Date()));
-    }
-
     @Override
     public Hash getHash() {
         return this.bucketHash;
@@ -59,4 +54,4 @@ public abstract class BucketEventData<T extends EventData> implements IEntity {
     }
 }
 
-
+// TODO: delete

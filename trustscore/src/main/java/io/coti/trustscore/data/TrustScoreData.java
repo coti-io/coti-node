@@ -60,3 +60,5 @@ public class TrustScoreData implements IEntity, ISignValidatable {
     }
 
 }
+
+//todo delete it
