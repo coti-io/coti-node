@@ -61,6 +61,7 @@ public class BaseNodeDspVoteService implements IDspVoteService {
         }
         if (transactionData.getDspConsensusResult() != null) {
             log.debug("DspConsensus result already exists for transaction {}", dspConsensusResult.getHash());
+            return;
         }
         if (dspConsensusResult.isDspConsensus()) {
             log.debug("Valid vote conclusion received for transaction: {}", dspConsensusResult.getHash());

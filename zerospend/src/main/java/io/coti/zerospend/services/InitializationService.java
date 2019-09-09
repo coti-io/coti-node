@@ -1,7 +1,7 @@
 package io.coti.zerospend.services;
 
 import io.coti.basenode.crypto.NodeCryptoHelper;
-import io.coti.basenode.data.DspVote;
+import io.coti.basenode.data.TransactionDspVote;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
@@ -55,8 +55,8 @@ public class InitializationService extends BaseNodeInitializationService {
 
             HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping = new HashMap<>();
             classNameToReceiverHandlerMapping.put(
-                    DspVote.class.getName(), data ->
-                            dspVoteService.receiveDspVote((DspVote) data));
+                    TransactionDspVote.class.getName(), data ->
+                            dspVoteService.receiveDspVote((TransactionDspVote) data));
             communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
 
             communicationService.initPublisher(propagationPort, NodeType.ZeroSpendServer);

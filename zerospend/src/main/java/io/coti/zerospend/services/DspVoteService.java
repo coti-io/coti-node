@@ -2,8 +2,9 @@ package io.coti.zerospend.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.crypto.DspConsensusCrypto;
-import io.coti.basenode.crypto.DspVoteCrypto;
+import io.coti.basenode.crypto.TransactionDspVoteCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.exceptions.DspVoteException;
 import io.coti.basenode.model.TransactionVotes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeDspVoteService;
@@ -32,7 +33,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
     @Autowired
     private Transactions transactions;
     @Autowired
-    private DspVoteCrypto dspVoteCrypto;
+    private TransactionDspVoteCrypto transactionDspVoteCrypto;
     @Autowired
     private DspConsensusCrypto dspConsensusCrypto;
     @Autowired
@@ -56,9 +57,9 @@ public class DspVoteService extends BaseNodeDspVoteService {
         transactionHashToVotesListMapping.put(transactionData.getHash(), new LinkedList<>());
     }
 
-    public String receiveDspVote(DspVote dspVote) {
-        log.debug("Received new Dsp Vote: Sender = {} , Transaction = {}", dspVote.getVoterDspHash(), dspVote.getTransactionHash());
-        Hash transactionHash = dspVote.getTransactionHash();
+    public void receiveDspVote(TransactionDspVote transactionDspVote) {
+        log.debug("Received new Dsp Vote: Sender = {} , Transaction = {}", transactionDspVote.getVoterDspHash(), transactionDspVote.getTransactionHash());
+        Hash transactionHash = transactionDspVote.getTransactionHash();
         synchronized (transactionHash.toHexString()) {
             TransactionVoteData transactionVoteData = transactionVotes.getByHash(transactionHash);
             if (transactionVoteData == null) {
@@ -69,29 +70,24 @@ public class DspVoteService extends BaseNodeDspVoteService {
                 }
                 transactionVoteData = transactionVotes.getByHash(transactionHash);
                 if (transactionVoteData == null) {
-                    return "Transaction does not exist";
+                    throw new DspVoteException(String.format("Transaction {} does not exist for dsp vote", transactionHash));
                 }
             }
 
-            if (!transactionVoteData.getLegalVoterDspHashes().contains(dspVote.getVoterDspHash())) {
-                log.error("Unauthorized Dsp vote received. Sender =  {}, Transaction =  {}", dspVote.getVoterDspHash(), dspVote.getTransactionHash());
-                log.error("Keyset count: " + transactionVoteData.getDspHashToVoteMapping().keySet().size());
-                transactionVoteData.getDspHashToVoteMapping().keySet().forEach(hash -> log.info(hash.toHexString()));
-                return "Unauthorized";
+            if (!transactionVoteData.getLegalVoterDspHashes().contains(transactionDspVote.getVoterDspHash())) {
+                throw new DspVoteException(String.format("Unauthorized Dsp vote received. Sender =  {}, Transaction =  {}", transactionDspVote.getVoterDspHash(), transactionDspVote.getTransactionHash()));
             }
 
-            if (!dspVoteCrypto.verifySignature(dspVote)) {
-                log.error("Invalid vote signature. Sender =  {}, Transaction = {}", dspVote.getVoterDspHash(), dspVote.getTransactionHash());
-                return "Invalid Signature";
+            if (!transactionDspVoteCrypto.verifySignature(transactionDspVote)) {
+                throw new DspVoteException(String.format("Invalid vote signature. Sender =  {}, Transaction = {}", transactionDspVote.getVoterDspHash(), transactionDspVote.getTransactionHash()));
             }
             if (transactionHashToVotesListMapping.get(transactionHash) == null) {
-                log.debug("Transaction Not existing in mapping!!");
-                return "Vote already processed";
+                log.debug("Dsp vote result already published");
+                return;
             }
-            log.debug("Adding new vote: {}", dspVote);
-            transactionHashToVotesListMapping.get(transactionHash).add(dspVote);
+            log.debug("Adding new vote: {}", transactionDspVote);
+            transactionHashToVotesListMapping.get(transactionHash).add(new DspVote(transactionDspVote));
         }
-        return "Ok";
     }
 
     @Scheduled(fixedDelay = 1000)
@@ -101,19 +97,19 @@ public class DspVoteService extends BaseNodeDspVoteService {
             synchronized (transactionHashToVotesListEntrySet.getKey().toHexString()) {
                 if (transactionHashToVotesListEntrySet.getValue() != null && transactionHashToVotesListEntrySet.getValue().size() > 0) {
                     Hash transactionHash = transactionHashToVotesListEntrySet.getKey();
-                    TransactionVoteData currentVotes = transactionVotes.getByHash(transactionHash);
-                    Map<Hash, DspVote> mapHashToDspVote = currentVotes.getDspHashToVoteMapping();
+                    TransactionVoteData currentTransactionVoteData = transactionVotes.getByHash(transactionHash);
+                    Map<Hash, DspVote> mapHashToDspVote = currentTransactionVoteData.getDspHashToVoteMapping();
                     transactionHashToVotesListEntrySet.getValue().forEach(dspVote -> mapHashToDspVote.putIfAbsent(dspVote.getVoterDspHash(), dspVote));
-                    if (isPositiveMajorityAchieved(currentVotes)) {
+                    if (isPositiveMajorityAchieved(currentTransactionVoteData)) {
                         publishDecision(transactionHash, mapHashToDspVote, true);
-                        log.debug("Valid vote majority achieved for: {}", currentVotes.getHash());
-                    } else if (isNegativeMajorityAchieved(currentVotes)) {
+                        log.debug("Valid vote majority achieved for transaction {}", currentTransactionVoteData.getHash());
+                    } else if (isNegativeMajorityAchieved(currentTransactionVoteData)) {
                         publishDecision(transactionHash, mapHashToDspVote, false);
-                        log.debug("Invalid vote majority achieved for: {}", currentVotes.getHash());
+                        log.debug("Invalid vote majority achieved for transaction {}", currentTransactionVoteData.getHash());
                     } else {
-                        log.debug("Undecided majority: {}", currentVotes.getHash());
+                        log.debug("Undecided majority for transaction {}", currentTransactionVoteData.getHash());
                     }
-                    transactionVotes.put(currentVotes);
+                    transactionVotes.put(currentTransactionVoteData);
                 }
             }
         }

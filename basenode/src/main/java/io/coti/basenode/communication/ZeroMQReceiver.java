@@ -36,16 +36,18 @@ public class ZeroMQReceiver implements IReceiver {
 
     private void runReceiveLoop() {
         while (true) {
-            String classType = receiver.recvStr();
-            if (classNameToHandlerMapping.containsKey(classType)) {
-                log.debug("Received a new {}", classType);
-                byte[] message = receiver.recv();
-                try {
+            try {
+                String classType = receiver.recvStr();
+                if (classNameToHandlerMapping.containsKey(classType)) {
+                    log.debug("Received a new {}", classType);
+                    byte[] message = receiver.recv();
+
                     classNameToHandlerMapping.get(classType).
                             accept(serializer.deserialize(message));
-                } catch (ClassCastException e) {
-                    log.error("Invalid request received: " + e.getMessage());
+
                 }
+            } catch (Exception e) {
+                log.error("ZeroMQ receiver error. {}: {} ", e.getClass().getName(), e.getMessage());
             }
         }
     }

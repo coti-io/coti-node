@@ -2,8 +2,8 @@ package io.coti.dspnode.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.ISender;
-import io.coti.basenode.crypto.DspVoteCrypto;
-import io.coti.basenode.data.DspVote;
+import io.coti.basenode.crypto.TransactionDspVoteCrypto;
+import io.coti.basenode.data.TransactionDspVote;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
@@ -37,7 +37,7 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private ISender sender;
     @Autowired
-    private DspVoteCrypto dspVoteCrypto;
+    private TransactionDspVoteCrypto transactionDspVoteCrypto;
     @Autowired
     private INetworkService networkService;
 
@@ -87,13 +87,13 @@ public class TransactionService extends BaseNodeTransactionService {
         while (!transactionsToValidate.isEmpty()) {
             TransactionData transactionData = transactionsToValidate.remove();
             log.debug("DSP Fully Checking transaction: {}", transactionData.getHash());
-            DspVote dspVote = new DspVote(
+            TransactionDspVote transactionDspVote = new TransactionDspVote(
                     transactionData.getHash(),
                     validationService.fullValidation(transactionData));
-            dspVoteCrypto.signMessage(dspVote);
+            transactionDspVoteCrypto.signMessage(transactionDspVote);
             String zerospendReceivingAddress = networkService.getSingleNodeData(NodeType.ZeroSpendServer).getReceivingFullAddress();
             log.debug("Sending DSP vote to {} for transaction {}", zerospendReceivingAddress, transactionData.getHash());
-            sender.send(dspVote, zerospendReceivingAddress);
+            sender.send(transactionDspVote, zerospendReceivingAddress);
         }
         isValidatorRunning.set(false);
     }
