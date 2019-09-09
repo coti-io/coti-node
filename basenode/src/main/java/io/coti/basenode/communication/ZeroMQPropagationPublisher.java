@@ -23,18 +23,17 @@ import java.util.concurrent.LinkedBlockingQueue;
 @Service
 public class ZeroMQPropagationPublisher implements IPropagationPublisher {
 
+    private static final int HEARTBEAT_INTERVAL = 5000;
+    private static final int INITIAL_DELAY = 1000;
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket propagator;
     private String propagationPort;
     private NodeType publisherNodeType;
     @Value("${server.ip}")
     private String publisherIp;
-    private final int HEARTBEAT_INTERVAL = 5000;
-    private final int INITIAL_DELAY = 1000;
     private Thread publishMessageThread;
     private BlockingQueue<ZeroMQMessageData> publishMessageQueue;
     private boolean contextTerminated;
-
     @Autowired
     private ISerializer serializer;
 

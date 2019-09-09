@@ -23,6 +23,11 @@ public class ClusterStampData implements ISignable, ISignValidatable {
     }
 
     @Override
+    public void setSignature(SignatureData signature) {
+        zeroSpendSignature = signature;
+    }
+
+    @Override
     public Hash getSignerHash() {
         return zeroSpendServerHash;
     }
@@ -30,11 +35,6 @@ public class ClusterStampData implements ISignable, ISignValidatable {
     @Override
     public void setSignerHash(Hash signerHash) {
         zeroSpendServerHash = signerHash;
-    }
-
-    @Override
-    public void setSignature(SignatureData signature) {
-        zeroSpendSignature = signature;
     }
 
     public void incrementMessageByteSize(long addedMessageByteSize) {

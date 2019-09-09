@@ -163,8 +163,9 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
     }
 
     @Override
-    public void setSignerHash(Hash signerHash) {
-        nodeHash = signerHash;
+    @JsonIgnore
+    public SignatureData getSignature() {
+        return nodeSignature;
     }
 
     @Override
@@ -174,14 +175,13 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
 
     @Override
     @JsonIgnore
-    public SignatureData getSignature() {
-        return nodeSignature;
+    public Hash getSignerHash() {
+        return nodeHash;
     }
 
     @Override
-    @JsonIgnore
-    public Hash getSignerHash() {
-        return nodeHash;
+    public void setSignerHash(Hash signerHash) {
+        nodeHash = signerHash;
     }
 
     @Override

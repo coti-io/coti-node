@@ -13,21 +13,12 @@ import javax.validation.constraints.NotNull;
 public class SetUserTypeRequest extends Request implements ISignValidatable {
 
     @NotNull
+    private String userType;
+    @NotNull
+    private Hash userHash;
+    @NotNull
     private Hash signerHash;
     @NotNull
-    public String userType;
-    @NotNull
-    public Hash userHash;
-    @NotNull
-    public @Valid SignatureData signature;
+    private @Valid SignatureData signature;
 
-    @Override
-    public SignatureData getSignature() {
-        return signature;
-    }
-
-    @Override
-    public Hash getSignerHash() {
-        return signerHash;
-    }
 }

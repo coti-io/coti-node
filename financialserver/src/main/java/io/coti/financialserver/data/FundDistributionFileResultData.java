@@ -28,6 +28,11 @@ public class FundDistributionFileResultData implements IEntity, ISignable, ISign
     }
 
     @Override
+    public void setSignature(SignatureData signature) {
+        financialServerSignature = signature;
+    }
+
+    @Override
     public Hash getSignerHash() {
         return financialServerHash;
     }
@@ -35,11 +40,6 @@ public class FundDistributionFileResultData implements IEntity, ISignable, ISign
     @Override
     public void setSignerHash(Hash signerHash) {
         financialServerHash = signerHash;
-    }
-
-    @Override
-    public void setSignature(SignatureData signature) {
-        financialServerSignature = signature;
     }
 
     public void incrementMessageByteSize(long addedMessageByteSize) {

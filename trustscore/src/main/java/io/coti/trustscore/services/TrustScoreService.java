@@ -1,7 +1,7 @@
 package io.coti.trustscore.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.coti.basenode.crypto.FullTransactionTrustScoreCrypto;
+import io.coti.basenode.crypto.ExpandedTransactionTrustScoreCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.GetUserTrustScoreResponse;
 import io.coti.basenode.http.Response;
@@ -53,7 +53,7 @@ import static io.coti.trustscore.utils.BucketBuilder.buildTransactionDataRequest
 public class TrustScoreService {
 
     @Autowired
-    private FullTransactionTrustScoreCrypto fullTransactionTrustScoreCrypto;
+    private ExpandedTransactionTrustScoreCrypto expandedTransactionTrustScoreCrypto;
 
     @Autowired
     private TrustScoreCrypto trustScoreCrypto;
@@ -135,9 +135,9 @@ public class TrustScoreService {
 
     public ResponseEntity<IResponse> setUserType(SetUserTypeRequest request) {
         try {
-            log.info("Setting UserType: " + request.userHash + "=" + request.userType);
+            log.info("Setting UserType: " + request.getUserHash() + "=" + request.getUserType());
 
-            TrustScoreData trustScoreData = trustScores.getByHash(request.userHash);
+            TrustScoreData trustScoreData = trustScores.getByHash(request.getUserHash());
             if (trustScoreData == null) {
                 return ResponseEntity
                         .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -154,13 +154,13 @@ public class TrustScoreService {
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new Response(USER_TYPE_ALREADY_UPDATED, STATUS_ERROR));
             }
-            UserType userType = UserType.enumFromString(request.userType);
+            UserType userType = UserType.enumFromString(request.getUserType());
             trustScoreData.setUserType(userType);
             trustScores.put(trustScoreData);
 
             updateUserTypeInBuckets(trustScoreData);
 
-            SetUserTypeResponse setUserTypeResponse = new SetUserTypeResponse(userType, request.userHash);
+            SetUserTypeResponse setUserTypeResponse = new SetUserTypeResponse(userType, request.getUserHash());
             return ResponseEntity.status(HttpStatus.OK)
                     .body(setUserTypeResponse);
         } catch (Exception e) {
@@ -208,9 +208,9 @@ public class TrustScoreService {
         }
 
         double currentTransactionsTrustScore = calculateUserTrustScore(trustScoreData);
-        FullTransactionTrustScoreData fullTransactionTrustScoreData = new FullTransactionTrustScoreData(userHash, transactionHash, currentTransactionsTrustScore);
-        fullTransactionTrustScoreCrypto.signMessage(fullTransactionTrustScoreData);
-        TransactionTrustScoreData transactionTrustScoreData = new TransactionTrustScoreData(fullTransactionTrustScoreData);
+        ExpandedTransactionTrustScoreData expandedTransactionTrustScoreData = new ExpandedTransactionTrustScoreData(userHash, transactionHash, currentTransactionsTrustScore);
+        expandedTransactionTrustScoreCrypto.signMessage(expandedTransactionTrustScoreData);
+        TransactionTrustScoreData transactionTrustScoreData = new TransactionTrustScoreData(expandedTransactionTrustScoreData);
         TransactionTrustScoreResponseData transactionTrustScoreResponseData = new TransactionTrustScoreResponseData(transactionTrustScoreData);
         GetTransactionTrustScoreResponse getTransactionTrustScoreResponse = new GetTransactionTrustScoreResponse(transactionTrustScoreResponseData);
         return ResponseEntity.status(HttpStatus.OK).body(getTransactionTrustScoreResponse);

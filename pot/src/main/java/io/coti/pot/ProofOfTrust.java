@@ -9,9 +9,18 @@ import java.util.List;
 
 public class ProofOfTrust implements IProofOfTrust {
 
+    private static int maxTrustScore = 100;
     private IAlgorithmOrder hashOrder;
     private IAlgorithmWorker hashWorker;
-    private static int maxTrustScore = 100;
+
+    public ProofOfTrust(int trustScore) {
+
+        if (trustScore < 0 || trustScore > maxTrustScore) {
+            throw new IllegalArgumentException("trustScore must be between 0 and 100 inclusive");
+        }
+        hashOrder = new AlgorithmOrder(trustScore, maxTrustScore);
+        hashWorker = new AlgorithmWorker(hashOrder);
+    }
 
     public List<IAlgorithm.AlgorithmTypes> getHashingAlgorithms() {
         return hashOrder.getHashingAlgorithms();
@@ -23,14 +32,5 @@ public class ProofOfTrust implements IProofOfTrust {
 
     public boolean verify(byte[] data, int[] nonce, byte[] target) {
         return hashWorker.verify(data, nonce, target);
-    }
-
-    public ProofOfTrust(int trustScore) {
-
-        if (trustScore < 0 || trustScore > maxTrustScore) {
-            throw new IllegalArgumentException("trustScore must be between 0 and 100 inclusive");
-        }
-        hashOrder = new AlgorithmOrder(trustScore, maxTrustScore);
-        hashWorker = new AlgorithmWorker(hashOrder);
     }
 }

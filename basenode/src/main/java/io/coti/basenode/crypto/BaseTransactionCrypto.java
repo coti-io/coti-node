@@ -170,11 +170,11 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
         @Override
         public byte[] getSignatureMessage(TransactionData transactionData) throws ClassNotFoundException {
-            ByteBuffer baseTransactionHashBuffer = ByteBuffer.allocate(3 * baseTransactionHashSize);
+            ByteBuffer baseTransactionHashBuffer = ByteBuffer.allocate(3 * BASE_TRANSACTION_HASH_SIZE);
             for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
-                if (Class.forName(packagePath + "NetworkFeeData").isInstance(baseTransactionData)
-                        || Class.forName(packagePath + "RollingReserveData").isInstance(baseTransactionData)
-                        || Class.forName(packagePath + "ReceiverBaseTransactionData").isInstance(baseTransactionData)) {
+                if (Class.forName(PACKAGE_PATH + "NetworkFeeData").isInstance(baseTransactionData)
+                        || Class.forName(PACKAGE_PATH + "RollingReserveData").isInstance(baseTransactionData)
+                        || Class.forName(PACKAGE_PATH + "ReceiverBaseTransactionData").isInstance(baseTransactionData)) {
                     baseTransactionHashBuffer.put(baseTransactionData.getHash().getBytes());
                 }
             }
@@ -182,9 +182,9 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         }
     };
 
-    final static int baseTransactionHashSize = 32;
+    protected static final int BASE_TRANSACTION_HASH_SIZE = 32;
+    protected static final String PACKAGE_PATH = "io.coti.basenode.data.";
     protected NodeCryptoHelper nodeCryptoHelper;
-    protected final String packagePath = "io.coti.basenode.data.";
 
     @Component
     public static class BaseTransactionCryptoInjector {
@@ -200,7 +200,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
     @Override
     public void setBaseTransactionHash(BaseTransactionData baseTransactionData) throws ClassNotFoundException {
-        if (!Class.forName(packagePath + name()).isInstance(baseTransactionData)) {
+        if (!Class.forName(PACKAGE_PATH + name()).isInstance(baseTransactionData)) {
             throw new IllegalArgumentException("");
         }
         baseTransactionData.setHash(createBaseTransactionHashFromData(baseTransactionData));
@@ -216,7 +216,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     @Override
     public boolean isBaseTransactionValid(TransactionData transactionData, BaseTransactionData baseTransactionData) {
         try {
-            return Class.forName(packagePath + name()).isInstance(baseTransactionData) && this.createBaseTransactionHashFromData(baseTransactionData).equals(baseTransactionData.getHash())
+            return Class.forName(PACKAGE_PATH + name()).isInstance(baseTransactionData) && this.createBaseTransactionHashFromData(baseTransactionData).equals(baseTransactionData.getHash())
                     && CryptoHelper.isAddressValid(baseTransactionData.getAddressHash()) && verifySignature(transactionData, baseTransactionData);
 
         } catch (ClassNotFoundException | InvalidKeySpecException | NoSuchAlgorithmException e) {
@@ -246,7 +246,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     public boolean verifySignature(TransactionData transactionData, BaseTransactionData baseTransactionData) throws ClassNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException {
 
         try {
-            if (ITrustScoreNodeValidatable.class.isAssignableFrom(Class.forName(packagePath + name()))) {
+            if (ITrustScoreNodeValidatable.class.isAssignableFrom(Class.forName(PACKAGE_PATH + name()))) {
                 ITrustScoreNodeValidatable trustScoreNodeValidatable = (ITrustScoreNodeValidatable) baseTransactionData;
                 for (TrustScoreNodeResultData trustScoreNodeResultData : trustScoreNodeValidatable.getTrustScoreNodeResult()) {
                     if (!CryptoHelper.verifyByPublicKey(getSignatureMessage(transactionData, trustScoreNodeResultData), trustScoreNodeResultData.getSignature().getR(), trustScoreNodeResultData.getSignature().getS(), getPublicKey(trustScoreNodeResultData))) {
@@ -276,7 +276,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     @Override
     public byte[] getSignatureMessage(TransactionData transactionData) throws ClassNotFoundException {
         for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
-            if (Class.forName(packagePath + name()).isInstance(baseTransactionData)) {
+            if (Class.forName(PACKAGE_PATH + name()).isInstance(baseTransactionData)) {
                 return baseTransactionData.getHash().getBytes();
             }
         }
@@ -286,7 +286,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     @Override
     public byte[] getSignatureMessage(TransactionData transactionData, TrustScoreNodeResultData trustScoreNodeResultData) throws ClassNotFoundException {
         for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
-            if (Class.forName(packagePath + name()).isInstance(baseTransactionData)) {
+            if (Class.forName(PACKAGE_PATH + name()).isInstance(baseTransactionData)) {
                 byte[] baseTransactionHashInBytes = baseTransactionData.getHash().getBytes();
 
                 ByteBuffer validBaseTransactionBuffer = ByteBuffer.allocate(1);
@@ -319,7 +319,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
 
     protected <T extends OutputBaseTransactionData> byte[] getOutputMessageInBytes(T outputBaseTransactionData) throws ClassNotFoundException {
-        if (!OutputBaseTransactionData.class.isAssignableFrom(Class.forName(packagePath + name()))) {
+        if (!OutputBaseTransactionData.class.isAssignableFrom(Class.forName(PACKAGE_PATH + name()))) {
             throw new IllegalArgumentException("");
         }
         byte[] baseMessageInBytes = getBaseMessageInBytes(outputBaseTransactionData);

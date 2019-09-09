@@ -24,6 +24,11 @@ public class GetDisputeHistoryData implements ISignable, ISignValidatable {
     }
 
     @Override
+    public void setSignature(SignatureData signature) {
+        this.userSignature = signature;
+    }
+
+    @Override
     public Hash getSignerHash() {
         return userHash;
     }
@@ -31,10 +36,5 @@ public class GetDisputeHistoryData implements ISignable, ISignValidatable {
     @Override
     public void setSignerHash(Hash signerHash) {
         this.userHash = signerHash;
-    }
-
-    @Override
-    public void setSignature(SignatureData signature) {
-        this.userSignature = signature;
     }
 }

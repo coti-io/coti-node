@@ -66,7 +66,7 @@ import static utils.TransactionTestUtils.generateRandomHash;
         AddressTransactionsHistories.class, TransactionCrypto.class, NodeCryptoHelper.class, BaseNodeBalanceService.class,
         BaseNodeConfirmationService.class, LiveViewService.class, TransactionIndexService.class, TransactionIndexes.class,
         ClusterService.class, JacksonSerializer.class, ChunkService.class, HttpJacksonSerializer.class, NodeCryptoHelper.class,
-        FullTransactionTrustScoreCrypto.class, BaseNodeValidationService.class, TransactionSenderCrypto.class, BaseNodePotService.class,
+        ExpandedTransactionTrustScoreCrypto.class, BaseNodeValidationService.class, TransactionSenderCrypto.class, BaseNodePotService.class,
         LiveViewService.class, ClusterService.class, SimpMessagingTemplate.class, MessageChannel.class, SourceSelector.class,
         TrustChainConfirmationService.class, ClusterHelper.class
 })
@@ -133,7 +133,7 @@ public class HistoryTransactionServiceIntegrationTest {
     @Autowired
     private IClusterService clusterService;
     @Autowired
-    private FullTransactionTrustScoreCrypto fullTransactionTrustScoreCrypto;
+    private ExpandedTransactionTrustScoreCrypto expandedTransactionTrustScoreCrypto;
     @Autowired
     private BaseNodeValidationService baseNodeValidationService;
     @MockBean

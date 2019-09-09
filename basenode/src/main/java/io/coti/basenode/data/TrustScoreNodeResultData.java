@@ -21,13 +21,12 @@ public class TrustScoreNodeResultData implements Serializable {
         this.valid = valid;
     }
 
+    public SignatureData getSignature() {
+        return trustScoreNodeSignature;
+    }
 
     public void setSignature(SignatureData signatureData) {
         this.trustScoreNodeSignature = signatureData;
-    }
-
-    public SignatureData getSignature() {
-        return trustScoreNodeSignature;
     }
 
 }

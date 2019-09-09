@@ -72,9 +72,9 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
 
     };
 
-    public static final String INVALID_TRANSACTION_TYPE = "Invalid transaction type";
+    protected static final String INVALID_TRANSACTION_TYPE = "Invalid transaction type";
+    protected static final String PACKAGE_PATH = "io.coti.basenode.data.";
     protected TransactionType type;
-    protected final String packagePath = "io.coti.basenode.data.";
 
     TransactionTypeValidation(TransactionType type) {
         this.type = type;
@@ -115,7 +115,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
 
             for (int i = 0; i < outputBaseTransactions.size(); i++) {
                 OutputBaseTransactionData outputBaseTransactionData = outputBaseTransactions.get(i);
-                if (!Class.forName(packagePath + outputBaseTransactionNames.get(i)).equals(outputBaseTransactionData.getClass())) {
+                if (!Class.forName(PACKAGE_PATH + outputBaseTransactionNames.get(i)).equals(outputBaseTransactionData.getClass())) {
                     return false;
                 }
                 if (!originalAmount.equals(BigDecimal.ZERO) && originalAmount.compareTo(outputBaseTransactionData.getOriginalAmount()) != 0) {

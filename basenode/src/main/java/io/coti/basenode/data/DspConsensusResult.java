@@ -46,6 +46,11 @@ public class DspConsensusResult extends ConfirmationData implements IPropagatabl
     }
 
     @Override
+    public void setSignature(SignatureData signature) {
+        zeroSpendSignature = signature;
+    }
+
+    @Override
     @JsonIgnore
     public Hash getSignerHash() {
         return zeroSpendServerHash;
@@ -54,10 +59,5 @@ public class DspConsensusResult extends ConfirmationData implements IPropagatabl
     @Override
     public void setSignerHash(Hash signerHash) {
         zeroSpendServerHash = signerHash;
-    }
-
-    @Override
-    public void setSignature(SignatureData signature) {
-        zeroSpendSignature = signature;
     }
 }

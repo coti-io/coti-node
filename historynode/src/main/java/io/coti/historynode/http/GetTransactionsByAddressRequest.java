@@ -23,13 +23,18 @@ public class GetTransactionsByAddressRequest extends Request implements ISignVal
     @Valid
     private LocalDate endDate;
     @NotNull
-    public @Valid Hash userHash;
+    private @Valid Hash userHash;
     @NotNull
-    public @Valid SignatureData userSignature;
+    private @Valid SignatureData userSignature;
 
     @Override
     public SignatureData getSignature() {
         return userSignature;
+    }
+
+    @Override
+    public void setSignature(SignatureData signature) {
+        this.userSignature = signature;
     }
 
     @Override
@@ -40,11 +45,6 @@ public class GetTransactionsByAddressRequest extends Request implements ISignVal
     @Override
     public void setSignerHash(Hash signerHash) {
         this.userHash = signerHash;
-    }
-
-    @Override
-    public void setSignature(SignatureData signature) {
-        this.userSignature = signature;
     }
 }
 

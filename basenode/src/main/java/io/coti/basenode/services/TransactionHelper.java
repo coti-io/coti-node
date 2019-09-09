@@ -1,7 +1,7 @@
 package io.coti.basenode.services;
 
 import com.google.common.collect.Sets;
-import io.coti.basenode.crypto.FullTransactionTrustScoreCrypto;
+import io.coti.basenode.crypto.ExpandedTransactionTrustScoreCrypto;
 import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
@@ -46,7 +46,7 @@ public class TransactionHelper implements ITransactionHelper {
     @Autowired
     private TransactionIndexes transactionIndexes;
     @Autowired
-    private FullTransactionTrustScoreCrypto fullTransactionTrustScoreCrypto;
+    private ExpandedTransactionTrustScoreCrypto expandedTransactionTrustScoreCrypto;
     private Map<Hash, Stack<TransactionState>> transactionHashToTransactionStateStackMapping;
     private AtomicLong totalTransactions = new AtomicLong(0);
     private Set<Hash> noneIndexedTransactionHashes;
@@ -223,9 +223,9 @@ public class TransactionHelper implements ITransactionHelper {
         Map<Double, Integer> trustScoreResults = new HashMap<>();
         Set<Hash> transactionTrustScoreNodes = new HashSet<>();
         for (TransactionTrustScoreData transactionTrustScoreData : transactionTrustScores) {
-            FullTransactionTrustScoreData fullTransactionTrustScoreData = new FullTransactionTrustScoreData(senderHash, transactionHash, transactionTrustScoreData);
+            ExpandedTransactionTrustScoreData expandedTransactionTrustScoreData = new ExpandedTransactionTrustScoreData(senderHash, transactionHash, transactionTrustScoreData);
             if (transactionTrustScoreNodes.contains(transactionTrustScoreData.getTrustScoreNodeHash()) ||
-                    !fullTransactionTrustScoreCrypto.verifySignature(fullTransactionTrustScoreData))
+                    !expandedTransactionTrustScoreCrypto.verifySignature(expandedTransactionTrustScoreData))
                 return false;
             Double transactionTrustScore = transactionTrustScoreData.getTrustScore();
             trustScoreResults.computeIfPresent(transactionTrustScore, (trustScore, currentAmount) -> currentAmount + 1);
