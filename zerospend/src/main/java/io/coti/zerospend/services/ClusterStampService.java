@@ -63,8 +63,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     @Override
     protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData, String clusterstampFileLocation) {
-        //TODO 9/10/2019 astolia: make sure the sum of balances is equal to total supply from properties before signing
-
         clusterStampCrypto.signMessage(clusterStampData);
         updateClusterStampFileWithSignature(clusterStampData.getSignature(), clusterstampFileLocation);
     }
