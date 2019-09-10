@@ -6,6 +6,7 @@ import io.coti.basenode.crypto.GetClusterStampFileNamesCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.ClusterStampException;
 import io.coti.basenode.exceptions.ClusterStampValidationException;
+import io.coti.basenode.exceptions.CurrencyNotFoundException;
 import io.coti.basenode.http.GetClusterStampFileNamesResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.SerializableResponse;
@@ -13,6 +14,7 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.LastClusterStampVersions;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
+import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -202,14 +204,13 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         return sb.append(".").append(CLUSTERSTAMP_FILE_TYPE).toString();
     }
 
-    //TODO 9/10/2019 astolia: make sure the sum of balances is equal to total supply from properties before signing
     protected void loadClusterStamp(String folder, ClusterStampNameData clusterStampNameData) {
         String clusterStampFileLocation = folder + getClusterStampFileName(clusterStampNameData);
         File clusterstampFile = new File(clusterStampFileLocation);
         ClusterStampData clusterStampData = new ClusterStampData();
+        Set<Pair<Hash,Hash>> tokenGenesisAddressesToCurrencyHash = new HashSet<>();
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(clusterstampFile))) {
-            BigDecimal aggregatedBalance = new BigDecimal(0);
             String line;
             AtomicInteger relevantLineNumber = new AtomicInteger(0);
             AtomicInteger signatureRelevantLines = new AtomicInteger(0);
@@ -230,7 +231,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                     }
                 } else {
                     if (!finishedBalances) {
-                        fillBalanceFromLine(clusterStampData, line);
+                        fillBalanceFromLine(clusterStampData, line, tokenGenesisAddressesToCurrencyHash);
                     } else {
                         if (!reachedSignatureSection) {
                             if (!line.contentEquals(SIGNATURE_LINE_TOKEN))
@@ -245,6 +246,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                     }
                 }
             }
+            if(!validateBalancesEqualToTotalSupplies(tokenGenesisAddressesToCurrencyHash)){
+                throw new ClusterStampException("Failed to validate token balances");
+            }
             if (signatureRelevantLines.get() == 0) {
                 handleClusterStampWithoutSignature(clusterStampData, clusterStampFileLocation);
             } else if (signatureRelevantLines.get() == 1) {
@@ -256,6 +260,16 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         } catch (Exception e) {
             log.error("Errors on clusterstamp loading");
             throw new ClusterStampValidationException(e.getMessage());
+        }
+    }
+
+    private boolean validateBalancesEqualToTotalSupplies(Set<Pair<Hash,Hash>> tokenGenesisAddressesToCurrencyHash){
+        try {
+            return tokenGenesisAddressesToCurrencyHash.stream().allMatch( pair ->
+                balanceService.getBalanceByAddress(pair.getKey()).longValue() == (currencyService.getTokenTotalSupply(pair.getValue()).longValue())
+            );
+        } catch (CurrencyNotFoundException e) {
+            return false;
         }
     }
 
@@ -443,7 +457,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         return tokenClusterStampHashToName.values().stream().collect(Collectors.toList());
     }
 
-    private void fillBalanceFromLine(ClusterStampData clusterStampData, String line) {
+    private void fillBalanceFromLine(ClusterStampData clusterStampData, String line, Set<Pair<Hash,Hash>> tokenGenesisAddressesToCurrencyHash) {
         String[] addressDetails;
         addressDetails = line.split(",");
         int numOfDetailsInLine = addressDetails.length;
@@ -454,6 +468,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         BigDecimal addressAmount = numOfDetailsInLine == NUMBER_OF_ADDRESS_LINE_DETAILS ? new BigDecimal(addressDetails[ADDRESS_DETAILS_AMOUNT_INDEX]) :
                 new BigDecimal(addressDetails[ADDRESS_DETAILS_AMOUNT_INDEX_WITHOUT_CURRENCY_HASH]);
         Hash currencyDataHash = numOfDetailsInLine == NUMBER_OF_ADDRESS_LINE_DETAILS ? new Hash(addressDetails[CURRENCY_DATA_HASH_INDEX]) : null;
+        tokenGenesisAddressesToCurrencyHash.add(new Pair<>(addressHash,currencyDataHash));
 
         if (currencyDataHash != null) {
             currencyService.verifyCurrencyExists(currencyDataHash);
