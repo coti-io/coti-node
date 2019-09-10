@@ -7,6 +7,8 @@ import io.coti.basenode.http.GetUpdatedCurrencyRequest;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.FluxSink;
 
+import java.math.BigInteger;
+
 public interface ICurrencyService {
 
     void init();
@@ -27,4 +29,5 @@ public interface ICurrencyService {
 
     void getUpdatedCurrenciesReactive(GetUpdatedCurrencyRequest getUpdatedCurrencyRequest, FluxSink<CurrencyData> fluxSink);
 
+    BigInteger getTokenTotalSupply(Hash address);
 }
