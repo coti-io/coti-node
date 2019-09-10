@@ -35,10 +35,10 @@ public class CurrencyTypeData implements ISignable, ISignValidatable, Serializab
         hash = currencyTypeData.getHash();
     }
 
-    public CurrencyTypeData(CurrencyType currencyType, Instant creationTime, SignatureData registrarSignature) {
+    public CurrencyTypeData(CurrencyType currencyType, Instant creationTime) {
         this.currencyType = currencyType;
         this.creationTime = creationTime;
-        this.registrarSignature = registrarSignature;
+        this.registrarSignature = null;
         setHash();
     }
 
