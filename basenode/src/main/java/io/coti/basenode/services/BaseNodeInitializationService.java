@@ -104,6 +104,8 @@ public abstract class BaseNodeInitializationService {
     private BuildProperties buildProperties;
     @Autowired
     private ITransactionPropagationCheckService transactionPropagationCheckService;
+    @Autowired
+    private ICurrencyService currencyService;
 
     public void init() {
         log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());
@@ -113,6 +115,7 @@ public abstract class BaseNodeInitializationService {
             awsService.init();
             dbRecoveryService.init();
             addressService.init();
+            currencyService.init();
             balanceService.init();
             clusterStampService.init();
             confirmationService.init();

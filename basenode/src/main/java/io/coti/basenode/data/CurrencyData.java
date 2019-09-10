@@ -6,12 +6,14 @@ import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.constraints.NotEmpty;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.time.Instant;
 
+@Slf4j
 @Data
 public class CurrencyData implements IPropagatable, ISignable, ISignValidatable {
 
@@ -29,7 +31,11 @@ public class CurrencyData implements IPropagatable, ISignable, ISignValidatable 
     private Hash originatorHash;
     private SignatureData originatorSignature;
     private Hash registrarHash;
+
     private SignatureData registrarSignature;
+
+    public CurrencyData() {
+    }
 
     public void setHash() {
         byte[] nameInBytes = name.getBytes();

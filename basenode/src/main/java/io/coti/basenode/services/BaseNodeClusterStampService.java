@@ -12,14 +12,12 @@ import io.coti.basenode.http.SerializableResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.LastClusterStampVersions;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.IAwsService;
-import io.coti.basenode.services.interfaces.IBalanceService;
-import io.coti.basenode.services.interfaces.IClusterStampService;
-import io.coti.basenode.services.interfaces.INetworkService;
+import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -55,9 +53,12 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     private static final int CLUSTERSTAMP_UPDATE_TIME_INDEX = 0;
     private static final int CLUSTERSTAMP_FILE_TYPE_INDEX = 1;
     private static final int NUMBER_OF_GENESIS_ADDRESSES_MIN_LINES = 1; // Genesis One and Two + heading
-    private static final int NUMBER_OF_ADDRESS_LINE_DETAILS = 2;
+    private static final int NUMBER_OF_ADDRESS_LINE_DETAILS = 3;
+    private static final int NUMBER_OF_ADDRESS_LINE_DETAILS_WITHOUT_CURRENCY_HASH = 2;
     private static final int ADDRESS_DETAILS_HASH_INDEX = 0;
-    private static final int ADDRESS_DETAILS_AMOUNT_INDEX = 1;
+    private static final int ADDRESS_DETAILS_AMOUNT_INDEX = 2;
+    private static final int ADDRESS_DETAILS_AMOUNT_INDEX_WITHOUT_CURRENCY_HASH = 1;
+    private static final int CURRENCY_DATA_HASH_INDEX = 1;
     private static final int NUMBER_OF_SIGNATURE_LINE_DETAILS = 2;
     private static final int LONG_MAX_LENGTH = 19;
     protected static final String BAD_CSV_FILE_FORMAT = "Bad csv file format";
@@ -92,6 +93,10 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     private LastClusterStampVersions lastClusterStampVersions;
     @Autowired
     private BaseNodeFileSystemService fileSystemService;
+    @Autowired
+    protected ICurrencyService currencyService;
+    @Autowired
+    protected ApplicationContext applicationContext;
 
     @Override
     public void init() {
@@ -292,9 +297,13 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     private boolean validateResponseVersionValidity(GetClusterStampFileNamesResponse getClusterStampFileNamesResponse) {
         LastClusterStampVersionData lastVersionData = lastClusterStampVersions.get();
-        return lastVersionData != null
-                && validateVersion(lastVersionData.getVersionTimeMillis(), getClusterStampFileNamesResponse.getMajor().getVersionTimeMillis())
-                && getClusterStampFileNamesResponse.getTokenClusterStampNames().stream().allMatch(clusterStampNameData -> validateVersion(lastVersionData.getVersionTimeMillis(), clusterStampNameData.getVersionTimeMillis()));
+        if (!validateVersion(lastVersionData.getVersionTimeMillis(), getClusterStampFileNamesResponse.getMajor().getVersionTimeMillis())) {
+            return false;
+        }
+        if (getClusterStampFileNamesResponse.getTokenClusterStampNames().stream().anyMatch(clusterStampNameData -> !validateVersion(lastVersionData.getVersionTimeMillis(), clusterStampNameData.getVersionTimeMillis()))) {
+            return false;
+        }
+        return true;
     }
 
 
@@ -431,12 +440,26 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     private void fillBalanceFromLine(ClusterStampData clusterStampData, String line) {
         String[] addressDetails;
         addressDetails = line.split(",");
-        if (addressDetails.length != NUMBER_OF_ADDRESS_LINE_DETAILS) {
+        int numOfDetailsInLine = addressDetails.length;
+        if (numOfDetailsInLine != NUMBER_OF_ADDRESS_LINE_DETAILS && numOfDetailsInLine != NUMBER_OF_ADDRESS_LINE_DETAILS_WITHOUT_CURRENCY_HASH) {
             throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
         }
         Hash addressHash = new Hash(addressDetails[ADDRESS_DETAILS_HASH_INDEX]);
-        BigDecimal addressAmount = new BigDecimal(addressDetails[ADDRESS_DETAILS_AMOUNT_INDEX]);
-        log.trace("The hash {} was loaded from the clusterstamp with amount {}", addressHash, addressAmount);
+        BigDecimal addressAmount = numOfDetailsInLine == NUMBER_OF_ADDRESS_LINE_DETAILS ? new BigDecimal(addressDetails[ADDRESS_DETAILS_AMOUNT_INDEX]) :
+                new BigDecimal(addressDetails[ADDRESS_DETAILS_AMOUNT_INDEX_WITHOUT_CURRENCY_HASH]);
+        Hash currencyDataHash = numOfDetailsInLine == NUMBER_OF_ADDRESS_LINE_DETAILS ? new Hash(addressDetails[CURRENCY_DATA_HASH_INDEX]) : null;
+
+        if (currencyDataHash != null) {
+            currencyService.verifyCurrencyExists(currencyDataHash);
+            log.trace("The address hash {} for currency hash {} was loaded from the clusterstamp with amount {}", addressHash, currencyDataHash, addressAmount);
+        } else {
+            log.trace("The address hash {} was loaded from the clusterstamp with amount {}", addressHash, addressAmount);
+
+            CurrencyData nativeCurrencyData = currencyService.getNativeCurrency(); // Use this if needed
+            if (nativeCurrencyData == null) {
+                throw new ClusterStampException("Failed to locate native currency");
+            }
+        }
 
         balanceService.updateBalanceFromClusterStamp(addressHash, addressAmount);
         byte[] addressHashInBytes = addressHash.getBytes();
