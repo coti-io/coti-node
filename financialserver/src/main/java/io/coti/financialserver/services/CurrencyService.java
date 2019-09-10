@@ -19,7 +19,6 @@ import org.springframework.web.client.RestTemplate;
 public class CurrencyService extends BaseNodeCurrencyService {
 
     private static final String GET_NATIVE_CURRENCY_ENDPOINT = "/currencies/native";
-    //TODO 9/9/2019 astolia: this is final static in DistributionService. make public there or add here also?
     @Value("${financialserver.seed}")
     private String seed;
     @Autowired
