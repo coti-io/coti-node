@@ -59,6 +59,11 @@ public class BaseNodeHttpStringConstants {
     public static final String ADDRESS_BATCH_UPLOADED = "Address batch uploaded";
     public static final String ADDRESS_BATCH_UPLOAD_ERROR = "Address batch upload error: %s";
 
+    public static final String TRANSACTIONS_NOT_FOUND = "No valid transaction was found";
+    public static final String EMPTY_SEARCH_RESULT = "Search result is empty";
+
+    public static final String NATIVE_COIN_NOT_FOUND = "Native coin not found";
+    public static final String NO_VALID_NATIVE_COIN_NOT_FOUND = "No valid native coin was found";
     public static final String DOCUMENT_NOT_FOUND = "Document not found";
 
     public static final String NOT_BACKUP_NODE = "The node is not a backup node";
