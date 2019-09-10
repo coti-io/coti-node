@@ -112,6 +112,8 @@ public abstract class BaseNodeInitializationService {
     private BuildProperties buildProperties;
     @Autowired
     private ITransactionPropagationCheckService transactionPropagationCheckService;
+    @Autowired
+    private ICurrencyService currencyService;
     private final Map<Long, ReducedExistingTransactionData> indexToTransactionMap = new HashMap<>();
     private EnumMap<InitializationTransactionHandlerType, ExecutorData> existingTransactionExecutorMap;
 
@@ -123,6 +125,7 @@ public abstract class BaseNodeInitializationService {
             awsService.init();
             dbRecoveryService.init();
             addressService.init();
+            currencyService.init();
             balanceService.init();
             clusterStampService.init();
             confirmationService.init();
