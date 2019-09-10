@@ -11,6 +11,7 @@ import java.util.Map;
 
 @Service
 public class GetUpdatedCurrencyRequestCrypto extends SignatureCrypto<GetUpdatedCurrencyRequest> {
+
     @Override
     public byte[] getSignatureMessage(GetUpdatedCurrencyRequest getUpdatedCurrencyRequest) {
         final Map<CurrencyType, HashSet<Hash>> currencyHashesByType = getUpdatedCurrencyRequest.getCurrencyHashesByType();

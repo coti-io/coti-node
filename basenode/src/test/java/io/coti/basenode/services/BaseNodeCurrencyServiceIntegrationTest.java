@@ -39,7 +39,7 @@ import static testUtils.CurrencyServiceTestUtils.createCurrencyData;
 @ContextConfiguration(classes = {BaseNodeCurrencyService.class, BaseNodeRocksDBConnector.class,
         Currencies.class, NodeCryptoHelper.class,
         Transactions.class, AddressTransactionsHistories.class, TransactionIndexes.class, TransactionVotes.class,
-        NodeRegistrations.class, Addresses.class, CurrencyCrypto.class,
+        NodeRegistrations.class, Addresses.class, CurrencyRegistrarCrypto.class,
         BaseNodeNetworkService.class,
         RestTemplate.class, ApplicationContext.class, CommunicationService.class,
         ZeroMQReceiver.class, ZeroMQSubscriber.class, ZeroMQPropagationPublisher.class, ZeroMQSender.class,
@@ -66,7 +66,7 @@ public class BaseNodeCurrencyServiceIntegrationTest {
     private Currencies currencies;
     private NodeCryptoHelper nodeCryptoHelper;
     @Autowired
-    private CurrencyCrypto currencyCrypto;
+    private CurrencyRegistrarCrypto currencyRegistrarCrypto;
     @Autowired
     private BaseNodeNetworkService baseNodeNetworkService;
     @Autowired
@@ -236,7 +236,7 @@ public class BaseNodeCurrencyServiceIntegrationTest {
         setAndSignCurrencyDataByType(currencyData, currencyType);
 
 
-        currencyCrypto.signMessage(currencyData);
+        currencyRegistrarCrypto.signMessage(currencyData);
         currencies.delete(currencyData);
 //        baseNodeCurrencyService.updateMissingCurrencyDataHashesFromClusterStamp(currencyHash);
 //        Assert.assertTrue(baseNodeCurrencyService.getMissingCurrencyDataHashes().contains(currencyHash));
@@ -268,7 +268,7 @@ public class BaseNodeCurrencyServiceIntegrationTest {
 //        currencyTypeCrypto.signMessage(currencyTypeData);
 //        currencyTypeRegistrationCrypto.signMessage(currencyTypeRegistrationData);
         currencyData.setCurrencyTypeData(currencyTypeData);
-        currencyCrypto.signMessage(currencyData);
+        currencyRegistrarCrypto.signMessage(currencyData);
     }
 
 }

@@ -1,18 +1,21 @@
 package io.coti.financialserver.services;
 
+import com.google.gson.Gson;
 import io.coti.basenode.data.CurrencyData;
 import io.coti.basenode.exceptions.CurrencyInitializationException;
+import io.coti.basenode.http.Response;
 import io.coti.basenode.services.BaseNodeCurrencyService;
 import io.coti.basenode.services.interfaces.INetworkService;
-import io.coti.financialserver.model.CurrencySymbolIndexes;
-import io.coti.financialserver.model.CurrencyNameIndexes;
-import io.coti.financialserver.data.CurrencySymbolIndexData;
 import io.coti.financialserver.data.CurrencyNameIndexData;
+import io.coti.financialserver.data.CurrencySymbolIndexData;
+import io.coti.financialserver.model.CurrencyNameIndexes;
+import io.coti.financialserver.model.CurrencySymbolIndexes;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 
 @Slf4j
 @Service
@@ -28,8 +31,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
     @Autowired
     protected INetworkService networkService;
 
-    @Override
-    public void updateCurrencyDataIndexes(CurrencyData currencyData) {
+    private void updateCurrencyDataIndexes(CurrencyData currencyData) {
         currencyNameIndexes.put(new CurrencyNameIndexData(currencyData.getName(), currencyData.getHash()));
         currencySymbolIndexes.put(new CurrencySymbolIndexData(currencyData.getSymbol(), currencyData.getHash()));
     }
@@ -42,18 +44,30 @@ public class CurrencyService extends BaseNodeCurrencyService {
 
     @Override
     public void updateCurrencies() {
-        CurrencyData nativeCurrencyData = getNativeCurrency();
-        if (nativeCurrencyData == null) {
-            String recoveryServerAddress = networkService.getRecoveryServerAddress();
-            RestTemplate restTemplate = new RestTemplate();
-            nativeCurrencyData = restTemplate.getForObject(recoveryServerAddress + GET_NATIVE_CURRENCY_ENDPOINT, CurrencyData.class);
+        try {
+            CurrencyData nativeCurrencyData = getNativeCurrency();
+            if (nativeCurrencyData == null) {
+                String recoveryServerAddress = networkService.getRecoveryServerAddress();
+                nativeCurrencyData = restTemplate.getForObject(recoveryServerAddress + GET_NATIVE_CURRENCY_ENDPOINT, CurrencyData.class);
+            }
+            if (nativeCurrencyData == null) {
+                throw new CurrencyInitializationException("Native currency recovery failed. Recovery sent null native currency");
+            } else {
+                putCurrencyData(nativeCurrencyData);
+                setNativeCurrencyData(nativeCurrencyData);
+            }
+        } catch (CurrencyInitializationException e) {
+            throw e;
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            throw new CurrencyInitializationException(String.format("Native currency recovery failed. %s: %s", e.getClass().getName(), new Gson().fromJson(e.getResponseBodyAsString(), Response.class).getMessage()));
+        } catch (Exception e) {
+            throw new CurrencyInitializationException(String.format("Native currency recovery failed. %s: %s", e.getClass().getName(), e.getMessage()));
         }
-        if (nativeCurrencyData == null) {
-            throw new CurrencyInitializationException("Failed to retrieve native currency");
-        } else {
-            putCurrencyData(nativeCurrencyData);
-            setNativeCurrencyData(nativeCurrencyData);
-        }
+    }
+
+    public void putCurrencyData(CurrencyData currencyData) {
+        super.putCurrencyData(currencyData);
+        updateCurrencyDataIndexes(currencyData);
     }
 
 }
