@@ -3,6 +3,7 @@ package io.coti.basenode.services;
 import io.coti.basenode.crypto.*;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CurrencyInitializationException;
+import io.coti.basenode.exceptions.CurrencyNotFoundException;
 import io.coti.basenode.http.*;
 import io.coti.basenode.model.Currencies;
 import io.coti.basenode.services.interfaces.ICurrencyService;
@@ -20,7 +21,6 @@ import reactor.core.publisher.FluxSink;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
 import java.util.EnumMap;
@@ -211,6 +211,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             throw new CurrencyInitializationException("Failed to retrieve native currency data");
         } else {
             CurrencyData nativeCurrencyData = currencies.getByHash(nativeCurrencyHashes.iterator().next());
+            //TODO 9/10/2019 astolia: null pointer here after second run. set signature will fix the issue. temp WA delete DB.
             if (!currencyCrypto.verifySignature(nativeCurrencyData)) {
                 throw new CurrencyInitializationException("Failed to verify native currency data of " + nativeCurrencyData.getHash());
             } else {
@@ -251,6 +252,15 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         Map<CurrencyType, HashSet<Hash>> existingCurrencyHashesByType = getUpdatedCurrencyRequest.getCurrencyHashesByType();
         getRequiringUpdateOfCurrencyDataByTypeReactive(existingCurrencyHashesByType, fluxSink);
 
+    }
+
+    @Override
+    public BigInteger getTokenTotalSupply(Hash hash) {
+        CurrencyData currency = currencies.getByHash(hash);
+        if(currency == null){
+            throw new CurrencyNotFoundException(String.format("Currency with hash %s was not found",hash));
+        }
+        return currencies.getByHash(hash).getTotalSupply();
     }
 
     private void getRequiringUpdateOfCurrencyDataByTypeReactive(Map<CurrencyType, HashSet<Hash>> existingCurrencyHashesByType, FluxSink<CurrencyData> fluxSink) {
