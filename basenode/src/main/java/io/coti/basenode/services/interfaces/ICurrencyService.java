@@ -19,8 +19,6 @@ public interface ICurrencyService {
 
     void verifyCurrencyExists(Hash currencyDataHash);
 
-    CurrencyData getNativeCurrencyData();
-
     CurrencyData getNativeCurrency();
 
     void putCurrencyData(CurrencyData currencyData);

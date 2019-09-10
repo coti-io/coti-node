@@ -1,9 +1,11 @@
 package io.coti.basenode.crypto;
 
 import io.coti.basenode.data.CurrencyData;
+import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
 
+@Service
 public class CurrencyRegistrarCrypto extends SignatureCrypto<CurrencyData> {
     @Override
     public byte[] getSignatureMessage(CurrencyData currencyData) {

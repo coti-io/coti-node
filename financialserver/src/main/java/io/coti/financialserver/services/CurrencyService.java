@@ -4,12 +4,13 @@ import io.coti.basenode.data.CurrencyData;
 import io.coti.basenode.exceptions.CurrencyInitializationException;
 import io.coti.basenode.services.BaseNodeCurrencyService;
 import io.coti.basenode.services.interfaces.INetworkService;
-import io.coti.financialserver.data.CurrencyNameIndexData;
-import io.coti.financialserver.data.CurrencySymbolIndexData;
-import io.coti.financialserver.model.CurrencyNameIndexes;
 import io.coti.financialserver.model.CurrencySymbolIndexes;
+import io.coti.financialserver.model.CurrencyNameIndexes;
+import io.coti.financialserver.data.CurrencySymbolIndexData;
+import io.coti.financialserver.data.CurrencyNameIndexData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -18,6 +19,9 @@ import org.springframework.web.client.RestTemplate;
 public class CurrencyService extends BaseNodeCurrencyService {
 
     private static final String GET_NATIVE_CURRENCY_ENDPOINT = "/currencies/native";
+    //TODO 9/9/2019 astolia: this is final static in DistributionService. make public there or add here also?
+    @Value("${financialserver.seed}")
+    private String seed;
     @Autowired
     private CurrencyNameIndexes currencyNameIndexes;
     @Autowired
@@ -39,7 +43,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
 
     @Override
     public void updateCurrencies() {
-        CurrencyData nativeCurrencyData = getNativeCurrencyData();
+        CurrencyData nativeCurrencyData = getNativeCurrency();
         if (nativeCurrencyData == null) {
             String recoveryServerAddress = networkService.getRecoveryServerAddress();
             RestTemplate restTemplate = new RestTemplate();
@@ -52,6 +56,5 @@ public class CurrencyService extends BaseNodeCurrencyService {
             setNativeCurrencyData(nativeCurrencyData);
         }
     }
-
 
 }

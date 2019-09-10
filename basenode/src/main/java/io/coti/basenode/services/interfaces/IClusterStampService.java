@@ -15,4 +15,6 @@ public interface IClusterStampService {
 
     void getClusterStampFromRecoveryServer(boolean isStartup);
 
+    void generateNativeTokenClusterStamp();
+
 }

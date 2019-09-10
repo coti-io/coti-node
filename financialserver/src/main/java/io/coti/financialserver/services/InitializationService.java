@@ -9,6 +9,7 @@ import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.interfaces.ICommunicationService;
+import io.coti.financialserver.data.ReservedAddress;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,12 +25,15 @@ import java.util.List;
 @Service
 public class InitializationService extends BaseNodeInitializationService {
 
+    private static final int COTI_GENESIS_ADDRESS_INDEX = Math.toIntExact(ReservedAddress.GENESIS_ONE.getIndex());
     @Value("${propagation.port}")
     private String propagationPort;
     @Value("${server.port}")
     private String serverPort;
     @Value("${server.url}")
     private String webServerUrl;
+    @Value("${financialserver.seed}")
+    private String seed;
     @Autowired
     private ICommunicationService communicationService;
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
@@ -37,6 +41,8 @@ public class InitializationService extends BaseNodeInitializationService {
     private DistributionService distributionService;
     @Autowired
     private FundDistributionService fundDistributionService;
+    @Autowired
+    private NodeCryptoHelper nodeCryptoHelper;
 
     @PostConstruct
     @Override
@@ -54,6 +60,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
             NetworkNodeData zerospendNetworkNodeData = networkService.getSingleNodeData(NodeType.ZeroSpendServer);
             if (zerospendNetworkNodeData == null) {
+                log.info("Please generate Native token at ZeroSpend with following genesis address: {}", nodeCryptoHelper.generateAddress(seed, COTI_GENESIS_ADDRESS_INDEX));
                 log.error("No zerospend server exists in the network got from the node manager. Exiting from the application");
                 System.exit(SpringApplication.exit(applicationContext));
             }
