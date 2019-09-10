@@ -18,7 +18,7 @@ public class CurrenciesController {
 
     @GetMapping(path = "/native")
     public CurrencyData getNativeCurrency() {
-        return currencyService.getNativeCurrencyData();
+        return currencyService.getNativeCurrency();
     }
 
 }
