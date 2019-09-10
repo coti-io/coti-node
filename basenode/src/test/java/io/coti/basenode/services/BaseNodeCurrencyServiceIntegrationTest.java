@@ -156,7 +156,7 @@ public class BaseNodeCurrencyServiceIntegrationTest {
 
     @Test
     public void getNativeCurrencyData_addNativeCurrencyIfNeeded_verifyCurrencyExists() {
-        final CurrencyData nativeCurrencyData = baseNodeCurrencyService.getNativeCurrencyData();
+        final CurrencyData nativeCurrencyData = baseNodeCurrencyService.getNativeCurrency();
         if (nativeCurrencyData != null) {
             Assert.assertEquals(nativeCurrencyData.getCurrencyTypeData().getCurrencyType(), CurrencyType.NATIVE_COIN);
         } else {
@@ -167,7 +167,7 @@ public class BaseNodeCurrencyServiceIntegrationTest {
             CurrencyData currencyData = createCurrencyData("Coti Test name", "Coti Test Symbol", currencyHash);
             setAndSignCurrencyDataByType(currencyData, currencyType);
             baseNodeCurrencyService.putCurrencyData(currencyData);
-            Assert.assertEquals(baseNodeCurrencyService.getNativeCurrencyData(), currencyData);
+            Assert.assertEquals(baseNodeCurrencyService.getNativeCurrency(), currencyData);
         }
     }
 
@@ -262,7 +262,7 @@ public class BaseNodeCurrencyServiceIntegrationTest {
     }
 
     protected void setAndSignCurrencyDataByType(CurrencyData currencyData, CurrencyType currencyType) {
-        CurrencyTypeData currencyTypeData = new CurrencyTypeData(currencyType, Instant.now(), null);
+        CurrencyTypeData currencyTypeData = new CurrencyTypeData(currencyType, Instant.now());
 //        CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(currencyData.getHash(),
 //                currencyType, Instant.now());
 //        currencyTypeCrypto.signMessage(currencyTypeData);

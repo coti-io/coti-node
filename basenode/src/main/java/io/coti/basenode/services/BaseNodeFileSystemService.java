@@ -5,7 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Service;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -54,6 +57,25 @@ public class BaseNodeFileSystemService {
             Files.delete(Paths.get(filePath));
         } catch (Exception e) {
             throw new FileSystemException(String.format("Delete file error. %s: %s", e.getClass().getName(), e.getMessage()));
+        }
+    }
+
+    public void createFile(String dirPath, String fileName){
+        String fullPath = dirPath + "/" + fileName;
+        File file = new File(fullPath);
+        try {
+            file.createNewFile();
+        } catch (IOException e) {
+            throw new FileSystemException(String.format("Create file error. %s: %s", e.getClass().getName(), e.getMessage()));
+        }
+    }
+
+    public void createAndWriteLineToFile(String dirPath, String fileName, String line){
+        String relativePath = dirPath + "/" + fileName;
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(relativePath))){
+            writer.write(line);
+        } catch (IOException e) {
+            throw new FileSystemException(String.format("Create and write file error. %s: %s", e.getClass().getName(), e.getMessage()));
         }
     }
 
