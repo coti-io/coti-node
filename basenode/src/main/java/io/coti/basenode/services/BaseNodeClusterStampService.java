@@ -31,10 +31,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -71,7 +68,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     protected static ClusterStampNameData majorClusterStampName;
     protected static Map<Hash, ClusterStampNameData> tokenClusterStampHashToName;
     @Value("${clusterstamp.folder}")
-    private String clusterStampsFolder;
+    protected String clusterStampsFolder;
     @Value("${aws.s3.bucket.name.clusterstamp}")
     private String clusterStampBucketName;
     @Value("${application.name}")
@@ -93,7 +90,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     @Autowired
     private LastClusterStampVersions lastClusterStampVersions;
     @Autowired
-    private BaseNodeFileSystemService fileSystemService;
+    protected BaseNodeFileSystemService fileSystemService;
     @Autowired
     protected ICurrencyService currencyService;
     @Autowired
@@ -177,7 +174,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                 loadClusterStamp(clusterStampsFolder, clusterStampNameData));
     }
 
-    private void addClusterStampName(ClusterStampNameData clusterStampNameData) {
+    protected void addClusterStampName(ClusterStampNameData clusterStampNameData) {
         if (clusterStampNameData.isMajor()) {
             majorClusterStampName = clusterStampNameData;
         } else {
@@ -194,7 +191,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         }
     }
 
-    private String getClusterStampFileName(ClusterStampNameData clusterStampNameData) {
+    protected String getClusterStampFileName(ClusterStampNameData clusterStampNameData) {
         Long versionTimeMillis = clusterStampNameData.getVersionTimeMillis();
         Long creationTimeMillis = clusterStampNameData.getCreationTimeMillis();
         StringBuilder sb = new StringBuilder(CLUSTERSTAMP_FILE_PREFIX);
@@ -205,12 +202,14 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         return sb.append(".").append(CLUSTERSTAMP_FILE_TYPE).toString();
     }
 
-    private void loadClusterStamp(String folder, ClusterStampNameData clusterStampNameData) {
+    //TODO 9/10/2019 astolia: make sure the sum of balances is equal to total supply from properties before signing
+    protected void loadClusterStamp(String folder, ClusterStampNameData clusterStampNameData) {
         String clusterStampFileLocation = folder + getClusterStampFileName(clusterStampNameData);
         File clusterstampFile = new File(clusterStampFileLocation);
         ClusterStampData clusterStampData = new ClusterStampData();
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(clusterstampFile))) {
+            BigDecimal aggregatedBalance = new BigDecimal(0);
             String line;
             AtomicInteger relevantLineNumber = new AtomicInteger(0);
             AtomicInteger signatureRelevantLines = new AtomicInteger(0);
@@ -267,6 +266,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     @Override
     public void getClusterStampFromRecoveryServer(boolean isStartup) {
         String recoveryServerAddress = networkService.getRecoveryServerAddress();
+        //TODO 9/10/2019 astolia: check if this is even possible. if not - remove. this is done so ZS should exit and not try to recover.
         if (recoveryServerAddress == null) {
             handleMissingRecoveryServer();
             return;
@@ -283,6 +283,11 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         } catch (Exception e) {
             throw new ClusterStampException(String.format("Clusterstamp recovery failed. %s: %s", e.getClass().getName(), e.getMessage()));
         }
+    }
+
+    @Override
+    public void generateNativeTokenClusterStamp() {
+        log.warn("Generation of native token cluster stamp should only be activated by ZeroSpend server");
     }
 
     private void handleRequiredClusterStampFiles(GetClusterStampFileNamesResponse getClusterStampFileNamesResponse, boolean isStartup) {

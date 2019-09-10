@@ -15,7 +15,7 @@ public class CurrencyCrypto extends SignatureCrypto<CurrencyData> {
         byte[] symbolInBytes = currencyData.getSymbol().getBytes();
 //        byte[] currencyTypeInBytes = currencyData.getCurrencyTypeData().getCurrencyType().getText().getBytes();
         byte[] descriptionInBytes = currencyData.getDescription() == null ? new byte[0] : currencyData.getDescription().getBytes();
-        byte[] totalSupplyInBytes = currencyData.getTotalSupply().stripTrailingZeros().toPlainString().getBytes();
+        byte[] totalSupplyInBytes = currencyData.getTotalSupply().toByteArray();//.stripTrailingZeros().toPlainString().getBytes();
         int scale = currencyData.getScale();
         long creationTime = currencyData.getCreationTime().toEpochMilli();
         byte[] originatorHashInBytes = currencyData.getOriginatorHash().getBytes();

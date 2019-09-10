@@ -1,9 +1,6 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.crypto.CurrencyCrypto;
-import io.coti.basenode.crypto.CurrencyTypeRegistrationCrypto;
-import io.coti.basenode.crypto.GetUpdatedCurrencyRequestCrypto;
-import io.coti.basenode.crypto.GetUpdatedCurrencyResponseCrypto;
+import io.coti.basenode.crypto.*;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CurrencyInitializationException;
 import io.coti.basenode.http.*;
@@ -24,6 +21,7 @@ import reactor.core.publisher.FluxSink;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.Instant;
 import java.util.EnumMap;
 import java.util.HashSet;
@@ -44,8 +42,9 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     private EnumMap<CurrencyType, HashSet<Hash>> currencyHashByTypeMap;
     private CurrencyData nativeCurrencyData;
 
+    //TODO 9/9/2019 astolia: do order protected, private order
     @Autowired
-    private Currencies currencies;
+    protected Currencies currencies;
     @Autowired
     private INetworkService networkService;
     @Autowired
@@ -64,7 +63,8 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     private HttpJacksonSerializer jacksonSerializer;
     @Autowired
     private BaseNodeCurrencyChunkService baseNodeCurrencyChunkService;
-
+    @Autowired
+    private CurrencyRegistrarCrypto currencyRegistrarCrypto;
 
     public void init() {
         log.info("{} is up", this.getClass().getSimpleName());
@@ -73,7 +73,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         updateCurrencyHashByTypeMapFromExistingCurrencies();
         updateCurrencies();
     }
-
 
     public void updateCurrencyHashByTypeMapFromExistingCurrencies() {
         currencies.forEach(currencyData -> {
@@ -226,14 +225,13 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         }
     }
 
-    public CurrencyData getNativeCurrencyData() {
-        CurrencyData nativeCurrencyData = null;
-        HashSet<Hash> nativeCurrencyHashes = currencyHashByTypeMap.get(CurrencyType.NATIVE_COIN);
-        if (nativeCurrencyHashes != null && !nativeCurrencyHashes.isEmpty()) {
-            nativeCurrencyData = currencies.getByHash(nativeCurrencyHashes.iterator().next());
-        }
-        return nativeCurrencyData;
-    }
+//    public Optional<CurrencyData> getNativeCurrencyData() {
+//        HashSet<Hash> nativeCurrencyHashes = currencyHashByTypeMap.get(CurrencyType.NATIVE_COIN);
+//        if (nativeCurrencyHashes != null && !nativeCurrencyHashes.isEmpty()) {
+//            return Optional.of(currencies.getByHash(nativeCurrencyHashes.iterator().next()));
+//        }
+//        return Optional.empty();
+//    }
 
     protected void setNativeCurrencyData(CurrencyData currencyData) {
         if (this.nativeCurrencyData != null) {
@@ -387,25 +385,27 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     public void initTestNativeCurrencyEntry() {
-        //TODO 8/22/2019 tomer: used for initial testing, creating initial Native currency
-        CurrencyData currencyData = createCurrencyData("Coti Native Coin", ("CotiNative").toUpperCase(), new BigDecimal(70000), 8, Instant.now(),
-                "Coti Native description", new Hash("aaaa"), new Hash("bbbb"), new Hash("cccc"), CurrencyType.NATIVE_COIN);
-        putCurrencyData(currencyData);
+//        //TODO 8/22/2019 tomer: used for initial testing, creating initial Native currency
+//        CurrencyData currencyData = createCurrencyData("Coti Native Coin", ("CotiNative").toUpperCase(), new BigDecimal(70000), 8, Instant.now(),
+//                "Coti Native description", new Hash("aaaa"), new Hash("bbbb"), new Hash("cccc"), CurrencyType.NATIVE_COIN);
+//        putCurrencyData(currencyData);
     }
 
     public void initTestNonNativeCurrencyEntries() {
-        //TODO 8/14/2019 tomer: used for initial testing, remove to dedicated test files
-        CurrencyData currencyData = createCurrencyData("Non Native Coin1", "NONI", new BigDecimal(70000), 8, Instant.now(),
-                "Coti Non Native description", new Hash("aaaa"), new Hash("bbbb"), new Hash("cccc"), CurrencyType.PAYMENT_CMD_TOKEN);
-        putCurrencyData(currencyData);
-
-        CurrencyData currencyData2 = createCurrencyData("Non Native Coin2", "NONII", new BigDecimal(70000), 8, Instant.now(),
-                "Coti Non Native 2 description", new Hash("aaaa"), new Hash("bbbb"), new Hash("cccc"), CurrencyType.PAYMENT_CMD_TOKEN);
-        putCurrencyData(currencyData2);
+//        //TODO 8/14/2019 tomer: used for initial testing, remove to dedicated test files
+//        CurrencyData currencyData = createCurrencyData("Non Native Coin1", "NONI", new BigDecimal(70000), 8, Instant.now(),
+//                "Coti Non Native description", new Hash("aaaa"), new Hash("bbbb"), new Hash("cccc"), CurrencyType.PAYMENT_CMD_TOKEN);
+//        putCurrencyData(currencyData);
+//
+//        CurrencyData currencyData2 = createCurrencyData("Non Native Coin2", "NONII", new BigDecimal(70000), 8, Instant.now(),
+//                "Coti Non Native 2 description", new Hash("aaaa"), new Hash("bbbb"), new Hash("cccc"), CurrencyType.PAYMENT_CMD_TOKEN);
+//        putCurrencyData(currencyData2);
     }
 
-    private CurrencyData createCurrencyData(String name, String symbol, BigDecimal totalSupply, int scale, Instant creationTime,
-                                            String description, Hash registrarHash, Hash signerHash, Hash originatorHash, CurrencyType currencyType) {
+    //TODO 9/10/2019 astolia/tomer:  handle crypto
+    protected CurrencyData createCurrencyData(String name, String symbol, BigInteger totalSupply, int scale, Instant creationTime,
+                                              String description, CurrencyType currencyType) {
+
         CurrencyData currencyData = new CurrencyData();
         setCurrencyDataName(currencyData, name);
         setCurrencyDataSymbol(currencyData, symbol);
@@ -414,16 +414,13 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         currencyData.setScale(scale);
         currencyData.setCreationTime(creationTime);
         currencyData.setDescription(description);
-        currencyData.setRegistrarHash(registrarHash);
-        currencyData.setSignerHash(signerHash);
-        currencyData.setOriginatorHash(originatorHash);
 
-        CurrencyTypeData currencyTypeData = new CurrencyTypeData(currencyType, Instant.now(), null);
+        CurrencyTypeData currencyTypeData = new CurrencyTypeData(currencyType, Instant.now());
         currencyData.setCurrencyTypeData(currencyTypeData);
         CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(currencyData);
         currencyTypeRegistrationCrypto.signMessage(currencyTypeRegistrationData);
         currencyTypeData.setSignature(currencyTypeRegistrationData.getSignature());
-        currencyCrypto.signMessage(currencyData);
+        currencyRegistrarCrypto.signMessage(currencyData);
         return currencyData;
     }
 
