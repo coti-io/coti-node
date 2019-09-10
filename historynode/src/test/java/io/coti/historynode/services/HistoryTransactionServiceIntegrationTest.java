@@ -52,7 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static io.coti.basenode.services.CurrencyService.NATIVE_CURRENCY_HASH;
+import static io.coti.basenode.services.BaseNodeCurrencyService.NATIVE_CURRENCY_HASH;
 import static utils.TestConstants.MAX_TRUST_SCORE;
 import static utils.TransactionTestUtils.createRandomTransaction;
 import static utils.TransactionTestUtils.generateRandomHash;
