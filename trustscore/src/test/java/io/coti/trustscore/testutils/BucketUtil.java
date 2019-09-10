@@ -14,7 +14,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static io.coti.basenode.services.CurrencyService.NATIVE_CURRENCY_HASH;
+import static io.coti.basenode.services.BaseNodeCurrencyService.NATIVE_CURRENCY_HASH;
+
 
 @Slf4j
 public class BucketUtil {
