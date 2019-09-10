@@ -1,12 +1,9 @@
 package testUtils;
 
-import io.coti.basenode.crypto.CurrencyCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.GetBalancesRequest;
-import io.coti.basenode.services.BaseNodeCurrencyService;
 import io.coti.basenode.services.NodeTypeService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
@@ -62,11 +59,11 @@ public class BaseNodeTestUtils {
                         Instant.now())));
         return
                 new TransactionData(baseTransactions,
-                hash,
-                TRANSACTION_DESCRIPTION,
-                generateRandomTrustScore(),
+                        hash,
+                        TRANSACTION_DESCRIPTION,
+                        generateRandomTrustScore(),
                         Instant.ofEpochMilli(new Date().getTime()),
-                TransactionType.Payment);
+                        TransactionType.Payment);
     }
 
     public static TransactionData createRandomTransaction() {
@@ -133,7 +130,7 @@ public class BaseNodeTestUtils {
 
     public static GetBalancesRequest generateRandomBalanceRequest() {
         GetBalancesRequest getBalancesRequest = new GetBalancesRequest();
-        @NotNull(message = "Addresses must not be blank") List<Hash> addresses = Arrays.asList(generateRandomHash(),generateRandomHash());
+        @NotNull(message = "Addresses must not be blank") List<Hash> addresses = Arrays.asList(generateRandomHash(), generateRandomHash());
         getBalancesRequest.setAddresses(addresses);
         return getBalancesRequest;
     }
@@ -161,7 +158,7 @@ public class BaseNodeTestUtils {
 
     public static NetworkNodeData generateRandomNetworkNodeData(boolean isMultipleNodeType) {
         NodeType nodeType = null;
-        if(isMultipleNodeType)
+        if (isMultipleNodeType)
             nodeType = NodeTypeService.getNodeTypeList(true).get(0);
         else
             nodeType = NodeTypeService.getNodeTypeList(false).get(0);
@@ -170,7 +167,7 @@ public class BaseNodeTestUtils {
         NetworkType networkType = NetworkType.TestNet;
         String address = ANY_ADDRESS;
         String httpPort = ANY_PORT;
-        return new NetworkNodeData(nodeType, address, httpPort, hash, networkType );
+        return new NetworkNodeData(nodeType, address, httpPort, hash, networkType);
     }
 
 

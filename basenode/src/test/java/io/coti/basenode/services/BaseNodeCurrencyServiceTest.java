@@ -29,7 +29,7 @@ import static testUtils.CurrencyServiceTestUtils.createCurrencyData;
 
 @ContextConfiguration(classes = {BaseNodeCurrencyService.class, BaseNodeRocksDBConnector.class,
         Currencies.class, NodeCryptoHelper.class,
-        BaseNodeNetworkService.class, RestTemplate.class, CurrencyCrypto.class,
+        BaseNodeNetworkService.class, RestTemplate.class, CurrencyRegistrarCrypto.class,
         ApplicationContext.class,
         GetUpdatedCurrencyRequestCrypto.class, GetUpdatedCurrencyResponseCrypto.class,
         CurrencyTypeRegistrationCrypto.class
@@ -54,7 +54,7 @@ public class BaseNodeCurrencyServiceTest {
     @Autowired
     private RestTemplate restTemplate;
     @Autowired
-    private CurrencyCrypto currencyCrypto;
+    private CurrencyRegistrarCrypto currencyRegistrarCrypto;
     @Autowired
     private ApplicationContext applicationContext;
     @Autowired
@@ -134,7 +134,7 @@ public class BaseNodeCurrencyServiceTest {
 //        currencyTypeCrypto.signMessage(currencyTypeData);
         currencyTypeRegistrationCrypto.signMessage(currencyTypeRegistrationData);
         currencyData.setCurrencyTypeData(currencyTypeData);
-        currencyCrypto.signMessage(currencyData);
+        currencyRegistrarCrypto.signMessage(currencyData);
     }
 
 }
