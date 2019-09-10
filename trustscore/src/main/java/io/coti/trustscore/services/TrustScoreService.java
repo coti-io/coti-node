@@ -458,10 +458,10 @@ public class TrustScoreService {
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(new Response(USER_TYPE_ALREADY_UPDATED, STATUS_ERROR));
             }
+
+            UserType userType = UserType.enumFromString(request.getUserType());
             userTrustScoreData.setUserType(userType);
             userTrustScores.put(userTrustScoreData);
-            UserType userType = UserType.enumFromString(request.getUserType());
-
             updateUserTypeInBuckets(userTrustScoreData);
 
             SetUserTypeResponse setUserTypeResponse = new SetUserTypeResponse(userType, request.getUserHash());
@@ -496,10 +496,10 @@ public class TrustScoreService {
                     .status(HttpStatus.BAD_REQUEST).body(new Response(BAD_SIGNATURE_ON_TRUST_SCORE_FOR_TRANSACTION));
         }
 
-        UserTrustScoreData userTrustScoreData = userTrustScores.getByHash(userHash);
-        if (userTrustScoreData == null) {
         Hash userHash = getTransactionTrustScoreRequest.getUserHash();
         Hash transactionHash = getTransactionTrustScoreRequest.getTransactionHash();
+        UserTrustScoreData userTrustScoreData = userTrustScores.getByHash(userHash);
+        if (userTrustScoreData == null) {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .body(new Response(NON_EXISTING_USER_MESSAGE, STATUS_ERROR));
