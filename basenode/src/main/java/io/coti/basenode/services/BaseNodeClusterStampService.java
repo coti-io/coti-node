@@ -65,7 +65,6 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     private static final String CLUSTERSTAMP_FILE_PREFIX = "Clusterstamp";
     private static final String CLUSTERSTAMP_FILE_TYPE = "csv";
     private static final String CLUSTERSTAMP_ENDPOINT = "/clusterstamps";
-
     protected static ClusterStampNameData majorClusterStampName;
     protected static Map<Hash, ClusterStampNameData> tokenClusterStampHashToName;
     @Value("${clusterstamp.folder}")
@@ -207,7 +206,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         String clusterStampFileLocation = folder + getClusterStampFileName(clusterStampNameData);
         File clusterstampFile = new File(clusterStampFileLocation);
         ClusterStampData clusterStampData = new ClusterStampData();
-        Set<Pair<Hash,Hash>> tokenGenesisAddressesToCurrencyHash = new HashSet<>();
+        Set<Pair<Hash, Hash>> tokenGenesisAddressesToCurrencyHash = new HashSet<>();
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(clusterstampFile))) {
             String line;
@@ -245,7 +244,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                     }
                 }
             }
-            if(!validateBalancesEqualToTotalSupplies(tokenGenesisAddressesToCurrencyHash)){
+            if (!validateBalancesEqualToTotalSupplies(tokenGenesisAddressesToCurrencyHash)) {
                 throw new ClusterStampException("Failed to validate token balances");
             }
             if (signatureRelevantLines == 0) {
@@ -262,10 +261,10 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         }
     }
 
-    private boolean validateBalancesEqualToTotalSupplies(Set<Pair<Hash,Hash>> tokenGenesisAddressesToCurrencyHash){
+    private boolean validateBalancesEqualToTotalSupplies(Set<Pair<Hash, Hash>> tokenGenesisAddressesToCurrencyHash) {
         try {
-            return tokenGenesisAddressesToCurrencyHash.stream().allMatch( pair ->
-                balanceService.getBalanceByAddress(pair.getKey()).longValue() == (currencyService.getTokenTotalSupply(pair.getValue()).longValue())
+            return tokenGenesisAddressesToCurrencyHash.stream().allMatch(pair ->
+                    balanceService.getBalanceByAddress(pair.getKey()).longValue() == (currencyService.getTokenTotalSupply(pair.getValue()).longValue())
             );
         } catch (CurrencyNotFoundException e) {
             return false;
@@ -456,7 +455,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         return tokenClusterStampHashToName.values().stream().collect(Collectors.toList());
     }
 
-    private void fillBalanceFromLine(ClusterStampData clusterStampData, String line, Set<Pair<Hash,Hash>> tokenGenesisAddressesToCurrencyHash) {
+    private void fillBalanceFromLine(ClusterStampData clusterStampData, String line, Set<Pair<Hash, Hash>> tokenGenesisAddressesToCurrencyHash) {
         String[] addressDetails;
         addressDetails = line.split(",");
         int numOfDetailsInLine = addressDetails.length;
@@ -467,7 +466,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         BigDecimal addressAmount = numOfDetailsInLine == NUMBER_OF_ADDRESS_LINE_DETAILS ? new BigDecimal(addressDetails[ADDRESS_DETAILS_AMOUNT_INDEX]) :
                 new BigDecimal(addressDetails[ADDRESS_DETAILS_AMOUNT_INDEX_WITHOUT_CURRENCY_HASH]);
         Hash currencyDataHash = numOfDetailsInLine == NUMBER_OF_ADDRESS_LINE_DETAILS ? new Hash(addressDetails[CURRENCY_DATA_HASH_INDEX]) : null;
-        tokenGenesisAddressesToCurrencyHash.add(new Pair<>(addressHash,currencyDataHash));
+        tokenGenesisAddressesToCurrencyHash.add(new Pair<>(addressHash, currencyDataHash));
 
         if (currencyDataHash != null) {
             currencyService.verifyCurrencyExists(currencyDataHash);
