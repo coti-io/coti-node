@@ -37,24 +37,18 @@ public class CurrencyService extends BaseNodeCurrencyService {
     }
 
     @Override
-    public void removeCurrencyDataIndexes(CurrencyData currencyData) {
-        currencyNameIndexes.delete(new CurrencyNameIndexData(currencyData.getName(), currencyData.getHash()));
-        currencySymbolIndexes.delete(new CurrencySymbolIndexData(currencyData.getSymbol(), currencyData.getHash()));
-    }
-
-    @Override
     public void updateCurrencies() {
         try {
             CurrencyData nativeCurrencyData = getNativeCurrency();
             if (nativeCurrencyData == null) {
                 String recoveryServerAddress = networkService.getRecoveryServerAddress();
                 nativeCurrencyData = restTemplate.getForObject(recoveryServerAddress + GET_NATIVE_CURRENCY_ENDPOINT, CurrencyData.class);
-            }
-            if (nativeCurrencyData == null) {
-                throw new CurrencyInitializationException("Native currency recovery failed. Recovery sent null native currency");
-            } else {
-                putCurrencyData(nativeCurrencyData);
-                setNativeCurrencyData(nativeCurrencyData);
+                if (nativeCurrencyData == null) {
+                    throw new CurrencyInitializationException("Native currency recovery failed. Recovery sent null native currency");
+                } else {
+                    putCurrencyData(nativeCurrencyData);
+                    setNativeCurrencyData(nativeCurrencyData);
+                }
             }
         } catch (CurrencyInitializationException e) {
             throw e;
@@ -65,6 +59,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
         }
     }
 
+    @Override
     public void putCurrencyData(CurrencyData currencyData) {
         super.putCurrencyData(currencyData);
         updateCurrencyDataIndexes(currencyData);

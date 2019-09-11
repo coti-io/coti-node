@@ -11,8 +11,6 @@ public interface ICurrencyService {
 
     void init();
 
-    void removeCurrencyDataIndexes(CurrencyData currencyData);
-
     void updateCurrencies();
 
     void verifyCurrencyExists(Hash currencyDataHash);
