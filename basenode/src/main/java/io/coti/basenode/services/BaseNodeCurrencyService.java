@@ -67,9 +67,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     public void updateCurrencyHashByTypeMapFromExistingCurrencies() {
-        currencies.forEach(currencyData -> {
-            updateCurrencyHashByTypeMap(currencyData);
-        });
+        currencies.forEach(this::updateCurrencyHashByTypeMap);
         if (!currencies.isEmpty()) {
             verifyValidNativeCurrencyPresent();
         }

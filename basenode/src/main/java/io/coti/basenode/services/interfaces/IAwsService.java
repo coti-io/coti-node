@@ -12,6 +12,8 @@ public interface IAwsService {
 
     void uploadFolderAndContentsToS3(String bucketName, String s3folderPath, File directoryToUpload);
 
+    void uploadFileToS3(String bucketName, String directoryToUpload);
+
     void downloadFolderAndContents(String bucketName, String s3folderPath, String directoryToDownload);
 
     List<String> listS3Paths(String bucketName, String path);
