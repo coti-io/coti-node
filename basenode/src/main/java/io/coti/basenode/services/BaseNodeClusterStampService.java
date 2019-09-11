@@ -71,7 +71,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     @Value("${clusterstamp.folder}")
     protected String clusterStampsFolder;
     @Value("${aws.s3.bucket.name.clusterstamp}")
-    private String clusterStampBucketName;
+    protected String clusterStampBucketName;
     @Value("${application.name}")
     private String applicationName;
     @Autowired
@@ -87,9 +87,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     @Autowired
     protected INetworkService networkService;
     @Autowired
-    private IAwsService awsService;
+    protected IAwsService awsService;
     @Autowired
-    private LastClusterStampVersions lastClusterStampVersions;
+    protected LastClusterStampVersions lastClusterStampVersions;
     @Autowired
     protected BaseNodeFileSystemService fileSystemService;
     @Autowired
@@ -98,13 +98,15 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     protected ApplicationContext applicationContext;
 
     @Override
-    public void init() {
+    public boolean init() {
         try {
+            //TODO 9/11/2019 astolia: check scenario: existing major local file and creating new native token
             fileSystemService.createFolder(clusterStampsFolder);
             initLocalClusterStampNames();
-            fillClusterStampNamesMap();
+            boolean uploadMajorToS3AfterLoad = fillClusterStampNamesMap();
             getClusterStampFromRecoveryServer(true);
             loadAllClusterStamps();
+            return uploadMajorToS3AfterLoad;
         } catch (ClusterStampException e) {
             throw new ClusterStampException("Error at clusterstamp init. " + e.getMessage());
         } catch (Exception e) {
@@ -112,12 +114,13 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         }
     }
 
+
     private void initLocalClusterStampNames() {
         majorClusterStampName = null;
         tokenClusterStampHashToName = new HashMap<>();
     }
 
-    private void fillClusterStampNamesMap() {
+    private boolean fillClusterStampNamesMap() {
         List<String> clusterStampFileNames = fileSystemService.listFolderFileNames(clusterStampsFolder);
         for (String clusterStampFileName : clusterStampFileNames) {
             ClusterStampNameData clusterStampNameData = validateNameAndGetClusterStampNameData(clusterStampFileName);
@@ -127,12 +130,14 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             addClusterStampName(clusterStampNameData);
         }
         if (majorClusterStampName == null) {
-            handleMissingMajor();
+            return handleMissingMajor();
         }
+        return false;
     }
 
-    protected void handleMissingMajor() {
-        // Handled differently per node. base case is to do nothing.
+    protected boolean handleMissingMajor() {
+        // Handled differently per node. base case is to return false - no need to upload major clusterstamp to s3.
+        return false;
     }
 
     private ClusterStampNameData validateNameAndGetClusterStampNameData(String clusterStampFileName) {
@@ -298,11 +303,6 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         }
     }
 
-    @Override
-    public void generateNativeTokenClusterStamp() {
-        log.warn("Generation of native token cluster stamp should only be activated by ZeroSpend server");
-    }
-
     private void handleRequiredClusterStampFiles(GetClusterStampFileNamesResponse getClusterStampFileNamesResponse, boolean isStartup) {
         if (!validateResponseVersionValidity(getClusterStampFileNamesResponse)) {
             throw new ClusterStampException("Recovery clusterstamp version is not valid");
@@ -431,7 +431,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             addClusterStampName(clusterStampNameData);
             awsService.downloadFile(filePath, clusterStampBucketName);
         } catch (IOException e) {
-            throw new ClusterStampException(String.format("Couldn't download %s clusterstamp file.", clusterStampFileName, e.getMessage()));
+            throw new ClusterStampException(String.format("Couldn't download %s clusterstamp file. Error: %s", clusterStampFileName, e.getMessage()));
         }
     }
 
@@ -467,6 +467,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         BigDecimal addressAmount = numOfDetailsInLine == NUMBER_OF_ADDRESS_LINE_DETAILS ? new BigDecimal(addressDetails[ADDRESS_DETAILS_AMOUNT_INDEX]) :
                 new BigDecimal(addressDetails[ADDRESS_DETAILS_AMOUNT_INDEX_WITHOUT_CURRENCY_HASH]);
         Hash currencyDataHash = numOfDetailsInLine == NUMBER_OF_ADDRESS_LINE_DETAILS ? new Hash(addressDetails[CURRENCY_DATA_HASH_INDEX]) : null;
+        //TODO 9/11/2019 astolia: should CS file have 3 value in each line? if not, ther eis null pointer cause here.
         tokenGenesisAddressesToCurrencyHash.add(new Pair<>(addressHash, currencyDataHash));
 
         if (currencyDataHash != null) {
