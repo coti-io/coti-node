@@ -21,35 +21,38 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private String nativeTokenAddress;
 
     @Override
-    protected void handleMissingMajor(){
-        //TODO 9/9/2019 astolia: implement
+    public boolean init() {
+        boolean uploadMajorToS3AfterLoad = super.init();
+        if (uploadMajorToS3AfterLoad) {
+            uploadMajorClusterStamp();
+        }
+        lastClusterStampVersions.put(new LastClusterStampVersionData(majorClusterStampName.getVersionTimeMillis()));
+        return false;
+    }
+
+    private void uploadMajorClusterStamp() {
+        awsService.uploadFileToS3(clusterStampBucketName, clusterStampsFolder + getClusterStampFileName(majorClusterStampName));
+    }
+
+    @Override
+    protected boolean handleMissingMajor() {
         CurrencyData nativeCurrency = currencyService.getNativeCurrency();
-        //check if there is a native token in the db.
-        if(nativeCurrency == null){
-            //if not - exception
+        if (nativeCurrency == null) {
             throw new ClusterStampException("Unable to start zero spend server. Native token not found.");
         }
-        // if there isn't - create a clusterstamp major file
         ClusterStampNameData nativeMajorClusterStamp = new ClusterStampNameData(ClusterStampType.MAJOR);
         generateOneLineClusterStampFile(nativeMajorClusterStamp, nativeCurrency);
         addClusterStampName(nativeMajorClusterStamp);
-        //super.loadClusterStamp(clusterStampsFolder, nativeMajorClusterStamp);
-        // upload the file to s3
-        // set the major field
-        // set the version if it isn't defined.
-
-        //throw new ClusterStampException("Unable to start zero spend server. Major clusterstamp not found.");
+        return true;
     }
 
-    private void generateOneLineClusterStampFile(ClusterStampNameData clusterStamp, CurrencyData currencyData){
+    private void generateOneLineClusterStampFile(ClusterStampNameData clusterStamp, CurrencyData currencyData) {
         String line = generateClusterStampLineFromNewCurrency(currencyData);
         fileSystemService.createAndWriteLineToFile(clusterStampsFolder, super.getClusterStampFileName(clusterStamp), line);
-        //fileSystemService.createFile(clusterStampsFolder, super.getClusterStampFileName(clusterStamp));
-
 
     }
 
-    private String generateClusterStampLineFromNewCurrency(CurrencyData currencyData){
+    private String generateClusterStampLineFromNewCurrency(CurrencyData currencyData) {
         String clusterStampDelimiter = ",";
         StringBuilder sb = new StringBuilder();
         sb.append(nativeTokenAddress).append(clusterStampDelimiter).append(currencyData.getHash()).append(clusterStampDelimiter).append(currencyData.getTotalSupply().toString());
@@ -57,7 +60,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     }
 
     @Override
-    protected void handleMissingRecoveryServer(){
+    protected void handleMissingRecoveryServer() {
         // Zero spend does nothing in this case.
     }
 
@@ -68,9 +71,8 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     }
 
     private void updateClusterStampFileWithSignature(SignatureData signature, String clusterstampFileLocation) {
-        try {
-            FileWriter clusterstampFileWriter = new FileWriter(clusterstampFileLocation, true);
-            BufferedWriter clusterStampBufferedWriter = new BufferedWriter(clusterstampFileWriter);
+        try (FileWriter clusterstampFileWriter = new FileWriter(clusterstampFileLocation, true);
+             BufferedWriter clusterStampBufferedWriter = new BufferedWriter(clusterstampFileWriter)) {
             clusterStampBufferedWriter.newLine();
             clusterStampBufferedWriter.newLine();
             clusterStampBufferedWriter.append("# Signature");
@@ -78,7 +80,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             clusterStampBufferedWriter.append("r," + signature.getR());
             clusterStampBufferedWriter.newLine();
             clusterStampBufferedWriter.append("s," + signature.getS());
-            clusterStampBufferedWriter.close();
         } catch (IOException e) {
             log.error("Exception at clusterstamp signing");
             throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
@@ -88,11 +89,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Override
     protected void setClusterStampSignerHash(ClusterStampData clusterStampData) {
         clusterStampData.setSignerHash(networkService.getNetworkNodeData().getNodeHash());
-    }
-
-    @Override
-    public void generateNativeTokenClusterStamp() {
-
     }
 
 }
