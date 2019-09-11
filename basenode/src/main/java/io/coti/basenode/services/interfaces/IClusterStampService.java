@@ -9,12 +9,10 @@ import org.springframework.http.ResponseEntity;
  */
 public interface IClusterStampService {
 
-    void init();
+    boolean init();
 
     ResponseEntity<IResponse> getRequiredClusterStampNames();
 
     void getClusterStampFromRecoveryServer(boolean isStartup);
-
-    void generateNativeTokenClusterStamp();
 
 }
