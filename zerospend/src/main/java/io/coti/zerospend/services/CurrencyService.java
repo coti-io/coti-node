@@ -27,7 +27,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
     @Value("${native.token.genesis.address}")
     private String nativeTokenAddress;
 
-    private void generateNativeToken(){
+    private void generateNativeToken() {
         CurrencyData currencyData = super.createCurrencyData(nativeTokenName, (nativeTokenSymbol).toUpperCase(), nativeTokenTotalSupply, nativeTokenScale, Instant.now(), nativeTokenDescription
                 , CurrencyType.NATIVE_COIN);
         putCurrencyData(currencyData);
