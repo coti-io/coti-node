@@ -124,28 +124,20 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         if (nativeCurrencyHashes == null || nativeCurrencyHashes.isEmpty() || nativeCurrencyHashes.size() != NUMBER_OF_NATIVE_CURRENCY) {
             throw new CurrencyInitializationException("Failed to retrieve native currency data");
         } else {
-            CurrencyData nativeCurrencyData = currencies.getByHash(nativeCurrencyHashes.iterator().next());
-            if (!currencyRegistrarCrypto.verifySignature(nativeCurrencyData)) {
-                throw new CurrencyInitializationException("Failed to verify native currency data of " + nativeCurrencyData.getHash());
+            CurrencyData nativeCurrency = currencies.getByHash(nativeCurrencyHashes.iterator().next());
+            if (!currencyRegistrarCrypto.verifySignature(nativeCurrency)) {
+                throw new CurrencyInitializationException("Failed to verify native currency data of " + nativeCurrency.getHash());
             } else {
-                CurrencyTypeRegistrationData nativeCurrencyTypeRegistrationData = new CurrencyTypeRegistrationData(nativeCurrencyData);
+                CurrencyTypeRegistrationData nativeCurrencyTypeRegistrationData = new CurrencyTypeRegistrationData(nativeCurrency);
                 if (!currencyTypeRegistrationCrypto.verifySignature(nativeCurrencyTypeRegistrationData)) {
                     throw new CurrencyInitializationException("Failed to verify native currency data type of " + nativeCurrencyTypeRegistrationData.getCurrencyType().getText());
                 }
             }
             if (getNativeCurrency() == null) {
-                setNativeCurrencyData(nativeCurrencyData);
+                setNativeCurrencyData(nativeCurrency);
             }
         }
     }
-
-//    public Optional<CurrencyData> getNativeCurrencyData() {
-//        HashSet<Hash> nativeCurrencyHashes = currencyHashByTypeMap.get(CurrencyType.NATIVE_COIN);
-//        if (nativeCurrencyHashes != null && !nativeCurrencyHashes.isEmpty()) {
-//            return Optional.of(currencies.getByHash(nativeCurrencyHashes.iterator().next()));
-//        }
-//        return Optional.empty();
-//    }
 
     protected void setNativeCurrencyData(CurrencyData currencyData) {
         if (this.nativeCurrencyData != null) {
@@ -209,19 +201,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         updateCurrencyHashByTypeMap(currencyData);
     }
 
-    private void removeCurrencyData(CurrencyData currencyData) {
-        if (currencyData == null) {
-            log.error("Failed to remove an empty currency");
-            return;
-        }
-        currencies.delete(currencyData);
-        removeCurrencyDataIndexes(currencyData);
-        currencyHashByTypeMap.get(currencyData.getCurrencyTypeData().getCurrencyType()).remove(currencyData.getHash());
-    }
-
-    public void removeCurrencyDataIndexes(CurrencyData currencyData) {
-        // Implemented by Financial Server node
-    }
 
     public void verifyCurrencyExists(Hash currencyDataHash) {
         if (currencies.getByHash(currencyDataHash) == null) {
@@ -248,33 +227,13 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         if (!Pattern.compile("[A-Z]{0,15}").matcher(symbol).matches()) {
             log.error("Attempted to set an invalid currency symbol of {}.", symbol);
             return;
-        } else {
-            currencyData.setSymbol(symbol);
         }
-    }
-
-    public void initTestNativeCurrencyEntry() {
-//        //TODO 8/22/2019 tomer: used for initial testing, creating initial Native currency
-//        CurrencyData currencyData = createCurrencyData("Coti Native Coin", ("CotiNative").toUpperCase(), new BigDecimal(70000), 8, Instant.now(),
-//                "Coti Native description", new Hash("aaaa"), new Hash("bbbb"), new Hash("cccc"), CurrencyType.NATIVE_COIN);
-//        putCurrencyData(currencyData);
-    }
-
-    public void initTestNonNativeCurrencyEntries() {
-//        //TODO 8/14/2019 tomer: used for initial testing, remove to dedicated test files
-//        CurrencyData currencyData = createCurrencyData("Non Native Coin1", "NONI", new BigDecimal(70000), 8, Instant.now(),
-//                "Coti Non Native description", new Hash("aaaa"), new Hash("bbbb"), new Hash("cccc"), CurrencyType.PAYMENT_CMD_TOKEN);
-//        putCurrencyData(currencyData);
-//
-//        CurrencyData currencyData2 = createCurrencyData("Non Native Coin2", "NONII", new BigDecimal(70000), 8, Instant.now(),
-//                "Coti Non Native 2 description", new Hash("aaaa"), new Hash("bbbb"), new Hash("cccc"), CurrencyType.PAYMENT_CMD_TOKEN);
-//        putCurrencyData(currencyData2);
+        currencyData.setSymbol(symbol);
     }
 
     //TODO 9/10/2019 astolia/tomer:  handle crypto
     protected CurrencyData createCurrencyData(String name, String symbol, BigInteger totalSupply, int scale, Instant creationTime,
                                               String description, CurrencyType currencyType) {
-
         CurrencyData currencyData = new CurrencyData();
         setCurrencyDataName(currencyData, name);
         setCurrencyDataSymbol(currencyData, symbol);
@@ -292,6 +251,5 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         currencyRegistrarCrypto.signMessage(currencyData);
         return currencyData;
     }
-
 
 }
