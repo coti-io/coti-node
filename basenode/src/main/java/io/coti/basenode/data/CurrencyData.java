@@ -9,7 +9,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.constraints.NotEmpty;
-import java.math.BigInteger;
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.time.Instant;
 
@@ -25,7 +25,7 @@ public class CurrencyData implements IPropagatable, ISignable, ISignValidatable 
     private CurrencyTypeData currencyTypeData;
     @NotEmpty
     private String description;
-    private BigInteger totalSupply;
+    private BigDecimal totalSupply;
     private int scale;
     private Instant creationTime;
     private Hash originatorHash;

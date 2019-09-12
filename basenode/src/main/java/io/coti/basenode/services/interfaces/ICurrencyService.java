@@ -5,7 +5,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.GetUpdatedCurrencyRequest;
 import reactor.core.publisher.FluxSink;
 
-import java.math.BigInteger;
+import java.math.BigDecimal;
 
 public interface ICurrencyService {
 
@@ -13,7 +13,7 @@ public interface ICurrencyService {
 
     void updateCurrencies();
 
-    void verifyCurrencyExists(Hash currencyDataHash);
+    boolean verifyCurrencyExists(Hash currencyDataHash);
 
     CurrencyData getNativeCurrency();
 
@@ -21,5 +21,7 @@ public interface ICurrencyService {
 
     void getUpdatedCurrencyBatch(GetUpdatedCurrencyRequest getUpdatedCurrencyRequest, FluxSink<CurrencyData> fluxSink);
 
-    BigInteger getTokenTotalSupply(Hash address);
+    BigDecimal getTokenTotalSupply(Hash currencyHash);
+
+    int getTokenScale(Hash currencyHash);
 }
