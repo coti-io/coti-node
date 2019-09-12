@@ -22,7 +22,7 @@ import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 import reactor.core.publisher.FluxSink;
 
-import java.math.BigInteger;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.EnumMap;
 import java.util.HashSet;
@@ -158,12 +158,21 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     @Override
-    public BigInteger getTokenTotalSupply(Hash hash) {
-        CurrencyData currency = currencies.getByHash(hash);
+    public BigDecimal getTokenTotalSupply(Hash currencyHash) {
+        CurrencyData currency = currencies.getByHash(currencyHash);
         if (currency == null) {
-            throw new CurrencyNotFoundException(String.format("Currency with hash %s was not found", hash));
+            throw new CurrencyNotFoundException(String.format("Currency with hash %s was not found", currencyHash));
         }
-        return currencies.getByHash(hash).getTotalSupply();
+        return currencies.getByHash(currencyHash).getTotalSupply();
+    }
+
+    @Override
+    public int getTokenScale(Hash currencyHash) {
+        CurrencyData currency = currencies.getByHash(currencyHash);
+        if (currency == null) {
+            throw new CurrencyNotFoundException(String.format("Currency with hash %s was not found", currencyHash));
+        }
+        return currencies.getByHash(currencyHash).getScale();
     }
 
     private void getRequiringUpdateOfCurrencyDataByType(Map<CurrencyType, HashSet<Hash>> existingCurrencyHashesByType, FluxSink<CurrencyData> fluxSink) {
@@ -200,10 +209,8 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
 
-    public void verifyCurrencyExists(Hash currencyDataHash) {
-        if (currencies.getByHash(currencyDataHash) == null) {
-            throw new CurrencyInitializationException("Failed to locate Currency " + currencyDataHash);
-        }
+    public boolean verifyCurrencyExists(Hash currencyDataHash) {
+        return currencies.getByHash(currencyDataHash) != null;
     }
 
     public void setCurrencyDataName(CurrencyData currencyData, String name) {
@@ -230,7 +237,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     //TODO 9/10/2019 astolia/tomer:  handle crypto
-    protected CurrencyData createCurrencyData(String name, String symbol, BigInteger totalSupply, int scale, Instant creationTime,
+    protected CurrencyData createCurrencyData(String name, String symbol, BigDecimal totalSupply, int scale, Instant creationTime,
                                               String description, CurrencyType currencyType) {
         CurrencyData currencyData = new CurrencyData();
         setCurrencyDataName(currencyData, name);
