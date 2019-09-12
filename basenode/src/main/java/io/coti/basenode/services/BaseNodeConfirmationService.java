@@ -81,7 +81,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                 if (transactionData.isTrustChainConsensus()) {
                     totalConfirmed.incrementAndGet();
                     transactionData.getBaseTransactions().forEach(baseTransactionData ->
-                            balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount())
+                            balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getCurrencyHash(), baseTransactionData.getAmount())
                     );
                 }
                 transactionIndexData = nextTransactionIndexData;
@@ -159,7 +159,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         Instant dspConsensusTime = transactionData.getDspConsensusResult().getIndexingTime();
         Instant transactionConsensusUpdateTime = trustChainConsensusTime.isAfter(dspConsensusTime) ? trustChainConsensusTime : dspConsensusTime;
         transactionData.setTransactionConsensusUpdateTime(transactionConsensusUpdateTime);
-        transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount()));
+        transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getCurrencyHash(), baseTransactionData.getAmount()));
         totalConfirmed.incrementAndGet();
 
         transactionData.getBaseTransactions().forEach(baseTransactionData -> {
@@ -182,7 +182,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     public void insertSavedTransaction(TransactionData transactionData, AtomicLong maxTransactionIndex) {
         boolean isDspConfirmed = transactionHelper.isDspConfirmed(transactionData);
         transactionData.getBaseTransactions().forEach(baseTransactionData ->
-                balanceService.updatePreBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount())
+                balanceService.updatePreBalance(baseTransactionData.getAddressHash(), baseTransactionData.getCurrencyHash(), baseTransactionData.getAmount())
         );
         if (!isDspConfirmed) {
             transactionHelper.addNoneIndexedTransaction(transactionData);
@@ -199,7 +199,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
 
     @Override
     public void insertMissingTransaction(TransactionData transactionData) {
-        transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updatePreBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount()));
+        transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updatePreBalance(baseTransactionData.getAddressHash(), baseTransactionData.getCurrencyHash(), baseTransactionData.getAmount()));
         if (transactionData.isTrustChainConsensus()) {
             trustChainConfirmed.incrementAndGet();
         }
@@ -248,7 +248,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         continueHandleDSPConfirmedTransaction(transactionData);
         dspConfirmed.incrementAndGet();
         if (transactionData.isTrustChainConsensus()) {
-            transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount()));
+            transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getCurrencyHash(), baseTransactionData.getAmount()));
             totalConfirmed.incrementAndGet();
         }
     }
