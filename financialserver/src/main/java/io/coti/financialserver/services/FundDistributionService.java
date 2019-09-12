@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.services.CurrencyService.NATIVE_CURRENCY_HASH;
 import static io.coti.financialserver.http.HttpStringConstants.*;
 
 @Slf4j
@@ -129,8 +130,8 @@ public class FundDistributionService {
                     getFundAddressHash(fundDistributionReservedBalanceData.getFund()) : fundDistributionReservedBalanceData.getFund().getFundHash();
             fundDistributionBalanceResultDataList.add(
                     new FundDistributionBalanceResultData(fundDistributionReservedBalanceData.getFund().getText(),
-                            baseNodeBalanceService.getBalanceByAddress(fundAddress),
-                            baseNodeBalanceService.getPreBalanceByAddress(fundAddress),
+                            baseNodeBalanceService.getBalance(fundAddress, NATIVE_CURRENCY_HASH),
+                            baseNodeBalanceService.getPreBalance(fundAddress, NATIVE_CURRENCY_HASH),
                             fundDistributionReservedBalanceData.getReservedAmount()));
         });
         return ResponseEntity.status(HttpStatus.OK)
@@ -394,8 +395,8 @@ public class FundDistributionService {
         }
         FundDistributionReservedBalanceData fundDistributionReservedBalanceData = fundReservedBalanceMap.get(fundAddress);
         BigDecimal updatedAmountToLock = fundDistributionReservedBalanceData.getReservedAmount().add(amount);
-        if (updatedAmountToLock.compareTo(baseNodeBalanceService.getPreBalanceByAddress(fundAddress)) > 0 ||
-                updatedAmountToLock.compareTo(baseNodeBalanceService.getBalanceByAddress(fundAddress)) > 0) {
+        if (updatedAmountToLock.compareTo(baseNodeBalanceService.getPreBalance(fundAddress, NATIVE_CURRENCY_HASH)) > 0 ||
+                updatedAmountToLock.compareTo(baseNodeBalanceService.getBalance(fundAddress, NATIVE_CURRENCY_HASH)) > 0) {
             return false;
         } else {
             fundDistributionReservedBalanceData.setReservedAmount(updatedAmountToLock);

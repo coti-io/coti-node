@@ -28,11 +28,11 @@ public interface IBalanceService {
 
     void updatePreBalanceFromClusterStamp();
 
-    void updateBalance(Hash addressHash, BigDecimal amount);
+    void updateBalance(Hash addressHash, Hash currencyHash, BigDecimal amount);
 
-    void updatePreBalance(Hash addressHash, BigDecimal amount);
+    void updatePreBalance(Hash addressHash, Hash currencyHash, BigDecimal amount);
 
-    BigDecimal getBalanceByAddress(Hash addressHash);
+    BigDecimal getBalance(Hash addressHash, Hash currencyHash);
 
-    BigDecimal getPreBalanceByAddress(Hash addressHash);
+    BigDecimal getPreBalance(Hash addressHash, Hash currencyHash);
 }
