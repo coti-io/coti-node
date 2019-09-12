@@ -8,7 +8,6 @@ import io.coti.basenode.services.interfaces.IAwsService;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -58,7 +57,7 @@ public class BaseNodeClusterStampServiceTest {
     String recoveryServerAddress = "http://localhost:7020";
 
 
-    @Before
+//    @Before
     public void beforeEachTest(){
 
         when(networkService.getRecoveryServerAddress()).thenReturn(recoveryServerAddress);
