@@ -6,7 +6,6 @@ import io.coti.basenode.crypto.GetClusterStampFileNamesCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.ClusterStampException;
 import io.coti.basenode.exceptions.ClusterStampValidationException;
-import io.coti.basenode.exceptions.CurrencyNotFoundException;
 import io.coti.basenode.http.GetClusterStampFileNamesResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.SerializableResponse;
@@ -14,7 +13,6 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.LastClusterStampVersions;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
-import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +31,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -44,21 +45,23 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 @Service
 public class BaseNodeClusterStampService implements IClusterStampService {
 
+    private static final int CLUSTERSTAMP_NAME_ARRAY_NOT_UPDATED_LENGTH = 3;
+    private static final int CLUSTERSTAMP_UPDATE_TIME_AND_FILE_TYPE_NOT_UPDATED_INDEX = 2;
     private static final int CLUSTERSTAMP_NAME_ARRAY_LENGTH = 4;
     private static final int CLUSTERSTAMP_CONST_PREFIX_INDEX = 0;
     private static final int CLUSTERSTAMP_TYPE_MARK_INDEX = 1;
     private static final int CLUSTERSTAMP_VERSION_TIME_INDEX = 2;
     private static final int CLUSTERSTAMP_UPDATE_TIME_AND_FILE_TYPE_INDEX = 3;
-    private static final int CLUSTERSTAMP_UPDATE_TIME_AND_FILE_TYPE_ARRAY_LENGTH = 2;
+    private static final int CLUSTERSTAMP_VERSION_OR_UPDATE_TIME_AND_FILE_TYPE_ARRAY_LENGTH = 2;
     private static final int CLUSTERSTAMP_UPDATE_TIME_INDEX = 0;
+    private static final int CLUSTERSTAMP_VERSION_TIME_NOT_UPDATED_INDEX = 0;
     private static final int CLUSTERSTAMP_FILE_TYPE_INDEX = 1;
     private static final int NUMBER_OF_GENESIS_ADDRESSES_MIN_LINES = 1; // Genesis One and Two + heading
-    private static final int NUMBER_OF_ADDRESS_LINE_DETAILS = 3;
-    private static final int NUMBER_OF_ADDRESS_LINE_DETAILS_WITHOUT_CURRENCY_HASH = 2;
-    private static final int ADDRESS_DETAILS_HASH_INDEX = 0;
-    private static final int ADDRESS_DETAILS_AMOUNT_INDEX = 2;
-    private static final int ADDRESS_DETAILS_AMOUNT_INDEX_WITHOUT_CURRENCY_HASH = 1;
-    private static final int CURRENCY_DATA_HASH_INDEX = 1;
+    private static final int DETAILS_IN_CLUSTERSTAMP_LINE_WITHOUT_CURRENCY_HASH = 2;
+    private static final int DETAILS_IN_CLUSTERSTAMP_LINE_WITH_CURRENCY_HASH = 3;
+    private static final int ADDRESS_HASH_INDEX_IN_CLUSTERSTAMP_LINE = 0;
+    private static final int AMOUNT_INDEX_IN_CLUSTERSTAMP_LINE = 1;
+    private static final int CURRENCY_HASH_INDEX_IN_CLUSTERSTAMP_LINE = 2;
     private static final int NUMBER_OF_SIGNATURE_LINE_DETAILS = 2;
     private static final int LONG_MAX_LENGTH = 19;
     protected static final String BAD_CSV_FILE_FORMAT = "Bad csv file format";
@@ -142,24 +145,37 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     private ClusterStampNameData validateNameAndGetClusterStampNameData(String clusterStampFileName) {
         String[] delimitedFileName = clusterStampFileName.split("_");
-        if (delimitedFileName.length != CLUSTERSTAMP_NAME_ARRAY_LENGTH) {
+        if (delimitedFileName.length != CLUSTERSTAMP_NAME_ARRAY_LENGTH && delimitedFileName.length != CLUSTERSTAMP_NAME_ARRAY_NOT_UPDATED_LENGTH) {
             throw new ClusterStampException(String.format("Bad cluster stamp file name: %s. Please correct clusterstamp file name and restart.", clusterStampFileName));
         }
-
         String clusterStampConstantPrefix = delimitedFileName[CLUSTERSTAMP_CONST_PREFIX_INDEX];
         String clusterStampTypeMark = delimitedFileName[CLUSTERSTAMP_TYPE_MARK_INDEX];
-        String clusterStampVersionTime = delimitedFileName[CLUSTERSTAMP_VERSION_TIME_INDEX];
-        String[] delimitedClusterStampUpdateTimeAndFileType = delimitedFileName[CLUSTERSTAMP_UPDATE_TIME_AND_FILE_TYPE_INDEX].split("\\.");
-        if (delimitedClusterStampUpdateTimeAndFileType.length != CLUSTERSTAMP_UPDATE_TIME_AND_FILE_TYPE_ARRAY_LENGTH) {
-            throw new ClusterStampException(String.format("Bad cluster stamp file name: %s. Please correct clusterstamp name and restart.", clusterStampFileName));
+        String clusterStampUpdateTime;
+        String clusterStampVersionTime;
+        String clusterStampFileType;
+        if (delimitedFileName.length == CLUSTERSTAMP_NAME_ARRAY_NOT_UPDATED_LENGTH) {
+            String[] delimitedClusterStampVersionTimeAndFileType = validateAndGetClusterStampNameLastDelimitedPart(clusterStampFileName, delimitedFileName[CLUSTERSTAMP_UPDATE_TIME_AND_FILE_TYPE_NOT_UPDATED_INDEX]);
+            clusterStampVersionTime = delimitedClusterStampVersionTimeAndFileType[CLUSTERSTAMP_VERSION_TIME_NOT_UPDATED_INDEX];
+            clusterStampUpdateTime = clusterStampVersionTime;
+            clusterStampFileType = delimitedClusterStampVersionTimeAndFileType[CLUSTERSTAMP_FILE_TYPE_INDEX];
+        } else {
+            clusterStampVersionTime = delimitedFileName[CLUSTERSTAMP_VERSION_TIME_INDEX];
+            String[] delimitedClusterStampUpdateTimeAndFileType = validateAndGetClusterStampNameLastDelimitedPart(clusterStampFileName, delimitedFileName[CLUSTERSTAMP_UPDATE_TIME_AND_FILE_TYPE_INDEX]);
+            clusterStampUpdateTime = delimitedClusterStampUpdateTimeAndFileType[CLUSTERSTAMP_UPDATE_TIME_INDEX];
+            clusterStampFileType = delimitedClusterStampUpdateTimeAndFileType[CLUSTERSTAMP_FILE_TYPE_INDEX];
         }
-
-        String clusterStampUpdateTime = delimitedClusterStampUpdateTimeAndFileType[CLUSTERSTAMP_UPDATE_TIME_INDEX];
-        String clusterStampFileType = delimitedClusterStampUpdateTimeAndFileType[CLUSTERSTAMP_FILE_TYPE_INDEX];
         if (!validateClusterStampFileName(clusterStampConstantPrefix, clusterStampTypeMark, clusterStampVersionTime, clusterStampUpdateTime, clusterStampFileType)) {
             throw new ClusterStampException(String.format("Bad cluster stamp file name: %s. Please correct clusterstamp name and restart.", clusterStampFileName));
         }
         return new ClusterStampNameData(ClusterStampType.getTypeByMark(clusterStampTypeMark).get(), clusterStampVersionTime, clusterStampUpdateTime);
+    }
+
+    private String[] validateAndGetClusterStampNameLastDelimitedPart(String clusterStampFileName, String clusterStampNameLastPart) {
+        String[] clusterStampNameLastDelimitedPart = clusterStampNameLastPart.split("\\.");
+        if (clusterStampNameLastDelimitedPart.length != CLUSTERSTAMP_VERSION_OR_UPDATE_TIME_AND_FILE_TYPE_ARRAY_LENGTH) {
+            throw new ClusterStampException(String.format("Bad cluster stamp file name: %s. Please correct clusterstamp name and restart.", clusterStampFileName));
+        }
+        return clusterStampNameLastDelimitedPart;
     }
 
     private boolean validateClusterStampFileName(String clusterStampConstantPrefix, String clusterStampTypeMark, String clusterStampVersionTime, String clusterStampUpdateTime, String clusterStampFileType) {
@@ -167,6 +183,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                 && ClusterStampType.getTypeByMark(clusterStampTypeMark).isPresent()
                 && isLong(clusterStampVersionTime)
                 && isLong(clusterStampUpdateTime)
+                && Long.parseLong(clusterStampUpdateTime) >= Long.parseLong(clusterStampVersionTime)
                 && clusterStampFileType.equals(CLUSTERSTAMP_FILE_TYPE);
     }
 
@@ -212,8 +229,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         String clusterStampFileLocation = folder + getClusterStampFileName(clusterStampNameData);
         File clusterstampFile = new File(clusterStampFileLocation);
         ClusterStampData clusterStampData = new ClusterStampData();
-        Set<Pair<Hash, Hash>> tokenGenesisAddressesToCurrencyHash = new HashSet<>();
-
+        Map<Hash, BigDecimal> tokenHashToAmountInClusterStampFile = new HashMap<>();
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(clusterstampFile))) {
             String line;
             AtomicInteger relevantLineNumber = new AtomicInteger(0);
@@ -235,7 +251,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                     }
                 } else {
                     if (!finishedBalances) {
-                        fillBalanceFromLine(clusterStampData, line, tokenGenesisAddressesToCurrencyHash);
+                        fillBalanceFromLine(clusterStampData, line, tokenHashToAmountInClusterStampFile);
                     } else {
                         if (!reachedSignatureSection) {
                             if (!line.contentEquals(SIGNATURE_LINE_TOKEN))
@@ -250,8 +266,8 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                     }
                 }
             }
-            if (!validateBalancesEqualToTotalSupplies(tokenGenesisAddressesToCurrencyHash)) {
-                throw new ClusterStampException("Failed to validate token balances");
+            if (tokenHashToAmountInClusterStampFile.entrySet().stream().anyMatch(entry -> entry.getValue().compareTo(BigDecimal.ZERO) != 0)) {
+                throw new ClusterStampException("Wrong currency balances in clusterstamp file.");
             }
             if (signatureRelevantLines.get() == 0) {
                 handleClusterStampWithoutSignature(clusterStampData, clusterStampFileLocation);
@@ -267,28 +283,16 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         }
     }
 
-    private boolean validateBalancesEqualToTotalSupplies(Set<Pair<Hash, Hash>> tokenGenesisAddressesToCurrencyHash) {
-        try {
-            return tokenGenesisAddressesToCurrencyHash.stream().allMatch(pair ->
-                    balanceService.getBalanceByAddress(pair.getKey()).longValue() == (currencyService.getTokenTotalSupply(pair.getValue()).longValue())
-            );
-        } catch (CurrencyNotFoundException e) {
-            return false;
+    protected void handleMissingRecoveryServer(String recoveryServerAddress) {
+        if (recoveryServerAddress == null) {
+            throw new ClusterStampException("Recovery server undefined.");
         }
-    }
-
-    protected void handleMissingRecoveryServer() {
-        throw new ClusterStampException("Recovery server undefined.");
     }
 
     @Override
     public void getClusterStampFromRecoveryServer(boolean isStartup) {
         String recoveryServerAddress = networkService.getRecoveryServerAddress();
-        //TODO 9/10/2019 astolia: check if this is even possible. if not - remove. this is done so ZS should exit and not try to recover.
-        if (recoveryServerAddress == null) {
-            handleMissingRecoveryServer();
-            return;
-        }
+        handleMissingRecoveryServer(recoveryServerAddress);
         try {
             RestTemplate restTemplate = new RestTemplate();
             GetClusterStampFileNamesResponse getClusterStampFileNamesResponse = restTemplate.getForObject(recoveryServerAddress + CLUSTERSTAMP_ENDPOINT, GetClusterStampFileNamesResponse.class);
@@ -456,41 +460,54 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         return tokenClusterStampHashToName.values().stream().collect(Collectors.toList());
     }
 
-    private void fillBalanceFromLine(ClusterStampData clusterStampData, String line, Set<Pair<Hash, Hash>> tokenGenesisAddressesToCurrencyHash) {
+    private void fillBalanceFromLine(ClusterStampData clusterStampData, String line, Map<Hash, BigDecimal> tokenHashToAmountInClusterStampFile) {
         String[] addressDetails;
         addressDetails = line.split(",");
         int numOfDetailsInLine = addressDetails.length;
-        if (numOfDetailsInLine != NUMBER_OF_ADDRESS_LINE_DETAILS && numOfDetailsInLine != NUMBER_OF_ADDRESS_LINE_DETAILS_WITHOUT_CURRENCY_HASH) {
+        if (numOfDetailsInLine != DETAILS_IN_CLUSTERSTAMP_LINE_WITH_CURRENCY_HASH && numOfDetailsInLine != DETAILS_IN_CLUSTERSTAMP_LINE_WITHOUT_CURRENCY_HASH) {
             throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
         }
-        Hash addressHash = new Hash(addressDetails[ADDRESS_DETAILS_HASH_INDEX]);
-        BigDecimal addressAmount = numOfDetailsInLine == NUMBER_OF_ADDRESS_LINE_DETAILS ? new BigDecimal(addressDetails[ADDRESS_DETAILS_AMOUNT_INDEX]) :
-                new BigDecimal(addressDetails[ADDRESS_DETAILS_AMOUNT_INDEX_WITHOUT_CURRENCY_HASH]);
-        Hash currencyDataHash = numOfDetailsInLine == NUMBER_OF_ADDRESS_LINE_DETAILS ? new Hash(addressDetails[CURRENCY_DATA_HASH_INDEX]) : null;
-        //TODO 9/11/2019 astolia: should CS file have 3 value in each line? if not, ther eis null pointer cause here.
-        tokenGenesisAddressesToCurrencyHash.add(new Pair<>(addressHash, currencyDataHash));
-
-        if (currencyDataHash != null) {
-            currencyService.verifyCurrencyExists(currencyDataHash);
-            log.trace("The address hash {} for currency hash {} was loaded from the clusterstamp with amount {}", addressHash, currencyDataHash, addressAmount);
-        } else {
-            log.trace("The address hash {} was loaded from the clusterstamp with amount {}", addressHash, addressAmount);
-
-            CurrencyData nativeCurrencyData = currencyService.getNativeCurrency(); // Use this if needed
+        Hash addressHash = new Hash(addressDetails[ADDRESS_HASH_INDEX_IN_CLUSTERSTAMP_LINE]);
+        BigDecimal tokensAmountInAddress = new BigDecimal(addressDetails[AMOUNT_INDEX_IN_CLUSTERSTAMP_LINE]);
+        Hash currencyHash = numOfDetailsInLine == DETAILS_IN_CLUSTERSTAMP_LINE_WITH_CURRENCY_HASH ? ((addressDetails[CURRENCY_HASH_INDEX_IN_CLUSTERSTAMP_LINE]).isEmpty() ? null : new Hash(addressDetails[CURRENCY_HASH_INDEX_IN_CLUSTERSTAMP_LINE])) : null;
+        if (currencyHash == null) {
+            CurrencyData nativeCurrencyData = currencyService.getNativeCurrency();
             if (nativeCurrencyData == null) {
-                throw new ClusterStampException("Failed to locate native currency");
+                throw new ClusterStampException("Native currency is missing.");
             }
+            currencyHash = nativeCurrencyData.getHash();
         }
 
-        balanceService.updateBalanceFromClusterStamp(addressHash, addressAmount);
+        if (!currencyService.verifyCurrencyExists(currencyHash)) {
+            throw new ClusterStampValidationException(String.format("Excess amount of currency %s found in clusterstamp file.", currencyHash));
+        }
+        prepareForBalancesValidations(addressHash, tokensAmountInAddress, currencyHash, tokenHashToAmountInClusterStampFile);
+        log.trace("The address hash {} for currency hash {} was loaded from the clusterstamp with amount {}", addressHash, currencyHash, tokensAmountInAddress);
+
+        balanceService.updateBalanceFromClusterStamp(addressHash, tokensAmountInAddress);
         byte[] addressHashInBytes = addressHash.getBytes();
-        byte[] addressAmountInBytes = addressAmount.stripTrailingZeros().toPlainString().getBytes();
+        byte[] addressAmountInBytes = tokensAmountInAddress.stripTrailingZeros().toPlainString().getBytes();
         byte[] balanceInBytes = ByteBuffer.allocate(addressHashInBytes.length + addressAmountInBytes.length).put(addressHashInBytes).put(addressAmountInBytes).array();
         clusterStampData.getSignatureMessage().add(balanceInBytes);
         clusterStampData.incrementMessageByteSize(balanceInBytes.length);
     }
 
-    private void fillSignatureDataFromLine(ClusterStampData clusterStampData, String line, AtomicInteger signatureRelevantLines) {
+    private void prepareForBalancesValidations(Hash addressHash, BigDecimal tokensAmountInAddress, Hash currencyHash, Map<Hash, BigDecimal> tokenHashToAmountInClusterStampFile) {
+        if (tokensAmountInAddress.scale() != currencyService.getTokenScale(currencyHash)) {
+            throw new ClusterStampValidationException(String.format("Currency %s scale in clusterstamp file is wrong.", currencyHash));
+        }
+        if (balanceService.getBalanceByAddress(addressHash).contains(currencyHash)) {
+            throw new ClusterStampValidationException(String.format("Duplicate address: %s and token hash: %s found in clusterstamp file.", addressHash, currencyHash));
+        }
+        tokenHashToAmountInClusterStampFile.putIfAbsent(currencyHash, currencyService.getTokenTotalSupply(currencyHash));
+        BigDecimal subtractTokensAmount = tokenHashToAmountInClusterStampFile.get(currencyHash).subtract(tokensAmountInAddress);
+        if (subtractTokensAmount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new ClusterStampValidationException(String.format("Currency %s amount in clusterstamp file exceeds currency supply.", currencyHash));
+        }
+        tokenHashToAmountInClusterStampFile.replace(currencyHash, subtractTokensAmount);
+    }
+
+    private void fillSignatureDataFromLine(ClusterStampData clusterStampData, String line, int signatureRelevantLines) {
         if (signatureRelevantLines.get() > 2) {
             throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
         }
