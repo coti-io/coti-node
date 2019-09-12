@@ -460,44 +460,47 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     }
 
     private void fillBalanceFromLine(ClusterStampData clusterStampData, String line, Map<Hash, BigDecimal> tokenHashToAmountInClusterStampFile) {
-        String[] addressDetails;
-        addressDetails = line.split(",");
-        int numOfDetailsInLine = addressDetails.length;
-        if (numOfDetailsInLine != DETAILS_IN_CLUSTERSTAMP_LINE_WITH_CURRENCY_HASH && numOfDetailsInLine != DETAILS_IN_CLUSTERSTAMP_LINE_WITHOUT_CURRENCY_HASH) {
-            throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
-        }
-        Hash addressHash = new Hash(addressDetails[ADDRESS_HASH_INDEX_IN_CLUSTERSTAMP_LINE]);
-        BigDecimal tokensAmountInAddress = new BigDecimal(addressDetails[AMOUNT_INDEX_IN_CLUSTERSTAMP_LINE]);
-        Hash currencyHash = numOfDetailsInLine == DETAILS_IN_CLUSTERSTAMP_LINE_WITH_CURRENCY_HASH ? ((addressDetails[CURRENCY_HASH_INDEX_IN_CLUSTERSTAMP_LINE]).isEmpty() ? null : new Hash(addressDetails[CURRENCY_HASH_INDEX_IN_CLUSTERSTAMP_LINE])) : null;
-        if (currencyHash == null) {
-            CurrencyData nativeCurrencyData = currencyService.getNativeCurrency();
-            if (nativeCurrencyData == null) {
-                throw new ClusterStampException("Native currency is missing.");
+        try {
+            String[] addressDetails;
+            addressDetails = line.split(",");
+            int numOfDetailsInLine = addressDetails.length;
+            if (numOfDetailsInLine != DETAILS_IN_CLUSTERSTAMP_LINE_WITH_CURRENCY_HASH && numOfDetailsInLine != DETAILS_IN_CLUSTERSTAMP_LINE_WITHOUT_CURRENCY_HASH) {
+                throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
             }
-            currencyHash = nativeCurrencyData.getHash();
-        }
+            Hash addressHash = new Hash(addressDetails[ADDRESS_HASH_INDEX_IN_CLUSTERSTAMP_LINE]);
+            BigDecimal tokensAmountInAddress = new BigDecimal(addressDetails[AMOUNT_INDEX_IN_CLUSTERSTAMP_LINE]);
+            Hash currencyHash = numOfDetailsInLine == DETAILS_IN_CLUSTERSTAMP_LINE_WITH_CURRENCY_HASH ? ((addressDetails[CURRENCY_HASH_INDEX_IN_CLUSTERSTAMP_LINE]).isEmpty() ? null : new Hash(addressDetails[CURRENCY_HASH_INDEX_IN_CLUSTERSTAMP_LINE])) : null;
+            if (currencyHash == null) {
+                CurrencyData nativeCurrencyData = currencyService.getNativeCurrency();
+                if (nativeCurrencyData == null) {
+                    throw new ClusterStampException("Native currency is missing.");
+                }
+                currencyHash = nativeCurrencyData.getHash();
+            }
 
-        if (!currencyService.verifyCurrencyExists(currencyHash)) {
-            throw new ClusterStampValidationException(String.format("Excess amount of currency %s found in clusterstamp file.", currencyHash));
-        }
-        prepareForBalancesValidations(addressHash, tokensAmountInAddress, currencyHash, tokenHashToAmountInClusterStampFile);
-        log.trace("The address hash {} for currency hash {} was loaded from the clusterstamp with amount {}", addressHash, currencyHash, tokensAmountInAddress);
+            if (!currencyService.verifyCurrencyExists(currencyHash)) {
+                throw new ClusterStampValidationException(String.format("Excess amount of currency %s found in clusterstamp file.", currencyHash));
+            }
+            balanceService.updateBalanceFromClusterStamp(addressHash, currencyHash, tokensAmountInAddress);
+            prepareForBalancesValidations(tokensAmountInAddress, currencyHash, tokenHashToAmountInClusterStampFile);
+            log.trace("The address hash {} for currency hash {} was loaded from the clusterstamp with amount {}", addressHash, currencyHash, tokensAmountInAddress);
 
-        balanceService.updateBalanceFromClusterStamp(addressHash, tokensAmountInAddress);
-        byte[] addressHashInBytes = addressHash.getBytes();
-        byte[] addressAmountInBytes = tokensAmountInAddress.stripTrailingZeros().toPlainString().getBytes();
-        byte[] balanceInBytes = ByteBuffer.allocate(addressHashInBytes.length + addressAmountInBytes.length).put(addressHashInBytes).put(addressAmountInBytes).array();
-        clusterStampData.getSignatureMessage().add(balanceInBytes);
-        clusterStampData.incrementMessageByteSize(balanceInBytes.length);
+            byte[] addressHashInBytes = addressHash.getBytes();
+            byte[] addressAmountInBytes = tokensAmountInAddress.stripTrailingZeros().toPlainString().getBytes();
+            byte[] balanceInBytes = ByteBuffer.allocate(addressHashInBytes.length + addressAmountInBytes.length).put(addressHashInBytes).put(addressAmountInBytes).array();
+            clusterStampData.getSignatureMessage().add(balanceInBytes);
+            clusterStampData.incrementMessageByteSize(balanceInBytes.length);
+        } catch (ClusterStampException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ClusterStampException(String.format("Fill balance from clusterstamp line error. %s: %s", e.getClass().getName(), e.getMessage()));
+        }
     }
 
     //TODO 9/12/2019 astolia: make sure this works fine.
-    private void prepareForBalancesValidations(Hash addressHash, BigDecimal tokensAmountInAddress, Hash currencyHash, Map<Hash, BigDecimal> tokenHashToAmountInClusterStampFile) {
+    private void prepareForBalancesValidations(BigDecimal tokensAmountInAddress, Hash currencyHash, Map<Hash, BigDecimal> tokenHashToAmountInClusterStampFile) {
         if (tokensAmountInAddress.scale() != currencyService.getTokenScale(currencyHash)) {
             throw new ClusterStampValidationException(String.format("Currency %s scale in clusterstamp file is wrong.", currencyHash));
-        }
-        if (balanceService.getBalanceByAddress(addressHash).contains(currencyHash)) {
-            throw new ClusterStampValidationException(String.format("Duplicate address: %s and token hash: %s found in clusterstamp file.", addressHash, currencyHash));
         }
         tokenHashToAmountInClusterStampFile.putIfAbsent(currencyHash, currencyService.getTokenTotalSupply(currencyHash));
         BigDecimal subtractTokensAmount = tokenHashToAmountInClusterStampFile.get(currencyHash).subtract(tokensAmountInAddress);
