@@ -52,7 +52,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static io.coti.basenode.services.BaseNodeCurrencyService.NATIVE_CURRENCY_HASH;
 import static utils.TestConstants.MAX_TRUST_SCORE;
 import static utils.TransactionTestUtils.createRandomTransaction;
 import static utils.TransactionTestUtils.generateRandomHash;
@@ -68,7 +67,7 @@ import static utils.TransactionTestUtils.generateRandomHash;
         ClusterService.class, JacksonSerializer.class, ChunkService.class, HttpJacksonSerializer.class, NodeCryptoHelper.class,
         ExpandedTransactionTrustScoreCrypto.class, BaseNodeValidationService.class, TransactionSenderCrypto.class, BaseNodePotService.class,
         LiveViewService.class, ClusterService.class, SimpMessagingTemplate.class, MessageChannel.class, SourceSelector.class,
-        TrustChainConfirmationService.class, ClusterHelper.class
+        TrustChainConfirmationService.class, ClusterHelper.class, BaseNodeCurrencyService.class
 })
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
@@ -136,6 +135,8 @@ public class HistoryTransactionServiceIntegrationTest {
     private ExpandedTransactionTrustScoreCrypto expandedTransactionTrustScoreCrypto;
     @Autowired
     private BaseNodeValidationService baseNodeValidationService;
+    @Autowired
+    private BaseNodeCurrencyService currencyService;
     @MockBean
     private BaseNodeDspVoteService baseNodeDspVoteService;
     @MockBean
@@ -151,6 +152,7 @@ public class HistoryTransactionServiceIntegrationTest {
 
     //            @Test
     public void indexTransactions_differentBaseTransactionsTypes_indexOfTransactionsMatch() {
+        Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();
         TransactionData transactionData = createRandomTransaction();
         Hash transactionHash = transactionData.getHash();
         Instant attachmentTime = Instant.now();
@@ -158,12 +160,12 @@ public class HistoryTransactionServiceIntegrationTest {
         transactionData.setSenderHash(generateRandomHash());
 
         ReceiverBaseTransactionData receiverBaseTransaction =
-                new ReceiverBaseTransactionData(generateRandomHash(), NATIVE_CURRENCY_HASH, new BigDecimal(7), NATIVE_CURRENCY_HASH, new BigDecimal(8), Instant.now());
+                new ReceiverBaseTransactionData(generateRandomHash(), nativeCurrencyHash, new BigDecimal(7), nativeCurrencyHash, new BigDecimal(8), Instant.now());
         transactionData.getBaseTransactions().add(receiverBaseTransaction);
         Hash receiverBaseTransactionAddressHash = receiverBaseTransaction.getAddressHash();
 
         InputBaseTransactionData inputBaseTransaction =
-                new InputBaseTransactionData(generateRandomHash(), NATIVE_CURRENCY_HASH, new BigDecimal(-6), Instant.now());
+                new InputBaseTransactionData(generateRandomHash(), nativeCurrencyHash, new BigDecimal(-6), Instant.now());
         transactionData.getBaseTransactions().add(inputBaseTransaction);
         Hash inputBaseTransactionAddressHash = receiverBaseTransaction.getAddressHash();
 
@@ -489,6 +491,7 @@ public class HistoryTransactionServiceIntegrationTest {
 
 
     private TransactionData generateInitialTransactionByAttachmentDate(Instant attachmentTime) {
+        Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();
         BigDecimal amount = new BigDecimal(4);
         int genesisAddressIndex = 2;
         Hash cotiGenesisAddress = nodeCryptoHelper.generateAddress(seed, genesisAddressIndex);
@@ -497,9 +500,9 @@ public class HistoryTransactionServiceIntegrationTest {
 
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
 
-        InputBaseTransactionData ibt = new InputBaseTransactionData(cotiGenesisAddress, NATIVE_CURRENCY_HASH, amount.multiply(new BigDecimal(-1)), Instant.now());
+        InputBaseTransactionData ibt = new InputBaseTransactionData(cotiGenesisAddress, nativeCurrencyHash, amount.multiply(new BigDecimal(-1)), Instant.now());
 
-        ReceiverBaseTransactionData rbt = new ReceiverBaseTransactionData(fundAddress, NATIVE_CURRENCY_HASH, amount, NATIVE_CURRENCY_HASH, amount, Instant.now());
+        ReceiverBaseTransactionData rbt = new ReceiverBaseTransactionData(fundAddress, nativeCurrencyHash, amount, nativeCurrencyHash, amount, Instant.now());
         baseTransactions.add(ibt);
         baseTransactions.add(rbt);
 

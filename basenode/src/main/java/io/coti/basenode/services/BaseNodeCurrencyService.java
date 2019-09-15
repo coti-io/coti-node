@@ -4,7 +4,7 @@ import io.coti.basenode.crypto.CurrencyRegistrarCrypto;
 import io.coti.basenode.crypto.CurrencyTypeRegistrationCrypto;
 import io.coti.basenode.crypto.GetUpdatedCurrencyRequestCrypto;
 import io.coti.basenode.data.*;
-import io.coti.basenode.exceptions.CurrencyInitializationException;
+import io.coti.basenode.exceptions.CurrencyException;
 import io.coti.basenode.exceptions.CurrencyNotFoundException;
 import io.coti.basenode.http.CustomRequestCallBack;
 import io.coti.basenode.http.GetUpdatedCurrencyRequest;
@@ -34,7 +34,6 @@ import java.util.regex.Pattern;
 public class BaseNodeCurrencyService implements ICurrencyService {
 
     private static final int MAXIMUM_BUFFER_SIZE = 50000;
-    public static final Hash NATIVE_CURRENCY_HASH = null;
     private static final String RECOVERY_NODE_GET_CURRENCIES_UPDATE_REACTIVE_ENDPOINT = "/currencies/update/batch";
     private static final int NUMBER_OF_NATIVE_CURRENCY = 1;
     private EnumMap<CurrencyType, HashSet<Hash>> currencyHashByTypeMap;
@@ -120,15 +119,15 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     private void verifyValidNativeCurrencyPresent() {
         HashSet<Hash> nativeCurrencyHashes = currencyHashByTypeMap.get(CurrencyType.NATIVE_COIN);
         if (nativeCurrencyHashes == null || nativeCurrencyHashes.isEmpty() || nativeCurrencyHashes.size() != NUMBER_OF_NATIVE_CURRENCY) {
-            throw new CurrencyInitializationException("Failed to retrieve native currency data");
+            throw new CurrencyException("Failed to retrieve native currency data");
         } else {
             CurrencyData nativeCurrency = currencies.getByHash(nativeCurrencyHashes.iterator().next());
             if (!currencyRegistrarCrypto.verifySignature(nativeCurrency)) {
-                throw new CurrencyInitializationException("Failed to verify native currency data of " + nativeCurrency.getHash());
+                throw new CurrencyException("Failed to verify native currency data of " + nativeCurrency.getHash());
             } else {
                 CurrencyTypeRegistrationData nativeCurrencyTypeRegistrationData = new CurrencyTypeRegistrationData(nativeCurrency);
                 if (!currencyTypeRegistrationCrypto.verifySignature(nativeCurrencyTypeRegistrationData)) {
-                    throw new CurrencyInitializationException("Failed to verify native currency data type of " + nativeCurrencyTypeRegistrationData.getCurrencyType().getText());
+                    throw new CurrencyException("Failed to verify native currency data type of " + nativeCurrencyTypeRegistrationData.getCurrencyType().getText());
                 }
             }
             if (getNativeCurrency() == null) {
@@ -139,21 +138,37 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     protected void setNativeCurrencyData(CurrencyData currencyData) {
         if (this.nativeCurrencyData != null) {
-            throw new CurrencyInitializationException("Attempted to override existing native currency");
+            throw new CurrencyException("Attempted to override existing native currency");
         }
         this.nativeCurrencyData = currencyData;
     }
 
+    @Override
     public CurrencyData getNativeCurrency() {
         return this.nativeCurrencyData;
     }
 
-    public void getUpdatedCurrencyBatch(GetUpdatedCurrencyRequest getUpdatedCurrencyRequest, FluxSink<CurrencyData> fluxSink) {
-        if (!getUpdatedCurrencyRequestCrypto.verifySignature(getUpdatedCurrencyRequest)) {
-            log.error("Authorization check failed on request to get updated currencies.");
+    @Override
+    public Hash getNativeCurrencyHash() {
+        if (nativeCurrencyData == null) {
+            throw new CurrencyException("Native currency is missing.");
         }
-        Map<CurrencyType, HashSet<Hash>> existingCurrencyHashesByType = getUpdatedCurrencyRequest.getCurrencyHashesByType();
-        getRequiringUpdateOfCurrencyDataByType(existingCurrencyHashesByType, fluxSink);
+        return nativeCurrencyData.getHash();
+    }
+
+    @Override
+    public void getUpdatedCurrencyBatch(GetUpdatedCurrencyRequest getUpdatedCurrencyRequest, FluxSink<CurrencyData> fluxSink) {
+        try {
+            if (!getUpdatedCurrencyRequestCrypto.verifySignature(getUpdatedCurrencyRequest)) {
+                log.error("Authorization check failed on request to get updated currencies.");
+            }
+            Map<CurrencyType, HashSet<Hash>> existingCurrencyHashesByType = getUpdatedCurrencyRequest.getCurrencyHashesByType();
+            getRequiringUpdateOfCurrencyDataByType(existingCurrencyHashesByType, fluxSink);
+        } catch (Exception e) {
+
+        } finally {
+            fluxSink.complete();
+        }
 
     }
 
@@ -186,7 +201,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                 }
             });
         });
-        fluxSink.complete();
     }
 
     private void sendUpdatedCurrencyData(Hash localCurrencyHash, FluxSink<CurrencyData> fluxSink) {
@@ -194,15 +208,14 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         if (updatedCurrencyData != null) {
             fluxSink.next(updatedCurrencyData);
         } else {
-            log.error("Failed to retrieve currencyData {}", localCurrencyHash);
+            throw new CurrencyException(String.format("Failed to retrieve currencyData %s", localCurrencyHash));
         }
     }
 
     @Override
     public void putCurrencyData(CurrencyData currencyData) {
         if (currencyData == null) {
-            log.error("Failed to add an empty currency");
-            return;
+            throw new CurrencyException("Failed to add an empty currency");
         }
         currencies.put(currencyData);
         updateCurrencyHashByTypeMap(currencyData);
@@ -215,14 +228,12 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     public void setCurrencyDataName(CurrencyData currencyData, String name) {
         if (name.length() != name.trim().length()) {
-            log.error("Attempted to set an invalid currency name with spaces at the start or the end {}.", name);
-            return;
+            throw new CurrencyException(String.format("Attempted to set an invalid currency name with spaces at the start or the end %s.", name));
         }
         final String[] words = name.split(" ");
         for (String word : words) {
             if (word == null || word.isEmpty() || !Pattern.compile("[A-Za-z0-9]+").matcher(word).matches()) {
-                log.error("Attempted to set an invalid currency name with the word {}.", name);
-                return;
+                throw new CurrencyException(String.format("Attempted to set an invalid currency name with the word %s.", name));
             }
         }
         currencyData.setName(name);
@@ -230,13 +241,11 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     public void setCurrencyDataSymbol(CurrencyData currencyData, String symbol) {
         if (!Pattern.compile("[A-Z]{0,15}").matcher(symbol).matches()) {
-            log.error("Attempted to set an invalid currency symbol of {}.", symbol);
-            return;
+            throw new CurrencyException(String.format("Attempted to set an invalid currency symbol of %s.", symbol));
         }
         currencyData.setSymbol(symbol);
     }
 
-    //TODO 9/10/2019 astolia/tomer:  handle crypto
     protected CurrencyData createCurrencyData(String name, String symbol, BigDecimal totalSupply, int scale, Instant creationTime,
                                               String description, CurrencyType currencyType) {
         CurrencyData currencyData = new CurrencyData();
@@ -249,10 +258,10 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         currencyData.setDescription(description);
 
         CurrencyTypeData currencyTypeData = new CurrencyTypeData(currencyType, Instant.now());
-        currencyData.setCurrencyTypeData(currencyTypeData);
         CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(currencyData);
         currencyTypeRegistrationCrypto.signMessage(currencyTypeRegistrationData);
         currencyTypeData.setSignature(currencyTypeRegistrationData.getSignature());
+        currencyData.setCurrencyTypeData(currencyTypeData);
         currencyRegistrarCrypto.signMessage(currencyData);
         return currencyData;
     }
