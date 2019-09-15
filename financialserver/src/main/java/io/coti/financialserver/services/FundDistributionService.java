@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
-import static io.coti.basenode.services.CurrencyService.NATIVE_CURRENCY_HASH;
+import static io.coti.basenode.services.BaseNodeCurrencyService.NATIVE_CURRENCY_HASH;
 import static io.coti.financialserver.http.HttpStringConstants.*;
 
 @Slf4j
