@@ -2,7 +2,7 @@ package io.coti.financialserver.services;
 
 import com.google.gson.Gson;
 import io.coti.basenode.data.CurrencyData;
-import io.coti.basenode.exceptions.CurrencyInitializationException;
+import io.coti.basenode.exceptions.CurrencyException;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.services.BaseNodeCurrencyService;
 import io.coti.basenode.services.interfaces.INetworkService;
@@ -44,18 +44,18 @@ public class CurrencyService extends BaseNodeCurrencyService {
                 String recoveryServerAddress = networkService.getRecoveryServerAddress();
                 nativeCurrencyData = restTemplate.getForObject(recoveryServerAddress + GET_NATIVE_CURRENCY_ENDPOINT, CurrencyData.class);
                 if (nativeCurrencyData == null) {
-                    throw new CurrencyInitializationException("Native currency recovery failed. Recovery sent null native currency");
+                    throw new CurrencyException("Native currency recovery failed. Recovery sent null native currency");
                 } else {
                     putCurrencyData(nativeCurrencyData);
                     setNativeCurrencyData(nativeCurrencyData);
                 }
             }
-        } catch (CurrencyInitializationException e) {
+        } catch (CurrencyException e) {
             throw e;
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            throw new CurrencyInitializationException(String.format("Native currency recovery failed. %s: %s", e.getClass().getName(), new Gson().fromJson(e.getResponseBodyAsString(), Response.class).getMessage()));
+            throw new CurrencyException(String.format("Native currency recovery failed. %s: %s", e.getClass().getName(), new Gson().fromJson(e.getResponseBodyAsString(), Response.class).getMessage()));
         } catch (Exception e) {
-            throw new CurrencyInitializationException(String.format("Native currency recovery failed. %s: %s", e.getClass().getName(), e.getMessage()));
+            throw new CurrencyException(String.format("Native currency recovery failed. %s: %s", e.getClass().getName(), e.getMessage()));
         }
     }
 
