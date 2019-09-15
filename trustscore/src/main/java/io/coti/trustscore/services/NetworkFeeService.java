@@ -6,6 +6,7 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.TransactionHelper;
+import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.trustscore.config.rules.UserNetworkFeeByTrustScoreRange;
 import io.coti.trustscore.data.Enums.TrustScoreRangeType;
@@ -30,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
-import static io.coti.basenode.services.BaseNodeCurrencyService.NATIVE_CURRENCY_HASH;
 import static io.coti.basenode.services.TransactionHelper.CURRENCY_SCALE;
 import static io.coti.trustscore.http.HttpStringConstants.*;
 
@@ -50,9 +50,12 @@ public class NetworkFeeService {
     private IValidationService validationService;
     @Autowired
     private TrustScoreService trustScoreService;
+    @Autowired
+    private ICurrencyService currencyService;
 
     public ResponseEntity<IResponse> createNetworkFee(NetworkFeeRequest networkFeeRequest) {
         try {
+            Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();
             FullNodeFeeData fullNodeFeeData = networkFeeRequest.getFullNodeFeeData();
             boolean feeIncluded = networkFeeRequest.isFeeIncluded();
             if (!validateFullNodeFee(fullNodeFeeData, feeIncluded)) {
@@ -85,7 +88,7 @@ public class NetworkFeeService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(INVALID_REDUCED_AMOUNT_VS_NETWORK_FEE, fee.add(fullNodeFeeData.getAmount()).toPlainString()), STATUS_ERROR));
             }
 
-            NetworkFeeData networkFeeData = new NetworkFeeData(networkFeeAddress, NATIVE_CURRENCY_HASH, fee, NATIVE_CURRENCY_HASH, originalAmount, reducedAmount, Instant.now());
+            NetworkFeeData networkFeeData = new NetworkFeeData(networkFeeAddress, nativeCurrencyHash, fee, nativeCurrencyHash, originalAmount, reducedAmount, Instant.now());
             setNetworkFeeHash(networkFeeData);
             signNetworkFee(networkFeeData, true);
             NetworkFeeResponseData networkFeeResponseData = new NetworkFeeResponseData(networkFeeData);

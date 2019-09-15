@@ -7,7 +7,8 @@ import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.services.BaseNodeBalanceService;
+import io.coti.basenode.services.interfaces.IBalanceService;
+import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.financialserver.crypto.FundDistributionFileCrypto;
 import io.coti.financialserver.crypto.FundDistributionFileResultCrypto;
@@ -36,7 +37,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
-import static io.coti.basenode.services.BaseNodeCurrencyService.NATIVE_CURRENCY_HASH;
 import static io.coti.financialserver.http.HttpStringConstants.*;
 
 @Slf4j
@@ -59,9 +59,11 @@ public class FundDistributionService {
     @Autowired
     private NodeCryptoHelper nodeCryptoHelper;
     @Autowired
-    private BaseNodeBalanceService baseNodeBalanceService;
+    private IBalanceService balanceService;
     @Autowired
     protected INetworkService networkService;
+    @Autowired
+    private ICurrencyService currencyService;
     @Autowired
     private AwsService awsService;
     @Autowired
@@ -124,14 +126,15 @@ public class FundDistributionService {
     }
 
     public ResponseEntity<IResponse> getFundBalances() {
+        Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();
         List<FundDistributionBalanceResultData> fundDistributionBalanceResultDataList = new ArrayList<>();
         fundReservedBalanceMap.values().forEach(fundDistributionReservedBalanceData -> {
             Hash fundAddress = (fundDistributionReservedBalanceData.getFund().getFundHash() == null) ?
                     getFundAddressHash(fundDistributionReservedBalanceData.getFund()) : fundDistributionReservedBalanceData.getFund().getFundHash();
             fundDistributionBalanceResultDataList.add(
                     new FundDistributionBalanceResultData(fundDistributionReservedBalanceData.getFund().getText(),
-                            baseNodeBalanceService.getBalance(fundAddress, NATIVE_CURRENCY_HASH),
-                            baseNodeBalanceService.getPreBalance(fundAddress, NATIVE_CURRENCY_HASH),
+                            balanceService.getBalance(fundAddress, nativeCurrencyHash),
+                            balanceService.getPreBalance(fundAddress, nativeCurrencyHash),
                             fundDistributionReservedBalanceData.getReservedAmount()));
         });
         return ResponseEntity.status(HttpStatus.OK)
@@ -395,8 +398,8 @@ public class FundDistributionService {
         }
         FundDistributionReservedBalanceData fundDistributionReservedBalanceData = fundReservedBalanceMap.get(fundAddress);
         BigDecimal updatedAmountToLock = fundDistributionReservedBalanceData.getReservedAmount().add(amount);
-        if (updatedAmountToLock.compareTo(baseNodeBalanceService.getPreBalance(fundAddress, NATIVE_CURRENCY_HASH)) > 0 ||
-                updatedAmountToLock.compareTo(baseNodeBalanceService.getBalance(fundAddress, NATIVE_CURRENCY_HASH)) > 0) {
+        if (updatedAmountToLock.compareTo(balanceService.getPreBalance(fundAddress, currencyService.getNativeCurrencyHash())) > 0 ||
+                updatedAmountToLock.compareTo(balanceService.getBalance(fundAddress, currencyService.getNativeCurrencyHash())) > 0) {
             return false;
         } else {
             fundDistributionReservedBalanceData.setReservedAmount(updatedAmountToLock);

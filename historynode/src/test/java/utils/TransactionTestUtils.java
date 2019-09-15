@@ -3,6 +3,8 @@ package utils;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.GetHistoryAddressesRequest;
+import io.coti.basenode.services.interfaces.ICurrencyService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
@@ -13,11 +15,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static io.coti.basenode.services.BaseNodeCurrencyService.NATIVE_CURRENCY_HASH;
 import static utils.TestConstants.*;
 
 public class TransactionTestUtils {
 
+    @Autowired
+    private static ICurrencyService currencyService;
 
     public static Hash generateRandomHash() {
         return generateRandomHash(SIZE_OF_HASH);
@@ -56,7 +59,7 @@ public class TransactionTestUtils {
         ArrayList<BaseTransactionData> baseTransactions = new ArrayList<>(
                 Collections.singletonList(new InputBaseTransactionData
                         (HashTestUtils.generateRandomAddressHash(),
-                                NATIVE_CURRENCY_HASH,
+                                currencyService.getNativeCurrencyHash(),
                                 new BigDecimal(0),
                                 Instant.now())));
         byte[] bytesToHash = getBaseMessageInBytes(baseTransactions.get(0));
