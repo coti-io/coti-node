@@ -17,6 +17,8 @@ public interface ICurrencyService {
 
     CurrencyData getNativeCurrency();
 
+    Hash getNativeCurrencyHash();
+
     void putCurrencyData(CurrencyData currencyData);
 
     void getUpdatedCurrencyBatch(GetUpdatedCurrencyRequest getUpdatedCurrencyRequest, FluxSink<CurrencyData> fluxSink);

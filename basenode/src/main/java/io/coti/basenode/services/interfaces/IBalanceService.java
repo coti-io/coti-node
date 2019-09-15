@@ -18,7 +18,7 @@ public interface IBalanceService {
 
     ResponseEntity<GetBalancesResponse> getBalances(GetBalancesRequest getBalancesRequest);
 
-    void continueHandleBalanceChanges(Hash addressHash);
+    void continueHandleBalanceChanges(Hash addressHash, Hash currencyHash);
 
     void rollbackBaseTransactions(TransactionData transactionData);
 
