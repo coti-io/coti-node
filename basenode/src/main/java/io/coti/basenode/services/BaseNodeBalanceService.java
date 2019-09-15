@@ -139,7 +139,10 @@ public class BaseNodeBalanceService implements IBalanceService {
 
     @Override
     public void updatePreBalanceFromClusterStamp() {
-        preBalanceMap.putAll(balanceMap);
+        balanceMap.forEach((addressHash, currencyHashBalanceMap) -> {
+            preBalanceMap.put(addressHash, new ConcurrentHashMap<>());
+            preBalanceMap.get(addressHash).putAll(currencyHashBalanceMap);
+        });
     }
 
     @Override
@@ -180,7 +183,7 @@ public class BaseNodeBalanceService implements IBalanceService {
 
     private BigDecimal getBalance(Hash addressHash, Hash
             currencyHash, Map<Hash, Map<Hash, BigDecimal>> balanceMap) {
-        return Optional.ofNullable(Optional.ofNullable(balanceMap.get(addressHash)).orElse(new ConcurrentHashMap<>()).get(getNativeCurrencyHashIfNull(currencyHash))).orElse(BigDecimal.ZERO);
+        return new BigDecimal(Optional.ofNullable(Optional.ofNullable(balanceMap.get(addressHash)).orElse(new ConcurrentHashMap<>()).get(getNativeCurrencyHashIfNull(currencyHash))).orElse(BigDecimal.ZERO).toString());
     }
 
     private Hash getNativeCurrencyHashIfNull(Hash currencyHash) {
