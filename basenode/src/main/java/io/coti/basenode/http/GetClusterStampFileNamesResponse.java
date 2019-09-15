@@ -8,6 +8,7 @@ import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -16,13 +17,15 @@ import java.util.List;
 public class GetClusterStampFileNamesResponse extends BaseResponse implements ISignValidatable, ISignable, IPropagatable {
 
     @NotEmpty
-    ClusterStampNameData major;
+    private @Valid ClusterStampNameData major;
     @NotNull
-    private List<ClusterStampNameData> tokenClusterStampNames;
-    @NotNull
-    private Hash signerHash;
-    @NotNull
-    private SignatureData signature;
+    private List<@Valid ClusterStampNameData> tokenClusterStampNames;
+    @NotEmpty
+    private String clusterStampBucketName;
+    @NotEmpty
+    private @Valid Hash signerHash;
+    @NotEmpty
+    private @Valid SignatureData signature;
 
     @Override
     public Hash getHash() {

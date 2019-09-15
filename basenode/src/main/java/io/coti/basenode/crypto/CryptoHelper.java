@@ -35,6 +35,7 @@ public class CryptoHelper {
     private static final ECParameterSpec spec = new ECParameterSpec(curve.getCurve(), curve.getG(), curve.getN(), curve.getH());
     public static final int ADDRESS_SIZE_IN_BYTES = 68;
     public static final int ADDRESS_CHECKSUM_SIZE_IN_BYTES = 4;
+    public static final int DEFAULT_HASH_BYTE_SIZE = 32;
 
     public static PublicKey getPublicKeyFromHexString(String pubKeyHex) throws NoSuchAlgorithmException, InvalidKeySpecException {
         String pointX = pubKeyHex.substring(0, (pubKeyHex.length() / 2));

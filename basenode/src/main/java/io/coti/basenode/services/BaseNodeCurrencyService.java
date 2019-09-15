@@ -58,11 +58,17 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     private IChunkService chunkService;
 
     public void init() {
-        currencyHashByTypeMap = new EnumMap<>(CurrencyType.class);
-        nativeCurrencyData = null;
-        updateCurrencyHashByTypeMapFromExistingCurrencies();
-        updateCurrencies();
-        log.info("{} is up", this.getClass().getSimpleName());
+        try {
+            currencyHashByTypeMap = new EnumMap<>(CurrencyType.class);
+            nativeCurrencyData = null;
+            updateCurrencyHashByTypeMapFromExistingCurrencies();
+            updateCurrencies();
+            log.info("{} is up", this.getClass().getSimpleName());
+        } catch (CurrencyException e) {
+            throw new CurrencyException("Error at currency service init. " + e.getMessage());
+        } catch (Exception e) {
+            throw new CurrencyException(String.format("Error at currency service init. %s: %s", e.getClass().getName(), e.getMessage()));
+        }
     }
 
     public void updateCurrencyHashByTypeMapFromExistingCurrencies() {
@@ -248,22 +254,24 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     protected CurrencyData createCurrencyData(String name, String symbol, BigDecimal totalSupply, int scale, Instant creationTime,
                                               String description, CurrencyType currencyType) {
-        CurrencyData currencyData = new CurrencyData();
-        setCurrencyDataName(currencyData, name);
-        setCurrencyDataSymbol(currencyData, symbol);
-        currencyData.setHash();
-        currencyData.setTotalSupply(totalSupply);
-        currencyData.setScale(scale);
-        currencyData.setCreationTime(creationTime);
-        currencyData.setDescription(description);
+        try {
+            CurrencyData currencyData = new CurrencyData();
+            setCurrencyDataName(currencyData, name);
+            setCurrencyDataSymbol(currencyData, symbol);
+            currencyData.setHash();
+            currencyData.setTotalSupply(totalSupply);
+            currencyData.setScale(scale);
+            currencyData.setCreationTime(creationTime);
+            currencyData.setDescription(description);
 
-        CurrencyTypeData currencyTypeData = new CurrencyTypeData(currencyType, Instant.now());
-        CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(currencyData);
-        currencyTypeRegistrationCrypto.signMessage(currencyTypeRegistrationData);
-        currencyTypeData.setSignature(currencyTypeRegistrationData.getSignature());
-        currencyData.setCurrencyTypeData(currencyTypeData);
-        currencyRegistrarCrypto.signMessage(currencyData);
-        return currencyData;
+            CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(currencyData.getHash(), currencyType, creationTime);
+            currencyTypeRegistrationCrypto.signMessage(currencyTypeRegistrationData);
+            currencyData.setCurrencyTypeData(new CurrencyTypeData(currencyTypeRegistrationData));
+            currencyRegistrarCrypto.signMessage(currencyData);
+            return currencyData;
+        } catch (Exception e) {
+            throw new CurrencyException(String.format("Create currency error. %s: %s", e.getClass().getName(), e.getMessage()));
+        }
     }
 
 }
