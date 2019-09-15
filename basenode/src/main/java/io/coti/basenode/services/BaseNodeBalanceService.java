@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static io.coti.basenode.services.CurrencyService.NATIVE_CURRENCY_HASH;
+import static io.coti.basenode.services.BaseNodeCurrencyService.NATIVE_CURRENCY_HASH;
 
 @Slf4j
 @Service
