@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
-import java.io.IOException;
 
 
 @Slf4j
@@ -19,23 +18,34 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     @Value("${native.token.genesis.address}")
     private String nativeTokenAddress;
+    private boolean uploadMajorClusterStamp;
+
+    @Value("${aws.s3.bucket.name.clusterstamp}")
+    private void setClusterStampBucketName(String clusterStampBucketName) {
+        this.clusterStampBucketName = clusterStampBucketName;
+    }
 
     @Override
-    public boolean init() {
-        boolean uploadMajorToS3AfterLoad = super.init();
-        if (uploadMajorToS3AfterLoad) {
+    public void init() {
+        super.init();
+        if (uploadMajorClusterStamp) {
             uploadMajorClusterStamp();
         }
-        lastClusterStampVersions.put(new LastClusterStampVersionData(majorClusterStampName.getVersionTimeMillis()));
-        return false;
     }
 
     private void uploadMajorClusterStamp() {
         awsService.uploadFileToS3(clusterStampBucketName, clusterStampsFolder + getClusterStampFileName(majorClusterStampName));
     }
 
-    @Override
-    protected boolean handleMissingMajor() {
+    protected void fillClusterStampNamesMap() {
+        super.fillClusterStampNamesMap();
+        if (majorClusterStampName == null) {
+            handleMissingMajor();
+        }
+
+    }
+
+    private void handleMissingMajor() {
         CurrencyData nativeCurrency = currencyService.getNativeCurrency();
         if (nativeCurrency == null) {
             throw new ClusterStampException("Unable to start zero spend server. Native token not found.");
@@ -43,7 +53,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         ClusterStampNameData nativeMajorClusterStamp = new ClusterStampNameData(ClusterStampType.MAJOR);
         generateOneLineClusterStampFile(nativeMajorClusterStamp, nativeCurrency);
         addClusterStampName(nativeMajorClusterStamp);
-        return true;
+        uploadMajorClusterStamp = true;
     }
 
     private void generateOneLineClusterStampFile(ClusterStampNameData clusterStamp, CurrencyData currencyData) {
@@ -55,7 +65,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private String generateClusterStampLineFromNewCurrency(CurrencyData currencyData) {
         String clusterStampDelimiter = ",";
         StringBuilder sb = new StringBuilder();
-        sb.append(nativeTokenAddress).append(clusterStampDelimiter).append(currencyData.getHash()).append(clusterStampDelimiter).append(currencyData.getTotalSupply().toString());
+        sb.append(nativeTokenAddress).append(clusterStampDelimiter).append(currencyData.getTotalSupply().toString()).append(clusterStampDelimiter).append(currencyData.getHash());
         return sb.toString();
     }
 
@@ -80,7 +90,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             clusterStampBufferedWriter.append("r," + signature.getR());
             clusterStampBufferedWriter.newLine();
             clusterStampBufferedWriter.append("s," + signature.getS());
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Exception at clusterstamp signing");
             throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
         }

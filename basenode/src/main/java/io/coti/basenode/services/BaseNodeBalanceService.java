@@ -159,7 +159,7 @@ public class BaseNodeBalanceService implements IBalanceService {
             currentCurrencyHashBalanceMap.putIfAbsent(finalCurrencyHash, amount);
             return currentCurrencyHashBalanceMap;
         });
-        balanceMap.putIfAbsent(addressHash, getInitialCurrencyHashBalanceMap(currencyHash, amount));
+        balanceMap.putIfAbsent(addressHash, getInitialCurrencyHashBalanceMap(finalCurrencyHash, amount));
     }
 
     private Map<Hash, BigDecimal> getInitialCurrencyHashBalanceMap(Hash currencyHash, BigDecimal amount) {
@@ -180,7 +180,7 @@ public class BaseNodeBalanceService implements IBalanceService {
 
     private BigDecimal getBalance(Hash addressHash, Hash
             currencyHash, Map<Hash, Map<Hash, BigDecimal>> balanceMap) {
-        return Optional.ofNullable(Optional.ofNullable(balanceMap.get(addressHash)).orElse(new ConcurrentHashMap<>()).get(currencyHash)).orElse(BigDecimal.ZERO);
+        return Optional.ofNullable(Optional.ofNullable(balanceMap.get(addressHash)).orElse(new ConcurrentHashMap<>()).get(getNativeCurrencyHashIfNull(currencyHash))).orElse(BigDecimal.ZERO);
     }
 
     private Hash getNativeCurrencyHashIfNull(Hash currencyHash) {
