@@ -66,14 +66,13 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     private static final int LONG_MAX_LENGTH = 19;
     protected static final String BAD_CSV_FILE_FORMAT = "Bad csv file format";
     private static final String SIGNATURE_LINE_TOKEN = "# Signature";
-    private static final String CLUSTERSTAMP_FILE_PREFIX = "Clusterstamp";
+    private static final String CLUSTERSTAMP_FILE_PREFIX = "clusterstamp";
     private static final String CLUSTERSTAMP_FILE_TYPE = "csv";
     private static final String CLUSTERSTAMP_ENDPOINT = "/clusterstamps";
     protected static ClusterStampNameData majorClusterStampName;
     protected static Map<Hash, ClusterStampNameData> tokenClusterStampHashToName;
     @Value("${clusterstamp.folder}")
     protected String clusterStampsFolder;
-    @Value("${aws.s3.bucket.name.clusterstamp}")
     protected String clusterStampBucketName;
     @Value("${application.name}")
     private String applicationName;
@@ -101,14 +100,13 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     protected ApplicationContext applicationContext;
 
     @Override
-    public boolean init() {
+    public void init() {
         try {
             fileSystemService.createFolder(clusterStampsFolder);
             initLocalClusterStampNames();
-            boolean uploadMajorToS3AfterLoad = fillClusterStampNamesMap();
+            fillClusterStampNamesMap();
             getClusterStampFromRecoveryServer(true);
             loadAllClusterStamps();
-            return uploadMajorToS3AfterLoad;
         } catch (ClusterStampException e) {
             throw new ClusterStampException("Error at clusterstamp init. " + e.getMessage());
         } catch (Exception e) {
@@ -122,7 +120,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         tokenClusterStampHashToName = new HashMap<>();
     }
 
-    private boolean fillClusterStampNamesMap() {
+    protected void fillClusterStampNamesMap() {
         List<String> clusterStampFileNames = fileSystemService.listFolderFileNames(clusterStampsFolder);
         for (String clusterStampFileName : clusterStampFileNames) {
             ClusterStampNameData clusterStampNameData = validateNameAndGetClusterStampNameData(clusterStampFileName);
@@ -131,15 +129,6 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             }
             addClusterStampName(clusterStampNameData);
         }
-        if (majorClusterStampName == null) {
-            return handleMissingMajor();
-        }
-        return false;
-    }
-
-    protected boolean handleMissingMajor() {
-        // Handled differently per node. base case is to return false - no need to upload major clusterstamp to s3.
-        return false;
     }
 
     private ClusterStampNameData validateNameAndGetClusterStampNameData(String clusterStampFileName) {
@@ -300,6 +289,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             if (!getClusterStampFileNamesCrypto.verifySignature(getClusterStampFileNamesResponse)) {
                 throw new ClusterStampException(String.format("Cluster stamp retrieval failed. Bad signature for response from recovery server %s.", recoveryServerAddress));
             }
+            clusterStampBucketName = getClusterStampFileNamesResponse.getClusterStampBucketName();
             handleRequiredClusterStampFiles(getClusterStampFileNamesResponse, isStartup);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             throw new ClusterStampException(String.format("Clusterstamp recovery failed. %s: %s", e.getClass().getName(), new Gson().fromJson(e.getResponseBodyAsString(), Response.class).getMessage()));
@@ -321,13 +311,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     private boolean validateResponseVersionValidity(GetClusterStampFileNamesResponse getClusterStampFileNamesResponse) {
         LastClusterStampVersionData lastVersionData = lastClusterStampVersions.get();
-        if (!validateVersion(lastVersionData.getVersionTimeMillis(), getClusterStampFileNamesResponse.getMajor().getVersionTimeMillis())) {
-            return false;
-        }
-        if (getClusterStampFileNamesResponse.getTokenClusterStampNames().stream().anyMatch(clusterStampNameData -> !validateVersion(lastVersionData.getVersionTimeMillis(), clusterStampNameData.getVersionTimeMillis()))) {
-            return false;
-        }
-        return true;
+        return lastVersionData == null || (!validateVersion(lastVersionData.getVersionTimeMillis(), getClusterStampFileNamesResponse.getMajor().getVersionTimeMillis()) &&
+                getClusterStampFileNamesResponse.getTokenClusterStampNames().stream().
+                        anyMatch(clusterStampNameData -> !validateVersion(lastVersionData.getVersionTimeMillis(), clusterStampNameData.getVersionTimeMillis())));
     }
 
 
@@ -433,8 +419,8 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         String clusterStampFileName = getClusterStampFileName(clusterStampNameData);
         String filePath = clusterStampsFolder + clusterStampFileName;
         try {
-            addClusterStampName(clusterStampNameData);
             awsService.downloadFile(filePath, clusterStampBucketName);
+            addClusterStampName(clusterStampNameData);
         } catch (IOException e) {
             throw new ClusterStampException(String.format("Couldn't download %s clusterstamp file. Error: %s", clusterStampFileName, e.getMessage()));
         }
@@ -448,11 +434,11 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     public ResponseEntity<IResponse> getRequiredClusterStampNames() {
         GetClusterStampFileNamesResponse getClusterStampFileNamesResponse = new GetClusterStampFileNamesResponse();
         if (majorClusterStampName == null) {
-            log.error(CLUSTERSTAMP_MAJOR_NOT_FOUND);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SerializableResponse(CLUSTERSTAMP_MAJOR_NOT_FOUND, STATUS_ERROR));
         }
         getClusterStampFileNamesResponse.setMajor(majorClusterStampName);
         getClusterStampFileNamesResponse.setTokenClusterStampNames(getLocalTokensList());
+        getClusterStampFileNamesResponse.setClusterStampBucketName(clusterStampBucketName);
         getClusterStampFileNamesCrypto.signMessage(getClusterStampFileNamesResponse);
         return ResponseEntity.ok(getClusterStampFileNamesResponse);
     }

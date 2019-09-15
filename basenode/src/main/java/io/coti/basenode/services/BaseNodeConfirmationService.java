@@ -158,7 +158,8 @@ public class BaseNodeConfirmationService implements IConfirmationService {
 
         transactionData.getBaseTransactions().forEach(baseTransactionData -> {
             Hash addressHash = baseTransactionData.getAddressHash();
-            balanceService.continueHandleBalanceChanges(addressHash);
+            Hash currencyHash = baseTransactionData.getCurrencyHash();
+            balanceService.continueHandleBalanceChanges(addressHash, currencyHash);
         });
 
         continueHandleAddressHistoryChanges(transactionData);
