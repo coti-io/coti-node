@@ -6,6 +6,7 @@ import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.services.TransactionHelper;
+import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.zerospend.crypto.TransactionCryptoCreator;
 import io.coti.zerospend.data.ZeroSpendTransactionType;
@@ -18,7 +19,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.*;
 
-import static io.coti.basenode.services.BaseNodeCurrencyService.NATIVE_CURRENCY_HASH;
 import static io.coti.zerospend.data.ZeroSpendTransactionType.GENESIS;
 import static io.coti.zerospend.data.ZeroSpendTransactionType.STARVATION;
 
@@ -41,6 +41,8 @@ public class TransactionCreationService {
     private DspVoteService dspVoteService;
     @Autowired
     private NodeCryptoHelper nodeCryptoHelper;
+    @Autowired
+    private ICurrencyService currencyService;
     @Value("${zerospend.seed}")
     private String seed;
 
@@ -118,7 +120,7 @@ public class TransactionCreationService {
         Map<Hash, Integer> addressHashToAddressIndexMap = new HashMap<>();
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
         Hash addressHash = nodeCryptoHelper.generateAddress(seed, ZERO_SPEND_ADDRESS_INDEX);
-        BaseTransactionData baseTransactionData = new InputBaseTransactionData(addressHash, NATIVE_CURRENCY_HASH, BigDecimal.ZERO, Instant.now());
+        BaseTransactionData baseTransactionData = new InputBaseTransactionData(addressHash, currencyService.getNativeCurrencyHash(), BigDecimal.ZERO, Instant.now());
         addressHashToAddressIndexMap.put(addressHash, ZERO_SPEND_ADDRESS_INDEX);
         baseTransactions.add(baseTransactionData);
         TransactionData transactionData = new TransactionData(baseTransactions, description.name(), trustScore, Instant.now(), TransactionType.ZeroSpend);

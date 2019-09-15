@@ -8,6 +8,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
+import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.fullnode.crypto.FullNodeFeeRequestCrypto;
 import io.coti.fullnode.http.FullNodeFeeRequest;
@@ -27,7 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
-import static io.coti.basenode.services.BaseNodeCurrencyService.NATIVE_CURRENCY_HASH;
 import static io.coti.basenode.services.TransactionHelper.CURRENCY_SCALE;
 
 @Slf4j
@@ -51,9 +51,12 @@ public class FeeService {
     private FullNodeFeeRequestCrypto fullNodeFeeRequestCrypto;
     @Autowired
     private IValidationService validationService;
+    @Autowired
+    private ICurrencyService currencyService;
 
     public ResponseEntity<BaseResponse> createFullNodeFee(FullNodeFeeRequest fullNodeFeeRequest) {
         try {
+            Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();
             if (!fullNodeFeeRequestCrypto.verifySignature(fullNodeFeeRequest)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
             }
@@ -87,7 +90,7 @@ public class FeeService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(INVALID_AMOUNT_VS_FULL_NODE_FEE, amount.toPlainString()), STATUS_ERROR));
             }
 
-            FullNodeFeeData fullNodeFeeData = new FullNodeFeeData(address, NATIVE_CURRENCY_HASH, amount, NATIVE_CURRENCY_HASH, originalAmount, Instant.now());
+            FullNodeFeeData fullNodeFeeData = new FullNodeFeeData(address, nativeCurrencyHash, amount, nativeCurrencyHash, originalAmount, Instant.now());
             setFullNodeFeeHash(fullNodeFeeData);
             signFullNodeFee(fullNodeFeeData);
             FullNodeFeeResponseData fullNodeFeeResponseData = new FullNodeFeeResponseData(fullNodeFeeData);

@@ -2,8 +2,10 @@ package io.coti.trustscore.testutils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.data.*;
+import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.trustscore.config.rules.RulesData;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.validation.Valid;
 import java.io.File;
@@ -14,12 +16,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static io.coti.basenode.services.BaseNodeCurrencyService.NATIVE_CURRENCY_HASH;
-
 
 @Slf4j
 public class BucketUtil {
 
+    @Autowired
+    private static ICurrencyService currencyService;
 
     public static RulesData generateRulesDataObject() {
         RulesData rulesData = null;
@@ -39,7 +41,7 @@ public class BucketUtil {
         List<@Valid BaseTransactionData> baseTransactions = new ArrayList<>(
                 Arrays.asList(new InputBaseTransactionData
                         (new Hash("caba14b7fe219b3da5dee0c29389c88e4d134333a2ee104152d6e9f7b673be9e0e28ca511d1ac749f46bea7f1ab25818f335ab9111a6c5eebe2f650974e12d1b7dccd4d7"),
-                                NATIVE_CURRENCY_HASH,
+                                currencyService.getNativeCurrencyHash(),
                                 new BigDecimal(0),
                                 Instant.now())));
 
