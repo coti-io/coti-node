@@ -7,13 +7,16 @@ import java.math.BigDecimal;
 
 @Data
 public class UpdatedBalanceMessage {
-    private final BigDecimal preBalance;
-    public String message;
-    public String addressHash;
-    public BigDecimal balance;
 
-    public UpdatedBalanceMessage(Hash addressHash, BigDecimal balance, BigDecimal preBalance) {
+    private String addressHash;
+    private String currencyHash;
+    private BigDecimal balance;
+    private BigDecimal preBalance;
+    private String message;
+
+    public UpdatedBalanceMessage(Hash addressHash, Hash currencyHash, BigDecimal balance, BigDecimal preBalance) {
         this.addressHash = addressHash.toHexString();
+        this.currencyHash = currencyHash.toHexString();
         this.balance = balance;
         this.preBalance = preBalance;
         this.message = "Balance Updated!";

@@ -2,6 +2,8 @@ package utils;
 
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.GetHistoryAddressesRequest;
+import io.coti.basenode.services.interfaces.ICurrencyService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -10,13 +12,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static io.coti.basenode.services.BaseNodeCurrencyService.NATIVE_CURRENCY_HASH;
-
 public class TestUtils {
 
     private static final String[] hexaOptions = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
     private static final int SIZE_OF_HASH = 64;
     private static final String TRANSACTION_DESCRIPTION = "test";
+    @Autowired
+    private static ICurrencyService currencyService;
 
     public static Hash generateRandomHash() {
         return generateRandomHash(SIZE_OF_HASH);
@@ -51,7 +53,7 @@ public class TestUtils {
         ArrayList<BaseTransactionData> baseTransactions = new ArrayList<>(
                 Collections.singletonList(new InputBaseTransactionData
                         (generateRandomHash(SIZE_OF_HASH),
-                                NATIVE_CURRENCY_HASH,
+                                currencyService.getNativeCurrencyHash(),
                                 new BigDecimal(0),
                                 Instant.now())));
         return new TransactionData(baseTransactions,
