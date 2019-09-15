@@ -6,7 +6,9 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.GetBalancesRequest;
 import io.coti.basenode.http.GetBalancesResponse;
 import io.coti.basenode.services.interfaces.IBalanceService;
+import io.coti.basenode.services.interfaces.ICurrencyService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -18,14 +20,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static io.coti.basenode.services.BaseNodeCurrencyService.NATIVE_CURRENCY_HASH;
-
 @Slf4j
 @Service
 public class BaseNodeBalanceService implements IBalanceService {
 
     protected Map<Hash, Map<Hash, BigDecimal>> balanceMap;
     protected Map<Hash, Map<Hash, BigDecimal>> preBalanceMap;
+    @Autowired
+    protected ICurrencyService currencyService;
 
     public void init() {
         balanceMap = new ConcurrentHashMap<>();
@@ -62,24 +64,26 @@ public class BaseNodeBalanceService implements IBalanceService {
             preBalanceMap.putIfAbsent(addressHash, new ConcurrentHashMap<>());
             currencyHashPreBalanceMap.forEach((currencyHash, preBalanceInChange) -> {
                 preBalanceMap.get(addressHash).put(currencyHash, preBalanceInChange);
+                continueHandleBalanceChanges(addressHash, currencyHash);
             });
-            continueHandleBalanceChanges(addressHash);
+
         });
         return true;
     }
 
     @Override
-    public void continueHandleBalanceChanges(Hash addressHash) {
+    public void continueHandleBalanceChanges(Hash addressHash, Hash currencyHash) {
     }
 
     @Override
     public ResponseEntity<GetBalancesResponse> getBalances(GetBalancesRequest getBalancesRequest) {
+        Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();
         GetBalancesResponse getBalancesResponse = new GetBalancesResponse();
         BigDecimal balance;
         BigDecimal preBalance;
         for (Hash addressHash : getBalancesRequest.getAddresses()) {
-            balance = getBalance(addressHash, NATIVE_CURRENCY_HASH);
-            preBalance = getPreBalance(addressHash, NATIVE_CURRENCY_HASH);
+            balance = getBalance(addressHash, nativeCurrencyHash);
+            preBalance = getPreBalance(addressHash, nativeCurrencyHash);
             getBalancesResponse.addAddressBalanceToResponse(addressHash, balance, preBalance);
         }
         return ResponseEntity.status(HttpStatus.OK).body(getBalancesResponse);
@@ -179,6 +183,6 @@ public class BaseNodeBalanceService implements IBalanceService {
     }
 
     private Hash getNativeCurrencyHashIfNull(Hash currencyHash) {
-        return Optional.ofNullable(currencyHash).orElse(NATIVE_CURRENCY_HASH);
+        return Optional.ofNullable(currencyHash).orElse(currencyService.getNativeCurrencyHash());
     }
 }
