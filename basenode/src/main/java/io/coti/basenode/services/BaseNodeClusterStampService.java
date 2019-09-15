@@ -103,7 +103,6 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     @Override
     public boolean init() {
         try {
-            //TODO 9/11/2019 astolia: check scenario: existing major local file and creating new native token
             fileSystemService.createFolder(clusterStampsFolder);
             initLocalClusterStampNames();
             boolean uploadMajorToS3AfterLoad = fillClusterStampNamesMap();
@@ -283,16 +282,18 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         }
     }
 
-    protected void handleMissingRecoveryServer(String recoveryServerAddress) {
-        if (recoveryServerAddress == null) {
-            throw new ClusterStampException("Recovery server undefined.");
-        }
+    protected void handleMissingRecoveryServer() {
+        throw new ClusterStampException("Recovery server undefined.");
+
     }
 
     @Override
     public void getClusterStampFromRecoveryServer(boolean isStartup) {
         String recoveryServerAddress = networkService.getRecoveryServerAddress();
-        handleMissingRecoveryServer(recoveryServerAddress);
+        if (recoveryServerAddress == null) {
+            handleMissingRecoveryServer();
+            return;
+        }
         try {
             RestTemplate restTemplate = new RestTemplate();
             GetClusterStampFileNamesResponse getClusterStampFileNamesResponse = restTemplate.getForObject(recoveryServerAddress + CLUSTERSTAMP_ENDPOINT, GetClusterStampFileNamesResponse.class);
@@ -483,7 +484,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                 throw new ClusterStampValidationException(String.format("Excess amount of currency %s found in clusterstamp file.", currencyHash));
             }
             balanceService.updateBalanceFromClusterStamp(addressHash, currencyHash, tokensAmountInAddress);
-            prepareForBalancesValidations(tokensAmountInAddress, currencyHash, tokenHashToAmountInClusterStampFile);
+            preValidateBalances(tokensAmountInAddress, currencyHash, tokenHashToAmountInClusterStampFile);
             log.trace("The address hash {} for currency hash {} was loaded from the clusterstamp with amount {}", addressHash, currencyHash, tokensAmountInAddress);
 
             byte[] addressHashInBytes = addressHash.getBytes();
@@ -498,8 +499,8 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         }
     }
 
-    private void prepareForBalancesValidations(Hash addressHash, BigDecimal tokensAmountInAddress, Hash currencyHash, Map<Hash, BigDecimal> tokenHashToAmountInClusterStampFile) {
-        if (tokensAmountInAddress.scale() != currencyService.getTokenScale(currencyHash)) {
+        if (tokensAmountInAddress.scale() > currencyService.getTokenScale(currencyHash)) {
+    private void preValidateBalances(BigDecimal tokensAmountInAddress, Hash currencyHash, Map<Hash, BigDecimal> tokenHashToAmountInClusterStampFile) {
             throw new ClusterStampValidationException(String.format("Currency %s scale in clusterstamp file is wrong.", currencyHash));
         }
         tokenHashToAmountInClusterStampFile.putIfAbsent(currencyHash, currencyService.getTokenTotalSupply(currencyHash));
