@@ -59,11 +59,11 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     private IChunkService chunkService;
 
     public void init() {
-        log.info("{} is up", this.getClass().getSimpleName());
         currencyHashByTypeMap = new EnumMap<>(CurrencyType.class);
         nativeCurrencyData = null;
         updateCurrencyHashByTypeMapFromExistingCurrencies();
         updateCurrencies();
+        log.info("{} is up", this.getClass().getSimpleName());
     }
 
     public void updateCurrencyHashByTypeMapFromExistingCurrencies() {
