@@ -60,7 +60,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     }
 
     @Override
-    protected void handleMissingRecoveryServer(String recoveryServerAddress) {
+    protected void handleMissingRecoveryServer() {
         // Zero spend does nothing in this case.
     }
 
