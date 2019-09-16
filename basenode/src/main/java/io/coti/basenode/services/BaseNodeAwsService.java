@@ -39,11 +39,15 @@ public class BaseNodeAwsService implements IAwsService {
 
     @Override
     public void createS3Folder(String bucketName, String folderPath) {
-        ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentLength(0);
-        InputStream emptyContent = new ByteArrayInputStream(new byte[0]);
-        PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, folderPath + "/", emptyContent, metadata);
-        s3Client.putObject(putObjectRequest);
+        try {
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentLength(0);
+            InputStream emptyContent = new ByteArrayInputStream(new byte[0]);
+            PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, folderPath + "/", emptyContent, metadata);
+            s3Client.putObject(putObjectRequest);
+        } catch (Exception e) {
+            throw new AwsDataTransferException("Create S3 folder error", e);
+        }
     }
 
     @Override
@@ -64,12 +68,10 @@ public class BaseNodeAwsService implements IAwsService {
                 log.debug("Finished uploading files to S3");
             }
         } catch (InterruptedException e) {
-            log.error(e.getMessage());
             Thread.currentThread().interrupt();
             throw new AwsDataTransferException("Unable to upload folder and contents to S3. The thread is interrupted");
         } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new AwsDataTransferException(String.format("Unable to upload folder and contents to S3. Exception: %s, Error: %s", e.getClass().getName(), e.getMessage()));
+            throw new AwsDataTransferException("Unable to upload folder and contents to S3.", e);
         } finally {
             if (monitorTransferProgress != null && monitorTransferProgress.isAlive()) {
                 monitorTransferProgress.interrupt();
@@ -93,12 +95,10 @@ public class BaseNodeAwsService implements IAwsService {
             }
             removeExcessFolderStructure(directoryToDownload + "/" + s3folderPath, directoryToDownload);
         } catch (InterruptedException e) {
-            log.error(e.getMessage());
             Thread.currentThread().interrupt();
             throw new AwsDataTransferException("Unable to download folder and contents to S3. The thread is interrupted");
         } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new AwsDataTransferException(String.format("Unable to download folder and contents to S3. Exception: %s, Error: %s", e.getClass().getName(), e.getMessage()));
+            throw new AwsDataTransferException("Unable to download folder and contents to S3.", e);
         } finally {
             if (monitorTransferProgress != null && monitorTransferProgress.isAlive()) {
                 monitorTransferProgress.interrupt();
@@ -120,7 +120,7 @@ public class BaseNodeAwsService implements IAwsService {
             summaries.forEach(s -> keys.add(s.getKey()));
             return keys;
         } catch (Exception e) {
-            throw new AwsDataTransferException(String.format("List S3 paths error. Exception: %s, Error: %s", e.getClass().getName(), e.getMessage()));
+            throw new AwsDataTransferException("List S3 paths error.", e);
         }
     }
 
@@ -133,7 +133,7 @@ public class BaseNodeAwsService implements IAwsService {
         try {
             fileExists = s3Client.doesObjectExist(bucketName, fileName);
         } catch (Exception e) {
-            throw new AwsDataTransferException(String.format("S3 check object exist error. Exception: %s, Error: %s", e.getClass().getName(), e.getMessage()));
+            throw new AwsDataTransferException("S3 check object exist error.", e);
         }
 
         if (!fileExists) {
@@ -154,7 +154,7 @@ public class BaseNodeAwsService implements IAwsService {
             }
 
         } catch (Exception e) {
-            throw new AwsDataTransferException(String.format("S3 download file error. Exception: %s, Error: %s", e.getClass().getName(), e.getMessage()));
+            throw new AwsDataTransferException("S3 download file error.", e);
         }
     }
 
@@ -166,7 +166,7 @@ public class BaseNodeAwsService implements IAwsService {
             DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(bucketName).withKeys(keysToDelete);
             s3Client.deleteObjects(deleteObjectsRequest);
         } catch (Exception e) {
-            throw new AwsDataTransferException(String.format("Delete folder and contents from S3 error. Exception: %s, Error: %s", e.getClass().getName(), e.getMessage()));
+            throw new AwsDataTransferException("Delete folder and contents from S3 error", e);
         }
     }
 
@@ -200,7 +200,7 @@ public class BaseNodeAwsService implements IAwsService {
                 return AmazonS3ClientBuilder.standard().withRegion(region).build();
             }
         } catch (Exception e) {
-            throw new AwsException(String.format("Get S3 client error. Exception: %s, Error: %s", e.getClass().getName(), e.getMessage()));
+            throw new AwsException("Get S3 client error", e);
         }
     }
 
@@ -213,7 +213,7 @@ public class BaseNodeAwsService implements IAwsService {
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 } catch (Exception e) {
-                    throw new AwsException(String.format("Monitor transfer progress error. Exception: %s, Error: %s", e.getClass().getName(), e.getMessage()));
+                    throw new AwsException("Monitor transfer progress error.", e);
                 }
             }
             logTransferProgress(transfer);

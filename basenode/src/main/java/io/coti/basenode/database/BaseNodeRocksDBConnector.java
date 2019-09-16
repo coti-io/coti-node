@@ -83,9 +83,9 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
                 resetColumnFamilies();
             }
         } catch (DataBaseException e) {
-            throw new DataBaseException("Error initiating Rocks DB. " + e.getMessage());
+            throw new DataBaseException("Error initiating Rocks DB.\n" + e.getMessage(), e);
         } catch (Exception e) {
-            throw new DataBaseException(String.format("Error initiating Rocks DB. Class: %s, Exception message: %s", e.getClass(), e.getMessage()));
+            throw new DataBaseException("Error initiating Rocks DB.", e);
         }
     }
 
@@ -103,9 +103,9 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
                 dropColumnFamilies(notListedColumnFamilyNames);
             }
         } catch (DataBaseException e) {
-            throw new DataBaseException("Error at dropping not listed Rocks DB column families. " + e.getMessage());
+            throw new DataBaseException("Error at dropping not listed Rocks DB column families.\n" + e.getMessage(), e);
         } catch (Exception e) {
-            throw new DataBaseException(String.format("Error at dropping not listed Rocks DB column families. Class: %s, Exception message: %s", e.getClass(), e.getMessage()));
+            throw new DataBaseException("Error at dropping not listed Rocks DB column families.", e);
         }
     }
 
@@ -114,7 +114,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             List<byte[]> columnFamilies = RocksDB.listColumnFamilies(options, dbPath);
             return columnFamilies.stream().map(dbColumnFamily -> new String(dbColumnFamily)).collect(Collectors.toList());
         } catch (Exception e) {
-            throw new DataBaseException(String.format("Error at getting column families. Class: %s, Exception message: %s", e.getClass(), e.getMessage()));
+            throw new DataBaseException(String.format("Error at getting column families.", e));
         }
     }
 
@@ -154,7 +154,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
                     }
                 }
             } catch (Exception e) {
-                throw new DataBaseException(String.format("Error resetting column families. Class: %s, Exception message: %s", e.getClass().getName(), e.getMessage()));
+                throw new DataBaseException("Error resetting column families.", e);
             }
         });
     }
@@ -174,7 +174,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             db = RocksDB.open(dbOptions, dbPath, columnFamilyDescriptors, columnFamilyHandles);
             populateColumnFamilies(dbColumnFamilies, columnFamilyHandles);
         } catch (Exception e) {
-            throw new DataBaseException(String.format("Error opening Rocks DB. Class: %s, Exception message: %s", e.getClass().getName(), e.getMessage()));
+            throw new DataBaseException("Error opening Rocks DB.", e);
         }
 
     }
@@ -184,7 +184,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             try {
                 ((Collection) ctx.getBean(Class.forName(columnFamilyClassNames.get(i)))).init();
             } catch (Exception e) {
-                throw new DataBaseException(String.format("Error at init column family classes. Class: %s, Exception message: %s", e.getClass().getName(), e.getMessage()));
+                throw new DataBaseException("Error at init column family classes.", e);
             }
         }
     }
@@ -210,7 +210,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             rocksBackupEngine.createNewBackup(db, false);
             log.info("Finished database backup to {}", backupPath);
         } catch (Exception e) {
-            throw new DataBaseException(String.format("Failed to generate database backup. Class: %s, Exception message: %s", e.getClass().getName(), e.getMessage()));
+            throw new DataBaseException("Failed to generate database backup.", e);
         }
     }
 
@@ -227,9 +227,9 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             openDB();
             log.info("Finished database restore from {}", backupPath);
         } catch (DataBaseException e) {
-            throw new DataBaseException("Failed to restore database. " + e.getMessage());
+            throw new DataBaseException("Failed to restore database.\n" + e.getMessage(), e);
         } catch (Exception e) {
-            throw new DataBaseException(String.format("Failed to restore database. Class: %s, Exception message: %s", e.getClass().getName(), e.getMessage()));
+            throw new DataBaseException("Failed to restore database", e);
         }
     }
 
@@ -273,8 +273,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         iterator.seekToFirst();
         return !iterator.isValid();
     }
-
-
+    
     @Override
     public boolean put(String columnFamilyName, byte[] key, byte[] value) {
         try {
@@ -350,7 +349,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         } catch (DataBaseException e) {
             throw e;
         } catch (Exception e) {
-            throw new DataBaseException(String.format("Create db directory error. Class: %s, Exception message: %s", e.getClass().getName(), e.getMessage()));
+            throw new DataBaseException("Create db directory error.", e);
 
         }
     }
@@ -361,7 +360,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             RocksDB.loadLibrary();
             log.info("RocksDB library loaded");
         } catch (Exception e) {
-            throw new DataBaseException(String.format("Error loading rocksdb library. Class: %s, Exception message: %s", e.getClass().getName(), e.getMessage()));
+            throw new DataBaseException("Error loading rocksdb library", e);
         }
     }
 

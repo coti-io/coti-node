@@ -71,7 +71,7 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
                         }
 
                     } catch (Exception e) {
-                        throw new TransactionSyncException(e.getMessage());
+                        throw new TransactionSyncException("Error at getting chunks", e);
                     }
                 }
                 return null;
@@ -86,9 +86,10 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
                 }
             }
             log.info("Finished to get missing transactions");
+        } catch (TransactionSyncException e) {
+            throw new TransactionSyncException("Error at missing transactions from recovery Node.\n" + e.getMessage(), e);
         } catch (Exception e) {
-            log.error("Error at missing transactions from recovery Node");
-            throw new TransactionSyncException(e.getMessage());
+            throw new TransactionSyncException("Error at missing transactions from recovery Node", e);
         }
 
     }

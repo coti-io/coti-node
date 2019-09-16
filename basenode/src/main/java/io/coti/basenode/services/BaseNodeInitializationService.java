@@ -6,6 +6,7 @@ import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeRegistrationCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
+import io.coti.basenode.exceptions.NetworkException;
 import io.coti.basenode.exceptions.TransactionSyncException;
 import io.coti.basenode.http.CustomHttpComponentsClientHttpRequestFactory;
 import io.coti.basenode.http.GetNodeRegistrationRequest;
@@ -107,30 +108,24 @@ public abstract class BaseNodeInitializationService {
     }
 
     public void initServices() {
-        try {
-            awsService.init();
-            dbRecoveryService.init();
-            addressService.init();
-            balanceService.init();
-            clusterStampService.loadClusterStamp();
-            confirmationService.init();
-            transactionIndexService.init();
-            dspVoteService.init();
-            transactionService.init();
-            potService.init();
-            initCommunication();
-            log.info("The communication initialization is done");
-            initTransactionSync();
-            log.info("The transaction sync initialization is done");
-            networkService.setConnectToNetworkUrl(nodeManagerHttpAddress + NODE_MANAGER_NODES_ENDPOINT);
-            networkService.connectToNetwork();
-            propagationSubscriber.initPropagationHandler();
-            monitorService.init();
-        } catch (Exception e) {
-            log.error("Errors at {}", this.getClass().getSimpleName());
-            log.error("{}: {}", e.getClass().getName(), e.getMessage());
-            System.exit(SpringApplication.exit(applicationContext));
-        }
+        awsService.init();
+        dbRecoveryService.init();
+        addressService.init();
+        balanceService.init();
+        clusterStampService.loadClusterStamp();
+        confirmationService.init();
+        transactionIndexService.init();
+        dspVoteService.init();
+        transactionService.init();
+        potService.init();
+        initCommunication();
+        log.info("The communication initialization is done");
+        initTransactionSync();
+        log.info("The transaction sync initialization is done");
+        networkService.setConnectToNetworkUrl(nodeManagerHttpAddress + NODE_MANAGER_NODES_ENDPOINT);
+        networkService.connectToNetwork();
+        propagationSubscriber.initPropagationHandler();
+        monitorService.init();
     }
 
     private void initTransactionSync() {
@@ -159,9 +154,10 @@ public abstract class BaseNodeInitializationService {
             balanceService.validateBalances();
             log.info("Transactions Load completed");
             clusterService.finalizeInit();
-
+        } catch (TransactionSyncException e) {
+            throw new TransactionSyncException("Error at sync transactions.\n" + e.getMessage(), e);
         } catch (Exception e) {
-            throw new TransactionSyncException(e.getMessage());
+            throw new TransactionSyncException("Error at sync transactions.", e);
         }
     }
 
@@ -205,7 +201,11 @@ public abstract class BaseNodeInitializationService {
     }
 
     private NetworkData getNetworkDetailsFromNodeManager() {
-        return restTemplate.getForEntity(nodeManagerHttpAddress + NODE_MANAGER_NODES_ENDPOINT, NetworkData.class).getBody();
+        try {
+            return restTemplate.getForEntity(nodeManagerHttpAddress + NODE_MANAGER_NODES_ENDPOINT, NetworkData.class).getBody();
+        } catch (Exception e) {
+            throw new NetworkException("Error at getting network details.", e);
+        }
     }
 
     private void getNodeRegistration(NetworkNodeData networkNodeData) {
@@ -227,8 +227,9 @@ public abstract class BaseNodeInitializationService {
                 nodeRegistrations.put(nodeRegistrationData);
             }
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            log.error("Error at registration of node. Registrar response: \n {}", e.getResponseBodyAsString());
-            System.exit(SpringApplication.exit(applicationContext));
+            throw new NetworkException(String.format("Error at registration of node. Registrar response: \n %s", e.getResponseBodyAsString()), e);
+        } catch (Exception e) {
+            throw new NetworkException("Error at registration of node.", e);
         }
     }
 

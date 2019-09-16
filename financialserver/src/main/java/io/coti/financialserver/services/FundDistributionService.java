@@ -4,6 +4,7 @@ import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
+import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeBalanceService;
@@ -239,14 +240,7 @@ public class FundDistributionService {
     }
 
     private ResponseEntity<IResponse> verifyDailyDistributionLocalFileByName(List<FundDistributionData> fundDistributionFileDataEntries, FundDistributionFileData fundDistributionFileData, String fileName) {
-        ResponseEntity<IResponse> responseEntityForFileHandling = handleFundDistributionFile(fundDistributionFileData, fileName, fundDistributionFileDataEntries);
-        if (responseEntityForFileHandling != null) {
-            return responseEntityForFileHandling;
-        }
-        if (fundDistributionFileData.getUserSignature() == null || !fundDistributionFileCrypto.verifySignature(fundDistributionFileData)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
-        }
-        return null;
+        return getResponseEntityForFileHandling(fundDistributionFileDataEntries, fundDistributionFileData, fileName);
     }
 
     private ResponseEntity<IResponse> verifyDailyDistributionFileByName(List<FundDistributionData> fundDistributionFileDataEntries, FundDistributionFileData fundDistributionFileData, String fileName) {
@@ -254,10 +248,18 @@ public class FundDistributionService {
             awsService.downloadFundDistributionFile(fileName);
         } catch (Exception e) {
             log.error(CANT_SAVE_FILE_ON_DISK);
-            log.error("{}: {}", e.getClass().getName(), e.getMessage());
+            if (e instanceof CotiRunTimeException) {
+                ((CotiRunTimeException) e).logMessage();
+            } else {
+                log.error("{}: {}", e.getClass().getName(), e.getMessage());
+            }
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(CANT_SAVE_FILE_ON_DISK, STATUS_ERROR));
         }
 
+        return getResponseEntityForFileHandling(fundDistributionFileDataEntries, fundDistributionFileData, fileName);
+    }
+
+    private ResponseEntity<IResponse> getResponseEntityForFileHandling(List<FundDistributionData> fundDistributionFileDataEntries, FundDistributionFileData fundDistributionFileData, String fileName) {
         ResponseEntity<IResponse> responseEntityForFileHandling = handleFundDistributionFile(fundDistributionFileData, fileName, fundDistributionFileDataEntries);
         if (responseEntityForFileHandling != null) {
             return responseEntityForFileHandling;
@@ -296,7 +298,7 @@ public class FundDistributionService {
                 }
             }
         } catch (Exception e) {
-            log.error("Errors on distribution funds service: {}", e);
+            log.error("Errors on distribution funds service: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(new Response(line, BAD_CSV_FILE_LINE_FORMAT));
         }
         return null;

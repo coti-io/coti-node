@@ -1,10 +1,13 @@
 package io.coti.basenode.services;
 
+import com.google.gson.Gson;
 import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeRegistrationCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.exceptions.NetworkException;
 import io.coti.basenode.exceptions.NetworkNodeValidationException;
 import io.coti.basenode.http.CustomHttpComponentsClientHttpRequestFactory;
+import io.coti.basenode.http.Response;
 import io.coti.basenode.services.interfaces.ICommunicationService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
@@ -79,7 +82,12 @@ public class BaseNodeNetworkService implements INetworkService {
         log.info("New network structure received");
 
         if (!isNodeConnectedToNetwork(newNetworkData)) {
-            connectToNetwork();
+            try {
+                connectToNetwork();
+            } catch (NetworkException e) {
+                e.logMessage();
+                System.exit(SpringApplication.exit(applicationContext));
+            }
         }
     }
 
@@ -366,17 +374,18 @@ public class BaseNodeNetworkService implements INetworkService {
 
     @Override
     public void connectToNetwork() {
-        log.info("Connecting to Coti network");
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.setRequestFactory(new CustomHttpComponentsClientHttpRequestFactory());
-
-        HttpEntity<NetworkNodeData> entity = new HttpEntity<>(networkNodeData);
         try {
+            log.info("Connecting to Coti network");
+            RestTemplate restTemplate = new RestTemplate();
+            restTemplate.setRequestFactory(new CustomHttpComponentsClientHttpRequestFactory());
+
+            HttpEntity<NetworkNodeData> entity = new HttpEntity<>(networkNodeData);
             ResponseEntity<String> response = restTemplate.exchange(connectToNetworkUrl, HttpMethod.PUT, entity, String.class);
             log.info("{}", response.getBody());
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            log.error("Unable to connect to network. Node manager error: {}", e.getResponseBodyAsString());
-            System.exit(SpringApplication.exit(applicationContext));
+            throw new NetworkException(String.format("Connect to network failed. Node manager response: %s", new Gson().fromJson(e.getResponseBodyAsString(), Response.class).getMessage()));
+        } catch (Exception e) {
+            throw new NetworkException("Connect to network failed.", e);
         }
     }
 

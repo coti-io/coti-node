@@ -3,6 +3,7 @@ package io.coti.fullnode.services;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
+import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.interfaces.ICommunicationService;
 import lombok.extern.slf4j.Slf4j;
@@ -60,7 +61,11 @@ public class InitializationService extends BaseNodeInitializationService {
             super.initServices();
         } catch (Exception e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
-            log.error("{}: {}", e.getClass().getName(), e.getMessage());
+            if (e instanceof CotiRunTimeException) {
+                ((CotiRunTimeException) e).logMessage();
+            } else {
+                log.error("{}: {}", e.getClass().getName(), e.getMessage());
+            }
             System.exit(SpringApplication.exit(applicationContext));
         }
     }

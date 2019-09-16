@@ -1,14 +1,17 @@
 package io.coti.basenode.services;
 
+import com.google.gson.Gson;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.DbRestoreSource;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
+import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.exceptions.DataBaseRecoveryException;
 import io.coti.basenode.exceptions.DataBaseRestoreException;
 import io.coti.basenode.http.GetBackupBucketResponse;
 import io.coti.basenode.http.HttpJacksonSerializer;
+import io.coti.basenode.http.Response;
 import io.coti.basenode.http.SerializableResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.IAwsService;
@@ -91,11 +94,10 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
             if (restore) {
                 restoreDB();
             }
+        } catch (DataBaseRecoveryException e) {
+            throw new DataBaseRecoveryException("Recovery service init error.\n" + e.getMessage(), e);
         } catch (Exception e) {
-            if (e instanceof DataBaseRecoveryException) {
-                throw e;
-            }
-            throw new DataBaseRecoveryException(e.getMessage());
+            throw new DataBaseRecoveryException("Recovery service init error.", e);
         }
     }
 
@@ -144,8 +146,11 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                     }
                 }
                 log.info("Finished DB backup flow");
+            } catch (CotiRunTimeException e) {
+                log.error("Backup DB error.");
+                e.logMessage();
             } catch (Exception e) {
-                log.error(e.getMessage());
+                log.error("Backup DB error.\n{}: {}", e.getClass().getName(), e.getMessage());
             } finally {
                 deleteBackup(remoteBackupFolderPath);
             }
@@ -177,17 +182,16 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                     dBConnector.restoreDataBase(remoteBackupFolderPath);
                 } catch (Exception e) {
                     dBConnector.restoreDataBase(localBackupFolderPath);
-                    throw new DataBaseRecoveryException(e.getMessage());
+                    throw e;
                 } finally {
                     deleteBackup(remoteBackupFolderPath);
                 }
             }
             log.info("Finished DB restore flow");
+        } catch (DataBaseRecoveryException e) {
+            throw new DataBaseRecoveryException("Restore database error.\n" + e.getMessage(), e);
         } catch (Exception e) {
-            if (e instanceof DataBaseRecoveryException) {
-                throw new DataBaseRecoveryException("Restore database error. " + e.getMessage());
-            }
-            throw new DataBaseRecoveryException(String.format("Restore database error. Exception: %s, Error: %s", e.getClass(), e.getMessage()));
+            throw new DataBaseRecoveryException("Restore database error.", e);
         }
 
     }
@@ -210,10 +214,9 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
             return getBackupBucketResponse.getBackupBucket();
 
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            throw new DataBaseRecoveryException(String.format("Get backup bucket from restore node error. Exception: %s, Error: %s", e.getClass(),
-                    ((SerializableResponse) jacksonSerializer.deserialize(e.getResponseBodyAsByteArray())).getMessage()));
+            throw new DataBaseRecoveryException(String.format("Get backup bucket from restore node error. Recovery node response: %s", new Gson().fromJson(e.getResponseBodyAsString(), Response.class).getMessage()), e);
         } catch (Exception e) {
-            throw new DataBaseRecoveryException(String.format("Get backup bucket from restore node error. Exception: %s, Error: %s", e.getClass(), e.getMessage()));
+            throw new DataBaseRecoveryException("Get backup bucket from restore node error.", e);
         }
 
     }

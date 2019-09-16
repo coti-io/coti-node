@@ -1,5 +1,6 @@
 package io.coti.storagenode.services;
 
+import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.storagenode.database.DbConnectorService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +32,11 @@ public class InitializationService {
             objectService.init();
         } catch (Exception e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
-            log.error("{}: {}", e.getClass().getName(), e.getMessage());
+            if (e instanceof CotiRunTimeException) {
+                ((CotiRunTimeException) e).logMessage();
+            } else {
+                log.error("{}: {}", e.getClass().getName(), e.getMessage());
+            }
             System.exit(SpringApplication.exit(applicationContext));
         }
     }
