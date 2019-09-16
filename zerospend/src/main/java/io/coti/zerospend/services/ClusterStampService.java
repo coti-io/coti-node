@@ -18,6 +18,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     @Value("${native.token.genesis.address}")
     private String nativeTokenAddress;
+    @Value("${upload.clusterstamp}")
     private boolean uploadMajorClusterStamp;
 
     @Value("${aws.s3.bucket.name.clusterstamp}")
