@@ -28,7 +28,6 @@ import org.springframework.web.client.RestTemplate;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -108,9 +107,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             getClusterStampFromRecoveryServer(true);
             loadAllClusterStamps();
         } catch (ClusterStampException e) {
-            throw new ClusterStampException("Error at clusterstamp init. " + e.getMessage());
+            throw new ClusterStampException("Error at clusterstamp init. " + e.getMessage(), e);
         } catch (Exception e) {
-            throw new ClusterStampException(String.format("Error at clusterstamp init. Exception: %s, exception error: %s", e.getClass().getName(), e.getMessage()));
+            throw new ClusterStampException("Error at clusterstamp init.", e);
         }
     }
 
@@ -134,7 +133,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     private ClusterStampNameData validateNameAndGetClusterStampNameData(String clusterStampFileName) {
         String[] delimitedFileName = clusterStampFileName.split("_");
         if (delimitedFileName.length != CLUSTERSTAMP_NAME_ARRAY_LENGTH && delimitedFileName.length != CLUSTERSTAMP_NAME_ARRAY_NOT_UPDATED_LENGTH) {
-            throw new ClusterStampException(String.format("Bad cluster stamp file name: %s. Please correct clusterstamp file name and restart.", clusterStampFileName));
+            throw new ClusterStampValidationException(String.format("Bad cluster stamp file name: %s. Please correct clusterstamp file name and restart.", clusterStampFileName));
         }
         String clusterStampConstantPrefix = delimitedFileName[CLUSTERSTAMP_CONST_PREFIX_INDEX];
         String clusterStampTypeMark = delimitedFileName[CLUSTERSTAMP_TYPE_MARK_INDEX];
@@ -153,7 +152,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             clusterStampFileType = delimitedClusterStampUpdateTimeAndFileType[CLUSTERSTAMP_FILE_TYPE_INDEX];
         }
         if (!validateClusterStampFileName(clusterStampConstantPrefix, clusterStampTypeMark, clusterStampVersionTime, clusterStampUpdateTime, clusterStampFileType)) {
-            throw new ClusterStampException(String.format("Bad cluster stamp file name: %s. Please correct clusterstamp name and restart.", clusterStampFileName));
+            throw new ClusterStampValidationException(String.format("Bad cluster stamp file name: %s. Please correct clusterstamp name and restart.", clusterStampFileName));
         }
         return new ClusterStampNameData(ClusterStampType.getTypeByMark(clusterStampTypeMark).get(), clusterStampVersionTime, clusterStampUpdateTime);
     }
@@ -255,7 +254,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                 }
             }
             if (currencyHashToAmountMap.entrySet().stream().anyMatch(entry -> entry.getValue().compareTo(BigDecimal.ZERO) != 0)) {
-                throw new ClusterStampException("Wrong currency balances in clusterstamp file.");
+                throw new ClusterStampValidationException("Wrong currency balances in clusterstamp file.");
             }
             if (signatureRelevantLines.get() == 0) {
                 handleClusterStampWithoutSignature(clusterStampData, clusterStampFileLocation);
@@ -265,9 +264,10 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                 handleClusterStampWithSignature(clusterStampData);
             }
             balanceService.updatePreBalanceFromClusterStamp();
+        } catch (ClusterStampException e) {
+            throw new ClusterStampException("Errors on clusterstamp loading. " + e.getMessage(), e);
         } catch (Exception e) {
-            log.error("Errors on clusterstamp loading");
-            throw new ClusterStampValidationException(e.getMessage());
+            throw new ClusterStampException("Errors on clusterstamp loading.", e);
         }
     }
 
@@ -293,9 +293,12 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             handleRequiredClusterStampFiles(getClusterStampFileNamesResponse, isStartup);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             throw new ClusterStampException(String.format("Clusterstamp recovery failed. %s: %s", e.getClass().getName(), new Gson().fromJson(e.getResponseBodyAsString(), Response.class).getMessage()));
+        } catch (ClusterStampException e) {
+            throw new ClusterStampException("Clusterstamp recovery failed." + e.getMessage(), e);
         } catch (Exception e) {
-            throw new ClusterStampException(String.format("Clusterstamp recovery failed. %s: %s", e.getClass().getName(), e.getMessage()));
+            throw new ClusterStampException("Clusterstamp recovery failed.", e);
         }
+
     }
 
     private void handleRequiredClusterStampFiles(GetClusterStampFileNamesResponse getClusterStampFileNamesResponse, boolean isStartup) {
@@ -336,7 +339,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             tokenClusterStampHashToName = new HashMap<>();
             fileSystemService.removeFolderContents(clusterStampsFolder);
         } catch (Exception e) {
-            throw new ClusterStampException(String.format("Failed to remove %s folder contents. Please manually delete all clusterstamps and restart. Error: %s", clusterStampsFolder, e.getMessage()));
+            throw new ClusterStampException(String.format("Failed to remove %s folder contents. Please manually delete all clusterstamps and restart.", clusterStampsFolder), e);
         }
     }
 
@@ -393,7 +396,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         try {
             fileSystemService.deleteFile(clusterStampFilePath);
         } catch (Exception e) {
-            throw new ClusterStampException(String.format("Failed to delete file %s. Please delete manually and restart. Error: %s", clusterStampFilePath, e.getMessage()));
+            throw new ClusterStampException(String.format("Failed to delete file %s. Please delete manually and restart.", clusterStampFilePath), e);
         }
     }
 
@@ -421,8 +424,8 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         try {
             awsService.downloadFile(filePath, clusterStampBucketName);
             addClusterStampName(clusterStampNameData);
-        } catch (IOException e) {
-            throw new ClusterStampException(String.format("Couldn't download %s clusterstamp file. Error: %s", clusterStampFileName, e.getMessage()));
+        } catch (Exception e) {
+            throw new ClusterStampException(String.format("Couldn't download %s clusterstamp file.", clusterStampFileName), e);
         }
     }
 
@@ -476,9 +479,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             clusterStampData.getSignatureMessage().add(balanceInBytes);
             clusterStampData.incrementMessageByteSize(balanceInBytes.length);
         } catch (ClusterStampException e) {
-            throw e;
+            throw new ClusterStampException("Error at filling balance from clusterstamp line. " + e.getMessage(), e);
         } catch (Exception e) {
-            throw new ClusterStampException(String.format("Fill balance from clusterstamp line error. %s: %s", e.getClass().getName(), e.getMessage()));
+            throw new ClusterStampException("Error at filling balance from clusterstamp line.", e);
         }
     }
 
