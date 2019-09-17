@@ -105,8 +105,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             fillClusterStampNamesMap();
             getClusterStampFromRecoveryServer(true);
             loadAllClusterStamps();
+            log.info("{} is up", this.getClass().getSimpleName());
         } catch (ClusterStampException e) {
-            throw new ClusterStampException("Error at clusterstamp init. " + e.getMessage(), e);
+            throw new ClusterStampException("Error at clusterstamp init.\n" + e.getMessage(), e);
         } catch (Exception e) {
             throw new ClusterStampException("Error at clusterstamp init.", e);
         }
@@ -178,6 +179,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     }
 
     private void loadAllClusterStamps() {
+        log.info("Loading clusterstamp files");
         loadClusterStamp(clusterStampsFolder, majorClusterStampName);
         tokenClusterStampHashToName.values().forEach(clusterStampNameData ->
                 loadClusterStamp(clusterStampsFolder, clusterStampNameData));
@@ -212,7 +214,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     }
 
     protected void loadClusterStamp(String folder, ClusterStampNameData clusterStampNameData) {
-        String clusterStampFileLocation = folder + getClusterStampFileName(clusterStampNameData);
+        String clusterStampFileName = getClusterStampFileName(clusterStampNameData);
+        log.info("Starting to load clusterstamp file {}", clusterStampFileName);
+        String clusterStampFileLocation = folder + clusterStampFileName;
         File clusterstampFile = new File(clusterStampFileLocation);
         ClusterStampData clusterStampData = new ClusterStampData();
         Map<Hash, BigDecimal> currencyHashToAmountMap = new HashMap<>();
@@ -228,20 +232,20 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                 relevantLineNumber++;
                 if (line.isEmpty()) {
                     if (relevantLineNumber < NUMBER_OF_GENESIS_ADDRESSES_MIN_LINES) {
-                        throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
+                        throw new ClusterStampValidationException(String.format("Clusterstamp file %s has less than necessary number of balance lines", clusterStampFileName));
                     } else {
                         if (!finishedBalances)
                             finishedBalances = true;
                         else
-                            throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
+                            throw new ClusterStampValidationException(String.format("Unnecessary empty line at clusterstamp file %s.", clusterStampFileName));
                     }
                 } else {
                     if (!finishedBalances) {
-                        fillBalanceFromLine(clusterStampData, line, currencyHashToAmountMap);
+                        fillBalanceFromLine(clusterStampData, line, currencyHashToAmountMap, clusterStampFileName);
                     } else {
                         if (!reachedSignatureSection) {
                             if (!line.contentEquals(SIGNATURE_LINE_TOKEN))
-                                throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
+                                throw new ClusterStampValidationException(String.format("Invalid signature line notification at clusterstamp file %s", clusterStampFileName));
                             else
                                 reachedSignatureSection = true;
                         } else {
@@ -253,20 +257,21 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                 }
             }
             if (currencyHashToAmountMap.entrySet().stream().anyMatch(entry -> entry.getValue().compareTo(BigDecimal.ZERO) != 0)) {
-                throw new ClusterStampValidationException("Wrong currency balances in clusterstamp file.");
+                throw new ClusterStampValidationException(String.format("Wrong currency balances at clusterstamp file %s.", clusterStampFileName));
             }
             if (signatureRelevantLines == 0) {
                 handleClusterStampWithoutSignature(clusterStampData, clusterStampFileLocation);
             } else if (signatureRelevantLines == 1) {
-                throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
+                throw new ClusterStampValidationException(String.format("Signature lines can not be a single line at clusterstamp file %s", clusterStampFileName));
             } else {
                 handleClusterStampWithSignature(clusterStampData);
             }
             balanceService.updatePreBalanceFromClusterStamp();
+            log.info("Finished to load clusterstamp file {}", clusterStampFileName);
         } catch (ClusterStampException e) {
-            throw new ClusterStampException("Errors on clusterstamp loading. " + e.getMessage(), e);
+            throw new ClusterStampException(String.format("Errors on clusterstamp file %s loading.\n", clusterStampFileName) + e.getMessage(), e);
         } catch (Exception e) {
-            throw new ClusterStampException("Errors on clusterstamp loading.", e);
+            throw new ClusterStampException(String.format("Errors on clusterstamp file %s loading.", clusterStampFileName), e);
         }
     }
 
@@ -291,9 +296,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             clusterStampBucketName = getClusterStampFileNamesResponse.getClusterStampBucketName();
             handleRequiredClusterStampFiles(getClusterStampFileNamesResponse, isStartup);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            throw new ClusterStampException(String.format("Clusterstamp recovery failed. %s: %s", e.getClass().getName(), new Gson().fromJson(e.getResponseBodyAsString(), Response.class).getMessage()));
+            throw new ClusterStampException(String.format("Clusterstamp recovery failed. Recovery server response: %s.", new Gson().fromJson(e.getResponseBodyAsString(), Response.class).getMessage()), e);
         } catch (ClusterStampException e) {
-            throw new ClusterStampException("Clusterstamp recovery failed." + e.getMessage(), e);
+            throw new ClusterStampException("Clusterstamp recovery failed.\n" + e.getMessage(), e);
         } catch (Exception e) {
             throw new ClusterStampException("Clusterstamp recovery failed.", e);
         }
@@ -302,7 +307,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     private void handleRequiredClusterStampFiles(GetClusterStampFileNamesResponse getClusterStampFileNamesResponse, boolean isStartup) {
         if (!validateResponseVersionValidity(getClusterStampFileNamesResponse)) {
-            throw new ClusterStampException("Recovery clusterstamp version is not valid");
+            throw new ClusterStampValidationException("Recovery clusterstamp version is not valid");
         }
         if (majorClusterStampName == null) {
             handleMissingClusterStampsWithMajorNotPresent(getClusterStampFileNamesResponse, isStartup);
@@ -391,11 +396,12 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     private void removeClusterStampNameAndFile(ClusterStampNameData clusterStampNameData) {
         removeClusterStampName(clusterStampNameData);
-        String clusterStampFilePath = clusterStampsFolder + getClusterStampFileName(clusterStampNameData);
+        String clusterStampFileName = getClusterStampFileName(clusterStampNameData);
+        String clusterStampFilePath = clusterStampsFolder + clusterStampFileName;
         try {
             fileSystemService.deleteFile(clusterStampFilePath);
         } catch (Exception e) {
-            throw new ClusterStampException(String.format("Failed to delete file %s. Please delete manually and restart.", clusterStampFilePath), e);
+            throw new ClusterStampException(String.format("Failed to delete clusterstamp file %s. Please delete manually and restart.", clusterStampFileName), e);
         }
     }
 
@@ -412,7 +418,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         if (!localTokens.isEmpty()) {
             StringBuilder sb = new StringBuilder("Excess tokens found locally: ");
             localTokens.values().forEach(excessLocalClusterStampNameData -> sb.append(getClusterStampFileName(excessLocalClusterStampNameData) + " "));
-            throw new ClusterStampException(sb.toString());
+            throw new ClusterStampValidationException(sb.toString());
         }
         return missingClusterStamps;
     }
@@ -424,7 +430,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             awsService.downloadFile(filePath, clusterStampBucketName);
             addClusterStampName(clusterStampNameData);
         } catch (Exception e) {
-            throw new ClusterStampException(String.format("Couldn't download %s clusterstamp file.", clusterStampFileName), e);
+            throw new ClusterStampException(String.format("Couldn't download clusterstamp file %s.", clusterStampFileName), e);
         }
     }
 
@@ -449,7 +455,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         return tokenClusterStampHashToName.values().stream().collect(Collectors.toList());
     }
 
-    private void fillBalanceFromLine(ClusterStampData clusterStampData, String line, Map<Hash, BigDecimal> currencyHashToAmountMap) {
+    private void fillBalanceFromLine(ClusterStampData clusterStampData, String line, Map<Hash, BigDecimal> currencyHashToAmountMap, String clusterStampFileName) {
         try {
             String[] lineDetails = line.split(",");
             int numOfDetailsInLine = lineDetails.length;
@@ -464,11 +470,11 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             }
 
             if (!currencyService.verifyCurrencyExists(currencyHash)) {
-                throw new ClusterStampValidationException(String.format("Currency %s in clusterstamp file not found at DB", currencyHash));
+                throw new ClusterStampValidationException(String.format("Currency %s in clusterstamp file %s not found at DB", currencyHash, clusterStampFileName));
             }
             balanceService.updateBalanceFromClusterStamp(addressHash, currencyHash, currencyAmountInAddress);
             validateClusterStampLineDetails(currencyAmountInAddress, currencyHash, currencyHashToAmountMap);
-            log.trace("The address hash {} for currency hash {} was loaded from the clusterstamp with amount {}", addressHash, currencyHash, currencyAmountInAddress);
+            log.trace("The address hash {} for currency hash {} was loaded from the clusterstamp {} with amount {}", addressHash, currencyHash, clusterStampFileName, currencyAmountInAddress);
 
             byte[] addressHashInBytes = addressHash.getBytes();
             byte[] addressCurrencyAmountInBytes = currencyAmountInAddress.stripTrailingZeros().toPlainString().getBytes();
@@ -478,9 +484,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             clusterStampData.getSignatureMessage().add(balanceInBytes);
             clusterStampData.incrementMessageByteSize(balanceInBytes.length);
         } catch (ClusterStampException e) {
-            throw new ClusterStampException("Error at filling balance from clusterstamp line. " + e.getMessage(), e);
+            throw new ClusterStampException(String.format("Error at filling balance from line of clusterstamp %s.\n", clusterStampFileName) + e.getMessage(), e);
         } catch (Exception e) {
-            throw new ClusterStampException("Error at filling balance from clusterstamp line.", e);
+            throw new ClusterStampException(String.format("Error at filling balance from line of clusterstamp %s.", clusterStampFileName), e);
         }
     }
 
@@ -519,15 +525,14 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             clusterStampData.getSignature().setS(signatureDetails[1]);
     }
 
-    protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData, String clusterstampFileLocation) {
-        throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
+    protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData, String clusterStampFileLocation) {
+        throw new ClusterStampValidationException(String.format("Clusterstamp file has no signature."));
     }
 
     private void handleClusterStampWithSignature(ClusterStampData clusterStampData) {
         setClusterStampSignerHash(clusterStampData);
         if (!clusterStampCrypto.verifySignature(clusterStampData)) {
-            log.error("Clusterstamp invalid signature");
-            throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
+            throw new ClusterStampValidationException("Invalid signature.");
         }
     }
 
