@@ -72,13 +72,14 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     @Override
     protected void handleMissingRecoveryServer() {
-        // Zero spend does nothing in this case.
+        // Zero spend does nothing in this method.
     }
 
     @Override
     protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData, String clusterstampFileLocation) {
         clusterStampCrypto.signMessage(clusterStampData);
         updateClusterStampFileWithSignature(clusterStampData.getSignature(), clusterstampFileLocation);
+        uploadMajorClusterStamp = true;
     }
 
     private void updateClusterStampFileWithSignature(SignatureData signature, String clusterstampFileLocation) {
@@ -92,8 +93,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             clusterStampBufferedWriter.newLine();
             clusterStampBufferedWriter.append("s," + signature.getS());
         } catch (Exception e) {
-            log.error("Exception at clusterstamp signing");
-            throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
+            throw new ClusterStampValidationException("Exception at clusterstamp signing.", e);
         }
     }
 
