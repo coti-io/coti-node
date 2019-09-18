@@ -37,6 +37,7 @@ public class RocksDBConnector extends BaseNodeRocksDBConnector {
                 DailyFundDistributionFiles.class.getName(),
                 CurrencyNameIndexes.class.getName(),
                 CurrencySymbolIndexes.class.getName()
+                //TODO 9/17/2019 astolia: add collections here.
         ));
     }
 }
