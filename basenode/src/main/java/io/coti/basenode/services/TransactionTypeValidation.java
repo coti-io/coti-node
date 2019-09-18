@@ -53,12 +53,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
     Initial(TransactionType.Initial) {
         @Override
         public boolean validateBaseTransactions(TransactionData transactionData) {
-            try {
-                return validateInputBaseTransactions(transactionData) && validateOutputBaseTransactions(transactionData, true);
-            } catch (IllegalArgumentException e) {
-                log.error("Errors during validation of base transactions: {}", e);
-                return false;
-            }
+            return validateBaseTransactions(transactionData, true);
         }
 
         @Override
@@ -70,6 +65,12 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
             return inputBaseTransactions.size() == 1;
         }
 
+    },
+    TokenGeneration(TransactionType.TokenGeneration) {
+        @Override
+        public boolean validateBaseTransactions(TransactionData transactionData) {
+            return validateBaseTransactions(transactionData, true);
+        }
     };
 
     protected static final String INVALID_TRANSACTION_TYPE = "Invalid transaction type";
@@ -82,10 +83,14 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
 
     @Override
     public boolean validateBaseTransactions(TransactionData transactionData) {
+        return validateBaseTransactions(transactionData, false);
+    }
+
+    protected boolean validateBaseTransactions(TransactionData transactionData, boolean skipValidationOfReducedAmount) {
         try {
-            return validateInputBaseTransactions(transactionData) && validateOutputBaseTransactions(transactionData, false);
+            return validateInputBaseTransactions(transactionData) && validateOutputBaseTransactions(transactionData, skipValidationOfReducedAmount);
         } catch (IllegalArgumentException e) {
-            log.error("Errors of an illegal argument during validation of base transactions: {}", e);
+            log.error("Errors of an illegal argument during validation of base transactions: {}", e.getMessage());
             return false;
         }
     }

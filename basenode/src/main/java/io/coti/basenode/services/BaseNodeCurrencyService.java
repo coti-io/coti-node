@@ -65,9 +65,9 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             updateCurrencies();
             log.info("{} is up", this.getClass().getSimpleName());
         } catch (CurrencyException e) {
-            throw new CurrencyException("Error at currency service init. " + e.getMessage());
+            throw new CurrencyException("Error at currency service init.\n" + e.getMessage(), e);
         } catch (Exception e) {
-            throw new CurrencyException(String.format("Error at currency service init. %s: %s", e.getClass().getName(), e.getMessage()));
+            throw new CurrencyException("Error at currency service init.", e);
         }
     }
 
@@ -270,7 +270,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             currencyRegistrarCrypto.signMessage(currencyData);
             return currencyData;
         } catch (Exception e) {
-            throw new CurrencyException(String.format("Create currency error. %s: %s", e.getClass().getName(), e.getMessage()));
+            throw new CurrencyException("Create currency error.", e);
         }
     }
 
