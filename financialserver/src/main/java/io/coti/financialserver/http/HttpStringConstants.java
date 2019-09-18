@@ -73,5 +73,7 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
 
     public static final String DISTRIBUTION_FILE_RECORD_DELETED = "Distribution file record deleted";
 
+    public static final String TOKEN_GENERATION_INVALID_REQUEST = "Bad token generation request";
+
 
 }
