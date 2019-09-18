@@ -59,5 +59,6 @@ public class TransactionService extends BaseNodeTransactionService {
                 rollingReserveService.setRollingReserveReleaseDate(transactionData, rbtOwnerData.getMerchantHash());
             }
         }
+        //TODO 9/18/2019 astolia: handle her etype TokenGeneration
     }
 }
