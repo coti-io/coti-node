@@ -110,25 +110,25 @@ public abstract class BaseNodeInitializationService {
     }
 
     public void initServices() {
-            awsService.init();
-            dbRecoveryService.init();
-            addressService.init();
-            currencyService.init();
-            balanceService.init();
-            clusterStampService.init();
-            confirmationService.init();
-            transactionIndexService.init();
-            dspVoteService.init();
-            transactionService.init();
-            potService.init();
-            initCommunication();
-            log.info("The communication initialization is done");
-            initTransactionSync();
-            log.info("The transaction sync initialization is done");
-            networkService.setConnectToNetworkUrl(nodeManagerHttpAddress + NODE_MANAGER_NODES_ENDPOINT);
-            networkService.connectToNetwork();
-            propagationSubscriber.initPropagationHandler();
-            monitorService.init();
+        awsService.init();
+        dbRecoveryService.init();
+        addressService.init();
+        currencyService.init();
+        balanceService.init();
+        clusterStampService.init();
+        confirmationService.init();
+        transactionIndexService.init();
+        dspVoteService.init();
+        transactionService.init();
+        potService.init();
+        initCommunication();
+        log.info("The communication initialization is done");
+        initTransactionSync();
+        log.info("The transaction sync initialization is done");
+        networkService.setConnectToNetworkUrl(nodeManagerHttpAddress + NODE_MANAGER_NODES_ENDPOINT);
+        networkService.connectToNetwork();
+        propagationSubscriber.initPropagationHandler();
+        monitorService.init();
     }
 
     public void initTransactionSync() {

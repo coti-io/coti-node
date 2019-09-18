@@ -275,7 +275,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         iterator.seekToFirst();
         return !iterator.isValid();
     }
-    
+
     @Override
     public boolean put(String columnFamilyName, byte[] key, byte[] value) {
         try {

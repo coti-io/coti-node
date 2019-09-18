@@ -60,7 +60,7 @@ public class BaseNodeFileSystemService {
         }
     }
 
-    public void createFile(String dirPath, String fileName){
+    public void createFile(String dirPath, String fileName) {
         String fullPath = dirPath + "/" + fileName;
         File file = new File(fullPath);
         try {
@@ -70,9 +70,9 @@ public class BaseNodeFileSystemService {
         }
     }
 
-    public void createAndWriteLineToFile(String dirPath, String fileName, String line){
+    public void createAndWriteLineToFile(String dirPath, String fileName, String line) {
         String relativePath = dirPath + "/" + fileName;
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(relativePath))){
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(relativePath))) {
             writer.write(line);
         } catch (IOException e) {
             throw new FileSystemException(String.format("Create and write file error. %s: %s", e.getClass().getName(), e.getMessage()));
