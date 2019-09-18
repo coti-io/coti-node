@@ -19,6 +19,7 @@ import io.coti.financialserver.data.CurrencyNameIndexData;
 import io.coti.financialserver.data.CurrencySymbolIndexData;
 import io.coti.financialserver.model.CurrencyNameIndexes;
 import io.coti.financialserver.model.CurrencySymbolIndexes;
+import io.coti.financialserver.model.PendingCurrencies;
 import io.coti.financialserver.model.UserTokenGenerations;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +56,8 @@ public class CurrencyService extends BaseNodeCurrencyService {
     private Transactions transactions;
     @Autowired
     private UserTokenGenerations userTokenGenerations;
+    @Autowired
+    private PendingCurrencies pendingCurrencies;
 
     private Set<Hash> concurrentUserHashes;
     private Set<String> concurrentCurrencySymbols;
@@ -115,7 +118,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
         updateCurrencyDataIndexes(currencyData);
     }
 
-    @Override
+//    @Override
     public ResponseEntity<IResponse> getUserTokenGenerationData(GetTokenGenerationDataRequest getTokenGenerationDataRequest) {
         //TODO 9/17/2019 astolia: maybe signature validation isn't required
         if(!getTokenGenerationDataRequestCrypto.verifySignature(getTokenGenerationDataRequest)){
@@ -132,5 +135,6 @@ public class CurrencyService extends BaseNodeCurrencyService {
     }
 
     public ResponseEntity<IResponse> generateToken(GenerateTokenRequest generateTokenRequest) {
+        return null;
     }
 }
