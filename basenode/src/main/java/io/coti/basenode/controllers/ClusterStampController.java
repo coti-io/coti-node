@@ -16,7 +16,7 @@ public class ClusterStampController {
     private BaseNodeClusterStampService clusterStampService;
 
     @GetMapping(value = "/clusterstamps")
-    public ResponseEntity<IResponse> getRequiredClusterStampNames(){
+    public ResponseEntity<IResponse> getRequiredClusterStampNames() {
         return clusterStampService.getRequiredClusterStampNames();
     }
 

@@ -57,15 +57,15 @@ public class BaseNodeClusterStampServiceTest {
     String recoveryServerAddress = "http://localhost:7020";
 
 
-//    @Before
-    public void beforeEachTest(){
+    //    @Before
+    public void beforeEachTest() {
 
         when(networkService.getRecoveryServerAddress()).thenReturn(recoveryServerAddress);
         prepareAndMockResponse();
 
     }
 
-    private void prepareAndMockResponse(){
+    private void prepareAndMockResponse() {
 //        ClusterStampNameData major = new ClusterStampNameData("Clusterstamp_M_1565787205728_1565787834293.csv");
 //        ClusterStampNameData token1 = new ClusterStampNameData("Clusterstamp_T_1565787205728_1565787268212.csv");
 //        ClusterStampNameData token2 = new ClusterStampNameData("Clusterstamp_T_1565787205728_1565787834293.csv");
@@ -78,7 +78,7 @@ public class BaseNodeClusterStampServiceTest {
     }
 
     //@Test
-    public void getClusterStampFromRecoveryServer_Something_Something(){
+    public void getClusterStampFromRecoveryServer_Something_Something() {
 
         //baseNodeClusterStampService.getClusterStampFromRecoveryServer(true);
         Assert.assertTrue(true);
