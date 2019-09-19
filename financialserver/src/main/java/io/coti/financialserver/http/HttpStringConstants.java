@@ -74,5 +74,10 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
 
     public static final String TOKEN_GENERATION_INVALID_REQUEST = "Bad token generation request";
 
+    public static final String TOKEN_GENERATION_REQUEST_INVALID_SIGNATURE = "Signature failed for token generation request";
+    public static final String TOKEN_GENERATION_REQUEST_CURRENCY_DATA_INVALID_SIGNATURE = "Signature failed for token generation currency data request";
+    public static final String TOKEN_GENERATION_REQUEST_CURRENCY_TYPE_DATA_INVALID_SIGNATURE = "Signature failed for token generation currency type data request";
+    public static final String TOKEN_GENERATION_INVALID_REQUEST_DATA = "Bad token generation request fields";
+
 
 }
