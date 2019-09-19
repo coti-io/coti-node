@@ -133,7 +133,8 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         ).collect(Collectors.toList());
     }
 
-    private void resetColumnFamilies() {
+    @Override
+    public void resetColumnFamilies() {
         resetColumnFamilies(null);
     }
 
