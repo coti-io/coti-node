@@ -197,7 +197,6 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     private void removeClusterStampName(ClusterStampNameData clusterStampNameData) {
         if (clusterStampNameData.isMajor()) {
-            lastClusterStampVersions.deleteAll();
             majorClusterStampName = null;
         } else {
             tokenClusterStampHashToName.remove(clusterStampNameData.getHash());
