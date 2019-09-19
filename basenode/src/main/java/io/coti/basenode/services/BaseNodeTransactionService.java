@@ -42,6 +42,12 @@ public class BaseNodeTransactionService implements ITransactionService {
     private JacksonSerializer jacksonSerializer;
     @Autowired
     private TransactionIndexes transactionIndexes;
+    @Autowired
+    private IClusterStampService clusterStampService;
+    @Autowired
+    private IDatabaseConnector databaseConnector;
+    @Autowired
+    private INetworkService networkService;
     protected Map<TransactionData, Boolean> postponedTransactions = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
     private final LockData transactionLockData = new LockData();
 
@@ -269,5 +275,17 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     public int totalPostponedTransactions() {
         return postponedTransactions.size();
+    }
+
+    @Override
+    public void resetOldClusterStampTransactions() {
+        if (clusterStampService.shouldUpdateClusterStampDBVersion()) {
+            if (clusterStampService.isClusterStampDBVersionExist() && networkService.getRecoveryServerAddress() != null) {
+                log.info("Starting to reset old clusterstamp transactions");
+                databaseConnector.resetColumnFamilies();
+                log.info("Finished to reset old clusterstamp transactions");
+            }
+            clusterStampService.setClusterStampDBVersion();
+        }
     }
 }

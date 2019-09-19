@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -319,16 +320,32 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     private boolean validateResponseVersionValidity(GetClusterStampFileNamesResponse getClusterStampFileNamesResponse) {
         LastClusterStampVersionData lastVersionData = lastClusterStampVersions.get();
-        return lastVersionData == null || (!validateVersion(lastVersionData.getVersionTimeMillis(), getClusterStampFileNamesResponse.getMajor().getVersionTimeMillis()) &&
-                getClusterStampFileNamesResponse.getTokenClusterStampNames().stream().
-                        anyMatch(clusterStampNameData -> !validateVersion(lastVersionData.getVersionTimeMillis(), clusterStampNameData.getVersionTimeMillis())));
+        return lastVersionData == null || lastVersionData.getVersionTimeMillis() == null ||
+                (validateVersion(lastVersionData.getVersionTimeMillis(), getClusterStampFileNamesResponse.getMajor().getVersionTimeMillis()) &&
+                        getClusterStampFileNamesResponse.getTokenClusterStampNames().stream().
+                                allMatch(clusterStampNameData -> validateVersion(lastVersionData.getVersionTimeMillis(), clusterStampNameData.getVersionTimeMillis())));
     }
 
-
-    private boolean validateVersion(Long currentVersion, Long clusterStampFileVersion) {
-        return clusterStampFileVersion >= currentVersion;
+    private boolean validateVersion(Long clusterStampDBVersion, Long clusterStampFileVersion) {
+        return clusterStampFileVersion >= clusterStampDBVersion;
     }
 
+    @Override
+    public boolean shouldUpdateClusterStampDBVersion() {
+        LastClusterStampVersionData lastVersionData = lastClusterStampVersions.get();
+        return lastVersionData == null || lastVersionData.getVersionTimeMillis() == null || majorClusterStampName.getVersionTimeMillis() > lastVersionData.getVersionTimeMillis();
+    }
+
+    @Override
+    public boolean isClusterStampDBVersionExist() {
+        return lastClusterStampVersions.get() != null;
+    }
+
+    @Override
+    public void setClusterStampDBVersion() {
+        lastClusterStampVersions.put(new LastClusterStampVersionData(majorClusterStampName.getVersionTimeMillis()));
+        log.info("Clusterstamp version time is set to {}", Instant.ofEpochMilli(majorClusterStampName.getVersionTimeMillis()));
+    }
 
     private void handleMissingClusterStampsWithMajorNotPresent(GetClusterStampFileNamesResponse getClusterStampFileNamesResponse, boolean isStartup) {
         clearClusterStampNamesAndFiles();
