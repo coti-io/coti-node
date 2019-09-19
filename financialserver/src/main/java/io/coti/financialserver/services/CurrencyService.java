@@ -126,12 +126,20 @@ public class CurrencyService extends BaseNodeCurrencyService {
         }
         UserTokenGenerationData userTokenGenerationData = userTokenGenerations.getByHash(getTokenGenerationDataRequest.getSenderHash());
         GetTokenGenerationDataResponse getTokenGenerationDataResponse = new GetTokenGenerationDataResponse();
-        getTokenGenerationDataResponse.setTransactionHashToGeneratedCurrency(
-                userTokenGenerationData.getTransactionHashToCurrencyHashMap().entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey,
-                                entry -> currencies.getByHash(entry.getValue())
-                        )));
-        return ResponseEntity.ok(getTokenGenerationDataResponse);
+        userTokenGenerationData.getTransactionHashToCurrencyHashMap().entrySet().forEach( entry -> {
+            Hash transactionHash = entry.getKey();
+            if(transactionHash == null){
+                getTokenGenerationDataResponse.
+            }
+            CurrencyData currencyData = pendingCurrencies.getByHash(transactionHash);
+            if(currencyData != null)
+        });
+//        getTokenGenerationDataResponse.setTransactionHashToGeneratedCurrency(
+//                userTokenGenerationData.getTransactionHashToCurrencyHashMap().entrySet().stream()
+//                        .collect(Collectors.toMap(Map.Entry::getKey,
+//                                entry -> currencies.getByHash(entry.getValue())
+//                        )));
+//        return ResponseEntity.ok(getTokenGenerationDataResponse);
     }
 
     public ResponseEntity<IResponse> generateToken(GenerateTokenRequest generateTokenRequest) {
