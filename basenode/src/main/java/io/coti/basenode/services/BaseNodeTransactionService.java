@@ -4,6 +4,7 @@ import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.data.DspConsensusResult;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
@@ -44,6 +45,12 @@ public class BaseNodeTransactionService implements ITransactionService {
     private JacksonSerializer jacksonSerializer;
     @Autowired
     private TransactionIndexes transactionIndexes;
+    @Autowired
+    private IClusterStampService clusterStampService;
+    @Autowired
+    private IDatabaseConnector databaseConnector;
+    @Autowired
+    private INetworkService networkService;
     private Map<Hash, TransactionData> parentProcessingTransactions = new ConcurrentHashMap<>();
     private List<TransactionData> postponedTransactions = new LinkedList<>();
 
@@ -262,5 +269,17 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     public int totalPostponedTransactions() {
         return postponedTransactions.size();
+    }
+
+    @Override
+    public void resetOldClusterStampTransactions() {
+        if (clusterStampService.shouldUpdateClusterStampDBVersion()) {
+            if (clusterStampService.isClusterStampDBVersionExist() && networkService.getRecoveryServerAddress() != null) {
+                log.info("Starting to reset old clusterstamp transactions");
+                databaseConnector.resetColumnFamilies();
+                log.info("Finished to reset old clusterstamp transactions");
+            }
+            clusterStampService.setClusterStampDBVersion();
+        }
     }
 }

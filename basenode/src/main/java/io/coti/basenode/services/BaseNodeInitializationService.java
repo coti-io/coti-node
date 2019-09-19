@@ -133,6 +133,7 @@ public abstract class BaseNodeInitializationService {
 
     public void initTransactionSync() {
         try {
+            transactionService.resetOldClusterStampTransactions();
             AtomicLong maxTransactionIndex = new AtomicLong(-1);
             log.info("Starting to read existing transactions");
             AtomicLong completedExistedTransactionNumber = new AtomicLong(0);
