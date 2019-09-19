@@ -1,7 +1,9 @@
 package io.coti.financialserver.services;
 
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
+import io.coti.basenode.data.UserTokenGenerationData;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeTransactionService;
@@ -11,11 +13,15 @@ import io.coti.financialserver.data.ReceiverBaseTransactionOwnerData;
 import io.coti.financialserver.http.TransactionRequest;
 import io.coti.financialserver.http.TransactionResponse;
 import io.coti.financialserver.model.ReceiverBaseTransactionOwners;
+import io.coti.financialserver.model.UserTokenGenerations;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.coti.financialserver.http.HttpStringConstants.*;
 
@@ -31,6 +37,9 @@ public class TransactionService extends BaseNodeTransactionService {
     private ITransactionHelper transactionHelper;
     @Autowired
     private ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
+    //TODO 9/18/2019 astolia: consider extract usage of this collection to currency service and use that instead.
+    @Autowired
+    private UserTokenGenerations userTokenGenerations;
 
     public ResponseEntity<IResponse> setReceiverBaseTransactionOwner(TransactionRequest transactionRequest) {
 
@@ -59,6 +68,20 @@ public class TransactionService extends BaseNodeTransactionService {
                 rollingReserveService.setRollingReserveReleaseDate(transactionData, rbtOwnerData.getMerchantHash());
             }
         }
-        //TODO 9/18/2019 astolia: handle her etype TokenGeneration
+        //TODO 9/18/2019 astolia: need to be synchronized on financial CurrencyService senderHash set?
+        // if token generation request has arrived before propagated transaction has arrived.
+        else if(transactionData.getType() == TransactionType.TokenGeneration){
+            Hash senderHash = transactionData.getSenderHash();
+            UserTokenGenerationData userTokenGenerationData = userTokenGenerations.getByHash(senderHash);
+            if(userTokenGenerationData == null){
+                Map<Hash,Hash> transactionHashToCurrencyHashMap = new HashMap<>();
+                transactionHashToCurrencyHashMap.put(transactionData.getHash(), null);
+                userTokenGenerations.put(new UserTokenGenerationData(senderHash, transactionHashToCurrencyHashMap));
+            }
+            else{
+                userTokenGenerationData.getTransactionHashToCurrencyHashMap().put(transactionData.getHash(), null);
+            }
+
+        }
     }
 }
