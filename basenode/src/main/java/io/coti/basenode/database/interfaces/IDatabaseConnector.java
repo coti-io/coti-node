@@ -8,6 +8,8 @@ public interface IDatabaseConnector {
 
     void init();
 
+    void resetColumnFamilies();
+
     void generateDataBaseBackup(String backupPath);
 
     void restoreDataBase(String backupPath);
