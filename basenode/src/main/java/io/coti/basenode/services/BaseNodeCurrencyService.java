@@ -27,7 +27,6 @@ import java.time.Instant;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 @Slf4j
 @Service
@@ -232,32 +231,12 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         return currencies.getByHash(currencyDataHash) != null;
     }
 
-    public void setCurrencyDataName(CurrencyData currencyData, String name) {
-        if (name.length() != name.trim().length()) {
-            throw new CurrencyException(String.format("Attempted to set an invalid currency name with spaces at the start or the end %s.", name));
-        }
-        final String[] words = name.split(" ");
-        for (String word : words) {
-            if (word == null || word.isEmpty() || !Pattern.compile("[A-Za-z0-9]+").matcher(word).matches()) {
-                throw new CurrencyException(String.format("Attempted to set an invalid currency name with the word %s.", name));
-            }
-        }
-        currencyData.setName(name);
-    }
-
-    public void setCurrencyDataSymbol(CurrencyData currencyData, String symbol) {
-        if (!Pattern.compile("[A-Z]{0,15}").matcher(symbol).matches()) {
-            throw new CurrencyException(String.format("Attempted to set an invalid currency symbol of %s.", symbol));
-        }
-        currencyData.setSymbol(symbol);
-    }
-
     protected CurrencyData createCurrencyData(String name, String symbol, BigDecimal totalSupply, int scale, Instant creationTime,
                                               String description, CurrencyType currencyType) {
         try {
             CurrencyData currencyData = new CurrencyData();
-            setCurrencyDataName(currencyData, name);
-            setCurrencyDataSymbol(currencyData, symbol);
+            currencyData.setName(name);
+            currencyData.setSymbol(symbol);
             currencyData.setHash();
             currencyData.setTotalSupply(totalSupply);
             currencyData.setScale(scale);

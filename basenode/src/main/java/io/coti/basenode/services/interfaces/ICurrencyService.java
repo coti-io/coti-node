@@ -26,4 +26,5 @@ public interface ICurrencyService {
     BigDecimal getTokenTotalSupply(Hash currencyHash);
 
     int getTokenScale(Hash currencyHash);
+
 }

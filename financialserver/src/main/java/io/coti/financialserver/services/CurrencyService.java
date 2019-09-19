@@ -1,11 +1,13 @@
 package io.coti.financialserver.services;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
+import io.coti.basenode.crypto.CurrencyOriginatorCrypto;
+import io.coti.basenode.crypto.CurrencyTypeRegistrationCrypto;
+import io.coti.basenode.crypto.GenerateTokenRequestCrypto;
 import io.coti.basenode.crypto.GetTokenGenerationDataRequestCrypto;
-import io.coti.basenode.data.CurrencyData;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.UserTokenGenerationData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CurrencyException;
 import io.coti.basenode.http.GenerateTokenRequest;
 import io.coti.basenode.http.GetTokenGenerationDataRequest;
@@ -32,10 +34,9 @@ import org.springframework.web.client.HttpServerErrorException;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
-import static io.coti.financialserver.http.HttpStringConstants.TOKEN_GENERATION_INVALID_REQUEST;
+import static io.coti.financialserver.http.HttpStringConstants.*;
 
 @Slf4j
 @Service
@@ -58,13 +59,21 @@ public class CurrencyService extends BaseNodeCurrencyService {
     private UserTokenGenerations userTokenGenerations;
     @Autowired
     private PendingCurrencies pendingCurrencies;
+    @Autowired
+    private GenerateTokenRequestCrypto generateTokenRequestCrypto;
+    @Autowired
+    private CurrencyOriginatorCrypto currencyOriginatorCrypto;
+    @Autowired
+    private CurrencyTypeRegistrationCrypto currencyTypeRegistrationCrypto;
 
     private Set<Hash> concurrentUserHashes;
     private Set<String> concurrentCurrencySymbols;
     private Set<String> concurrentCurrencyNames;
+    private Map<Hash, Hash> concurrentTransactionHashes;
 
     @Override
     public void init() {
+        super.init();
         initConcurrentSets();
 
     }
@@ -73,11 +82,12 @@ public class CurrencyService extends BaseNodeCurrencyService {
         concurrentUserHashes = Sets.newConcurrentHashSet();
         concurrentCurrencySymbols = Sets.newConcurrentHashSet();
         concurrentCurrencyNames = Sets.newConcurrentHashSet();
+        concurrentTransactionHashes = Maps.newConcurrentMap();
     }
 
-    private synchronized <T> boolean checkUniquenessAndAdd(Set<T> concurrentSet, T o){
+    private synchronized <T> boolean checkUniquenessAndAdd(Set<T> concurrentSet, T o) {
         boolean isObjectContained = concurrentSet.contains(o);
-        if(!isObjectContained){
+        if (!isObjectContained) {
             concurrentSet.add(o);
             return true;
         }
@@ -118,31 +128,77 @@ public class CurrencyService extends BaseNodeCurrencyService {
         updateCurrencyDataIndexes(currencyData);
     }
 
-//    @Override
+    //    @Override
     public ResponseEntity<IResponse> getUserTokenGenerationData(GetTokenGenerationDataRequest getTokenGenerationDataRequest) {
         //TODO 9/17/2019 astolia: maybe signature validation isn't required
-        if(!getTokenGenerationDataRequestCrypto.verifySignature(getTokenGenerationDataRequest)){
+        if (!getTokenGenerationDataRequestCrypto.verifySignature(getTokenGenerationDataRequest)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_GENERATION_INVALID_REQUEST, STATUS_ERROR));
         }
         UserTokenGenerationData userTokenGenerationData = userTokenGenerations.getByHash(getTokenGenerationDataRequest.getSenderHash());
         GetTokenGenerationDataResponse getTokenGenerationDataResponse = new GetTokenGenerationDataResponse();
-        userTokenGenerationData.getTransactionHashToCurrencyHashMap().entrySet().forEach( entry -> {
-            Hash transactionHash = entry.getKey();
-            if(transactionHash == null){
-                getTokenGenerationDataResponse.
-            }
-            CurrencyData currencyData = pendingCurrencies.getByHash(transactionHash);
-            if(currencyData != null)
-        });
+//        userTokenGenerationData.getTransactionHashToCurrencyHashMap().entrySet().forEach( entry -> {
+//            Hash transactionHash = entry.getKey();
+//            if(transactionHash == null){
+//                getTokenGenerationDataResponse.
+//            }
+//            CurrencyData currencyData = pendingCurrencies.getByHash(transactionHash);
+//            if(currencyData != null)
+//        });
 //        getTokenGenerationDataResponse.setTransactionHashToGeneratedCurrency(
 //                userTokenGenerationData.getTransactionHashToCurrencyHashMap().entrySet().stream()
 //                        .collect(Collectors.toMap(Map.Entry::getKey,
 //                                entry -> currencies.getByHash(entry.getValue())
 //                        )));
 //        return ResponseEntity.ok(getTokenGenerationDataResponse);
+        return null;
     }
 
     public ResponseEntity<IResponse> generateToken(GenerateTokenRequest generateTokenRequest) {
+        if (!generateTokenRequestCrypto.verifySignature(generateTokenRequest)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_GENERATION_REQUEST_INVALID_SIGNATURE, STATUS_ERROR));
+        }
+        CurrencyData currencyData = generateTokenRequest.getCurrencyData();
+        if (!currencyOriginatorCrypto.verifySignature(currencyData)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_GENERATION_REQUEST_CURRENCY_DATA_INVALID_SIGNATURE, STATUS_ERROR));
+        }
+        CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(currencyData);
+        if (!currencyTypeRegistrationCrypto.verifySignature(currencyTypeRegistrationData)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_GENERATION_REQUEST_CURRENCY_TYPE_DATA_INVALID_SIGNATURE, STATUS_ERROR));
+        }
+        if (verifyGenerateTokenRequestCurrencyDataFields(currencyData)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_GENERATION_INVALID_REQUEST_DATA, STATUS_ERROR));
+        }
+
         return null;
     }
+
+    private boolean verifyGenerateTokenRequestCurrencyDataFields(CurrencyData currencyData) {
+        if (currencyData.getCurrencyTypeData().getCurrencyType() != CurrencyType.REGULAR_CMD_TOKEN) {
+            log.error("Invalid currency type {} identified.", currencyData.getCurrencyTypeData().getCurrencyType().getText());
+            return false;
+        }
+        return true;
+    }
+
+    public void handleDSPConfirmedTransaction(TransactionData transactionData) {
+        final Hash userHash = transactionData.getSenderHash();
+        final Hash transactionHash = transactionData.getHash();
+        final Hash currencyHash = userTokenGenerations.getByHash(userHash).getTransactionHashToCurrencyHashMap().get(transactionHash);
+        if (currencyHash != null) {
+            CurrencyData pendingCurrency = pendingCurrencies.getByHash(currencyHash);
+            if (pendingCurrency != null) {
+                pendingCurrencies.deleteByHash(pendingCurrency.getHash());
+                putCurrencyData(pendingCurrency);
+                releaseRelatedToPendingCurrency(pendingCurrency, transactionHash);
+            }
+        }
+    }
+
+    private void releaseRelatedToPendingCurrency(CurrencyData pendingCurrency, Hash transactionHash) {
+        concurrentUserHashes.remove(pendingCurrency.getOriginatorHash());
+        concurrentCurrencySymbols.remove(pendingCurrency.getSymbol());
+        concurrentCurrencyNames.remove(pendingCurrency.getName());
+        concurrentTransactionHashes.remove(transactionHash);
+    }
+
 }
