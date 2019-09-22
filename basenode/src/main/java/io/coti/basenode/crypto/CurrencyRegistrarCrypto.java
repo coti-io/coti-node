@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 
 @Service
 public class CurrencyRegistrarCrypto extends SignatureCrypto<CurrencyData> {
+
     @Override
     public byte[] getSignatureMessage(CurrencyData currencyData) {
         byte[] hashInBytes = currencyData.getHash().getBytes();
