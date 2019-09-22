@@ -40,7 +40,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Autowired
     protected Currencies currencies;
     @Autowired
-    private INetworkService networkService;
+    protected INetworkService networkService;
     @Autowired
     protected RestTemplate restTemplate;
     @Autowired
@@ -48,7 +48,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Autowired
     private GetUpdatedCurrencyRequestCrypto getUpdatedCurrencyRequestCrypto;
     @Autowired
-    private CurrencyTypeRegistrationCrypto currencyTypeRegistrationCrypto;
+    protected CurrencyTypeRegistrationCrypto currencyTypeRegistrationCrypto;
     @Autowired
     private HttpJacksonSerializer jacksonSerializer;
     @Autowired
