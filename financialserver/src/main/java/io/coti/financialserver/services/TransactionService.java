@@ -37,9 +37,10 @@ public class TransactionService extends BaseNodeTransactionService {
     private ITransactionHelper transactionHelper;
     @Autowired
     private ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
-    //TODO 9/18/2019 astolia: consider extract usage of this collection to currency service and use that instead.
     @Autowired
     private UserTokenGenerations userTokenGenerations;
+    @Autowired
+    private CurrencyService currencyService;
 
     public ResponseEntity<IResponse> setReceiverBaseTransactionOwner(TransactionRequest transactionRequest) {
 
@@ -68,18 +69,20 @@ public class TransactionService extends BaseNodeTransactionService {
                 rollingReserveService.setRollingReserveReleaseDate(transactionData, rbtOwnerData.getMerchantHash());
             }
         }
-        //TODO 9/18/2019 astolia: need to be synchronized on financial CurrencyService senderHash set?
-        // if token generation request has arrived before propagated transaction has arrived.
         else if(transactionData.getType() == TransactionType.TokenGeneration){
             Hash senderHash = transactionData.getSenderHash();
-            UserTokenGenerationData userTokenGenerationData = userTokenGenerations.getByHash(senderHash);
-            if(userTokenGenerationData == null){
-                Map<Hash,Hash> transactionHashToCurrencyHashMap = new HashMap<>();
-                transactionHashToCurrencyHashMap.put(transactionData.getHash(), null);
-                userTokenGenerations.put(new UserTokenGenerationData(senderHash, transactionHashToCurrencyHashMap));
-            }
-            else{
-                userTokenGenerationData.getTransactionHashToCurrencyHashMap().put(transactionData.getHash(), null);
+            currencyService.addUserHashLock(senderHash);
+            synchronized (currencyService.getUserHashLock(senderHash)){
+                UserTokenGenerationData userTokenGenerationData = userTokenGenerations.getByHash(senderHash);
+                if(userTokenGenerationData == null){
+                    Map<Hash,Hash> transactionHashToCurrencyMap = new HashMap<>();
+                    transactionHashToCurrencyMap.put(transactionData.getHash(), null);
+                    userTokenGenerations.put(new UserTokenGenerationData(senderHash, transactionHashToCurrencyMap));
+                }
+                else{
+                    userTokenGenerationData.getTransactionHashToCurrencyMap().put(transactionData.getHash(), null);
+                    userTokenGenerations.put(userTokenGenerationData);
+                }
             }
 
         }
