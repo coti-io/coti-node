@@ -193,7 +193,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         if (currency == null) {
             throw new CurrencyNotFoundException(String.format("Currency with hash %s was not found", currencyHash));
         }
-        return currencies.getByHash(currencyHash).getScale();
+        return currency.getScale();
     }
 
     private void getRequiringUpdateOfCurrencyDataByType(Map<CurrencyType, HashSet<Hash>> existingCurrencyHashesByType, FluxSink<CurrencyData> fluxSink) {
