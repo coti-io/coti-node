@@ -8,40 +8,35 @@ import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
-import java.math.BigDecimal;
-import java.nio.ByteBuffer;
 import java.time.Instant;
 
 @Slf4j
 @Data
-public class CurrencyData implements IPropagatable, ISignable, ISignValidatable {
+public class CurrencyData extends OriginatorCurrencyData implements IPropagatable, ISignable, ISignValidatable {
 
-    private Hash hash;
     @NotEmpty
-    private String name;
+    private @Valid Hash hash;
     @NotEmpty
-    private String symbol;
-    private CurrencyTypeData currencyTypeData;
+    private @Valid CurrencyTypeData currencyTypeData;
     @NotEmpty
-    private String description;
-    private BigDecimal totalSupply;
-    private int scale;
     private Instant creationTime;
-    private Hash originatorHash;
-    private SignatureData originatorSignature;
-    private Hash registrarHash;
-    private SignatureData registrarSignature;
+    @NotEmpty
+    private @Valid Hash registrarHash;
+    @NotEmpty
+    private @Valid SignatureData registrarSignature;
 
     public CurrencyData() {
+        super();
+    }
+
+    public CurrencyData(OriginatorCurrencyData originatorCurrencyData) {
+        super(originatorCurrencyData);
     }
 
     public void setHash() {
-        byte[] nameInBytes = name.getBytes();
-        byte[] symbolInBytes = symbol.getBytes();
-        byte[] concatDataFields = ByteBuffer.allocate(nameInBytes.length + symbolInBytes.length).
-                put(nameInBytes).put(symbolInBytes).array();
-        hash = CryptoHelper.cryptoHash(concatDataFields, 224);
+        hash = CryptoHelper.cryptoHash(symbol.getBytes(), 224);
     }
 
     @JsonIgnore
