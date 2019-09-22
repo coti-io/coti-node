@@ -76,6 +76,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                     transactionData.getBaseTransactions().forEach(baseTransactionData ->
                             balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getCurrencyHash(), baseTransactionData.getAmount())
                     );
+                    continueHandleTCCConfirmedTransaction(transactionData);
                 }
                 transactionIndexData = nextTransactionIndexData;
             }
@@ -109,6 +110,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                 transactionData.setTrustChainConsensusTime(((TccInfo) confirmationData).getTrustChainConsensusTime());
                 transactionData.setTrustChainTrustScore(((TccInfo) confirmationData).getTrustChainTrustScore());
                 trustChainConfirmed.incrementAndGet();
+                continueHandleTCCConfirmedTransaction(transactionData);
             } else if (confirmationData instanceof DspConsensusResult) {
                 transactionData.setDspConsensusResult((DspConsensusResult) confirmationData);
                 if (!insertNewTransactionIndex(transactionData)) {
@@ -171,6 +173,10 @@ public class BaseNodeConfirmationService implements IConfirmationService {
 
     protected void continueHandleAddressHistoryChanges(TransactionData transactionData) {
         // implemented by the sub classes
+    }
+
+    protected void continueHandleTCCConfirmedTransaction(TransactionData transactionData) {
+        log.debug("Continue to handle TCC confirmed transaction by base node");
     }
 
     @Override
@@ -246,6 +252,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         if (transactionData.isTrustChainConsensus()) {
             transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getCurrencyHash(), baseTransactionData.getAmount()));
             totalConfirmed.incrementAndGet();
+            continueHandleTCCConfirmedTransaction(transactionData);
         }
     }
 
