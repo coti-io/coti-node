@@ -12,6 +12,7 @@ import java.time.Instant;
 
 @Data
 public class CurrencyTypeData implements ISignable, ISignValidatable, Serializable {
+
     protected CurrencyType currencyType;
     protected Instant creationTime;
     private Hash hash;
