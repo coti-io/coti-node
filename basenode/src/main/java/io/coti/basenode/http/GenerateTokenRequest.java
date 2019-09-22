@@ -16,6 +16,8 @@ public class GenerateTokenRequest extends SerializableRequest implements ISignab
     private Hash hash;
     @NotEmpty
     private Hash transactionHash;
+
+    //TODO 9/22/2019 astolia: change to OriginatorCurrencyData
     @NotEmpty
     private CurrencyData currencyData;
     @NotNull
