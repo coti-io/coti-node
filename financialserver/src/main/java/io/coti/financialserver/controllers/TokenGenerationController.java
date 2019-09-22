@@ -22,7 +22,7 @@ public class TokenGenerationController {
     @Autowired
     private CurrencyService currencyService;
 
-    @RequestMapping(path = "/getUserTokenGeneration", method = RequestMethod.POST)
+    @RequestMapping(path = "/getUserTokenGenerations", method = RequestMethod.POST)
     public ResponseEntity<IResponse> getUserTokenGenerationData(@Valid @RequestBody GetTokenGenerationDataRequest getTokenGenerationDataRequest) {
         return currencyService.getUserTokenGenerationData(getTokenGenerationDataRequest);
     }
