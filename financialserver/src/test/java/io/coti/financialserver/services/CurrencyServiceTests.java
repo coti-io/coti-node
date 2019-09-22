@@ -11,7 +11,6 @@ import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IChunkService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.financialserver.model.CurrencyNameIndexes;
-import io.coti.financialserver.model.CurrencySymbolIndexes;
 import io.coti.financialserver.model.PendingCurrencies;
 import io.coti.financialserver.model.UserTokenGenerations;
 import org.junit.Assert;
@@ -39,7 +38,7 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATUR
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {CurrencyService.class, GetTokenGenerationDataRequestCrypto.class,NodeCryptoHelper.class, UserTokenGenerations.class})
+@ContextConfiguration(classes = {CurrencyService.class, GetTokenGenerationDataRequestCrypto.class, NodeCryptoHelper.class, UserTokenGenerations.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -61,8 +60,6 @@ public class CurrencyServiceTests {
     //
     @MockBean
     private CurrencyNameIndexes currencyNameIndexes;
-    @MockBean
-    private CurrencySymbolIndexes currencySymbolIndexes;
     @MockBean
     protected INetworkService networkService;
     @MockBean
@@ -96,12 +93,12 @@ public class CurrencyServiceTests {
 
 
     @BeforeClass
-    public static void setUpOnce(){
+    public static void setUpOnce() {
         userHash = new Hash("00");
         transactionHash = new Hash("11");
         currencyHash = new Hash("22");
 
-        currencyData= new CurrencyData();
+        currencyData = new CurrencyData();
         currencyData.setHash(currencyHash);
         currencyData.setName("AlexToken");
         currencyData.setSymbol("ALX");
@@ -113,14 +110,14 @@ public class CurrencyServiceTests {
     }
 
     @Before
-    public void setUpBeforeEachTest(){
+    public void setUpBeforeEachTest() {
 
     }
 
     //TODO 9/20/2019 astolia: clean up, remove duplicates...
 
     @Test
-    public void getUserTokenGenerationData_UnsignedRequest_shouldReturnBadRequest(){
+    public void getUserTokenGenerationData_UnsignedRequest_shouldReturnBadRequest() {
         GetTokenGenerationDataRequest getTokenGenerationDataRequest = new GetTokenGenerationDataRequest();
         getTokenGenerationDataRequest.setSenderHash(userHash);
         ResponseEntity expected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
@@ -134,7 +131,7 @@ public class CurrencyServiceTests {
     }
 
     @Test
-    public void getUserTokenGenerationData_noUserTokenGenerations_shouldReturnEmptyResponse(){
+    public void getUserTokenGenerationData_noUserTokenGenerations_shouldReturnEmptyResponse() {
         GetTokenGenerationDataRequest getTokenGenerationDataRequest = new GetTokenGenerationDataRequest();
         getTokenGenerationDataRequest.setSenderHash(userHash);
         getTokenGenerationDataRequestCrypto.signMessage(getTokenGenerationDataRequest);
@@ -144,9 +141,9 @@ public class CurrencyServiceTests {
     }
 
     @Test
-    public void getUserTokenGenerationData_onlyPendingToken_shouldReturnResponseWithAvailableTransaction(){
-        Map<Hash,Hash> transactionHashToCurrencyHash = new HashMap<>();
-        transactionHashToCurrencyHash.put(transactionHash,null);
+    public void getUserTokenGenerationData_onlyPendingToken_shouldReturnResponseWithAvailableTransaction() {
+        Map<Hash, Hash> transactionHashToCurrencyHash = new HashMap<>();
+        transactionHashToCurrencyHash.put(transactionHash, null);
         UserTokenGenerationData userTokenGenerationData = new UserTokenGenerationData(userHash, transactionHashToCurrencyHash);
         when(userTokenGenerations.getByHash(userTokenGenerationData.getUserHash())).thenReturn(userTokenGenerationData);
 
@@ -162,11 +159,11 @@ public class CurrencyServiceTests {
     }
 
     @Test
-    public void getUserTokenGenerationData_onlyCompletedToken_shouldReturnResponseWithAvailableTransactionAndCurrency(){
+    public void getUserTokenGenerationData_onlyCompletedToken_shouldReturnResponseWithAvailableTransactionAndCurrency() {
         when(currencies.getByHash(currencyData.getHash())).thenReturn(currencyData);
 
-        Map<Hash,Hash> transactionHashToCurrencyHash = new HashMap<>();
-        transactionHashToCurrencyHash.put(transactionHash,currencyData.getHash());
+        Map<Hash, Hash> transactionHashToCurrencyHash = new HashMap<>();
+        transactionHashToCurrencyHash.put(transactionHash, currencyData.getHash());
 
         UserTokenGenerationData userTokenGenerationData = new UserTokenGenerationData(userHash, transactionHashToCurrencyHash);
         when(userTokenGenerations.getByHash(userTokenGenerationData.getUserHash())).thenReturn(userTokenGenerationData);
@@ -183,12 +180,12 @@ public class CurrencyServiceTests {
     }
 
     @Test
-    public void getUserTokenGenerationData_onlyPendingToken_shouldReturnResponseWithPendingTransactionAndCurrency(){
+    public void getUserTokenGenerationData_onlyPendingToken_shouldReturnResponseWithPendingTransactionAndCurrency() {
 
         when(pendingCurrencies.getByHash(currencyData.getHash())).thenReturn(currencyData);
 
-        Map<Hash,Hash> transactionHashToCurrencyHash = new HashMap<>();
-        transactionHashToCurrencyHash.put(transactionHash,currencyData.getHash());
+        Map<Hash, Hash> transactionHashToCurrencyHash = new HashMap<>();
+        transactionHashToCurrencyHash.put(transactionHash, currencyData.getHash());
 
         UserTokenGenerationData userTokenGenerationData = new UserTokenGenerationData(userHash, transactionHashToCurrencyHash);
         when(userTokenGenerations.getByHash(userTokenGenerationData.getUserHash())).thenReturn(userTokenGenerationData);
