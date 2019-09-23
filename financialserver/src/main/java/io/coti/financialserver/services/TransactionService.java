@@ -68,23 +68,21 @@ public class TransactionService extends BaseNodeTransactionService {
             } else {
                 rollingReserveService.setRollingReserveReleaseDate(transactionData, rbtOwnerData.getMerchantHash());
             }
-        }
-        else if(transactionData.getType() == TransactionType.TokenGeneration){
+        } else if (transactionData.getType() == TransactionType.TokenGeneration) {
             Hash senderHash = transactionData.getSenderHash();
-            currencyService.addUserHashLock(senderHash);
-            synchronized (currencyService.getUserHashLock(senderHash)){
+            currencyService.addUserToHashLocks(senderHash);
+            synchronized (currencyService.getUserHashLock(senderHash)) {
                 UserTokenGenerationData userTokenGenerationData = userTokenGenerations.getByHash(senderHash);
-                if(userTokenGenerationData == null){
-                    Map<Hash,Hash> transactionHashToCurrencyMap = new HashMap<>();
+                if (userTokenGenerationData == null) {
+                    Map<Hash, Hash> transactionHashToCurrencyMap = new HashMap<>();
                     transactionHashToCurrencyMap.put(transactionData.getHash(), null);
                     userTokenGenerations.put(new UserTokenGenerationData(senderHash, transactionHashToCurrencyMap));
-                }
-                else{
+                } else {
                     userTokenGenerationData.getTransactionHashToCurrencyMap().put(transactionData.getHash(), null);
                     userTokenGenerations.put(userTokenGenerationData);
                 }
             }
-
+            currencyService.removeUserFromHashLocks(senderHash);
         }
     }
 }
