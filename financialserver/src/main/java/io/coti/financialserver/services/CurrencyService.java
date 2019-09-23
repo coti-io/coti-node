@@ -58,8 +58,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
     private Transactions transactions;
 
     private Map<Hash, Hash> concurrentUserHashes;
-    private Map<String, String> concurrentCurrencySymbols; //TODO 9/19/2019 astolia: change to set?
-    private Map<String, String> concurrentCurrencyNames; //TODO 9/19/2019 astolia: change to set?
+    private Map<String, String> currencyNamesLocks;
     private Map<Hash, Hash> concurrentTransactionHashes;
 
     @Override
@@ -71,8 +70,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
 
     private void initConcurrentSets() {
         concurrentUserHashes = Maps.newConcurrentMap();
-        concurrentCurrencySymbols = Maps.newConcurrentMap();
-        concurrentCurrencyNames = Maps.newConcurrentMap();
+        currencyNamesLocks = Maps.newConcurrentMap();
         concurrentTransactionHashes = Maps.newConcurrentMap();
     }
 
@@ -148,44 +146,63 @@ public class CurrencyService extends BaseNodeCurrencyService {
         if (validationResponseOpt.isPresent()) {
             return validationResponseOpt.get();
         }
-        CurrencyData currencyData = generateTokenRequest.getCurrencyData();
-        CurrencyType currencyType = CurrencyType.REGULAR_CMD_TOKEN;
-        setSignedCurrencyTypeData(currencyData, currencyType);
+        try {
+            occupyLocksAndValidateUniquenessAndAddToken(generateTokenRequest);
+        } catch (CurrencyException e) {
+            String error = e.getCause() != null ? String.format("%s : %s. %s",TOKEN_GENERATION_REQUEST_FAILURE, e.getMessage(), e.getCause()) : String.format("%s : %s.",TOKEN_GENERATION_REQUEST_FAILURE, e.getMessage());
+            return ResponseEntity.ok(new Response(error));
+        }
+        catch (Exception e){
+            return ResponseEntity.ok(new Response(String.format("%s : %s.",TOKEN_GENERATION_REQUEST_FAILURE, e.getMessage()), STATUS_ERROR));
+        }
+        return ResponseEntity.ok(new Response(TOKEN_GENERATION_REQUEST_SUCCESS, STATUS_SUCCESS));
+    }
 
-        occupyLocksAndValidateUniquenessAndAddToken(generateTokenRequest, request -> {
-            CurrencyData requestedCurrencyData = request.getCurrencyData();
+    private synchronized void occupyLocksAndValidateUniquenessAndAddToken(GenerateTokenRequest generateTokenRequest) {
+        OriginatorCurrencyData requestCurrencyData = generateTokenRequest.getOriginatorCurrencyData();
+        String currencySymbol = requestCurrencyData.getSymbol();
+        String currencyName = requestCurrencyData.getName();
+        Hash userHash = generateTokenRequest.getHash();
+        addLockToLocksMap(concurrentUserHashes, userHash);
+        synchronized (concurrentUserHashes.get(userHash)) {
             try {
-                validateCurrencyUniqueness(requestedCurrencyData);
+                validateCurrencyUniqueness(requestCurrencyData.calculateHash(), currencyName, currencySymbol);
             } catch (CurrencyException e) {
                 throw new CurrencyException("Currency details are already in use. ", e);
             }
-            Hash requestUserHash = request.getHash();
-            UserTokenGenerationData userTokenGenerationData = userTokenGenerations.getByHash(requestUserHash);
+            currencyNamesLocks.put(currencyName, currencyName);
+            OriginatorCurrencyData requestedCurrencyData = generateTokenRequest.getOriginatorCurrencyData();
+            CurrencyType currencyType = CurrencyType.REGULAR_CMD_TOKEN;
+            CurrencyTypeData currencyTypeData = new CurrencyTypeData(currencyType, Instant.now());
+            CurrencyData currencyData = new CurrencyData(requestedCurrencyData, currencyTypeData);
+            setSignedCurrencyTypeData(currencyData, currencyType);
+
+            UserTokenGenerationData userTokenGenerationData = userTokenGenerations.getByHash(userHash);
             if (userTokenGenerationData == null) {
                 throw new CurrencyException("Couldn't find Token generation data to match token generation request. Transaction was not propagated yet.");
             }
-            Hash requestTransactionHash = request.getTransactionHash();
+            Hash requestTransactionHash = generateTokenRequest.getTransactionHash();
             TransactionData tokenGenerationTransactionData = transactions.getByHash(requestTransactionHash);
-            Hash requestCurrencyDataHash = requestedCurrencyData.getHash();
+            Hash requestCurrencyDataHash = currencyData.getHash();
             if (tokenGenerationTransactionData.isTrustChainConsensus()) {
                 addLockToLocksMap(concurrentTransactionHashes, requestTransactionHash);
                 synchronized (requestTransactionHash) {
                     if (pendingCurrencies.getByHash(requestCurrencyDataHash) != null) {
-                        pendingCurrencies.delete(requestedCurrencyData);
+                        pendingCurrencies.delete(currencyData);
                     }
-                    putCurrencyData(request.getCurrencyData());
-                    userTokenGenerationData.getTransactionHashToCurrencyMap().put(request.getTransactionHash(), requestCurrencyDataHash);
+                    putCurrencyData(currencyData);
+                    userTokenGenerationData.getTransactionHashToCurrencyMap().put(requestTransactionHash, requestCurrencyDataHash);
+
                 }
+                concurrentTransactionHashes.remove(requestTransactionHash);
             } else {
-
-                pendingCurrencies.put(requestedCurrencyData);
-                userTokenGenerationData.getTransactionHashToCurrencyMap().put(request.getTransactionHash(), requestCurrencyDataHash);
+                pendingCurrencies.put(currencyData);
+                userTokenGenerationData.getTransactionHashToCurrencyMap().put(requestTransactionHash, requestCurrencyDataHash);
             }
-
-        });
-        //TODO 9/20/2019 astolia: what is the expected response??
-        return null;//ResponseEntity.ok();
+        }
+        currencyNamesLocks.remove(currencyNamesLocks);
     }
+
 
     protected void setSignedCurrencyTypeData(CurrencyData currencyData, CurrencyType currencyType) {
         CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(currencyData.getHash(), currencyType, Instant.now());
@@ -197,46 +214,32 @@ public class CurrencyService extends BaseNodeCurrencyService {
         if (!generateTokenRequestCrypto.verifySignature(generateTokenRequest)) {
             return Optional.of(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_GENERATION_REQUEST_INVALID_SIGNATURE, STATUS_ERROR)));
         }
-        CurrencyData currencyData = generateTokenRequest.getCurrencyData();
-        if (!currencyOriginatorCrypto.verifySignature(currencyData)) {
+        OriginatorCurrencyData currencyData = generateTokenRequest.getOriginatorCurrencyData();
+        if (!currencyOriginatorCrypto.verifySignature(new CurrencyData(currencyData))) {
             return Optional.of(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_GENERATION_REQUEST_CURRENCY_DATA_INVALID_SIGNATURE, STATUS_ERROR)));
         }
-        CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(currencyData);
-        if (!currencyTypeRegistrationCrypto.verifySignature(currencyTypeRegistrationData)) {
-            return Optional.of(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_GENERATION_REQUEST_CURRENCY_TYPE_DATA_INVALID_SIGNATURE, STATUS_ERROR)));
-        }
+//        CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(currencyData);
+//        if (!currencyTypeRegistrationCrypto.verifySignature(currencyTypeRegistrationData)) {
+//            return Optional.of(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_GENERATION_REQUEST_CURRENCY_TYPE_DATA_INVALID_SIGNATURE, STATUS_ERROR)));
+//        }
         return Optional.empty();
     }
 
 
-    private void validateCurrencyUniqueness(CurrencyData currencyData) {
+    private void validateCurrencyUniqueness(Hash currencyHash, String currencyName, String currencySymbol) {
         StringBuilder sb = new StringBuilder();
-        if(currencyNameIndexes.getByHash(new CurrencyNameIndexData(currencyData.getName(),currencyData.getHash()).getHash()) != null){
-            sb.append("Currency name ").append(currencyData.getName()).append(" is already in use. ");
+        if (currencyNameIndexes.getByHash(new CurrencyNameIndexData(currencyName, currencyHash).getHash()) != null || currencyNamesLocks.get(currencyName) != null) {
+            sb.append("Currency name ").append(currencyName).append(" is already in use. ");
         }
-        if(currencySymbolIndexes.getByHash(new CurrencySymbolIndexData(currencyData.getSymbol(),currencyData.getHash()).getHash()) != null){
-            sb.append("Currency symbol ").append(currencyData.getSymbol()).append(" is already in use. ");
+        //TODO 9/23/2019 astolia: make sure removing/putting to these collections is in sync with this method.
+        if (currencies.getByHash(currencyHash) != null || pendingCurrencies.getByHash(currencyHash) != null) {
+            sb.append("Currency symbol ").append(currencySymbol).append(" is already in use. ");
         }
-        if(sb.length() != 0){
+        if (sb.length() != 0) {
             throw new CurrencyException(sb.toString());
         }
     }
 
-    //TODO 9/20/2019 astolia: need to sync flow of handle propagated transactions?????
-    private synchronized void occupyLocksAndValidateUniquenessAndAddToken(GenerateTokenRequest generateTokenRequest, Consumer<GenerateTokenRequest> consumer) {
-        Hash userHash = generateTokenRequest.getHash();
-        CurrencyData requestCurrencyData = generateTokenRequest.getCurrencyData();
-        String currencySymbol = requestCurrencyData.getSymbol();
-        String currencyName = requestCurrencyData.getName();
-        addLockToLocksMap(concurrentUserHashes, userHash);
-        synchronized (concurrentUserHashes.get(userHash)) {
-            concurrentCurrencySymbols.put(currencySymbol, currencySymbol);
-            concurrentCurrencyNames.put(currencyName, currencyName);
-            consumer.accept(generateTokenRequest);
-        }
-    }
-
-    //TODO 9/20/2019 astolia: make sure no issues here.
     private void addLockToLocksMap(Map<Hash, Hash> locksIdentityMap, Hash hash) {
         synchronized (locksIdentityMap) {
             Hash hashLock = locksIdentityMap.get(hash);
@@ -278,8 +281,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
     }
 
     private void releaseRelatedToPendingCurrency(CurrencyData pendingCurrency, Hash transactionHash) {
-        concurrentCurrencySymbols.remove(pendingCurrency.getSymbol());
-        concurrentCurrencyNames.remove(pendingCurrency.getName());
+        currencyNamesLocks.remove(pendingCurrency.getName());
         concurrentTransactionHashes.remove(transactionHash);
     }
 
