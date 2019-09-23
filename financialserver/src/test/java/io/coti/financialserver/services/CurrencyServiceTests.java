@@ -2,8 +2,10 @@ package io.coti.financialserver.services;
 
 import io.coti.basenode.crypto.*;
 import io.coti.basenode.data.*;
-import io.coti.basenode.http.GetTokenGenerationDataRequest;
-import io.coti.basenode.http.GetTokenGenerationDataResponse;
+import io.coti.financialserver.http.GetUserTokensRequest;
+import io.coti.financialserver.crypto.GenerateTokenRequestCrypto;
+import io.coti.financialserver.crypto.GetUserTokensRequestCrypto;
+import io.coti.financialserver.http.GetTokenGenerationDataResponse;
 import io.coti.basenode.http.HttpJacksonSerializer;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.model.Currencies;
@@ -38,7 +40,7 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATUR
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {CurrencyService.class, GetTokenGenerationDataRequestCrypto.class, NodeCryptoHelper.class, UserTokenGenerations.class})
+@ContextConfiguration(classes = {CurrencyService.class, GetUserTokensRequestCrypto.class, NodeCryptoHelper.class, UserTokenGenerations.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -47,7 +49,7 @@ public class CurrencyServiceTests {
     @Autowired
     private CurrencyService currencyService;
     @Autowired
-    private GetTokenGenerationDataRequestCrypto getTokenGenerationDataRequestCrypto;
+    private GetUserTokensRequestCrypto getUserTokensRequestCrypto;
     @Autowired
     private NodeCryptoHelper nodeCryptoHelper;
     @MockBean
@@ -118,24 +120,24 @@ public class CurrencyServiceTests {
 
     @Test
     public void getUserTokenGenerationData_UnsignedRequest_shouldReturnBadRequest() {
-        GetTokenGenerationDataRequest getTokenGenerationDataRequest = new GetTokenGenerationDataRequest();
-        getTokenGenerationDataRequest.setSenderHash(userHash);
+        GetUserTokensRequest getUserTokensRequest = new GetUserTokensRequest();
+        getUserTokensRequest.setUserHash(userHash);
         ResponseEntity expected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
 
-        ResponseEntity actual = currencyService.getUserTokenGenerationData(getTokenGenerationDataRequest);
+        ResponseEntity actual = currencyService.getUserTokens(getUserTokensRequest);
         Assert.assertEquals(expected, actual);
 
-        getTokenGenerationDataRequest.setSenderHash(new Hash("1111"));
-        actual = currencyService.getUserTokenGenerationData(getTokenGenerationDataRequest);
+        getUserTokensRequest.setUserHash(new Hash("1111"));
+        actual = currencyService.getUserTokens(getUserTokensRequest);
         Assert.assertEquals(expected, actual);
     }
 
     @Test
     public void getUserTokenGenerationData_noUserTokenGenerations_shouldReturnEmptyResponse() {
-        GetTokenGenerationDataRequest getTokenGenerationDataRequest = new GetTokenGenerationDataRequest();
-        getTokenGenerationDataRequest.setSenderHash(userHash);
-        getTokenGenerationDataRequestCrypto.signMessage(getTokenGenerationDataRequest);
-        ResponseEntity actual = currencyService.getUserTokenGenerationData(getTokenGenerationDataRequest);
+        GetUserTokensRequest getUserTokensRequest = new GetUserTokensRequest();
+        getUserTokensRequest.setUserHash(userHash);
+        getUserTokensRequestCrypto.signMessage(getUserTokensRequest);
+        ResponseEntity actual = currencyService.getUserTokens(getUserTokensRequest);
         ResponseEntity expected = ResponseEntity.ok(new GetTokenGenerationDataResponse());
         Assert.assertEquals(expected, actual);
     }
@@ -147,10 +149,10 @@ public class CurrencyServiceTests {
         UserTokenGenerationData userTokenGenerationData = new UserTokenGenerationData(userHash, transactionHashToCurrencyHash);
         when(userTokenGenerations.getByHash(userTokenGenerationData.getUserHash())).thenReturn(userTokenGenerationData);
 
-        GetTokenGenerationDataRequest getTokenGenerationDataRequest = new GetTokenGenerationDataRequest();
-        getTokenGenerationDataRequest.setSenderHash(userHash);
-        getTokenGenerationDataRequestCrypto.signMessage(getTokenGenerationDataRequest);
-        ResponseEntity actual = currencyService.getUserTokenGenerationData(getTokenGenerationDataRequest);
+        GetUserTokensRequest getUserTokensRequest = new GetUserTokensRequest();
+        getUserTokensRequest.setUserHash(userHash);
+        getUserTokensRequestCrypto.signMessage(getUserTokensRequest);
+        ResponseEntity actual = currencyService.getUserTokens(getUserTokensRequest);
 
         GetTokenGenerationDataResponse getTokenGenerationDataResponse = new GetTokenGenerationDataResponse();
         getTokenGenerationDataResponse.addUnusedConfirmedTransaction(transactionHash);
@@ -168,10 +170,10 @@ public class CurrencyServiceTests {
         UserTokenGenerationData userTokenGenerationData = new UserTokenGenerationData(userHash, transactionHashToCurrencyHash);
         when(userTokenGenerations.getByHash(userTokenGenerationData.getUserHash())).thenReturn(userTokenGenerationData);
 
-        GetTokenGenerationDataRequest getTokenGenerationDataRequest = new GetTokenGenerationDataRequest();
-        getTokenGenerationDataRequest.setSenderHash(userHash);
-        getTokenGenerationDataRequestCrypto.signMessage(getTokenGenerationDataRequest);
-        ResponseEntity actual = currencyService.getUserTokenGenerationData(getTokenGenerationDataRequest);
+        GetUserTokensRequest getUserTokensRequest = new GetUserTokensRequest();
+        getUserTokensRequest.setUserHash(userHash);
+        getUserTokensRequestCrypto.signMessage(getUserTokensRequest);
+        ResponseEntity actual = currencyService.getUserTokens(getUserTokensRequest);
 
         GetTokenGenerationDataResponse getTokenGenerationDataResponse = new GetTokenGenerationDataResponse();
         getTokenGenerationDataResponse.addCompletedTransactionHashToGeneratedCurrency(transactionHash, currencyData);
@@ -190,10 +192,10 @@ public class CurrencyServiceTests {
         UserTokenGenerationData userTokenGenerationData = new UserTokenGenerationData(userHash, transactionHashToCurrencyHash);
         when(userTokenGenerations.getByHash(userTokenGenerationData.getUserHash())).thenReturn(userTokenGenerationData);
 
-        GetTokenGenerationDataRequest getTokenGenerationDataRequest = new GetTokenGenerationDataRequest();
-        getTokenGenerationDataRequest.setSenderHash(userHash);
-        getTokenGenerationDataRequestCrypto.signMessage(getTokenGenerationDataRequest);
-        ResponseEntity actual = currencyService.getUserTokenGenerationData(getTokenGenerationDataRequest);
+        GetUserTokensRequest getUserTokensRequest = new GetUserTokensRequest();
+        getUserTokensRequest.setUserHash(userHash);
+        getUserTokensRequestCrypto.signMessage(getUserTokensRequest);
+        ResponseEntity actual = currencyService.getUserTokens(getUserTokensRequest);
 
         GetTokenGenerationDataResponse getTokenGenerationDataResponse = new GetTokenGenerationDataResponse();
         getTokenGenerationDataResponse.addPendingTransactionHashToGeneratedCurrency(transactionHash, currencyData);
