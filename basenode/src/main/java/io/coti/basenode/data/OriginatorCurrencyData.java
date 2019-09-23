@@ -1,5 +1,6 @@
 package io.coti.basenode.data;
 
+import io.coti.basenode.crypto.CryptoHelper;
 import lombok.Data;
 
 import javax.validation.Valid;
@@ -36,5 +37,9 @@ public class OriginatorCurrencyData implements Serializable {
         scale = originatorCurrencyData.getScale();
         originatorHash = originatorCurrencyData.getOriginatorHash();
         originatorSignature = originatorCurrencyData.getOriginatorSignature();
+    }
+
+    public Hash calculateHash(){
+        return CryptoHelper.cryptoHash(symbol.getBytes(), 224);
     }
 }
