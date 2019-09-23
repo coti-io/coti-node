@@ -7,11 +7,12 @@ import java.nio.ByteBuffer;
 
 @Service
 public class GenerateTokenRequestCrypto extends SignatureCrypto<GenerateTokenRequest> {
+
     @Override
     public byte[] getSignatureMessage(GenerateTokenRequest generateTokenRequest) {
 
         byte[] transactionHashInBytes = generateTokenRequest.getTransactionHash().getBytes();
-        byte[] currencyHashInBytes = generateTokenRequest.getCurrencyData().getHash().getBytes();
+        byte[] currencyHashInBytes = generateTokenRequest.getOriginatorCurrencyData().getOriginatorHash().getBytes();
 
         byte[] generateTokenRequestBufferInBytes = ByteBuffer.allocate(transactionHashInBytes.length + currencyHashInBytes.length).
                 put(transactionHashInBytes).put(currencyHashInBytes).array();
