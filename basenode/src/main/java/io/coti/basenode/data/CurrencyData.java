@@ -1,7 +1,6 @@
 package io.coti.basenode.data;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
@@ -37,8 +36,15 @@ public class CurrencyData extends OriginatorCurrencyData implements IPropagatabl
         super(originatorCurrencyData);
     }
 
+    public CurrencyData(OriginatorCurrencyData originatorCurrencyData,CurrencyTypeData currencyTypeData) {
+        super(originatorCurrencyData);
+        creationTime = currencyTypeData.creationTime;
+        this.currencyTypeData = currencyTypeData;
+        setHash();
+    }
+
     public void setHash() {
-        hash = CryptoHelper.cryptoHash(symbol.getBytes(), 224);
+        hash = super.calculateHash();
     }
 
     public void setName(String name) {
