@@ -12,7 +12,7 @@ public class GenerateTokenRequestCrypto extends SignatureCrypto<GenerateTokenReq
     public byte[] getSignatureMessage(GenerateTokenRequest generateTokenRequest) {
 
         byte[] transactionHashInBytes = generateTokenRequest.getTransactionHash().getBytes();
-        byte[] currencyHashInBytes = generateTokenRequest.getOriginatorCurrencyData().getOriginatorHash().getBytes();
+        byte[] currencyHashInBytes = generateTokenRequest.getOriginatorCurrencyData().calculateHash().getBytes();
 
         byte[] generateTokenRequestBufferInBytes = ByteBuffer.allocate(transactionHashInBytes.length + currencyHashInBytes.length).
                 put(transactionHashInBytes).put(currencyHashInBytes).array();
