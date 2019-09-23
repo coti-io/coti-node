@@ -26,4 +26,13 @@ public class CotiRunTimeException extends RuntimeException {
             log.error("Cause: {}", getCause().toString());
         }
     }
+
+    public String getMessageAndCause() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(getMessage());
+        if (getCause() != null) {
+            stringBuilder.append("\nCause: ").append(getCause().toString());
+        }
+        return stringBuilder.toString();
+    }
 }
