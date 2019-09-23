@@ -14,29 +14,29 @@ import java.time.Instant;
 @Service
 public class CurrencyService extends BaseNodeCurrencyService {
 
-    @Value("${native.token.name}")
-    private String nativeTokenName;
-    @Value("${native.token.symbol}")
-    private String nativeTokenSymbol;
-    @Value("${native.token.supply}")
-    private BigDecimal nativeTokenTotalSupply;
-    @Value("${native.token.scale}")
-    private int nativeTokenScale;
-    @Value("${native.token.description}")
-    private String nativeTokenDescription;
-    @Value("${native.token.genesis.address}")
-    private String nativeTokenAddress;
+    @Value("${native.currency.name}")
+    private String nativeCurrencyName;
+    @Value("${native.currency.symbol}")
+    private String nativeCurrencySymbol;
+    @Value("${native.currency.supply}")
+    private BigDecimal nativeCurrencyTotalSupply;
+    @Value("${native.currency.scale}")
+    private int nativeCurrencyScale;
+    @Value("${native.currency.description}")
+    private String nativeCurrencyDescription;
+    @Value("${native.currency.genesis.address}")
+    private String nativeCurrencyAddress;
 
     @Override
     public void updateCurrencies() {
         CurrencyData nativeCurrencyData = getNativeCurrency();
         if (nativeCurrencyData == null) {
-            generateNativeToken();
+            generateNativeCurrency();
         }
     }
 
-    private void generateNativeToken() {
-        CurrencyData currencyData = super.createCurrencyData(nativeTokenName, (nativeTokenSymbol).toUpperCase(), nativeTokenTotalSupply, nativeTokenScale, Instant.now(), nativeTokenDescription
+    private void generateNativeCurrency() {
+        CurrencyData currencyData = super.createCurrencyData(nativeCurrencyName, (nativeCurrencySymbol).toUpperCase(), nativeCurrencyTotalSupply, nativeCurrencyScale, Instant.now(), nativeCurrencyDescription
                 , CurrencyType.NATIVE_COIN);
         putCurrencyData(currencyData);
         setNativeCurrencyData(currencyData);
