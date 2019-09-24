@@ -22,6 +22,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import static io.coti.financialserver.http.HttpStringConstants.*;
 
@@ -41,6 +43,20 @@ public class TransactionService extends BaseNodeTransactionService {
     private UserTokenGenerations userTokenGenerations;
     @Autowired
     private CurrencyService currencyService;
+    private BlockingQueue<TransactionData> tokenGenerationTransactionsQueue;
+    private Thread tokenGenerationTransactionsThread;
+
+    @Override
+    public void init() {
+        initTokenGenerationQueueAndThread();
+        super.init();
+    }
+
+    public void initTokenGenerationQueueAndThread() {
+        tokenGenerationTransactionsQueue = new LinkedBlockingQueue<>();
+        tokenGenerationTransactionsThread = new Thread(() -> handlePropagatedTokenGenerationTransactions());
+        tokenGenerationTransactionsThread.start();
+    }
 
     public ResponseEntity<IResponse> setReceiverBaseTransactionOwner(TransactionRequest transactionRequest) {
 
@@ -69,20 +85,35 @@ public class TransactionService extends BaseNodeTransactionService {
                 rollingReserveService.setRollingReserveReleaseDate(transactionData, rbtOwnerData.getMerchantHash());
             }
         } else if (transactionData.getType() == TransactionType.TokenGeneration) {
-            Hash senderHash = transactionData.getSenderHash();
-            currencyService.addUserToHashLocks(senderHash);
-            synchronized (currencyService.getUserHashLock(senderHash)) {
-                UserTokenGenerationData userTokenGenerationData = userTokenGenerations.getByHash(senderHash);
-                if (userTokenGenerationData == null) {
-                    Map<Hash, Hash> transactionHashToCurrencyMap = new HashMap<>();
-                    transactionHashToCurrencyMap.put(transactionData.getHash(), null);
-                    userTokenGenerations.put(new UserTokenGenerationData(senderHash, transactionHashToCurrencyMap));
-                } else {
-                    userTokenGenerationData.getTransactionHashToCurrencyMap().put(transactionData.getHash(), null);
-                    userTokenGenerations.put(userTokenGenerationData);
-                }
+            try {
+                tokenGenerationTransactionsQueue.put(transactionData);
+            } catch (InterruptedException e) {
+                log.error(String.format("Interrupted while waiting for insertion of token generation transaction %s into blocking queue.", transactionData.getHash()));
             }
-            currencyService.removeUserFromHashLocks(senderHash);
+        }
+    }
+
+    private void handlePropagatedTokenGenerationTransactions() {
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                TransactionData tokenGenerationTransaction = tokenGenerationTransactionsQueue.take();
+                Hash userHash = tokenGenerationTransaction.getSenderHash();
+                currencyService.addUserToHashLocks(userHash);
+                synchronized (currencyService.getUserHashLock(userHash)) {
+                    UserTokenGenerationData userTokenGenerationData = userTokenGenerations.getByHash(userHash);
+                    if (userTokenGenerationData == null) {
+                        Map<Hash, Hash> transactionHashToCurrencyMap = new HashMap<>();
+                        transactionHashToCurrencyMap.put(tokenGenerationTransaction.getHash(), null);
+                        userTokenGenerations.put(new UserTokenGenerationData(userHash, transactionHashToCurrencyMap));
+                    } else {
+                        userTokenGenerationData.getTransactionHashToCurrencyMap().put(tokenGenerationTransaction.getHash(), null);
+                        userTokenGenerations.put(userTokenGenerationData);
+                    }
+                }
+                currencyService.removeUserFromHashLocks(userHash);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 }
