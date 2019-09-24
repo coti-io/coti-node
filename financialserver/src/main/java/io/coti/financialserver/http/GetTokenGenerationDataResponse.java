@@ -1,6 +1,5 @@
 package io.coti.financialserver.http;
 
-import io.coti.basenode.data.TokenGenerationTransactionData;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.financialserver.http.data.GeneratedTokenResponseData;
 import lombok.Data;

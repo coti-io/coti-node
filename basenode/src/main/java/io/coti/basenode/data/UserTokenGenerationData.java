@@ -9,9 +9,9 @@ import java.util.Map;
 public class UserTokenGenerationData implements IEntity {
 
     private Hash userHash;
-    private Map<Hash,Hash> transactionHashToCurrencyMap;
+    private Map<Hash, Hash> transactionHashToCurrencyMap;
 
-    public UserTokenGenerationData(Hash userHash, Map<Hash,Hash> transactionHashToCurrencyMap){
+    public UserTokenGenerationData(Hash userHash, Map<Hash, Hash> transactionHashToCurrencyMap) {
         this.userHash = userHash;
         this.transactionHashToCurrencyMap = transactionHashToCurrencyMap;
     }
