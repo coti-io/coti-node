@@ -196,7 +196,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
             } catch (CurrencyException e) {
                 throw new CurrencyException("Currency details are already in use. ", e);
             }
-            processingCurrencyNameSet.put(currencyName, currencyName);
+            processingCurrencyNameSet.add(currencyName);
             OriginatorCurrencyData requestedCurrencyData = generateTokenRequest.getOriginatorCurrencyData();
             CurrencyType currencyType = CurrencyType.REGULAR_CMD_TOKEN;
             CurrencyTypeData currencyTypeData = new CurrencyTypeData(currencyType, Instant.now());
@@ -252,7 +252,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
     private void validateCurrencyUniqueness(Hash currencyHash, String currencyName, String currencySymbol) {
         StringBuilder sb = new StringBuilder();
 
-        if (processingCurrencyNameSet.get(currencyName) != null || currencyNameIndexes.getByHash(new CurrencyNameIndexData(currencyName, currencyHash).getHash()) != null) {
+        if (processingCurrencyNameSet.contains(currencyName) || currencyNameIndexes.getByHash(new CurrencyNameIndexData(currencyName, currencyHash).getHash()) != null) {
             sb.append("Currency name ").append(currencyName).append(" is already in use. ");
         }
         //TODO 9/23/2019 astolia: make sure removing/putting to these collections is in sync with this method.
