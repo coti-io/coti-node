@@ -16,8 +16,8 @@ import java.io.FileWriter;
 @Service
 public class ClusterStampService extends BaseNodeClusterStampService {
 
-    @Value("${native.token.genesis.address}")
-    private String nativeTokenAddress;
+    @Value("${native.currency.genesis.address}")
+    private String nativeCurrencyAddress;
     @Value("${upload.clusterstamp}")
     private boolean uploadMajorClusterStamp;
 
@@ -66,7 +66,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private String generateClusterStampLineFromNewCurrency(CurrencyData currencyData) {
         String clusterStampDelimiter = ",";
         StringBuilder sb = new StringBuilder();
-        sb.append(nativeTokenAddress).append(clusterStampDelimiter).append(currencyData.getTotalSupply().toString()).append(clusterStampDelimiter).append(currencyData.getHash());
+        sb.append(nativeCurrencyAddress).append(clusterStampDelimiter).append(currencyData.getTotalSupply().toString()).append(clusterStampDelimiter).append(currencyData.getHash());
         return sb.toString();
     }
 
