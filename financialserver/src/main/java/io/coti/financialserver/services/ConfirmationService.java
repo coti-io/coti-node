@@ -15,7 +15,7 @@ public class ConfirmationService extends BaseNodeConfirmationService {
     @Override
     protected void continueHandleTCCTransaction(TransactionData transactionData) {
         if (transactionData.getType() == TransactionType.TokenGeneration) {
-            currencyService.addToConfirmedTransactionQueue(transactionData);
+            currencyService.addTransactionQueue(transactionData);
         }
     }
 }
