@@ -31,6 +31,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -46,6 +47,10 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 public class CurrencyService extends BaseNodeCurrencyService {
 
     private static final String GET_NATIVE_CURRENCY_ENDPOINT = "/currencies/native";
+    private final Map<Hash, Hash> processingUserHashMap = new ConcurrentHashMap<>();
+    private final Set<String> processingCurrencyNameSet = Sets.newConcurrentHashSet();
+    private final Set<String> processingCurrencySymbolSet = Sets.newConcurrentHashSet();
+    private final Map<Hash, Hash> processingTransactionHashMap = new ConcurrentHashMap<>();
     @Value("${financialserver.seed}")
     private String seed;
     @Autowired
@@ -63,39 +68,40 @@ public class CurrencyService extends BaseNodeCurrencyService {
     @Autowired
     private Transactions transactions;
 
-    private Map<Hash, Hash> processingUserHashMap;
-    private Set<String> processingCurrencyNameSet;
-    private Set<String> processingCurrencySymbolSet;
-    private Map<Hash, Hash> processingTransactionHashMap;
 
     private BlockingQueue<TransactionData> confirmedTransactionQueue;
-    private Thread confirmedTransactionThread;
+    private BlockingQueue<TransactionData> tokenGenerationTransactionsQueue;
+
 
     @Override
     public void init() {
         super.init();
-        initConcurrentSets();
-        initConfirmedTransactionQueue();
-
+        initConfirmedTransactionQueueAndThread();
+        initTokenGenerationQueueAndThread();
     }
 
-    private void initConcurrentSets() {
-        processingUserHashMap = new ConcurrentHashMap<>();
-        processingCurrencyNameSet = Sets.newConcurrentHashSet();
-        processingCurrencySymbolSet = Sets.newConcurrentHashSet();
-        processingTransactionHashMap = new ConcurrentHashMap<>();
-    }
-
-    private void initConfirmedTransactionQueue() {
+    private void initConfirmedTransactionQueueAndThread() {
         confirmedTransactionQueue = new LinkedBlockingQueue<>();
-        confirmedTransactionThread = new Thread(() -> handleConfirmedTransaction());
+        Thread confirmedTransactionThread = new Thread(this::handleConfirmedTransaction);
         confirmedTransactionThread.start();
     }
 
-    protected void addToConfirmedTransactionQueue(TransactionData transactionData) {
+    private void initTokenGenerationQueueAndThread() {
+        tokenGenerationTransactionsQueue = new LinkedBlockingQueue<>();
+        Thread tokenGenerationTransactionsThread = new Thread(this::handlePropagatedTokenGenerationTransactions);
+        tokenGenerationTransactionsThread.start();
+    }
+
+    protected void addTransactionQueue(TransactionData transactionData) {
         try {
-            confirmedTransactionQueue.put(transactionData);
+            if(transactionData.isTrustChainConsensus()){
+                confirmedTransactionQueue.put(transactionData);
+            }
+            else{
+                tokenGenerationTransactionsQueue.put(transactionData);
+            }
         } catch (InterruptedException e) {
+            log.error(String.format("Interrupted while waiting for insertion of transaction %s into blocking queue.", transactionData.getHash()));
             Thread.currentThread().interrupt();
         }
     }
@@ -246,7 +252,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
                         pendingCurrencies.delete(currencyData);
                     }
                 }
-                processingCurrencyNameSet.remove(processingCurrencyNameSet);
+                processingCurrencyNameSet.remove(currencyName);
                 processingTransactionHashMap.remove(requestTransactionHash);
             } else {
                 pendingCurrencies.put(currencyData);
@@ -347,6 +353,30 @@ public class CurrencyService extends BaseNodeCurrencyService {
                 }
             }
             processingTransactionHashMap.remove(transactionHash);
+        }
+    }
+
+    private void handlePropagatedTokenGenerationTransactions() {
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                TransactionData tokenGenerationTransaction = tokenGenerationTransactionsQueue.take();
+                Hash userHash = tokenGenerationTransaction.getSenderHash();
+                addLockToProcessingMap(processingUserHashMap, userHash);
+                synchronized (processingUserHashMap.get(userHash)) {
+                    UserTokenGenerationData userTokenGenerationData = userTokenGenerations.getByHash(userHash);
+                    if (userTokenGenerationData == null) {
+                        Map<Hash, Hash> transactionHashToCurrencyMap = new HashMap<>();
+                        transactionHashToCurrencyMap.put(tokenGenerationTransaction.getHash(), null);
+                        userTokenGenerations.put(new UserTokenGenerationData(userHash, transactionHashToCurrencyMap));
+                    } else {
+                        userTokenGenerationData.getTransactionHashToCurrencyMap().put(tokenGenerationTransaction.getHash(), null);
+                        userTokenGenerations.put(userTokenGenerationData);
+                    }
+                }
+                removeLockFromLocksMap(processingUserHashMap, userHash);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 
