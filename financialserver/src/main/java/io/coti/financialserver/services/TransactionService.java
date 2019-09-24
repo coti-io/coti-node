@@ -51,7 +51,7 @@ public class TransactionService extends BaseNodeTransactionService {
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
 
-        if (transactionData.getType() == TransactionType.Payment) {
+        if (transactionData.getType().equals(TransactionType.Payment)) {
 
             ReceiverBaseTransactionOwnerData rbtOwnerData = receiverBaseTransactionOwners.getByHash(transactionHelper.getReceiverBaseTransactionHash(transactionData));
 
@@ -60,8 +60,8 @@ public class TransactionService extends BaseNodeTransactionService {
             } else {
                 rollingReserveService.setRollingReserveReleaseDate(transactionData, rbtOwnerData.getMerchantHash());
             }
-        } else if (transactionData.getType() == TransactionType.TokenGeneration) {
-            currencyService.addTransactionQueue(transactionData);
+        } else if (transactionData.getType().equals(TransactionType.TokenGeneration)) {
+            currencyService.addToTokenGenerationTransactionQueue(transactionData);
         }
     }
 

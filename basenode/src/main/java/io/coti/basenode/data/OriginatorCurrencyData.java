@@ -39,7 +39,7 @@ public class OriginatorCurrencyData implements Serializable {
         originatorSignature = originatorCurrencyData.getOriginatorSignature();
     }
 
-    public Hash calculateHash(){
+    public Hash calculateHash() {
         return CryptoHelper.cryptoHash(symbol.getBytes(), 224);
     }
 }

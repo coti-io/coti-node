@@ -36,7 +36,7 @@ public class CurrencyData extends OriginatorCurrencyData implements IPropagatabl
         super(originatorCurrencyData);
     }
 
-    public CurrencyData(OriginatorCurrencyData originatorCurrencyData,CurrencyTypeData currencyTypeData) {
+    public CurrencyData(OriginatorCurrencyData originatorCurrencyData, CurrencyTypeData currencyTypeData) {
         super(originatorCurrencyData);
         creationTime = currencyTypeData.creationTime;
         this.currencyTypeData = currencyTypeData;
