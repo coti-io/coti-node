@@ -34,7 +34,9 @@ import java.time.Instant;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.financialserver.http.HttpStringConstants.*;
@@ -66,10 +68,14 @@ public class CurrencyService extends BaseNodeCurrencyService {
     private Set<String> processingCurrencySymbolSet;
     private Map<Hash, Hash> processingTransactionHashMap;
 
+    private BlockingQueue<TransactionData> confirmedTransactionQueue;
+    private Thread confirmedTransactionThread;
+
     @Override
     public void init() {
         super.init();
         initConcurrentSets();
+        initConfirmedTransactionQueue();
 
     }
 
@@ -78,6 +84,31 @@ public class CurrencyService extends BaseNodeCurrencyService {
         processingCurrencyNameSet = Sets.newConcurrentHashSet();
         processingCurrencySymbolSet = Sets.newConcurrentHashSet();
         processingTransactionHashMap = new ConcurrentHashMap<>();
+    }
+
+    private void initConfirmedTransactionQueue() {
+        confirmedTransactionQueue = new LinkedBlockingQueue<>();
+        confirmedTransactionThread = new Thread(() -> handleConfirmedTransaction());
+        confirmedTransactionThread.start();
+    }
+
+    protected void addToConfirmedTransactionQueue(TransactionData transactionData) {
+        try {
+            confirmedTransactionQueue.put(transactionData);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void handleConfirmedTransaction() {
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                TransactionData transactionData = confirmedTransactionQueue.take();
+                handleTCCTransaction(transactionData);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     private void updateCurrencyDataNameIndex(CurrencyData currencyData) {
@@ -301,7 +332,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
         }
     }
 
-    public void handleTCCConfirmedTransaction(TransactionData transactionData) {
+    public void handleTCCTransaction(TransactionData transactionData) {
         final Hash userHash = transactionData.getSenderHash();
         final Hash transactionHash = transactionData.getHash();
         final Hash currencyHash = userTokenGenerations.getByHash(userHash).getTransactionHashToCurrencyMap().get(transactionHash);
