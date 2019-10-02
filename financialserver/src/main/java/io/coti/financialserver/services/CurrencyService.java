@@ -157,11 +157,12 @@ public class CurrencyService extends BaseNodeCurrencyService {
             }
             UserTokenGenerationData userTokenGenerationData = userTokenGenerations.getByHash(getUserTokensRequest.getUserHash());
             GetTokenGenerationDataResponse getTokenGenerationDataResponse = new GetTokenGenerationDataResponse();
+            HashSet<GeneratedTokenResponseData> generatedTokens = new HashSet<>();
+            getTokenGenerationDataResponse.setGeneratedTokens(generatedTokens);
             if (userTokenGenerationData == null) {
                 return ResponseEntity.ok(getTokenGenerationDataResponse);
             }
             Map<Hash, Hash> userTransactionHashToCurrencyHashMap = userTokenGenerationData.getTransactionHashToCurrencyMap();
-            HashSet<GeneratedTokenResponseData> generatedTokens = new HashSet<>();
             userTransactionHashToCurrencyHashMap.entrySet().forEach(entry ->
                     fillGetTokenGenerationDataResponse(generatedTokens, entry));
             return ResponseEntity.ok(getTokenGenerationDataResponse);
@@ -236,7 +237,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
             Hash requestTransactionHash = generateTokenRequest.getTransactionHash();
             Hash currencyHash = requestCurrencyData.calculateHash();
 
-            validateTransactionAvailability(userTokenGenerationData, requestTransactionHash, currencyHash);
+            validateTransactionAvailability(userTokenGenerationData, requestTransactionHash);
             validateCurrencyUniqueness(currencyHash, currencyName);
 
             CurrencyType currencyType = CurrencyType.REGULAR_CMD_TOKEN;
@@ -275,7 +276,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
         }
     }
 
-    private void validateTransactionAvailability(UserTokenGenerationData userTokenGenerationData, Hash requestTransactionHash, Hash currencyHash) {
+    private void validateTransactionAvailability(UserTokenGenerationData userTokenGenerationData, Hash requestTransactionHash) {
         final Hash existingCurrencyHash = userTokenGenerationData.getTransactionHashToCurrencyMap().get(requestTransactionHash);
         if (existingCurrencyHash != null) {
             throw new CurrencyException(String.format("Transaction hash %s was already used", requestTransactionHash));
