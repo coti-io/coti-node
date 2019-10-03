@@ -2,7 +2,10 @@ package io.coti.nodemanager.controllers;
 
 import io.coti.basenode.data.NetworkData;
 import io.coti.basenode.data.NetworkNodeData;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.INetworkService;
+import io.coti.nodemanager.http.SetNodeStakeRequest;
+import io.coti.nodemanager.services.StakingService;
 import io.coti.nodemanager.services.interfaces.INodeManagementService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +23,8 @@ public class NodeController {
     private INodeManagementService nodeManagementService;
     @Autowired
     private INetworkService networkService;
+    @Autowired
+    private StakingService stakingService;
 
     @PutMapping
     public ResponseEntity<String> addNode(@Valid @RequestBody NetworkNodeData networkNodeData) {
@@ -33,5 +38,8 @@ public class NodeController {
         return ResponseEntity.ok(networkService.getNetworkData());
     }
 
-
+    @PutMapping(path = "/stake")
+    public ResponseEntity<IResponse> setNodeStake(@Valid @RequestBody SetNodeStakeRequest request) {
+        return stakingService.setNodeStake(request);  // not checked
+    }
 }

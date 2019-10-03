@@ -18,4 +18,6 @@ public interface INodeManagementService {
     void insertDeletedNodeRecord(NetworkNodeData networkNodeData);
 
     Map<String, List<SingleNodeDetailsForWallet>> getNetworkDetailsForWallet();
+
+    SingleNodeDetailsForWallet getOneNodeDetailsForWallet();
 }

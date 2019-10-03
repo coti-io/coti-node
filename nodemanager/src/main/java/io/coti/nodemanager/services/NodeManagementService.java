@@ -1,6 +1,7 @@
 package io.coti.nodemanager.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.interfaces.INetworkService;
@@ -44,6 +45,9 @@ public class NodeManagementService implements INodeManagementService {
     private ActiveNodes activeNodes;
     @Autowired
     private INetworkService networkService;
+    @Autowired
+    private StakingService stakingService;
+
     @Value("${server.ip}")
     private String nodeManagerIp;
     @Value("${propagation.port}")
@@ -112,9 +116,27 @@ public class NodeManagementService implements INodeManagementService {
     @Override
     public Map<String, List<SingleNodeDetailsForWallet>> getNetworkDetailsForWallet() {
         Map<String, List<SingleNodeDetailsForWallet>> networkDetailsForWallet = new HashedMap<>();
-        List<SingleNodeDetailsForWallet> fullNodesDetailsForWallet = networkService.getMapFromFactory(NodeType.FullNode).values().stream()
-                .map(this::createSingleNodeDetailsForWallet)
-                .collect(Collectors.toList());
+
+        Map<Hash, NetworkNodeData> fullNodesDetails = networkService.getMapFromFactory(NodeType.FullNode);
+        Hash selectedNode = stakingService.selectNode(fullNodesDetails);
+        List<SingleNodeDetailsForWallet> fullNodesDetailsForWallet;
+        if( selectedNode != null) {
+            NetworkNodeData networkNodeData = fullNodesDetails.get(selectedNode);
+            fullNodesDetailsForWallet = fullNodesDetails.values().stream()
+                    .map(this::createSingleNodeDetailsForWallet)
+                    .filter(S -> stakingService.filterFullNodes(S))
+                    .collect(Collectors.toList());
+            SingleNodeDetailsForWallet selectedNodeForWallet = createSingleNodeDetailsForWallet(networkNodeData);
+            fullNodesDetailsForWallet.remove(selectedNodeForWallet);
+            fullNodesDetailsForWallet.add(0, createSingleNodeDetailsForWallet(networkNodeData));
+        }
+        else {
+            fullNodesDetailsForWallet = fullNodesDetails.values().stream()
+                    .map(this::createSingleNodeDetailsForWallet)
+                    .filter(S -> stakingService.filterFullNodes(S))
+                    .collect(Collectors.toList());
+        }
+
         List<SingleNodeDetailsForWallet> trustScoreNodesDetailsForWallet = networkService.getMapFromFactory(NodeType.TrustScoreNode).values().stream()
                 .map(this::createSingleNodeDetailsForWallet)
                 .collect(Collectors.toList());
@@ -127,6 +149,18 @@ public class NodeManagementService implements INodeManagementService {
         networkDetailsForWallet.put(TRUST_SCORE_NODES_FOR_WALLET_KEY, trustScoreNodesDetailsForWallet);
         networkDetailsForWallet.put(FINANCIAL_SERVER_FOR_WALLET_KEY, financialServerDetailsForWallet);
         return networkDetailsForWallet;
+    }
+
+    @Override
+    public SingleNodeDetailsForWallet getOneNodeDetailsForWallet() {
+        Map<Hash, NetworkNodeData> fullNodesDetails = networkService.getMapFromFactory(NodeType.FullNode);
+        Hash selectedNode = stakingService.selectNode(fullNodesDetails);
+        if( selectedNode != null) {
+            return createSingleNodeDetailsForWallet(fullNodesDetails.get(selectedNode));
+        }
+        else {
+            return null;
+        }
     }
 
     private SingleNodeDetailsForWallet createSingleNodeDetailsForWallet(NetworkNodeData node) {
