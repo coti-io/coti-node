@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 
 @Data
 public class StakingNodeDataList {
+
     private String node;
 
     public StakingNodeDataList(Hash nodeHash, BigDecimal stake) {

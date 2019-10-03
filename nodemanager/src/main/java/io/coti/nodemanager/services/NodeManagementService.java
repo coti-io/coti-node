@@ -118,23 +118,15 @@ public class NodeManagementService implements INodeManagementService {
         Map<String, List<SingleNodeDetailsForWallet>> networkDetailsForWallet = new HashedMap<>();
 
         Map<Hash, NetworkNodeData> fullNodesDetails = networkService.getMapFromFactory(NodeType.FullNode);
-        Hash selectedNode = stakingService.selectNode(fullNodesDetails);
-        List<SingleNodeDetailsForWallet> fullNodesDetailsForWallet;
+        NetworkNodeData selectedNode = stakingService.selectStakedNode(fullNodesDetails);
+        List<SingleNodeDetailsForWallet> fullNodesDetailsForWallet = fullNodesDetails.values().stream()
+                .map(this::createSingleNodeDetailsForWallet)
+                .filter(singleNodeDetailsForWallet -> stakingService.filterFullNode(singleNodeDetailsForWallet))
+                .collect(Collectors.toList());;
         if( selectedNode != null) {
-            NetworkNodeData networkNodeData = fullNodesDetails.get(selectedNode);
-            fullNodesDetailsForWallet = fullNodesDetails.values().stream()
-                    .map(this::createSingleNodeDetailsForWallet)
-                    .filter(S -> stakingService.filterFullNodes(S))
-                    .collect(Collectors.toList());
-            SingleNodeDetailsForWallet selectedNodeForWallet = createSingleNodeDetailsForWallet(networkNodeData);
+            SingleNodeDetailsForWallet selectedNodeForWallet = createSingleNodeDetailsForWallet(selectedNode);
             fullNodesDetailsForWallet.remove(selectedNodeForWallet);
-            fullNodesDetailsForWallet.add(0, createSingleNodeDetailsForWallet(networkNodeData));
-        }
-        else {
-            fullNodesDetailsForWallet = fullNodesDetails.values().stream()
-                    .map(this::createSingleNodeDetailsForWallet)
-                    .filter(S -> stakingService.filterFullNodes(S))
-                    .collect(Collectors.toList());
+            fullNodesDetailsForWallet.add(0, createSingleNodeDetailsForWallet(selectedNode));
         }
 
         List<SingleNodeDetailsForWallet> trustScoreNodesDetailsForWallet = networkService.getMapFromFactory(NodeType.TrustScoreNode).values().stream()
@@ -154,9 +146,9 @@ public class NodeManagementService implements INodeManagementService {
     @Override
     public SingleNodeDetailsForWallet getOneNodeDetailsForWallet() {
         Map<Hash, NetworkNodeData> fullNodesDetails = networkService.getMapFromFactory(NodeType.FullNode);
-        Hash selectedNode = stakingService.selectNode(fullNodesDetails);
+        NetworkNodeData selectedNode = stakingService.selectStakedNode(fullNodesDetails);
         if( selectedNode != null) {
-            return createSingleNodeDetailsForWallet(fullNodesDetails.get(selectedNode));
+            return createSingleNodeDetailsForWallet(selectedNode);
         }
         else {
             return null;

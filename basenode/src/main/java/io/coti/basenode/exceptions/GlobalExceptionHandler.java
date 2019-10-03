@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import javax.validation.ConstraintViolationException;
+import javax.validation.UnexpectedTypeException;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 
@@ -23,7 +24,7 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class})
+    @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class, UnexpectedTypeException.class})
     public ResponseEntity handleArgumentNotValid(Exception e) {
         log.info("Received a request with missing or invalid parameters.");
         log.info("Exception message: " + e);

@@ -1,6 +1,5 @@
 package io.coti.nodemanager.controllers;
 
-import io.coti.basenode.data.FeeData;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.nodemanager.http.SetNodeStakeAdminRequest;
 import io.coti.nodemanager.services.StakingService;
@@ -19,17 +18,12 @@ public class AdminController {
 
     @PutMapping(path = "/stake")
     public ResponseEntity<IResponse> setNodeStake(@Valid @RequestBody SetNodeStakeAdminRequest request) {
-        return stakingService.setNodeStake(request);
+        return stakingService.setNodeStake(request.getStakingNodeData());
     }
 
-    @GetMapping(path = "/stakerslist")
-    public ResponseEntity<IResponse> getStakersList() {
-        return stakingService.getStakersList();
-    }
-
-    @GetMapping(path = "/distributioncheck") // test distribution function
-    public ResponseEntity<String> distributionCheck(@Valid @RequestBody FeeData request) {
-        return stakingService.distributionCheck(request);
+    @GetMapping(path = "/stake/list")
+    public ResponseEntity<IResponse> getStakerList() {
+        return stakingService.getStakerList();
     }
 }
 

@@ -1,25 +1,18 @@
 package io.coti.nodemanager.http;
 
-import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Request;
+import io.coti.nodemanager.data.StakingNodeData;
 import lombok.Data;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.math.BigDecimal;
 
 @Data
 public class SetNodeStakeAdminRequest extends Request {
 
     @NotNull
-    private Hash nodeHash;
-    @NotNull
-    private BigDecimal stake;
+    private @Valid StakingNodeData stakingNodeData;
 
-    public SetNodeStakeAdminRequest(){
-    }
-
-    public SetNodeStakeAdminRequest(Hash nodeHash, BigDecimal stake) {
-        this.nodeHash = nodeHash;
-        this.stake = stake;
+    private SetNodeStakeAdminRequest() {
     }
 }

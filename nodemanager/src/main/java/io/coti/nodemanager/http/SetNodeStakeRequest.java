@@ -7,6 +7,7 @@ import io.coti.basenode.http.Request;
 import lombok.Data;
 
 import javax.validation.Valid;
+import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
@@ -14,8 +15,8 @@ import java.math.BigDecimal;
 public class SetNodeStakeRequest extends Request implements ISignValidatable {
 
     @NotNull
-    private Hash nodeHash;
-    @NotNull
+    private @Valid Hash nodeHash;
+    @DecimalMin(value = "0")
     private BigDecimal stake;
     @NotNull
     private Hash signerHash;
