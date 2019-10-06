@@ -7,18 +7,18 @@ import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.http.Request;
 import lombok.Data;
 
-import javax.validation.constraints.NotEmpty;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Data
 public class GenerateTokenRequest extends Request implements ISignValidatable {
 
-    @NotEmpty
-    private Hash transactionHash;
-    @NotEmpty
-    private OriginatorCurrencyData originatorCurrencyData;
     @NotNull
-    private SignatureData signature;
+    private @Valid Hash transactionHash;
+    @NotNull
+    private @Valid OriginatorCurrencyData originatorCurrencyData;
+    @NotNull
+    private @Valid SignatureData signature;
 
     @Override
     public Hash getSignerHash() {
