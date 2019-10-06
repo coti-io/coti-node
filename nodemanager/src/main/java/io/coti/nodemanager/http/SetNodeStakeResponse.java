@@ -8,11 +8,11 @@ import java.math.BigDecimal;
 
 @Data
 public class SetNodeStakeResponse extends BaseResponse {
+
     private String nodeHash;
     private String stake;
 
     public SetNodeStakeResponse(Hash nodeHash, BigDecimal stake) {
-        super();
         this.nodeHash = nodeHash.toHexString();
         this.stake = stake.toString();
     }

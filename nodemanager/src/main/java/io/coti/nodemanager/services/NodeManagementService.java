@@ -122,8 +122,8 @@ public class NodeManagementService implements INodeManagementService {
         List<SingleNodeDetailsForWallet> fullNodesDetailsForWallet = fullNodesDetails.values().stream()
                 .map(this::createSingleNodeDetailsForWallet)
                 .filter(singleNodeDetailsForWallet -> stakingService.filterFullNode(singleNodeDetailsForWallet))
-                .collect(Collectors.toList());;
-        if( selectedNode != null) {
+                .collect(Collectors.toList());
+        if (selectedNode != null) {
             SingleNodeDetailsForWallet selectedNodeForWallet = createSingleNodeDetailsForWallet(selectedNode);
             fullNodesDetailsForWallet.remove(selectedNodeForWallet);
             fullNodesDetailsForWallet.add(0, createSingleNodeDetailsForWallet(selectedNode));
@@ -147,10 +147,9 @@ public class NodeManagementService implements INodeManagementService {
     public SingleNodeDetailsForWallet getOneNodeDetailsForWallet() {
         Map<Hash, NetworkNodeData> fullNodesDetails = networkService.getMapFromFactory(NodeType.FullNode);
         NetworkNodeData selectedNode = stakingService.selectStakedNode(fullNodesDetails);
-        if( selectedNode != null) {
+        if (selectedNode != null) {
             return createSingleNodeDetailsForWallet(selectedNode);
-        }
-        else {
+        } else {
             return null;
         }
     }

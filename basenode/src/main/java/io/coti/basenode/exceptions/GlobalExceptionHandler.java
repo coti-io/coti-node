@@ -25,59 +25,53 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class, UnexpectedTypeException.class})
-    public ResponseEntity handleArgumentNotValid(Exception e) {
+    public ResponseEntity<ExceptionResponse> handleArgumentNotValid(Exception e) {
         log.info("Received a request with missing or invalid parameters.");
         log.info("Exception message: " + e);
-        ResponseEntity responseEntity = new ResponseEntity(
+        return new ResponseEntity<>(
                 new ExceptionResponse(INVALID_PARAMETERS_MESSAGE, API_CLIENT_ERROR), HttpStatus.BAD_REQUEST);
-        return responseEntity;
     }
 
     @ExceptionHandler(NullPointerException.class)
-    public ResponseEntity handleNullPointerException(NullPointerException e) {
+    public ResponseEntity<ExceptionResponse> handleNullPointerException(NullPointerException e) {
         log.error("NullPointerException for a request.");
         log.error("Exception: ", e);
-        ResponseEntity responseEntity = new ResponseEntity(
+        return new ResponseEntity<>(
                 new ExceptionResponse(GENERAL_EXCEPTION_ERROR, API_SERVER_ERROR), HttpStatus.INTERNAL_SERVER_ERROR);
-        return responseEntity;
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
+    public ResponseEntity<ExceptionResponse> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
         log.info("Received a request with unsupported method");
         log.info("Exception message: " + e.getMessage());
-        ResponseEntity responseEntity = new ResponseEntity(
+        return new ResponseEntity<>(
                 new ExceptionResponse(METHOD_NOT_SUPPORTED, API_CLIENT_ERROR), HttpStatus.NOT_FOUND);
-        return responseEntity;
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)
-    public ResponseEntity handleNoHandlerFoundException(NoHandlerFoundException e) {
+    public ResponseEntity<ExceptionResponse> handleNoHandlerFoundException(NoHandlerFoundException e) {
         log.info("Received a request with no handler");
         log.info("Exception message: " + e.getMessage());
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setContentType(MediaType.APPLICATION_JSON);
-        ResponseEntity responseEntity = ResponseEntity.status(HttpStatus.NOT_FOUND).headers(responseHeaders).body(new ExceptionResponse(e.getMessage(), API_CLIENT_ERROR));
-        return responseEntity;
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).headers(responseHeaders).body(new ExceptionResponse(e.getMessage(), API_CLIENT_ERROR));
     }
 
     @ExceptionHandler(RequestRejectedException.class)
-    public ResponseEntity handleRequestRejectedException(RequestRejectedException e) {
+    public ResponseEntity<ExceptionResponse> handleRequestRejectedException(RequestRejectedException e) {
         log.info("Received a rejected request");
         log.info("Exception message: " + e.getMessage());
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setContentType(MediaType.APPLICATION_JSON);
-        ResponseEntity responseEntity = ResponseEntity.status(HttpStatus.BAD_REQUEST).headers(responseHeaders).body(new ExceptionResponse(e.getMessage(), API_CLIENT_ERROR));
-        return responseEntity;
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).headers(responseHeaders).body(new ExceptionResponse(e.getMessage(), API_CLIENT_ERROR));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
+    public ResponseEntity<ExceptionResponse> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
         log.info("Received a request with missing parameters.");
         log.info("Exception message: " + e);
-        ResponseEntity responseEntity = new ResponseEntity(
+        return new ResponseEntity<>(
                 new ExceptionResponse(INVALID_PARAMETERS_MESSAGE, API_CLIENT_ERROR), HttpStatus.BAD_REQUEST);
-        return responseEntity;
     }
 
     @ExceptionHandler(ClientAbortException.class)
@@ -87,19 +81,17 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity handleDefaultException(Exception e) {
+    public ResponseEntity<ExceptionResponse> handleDefaultException(Exception e) {
         log.error("{} for a request.", e.getClass().getSimpleName());
         log.error("Exception: " + e);
-        ResponseEntity responseEntity = new ResponseEntity(
+        return new ResponseEntity<>(
                 new ExceptionResponse(GENERAL_EXCEPTION_ERROR, API_SERVER_ERROR), HttpStatus.INTERNAL_SERVER_ERROR);
-        return responseEntity;
     }
 
     @ExceptionHandler(TransactionException.class)
-    public ResponseEntity handleTransactionException(TransactionException e) {
+    public ResponseEntity<ExceptionResponse> handleTransactionException(TransactionException e) {
         log.error("An error while adding transaction, performing a rollback procedure. Exception message: {}", e.getMessage());
-        ResponseEntity responseEntity = new ResponseEntity(
+        return new ResponseEntity<>(
                 new ExceptionResponse(TRANSACTION_ROLLBACK_MESSAGE, API_SERVER_ERROR), HttpStatus.INTERNAL_SERVER_ERROR);
-        return responseEntity;
     }
 }

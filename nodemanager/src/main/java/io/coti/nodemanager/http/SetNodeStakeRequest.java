@@ -19,7 +19,7 @@ public class SetNodeStakeRequest extends Request implements ISignValidatable {
     @DecimalMin(value = "0")
     private BigDecimal stake;
     @NotNull
-    private Hash signerHash;
+    private @Valid Hash signerHash;
     @NotNull
     private @Valid SignatureData signature;
 

@@ -12,7 +12,7 @@ import io.coti.nodemanager.http.SetNodeStakeRequest;
 import io.coti.nodemanager.http.data.SingleNodeDetailsForWallet;
 import io.coti.nodemanager.http.data.StakingNodeResponseData;
 import io.coti.nodemanager.model.StakingNodes;
-import io.coti.nodemanager.services.data.WeightedNode;
+import io.coti.nodemanager.data.WeightedNode;
 import io.coti.nodemanager.services.interfaces.IStakingService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

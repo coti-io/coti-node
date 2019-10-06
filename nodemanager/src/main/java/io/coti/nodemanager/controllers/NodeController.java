@@ -19,6 +19,7 @@ import javax.validation.Valid;
 @RestController
 @RequestMapping("/nodes")
 public class NodeController {
+
     @Autowired
     private INodeManagementService nodeManagementService;
     @Autowired

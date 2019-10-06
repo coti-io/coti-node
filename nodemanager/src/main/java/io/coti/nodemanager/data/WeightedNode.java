@@ -1,4 +1,4 @@
-package io.coti.nodemanager.services.data;
+package io.coti.nodemanager.data;
 
 import io.coti.basenode.data.NetworkNodeData;
 import lombok.Data;
