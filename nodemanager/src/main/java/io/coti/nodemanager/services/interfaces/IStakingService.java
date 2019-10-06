@@ -1,5 +1,6 @@
 package io.coti.nodemanager.services.interfaces;
 
+import io.coti.basenode.data.FeeData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.http.interfaces.IResponse;
@@ -17,6 +18,8 @@ public interface IStakingService {
     ResponseEntity<IResponse> setNodeStake(SetNodeStakeRequest setNodeStakeRequest);
 
     ResponseEntity<IResponse> getStakerList();
+
+    ResponseEntity<String> distributionCheck(FeeData request);
 
     NetworkNodeData selectStakedNode(Map<Hash, NetworkNodeData> nodeMap);
 

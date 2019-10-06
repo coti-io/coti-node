@@ -1,8 +1,6 @@
 package io.coti.nodemanager.services;
 
-import io.coti.basenode.data.FeeData;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.NetworkNodeData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.nodemanager.crypto.StakingNodeCrypto;
@@ -90,6 +88,22 @@ public class StakingService implements IStakingService {
                     .status(HttpStatus.BAD_REQUEST)
                     .body(new Response(e.getMessage(), STATUS_ERROR));
         }
+    }
+
+    @Override
+    public ResponseEntity<String> distributionCheck(FeeData request) {
+        Map<Hash, NetworkNodeData> stakers = new HashMap<>();
+        stakingNodes.forEach(N -> {
+            stakers.put(N.getHash(), new NetworkNodeData(NodeType.FullNode, "no", "no", N.getHash(), NetworkType.TestNet));
+        });
+
+        for (NetworkNodeData stake : stakers.values()) {
+            stake.setFeeData(new FeeData(request.getFeePercentage(), request.getMinimumFee(), request.getMaximumFee()));
+        }
+
+        NetworkNodeData selectedNode = selectStakedNode(stakers);
+
+        return ResponseEntity.status(HttpStatus.OK).body(selectedNode.getNodeHash().toHexString());
     }
 
     @Override
