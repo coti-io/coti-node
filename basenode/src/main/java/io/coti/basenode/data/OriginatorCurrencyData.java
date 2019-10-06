@@ -2,9 +2,12 @@ package io.coti.basenode.data;
 
 import io.coti.basenode.crypto.CryptoHelper;
 import lombok.Data;
+import org.hibernate.validator.constraints.Range;
 
 import javax.validation.Valid;
+import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
@@ -17,13 +20,13 @@ public class OriginatorCurrencyData implements Serializable {
     protected String symbol;
     @NotEmpty
     private String description;
-    @NotEmpty
+    @DecimalMin(value = "0")
     protected BigDecimal totalSupply;
-    @NotEmpty
+    @Range(min = 0, max = 12)
     protected int scale;
-    @NotEmpty
+    @NotNull
     protected @Valid Hash originatorHash;
-    @NotEmpty
+    @NotNull
     protected @Valid SignatureData originatorSignature;
 
     protected OriginatorCurrencyData() {
