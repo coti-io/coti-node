@@ -9,7 +9,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.regex.Pattern;
 
@@ -17,15 +17,15 @@ import java.util.regex.Pattern;
 @Data
 public class CurrencyData extends OriginatorCurrencyData implements IPropagatable, ISignable, ISignValidatable {
 
-    @NotEmpty
+    @NotNull
     private @Valid Hash hash;
-    @NotEmpty
+    @NotNull
     private @Valid CurrencyTypeData currencyTypeData;
-    @NotEmpty
+    @NotNull
     private Instant creationTime;
-    @NotEmpty
+    @NotNull
     private @Valid Hash registrarHash;
-    @NotEmpty
+    @NotNull
     private @Valid SignatureData registrarSignature;
 
     public CurrencyData() {
