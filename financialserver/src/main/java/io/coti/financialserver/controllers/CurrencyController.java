@@ -25,7 +25,7 @@ public class CurrencyController {
     }
 
     @PutMapping(path = "/token/generate")
-    public ResponseEntity<IResponse> generateToken(GenerateTokenRequest generateTokenRequest) {
+    public ResponseEntity<IResponse> generateToken(@Valid @RequestBody GenerateTokenRequest generateTokenRequest) {
         return currencyService.generateToken(generateTokenRequest);
     }
 }
