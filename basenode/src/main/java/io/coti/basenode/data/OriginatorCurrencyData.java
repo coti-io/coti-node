@@ -26,7 +26,7 @@ public class OriginatorCurrencyData implements Serializable {
     @NotEmpty
     protected @Valid SignatureData originatorSignature;
 
-    protected OriginatorCurrencyData() {
+    public OriginatorCurrencyData() {
     }
 
     public OriginatorCurrencyData(OriginatorCurrencyData originatorCurrencyData) {

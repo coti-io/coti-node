@@ -93,6 +93,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
     private void addToTransactionQueue(BlockingQueue<TransactionData> queue, TransactionData transactionData) {
         try {
             queue.put(transactionData);
+            log.info("addToTransactionQueue queue size is {}, transaction hash {}", queue.size(), transactionData.getHash());
         } catch (InterruptedException e) {
             log.error("Interrupted while waiting for insertion of transaction {} into blocking queue.", transactionData.getHash());
             Thread.currentThread().interrupt();
@@ -101,10 +102,12 @@ public class CurrencyService extends BaseNodeCurrencyService {
 
     public void addToPendingCurrencyTransactionQueue(TransactionData transactionData) {
         addToTransactionQueue(pendingCurrencyTransactionQueue, transactionData);
+        log.info("addToPendingCurrencyTransactionQueue pendingCurrencyTransactionQueue size {}", pendingCurrencyTransactionQueue.size());
     }
 
     public void addToTokenGenerationTransactionQueue(TransactionData transactionData) {
         addToTransactionQueue(tokenGenerationTransactionQueue, transactionData);
+        log.info("addToTokenGenerationTransactionQueue tokenGenerationTransactionQueue size {}", tokenGenerationTransactionQueue.size());
     }
 
     private void updateCurrencyNameIndex(CurrencyData currencyData) {
@@ -215,7 +218,6 @@ public class CurrencyService extends BaseNodeCurrencyService {
         removeLockFromProcessingSet(processingCurrencySymbolSet, generateTokenRequest.getOriginatorCurrencyData().getSymbol());
         removeLockFromProcessingSet(processingCurrencyNameSet, generateTokenRequest.getOriginatorCurrencyData().getName());
         removeLockFromLocksMap(lockTransactionHashMap, generateTokenRequest.getTransactionHash());
-        removeLockFromLocksMap(lockUserHashMap, generateTokenRequest.getSignerHash());
     }
 
     private void occupyLocks(GenerateTokenRequest generateTokenRequest) {
@@ -229,7 +231,10 @@ public class CurrencyService extends BaseNodeCurrencyService {
         OriginatorCurrencyData requestCurrencyData = generateTokenRequest.getOriginatorCurrencyData();
         String currencyName = requestCurrencyData.getName();
         Hash userHash = generateTokenRequest.getSignerHash();
-        synchronized (lockUserHashMap.get(userHash)) {
+        log.info("validateUniquenessAndAddToken - about to lock User {}", userHash);
+        log.info("validateUniquenessAndAddToken - lockUserHashMap size {}", lockUserHashMap.size());
+        log.info("validateUniquenessAndAddToken - lockUserHashMap value {}", lockUserHashMap.get(userHash));
+        synchronized (addLockToLockMap(lockUserHashMap, userHash)) {
             UserTokenGenerationData userTokenGenerationData = userTokenGenerations.getByHash(userHash);
             if (userTokenGenerationData == null) {
                 throw new CurrencyException("Couldn't find Token generation data to match token generation request. Transaction was not propagated yet.");
@@ -245,6 +250,9 @@ public class CurrencyService extends BaseNodeCurrencyService {
             CurrencyData currencyData = new CurrencyData(requestCurrencyData, currencyTypeData);
             setSignedCurrencyTypeData(currencyData, currencyType);
 
+            log.info("validateUniquenessAndAddToken - about to lock Tx {}", requestTransactionHash);
+            log.info("validateUniquenessAndAddToken - lockTransactionHashMap size {}", lockTransactionHashMap.size());
+            log.info("validateUniquenessAndAddToken - lockTransactionHashMap value {}", lockTransactionHashMap.get(requestTransactionHash));
             synchronized (lockTransactionHashMap.get(requestTransactionHash)) {
                 TransactionData tokenGenerationTransactionData = transactions.getByHash(requestTransactionHash);
                 Hash requestCurrencyDataHash = currencyData.getHash();
@@ -256,6 +264,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
                 }
             }
             userTokenGenerations.put(userTokenGenerationData);
+            removeLockFromLocksMap(lockUserHashMap, generateTokenRequest.getSignerHash());
         }
     }
 
@@ -292,9 +301,11 @@ public class CurrencyService extends BaseNodeCurrencyService {
         }
     }
 
-    private void addLockToLockMap(Map<Hash, Hash> locksIdentityMap, Hash hash) {
+    private Hash addLockToLockMap(Map<Hash, Hash> locksIdentityMap, Hash hash) {
         synchronized (locksIdentityMap) {
             locksIdentityMap.putIfAbsent(hash, hash);
+            log.info("addLockToLockMap Locking {}", hash);
+            return locksIdentityMap.get(hash);
         }
     }
 
@@ -303,6 +314,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
             Hash hashLock = locksIdentityMap.get(hash);
             if (hashLock != null) {
                 locksIdentityMap.remove(hash);
+                log.info("removeLockFromLocksMap Unlocking {}", hash);
             }
         }
     }
@@ -313,6 +325,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
                 throw new CurrencyException(String.format("%s is in progress", lock));
             } else {
                 lockProcessingSet.add(lock);
+                log.info("addLockToProcessingSet Locking {}", lock);
             }
         }
     }
@@ -320,37 +333,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
     public void removeLockFromProcessingSet(Set<String> lockProcessingSet, String lock) {
         synchronized (lockProcessingSet) {
             lockProcessingSet.remove(lock);
-        }
-    }
-
-    private void handlePendingCurrencies() {
-        while (!Thread.currentThread().isInterrupted()) {
-            Hash transactionHash = null;
-            try {
-                TransactionData transactionData = pendingCurrencyTransactionQueue.take();
-                final Hash userHash = transactionData.getSenderHash();
-                transactionHash = transactionData.getHash();
-                UserTokenGenerationData userTokenGenerationData = userTokenGenerations.getByHash(userHash);
-                if (userTokenGenerationData != null) {
-                    final Hash currencyHash = userTokenGenerations.getByHash(userHash).getTransactionHashToCurrencyMap().get(transactionHash);
-                    if (currencyHash != null) {
-                        addLockToLockMap(lockTransactionHashMap, transactionHash);
-                        synchronized (lockTransactionHashMap.get(transactionHash)) {
-                            CurrencyData pendingCurrency = pendingCurrencies.getByHash(currencyHash);
-                            if (pendingCurrency != null) {
-                                pendingCurrencies.deleteByHash(currencyHash);
-                                putCurrencyData(pendingCurrency);
-                            }
-                        }
-                    }
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            } finally {
-                if (transactionHash != null) {
-                    removeLockFromLocksMap(lockTransactionHashMap, transactionHash);
-                }
-            }
+            log.info("removeLockFromProcessingSet Unlocking {}", lock);
         }
     }
 
@@ -358,10 +341,11 @@ public class CurrencyService extends BaseNodeCurrencyService {
         while (!Thread.currentThread().isInterrupted()) {
             Hash userHash = null;
             try {
+                log.info("handlePropagatedTokenGenerationTransactions - tokenGenerationTransactionQueue size {}", tokenGenerationTransactionQueue.size());
                 TransactionData tokenGenerationTransaction = tokenGenerationTransactionQueue.take();
                 userHash = tokenGenerationTransaction.getSenderHash();
-                addLockToLockMap(lockUserHashMap, userHash);
-                synchronized (lockUserHashMap.get(userHash)) {
+                log.info("handlePropagatedTokenGenerationTransactions - Reached here with userHash {} , lockUserHashMap size {}", userHash, lockUserHashMap.size());
+                synchronized (addLockToLockMap(lockUserHashMap, userHash)) {
                     UserTokenGenerationData userTokenGenerationData = userTokenGenerations.getByHash(userHash);
                     if (userTokenGenerationData == null) {
                         Map<Hash, Hash> transactionHashToCurrencyMap = new HashMap<>();
@@ -371,15 +355,55 @@ public class CurrencyService extends BaseNodeCurrencyService {
                         userTokenGenerationData.getTransactionHashToCurrencyMap().put(tokenGenerationTransaction.getHash(), null);
                         userTokenGenerations.put(userTokenGenerationData);
                     }
+                    if (userHash != null) {
+                        log.info("handlePropagatedTokenGenerationTransactions removeLockFromLocksMap lockUserHashMap for userHash {}", userHash);
+                        removeLockFromLocksMap(lockUserHashMap, userHash);
+                    }
                 }
-
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } finally {
-                if (userHash != null) {
-                    removeLockFromLocksMap(lockUserHashMap, userHash);
+                log.info("handlePropagatedTokenGenerationTransactions userHash {}", userHash);
+            }
+        }
+    }
+
+    private void handlePendingCurrencies() {
+        while (!Thread.currentThread().isInterrupted()) {
+            Hash transactionHash = null;
+            try {
+                log.info("handlePendingCurrencies - pendingCurrencyTransactionQueue size {}", pendingCurrencyTransactionQueue.size());
+                TransactionData transactionData = pendingCurrencyTransactionQueue.take();
+                log.info("handlePendingCurrencies - pendingCurrencyTransactionQueue size {} with txData {}", pendingCurrencyTransactionQueue.size(), transactionData.getHash());
+                final Hash userHash = transactionData.getSenderHash();
+                transactionHash = transactionData.getHash();
+                log.info("handlePendingCurrencies - Reached here with userHash {} , lockUserHashMap size {}", userHash, lockUserHashMap.size());
+                UserTokenGenerationData userTokenGenerationData = userTokenGenerations.getByHash(userHash);
+                if (userTokenGenerationData != null) {
+                    final Hash currencyHash = userTokenGenerationData.getTransactionHashToCurrencyMap().get(transactionHash);
+                    log.info("handlePendingCurrencies - Reached here with currencyHash {}", currencyHash);
+                    if (currencyHash != null) {
+                        synchronized (addLockToLockMap(lockTransactionHashMap, transactionHash)) {
+                            CurrencyData pendingCurrency = pendingCurrencies.getByHash(currencyHash);
+                            if (pendingCurrency != null) {
+                                log.info("handlePendingCurrencies - Reached here with pendingCurrency {}", pendingCurrency.getHash());
+                                pendingCurrencies.deleteByHash(currencyHash);
+                                putCurrencyData(pendingCurrency);
+                                log.info("handlePendingCurrencies - Reached the end");
+                            }
+                        }
+                    }
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } finally {
+                log.info("handlePendingCurrencies transactionHash {}", transactionHash);
+                if (transactionHash != null) {
+                    removeLockFromLocksMap(lockTransactionHashMap, transactionHash);
                 }
             }
         }
     }
+
+
 }
