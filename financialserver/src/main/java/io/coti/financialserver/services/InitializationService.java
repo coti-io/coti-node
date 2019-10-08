@@ -1,10 +1,7 @@
 package io.coti.financialserver.services;
 
 import io.coti.basenode.crypto.NodeCryptoHelper;
-import io.coti.basenode.data.DspConsensusResult;
-import io.coti.basenode.data.NetworkNodeData;
-import io.coti.basenode.data.NodeType;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.services.BaseNodeInitializationService;
@@ -53,7 +50,7 @@ public class InitializationService extends BaseNodeInitializationService {
             super.createNetworkNodeData();
             super.getNetwork();
 
-            publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(TransactionData.class, DspConsensusResult.class));
+            publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(TransactionData.class, DspConsensusResult.class, CurrencyNoticeData.class));
             communicationService.initSubscriber(NodeType.FinancialServer, publisherNodeTypeToMessageTypesMap);
 
             communicationService.initPublisher(propagationPort, NodeType.FinancialServer);
