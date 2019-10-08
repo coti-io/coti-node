@@ -10,6 +10,7 @@ import io.coti.basenode.exceptions.CurrencyValidationException;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
+import io.coti.basenode.services.BaseNodeClusterStampService;
 import io.coti.basenode.services.BaseNodeCurrencyService;
 import io.coti.basenode.services.TransactionHelper;
 import io.coti.financialserver.crypto.GenerateTokenRequestCrypto;
@@ -48,6 +49,7 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 public class CurrencyService extends BaseNodeCurrencyService {
 
     private static final String GET_NATIVE_CURRENCY_ENDPOINT = "/currencies/native";
+    public static final String CURRENCIES_TOKEN_ENDPOINT = "/currencies/token";
     private final Map<Hash, Hash> lockUserHashMap = new ConcurrentHashMap<>();
     private final Map<Hash, Hash> lockTransactionHashMap = new ConcurrentHashMap<>();
     private final Set<String> processingCurrencyNameSet = Sets.newConcurrentHashSet();
@@ -70,6 +72,8 @@ public class CurrencyService extends BaseNodeCurrencyService {
     private Transactions transactions;
     @Autowired
     private TransactionHelper transactionHelper;
+    @Autowired
+    private BaseNodeClusterStampService baseNodeClusterStampService;
     private BlockingQueue<TransactionData> pendingCurrencyTransactionQueue;
     private BlockingQueue<TransactionData> tokenGenerationTransactionQueue;
     private Thread pendingCurrencyTransactionThread;
@@ -225,6 +229,8 @@ public class CurrencyService extends BaseNodeCurrencyService {
         OriginatorCurrencyData requestCurrencyData = generateTokenRequest.getOriginatorCurrencyData();
         String currencyName = requestCurrencyData.getName();
         Hash userHash = generateTokenRequest.getSignerHash();
+        CurrencyData currencyData = null;
+        boolean currencyConfirmed = false;
         synchronized (addLockToLockMap(lockUserHashMap, userHash)) {
             UserTokenGenerationData userTokenGenerationData = userTokenGenerations.getByHash(userHash);
             if (userTokenGenerationData == null) {
@@ -238,7 +244,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
 
             CurrencyType currencyType = CurrencyType.REGULAR_CMD_TOKEN;
             CurrencyTypeData currencyTypeData = new CurrencyTypeData(currencyType, Instant.now());
-            CurrencyData currencyData = new CurrencyData(requestCurrencyData, currencyTypeData);
+            currencyData = new CurrencyData(requestCurrencyData, currencyTypeData);
             setSignedCurrencyTypeData(currencyData, currencyType);
 
             synchronized (addLockToLockMap(lockTransactionHashMap, requestTransactionHash)) {
@@ -247,6 +253,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
                 userTokenGenerationData.getTransactionHashToCurrencyMap().put(requestTransactionHash, requestCurrencyDataHash);
                 if (transactionHelper.isConfirmed(tokenGenerationTransactionData)) {
                     putCurrencyData(currencyData);
+                    currencyConfirmed = true;
                 } else {
                     putPendingCurrencyData(currencyData);
                 }
@@ -255,6 +262,25 @@ public class CurrencyService extends BaseNodeCurrencyService {
             userTokenGenerations.put(userTokenGenerationData);
             removeLockFromLocksMap(lockUserHashMap, generateTokenRequest.getSignerHash());
         }
+        if (currencyConfirmed) {
+            sendConfirmedCurrency(currencyData);
+        }
+    }
+
+    private void sendConfirmedCurrency(CurrencyData currencyData) {
+        String recoveryServerAddress = networkService.getRecoveryServerAddress();
+        ResponseEntity<ResponseEntity> responseEntity = restTemplate.postForEntity(recoveryServerAddress + CURRENCIES_TOKEN_ENDPOINT, currencyData, ResponseEntity.class);
+
+        HttpStatus statusCode = responseEntity.getStatusCode();
+        ResponseEntity responseEntityBody = responseEntity.getBody();
+        if (statusCode != HttpStatus.OK) {
+            if (statusCode.equals(HttpStatus.UNAUTHORIZED) || statusCode.equals(HttpStatus.BAD_REQUEST)) {
+                throw new CurrencyException(responseEntityBody.toString());
+                //TODO 10/7/2019 tomer: Consider removing currency or moving to queue for further handling
+            }
+        }
+
+
     }
 
 
@@ -337,6 +363,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
                             if (pendingCurrency != null) {
                                 pendingCurrencies.deleteByHash(currencyHash);
                                 putCurrencyData(pendingCurrency);
+                                sendConfirmedCurrency(pendingCurrency);
                             }
                             removeLockFromLocksMap(lockTransactionHashMap, transactionHash);
                         }
@@ -370,4 +397,15 @@ public class CurrencyService extends BaseNodeCurrencyService {
             }
         }
     }
+
+    @Override
+    public void handlePropagatedCurrencyNotice(CurrencyNoticeData currencyNoticeData) {
+        CurrencyData currencyData = currencyNoticeData.getCurrencyData();
+        if (!verifyCurrencyExists(currencyData.getHash())) {
+            log.error("Propagated currency {} does not exist", currencyData.getName());
+            return;
+        }
+        baseNodeClusterStampService.handlePropagatedCurrencyNoticeForExistingCurrency(currencyNoticeData);
+    }
+
 }
