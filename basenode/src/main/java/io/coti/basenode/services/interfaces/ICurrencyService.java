@@ -1,7 +1,7 @@
 package io.coti.basenode.services.interfaces;
 
 import io.coti.basenode.data.CurrencyData;
-import io.coti.basenode.data.CurrencyNoticeData;
+import io.coti.basenode.data.InitiatedTokenNoticeData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.GetUpdatedCurrencyRequest;
 import reactor.core.publisher.FluxSink;
@@ -28,5 +28,5 @@ public interface ICurrencyService {
 
     int getTokenScale(Hash currencyHash);
 
-    void handlePropagatedCurrencyNotice(CurrencyNoticeData currencyNoticeData);
+    void handlePropagatedCurrencyNotice(InitiatedTokenNoticeData initiatedTokenNoticeData);
 }

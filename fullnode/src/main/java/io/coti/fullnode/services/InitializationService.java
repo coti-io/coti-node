@@ -44,7 +44,7 @@ public class InitializationService extends BaseNodeInitializationService {
             super.createNetworkNodeData();
             super.getNetwork();
 
-            publisherNodeTypeToMessageTypesMap.put(NodeType.DspNode, Arrays.asList(TransactionData.class, AddressData.class, DspConsensusResult.class, CurrencyNoticeData.class));
+            publisherNodeTypeToMessageTypesMap.put(NodeType.DspNode, Arrays.asList(TransactionData.class, AddressData.class, DspConsensusResult.class, InitiatedTokenNoticeData.class));
 
             communicationService.initSubscriber(NodeType.FullNode, publisherNodeTypeToMessageTypesMap);
 

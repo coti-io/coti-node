@@ -6,6 +6,7 @@ import io.coti.basenode.crypto.CurrencyRegistrarCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeCurrencyService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,7 +62,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
         setNativeCurrencyData(currencyData);
     }
 
-    public ResponseEntity<BaseResponse> initiateToken(CurrencyData currencyData) {
+    public ResponseEntity<IResponse> initiateToken(CurrencyData currencyData) {
         if (!currencyOriginatorCrypto.verifySignature(currencyData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new Response(String.format("Failed to verify currency originator %s", currencyData.getOriginatorHash().toString()), STATUS_ERROR));
@@ -88,8 +89,8 @@ public class CurrencyService extends BaseNodeCurrencyService {
 
         ClusterStampNameData clusterStampNameData = clusterStampService.handleNewToken(currencyData);
 
-        CurrencyNoticeData currencyNoticeData = new CurrencyNoticeData(currencyData, clusterStampNameData);
-        propagationPublisher.propagate(currencyNoticeData, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode));
+        InitiatedTokenNoticeData initiatedTokenNoticeData = new InitiatedTokenNoticeData(currencyData, clusterStampNameData);
+        propagationPublisher.propagate(initiatedTokenNoticeData, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode));
 
 
         return ResponseEntity.status(HttpStatus.OK)
