@@ -1,5 +1,6 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.crypto.CurrencyOriginatorCrypto;
 import io.coti.basenode.crypto.CurrencyRegistrarCrypto;
 import io.coti.basenode.crypto.CurrencyTypeRegistrationCrypto;
 import io.coti.basenode.crypto.GetUpdatedCurrencyRequestCrypto;
@@ -10,6 +11,7 @@ import io.coti.basenode.http.CustomRequestCallBack;
 import io.coti.basenode.http.GetUpdatedCurrencyRequest;
 import io.coti.basenode.http.HttpJacksonSerializer;
 import io.coti.basenode.model.Currencies;
+import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IChunkService;
 import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.INetworkService;
@@ -52,9 +54,16 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Autowired
     private HttpJacksonSerializer jacksonSerializer;
     @Autowired
+    private CurrencyOriginatorCrypto currencyOriginatorCrypto;
+    @Autowired
     private CurrencyRegistrarCrypto currencyRegistrarCrypto;
     @Autowired
     private IChunkService chunkService;
+    @Autowired
+    private BaseNodeClusterStampService baseNodeClusterStampService;
+    @Autowired
+    protected IBalanceService balanceService;
+
 
     public void init() {
         try {
@@ -193,6 +202,35 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             throw new CurrencyNotFoundException(String.format("Currency with hash %s was not found", currencyHash));
         }
         return currency.getScale();
+    }
+
+    @Override
+    public void handlePropagatedCurrencyNotice(CurrencyNoticeData currencyNoticeData) {
+        CurrencyData currencyData = currencyNoticeData.getCurrencyData();
+        if (!verifyPropagatedCurrencyData(currencyData)) return;
+
+        putCurrencyData(currencyData);
+        baseNodeClusterStampService.handlePropagatedCurrencyNoticeForExistingCurrency(currencyNoticeData);
+    }
+
+    protected boolean verifyPropagatedCurrencyData(CurrencyData currencyData) {
+        if (!currencyOriginatorCrypto.verifySignature(currencyData)) {
+            log.error("Failed to verify propagated currency {} originator already exists", currencyData.getName());
+            return false;
+        }
+        if (!currencyRegistrarCrypto.verifySignature(currencyData)) {
+            log.error("Failed to verify propagated currency {} registrar already exists", currencyData.getName());
+            return false;
+        }
+        if (verifyCurrencyExists(currencyData.getHash())) {
+            log.error("Propagated currency {} already exists", currencyData.getName());
+            return false;
+        }
+        if (currencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
+            log.error("Propagated currency {} marked as native", currencyData.getName());
+            return false;
+        }
+        return true;
     }
 
     private void getRequiringUpdateOfCurrencyDataByType(Map<CurrencyType, HashSet<Hash>> existingCurrencyHashesByType, FluxSink<CurrencyData> fluxSink) {

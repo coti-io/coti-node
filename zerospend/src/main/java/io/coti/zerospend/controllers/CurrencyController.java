@@ -1,12 +1,14 @@
 package io.coti.zerospend.controllers;
 
 import io.coti.basenode.data.CurrencyData;
+import io.coti.basenode.http.BaseResponse;
 import io.coti.zerospend.services.CurrencyService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 @Slf4j
 @RestController
@@ -20,4 +22,10 @@ public class CurrencyController {
     public CurrencyData getNativeCurrency() {
         return currencyService.getNativeCurrency();
     }
+
+    @PostMapping(path = "/token")
+    public ResponseEntity<BaseResponse> distributeToken(@RequestBody @Valid CurrencyData currencyData) {
+        return currencyService.initiateToken(currencyData);
+    }
+
 }

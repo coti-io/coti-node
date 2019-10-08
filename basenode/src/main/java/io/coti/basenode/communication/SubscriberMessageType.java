@@ -36,7 +36,14 @@ public enum SubscriberMessageType implements ISubscriberMessageType {
         public Consumer<Object> getHandler(NodeType publisherNodeType) {
             return networkData -> networkService.handleNetworkChanges((NetworkData) networkData);
         }
-    };
+    },
+    CurrencyNoticeData {
+        @Override
+        public Consumer<Object> getHandler(NodeType publisherNodeType) {
+            return currencyNoticeData -> currencyService.handlePropagatedCurrencyNotice((CurrencyNoticeData) currencyNoticeData);
+        }
+    }
+    ;
 
     protected ITransactionService transactionService;
     protected IAddressService addressService;
