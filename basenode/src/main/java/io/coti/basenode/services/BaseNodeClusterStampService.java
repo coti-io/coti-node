@@ -567,10 +567,10 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         clusterStampData.setSignerHash(networkService.getSingleNodeData(NodeType.ZeroSpendServer).getNodeHash());
     }
 
-    public void handlePropagatedCurrencyNoticeForExistingCurrency(CurrencyNoticeData currencyNoticeData) {
-        if (!isClusterStampNamePresent(currencyNoticeData.getClusterStampNameData())) {
-            downloadAndAddSingleClusterStamp(currencyNoticeData.getClusterStampNameData());
-            loadClusterStamp(currencyNoticeData.getClusterStampNameData());
+    public void handlePropagatedCurrencyNoticeForExistingCurrency(InitiatedTokenNoticeData initiatedTokenNoticeData) {
+        if (!isClusterStampNamePresent(initiatedTokenNoticeData.getClusterStampNameData())) {
+            downloadAndAddSingleClusterStamp(initiatedTokenNoticeData.getClusterStampNameData());
+            loadClusterStamp(initiatedTokenNoticeData.getClusterStampNameData());
         }
     }
 

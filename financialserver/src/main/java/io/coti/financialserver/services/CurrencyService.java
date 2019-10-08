@@ -49,7 +49,7 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 public class CurrencyService extends BaseNodeCurrencyService {
 
     private static final String GET_NATIVE_CURRENCY_ENDPOINT = "/currencies/native";
-    public static final String CURRENCIES_TOKEN_ENDPOINT = "/currencies/token";
+    public static final String GENERATED_TOKEN_ENDPOINT = "/currencies/token";
     private final Map<Hash, Hash> lockUserHashMap = new ConcurrentHashMap<>();
     private final Map<Hash, Hash> lockTransactionHashMap = new ConcurrentHashMap<>();
     private final Set<String> processingCurrencyNameSet = Sets.newConcurrentHashSet();
@@ -230,7 +230,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
         String currencyName = requestCurrencyData.getName();
         Hash userHash = generateTokenRequest.getSignerHash();
         CurrencyData currencyData = null;
-        boolean currencyConfirmed = false;
+        boolean tokenConfirmed = false;
         synchronized (addLockToLockMap(lockUserHashMap, userHash)) {
             UserTokenGenerationData userTokenGenerationData = userTokenGenerations.getByHash(userHash);
             if (userTokenGenerationData == null) {
@@ -253,7 +253,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
                 userTokenGenerationData.getTransactionHashToCurrencyMap().put(requestTransactionHash, requestCurrencyDataHash);
                 if (transactionHelper.isConfirmed(tokenGenerationTransactionData)) {
                     putCurrencyData(currencyData);
-                    currencyConfirmed = true;
+                    tokenConfirmed = true;
                 } else {
                     putPendingCurrencyData(currencyData);
                 }
@@ -262,22 +262,19 @@ public class CurrencyService extends BaseNodeCurrencyService {
             userTokenGenerations.put(userTokenGenerationData);
             removeLockFromLocksMap(lockUserHashMap, generateTokenRequest.getSignerHash());
         }
-        if (currencyConfirmed) {
-            sendConfirmedCurrency(currencyData);
+        if (tokenConfirmed) {
+            sendGeneratedToken(currencyData);
         }
     }
 
-    private void sendConfirmedCurrency(CurrencyData currencyData) {
-        String recoveryServerAddress = networkService.getRecoveryServerAddress();
-        ResponseEntity<ResponseEntity> responseEntity = restTemplate.postForEntity(recoveryServerAddress + CURRENCIES_TOKEN_ENDPOINT, currencyData, ResponseEntity.class);
-
-        HttpStatus statusCode = responseEntity.getStatusCode();
-        ResponseEntity responseEntityBody = responseEntity.getBody();
-        if (statusCode != HttpStatus.OK) {
-            if (statusCode.equals(HttpStatus.UNAUTHORIZED) || statusCode.equals(HttpStatus.BAD_REQUEST)) {
-                throw new CurrencyException(responseEntityBody.toString());
-                //TODO 10/7/2019 tomer: Consider removing currency or moving to queue for further handling
-            }
+    private void sendGeneratedToken(CurrencyData currencyData) {
+        try {
+            String initiatorAddress = networkService.getSingleNodeData(NodeType.ZeroSpendServer).getHttpFullAddress();
+            Response response = restTemplate.postForObject(initiatorAddress + GENERATED_TOKEN_ENDPOINT, currencyData, Response.class);
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            throw new CurrencyException(String.format("Error at sending generated token. Initiator server response: %s", new Gson().fromJson(e.getResponseBodyAsString(), Response.class).getMessage()));
+        } catch (Exception e) {
+            throw new CurrencyException("Error at sending generated token.", e);
         }
 
 
@@ -363,7 +360,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
                             if (pendingCurrency != null) {
                                 pendingCurrencies.deleteByHash(currencyHash);
                                 putCurrencyData(pendingCurrency);
-                                sendConfirmedCurrency(pendingCurrency);
+                                sendGeneratedToken(pendingCurrency);
                             }
                             removeLockFromLocksMap(lockTransactionHashMap, transactionHash);
                         }
@@ -399,13 +396,13 @@ public class CurrencyService extends BaseNodeCurrencyService {
     }
 
     @Override
-    public void handlePropagatedCurrencyNotice(CurrencyNoticeData currencyNoticeData) {
-        CurrencyData currencyData = currencyNoticeData.getCurrencyData();
+    public void handlePropagatedCurrencyNotice(InitiatedTokenNoticeData initiatedTokenNoticeData) {
+        CurrencyData currencyData = initiatedTokenNoticeData.getCurrencyData();
         if (!verifyCurrencyExists(currencyData.getHash())) {
             log.error("Propagated currency {} does not exist", currencyData.getName());
             return;
         }
-        baseNodeClusterStampService.handlePropagatedCurrencyNoticeForExistingCurrency(currencyNoticeData);
+        baseNodeClusterStampService.handlePropagatedCurrencyNoticeForExistingCurrency(initiatedTokenNoticeData);
     }
 
 }

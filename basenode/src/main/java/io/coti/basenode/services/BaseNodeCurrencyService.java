@@ -205,12 +205,12 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     @Override
-    public void handlePropagatedCurrencyNotice(CurrencyNoticeData currencyNoticeData) {
-        CurrencyData currencyData = currencyNoticeData.getCurrencyData();
+    public void handlePropagatedCurrencyNotice(InitiatedTokenNoticeData initiatedTokenNoticeData) {
+        CurrencyData currencyData = initiatedTokenNoticeData.getCurrencyData();
         if (!verifyPropagatedCurrencyData(currencyData)) return;
 
         putCurrencyData(currencyData);
-        baseNodeClusterStampService.handlePropagatedCurrencyNoticeForExistingCurrency(currencyNoticeData);
+        baseNodeClusterStampService.handlePropagatedCurrencyNoticeForExistingCurrency(initiatedTokenNoticeData);
     }
 
     protected boolean verifyPropagatedCurrencyData(CurrencyData currencyData) {
