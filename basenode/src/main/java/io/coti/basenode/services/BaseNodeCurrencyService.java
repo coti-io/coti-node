@@ -205,15 +205,16 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     @Override
-    public void handlePropagatedCurrencyNotice(InitiatedTokenNoticeData initiatedTokenNoticeData) {
+    public void handleInitiatedTokenNotice(InitiatedTokenNoticeData initiatedTokenNoticeData) {
         CurrencyData currencyData = initiatedTokenNoticeData.getCurrencyData();
-        if (!verifyPropagatedCurrencyData(currencyData)) return;
-
+        if (!validateInitiatedToken(currencyData)) {
+            return;
+        }
         putCurrencyData(currencyData);
-        baseNodeClusterStampService.handlePropagatedCurrencyNoticeForExistingCurrency(initiatedTokenNoticeData);
+        baseNodeClusterStampService.handleInitiatedTokenNotice(initiatedTokenNoticeData);
     }
 
-    protected boolean verifyPropagatedCurrencyData(CurrencyData currencyData) {
+    private boolean validateInitiatedToken(CurrencyData currencyData) {
         if (!currencyOriginatorCrypto.verifySignature(currencyData)) {
             log.error("Failed to verify propagated currency {} originator already exists", currencyData.getName());
             return false;

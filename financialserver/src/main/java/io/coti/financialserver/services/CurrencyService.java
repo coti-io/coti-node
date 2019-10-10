@@ -10,9 +10,9 @@ import io.coti.basenode.exceptions.CurrencyValidationException;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.BaseNodeClusterStampService;
 import io.coti.basenode.services.BaseNodeCurrencyService;
 import io.coti.basenode.services.TransactionHelper;
+import io.coti.basenode.services.interfaces.IClusterStampService;
 import io.coti.financialserver.crypto.GenerateTokenRequestCrypto;
 import io.coti.financialserver.crypto.GetUserTokensRequestCrypto;
 import io.coti.financialserver.data.CurrencyNameIndexData;
@@ -73,7 +73,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
     @Autowired
     private TransactionHelper transactionHelper;
     @Autowired
-    private BaseNodeClusterStampService baseNodeClusterStampService;
+    private IClusterStampService clusterStampService;
     private BlockingQueue<TransactionData> pendingCurrencyTransactionQueue;
     private BlockingQueue<TransactionData> tokenGenerationTransactionQueue;
     private Thread pendingCurrencyTransactionThread;
@@ -270,7 +270,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
     private void sendGeneratedToken(CurrencyData currencyData) {
         try {
             String initiatorAddress = networkService.getSingleNodeData(NodeType.ZeroSpendServer).getHttpFullAddress();
-            Response response = restTemplate.postForObject(initiatorAddress + GENERATED_TOKEN_ENDPOINT, currencyData, Response.class);
+            restTemplate.postForObject(initiatorAddress + GENERATED_TOKEN_ENDPOINT, currencyData, Response.class);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             throw new CurrencyException(String.format("Error at sending generated token. Initiator server response: %s", new Gson().fromJson(e.getResponseBodyAsString(), Response.class).getMessage()));
         } catch (Exception e) {
@@ -396,13 +396,13 @@ public class CurrencyService extends BaseNodeCurrencyService {
     }
 
     @Override
-    public void handlePropagatedCurrencyNotice(InitiatedTokenNoticeData initiatedTokenNoticeData) {
+    public void handleInitiatedTokenNotice(InitiatedTokenNoticeData initiatedTokenNoticeData) {
         CurrencyData currencyData = initiatedTokenNoticeData.getCurrencyData();
         if (!verifyCurrencyExists(currencyData.getHash())) {
             log.error("Propagated currency {} does not exist", currencyData.getName());
             return;
         }
-        baseNodeClusterStampService.handlePropagatedCurrencyNoticeForExistingCurrency(initiatedTokenNoticeData);
+        clusterStampService.handleInitiatedTokenNotice(initiatedTokenNoticeData);
     }
 
 }
