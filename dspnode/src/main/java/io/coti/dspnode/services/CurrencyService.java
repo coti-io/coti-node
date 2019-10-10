@@ -19,8 +19,8 @@ public class CurrencyService extends BaseNodeCurrencyService {
     private IPropagationPublisher propagationPublisher;
 
     @Override
-    public void handlePropagatedCurrencyNotice(InitiatedTokenNoticeData initiatedTokenNoticeData) {
-        super.handlePropagatedCurrencyNotice(initiatedTokenNoticeData);
+    public void handleInitiatedTokenNotice(InitiatedTokenNoticeData initiatedTokenNoticeData) {
+        super.handleInitiatedTokenNotice(initiatedTokenNoticeData);
         propagationPublisher.propagate(initiatedTokenNoticeData, Arrays.asList(NodeType.FullNode));
     }
 }
