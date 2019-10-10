@@ -38,10 +38,9 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         uploadClusterStamp(majorClusterStampName);
     }
 
-    protected void uploadClusterStamp(ClusterStampNameData clusterStampNameData) {
-        awsService.uploadFileToS3(clusterStampBucketName, clusterStampsFolder + getClusterStampFileName(clusterStampNameData));
+    private void uploadClusterStamp(ClusterStampNameData clusterStampNameData) {
+        awsService.uploadFileToS3(clusterStampBucketName, clusterStampFolder + getClusterStampFileName(clusterStampNameData));
     }
-
 
     protected void fillClusterStampNamesMap() {
         super.fillClusterStampNamesMap();
@@ -56,12 +55,11 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         if (nativeCurrency == null) {
             throw new ClusterStampException("Unable to start zero spend server. Native token not found.");
         }
-        final ClusterStampType clusterStampType = ClusterStampType.MAJOR;
-        handleNewCurrencyByType(nativeCurrency, clusterStampType);
+        handleNewCurrencyByType(nativeCurrency, ClusterStampType.MAJOR);
         uploadMajorClusterStamp = true;
     }
 
-    protected ClusterStampNameData handleNewCurrencyByType(CurrencyData currency, ClusterStampType clusterStampType) {
+    private ClusterStampNameData handleNewCurrencyByType(CurrencyData currency, ClusterStampType clusterStampType) {
         ClusterStampNameData clusterStampNameData = new ClusterStampNameData(clusterStampType);
         generateOneLineClusterStampFile(clusterStampNameData, currency);
         addClusterStampName(clusterStampNameData);
@@ -70,7 +68,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     private void generateOneLineClusterStampFile(ClusterStampNameData clusterStamp, CurrencyData currencyData) {
         String line = generateClusterStampLineFromNewCurrency(currencyData);
-        fileSystemService.createAndWriteLineToFile(clusterStampsFolder, super.getClusterStampFileName(clusterStamp), line);
+        fileSystemService.createAndWriteLineToFile(clusterStampFolder, super.getClusterStampFileName(clusterStamp), line);
 
     }
 
@@ -116,7 +114,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     public ClusterStampNameData handleNewToken(CurrencyData currencyData) {
         ClusterStampNameData clusterStampNameData = handleNewCurrencyByType(currencyData, ClusterStampType.TOKEN);
         uploadClusterStamp(clusterStampNameData);
-        balanceService.updateBalance(new Hash(currencyAddress), currencyData.getHash(), currencyData.getTotalSupply());
+        loadClusterStamp(clusterStampNameData);
         return clusterStampNameData;
     }
 }

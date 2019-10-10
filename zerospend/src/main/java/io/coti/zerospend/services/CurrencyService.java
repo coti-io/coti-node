@@ -4,7 +4,6 @@ import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.crypto.CurrencyOriginatorCrypto;
 import io.coti.basenode.crypto.CurrencyRegistrarCrypto;
 import io.coti.basenode.data.*;
-import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeCurrencyService;
@@ -35,7 +34,6 @@ public class CurrencyService extends BaseNodeCurrencyService {
     private int nativeCurrencyScale;
     @Value("${native.currency.description}")
     private String nativeCurrencyDescription;
-
     @Autowired
     private CurrencyOriginatorCrypto currencyOriginatorCrypto;
     @Autowired
@@ -72,7 +70,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
                     .body(new Response(String.format("Failed to verify currency %s", currencyData.getRegistrarHash().toString()), STATUS_ERROR));
         }
         NetworkNodeData financialServerNodeData = networkService.getSingleNodeData(NodeType.FinancialServer);
-        if (!financialServerNodeData.getSignerHash().equals(currencyData.getRegistrarHash())) {
+        if (financialServerNodeData == null || !financialServerNodeData.getSignerHash().equals(currencyData.getRegistrarHash())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new Response(String.format("Failed to verify currency %s request is from financial server", currencyData.getName()), STATUS_ERROR));
         }
@@ -91,7 +89,6 @@ public class CurrencyService extends BaseNodeCurrencyService {
 
         InitiatedTokenNoticeData initiatedTokenNoticeData = new InitiatedTokenNoticeData(currencyData, clusterStampNameData);
         propagationPublisher.propagate(initiatedTokenNoticeData, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode));
-
 
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new Response("Currency name = {} received successfully", currencyData.getName()));
