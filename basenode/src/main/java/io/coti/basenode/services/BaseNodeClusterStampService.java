@@ -72,7 +72,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     protected static ClusterStampNameData majorClusterStampName;
     protected static Map<Hash, ClusterStampNameData> tokenClusterStampHashToName;
     @Value("${clusterstamp.folder}")
-    protected String clusterStampsFolder;
+    protected String clusterStampFolder;
     protected String clusterStampBucketName;
     @Value("${application.name}")
     private String applicationName;
@@ -102,7 +102,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     @Override
     public void init() {
         try {
-            fileSystemService.createFolder(clusterStampsFolder);
+            fileSystemService.createFolder(clusterStampFolder);
             initLocalClusterStampNames();
             fillClusterStampNamesMap();
             getClusterStampFromRecoveryServer(true);
@@ -122,7 +122,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     }
 
     protected void fillClusterStampNamesMap() {
-        List<String> clusterStampFileNames = fileSystemService.listFolderFileNames(clusterStampsFolder);
+        List<String> clusterStampFileNames = fileSystemService.listFolderFileNames(clusterStampFolder);
         for (String clusterStampFileName : clusterStampFileNames) {
             ClusterStampNameData clusterStampNameData = validateNameAndGetClusterStampNameData(clusterStampFileName);
             if (clusterStampNameData.isMajor() && majorClusterStampName != null) {
@@ -187,10 +187,6 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                 loadClusterStamp(clusterStampNameData));
     }
 
-    protected void loadClusterStamp(ClusterStampNameData clusterStampNameData) {
-        loadClusterStamp(clusterStampsFolder, clusterStampNameData);
-    }
-
     protected void addClusterStampName(ClusterStampNameData clusterStampNameData) {
         if (clusterStampNameData.isMajor()) {
             majorClusterStampName = clusterStampNameData;
@@ -207,7 +203,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         }
     }
 
-    protected boolean isClusterStampNamePresent(ClusterStampNameData clusterStampNameData) {
+    private boolean isClusterStampNameExists(ClusterStampNameData clusterStampNameData) {
         if (clusterStampNameData.isMajor()) {
             return majorClusterStampName.equals(clusterStampNameData);
         }
@@ -225,10 +221,10 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         return sb.append(".").append(CLUSTERSTAMP_FILE_TYPE).toString();
     }
 
-    protected void loadClusterStamp(String folder, ClusterStampNameData clusterStampNameData) {
+    protected void loadClusterStamp(ClusterStampNameData clusterStampNameData) {
         String clusterStampFileName = getClusterStampFileName(clusterStampNameData);
         log.info("Starting to load clusterstamp file {}", clusterStampFileName);
-        String clusterStampFileLocation = folder + clusterStampFileName;
+        String clusterStampFileLocation = clusterStampFolder + clusterStampFileName;
         File clusterstampFile = new File(clusterStampFileLocation);
         ClusterStampData clusterStampData = new ClusterStampData();
         Map<Hash, BigDecimal> currencyHashToAmountMap = new HashMap<>();
@@ -281,7 +277,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             balanceService.updatePreBalanceFromClusterStamp();
             log.info("Finished to load clusterstamp file {}", clusterStampFileName);
         } catch (ClusterStampException e) {
-            throw new ClusterStampException(String.format("Errors on clusterstamp file %s loading.%n", clusterStampFileName) + e.getMessage(), e);
+            throw new ClusterStampException(String.format("Errors on clusterstamp file %s loading.\n", clusterStampFileName) + e.getMessage(), e);
         } catch (Exception e) {
             throw new ClusterStampException(String.format("Errors on clusterstamp file %s loading.", clusterStampFileName), e);
         }
@@ -289,7 +285,6 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     protected void handleMissingRecoveryServer() {
         throw new ClusterStampException("Recovery server undefined.");
-
     }
 
     @Override
@@ -369,9 +364,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     private void clearClusterStampNamesAndFiles() {
         try {
             tokenClusterStampHashToName = new HashMap<>();
-            fileSystemService.removeFolderContents(clusterStampsFolder);
+            fileSystemService.removeFolderContents(clusterStampFolder);
         } catch (Exception e) {
-            throw new ClusterStampException(String.format("Failed to remove %s folder contents. Please manually delete all clusterstamps and restart.", clusterStampsFolder), e);
+            throw new ClusterStampException(String.format("Failed to remove %s folder contents. Please manually delete all clusterstamps and restart.", clusterStampFolder), e);
         }
     }
 
@@ -425,7 +420,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     private void removeClusterStampNameAndFile(ClusterStampNameData clusterStampNameData) {
         removeClusterStampName(clusterStampNameData);
         String clusterStampFileName = getClusterStampFileName(clusterStampNameData);
-        String clusterStampFilePath = clusterStampsFolder + clusterStampFileName;
+        String clusterStampFilePath = clusterStampFolder + clusterStampFileName;
         try {
             fileSystemService.deleteFile(clusterStampFilePath);
         } catch (Exception e) {
@@ -451,9 +446,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         return missingClusterStamps;
     }
 
-    protected void downloadAndAddSingleClusterStamp(ClusterStampNameData clusterStampNameData) {
+    private void downloadAndAddSingleClusterStamp(ClusterStampNameData clusterStampNameData) {
         String clusterStampFileName = getClusterStampFileName(clusterStampNameData);
-        String filePath = clusterStampsFolder + clusterStampFileName;
+        String filePath = clusterStampFolder + clusterStampFileName;
         try {
             awsService.downloadFile(filePath, clusterStampBucketName);
             addClusterStampName(clusterStampNameData);
@@ -512,7 +507,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             clusterStampData.getSignatureMessage().add(balanceInBytes);
             clusterStampData.incrementMessageByteSize(balanceInBytes.length);
         } catch (ClusterStampException e) {
-            throw new ClusterStampException(String.format("Error at filling balance from line of clusterstamp %s.%n", clusterStampFileName) + e.getMessage(), e);
+            throw new ClusterStampException(String.format("Error at filling balance from line of clusterstamp %s.\n", clusterStampFileName) + e.getMessage(), e);
         } catch (Exception e) {
             throw new ClusterStampException(String.format("Error at filling balance from line of clusterstamp %s.", clusterStampFileName), e);
         }
@@ -568,8 +563,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         clusterStampData.setSignerHash(networkService.getSingleNodeData(NodeType.ZeroSpendServer).getNodeHash());
     }
 
-    public void handlePropagatedCurrencyNoticeForExistingCurrency(InitiatedTokenNoticeData initiatedTokenNoticeData) {
-        if (!isClusterStampNamePresent(initiatedTokenNoticeData.getClusterStampNameData())) {
+    @Override
+    public void handleInitiatedTokenNotice(InitiatedTokenNoticeData initiatedTokenNoticeData) {
+        if (!isClusterStampNameExists(initiatedTokenNoticeData.getClusterStampNameData())) {
             downloadAndAddSingleClusterStamp(initiatedTokenNoticeData.getClusterStampNameData());
             loadClusterStamp(initiatedTokenNoticeData.getClusterStampNameData());
         }
