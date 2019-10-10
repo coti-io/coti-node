@@ -36,7 +36,7 @@ public enum SubscriberMessageType implements ISubscriberMessageType {
     InitiatedTokenNoticeData {
         @Override
         public Consumer<Object> getHandler(NodeType publisherNodeType) {
-            return currencyNoticeData -> currencyService.handlePropagatedCurrencyNotice((InitiatedTokenNoticeData) currencyNoticeData);
+            return initiatedTokenNoticeData -> currencyService.handleInitiatedTokenNotice((InitiatedTokenNoticeData) initiatedTokenNoticeData);
         }
     };
 
