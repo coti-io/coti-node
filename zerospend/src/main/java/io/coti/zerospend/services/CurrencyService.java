@@ -91,7 +91,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
         propagationPublisher.propagate(initiatedTokenNoticeData, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode));
 
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new Response("Currency name = {} received successfully", currencyData.getName()));
+                .body(new Response(String.format("Currency name = %s received successfully", currencyData.getName())));
     }
 
 }
