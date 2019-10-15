@@ -29,7 +29,7 @@ public class OriginatorCurrencyData implements Serializable {
     @NotNull
     protected @Valid SignatureData originatorSignature;
 
-    protected OriginatorCurrencyData() {
+    public OriginatorCurrencyData() {
     }
 
     public OriginatorCurrencyData(OriginatorCurrencyData originatorCurrencyData) {
