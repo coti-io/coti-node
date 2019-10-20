@@ -492,7 +492,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                 currencyHash = currencyService.getNativeCurrencyHash();
             }
 
-            if (!currencyService.verifyCurrencyExists(currencyHash)) {
+            if (currencyHashToAmountMap.get(currencyHash) == null && !currencyService.verifyCurrencyExists(currencyHash)) {
                 throw new ClusterStampValidationException(String.format("Currency %s in clusterstamp file %s not found at DB", currencyHash, clusterStampFileName));
             }
             balanceService.updateBalanceFromClusterStamp(addressHash, currencyHash, currencyAmountInAddress);
@@ -515,7 +515,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     private void validateClusterStampLineDetails(BigDecimal currencyAmountInAddress, Hash currencyHash, Map<Hash, BigDecimal> currencyHashToAmountMap) {
         if (currencyAmountInAddress.scale() > currencyService.getTokenScale(currencyHash)) {
-            throw new ClusterStampValidationException(String.format("Scale of currency %s in clusterstamp file is wrong.", currencyHash));
+            throw new ClusterStampValidationException(String.format("Scale of currency %s in clusterstamp file is wrong for amount %s.", currencyHash, currencyAmountInAddress));
         }
         currencyHashToAmountMap.putIfAbsent(currencyHash, currencyService.getTokenTotalSupply(currencyHash));
         BigDecimal subtractedCurrencyAmount = currencyHashToAmountMap.get(currencyHash).subtract(currencyAmountInAddress);
