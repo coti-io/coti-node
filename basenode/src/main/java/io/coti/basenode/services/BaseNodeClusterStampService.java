@@ -226,7 +226,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         String clusterStampFileLocation = clusterStampFolder + clusterStampFileName;
         File clusterstampFile = new File(clusterStampFileLocation);
         ClusterStampData clusterStampData = new ClusterStampData();
-        Map<Hash, BigDecimal> currencyHashToAmountMap = new HashMap<>();
+        Map<Hash, TokenData> currencyHashToTokenDataMap = new HashMap<>();
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(clusterstampFile))) {
             String line;
             int relevantLineNumber = 0;
@@ -248,7 +248,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                     }
                 } else {
                     if (!finishedBalances) {
-                        fillBalanceFromLine(clusterStampData, line, currencyHashToAmountMap, clusterStampFileName);
+                        fillBalanceFromLine(clusterStampData, line, currencyHashToTokenDataMap, clusterStampFileName);
                     } else {
                         if (!reachedSignatureSection) {
                             if (!line.contentEquals(SIGNATURE_LINE_TOKEN))
@@ -263,7 +263,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                     }
                 }
             }
-            if (currencyHashToAmountMap.entrySet().stream().anyMatch(entry -> entry.getValue().compareTo(BigDecimal.ZERO) != 0)) {
+            if (currencyHashToTokenDataMap.entrySet().stream().anyMatch(entry -> entry.getValue().getAmount().compareTo(BigDecimal.ZERO) != 0)) {
                 throw new ClusterStampValidationException(String.format("Wrong currency balances at clusterstamp file %s.", clusterStampFileName));
             }
             if (signatureRelevantLines == 0) {
@@ -477,7 +477,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         return tokenClusterStampHashToName.values().stream().collect(Collectors.toList());
     }
 
-    private void fillBalanceFromLine(ClusterStampData clusterStampData, String line, Map<Hash, BigDecimal> currencyHashToAmountMap, String clusterStampFileName) {
+    private void fillBalanceFromLine(ClusterStampData clusterStampData, String line, Map<Hash, TokenData> currencyHashToTokenDataMap, String clusterStampFileName) {
         try {
             String[] lineDetails = line.split(",");
             int numOfDetailsInLine = lineDetails.length;
@@ -491,11 +491,16 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                 currencyHash = currencyService.getNativeCurrencyHash();
             }
 
-            if (currencyHashToAmountMap.get(currencyHash) == null && !currencyService.verifyCurrencyExists(currencyHash)) {
-                throw new ClusterStampValidationException(String.format("Currency %s in clusterstamp file %s not found at DB", currencyHash, clusterStampFileName));
+            if (currencyHashToTokenDataMap.get(currencyHash) == null) {
+                if (!currencyService.verifyCurrencyExists(currencyHash)) {
+                    throw new ClusterStampValidationException(String.format("Currency %s in clusterstamp file %s not found at DB", currencyHash, clusterStampFileName));
+                } else {
+                    TokenData tokenData = new TokenData();
+                    currencyHashToTokenDataMap.put(currencyHash, tokenData);
+                }
             }
             balanceService.updateBalanceFromClusterStamp(addressHash, currencyHash, currencyAmountInAddress);
-            validateClusterStampLineDetails(currencyAmountInAddress, currencyHash, currencyHashToAmountMap);
+            validateClusterStampLineDetails(currencyAmountInAddress, currencyHash, currencyHashToTokenDataMap);
             log.trace("The address hash {} for currency hash {} was loaded from the clusterstamp {} with amount {}", addressHash, currencyHash, clusterStampFileName, currencyAmountInAddress);
 
             byte[] addressHashInBytes = addressHash.getBytes();
@@ -512,19 +517,30 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         }
     }
 
-    private void validateClusterStampLineDetails(BigDecimal currencyAmountInAddress, Hash currencyHash, Map<Hash, BigDecimal> currencyHashToAmountMap) {
-        if (currencyAmountInAddress.scale() > currencyService.getTokenScale(currencyHash)) {
+    private void validateClusterStampLineDetails(BigDecimal currencyAmountInAddress, Hash
+            currencyHash, Map<Hash, TokenData> currencyHashToTokenDataMap) {
+        int scale = currencyHashToTokenDataMap.get(currencyHash).getScale();
+        if (scale == 0) {
+            scale = currencyService.getTokenScale(currencyHash);
+            currencyHashToTokenDataMap.get(currencyHash).setScale(scale);
+        }
+        if (currencyAmountInAddress.scale() > scale) {
             throw new ClusterStampValidationException(String.format("Scale of currency %s in clusterstamp file is wrong for amount %s.", currencyHash, currencyAmountInAddress));
         }
-        currencyHashToAmountMap.putIfAbsent(currencyHash, currencyService.getTokenTotalSupply(currencyHash));
-        BigDecimal subtractedCurrencyAmount = currencyHashToAmountMap.get(currencyHash).subtract(currencyAmountInAddress);
+        if (currencyHashToTokenDataMap.get(currencyHash).getTotalSupply().equals(BigDecimal.ZERO)) {
+            BigDecimal totalSupply = currencyService.getTokenTotalSupply(currencyHash);
+            currencyHashToTokenDataMap.get(currencyHash).setTotalSupply(totalSupply);
+            currencyHashToTokenDataMap.get(currencyHash).setAmount(totalSupply);
+        }
+        BigDecimal subtractedCurrencyAmount = currencyHashToTokenDataMap.get(currencyHash).getAmount().subtract(currencyAmountInAddress);
         if (subtractedCurrencyAmount.compareTo(BigDecimal.ZERO) < 0) {
             throw new ClusterStampValidationException(String.format("Total amount of currency %s in clusterstamp file exceeds currency supply.", currencyHash));
         }
-        currencyHashToAmountMap.replace(currencyHash, subtractedCurrencyAmount);
+        currencyHashToTokenDataMap.get(currencyHash).setAmount(subtractedCurrencyAmount);
     }
 
-    private void fillSignatureDataFromLine(ClusterStampData clusterStampData, String line, int signatureRelevantLines) {
+    private void fillSignatureDataFromLine(ClusterStampData clusterStampData, String line,
+                                           int signatureRelevantLines) {
         if (signatureRelevantLines > 2) {
             throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
         }
@@ -547,7 +563,8 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             clusterStampData.getSignature().setS(signatureDetails[1]);
     }
 
-    protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData, String clusterStampFileLocation) {
+    protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData, String
+            clusterStampFileLocation) {
         throw new ClusterStampValidationException(String.format("Clusterstamp file has no signature."));
     }
 
