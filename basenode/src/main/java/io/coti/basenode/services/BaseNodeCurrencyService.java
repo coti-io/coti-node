@@ -64,7 +64,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Autowired
     protected IBalanceService balanceService;
 
-
     public void init() {
         try {
             currencyHashByTypeMap = new EnumMap<>(CurrencyType.class);
