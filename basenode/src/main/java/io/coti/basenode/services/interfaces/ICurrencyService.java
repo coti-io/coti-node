@@ -6,8 +6,6 @@ import io.coti.basenode.data.InitiatedTokenNoticeData;
 import io.coti.basenode.http.GetUpdatedCurrencyRequest;
 import reactor.core.publisher.FluxSink;
 
-import java.math.BigDecimal;
-
 public interface ICurrencyService {
 
     void init();
@@ -24,9 +22,7 @@ public interface ICurrencyService {
 
     void getUpdatedCurrencyBatch(GetUpdatedCurrencyRequest getUpdatedCurrencyRequest, FluxSink<CurrencyData> fluxSink);
 
-    BigDecimal getTokenTotalSupply(Hash currencyHash);
-
-    int getTokenScale(Hash currencyHash);
+    CurrencyData getCurrencyFromDB(Hash currencyHash);
 
     void handleInitiatedTokenNotice(InitiatedTokenNoticeData initiatedTokenNoticeData);
 }
