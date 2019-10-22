@@ -6,7 +6,6 @@ import io.coti.basenode.crypto.CurrencyTypeRegistrationCrypto;
 import io.coti.basenode.crypto.GetUpdatedCurrencyRequestCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CurrencyException;
-import io.coti.basenode.exceptions.CurrencyNotFoundException;
 import io.coti.basenode.http.CustomRequestCallBack;
 import io.coti.basenode.http.GetUpdatedCurrencyRequest;
 import io.coti.basenode.http.HttpJacksonSerializer;
@@ -182,25 +181,11 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         } finally {
             fluxSink.complete();
         }
-
     }
 
     @Override
-    public BigDecimal getTokenTotalSupply(Hash currencyHash) {
-        CurrencyData currency = currencies.getByHash(currencyHash);
-        if (currency == null) {
-            throw new CurrencyNotFoundException(String.format("Currency with hash %s was not found", currencyHash));
-        }
-        return currencies.getByHash(currencyHash).getTotalSupply();
-    }
-
-    @Override
-    public int getTokenScale(Hash currencyHash) {
-        CurrencyData currency = currencies.getByHash(currencyHash);
-        if (currency == null) {
-            throw new CurrencyNotFoundException(String.format("Currency with hash %s was not found", currencyHash));
-        }
-        return currency.getScale();
+    public CurrencyData getCurrencyFromDB(Hash currencyHash) {
+        return currencies.getByHash(currencyHash);
     }
 
     @Override

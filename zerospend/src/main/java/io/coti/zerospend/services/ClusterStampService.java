@@ -35,7 +35,9 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     }
 
     private void uploadMajorClusterStamp() {
+        log.info("Starting to upload major clusterstamp");
         uploadClusterStamp(majorClusterStampName);
+        log.info("Finished to upload major clusterstamp");
     }
 
     private void uploadClusterStamp(ClusterStampNameData clusterStampNameData) {
