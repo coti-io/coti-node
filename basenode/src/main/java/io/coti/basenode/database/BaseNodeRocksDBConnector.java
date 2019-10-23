@@ -37,6 +37,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     private RocksDB db;
     protected List<String> columnFamilyClassNames;
     protected List<String> resetColumnFamilyNames;
+    private List<String> resetTransactionColumnFamilyNames;
     private Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
 
     public void init() {
@@ -62,12 +63,12 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
                 Currencies.class.getName(),
                 LastClusterStampVersions.class.getName()
         ));
-        resetColumnFamilyNames = new ArrayList<>(Arrays.asList(
+        resetTransactionColumnFamilyNames = new ArrayList<>(Arrays.asList(
                 Transactions.class.getName(),
                 AddressTransactionsHistories.class.getName(),
                 TransactionIndexes.class.getName()
         ));
-
+        resetColumnFamilyNames = new ArrayList<>();
     }
 
     public void init(String dbPath) {
@@ -81,7 +82,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             } else {
                 openDB();
             }
-            if (resetTransactions) {
+            if (reset()) {
                 resetColumnFamilies();
             }
         } catch (DataBaseException e) {
@@ -89,6 +90,13 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         } catch (Exception e) {
             throw new DataBaseException("Error initiating Rocks DB.", e);
         }
+    }
+
+    protected boolean reset() {
+        if (resetTransactions) {
+            resetColumnFamilyNames.addAll(resetTransactionColumnFamilyNames);
+        }
+        return resetTransactions;
     }
 
     private void openDBAndDropNotListedColumnFamilies() {
@@ -129,6 +137,11 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     @Override
     public void resetColumnFamilies() {
         resetColumnFamilies(null);
+    }
+
+    @Override
+    public void resetTransactionColumnFamilies() {
+        resetColumnFamilies(resetTransactionColumnFamilyNames);
     }
 
     private void resetColumnFamilies(List<String> resetColumnFamilyNames) {

@@ -47,7 +47,6 @@ public class NodeManagementService implements INodeManagementService {
     private INetworkService networkService;
     @Autowired
     private StakingService stakingService;
-
     @Value("${server.ip}")
     private String nodeManagerIp;
     @Value("${propagation.port}")
