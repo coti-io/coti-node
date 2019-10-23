@@ -138,6 +138,11 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         resetColumnFamilies(null);
     }
 
+    @Override
+    public void resetTransactionColumnFamilies() {
+        resetColumnFamilies(resetTransactionColumnFamilyNames);
+    }
+
     private void resetColumnFamilies(List<String> resetColumnFamilyNames) {
         resetColumnFamilyNames = Optional.ofNullable(resetColumnFamilyNames).orElse(this.resetColumnFamilyNames);
         dropAndCreateColumnFamilies(resetColumnFamilyNames, true);
