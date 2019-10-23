@@ -3,6 +3,7 @@ package io.coti.basenode.services;
 import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.exceptions.BalanceException;
 import io.coti.basenode.http.GetBalancesRequest;
 import io.coti.basenode.http.GetBalancesResponse;
 import io.coti.basenode.services.interfaces.IBalanceService;
@@ -108,8 +109,7 @@ public class BaseNodeBalanceService implements IBalanceService {
         preBalanceMap.forEach((hash, currencyHashPreBalanceMap) -> {
             currencyHashPreBalanceMap.forEach((currencyHash, preBalance) -> {
                 if (preBalance.signum() == -1) {
-                    log.error("PreBalance Validation failed!");
-                    throw new IllegalArgumentException("ClusterStamp or database are corrupted.");
+                    throw new BalanceException(String.format("PreBalance Validation failed with preBalance %s for address %s and currency %s", preBalance, hash, currencyHash));
                 }
             });
 
@@ -117,8 +117,7 @@ public class BaseNodeBalanceService implements IBalanceService {
         balanceMap.forEach((hash, currencyHashBalanceMap) -> {
             currencyHashBalanceMap.forEach((currencyHash, balance) -> {
                 if (balance.signum() == -1) {
-                    log.error("Balance Validation failed!");
-                    throw new IllegalArgumentException("ClusterStamp or database are corrupted.");
+                    throw new BalanceException(String.format("Balance Validation failed with balance %s for address %s and currency %s", balance, hash, currencyHash));
                 }
             });
         });
