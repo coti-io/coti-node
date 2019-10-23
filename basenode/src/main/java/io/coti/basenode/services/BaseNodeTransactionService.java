@@ -264,7 +264,7 @@ public class BaseNodeTransactionService implements ITransactionService {
         if (clusterStampService.shouldUpdateClusterStampDBVersion()) {
             if (clusterStampService.isClusterStampDBVersionExist() && networkService.getRecoveryServerAddress() != null) {
                 log.info("Starting to reset old clusterstamp transactions");
-                databaseConnector.resetColumnFamilies();
+                databaseConnector.resetTransactionColumnFamilies();
                 log.info("Finished to reset old clusterstamp transactions");
             }
             clusterStampService.setClusterStampDBVersion();
