@@ -6,6 +6,9 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.exceptions.BalanceException;
 import io.coti.basenode.http.GetBalancesRequest;
 import io.coti.basenode.http.GetBalancesResponse;
+import io.coti.basenode.http.GetTokenBalancesRequest;
+import io.coti.basenode.http.GetTokenBalancesResponse;
+import io.coti.basenode.http.data.AddressBalance;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.ICurrencyService;
 import lombok.extern.slf4j.Slf4j;
@@ -88,6 +91,34 @@ public class BaseNodeBalanceService implements IBalanceService {
             preBalance = getPreBalance(addressHash, nativeCurrencyHash);
             getBalancesResponse.addAddressBalanceToResponse(addressHash, balance, preBalance);
         }
+        return ResponseEntity.status(HttpStatus.OK).body(getBalancesResponse);
+    }
+
+    @Override
+    public ResponseEntity<GetTokenBalancesResponse> getTokenBalances(GetTokenBalancesRequest getTokenBalancesRequest) {
+        GetTokenBalancesResponse getBalancesResponse = new GetTokenBalancesResponse();
+        Map<Hash, Map<Hash, AddressBalance>> tokenToAddressesBalance = getBalancesResponse.getTokenToAddressesBalance();
+
+        getTokenBalancesRequest.getAddresses().forEach(address -> {
+            Map<Hash, BigDecimal> addressToBalanceMap = balanceMap.get(address);
+            if (addressToBalanceMap != null && !addressToBalanceMap.isEmpty()) {
+                addressToBalanceMap.entrySet().forEach(entry -> {
+                    tokenToAddressesBalance.putIfAbsent(entry.getKey(), new HashMap<>());
+                    tokenToAddressesBalance.get(entry.getKey()).putIfAbsent(address, new AddressBalance(BigDecimal.ZERO, BigDecimal.ZERO));
+                    tokenToAddressesBalance.get(entry.getKey()).get(address).setAddressBalance(entry.getValue());
+                });
+            }
+            Map<Hash, BigDecimal> addressToPreBalanceMap = preBalanceMap.get(address);
+            if (addressToPreBalanceMap != null && !addressToPreBalanceMap.isEmpty()) {
+                addressToPreBalanceMap.entrySet().forEach(entry -> {
+                    tokenToAddressesBalance.putIfAbsent(entry.getKey(), new HashMap<>());
+                    tokenToAddressesBalance.get(entry.getKey()).putIfAbsent(address, new AddressBalance(BigDecimal.ZERO, BigDecimal.ZERO));
+                    tokenToAddressesBalance.get(entry.getKey()).get(address).setAddressPreBalance(entry.getValue());
+                });
+            }
+        });
+        tokenToAddressesBalance.remove(currencyService.getNativeCurrencyHash());
+
         return ResponseEntity.status(HttpStatus.OK).body(getBalancesResponse);
     }
 
@@ -188,4 +219,5 @@ public class BaseNodeBalanceService implements IBalanceService {
     protected Hash getNativeCurrencyHashIfNull(Hash currencyHash) {
         return Optional.ofNullable(currencyHash).orElse(currencyService.getNativeCurrencyHash());
     }
+
 }

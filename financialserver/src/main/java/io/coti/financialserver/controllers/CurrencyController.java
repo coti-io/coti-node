@@ -1,5 +1,6 @@
 package io.coti.financialserver.controllers;
 
+import io.coti.basenode.http.GetTokensRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.financialserver.http.GenerateTokenRequest;
 import io.coti.financialserver.http.GetUserTokensRequest;
@@ -28,4 +29,10 @@ public class CurrencyController {
     public ResponseEntity<IResponse> generateToken(@Valid @RequestBody GenerateTokenRequest generateTokenRequest) {
         return currencyService.generateToken(generateTokenRequest);
     }
+
+    @RequestMapping(value = "/tokens", method = RequestMethod.POST)
+    public ResponseEntity<IResponse> getTokens(@Valid @RequestBody GetTokensRequest getTokensRequest) {
+        return currencyService.getTokens(getTokensRequest);
+    }
+
 }
