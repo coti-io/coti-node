@@ -61,7 +61,7 @@ public class BaseNodeBalanceServiceTest {
         currencyHashToAmountMap2.put(tokenHash1, BigDecimal.ZERO);
         currencyHashToAmountMap2.put(tokenHash2, BigDecimal.ONE);
         balanceService.preBalanceMap.put(addressHash2, currencyHashToAmountMap2);
-
+        balanceService.preBalanceMap.put(addressHash1, currencyHashToAmountMap1);
         ResponseEntity<GetTokenBalancesResponse> currencyBalances = balanceService.getTokenBalances(getCurrencyBalanceRequest);
 
         Assert.assertTrue(currencyBalances.getStatusCode().equals(HttpStatus.OK));
