@@ -8,6 +8,7 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Currencies;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeClusterStampService;
+import io.coti.basenode.services.BaseNodeCurrencyService;
 import io.coti.basenode.services.TransactionHelper;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IChunkService;
@@ -57,6 +58,8 @@ public class CurrencyServiceTests {
 
     @Autowired
     private CurrencyService currencyService;
+    @Autowired
+    private BaseNodeCurrencyService baseNodeCurrencyService;
     @Autowired
     private GetUserTokensRequestCrypto getUserTokensRequestCrypto;
     @Autowired
@@ -109,6 +112,9 @@ public class CurrencyServiceTests {
     private static Hash transactionHash;
     private static CurrencyData currencyData;
     private static CurrencyData currencyData2;
+    private static CurrencyData nativeCurrencyData;
+    private static Hash nativeCurrencyHash;
+    public static final String RECOVER_NATIVE_CURRENCY_PATH = "null/currencies/native";
 
 
     @BeforeClass
@@ -137,6 +143,17 @@ public class CurrencyServiceTests {
         currencyData2.setTotalSupply(new BigDecimal("100"));
         currencyData2.setScale(8);
         currencyData2.setCreationTime(Instant.now());
+
+        nativeCurrencyHash = new Hash(7777);
+        nativeCurrencyData = new CurrencyData();
+        nativeCurrencyData.setHash(nativeCurrencyHash);
+        nativeCurrencyData.setName("Coti");
+        nativeCurrencyData.setSymbol("COTI");
+        nativeCurrencyData.setCurrencyTypeData(new CurrencyTypeData(CurrencyType.NATIVE_COIN, Instant.now()));
+        nativeCurrencyData.setDescription("native description");
+        nativeCurrencyData.setTotalSupply(new BigDecimal(20000));
+        nativeCurrencyData.setScale(8);
+        nativeCurrencyData.setCreationTime(Instant.now());
     }
 
     @Before
@@ -240,8 +257,16 @@ public class CurrencyServiceTests {
 
     //TODO 9/22/2019 astolia: run TransactionService continueHandlePropagatedTransaction with TokenGenerationTransaction before some tests to mock insertion of data to db.
 
+    protected void currencyServiceInit() {
+        when(currencies.isEmpty()).thenReturn(Boolean.TRUE);
+        when(restTemplate.getForObject(RECOVER_NATIVE_CURRENCY_PATH, CurrencyData.class)).thenReturn(nativeCurrencyData);
+        currencyService.init();
+    }
+
     @Test
     public void getTokens() {
+        currencyServiceInit();
+
         List<Hash> currenciesList = Arrays.asList(currencyData2.getHash(), currencyData.getHash());
 
         GetCurrenciesRequest getCurrenciesRequest = new GetCurrenciesRequest();
