@@ -37,7 +37,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     private static final String RECOVERY_NODE_GET_CURRENCIES_UPDATE_REACTIVE_ENDPOINT = "/currencies/update/batch";
     private static final int NUMBER_OF_NATIVE_CURRENCY = 1;
     private EnumMap<CurrencyType, HashSet<Hash>> currencyHashByTypeMap;
-    private CurrencyData nativeCurrencyData;
+    protected CurrencyData nativeCurrencyData;
     @Autowired
     protected Currencies currencies;
     @Autowired
