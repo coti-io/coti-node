@@ -95,30 +95,22 @@ public class BaseNodeBalanceService implements IBalanceService {
 
     @Override
     public ResponseEntity<GetTokenBalancesResponse> getTokenBalances(GetTokenBalancesRequest getTokenBalancesRequest) {
-        GetTokenBalancesResponse getBalancesResponse = new GetTokenBalancesResponse();
-        Map<Hash, Map<Hash, AddressBalance>> tokenToAddressesBalance = getBalancesResponse.getTokenToAddressesBalance();
+        Map<Hash, Map<Hash, AddressBalance>> tokenToAddressesBalance = new HashMap<>();
 
         getTokenBalancesRequest.getAddresses().forEach(address -> {
-            Map<Hash, BigDecimal> addressToBalanceMap = balanceMap.get(address);
-            if (addressToBalanceMap != null && !addressToBalanceMap.isEmpty()) {
-                addressToBalanceMap.entrySet().forEach(entry -> {
-                    tokenToAddressesBalance.putIfAbsent(entry.getKey(), new HashMap<>());
-                    tokenToAddressesBalance.get(entry.getKey()).putIfAbsent(address, new AddressBalance(BigDecimal.ZERO, BigDecimal.ZERO));
-                    tokenToAddressesBalance.get(entry.getKey()).get(address).setAddressBalance(entry.getValue());
-                });
-            }
             Map<Hash, BigDecimal> addressToPreBalanceMap = preBalanceMap.get(address);
-            if (addressToPreBalanceMap != null && !addressToPreBalanceMap.isEmpty()) {
+            if (addressToPreBalanceMap != null) {
                 addressToPreBalanceMap.entrySet().forEach(entry -> {
-                    tokenToAddressesBalance.putIfAbsent(entry.getKey(), new HashMap<>());
-                    tokenToAddressesBalance.get(entry.getKey()).putIfAbsent(address, new AddressBalance(BigDecimal.ZERO, BigDecimal.ZERO));
-                    tokenToAddressesBalance.get(entry.getKey()).get(address).setAddressPreBalance(entry.getValue());
+                    Hash currencyHash = entry.getKey();
+                    BigDecimal preBalance = entry.getValue();
+                    tokenToAddressesBalance.putIfAbsent(currencyHash, new HashMap<>());
+                    tokenToAddressesBalance.get(currencyHash).putIfAbsent(address, new AddressBalance(getBalance(address, currencyHash), preBalance));
                 });
             }
         });
         tokenToAddressesBalance.remove(currencyService.getNativeCurrencyHash());
 
-        return ResponseEntity.status(HttpStatus.OK).body(getBalancesResponse);
+        return ResponseEntity.status(HttpStatus.OK).body(new GetTokenBalancesResponse(tokenToAddressesBalance));
     }
 
     @Override

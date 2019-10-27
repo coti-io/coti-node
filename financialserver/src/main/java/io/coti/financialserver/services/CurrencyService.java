@@ -7,9 +7,6 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.exceptions.CurrencyException;
 import io.coti.basenode.exceptions.CurrencyValidationException;
-import io.coti.basenode.http.GetTokenResponseData;
-import io.coti.basenode.http.GetTokensRequest;
-import io.coti.basenode.http.GetTokensResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
@@ -19,10 +16,9 @@ import io.coti.basenode.services.interfaces.IClusterStampService;
 import io.coti.financialserver.crypto.GenerateTokenRequestCrypto;
 import io.coti.financialserver.crypto.GetUserTokensRequestCrypto;
 import io.coti.financialserver.data.CurrencyNameIndexData;
-import io.coti.financialserver.http.GenerateTokenRequest;
-import io.coti.financialserver.http.GetTokenGenerationDataResponse;
-import io.coti.financialserver.http.GetUserTokensRequest;
+import io.coti.financialserver.http.*;
 import io.coti.financialserver.http.data.GeneratedTokenResponseData;
+import io.coti.financialserver.http.data.GetCurrencyResponseData;
 import io.coti.financialserver.model.CurrencyNameIndexes;
 import io.coti.financialserver.model.PendingCurrencies;
 import io.coti.financialserver.model.UserTokenGenerations;
@@ -40,7 +36,6 @@ import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.stream.Collectors;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.financialserver.http.HttpStringConstants.*;
@@ -406,15 +401,17 @@ public class CurrencyService extends BaseNodeCurrencyService {
         clusterStampService.handleInitiatedTokenNotice(initiatedTokenNoticeData);
     }
 
-    public ResponseEntity<IResponse> getTokens(GetTokensRequest getTokensRequest) {
-        List<GetTokenResponseData> currencyTokensDetails = getTokensRequest.getCurrencies().stream().map(tokenHash ->
-                new GetTokenResponseData(getCurrencyFromDB(tokenHash))
-        ).collect(Collectors.toList());
-        currencyTokensDetails.sort(Comparator.comparing(GetTokenResponseData::getName));
-
-        GetTokensResponse getTokensResponse = new GetTokensResponse();
-        getTokensResponse.setTokensData(currencyTokensDetails);
-
-        return ResponseEntity.status(HttpStatus.OK).body(getTokensResponse);
+    public ResponseEntity<IResponse> getCurrenciesForWallet(GetCurrenciesRequest getCurrenciesRequest) {
+        List<GetCurrencyResponseData> tokenDetails = new ArrayList<>();
+        getCurrenciesRequest.getTokenHashes().forEach(tokenHash -> {
+            if (!tokenHash.equals(nativeCurrencyData.getHash())) {
+                CurrencyData tokenData = getCurrencyFromDB(tokenHash);
+                if (tokenData != null) {
+                    tokenDetails.add(new GetCurrencyResponseData(tokenData));
+                }
+            }
+        });
+        tokenDetails.sort(Comparator.comparing(GetCurrencyResponseData::getName));
+        return ResponseEntity.status(HttpStatus.OK).body(new GetCurrenciesResponse(new GetCurrencyResponseData(nativeCurrencyData), tokenDetails));
     }
 }
