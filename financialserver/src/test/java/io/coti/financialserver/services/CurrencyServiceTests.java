@@ -2,8 +2,6 @@ package io.coti.financialserver.services;
 
 import io.coti.basenode.crypto.*;
 import io.coti.basenode.data.*;
-import io.coti.basenode.http.GetTokensRequest;
-import io.coti.basenode.http.GetTokensResponse;
 import io.coti.basenode.http.HttpJacksonSerializer;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
@@ -16,6 +14,8 @@ import io.coti.basenode.services.interfaces.IChunkService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.financialserver.crypto.GenerateTokenRequestCrypto;
 import io.coti.financialserver.crypto.GetUserTokensRequestCrypto;
+import io.coti.financialserver.http.GetCurrenciesRequest;
+import io.coti.financialserver.http.GetCurrenciesResponse;
 import io.coti.financialserver.http.GetTokenGenerationDataResponse;
 import io.coti.financialserver.http.GetUserTokensRequest;
 import io.coti.financialserver.model.CurrencyNameIndexes;
@@ -244,15 +244,15 @@ public class CurrencyServiceTests {
     public void getTokens() {
         List<Hash> currenciesList = Arrays.asList(currencyData2.getHash(), currencyData.getHash());
 
-        GetTokensRequest getTokensRequest = new GetTokensRequest();
-        getTokensRequest.setCurrencies(currenciesList);
+        GetCurrenciesRequest getCurrenciesRequest = new GetCurrenciesRequest();
+        getCurrenciesRequest.setTokenHashes(currenciesList);
 
         when(currencies.getByHash(currencyData2.getHash())).thenReturn(currencyData2);
         when(currencies.getByHash(currencyData.getHash())).thenReturn(currencyData);
 
-        ResponseEntity<IResponse> tokens = currencyService.getTokens(getTokensRequest);
+        ResponseEntity<IResponse> tokens = currencyService.getCurrenciesForWallet(getCurrenciesRequest);
         Assert.assertTrue(tokens.getStatusCode().equals(HttpStatus.OK));
-        Assert.assertTrue(((GetTokensResponse) tokens.getBody()).getTokensData().get(0).getName().equals(currencyData.getName()));
-        Assert.assertTrue(((GetTokensResponse) tokens.getBody()).getTokensData().get(1).getName().equals(currencyData2.getName()));
+        Assert.assertTrue(((GetCurrenciesResponse) tokens.getBody()).getTokens().get(0).getName().equals(currencyData.getName()));
+        Assert.assertTrue(((GetCurrenciesResponse) tokens.getBody()).getTokens().get(1).getName().equals(currencyData2.getName()));
     }
 }
