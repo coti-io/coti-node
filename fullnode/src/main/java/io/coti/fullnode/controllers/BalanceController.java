@@ -27,7 +27,7 @@ public class BalanceController {
     }
 
     @PostMapping(value = "/tokens")
-    public ResponseEntity<GetTokenBalancesResponse> getBalances(@Valid @RequestBody GetTokenBalancesRequest getTokenBalancesRequest) {
+    public ResponseEntity<GetTokenBalancesResponse> getTokenBalances(@Valid @RequestBody GetTokenBalancesRequest getTokenBalancesRequest) {
         return balanceService.getTokenBalances(getTokenBalancesRequest);
     }
 

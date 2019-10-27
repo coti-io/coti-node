@@ -63,11 +63,11 @@ public class BaseNodeBalanceServiceTest {
         balanceService.preBalanceMap.put(addressHash2, currencyHashToAmountMap2);
 
         ResponseEntity<GetTokenBalancesResponse> currencyBalances = balanceService.getTokenBalances(getCurrencyBalanceRequest);
-        
+
         Assert.assertTrue(currencyBalances.getStatusCode().equals(HttpStatus.OK));
-        Assert.assertTrue(currencyBalances.getBody().getTokenToAddressesBalance().containsKey(tokenHash1));
-        Assert.assertTrue(currencyBalances.getBody().getTokenToAddressesBalance().containsKey(tokenHash2));
-        Assert.assertTrue(currencyBalances.getBody().getTokenToAddressesBalance().get(tokenHash1).get(addressHash1).getAddressBalance().equals(BigDecimal.TEN));
+        Assert.assertTrue(currencyBalances.getBody().getTokenBalances().containsKey(tokenHash1));
+        Assert.assertTrue(currencyBalances.getBody().getTokenBalances().containsKey(tokenHash2));
+        Assert.assertTrue(currencyBalances.getBody().getTokenBalances().get(tokenHash1).get(addressHash1).getAddressBalance().equals(BigDecimal.TEN));
     }
 
 }
