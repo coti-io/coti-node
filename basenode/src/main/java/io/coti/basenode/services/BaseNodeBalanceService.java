@@ -185,7 +185,7 @@ public class BaseNodeBalanceService implements IBalanceService {
         return new BigDecimal(Optional.ofNullable(Optional.ofNullable(balanceMap.get(addressHash)).orElse(new ConcurrentHashMap<>()).get(getNativeCurrencyHashIfNull(currencyHash))).orElse(BigDecimal.ZERO).toString());
     }
 
-    private Hash getNativeCurrencyHashIfNull(Hash currencyHash) {
+    protected Hash getNativeCurrencyHashIfNull(Hash currencyHash) {
         return Optional.ofNullable(currencyHash).orElse(currencyService.getNativeCurrencyHash());
     }
 }
