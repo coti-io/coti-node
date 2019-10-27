@@ -5,6 +5,8 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.GetBalancesRequest;
 import io.coti.basenode.http.GetBalancesResponse;
+import io.coti.basenode.http.GetTokenBalancesRequest;
+import io.coti.basenode.http.GetTokenBalancesResponse;
 import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
@@ -17,6 +19,8 @@ public interface IBalanceService {
     boolean checkBalancesAndAddToPreBalance(List<BaseTransactionData> baseTransactionDatas);
 
     ResponseEntity<GetBalancesResponse> getBalances(GetBalancesRequest getBalancesRequest);
+
+    ResponseEntity<GetTokenBalancesResponse> getTokenBalances(GetTokenBalancesRequest getTokenBalancesRequest);
 
     void continueHandleBalanceChanges(Hash addressHash, Hash currencyHash);
 

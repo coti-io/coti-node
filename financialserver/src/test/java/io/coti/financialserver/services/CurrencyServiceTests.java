@@ -2,10 +2,16 @@ package io.coti.financialserver.services;
 
 import io.coti.basenode.crypto.*;
 import io.coti.basenode.data.*;
+import io.coti.basenode.http.GetTokensRequest;
+import io.coti.basenode.http.GetTokensResponse;
 import io.coti.basenode.http.HttpJacksonSerializer;
 import io.coti.basenode.http.Response;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Currencies;
 import io.coti.basenode.model.Transactions;
+import io.coti.basenode.services.BaseNodeClusterStampService;
+import io.coti.basenode.services.TransactionHelper;
+import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IChunkService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.financialserver.crypto.GenerateTokenRequestCrypto;
@@ -33,14 +39,17 @@ import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {CurrencyService.class, GetUserTokensRequestCrypto.class, NodeCryptoHelper.class, UserTokenGenerations.class})
+@ContextConfiguration(classes = {CurrencyService.class, GetUserTokensRequestCrypto.class, NodeCryptoHelper.class, UserTokenGenerations.class,
+        BaseNodeClusterStampService.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -86,12 +95,20 @@ public class CurrencyServiceTests {
     private CurrencyRegistrarCrypto currencyRegistrarCrypto;
     @MockBean
     private IChunkService chunkService;
+    @MockBean
+    private BaseNodeClusterStampService baseNodeClusterStampService;
+    @MockBean
+    private IBalanceService balanceService;
+    @MockBean
+    private TransactionHelper transactionHelper;
 
     //
     private static Hash userHash;
     private static Hash currencyHash;
+    private static Hash currencyHash2;
     private static Hash transactionHash;
     private static CurrencyData currencyData;
+    private static CurrencyData currencyData2;
 
 
     @BeforeClass
@@ -99,6 +116,7 @@ public class CurrencyServiceTests {
         userHash = new Hash("00");
         transactionHash = new Hash("11");
         currencyHash = new Hash("22");
+        currencyHash2 = new Hash("33");
 
         currencyData = new CurrencyData();
         currencyData.setHash(currencyHash);
@@ -109,6 +127,16 @@ public class CurrencyServiceTests {
         currencyData.setTotalSupply(new BigDecimal("100"));
         currencyData.setScale(8);
         currencyData.setCreationTime(Instant.now());
+
+        currencyData2 = new CurrencyData();
+        currencyData2.setHash(currencyHash2);
+        currencyData2.setName("Tomeroken");
+        currencyData2.setSymbol("TMR");
+        currencyData2.setCurrencyTypeData(new CurrencyTypeData(CurrencyType.PAYMENT_CMD_TOKEN, Instant.now()));
+        currencyData2.setDescription("Dummy token for testing");
+        currencyData2.setTotalSupply(new BigDecimal("100"));
+        currencyData2.setScale(8);
+        currencyData2.setCreationTime(Instant.now());
     }
 
     @Before
@@ -212,4 +240,19 @@ public class CurrencyServiceTests {
 
     //TODO 9/22/2019 astolia: run TransactionService continueHandlePropagatedTransaction with TokenGenerationTransaction before some tests to mock insertion of data to db.
 
+    @Test
+    public void getTokens() {
+        List<Hash> currenciesList = Arrays.asList(currencyData2.getHash(), currencyData.getHash());
+
+        GetTokensRequest getTokensRequest = new GetTokensRequest();
+        getTokensRequest.setCurrencies(currenciesList);
+
+        when(currencies.getByHash(currencyData2.getHash())).thenReturn(currencyData2);
+        when(currencies.getByHash(currencyData.getHash())).thenReturn(currencyData);
+
+        ResponseEntity<IResponse> tokens = currencyService.getTokens(getTokensRequest);
+        Assert.assertTrue(tokens.getStatusCode().equals(HttpStatus.OK));
+        Assert.assertTrue(((GetTokensResponse) tokens.getBody()).getTokensData().get(0).getName().equals(currencyData.getName()));
+        Assert.assertTrue(((GetTokensResponse) tokens.getBody()).getTokensData().get(1).getName().equals(currencyData2.getName()));
+    }
 }

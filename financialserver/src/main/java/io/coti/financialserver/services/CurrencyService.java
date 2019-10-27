@@ -7,6 +7,9 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.exceptions.CurrencyException;
 import io.coti.basenode.exceptions.CurrencyValidationException;
+import io.coti.basenode.http.GetTokenResponseData;
+import io.coti.basenode.http.GetTokensRequest;
+import io.coti.basenode.http.GetTokensResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
@@ -33,13 +36,11 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Collectors;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.financialserver.http.HttpStringConstants.*;
@@ -405,4 +406,15 @@ public class CurrencyService extends BaseNodeCurrencyService {
         clusterStampService.handleInitiatedTokenNotice(initiatedTokenNoticeData);
     }
 
+    public ResponseEntity<IResponse> getTokens(GetTokensRequest getTokensRequest) {
+        List<GetTokenResponseData> currencyTokensDetails = getTokensRequest.getCurrencies().stream().map(tokenHash ->
+                new GetTokenResponseData(getCurrencyFromDB(tokenHash))
+        ).collect(Collectors.toList());
+        currencyTokensDetails.sort(Comparator.comparing(GetTokenResponseData::getName));
+
+        GetTokensResponse getTokensResponse = new GetTokensResponse();
+        getTokensResponse.setTokensData(currencyTokensDetails);
+
+        return ResponseEntity.status(HttpStatus.OK).body(getTokensResponse);
+    }
 }
