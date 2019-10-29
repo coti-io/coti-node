@@ -2,6 +2,7 @@ package io.coti.nodemanager.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkNodeData;
+import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.nodemanager.data.NetworkNodeStatus;
 import io.coti.nodemanager.model.ActiveNodes;

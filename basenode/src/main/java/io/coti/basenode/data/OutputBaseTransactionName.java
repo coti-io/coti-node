@@ -7,7 +7,8 @@ import java.util.Set;
 
 public enum OutputBaseTransactionName {
     FullNodeFeeData(EnumSet.of(TransactionType.Payment, TransactionType.Transfer, TransactionType.TokenGeneration)),
-    NetworkFeeData(EnumSet.of(TransactionType.Payment, TransactionType.Transfer, TransactionType.TokenGeneration)),
+    NetworkFeeData(EnumSet.of(TransactionType.Payment, TransactionType.Transfer)),
+    TokenServiceFeeData(EnumSet.of(TransactionType.TokenGeneration)),
     RollingReserveData(EnumSet.of(TransactionType.Payment)),
     ReceiverBaseTransactionData(EnumSet.of(TransactionType.Initial, TransactionType.Transfer, TransactionType.Payment));
 
@@ -15,10 +16,6 @@ public enum OutputBaseTransactionName {
 
     OutputBaseTransactionName(Set<TransactionType> transactionTypes) {
         this.transactionTypes = transactionTypes;
-    }
-
-    private Set<TransactionType> getTransactionTypes() {
-        return transactionTypes;
     }
 
     public static List<String> getOutputBaseTransactionsByType(TransactionType type) {
@@ -29,5 +26,9 @@ public enum OutputBaseTransactionName {
             }
         }
         return outputBaseTransactions;
+    }
+
+    private Set<TransactionType> getTransactionTypes() {
+        return transactionTypes;
     }
 }

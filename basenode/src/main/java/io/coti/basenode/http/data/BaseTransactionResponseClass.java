@@ -5,6 +5,7 @@ public enum BaseTransactionResponseClass {
     PIBT(PaymentInputBaseTransactionResponseData.class),
     FFBT(FullNodeFeeResponseData.class),
     NFBT(NetworkFeeResponseData.class),
+    TFBT(TokenServiceFeeResponseData.class),
     RRBT(RollingReserveResponseData.class),
     RBT(ReceiverBaseTransactionResponseData.class);
 
