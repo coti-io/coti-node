@@ -106,6 +106,36 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         }
 
     },
+    TokenServiceFeeData {
+        @Override
+        public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
+            if (!TokenServiceFeeData.class.isInstance(baseTransactionData)) {
+                throw new IllegalArgumentException("");
+            }
+
+            try {
+                TokenServiceFeeData tokenServiceFeeData = (TokenServiceFeeData) baseTransactionData;
+                byte[] outputMessageInBytes = getOutputMessageInBytes(tokenServiceFeeData);
+
+                ByteBuffer baseTransactionBuffer = ByteBuffer.allocate(outputMessageInBytes.length).put(outputMessageInBytes);
+                return baseTransactionBuffer.array();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+                return new byte[0];
+            }
+        }
+
+        @Override
+        public boolean verifySignature(TransactionData transactionData, BaseTransactionData baseTransactionData) {
+            try {
+                return CryptoHelper.verifyByPublicKey(getSignatureMessage(transactionData), baseTransactionData.getSignatureData().getR(), baseTransactionData.getSignatureData().getS(), ((TokenServiceFeeData) baseTransactionData).getSignerHash().toString());
+            } catch (ClassNotFoundException | InvalidKeySpecException | NoSuchAlgorithmException e) {
+                log.error("{}: {}", e.getClass().getName(), e.getMessage());
+                return false;
+            }
+        }
+
+    },
     ROLLING_RESERVE_DATA(RollingReserveData.class) {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
@@ -304,7 +334,6 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         return new byte[0];
     }
 
-
     protected byte[] getBaseMessageInBytes(BaseTransactionData baseTransactionData) {
         byte[] addressBytes = baseTransactionData.getAddressHash().getBytes();
         String decimalStringRepresentation = baseTransactionData.getAmount().stripTrailingZeros().toPlainString();
@@ -333,5 +362,17 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
                 put(baseMessageInBytes).put(bytesOfOriginalAmount);
 
         return outputBaseTransactionBuffer.array();
+    }
+
+    @Component
+    public static class BaseTransactionCryptoInjector {
+        @Autowired
+        private NodeCryptoHelper nodeCryptoHelper;
+
+        @PostConstruct
+        public void postConstruct() {
+            for (BaseTransactionCrypto baseTransactionCrypto : EnumSet.allOf(BaseTransactionCrypto.class))
+                baseTransactionCrypto.nodeCryptoHelper = nodeCryptoHelper;
+        }
     }
 }

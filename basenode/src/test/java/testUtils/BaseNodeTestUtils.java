@@ -14,15 +14,15 @@ import java.util.concurrent.ThreadLocalRandom;
 @Slf4j
 public class BaseNodeTestUtils {
 
+    private static final String ANY_ADDRESS = "localhost";
+    private static final String ANY_PORT = "7040";
     private static final String[] hexaOptions = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
     private static final int SIZE_OF_HASH = 64;
     private static final int SIZE_OF_BASE_TRANSACTION_HASH = 136;
     private static final int MAX_TRUST_SCORE = 100;
     private static final int ANY_NUMBER = 10000;
     private static final String TRANSACTION_DESCRIPTION = "test";
-    public static final String ANY_ADDRESS = "localhost";
-    public static final String ANY_PORT = "7040";
-
+    private static final String FS_Public_Key = "405252ce1be829e4183eb7c36c5c375fa61372cb340f4d35260376a71dcad95046b05ed98ad069f91846994e7e681870182f92dd35f44c9c0a61eef381a250f6";
 
     public static Hash generateRandomHash() {
         return generateRandomHash(SIZE_OF_HASH);
@@ -88,6 +88,14 @@ public class BaseNodeTestUtils {
                 null,
                 new BigDecimal(originalAmount),
                 new BigDecimal(reducedAmount),
+                Instant.now());
+    }
+
+    public static TokenServiceFeeData generateTokenServiceFeeData(Hash hash, double count) {
+        return new TokenServiceFeeData(hash,
+                null,
+                new Hash(FS_Public_Key),
+                new BigDecimal(count),
                 Instant.now());
     }
 
