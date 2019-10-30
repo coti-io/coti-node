@@ -3,6 +3,7 @@ package io.coti.financialserver.services;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import io.coti.basenode.crypto.CurrencyOriginatorCrypto;
+import io.coti.basenode.crypto.CurrencyRegistrarCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.exceptions.CurrencyException;
@@ -64,6 +65,8 @@ public class CurrencyService extends BaseNodeCurrencyService {
     private PendingCurrencies pendingCurrencies;
     @Autowired
     private CurrencyOriginatorCrypto currencyOriginatorCrypto;
+    @Autowired
+    private CurrencyRegistrarCrypto currencyRegistrarCrypto;
     @Autowired
     private Transactions transactions;
     @Autowired
@@ -242,6 +245,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
             CurrencyTypeData currencyTypeData = new CurrencyTypeData(currencyType, Instant.now());
             currencyData = new CurrencyData(requestCurrencyData, currencyTypeData);
             setSignedCurrencyTypeData(currencyData, currencyType);
+            currencyRegistrarCrypto.signMessage(currencyData);
 
             synchronized (addLockToLockMap(lockTransactionHashMap, requestTransactionHash)) {
                 TransactionData tokenGenerationTransactionData = transactions.getByHash(requestTransactionHash);

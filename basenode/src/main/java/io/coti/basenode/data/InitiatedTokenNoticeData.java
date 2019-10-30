@@ -11,12 +11,15 @@ import java.nio.ByteBuffer;
 @Data
 public class InitiatedTokenNoticeData implements IPropagatable {
 
+    private static final long serialVersionUID = -6492207702483646548L;
     @NotNull
     private @Valid Hash hash;
     @NotNull
     private @Valid CurrencyData currencyData;
     @NotNull
     private @Valid ClusterStampNameData clusterStampNameData;
+
+    private InitiatedTokenNoticeData() {}
 
     public InitiatedTokenNoticeData(CurrencyData currencyData, ClusterStampNameData clusterStampNameData) {
         this.currencyData = currencyData;
@@ -29,6 +32,6 @@ public class InitiatedTokenNoticeData implements IPropagatable {
         byte[] clusterStampNameDataInBytes = this.getClusterStampNameData().getHash().getBytes();
         ByteBuffer buffer = ByteBuffer.allocate(currencyHashInBytes.length + clusterStampNameDataInBytes.length)
                 .put(currencyHashInBytes).put(clusterStampNameDataInBytes);
-        CryptoHelper.cryptoHash(buffer.array());
+        this.hash = CryptoHelper.cryptoHash(buffer.array());
     }
 }
