@@ -17,8 +17,8 @@ public class CurrencyOriginatorCrypto extends SignatureValidationCrypto<Currency
         byte[] descriptionInBytes = currencyData.getDescription().getBytes();
         byte[] totalSupplyInBytes = currencyData.getTotalSupply().stripTrailingZeros().toPlainString().getBytes();
         byte[] scaleInBytes = ByteBuffer.allocate(Integer.BYTES).putInt(currencyData.getScale()).array();
-        ByteBuffer currencyBuffer = ByteBuffer.allocate(nameInBytes.length + symbolInBytes.length + descriptionInBytes.length + totalSupplyInBytes.length + totalSupplyInBytes.length + scaleInBytes.length)
-                .put(nameInBytes).put(symbolInBytes).put(descriptionInBytes).put(totalSupplyInBytes).put(totalSupplyInBytes).put(scaleInBytes);
+        ByteBuffer currencyBuffer = ByteBuffer.allocate(nameInBytes.length + symbolInBytes.length + descriptionInBytes.length + totalSupplyInBytes.length + scaleInBytes.length)
+                .put(nameInBytes).put(symbolInBytes).put(descriptionInBytes).put(totalSupplyInBytes).put(scaleInBytes);
         return CryptoHelper.cryptoHash(currencyBuffer.array()).getBytes();
     }
 
