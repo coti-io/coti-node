@@ -50,7 +50,15 @@ public class TransactionService extends BaseNodeTransactionService {
 
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
+        processAllPropagatedTransaction(transactionData);
+    }
 
+    @Override
+    protected void propagateMissingTransaction(TransactionData transactionData) {
+        processAllPropagatedTransaction(transactionData);
+    }
+
+    private void processAllPropagatedTransaction(TransactionData transactionData) {
         if (transactionData.getType().equals(TransactionType.Payment)) {
 
             ReceiverBaseTransactionOwnerData rbtOwnerData = receiverBaseTransactionOwners.getByHash(transactionHelper.getReceiverBaseTransactionHash(transactionData));
@@ -64,6 +72,5 @@ public class TransactionService extends BaseNodeTransactionService {
             currencyService.addToTokenGenerationTransactionQueue(transactionData);
         }
     }
-
 
 }
