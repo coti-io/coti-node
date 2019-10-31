@@ -235,6 +235,7 @@ public class BaseNodeTransactionService implements ITransactionService {
             });
             missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> confirmationService.insertMissingTransaction(transactionData));
             transactionHelper.incrementTotalTransactions();
+            continueHandleMissingTransaction(transactionData);
         } else {
             missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> confirmationService.insertMissingConfirmation(transactionData, trustChainUnconfirmedExistingTransactionHashes));
         }
@@ -242,8 +243,8 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     }
 
-    protected void propagateMissingTransaction(TransactionData transactionData) {
-        log.debug("Propagate missing transaction {} by base node", transactionData.getHash());
+    protected void continueHandleMissingTransaction(TransactionData transactionData) {
+        log.debug("Continue handle missing transaction {} by base node", transactionData.getHash());
     }
 
     public Thread monitorTransactionThread(String type, AtomicLong transactionNumber, AtomicLong receivedTransactionNumber) {
