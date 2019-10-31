@@ -214,7 +214,7 @@ public class BaseNodeTransactionService implements ITransactionService {
             transactionHelper.incrementTotalTransactions();
 
             confirmationService.insertMissingTransaction(transactionData);
-            propagateMissingTransaction(transactionData);
+            continueHandleMissingTransaction(transactionData);
 
         } else {
             transactions.put(transactionData);
@@ -224,8 +224,8 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     }
 
-    protected void propagateMissingTransaction(TransactionData transactionData) {
-        log.debug("Propagate missing transaction {} by base node", transactionData.getHash());
+    protected void continueHandleMissingTransaction(TransactionData transactionData) {
+        log.debug("Continue handle missing transaction {} by base node", transactionData.getHash());
     }
 
     public Thread monitorTransactionThread(String type, AtomicLong transactionNumber, AtomicLong receivedTransactionNumber) {
