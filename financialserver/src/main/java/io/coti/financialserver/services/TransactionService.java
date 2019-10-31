@@ -50,15 +50,15 @@ public class TransactionService extends BaseNodeTransactionService {
 
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
-        processAllPropagatedTransaction(transactionData);
+        continueHandleTransaction(transactionData);
     }
 
     @Override
-    protected void propagateMissingTransaction(TransactionData transactionData) {
-        processAllPropagatedTransaction(transactionData);
+    protected void continueHandleMissingTransaction(TransactionData transactionData) {
+        continueHandleTransaction(transactionData);
     }
 
-    private void processAllPropagatedTransaction(TransactionData transactionData) {
+    private void continueHandleTransaction(TransactionData transactionData) {
         if (transactionData.getType().equals(TransactionType.Payment)) {
 
             ReceiverBaseTransactionOwnerData rbtOwnerData = receiverBaseTransactionOwners.getByHash(transactionHelper.getReceiverBaseTransactionHash(transactionData));

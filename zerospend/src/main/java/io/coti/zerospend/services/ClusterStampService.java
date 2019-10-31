@@ -115,8 +115,8 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     public ClusterStampNameData handleNewToken(CurrencyData currencyData) {
         ClusterStampNameData clusterStampNameData = handleNewCurrencyByType(currencyData, ClusterStampType.TOKEN);
-        uploadClusterStamp(clusterStampNameData);
         loadClusterStamp(clusterStampNameData);
+        uploadClusterStamp(clusterStampNameData);
         return clusterStampNameData;
     }
 }
