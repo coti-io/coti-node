@@ -15,6 +15,7 @@ public class TokenGenerationFeeResponseData implements IResponse {
     private String amount;
     private String originalAmount;
     private String addressHash;
+    private String currencyHash;
     private String signerHash;
     private Instant createTime;
     private String name;
@@ -25,6 +26,7 @@ public class TokenGenerationFeeResponseData implements IResponse {
         this.amount = tokenServiceFeeData.getAmount().toPlainString();
         this.originalAmount = tokenServiceFeeData.getOriginalAmount().toPlainString();
         this.addressHash = tokenServiceFeeData.getAddressHash().toString();
+        this.currencyHash = tokenServiceFeeData.getCurrencyHash().toString();
         this.signerHash = tokenServiceFeeData.getSignerHash().toString();
         this.createTime = tokenServiceFeeData.getCreateTime();
         this.name = BaseTransactionName.getName(TokenServiceFeeData.class).name();
