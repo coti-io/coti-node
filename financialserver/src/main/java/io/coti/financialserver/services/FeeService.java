@@ -4,8 +4,8 @@ import io.coti.basenode.crypto.BaseTransactionCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TokenServiceFeeData;
-import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.financialserver.data.ReservedAddress;
 import io.coti.financialserver.http.GenerateTokenFeeRequest;
@@ -27,6 +27,7 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 @Service
 public class FeeService {
 
+    private final static BigDecimal totalSupplyFeeFactor = BigDecimal.ZERO;
     @Value("${token.generation.fee}")
     private BigDecimal tokenGenerationFee;
     @Value("${financialserver.seed}")
@@ -38,10 +39,10 @@ public class FeeService {
     @Autowired
     private ICurrencyService currencyService;
 
-    public ResponseEntity<BaseResponse> createTokenGenerationFee(GenerateTokenFeeRequest generateTokenFeeRequest) {
+    public ResponseEntity<IResponse> createTokenGenerationFee(GenerateTokenFeeRequest generateTokenRequest) {
         try {
             Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();
-            BigDecimal amount = tokenGenerationFee;
+            BigDecimal amount = totalSupplyFeeFactor.multiply(generateTokenRequest.getCurrencyData().getTotalSupply()).add(tokenGenerationFee);
             Hash address = networkFeeAddress();
 
             TokenServiceFeeData tokenServiceFeeData = new TokenServiceFeeData(address, nativeCurrencyHash, nodeCryptoHelper.getNodeHash(), amount, Instant.now());
@@ -56,15 +57,15 @@ public class FeeService {
         }
     }
 
-    public Hash networkFeeAddress() {
+    private Hash networkFeeAddress() {
         return nodeCryptoHelper.generateAddress(seed, (int) ReservedAddress.NETWORK_FEE_POOL.getIndex());
     }
 
-    public void setFeeHash(TokenServiceFeeData tokenServiceFeeData) throws ClassNotFoundException {
+    private void setFeeHash(TokenServiceFeeData tokenServiceFeeData) throws ClassNotFoundException {
         BaseTransactionCrypto.TokenServiceFeeData.setBaseTransactionHash(tokenServiceFeeData);
     }
 
-    public void signTokenGenerationFee(TokenServiceFeeData tokenServiceFeeData) {
+    private void signTokenGenerationFee(TokenServiceFeeData tokenServiceFeeData) {
         tokenServiceFeeData.setSignature(nodeCryptoHelper.signMessage(tokenServiceFeeData.getHash().getBytes()));
     }
 }

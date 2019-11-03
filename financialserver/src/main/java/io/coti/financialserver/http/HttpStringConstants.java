@@ -73,6 +73,7 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
 
     public static final String DISTRIBUTION_FILE_RECORD_DELETED = "Distribution file record deleted";
 
+    public static final String TOKEN_GENERATION_FEE_FAILURE = "Failed to create requested token fee";
     public static final String TOKEN_GENERATION_REQUEST_INVALID_SIGNATURE = "Signature failed for token generation request";
     public static final String TOKEN_GENERATION_REQUEST_CURRENCY_DATA_INVALID_SIGNATURE = "Signature failed for token generation currency data request";
     public static final String TOKEN_GENERATION_REQUEST_CURRENCY_TYPE_DATA_INVALID_SIGNATURE = "Signature failed for token generation currency type data request";

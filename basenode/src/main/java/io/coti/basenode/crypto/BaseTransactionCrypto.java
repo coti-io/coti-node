@@ -128,7 +128,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
         @Override
         public String getPublicKey(BaseTransactionData baseTransactionData) {
-            return  ((TokenServiceFeeData)baseTransactionData).getSignerHash().toString();
+            return ((TokenServiceFeeData) baseTransactionData).getSignerHash().toString();
         }
 
     },

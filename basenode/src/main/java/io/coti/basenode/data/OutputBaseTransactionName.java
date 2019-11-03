@@ -18,6 +18,10 @@ public enum OutputBaseTransactionName {
         this.transactionTypes = transactionTypes;
     }
 
+    private Set<TransactionType> getTransactionTypes() {
+        return transactionTypes;
+    }
+
     public static List<String> getOutputBaseTransactionsByType(TransactionType type) {
         List<String> outputBaseTransactions = new ArrayList<>();
         for (OutputBaseTransactionName outputBaseTransactionName : values()) {
@@ -26,9 +30,5 @@ public enum OutputBaseTransactionName {
             }
         }
         return outputBaseTransactions;
-    }
-
-    private Set<TransactionType> getTransactionTypes() {
-        return transactionTypes;
     }
 }
