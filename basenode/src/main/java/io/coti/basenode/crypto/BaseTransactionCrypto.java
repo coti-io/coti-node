@@ -108,17 +108,13 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     },
     TokenServiceFeeData {
         @Override
-        public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
-            if (!TokenServiceFeeData.class.isInstance(baseTransactionData)) {
+        public byte[] getMessageInBytes(BaseTransactionData tokenServiceFeeData) {
+            if (!TokenServiceFeeData.class.isInstance(tokenServiceFeeData)) {
                 throw new IllegalArgumentException("");
             }
 
             try {
-                TokenServiceFeeData tokenServiceFeeData = (TokenServiceFeeData) baseTransactionData;
-                byte[] outputMessageInBytes = getOutputMessageInBytes(tokenServiceFeeData);
-
-                ByteBuffer baseTransactionBuffer = ByteBuffer.allocate(outputMessageInBytes.length).put(outputMessageInBytes);
-                return baseTransactionBuffer.array();
+                return getOutputMessageInBytes((TokenServiceFeeData) tokenServiceFeeData);
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
                 return new byte[0];
@@ -341,8 +337,10 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         Instant createTime = baseTransactionData.getCreateTime();
         byte[] createTimeInBytes = ByteBuffer.allocate(Long.BYTES).putLong(createTime.toEpochMilli()).array();
 
-        ByteBuffer baseTransactionBuffer = ByteBuffer.allocate(addressBytes.length + bytesOfAmount.length + createTimeInBytes.length).
-                put(addressBytes).put(bytesOfAmount).put(createTimeInBytes);
+        byte[] currencyHashInBytes = baseTransactionData.getCurrencyHash() != null ? baseTransactionData.getCurrencyHash().getBytes() : new byte[0];
+
+        ByteBuffer baseTransactionBuffer = ByteBuffer.allocate(addressBytes.length + bytesOfAmount.length + createTimeInBytes.length + currencyHashInBytes.length).
+                put(addressBytes).put(bytesOfAmount).put(createTimeInBytes).put(currencyHashInBytes);
 
         return baseTransactionBuffer.array();
     }
