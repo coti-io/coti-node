@@ -37,8 +37,4 @@ public enum OutputBaseTransactionName {
         }
         return outputBaseTransactions;
     }
-
-    private Set<TransactionType> getTransactionTypes() {
-        return transactionTypes;
-    }
 }

@@ -8,7 +8,6 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.exceptions.CurrencyException;
 import io.coti.basenode.exceptions.CurrencyValidationException;
-import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
@@ -55,7 +54,6 @@ public class CurrencyService extends BaseNodeCurrencyService {
     private final Set<String> processingCurrencySymbolSet = Sets.newConcurrentHashSet();
     @Value("${financialserver.seed}")
     private String seed;
-
     @Autowired
     private CurrencyNameIndexes currencyNameIndexes;
     @Autowired
@@ -220,20 +218,20 @@ public class CurrencyService extends BaseNodeCurrencyService {
         return ResponseEntity.status(HttpStatus.CREATED).body(new Response(TOKEN_GENERATION_REQUEST_SUCCESS, STATUS_SUCCESS));
     }
 
-    public ResponseEntity<BaseResponse> getTokenGenerationFee(GenerateTokenFeeRequest generateTokenRequest) {
+    public ResponseEntity<IResponse> getTokenGenerationFee(GenerateTokenFeeRequest generateTokenRequest) {
         try {
             CurrencyDataForFee requestCurrencyData = generateTokenRequest.getCurrencyData();
             String currencyName = requestCurrencyData.getName();
             Hash currencyHash = requestCurrencyData.calculateHash();
             validateCurrencyUniqueness(currencyHash, currencyName);
         } catch (CurrencyValidationException e) {
-            String error = String.format("%s. Exception: %s", TOKEN_GENERATION_REQUEST_FAILURE, e.getMessageAndCause());
+            String error = String.format("%s. Exception: %s", TOKEN_GENERATION_FEE_FAILURE, e.getMessageAndCause());
             return ResponseEntity.badRequest().body(new Response(error, STATUS_ERROR));
         } catch (CotiRunTimeException e) {
-            String error = String.format("%s. Exception: %s", TOKEN_GENERATION_REQUEST_FAILURE, e.getMessageAndCause());
+            String error = String.format("%s. Exception: %s", TOKEN_GENERATION_FEE_FAILURE, e.getMessageAndCause());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(error, STATUS_ERROR));
         } catch (Exception e) {
-            String error = String.format("%s. Exception: %s", TOKEN_GENERATION_REQUEST_FAILURE, e.getMessage());
+            String error = String.format("%s. Exception: %s", TOKEN_GENERATION_FEE_FAILURE, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(error, STATUS_ERROR));
         }
 

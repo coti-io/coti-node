@@ -19,7 +19,8 @@ public class InitiatedTokenNoticeData implements IPropagatable {
     @NotNull
     private @Valid ClusterStampNameData clusterStampNameData;
 
-    private InitiatedTokenNoticeData() {}
+    private InitiatedTokenNoticeData() {
+    }
 
     public InitiatedTokenNoticeData(CurrencyData currencyData, ClusterStampNameData clusterStampNameData) {
         this.currencyData = currencyData;
