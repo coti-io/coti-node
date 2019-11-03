@@ -37,7 +37,6 @@ public class CurrencyController {
         return currencyService.getTokenGenerationFee(generateTokenFeeRequest);
     }
 
-
     @PostMapping(path = "/wallet")
     public ResponseEntity<IResponse> getCurrenciesForWallet(@Valid @RequestBody GetCurrenciesRequest getCurrenciesRequest) {
         return currencyService.getCurrenciesForWallet(getCurrenciesRequest);

@@ -13,7 +13,7 @@ public abstract class BaseTransactionResponseData {
 
     private String hash;
     private String addressHash;
-    private  String currencyHash;
+    private String currencyHash;
     private BigDecimal amount;
     private Instant createTime;
     private String name;

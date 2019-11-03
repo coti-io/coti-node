@@ -11,6 +11,7 @@ import java.util.List;
 
 @Data
 public class RollingReserveResponseData extends OutputBaseTransactionResponseData {
+
     private BigDecimal reducedAmount;
     private List<TrustScoreNodeResultResponseData> rollingReserveTrustScoreNodeResult;
 

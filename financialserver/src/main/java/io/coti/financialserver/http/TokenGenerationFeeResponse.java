@@ -9,7 +9,6 @@ public class TokenGenerationFeeResponse extends BaseResponse {
     private TokenGenerationFeeResponseData tokenGenerationFee;
 
     public TokenGenerationFeeResponse(TokenGenerationFeeResponseData tokenGenerationFeeResponseData) {
-        super();
         this.tokenGenerationFee = tokenGenerationFeeResponseData;
     }
 }
