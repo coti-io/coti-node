@@ -202,7 +202,8 @@ public class CurrencyService extends BaseNodeCurrencyService {
         try {
             validateTokenGenerationRequest(generateTokenRequest);
             occupyLocksToProcessingSets(generateTokenRequest);
-            validateUniquenessAndAddToken(generateTokenRequest);
+            Hash tokenHash = validateUniquenessAndAddToken(generateTokenRequest);
+            return ResponseEntity.status(HttpStatus.CREATED).body(new GenerateTokenResponse(tokenHash));
         } catch (CurrencyValidationException e) {
             String error = String.format("%s. Exception: %s", TOKEN_GENERATION_REQUEST_FAILURE, e.getMessageAndCause());
             return ResponseEntity.badRequest().body(new Response(error, STATUS_ERROR));
@@ -215,7 +216,6 @@ public class CurrencyService extends BaseNodeCurrencyService {
         } finally {
             removeOccupyLocksFromProcessingSets(generateTokenRequest);
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(new Response(TOKEN_GENERATION_REQUEST_SUCCESS, STATUS_SUCCESS));
     }
 
     public ResponseEntity<IResponse> getTokenGenerationFee(GenerateTokenFeeRequest generateTokenRequest) {
@@ -248,11 +248,11 @@ public class CurrencyService extends BaseNodeCurrencyService {
         addLockToProcessingSet(processingCurrencySymbolSet, generateTokenRequest.getOriginatorCurrencyData().getSymbol());
     }
 
-    private void validateUniquenessAndAddToken(GenerateTokenRequest generateTokenRequest) {
+    private Hash validateUniquenessAndAddToken(GenerateTokenRequest generateTokenRequest) {
         OriginatorCurrencyData requestCurrencyData = generateTokenRequest.getOriginatorCurrencyData();
         String currencyName = requestCurrencyData.getName();
         Hash userHash = generateTokenRequest.getSignerHash();
-        CurrencyData currencyData = null;
+        CurrencyData currencyData;
         boolean tokenConfirmed = false;
         synchronized (addLockToLockMap(lockUserHashMap, userHash)) {
             UserTokenGenerationData userTokenGenerationData = userTokenGenerations.getByHash(userHash);
@@ -289,6 +289,8 @@ public class CurrencyService extends BaseNodeCurrencyService {
         if (tokenConfirmed) {
             sendGeneratedToken(currencyData);
         }
+
+        return currencyData.getHash();
     }
 
     private void sendGeneratedToken(CurrencyData currencyData) {
