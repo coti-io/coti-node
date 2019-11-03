@@ -18,6 +18,7 @@ public class RollingReserveResponseData {
     private String originalAmount;
     private String reducedAmount;
     private String addressHash;
+    private String currencyHash;
     private Instant createTime;
     private String name;
     private List<TrustScoreNodeResultResponseData> rollingReserveTrustScoreNodeResult;
@@ -28,6 +29,7 @@ public class RollingReserveResponseData {
         this.originalAmount = rollingReserveData.getOriginalAmount().toPlainString();
         this.reducedAmount = rollingReserveData.getReducedAmount().toPlainString();
         this.addressHash = rollingReserveData.getAddressHash().toString();
+        this.currencyHash = rollingReserveData.getCurrencyHash().toString();
         this.createTime = rollingReserveData.getCreateTime();
         this.name = BaseTransactionName.getName(RollingReserveData.class).name();
         this.rollingReserveTrustScoreNodeResult = new ArrayList<>();
