@@ -2,7 +2,6 @@ package io.coti.nodemanager.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkNodeData;
-import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.nodemanager.model.ActiveNodes;
 import io.coti.nodemanager.services.interfaces.IHealthCheckService;
@@ -96,11 +95,9 @@ public class HealthCheckService implements IHealthCheckService {
 
     private boolean checkAndDeleteNodeIfNeeded(NetworkNodeData networkNodeData, List<NetworkNodeData> nodesToRemove) {
         if (!isNodeConnected(networkNodeData)) {
-            if (networkNodeData.getNodeType() != NodeType.FinancialServer) {
-                deleteNodeRecord(networkNodeData);
-                nodesToRemove.add(networkNodeData);
-                return true;
-            }
+            deleteNodeRecord(networkNodeData);
+            nodesToRemove.add(networkNodeData);
+            return true;
         }
         return false;
     }
