@@ -122,13 +122,8 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         }
 
         @Override
-        public boolean verifySignature(TransactionData transactionData, BaseTransactionData baseTransactionData) {
-            try {
-                return CryptoHelper.verifyByPublicKey(getSignatureMessage(transactionData), baseTransactionData.getSignatureData().getR(), baseTransactionData.getSignatureData().getS(), ((TokenServiceFeeData) baseTransactionData).getSignerHash().toString());
-            } catch (ClassNotFoundException | InvalidKeySpecException | NoSuchAlgorithmException e) {
-                log.error("{}: {}", e.getClass().getName(), e.getMessage());
-                return false;
-            }
+        public String getPublicKey(BaseTransactionData baseTransactionData) {
+            return  ((TokenServiceFeeData)baseTransactionData).getSignerHash().toString();
         }
 
     },
