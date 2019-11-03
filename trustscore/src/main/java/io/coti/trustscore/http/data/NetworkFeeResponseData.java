@@ -18,6 +18,7 @@ public class NetworkFeeResponseData {
     private String originalAmount;
     private String reducedAmount;
     private String addressHash;
+    private String currencyHash;
     private Instant createTime;
     private String name;
     private List<TrustScoreNodeResultResponseData> networkFeeTrustScoreNodeResult;
@@ -28,6 +29,7 @@ public class NetworkFeeResponseData {
         this.originalAmount = networkFeeData.getOriginalAmount().toPlainString();
         this.reducedAmount = networkFeeData.getReducedAmount() == null ? null : networkFeeData.getReducedAmount().toPlainString();
         this.addressHash = networkFeeData.getAddressHash().toString();
+        this.currencyHash = networkFeeData.getCurrencyHash().toString();
         this.createTime = networkFeeData.getCreateTime();
         this.name = BaseTransactionName.getName(NetworkFeeData.class).name();
         this.networkFeeTrustScoreNodeResult = new ArrayList<>();

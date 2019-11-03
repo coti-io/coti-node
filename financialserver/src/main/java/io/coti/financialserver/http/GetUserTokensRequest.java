@@ -8,16 +8,17 @@ import lombok.Data;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.time.Instant;
 
 @Data
 public class GetUserTokensRequest extends Request implements ISignValidatable {
 
-    @NotEmpty
+    @NotNull
     private @Valid Hash userHash;
-    @NotEmpty
+    @NotNull
     private Instant creationTime;
-    @NotEmpty
+    @NotNull
     private @Valid SignatureData signature;
 
     @Override
