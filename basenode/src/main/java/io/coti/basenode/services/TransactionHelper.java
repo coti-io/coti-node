@@ -8,7 +8,10 @@ import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.*;
+import io.coti.basenode.services.interfaces.IBalanceService;
+import io.coti.basenode.services.interfaces.IClusterService;
+import io.coti.basenode.services.interfaces.IConfirmationService;
+import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -65,7 +68,7 @@ public class TransactionHelper implements ITransactionHelper {
             transactionTotals.put(baseTransactionData.getCurrencyHash(),
                     transactionTotals.getOrDefault(baseTransactionData.getCurrencyHash(), BigDecimal.ZERO).add(baseTransactionData.getAmount()));
         }
-        return transactionTotals.values().stream().allMatch(t-> t.compareTo(BigDecimal.ZERO) == 0);
+        return transactionTotals.values().stream().allMatch(t -> t.compareTo(BigDecimal.ZERO) == 0);
     }
 
     @Override
