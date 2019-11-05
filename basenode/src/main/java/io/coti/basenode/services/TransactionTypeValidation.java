@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 public enum TransactionTypeValidation implements ITransactionTypeValidation {
@@ -52,8 +53,8 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
     },
     INITIAL(TransactionType.Initial) {
         @Override
-        public boolean validateBaseTransactions(TransactionData transactionData) {
-            return validateBaseTransactions(transactionData, true);
+        public boolean validateBaseTransactions(TransactionData transactionData, Hash nativeCurrencyHash) {
+            return validateBaseTransactions(transactionData, true, nativeCurrencyHash);
         }
 
         @Override
@@ -68,8 +69,8 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
     },
     TokenGeneration(TransactionType.TokenGeneration) {
         @Override
-        public boolean validateBaseTransactions(TransactionData transactionData) {
-            return validateBaseTransactions(transactionData, true);
+        public boolean validateBaseTransactions(TransactionData transactionData, Hash nativeCurrencyHash) {
+            return validateBaseTransactions(transactionData, true, nativeCurrencyHash);
         }
     };
 
@@ -90,13 +91,13 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
     }
 
     @Override
-    public boolean validateBaseTransactions(TransactionData transactionData) {
-        return validateBaseTransactions(transactionData, false);
+    public boolean validateBaseTransactions(TransactionData transactionData, Hash nativeCurrencyHash) {
+        return validateBaseTransactions(transactionData, false, nativeCurrencyHash);
     }
 
-    protected boolean validateBaseTransactions(TransactionData transactionData, boolean skipValidationOfReducedAmount) {
+    protected boolean validateBaseTransactions(TransactionData transactionData, boolean skipValidationOfReducedAmount, Hash nativeCurrencyHash) {
         try {
-            return validateInputBaseTransactions(transactionData) && validateOutputBaseTransactions(transactionData, skipValidationOfReducedAmount);
+            return validateInputBaseTransactions(transactionData) && validateOutputBaseTransactions(transactionData, skipValidationOfReducedAmount, nativeCurrencyHash);
         } catch (IllegalArgumentException e) {
             log.error("Errors of an illegal argument during validation of base transactions: ", e);
             return false;
@@ -112,7 +113,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
     }
 
     @Override
-    public boolean validateOutputBaseTransactions(TransactionData transactionData, boolean skipValidationOfReducedAmount) {
+    public boolean validateOutputBaseTransactions(TransactionData transactionData, boolean skipValidationOfReducedAmount, Hash nativeCurrencyHash) {
         try {
             if (!type.equals(transactionData.getType())) {
                 throw new IllegalArgumentException(INVALID_TRANSACTION_TYPE);
@@ -125,6 +126,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
             }
 
             BigDecimal originalAmount = BigDecimal.ZERO;
+            Hash originalCurrencyHash = null;
 
             for (int i = 0; i < outputBaseTransactions.size(); i++) {
                 OutputBaseTransactionData outputBaseTransactionData = outputBaseTransactions.get(i);
@@ -134,8 +136,15 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
                 if (!originalAmount.equals(BigDecimal.ZERO) && originalAmount.compareTo(outputBaseTransactionData.getOriginalAmount()) != 0) {
                     return false;
                 }
-                originalAmount = outputBaseTransactionData.getOriginalAmount();
+                if (originalCurrencyHash != null &&
+                        !originalCurrencyHash.equals(Optional.ofNullable(outputBaseTransactionData.getOriginalCurrencyHash()).orElse(nativeCurrencyHash))){
+                    return false;
+                }
 
+                originalAmount = outputBaseTransactionData.getOriginalAmount();
+                if (originalCurrencyHash == null) {
+                    originalCurrencyHash = Optional.ofNullable(outputBaseTransactionData.getOriginalCurrencyHash()).orElse(nativeCurrencyHash);
+                }
             }
 
             return skipValidationOfReducedAmount || validateReducedAmount(outputBaseTransactions);

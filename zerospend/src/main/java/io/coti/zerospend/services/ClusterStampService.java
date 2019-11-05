@@ -97,7 +97,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         try (FileWriter clusterstampFileWriter = new FileWriter(clusterstampFileLocation, true);
              BufferedWriter clusterStampBufferedWriter = new BufferedWriter(clusterstampFileWriter)) {
             clusterStampBufferedWriter.newLine();
-            clusterStampBufferedWriter.newLine();
             clusterStampBufferedWriter.append("# Signature");
             clusterStampBufferedWriter.newLine();
             clusterStampBufferedWriter.append("r," + signature.getR());
