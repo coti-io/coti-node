@@ -33,11 +33,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Collectors;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.financialserver.http.HttpStringConstants.*;
@@ -263,6 +265,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
             Hash currencyHash = requestCurrencyData.calculateHash();
 
             validateTransactionAvailability(userTokenGenerationData, requestTransactionHash);
+            validateTransactionAmount(requestCurrencyData, requestTransactionHash);
             validateCurrencyUniqueness(currencyHash, currencyName);
 
             CurrencyType currencyType = CurrencyType.REGULAR_CMD_TOKEN;
@@ -302,8 +305,6 @@ public class CurrencyService extends BaseNodeCurrencyService {
         } catch (Exception e) {
             throw new CurrencyException("Error at sending generated token.", e);
         }
-
-
     }
 
 
@@ -327,6 +328,16 @@ public class CurrencyService extends BaseNodeCurrencyService {
         final Hash existingCurrencyHash = userTokenGenerationData.getTransactionHashToCurrencyMap().get(requestTransactionHash);
         if (existingCurrencyHash != null) {
             throw new CurrencyException(String.format("Transaction hash %s was already used", requestTransactionHash));
+        }
+    }
+
+    private void validateTransactionAmount(OriginatorCurrencyData requestCurrencyData, Hash requestTransactionHash) {
+        TransactionData tokenGenerationTransactionData = transactions.getByHash(requestTransactionHash);
+        BaseTransactionData tokenServiceFeeData = tokenGenerationTransactionData.getBaseTransactions().stream()
+                .filter(baseTransactionData -> baseTransactionData instanceof TokenServiceFeeData).findFirst().get();
+
+        if (!tokenServiceFeeData.getAmount().equals(feeService.calculateTokenGenerationFee(requestCurrencyData.getTotalSupply()))) {
+            throw new CurrencyException(String.format("The token generation fees in the transaction %s is not correct", requestTransactionHash));
         }
     }
 
