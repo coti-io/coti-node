@@ -253,10 +253,6 @@ public class TransactionService extends BaseNodeTransactionService {
             log.error("Invalid fullnode fee data for transaction {}", transactionData.getHash());
             throw new TransactionValidationException(INVALID_FULL_NODE_FEE);
         }
-        if (!validationService.validateBaseTransactionAmounts(transactionData)) {
-            log.error("Illegal base transaction amounts for transaction {}", transactionData.getHash());
-            throw new TransactionValidationException(ILLEGAL_BASE_TRANSACTIONS_AMOUNT);
-        }
         if (!validationService.validateTransactionTimeFields(transactionData)) {
             log.error("Invalid transaction time field for transaction {}", transactionData.getHash());
             throw new TransactionValidationException(String.format(INVALID_TRANSACTION_TIME_FIELD, Instant.now()));
