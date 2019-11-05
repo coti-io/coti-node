@@ -74,6 +74,7 @@ public class BaseNodeFileSystemService {
         String relativePath = dirPath + "/" + fileName;
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(relativePath))) {
             writer.write(line);
+            writer.newLine();
         } catch (IOException e) {
             throw new FileSystemException(String.format("Create and write file error. %s: %s", e.getClass().getName(), e.getMessage()));
         }

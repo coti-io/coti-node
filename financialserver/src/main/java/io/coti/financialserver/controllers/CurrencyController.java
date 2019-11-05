@@ -32,7 +32,7 @@ public class CurrencyController {
         return currencyService.generateToken(generateTokenRequest);
     }
 
-    @PostMapping(path = "/token/fee")
+    @PostMapping(path = "/token/generate/fee")
     public ResponseEntity<IResponse> getTokenFee(@Valid @RequestBody GenerateTokenFeeRequest generateTokenFeeRequest) {
         return currencyService.getTokenGenerationFee(generateTokenFeeRequest);
     }
