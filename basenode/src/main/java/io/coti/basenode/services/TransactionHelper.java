@@ -8,10 +8,7 @@ import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.IBalanceService;
-import io.coti.basenode.services.interfaces.IClusterService;
-import io.coti.basenode.services.interfaces.IConfirmationService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -47,6 +44,9 @@ public class TransactionHelper implements ITransactionHelper {
     private TransactionIndexes transactionIndexes;
     @Autowired
     private ExpandedTransactionTrustScoreCrypto expandedTransactionTrustScoreCrypto;
+    @Autowired
+    private BaseNodeCurrencyService currencyService;
+
     private Map<Hash, Stack<TransactionState>> transactionHashToTransactionStateStackMapping;
     private AtomicLong totalTransactions = new AtomicLong(0);
     private Set<Hash> noneIndexedTransactionHashes;
@@ -60,12 +60,12 @@ public class TransactionHelper implements ITransactionHelper {
 
     @Override
     public boolean validateBaseTransactionAmounts(List<BaseTransactionData> baseTransactions) {
-        BigDecimal totalTransactionSum = BigDecimal.ZERO;
-        for (BaseTransactionData baseTransactionData :
-                baseTransactions) {
-            totalTransactionSum = totalTransactionSum.add(baseTransactionData.getAmount());
+        Map<Hash, BigDecimal> transactionTotals = new HashMap<>();
+        for (BaseTransactionData baseTransactionData : baseTransactions) {
+            transactionTotals.put(baseTransactionData.getCurrencyHash(),
+                    transactionTotals.getOrDefault(baseTransactionData.getCurrencyHash(), BigDecimal.ZERO).add(baseTransactionData.getAmount()));
         }
-        return totalTransactionSum.compareTo(BigDecimal.ZERO) == 0;
+        return transactionTotals.values().stream().allMatch(t-> t.compareTo(BigDecimal.ZERO) == 0);
     }
 
     @Override
@@ -129,6 +129,7 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     public boolean validateTransactionType(TransactionData transactionData) {
+        Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();
         try {
             TransactionType transactionType = transactionData.getType();
             if (transactionType == null) {
