@@ -55,4 +55,11 @@ public class BaseNodeHttpStringConstants {
     public static final String NOT_BACKUP_NODE = "The node is not a backup node";
 
     public static final String CLUSTERSTAMP_MAJOR_NOT_FOUND = "Major cluster stamp not found";
+
+    public static final String INVALID_IMAGE_FILE_SIZE = "Invalid file size";
+    public static final String INVALID_IMAGE_FILE_TYPE = "Invalid image file type";
+    public static final String INVALID_IMAGE_FILE_DIMENSION = "Invalid image file dimensions";
+    public static final String INVALID_CURRENCY_HASH = "Invalid currency hash";
+    public static final String INVALID_SIGNER_HASH = "Invalid signer hash";
+    public static final String INVALID_UPLOAD_FREQUENCY = "Attempted to upload again CMD token image too soon";
 }

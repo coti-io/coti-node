@@ -5,6 +5,7 @@ import io.coti.financialserver.http.GenerateTokenFeeRequest;
 import io.coti.financialserver.http.GenerateTokenRequest;
 import io.coti.financialserver.http.GetCurrenciesRequest;
 import io.coti.financialserver.http.GetUserTokensRequest;
+import io.coti.financialserver.http.UploadCMDTokenIconRequest;
 import io.coti.financialserver.services.CurrencyService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,11 @@ public class CurrencyController {
     @PostMapping(path = "/wallet")
     public ResponseEntity<IResponse> getCurrenciesForWallet(@Valid @RequestBody GetCurrenciesRequest getCurrenciesRequest) {
         return currencyService.getCurrenciesForWallet(getCurrenciesRequest);
+    }
+
+    @PostMapping(path = "/token/icon")
+    public ResponseEntity<IResponse> uploadTokenIcon(@Valid @RequestBody UploadCMDTokenIconRequest uploadCMDTokenIconRequest) {
+        return currencyService.uploadCMDTokenIcon(uploadCMDTokenIconRequest);
     }
 
 }

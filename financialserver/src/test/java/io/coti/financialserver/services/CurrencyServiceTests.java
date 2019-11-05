@@ -15,13 +15,14 @@ import io.coti.basenode.services.interfaces.IChunkService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.financialserver.crypto.GenerateTokenRequestCrypto;
 import io.coti.financialserver.crypto.GetUserTokensRequestCrypto;
-import io.coti.financialserver.http.GetCurrenciesRequest;
-import io.coti.financialserver.http.GetCurrenciesResponse;
-import io.coti.financialserver.http.GetTokenGenerationDataResponse;
-import io.coti.financialserver.http.GetUserTokensRequest;
+import io.coti.financialserver.crypto.UploadCMDTokenIconCrypto;
+import io.coti.financialserver.http.*;
+import io.coti.financialserver.http.data.UploadCMDTokenIconData;
+import io.coti.financialserver.model.CMDTokenIcons;
 import io.coti.financialserver.model.CurrencyNameIndexes;
 import io.coti.financialserver.model.PendingCurrencies;
 import io.coti.financialserver.model.UserTokenGenerations;
+import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -33,24 +34,29 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 import static org.mockito.Mockito.when;
 
 @ContextConfiguration(classes = {CurrencyService.class, GetUserTokensRequestCrypto.class, NodeCryptoHelper.class, UserTokenGenerations.class,
-        BaseNodeClusterStampService.class})
+        BaseNodeClusterStampService.class, AwsService.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -104,6 +110,12 @@ public class CurrencyServiceTests {
     private IBalanceService balanceService;
     @MockBean
     private TransactionHelper transactionHelper;
+    @MockBean
+    private UploadCMDTokenIconCrypto uploadCMDTokenIconCrypto;
+    @Autowired
+    private AwsService awsService;
+    @MockBean
+    private CMDTokenIcons cmdTokenIcons;
 
     //
     private static Hash userHash;
@@ -133,6 +145,7 @@ public class CurrencyServiceTests {
         currencyData.setTotalSupply(new BigDecimal("100"));
         currencyData.setScale(8);
         currencyData.setCreationTime(Instant.now());
+        currencyData.setSignerHash(userHash);
 
         currencyData2 = new CurrencyData();
         currencyData2.setHash(currencyHash2);
@@ -143,6 +156,7 @@ public class CurrencyServiceTests {
         currencyData2.setTotalSupply(new BigDecimal("100"));
         currencyData2.setScale(8);
         currencyData2.setCreationTime(Instant.now());
+        currencyData2.setSignerHash(userHash);
 
         nativeCurrencyHash = new Hash(7777);
         nativeCurrencyData = new CurrencyData();
@@ -154,6 +168,7 @@ public class CurrencyServiceTests {
         nativeCurrencyData.setTotalSupply(new BigDecimal(20000));
         nativeCurrencyData.setScale(8);
         nativeCurrencyData.setCreationTime(Instant.now());
+        nativeCurrencyData.setSignerHash(userHash);
     }
 
     @Before
@@ -279,5 +294,73 @@ public class CurrencyServiceTests {
         Assert.assertTrue(tokens.getStatusCode().equals(HttpStatus.OK));
         Assert.assertTrue(((GetCurrenciesResponse) tokens.getBody()).getTokens().get(0).getName().equals(currencyData.getName()));
         Assert.assertTrue(((GetCurrenciesResponse) tokens.getBody()).getTokens().get(1).getName().equals(currencyData2.getName()));
+    }
+
+//    @Test
+    public void uploadTokenIcon_newFile_success() {
+        currencyServiceInit();
+        awsService.init();
+
+        UploadCMDTokenIconData uploadCMDTokenIconData = new UploadCMDTokenIconData();
+        uploadCMDTokenIconData.setUserHash(userHash);
+        uploadCMDTokenIconData.setCurrencyHash(currencyHash);
+        MultipartFile multipartFile = null;
+        try {
+//            File localTestFile = new File(getClass().getClassLoader().getResource("cotiIcon.png").getFile());
+            File localTestFile = new File(getClass().getClassLoader().getResource("testLarge.mp3").getFile());
+
+            multipartFile = buildMultipartFile(localTestFile, "multipartTestFile");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        uploadCMDTokenIconData.setFile(multipartFile);
+        UploadCMDTokenIconRequest uploadCMDTokenIconRequest = new UploadCMDTokenIconRequest(uploadCMDTokenIconData);
+
+        when(uploadCMDTokenIconCrypto.verifySignature(uploadCMDTokenIconData)).thenReturn(true);
+        when(currencies.getByHash(currencyHash)).thenReturn(currencyData);
+//        when(cmdTokenIcons.getByHash(currencyHash)).thenReturn(null);
+
+        ResponseEntity<IResponse> responseEntity = currencyService.uploadCMDTokenIcon(uploadCMDTokenIconRequest);
+
+        Assert.assertTrue(responseEntity.getStatusCode().equals(HttpStatus.OK));
+        Assert.assertTrue(((Response) responseEntity.getBody()).getStatus().equals(STATUS_SUCCESS));
+    }
+
+    private MultipartFile buildMultipartFile(File file, String multipartFileParameterName) throws IOException {
+        MultipartFile multipartFile = null;
+        try (final FileInputStream input = new FileInputStream(file)) {
+            multipartFile = new MockMultipartFile(
+                    multipartFileParameterName,
+                    file.getName(),
+                    Files.probeContentType(file.toPath()),
+                    IOUtils.toByteArray(input));
+        }
+        return multipartFile;
+    }
+
+    @Test
+    public void uploadTokenIcon_emptyFile_failure() {
+        currencyServiceInit();
+        awsService.init();
+
+        UploadCMDTokenIconData uploadCMDTokenIconData = new UploadCMDTokenIconData();
+        uploadCMDTokenIconData.setUserHash(userHash);
+        uploadCMDTokenIconData.setCurrencyHash(currencyHash);
+        MultipartFile multipartFile = null;
+        try {
+            multipartFile = buildMultipartFile(File.createTempFile("testFile", "png"), "multipartTestFile");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        uploadCMDTokenIconData.setFile(multipartFile);
+        UploadCMDTokenIconRequest uploadCMDTokenIconRequest = new UploadCMDTokenIconRequest(uploadCMDTokenIconData);
+
+        when(uploadCMDTokenIconCrypto.verifySignature(uploadCMDTokenIconData)).thenReturn(true);
+        when(currencies.getByHash(currencyHash)).thenReturn(currencyData);
+
+        ResponseEntity<IResponse> responseEntity = currencyService.uploadCMDTokenIcon(uploadCMDTokenIconRequest);
+
+        Assert.assertTrue(responseEntity.getStatusCode().equals(HttpStatus.BAD_REQUEST));
+        Assert.assertTrue(((Response) responseEntity.getBody()).getStatus().equals(STATUS_ERROR));
     }
 }
