@@ -41,11 +41,8 @@ public class FeeService {
 
     public ResponseEntity<IResponse> createTokenGenerationFee(GenerateTokenFeeRequest generateTokenRequest) {
         try {
-            Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();
-            BigDecimal amount = totalSupplyFeeFactor.multiply(generateTokenRequest.getCurrencyData().getTotalSupply()).add(tokenGenerationFee);
-            Hash address = networkFeeAddress();
-
-            TokenServiceFeeData tokenServiceFeeData = new TokenServiceFeeData(address, nativeCurrencyHash, nodeCryptoHelper.getNodeHash(), amount, Instant.now());
+            TokenServiceFeeData tokenServiceFeeData = new TokenServiceFeeData(networkFeeAddress(), currencyService.getNativeCurrencyHash(),
+                    NodeCryptoHelper.getNodeHash(), calculateTokenGenerationFee(generateTokenRequest.getCurrencyData().getTotalSupply()), Instant.now());
             setFeeHash(tokenServiceFeeData);
             signTokenGenerationFee(tokenServiceFeeData);
             TokenGenerationFeeResponseData tokenGenerationFeeResponseData = new TokenGenerationFeeResponseData(tokenServiceFeeData);
@@ -55,6 +52,10 @@ public class FeeService {
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
         }
+    }
+
+    public BigDecimal calculateTokenGenerationFee(BigDecimal totalSupply) {
+        return totalSupplyFeeFactor.multiply(totalSupply).add(tokenGenerationFee);
     }
 
     private Hash networkFeeAddress() {
