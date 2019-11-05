@@ -1,6 +1,5 @@
 package io.coti.financialserver.controllers;
 
-import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.financialserver.http.GenerateTokenFeeRequest;
 import io.coti.financialserver.http.GenerateTokenRequest;
