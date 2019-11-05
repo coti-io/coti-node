@@ -10,8 +10,10 @@ import io.coti.basenode.services.BaseNodeAwsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.IOException;
 
 import static io.coti.financialserver.http.HttpStringConstants.*;
 
@@ -24,6 +26,8 @@ public class AwsService extends BaseNodeAwsService {
     private String BUCKET_NAME;
     @Value("${aws.s3.bucket.name.distribution}")
     private String BUCKET_NAME_DISTRIBUTION;
+    @Value("${aws.s3.bucket.name.cmd.icons}")
+    private String bucketNameCMDIcon;
 
     @Override
     public void init() {
@@ -42,7 +46,7 @@ public class AwsService extends BaseNodeAwsService {
         String error = null;
 
         if (s3Client.doesObjectExist(bucketName, fileName)) {
-            error = DOCUMENT_EXISTS_ERROR;
+            return DOCUMENT_EXISTS_ERROR;
         }
 
         try {
@@ -56,6 +60,27 @@ public class AwsService extends BaseNodeAwsService {
             error = DOCUMENT_UPLOAD_ERROR;
         }
 
+        return error;
+    }
+
+    public String uploadCMDIconFile(MultipartFile multiPartFile, String fileName, boolean override) {
+        return uploadDocument(multiPartFile, fileName, bucketNameCMDIcon, override);
+    }
+
+    private String uploadDocument(MultipartFile multiPartFile, String fileName, String bucketName, boolean override) {
+        String error = null;
+
+        if (!override && s3Client.doesObjectExist(bucketName, fileName)) {
+            return DOCUMENT_EXISTS_ERROR;
+        }
+        try {
+            ObjectMetadata metaData = new ObjectMetadata();
+            metaData.addUserMetadata(S3_SUFFIX_METADATA_KEY, metaData.getContentType());
+            s3Client.putObject(bucketName, fileName, multiPartFile.getInputStream(), metaData);
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            error = DOCUMENT_UPLOAD_ERROR;
+        }
         return error;
     }
 

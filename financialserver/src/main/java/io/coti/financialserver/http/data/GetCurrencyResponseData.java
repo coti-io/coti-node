@@ -12,10 +12,10 @@ public class GetCurrencyResponseData extends BaseResponse {
     protected String symbol;
     protected String iconURL;
 
-    public GetCurrencyResponseData(CurrencyData currencyData) {
+    public GetCurrencyResponseData(CurrencyData currencyData, String iconURL) {
         this.hash = currencyData.getHash().toHexString();
         this.name = currencyData.getName();
         this.symbol = currencyData.getSymbol();
-        this.iconURL = "placeHolder";
+        this.iconURL = iconURL;
     }
 }

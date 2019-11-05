@@ -2,6 +2,7 @@ package io.coti.financialserver.services;
 
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
+import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.CurrencyOriginatorCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CotiRunTimeException;
@@ -15,14 +16,19 @@ import io.coti.basenode.services.TransactionHelper;
 import io.coti.basenode.services.interfaces.IClusterStampService;
 import io.coti.financialserver.crypto.GenerateTokenRequestCrypto;
 import io.coti.financialserver.crypto.GetUserTokensRequestCrypto;
+import io.coti.financialserver.crypto.UploadCMDTokenIconCrypto;
 import io.coti.financialserver.data.CurrencyNameIndexData;
 import io.coti.financialserver.http.*;
+import io.coti.financialserver.http.data.CMDTokenIconData;
 import io.coti.financialserver.http.data.GeneratedTokenResponseData;
 import io.coti.financialserver.http.data.GetCurrencyResponseData;
+import io.coti.financialserver.http.data.UploadCMDTokenIconData;
+import io.coti.financialserver.model.CMDTokenIcons;
 import io.coti.financialserver.model.CurrencyNameIndexes;
 import io.coti.financialserver.model.PendingCurrencies;
 import io.coti.financialserver.model.UserTokenGenerations;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -30,8 +36,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
+import java.io.IOException;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,6 +64,16 @@ public class CurrencyService extends BaseNodeCurrencyService {
     private final Set<String> processingCurrencySymbolSet = Sets.newConcurrentHashSet();
     @Value("${financialserver.seed}")
     private String seed;
+    @Value("${cmd.icon.file.size.limit}")
+    private long cmdIconFileSizeLimit;
+    @Value("${cmd.icon.max.width}")
+    private int cmdIconMaxWidth;
+    @Value("${cmd.icon.max.height}")
+    private int cmdIconMaxHeight;
+    @Value("${cmd.icon.update.min.interval}")
+    private long cmdIconFileUpdateMinInterval;
+    @Value("${aws.s3.bucket.name.cmd.icons}")
+    private String bucketNameCMDIcon;
     @Autowired
     private CurrencyNameIndexes currencyNameIndexes;
     @Autowired
@@ -70,15 +92,24 @@ public class CurrencyService extends BaseNodeCurrencyService {
     private TransactionHelper transactionHelper;
     @Autowired
     private IClusterStampService clusterStampService;
+    @Autowired
+    private UploadCMDTokenIconCrypto uploadCMDTokenIconCrypto;
+    @Autowired
+    private AwsService awsService;
+    @Autowired
+    private CMDTokenIcons cmdTokenIcons;
+
     private BlockingQueue<TransactionData> pendingCurrencyTransactionQueue;
     private BlockingQueue<TransactionData> tokenGenerationTransactionQueue;
     private Thread pendingCurrencyTransactionThread;
     private Thread tokenGenerationTransactionThread;
+    private Map<String, String> cmdTokenIconMimeTypeToExtension;
 
     @Override
     public void init() {
         super.init();
         initQueuesAndThreads();
+        initCMDTokenIconMimeTypeToExtensions();
     }
 
     private void initQueuesAndThreads() {
@@ -88,6 +119,17 @@ public class CurrencyService extends BaseNodeCurrencyService {
         pendingCurrencyTransactionThread.start();
         tokenGenerationTransactionThread = new Thread(this::handlePropagatedTokenGenerationTransactions);
         tokenGenerationTransactionThread.start();
+    }
+
+    private void initCMDTokenIconMimeTypeToExtensions() {
+        cmdTokenIconMimeTypeToExtension = new HashMap<>();
+        cmdTokenIconMimeTypeToExtension.put("image/x-png", "png");
+        cmdTokenIconMimeTypeToExtension.put("image/png", "png");
+        cmdTokenIconMimeTypeToExtension.put("x-citrix-png", "png");
+        cmdTokenIconMimeTypeToExtension.put("image/svg+xml", "svg");
+        cmdTokenIconMimeTypeToExtension.put("image/gif", "gif");
+        cmdTokenIconMimeTypeToExtension.put("image/bmp", "bmp");
+        cmdTokenIconMimeTypeToExtension.put("image/jpeg", "jpeg");
     }
 
     private void addToTransactionQueue(BlockingQueue<TransactionData> queue, TransactionData transactionData) {
@@ -407,11 +449,136 @@ public class CurrencyService extends BaseNodeCurrencyService {
             if (!tokenHash.equals(nativeCurrencyData.getHash())) {
                 CurrencyData tokenData = getCurrencyFromDB(tokenHash);
                 if (tokenData != null) {
-                    tokenDetails.add(new GetCurrencyResponseData(tokenData));
+                    tokenDetails.add(new GetCurrencyResponseData(tokenData, getTokenCMDIconFileURL(tokenData)));
                 }
             }
         });
         tokenDetails.sort(Comparator.comparing(GetCurrencyResponseData::getName));
-        return ResponseEntity.status(HttpStatus.OK).body(new GetCurrenciesResponse(new GetCurrencyResponseData(nativeCurrencyData), tokenDetails));
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new GetCurrenciesResponse(new GetCurrencyResponseData(nativeCurrencyData, getTokenCMDIconFileURL(nativeCurrencyData)), tokenDetails));
     }
+
+    public ResponseEntity<IResponse> uploadCMDTokenIcon(UploadCMDTokenIconRequest uploadCMDTokenIconRequest) {
+        try {
+            UploadCMDTokenIconData uploadCMDTokenIconData = uploadCMDTokenIconRequest.getUploadCMDTokenIconData();
+            Hash currencyHash = uploadCMDTokenIconData.getCurrencyHash();
+            if (!uploadCMDTokenIconCrypto.verifySignature(uploadCMDTokenIconData)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
+            }
+            MultipartFile multipartIconFile = uploadCMDTokenIconData.getFile();
+
+            long cmdIconFileSize = multipartIconFile.getSize();
+            if (cmdIconFileSize == 0 || cmdIconFileSize > cmdIconFileSizeLimit) {
+                log.error("Invalid image file size of {}", cmdIconFileSize);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_IMAGE_FILE_SIZE, STATUS_ERROR));
+            }
+
+            String verifiedCMDIconImageExtension = getVerifiedCMDTokenIconType(multipartIconFile);
+            if (verifiedCMDIconImageExtension == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_IMAGE_FILE_TYPE, STATUS_ERROR));
+            }
+
+            if (!verifyCMDTokenIconDimensions(multipartIconFile)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_IMAGE_FILE_DIMENSION, STATUS_ERROR));
+            }
+
+            CurrencyData currencyFromDB = getCurrencyFromDB(currencyHash);
+            CMDTokenIconData cmdTokenIconData = getCMDTokenIconFromDB(currencyHash);
+            Hash userHash = uploadCMDTokenIconData.getSignerHash();
+            if (currencyFromDB != null) {
+                if (!currencyFromDB.getSignerHash().equals(userHash)) {
+                    log.error("Currency {} initiated by another user {}", currencyFromDB.getName(), currencyFromDB.getSignerHash());
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNER_HASH, STATUS_ERROR));
+                } else {
+                    if (cmdTokenIconData != null &&
+                            (cmdTokenIconData.getLastUpdatedTime().plus(cmdIconFileUpdateMinInterval, ChronoUnit.MINUTES).compareTo(Instant.now())) < 0) {
+                        log.error("Currency {} icon period between allowed updates was exceeded", currencyFromDB.getName());
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_UPLOAD_FREQUENCY, STATUS_ERROR));
+                    }
+                }
+            } else {
+                log.error("Invalid currency hash of {}", currencyHash);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_CURRENCY_HASH, STATUS_ERROR));
+            }
+
+            String iconFileNameFromSymbol = getTokenCMDIconFileName(currencyFromDB, verifiedCMDIconImageExtension);
+
+            String uploadError = awsService.uploadCMDIconFile(multipartIconFile, iconFileNameFromSymbol, true);
+            if (uploadError != null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(uploadError, STATUS_ERROR));
+            }
+
+            if (cmdTokenIconData != null) {
+                cmdTokenIconData.setImageFileExtension(verifiedCMDIconImageExtension);
+                cmdTokenIconData.setLastUpdatedTime(Instant.now());
+            } else {
+                cmdTokenIconData = new CMDTokenIconData(currencyHash, userHash, verifiedCMDIconImageExtension);
+            }
+            cmdTokenIcons.put(cmdTokenIconData);
+
+            log.info("Uploaded icon file for Token {} successfully", currencyFromDB.getSymbol());
+            return ResponseEntity.ok(new Response(String.format("Uploaded icon file for Token %s successfully as %s",
+                    currencyHash.toHexString(), getTokenCMDIconFileName(currencyFromDB)), STATUS_SUCCESS));
+        } catch (Exception e) {
+            log.error("Error at token icon: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
+        }
+
+    }
+
+    protected boolean verifyCMDTokenIconDimensions(MultipartFile multipartIconFile) throws IOException {
+        try (ImageInputStream in = ImageIO.createImageInputStream(multipartIconFile.getInputStream())) {
+            final Iterator<ImageReader> readers = ImageIO.getImageReaders(in);
+            if (readers.hasNext()) {
+                ImageReader reader = readers.next();
+                try {
+                    reader.setInput(in);
+                    if (reader.getWidth(0) > cmdIconMaxWidth || reader.getHeight(0) > cmdIconMaxHeight) {
+                        log.error("Invalid image file dimensions of {}, {}", reader.getWidth(0), reader.getHeight(0));
+                        return false;
+                    }
+                } finally {
+                    reader.dispose();
+                }
+            }
+        }
+        return true;
+    }
+
+    protected String getVerifiedCMDTokenIconType(MultipartFile multipartIconFile) throws IOException {
+        Tika tika = new Tika();
+        String mimeType = tika.detect(multipartIconFile.getInputStream());
+        String cmdTokenFileExtension = cmdTokenIconMimeTypeToExtension.get(mimeType);
+        if (cmdTokenFileExtension == null) {
+            log.error("Invalid image file type of {}", mimeType);
+        }
+        return cmdTokenFileExtension;
+    }
+
+    private String getTokenCMDIconFileName(CurrencyData currencyData, String cmdIconImageExtension) {
+        return CryptoHelper.cryptoHash(currencyData.getSymbol().getBytes()).toHexString()
+                + "." + cmdIconImageExtension;
+    }
+
+    public String getTokenCMDIconFileName(CurrencyData currencyData) {
+        CMDTokenIconData cmdTokenIconFromDB = getCMDTokenIconFromDB(currencyData.getHash());
+        if (cmdTokenIconFromDB == null) {
+            return null;
+        }
+        return CryptoHelper.cryptoHash(currencyData.getSymbol().getBytes()).toHexString()
+                + "." + cmdTokenIconFromDB.getImageFileExtension();
+    }
+
+    public String getTokenCMDIconFileURL(CurrencyData currencyData) {
+        CMDTokenIconData cmdTokenIconFromDB = getCMDTokenIconFromDB(currencyData.getHash());
+        if (cmdTokenIconFromDB == null) {
+            return null;
+        }
+        return bucketNameCMDIcon + "\\" + getTokenCMDIconFileName(currencyData, cmdTokenIconFromDB.getImageFileExtension());
+    }
+
+    private CMDTokenIconData getCMDTokenIconFromDB(Hash currencyHash) {
+        return cmdTokenIcons.getByHash(currencyHash);
+    }
+
 }
