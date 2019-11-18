@@ -106,6 +106,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             fillClusterStampNamesMap();
             getClusterStampFromRecoveryServer(true);
             loadAllClusterStamps();
+
             log.info("{} is up", this.getClass().getSimpleName());
         } catch (ClusterStampException e) {
             throw new ClusterStampException("Error at clusterstamp init.\n" + e.getMessage(), e);

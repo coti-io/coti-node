@@ -23,11 +23,11 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 public class AwsService extends BaseNodeAwsService {
 
     @Value("${aws.s3.bucket.name}")
-    private String BUCKET_NAME;
+    private String disputeDocumentBucketName;
     @Value("${aws.s3.bucket.name.distribution}")
-    private String BUCKET_NAME_DISTRIBUTION;
+    private String distributionBucketName;
     @Value("${aws.s3.bucket.name.cmd.icons}")
-    private String bucketNameCMDIcon;
+    private String tokenIconBucketName;
 
     @Override
     public void init() {
@@ -39,10 +39,10 @@ public class AwsService extends BaseNodeAwsService {
 
     public String uploadDisputeDocument(Hash documentHash, File file, String contentType) {
         String fileName = documentHash.toString();
-        return uploadDocument(file, contentType, fileName, BUCKET_NAME);
+        return uploadDocument(file, contentType, fileName, disputeDocumentBucketName);
     }
 
-    public String uploadDocument(File file, String contentType, String fileName, String bucketName) {
+    private String uploadDocument(File file, String contentType, String fileName, String bucketName) {
         String error = null;
 
         if (s3Client.doesObjectExist(bucketName, fileName)) {
@@ -64,7 +64,7 @@ public class AwsService extends BaseNodeAwsService {
     }
 
     public String uploadCMDIconFile(MultipartFile multiPartFile, String fileName, boolean override) {
-        return uploadDocument(multiPartFile, fileName, bucketNameCMDIcon, override);
+        return uploadDocument(multiPartFile, fileName, tokenIconBucketName, override);
     }
 
     private String uploadDocument(MultipartFile multiPartFile, String fileName, String bucketName, boolean override) {
@@ -85,14 +85,14 @@ public class AwsService extends BaseNodeAwsService {
     }
 
     public S3Object getS3Object(String fileName) {
-        return s3Client.getObject(BUCKET_NAME, fileName);
+        return s3Client.getObject(disputeDocumentBucketName, fileName);
     }
 
     public void downloadFundDistributionFile(String fileName) {
-        downloadFile(fileName, BUCKET_NAME_DISTRIBUTION);
+        downloadFile(fileName, distributionBucketName);
     }
 
     public String uploadFundDistributionResultFile(String fileName, File file, String contentType) {
-        return uploadDocument(file, contentType, fileName, BUCKET_NAME_DISTRIBUTION);
+        return uploadDocument(file, contentType, fileName, distributionBucketName);
     }
 }
