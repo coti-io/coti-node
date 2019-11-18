@@ -73,10 +73,28 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String DISTRIBUTION_FILE_RECORD_DELETED = "Distribution file record deleted";
 
     public static final String TOKEN_GENERATION_FEE_FAILURE = "Failed to create requested token fee";
-    public static final String TOKEN_GENERATION_REQUEST_INVALID_SIGNATURE = "Signature failed for token generation request";
+    public static final String TOKEN_GENERATION_REQUEST_INVALID_SIGNATURE = "Signature check failed for token generation request";
     public static final String TOKEN_GENERATION_REQUEST_CURRENCY_DATA_INVALID_SIGNATURE = "Signature failed for token generation currency data request";
-    public static final String TOKEN_GENERATION_REQUEST_CURRENCY_TYPE_DATA_INVALID_SIGNATURE = "Signature failed for token generation currency type data request";
-    public static final String TOKEN_GENERATION_INVALID_REQUEST_DATA = "Bad token generation request fields";
     public static final String TOKEN_GENERATION_REQUEST_FAILURE = "Failed to create requested token";
+    public static final String TOKEN_MINTING_FEE_FAILURE = "Failed to create requested token fee";
+    public static final String TOKEN_MINTING_REQUEST_INVALID_SIGNATURE = "Signature check failed for token minting request";
+    public static final String TOKEN_MINTING_REQUEST_INVALID_CURRENCY = "Non-existing currency in token minting fee request";
+    public static final String TOKEN_MINTING_REQUEST_INVALID_ORIGINATOR = "Request for token minting fee by user not the token originator";
+    public static final String TOKEN_MINTING_REQUEST_INVALID_AMOUNT = "The amount requested for minting exceeds the supply available";
+    public static final String TOKEN_MINTING_REQUEST_INVALID_WARRANT = "The fee warrant provided for minting is invalid or expired";
+    public static final String TOKEN_MINTING_REQUEST_INVALID_ADDRESS = "The receiver address provided for minting is invalid";
+    public static final String TOKEN_MINTING_REQUEST_INVALID_WARRANT_MISMATCHED = "The fee warrant provided for minting does not match request";
+    public static final String TOKEN_MINTING_REQUEST_INVALID_WARRANT_USED = "The fee warrant provided for minting was used already";
+
+    public static final String TOKEN_MINTING_DELETE_REQUEST_INVALID_TOKEN = "Non-existing token in token minting fee delete request";
+    public static final String TOKEN_MINTING_DELETE_REQUEST_INVALID_FEE_WARRANT = "Non-existing fee warrant in token minting fee delete request";
+    public static final String TOKEN_MINTING_DELETE_REQUEST_INVALID_CURRENCY = "Non-existing currency in token minting fee delete request";
+    public static final String TOKEN_MINTING_DELETE_REQUEST_INVALID_ORIGINATOR = "Request for token minting fee deletion by user not the token originator";
+    public static final String TOKEN_MINTING_DELETE_REQUEST_INVALID_FOR_EXISTING_TRANSACTION = "Request for token minting fee deletion by user, invalid for active transaction";
+    public static final String TOKEN_MINTING_DELETE_REQUEST_FAILED_FEE_WARRANT_DELETION = "Request for token minting fee deletion, fee warrant deletion failed";
+    public static final String TOKEN_MINTING_DELETE_REQUEST_FAILED_MINTED_REQUEST_DELETION = "Request for token minting fee deletion, minted request deletion failed";
+
+    public static final String TOKEN_MINTING_FEE_QUOTE_REQUEST_INVALID_CURRENCY = "Non-existing currency in token minting fee quote request";
+    public static final String TOKEN_MINTING_FEE_QUOTE_REQUEST_INVALID_ORIGINATOR = "Request for token minting fee quote by user not the token originator";
 
 }

@@ -1,11 +1,9 @@
 package io.coti.financialserver.controllers;
 
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.financialserver.http.GenerateTokenFeeRequest;
-import io.coti.financialserver.http.GenerateTokenRequest;
-import io.coti.financialserver.http.GetCurrenciesRequest;
-import io.coti.financialserver.http.GetUserTokensRequest;
+import io.coti.financialserver.http.*;
 import io.coti.financialserver.services.CurrencyService;
+import io.coti.financialserver.services.MintingService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +18,8 @@ public class CurrencyController {
 
     @Autowired
     private CurrencyService currencyService;
+    @Autowired
+    private MintingService mintingService;
 
     @PostMapping(path = "/token/user")
     public ResponseEntity<IResponse> getUserTokens(@Valid @RequestBody GetUserTokensRequest getUserTokensRequest) {
@@ -32,8 +32,38 @@ public class CurrencyController {
     }
 
     @PostMapping(path = "/token/generate/fee")
-    public ResponseEntity<IResponse> getTokenFee(@Valid @RequestBody GenerateTokenFeeRequest generateTokenFeeRequest) {
+    public ResponseEntity<IResponse> getTokenGenerationFee(@Valid @RequestBody GenerateTokenFeeRequest generateTokenFeeRequest) {
         return currencyService.getTokenGenerationFee(generateTokenFeeRequest);
+    }
+
+    @PostMapping(path = "/token/mint/quote")
+    public ResponseEntity<IResponse> getTokenMintingFeeQuote(@Valid @RequestBody GetTokenMintingFeeQuoteRequest getTokenMintingFeeQuoteRequest) {
+        return mintingService.getTokenMintingFeeQuote(getTokenMintingFeeQuoteRequest);
+    }
+
+    @PostMapping(path = "/token/mint/fee")
+    public ResponseEntity<IResponse> getTokenMintingFee(@RequestBody MintingTokenFeeRequest mintingTokenFeeRequest) {
+        return mintingService.getTokenMintingFee(mintingTokenFeeRequest);
+    }
+
+    @GetMapping(path = "/token/mint/quotes")
+    public ResponseEntity<IResponse> getTokenMintingQuotes(@Valid @RequestBody GetMintingQuotesRequest getMintingQuotesRequest) {
+        return mintingService.getTokenMintingQuotes(getMintingQuotesRequest);
+    }
+
+    @GetMapping(path = "/token/mint/history")
+    public ResponseEntity<IResponse> getTokenMintingHistory(@Valid @RequestBody GetMintingHistoryRequest getMintingHistoryRequest) {
+        return mintingService.getTokenMintingHistory(getMintingHistoryRequest);
+    }
+
+    @PostMapping(path = "/token/mint/quote/retry")
+    public ResponseEntity<IResponse> getTokenMintingFeeRetry(@RequestBody MintingTokenFeeRequest mintingTokenFeeRequest) {
+        return mintingService.getTokenMintingFeeRetry(mintingTokenFeeRequest);
+    }
+
+    @DeleteMapping(path = "/token/mint/quote")
+    public ResponseEntity<IResponse> deleteTokenMintingQuote(@Valid @RequestBody DeleteTokenMintingQuoteRequest deleteTokenMintingQuoteRequest) {
+        return mintingService.deleteTokenMintingQuote(deleteTokenMintingQuoteRequest);
     }
 
     @PostMapping(path = "/wallet")

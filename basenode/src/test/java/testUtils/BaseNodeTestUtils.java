@@ -96,6 +96,8 @@ public class BaseNodeTestUtils {
                 null,
                 new Hash(FS_Public_Key),
                 new BigDecimal(count),
+                null,
+                new BigDecimal(10000000),
                 Instant.now());
     }
 

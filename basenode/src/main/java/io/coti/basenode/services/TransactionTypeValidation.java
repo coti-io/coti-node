@@ -72,6 +72,12 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
         public boolean validateBaseTransactions(TransactionData transactionData, Hash nativeCurrencyHash) {
             return validateBaseTransactions(transactionData, true, nativeCurrencyHash);
         }
+    },
+    TokenMinting(TransactionType.TokenMinting) {
+        @Override
+        public boolean validateBaseTransactions(TransactionData transactionData, Hash nativeCurrencyHash) {
+            return validateBaseTransactions(transactionData, true, nativeCurrencyHash);
+        }
     };
 
     protected static final String INVALID_TRANSACTION_TYPE = "Invalid transaction type";

@@ -11,11 +11,16 @@ public class ConfirmationService extends BaseNodeConfirmationService {
 
     @Autowired
     private CurrencyService currencyService;
+    @Autowired
+    private MintingService mintingService;
 
     @Override
     protected void continueHandleConfirmedTransaction(TransactionData transactionData) {
         if (transactionData.getType() == TransactionType.TokenGeneration) {
             currencyService.addToPendingCurrencyTransactionQueue(transactionData);
+        } else if (transactionData.getType() == TransactionType.TokenMinting) {
+            mintingService.addToConfirmedTokenMintingFeeTransactionQueue(transactionData);
         }
     }
+
 }

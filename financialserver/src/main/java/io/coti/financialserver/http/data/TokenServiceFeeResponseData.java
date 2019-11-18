@@ -6,27 +6,32 @@ import io.coti.basenode.data.TokenServiceFeeData;
 import io.coti.basenode.http.interfaces.IResponse;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
-public class TokenGenerationFeeResponseData implements IResponse {
+public class TokenServiceFeeResponseData implements IResponse {
 
     private String hash;
-    private String amount;
-    private String originalAmount;
+    private BigDecimal amount;
+    private BigDecimal originalAmount;
     private String addressHash;
     private String currencyHash;
+    private String tokenHash;
+    private BigDecimal tokenAmount;
     private String signerHash;
     private Instant createTime;
     private String name;
     private SignatureData signatureData;
 
-    public TokenGenerationFeeResponseData(TokenServiceFeeData tokenServiceFeeData) {
+    public TokenServiceFeeResponseData(TokenServiceFeeData tokenServiceFeeData) {
         this.hash = tokenServiceFeeData.getHash().toString();
-        this.amount = tokenServiceFeeData.getAmount().toPlainString();
-        this.originalAmount = tokenServiceFeeData.getOriginalAmount().toPlainString();
+        this.amount = tokenServiceFeeData.getAmount();
+        this.originalAmount = tokenServiceFeeData.getOriginalAmount();
         this.addressHash = tokenServiceFeeData.getAddressHash().toString();
         this.currencyHash = tokenServiceFeeData.getCurrencyHash().toString();
+        this.tokenHash = tokenServiceFeeData.getTokenHash().toString();
+        this.tokenAmount = tokenServiceFeeData.getTokenAmount();
         this.signerHash = tokenServiceFeeData.getSignerHash().toString();
         this.createTime = tokenServiceFeeData.getCreateTime();
         this.name = BaseTransactionName.getName(TokenServiceFeeData.class).name();

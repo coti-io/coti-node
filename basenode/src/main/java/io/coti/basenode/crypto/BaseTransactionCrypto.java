@@ -119,7 +119,16 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
             }
 
             try {
-                return getOutputMessageInBytes((TokenServiceFeeData) tokenServiceFeeData);
+                byte[] outputMessageInBytes = getOutputMessageInBytes((TokenServiceFeeData) tokenServiceFeeData);
+
+                byte[] tokenHashInBytes = ((TokenServiceFeeData) tokenServiceFeeData).getTokenHash().getBytes();
+                byte[] bytesOfTokenAmount = ((TokenServiceFeeData) tokenServiceFeeData).getTokenAmount()
+                        .stripTrailingZeros().toPlainString().getBytes(StandardCharsets.UTF_8);
+
+                ByteBuffer baseTransactionBuffer = ByteBuffer.allocate(outputMessageInBytes.length + tokenHashInBytes.length + bytesOfTokenAmount.length).
+                        put(outputMessageInBytes).put(tokenHashInBytes).put(bytesOfTokenAmount);
+
+                return baseTransactionBuffer.array();
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
                 return new byte[0];

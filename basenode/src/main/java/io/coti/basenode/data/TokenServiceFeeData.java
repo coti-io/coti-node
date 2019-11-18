@@ -9,14 +9,18 @@ import java.time.Instant;
 public class TokenServiceFeeData extends OutputBaseTransactionData {
 
     private Hash signerHash;
+    protected Hash tokenHash;
+    protected BigDecimal tokenAmount;
 
     private TokenServiceFeeData() {
         super();
     }
 
-    public TokenServiceFeeData(Hash addressHash, Hash currencyHash, Hash signerHash, BigDecimal amount, Instant createTime) {
+    public TokenServiceFeeData(Hash addressHash, Hash currencyHash, Hash signerHash, BigDecimal amount, Hash tokenHash, BigDecimal tokenAmount, Instant createTime) {
         super(addressHash, currencyHash, amount, currencyHash, amount, createTime);
         this.signerHash = signerHash;
+        this.tokenHash = tokenHash;
+        this.tokenAmount = tokenAmount;
     }
 
 }

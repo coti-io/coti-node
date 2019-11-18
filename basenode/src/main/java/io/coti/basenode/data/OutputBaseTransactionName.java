@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Set;
 
 public enum OutputBaseTransactionName {
-    FullNodeFeeData(EnumSet.of(TransactionType.Payment, TransactionType.Transfer, TransactionType.TokenGeneration)),
+    FullNodeFeeData(EnumSet.of(TransactionType.Payment, TransactionType.Transfer, TransactionType.TokenGeneration, TransactionType.TokenMinting)),
     NetworkFeeData(EnumSet.of(TransactionType.Payment, TransactionType.Transfer)),
-    TokenServiceFeeData(EnumSet.of(TransactionType.TokenGeneration)),
+    TokenServiceFeeData(EnumSet.of(TransactionType.TokenGeneration, TransactionType.TokenMinting)),
     RollingReserveData(EnumSet.of(TransactionType.Payment)),
     ReceiverBaseTransactionData(EnumSet.of(TransactionType.Initial, TransactionType.Transfer, TransactionType.Payment));
 
