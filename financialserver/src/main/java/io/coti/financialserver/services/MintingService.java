@@ -138,11 +138,11 @@ public class MintingService extends BaseNodeMintingService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_MINTING_REQUEST_INVALID_ADDRESS, STATUS_ERROR));
         }
 
-        if (mintingFeeQuoteData != null && (!isStillValid(mintingFeeQuoteData) ||
-                !mintingFeeQuoteData.getMintingAmount().equals(tokenMintingData.getMintingAmount())
-                || !mintingFeeQuoteData.getCurrencyHash().equals(tokenMintingData.getMintingCurrencyHash())
-                || !currencyData.getOriginatorHash().equals(tokenMintingData.getSignerHash())
-                || !mintingFeeQuoteData.getMintingFee().equals(tokenMintingData.getFeeAmount()))) {
+        if (!currencyData.getOriginatorHash().equals(tokenMintingData.getSignerHash()) ||
+                (mintingFeeQuoteData != null && (!isStillValid(mintingFeeQuoteData) ||
+                        !mintingFeeQuoteData.getMintingAmount().equals(tokenMintingData.getMintingAmount())
+                        || !mintingFeeQuoteData.getCurrencyHash().equals(tokenMintingData.getMintingCurrencyHash())
+                        || !mintingFeeQuoteData.getMintingFee().equals(tokenMintingData.getFeeAmount())))) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_MINTING_REQUEST_INVALID_FOR_THE_QUOTE, STATUS_ERROR));
         }
         if (currencyData.getTotalSupply()
@@ -165,7 +165,10 @@ public class MintingService extends BaseNodeMintingService {
 
     private ResponseEntity<IResponse> createTokenMintingFee(TokenMintingData tokenMintingData, CurrencyData currencyData, MintingFeeQuoteData mintingFeeQuoteData) {
         try {
-            BigDecimal mintingFee = mintingFeeQuoteData.getMintingFee();
+            BigDecimal mintingFee = null;
+            if (mintingFeeQuoteData != null) {
+                mintingFee = mintingFeeQuoteData.getMintingFee();
+            }
             if (mintingFee == null) {
                 mintingFee = feeService.calculateTokenMintingFee(tokenMintingData.getMintingAmount(), Instant.now(), currencyData);
             }
