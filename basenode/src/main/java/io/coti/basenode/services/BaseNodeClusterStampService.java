@@ -273,7 +273,6 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             } else {
                 handleClusterStampWithSignature(clusterStampData);
             }
-            balanceService.updatePreBalanceFromClusterStamp();
             log.info("Finished to load clusterstamp file {}", clusterStampFileName);
         } catch (ClusterStampException e) {
             throw new ClusterStampException(String.format("Errors on clusterstamp file %s loading.\n", clusterStampFileName) + e.getMessage(), e);
@@ -492,7 +491,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             }
 
             validateClusterStampLineDetails(currencyAmountInAddress, currencyHash, clusterStampCurrencyMap, clusterStampFileName);
-            balanceService.updateBalanceFromClusterStamp(addressHash, currencyHash, currencyAmountInAddress);
+            balanceService.updateBalanceAndPreBalanceFromClusterStamp(addressHash, currencyHash, currencyAmountInAddress);
             log.trace("The address hash {} for currency hash {} was loaded from the clusterstamp {} with amount {}", addressHash, currencyHash, clusterStampFileName, currencyAmountInAddress);
 
             byte[] addressHashInBytes = addressHash.getBytes();
