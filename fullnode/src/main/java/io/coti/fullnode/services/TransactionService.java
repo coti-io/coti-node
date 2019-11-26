@@ -3,10 +3,7 @@ package io.coti.fullnode.services;
 import com.dictiography.collections.IndexedNavigableSet;
 import com.dictiography.collections.IndexedTreeSet;
 import io.coti.basenode.crypto.TransactionCrypto;
-import io.coti.basenode.data.AddressTransactionsHistory;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.ReducedTransactionData;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.TransactionException;
 import io.coti.basenode.exceptions.TransactionValidationException;
 import io.coti.basenode.http.CustomGson;
@@ -236,6 +233,11 @@ public class TransactionService extends BaseNodeTransactionService {
             throw new TransactionValidationException(INSUFFICIENT_FUNDS_MESSAGE);
         }
 
+        if (transactionData.getType() == TransactionType.TokenMintingFee
+                && !validationService.validateTokenMintingAndAddToRequestedAmount(transactionData)) {
+            log.error("Minting balance check failed: {}", transactionData.getHash());
+            throw new TransactionValidationException(INSUFFICIENT_MINTING_FUNDS_MESSAGE);
+        }
     }
 
     public void getTransactions(GetTransactionsRequest getTransactionsRequest, HttpServletResponse response) {

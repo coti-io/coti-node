@@ -104,6 +104,8 @@ public abstract class BaseNodeInitializationService {
     private BuildProperties buildProperties;
     @Autowired
     private ICurrencyService currencyService;
+    @Autowired
+    private IMintingService mintingService;
 
     public void init() {
         log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());
@@ -115,6 +117,7 @@ public abstract class BaseNodeInitializationService {
         addressService.init();
         currencyService.init();
         balanceService.init();
+        mintingService.init();
         clusterStampService.init();
         confirmationService.init();
         transactionIndexService.init();

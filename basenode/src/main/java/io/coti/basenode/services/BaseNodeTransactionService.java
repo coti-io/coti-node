@@ -4,6 +4,7 @@ import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.data.DspConsensusResult;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
@@ -51,6 +52,8 @@ public class BaseNodeTransactionService implements ITransactionService {
     private IDatabaseConnector databaseConnector;
     @Autowired
     private INetworkService networkService;
+    @Autowired
+    private IMintingService mintingService;
     private Map<Hash, TransactionData> parentProcessingTransactions = new ConcurrentHashMap<>();
     private List<TransactionData> postponedTransactions = new LinkedList<>();
 
@@ -163,6 +166,10 @@ public class BaseNodeTransactionService implements ITransactionService {
             }
             if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
                 log.error("Balance check failed: {}", transactionData.getHash());
+                return;
+            }
+            if (transactionData.getType() == TransactionType.TokenMintingFee && !validationService.validateTokenMintingAndAddToRequestedAmount(transactionData)) {
+                log.error("Minting balance check failed: {}", transactionData.getHash());
                 return;
             }
             transactionHelper.attachTransactionToCluster(transactionData);

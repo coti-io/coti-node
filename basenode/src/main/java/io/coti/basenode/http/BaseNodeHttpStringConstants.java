@@ -19,6 +19,7 @@ public class BaseNodeHttpStringConstants {
 
     public static final String AUTHENTICATION_FAILED_MESSAGE = "Authentication failed!";
     public static final String INSUFFICIENT_FUNDS_MESSAGE = "Balance for address is insufficient!";
+    public static final String INSUFFICIENT_MINTING_FUNDS_MESSAGE = "Minting balance for address is insufficient!";
     public static final String ILLEGAL_BASE_TRANSACTIONS_AMOUNT = "Illegal transaction - sum of base transactions must be 0!";
     public static final String INVALID_TRUST_SCORE_MESSAGE = "Invalid sender trust score!";
 
@@ -38,6 +39,7 @@ public class BaseNodeHttpStringConstants {
     public static final String INVALID_TRANSACTION_TIME_FIELD = "Invalid transaction time field. Current node time: %s";
     public static final String INVALID_AMOUNT = "Invalid amount";
     public static final String INVALID_AMOUNT_VS_FULL_NODE_FEE = "Transaction amount should be greater than minimum full node fee %s";
+    public static final String UNDEFINED_TOKEN_TYPE_FEE = "Fee rules for token type %s are not defined yet";
 
     public static final String UNAUTHORIZED_IP_ACCESS = "Unauthorized ip access";
     public static final String METHOD_NOT_SUPPORTED = "Unsupported method";

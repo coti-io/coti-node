@@ -91,13 +91,15 @@ public class BaseNodeTestUtils {
                 Instant.now());
     }
 
-    public static TokenServiceFeeData generateTokenServiceFeeData(Hash hash, double count) {
-        return new TokenServiceFeeData(hash,
-                null,
-                new Hash(FS_Public_Key),
-                new BigDecimal(count),
-                Instant.now());
-    }
+//    public static TokenFeeBaseTransactionData generateTokenServiceFeeData(Hash hash, double count) {
+//        return new TokenFeeBaseTransactionData(hash,
+//                null,
+//                new Hash(FS_Public_Key),
+//                new BigDecimal(count),
+//                null,
+//                new BigDecimal(10000000),
+//                Instant.now());
+//    }
 
     public static BaseTransactionData generateFullNodeFeeData(Hash hash, double count) {
         return new FullNodeFeeData(hash,

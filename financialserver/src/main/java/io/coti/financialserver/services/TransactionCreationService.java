@@ -78,13 +78,15 @@ public class TransactionCreationService {
         propagationPublisher.propagate(chargebackTransaction, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode));
     }
 
-    public Hash createInitialTransactionToFund(BigDecimal amount, Hash cotiGenesisAddress, Hash fundAddress, int genesisAddressIndex) {
-        Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();
+    public Hash createInitialTransaction(BigDecimal amount, Hash currencyHash, Hash cotiGenesisAddress, Hash fundAddress, int genesisAddressIndex) {
+        if (currencyHash == null) {
+            currencyHash = currencyService.getNativeCurrencyHash();
+        }
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
 
-        InputBaseTransactionData ibt = new InputBaseTransactionData(cotiGenesisAddress, nativeCurrencyHash, amount.multiply(new BigDecimal(-1)), Instant.now());
+        InputBaseTransactionData ibt = new InputBaseTransactionData(cotiGenesisAddress, currencyHash, amount.multiply(new BigDecimal(-1)), Instant.now());
 
-        ReceiverBaseTransactionData rbt = new ReceiverBaseTransactionData(fundAddress, nativeCurrencyHash, amount, nativeCurrencyHash, amount, Instant.now());
+        ReceiverBaseTransactionData rbt = new ReceiverBaseTransactionData(fundAddress, currencyHash, amount, currencyHash, amount, Instant.now());
         baseTransactions.add(ibt);
         baseTransactions.add(rbt);
 
