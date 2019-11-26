@@ -111,15 +111,19 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         }
 
     },
-    TokenServiceFeeData {
+    TokenGenerationFeeBaseTransactionData {
         @Override
-        public byte[] getMessageInBytes(BaseTransactionData tokenServiceFeeData) {
-            if (!TokenServiceFeeData.class.isInstance(tokenServiceFeeData)) {
+        public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
+            if (!TokenGenerationFeeBaseTransactionData.class.isInstance(baseTransactionData)) {
                 throw new IllegalArgumentException("");
             }
 
             try {
-                return getOutputMessageInBytes((TokenServiceFeeData) tokenServiceFeeData);
+                byte[] outputMessageInBytes = getOutputMessageInBytes((TokenGenerationFeeBaseTransactionData) baseTransactionData);
+                byte[] serviceDataInBytes = ((TokenGenerationFeeBaseTransactionData) baseTransactionData).getServiceData().getMessageInBytes();
+
+                return ByteBuffer.allocate(outputMessageInBytes.length + serviceDataInBytes.length).
+                        put(outputMessageInBytes).put(serviceDataInBytes).array();
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
                 return new byte[0];
@@ -128,7 +132,32 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
         @Override
         public String getPublicKey(BaseTransactionData baseTransactionData) {
-            return ((TokenServiceFeeData) baseTransactionData).getSignerHash().toString();
+            return ((TokenGenerationFeeBaseTransactionData) baseTransactionData).getSignerHash().toString();
+        }
+
+    },
+    TokenMintingFeeBaseTransactionData {
+        @Override
+        public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
+            if (!TokenMintingFeeBaseTransactionData.class.isInstance(baseTransactionData)) {
+                throw new IllegalArgumentException("");
+            }
+
+            try {
+                byte[] outputMessageInBytes = getOutputMessageInBytes((TokenMintingFeeBaseTransactionData) baseTransactionData);
+                byte[] serviceDataInBytes = ((TokenMintingFeeBaseTransactionData) baseTransactionData).getServiceData().getMessageInBytes();
+
+                return ByteBuffer.allocate(outputMessageInBytes.length + serviceDataInBytes.length).
+                        put(outputMessageInBytes).put(serviceDataInBytes).array();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+                return new byte[0];
+            }
+        }
+
+        @Override
+        public String getPublicKey(BaseTransactionData baseTransactionData) {
+            return ((TokenMintingFeeBaseTransactionData) baseTransactionData).getSignerHash().toString();
         }
 
     },

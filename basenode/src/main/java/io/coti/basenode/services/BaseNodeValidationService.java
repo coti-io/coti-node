@@ -93,6 +93,11 @@ public class BaseNodeValidationService implements IValidationService {
     }
 
     @Override
+    public boolean validateTokenMintingAndAddToRequestedAmount(TransactionData transactionData) {
+        return transactionHelper.checkTokenMintingAndAddToRequestedAmount(transactionData);
+    }
+
+    @Override
     public <T extends BaseTransactionData & ITrustScoreNodeValidatable> boolean validateBaseTransactionTrustScoreNodeResult(T baseTransactionData) {
         return transactionHelper.validateBaseTransactionTrustScoreNodeResult(baseTransactionData);
     }
@@ -124,5 +129,6 @@ public class BaseNodeValidationService implements IValidationService {
                 entry.getValue() != null && !entry.getKey().equals(entry.getValue().getHash())
         );
     }
+
 
 }

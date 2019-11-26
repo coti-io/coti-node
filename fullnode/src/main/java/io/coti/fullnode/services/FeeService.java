@@ -2,12 +2,10 @@ package io.coti.fullnode.services;
 
 import io.coti.basenode.crypto.BaseTransactionCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
-import io.coti.basenode.data.BaseTransactionData;
-import io.coti.basenode.data.FullNodeFeeData;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
+import io.coti.basenode.model.Currencies;
 import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.fullnode.crypto.FullNodeFeeRequestCrypto;
@@ -45,6 +43,8 @@ public class FeeService {
     private BigDecimal feePercentage;
     @Value("${fullnode.seed}")
     private String seed;
+    @Value("${regular.token.fullnode.fee}")
+    private BigDecimal regularTokenFullnodeFee;
     @Autowired
     private NodeCryptoHelper nodeCryptoHelper;
     @Autowired
@@ -53,6 +53,8 @@ public class FeeService {
     private IValidationService validationService;
     @Autowired
     private ICurrencyService currencyService;
+    @Autowired
+    protected Currencies currencies;
 
     public ResponseEntity<BaseResponse> createFullNodeFee(FullNodeFeeRequest fullNodeFeeRequest) {
         try {
@@ -67,16 +69,22 @@ public class FeeService {
             }
             Hash address = this.getAddress();
             BigDecimal amount;
+            Hash originalCurrencyHash = null;
             if (zeroFeeUserHashes.contains(fullNodeFeeRequest.getUserHash().toString())) {
                 amount = new BigDecimal(0);
             } else {
-                BigDecimal fee = originalAmount.multiply(feePercentage).divide(new BigDecimal(100));
-                if (fee.compareTo(minimumFee) <= 0) {
-                    amount = minimumFee;
-                } else if (fee.compareTo(maximumFee) >= 0) {
-                    amount = maximumFee;
-                } else {
-                    amount = fee;
+                if (fullNodeFeeRequest.getOriginalCurrencyHash() == null || fullNodeFeeRequest.getOriginalCurrencyHash().equals(nativeCurrencyHash)) {
+                    BigDecimal fee = originalAmount.multiply(feePercentage).divide(new BigDecimal(100));
+                    amount = (fee.compareTo(minimumFee) <= 0 ? minimumFee : fee.compareTo(maximumFee) >= 0 ? maximumFee : fee);
+                    originalCurrencyHash = nativeCurrencyHash;
+                } else{
+                    CurrencyData currencyData = currencies.getByHash(fullNodeFeeRequest.getOriginalCurrencyHash());
+                    if (currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.REGULAR_CMD_TOKEN){
+                        amount = regularTokenFullnodeFee;
+                        originalCurrencyHash = currencyData.getHash();
+                    } else {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(UNDEFINED_TOKEN_TYPE_FEE, fullNodeFeeRequest.getOriginalCurrencyHash()), STATUS_ERROR));
+                    }
                 }
             }
 
@@ -90,7 +98,7 @@ public class FeeService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(INVALID_AMOUNT_VS_FULL_NODE_FEE, amount.toPlainString()), STATUS_ERROR));
             }
 
-            FullNodeFeeData fullNodeFeeData = new FullNodeFeeData(address, nativeCurrencyHash, amount, nativeCurrencyHash, originalAmount, Instant.now());
+            FullNodeFeeData fullNodeFeeData = new FullNodeFeeData(address, nativeCurrencyHash, amount, originalCurrencyHash, originalAmount, Instant.now());
             setFullNodeFeeHash(fullNodeFeeData);
             signFullNodeFee(fullNodeFeeData);
             FullNodeFeeResponseData fullNodeFeeResponseData = new FullNodeFeeResponseData(fullNodeFeeData);

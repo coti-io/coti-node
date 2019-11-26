@@ -73,4 +73,6 @@ public interface ITransactionHelper {
     void removeNoneIndexedTransaction(TransactionData transactionData);
 
     Set<Hash> getNoneIndexedTransactionHashes();
+
+    boolean checkTokenMintingAndAddToRequestedAmount(TransactionData transactionData);
 }
