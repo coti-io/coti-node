@@ -7,13 +7,19 @@ import lombok.Data;
 @Data
 public class GeneratedTokenResponseData {
 
-    private Hash transactionHash;
-    private CurrencyData token;
+    private String transactionHash;
+    private GeneratedTokenResponseCurrencyData token;
     private boolean approved;
 
     public GeneratedTokenResponseData(Hash transactionHash, CurrencyData token, boolean approved) {
-        this.transactionHash = transactionHash;
-        this.token = token;
+        this.transactionHash = transactionHash.toString();
+        if (token == null) {
+            this.token = null;
+        }
+        else {
+            this.token = new GeneratedTokenResponseCurrencyData(token);
+        }
+
         this.approved = approved;
     }
 }

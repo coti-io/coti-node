@@ -5,6 +5,7 @@ import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IConfirmationService;
+import io.coti.basenode.services.interfaces.IMintingService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,8 @@ public class BaseNodeConfirmationService implements IConfirmationService {
 
     @Autowired
     private IBalanceService balanceService;
+    @Autowired
+    private IMintingService mintingService;
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -80,6 +83,9 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                     transactionData.getBaseTransactions().forEach(baseTransactionData ->
                             balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getCurrencyHash(), baseTransactionData.getAmount())
                     );
+//                    if(transactionData.getType() == TransactionType.TokenMintingFee){
+//                        mintingService.updateMintedAmount(transactionData);
+//                    }
                 }
                 transactionIndexData = nextTransactionIndexData;
             }
@@ -158,6 +164,9 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         Instant transactionConsensusUpdateTime = trustChainConsensusTime.isAfter(dspConsensusTime) ? trustChainConsensusTime : dspConsensusTime;
         transactionData.setTransactionConsensusUpdateTime(transactionConsensusUpdateTime);
         transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getCurrencyHash(), baseTransactionData.getAmount()));
+        if (transactionData.getType() == TransactionType.TokenMintingFee) {
+            mintingService.updateMintedAmount(transactionData);
+        }
         totalConfirmed.incrementAndGet();
 
         transactionData.getBaseTransactions().forEach(baseTransactionData -> {
@@ -253,6 +262,9 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         dspConfirmed.incrementAndGet();
         if (transactionData.isTrustChainConsensus()) {
             transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getCurrencyHash(), baseTransactionData.getAmount()));
+            if (transactionData.getType() == TransactionType.TokenMintingFee) {
+                mintingService.updateMintedAmount(transactionData);
+            }
             totalConfirmed.incrementAndGet();
             continueHandleConfirmedTransaction(transactionData);
         }
