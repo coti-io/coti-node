@@ -2,6 +2,7 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.data.*;
+import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
@@ -48,6 +49,8 @@ public class BaseNodeTransactionService implements ITransactionService {
     private IDatabaseConnector databaseConnector;
     @Autowired
     private INetworkService networkService;
+    @Autowired
+    private IMintingService mintingService;
     protected Map<TransactionData, Boolean> postponedTransactions = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
     private final LockData transactionLockData = new LockData();
 
@@ -158,6 +161,10 @@ public class BaseNodeTransactionService implements ITransactionService {
             }
             if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
                 log.error("Balance check failed: {}", transactionData.getHash());
+                return;
+            }
+            if (transactionData.getType() == TransactionType.TokenMintingFee && !validationService.validateTokenMintingAndAddToRequestedAmount(transactionData)) {
+                log.error("Minting balance check failed: {}", transactionData.getHash());
                 return;
             }
             transactionHelper.attachTransactionToCluster(transactionData);

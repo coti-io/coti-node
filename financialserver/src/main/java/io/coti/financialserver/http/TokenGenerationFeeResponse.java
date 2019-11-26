@@ -6,9 +6,12 @@ import lombok.Data;
 
 @Data
 public class TokenGenerationFeeResponse extends BaseResponse {
-    private TokenGenerationFeeResponseData tokenGenerationFee;
+    private TokenGenerationFeeResponseData tokenServiceFee;
+
+    public TokenGenerationFeeResponse() {
+    }
 
     public TokenGenerationFeeResponse(TokenGenerationFeeResponseData tokenGenerationFeeResponseData) {
-        this.tokenGenerationFee = tokenGenerationFeeResponseData;
+        this.tokenServiceFee = tokenGenerationFeeResponseData;
     }
 }

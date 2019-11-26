@@ -114,6 +114,8 @@ public abstract class BaseNodeInitializationService {
     private ITransactionPropagationCheckService transactionPropagationCheckService;
     @Autowired
     private ICurrencyService currencyService;
+    @Autowired
+    private IMintingService mintingService;
     private final Map<Long, ReducedExistingTransactionData> indexToTransactionMap = new HashMap<>();
     private EnumMap<InitializationTransactionHandlerType, ExecutorData> existingTransactionExecutorMap;
 
@@ -122,26 +124,27 @@ public abstract class BaseNodeInitializationService {
     }
 
     public void initServices() {
-            awsService.init();
-            dbRecoveryService.init();
-            addressService.init();
-            currencyService.init();
-            balanceService.init();
-            clusterStampService.init();
-            confirmationService.init();
-            transactionIndexService.init();
-            dspVoteService.init();
-            transactionService.init();
+        awsService.init();
+        dbRecoveryService.init();
+        addressService.init();
+        currencyService.init();
+        balanceService.init();
+        mintingService.init();
+        clusterStampService.init();
+        confirmationService.init();
+        transactionIndexService.init();
+        dspVoteService.init();
+        transactionService.init();
         transactionPropagationCheckService.init();
-            potService.init();
-            initCommunication();
-            log.info("The communication initialization is done");
-            initTransactionSync();
-            log.info("The transaction sync initialization is done");
-            networkService.setConnectToNetworkUrl(nodeManagerHttpAddress + NODE_MANAGER_NODES_ENDPOINT);
-            networkService.connectToNetwork();
-            propagationSubscriber.initPropagationHandler();
-            monitorService.init();
+        potService.init();
+        initCommunication();
+        log.info("The communication initialization is done");
+        initTransactionSync();
+        log.info("The transaction sync initialization is done");
+        networkService.setConnectToNetworkUrl(nodeManagerHttpAddress + NODE_MANAGER_NODES_ENDPOINT);
+        networkService.connectToNetwork();
+        propagationSubscriber.initPropagationHandler();
+        monitorService.init();
     }
 
     public void initTransactionSync() {

@@ -10,6 +10,7 @@ import io.coti.basenode.exceptions.CurrencyException;
 import io.coti.basenode.exceptions.CurrencyValidationException;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.basenode.model.Currencies;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeCurrencyService;
 import io.coti.basenode.services.TransactionHelper;
@@ -70,6 +71,8 @@ public class CurrencyService extends BaseNodeCurrencyService {
     private CurrencyRegistrarCrypto currencyRegistrarCrypto;
     @Autowired
     private Transactions transactions;
+    @Autowired
+    private Currencies currencies;
     @Autowired
     private TransactionHelper transactionHelper;
     @Autowired
@@ -219,10 +222,11 @@ public class CurrencyService extends BaseNodeCurrencyService {
     }
 
     public ResponseEntity<IResponse> getTokenGenerationFee(GenerateTokenFeeRequest generateTokenRequest) {
+        Hash currencyHash;
         try {
             CurrencyDataForFee requestCurrencyData = generateTokenRequest.getCurrencyData();
             String currencyName = requestCurrencyData.getName();
-            Hash currencyHash = requestCurrencyData.calculateHash();
+            currencyHash = requestCurrencyData.calculateHash();
             validateCurrencyUniqueness(currencyHash, currencyName);
         } catch (CurrencyValidationException e) {
             String error = String.format("%s. Exception: %s", TOKEN_GENERATION_FEE_FAILURE, e.getMessageAndCause());
@@ -235,7 +239,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(error, STATUS_ERROR));
         }
 
-        return feeService.createTokenGenerationFee(generateTokenRequest);
+        return feeService.createTokenGenerationFee(generateTokenRequest, currencyHash);
     }
 
     private void removeOccupyLocksFromProcessingSets(GenerateTokenRequest generateTokenRequest) {
@@ -332,7 +336,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
     private void validateTransactionAmount(OriginatorCurrencyData requestCurrencyData, Hash requestTransactionHash) {
         TransactionData tokenGenerationTransactionData = transactions.getByHash(requestTransactionHash);
         BaseTransactionData tokenServiceFeeData = tokenGenerationTransactionData.getBaseTransactions().stream()
-                .filter(baseTransactionData -> baseTransactionData instanceof TokenServiceFeeData).findFirst().get();
+                .filter(baseTransactionData -> baseTransactionData instanceof TokenFeeBaseTransactionData).findFirst().get();
 
         if (!tokenServiceFeeData.getAmount().equals(feeService.calculateTokenGenerationFee(requestCurrencyData.getTotalSupply()))) {
             throw new CurrencyException(String.format("The token generation fees in the transaction %s is not correct", requestTransactionHash));
@@ -364,7 +368,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
         }
     }
 
-    public void addLockToProcessingSet(Set<String> lockProcessingSet, String lock) {
+    private void addLockToProcessingSet(Set<String> lockProcessingSet, String lock) {
         synchronized (lockProcessingSet) {
             if (lockProcessingSet.contains(lock)) {
                 throw new CurrencyException(String.format("%s is in progress", lock));
@@ -374,7 +378,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
         }
     }
 
-    public void removeLockFromProcessingSet(Set<String> lockProcessingSet, String lock) {
+    private void removeLockFromProcessingSet(Set<String> lockProcessingSet, String lock) {
         synchronized (lockProcessingSet) {
             lockProcessingSet.remove(lock);
         }
@@ -453,4 +457,5 @@ public class CurrencyService extends BaseNodeCurrencyService {
         tokenDetails.sort(Comparator.comparing(GetCurrencyResponseData::getName));
         return ResponseEntity.status(HttpStatus.OK).body(new GetCurrenciesResponse(new GetCurrencyResponseData(nativeCurrencyData), tokenDetails));
     }
+
 }

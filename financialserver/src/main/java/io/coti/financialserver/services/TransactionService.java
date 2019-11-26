@@ -1,7 +1,6 @@
 package io.coti.financialserver.services;
 
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeTransactionService;
@@ -33,6 +32,8 @@ public class TransactionService extends BaseNodeTransactionService {
     private ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
     @Autowired
     private CurrencyService currencyService;
+    @Autowired
+    private MintingService mintingService;
 
     public ResponseEntity<IResponse> setReceiverBaseTransactionOwner(TransactionRequest transactionRequest) {
 
@@ -59,17 +60,19 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     private void continueHandleTransaction(TransactionData transactionData) {
-        if (transactionData.getType().equals(TransactionType.Payment)) {
-
-            ReceiverBaseTransactionOwnerData rbtOwnerData = receiverBaseTransactionOwners.getByHash(transactionHelper.getReceiverBaseTransactionHash(transactionData));
-
-            if (rbtOwnerData == null) {
-                log.error("Owner(merchant) not found for RBT hash in received transaction {}.", transactionData.getHash());
-            } else {
-                rollingReserveService.setRollingReserveReleaseDate(transactionData, rbtOwnerData.getMerchantHash());
-            }
-        } else if (transactionData.getType().equals(TransactionType.TokenGeneration)) {
-            currencyService.addToTokenGenerationTransactionQueue(transactionData);
+        switch (transactionData.getType()) {
+            case Payment:
+                ReceiverBaseTransactionOwnerData rbtOwnerData = receiverBaseTransactionOwners.getByHash(transactionHelper.getReceiverBaseTransactionHash(transactionData));
+                if (rbtOwnerData == null) {
+                    log.error("Owner(merchant) not found for RBT hash in received transaction.", transactionData);
+                } else {
+                    rollingReserveService.setRollingReserveReleaseDate(transactionData, rbtOwnerData.getMerchantHash());
+                }
+                break;
+            case TokenGenerationFee:
+                currencyService.addToTokenGenerationTransactionQueue(transactionData);
+                break;
+            default:
         }
     }
 

@@ -12,7 +12,11 @@ public class GetUserTokensRequestCrypto extends SignatureValidationCrypto<GetUse
 
     @Override
     public byte[] getSignatureMessage(GetUserTokensRequest getUserTokensRequest) {
-        ByteBuffer getUserTokensRequestBuffer = ByteBuffer.allocate(Long.BYTES).putLong(getUserTokensRequest.getCreationTime().toEpochMilli());
-        return CryptoHelper.cryptoHash(getUserTokensRequestBuffer.array()).getBytes();
+
+        byte[] userHashInBytes = getUserTokensRequest.getUserHash().getBytes();
+
+        ByteBuffer getMintingHistoryRequestBuffer = ByteBuffer.allocate(userHashInBytes.length + Long.BYTES)
+                .put(userHashInBytes).putLong(getUserTokensRequest.getCreationTime().toEpochMilli());
+        return CryptoHelper.cryptoHash(getMintingHistoryRequestBuffer.array()).getBytes();
     }
 }
