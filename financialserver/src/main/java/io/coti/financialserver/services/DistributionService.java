@@ -41,7 +41,7 @@ public class DistributionService {
                 BigDecimal amount = getInitialAmountByReservedAddress(initialFundDistributionAddress);
                 Hash initialTransactionHash;
                 try {
-                    initialTransactionHash = transactionCreationService.createInitialTransactionToFund(amount, cotiGenesisAddress, fundAddress, COTI_GENESIS_ADDRESS_INDEX);
+                    initialTransactionHash = transactionCreationService.createInitialTransaction(amount, null, cotiGenesisAddress, fundAddress, COTI_GENESIS_ADDRESS_INDEX);
                 } catch (Exception e) {
                     log.error("Failed to create initial fund");
                     log.error("{}: {}", e.getClass().getName(), e.getMessage());

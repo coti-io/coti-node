@@ -67,7 +67,13 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
         }
 
     },
-    TokenGeneration(TransactionType.TokenGeneration) {
+    TokenGenerationFee(TransactionType.TokenGenerationFee) {
+        @Override
+        public boolean validateBaseTransactions(TransactionData transactionData, Hash nativeCurrencyHash) {
+            return validateBaseTransactions(transactionData, true, nativeCurrencyHash);
+        }
+    },
+    TokenMintingFee(TransactionType.TokenMintingFee) {
         @Override
         public boolean validateBaseTransactions(TransactionData transactionData, Hash nativeCurrencyHash) {
             return validateBaseTransactions(transactionData, true, nativeCurrencyHash);

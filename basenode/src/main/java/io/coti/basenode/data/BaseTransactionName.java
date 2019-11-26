@@ -5,7 +5,8 @@ public enum BaseTransactionName {
     PIBT(PaymentInputBaseTransactionData.class),
     FFBT(FullNodeFeeData.class),
     NFBT(NetworkFeeData.class),
-    TFBT(TokenServiceFeeData.class),
+    TGBT(TokenGenerationFeeBaseTransactionData.class),
+    TMBT(TokenMintingFeeBaseTransactionData.class),
     RRBT(RollingReserveData.class),
     RBT(ReceiverBaseTransactionData.class);
 

@@ -1,7 +1,7 @@
 package io.coti.basenode.http.data;
 
 import io.coti.basenode.data.BaseTransactionData;
-import io.coti.basenode.data.TokenServiceFeeData;
+import io.coti.basenode.data.TokenFeeBaseTransactionData;
 import lombok.Data;
 
 @Data
@@ -11,6 +11,6 @@ public class TokenServiceFeeResponseData extends OutputBaseTransactionResponseDa
 
     public TokenServiceFeeResponseData(BaseTransactionData baseTransactionData) {
         super(baseTransactionData);
-        signerHash = ((TokenServiceFeeData) baseTransactionData).getSignerHash().toString();
+        signerHash = ((TokenFeeBaseTransactionData) baseTransactionData).getSignerHash().toString();
     }
 }
