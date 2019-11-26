@@ -5,6 +5,7 @@ import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.basenode.model.Currencies;
 import io.coti.basenode.services.TransactionHelper;
 import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.IValidationService;
@@ -42,6 +43,8 @@ public class NetworkFeeService {
     private Hash networkFeeAddress;
     @Value("${network.fee.difference.validation}")
     private BigDecimal networkFeeDifferenceValidation;
+    @Value("${regular.token.network.fee}")
+    private BigDecimal regularTokenNetworkFee;
     @Autowired
     private TransactionHelper transactionHelper;
     @Autowired
@@ -52,6 +55,8 @@ public class NetworkFeeService {
     private TrustScoreService trustScoreService;
     @Autowired
     private ICurrencyService currencyService;
+    @Autowired
+    protected Currencies currencies;
 
     public ResponseEntity<IResponse> createNetworkFee(NetworkFeeRequest networkFeeRequest) {
         try {
@@ -76,19 +81,31 @@ public class NetworkFeeService {
                 }
             }
 
-            TrustScoreData trustScoreData = trustScores.getByHash(networkFeeRequest.getUserHash());
-            if (trustScoreData == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(TRUST_SCORE_NOT_EXIST, networkFeeRequest.getUserHash()), STATUS_ERROR));
-            }
-            double userTrustScore = trustScoreService.calculateUserTrustScore(trustScoreData);
+            BigDecimal fee;
+            if (fullNodeFeeData.getOriginalCurrencyHash() == null || fullNodeFeeData.getOriginalCurrencyHash().equals(nativeCurrencyHash)) {
+                TrustScoreData trustScoreData = trustScores.getByHash(networkFeeRequest.getUserHash());
+                if (trustScoreData == null) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(TRUST_SCORE_NOT_EXIST, networkFeeRequest.getUserHash()), STATUS_ERROR));
+                }
+                double userTrustScore = trustScoreService.calculateUserTrustScore(trustScoreData);
 
-            BigDecimal fee = calculateNetworkFeeAmount(getUserNetworkFeeByTrustScoreRange(userTrustScore), originalAmount);
+                fee = calculateNetworkFeeAmount(getUserNetworkFeeByTrustScoreRange(userTrustScore), originalAmount);
+            } else {
+                CurrencyData currencyData = currencies.getByHash(fullNodeFeeData.getOriginalCurrencyHash());
+                if (currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.REGULAR_CMD_TOKEN){
+                    fee = regularTokenNetworkFee;
+                } else {
+                    // change it together with validateNetworkFee
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(UNDEFINED_TOKEN_TYPE_FEE, fullNodeFeeData.getCurrencyHash()), STATUS_ERROR));
+                }
+            }
 
             if (reducedAmount != null && reducedAmount.compareTo(fee) <= 0) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(INVALID_REDUCED_AMOUNT_VS_NETWORK_FEE, fee.add(fullNodeFeeData.getAmount()).toPlainString()), STATUS_ERROR));
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(INVALID_REDUCED_AMOUNT_VS_NETWORK_FEE,
+                        fee.add(fullNodeFeeData.getAmount()).toPlainString()), STATUS_ERROR));
             }
 
-            NetworkFeeData networkFeeData = new NetworkFeeData(networkFeeAddress, nativeCurrencyHash, fee, nativeCurrencyHash, originalAmount, reducedAmount, Instant.now());
+            NetworkFeeData networkFeeData = new NetworkFeeData(networkFeeAddress, nativeCurrencyHash, fee, fullNodeFeeData.getOriginalCurrencyHash(), originalAmount, reducedAmount, Instant.now());
             setNetworkFeeHash(networkFeeData);
             signNetworkFee(networkFeeData, true);
             NetworkFeeResponseData networkFeeResponseData = new NetworkFeeResponseData(networkFeeData);
@@ -141,13 +158,26 @@ public class NetworkFeeService {
     }
 
     public boolean isNetworkFeeValid(NetworkFeeData networkFeeData, Hash userHash) {
-        TrustScoreData trustScoreData = trustScores.getByHash(userHash);
-        if (trustScoreData == null) {
-            return false;
-        }
-        double userTrustScore = trustScoreService.calculateUserTrustScore(trustScoreData);
 
-        BigDecimal calculatedNetworkFee = calculateNetworkFeeAmount(getUserNetworkFeeByTrustScoreRange(userTrustScore), networkFeeData.getOriginalAmount());
+        Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();
+        BigDecimal calculatedNetworkFee;
+        if (networkFeeData.getOriginalCurrencyHash() == null || networkFeeData.getOriginalCurrencyHash().equals(nativeCurrencyHash)) {
+            TrustScoreData trustScoreData = trustScores.getByHash(userHash);
+            if (trustScoreData == null) {
+                return false;
+            }
+            double userTrustScore = trustScoreService.calculateUserTrustScore(trustScoreData);
+
+            calculatedNetworkFee = calculateNetworkFeeAmount(getUserNetworkFeeByTrustScoreRange(userTrustScore), networkFeeData.getOriginalAmount());
+        } else {
+            CurrencyData currencyData = currencies.getByHash(networkFeeData.getOriginalCurrencyHash());
+            if (currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.REGULAR_CMD_TOKEN){
+                calculatedNetworkFee = regularTokenNetworkFee;
+            } else {
+                return false;   // change it together with createNetworkFee
+            }
+        }
+
         int compareResult = networkFeeDifferenceValidation.compareTo(calculatedNetworkFee.subtract(networkFeeData.getAmount()).abs());
         return compareResult >= 0 && validateNetworkFeeCrypto(networkFeeData);
     }

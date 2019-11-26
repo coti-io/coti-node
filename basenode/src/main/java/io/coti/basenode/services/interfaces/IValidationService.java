@@ -39,4 +39,6 @@ public interface IValidationService {
     boolean validateAmountField(BigDecimal amount);
 
     boolean validateGetAddressesResponse(GetHistoryAddressesResponse getHistoryAddressesResponse);
+
+    boolean validateTokenMintingAndAddToRequestedAmount(TransactionData transactionData);
 }

@@ -100,7 +100,7 @@ public class DistributeTokenService {
         Hash fundTargetAddress = nodeCryptoHelper.generateAddress(seed, targetSaleIndex);
         Hash transactionHash;
         try {
-            transactionHash = transactionCreationService.createInitialTransactionToFund(entry.getAmount(), fundSourceAddress, fundTargetAddress, tokenSaleIndex);
+            transactionHash = transactionCreationService.createInitialTransaction(entry.getAmount(), null, fundSourceAddress, fundTargetAddress, tokenSaleIndex);
         } catch (Exception e) {
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
             entry.setCompletedSuccessfully(false);
