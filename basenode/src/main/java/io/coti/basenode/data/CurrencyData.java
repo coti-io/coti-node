@@ -9,7 +9,9 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.Valid;
+import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.regex.Pattern;
 
@@ -23,6 +25,10 @@ public class CurrencyData extends OriginatorCurrencyData implements IPropagatabl
     private @Valid CurrencyTypeData currencyTypeData;
     @NotNull
     private Instant creationTime;
+    @DecimalMin(value = "0")
+    private BigDecimal mintedAmount;
+    @DecimalMin(value = "0")
+    private BigDecimal requestedMintingAmount;
     @NotNull
     private @Valid Hash registrarHash;
     @NotNull
@@ -40,6 +46,8 @@ public class CurrencyData extends OriginatorCurrencyData implements IPropagatabl
         super(originatorCurrencyData);
         creationTime = currencyTypeData.creationTime;
         this.currencyTypeData = currencyTypeData;
+        this.mintedAmount = BigDecimal.ZERO;
+        this.requestedMintingAmount = BigDecimal.ZERO;
         setHash();
     }
 

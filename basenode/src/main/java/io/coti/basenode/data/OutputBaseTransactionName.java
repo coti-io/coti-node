@@ -8,7 +8,8 @@ import java.util.Set;
 public enum OutputBaseTransactionName {
     FULL_NODE_FEE_DATA(FullNodeFeeData.class, EnumSet.of(TransactionType.Payment, TransactionType.Transfer)),
     NETWORK_FEE_DATA(NetworkFeeData.class, EnumSet.of(TransactionType.Payment, TransactionType.Transfer)),
-    TokenServiceFeeData(EnumSet.of(TransactionType.TokenGeneration)),
+    TokenGenerationFeeBaseTransactionData(EnumSet.of(TransactionType.TokenGenerationFee)),
+    TokenMintingFeeBaseTransactionData(EnumSet.of(TransactionType.TokenMintingFee)),
     ROLLING_RESERVE_DATA(RollingReserveData.class, EnumSet.of(TransactionType.Payment)),
     RECEIVER_BASE_TRANSACTION_DATA(ReceiverBaseTransactionData.class, EnumSet.of(TransactionType.Initial, TransactionType.Transfer, TransactionType.Payment));
 
