@@ -16,13 +16,13 @@ import java.time.Instant;
 public class GetTokenMintingFeeQuoteRequest extends Request implements ISignValidatable {
 
     @NotNull
-    private @Valid Hash userHash;
-    @NotNull
     private @Valid Hash currencyHash;
     @Positive
-    private BigDecimal amount;
+    private BigDecimal mintingAmount;
     @NotNull
-    private Instant requestTime;
+    private Instant createTime;
+    @NotNull
+    private @Valid Hash userHash;
     @NotNull
     private @Valid SignatureData signature;
 

@@ -1,6 +1,6 @@
 package io.coti.basenode.data;
 
-import io.coti.basenode.data.interfaces.IServiceDataInBaseTransaction;
+import io.coti.basenode.data.interfaces.ITokenServiceData;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 
 @Data
-public class TokenGenerationFeeDataInBaseTransaction implements IServiceDataInBaseTransaction {
+public class TokenGenerationData implements ITokenServiceData {
 
     @NotNull
     private String name;
@@ -23,21 +23,21 @@ public class TokenGenerationFeeDataInBaseTransaction implements IServiceDataInBa
     @NotNull
     private int scale;
     @NotNull
-    private Instant requestTime;
+    private Instant createTime;
     @NotNull
-    private BigDecimal feeQuote;
+    private BigDecimal feeAmount;
 
-    public TokenGenerationFeeDataInBaseTransaction() {
+    private TokenGenerationData() {
     }
 
-    public TokenGenerationFeeDataInBaseTransaction(String name, String symbol, Hash generatingCurrencyHash, BigDecimal totalSupply, int scale, Instant requestTime, BigDecimal feeQuote) {
+    public TokenGenerationData(String name, String symbol, Hash generatingCurrencyHash, BigDecimal totalSupply, int scale, Instant createTime, BigDecimal feeAmount) {
         this.name = name;
         this.symbol = symbol;
         this.generatingCurrencyHash = generatingCurrencyHash;
         this.totalSupply = totalSupply;
         this.scale = scale;
-        this.requestTime = requestTime;
-        this.feeQuote = feeQuote;
+        this.createTime = createTime;
+        this.feeAmount = feeAmount;
     }
 
     @Override
@@ -46,11 +46,11 @@ public class TokenGenerationFeeDataInBaseTransaction implements IServiceDataInBa
         byte[] bytesOfSymbol = symbol.getBytes();
         byte[] bytesOfCurrencyHash = generatingCurrencyHash.getBytes();
         byte[] bytesOfTotalSupply = totalSupply.stripTrailingZeros().toPlainString().getBytes(StandardCharsets.UTF_8);
-        byte[] bytesOfFeeQuote = feeQuote.stripTrailingZeros().toPlainString().getBytes(StandardCharsets.UTF_8);
+        byte[] bytesOfFeeQuote = feeAmount.stripTrailingZeros().toPlainString().getBytes(StandardCharsets.UTF_8);
 
         return ByteBuffer.allocate(bytesOfName.length + bytesOfSymbol.length + bytesOfCurrencyHash.length + bytesOfTotalSupply.length +
                 +Integer.BYTES + Long.BYTES + bytesOfFeeQuote.length)
                 .put(bytesOfName).put(bytesOfSymbol).put(bytesOfCurrencyHash).put(bytesOfTotalSupply)
-                .putInt(scale).putLong(requestTime.toEpochMilli()).put(bytesOfFeeQuote).array();
+                .putInt(scale).putLong(createTime.toEpochMilli()).put(bytesOfFeeQuote).array();
     }
 }

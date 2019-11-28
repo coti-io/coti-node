@@ -9,14 +9,14 @@ import java.time.Instant;
 public class TokenGenerationFeeBaseTransactionData extends TokenFeeBaseTransactionData {
 
     private static final long serialVersionUID = -7466306830924153999L;
-    private TokenGenerationFeeDataInBaseTransaction serviceData;
+    private TokenGenerationData serviceData;
 
-    public TokenGenerationFeeBaseTransactionData() {
+    private TokenGenerationFeeBaseTransactionData() {
     }
 
-    public TokenGenerationFeeBaseTransactionData(Hash addressHash, Hash currencyHash, Hash signerHash, BigDecimal amount, Instant createTime, TokenGenerationFeeDataInBaseTransaction tokenGenerationFeeDataInBaseTransaction) {
+    public TokenGenerationFeeBaseTransactionData(Hash addressHash, Hash currencyHash, Hash signerHash, BigDecimal amount, Instant createTime, TokenGenerationData tokenGenerationData) {
         super(addressHash, currencyHash, signerHash, amount, createTime);
-        this.serviceData = tokenGenerationFeeDataInBaseTransaction;
+        this.serviceData = tokenGenerationData;
 
     }
 }

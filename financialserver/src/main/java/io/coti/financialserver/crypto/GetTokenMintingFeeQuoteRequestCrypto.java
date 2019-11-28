@@ -13,14 +13,13 @@ public class GetTokenMintingFeeQuoteRequestCrypto extends SignatureValidationCry
 
     @Override
     public byte[] getSignatureMessage(GetTokenMintingFeeQuoteRequest getTokenMintingFeeQuoteRequest) {
-        byte[] userHashInBytes = getTokenMintingFeeQuoteRequest.getUserHash().getBytes();
         byte[] currencyHashInBytes = getTokenMintingFeeQuoteRequest.getCurrencyHash().getBytes();
-        byte[] amountInBytes = getTokenMintingFeeQuoteRequest.getAmount().stripTrailingZeros().toPlainString().getBytes(StandardCharsets.UTF_8);
-        byte[] requestTimeInBytes = ByteBuffer.allocate(Long.BYTES).putLong(getTokenMintingFeeQuoteRequest.getRequestTime().toEpochMilli()).array();
+        byte[] amountInBytes = getTokenMintingFeeQuoteRequest.getMintingAmount().stripTrailingZeros().toPlainString().getBytes(StandardCharsets.UTF_8);
+        byte[] createTimeInBytes = ByteBuffer.allocate(Long.BYTES).putLong(getTokenMintingFeeQuoteRequest.getCreateTime().toEpochMilli()).array();
 
         ByteBuffer getMintingQuotesRequestBuffer =
-                ByteBuffer.allocate(userHashInBytes.length + currencyHashInBytes.length + amountInBytes.length + requestTimeInBytes.length)
-                        .put(userHashInBytes).put(currencyHashInBytes).put(amountInBytes).put(requestTimeInBytes);
+                ByteBuffer.allocate(currencyHashInBytes.length + amountInBytes.length + createTimeInBytes.length)
+                        .put(currencyHashInBytes).put(amountInBytes).put(createTimeInBytes);
         return CryptoHelper.cryptoHash(getMintingQuotesRequestBuffer.array()).getBytes();
     }
 }

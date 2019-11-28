@@ -2,6 +2,7 @@ package io.coti.basenode.data.interfaces;
 
 import java.io.Serializable;
 
-public interface IServiceDataInBaseTransaction extends Serializable {
+public interface ITokenServiceData extends Serializable {
+
     byte[] getMessageInBytes();
 }

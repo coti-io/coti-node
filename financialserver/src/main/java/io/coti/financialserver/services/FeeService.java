@@ -48,7 +48,7 @@ public class FeeService {
             BigDecimal tokenGenerationFee = calculateTokenGenerationFee(generateTokenRequest.getCurrencyData().getTotalSupply());
             TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData =
                     new TokenGenerationFeeBaseTransactionData(networkFeeAddress(), currencyService.getNativeCurrencyHash(), NodeCryptoHelper.getNodeHash(), tokenGenerationFee,
-                    Instant.now(), new TokenGenerationFeeDataInBaseTransaction(generateTokenRequest.getCurrencyData().getName(), generateTokenRequest.getCurrencyData().getSymbol(), currencyHash,
+                    Instant.now(), new TokenGenerationData(generateTokenRequest.getCurrencyData().getName(), generateTokenRequest.getCurrencyData().getSymbol(), currencyHash,
                             generateTokenRequest.getCurrencyData().getTotalSupply(), generateTokenRequest.getCurrencyData().getScale(), Instant.now(), tokenGenerationFee));
             setFeeHash(tokenGenerationFeeBaseTransactionData);
             signTokenGenerationFee(tokenGenerationFeeBaseTransactionData);
