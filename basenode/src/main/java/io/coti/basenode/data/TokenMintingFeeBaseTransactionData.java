@@ -9,14 +9,14 @@ import java.time.Instant;
 public class TokenMintingFeeBaseTransactionData extends TokenFeeBaseTransactionData {
 
     private static final long serialVersionUID = 7641308128208586733L;
-    private TokenMintingFeeDataInBaseTransaction serviceData;
+    private TokenMintingData serviceData;
 
     public TokenMintingFeeBaseTransactionData() {
     }
 
-    public TokenMintingFeeBaseTransactionData(Hash addressHash, Hash currencyHash, Hash signerHash, BigDecimal amount, Instant createTime, TokenMintingFeeDataInBaseTransaction tokenMintingFeeDataInBaseTransaction) {
+    public TokenMintingFeeBaseTransactionData(Hash addressHash, Hash currencyHash, Hash signerHash, BigDecimal amount, Instant createTime, TokenMintingData tokenMintingData) {
         super(addressHash, currencyHash, signerHash, amount, createTime);
-        this.serviceData = tokenMintingFeeDataInBaseTransaction;
+        this.serviceData = tokenMintingData;
     }
 
 }

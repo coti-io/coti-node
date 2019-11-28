@@ -22,9 +22,6 @@ public class BaseNodeMintingService implements IMintingService {
     protected ICurrencyService currencyService;
     @Autowired
     protected Currencies currencies;
-    @Autowired
-    private CurrencyRegistrarCrypto currencyRegistrarCrypto;
-
     private Map<Hash, Hash> lockMintingRecordHashMap = new ConcurrentHashMap<>();
 
     public void init() {
