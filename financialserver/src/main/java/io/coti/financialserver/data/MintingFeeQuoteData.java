@@ -1,0 +1,55 @@
+package io.coti.financialserver.data;
+
+import io.coti.basenode.crypto.CryptoHelper;
+import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.SignatureData;
+import io.coti.basenode.data.interfaces.ISignValidatable;
+import io.coti.basenode.data.interfaces.ISignable;
+import lombok.Data;
+import org.apache.commons.lang3.ArrayUtils;
+
+import javax.validation.Valid;
+import javax.validation.constraints.DecimalMin;
+import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
+import java.time.Instant;
+
+@Data
+public class MintingFeeQuoteData implements ISignable, ISignValidatable {
+
+    @NotNull
+    private @Valid Hash hash;
+    @NotNull
+    private Instant createTime;
+    @DecimalMin(value = "0")
+    protected BigDecimal mintingAmount;
+    @NotNull
+    protected @Valid Hash currencyHash;
+    @DecimalMin(value = "0")
+    protected BigDecimal mintingFee;
+    @NotNull
+    private @Valid Hash signerHash;
+    @NotNull
+    private @Valid SignatureData signatureData;
+
+    private MintingFeeQuoteData() {
+    }
+
+    public MintingFeeQuoteData(Hash currencyHash, Instant createTime, BigDecimal mintingAmount, BigDecimal mintingFee) {
+        this.hash = CryptoHelper.cryptoHash(ArrayUtils.addAll(currencyHash.getBytes(), createTime.toString().getBytes()));
+        this.createTime = createTime;
+        this.currencyHash = currencyHash;
+        this.mintingAmount = mintingAmount;
+        this.mintingFee = mintingFee;
+    }
+
+    @Override
+    public SignatureData getSignature() {
+        return this.signatureData;
+    }
+
+    @Override
+    public void setSignature(SignatureData signature) {
+        this.signatureData = signature;
+    }
+}

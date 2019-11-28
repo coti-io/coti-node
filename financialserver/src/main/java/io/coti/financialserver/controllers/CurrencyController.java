@@ -42,7 +42,7 @@ public class CurrencyController {
     }
 
     @PostMapping(path = "/token/mint/fee")
-    public ResponseEntity<IResponse> getTokenMintingFee(@RequestBody MintingTokenFeeRequest mintingTokenFeeRequest) {
+    public ResponseEntity<IResponse> getTokenMintingFee(@Valid @RequestBody MintingTokenFeeRequest mintingTokenFeeRequest) {
         return mintingService.getTokenMintingFee(mintingTokenFeeRequest);
     }
 
