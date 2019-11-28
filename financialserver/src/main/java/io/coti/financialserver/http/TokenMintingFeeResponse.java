@@ -6,10 +6,8 @@ import lombok.Data;
 
 @Data
 public class TokenMintingFeeResponse extends BaseResponse {
-    private TokenMintingFeeResponseData tokenServiceFee;
 
-    public TokenMintingFeeResponse() {
-    }
+    private TokenMintingFeeResponseData tokenServiceFee;
 
     public TokenMintingFeeResponse(TokenMintingFeeResponseData tokenMintingFeeResponseData) {
         this.tokenServiceFee = tokenMintingFeeResponseData;

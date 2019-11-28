@@ -1,6 +1,6 @@
 package io.coti.basenode.data;
 
-import io.coti.basenode.data.interfaces.IServiceDataInBaseTransaction;
+import io.coti.basenode.data.interfaces.ITokenServiceData;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -20,7 +20,5 @@ public abstract class TokenFeeBaseTransactionData extends OutputBaseTransactionD
         this.signerHash = signerHash;
     }
 
-    public IServiceDataInBaseTransaction getServiceData() {
-        return null;
-    }
+    public abstract ITokenServiceData getServiceData();
 }
