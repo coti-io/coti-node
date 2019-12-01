@@ -46,11 +46,11 @@ public class TokenGenerationData implements ITokenServiceData {
         byte[] bytesOfSymbol = symbol.getBytes();
         byte[] bytesOfCurrencyHash = generatingCurrencyHash.getBytes();
         byte[] bytesOfTotalSupply = totalSupply.stripTrailingZeros().toPlainString().getBytes(StandardCharsets.UTF_8);
-        byte[] bytesOfFeeQuote = feeAmount.stripTrailingZeros().toPlainString().getBytes(StandardCharsets.UTF_8);
+        byte[] bytesOfFeeAmount = feeAmount.stripTrailingZeros().toPlainString().getBytes(StandardCharsets.UTF_8);
 
         return ByteBuffer.allocate(bytesOfName.length + bytesOfSymbol.length + bytesOfCurrencyHash.length + bytesOfTotalSupply.length +
-                +Integer.BYTES + Long.BYTES + bytesOfFeeQuote.length)
+                +Integer.BYTES + Long.BYTES + bytesOfFeeAmount.length)
                 .put(bytesOfName).put(bytesOfSymbol).put(bytesOfCurrencyHash).put(bytesOfTotalSupply)
-                .putInt(scale).putLong(createTime.toEpochMilli()).put(bytesOfFeeQuote).array();
+                .putInt(scale).putLong(createTime.toEpochMilli()).put(bytesOfFeeAmount).array();
     }
 }
