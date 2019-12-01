@@ -9,9 +9,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.Valid;
-import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.NotNull;
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.regex.Pattern;
 
@@ -25,10 +23,6 @@ public class CurrencyData extends OriginatorCurrencyData implements IPropagatabl
     private @Valid CurrencyTypeData currencyTypeData;
     @NotNull
     private Instant creationTime;
-    @DecimalMin(value = "0")
-    private BigDecimal mintedAmount;
-    @DecimalMin(value = "0")
-    private BigDecimal requestedMintingAmount;
     @NotNull
     private @Valid Hash registrarHash;
     @NotNull
@@ -46,8 +40,6 @@ public class CurrencyData extends OriginatorCurrencyData implements IPropagatabl
         super(originatorCurrencyData);
         creationTime = currencyTypeData.creationTime;
         this.currencyTypeData = currencyTypeData;
-        this.mintedAmount = BigDecimal.ZERO;
-        this.requestedMintingAmount = BigDecimal.ZERO;
         setHash();
     }
 
@@ -55,6 +47,7 @@ public class CurrencyData extends OriginatorCurrencyData implements IPropagatabl
         hash = super.calculateHash();
     }
 
+    @Override
     public void setName(String name) {
         if (name.length() != name.trim().length()) {
             throw new CurrencyException(String.format("Attempted to set an invalid currency name with spaces at the start or the end %s.", name));
@@ -68,6 +61,7 @@ public class CurrencyData extends OriginatorCurrencyData implements IPropagatabl
         this.name = name;
     }
 
+    @Override
     public void setSymbol(String symbol) {
         if (!Pattern.compile("[A-Z]{0,15}").matcher(symbol).matches()) {
             throw new CurrencyException(String.format("Attempted to set an invalid currency symbol of %s.", symbol));
