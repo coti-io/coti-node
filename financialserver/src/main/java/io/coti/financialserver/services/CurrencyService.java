@@ -260,8 +260,8 @@ public class CurrencyService extends BaseNodeCurrencyService {
     }
 
     private Hash validateUniquenessAndAddToken(GenerateTokenRequest generateTokenRequest) {
-        OriginatorCurrencyData requestCurrencyData = generateTokenRequest.getOriginatorCurrencyData();
-        String currencyName = requestCurrencyData.getName();
+        OriginatorCurrencyData originatorCurrencyData = generateTokenRequest.getOriginatorCurrencyData();
+        String currencyName = originatorCurrencyData.getName();
         Hash userHash = generateTokenRequest.getSignerHash();
         CurrencyData currencyData;
         boolean tokenConfirmed = false;
@@ -271,15 +271,15 @@ public class CurrencyService extends BaseNodeCurrencyService {
                 throw new CurrencyException("Couldn't find Token generation data to match token generation request. Transaction was not propagated yet.");
             }
             Hash requestTransactionHash = generateTokenRequest.getTransactionHash();
-            Hash currencyHash = requestCurrencyData.calculateHash();
+            Hash currencyHash = originatorCurrencyData.calculateHash();
 
             validateTransactionAvailability(userTokenGenerationData, requestTransactionHash);
-            validateTransactionAmount(requestCurrencyData, requestTransactionHash);
+            validateTransactionAmount(originatorCurrencyData, requestTransactionHash);
             validateCurrencyUniqueness(currencyHash, currencyName);
 
             CurrencyType currencyType = CurrencyType.REGULAR_CMD_TOKEN;
             CurrencyTypeData currencyTypeData = new CurrencyTypeData(currencyType, Instant.now());
-            currencyData = new CurrencyData(requestCurrencyData, currencyTypeData);
+            currencyData = new CurrencyData(originatorCurrencyData, currencyTypeData);
             setSignedCurrencyTypeData(currencyData, currencyType);
             currencyRegistrarCrypto.signMessage(currencyData);
 

@@ -46,11 +46,13 @@ public class FeeService {
     public ResponseEntity<IResponse> createTokenGenerationFee(GenerateTokenFeeRequest generateTokenRequest, Hash currencyHash) {
         try {
             BigDecimal tokenGenerationFee = calculateTokenGenerationFee(generateTokenRequest.getCurrencyData().getTotalSupply());
+            TokenGenerationData tokenGenerationData = new TokenGenerationData(generateTokenRequest.getCurrencyData().getName(),
+                    generateTokenRequest.getCurrencyData().getSymbol(), currencyHash, generateTokenRequest.getCurrencyData().getTotalSupply(),
+                    generateTokenRequest.getCurrencyData().getScale(), Instant.now(), tokenGenerationFee);
             TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData =
-                    new TokenGenerationFeeBaseTransactionData(networkFeeAddress(), currencyService.getNativeCurrencyHash(), NodeCryptoHelper.getNodeHash(), tokenGenerationFee,
-                    Instant.now(), new TokenGenerationData(generateTokenRequest.getCurrencyData().getName(), generateTokenRequest.getCurrencyData().getSymbol(), currencyHash,
-                            generateTokenRequest.getCurrencyData().getTotalSupply(), generateTokenRequest.getCurrencyData().getScale(), Instant.now(), tokenGenerationFee));
-            setFeeHash(tokenGenerationFeeBaseTransactionData);
+                    new TokenGenerationFeeBaseTransactionData(networkFeeAddress(), currencyService.getNativeCurrencyHash(),
+                            NodeCryptoHelper.getNodeHash(), tokenGenerationFee, Instant.now(), tokenGenerationData);
+            setTokenGenerationFeeHash(tokenGenerationFeeBaseTransactionData);
             signTokenGenerationFee(tokenGenerationFeeBaseTransactionData);
             TokenGenerationFeeResponseData tokenGenerationFeeResponseData = new TokenGenerationFeeResponseData(tokenGenerationFeeBaseTransactionData);
             return ResponseEntity.status(HttpStatus.CREATED)
@@ -75,7 +77,7 @@ public class FeeService {
         return nodeCryptoHelper.generateAddress(seed, (int) ReservedAddress.NETWORK_FEE_POOL.getIndex());
     }
 
-    protected void setFeeHash(TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData) throws ClassNotFoundException {
+    protected void setTokenGenerationFeeHash(TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData) throws ClassNotFoundException {
         BaseTransactionCrypto.TokenGenerationFeeBaseTransactionData.setBaseTransactionHash(tokenGenerationFeeBaseTransactionData);
     }
 

@@ -14,13 +14,6 @@ public class TokenMintingCrypto extends SignatureValidationCrypto<TokenMintingDa
 
     @Override
     public byte[] getSignatureMessage(TokenMintingData tokenMintingData) {
-        byte[] currencyHashInBytes = tokenMintingData.getMintingCurrencyHash().getBytes();
-        byte[] amountBytes = tokenMintingData.getMintingAmount().stripTrailingZeros().toPlainString().getBytes(StandardCharsets.UTF_8);
-        byte[] addressHashInBytes = tokenMintingData.getReceiverAddress().getBytes();
-
-        byte[] mintingTokenFeeRequestBufferInBytes = ByteBuffer.allocate(currencyHashInBytes.length + amountBytes.length + addressHashInBytes.length + Long.BYTES).
-                put(currencyHashInBytes).put(amountBytes).put(addressHashInBytes).putLong(tokenMintingData.getCreateTime().toEpochMilli()).array();
-
-        return CryptoHelper.cryptoHash(mintingTokenFeeRequestBufferInBytes).getBytes();
+        return CryptoHelper.cryptoHash(tokenMintingData.getMessageInBytes()).getBytes();
     }
 }

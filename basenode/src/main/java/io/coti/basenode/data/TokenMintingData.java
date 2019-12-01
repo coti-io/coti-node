@@ -22,7 +22,6 @@ public class TokenMintingData implements ITokenServiceData, ISignValidatable {
     private @Valid Hash receiverAddress;
     @NotNull
     private Instant createTime;
-    @NotNull
     private BigDecimal feeAmount;
     @NotNull
     private @Valid Hash signerHash;
@@ -36,12 +35,12 @@ public class TokenMintingData implements ITokenServiceData, ISignValidatable {
     public byte[] getMessageInBytes() {
         byte[] bytesOfCurrencyHash = mintingCurrencyHash.getBytes();
         byte[] bytesOfAmount = mintingAmount.stripTrailingZeros().toPlainString().getBytes(StandardCharsets.UTF_8);
+        byte[] bytesOfFeeAmount = feeAmount != null ? feeAmount.stripTrailingZeros().toPlainString().getBytes(StandardCharsets.UTF_8) : new byte[0];
         byte[] bytesOfReceiverAddress = receiverAddress.getBytes();
-        byte[] bytesOfFeeQuote = feeAmount.stripTrailingZeros().toPlainString().getBytes(StandardCharsets.UTF_8);
 
-        return ByteBuffer.allocate(bytesOfCurrencyHash.length + bytesOfAmount.length
-                + bytesOfReceiverAddress.length + Long.BYTES + bytesOfFeeQuote.length)
-                .put(bytesOfCurrencyHash).put(bytesOfAmount).put(bytesOfReceiverAddress)
-                .putLong(createTime.toEpochMilli()).put(bytesOfFeeQuote).array();
+        return ByteBuffer.allocate(bytesOfCurrencyHash.length + bytesOfAmount.length + bytesOfFeeAmount.length
+                + bytesOfReceiverAddress.length + Long.BYTES)
+                .put(bytesOfCurrencyHash).put(bytesOfAmount).put(bytesOfFeeAmount).put(bytesOfReceiverAddress)
+                .putLong(createTime.toEpochMilli()).array();
     }
 }
