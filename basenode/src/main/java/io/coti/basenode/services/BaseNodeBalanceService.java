@@ -212,4 +212,20 @@ public class BaseNodeBalanceService implements IBalanceService {
         return Optional.ofNullable(currencyHash).orElse(currencyService.getNativeCurrencyHash());
     }
 
+    @Override
+    public Map<Hash, BigDecimal> getTotalBalancesByCurrency() {
+        Map<Hash, BigDecimal> currencyBalanceTotals = new HashMap<>();
+        balanceMap.forEach((addressHash, currencyHashBalanceMap) -> {
+            currencyHashBalanceMap.forEach((currencyHash, balance) -> {
+                if (balance.signum() == -1) {
+                    throw new BalanceException(String.format("Balance totals failed with balance %s for address %s and currency %s", balance, addressHash, currencyHash));
+                } else {
+                    currencyBalanceTotals.putIfAbsent(currencyHash, BigDecimal.ZERO);
+                    currencyBalanceTotals.put(currencyHash, currencyBalanceTotals.get(currencyHash).add(balance));
+                }
+            });
+        });
+        return currencyBalanceTotals;
+    }
+
 }
