@@ -54,8 +54,21 @@ public class CurrencyService extends BaseNodeCurrencyService {
     }
 
     private void generateNativeCurrency() {
-        CurrencyData currencyData = super.createCurrencyData(nativeCurrencyName, (nativeCurrencySymbol).toUpperCase(), nativeCurrencyTotalSupply, nativeCurrencyScale, Instant.now(), nativeCurrencyDescription
-                , CurrencyType.NATIVE_COIN);
+        CurrencyData currencyData = new CurrencyData();
+        Instant creationTime = Instant.now();
+        currencyData.setName(nativeCurrencyName);
+        currencyData.setSymbol(nativeCurrencySymbol.toUpperCase());
+        currencyData.setTotalSupply(nativeCurrencyTotalSupply);
+        currencyData.setScale(nativeCurrencyScale);
+        currencyData.setCreationTime(creationTime);
+        currencyData.setDescription(nativeCurrencyDescription);
+        currencyData.setHash();
+
+        CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(currencyData.getHash(), CurrencyType.NATIVE_COIN, creationTime);
+        currencyTypeRegistrationCrypto.signMessage(currencyTypeRegistrationData);
+        currencyData.setCurrencyTypeData(new CurrencyTypeData(currencyTypeRegistrationData));
+        currencyRegistrarCrypto.signMessage(currencyData);
+
         putCurrencyData(currencyData);
         setNativeCurrencyData(currencyData);
     }

@@ -124,8 +124,7 @@ public class MintingService extends BaseNodeMintingService {
             BigDecimal mintingFee = null;
             MintingFeeQuoteData mintingFeeQuoteData = mintingTokenFeeRequest.getMintingFeeQuoteData();
             TokenMintingData tokenMintingData = mintingTokenFeeRequest.getTokenMintingData();
-            if (mintingTokenFeeRequest.getMintingFeeQuoteData() != null
-                    && mintingFeeQuoteData != null && isStillValid(mintingFeeQuoteData)) {
+            if (mintingFeeQuoteData != null && isStillValid(mintingFeeQuoteData)) {
                 if (!mintingFeeQuoteCrypto.verifySignature(mintingFeeQuoteData)) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
                 }
@@ -135,13 +134,12 @@ public class MintingService extends BaseNodeMintingService {
                 mintingFee = mintingFeeQuoteData.getMintingFee();
             }
             if (mintingFee == null) {
-                mintingFee = feeService.calculateTokenMintingFee(tokenMintingData.getMintingAmount(),
-                        Instant.now(), currencyData);
+                mintingFee = feeService.calculateTokenMintingFee(tokenMintingData.getMintingAmount(), Instant.now(), currencyData);
             }
-            TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = new TokenMintingFeeBaseTransactionData(feeService.networkFeeAddress(), currencyService.getNativeCurrencyHash(),
-                    NodeCryptoHelper.getNodeHash(), mintingFee, Instant.now(), tokenMintingData);
-            setFeeHash(tokenMintingFeeBaseTransactionData);
-            signTokenGenerationFee(tokenMintingFeeBaseTransactionData);
+            TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = new TokenMintingFeeBaseTransactionData(feeService.networkFeeAddress(),
+                    currencyService.getNativeCurrencyHash(), NodeCryptoHelper.getNodeHash(), mintingFee, Instant.now(), tokenMintingData);
+            setTokenMintingFeeHash(tokenMintingFeeBaseTransactionData);
+            signTokenMintingFee(tokenMintingFeeBaseTransactionData);
             TokenMintingFeeResponseData tokenMintingFeeResponseData = new TokenMintingFeeResponseData(tokenMintingFeeBaseTransactionData);
             return ResponseEntity.status(HttpStatus.CREATED).body(new TokenMintingFeeResponse(tokenMintingFeeResponseData));
         } catch (Exception e) {
@@ -183,9 +181,9 @@ public class MintingService extends BaseNodeMintingService {
 
         if (mintingTokenFeeRequest.getMintingFeeQuoteData() != null) {
             MintingFeeQuoteData mintingFeeQuoteData = mintingTokenFeeRequest.getMintingFeeQuoteData();
-            if (!mintingFeeQuoteData.getMintingAmount().equals(mintingTokenFeeRequest.getMintingFeeData().getAmount())
-                    || !mintingFeeQuoteData.getCurrencyHash().equals(mintingTokenFeeRequest.getMintingFeeData().getCurrencyHash())
-                    || !currencyData.getOriginatorHash().equals(mintingTokenFeeRequest.getUserHash())) {
+            if (!mintingFeeQuoteData.getMintingAmount().equals(mintingTokenFeeRequest.getMintingFeeQuoteData().getMintingAmount())
+                    || !mintingFeeQuoteData.getCurrencyHash().equals(mintingTokenFeeRequest.getMintingFeeQuoteData().getCurrencyHash())
+                    || !currencyData.getOriginatorHash().equals(mintingTokenFeeRequest.getTokenMintingData().getSignerHash())) {
                 return false;
             }
         }
@@ -309,11 +307,11 @@ public class MintingService extends BaseNodeMintingService {
         }
     }
 
-    private void setFeeHash(TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData) throws ClassNotFoundException {
+    private void setTokenMintingFeeHash(TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData) throws ClassNotFoundException {
         BaseTransactionCrypto.TokenMintingFeeBaseTransactionData.setBaseTransactionHash(tokenMintingFeeBaseTransactionData);
     }
 
-    private void signTokenGenerationFee(TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData) {
+    private void signTokenMintingFee(TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData) {
         tokenMintingFeeBaseTransactionData.setSignature(nodeCryptoHelper.signMessage(tokenMintingFeeBaseTransactionData.getHash().getBytes()));
     }
 
