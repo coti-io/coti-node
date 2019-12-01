@@ -253,27 +253,4 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     public boolean verifyCurrencyExists(Hash currencyDataHash) {
         return currencies.getByHash(currencyDataHash) != null;
     }
-
-    protected CurrencyData createCurrencyData(String name, String symbol, BigDecimal totalSupply, int scale, Instant creationTime,
-                                              String description, CurrencyType currencyType) {
-        try {
-            CurrencyData currencyData = new CurrencyData();
-            currencyData.setName(name);
-            currencyData.setSymbol(symbol);
-            currencyData.setHash();
-            currencyData.setTotalSupply(totalSupply);
-            currencyData.setScale(scale);
-            currencyData.setCreationTime(creationTime);
-            currencyData.setDescription(description);
-
-            CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(currencyData.getHash(), currencyType, creationTime);
-            currencyTypeRegistrationCrypto.signMessage(currencyTypeRegistrationData);
-            currencyData.setCurrencyTypeData(new CurrencyTypeData(currencyTypeRegistrationData));
-            currencyRegistrarCrypto.signMessage(currencyData);
-            return currencyData;
-        } catch (Exception e) {
-            throw new CurrencyException("Create currency error.", e);
-        }
-    }
-
 }
