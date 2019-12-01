@@ -18,8 +18,6 @@ import java.time.Instant;
 public class MintingFeeQuoteData implements ISignable, ISignValidatable {
 
     @NotNull
-    private @Valid Hash hash;
-    @NotNull
     private Instant createTime;
     @DecimalMin(value = "0")
     protected BigDecimal mintingAmount;
@@ -36,7 +34,6 @@ public class MintingFeeQuoteData implements ISignable, ISignValidatable {
     }
 
     public MintingFeeQuoteData(Hash currencyHash, Instant createTime, BigDecimal mintingAmount, BigDecimal mintingFee) {
-        this.hash = CryptoHelper.cryptoHash(ArrayUtils.addAll(currencyHash.getBytes(), createTime.toString().getBytes()));
         this.createTime = createTime;
         this.currencyHash = currencyHash;
         this.mintingAmount = mintingAmount;
