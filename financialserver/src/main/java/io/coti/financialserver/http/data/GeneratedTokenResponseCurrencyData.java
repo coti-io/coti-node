@@ -1,13 +1,10 @@
 package io.coti.financialserver.http.data;
 
-import io.coti.basenode.data.*;
+import io.coti.basenode.data.CurrencyData;
+import io.coti.basenode.data.CurrencyType;
+import io.coti.basenode.data.SignatureData;
 import lombok.Data;
-import org.hibernate.validator.constraints.Range;
 
-import javax.validation.Valid;
-import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.Instant;
 
@@ -26,8 +23,8 @@ public class GeneratedTokenResponseCurrencyData {
     protected Instant creationTime;
     private String registrarHash;
     protected SignatureData registrarSignature;
-    private BigDecimal mintedAmount;
-    private BigDecimal requestedMintingAmount;
+    protected BigDecimal mintedAmount;
+    protected BigDecimal requestedMintingAmount;
 
     public GeneratedTokenResponseCurrencyData(CurrencyData token) {
         this.currencyName = token.getName();
@@ -42,7 +39,7 @@ public class GeneratedTokenResponseCurrencyData {
         this.creationTime = token.getCreationTime();
         this.registrarHash = token.getRegistrarHash().toString();
         this.registrarSignature = token.getRegistrarSignature();
-        this.mintedAmount = token.getMintedAmount();
-        this.requestedMintingAmount = token.getRequestedMintingAmount();
+        this.mintedAmount = BigDecimal.ZERO;
+        this.requestedMintingAmount = BigDecimal.ZERO;
     }
 }
