@@ -15,6 +15,7 @@ import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeCurrencyService;
 import io.coti.basenode.services.TransactionHelper;
 import io.coti.basenode.services.interfaces.IClusterStampService;
+import io.coti.basenode.services.interfaces.IMintingService;
 import io.coti.financialserver.crypto.GenerateTokenRequestCrypto;
 import io.coti.financialserver.crypto.GetUserTokensRequestCrypto;
 import io.coti.financialserver.data.CurrencyNameIndexData;
@@ -79,6 +80,8 @@ public class CurrencyService extends BaseNodeCurrencyService {
     private IClusterStampService clusterStampService;
     @Autowired
     private FeeService feeService;
+    @Autowired
+    private IMintingService mintingService;
 
     private BlockingQueue<TransactionData> pendingCurrencyTransactionQueue;
     private BlockingQueue<TransactionData> tokenGenerationTransactionQueue;
@@ -198,7 +201,11 @@ public class CurrencyService extends BaseNodeCurrencyService {
         if (currencyData == null) {
             throw new CurrencyException(String.format("Unidentified currency hash: %s", currencyHash));
         }
-        generatedTokens.add(new GeneratedTokenResponseData(transactionHash, currencyData, true));
+        GeneratedTokenResponseData generatedTokenResponseData = new GeneratedTokenResponseData(transactionHash, currencyData, true);
+
+        generatedTokenResponseData.getToken().setMintedAmount(mintingService.getTokenMintedAmount(currencyHash));
+        generatedTokenResponseData.getToken().setRequestedMintingAmount(mintingService.getTokenRequestedMintingAmount(currencyHash));
+        generatedTokens.add(generatedTokenResponseData);
     }
 
     public ResponseEntity<IResponse> generateToken(GenerateTokenRequest generateTokenRequest) {
