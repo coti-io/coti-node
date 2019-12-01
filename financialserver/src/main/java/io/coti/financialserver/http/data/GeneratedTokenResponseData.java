@@ -15,8 +15,7 @@ public class GeneratedTokenResponseData {
         this.transactionHash = transactionHash.toString();
         if (token == null) {
             this.token = null;
-        }
-        else {
+        } else {
             this.token = new GeneratedTokenResponseCurrencyData(token);
         }
 
