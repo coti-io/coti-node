@@ -319,4 +319,22 @@ public class MintingService extends BaseNodeMintingService {
         Instant createTime = mintingFeeQuoteData.getCreateTime();
         return createTime.isAfter(Instant.now().minus(MINTING_FEE_QUOTE_EXPIRATION_MINUTES, ChronoUnit.MINUTES)) && createTime.isBefore(Instant.now());
     }
+
+    @Override
+    public void validateMintingBalances() {
+        mintingRecords.forEach(mintingRecordData -> {
+                    Hash tokenHash = mintingRecordData.getHash();
+                    BigDecimal mintingAmount = mintingRecordData.getMintingHistory().values().stream()
+                            .map(MintedTokenData::getMintingAmount)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    BigDecimal tokenMintedFoundAmount = getTokenMintedAmount(tokenHash);
+                    if (!mintingAmount.equals(tokenMintedFoundAmount)) {
+                        log.error("Minting balance validation identified mismatch for currency {}, expected {} found {}",
+                                tokenHash, mintingAmount, tokenMintedFoundAmount);
+                    }
+                }
+        );
+        log.info("Minting Balance Validation completed");
+    }
+
 }
