@@ -161,7 +161,7 @@ public class BaseNodeTransactionService implements ITransactionService {
                 log.error("Balance check failed: {}", transactionData.getHash());
                 return;
             }
-            if (transactionData.getType() == TransactionType.TokenMintingFee && !validationService.validateTokenMintingAndAddToRequestedAmount(transactionData)) {
+            if (transactionData.getType() == TransactionType.TokenMintingFee && !validationService.validateTokenMintingAndAddToAllocatedAmount(transactionData)) {
                 log.error("Minting balance check failed: {}", transactionData.getHash());
                 return;
             }

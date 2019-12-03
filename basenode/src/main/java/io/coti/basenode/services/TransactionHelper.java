@@ -286,7 +286,7 @@ public class TransactionHelper implements ITransactionHelper {
     private void revertPayloadAction(TransactionData transactionData) {
         if (transactionData.getType() == TransactionType.TokenMintingFee) {
             log.error("Reverting minting transaction: {}", transactionData.getHash());
-            mintingService.revertMintingRequestedReserve(transactionData);
+            mintingService.revertMintingAllocation(transactionData);
         }
     }
 
@@ -311,11 +311,11 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     @Override
-    public boolean checkTokenMintingAndAddToRequestedAmount(TransactionData transactionData) {
+    public boolean checkTokenMintingAndAddToAllocatedAmount(TransactionData transactionData) {
         if (!isTransactionExists(transactionData)) {
             return false;
         }
-        if (!mintingService.checkMintingAmountAndAddToRequestedAmount(transactionData)) {
+        if (!mintingService.checkMintingAmountAndAddToAllocatedAmount(transactionData)) {
             return false;
         }
         transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(PAYLOAD_CHECKED);
