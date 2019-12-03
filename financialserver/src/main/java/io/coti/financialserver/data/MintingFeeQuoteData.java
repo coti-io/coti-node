@@ -1,12 +1,10 @@
 package io.coti.financialserver.data;
 
-import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
-import org.apache.commons.lang3.ArrayUtils;
 
 import javax.validation.Valid;
 import javax.validation.constraints.DecimalMin;
