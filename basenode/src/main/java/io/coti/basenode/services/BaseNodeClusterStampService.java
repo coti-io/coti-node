@@ -497,10 +497,8 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
             validateClusterStampLineDetails(currencyAmountInAddress, currencyHash, clusterStampCurrencyMap, clusterStampFileName);
             balanceService.updateBalanceFromClusterStamp(addressHash, currencyHash, currencyAmountInAddress);
-            if (!currencyGenesisAddress.equals(addressHash)) {
-                mintingService.updateMintedTotalAmount(currencyHash, currencyAmountInAddress);
-            } else {
-                mintingService.initializeIfAbsentMintedTotalAmount(currencyHash);
+            if (currencyGenesisAddress.equals(addressHash) && !currencyHash.equals(currencyService.getNativeCurrencyHash())) {
+                mintingService.updateTokenAllocatedAmountFromDBAndClusterStamp(currencyHash, currencyAmountInAddress);
             }
             log.trace("The address hash {} for currency hash {} was loaded from the clusterstamp {} with amount {}", addressHash, currencyHash, clusterStampFileName, currencyAmountInAddress);
 
