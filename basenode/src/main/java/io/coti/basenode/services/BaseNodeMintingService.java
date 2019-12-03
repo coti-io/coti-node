@@ -2,12 +2,11 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.*;
-import io.coti.basenode.exceptions.CurrencyException;
+import io.coti.basenode.exceptions.BalanceException;
 import io.coti.basenode.model.Currencies;
-import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.IMintingService;
+import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,47 +23,18 @@ public class BaseNodeMintingService implements IMintingService {
     @Autowired
     protected ICurrencyService currencyService;
     @Autowired
-    private IBalanceService balanceService;
-    @Autowired
     protected Currencies currencies;
     @Autowired
-    private Transactions transactions;
+    private ITransactionHelper transactionHelper;
 
     private Map<Hash, MutablePair> mintingMap;
     private Map<Hash, Hash> lockMintingRecordHashMap = new ConcurrentHashMap<>();
+    private Hash nativeCurrencyHash;
 
     public void init() {
         mintingMap = new ConcurrentHashMap<>();
-        initMintingMap();
+        nativeCurrencyHash = currencyService.getNativeCurrencyHash();
         log.info("{} is up", this.getClass().getSimpleName());
-    }
-
-    private void initMintingMap() {
-        initMintingMapWithMinted();
-        initMintingMapWithRequestedMinted();
-    }
-
-    private void initMintingMapWithMinted() {
-
-        Map<Hash, BigDecimal> totalBalancesByCurrency = balanceService.getTotalBalancesByCurrency();
-        totalBalancesByCurrency.forEach((currencyHash, currencyBalanceTotal) -> {
-            mintingMap.putIfAbsent(currencyHash, new MutablePair(currencyBalanceTotal, BigDecimal.ZERO));
-        });
-    }
-
-    private void initMintingMapWithRequestedMinted() {
-        transactions.forEach(transactionData -> {
-            TokenMintingFeeBaseTransactionData tokenMintingFeeData = getTokenMintingFeeData(transactionData);
-            if (tokenMintingFeeData != null) {
-                Hash tokenHash = tokenMintingFeeData.getCurrencyHash();
-                BigDecimal newMintingRequestedAmount = tokenMintingFeeData.getServiceData().getMintingAmount();
-                MutablePair mintingPair = mintingMap.get(tokenHash);
-                if (mintingPair == null) {
-                    throw new CurrencyException("Error at minting service init. Transaction " + transactionData.getHash() + " with illegal token " + tokenHash + " \n");
-                }
-                mintingMap.get(tokenHash).setRight(newMintingRequestedAmount.add(getTokenRequestedMintingAmount(tokenHash)));
-            }
-        });
     }
 
     public BigDecimal getTokenMintedAmount(Hash tokenHash) {
@@ -197,6 +167,57 @@ public class BaseNodeMintingService implements IMintingService {
                 .stream()
                 .filter(t -> t instanceof TokenMintingFeeBaseTransactionData)
                 .findFirst().orElse(null);
+    }
+
+    @Override
+    public void updateMintedTotalAmount(Hash currencyHash, BigDecimal currencyAmountInAddress) {
+        if (currencyAmountInAddress.signum() == -1) {
+            throw new BalanceException(String.format("Balance totals failed with balance %s for currency %s", currencyAmountInAddress, currencyHash));
+        }
+        initializeIfAbsentMintedTotalAmount(currencyHash);
+        setTokenMintedAmount(currencyHash, getTokenMintedAmount(currencyHash).add(currencyAmountInAddress));
+    }
+
+    @Override
+    public void initializeIfAbsentMintedTotalAmount(Hash currencyHash) {
+        mintingMap.putIfAbsent(currencyHash, new MutablePair(BigDecimal.ZERO, BigDecimal.ZERO));
+    }
+
+    @Override
+    public void handleExistingTransaction(TransactionData transactionData) {
+        TransactionType transactionType = transactionData.getType();
+        if (transactionType == TransactionType.TokenMintingFee && !transactionHelper.isConfirmed(transactionData)) {
+            TokenMintingFeeBaseTransactionData tokenMintingFeeData = getTokenMintingFeeData(transactionData);
+            if (tokenMintingFeeData != null) {
+                Hash tokenHash = tokenMintingFeeData.getServiceData().getMintingCurrencyHash();
+                BigDecimal newMintingRequestedAmount = tokenMintingFeeData.getServiceData().getMintingAmount();
+                initializeIfAbsentMintedTotalAmount(tokenHash);
+                setTokenRequestedMintingAmount(tokenHash, newMintingRequestedAmount.add(getTokenRequestedMintingAmount(tokenHash)));
+            }
+        }
+        if (transactionType == TransactionType.Initial) {
+            BaseTransactionData rbt = transactionData.getBaseTransactions().stream()
+                    .filter(baseTransactionData -> ReceiverBaseTransactionData.class.isInstance(baseTransactionData))
+                    .findFirst().orElse(null);
+            if (rbt != null) {
+                Hash tokenHash = rbt.getCurrencyHash();
+                initializeIfAbsentMintedTotalAmount(tokenHash);
+
+                if (transactionHelper.isConfirmed(transactionData)) {
+                    setTokenMintedAmount(tokenHash, rbt.getAmount().add(getTokenMintedAmount(tokenHash)));
+                } else {
+                    if (!tokenHash.equals(nativeCurrencyHash)) {
+                        setTokenRequestedMintingAmount(tokenHash, getTokenRequestedMintingAmount(tokenHash).add(rbt.getAmount()));
+                    }
+                }
+            }
+        }
+    }
+
+
+    @Override
+    public void validateMintingBalances() {
+        // To be validated only by Financial server
     }
 
 }
