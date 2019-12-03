@@ -16,6 +16,11 @@ public class BaseNodeHttpStringConstants {
     public static final String TRANSACTION_RESPONSE_ERROR = "Transaction response error";
     public static final String TRANSACTION_ROLLBACK_MESSAGE = "Transaction creation failed";
     public static final String TRANSACTION_SOURCE_NOT_FOUND = "There is no valid source. Please try again later";
+    public static final String TRANSACTION_RESENT_MESSAGE = "Transaction resent to the network";
+    public static final String TRANSACTION_RESENT_INVALID_SIGNATURE_MESSAGE = "Invalid transaction resend request signature";
+    public static final String TRANSACTION_RESENT_PROCESSING_MESSAGE = "Transaction requested to resend is still processed";
+    public static final String TRANSACTION_RESENT_NOT_AVAILABLE_MESSAGE = "Transaction requested to resend is not available in the database";
+    public static final String TRANSACTION_RESENT_NOT_AUTHORISED_MESSAGE = "Transaction is requested to resend not by the transaction sender";
 
     public static final String AUTHENTICATION_FAILED_MESSAGE = "Authentication failed!";
     public static final String INSUFFICIENT_FUNDS_MESSAGE = "Balance for address is insufficient!";
