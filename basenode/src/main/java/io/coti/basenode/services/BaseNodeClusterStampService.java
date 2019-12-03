@@ -75,6 +75,8 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     protected String clusterStampBucketName;
     @Value("${application.name}")
     private String applicationName;
+    @Value("${currency.genesis.address}")
+    private Hash currencyGenesisAddress;
     @Autowired
     protected IBalanceService balanceService;
     @Autowired
@@ -97,6 +99,8 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     protected ICurrencyService currencyService;
     @Autowired
     protected ApplicationContext applicationContext;
+    @Autowired
+    protected IMintingService mintingService;
 
     @Override
     public void init() {
@@ -493,6 +497,11 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
             validateClusterStampLineDetails(currencyAmountInAddress, currencyHash, clusterStampCurrencyMap, clusterStampFileName);
             balanceService.updateBalanceFromClusterStamp(addressHash, currencyHash, currencyAmountInAddress);
+            if (!currencyGenesisAddress.equals(addressHash)) {
+                mintingService.updateMintedTotalAmount(currencyHash, currencyAmountInAddress);
+            } else {
+                mintingService.initializeIfAbsentMintedTotalAmount(currencyHash);
+            }
             log.trace("The address hash {} for currency hash {} was loaded from the clusterstamp {} with amount {}", addressHash, currencyHash, clusterStampFileName, currencyAmountInAddress);
 
             byte[] addressHashInBytes = addressHash.getBytes();
