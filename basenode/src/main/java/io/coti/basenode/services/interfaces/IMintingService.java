@@ -18,4 +18,12 @@ public interface IMintingService {
     BigDecimal getTokenMintedAmount(Hash tokenHash);
 
     BigDecimal getTokenRequestedMintingAmount(Hash tokenHash);
+
+    void updateMintedTotalAmount(Hash currencyHash, BigDecimal currencyAmountInAddress);
+
+    void initializeIfAbsentMintedTotalAmount(Hash currencyHash);
+
+    void handleExistingTransaction(TransactionData transactionData);
+
+    void validateMintingBalances();
 }
