@@ -160,9 +160,6 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         Instant transactionConsensusUpdateTime = trustChainConsensusTime.isAfter(dspConsensusTime) ? trustChainConsensusTime : dspConsensusTime;
         transactionData.setTransactionConsensusUpdateTime(transactionConsensusUpdateTime);
         transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getCurrencyHash(), baseTransactionData.getAmount()));
-        if (transactionData.getType() == TransactionType.TokenMintingFee) {
-            mintingService.updateMintedAmount(transactionData);
-        }
         totalConfirmed.incrementAndGet();
 
         transactionData.getBaseTransactions().forEach(baseTransactionData -> {
@@ -258,9 +255,6 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         dspConfirmed.incrementAndGet();
         if (transactionData.isTrustChainConsensus()) {
             transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getCurrencyHash(), baseTransactionData.getAmount()));
-            if (transactionData.getType() == TransactionType.TokenMintingFee) {
-                mintingService.updateMintedAmount(transactionData);
-            }
             totalConfirmed.incrementAndGet();
             continueHandleConfirmedTransaction(transactionData);
         }

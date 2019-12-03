@@ -101,7 +101,7 @@ public class MintingService extends BaseNodeMintingService {
         try {
             CurrencyData currencyData = validateMintingTokenFeeRequestAndGetCurrencyData(tokenMintingFeeRequest);
             if (!validateTokenSupplyAvailableAndQuoteAmount(tokenMintingFeeRequest, currencyData)) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_MINTING_REQUEST_INVALID_FOR_WARRANT, STATUS_ERROR));
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_MINTING_REQUEST_INVALID_FOR_THE_QUOTE, STATUS_ERROR));
             }
             if (!isAddressValid(tokenMintingFeeRequest.getTokenMintingData().getReceiverAddress())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_MINTING_REQUEST_INVALID_ADDRESS, STATUS_ERROR));
@@ -129,7 +129,7 @@ public class MintingService extends BaseNodeMintingService {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
                 }
                 if (!mintingFeeQuoteData.getMintingFee().equals(tokenMintingData.getFeeAmount())) {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_MINTING_REQUEST_INVALID_WARRANT_MISMATCHED, STATUS_ERROR));
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_MINTING_REQUEST_INVALID_FOR_THE_QUOTE, STATUS_ERROR));
                 }
                 mintingFee = mintingFeeQuoteData.getMintingFee();
             }
@@ -326,7 +326,7 @@ public class MintingService extends BaseNodeMintingService {
                     BigDecimal mintingAmount = mintingRecordData.getMintingHistory().values().stream()
                             .map(MintedTokenData::getMintingAmount)
                             .reduce(BigDecimal.ZERO, BigDecimal::add);
-                    BigDecimal tokenMintedFoundAmount = getTokenMintedAmount(tokenHash);
+                    BigDecimal tokenMintedFoundAmount = getTokenAllocatedAmount(tokenHash);
                     if (!mintingAmount.equals(tokenMintedFoundAmount)) {
                         log.error("Minting balance validation identified mismatch for currency {}, expected {} found {}",
                                 tokenHash, mintingAmount, tokenMintedFoundAmount);
