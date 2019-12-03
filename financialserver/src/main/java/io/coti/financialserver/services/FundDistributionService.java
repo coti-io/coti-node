@@ -612,7 +612,7 @@ public class FundDistributionService {
         try {
             int sourceAddressIndex = Math.toIntExact(fundDistributionData.getDistributionPoolFund().getReservedAddress().getIndex());
             Hash sourceAddress = fundDistributionData.getDistributionPoolFund().getFundHash();
-            initialTransactionHash = transactionCreationService.createInitialTransaction(fundDistributionData.getAmount(), null,
+            initialTransactionHash = transactionCreationService.createInitialTransaction(fundDistributionData.getAmount(), currencyService.getNativeCurrencyHash(),
                     sourceAddress, fundDistributionData.getReceiverAddress(), sourceAddressIndex);
         } catch (Exception e) {
             log.error("Failed to create initial transaction.");

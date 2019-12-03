@@ -9,19 +9,13 @@ public interface IMintingService {
 
     void init();
 
-    boolean checkMintingAmountAndAddToRequestedAmount(TransactionData transactionData);
+    boolean checkMintingAmountAndAddToAllocatedAmount(TransactionData transactionData);
 
-    void revertMintingRequestedReserve(TransactionData transactionData);
+    void revertMintingAllocation(TransactionData transactionData);
 
-    void updateMintedAmount(TransactionData transactionData);
+    BigDecimal getTokenAllocatedAmount(Hash tokenHash);
 
-    BigDecimal getTokenMintedAmount(Hash tokenHash);
-
-    BigDecimal getTokenRequestedMintingAmount(Hash tokenHash);
-
-    void updateMintedTotalAmount(Hash currencyHash, BigDecimal currencyAmountInAddress);
-
-    void initializeIfAbsentMintedTotalAmount(Hash currencyHash);
+    void updateTokenAllocatedAmountFromDBAndClusterStamp(Hash currencyHash, BigDecimal currencyAmountInAddress);
 
     void handleExistingTransaction(TransactionData transactionData);
 
