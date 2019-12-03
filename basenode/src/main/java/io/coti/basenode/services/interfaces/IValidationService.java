@@ -40,5 +40,5 @@ public interface IValidationService {
 
     boolean validateGetAddressesResponse(GetHistoryAddressesResponse getHistoryAddressesResponse);
 
-    boolean validateTokenMintingAndAddToRequestedAmount(TransactionData transactionData);
+    boolean validateTokenMintingAndAddToAllocatedAmount(TransactionData transactionData);
 }
