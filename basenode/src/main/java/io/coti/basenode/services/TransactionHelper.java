@@ -262,6 +262,11 @@ public class TransactionHelper implements ITransactionHelper {
         return transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).peek().equals(FINISHED);
     }
 
+    @Override
+    public boolean isTransactionProcessed(Hash transactionHash) {
+        return transactionHashToTransactionStateStackMapping.containsKey(transactionHash);
+    }
+
     private void rollbackTransaction(TransactionData transactionData) {
         Stack<TransactionState> currentTransactionStateStack = transactionHashToTransactionStateStackMapping.get(transactionData.getHash());
         while (!currentTransactionStateStack.isEmpty()) {

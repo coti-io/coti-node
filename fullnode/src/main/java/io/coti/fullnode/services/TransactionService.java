@@ -24,6 +24,7 @@ import io.coti.basenode.services.interfaces.IChunkService;
 import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.fullnode.crypto.ResendTransactionRequestCrypto;
 import io.coti.fullnode.http.*;
 import io.coti.fullnode.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
@@ -75,6 +76,7 @@ public class TransactionService extends BaseNodeTransactionService {
     private BlockingQueue<ReducedTransactionData> explorerIndexQueue;
     private Thread explorerIndexThread;
     private IndexedNavigableSet<ReducedTransactionData> explorerIndexedTransactionSet;
+    private ResendTransactionRequestCrypto resendTransactionRequestCrypto;
 
     @Override
     public void init() {
@@ -175,6 +177,36 @@ public class TransactionService extends BaseNodeTransactionService {
         } finally {
             transactionHelper.endHandleTransaction(transactionData);
         }
+    }
+
+    public ResponseEntity<Response> repropagateTransaction(RepropagateTransactionRequest request) {
+
+        if (!resendTransactionRequestCrypto.verifySignature(request)) {
+            log.error("Signature validation failed for the request to resend transaction {}", request.getTransactionHash());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new AddTransactionResponse(STATUS_ERROR, TRANSACTION_RESENT_INVALID_SIGNATURE_MESSAGE));
+        }
+        TransactionData transactionData = transactions.getByHash(request.getTransactionHash());
+        if (transactionData == null) {
+            log.error("Transaction {} requested to resend is not available in the database", request.getTransactionHash());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new AddTransactionResponse(STATUS_ERROR, TRANSACTION_RESENT_NOT_AVAILABLE_MESSAGE));
+        }
+        if (!request.getSignerHash().equals(transactionData.getSenderHash())) {
+            log.error("Transaction {} is requested to resend not by the transaction sender", request.getTransactionHash());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new AddTransactionResponse(STATUS_ERROR, TRANSACTION_RESENT_NOT_AUTHORISED_MESSAGE));
+        }
+        if (transactionHelper.isTransactionHashProcessing(request.getTransactionHash())) {
+            log.error("Transaction {} requested to resend is still being processed", request.getTransactionHash());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new AddTransactionResponse(STATUS_ERROR, TRANSACTION_RESENT_PROCESSING_MESSAGE));
+        }
+
+        ((NetworkService) networkService).sendDataToConnectedDspNodes(transactionData);
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new AddTransactionResponse(STATUS_SUCCESS, TRANSACTION_RESENT_MESSAGE));
     }
 
     public void selectSources(TransactionData transactionData) {

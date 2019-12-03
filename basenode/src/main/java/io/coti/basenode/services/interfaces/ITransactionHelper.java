@@ -32,6 +32,8 @@ public interface ITransactionHelper {
 
     boolean isTransactionFinished(TransactionData transactionData);
 
+    boolean isTransactionProcessed(Hash transactionHash);
+
     boolean checkBalancesAndAddToPreBalance(TransactionData transactionData);
 
     void attachTransactionToCluster(TransactionData transactionData);

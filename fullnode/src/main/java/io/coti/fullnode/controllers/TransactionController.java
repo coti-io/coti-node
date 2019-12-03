@@ -33,6 +33,11 @@ public class TransactionController {
         return transactionService.addNewTransaction(addTransactionRequest);
     }
 
+    @PostMapping(value = "/repropagate")
+    public ResponseEntity<Response> repropagateTransaction(@Valid @RequestBody RepropagateTransactionRequest repropagateTransactionRequest) {
+        return transactionService.repropagateTransaction(repropagateTransactionRequest);
+    }
+
     @PostMapping()
     public ResponseEntity<IResponse> getTransactionDetails(@Valid @RequestBody GetTransactionRequest getTransactionRequest) {
         return transactionService.getTransactionDetails(getTransactionRequest.transactionHash);
