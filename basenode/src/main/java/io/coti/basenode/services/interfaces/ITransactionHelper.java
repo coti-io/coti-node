@@ -74,5 +74,5 @@ public interface ITransactionHelper {
 
     Set<Hash> getNoneIndexedTransactionHashes();
 
-    boolean checkTokenMintingAndAddToRequestedAmount(TransactionData transactionData);
+    boolean checkTokenMintingAndAddToAllocatedAmount(TransactionData transactionData);
 }

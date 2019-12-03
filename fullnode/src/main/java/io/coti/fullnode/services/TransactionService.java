@@ -234,7 +234,7 @@ public class TransactionService extends BaseNodeTransactionService {
         }
 
         if (transactionData.getType() == TransactionType.TokenMintingFee
-                && !validationService.validateTokenMintingAndAddToRequestedAmount(transactionData)) {
+                && !validationService.validateTokenMintingAndAddToAllocatedAmount(transactionData)) {
             log.error("Minting balance check failed: {}", transactionData.getHash());
             throw new TransactionValidationException(INSUFFICIENT_MINTING_FUNDS_MESSAGE);
         }

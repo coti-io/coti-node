@@ -93,8 +93,8 @@ public class BaseNodeValidationService implements IValidationService {
     }
 
     @Override
-    public boolean validateTokenMintingAndAddToRequestedAmount(TransactionData transactionData) {
-        return transactionHelper.checkTokenMintingAndAddToRequestedAmount(transactionData);
+    public boolean validateTokenMintingAndAddToAllocatedAmount(TransactionData transactionData) {
+        return transactionHelper.checkTokenMintingAndAddToAllocatedAmount(transactionData);
     }
 
     @Override

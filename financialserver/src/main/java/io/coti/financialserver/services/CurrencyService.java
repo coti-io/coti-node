@@ -14,6 +14,7 @@ import io.coti.basenode.model.Currencies;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeCurrencyService;
 import io.coti.basenode.services.TransactionHelper;
+import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IClusterStampService;
 import io.coti.basenode.services.interfaces.IMintingService;
 import io.coti.financialserver.crypto.GenerateTokenRequestCrypto;
@@ -35,6 +36,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
@@ -54,8 +56,8 @@ public class CurrencyService extends BaseNodeCurrencyService {
     private final Map<Hash, Hash> lockTransactionHashMap = new ConcurrentHashMap<>();
     private final Set<String> processingCurrencyNameSet = Sets.newConcurrentHashSet();
     private final Set<String> processingCurrencySymbolSet = Sets.newConcurrentHashSet();
-    @Value("${financialserver.seed}")
-    private String seed;
+    @Value("${currency.genesis.address}")
+    private Hash currencyGenesisAddress;
     @Autowired
     private CurrencyNameIndexes currencyNameIndexes;
     @Autowired
@@ -82,6 +84,8 @@ public class CurrencyService extends BaseNodeCurrencyService {
     private FeeService feeService;
     @Autowired
     private IMintingService mintingService;
+    @Autowired
+    private IBalanceService balanceService;
 
     private BlockingQueue<TransactionData> pendingCurrencyTransactionQueue;
     private BlockingQueue<TransactionData> tokenGenerationTransactionQueue;
@@ -192,19 +196,24 @@ public class CurrencyService extends BaseNodeCurrencyService {
             generatedTokens.add(new GeneratedTokenResponseData(transactionHash, null, false));
             return;
         }
-        CurrencyData currencyData = pendingCurrencies.getByHash(currencyHash);
-        if (currencyData != null) {
-            generatedTokens.add(new GeneratedTokenResponseData(transactionHash, currencyData, false));
+        CurrencyData pendingCurrencyData = pendingCurrencies.getByHash(currencyHash);
+        if (pendingCurrencyData != null) {
+            generatedTokens.add(new GeneratedTokenResponseData(transactionHash, pendingCurrencyData, false));
             return;
         }
-        currencyData = currencies.getByHash(currencyHash);
+        CurrencyData currencyData = currencies.getByHash(currencyHash);
         if (currencyData == null) {
             throw new CurrencyException(String.format("Unidentified currency hash: %s", currencyHash));
         }
         GeneratedTokenResponseData generatedTokenResponseData = new GeneratedTokenResponseData(transactionHash, currencyData, true);
 
-        generatedTokenResponseData.getToken().setMintedAmount(mintingService.getTokenMintedAmount(currencyHash));
-        generatedTokenResponseData.getToken().setRequestedMintingAmount(mintingService.getTokenRequestedMintingAmount(currencyHash));
+        BigDecimal genesisAddressBalance = balanceService.getBalance(currencyGenesisAddress, currencyHash);
+        BigDecimal mintedAmount = BigDecimal.ZERO;
+        if (genesisAddressBalance != null) {
+            mintedAmount = currencyData.getTotalSupply().subtract(genesisAddressBalance);
+        }
+        generatedTokenResponseData.getToken().setMintedAmount(mintedAmount);
+        generatedTokenResponseData.getToken().setRequestedMintingAmount(mintingService.getTokenAllocatedAmount(currencyHash).subtract(mintedAmount));
         generatedTokens.add(generatedTokenResponseData);
     }
 
