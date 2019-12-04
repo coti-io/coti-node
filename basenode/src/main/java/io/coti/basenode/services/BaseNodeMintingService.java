@@ -3,6 +3,7 @@ package io.coti.basenode.services;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.model.Currencies;
+import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.IMintingService;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -21,6 +23,8 @@ public class BaseNodeMintingService implements IMintingService {
     protected ICurrencyService currencyService;
     @Autowired
     protected Currencies currencies;
+    @Autowired
+    protected IBalanceService balanceService;
 
     private Map<Hash, BigDecimal> mintingMap;
     private Map<Hash, Hash> lockMintingRecordHashMap = new ConcurrentHashMap<>();
@@ -34,7 +38,7 @@ public class BaseNodeMintingService implements IMintingService {
         if (mintingMap.get(tokenHash) != null) {
             return mintingMap.get(tokenHash);
         }
-        return BigDecimal.ZERO;
+        return null;
     }
 
     protected Hash addLockToLockMap(Hash hash) {
@@ -120,14 +124,6 @@ public class BaseNodeMintingService implements IMintingService {
     }
 
     @Override
-    public void updateTokenAllocatedAmountFromDBAndClusterStamp(Hash currencyHash, BigDecimal currencyAmountInAddress) {
-        CurrencyData currencyData = currencies.getByHash(currencyHash);
-        if (currencyData != null) {
-            mintingMap.put(currencyHash, currencyData.getTotalSupply().subtract(currencyAmountInAddress));
-        }
-    }
-
-    @Override
     public void handleExistingTransaction(TransactionData transactionData) {
         TransactionType transactionType = transactionData.getType();
         if (transactionType == TransactionType.TokenMintingFee) {
@@ -135,7 +131,10 @@ public class BaseNodeMintingService implements IMintingService {
             if (tokenMintingFeeData != null) {
                 Hash tokenHash = tokenMintingFeeData.getServiceData().getMintingCurrencyHash();
                 BigDecimal newMintingRequestedAmount = tokenMintingFeeData.getServiceData().getMintingAmount();
-                mintingMap.put(tokenHash, newMintingRequestedAmount.add(getTokenAllocatedAmount(tokenHash)));
+                BigDecimal tokenAllocatedAmount = getTokenAllocatedAmount(tokenHash);
+                if (getTokenAllocatedAmount(tokenHash) != null) {
+                    mintingMap.put(tokenHash, newMintingRequestedAmount.add(tokenAllocatedAmount));
+                }
             }
         }
     }
@@ -143,5 +142,18 @@ public class BaseNodeMintingService implements IMintingService {
     @Override
     public void validateMintingBalances() {
         // To be validated only by Financial server
+    }
+
+    @Override
+    public void updateMintingBalanceFromClusterStamp(Set<Hash> currencyHashes, Hash currencyGenesisAddress) {
+        currencyHashes.stream().forEach(currencyHash -> {
+            BigDecimal tokenAllocatedAmount = getTokenAllocatedAmount(currencyHash);
+            if (tokenAllocatedAmount == null) {
+                CurrencyData currencyData = currencies.getByHash(currencyHash);
+                BigDecimal totalSupply = currencyData.getTotalSupply();
+                BigDecimal genesisAddressBalance = balanceService.getBalance(currencyGenesisAddress, currencyData.getHash());
+                mintingMap.put(currencyHash, totalSupply.subtract(genesisAddressBalance));
+            }
+        });
     }
 }
