@@ -4,6 +4,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 public interface IMintingService {
 
@@ -15,9 +16,9 @@ public interface IMintingService {
 
     BigDecimal getTokenAllocatedAmount(Hash tokenHash);
 
-    void updateTokenAllocatedAmountFromDBAndClusterStamp(Hash currencyHash, BigDecimal currencyAmountInAddress);
-
     void handleExistingTransaction(TransactionData transactionData);
 
     void validateMintingBalances();
+
+    void updateMintingBalanceFromClusterStamp(Set<Hash> keySet, Hash currencyGenesisAddress);
 }
