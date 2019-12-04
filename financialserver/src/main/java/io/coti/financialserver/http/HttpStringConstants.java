@@ -82,6 +82,7 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String TOKEN_MINTING_REQUEST_INVALID_ORIGINATOR = "Request for token minting fee by user not the token originator";
     public static final String TOKEN_MINTING_REQUEST_INVALID_FOR_THE_QUOTE = "The minting request details for minting differ from provided quote";
     public static final String TOKEN_MINTING_REQUEST_INVALID_ADDRESS = "The receiver address provided for minting is invalid";
+    public static final String TOKEN_MINTING_REQUEST_INVALID_AMOUNT = "The amount to be minted exceeds available funds";
 
     public static final String TOKEN_MINTING_FEE_QUOTE_REQUEST_INVALID_CURRENCY = "Non-existing currency in token minting fee quote request";
     public static final String TOKEN_MINTING_FEE_QUOTE_REQUEST_INVALID_ORIGINATOR = "Request for token minting fee quote by user not the token originator";
