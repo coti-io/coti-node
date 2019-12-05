@@ -65,6 +65,13 @@ public class BaseNodeTransactionService implements ITransactionService {
 
             if (startingIndex <= transactionIndexService.getLastTransactionIndexData().getIndex()) {
                 for (long i = startingIndex; i <= transactionIndexService.getLastTransactionIndexData().getIndex(); i++) {
+                    if(i > 34400 && i< 34410) {
+                        log.error("{}",i);
+                        log.error("{}",transactionIndexes.getByHash(new Hash(i)));
+                        log.error("{}",transactionIndexes.getByHash(new Hash(i)).getTransactionHash());
+                        log.error("{}",transactions.getByHash(transactionIndexes.getByHash(new Hash(i)).getTransactionHash()));
+                        log.error(jacksonSerializer.serializeAsString(transactions.getByHash(transactionIndexes.getByHash(new Hash(i)).getTransactionHash())));
+                    }
                     output.write(jacksonSerializer.serialize(transactions.getByHash(transactionIndexes.getByHash(new Hash(i)).getTransactionHash())));
                     output.flush();
                     transactionNumber.incrementAndGet();
