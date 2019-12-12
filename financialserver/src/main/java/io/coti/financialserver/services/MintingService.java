@@ -13,8 +13,8 @@ import io.coti.financialserver.crypto.GetMintingHistoryRequestCrypto;
 import io.coti.financialserver.crypto.GetTokenMintingFeeQuoteRequestCrypto;
 import io.coti.financialserver.crypto.MintingFeeQuoteCrypto;
 import io.coti.financialserver.crypto.TokenMintingCrypto;
-import io.coti.financialserver.data.MintedTokenData;
 import io.coti.financialserver.data.MintingFeeQuoteData;
+import io.coti.financialserver.data.MintingHistoryData;
 import io.coti.financialserver.data.MintingRecordData;
 import io.coti.financialserver.data.ReservedAddress;
 import io.coti.financialserver.http.*;
@@ -105,7 +105,6 @@ public class MintingService extends BaseNodeMintingService {
             ResponseEntity<IResponse> badRequestResponse = validateTokenMintingFeeRequest(tokenMintingFeeRequest, currencyData);
             if (badRequestResponse != null) return badRequestResponse;
 
-            initMintingRecordsOfToken(currencyData);
             return createTokenMintingFee(tokenMintingData, currencyData, tokenMintingFeeRequest.getMintingFeeQuoteData());
         } catch (CurrencyValidationException e) {
             String error = String.format("%s. Exception: %s", TOKEN_MINTING_FEE_FAILURE, e.getMessageAndCause());
@@ -150,17 +149,6 @@ public class MintingService extends BaseNodeMintingService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_MINTING_REQUEST_INVALID_AMOUNT, STATUS_ERROR));
         }
         return null;
-    }
-
-    private void initMintingRecordsOfToken(CurrencyData currencyData) {
-        synchronized (addLockToLockMap(currencyData.getHash())) {
-            MintingRecordData mintingRecordData = mintingRecords.getByHash(currencyData.getHash());
-            if (mintingRecordData == null) {
-                mintingRecordData = new MintingRecordData(currencyData.getHash());
-                mintingRecords.put(mintingRecordData);
-            }
-            removeLockFromLocksMap(currencyData.getHash());
-        }
     }
 
     private ResponseEntity<IResponse> createTokenMintingFee(TokenMintingData tokenMintingData, CurrencyData currencyData, MintingFeeQuoteData mintingFeeQuoteData) {
@@ -214,7 +202,7 @@ public class MintingService extends BaseNodeMintingService {
             }
             HashSet<Hash> userTokenHashes = getUserTokenHashes(getMintingHistoryRequest.getUserHash());
 
-            Map<Hash, Map<Instant, MintedTokenData>> mintingHistory = new HashMap<>();
+            Map<Hash, Map<Instant, MintingHistoryData>> mintingHistory = new HashMap<>();
             if (userTokenHashes.isEmpty()) {
                 return ResponseEntity.ok(new GetMintingHistoryResponse(mintingHistory));
             }
@@ -226,10 +214,10 @@ public class MintingService extends BaseNodeMintingService {
         }
     }
 
-    private void fillMintingHistory(Hash currencyHash, Map<Hash, Map<Instant, MintedTokenData>> mintingHistory) {
+    private void fillMintingHistory(Hash currencyHash, Map<Hash, Map<Instant, MintingHistoryData>> mintingHistory) {
         MintingRecordData mintingRecordData = mintingRecords.getByHash(currencyHash);
         if (mintingRecordData != null) {
-            Map<Instant, MintedTokenData> mintingTokenHistory = mintingRecordData.getMintingHistory();
+            Map<Instant, MintingHistoryData> mintingTokenHistory = mintingRecordData.getMintingHistory();
             mintingHistory.put(currencyHash, mintingTokenHistory);
         }
     }
@@ -245,28 +233,24 @@ public class MintingService extends BaseNodeMintingService {
                 }
                 TokenMintingData tokenMintingFeeBaseTransactionServiceData = tokenMintingFeeBaseTransactionData.getServiceData();
                 Hash mintingCurrencyHash = tokenMintingFeeBaseTransactionServiceData.getMintingCurrencyHash();
-                synchronized (addLockToLockMap(mintingCurrencyHash)) {
-                    MintingRecordData mintingRecordData = mintingRecords.getByHash(mintingCurrencyHash);
-                    if (mintingRecordData == null) {
-                        log.error("TokenMinting transaction {} without minting record", tokenMintingTransaction.getHash());
-                        continue;
-                    }
+                MintingRecordData mintingRecordData = mintingRecords.getByHash(mintingCurrencyHash);
+                if (mintingRecordData == null) {
+                    mintingRecordData = new MintingRecordData(mintingCurrencyHash);
+                }
 
-                    int genesisAddressIndex = Math.toIntExact(ReservedAddress.GENESIS_ONE.getIndex());
-                    Hash cotiGenesisAddress = nodeCryptoHelper.generateAddress(seed, genesisAddressIndex);
-                    BigDecimal newAmountToMint = tokenMintingFeeBaseTransactionServiceData.getMintingAmount();
-                    Hash initialTransactionHash = transactionCreationService.createInitialTransaction(newAmountToMint, mintingCurrencyHash,
-                            cotiGenesisAddress, tokenMintingFeeBaseTransactionServiceData.getReceiverAddress(), genesisAddressIndex);
+                int genesisAddressIndex = Math.toIntExact(ReservedAddress.GENESIS_ONE.getIndex());
+                Hash cotiGenesisAddress = nodeCryptoHelper.generateAddress(seed, genesisAddressIndex);
+                BigDecimal newAmountToMint = tokenMintingFeeBaseTransactionServiceData.getMintingAmount();
+                Hash initialTransactionHash = transactionCreationService.createInitialTransaction(newAmountToMint, mintingCurrencyHash,
+                        cotiGenesisAddress, tokenMintingFeeBaseTransactionServiceData.getReceiverAddress(), genesisAddressIndex);
 
-                    if (initialTransactionHash != null) {
-                        log.info("Minting transaction {} for token {} successfully created. The amount is {}", initialTransactionHash,
-                                mintingCurrencyHash, newAmountToMint);
-                        MintedTokenData mintedTokenData = new MintedTokenData(mintingCurrencyHash,
-                                Instant.now(), newAmountToMint, initialTransactionHash, tokenMintingTransaction.getHash());
-                        mintingRecordData.getMintingHistory().put(mintedTokenData.getMintingTime(), mintedTokenData);
-                        mintingRecords.put(mintingRecordData);
-                    }
-                    removeLockFromLocksMap(mintingCurrencyHash);
+                if (initialTransactionHash != null) {
+                    log.info("Minting transaction {} for token {} successfully created. The amount is {}", initialTransactionHash,
+                            mintingCurrencyHash, newAmountToMint);
+                    MintingHistoryData mintingHistoryData = new MintingHistoryData(mintingCurrencyHash,
+                            Instant.now(), newAmountToMint, initialTransactionHash, tokenMintingTransaction.getHash());
+                    mintingRecordData.getMintingHistory().put(mintingHistoryData.getMintingTime(), mintingHistoryData);
+                    mintingRecords.put(mintingRecordData);
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -319,7 +303,7 @@ public class MintingService extends BaseNodeMintingService {
         mintingRecords.forEach(mintingRecordData -> {
                     Hash tokenHash = mintingRecordData.getHash();
                     BigDecimal mintingAmount = mintingRecordData.getMintingHistory().values().stream()
-                            .map(MintedTokenData::getMintingAmount)
+                            .map(MintingHistoryData::getMintingAmount)
                             .reduce(BigDecimal.ZERO, BigDecimal::add);
                     BigDecimal tokenMintedFoundAmount = getTokenAllocatedAmount(tokenHash);
                     if (!mintingAmount.equals(tokenMintedFoundAmount)) {

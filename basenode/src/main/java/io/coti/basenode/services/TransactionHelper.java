@@ -300,9 +300,6 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     public boolean checkBalancesAndAddToPreBalance(TransactionData transactionData) {
-        if (!isTransactionExists(transactionData)) {
-            return false;
-        }
         if (!balanceService.checkBalancesAndAddToPreBalance(transactionData.getBaseTransactions())) {
             return false;
         }
@@ -312,9 +309,6 @@ public class TransactionHelper implements ITransactionHelper {
 
     @Override
     public boolean checkTokenMintingAndAddToAllocatedAmount(TransactionData transactionData) {
-        if (!isTransactionExists(transactionData)) {
-            return false;
-        }
         if (!mintingService.checkMintingAmountAndAddToAllocatedAmount(transactionData)) {
             return false;
         }

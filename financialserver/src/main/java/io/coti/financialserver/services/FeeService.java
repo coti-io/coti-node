@@ -2,7 +2,10 @@ package io.coti.financialserver.services;
 
 import io.coti.basenode.crypto.BaseTransactionCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
-import io.coti.basenode.data.*;
+import io.coti.basenode.data.CurrencyData;
+import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.TokenGenerationData;
+import io.coti.basenode.data.TokenGenerationFeeBaseTransactionData;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.ICurrencyService;

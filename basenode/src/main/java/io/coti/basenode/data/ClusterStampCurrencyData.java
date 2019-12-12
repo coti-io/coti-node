@@ -9,10 +9,12 @@ import java.math.BigDecimal;
 @Data
 public class ClusterStampCurrencyData {
 
+    private BigDecimal totalSupply;
     private BigDecimal amount;
     private int scale;
 
     public ClusterStampCurrencyData(CurrencyData currencyData) {
+        this.totalSupply = currencyData.getTotalSupply();
         this.amount = currencyData.getTotalSupply();
         this.scale = currencyData.getScale();
     }
