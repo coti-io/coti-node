@@ -6,27 +6,20 @@ import io.coti.basenode.data.interfaces.IEntity;
 import lombok.Data;
 import org.apache.commons.lang3.ArrayUtils;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
-public class MintedTokenData implements IEntity {
+public class MintingHistoryData implements IEntity {
 
     private static final long serialVersionUID = 4545495200393507685L;
-    @NotNull
     private Hash hash;
-    @NotNull
     private Instant mintingTime;
-    @Positive
     protected BigDecimal mintingAmount;
-    @NotNull
     private Hash mintingTransactionHash;
-    @NotNull
     private Hash feeTransactionHash;
 
-    public MintedTokenData(Hash currencyHash, Instant mintingTime, BigDecimal mintingAmount, Hash mintingTransactionHash, Hash feeTransactionHash) {
+    public MintingHistoryData(Hash currencyHash, Instant mintingTime, BigDecimal mintingAmount, Hash mintingTransactionHash, Hash feeTransactionHash) {
         this.hash = CryptoHelper.cryptoHash(ArrayUtils.addAll(currencyHash.getBytes(), mintingTime.toString().getBytes()));
         this.mintingTime = mintingTime;
         this.mintingAmount = mintingAmount;

@@ -1,10 +1,11 @@
 package io.coti.basenode.services.interfaces;
 
+import io.coti.basenode.data.ClusterStampCurrencyData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 
 import java.math.BigDecimal;
-import java.util.Set;
+import java.util.Map;
 
 public interface IMintingService {
 
@@ -20,5 +21,5 @@ public interface IMintingService {
 
     void validateMintingBalances();
 
-    void updateMintingBalanceFromClusterStamp(Set<Hash> keySet, Hash currencyGenesisAddress);
+    void updateMintingBalanceFromClusterStamp(Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap, Hash currencyGenesisAddress);
 }

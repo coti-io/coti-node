@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -145,15 +144,14 @@ public class BaseNodeMintingService implements IMintingService {
     }
 
     @Override
-    public void updateMintingBalanceFromClusterStamp(Set<Hash> currencyHashes, Hash currencyGenesisAddress) {
-        currencyHashes.stream().forEach(currencyHash -> {
-            BigDecimal tokenAllocatedAmount = getTokenAllocatedAmount(currencyHash);
-            if (tokenAllocatedAmount == null) {
-                CurrencyData currencyData = currencies.getByHash(currencyHash);
-                BigDecimal totalSupply = currencyData.getTotalSupply();
-                BigDecimal genesisAddressBalance = balanceService.getBalance(currencyGenesisAddress, currencyData.getHash());
-                mintingMap.put(currencyHash, totalSupply.subtract(genesisAddressBalance));
-            }
+    public void updateMintingBalanceFromClusterStamp(Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap, Hash currencyGenesisAddress) {
+        clusterStampCurrencyMap.entrySet().stream().forEach(entry -> {
+            Hash currencyHash = entry.getKey();
+            ClusterStampCurrencyData clusterStampCurrencyData = entry.getValue();
+            BigDecimal totalSupply = clusterStampCurrencyData.getTotalSupply();
+            BigDecimal genesisAddressBalance = balanceService.getBalance(currencyGenesisAddress, currencyHash);
+            mintingMap.put(currencyHash, totalSupply.subtract(genesisAddressBalance));
+
         });
     }
 }
