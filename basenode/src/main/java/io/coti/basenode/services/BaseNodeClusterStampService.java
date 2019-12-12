@@ -278,7 +278,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                 handleClusterStampWithSignature(clusterStampData);
             }
             balanceService.updatePreBalanceFromClusterStamp();
-            mintingService.updateMintingBalanceFromClusterStamp(clusterStampCurrencyMap.keySet(), currencyGenesisAddress);
+            mintingService.updateMintingBalanceFromClusterStamp(clusterStampCurrencyMap, currencyGenesisAddress);
             log.info("Finished to load clusterstamp file {}", clusterStampFileName);
         } catch (ClusterStampException e) {
             throw new ClusterStampException(String.format("Errors on clusterstamp file %s loading.\n", clusterStampFileName) + e.getMessage(), e);
