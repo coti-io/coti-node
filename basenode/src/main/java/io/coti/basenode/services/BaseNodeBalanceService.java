@@ -147,7 +147,7 @@ public class BaseNodeBalanceService implements IBalanceService {
     }
 
     @Override
-    public void updateBalanceFromClusterStamp(Hash addressHash, Hash currencyHash, BigDecimal amount) throws IllegalArgumentException {
+    public void updateBalanceAndPreBalanceFromClusterStamp(Hash addressHash, Hash currencyHash, BigDecimal amount) throws IllegalArgumentException {
         currencyHash = getNativeCurrencyHashIfNull(currencyHash);
         if (balanceMap.containsKey(addressHash) && balanceMap.get(addressHash).containsKey(currencyHash)) {
             log.error("The address {} for currency {} was already found in the clusterstamp", addressHash, currencyHash);
@@ -155,15 +155,9 @@ public class BaseNodeBalanceService implements IBalanceService {
         }
         balanceMap.putIfAbsent(addressHash, new ConcurrentHashMap<>());
         balanceMap.get(addressHash).put(currencyHash, amount);
+        preBalanceMap.putIfAbsent(addressHash, new ConcurrentHashMap<>());
+        preBalanceMap.get(addressHash).put(currencyHash, amount);
         log.trace("Loading from clusterstamp into inMem balance+preBalance address {} and amount {}", addressHash, amount);
-    }
-
-    @Override
-    public void updatePreBalanceFromClusterStamp() {
-        balanceMap.forEach((addressHash, currencyHashBalanceMap) -> {
-            preBalanceMap.put(addressHash, new ConcurrentHashMap<>());
-            preBalanceMap.get(addressHash).putAll(currencyHashBalanceMap);
-        });
     }
 
     @Override
