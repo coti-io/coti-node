@@ -92,7 +92,7 @@ public class NetworkFeeService {
                 fee = calculateNetworkFeeAmount(getUserNetworkFeeByTrustScoreRange(userTrustScore), originalAmount);
             } else {
                 CurrencyData currencyData = currencies.getByHash(fullNodeFeeData.getOriginalCurrencyHash());
-                if (currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.REGULAR_CMD_TOKEN){
+                if (currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.REGULAR_CMD_TOKEN) {
                     fee = regularTokenNetworkFee;
                 } else {
                     // change it together with validateNetworkFee

@@ -14,7 +14,7 @@ public class MintingRecordData implements IEntity {
     private static final long serialVersionUID = 5889649093085123791L;
     @NotNull
     private Hash hash;
-    private HashMap<Instant, MintedTokenData> mintingHistory;
+    private HashMap<Instant, MintingHistoryData> mintingHistory;
 
     public MintingRecordData(Hash hash) {
         this.hash = hash;
