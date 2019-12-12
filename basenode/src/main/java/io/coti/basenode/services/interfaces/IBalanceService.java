@@ -28,9 +28,7 @@ public interface IBalanceService {
 
     void validateBalances();
 
-    void updateBalanceFromClusterStamp(Hash addressHash, BigDecimal amount);
-
-    void updatePreBalanceFromClusterStamp();
+    void updateBalanceAndPreBalanceFromClusterStamp(Hash addressHash, Hash currencyHash, BigDecimal amount) throws IllegalArgumentException;
 
     void updateBalance(Hash addressHash, Hash currencyHash, BigDecimal amount);
 
