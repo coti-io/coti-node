@@ -1,6 +1,6 @@
 package io.coti.financialserver.http.data;
 
-import io.coti.financialserver.data.MintedTokenData;
+import io.coti.financialserver.data.MintingHistoryData;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -15,11 +15,11 @@ public class MintedTokenResponseData {
     private String mintingTransactionHash;
     private String feeTransactionHash;
 
-    public MintedTokenResponseData(MintedTokenData mintedTokenData) {
-        this.hash = mintedTokenData.getHash().toString();
-        this.mintingTime = mintedTokenData.getMintingTime();
-        this.mintingAmount = mintedTokenData.getMintingAmount();
-        this.mintingTransactionHash = mintedTokenData.getMintingTransactionHash().toString();
-        this.feeTransactionHash = mintedTokenData.getFeeTransactionHash().toString();
+    public MintedTokenResponseData(MintingHistoryData mintingHistoryData) {
+        this.hash = mintingHistoryData.getHash().toString();
+        this.mintingTime = mintingHistoryData.getMintingTime();
+        this.mintingAmount = mintingHistoryData.getMintingAmount();
+        this.mintingTransactionHash = mintingHistoryData.getMintingTransactionHash().toString();
+        this.feeTransactionHash = mintingHistoryData.getFeeTransactionHash().toString();
     }
 }
