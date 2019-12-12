@@ -77,9 +77,9 @@ public class FeeService {
                     BigDecimal fee = originalAmount.multiply(feePercentage).divide(new BigDecimal(100));
                     amount = (fee.compareTo(minimumFee) <= 0 ? minimumFee : fee.compareTo(maximumFee) >= 0 ? maximumFee : fee);
                     originalCurrencyHash = nativeCurrencyHash;
-                } else{
+                } else {
                     CurrencyData currencyData = currencies.getByHash(fullNodeFeeRequest.getOriginalCurrencyHash());
-                    if (currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.REGULAR_CMD_TOKEN){
+                    if (currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.REGULAR_CMD_TOKEN) {
                         amount = regularTokenFullnodeFee;
                         originalCurrencyHash = currencyData.getHash();
                     } else {

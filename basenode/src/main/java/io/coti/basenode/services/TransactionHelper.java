@@ -196,15 +196,13 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     public boolean isTransactionAlreadyPropagated(TransactionData transactionData) {
-        synchronized (transactionData) {
-            if (isTransactionExists(transactionData)) {
-                if (!isTransactionHashProcessing(transactionData.getHash())) {
-                    addDspResultToDb(transactionData.getDspConsensusResult());
-                }
-                return true;
+        if (isTransactionExists(transactionData)) {
+            if (!isTransactionHashProcessing(transactionData.getHash())) {
+                addDspResultToDb(transactionData.getDspConsensusResult());
             }
-            return false;
+            return true;
         }
+        return false;
     }
 
     private void addDspResultToDb(DspConsensusResult dspConsensusResult) {
@@ -304,9 +302,6 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     public boolean checkBalancesAndAddToPreBalance(TransactionData transactionData) {
-        if (!isTransactionExists(transactionData)) {
-            return false;
-        }
         if (!balanceService.checkBalancesAndAddToPreBalance(transactionData.getBaseTransactions())) {
             return false;
         }
@@ -316,9 +311,6 @@ public class TransactionHelper implements ITransactionHelper {
 
     @Override
     public boolean checkTokenMintingAndAddToAllocatedAmount(TransactionData transactionData) {
-        if (!isTransactionExists(transactionData)) {
-            return false;
-        }
         if (!mintingService.checkMintingAmountAndAddToAllocatedAmount(transactionData)) {
             return false;
         }

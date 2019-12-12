@@ -2,7 +2,7 @@ package io.coti.financialserver.http;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.BaseResponse;
-import io.coti.financialserver.data.MintedTokenData;
+import io.coti.financialserver.data.MintingHistoryData;
 import io.coti.financialserver.http.data.MintedTokenHistoryResponseData;
 import lombok.Data;
 
@@ -19,7 +19,7 @@ public class GetMintingHistoryResponse extends BaseResponse {
         this.mintingHistory = new HashMap<>();
     }
 
-    public GetMintingHistoryResponse(Map<Hash, Map<Instant, MintedTokenData>> mintingHistory) {
+    public GetMintingHistoryResponse(Map<Hash, Map<Instant, MintingHistoryData>> mintingHistory) {
 
         this.mintingHistory = new HashMap<>();
         mintingHistory.entrySet().forEach(entry ->
