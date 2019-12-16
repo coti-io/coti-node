@@ -32,8 +32,6 @@ public class TransactionService extends BaseNodeTransactionService {
     private ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
     @Autowired
     private CurrencyService currencyService;
-    @Autowired
-    private MintingService mintingService;
 
     public ResponseEntity<IResponse> setReceiverBaseTransactionOwner(TransactionRequest transactionRequest) {
 

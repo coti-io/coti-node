@@ -50,7 +50,6 @@ public class BaseNodeValidationService implements IValidationService {
 
     @Override
     public boolean validateAddress(Hash address) {
-
         return CryptoHelper.isAddressValid(address);
     }
 
@@ -129,6 +128,5 @@ public class BaseNodeValidationService implements IValidationService {
                 entry.getValue() != null && !entry.getKey().equals(entry.getValue().getHash())
         );
     }
-
 
 }

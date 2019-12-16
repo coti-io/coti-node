@@ -131,7 +131,7 @@ public class BaseNodeMintingService implements IMintingService {
                 Hash tokenHash = tokenMintingFeeData.getServiceData().getMintingCurrencyHash();
                 BigDecimal newMintingRequestedAmount = tokenMintingFeeData.getServiceData().getMintingAmount();
                 BigDecimal tokenAllocatedAmount = getTokenAllocatedAmount(tokenHash);
-                if (getTokenAllocatedAmount(tokenHash) != null) {
+                if (tokenAllocatedAmount != null) {
                     mintingMap.put(tokenHash, newMintingRequestedAmount.add(tokenAllocatedAmount));
                 }
             }
@@ -140,7 +140,7 @@ public class BaseNodeMintingService implements IMintingService {
 
     @Override
     public void validateMintingBalances() {
-        // To be validated only by Financial server
+        // To be validated by specific servers
     }
 
     @Override
@@ -151,7 +151,6 @@ public class BaseNodeMintingService implements IMintingService {
             BigDecimal totalSupply = clusterStampCurrencyData.getTotalSupply();
             BigDecimal genesisAddressBalance = balanceService.getBalance(currencyGenesisAddress, currencyHash);
             mintingMap.put(currencyHash, totalSupply.subtract(genesisAddressBalance));
-
         });
     }
 }
