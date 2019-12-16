@@ -52,8 +52,6 @@ public class BaseNodeTransactionService implements ITransactionService {
     private IDatabaseConnector databaseConnector;
     @Autowired
     private INetworkService networkService;
-    @Autowired
-    private IMintingService mintingService;
     private Map<Hash, TransactionData> parentProcessingTransactions = new ConcurrentHashMap<>();
     private List<TransactionData> postponedTransactions = new LinkedList<>();
 
@@ -168,7 +166,8 @@ public class BaseNodeTransactionService implements ITransactionService {
                 log.error("Balance check failed: {}", transactionData.getHash());
                 return;
             }
-            if (transactionData.getType() == TransactionType.TokenMintingFee && !validationService.validateTokenMintingAndAddToAllocatedAmount(transactionData)) {
+            if (transactionData.getType() == TransactionType.TokenMintingFee
+                    && !validationService.validateTokenMintingAndAddToAllocatedAmount(transactionData)) {
                 log.error("Minting balance check failed: {}", transactionData.getHash());
                 return;
             }

@@ -133,7 +133,7 @@ public class MintingService extends BaseNodeMintingService {
         if (!currencyData.getOriginatorHash().equals(tokenMintingData.getSignerHash())) {
             throw new CurrencyValidationException(TOKEN_MINTING_REQUEST_INVALID_ORIGINATOR);
         }
-        if (!isAddressValid(tokenMintingFeeRequest.getTokenMintingData().getReceiverAddress())) {
+        if (!isAddressValid(tokenMintingData.getReceiverAddress())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_MINTING_REQUEST_INVALID_ADDRESS, STATUS_ERROR));
         }
 

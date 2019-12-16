@@ -5,7 +5,6 @@ import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IConfirmationService;
-import io.coti.basenode.services.interfaces.IMintingService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +26,6 @@ public class BaseNodeConfirmationService implements IConfirmationService {
 
     @Autowired
     private IBalanceService balanceService;
-    @Autowired
-    private IMintingService mintingService;
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -86,9 +83,6 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                     transactionData.getBaseTransactions().forEach(baseTransactionData ->
                             balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getCurrencyHash(), baseTransactionData.getAmount())
                     );
-//                    if(transactionData.getType() == TransactionType.TokenMintingFee){
-//                        mintingService.updateMintedAmount(transactionData);
-//                    }
                 }
                 transactionIndexData = nextTransactionIndexData;
             }
@@ -109,7 +103,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         }
         LinkedList<ConfirmationData> remainingConfirmedTransactions = new LinkedList<>();
         confirmationQueue.drainTo(remainingConfirmedTransactions);
-        if (remainingConfirmedTransactions.size() != 0) {
+        if (!remainingConfirmedTransactions.isEmpty()) {
             log.info("Please wait to process {} remaining confirmed transaction(s)", remainingConfirmedTransactions.size());
             remainingConfirmedTransactions.forEach(this::updateConfirmedTransactionHandler);
         }

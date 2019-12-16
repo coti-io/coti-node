@@ -175,7 +175,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             Map<CurrencyType, HashSet<Hash>> existingCurrencyHashesByType = getUpdatedCurrencyRequest.getCurrencyHashesByType();
             getRequiringUpdateOfCurrencyDataByType(existingCurrencyHashesByType, fluxSink);
         } catch (Exception e) {
-
+            log.error("Encountered failure at getUpdatedCurrencyBatch");
         } finally {
             fluxSink.complete();
         }
@@ -246,7 +246,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         currencies.put(currencyData);
         updateCurrencyHashByTypeMap(currencyData);
     }
-
 
     public boolean verifyCurrencyExists(Hash currencyDataHash) {
         return currencies.getByHash(currencyDataHash) != null;

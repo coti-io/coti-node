@@ -147,7 +147,7 @@ public class BaseNodeBalanceService implements IBalanceService {
     }
 
     @Override
-    public void updateBalanceAndPreBalanceFromClusterStamp(Hash addressHash, Hash currencyHash, BigDecimal amount) throws IllegalArgumentException {
+    public void updateBalanceAndPreBalanceFromClusterStamp(Hash addressHash, Hash currencyHash, BigDecimal amount) {
         currencyHash = getNativeCurrencyHashIfNull(currencyHash);
         if (balanceMap.containsKey(addressHash) && balanceMap.get(addressHash).containsKey(currencyHash)) {
             log.error("The address {} for currency {} was already found in the clusterstamp", addressHash, currencyHash);
