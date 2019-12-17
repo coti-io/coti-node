@@ -8,6 +8,7 @@ import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.time.Instant;
 import java.util.List;
 
 @Data
@@ -15,6 +16,8 @@ public class GetHistoryAddressesRequest extends Request implements ISignable, IS
 
     @NotEmpty(message = "Address hash must not be null")
     private List<Hash> addressHashes;
+    @NotNull
+    public Instant createTime;
     @NotNull
     private Hash signerHash;
     @NotNull
@@ -25,6 +28,7 @@ public class GetHistoryAddressesRequest extends Request implements ISignable, IS
 
     public GetHistoryAddressesRequest(List<Hash> addressHashes) {
         this.addressHashes = addressHashes;
+        this.createTime = Instant.now();
     }
 
 }

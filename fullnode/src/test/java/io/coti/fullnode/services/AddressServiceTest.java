@@ -81,7 +81,7 @@ public class AddressServiceTest {
         AddressBulkRequest addressBulkRequest = AddressTestUtils.generateAddressBulkRequest(
                 addressInLocalAddressesCollection.getHash());
 
-        AddressesExistsResponse actualResponse = addressService.addressesExist(addressBulkRequest);
+        AddressesExistsResponse actualResponse = addressService.addressesCheckExistenceAndRequestHistoryNode(addressBulkRequest);
 
         AddressesExistsResponse expectedResponse = AddressTestUtils.generateExpectedResponse(
                 AddressTestUtils.initMapWithHashes(
@@ -100,7 +100,7 @@ public class AddressServiceTest {
     public void addressesExist_addressInLocalDbAndUpdatedFromHistoryLessThenTenMinutes_shouldReturnTrueAndFalse() {
         AddressBulkRequest addressBulkRequest = AddressTestUtils.generateAddressBulkRequest(
                 addressInLocalAddressesCollection.getHash(), addressInRequestedAddressesCollectionLessThenTenMinutes.getHash());
-        AddressesExistsResponse actualResponse = addressService.addressesExist(addressBulkRequest);
+        AddressesExistsResponse actualResponse = addressService.addressesCheckExistenceAndRequestHistoryNode(addressBulkRequest);
 
         AddressesExistsResponse expectedResponse = AddressTestUtils.generateExpectedResponse(
                 AddressTestUtils.initMapWithHashes(

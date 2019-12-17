@@ -9,6 +9,7 @@ import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.time.Instant;
 import java.util.Map;
 
 @Data
@@ -16,6 +17,8 @@ public class GetHistoryAddressesResponse extends BaseResponse implements ISignVa
 
     @NotEmpty
     private Map<Hash, AddressData> addressHashesToAddresses;
+    @NotNull
+    public Instant createTime;
     @NotNull
     private SignatureData signature;
     @NotNull
@@ -26,6 +29,7 @@ public class GetHistoryAddressesResponse extends BaseResponse implements ISignVa
 
     public GetHistoryAddressesResponse(Map<Hash, AddressData> addressHashesToAddresses) {
         this.addressHashesToAddresses = addressHashesToAddresses;
+        this.createTime = Instant.now();
     }
 
 }

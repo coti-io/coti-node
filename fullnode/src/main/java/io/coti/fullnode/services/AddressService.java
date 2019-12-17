@@ -61,7 +61,7 @@ public class AddressService extends BaseNodeAddressService {
         webSocketSender.notifyGeneratedAddress(addressData.getHash());
     }
 
-    public AddressesExistsResponse addressesExist(AddressBulkRequest addressRequest) {
+    public AddressesExistsResponse addressesCheckExistenceAndRequestHistoryNode(AddressBulkRequest addressRequest) {
 
         List<Hash> addressHashes = addressRequest.getAddresses();
         LinkedHashMap<String, Boolean> addressHashToFoundStatusMap = new LinkedHashMap<>();

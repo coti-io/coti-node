@@ -173,7 +173,7 @@ public class AddressServiceIntegrationTest {
         AddressBulkRequest addressBulkRequest = AddressTestUtils.generateAddressBulkRequest(
                 addressInLocalAddressesCollection.getHash(),
                 addressInRequestedAddressesCollectionMoreThenTenMinutesInHistory.getHash());
-        AddressesExistsResponse response = addressService.addressesExist(addressBulkRequest);
+        AddressesExistsResponse response = addressService.addressesCheckExistenceAndRequestHistoryNode(addressBulkRequest);
 
         AddressesExistsResponse expectedResponse = AddressTestUtils.generateExpectedResponse(
                 AddressTestUtils.initMapWithHashes(
@@ -195,7 +195,7 @@ public class AddressServiceIntegrationTest {
         AddressBulkRequest addressBulkRequest = AddressTestUtils.generateAddressBulkRequest(
                 addressInLocalAddressesCollection.getHash(),
                 addressInRequestedAddressesCollectionMoreThenTenMinutesInStorage.getHash());
-        AddressesExistsResponse response = addressService.addressesExist(addressBulkRequest);
+        AddressesExistsResponse response = addressService.addressesCheckExistenceAndRequestHistoryNode(addressBulkRequest);
 
         AddressesExistsResponse expectedResponse = AddressTestUtils.generateExpectedResponse(
                 AddressTestUtils.initMapWithHashes(
@@ -219,7 +219,7 @@ public class AddressServiceIntegrationTest {
         AddressBulkRequest addressBulkRequest = AddressTestUtils.generateAddressBulkRequest(
                 addressInLocalAddressesCollection.getHash(),
                 addressInRequestedAddressesCollectionMoreThenTenMinutesNotFound.getHash());
-        AddressesExistsResponse response = addressService.addressesExist(addressBulkRequest);
+        AddressesExistsResponse response = addressService.addressesCheckExistenceAndRequestHistoryNode(addressBulkRequest);
 
         AddressesExistsResponse expectedResponseFirstTime = AddressTestUtils.generateExpectedResponse(
                 AddressTestUtils.initMapWithHashes(
@@ -250,12 +250,12 @@ public class AddressServiceIntegrationTest {
         //Prepare History for this integration test
         AddressBulkRequest prepareForIntegrationRequest = AddressTestUtils.generateAddressBulkRequest(
                 addressNotFoundInFullNodeAndFoundInHistory.getHash());
-        addressService.addressesExist(prepareForIntegrationRequest);
+        addressService.addressesCheckExistenceAndRequestHistoryNode(prepareForIntegrationRequest);
 
         AddressBulkRequest addressBulkRequest = AddressTestUtils.generateAddressBulkRequest(
                 addressInLocalAddressesCollection.getHash(),
                 addressNotFoundInFullNodeAndFoundInHistory.getHash());
-        AddressesExistsResponse response = addressService.addressesExist(addressBulkRequest);
+        AddressesExistsResponse response = addressService.addressesCheckExistenceAndRequestHistoryNode(addressBulkRequest);
 
         AddressesExistsResponse expectedResponse = AddressTestUtils.generateExpectedResponse(
                 AddressTestUtils.initMapWithHashes(
@@ -277,7 +277,7 @@ public class AddressServiceIntegrationTest {
         AddressBulkRequest addressBulkRequest = AddressTestUtils.generateAddressBulkRequest(
                 addressInLocalAddressesCollection.getHash(),
                 addressNotFoundInFullNodeAndFoundInStorage.getHash());
-        AddressesExistsResponse response = addressService.addressesExist(addressBulkRequest);
+        AddressesExistsResponse response = addressService.addressesCheckExistenceAndRequestHistoryNode(addressBulkRequest);
 
         AddressesExistsResponse expectedResponse = AddressTestUtils.generateExpectedResponse(
                 AddressTestUtils.initMapWithHashes(
@@ -299,7 +299,7 @@ public class AddressServiceIntegrationTest {
         AddressBulkRequest addressBulkRequest = AddressTestUtils.generateAddressBulkRequest(
                 addressInLocalAddressesCollection.getHash(),
                 addressNotFoundInFullNodeAndNotFound.getHash());
-        AddressesExistsResponse response = addressService.addressesExist(addressBulkRequest);
+        AddressesExistsResponse response = addressService.addressesCheckExistenceAndRequestHistoryNode(addressBulkRequest);
 
         AddressesExistsResponse expectedResponse1 = AddressTestUtils.generateExpectedResponse(
                 AddressTestUtils.initMapWithHashes(

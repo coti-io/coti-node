@@ -6,6 +6,7 @@ import io.coti.basenode.http.GetHistoryAddressesResponse;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
+import java.time.Instant;
 import java.util.Map;
 
 import static io.coti.basenode.crypto.CryptoHelper.ADDRESS_SIZE_IN_BYTES;
@@ -16,8 +17,9 @@ public class GetHistoryAddressesResponseCrypto extends SignatureCrypto<GetHistor
     @Override
     public byte[] getSignatureMessage(GetHistoryAddressesResponse getHistoryAddressesResponse) {
         Map<Hash, AddressData> addressHashesToAddresses = getHistoryAddressesResponse.getAddressHashesToAddresses();
+        Instant createTime = getHistoryAddressesResponse.getCreateTime();
         int byteBufferSize = getByteBufferSize(addressHashesToAddresses);
-        ByteBuffer addressesResponseBuffer = ByteBuffer.allocate(byteBufferSize);
+        ByteBuffer addressesResponseBuffer = ByteBuffer.allocate(byteBufferSize + Long.BYTES);
         addressHashesToAddresses.forEach((hash, addressHash) -> {
             addressesResponseBuffer.
                     put(hash.getBytes());
@@ -26,6 +28,7 @@ public class GetHistoryAddressesResponseCrypto extends SignatureCrypto<GetHistor
 
             }
         });
+        addressesResponseBuffer.putLong(createTime.toEpochMilli());
         byte[] addressesResponseInBytes = addressesResponseBuffer.array();
         return CryptoHelper.cryptoHash(addressesResponseInBytes).getBytes();
     }
