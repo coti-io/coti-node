@@ -7,11 +7,11 @@ import java.math.BigDecimal;
 @Data
 public class AddressBalance {
 
-    public BigDecimal addressBalance;
-    public BigDecimal addressPreBalance;
+    public BigDecimal balance;
+    public BigDecimal preBalance;
 
-    public AddressBalance(BigDecimal addressBalance, BigDecimal addressPreBalance) {
-        this.addressBalance = addressBalance;
-        this.addressPreBalance = addressPreBalance;
+    public AddressBalance(BigDecimal balance, BigDecimal preBalance) {
+        this.balance = balance;
+        this.preBalance = preBalance;
     }
 }

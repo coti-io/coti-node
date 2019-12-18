@@ -81,7 +81,7 @@ public class AddressService extends BaseNodeAddressService {
             return false;
         });
 
-        if (addressHashes.size() > 0) {
+        if (!addressHashes.isEmpty()) {
             fillUnknownAddressesFromHistoryResponse(addressHashes, addressHashToFoundStatusMap, historyNodeHttpAddress);
         }
 
@@ -137,6 +137,7 @@ public class AddressService extends BaseNodeAddressService {
         if (historyNodeMap.isEmpty()) {
             return null;
         }
+        // ignore lint on get() in the following line as we are checking if isEmpty above
         return historyNodeMap.values().stream().findFirst().get().getHttpFullAddress();
     }
 }

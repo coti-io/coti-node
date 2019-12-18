@@ -4,6 +4,7 @@ import com.dictiography.collections.IndexedNavigableSet;
 import com.dictiography.collections.IndexedTreeSet;
 import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.exceptions.PotException;
 import io.coti.basenode.exceptions.TransactionException;
 import io.coti.basenode.exceptions.TransactionValidationException;
 import io.coti.basenode.http.CustomGson;
@@ -70,14 +71,13 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private PotService potService;
     private BlockingQueue<ReducedTransactionData> explorerIndexQueue;
-    private Thread explorerIndexThread;
     private IndexedNavigableSet<ReducedTransactionData> explorerIndexedTransactionSet;
 
     @Override
     public void init() {
         explorerIndexedTransactionSet = new IndexedTreeSet<>();
         explorerIndexQueue = new LinkedBlockingQueue<>();
-        explorerIndexThread = new Thread(() -> updateExplorerIndex());
+        Thread explorerIndexThread = new Thread(this::updateExplorerIndex);
         explorerIndexThread.start();
         super.init();
     }
@@ -85,10 +85,10 @@ public class TransactionService extends BaseNodeTransactionService {
     public ResponseEntity<Response> addNewTransaction(AddTransactionRequest request) {
         TransactionData transactionData =
                 new TransactionData(
-                        request.baseTransactions,
+                        request.getBaseTransactions(),
                         request.hash,
                         request.transactionDescription,
-                        request.trustScoreResults,
+                        request.getTrustScoreResults(),
                         request.createTime,
                         request.senderHash,
                         request.senderSignature,
@@ -132,16 +132,7 @@ public class TransactionService extends BaseNodeTransactionService {
             }
 
             // ############   POT   ###########
-            try {
-                potService.potAction(transactionData);
-            } catch (IllegalArgumentException e) {
-                log.error("Error at POT: {} , Transaction: {}", e.getMessage(), transactionData.getHash());
-                return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
-                        .body(new AddTransactionResponse(
-                                STATUS_ERROR,
-                                e.getMessage()));
-            }
+            potService.potAction(transactionData);
             // ################################
 
             transactionData.setAttachmentTime(Instant.now());
@@ -166,10 +157,18 @@ public class TransactionService extends BaseNodeTransactionService {
                     .body(new AddTransactionResponse(
                             STATUS_ERROR,
                             e.getMessage()));
+        } catch (PotException e) {
+            log.error("Error at POT: {} , Transaction: {}", e.getMessage(), transactionData.getHash());
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new AddTransactionResponse(
+                            STATUS_ERROR,
+                            e.getMessage()));
+
         } catch (Exception e) {
             log.error("Exception while adding transaction: {}", transactionData.getHash());
             throw new TransactionException(e);
-        } finally {
+        }  finally {
             transactionHelper.endHandleTransaction(transactionData);
         }
     }

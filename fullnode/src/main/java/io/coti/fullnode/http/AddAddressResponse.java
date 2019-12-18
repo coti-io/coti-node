@@ -6,9 +6,9 @@ import io.coti.basenode.http.data.AddressStatus;
 
 public class AddAddressResponse extends BaseResponse {
 
+    private String address;
 
-    public String address;
-    public AddressStatus addressStatus;
+    private AddressStatus addressStatus;
 
 
     public AddAddressResponse(Hash addressHash, AddressStatus status) {
@@ -22,5 +22,12 @@ public class AddAddressResponse extends BaseResponse {
 
     }
 
+    public String getAddress() {
+        return address;
+    }
+
+    public AddressStatus getAddressStatus() {
+        return addressStatus;
+    }
 
 }

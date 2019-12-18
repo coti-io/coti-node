@@ -11,7 +11,7 @@ import java.util.List;
 
 public class AddTransactionRequest extends Request {
     @NotEmpty
-    public List<@Valid BaseTransactionData> baseTransactions;
+    private List<@Valid BaseTransactionData> baseTransactions;
     @NotNull
     public Hash hash;
     @NotEmpty
@@ -19,13 +19,21 @@ public class AddTransactionRequest extends Request {
     @NotNull
     public Instant createTime;
     @NotEmpty
-    public List<@Valid TransactionTrustScoreData> trustScoreResults;
+    private List<@Valid TransactionTrustScoreData> trustScoreResults;
     @NotNull
     public Hash senderHash;
     @NotNull
     public @Valid SignatureData senderSignature;
     @NotNull
     public TransactionType type;
+
+    public List<TransactionTrustScoreData> getTrustScoreResults() {
+        return trustScoreResults;
+    }
+
+    public List<BaseTransactionData> getBaseTransactions() {
+        return baseTransactions;
+    }
 }
 
 

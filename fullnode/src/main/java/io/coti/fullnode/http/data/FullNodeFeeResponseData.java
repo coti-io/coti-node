@@ -5,10 +5,14 @@ import io.coti.basenode.data.FullNodeFeeData;
 import io.coti.basenode.data.SignatureData;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.time.Instant;
 
 @Data
-public class FullNodeFeeResponseData {
+public class FullNodeFeeResponseData implements Serializable {
+
+    private static final long serialVersionUID = -5923558615226036336L;
+
     private String hash;
     private String amount;
     private String originalAmount;

@@ -34,9 +34,8 @@ public class WebSocketSender {
     public void notifyTransactionHistoryChange(TransactionData transactionData, TransactionStatus transactionStatus) {
         log.debug("Transaction {} is about to be sent to the subscribed user", transactionData.getHash());
         NotifyTransactionChange notifyTransactionChange = new NotifyTransactionChange(transactionData, transactionStatus);
-        transactionData.getBaseTransactions().forEach(baseTransactionData -> {
-            messagingSender.convertAndSend("/topic/addressTransactions/" + baseTransactionData.getAddressHash().toString(), notifyTransactionChange);
-        });
+        transactionData.getBaseTransactions().forEach(baseTransactionData ->
+            messagingSender.convertAndSend("/topic/addressTransactions/" + baseTransactionData.getAddressHash().toString(), notifyTransactionChange));
         messagingSender.convertAndSend("/topic/transactions", notifyTransactionChange);
         messagingSender.convertAndSend("/topic/transaction/" + transactionData.getHash().toString(), notifyTransactionChange);
     }

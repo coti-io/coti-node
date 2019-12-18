@@ -67,7 +67,7 @@ public class BaseNodeBalanceServiceTest {
         Assert.assertTrue(currencyBalances.getStatusCode().equals(HttpStatus.OK));
         Assert.assertTrue(currencyBalances.getBody().getTokenBalances().containsKey(tokenHash1));
         Assert.assertTrue(currencyBalances.getBody().getTokenBalances().containsKey(tokenHash2));
-        Assert.assertTrue(currencyBalances.getBody().getTokenBalances().get(tokenHash1).get(addressHash1).getAddressBalance().equals(BigDecimal.TEN));
+        Assert.assertTrue(currencyBalances.getBody().getTokenBalances().get(tokenHash1).get(addressHash1).getBalance().equals(BigDecimal.TEN));
     }
 
 }

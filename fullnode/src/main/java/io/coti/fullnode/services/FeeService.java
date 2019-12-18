@@ -75,7 +75,7 @@ public class FeeService {
             } else {
                 if (fullNodeFeeRequest.getOriginalCurrencyHash() == null || fullNodeFeeRequest.getOriginalCurrencyHash().equals(nativeCurrencyHash)) {
                     BigDecimal fee = originalAmount.multiply(feePercentage).divide(new BigDecimal(100));
-                    amount = (fee.compareTo(minimumFee) <= 0 ? minimumFee : fee.compareTo(maximumFee) >= 0 ? maximumFee : fee);
+                    amount = getLegalFee(fee);
                     originalCurrencyHash = nativeCurrencyHash;
                 } else {
                     CurrencyData currencyData = currencies.getByHash(fullNodeFeeRequest.getOriginalCurrencyHash());
@@ -126,5 +126,10 @@ public class FeeService {
 
     public boolean validateFeeData(FullNodeFeeData fullNodeFeeData) {
         return fullNodeFeeData.getAddressHash().equals(this.getAddress());
+    }
+
+    private BigDecimal getLegalFee(BigDecimal fee){
+        BigDecimal legalFeeComparedToMax = fee.compareTo(maximumFee) >= 0 ? maximumFee : fee;
+        return fee.compareTo(minimumFee) <= 0 ? minimumFee : legalFeeComparedToMax;
     }
 }
