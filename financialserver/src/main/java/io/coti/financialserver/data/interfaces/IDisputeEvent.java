@@ -1,4 +1,6 @@
 package io.coti.financialserver.data.interfaces;
 
-public interface IDisputeEvent {
+import java.io.Serializable;
+
+public interface IDisputeEvent extends Serializable {
 }

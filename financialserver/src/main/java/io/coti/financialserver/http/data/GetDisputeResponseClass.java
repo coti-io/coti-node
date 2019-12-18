@@ -9,9 +9,9 @@ import java.lang.reflect.InvocationTargetException;
 
 @Slf4j
 public enum GetDisputeResponseClass {
-    Consumer(ConsumerDisputeResponseData.class),
-    Merchant(MerchantDisputeResponseData.class),
-    Arbitrator(ArbitratorDisputeResponseData.class) {
+    CONSUMER(ConsumerDisputeResponseData.class),
+    MERCHANT(MerchantDisputeResponseData.class),
+    ARBITRATOR(ArbitratorDisputeResponseData.class) {
         @Override
         public GetDisputeResponseData getNewInstance(DisputeData disputeData, Hash userHash) {
             try {

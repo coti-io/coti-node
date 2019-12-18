@@ -1,6 +1,5 @@
 package io.coti.financialserver.services;
 
-import io.coti.basenode.data.CurrencyData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -8,7 +7,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class CurrencyRateService {
 
-    public double getTokenRateToNativeCoin(CurrencyData currencyHash) {
+    public double getTokenRateToNativeCoin() {
         return 1.0;
     }
 }

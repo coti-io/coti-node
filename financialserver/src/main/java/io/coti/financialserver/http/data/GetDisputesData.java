@@ -9,10 +9,11 @@ import lombok.Data;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.util.List;
 
 @Data
-public class GetDisputesData implements ISignable, ISignValidatable {
+public class GetDisputesData implements ISignable, ISignValidatable, Serializable {
 
     private List<Hash> disputeHashes;
     @NotNull

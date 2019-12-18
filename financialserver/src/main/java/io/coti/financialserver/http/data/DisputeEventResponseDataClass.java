@@ -9,17 +9,17 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 public enum DisputeEventResponseDataClass {
-    DisputeData(DisputeData.class, GetDisputeResponseData.class, FinancialServerEvent.NewDispute) {
+    DISPUTE_DATA(DisputeData.class, GetDisputeResponseData.class, FinancialServerEvent.NEW_DISPUTE) {
         @Override
         public IDisputeEventResponseData getEventObject(DisputeEventData disputeEventData, Hash userHash, ActionSide evenDisplaySide) {
             return GetDisputeResponseClass.valueOf(evenDisplaySide.toString()).getNewInstance((DisputeData) disputeEventData.getEventObject(), userHash);
         }
     },
-    DisputeCommentData(DisputeCommentData.class, GetCommentResponseData.class, FinancialServerEvent.NewDisputeComment),
-    DisputeDocumentData(DisputeDocumentData.class, DocumentNameResponseData.class, FinancialServerEvent.NewDisputeDocument),
-    DisputeStatusChangeEventData(DisputeStatusChangeEventData.class, DisputeStatusChangeResponseData.class, FinancialServerEvent.DisputeStatusUpdated),
-    DisputeItemStatusChangeEventData(DisputeItemStatusChangeEventData.class, DisputeItemStatusChangeResponseData.class, FinancialServerEvent.DisputeItemStatusUpdated),
-    DisputeItemVoteData(DisputeItemVoteData.class, DisputeItemVoteResponseData.class, FinancialServerEvent.NewDisputeItemVote);
+    DISPUTE_COMMENT_DATA(DisputeCommentData.class, GetCommentResponseData.class, FinancialServerEvent.NEW_DISPUTE_COMMENT),
+    DISPUTE_DOCUMENT_DATA(DisputeDocumentData.class, DocumentNameResponseData.class, FinancialServerEvent.NEW_DISPUTE_DOCUMENT),
+    DISPUTE_STATUS_CHANGE_EVENT_DATA(DisputeStatusChangeEventData.class, DisputeStatusChangeResponseData.class, FinancialServerEvent.DISPUTE_STATUS_UPDATED),
+    DISPUTE_ITEM_STATUS_CHANGE_EVENT_DATA(DisputeItemStatusChangeEventData.class, DisputeItemStatusChangeResponseData.class, FinancialServerEvent.DISPUTE_ITEM_STATUS_UPDATED),
+    DISPUTE_ITEM_VOTE_DATA(DisputeItemVoteData.class, DisputeItemVoteResponseData.class, FinancialServerEvent.NEW_DISPUTE_ITEM_VOTE);
 
 
     private Class<? extends IDisputeEvent> disputeEventClass;

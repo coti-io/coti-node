@@ -7,8 +7,4 @@ import org.springframework.stereotype.Service;
 @Service
 public class MintingRecords extends Collection<MintingRecordData> {
 
-    public void init() {
-        super.init();
-    }
-
 }

@@ -7,9 +7,4 @@ import org.springframework.stereotype.Service;
 @Service
 public class DailyFundDistributionFiles extends Collection<DailyFundDistributionFileData> {
 
-    @Override
-    public void init() {
-        super.init();
-    }
-
 }

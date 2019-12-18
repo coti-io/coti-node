@@ -50,8 +50,9 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 @Service
 public class CurrencyService extends BaseNodeCurrencyService {
 
-    public static final String GENERATED_TOKEN_ENDPOINT = "/currencies/token";
-    private static final String GET_NATIVE_CURRENCY_ENDPOINT = "/currencies/native";
+    public static final String GENERATED_TOKEN_ENDPOINT = "/currenciesCollection/token";
+    private static final String GET_NATIVE_CURRENCY_ENDPOINT = "/currenciesCollection/native";
+    public static final String S_EXCEPTION_S = "%s. Exception: %s";
     private final Map<Hash, Hash> lockUserHashMap = new ConcurrentHashMap<>();
     private final Map<Hash, Hash> lockTransactionHashMap = new ConcurrentHashMap<>();
     private final Set<String> processingCurrencyNameSet = Sets.newConcurrentHashSet();
@@ -75,7 +76,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
     @Autowired
     private Transactions transactions;
     @Autowired
-    private Currencies currencies;
+    private Currencies currenciesCollection;
     @Autowired
     private TransactionHelper transactionHelper;
     @Autowired
@@ -85,7 +86,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
     @Autowired
     private IMintingService mintingService;
     @Autowired
-    private IBalanceService balanceService;
+    private IBalanceService iBalanceService;
 
     private BlockingQueue<TransactionData> pendingCurrencyTransactionQueue;
     private BlockingQueue<TransactionData> tokenGenerationTransactionQueue;
@@ -201,13 +202,13 @@ public class CurrencyService extends BaseNodeCurrencyService {
             generatedTokens.add(new GeneratedTokenResponseData(transactionHash, pendingCurrencyData, false));
             return;
         }
-        CurrencyData currencyData = currencies.getByHash(currencyHash);
+        CurrencyData currencyData = currenciesCollection.getByHash(currencyHash);
         if (currencyData == null) {
             throw new CurrencyException(String.format("Unidentified currency hash: %s", currencyHash));
         }
         GeneratedTokenResponseData generatedTokenResponseData = new GeneratedTokenResponseData(transactionHash, currencyData, true);
 
-        BigDecimal genesisAddressBalance = balanceService.getBalance(currencyGenesisAddress, currencyHash);
+        BigDecimal genesisAddressBalance = iBalanceService.getBalance(currencyGenesisAddress, currencyHash);
         BigDecimal mintedAmount = BigDecimal.ZERO;
         if (genesisAddressBalance != null) {
             mintedAmount = currencyData.getTotalSupply().subtract(genesisAddressBalance);
@@ -224,13 +225,13 @@ public class CurrencyService extends BaseNodeCurrencyService {
             Hash tokenHash = validateUniquenessAndAddToken(generateTokenRequest);
             return ResponseEntity.status(HttpStatus.CREATED).body(new GenerateTokenResponse(tokenHash));
         } catch (CurrencyValidationException e) {
-            String error = String.format("%s. Exception: %s", TOKEN_GENERATION_REQUEST_FAILURE, e.getMessageAndCause());
+            String error = String.format(S_EXCEPTION_S, TOKEN_GENERATION_REQUEST_FAILURE, e.getMessageAndCause());
             return ResponseEntity.badRequest().body(new Response(error, STATUS_ERROR));
         } catch (CotiRunTimeException e) {
-            String error = String.format("%s. Exception: %s", TOKEN_GENERATION_REQUEST_FAILURE, e.getMessageAndCause());
+            String error = String.format(S_EXCEPTION_S, TOKEN_GENERATION_REQUEST_FAILURE, e.getMessageAndCause());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(error, STATUS_ERROR));
         } catch (Exception e) {
-            String error = String.format("%s. Exception: %s", TOKEN_GENERATION_REQUEST_FAILURE, e.getMessage());
+            String error = String.format(S_EXCEPTION_S, TOKEN_GENERATION_REQUEST_FAILURE, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(error, STATUS_ERROR));
         } finally {
             removeOccupyLocksFromProcessingSets(generateTokenRequest);
@@ -245,13 +246,13 @@ public class CurrencyService extends BaseNodeCurrencyService {
             currencyHash = requestCurrencyData.calculateHash();
             validateCurrencyUniqueness(currencyHash, currencyName);
         } catch (CurrencyValidationException e) {
-            String error = String.format("%s. Exception: %s", TOKEN_GENERATION_FEE_FAILURE, e.getMessageAndCause());
+            String error = String.format(S_EXCEPTION_S, TOKEN_GENERATION_FEE_FAILURE, e.getMessageAndCause());
             return ResponseEntity.badRequest().body(new Response(error, STATUS_ERROR));
         } catch (CotiRunTimeException e) {
-            String error = String.format("%s. Exception: %s", TOKEN_GENERATION_FEE_FAILURE, e.getMessageAndCause());
+            String error = String.format(S_EXCEPTION_S, TOKEN_GENERATION_FEE_FAILURE, e.getMessageAndCause());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(error, STATUS_ERROR));
         } catch (Exception e) {
-            String error = String.format("%s. Exception: %s", TOKEN_GENERATION_FEE_FAILURE, e.getMessage());
+            String error = String.format(S_EXCEPTION_S, TOKEN_GENERATION_FEE_FAILURE, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(error, STATUS_ERROR));
         }
 
@@ -351,10 +352,15 @@ public class CurrencyService extends BaseNodeCurrencyService {
 
     private void validateTransactionAmount(OriginatorCurrencyData requestCurrencyData, Hash requestTransactionHash) {
         TransactionData tokenGenerationTransactionData = transactions.getByHash(requestTransactionHash);
-        BaseTransactionData tokenServiceFeeData = tokenGenerationTransactionData.getBaseTransactions().stream()
-                .filter(baseTransactionData -> baseTransactionData instanceof TokenFeeBaseTransactionData).findFirst().get();
+        Optional<BaseTransactionData> first = tokenGenerationTransactionData.getBaseTransactions().stream()
+                .filter(baseTransactionData -> baseTransactionData instanceof TokenFeeBaseTransactionData).findFirst();
 
-        if (!tokenServiceFeeData.getAmount().equals(feeService.calculateTokenGenerationFee(requestCurrencyData.getTotalSupply()))) {
+        BaseTransactionData tokenServiceFeeData = null;
+        if (first.isPresent()) {
+            tokenServiceFeeData = first.get();
+        }
+
+        if (tokenServiceFeeData == null || !tokenServiceFeeData.getAmount().equals(feeService.calculateTokenGenerationFee(requestCurrencyData.getTotalSupply()))) {
             throw new CurrencyException(String.format("The token generation fees in the transaction %s is not correct", requestTransactionHash));
         }
     }
@@ -363,7 +369,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
         if (currencyNameIndexes.getByHash(new CurrencyNameIndexData(currencyName, currencyHash).getHash()) != null) {
             throw new CurrencyException("Currency name is already in use.");
         }
-        if (pendingCurrencies.getByHash(currencyHash) != null || currencies.getByHash(currencyHash) != null) {
+        if (pendingCurrencies.getByHash(currencyHash) != null || currenciesCollection.getByHash(currencyHash) != null) {
             throw new CurrencyException("Currency symbol is already in use.");
         }
     }

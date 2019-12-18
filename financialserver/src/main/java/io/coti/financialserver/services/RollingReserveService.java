@@ -299,10 +299,10 @@ public class RollingReserveService {
 
     private void addConsumerToRollingReserveReceiver(RollingReserveReleaseStatus rollingReserveReleaseStatus) {
 
-        if (rollingReserveReleaseStatus.getRollingReserveReceiver() == RollingReserveReceiver.Merchant) {
-            rollingReserveReleaseStatus.setRollingReserveReceiver(RollingReserveReceiver.MerchantAndConsumer);
+        if (rollingReserveReleaseStatus.getRollingReserveReceiver() == RollingReserveReceiver.MERCHANT) {
+            rollingReserveReleaseStatus.setRollingReserveReceiver(RollingReserveReceiver.MERCHANT_AND_CONSUMER);
         } else {
-            rollingReserveReleaseStatus.setRollingReserveReceiver(RollingReserveReceiver.Consumer);
+            rollingReserveReleaseStatus.setRollingReserveReceiver(RollingReserveReceiver.CONSUMER);
         }
     }
 

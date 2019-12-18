@@ -8,10 +8,11 @@ import io.coti.financialserver.http.data.DisputeEventResponseDataClass;
 import io.coti.financialserver.http.data.interfaces.IDisputeEventResponseData;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.time.Instant;
 
 @Data
-public class DisputeEventResponse {
+public class DisputeEventResponse implements Serializable {
 
     private String hash;
     private Instant creationTime;

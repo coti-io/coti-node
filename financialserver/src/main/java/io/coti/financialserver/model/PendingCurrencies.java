@@ -7,8 +7,4 @@ import org.springframework.stereotype.Service;
 @Service
 public class PendingCurrencies extends Collection<CurrencyData> {
 
-    public void init() {
-        super.init();
-    }
-
 }

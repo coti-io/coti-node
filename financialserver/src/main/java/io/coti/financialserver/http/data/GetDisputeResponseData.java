@@ -6,13 +6,14 @@ import io.coti.financialserver.data.DisputeStatus;
 import io.coti.financialserver.http.data.interfaces.IDisputeEventResponseData;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public abstract class GetDisputeResponseData implements IDisputeEventResponseData {
+public abstract class GetDisputeResponseData implements IDisputeEventResponseData, Serializable {
     protected String hash;
     protected String transactionHash;
     protected Instant transactionCreationTime;

@@ -17,9 +17,9 @@ import static io.coti.financialserver.http.HttpStringConstants.DISPUTE_STATUS_IN
 
 
 public enum DisputeStatusService {
-    CanceledByConsumer(DisputeStatus.CanceledByConsumer, EnumSet.of(DisputeStatus.Recall), ActionSide.CONSUMER, true),
-    Claim(DisputeStatus.Claim, EnumSet.of(DisputeStatus.Recall), ActionSide.FINANCIAL_SERVER, false),
-    Closed(DisputeStatus.Closed, EnumSet.of(DisputeStatus.Recall, DisputeStatus.Claim), ActionSide.FINANCIAL_SERVER, true);
+    CANCELED_BY_CONSUMER(DisputeStatus.CANCELED_BY_CONSUMER, EnumSet.of(DisputeStatus.RECALL), ActionSide.CONSUMER, true),
+    CLAIM(DisputeStatus.CLAIM, EnumSet.of(DisputeStatus.RECALL), ActionSide.FINANCIAL_SERVER, false),
+    CLOSED(DisputeStatus.CLOSED, EnumSet.of(DisputeStatus.RECALL, DisputeStatus.CLAIM), ActionSide.FINANCIAL_SERVER, true);
 
     private DisputeStatus newDisputeStatus;
     private Set<DisputeStatus> previousDisputeStatuses;
@@ -39,7 +39,7 @@ public enum DisputeStatusService {
     }
 
     public void changeStatus(DisputeData disputeData) throws Exception {
-        if (!disputeData.getDisputeStatus().equals(DisputeStatus.Recall) && valueOf(disputeData.getDisputeStatus().toString()).isFinalStatus()) {
+        if (!disputeData.getDisputeStatus().equals(DisputeStatus.RECALL) && valueOf(disputeData.getDisputeStatus().toString()).isFinalStatus()) {
             throw new DisputeChangeStatusException(DISPUTE_STATUS_FINAL);
         }
         if (!previousDisputeStatuses.contains(disputeData.getDisputeStatus())) {

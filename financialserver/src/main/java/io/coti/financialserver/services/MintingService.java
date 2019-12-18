@@ -48,6 +48,7 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 public class MintingService extends BaseNodeMintingService {
 
     private final static int MINTING_FEE_QUOTE_EXPIRATION_MINUTES = 60;
+    public static final String S_EXCEPTION_S = "%s. Exception: %s";
     @Value("${financialserver.seed}")
     private String seed;
     @Autowired
@@ -107,13 +108,13 @@ public class MintingService extends BaseNodeMintingService {
 
             return createTokenMintingFee(tokenMintingData, currencyData, tokenMintingFeeRequest.getMintingFeeQuoteData());
         } catch (CurrencyValidationException e) {
-            String error = String.format("%s. Exception: %s", TOKEN_MINTING_FEE_FAILURE, e.getMessageAndCause());
+            String error = String.format(S_EXCEPTION_S, TOKEN_MINTING_FEE_FAILURE, e.getMessageAndCause());
             return ResponseEntity.badRequest().body(new Response(error, STATUS_ERROR));
         } catch (CotiRunTimeException e) {
-            String error = String.format("%s. Exception: %s", TOKEN_MINTING_FEE_FAILURE, e.getMessageAndCause());
+            String error = String.format(S_EXCEPTION_S, TOKEN_MINTING_FEE_FAILURE, e.getMessageAndCause());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(error, STATUS_ERROR));
         } catch (Exception e) {
-            String error = String.format("%s. Exception: %s", TOKEN_MINTING_FEE_FAILURE, e.getMessage());
+            String error = String.format(S_EXCEPTION_S, TOKEN_MINTING_FEE_FAILURE, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(error, STATUS_ERROR));
         }
     }

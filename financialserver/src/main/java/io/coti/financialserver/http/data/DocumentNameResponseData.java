@@ -5,11 +5,12 @@ import io.coti.financialserver.data.DisputeDocumentData;
 import io.coti.financialserver.http.data.interfaces.IDisputeEventResponseData;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.List;
 
 @Data
-public class DocumentNameResponseData implements IDisputeEventResponseData {
+public class DocumentNameResponseData implements IDisputeEventResponseData, Serializable {
     private String hash;
     private String disputeHash;
     private List<Long> itemIds;

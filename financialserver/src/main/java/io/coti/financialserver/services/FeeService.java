@@ -48,13 +48,13 @@ public class FeeService {
 
     public ResponseEntity<IResponse> createTokenGenerationFee(GenerateTokenFeeRequest generateTokenRequest, Hash currencyHash) {
         try {
-            BigDecimal tokenGenerationFee = calculateTokenGenerationFee(generateTokenRequest.getCurrencyData().getTotalSupply());
+            BigDecimal tokenGenerationFeeCalculated = calculateTokenGenerationFee(generateTokenRequest.getCurrencyData().getTotalSupply());
             TokenGenerationData tokenGenerationData = new TokenGenerationData(generateTokenRequest.getCurrencyData().getName(),
                     generateTokenRequest.getCurrencyData().getSymbol(), currencyHash, generateTokenRequest.getCurrencyData().getTotalSupply(),
-                    generateTokenRequest.getCurrencyData().getScale(), Instant.now(), tokenGenerationFee);
+                    generateTokenRequest.getCurrencyData().getScale(), Instant.now(), tokenGenerationFeeCalculated);
             TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData =
                     new TokenGenerationFeeBaseTransactionData(networkFeeAddress(), currencyService.getNativeCurrencyHash(),
-                            NodeCryptoHelper.getNodeHash(), tokenGenerationFee, Instant.now(), tokenGenerationData);
+                            NodeCryptoHelper.getNodeHash(), tokenGenerationFeeCalculated, Instant.now(), tokenGenerationData);
             setTokenGenerationFeeHash(tokenGenerationFeeBaseTransactionData);
             signTokenGenerationFee(tokenGenerationFeeBaseTransactionData);
             TokenGenerationFeeResponseData tokenGenerationFeeResponseData = new TokenGenerationFeeResponseData(tokenGenerationFeeBaseTransactionData);

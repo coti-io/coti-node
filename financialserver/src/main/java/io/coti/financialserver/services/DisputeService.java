@@ -109,11 +109,16 @@ public class DisputeService {
             if (itemIds.contains(item.getId()) || paymentItemsStreamSupplier.get().count() == 0) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_ITEMS_INVALID, STATUS_ERROR));
             }
-            PaymentItemData paymentItemData = paymentItemsStreamSupplier.get().findFirst().get();
-            item.setPrice(paymentItemData.getItemPrice());
-            item.setQuantity(paymentItemData.getItemQuantity());
-            item.setName(paymentItemData.getItemName());
-
+            Optional<PaymentItemData> first = paymentItemsStreamSupplier.get().findFirst();
+            PaymentItemData paymentItemData = null;
+            if (first.isPresent()) {
+                paymentItemData = first.get();
+            }
+            if (paymentItemData != null) {
+                item.setPrice(paymentItemData.getItemPrice());
+                item.setQuantity(paymentItemData.getItemQuantity());
+                item.setName(paymentItemData.getItemName());
+            }
             disputeAmount = disputeAmount.add(item.getPrice().multiply(new BigDecimal(item.getQuantity())));
             itemIds.add(item.getId());
         }
@@ -252,7 +257,7 @@ public class DisputeService {
 
     public void update(DisputeData disputeData) {
 
-        if (disputeData.getDisputeStatus().equals(DisputeStatus.Claim) && disputeData.getArbitratorHashes().isEmpty()) {
+        if (disputeData.getDisputeStatus().equals(DisputeStatus.CLAIM) && disputeData.getArbitratorHashes().isEmpty()) {
             assignToArbitrators(disputeData);
             disputeData.setArbitratorsAssignTime(Instant.now());
         }
@@ -273,18 +278,18 @@ public class DisputeService {
 
         for (DisputeItemVoteData disputeItemVoteData : disputeItemVotes) {
 
-            if (disputeItemVoteData.getStatus().equals(DisputeItemVoteStatus.AcceptedByArbitrator)) {
+            if (disputeItemVoteData.getStatus().equals(DisputeItemVoteStatus.ACCEPTED_BY_ARBITRATOR)) {
                 votesForConsumer++;
-            } else if (disputeItemVoteData.getStatus().equals(DisputeItemVoteStatus.RejectedByArbitrator)) {
+            } else if (disputeItemVoteData.getStatus().equals(DisputeItemVoteStatus.REJECTED_BY_ARBITRATOR)) {
                 votesForMerchant++;
             }
         }
 
         if (votesForConsumer >= majorityOfVotes) {
-            DisputeItemStatusService.AcceptedByArbitrators.changeStatus(disputeData, disputeItemData.getId(), ActionSide.FINANCIAL_SERVER);
+            DisputeItemStatusService.ACCEPTED_BY_ARBITRATORS.changeStatus(disputeData, disputeItemData.getId(), ActionSide.FINANCIAL_SERVER);
 
         } else if (votesForMerchant >= majorityOfVotes || disputeItemVotes.size() == arbitratorsCount) {
-            DisputeItemStatusService.RejectedByArbitrators.changeStatus(disputeData, disputeItemData.getId(), ActionSide.FINANCIAL_SERVER);
+            DisputeItemStatusService.REJECTED_BY_ARBITRATORS.changeStatus(disputeData, disputeItemData.getId(), ActionSide.FINANCIAL_SERVER);
         }
 
         disputeData.setUpdateTime(Instant.now());
@@ -295,16 +300,16 @@ public class DisputeService {
 
         int random;
 
-        List<String> arbitratorUserHashes = new ArrayList<>(this.arbitratorUserHashes);
+        List<String> arbitratorUserHashesList = new ArrayList<>(this.arbitratorUserHashes);
         for (int i = 0; i < COUNT_ARBITRATORS_PER_DISPUTE; i++) {
 
-            random = (int) ((Math.random() * arbitratorUserHashes.size()));
+            random = (int) (Math.random() * arbitratorUserHashesList.size());
 
-            Hash arbitratorHash = new Hash(arbitratorUserHashes.get(random));
+            Hash arbitratorHash = new Hash(arbitratorUserHashesList.get(random));
             disputeData.getArbitratorHashes().add(arbitratorHash);
             addUserDisputeHash(ActionSide.ARBITRATOR, arbitratorHash, disputeData.getHash());
 
-            arbitratorUserHashes.remove(random);
+            arbitratorUserHashesList.remove(random);
         }
 
         webSocketService.notifyOnDisputeToArbitrators(disputeData);
@@ -331,7 +336,7 @@ public class DisputeService {
 
         for (Hash disputeHash : transactionDisputesData.getDisputeHashes()) {
             disputeData = disputes.getByHash(disputeHash);
-            if (disputeData.getDisputeStatus().equals(DisputeStatus.Recall) || !DisputeStatusService.valueOf(disputeData.getDisputeStatus().toString()).isFinalStatus()) {
+            if (disputeData.getDisputeStatus().equals(DisputeStatus.RECALL) || !DisputeStatusService.valueOf(disputeData.getDisputeStatus().toString()).isFinalStatus()) {
                 return true;
             }
         }
