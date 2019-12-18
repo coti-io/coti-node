@@ -2,9 +2,9 @@ package io.coti.trustscore.services;
 
 import io.coti.basenode.data.TransactionData;
 import io.coti.trustscore.config.rules.RulesData;
-import io.coti.trustscore.data.Buckets.BucketChargeBackEventsData;
-import io.coti.trustscore.data.Enums.EventType;
-import io.coti.trustscore.data.Events.ChargeBackEventsData;
+import io.coti.trustscore.data.buckets.BucketChargeBackEventsData;
+import io.coti.trustscore.data.enums.EventType;
+import io.coti.trustscore.data.events.ChargeBackEventsData;
 import io.coti.trustscore.services.calculationservices.BucketChargeBackEventsCalculator;
 import io.coti.trustscore.services.interfaces.IBucketEventService;
 import lombok.Data;

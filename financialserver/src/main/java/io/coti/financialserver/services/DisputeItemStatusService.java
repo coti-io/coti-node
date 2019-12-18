@@ -23,7 +23,7 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 
 public enum DisputeItemStatusService {
 
-    AcceptedByMerchant(DisputeItemStatus.AcceptedByMerchant, EnumSet.of(DisputeItemStatus.Recall), ActionSide.Merchant, true, true, true) {
+    AcceptedByMerchant(DisputeItemStatus.AcceptedByMerchant, EnumSet.of(DisputeItemStatus.Recall), ActionSide.MERCHANT, true, true, true) {
         @Override
         public void changeDisputeItemsStatuses(DisputeData disputeData) {
             changePreClaimDisputeItemsStatuses(disputeData);
@@ -41,7 +41,7 @@ public enum DisputeItemStatusService {
 
         }
     },
-    RejectedByMerchant(DisputeItemStatus.RejectedByMerchant, EnumSet.of(DisputeItemStatus.Recall), ActionSide.Merchant, false, false, true) {
+    RejectedByMerchant(DisputeItemStatus.RejectedByMerchant, EnumSet.of(DisputeItemStatus.Recall), ActionSide.MERCHANT, false, false, true) {
         @Override
         public void changeDisputeItemsStatuses(DisputeData disputeData) {
             changePreClaimDisputeItemsStatuses(disputeData);
@@ -52,7 +52,7 @@ public enum DisputeItemStatusService {
             this.Claim.changeDisputeStatus(disputeData);
         }
     },
-    CanceledByConsumer(DisputeItemStatus.CanceledByConsumer, EnumSet.of(DisputeItemStatus.Recall), ActionSide.Consumer, true, false, true) {
+    CanceledByConsumer(DisputeItemStatus.CanceledByConsumer, EnumSet.of(DisputeItemStatus.Recall), ActionSide.CONSUMER, true, false, true) {
         @Override
         public void changeDisputeItemsStatuses(DisputeData disputeData) {
             changePreClaimDisputeItemsStatuses(disputeData);
@@ -72,7 +72,7 @@ public enum DisputeItemStatusService {
             return disputeItems.stream().filter(disputeItemData -> disputeItemData.getStatus().equals(DisputeItemStatus.CanceledByConsumer)).count() == disputeItems.size();
         }
     },
-    Claim(DisputeItemStatus.Claim, EnumSet.of(DisputeItemStatus.Recall, DisputeItemStatus.RejectedByMerchant), ActionSide.FinancialServer, false, false, false) {
+    Claim(DisputeItemStatus.Claim, EnumSet.of(DisputeItemStatus.Recall, DisputeItemStatus.RejectedByMerchant), ActionSide.FINANCIAL_SERVER, false, false, false) {
         @Override
         public void changeDisputeStatus(DisputeData disputeData) throws Exception {
             if (existRecallDisputeItems(disputeData)) {
@@ -81,13 +81,13 @@ public enum DisputeItemStatusService {
             DisputeStatusService.Claim.changeStatus(disputeData);
         }
     },
-    AcceptedByArbitrators(DisputeItemStatus.AcceptedByArbitrators, EnumSet.of(DisputeItemStatus.Claim), ActionSide.FinancialServer, true, true, false) {
+    AcceptedByArbitrators(DisputeItemStatus.AcceptedByArbitrators, EnumSet.of(DisputeItemStatus.Claim), ActionSide.FINANCIAL_SERVER, true, true, false) {
         @Override
         public void changeDisputeStatus(DisputeData disputeData) throws Exception {
             changeDisputeStatusForPostClaimDisputeItem(disputeData);
         }
     },
-    RejectedByArbitrators(DisputeItemStatus.RejectedByArbitrators, EnumSet.of(DisputeItemStatus.Claim), ActionSide.FinancialServer, true, false, false) {
+    RejectedByArbitrators(DisputeItemStatus.RejectedByArbitrators, EnumSet.of(DisputeItemStatus.Claim), ActionSide.FINANCIAL_SERVER, true, false, false) {
         @Override
         public void changeDisputeStatus(DisputeData disputeData) throws Exception {
             changeDisputeStatusForPostClaimDisputeItem(disputeData);
@@ -155,7 +155,7 @@ public enum DisputeItemStatusService {
 
     private void changeStatus(DisputeItemData disputeItemData) {
         disputeItemData.setStatus(newDisputeItemStatus);
-        if (actionSide.equals(ActionSide.Arbitrator)) {
+        if (actionSide.equals(ActionSide.ARBITRATOR)) {
             disputeItemData.setArbitratorsDecisionTime(Instant.now());
         }
     }
@@ -171,7 +171,7 @@ public enum DisputeItemStatusService {
         disputeData.getDisputeItems().forEach(disputeItemData -> {
             if (disputeItemData.getStatus().equals(DisputeItemStatus.RejectedByMerchant)) {
                 disputeItemData.setStatus(DisputeItemStatus.Claim);
-                webSocketService.notifyOnItemStatusChange(disputeData, disputeItemData.getId(), ActionSide.FinancialServer);
+                webSocketService.notifyOnItemStatusChange(disputeData, disputeItemData.getId(), ActionSide.FINANCIAL_SERVER);
             }
         });
     }

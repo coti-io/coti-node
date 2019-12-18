@@ -6,10 +6,10 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
-import io.coti.trustscore.data.Buckets.BucketTransactionEventsData;
-import io.coti.trustscore.data.Enums.UserType;
-import io.coti.trustscore.data.Events.BalanceCountAndContribution;
-import io.coti.trustscore.data.Events.TransactionEventData;
+import io.coti.trustscore.data.buckets.BucketTransactionEventsData;
+import io.coti.trustscore.data.enums.UserType;
+import io.coti.trustscore.data.events.BalanceCountAndContribution;
+import io.coti.trustscore.data.events.TransactionEventData;
 import io.coti.trustscore.model.BucketTransactionEvents;
 import io.coti.trustscore.services.BucketTransactionService;
 import io.coti.trustscore.services.calculationservices.BucketTransactionsCalculator;
@@ -59,7 +59,7 @@ public class BucketTransactionServiceTest {
         walletHash = generateRandomHash(64);
         nodeHash = generateRandomHash(64);
 
-        BucketTransactionService.init(generateRulesDataObject());
+        bucketTransactionService.init(generateRulesDataObject());
         initialBucketTransactionEventsDataForWallet();
         initialBucketTransactionEventsDataForNode();
     }

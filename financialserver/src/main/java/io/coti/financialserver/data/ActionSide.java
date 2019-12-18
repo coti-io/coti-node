@@ -1,8 +1,8 @@
 package io.coti.financialserver.data;
 
 public enum ActionSide {
-    Consumer,
-    Merchant,
-    Arbitrator,
-    FinancialServer;
+    CONSUMER,
+    MERCHANT,
+    ARBITRATOR,
+    FINANCIAL_SERVER;
 }

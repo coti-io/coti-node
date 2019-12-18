@@ -36,7 +36,7 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.ADDRESS_BATCH_UP
 @Service
 public class BaseNodeAddressService implements IAddressService {
 
-    protected final int TRUSTED_RESULT_MAX_DURATION_IN_MILLIS = 600_000;
+    protected final static int TRUSTED_RESULT_MAX_DURATION_IN_MILLIS = 600_000;
     @Autowired
     private Addresses addresses;
     @Autowired
@@ -128,6 +128,7 @@ public class BaseNodeAddressService implements IAddressService {
                 fileOutputStream.close();
             }
         } catch (IOException e) {
+            log.error("Error at uploadAddressBatch");
 
         }
         String line;

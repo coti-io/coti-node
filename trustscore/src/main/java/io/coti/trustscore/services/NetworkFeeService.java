@@ -3,6 +3,7 @@ package io.coti.trustscore.services;
 import io.coti.basenode.crypto.BaseTransactionCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
+import io.coti.basenode.exceptions.TrustScoreException;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Currencies;
@@ -10,8 +11,8 @@ import io.coti.basenode.services.TransactionHelper;
 import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.trustscore.config.rules.UserNetworkFeeByTrustScoreRange;
-import io.coti.trustscore.data.Enums.TrustScoreRangeType;
 import io.coti.trustscore.data.TrustScoreData;
+import io.coti.trustscore.data.enums.TrustScoreRangeType;
 import io.coti.trustscore.http.NetworkFeeRequest;
 import io.coti.trustscore.http.NetworkFeeResponse;
 import io.coti.trustscore.http.NetworkFeeValidateRequest;
@@ -113,7 +114,7 @@ public class NetworkFeeService {
                     .body(new NetworkFeeResponse(networkFeeResponseData));
         } catch (Exception e) {
             log.error(e.getMessage());
-            throw new RuntimeException(e);
+            throw new TrustScoreException(e.getMessage());
         }
     }
 
@@ -135,7 +136,7 @@ public class NetworkFeeService {
                     .body(new NetworkFeeResponse(new NetworkFeeResponseData(networkFeeData)));
         } catch (Exception e) {
             log.error(e.getMessage());
-            throw new RuntimeException(e);
+            throw new TrustScoreException(e.getMessage());
         }
     }
 

@@ -9,7 +9,4 @@ import org.springframework.stereotype.Service;
 @Service
 public class TrustScores extends Collection<TrustScoreData> {
 
-    public void init() {
-        super.init();
-    }
 }

@@ -4,13 +4,14 @@ import io.coti.basenode.crypto.BaseTransactionCrypto;
 import io.coti.basenode.crypto.GetMerchantRollingReserveAddressCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
+import io.coti.basenode.exceptions.TrustScoreException;
 import io.coti.basenode.http.*;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.IValidationService;
-import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.TrustScoreData;
+import io.coti.trustscore.data.enums.UserType;
 import io.coti.trustscore.http.RollingReserveRequest;
 import io.coti.trustscore.http.RollingReserveResponse;
 import io.coti.trustscore.http.RollingReserveValidateRequest;
@@ -102,7 +103,7 @@ public class RollingReserveService {
         }
     }
 
-    public Hash getMerchantRollingReserveAddress(Hash merchantHash) throws Exception {
+    public Hash getMerchantRollingReserveAddress(Hash merchantHash) {
         MerchantRollingReserveAddressData merchantRollingReserveAddressData = merchantRollingReserveAddresses.getByHash(merchantHash);
         if (merchantRollingReserveAddressData == null) {
             merchantRollingReserveAddressData = getMerchantAddressFromFinancialNode(merchantHash);
@@ -112,7 +113,7 @@ public class RollingReserveService {
         return merchantRollingReserveAddressData.getMerchantRollingReserveAddress();
     }
 
-    private MerchantRollingReserveAddressData getMerchantAddressFromFinancialNode(Hash merchantHash) throws Exception {
+    private MerchantRollingReserveAddressData getMerchantAddressFromFinancialNode(Hash merchantHash) {
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.setRequestFactory(new CustomHttpComponentsClientHttpRequestFactory());
         GetMerchantRollingReserveAddressRequest getMerchantRollingReserveAddressRequest = new GetMerchantRollingReserveAddressRequest();
@@ -126,7 +127,7 @@ public class RollingReserveService {
             ResponseEntity<GetMerchantRollingReserveAddressResponse> result = restTemplate.postForEntity(financialServerHttpAddress + MERCHANT_ADDRESS_END_POINT, getMerchantRollingReserveAddressRequest, GetMerchantRollingReserveAddressResponse.class);
             return result.getBody().getMerchantRollingReserveAddressData();
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            throw new Exception(String.format(MERCHANT_ADRRESS_GET_ERROR, ((SerializableResponse) jacksonSerializer.deserialize(e.getResponseBodyAsByteArray())).getMessage()));
+            throw new TrustScoreException(String.format(MERCHANT_ADRRESS_GET_ERROR, ((SerializableResponse) jacksonSerializer.deserialize(e.getResponseBodyAsByteArray())).getMessage()));
         }
 
 
@@ -151,7 +152,7 @@ public class RollingReserveService {
                     .body(new RollingReserveResponse(new RollingReserveResponseData(rollingReserveData)));
         } catch (Exception e) {
             log.error(e.getMessage());
-            throw new RuntimeException(e);
+            throw new TrustScoreException(e.getMessage());
         }
 
     }
@@ -189,7 +190,7 @@ public class RollingReserveService {
 
     private BigDecimal calculateRollingReserveAmount(BigDecimal reducedAmount, double trustScore) {
         double reserveRate = (trustScore == 0) ? MAX_ROLLING_RESERVE_RATE : Math.min(MAX_ROLLING_RESERVE_RATE / trustScore, MAX_ROLLING_RESERVE_RATE);
-        BigDecimal rollingReserveAmount = reducedAmount.multiply(new BigDecimal(reserveRate / 100));
+        BigDecimal rollingReserveAmount = reducedAmount.multiply(BigDecimal.valueOf(reserveRate / 100));
         if (rollingReserveAmount.scale() > CURRENCY_SCALE) {
             rollingReserveAmount = rollingReserveAmount.setScale(CURRENCY_SCALE, RoundingMode.DOWN);
         }

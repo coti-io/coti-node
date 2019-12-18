@@ -67,10 +67,10 @@ public class WebSocketService {
     public void notifyOnNewDispute(DisputeData disputeData) {
 
         Map<Hash, ActionSide> userHashToEventDisplaySideMap = new HashMap<>();
-        userHashToEventDisplaySideMap.put(disputeData.getConsumerHash(), ActionSide.Consumer);
-        userHashToEventDisplaySideMap.put(disputeData.getMerchantHash(), ActionSide.Merchant);
+        userHashToEventDisplaySideMap.put(disputeData.getConsumerHash(), ActionSide.CONSUMER);
+        userHashToEventDisplaySideMap.put(disputeData.getMerchantHash(), ActionSide.MERCHANT);
 
-        sendDisputeEvent(disputeData.getHash(), disputeData, userHashToEventDisplaySideMap, ActionSide.Consumer, true);
+        sendDisputeEvent(disputeData.getHash(), disputeData, userHashToEventDisplaySideMap, ActionSide.CONSUMER, true);
     }
 
     public void notifyOnDisputeToArbitrators(DisputeData disputeData) {
@@ -79,17 +79,17 @@ public class WebSocketService {
             return;
         }
         Map<Hash, ActionSide> userHashToEventDisplaySideMap = new HashMap<>();
-        disputeData.getArbitratorHashes().forEach(arbitratorHash -> userHashToEventDisplaySideMap.put(arbitratorHash, ActionSide.Arbitrator));
+        disputeData.getArbitratorHashes().forEach(arbitratorHash -> userHashToEventDisplaySideMap.put(arbitratorHash, ActionSide.ARBITRATOR));
 
-        sendDisputeEvent(disputeData.getHash(), disputeData, userHashToEventDisplaySideMap, ActionSide.FinancialServer, true);
+        sendDisputeEvent(disputeData.getHash(), disputeData, userHashToEventDisplaySideMap, ActionSide.FINANCIAL_SERVER, true);
 
     }
 
     public void notifyOnNewCommentOrDocument(DisputeData disputeData, IDisputeEvent disputeEvent, ActionSide actionSide) {
 
         Map<Hash, ActionSide> userHashToEventDisplaySideMap = new HashMap<>();
-        userHashToEventDisplaySideMap.put(disputeData.getConsumerHash(), ActionSide.Consumer);
-        userHashToEventDisplaySideMap.put(disputeData.getMerchantHash(), ActionSide.Merchant);
+        userHashToEventDisplaySideMap.put(disputeData.getConsumerHash(), ActionSide.CONSUMER);
+        userHashToEventDisplaySideMap.put(disputeData.getMerchantHash(), ActionSide.MERCHANT);
 
         sendDisputeEvent(disputeData.getHash(), disputeEvent, userHashToEventDisplaySideMap, actionSide, false);
     }
@@ -99,9 +99,9 @@ public class WebSocketService {
         DisputeStatusChangeEventData disputeStatusChangedEventData = new DisputeStatusChangeEventData(disputeData);
 
         Map<Hash, ActionSide> userHashToEventDisplaySideMap = new HashMap<>();
-        userHashToEventDisplaySideMap.put(disputeData.getConsumerHash(), ActionSide.Consumer);
-        userHashToEventDisplaySideMap.put(disputeData.getMerchantHash(), ActionSide.Merchant);
-        disputeData.getArbitratorHashes().forEach(arbitratorHash -> userHashToEventDisplaySideMap.put(arbitratorHash, ActionSide.Arbitrator));
+        userHashToEventDisplaySideMap.put(disputeData.getConsumerHash(), ActionSide.CONSUMER);
+        userHashToEventDisplaySideMap.put(disputeData.getMerchantHash(), ActionSide.MERCHANT);
+        disputeData.getArbitratorHashes().forEach(arbitratorHash -> userHashToEventDisplaySideMap.put(arbitratorHash, ActionSide.ARBITRATOR));
 
         sendDisputeEvent(disputeData.getHash(), disputeStatusChangedEventData, userHashToEventDisplaySideMap, actionSide, true);
     }
@@ -110,18 +110,18 @@ public class WebSocketService {
         DisputeItemStatusChangeEventData disputeIemStatusChangeEventData = new DisputeItemStatusChangeEventData(disputeData, itemId);
 
         Map<Hash, ActionSide> userHashToEventDisplaySideMap = new HashMap<>();
-        userHashToEventDisplaySideMap.put(disputeData.getConsumerHash(), ActionSide.Consumer);
-        userHashToEventDisplaySideMap.put(disputeData.getMerchantHash(), ActionSide.Merchant);
-        disputeData.getArbitratorHashes().forEach(arbitratorHash -> userHashToEventDisplaySideMap.put(arbitratorHash, ActionSide.Arbitrator));
+        userHashToEventDisplaySideMap.put(disputeData.getConsumerHash(), ActionSide.CONSUMER);
+        userHashToEventDisplaySideMap.put(disputeData.getMerchantHash(), ActionSide.MERCHANT);
+        disputeData.getArbitratorHashes().forEach(arbitratorHash -> userHashToEventDisplaySideMap.put(arbitratorHash, ActionSide.ARBITRATOR));
 
         sendDisputeEvent(disputeData.getHash(), disputeIemStatusChangeEventData, userHashToEventDisplaySideMap, actionSide, true);
     }
 
     public void notifyOnNewItemVote(DisputeItemVoteData disputeItemVoteData) {
         Map<Hash, ActionSide> userHashToEventDisplaySideMap = new HashMap<>();
-        userHashToEventDisplaySideMap.put(disputeItemVoteData.getArbitratorHash(), ActionSide.Arbitrator);
+        userHashToEventDisplaySideMap.put(disputeItemVoteData.getArbitratorHash(), ActionSide.ARBITRATOR);
 
-        sendDisputeEvent(disputeItemVoteData.getDisputeHash(), disputeItemVoteData, userHashToEventDisplaySideMap, ActionSide.Arbitrator, true);
+        sendDisputeEvent(disputeItemVoteData.getDisputeHash(), disputeItemVoteData, userHashToEventDisplaySideMap, ActionSide.ARBITRATOR, true);
     }
 
     private void sendDisputeEvent(Hash disputeHash, IDisputeEvent eventObject, Map<Hash, ActionSide> userHashToEventDisplaySideMap, ActionSide actionSide, boolean updateDisputeHistory) {

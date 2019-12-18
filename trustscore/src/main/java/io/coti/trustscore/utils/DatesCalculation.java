@@ -10,6 +10,10 @@ import java.util.GregorianCalendar;
 public class DatesCalculation {
     public static final int MILLI_SECONDS_PER_SECOND = 1000;
 
+    private DatesCalculation() {
+        throw new IllegalStateException("Utility class");
+    }
+
     public static int calculateDaysDiffBetweenDates(Date firstDate, Date secondDate) {
         long difference = Math.abs(secondDate.getTime() - firstDate.getTime());
         return (int) (difference / (MILLI_SECONDS_PER_SECOND * 60 * 60 * 24));

@@ -3,9 +3,9 @@ package io.coti.trustscore.utils;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.TransactionData;
-import io.coti.trustscore.data.Buckets.*;
-import io.coti.trustscore.data.Enums.EventType;
-import io.coti.trustscore.data.Enums.UserType;
+import io.coti.trustscore.data.buckets.*;
+import io.coti.trustscore.data.enums.EventType;
+import io.coti.trustscore.data.enums.UserType;
 import io.coti.trustscore.http.InsertEventRequest;
 
 import java.nio.ByteBuffer;
@@ -14,13 +14,19 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class BucketBuilder {
 
-    private static Map<EventType, Class> bucketMapper = new ConcurrentHashMap<EventType, Class>() {{
-        put(EventType.TRANSACTION, BucketTransactionEventsData.class);
-        put(EventType.HIGH_FREQUENCY_EVENTS, BucketChargeBackEventsData.class);
-        put(EventType.BEHAVIOR_EVENT, BucketBehaviorEventsData.class);
-        put(EventType.INITIAL_EVENT, BucketInitialTrustScoreEventsData.class);
-        put(EventType.NOT_FULFILMENT_EVENT, BucketNotFulfilmentEventsData.class);
-    }};
+    private static Map<EventType, Class> bucketMapper = new ConcurrentHashMap<>();
+
+    static {
+        bucketMapper.put(EventType.TRANSACTION, BucketTransactionEventsData.class);
+        bucketMapper.put(EventType.HIGH_FREQUENCY_EVENTS, BucketChargeBackEventsData.class);
+        bucketMapper.put(EventType.BEHAVIOR_EVENT, BucketBehaviorEventsData.class);
+        bucketMapper.put(EventType.INITIAL_EVENT, BucketInitialTrustScoreEventsData.class);
+        bucketMapper.put(EventType.NOT_FULFILMENT_EVENT, BucketNotFulfilmentEventsData.class);
+    }
+
+    private BucketBuilder() {
+        throw new IllegalStateException("Utility class");
+    }
 
     public static BucketEventData createBucket(EventType bucketType, UserType userType, Hash userHash) throws IllegalAccessException, InstantiationException {
         BucketEventData bucket = (BucketEventData) bucketMapper.get(bucketType).newInstance();

@@ -1,7 +1,7 @@
 package io.coti.trustscore.config.rules;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.coti.trustscore.data.Enums.HighFrequencyEventScoreType;
+import io.coti.trustscore.data.enums.HighFrequencyEventScoreType;
 import lombok.Data;
 
 import java.util.List;

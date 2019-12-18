@@ -3,6 +3,7 @@ package io.coti.trustscore.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.crypto.ExpandedTransactionTrustScoreCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.exceptions.TrustScoreException;
 import io.coti.basenode.http.GetUserTrustScoreResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.TransactionTrustScoreResponseData;
@@ -12,13 +13,13 @@ import io.coti.trustscore.crypto.GetTransactionTrustScoreRequestCrypto;
 import io.coti.trustscore.crypto.TrustScoreCrypto;
 import io.coti.trustscore.crypto.TrustScoreEventCrypto;
 import io.coti.trustscore.crypto.TrustScoreUserTypeCrypto;
-import io.coti.trustscore.data.Buckets.*;
-import io.coti.trustscore.data.Enums.EventType;
-import io.coti.trustscore.data.Enums.HighFrequencyEventScoreType;
-import io.coti.trustscore.data.Enums.InitialTrustScoreType;
-import io.coti.trustscore.data.Enums.UserType;
-import io.coti.trustscore.data.Events.*;
 import io.coti.trustscore.data.TrustScoreData;
+import io.coti.trustscore.data.buckets.*;
+import io.coti.trustscore.data.enums.EventType;
+import io.coti.trustscore.data.enums.HighFrequencyEventScoreType;
+import io.coti.trustscore.data.enums.InitialTrustScoreType;
+import io.coti.trustscore.data.enums.UserType;
+import io.coti.trustscore.data.events.*;
 import io.coti.trustscore.http.*;
 import io.coti.trustscore.model.BucketEvents;
 import io.coti.trustscore.model.TrustScores;
@@ -174,7 +175,6 @@ public class TrustScoreService {
 
     private boolean changingIsLegal(TrustScoreData trustScoreData) {
         return trustScoreData.getUserType().equals(UserType.CONSUMER);
-//        return true; // not commit this trustScoreData.getUserType().equals(UserType.CONSUMER);
     }
 
     public ResponseEntity<IResponse> getUserTrustScore(Hash userHash) {
@@ -224,7 +224,7 @@ public class TrustScoreService {
                     .body(new Response(NON_EXISTING_USER_MESSAGE, STATUS_ERROR));
         }
 
-        List<BucketEventData> bucketEventDataList = new ArrayList<BucketEventData>();
+        List<BucketEventData> bucketEventDataList = new ArrayList<>();
         for (IBucketEventService bucketEventService : bucketEventServiceList) {
             BucketEventData bucketEventData =
                     (BucketEventData) bucketEvents.getByHash(trustScoreData.getEventTypeToBucketHashMap().get(bucketEventService.getBucketEventType()));
@@ -464,22 +464,18 @@ public class TrustScoreService {
         return rulesData;
     }
 
-    private IResponse sendToSuitableService(InsertEventRequest request) throws Exception {
+    private IResponse sendToSuitableService(InsertEventRequest request) {
         switch (request.eventType) {
-            case INITIAL_EVENT: {
+            case INITIAL_EVENT:
                 return sendToBucketInitialTrustScoreEventsService(request);
-            }
-            case HIGH_FREQUENCY_EVENTS: {
+            case HIGH_FREQUENCY_EVENTS:
                 return sendToHighFrequencyEventScoreService(request);
-            }
-            case BEHAVIOR_EVENT: {
+            case BEHAVIOR_EVENT:
                 return sendToBucketBehaviorEventsService(request);
-            }
-            case NOT_FULFILMENT_EVENT: {
+            case NOT_FULFILMENT_EVENT:
                 return sendToBucketNotFulfilmentEventsService(request);
-            }
             default:
-                throw new Exception(ILLEGAL_EVENT_FROM_KYC_SERVER);
+                throw new TrustScoreException(ILLEGAL_EVENT_FROM_KYC_SERVER);
         }
     }
 

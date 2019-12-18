@@ -1,10 +1,10 @@
 package io.coti.trustscore.services;
 
 import io.coti.trustscore.config.rules.RulesData;
-import io.coti.trustscore.data.Buckets.BucketNotFulfilmentEventsData;
-import io.coti.trustscore.data.Enums.EventType;
-import io.coti.trustscore.data.Events.NotFulfilmentEventsData;
-import io.coti.trustscore.data.Events.NotFulfilmentToClientContributionData;
+import io.coti.trustscore.data.buckets.BucketNotFulfilmentEventsData;
+import io.coti.trustscore.data.enums.EventType;
+import io.coti.trustscore.data.events.NotFulfilmentEventsData;
+import io.coti.trustscore.data.events.NotFulfilmentToClientContributionData;
 import io.coti.trustscore.services.calculationservices.BucketNotFulfilmentEventsCalculator;
 import io.coti.trustscore.services.interfaces.IBucketEventService;
 import org.springframework.stereotype.Service;
@@ -60,7 +60,6 @@ public class BucketNotFulfilmentEventsService implements IBucketEventService<Not
         BucketNotFulfilmentEventsCalculator bucketCalculator = new BucketNotFulfilmentEventsCalculator(bucketNotFulfilmentEventsData);
         // Decay on case that this is the first event, or first access to data today
         bucketCalculator.decayScores(bucketNotFulfilmentEventsData);
-        //bucketCalculator.setCurrentScores();
 
         return bucketCalculator.getBucketSumScore(bucketNotFulfilmentEventsData);
     }

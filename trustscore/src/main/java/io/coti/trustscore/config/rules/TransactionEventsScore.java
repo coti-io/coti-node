@@ -1,6 +1,6 @@
 package io.coti.trustscore.config.rules;
 
-import io.coti.trustscore.data.Enums.TransactionEventScoreType;
+import io.coti.trustscore.data.enums.TransactionEventScoreType;
 import lombok.Data;
 
 import java.util.List;

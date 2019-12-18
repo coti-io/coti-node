@@ -1,11 +1,11 @@
 package io.coti.trustscore.services;
 
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
-import io.coti.trustscore.data.Buckets.BucketBehaviorEventsData;
-import io.coti.trustscore.data.Enums.BehaviorEventsScoreType;
-import io.coti.trustscore.data.Enums.EventType;
-import io.coti.trustscore.data.Enums.UserType;
-import io.coti.trustscore.data.Events.BehaviorEventsData;
+import io.coti.trustscore.data.buckets.BucketBehaviorEventsData;
+import io.coti.trustscore.data.enums.BehaviorEventsScoreType;
+import io.coti.trustscore.data.enums.EventType;
+import io.coti.trustscore.data.enums.UserType;
+import io.coti.trustscore.data.events.BehaviorEventsData;
 import io.coti.trustscore.http.InsertEventRequest;
 import org.junit.Assert;
 import org.junit.Before;

@@ -1,10 +1,10 @@
 package io.coti.trustscore.services;
 
 import io.coti.trustscore.config.rules.RulesData;
-import io.coti.trustscore.data.Buckets.BucketBehaviorEventsData;
-import io.coti.trustscore.data.Enums.EventType;
-import io.coti.trustscore.data.Events.BehaviorEventsData;
-import io.coti.trustscore.data.Events.EventCountAndContributionData;
+import io.coti.trustscore.data.buckets.BucketBehaviorEventsData;
+import io.coti.trustscore.data.enums.EventType;
+import io.coti.trustscore.data.events.BehaviorEventsData;
+import io.coti.trustscore.data.events.EventCountAndContributionData;
 import io.coti.trustscore.services.calculationservices.BucketBehaviorEventsCalculator;
 import io.coti.trustscore.services.interfaces.IBucketEventService;
 import org.springframework.stereotype.Service;

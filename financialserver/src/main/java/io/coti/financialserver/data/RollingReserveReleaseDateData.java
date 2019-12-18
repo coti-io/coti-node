@@ -4,6 +4,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -11,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Data
-public class RollingReserveReleaseDateData implements IEntity {
+public class RollingReserveReleaseDateData implements IEntity, Serializable {
 
     private static final long serialVersionUID = 5270626776162833891L;
     private Date date;
@@ -38,5 +39,6 @@ public class RollingReserveReleaseDateData implements IEntity {
 
     @Override
     public void setHash(Hash hash) {
+        // Never used
     }
 }

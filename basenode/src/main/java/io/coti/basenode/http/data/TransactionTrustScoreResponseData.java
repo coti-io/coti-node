@@ -4,8 +4,10 @@ import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.TransactionTrustScoreData;
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Data
-public class TransactionTrustScoreResponseData {
+public class TransactionTrustScoreResponseData implements Serializable {
 
     private double trustScore;
     private String trustScoreNodeHash;

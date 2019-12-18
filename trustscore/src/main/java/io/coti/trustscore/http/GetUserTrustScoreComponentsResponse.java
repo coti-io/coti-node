@@ -1,7 +1,7 @@
 package io.coti.trustscore.http;
 
 import io.coti.basenode.http.BaseResponse;
-import io.coti.trustscore.data.Buckets.BucketEventData;
+import io.coti.trustscore.data.buckets.BucketEventData;
 import io.coti.trustscore.data.TrustScoreData;
 import lombok.Data;
 

@@ -3,8 +3,8 @@ package io.coti.trustscore.http;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.BaseResponse;
-import io.coti.trustscore.data.Enums.EventType;
-import io.coti.trustscore.data.Enums.HighFrequencyEventScoreType;
+import io.coti.trustscore.data.enums.EventType;
+import io.coti.trustscore.data.enums.HighFrequencyEventScoreType;
 import lombok.Data;
 
 @Data

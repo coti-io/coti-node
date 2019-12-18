@@ -1,7 +1,7 @@
 package io.coti.trustscore.config.rules;
 
-import io.coti.trustscore.data.Enums.TrustScoreRangeType;
-import io.coti.trustscore.data.Enums.UserType;
+import io.coti.trustscore.data.enums.TrustScoreRangeType;
+import io.coti.trustscore.data.enums.UserType;
 import lombok.Data;
 
 import java.util.List;

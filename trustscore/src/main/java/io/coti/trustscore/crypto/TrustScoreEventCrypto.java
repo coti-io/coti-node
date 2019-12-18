@@ -2,7 +2,7 @@ package io.coti.trustscore.crypto;
 
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.SignatureValidationCrypto;
-import io.coti.trustscore.data.Events.KycEventData;
+import io.coti.trustscore.data.events.KycEventData;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
@@ -17,7 +17,6 @@ public class TrustScoreEventCrypto extends SignatureValidationCrypto<KycEventDat
                 put(userHashInBytes).putLong(eventData.getEventDate().toEpochMilli()).putInt(eventData.getEventType().getValue());
 
         byte[] trustScoreMessageInBytes = trustScoreMessageBuffer.array();
-        byte[] cryptoHashedMessage = CryptoHelper.cryptoHash(trustScoreMessageInBytes).getBytes();
-        return cryptoHashedMessage;
+        return CryptoHelper.cryptoHash(trustScoreMessageInBytes).getBytes();
     }
 }
