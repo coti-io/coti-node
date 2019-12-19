@@ -9,9 +9,9 @@ import java.util.HashMap;
 @Data
 public class HistoryTransactionResponseData {
 
-    private HashMap<Hash, TransactionData> HistoryTransactionResults;
+    private HashMap<Hash, TransactionData> historyTransactionResults;
 
     public HistoryTransactionResponseData(HashMap<Hash, TransactionData> historyTransactionResults) {
-        HistoryTransactionResults = historyTransactionResults;
+        this.historyTransactionResults = historyTransactionResults;
     }
 }

@@ -42,7 +42,7 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 @Service
 public class TransactionService extends BaseNodeTransactionService {
 
-    private final String END_POINT_RETRIEVE = "/transactions/reactive";
+    private static final String END_POINT_RETRIEVE = "/transactions/reactive";
     @Value("${storage.server.address}")
     protected String storageServerAddress;
     @Autowired
@@ -59,11 +59,6 @@ public class TransactionService extends BaseNodeTransactionService {
     private ChunkService chunkService;
     @Autowired
     private HttpJacksonSerializer jacksonSerializer;
-
-    @Override
-    public void init() {
-        super.init();
-    }
 
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
@@ -173,7 +168,7 @@ public class TransactionService extends BaseNodeTransactionService {
         while (!startDate.isAfter(endDate)) {
             HashSet<Hash> hashesOfDate = transactionHashesByDates.get(startDate);
             if (hashesOfDate != null) {
-                hashesOfDate.forEach(transactionHash -> transactionHashes.add(transactionHash));
+                hashesOfDate.forEach(transactionHashes::add);
             }
             startDate = startDate.plusDays(1);
         }

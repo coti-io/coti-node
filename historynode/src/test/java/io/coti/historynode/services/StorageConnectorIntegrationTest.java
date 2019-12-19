@@ -138,7 +138,7 @@ public class StorageConnectorIntegrationTest {
         GetHistoryAddressesRequest retrieveRequest = new GetHistoryAddressesRequest(addresses.stream().map(addressData -> addressData.getHash()).collect(Collectors.toList()));
         getHistoryAddressesRequestCrypto.signMessage(retrieveRequest);
         ResponseEntity<GetHistoryAddressesResponse> retrieveResponse = storageConnector.retrieveFromStorage(storageNodeUrl + "/addresses", retrieveRequest, GetHistoryAddressesResponse.class);
-        Assert.assertEquals(retrieveResponse.getStatusCode(), HttpStatus.OK);
+        Assert.assertEquals(HttpStatus.OK, retrieveResponse.getStatusCode());
         Map<Hash, AddressData> addressHashesToAddresses = retrieveResponse.getBody().getAddressHashesToAddresses();
         Assert.assertEquals(addressHashesToAddresses.size(), size);
         Set<Hash> hashes = addresses.stream().map(addressData -> addressData.getHash()).collect(Collectors.toSet());
