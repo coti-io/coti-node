@@ -67,7 +67,7 @@ public class AddressController {
     }
 
     @RequestMapping(value = "/history", method = RequestMethod.POST)
-    public ResponseEntity<AddressesExistsResponse> addressesExists(@Valid @RequestBody AddressBulkRequest addressRequest) {
+    public ResponseEntity<AddressesExistsResponse> addressesCheckExistenceAndRequestHistoryNode(@Valid @RequestBody AddressBulkRequest addressRequest) {
         return ResponseEntity.status(HttpStatus.OK).body(addressService.addressesCheckExistenceAndRequestHistoryNode(addressRequest));
     }
 }

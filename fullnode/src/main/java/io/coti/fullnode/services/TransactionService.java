@@ -179,34 +179,34 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
-    public ResponseEntity<Response> repropagateTransaction(RepropagateTransactionRequest request) {
+    public ResponseEntity<IResponse> repropagateTransaction(RepropagateTransactionRequest request) {
 
         if (!resendTransactionRequestCrypto.verifySignature(request)) {
             log.error("Signature validation failed for the request to resend transaction {}", request.getTransactionHash());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new AddTransactionResponse(STATUS_ERROR, TRANSACTION_RESENT_INVALID_SIGNATURE_MESSAGE));
+                    .body(new Response(TRANSACTION_RESENT_INVALID_SIGNATURE_MESSAGE, STATUS_ERROR));
         }
         TransactionData transactionData = transactions.getByHash(request.getTransactionHash());
         if (transactionData == null) {
             log.error("Transaction {} requested to resend is not available in the database", request.getTransactionHash());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new AddTransactionResponse(STATUS_ERROR, TRANSACTION_RESENT_NOT_AVAILABLE_MESSAGE));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new Response(TRANSACTION_RESENT_NOT_AVAILABLE_MESSAGE, STATUS_ERROR));
         }
         if (!request.getSignerHash().equals(transactionData.getSenderHash())) {
             log.error("Transaction {} is requested to resend not by the transaction sender", request.getTransactionHash());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new AddTransactionResponse(STATUS_ERROR, TRANSACTION_RESENT_NOT_AUTHORISED_MESSAGE));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new Response(TRANSACTION_RESENT_NOT_ALLOWED_MESSAGE, STATUS_ERROR));
         }
         if (transactionHelper.isTransactionHashProcessing(request.getTransactionHash())) {
             log.error("Transaction {} requested to resend is still being processed", request.getTransactionHash());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new AddTransactionResponse(STATUS_ERROR, TRANSACTION_RESENT_PROCESSING_MESSAGE));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new AddTransactionResponse(TRANSACTION_RESENT_PROCESSING_MESSAGE, STATUS_ERROR));
         }
 
         ((NetworkService) networkService).sendDataToConnectedDspNodes(transactionData);
 
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new AddTransactionResponse(STATUS_SUCCESS, TRANSACTION_RESENT_MESSAGE));
+                .body(new Response(TRANSACTION_RESENT_MESSAGE));
     }
 
     public void selectSources(TransactionData transactionData) {

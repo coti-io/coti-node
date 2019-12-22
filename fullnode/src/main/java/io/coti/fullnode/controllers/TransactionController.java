@@ -34,7 +34,7 @@ public class TransactionController {
     }
 
     @PostMapping(value = "/repropagate")
-    public ResponseEntity<Response> repropagateTransaction(@Valid @RequestBody RepropagateTransactionRequest repropagateTransactionRequest) {
+    public ResponseEntity<IResponse> repropagateTransaction(@Valid @RequestBody RepropagateTransactionRequest repropagateTransactionRequest) {
         return transactionService.repropagateTransaction(repropagateTransactionRequest);
     }
 
