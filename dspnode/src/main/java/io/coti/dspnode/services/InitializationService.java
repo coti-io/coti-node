@@ -35,6 +35,7 @@ public class InitializationService extends BaseNodeInitializationService {
     private ICommunicationService communicationService;
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
+    @Override
     @PostConstruct
     public void init() {
         try {

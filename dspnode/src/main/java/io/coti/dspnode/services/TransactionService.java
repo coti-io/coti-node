@@ -98,6 +98,7 @@ public class TransactionService extends BaseNodeTransactionService {
         isValidatorRunning.set(false);
     }
 
+    @Override
     public void continueHandlePropagatedTransaction(TransactionData transactionData) {
         propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
         if (!EnumSet.of(TransactionType.ZeroSpend, TransactionType.Initial).contains(transactionData.getType())) {
