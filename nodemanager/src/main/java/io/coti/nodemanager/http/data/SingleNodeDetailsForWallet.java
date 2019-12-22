@@ -5,8 +5,10 @@ import io.coti.basenode.data.FeeData;
 import io.coti.basenode.data.Hash;
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Data
-public class SingleNodeDetailsForWallet {
+public class SingleNodeDetailsForWallet implements Serializable {
 
     private String nodeHash;
     private String httpAddress;

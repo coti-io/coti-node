@@ -101,7 +101,7 @@ public class StakingService implements IStakingService {
         for (NetworkNodeData node : nodeMap.values()) {
             StakingNodeData stakingNodeData = stakingNodes.getByHash(node.getNodeHash());
             if (stakingNodeData != null && stakingNodeData.getStake() != null && stakingNodeData.getStake().doubleValue() > 0) {
-                double weight = stakingNodeData.getStake().doubleValue() * probabilityFromFee(node.getFeeData()) * probabilityFromTS(node.getTrustScore());
+                double weight = stakingNodeData.getStake().doubleValue() * probabilityFromFee(node.getFeeData()) * probabilityFromTS();
                 if (weight > 0) {
                     WeightedNode weightedNode = new WeightedNode(node, weight);
                     weightedNodeList.add(weightedNode);
@@ -109,9 +109,12 @@ public class StakingService implements IStakingService {
                     numberNodes++;
                 }
             }
-
         }
 
+        return calculateSelectStakedNode(totalWeight, numberNodes, weightedNodeList);
+    }
+
+    private NetworkNodeData calculateSelectStakedNode(double totalWeight, int numberNodes, List<WeightedNode> weightedNodeList) {
         Collections.shuffle(weightedNodeList);
         double randomValue = Math.random();
         double randomWeight = totalWeight * randomValue;
@@ -170,7 +173,7 @@ public class StakingService implements IStakingService {
 
     }
 
-    private double probabilityFromTS(Double trustScore) {
+    private double probabilityFromTS() {
         //first implementation doesn't use trust score
         return 1.0;
     }
