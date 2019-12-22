@@ -9,11 +9,12 @@ import lombok.Data;
 import javax.validation.Valid;
 import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
-public class MintingFeeQuoteData implements ISignable, ISignValidatable {
+public class MintingFeeQuoteData implements ISignable, ISignValidatable, Serializable {
 
     @NotNull
     private Instant createTime;

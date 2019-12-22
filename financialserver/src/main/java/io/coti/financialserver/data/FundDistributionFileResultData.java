@@ -48,7 +48,7 @@ public class FundDistributionFileResultData implements IEntity, ISignable, ISign
 
     @Override
     public Hash getHash() {
-        return financialServerHash;
+        return getSignerHash();
     }
 
     @Override

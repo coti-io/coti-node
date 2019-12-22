@@ -2,6 +2,7 @@ package io.coti.financialserver.http;
 
 import io.coti.basenode.data.Hash;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -10,6 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 
+@Slf4j
 @Data
 public class UpdateDistributionAmountRequest {
 
@@ -24,7 +26,7 @@ public class UpdateDistributionAmountRequest {
         try {
             this.distributionDate = LocalDate.parse(distributionDate).atStartOfDay();
         } catch (DateTimeParseException e) {
-            return;
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
         }
     }
 }

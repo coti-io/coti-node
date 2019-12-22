@@ -7,10 +7,11 @@ import org.hibernate.validator.constraints.Range;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Positive;
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Data
-public class CurrencyDataForFee {
+public class CurrencyDataForFee implements Serializable {
 
     @NotEmpty
     protected String name;

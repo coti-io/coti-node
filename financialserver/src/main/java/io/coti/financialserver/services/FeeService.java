@@ -2,7 +2,6 @@ package io.coti.financialserver.services;
 
 import io.coti.basenode.crypto.BaseTransactionCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
-import io.coti.basenode.data.CurrencyData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TokenGenerationData;
 import io.coti.basenode.data.TokenGenerationFeeBaseTransactionData;
@@ -29,7 +28,7 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 @Service
 public class FeeService {
 
-    private final static BigDecimal totalSupplyFeeFactor = BigDecimal.ZERO;
+    private static final BigDecimal totalSupplyFeeFactor = BigDecimal.ZERO;
     @Value("${token.generation.fee}")
     private BigDecimal tokenGenerationFee;
     @Value("${financialserver.seed}")
@@ -43,18 +42,16 @@ public class FeeService {
     private NodeCryptoHelper nodeCryptoHelper;
     @Autowired
     private ICurrencyService currencyService;
-    @Autowired
-    private CurrencyRateService currencyRateService;
 
     public ResponseEntity<IResponse> createTokenGenerationFee(GenerateTokenFeeRequest generateTokenRequest, Hash currencyHash) {
         try {
-            BigDecimal tokenGenerationFee = calculateTokenGenerationFee(generateTokenRequest.getCurrencyData().getTotalSupply());
+            BigDecimal tokenGenerationFeeCalculated = calculateTokenGenerationFee(generateTokenRequest.getCurrencyData().getTotalSupply());
             TokenGenerationData tokenGenerationData = new TokenGenerationData(generateTokenRequest.getCurrencyData().getName(),
                     generateTokenRequest.getCurrencyData().getSymbol(), currencyHash, generateTokenRequest.getCurrencyData().getTotalSupply(),
-                    generateTokenRequest.getCurrencyData().getScale(), Instant.now(), tokenGenerationFee);
+                    generateTokenRequest.getCurrencyData().getScale(), Instant.now(), tokenGenerationFeeCalculated);
             TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData =
                     new TokenGenerationFeeBaseTransactionData(networkFeeAddress(), currencyService.getNativeCurrencyHash(),
-                            NodeCryptoHelper.getNodeHash(), tokenGenerationFee, Instant.now(), tokenGenerationData);
+                            NodeCryptoHelper.getNodeHash(), tokenGenerationFeeCalculated, Instant.now(), tokenGenerationData);
             setTokenGenerationFeeHash(tokenGenerationFeeBaseTransactionData);
             signTokenGenerationFee(tokenGenerationFeeBaseTransactionData);
             TokenGenerationFeeResponseData tokenGenerationFeeResponseData = new TokenGenerationFeeResponseData(tokenGenerationFeeBaseTransactionData);
@@ -70,10 +67,8 @@ public class FeeService {
         return totalSupplyFeeFactor.multiply(totalSupply).add(tokenGenerationFee);
     }
 
-    public BigDecimal calculateTokenMintingFee(BigDecimal amount, Instant creationTime, CurrencyData currencyData) {
+    public BigDecimal calculateTokenMintingFee() {
         return regularTokenMintingFee;
-//        return tokenMintingFeeFactor.divide(new BigDecimal(100)).multiply(amount)
-//                .multiply(new BigDecimal(currencyRateService.getTokenRateToNativeCoin(currencyData))).add(tokenMintingMinimumFee);
     }
 
     protected Hash networkFeeAddress() {
@@ -85,6 +80,6 @@ public class FeeService {
     }
 
     protected void signTokenGenerationFee(TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData) {
-        tokenGenerationFeeBaseTransactionData.setSignature(nodeCryptoHelper.signMessage(tokenGenerationFeeBaseTransactionData.getHash().getBytes()));
+        tokenGenerationFeeBaseTransactionData.setSignature(NodeCryptoHelper.signMessage(tokenGenerationFeeBaseTransactionData.getHash().getBytes()));
     }
 }

@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,7 +75,7 @@ public class DocumentService {
         }
 
         for (DisputeItemData disputeItemData : disputeItemsData) {
-            if (disputeItemData.getStatus() != DisputeItemStatus.Recall) {
+            if (disputeItemData.getStatus() != DisputeItemStatus.RECALL) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ITEM_PASSED_RECALL_STATUS, STATUS_ERROR));
             }
 
@@ -103,13 +104,16 @@ public class DocumentService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(INTERNAL_ERROR, STATUS_ERROR));
         }
 
-        String upload_error = awsService.uploadDisputeDocument(disputeDocumentData.getHash(), file, multiPartFile.getContentType());
-        if (upload_error != null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(upload_error, STATUS_ERROR));
+        String uploadError = awsService.uploadDisputeDocument(disputeDocumentData.getHash(), file, multiPartFile.getContentType());
+        if (uploadError != null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(uploadError, STATUS_ERROR));
         }
 
-        if (!file.delete()) {
+        try {
+            Files.delete(file.toPath());
+        } catch (IOException e) {
             log.error("Couldn't delete file: {}", disputeDocumentData.getHash());
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
         }
 
         disputeDocumentData.setFileName(multiPartFile.getOriginalFilename());

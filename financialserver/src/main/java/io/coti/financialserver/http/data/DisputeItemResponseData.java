@@ -5,12 +5,13 @@ import io.coti.financialserver.data.DisputeItemStatus;
 import io.coti.financialserver.data.DisputeReason;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class DisputeItemResponseData {
+public class DisputeItemResponseData implements Serializable {
     private Long id;
     private BigDecimal price;
     private int quantity;

@@ -9,16 +9,16 @@ import java.lang.reflect.InvocationTargetException;
 
 @Slf4j
 public enum GetDisputeResponseClass {
-    Consumer(ConsumerDisputeResponseData.class),
-    Merchant(MerchantDisputeResponseData.class),
-    Arbitrator(ArbitratorDisputeResponseData.class) {
+    CONSUMER(ConsumerDisputeResponseData.class),
+    MERCHANT(MerchantDisputeResponseData.class),
+    ARBITRATOR(ArbitratorDisputeResponseData.class) {
         @Override
         public GetDisputeResponseData getNewInstance(DisputeData disputeData, Hash userHash) {
             try {
                 Constructor<? extends GetDisputeResponseData> constructor = getDisputeResponseClass.getConstructor(DisputeData.class, Hash.class);
                 return constructor.newInstance(disputeData, userHash);
             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
-                e.printStackTrace();
+                log.error("{}: {}", e.getClass().getName(), e.getMessage());
                 return null;
             }
         }
@@ -35,7 +35,7 @@ public enum GetDisputeResponseClass {
             Constructor<? extends GetDisputeResponseData> constructor = getDisputeResponseClass.getConstructor(DisputeData.class);
             return constructor.newInstance(disputeData);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
-            e.printStackTrace();
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
             return null;
         }
     }

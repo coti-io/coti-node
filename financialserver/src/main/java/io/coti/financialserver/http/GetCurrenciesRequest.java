@@ -12,5 +12,5 @@ import java.util.List;
 public class GetCurrenciesRequest extends Request {
 
     @NotNull(message = "Token hashes must not be blank")
-    public List<@Valid Hash> tokenHashes;
+    private List<@Valid Hash> tokenHashes;
 }

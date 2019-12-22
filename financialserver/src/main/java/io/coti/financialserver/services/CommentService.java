@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static io.coti.financialserver.http.HttpStringConstants.*;
 
@@ -63,7 +64,7 @@ public class CommentService {
         }
 
         for (DisputeItemData disputeItemData : disputeItemsData) {
-            if (disputeItemData.getStatus() != DisputeItemStatus.Recall) {
+            if (disputeItemData.getStatus() != DisputeItemStatus.RECALL) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ITEM_PASSED_RECALL_STATUS, STATUS_ERROR));
             }
 
@@ -98,7 +99,11 @@ public class CommentService {
         if (!disputeService.isAuthorizedDisputeDetailDisplay(disputeData, getDisputeCommentsData.getUserHash())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_COMMENT_UNAUTHORIZED, STATUS_ERROR));
         }
-        DisputeItemData disputeItemData = disputeData.getDisputeItems().stream().filter(disputeItem -> disputeItem.getId().equals(getDisputeCommentsData.getItemId())).findFirst().get();
+        Optional<DisputeItemData> first = disputeData.getDisputeItems().stream().filter(disputeItem -> disputeItem.getId().equals(getDisputeCommentsData.getItemId())).findFirst();
+        DisputeItemData disputeItemData = null;
+        if (first.isPresent()) {
+            disputeItemData = first.get();
+        }
         if (disputeItemData == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ITEM_NOT_FOUND, STATUS_ERROR));
         }

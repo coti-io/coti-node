@@ -3,8 +3,10 @@ package io.coti.financialserver.http.data;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Data
-public class FundDistributionFileEntryResultData {
+public class FundDistributionFileEntryResultData implements Serializable {
 
     private long id;
     private String receiverAddress;

@@ -49,7 +49,7 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable, IDispu
 
     public void init() {
 
-        disputeStatus = DisputeStatus.Recall;
+        disputeStatus = DisputeStatus.RECALL;
         creationTime = Instant.now();
         updateTime = Instant.now();
         arbitratorHashes = new ArrayList<>();
@@ -73,14 +73,14 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable, IDispu
     }
 
     public List<DisputeItemData> getDisputeItems(List<Long> itemIds) {
-        List<DisputeItemData> disputeItems = new ArrayList<>();
+        List<DisputeItemData> disputeItemsLocal = new ArrayList<>();
         for (DisputeItemData disputeItem : this.disputeItems) {
             if (itemIds.contains(disputeItem.getId())) {
-                disputeItems.add(disputeItem);
+                disputeItemsLocal.add(disputeItem);
             }
         }
 
-        return disputeItems;
+        return disputeItemsLocal;
     }
 
     @Override

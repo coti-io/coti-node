@@ -31,7 +31,7 @@ public class DisputeItemData implements Serializable {
         disputeDocumentHashes = new ArrayList<>();
         disputeCommentHashes = new ArrayList<>();
         disputeItemVotesData = new ArrayList<>();
-        status = DisputeItemStatus.Recall;
+        status = DisputeItemStatus.RECALL;
     }
 
     public void addDocumentHash(Hash documentHash) {

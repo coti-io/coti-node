@@ -76,6 +76,8 @@ public class DistributionService {
                 case ADVISORS:
                     amount = new BigDecimal(INITIAL_AMOUNT_FOR_ADVISORS);
                     break;
+                default:
+                    break;
             }
         }
         return amount;

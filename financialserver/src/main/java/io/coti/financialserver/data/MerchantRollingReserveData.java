@@ -47,7 +47,7 @@ public class MerchantRollingReserveData implements IEntity, ISignable, ISignVali
 
     @Override
     public Hash getSignerHash() {
-        return merchantHash;
+        return getHash();
     }
 
     @Override

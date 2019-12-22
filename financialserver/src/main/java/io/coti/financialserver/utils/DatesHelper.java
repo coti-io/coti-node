@@ -22,7 +22,7 @@ public class DatesHelper {
         try {
             date = formatter.parse(formatter.format(date));
         } catch (ParseException e) {
-            e.printStackTrace();
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
         }
 
         DateUtils.addDays(date, numberOfDays);

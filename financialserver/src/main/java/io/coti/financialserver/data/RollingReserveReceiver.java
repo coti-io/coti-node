@@ -1,7 +1,7 @@
 package io.coti.financialserver.data;
 
 public enum RollingReserveReceiver {
-    Merchant,
-    Consumer,
-    MerchantAndConsumer
+    MERCHANT,
+    CONSUMER,
+    MERCHANT_AND_CONSUMER
 }

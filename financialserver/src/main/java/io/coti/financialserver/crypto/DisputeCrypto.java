@@ -19,7 +19,7 @@ public class DisputeCrypto extends SignatureCrypto<DisputeData> {
         byte[] disputeItemsInBytes = new byte[0];
 
         List<DisputeItemData> disputeItems = disputeData.getDisputeItems();
-        if (disputeItems != null && disputeItems.size() > 0) {
+        if (disputeItems != null && !disputeItems.isEmpty()) {
             int disputeItemsByteSize = 0;
             for (DisputeItemData disputeItemData : disputeItems) {
                 disputeItemsByteSize += Long.BYTES + disputeItemData.getReason().toString().getBytes().length;

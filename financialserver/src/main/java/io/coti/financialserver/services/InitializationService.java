@@ -41,6 +41,7 @@ public class InitializationService extends BaseNodeInitializationService {
     @Autowired
     private NodeCryptoHelper nodeCryptoHelper;
 
+    @Override
     @PostConstruct
     public void init() {
         try {
