@@ -33,11 +33,11 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     private boolean resetTransactions;
     @Autowired
     private ApplicationContext ctx;
-    private String dbPath;
-    private RocksDB db;
+    protected String dbPath;
+    protected RocksDB db;
     protected List<String> columnFamilyClassNames;
     protected List<String> resetColumnFamilyNames;
-    private Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
+    protected Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
 
     public void init() {
         setColumnFamily();
@@ -109,7 +109,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         }
     }
 
-    private List<String> getColumnFamilyNamesFromDB() {
+    protected List<String> getColumnFamilyNamesFromDB() {
         try (Options options = new Options()) {
             List<byte[]> columnFamilies = RocksDB.listColumnFamilies(options, dbPath);
             return columnFamilies.stream().map(dbColumnFamily -> new String(dbColumnFamily)).collect(Collectors.toList());
@@ -159,7 +159,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         });
     }
 
-    private void openDB() {
+    protected void openDB() {
         openDB(null);
     }
 
@@ -179,7 +179,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
 
     }
 
-    private void initColumnFamilyClasses() {
+    protected void initColumnFamilyClasses() {
         for (int i = 1; i < columnFamilyClassNames.size(); i++) {
             try {
                 ((Collection) ctx.getBean(Class.forName(columnFamilyClassNames.get(i)))).init();
@@ -337,7 +337,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         }
     }
 
-    private void createDbDirectory() {
+    protected void createDbDirectory() {
         try {
             File dbDirectory = Paths.get(dbPath).toFile();
             if (!dbDirectory.exists() || !dbDirectory.isDirectory()) {
@@ -354,7 +354,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         }
     }
 
-    private void loadLibrary() {
+    protected void loadLibrary() {
         try {
             log.info("Starting to load RocksDB library");
             RocksDB.loadLibrary();
@@ -364,7 +364,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         }
     }
 
-    private void closeDB() {
+    protected void closeDB() {
         Iterator<ColumnFamilyHandle> iterator = classNameToColumnFamilyHandleMapping.values().iterator();
         while (iterator.hasNext()) {
             ColumnFamilyHandle columnFamilyHandle = iterator.next();
