@@ -45,11 +45,11 @@ public class BaseNodeTransactionService implements ITransactionService {
     private BaseNodeDspVoteService baseNodeDspVoteService;
     private Map<Hash, TransactionData> parentProcessingTransactions = new ConcurrentHashMap<>();
     private List<TransactionData> postponedTransactions = new LinkedList<>();
-    private HashSet<Hash> transactionsAwaitingHandling;
+    private HashSet<Hash> transactionsAwaitingHandlingSet;
 
     @Override
     public void init() {
-        transactionsAwaitingHandling = new HashSet<>();
+        transactionsAwaitingHandlingSet = new HashSet<>();
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
@@ -85,6 +85,22 @@ public class BaseNodeTransactionService implements ITransactionService {
             if (monitorTransactionBatch.isAlive()) {
                 monitorTransactionBatch.interrupt();
             }
+        }
+    }
+
+    @Override
+    public void getSingleTransaction(Hash transactionHash, HttpServletResponse response) {
+
+        try {
+            ServletOutputStream output = response.getOutputStream();
+            TransactionData transactionData = transactions.getByHash(transactionHash);
+            if (transactionData != null) {
+                output.write(jacksonSerializer.serialize(transactionData));
+                output.flush();
+            }
+        } catch (Exception e) {
+            log.error("Error sending requested transaction");
+            log.error(e.getMessage());
         }
     }
 
@@ -204,7 +220,7 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
         log.debug("Continue to handle propagated transaction {} by base node", transactionData.getHash());
-        transactionsAwaitingHandling.remove(transactionData.getHash());
+        transactionsAwaitingHandlingSet.remove(transactionData.getHash());
     }
 
     public void handleMissingTransaction(TransactionData transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes) {
@@ -268,11 +284,11 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     @Override
     public boolean isTransactionReceived(Hash transactionHash) {
-        return transactionsAwaitingHandling.contains(transactionHash);
+        return transactionsAwaitingHandlingSet.contains(transactionHash);
     }
 
     @Override
     public void addReceivedTransactionHash(Hash transactionHash) {
-        transactionsAwaitingHandling.add(transactionHash);
+        transactionsAwaitingHandlingSet.add(transactionHash);
     }
 }

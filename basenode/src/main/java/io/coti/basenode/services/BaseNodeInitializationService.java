@@ -154,6 +154,7 @@ public abstract class BaseNodeInitializationService {
             balanceService.validateBalances();
             log.info("Transactions Load completed");
             clusterService.finalizeInit();
+
         } catch (TransactionSyncException e) {
             throw new TransactionSyncException("Error at sync transactions.\n" + e.getMessage(), e);
         } catch (Exception e) {

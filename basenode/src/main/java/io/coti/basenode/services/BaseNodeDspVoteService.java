@@ -7,10 +7,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.exceptions.DspConsensusResultException;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.IConfirmationService;
-import io.coti.basenode.services.interfaces.IDspVoteService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
-import io.coti.basenode.services.interfaces.ITransactionService;
+import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,6 +31,9 @@ public class BaseNodeDspVoteService implements IDspVoteService {
     private Transactions transactions;
     @Autowired
     private ITransactionService transactionService;
+    @Autowired
+    private ITransactionSynchronizationService transactionSynchronizationService;
+
     private Map<Hash, DspConsensusResult> postponedDspConsensusResultsMap;
 
     public void init() {
@@ -61,12 +61,8 @@ public class BaseNodeDspVoteService implements IDspVoteService {
         TransactionData transactionData = transactions.getByHash(transactionHash);
         if (transactionData == null) {
             postponedDspConsensusResultsMap.put(transactionHash, dspConsensusResult);
-            if (transactionService.isTransactionReceived(transactionHash)) {
-                // Transaction Data is in queue no need to ask for it specifically
-            } else {
-                // get Transaction Data from Recovery Service by Tx Hash
-                TransactionData recoveredTransaction = null;
-
+            if (!transactionService.isTransactionReceived(transactionHash)) {
+                TransactionData recoveredTransaction = transactionSynchronizationService.requestSingleMissingTransaction(transactionHash);
 
                 if (recoveredTransaction == null) {
                     throw new DspConsensusResultException(String.format("DspConsensus result is for a non-existing transaction %s. ", transactionHash));

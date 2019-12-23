@@ -86,7 +86,10 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                     log.debug("Received a new message on channel: {}", channel);
                     byte[] message = propagationReceiver.recv();
                     messageQueue.put(new ZeroMQMessageData(channel, message));
-                    updateForReceivedTransaction(channel, message);
+    // add separated queues !!!
+                    if (!channel.contains("HeartBeat")) {
+                        updateForReceivedTransaction(channel, message);
+                    }
                 } catch (InterruptedException e) {
                     log.info("ZMQ subscriber propagation receiver interrupted");
                     Thread.currentThread().interrupt();
@@ -116,7 +119,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         try {
             propagatedMessageType = (Class<? extends IPropagatable>) Class.forName(channelArray[0]);
         } catch (ClassNotFoundException e) {
-            log.error("Zero MQ failed to identify type of message");
+            log.error("Zero MQ failed to identify type of message", e);
             return false;
         }
         if (propagatedMessageType == null) {
