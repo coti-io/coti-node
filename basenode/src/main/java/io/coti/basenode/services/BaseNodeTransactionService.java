@@ -4,6 +4,7 @@ import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.data.DspConsensusResult;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.http.GetTransactionRequest;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
@@ -14,6 +15,7 @@ import reactor.core.publisher.FluxSink;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -102,6 +104,11 @@ public class BaseNodeTransactionService implements ITransactionService {
             log.error("Error sending requested transaction");
             log.error(e.getMessage());
         }
+    }
+
+    @Override
+    public void getSingleTransaction(GetTransactionRequest getTransactionRequest) {
+        @Valid Hash transactionHash = getTransactionRequest.getTransactionHash();
     }
 
     @Override

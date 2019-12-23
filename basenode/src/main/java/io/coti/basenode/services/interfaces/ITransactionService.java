@@ -2,6 +2,7 @@ package io.coti.basenode.services.interfaces;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.http.GetTransactionRequest;
 import reactor.core.publisher.FluxSink;
 
 import javax.servlet.http.HttpServletResponse;
@@ -15,6 +16,8 @@ public interface ITransactionService {
     void getTransactionBatch(long startingIndex, HttpServletResponse response);
 
     void getSingleTransaction(Hash transactionHash, HttpServletResponse response);
+
+    void getSingleTransaction(GetTransactionRequest getTransactionRequest);
 
     void getTransactionBatch(long startingIndex, FluxSink sink);
 
