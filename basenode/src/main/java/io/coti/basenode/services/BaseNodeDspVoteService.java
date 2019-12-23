@@ -10,6 +10,7 @@ import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IConfirmationService;
 import io.coti.basenode.services.interfaces.IDspVoteService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,8 @@ public class BaseNodeDspVoteService implements IDspVoteService {
     private DspConsensusCrypto dspConsensusCrypto;
     @Autowired
     private Transactions transactions;
+    @Autowired
+    private ITransactionService transactionService;
     private Map<Hash, DspConsensusResult> postponedDspConsensusResultsMap;
 
     public void init() {
@@ -51,25 +54,38 @@ public class BaseNodeDspVoteService implements IDspVoteService {
     }
 
     private void handleVoteConclusionResult(DspConsensusResult dspConsensusResult) {
+        Hash transactionHash = dspConsensusResult.getHash();
         if (!dspConsensusCrypto.verifySignature(dspConsensusResult)) {
-            throw new DspConsensusResultException(String.format("DspConsensus signature verification failed for transaction %s", dspConsensusResult.getHash()));
+            throw new DspConsensusResultException(String.format("DspConsensus signature verification failed for transaction %s", transactionHash));
         }
-        TransactionData transactionData = transactions.getByHash(dspConsensusResult.getHash());
+        TransactionData transactionData = transactions.getByHash(transactionHash);
         if (transactionData == null) {
-            postponedDspConsensusResultsMap.put(dspConsensusResult.getHash(), dspConsensusResult);
-            throw new DspConsensusResultException(String.format("DspConsensus result is for a non-existing transaction %s. ", dspConsensusResult.getHash()));
+            postponedDspConsensusResultsMap.put(transactionHash, dspConsensusResult);
+            if (transactionService.isTransactionReceived(transactionHash)) {
+                // Transaction Data is in queue no need to ask for it specifically
+            } else {
+                // get Transaction Data from Recovery Service by Tx Hash
+                TransactionData recoveredTransaction = null;
+
+
+                if (recoveredTransaction == null) {
+                    throw new DspConsensusResultException(String.format("DspConsensus result is for a non-existing transaction %s. ", transactionHash));
+                }
+                transactionService.handlePropagatedTransaction(recoveredTransaction);
+            }
+
         }
         if (transactionData.getDspConsensusResult() != null) {
-            log.debug("DspConsensus result already exists for transaction {}", dspConsensusResult.getHash());
+            log.debug("DspConsensus result already exists for transaction {}", transactionHash);
             return;
         }
         if (dspConsensusResult.isDspConsensus()) {
-            log.debug("Valid vote conclusion received for transaction: {}", dspConsensusResult.getHash());
+            log.debug("Valid vote conclusion received for transaction: {}", transactionHash);
         } else {
-            log.debug("Invalid vote conclusion received for transaction: {}", dspConsensusResult.getHash());
+            log.debug("Invalid vote conclusion received for transaction: {}", transactionHash);
         }
 
-        log.debug("DspConsensus result for transaction: Hash= {}, DspVoteResult= {}, Index= {}", dspConsensusResult.getHash(), dspConsensusResult.isDspConsensus(), dspConsensusResult.getIndex());
+        log.debug("DspConsensus result for transaction: Hash= {}, DspVoteResult= {}, Index= {}", transactionHash, dspConsensusResult.isDspConsensus(), dspConsensusResult.getIndex());
     }
 
     protected void continueHandleVoteConclusion(DspConsensusResult dspConsensusResult) {
@@ -80,6 +96,4 @@ public class BaseNodeDspVoteService implements IDspVoteService {
     public DspConsensusResult getPostponedDspConsensusResult(Hash transactionHash) {
         return postponedDspConsensusResultsMap.get(transactionHash);
     }
-
-
 }

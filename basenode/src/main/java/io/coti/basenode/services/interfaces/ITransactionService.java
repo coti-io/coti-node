@@ -25,4 +25,8 @@ public interface ITransactionService {
     int totalPostponedTransactions();
 
     void addToExplorerIndexes(TransactionData transactionData);
+
+    boolean isTransactionReceived(Hash transactionHash);
+
+    void addReceivedTransactionHash(Hash transactionHash);
 }

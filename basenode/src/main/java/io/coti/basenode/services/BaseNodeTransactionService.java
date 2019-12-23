@@ -14,10 +14,7 @@ import reactor.core.publisher.FluxSink;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -44,11 +41,15 @@ public class BaseNodeTransactionService implements ITransactionService {
     private JacksonSerializer jacksonSerializer;
     @Autowired
     private TransactionIndexes transactionIndexes;
+    @Autowired
+    private BaseNodeDspVoteService baseNodeDspVoteService;
     private Map<Hash, TransactionData> parentProcessingTransactions = new ConcurrentHashMap<>();
     private List<TransactionData> postponedTransactions = new LinkedList<>();
+    private HashSet<Hash> transactionsAwaitingHandling;
 
     @Override
     public void init() {
+        transactionsAwaitingHandling = new HashSet<>();
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
@@ -203,6 +204,7 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
         log.debug("Continue to handle propagated transaction {} by base node", transactionData.getHash());
+        transactionsAwaitingHandling.remove(transactionData.getHash());
     }
 
     public void handleMissingTransaction(TransactionData transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes) {
@@ -262,5 +264,15 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     public int totalPostponedTransactions() {
         return postponedTransactions.size();
+    }
+
+    @Override
+    public boolean isTransactionReceived(Hash transactionHash) {
+        return transactionsAwaitingHandling.contains(transactionHash);
+    }
+
+    @Override
+    public void addReceivedTransactionHash(Hash transactionHash) {
+        transactionsAwaitingHandling.add(transactionHash);
     }
 }
