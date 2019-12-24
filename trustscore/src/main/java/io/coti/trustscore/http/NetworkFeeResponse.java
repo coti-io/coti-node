@@ -6,7 +6,6 @@ import lombok.Data;
 
 @Data
 public class NetworkFeeResponse extends BaseResponse {
-
     private NetworkFeeResponseData networkFeeData;
 
     public NetworkFeeResponse(NetworkFeeResponseData networkFeeResponseData) {

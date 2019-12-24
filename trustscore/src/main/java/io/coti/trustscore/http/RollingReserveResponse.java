@@ -7,7 +7,6 @@ import lombok.Data;
 
 @Data
 public class RollingReserveResponse extends BaseResponse {
-
     private RollingReserveResponseData rollingReserveData;
 
     public RollingReserveResponse(RollingReserveResponseData rollingReserveResponseData) {

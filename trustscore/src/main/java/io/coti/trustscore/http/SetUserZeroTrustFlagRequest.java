@@ -8,7 +8,6 @@ import javax.validation.constraints.NotNull;
 
 @Data
 public class SetUserZeroTrustFlagRequest extends Request {
-
     @NotNull
     private Hash userHash;
     @NotNull

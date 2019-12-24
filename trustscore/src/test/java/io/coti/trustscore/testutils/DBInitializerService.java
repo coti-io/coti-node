@@ -1,6 +1,6 @@
 package io.coti.trustscore.testutils;
 
-import io.coti.trustscore.database.TrustScoreRocksDBConnector;
+import io.coti.trustscore.database.RocksDBConnector;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -10,10 +10,10 @@ import javax.annotation.PostConstruct;
 public class DBInitializerService {
 
     @Autowired
-    private TrustScoreRocksDBConnector trustScoreRocksDBConnector;
+    private RocksDBConnector rocksDBConnector;
 
     @PostConstruct
     public void init() {
-        trustScoreRocksDBConnector.init();
+        rocksDBConnector.init();
     }
 }

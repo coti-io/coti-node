@@ -16,3 +16,5 @@ public class BalanceCountAndContribution implements Serializable {
         this.contribution = contribution;
     }
 }
+
+// todo to delete

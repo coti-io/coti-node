@@ -6,9 +6,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class BucketEvents<T extends BucketEventData> extends Collection<T> {
-
-    public void init() {
-        super.init();
-
-    }
 }
+
+//todo to delete

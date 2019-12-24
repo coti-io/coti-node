@@ -20,7 +20,7 @@ public enum UserType {
                 return value;
             }
         }
-        throw new IllegalArgumentException(String.format("User type {} doesn't exist", text));
+        throw new IllegalArgumentException(String.format("User type %s doesn't exist", text));
     }
 
     @Override
@@ -28,3 +28,5 @@ public enum UserType {
         return text;
     }
 }
+
+// todo to delete
