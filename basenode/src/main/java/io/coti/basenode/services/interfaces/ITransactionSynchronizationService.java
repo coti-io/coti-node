@@ -7,7 +7,5 @@ public interface ITransactionSynchronizationService {
 
     void requestMissingTransactions(long firstMissingTransactionIndex);
 
-    TransactionData requestSingleMissingTransaction(Hash transactionHash);
-
     TransactionData requestSingleMissingTransactionFromRecovery(Hash transactionHash);
 }

@@ -28,7 +28,6 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
     private static final String RECOVERY_NODE_GET_BATCH_ENDPOINT = "/transaction_batch";
     private static final String RECOVERY_NODE_GET_SINGLE_ENDPOINT = "/transaction/hash";
     private static final String STARTING_INDEX_URL_PARAM_ENDPOINT = "?starting_index=";
-    private static final String SINGLE_TRANSACTION_URL_PARAM = "?hash=";
     private static final long MAXIMUM_BUFFER_SIZE = 300000;
     @Autowired
     private ITransactionHelper transactionHelper;
@@ -96,21 +95,6 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
             throw new TransactionSyncException("Error at missing transactions from recovery Node", e);
         }
 
-    }
-
-    public TransactionData requestSingleMissingTransaction(Hash transactionHash) {
-        TransactionData transactionData = null;
-        try {
-            byte[] transactionBytes = restTemplate.getForObject(networkService.getRecoveryServerAddress() + RECOVERY_NODE_GET_SINGLE_ENDPOINT
-                    + SINGLE_TRANSACTION_URL_PARAM + transactionHash, byte[].class);
-            if (transactionBytes != null) {
-                transactionData = jacksonSerializer.deserialize(transactionBytes);
-            }
-        } catch (Exception e) {
-            log.error("Error at getting chunks", e);
-            return null;
-        }
-        return transactionData;
     }
 
     public TransactionData requestSingleMissingTransactionFromRecovery(Hash transactionHash) {

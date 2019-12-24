@@ -98,21 +98,6 @@ public class BaseNodeTransactionService implements ITransactionService {
     }
 
     @Override
-    public void getSingleTransaction(Hash transactionHash, HttpServletResponse response) {
-        try {
-            ServletOutputStream output = response.getOutputStream();
-            TransactionData transactionData = transactions.getByHash(transactionHash);
-            if (transactionData != null) {
-                output.write(jacksonSerializer.serialize(transactionData));
-                output.flush();
-            }
-        } catch (Exception e) {
-            log.error("Error sending requested transaction");
-            log.error(e.getMessage());
-        }
-    }
-
-    @Override
     public ResponseEntity<IResponse> getSingleTransaction(GetTransactionRequest getTransactionRequest) {
         Hash transactionHash = getTransactionRequest.getTransactionHash();
         TransactionData transactionData = transactions.getByHash(transactionHash);

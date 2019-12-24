@@ -1,6 +1,5 @@
 package io.coti.basenode.controllers;
 
-import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.GetTransactionRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.ITransactionService;
@@ -18,7 +17,7 @@ import java.io.IOException;
 
 @Slf4j
 @RestController
-public class TransactionBatchController {
+public class BaseNodeTransactionController {
 
     @Autowired
     private ITransactionService transactionService;
@@ -26,11 +25,6 @@ public class TransactionBatchController {
     @GetMapping(value = "/transaction_batch")
     public void getTransactionBatch(@RequestParam @Valid @NotNull Long starting_index, HttpServletResponse response) throws IOException {
         transactionService.getTransactionBatch(starting_index, response);
-    }
-
-    @GetMapping(value = "/transaction/hash")
-    public void getSingleTransaction(@RequestParam @Valid @NotNull Hash hash, HttpServletResponse response) throws IOException {
-        transactionService.getSingleTransaction(hash, response);
     }
 
     @GetMapping(value = "/transaction_batch/reactive", produces = MediaType.APPLICATION_STREAM_JSON_VALUE)
