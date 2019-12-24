@@ -91,7 +91,7 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
     @Override
     @JsonIgnore
     public Hash getSignerHash() {
-        return nodeHash;
+        return getHash();
     }
 
     @Override

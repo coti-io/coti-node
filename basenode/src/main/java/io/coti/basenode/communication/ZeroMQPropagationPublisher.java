@@ -102,7 +102,7 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
             }
             LinkedList<ZeroMQMessageData> remainingMessages = new LinkedList<>();
             publishMessageQueue.drainTo(remainingMessages);
-            if (remainingMessages.size() != 0) {
+            if (!remainingMessages.isEmpty()) {
                 log.info("Please wait to publish {} remaining messages", remainingMessages.size());
                 remainingMessages.forEach(messageData -> {
                     propagator.sendMore(messageData.getChannel().getBytes());

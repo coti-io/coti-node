@@ -8,6 +8,7 @@ import io.coti.basenode.services.interfaces.IAwsService;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import org.junit.Assert;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -64,6 +65,9 @@ public class BaseNodeClusterStampServiceTest {
         prepareAndMockResponse();
 
     }
+
+    @Test
+    private void placeHolderTest() {}
 
     private void prepareAndMockResponse() {
 //        ClusterStampNameData major = new ClusterStampNameData("Clusterstamp_M_1565787205728_1565787834293.csv");

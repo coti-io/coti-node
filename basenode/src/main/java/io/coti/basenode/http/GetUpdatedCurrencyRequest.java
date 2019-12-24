@@ -15,7 +15,7 @@ import java.util.Map;
 public class GetUpdatedCurrencyRequest extends SerializableRequest implements ISignable, ISignValidatable {
 
     @NotNull
-    public Map<CurrencyType, HashSet<Hash>> currencyHashesByType;
+    private Map<CurrencyType, HashSet<Hash>> currencyHashesByType;
     @NotNull
     private Hash signerHash;
     @NotNull

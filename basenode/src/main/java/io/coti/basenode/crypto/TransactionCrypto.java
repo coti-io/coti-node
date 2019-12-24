@@ -11,7 +11,7 @@ import java.util.List;
 @Component
 public class TransactionCrypto extends SignatureCrypto<TransactionData> {
 
-    private final static int BASE_TRANSACTION_HASH_SIZE = 32;
+    private static final int BASE_TRANSACTION_HASH_SIZE = 32;
 
     @Override
     public byte[] getSignatureMessage(TransactionData transactionData) {

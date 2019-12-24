@@ -64,7 +64,10 @@ public class BaseNodeFileSystemService {
         String fullPath = dirPath + "/" + fileName;
         File file = new File(fullPath);
         try {
-            file.createNewFile();
+            boolean newFileCreated = file.createNewFile();
+            if(newFileCreated) {
+                log.error("Failed to create {}", fileName);
+            }
         } catch (IOException e) {
             throw new FileSystemException(String.format("Create file error. %s: %s", e.getClass().getName(), e.getMessage()));
         }

@@ -77,6 +77,7 @@ public class BaseNodeBalanceService implements IBalanceService {
 
     @Override
     public void continueHandleBalanceChanges(Hash addressHash, Hash currencyHash) {
+        // Implemented by the specific nodes
     }
 
     @Override

@@ -80,7 +80,7 @@ public class BaseNodeAddressService implements IAddressService {
     }
 
     protected void continueHandleGeneratedAddress(AddressData addressData) {
-
+        // Implemented by the specific nodes
     }
 
     @Override
@@ -128,7 +128,7 @@ public class BaseNodeAddressService implements IAddressService {
                 fileOutputStream.close();
             }
         } catch (IOException e) {
-
+            log.error("Error at uploadAddressBatch");
         }
         String line;
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName))) {

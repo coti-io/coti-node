@@ -76,7 +76,7 @@ public class FeeService {
     }
 
     protected void setTokenGenerationFeeHash(TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData) throws ClassNotFoundException {
-        BaseTransactionCrypto.TokenGenerationFeeBaseTransactionData.setBaseTransactionHash(tokenGenerationFeeBaseTransactionData);
+        BaseTransactionCrypto.TOKEN_GENERATION_FEE_BASE_TRANSACTION_DATA.setBaseTransactionHash(tokenGenerationFeeBaseTransactionData);
     }
 
     protected void signTokenGenerationFee(TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData) {

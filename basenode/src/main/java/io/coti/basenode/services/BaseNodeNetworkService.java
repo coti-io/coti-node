@@ -24,7 +24,6 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import javax.validation.ValidationException;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,6 +35,8 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 @Service
 public class BaseNodeNetworkService implements INetworkService {
 
+    public static final String UNSUPPORTED_NETWORK_NODE_DATA_TYPE = "Unsupported networkNodeData type : {}";
+    public static final String UNSUPPORTED_NETWORK_NODE_DATA_TYPE_STRING = "Unsupported networkNodeData type";
     protected String recoveryServerAddress;
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
@@ -71,7 +72,6 @@ public class BaseNodeNetworkService implements INetworkService {
             if (multipleNodeMaps != null) {
                 log.info("FullNode: {}, DspNode: {}, TrustScoreNode: {}", multipleNodeMaps.get(NodeType.FullNode).size(), multipleNodeMaps.get(NodeType.DspNode).size(), multipleNodeMaps.get(NodeType.TrustScoreNode).size());
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -106,8 +106,8 @@ public class BaseNodeNetworkService implements INetworkService {
     public Map<Hash, NetworkNodeData> getMapFromFactory(NodeType nodeType) {
         Map<Hash, NetworkNodeData> mapToGet = multipleNodeMaps.get(nodeType);
         if (mapToGet == null) {
-            log.error("Unsupported networkNodeData type : {}", nodeType);
-            throw new IllegalArgumentException("Unsupported networkNodeData type");
+            log.error(UNSUPPORTED_NETWORK_NODE_DATA_TYPE, nodeType);
+            throw new IllegalArgumentException(UNSUPPORTED_NETWORK_NODE_DATA_TYPE_STRING);
         }
         return mapToGet;
     }
@@ -115,16 +115,16 @@ public class BaseNodeNetworkService implements INetworkService {
     @Override
     public NetworkNodeData getSingleNodeData(NodeType nodeType) {
         if (!singleNodeNetworkDataMap.containsKey(nodeType)) {
-            log.error("Unsupported networkNodeData type : {}", nodeType);
-            throw new IllegalArgumentException("Unsupported networkNodeData type");
+            log.error(UNSUPPORTED_NETWORK_NODE_DATA_TYPE, nodeType);
+            throw new IllegalArgumentException(UNSUPPORTED_NETWORK_NODE_DATA_TYPE_STRING);
         }
         return singleNodeNetworkDataMap.get(nodeType);
     }
 
     private void setSingleNodeData(NodeType nodeType, NetworkNodeData newNetworkNodeData) {
         if (!singleNodeNetworkDataMap.containsKey(nodeType)) {
-            log.error("Unsupported networkNodeData type : {}", nodeType);
-            throw new IllegalArgumentException("Unsupported networkNodeData type");
+            log.error(UNSUPPORTED_NETWORK_NODE_DATA_TYPE, nodeType);
+            throw new IllegalArgumentException(UNSUPPORTED_NETWORK_NODE_DATA_TYPE_STRING);
         }
         if (newNetworkNodeData != null && !newNetworkNodeData.getNodeType().equals(nodeType)) {
             log.error("Invalid networkNodeData type : {}", nodeType);
@@ -189,7 +189,7 @@ public class BaseNodeNetworkService implements INetworkService {
     }
 
     @Override
-    public void validateNetworkNodeData(NetworkNodeData networkNodeData) throws ValidationException {
+    public void validateNetworkNodeData(NetworkNodeData networkNodeData) {
         if (!networkNodeData.getNetworkType().equals(networkType)) {
             log.error("Invalid network type {} by node {}", networkNodeData.getNetworkType(), networkNodeData.getNodeHash());
             throw new NetworkNodeValidationException(String.format(INVALID_NETWORK_TYPE, networkType, networkNodeData.getNetworkType()));
@@ -244,17 +244,17 @@ public class BaseNodeNetworkService implements INetworkService {
             return nodeDataList;
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
-            return null;
+            return Collections.emptyList();
         }
     }
 
     @Override
     public List<NetworkNodeData> getNetworkNodeDataList() {
         List<NetworkNodeData> networkNodeDataList = new ArrayList<>();
-        multipleNodeMaps.forEach((nodeType, hashNetworkNodeDataMap) -> hashNetworkNodeDataMap.forEach(((hash, networkNodeData) -> networkNodeDataList.add(networkNodeData))));
-        singleNodeNetworkDataMap.forEach(((nodeType, networkNodeData) -> {
-            if (networkNodeData != null && networkNodeData.getNodeHash() != null) {
-                networkNodeDataList.add(networkNodeData);
+        multipleNodeMaps.forEach((nodeType, hashNetworkNodeDataMap) -> hashNetworkNodeDataMap.forEach(((hash, networkNodeDataEntry) -> networkNodeDataList.add(networkNodeDataEntry))));
+        singleNodeNetworkDataMap.forEach(((nodeType, networkNodeDataEntry) -> {
+            if (networkNodeDataEntry != null && networkNodeDataEntry.getNodeHash() != null) {
+                networkNodeDataList.add(networkNodeDataEntry);
             }
         }));
         return networkNodeDataList;
@@ -326,7 +326,7 @@ public class BaseNodeNetworkService implements INetworkService {
                     communicationService.addSender(newSingleNodeData.getReceivingFullAddress());
                 }
             }
-            if (recoveryServerAddress != null && (singleNodeData == null || singleNodeData != null && recoveryServerAddress.equals(singleNodeData.getHttpFullAddress()))) {
+            if (recoveryServerAddress != null && (singleNodeData == null || recoveryServerAddress.equals(singleNodeData.getHttpFullAddress()))) {
                 recoveryServerAddress = newSingleNodeData.getHttpFullAddress();
             }
             setSingleNodeData(singleNodeType, newSingleNodeData);

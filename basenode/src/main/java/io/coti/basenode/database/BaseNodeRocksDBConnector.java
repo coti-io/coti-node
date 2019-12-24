@@ -124,7 +124,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             List<byte[]> columnFamilies = RocksDB.listColumnFamilies(options, dbPath);
             return columnFamilies.stream().map(dbColumnFamily -> new String(dbColumnFamily)).collect(Collectors.toList());
         } catch (Exception e) {
-            throw new DataBaseException(String.format("Error at getting column families.", e));
+            throw new DataBaseException(String.format("Error at getting column families %s.", e.getMessage()));
         }
     }
 

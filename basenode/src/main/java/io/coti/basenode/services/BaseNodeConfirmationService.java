@@ -72,7 +72,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                     log.error("Null dsp consensus result found for index {} and transaction {}", i, transactionData.getHash());
                     return;
                 }
-                accumulatedHash = transactionIndexService.getAccumulatedHash(accumulatedHash, transactionData.getHash(), transactionData.getDspConsensusResult().getIndex());
+                accumulatedHash = TransactionIndexService.getAccumulatedHash(accumulatedHash, transactionData.getHash(), transactionData.getDspConsensusResult().getIndex());
                 if (!Arrays.equals(accumulatedHash, nextTransactionIndexData.getAccumulatedHash())) {
                     log.error("Incorrect accumulated hash");
                     return;
@@ -181,6 +181,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     protected void continueHandleConfirmedTransaction(TransactionData transactionData) {
+        // Implemented by the specific nodes
     }
 
     @Override

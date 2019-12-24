@@ -115,13 +115,13 @@ public class FeeService {
     }
 
     public void setFullNodeFeeHash(FullNodeFeeData fullNodeFeeData) throws ClassNotFoundException {
-        BaseTransactionCrypto.FullNodeFeeData.setBaseTransactionHash(fullNodeFeeData);
+        BaseTransactionCrypto.FULL_NODE_FEE_DATA.setBaseTransactionHash(fullNodeFeeData);
     }
 
     public void signFullNodeFee(FullNodeFeeData fullNodeFeeData) throws ClassNotFoundException {
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
         baseTransactions.add(fullNodeFeeData);
-        BaseTransactionCrypto.FullNodeFeeData.signMessage(new TransactionData(baseTransactions), fullNodeFeeData, FULL_NODE_FEE_ADDRESS_INDEX);
+        BaseTransactionCrypto.FULL_NODE_FEE_DATA.signMessage(new TransactionData(baseTransactions), fullNodeFeeData, FULL_NODE_FEE_ADDRESS_INDEX);
     }
 
     public boolean validateFeeData(FullNodeFeeData fullNodeFeeData) {

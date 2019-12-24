@@ -174,7 +174,7 @@ public class BaseNodeTestUtils {
             nodeType = NodeTypeService.getNodeTypeList(false).get(0);
 
         Hash hash = BaseNodeTestUtils.generateRandomHash();
-        NetworkType networkType = NetworkType.TestNet;
+        NetworkType networkType = NetworkType.TEST_NET;
         String address = ANY_ADDRESS;
         String httpPort = ANY_PORT;
         return new NetworkNodeData(nodeType, address, httpPort, hash, networkType);

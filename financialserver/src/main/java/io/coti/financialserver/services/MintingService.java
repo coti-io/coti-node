@@ -287,7 +287,7 @@ public class MintingService extends BaseNodeMintingService {
     }
 
     private void setTokenMintingFeeHash(TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData) throws ClassNotFoundException {
-        BaseTransactionCrypto.TokenMintingFeeBaseTransactionData.setBaseTransactionHash(tokenMintingFeeBaseTransactionData);
+        BaseTransactionCrypto.TOKEN_MINTING_FEE_BASE_TRANSACTION_DATA.setBaseTransactionHash(tokenMintingFeeBaseTransactionData);
     }
 
     private void signTokenMintingFee(TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData) {

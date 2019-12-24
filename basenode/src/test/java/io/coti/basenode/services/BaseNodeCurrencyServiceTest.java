@@ -81,7 +81,7 @@ public class BaseNodeCurrencyServiceTest {
 
         final CurrencyData nativeCurrencyData = baseNodeCurrencyService.getNativeCurrency();
         if (nativeCurrencyData != null) {
-            Assert.assertEquals(nativeCurrencyData.getCurrencyTypeData().getCurrencyType(), CurrencyType.NATIVE_COIN);
+            Assert.assertEquals(CurrencyType.NATIVE_COIN, nativeCurrencyData.getCurrencyTypeData().getCurrencyType());
         } else {
             HashSet nativeCurrencyHashes = baseNodeCurrencyService.getCurrencyHashesByCurrencyType(CurrencyType.NATIVE_COIN);
             Assert.assertTrue(nativeCurrencyHashes == null || nativeCurrencyHashes.isEmpty());

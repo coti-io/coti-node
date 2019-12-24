@@ -17,7 +17,7 @@ import java.util.Map;
 public class GetUpdatedCurrencyResponse extends BaseResponse implements ISignable, ISignValidatable {
 
     @NotNull
-    public Map<CurrencyType, HashSet<CurrencyData>> currencyDataByType;
+    private Map<CurrencyType, HashSet<CurrencyData>> currencyDataByType;
     @NotNull
     private Hash signerHash;
     @NotNull

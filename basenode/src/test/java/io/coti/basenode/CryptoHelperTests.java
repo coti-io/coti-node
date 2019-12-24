@@ -38,7 +38,7 @@ public class CryptoHelperTests {
         String rHex = "0af936b4ddb6e33269f63d52586ffa3ce7d9358a2fed7fde9536e19a70723860";
         String sHex = "c3a122626df0b7c9d731a8eb9cd42abce7fdd477c591d9f6569be8561ad27639";
         PublicKey key = CryptoHelper.getPublicKeyFromHexString("989fc9a6b0829cd4aa83e3d7f2d24322dc6c08db80fcef988f8fba226de8f28f5a624afacb6ac328547c94f4b3407e6012f81ebcd59b1b1883037198f3088770");
-        Assert.assertEquals(CryptoHelper.verifyByPublicKey(dataToVerify, rHex, sHex, key), true);
+        Assert.assertEquals(true, CryptoHelper.verifyByPublicKey(dataToVerify, rHex, sHex, key));
     }
 
 
@@ -66,7 +66,7 @@ public class CryptoHelperTests {
         String rHex = "0af936b4ddb6e33269f63d52586ffa3ce7d9358a2fed7fde9536e19a70723849"; //instead of .......60 changed r value to ......49
         String sHex = "c3a122626df0b7c9d731a8eb9cd42abce7fdd477c591d9f6569be8561ad27639";
         PublicKey key = CryptoHelper.getPublicKeyFromHexString("989fc9a6b0829cd4aa83e3d7f2d24322dc6c08db80fcef988f8fba226de8f28f5a624afacb6ac328547c94f4b3407e6012f81ebcd59b1b1883037198f3088770");
-        Assert.assertEquals(CryptoHelper.verifyByPublicKey(dataToVerify, rHex, sHex, key), false);
+        Assert.assertEquals(false, CryptoHelper.verifyByPublicKey(dataToVerify, rHex, sHex, key));
     }
 
 
@@ -88,14 +88,14 @@ public class CryptoHelperTests {
 
         boolean isVerified = CryptoHelper.isAddressValid(new Hash("bc0798cc85e98a8ed4160b8a21e17df7ce86edfd1efabc87c069b345858a49ab3e51540465f175952d19ac877b42cb044c04bb1c624e13b2f73382841ad452c7578da662"));
 
-        Assert.assertEquals(isVerified, true);
+        Assert.assertEquals(true, isVerified);
     }
 
 
     @Test
     public void wrongAddressCheckSum() {
         boolean isVerified = CryptoHelper.isAddressValid(new Hash("cc0798cc85e98a8ed4160b8a21e17df7ce86edfd1efabc87c069b345858a49ab3e51540465f175952d19ac877b42cb044c04bb1c624e13b2f73382841ad452c7578da662"));
-        Assert.assertEquals(isVerified, false);
+        Assert.assertEquals(false, isVerified);
     }
 
 

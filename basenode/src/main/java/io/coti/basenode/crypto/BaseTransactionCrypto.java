@@ -19,7 +19,7 @@ import java.util.List;
 
 @Slf4j
 public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
-    InputBaseTransactionData {
+    INPUT_BASE_TRANSACTION_DATA {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData inputBaseTransactionData) {
             if (!InputBaseTransactionData.class.isInstance(inputBaseTransactionData)) {
@@ -33,14 +33,14 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
             return transactionData.getHash().getBytes();
         }
     },
-    PaymentInputBaseTransactionData {
+    PAYMENT_INPUT_BASE_TRANSACTION_DATA {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
             if (!PaymentInputBaseTransactionData.class.isInstance(baseTransactionData)) {
                 throw new IllegalArgumentException("");
             }
             PaymentInputBaseTransactionData paymentInputBaseTransactionData = (PaymentInputBaseTransactionData) baseTransactionData;
-            byte[] inputMessageInBytes = this.InputBaseTransactionData.getMessageInBytes(baseTransactionData);
+            byte[] inputMessageInBytes = this.INPUT_BASE_TRANSACTION_DATA.getMessageInBytes(baseTransactionData);
 
             int itemsByteSize = 0;
             List<PaymentItemData> items = ((PaymentInputBaseTransactionData) baseTransactionData).getItems();
@@ -66,7 +66,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
             return transactionData.getHash().getBytes();
         }
     },
-    FullNodeFeeData {
+    FULL_NODE_FEE_DATA {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData fullNodeFeeData) {
             if (!FullNodeFeeData.class.isInstance(fullNodeFeeData)) {
@@ -87,7 +87,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
         }
     },
-    NetworkFeeData {
+    NETWORK_FEE_DATA {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
             if (!NetworkFeeData.class.isInstance(baseTransactionData)) {
@@ -111,7 +111,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         }
 
     },
-    TokenGenerationFeeBaseTransactionData {
+    TOKEN_GENERATION_FEE_BASE_TRANSACTION_DATA {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
             if (!TokenGenerationFeeBaseTransactionData.class.isInstance(baseTransactionData)) {
@@ -136,7 +136,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         }
 
     },
-    TokenMintingFeeBaseTransactionData {
+    TOKEN_MINTING_FEE_BASE_TRANSACTION_DATA {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
             if (!TokenMintingFeeBaseTransactionData.class.isInstance(baseTransactionData)) {
@@ -161,7 +161,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         }
 
     },
-    RollingReserveData {
+    ROLLING_RESERVE_DATA {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
             if (!RollingReserveData.class.isInstance(baseTransactionData)) {
@@ -184,7 +184,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         }
 
     },
-    ReceiverBaseTransactionData {
+    RECEIVER_BASE_TRANSACTION_DATA {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
             if (!ReceiverBaseTransactionData.class.isInstance(baseTransactionData)) {
@@ -242,7 +242,6 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
             throw new IllegalArgumentException("");
         }
         baseTransactionData.setHash(createBaseTransactionHashFromData(baseTransactionData));
-
     }
 
     @Override
@@ -277,7 +276,6 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         trustScoreNodeResultData.setSignature(nodeCryptoHelper.signMessage(this.getSignatureMessage(transactionData, trustScoreNodeResultData)));
         trustScoreNodeResult.add(trustScoreNodeResultData);
         baseTransactionData.setTrustScoreNodeResult(trustScoreNodeResult);
-
     }
 
     @Override
@@ -298,7 +296,6 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
             return false;
         }
-
     }
 
     @Override

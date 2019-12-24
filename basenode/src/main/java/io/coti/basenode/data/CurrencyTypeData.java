@@ -56,7 +56,7 @@ public class CurrencyTypeData implements ISignable, ISignValidatable, Serializab
 
     @Override
     public void setSignerHash(Hash signerHash) {
-
+        // Implemented in CurrencyTypeRegistrationData
     }
 
     @JsonIgnore

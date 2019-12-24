@@ -157,13 +157,13 @@ public class RollingReserveService {
     }
 
     public void setRollingReserveNodeFeeHash(RollingReserveData rollingReserveData) throws ClassNotFoundException {
-        BaseTransactionCrypto.RollingReserveData.setBaseTransactionHash(rollingReserveData);
+        BaseTransactionCrypto.ROLLING_RESERVE_DATA.setBaseTransactionHash(rollingReserveData);
     }
 
     public void signRollingReserveFee(RollingReserveData rollingReserveData, boolean isValid) throws ClassNotFoundException {
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
         baseTransactions.add(rollingReserveData);
-        BaseTransactionCrypto.RollingReserveData.signMessage(new TransactionData(baseTransactions), rollingReserveData, new TrustScoreNodeResultData(NodeCryptoHelper.getNodeHash(), isValid));
+        BaseTransactionCrypto.ROLLING_RESERVE_DATA.signMessage(new TransactionData(baseTransactions), rollingReserveData, new TrustScoreNodeResultData(NodeCryptoHelper.getNodeHash(), isValid));
     }
 
     private boolean isRollingReserveValid(RollingReserveData rollingReserveData, NetworkFeeData networkFeeData, double userTrustScore, UserType userType) {
@@ -184,7 +184,7 @@ public class RollingReserveService {
     private boolean validateRollingReserveCrypto(RollingReserveData rollingReserveData) {
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
         baseTransactions.add(rollingReserveData);
-        return BaseTransactionCrypto.RollingReserveData.isBaseTransactionValid(new TransactionData(baseTransactions), rollingReserveData);
+        return BaseTransactionCrypto.ROLLING_RESERVE_DATA.isBaseTransactionValid(new TransactionData(baseTransactions), rollingReserveData);
     }
 
     private BigDecimal calculateRollingReserveAmount(BigDecimal reducedAmount, double trustScore) {

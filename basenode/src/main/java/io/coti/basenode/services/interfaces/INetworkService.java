@@ -2,7 +2,6 @@ package io.coti.basenode.services.interfaces;
 
 import io.coti.basenode.data.*;
 
-import javax.validation.ValidationException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +26,7 @@ public interface INetworkService {
 
     boolean updateNetworkNode(NetworkNodeData networkNodeData);
 
-    void validateNetworkNodeData(NetworkNodeData networkNodeData) throws ValidationException;
+    void validateNetworkNodeData(NetworkNodeData networkNodeData);
 
     boolean validateFeeData(FeeData feeData);
 

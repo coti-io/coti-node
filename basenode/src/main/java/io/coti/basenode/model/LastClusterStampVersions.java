@@ -6,8 +6,4 @@ import org.springframework.stereotype.Service;
 @Service
 public class LastClusterStampVersions extends OneRowCollection<LastClusterStampVersionData> {
 
-    public void init() {
-        super.init();
-    }
-
 }

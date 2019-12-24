@@ -33,8 +33,8 @@ import java.util.concurrent.atomic.AtomicLong;
 @Service
 public abstract class BaseNodeInitializationService {
 
-    private final static String NODE_REGISTRATION = "/node/node_registration";
-    private final static String NODE_MANAGER_NODES_ENDPOINT = "/nodes";
+    private  static final String NODE_REGISTRATION = "/node/node_registration";
+    private  static final String NODE_MANAGER_NODES_ENDPOINT = "/nodes";
     @Value("${network}")
     protected NetworkType networkType;
     @Value("${server.ip}")
@@ -234,7 +234,7 @@ public abstract class BaseNodeInitializationService {
                 nodeRegistrations.put(nodeRegistrationData);
             }
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            throw new NetworkException(String.format("Error at registration of node. Registrar response: \n %s", e.getResponseBodyAsString()), e);
+            throw new NetworkException(String.format("Error at registration of node. Registrar response: %s", e.getResponseBodyAsString()), e);
         } catch (Exception e) {
             throw new NetworkException("Error at registration of node.", e);
         }

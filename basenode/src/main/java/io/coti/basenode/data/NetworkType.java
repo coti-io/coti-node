@@ -1,7 +1,7 @@
 package io.coti.basenode.data;
 
 public enum NetworkType {
-    AlphaNet,
-    TestNet,
-    MainNet;
+    ALPHA_NET,
+    TEST_NET,
+    MAIN_NET;
 }

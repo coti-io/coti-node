@@ -54,7 +54,7 @@ public class SourceSelector implements ISourceSelector {
             if (highIndex <= 100) {
                 neighbourSources.addAll(trustScoreToSourceListMapping.get(highIndex));
             }
-            if ((double) neighbourSources.size() / numberOfSources > (double) minSourcePercentage / 100) {
+            if (numberOfSources != 0 && ((double) neighbourSources.size() / numberOfSources > (double) minSourcePercentage / 100)) {
                 break;
             }
             lowIndex--;
@@ -105,7 +105,7 @@ public class SourceSelector implements ISourceSelector {
 
             TransactionData randomSource = olderSources.get(randomIndex);
 
-            if (randomWeightedSources.size() == 0)
+            if (randomWeightedSources.isEmpty())
                 randomWeightedSources.add(randomSource);
             else if (randomWeightedSources.size() == 1 && randomSource != randomWeightedSources.iterator().next())
                 randomWeightedSources.add(randomSource);

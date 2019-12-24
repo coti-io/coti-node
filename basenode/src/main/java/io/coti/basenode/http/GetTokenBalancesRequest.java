@@ -11,5 +11,5 @@ import java.util.List;
 public class GetTokenBalancesRequest extends Request {
 
     @NotNull(message = "Addresses must not be blank")
-    public List<@Valid Hash> addresses;
+    private List<@Valid Hash> addresses;
 }

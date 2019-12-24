@@ -46,6 +46,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private static final int INDEX_OF_BACKUP_TIMESTAMP_IN_PATH = 3;
     private static final int INDEX_OF_BACKUP_TIMESTAMP_IN_FOLDER_NAME = 1;
     private static final int ALLOWED_NUMBER_OF_BACKUPS = 2;
+    public static final String BACKUP_STRING = "/backup-";
     @Value("${db.backup}")
     private boolean backup;
     @Value("${db.backup.bucket}")
@@ -114,7 +115,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
             if (restoreNodeHash.toString().isEmpty()) {
                 throw new DataBaseRecoveryException("Restore node hash can not be empty when restore flag is set to true");
             }
-            if (restoreSource.equals(DbRestoreSource.Remote) && NodeCryptoHelper.getNodeHash().equals(restoreNodeHash) && backupBucket.isEmpty()) {
+            if (restoreSource.equals(DbRestoreSource.REMOTE) && NodeCryptoHelper.getNodeHash().equals(restoreNodeHash) && backupBucket.isEmpty()) {
                 throw new DataBaseRecoveryException("Aws backup bucket can not be empty when restore flag is set to true and remote restore is from the node's own backup");
             }
         }
@@ -134,13 +135,13 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                 }
                 File backupFolderToUpload = new File(remoteBackupFolderPath);
                 log.info("Uploading remote backup to S3 bucket");
-                awsService.uploadFolderAndContentsToS3(backupBucket, backupS3Path + "/backup-" + Instant.now().toEpochMilli(), backupFolderToUpload);
+                awsService.uploadFolderAndContentsToS3(backupBucket, backupS3Path + BACKUP_STRING + Instant.now().toEpochMilli(), backupFolderToUpload);
                 if (!backupFiles.isEmpty()) {
                     Set<Long> s3BackupTimeStampSet = getS3BackupTimeStampSet(backupFiles);
                     if (s3BackupTimeStampSet.size() >= ALLOWED_NUMBER_OF_BACKUPS) {
                         List<Long> s3BackupTimeStamps = s3BackupTimeStampSet.stream().collect(Collectors.toList());
                         Collections.sort(s3BackupTimeStamps);
-                        String[] backupFoldersToRemove = s3BackupTimeStamps.stream().limit(s3BackupTimeStampSet.size() - ALLOWED_NUMBER_OF_BACKUPS + 1).map(s3BackupTimeStamp -> backupS3Path + "/backup-" + s3BackupTimeStamp.toString()).toArray(String[]::new);
+                        String[] backupFoldersToRemove = s3BackupTimeStamps.stream().limit(s3BackupTimeStampSet.size() - ALLOWED_NUMBER_OF_BACKUPS + 1).map(s3BackupTimeStamp -> backupS3Path + BACKUP_STRING + s3BackupTimeStamp.toString()).toArray(String[]::new);
                         backupFiles = backupFiles.stream().filter(backupFile -> StringUtils.startsWithAny(backupFile, backupFoldersToRemove)).collect(Collectors.toList());
                         awsService.deleteFolderAndContentsFromS3(backupFiles, backupBucket);
                     }
@@ -160,7 +161,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private void restoreDB() {
         try {
             log.info("Starting DB restore flow");
-            if (restoreSource.equals(DbRestoreSource.Local)) {
+            if (restoreSource.equals(DbRestoreSource.LOCAL)) {
                 log.info("Restoring from local backup");
                 dBConnector.restoreDataBase(localBackupFolderPath);
             } else {
@@ -168,24 +169,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                     deleteBackup(localBackupFolderPath);
                     dBConnector.generateDataBaseBackup(localBackupFolderPath);
                 }
-                try {
-                    deleteBackup(remoteBackupFolderPath);
-                    final String restoreBucket = getBackupBucketFromRestoreNode();
-                    List<String> s3BackupFolderAndContents = awsService.listS3Paths(restoreBucket, restoreS3Path);
-                    if (s3BackupFolderAndContents.isEmpty()) {
-                        throw new DataBaseRestoreException(String.format("Couldn't complete restore. No backups found at %s/%s", restoreBucket, restoreS3Path));
-
-                    }
-                    String latestS3Backup = getLatestS3Backup(s3BackupFolderAndContents, restoreS3Path);
-                    log.info("Downloading remote backup from S3 bucket");
-                    awsService.downloadFolderAndContents(restoreBucket, latestS3Backup, remoteBackupFolderPath);
-                    dBConnector.restoreDataBase(remoteBackupFolderPath);
-                } catch (Exception e) {
-                    dBConnector.restoreDataBase(localBackupFolderPath);
-                    throw e;
-                } finally {
-                    deleteBackup(remoteBackupFolderPath);
-                }
+                restoreDBFromRemote();
             }
             log.info("Finished DB restore flow");
         } catch (DataBaseRecoveryException e) {
@@ -194,6 +178,27 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
             throw new DataBaseRecoveryException("Restore database error.", e);
         }
 
+    }
+
+    private void restoreDBFromRemote() {
+        try {
+            deleteBackup(remoteBackupFolderPath);
+            final String restoreBucket = getBackupBucketFromRestoreNode();
+            List<String> s3BackupFolderAndContents = awsService.listS3Paths(restoreBucket, restoreS3Path);
+            if (s3BackupFolderAndContents.isEmpty()) {
+                throw new DataBaseRestoreException(String.format("Couldn't complete restore. No backups found at %s/%s", restoreBucket, restoreS3Path));
+
+            }
+            String latestS3Backup = getLatestS3Backup(s3BackupFolderAndContents, restoreS3Path);
+            log.info("Downloading remote backup from S3 bucket");
+            awsService.downloadFolderAndContents(restoreBucket, latestS3Backup, remoteBackupFolderPath);
+            dBConnector.restoreDataBase(remoteBackupFolderPath);
+        } catch (Exception e) {
+            dBConnector.restoreDataBase(localBackupFolderPath);
+            throw e;
+        } finally {
+            deleteBackup(remoteBackupFolderPath);
+        }
     }
 
     private String getBackupBucketFromRestoreNode() {
@@ -260,15 +265,15 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private String getLatestS3Backup(List<String> remoteBackups, String backupNodeHashS3Path) {
         Set<Long> s3Backups = getS3BackupTimeStampSet(remoteBackups);
         Long backupTimeStamp = Collections.max(s3Backups);
-        return backupNodeHashS3Path + "/backup-" + backupTimeStamp.toString();
+        return backupNodeHashS3Path + BACKUP_STRING + backupTimeStamp.toString();
     }
 
     private Set<Long> getS3BackupTimeStampSet(List<String> remoteBackups) {
         String folderDelimiter = "/";
         String folderNameDelimiter = "-";
         Set<Long> s3Backups = new HashSet<>();
-        remoteBackups.forEach(backup -> {
-            String[] backupPathArray = backup.split(folderDelimiter);
+        remoteBackups.forEach(backupFromRemote -> {
+            String[] backupPathArray = backupFromRemote.split(folderDelimiter);
             if (backupPathArray.length > INDEX_OF_BACKUP_TIMESTAMP_IN_PATH) {
                 String[] folderNameArray = backupPathArray[INDEX_OF_BACKUP_TIMESTAMP_IN_PATH].split(folderNameDelimiter);
                 if (folderNameArray.length > INDEX_OF_BACKUP_TIMESTAMP_IN_FOLDER_NAME)

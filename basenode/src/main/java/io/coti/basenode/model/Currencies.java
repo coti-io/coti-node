@@ -6,8 +6,4 @@ import org.springframework.stereotype.Service;
 @Service
 public class Currencies extends Collection<CurrencyData> {
 
-    public void init() {
-        super.init();
-    }
-
 }
