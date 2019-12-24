@@ -10,4 +10,11 @@ public class GetTransactionRequest extends Request {
 
     @Valid
     private Hash transactionHash;
+
+    public GetTransactionRequest() {
+    }
+
+    public GetTransactionRequest(Hash transactionHash) {
+        this.transactionHash = transactionHash;
+    }
 }

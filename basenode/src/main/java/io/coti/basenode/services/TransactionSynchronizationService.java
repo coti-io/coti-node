@@ -5,6 +5,8 @@ import io.coti.basenode.data.AddressTransactionsHistory;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.exceptions.TransactionSyncException;
+import io.coti.basenode.http.GetTransactionRequest;
+import io.coti.basenode.http.GetTransactionResponse;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
@@ -97,7 +99,6 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
     }
 
     public TransactionData requestSingleMissingTransaction(Hash transactionHash) {
-
         TransactionData transactionData = null;
         try {
             byte[] transactionBytes = restTemplate.getForObject(networkService.getRecoveryServerAddress() + RECOVERY_NODE_GET_SINGLE_ENDPOINT
@@ -109,7 +110,24 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
             log.error("Error at getting chunks", e);
             return null;
         }
+        return transactionData;
+    }
 
+    public TransactionData requestSingleMissingTransactionFromRecovery(Hash transactionHash) {
+        GetTransactionRequest getTransactionRequest = new GetTransactionRequest(transactionHash);
+        TransactionData transactionData = null;
+        try {
+
+            GetTransactionResponse getTransactionResponse =
+                    restTemplate.postForObject(networkService.getRecoveryServerAddress() + RECOVERY_NODE_GET_SINGLE_ENDPOINT,
+                            getTransactionRequest, GetTransactionResponse.class);
+            if (getTransactionResponse != null) {
+                transactionData = getTransactionResponse.getTransactionData();
+            }
+        } catch (Exception e) {
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
+            return null;
+        }
         return transactionData;
     }
 

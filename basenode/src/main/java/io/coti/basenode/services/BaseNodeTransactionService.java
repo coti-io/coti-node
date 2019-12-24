@@ -5,21 +5,28 @@ import io.coti.basenode.data.DspConsensusResult;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.GetTransactionRequest;
+import io.coti.basenode.http.GetTransactionResponse;
+import io.coti.basenode.http.Response;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.FluxSink;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.TRANSACTION_DOESNT_EXIST_MESSAGE;
 
 @Slf4j
 @Service
@@ -92,7 +99,6 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     @Override
     public void getSingleTransaction(Hash transactionHash, HttpServletResponse response) {
-
         try {
             ServletOutputStream output = response.getOutputStream();
             TransactionData transactionData = transactions.getByHash(transactionHash);
@@ -107,8 +113,15 @@ public class BaseNodeTransactionService implements ITransactionService {
     }
 
     @Override
-    public void getSingleTransaction(GetTransactionRequest getTransactionRequest) {
-        @Valid Hash transactionHash = getTransactionRequest.getTransactionHash();
+    public ResponseEntity<IResponse> getSingleTransaction(GetTransactionRequest getTransactionRequest) {
+        Hash transactionHash = getTransactionRequest.getTransactionHash();
+        TransactionData transactionData = transactions.getByHash(transactionHash);
+        if (transactionData != null) {
+            return ResponseEntity.status(HttpStatus.OK).body(new GetTransactionResponse(transactionData));
+        }
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new Response(TRANSACTION_DOESNT_EXIST_MESSAGE, STATUS_ERROR));
     }
 
     @Override
