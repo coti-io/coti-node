@@ -1,6 +1,5 @@
 package io.coti.zerospend.services;
 
-import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.crypto.DspConsensusCrypto;
 import io.coti.basenode.crypto.TransactionDspVoteCrypto;
 import io.coti.basenode.data.*;
@@ -27,8 +26,6 @@ public class DspVoteService extends BaseNodeDspVoteService {
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
-    private IPropagationPublisher propagationPublisher;
-    @Autowired
     private TransactionVotes transactionVotes;
     @Autowired
     private Transactions transactions;
@@ -40,10 +37,38 @@ public class DspVoteService extends BaseNodeDspVoteService {
     private INetworkService networkService;
     private ConcurrentMap<Hash, List<DspVote>> transactionHashToVotesListMapping;
 
+    private Map<Hash, Hash> lockVotedTransactionRecordHashMap = new ConcurrentHashMap<>();
+    private Map<Hash, HashSet<TransactionDspVote>> missingTransactionsAwaitingHandling;
+
     @Override
     public void init() {
         transactionHashToVotesListMapping = new ConcurrentHashMap<>();
         super.init();
+        missingTransactionsAwaitingHandling = new ConcurrentHashMap<>();
+    }
+
+    protected Hash addLockToLockMap(Hash hash) {
+        return addLockToLockMap(lockVotedTransactionRecordHashMap, hash);
+    }
+
+    private Hash addLockToLockMap(Map<Hash, Hash> locksIdentityMap, Hash hash) {
+        synchronized (locksIdentityMap) {
+            locksIdentityMap.putIfAbsent(hash, hash);
+            return locksIdentityMap.get(hash);
+        }
+    }
+
+    protected void removeLockFromLocksMap(Hash hash) {
+        removeLockFromLocksMap(lockVotedTransactionRecordHashMap, hash);
+    }
+
+    private void removeLockFromLocksMap(Map<Hash, Hash> locksIdentityMap, Hash hash) {
+        synchronized (locksIdentityMap) {
+            Hash hashLock = locksIdentityMap.get(hash);
+            if (hashLock != null) {
+                locksIdentityMap.remove(hash);
+            }
+        }
     }
 
     public void preparePropagatedTransactionForVoting(TransactionData transactionData) {
@@ -52,34 +77,61 @@ public class DspVoteService extends BaseNodeDspVoteService {
                 dspHashList.add(node.getHash())
         );
         log.debug("Received new transaction. Live DSP Nodes: {}", dspHashList);
-        TransactionVoteData transactionVoteData = new TransactionVoteData(transactionData.getHash(), dspHashList);
-        transactionVotes.put(transactionVoteData);
-        transactionHashToVotesListMapping.put(transactionData.getHash(), new LinkedList<>());
+        Hash transactionDataHash = transactionData.getHash();
+        TransactionVoteData transactionVoteData = new TransactionVoteData(transactionDataHash, dspHashList);
+        synchronized (addLockToLockMap(transactionDataHash)) {
+            Hash transactionVoteDataHash = transactionVoteData.getHash();
+            boolean isNewTransaction = (transactionVotes.getByHash(transactionVoteDataHash) == null);
+            transactionVotes.put(transactionVoteData);
+            transactionHashToVotesListMapping.put(transactionDataHash, new LinkedList<>());
+
+            HashSet<TransactionDspVote> transactionDspVotesAwaitingHandling = missingTransactionsAwaitingHandling.get(transactionVoteDataHash);
+            if (isNewTransaction && transactionDspVotesAwaitingHandling != null && !transactionDspVotesAwaitingHandling.isEmpty()) {
+                transactionDspVotesAwaitingHandling.forEach(transactionDspVote -> handlePostponedTransactionDspVote(transactionDspVote, transactionDataHash));
+                missingTransactionsAwaitingHandling.remove(transactionVoteDataHash);
+            }
+        }
+        removeLockFromLocksMap(transactionDataHash);
+    }
+
+    private void handlePostponedTransactionDspVote(TransactionDspVote transactionDspVote, Hash transactionHash) {
+        TransactionVoteData transactionVoteData = transactionVotes.getByHash(transactionHash);
+        Hash voterDspHash = transactionDspVote.getVoterDspHash();
+        Hash transactionDspVoteTransactionHash = transactionDspVote.getTransactionHash();
+        if (!transactionVoteData.getLegalVoterDspHashes().contains(voterDspHash)) {
+            log.error("Unauthorized Dsp vote received. Sender =  {}, Transaction =  {}", voterDspHash, transactionDspVoteTransactionHash);
+            return;
+        }
+        if (!transactionDspVoteCrypto.verifySignature(transactionDspVote)) {
+            log.error("Invalid vote signature. Sender =  {}, Transaction = {}", voterDspHash, transactionDspVoteTransactionHash);
+            return;
+        }
+        if (transactionHashToVotesListMapping.get(transactionHash) == null) {
+            log.debug("Dsp vote result for transaction {} already published", transactionDspVoteTransactionHash);
+            return;
+        }
+        log.debug("Adding new vote: {}", transactionDspVote);
+        transactionHashToVotesListMapping.get(transactionHash).add(new DspVote(transactionDspVote));
     }
 
     public void receiveDspVote(TransactionDspVote transactionDspVote) {
-        log.debug("Received new Dsp Vote: Sender = {} , Transaction = {}", transactionDspVote.getVoterDspHash(), transactionDspVote.getTransactionHash());
         Hash transactionHash = transactionDspVote.getTransactionHash();
-        synchronized (transactionHash.toHexString()) {
+        Hash voterDspHash = transactionDspVote.getVoterDspHash();
+        log.debug("Received new Dsp Vote: Sender = {} , Transaction = {}", voterDspHash, transactionHash);
+        synchronized (addLockToLockMap(transactionHash)) {
             TransactionVoteData transactionVoteData = transactionVotes.getByHash(transactionHash);
             if (transactionVoteData == null) {
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                transactionVoteData = transactionVotes.getByHash(transactionHash);
-                if (transactionVoteData == null) {
-                    throw new DspVoteException(String.format("Transaction {} does not exist for dsp vote", transactionHash));
-                }
+                missingTransactionsAwaitingHandling.putIfAbsent(transactionHash, new HashSet<>());
+                missingTransactionsAwaitingHandling.get(transactionHash).add(transactionDspVote);
+                log.info("Transaction {} does not exist for dsp vote. Vote processing is delayed.", transactionHash);
+                return;
             }
 
-            if (!transactionVoteData.getLegalVoterDspHashes().contains(transactionDspVote.getVoterDspHash())) {
-                throw new DspVoteException(String.format("Unauthorized Dsp vote received. Sender =  {}, Transaction =  {}", transactionDspVote.getVoterDspHash(), transactionDspVote.getTransactionHash()));
+            if (!transactionVoteData.getLegalVoterDspHashes().contains(voterDspHash)) {
+                throw new DspVoteException(String.format("Unauthorized Dsp vote received. Sender =  %s, Transaction =  %s", voterDspHash, transactionHash));
             }
-
             if (!transactionDspVoteCrypto.verifySignature(transactionDspVote)) {
-                throw new DspVoteException(String.format("Invalid vote signature. Sender =  {}, Transaction = {}", transactionDspVote.getVoterDspHash(), transactionDspVote.getTransactionHash()));
+                throw new DspVoteException(String.format("Invalid vote signature. Sender =  %s, Transaction = %s", voterDspHash, transactionHash));
             }
             if (transactionHashToVotesListMapping.get(transactionHash) == null) {
                 log.debug("Dsp vote result already published");
@@ -88,18 +140,20 @@ public class DspVoteService extends BaseNodeDspVoteService {
             log.debug("Adding new vote: {}", transactionDspVote);
             transactionHashToVotesListMapping.get(transactionHash).add(new DspVote(transactionDspVote));
         }
+        removeLockFromLocksMap(transactionHash);
     }
 
     @Scheduled(fixedDelay = 1000)
     private void sumAndSaveVotes() {
         for (Map.Entry<Hash, List<DspVote>> transactionHashToVotesListEntrySet :
                 transactionHashToVotesListMapping.entrySet()) {
-            synchronized (transactionHashToVotesListEntrySet.getKey().toHexString()) {
-                if (transactionHashToVotesListEntrySet.getValue() != null && transactionHashToVotesListEntrySet.getValue().size() > 0) {
-                    Hash transactionHash = transactionHashToVotesListEntrySet.getKey();
+            Hash transactionHash = transactionHashToVotesListEntrySet.getKey();
+            synchronized (addLockToLockMap(transactionHash)) {
+                List<DspVote> transactionHashToVotesListEntrySetValue = transactionHashToVotesListEntrySet.getValue();
+                if (transactionHashToVotesListEntrySetValue != null && !transactionHashToVotesListEntrySetValue.isEmpty()) {
                     TransactionVoteData currentTransactionVoteData = transactionVotes.getByHash(transactionHash);
                     Map<Hash, DspVote> mapHashToDspVote = currentTransactionVoteData.getDspHashToVoteMapping();
-                    transactionHashToVotesListEntrySet.getValue().forEach(dspVote -> mapHashToDspVote.putIfAbsent(dspVote.getVoterDspHash(), dspVote));
+                    transactionHashToVotesListEntrySetValue.forEach(dspVote -> mapHashToDspVote.putIfAbsent(dspVote.getVoterDspHash(), dspVote));
                     if (isPositiveMajorityAchieved(currentTransactionVoteData)) {
                         publishDecision(transactionHash, mapHashToDspVote, true);
                         log.debug("Valid vote majority achieved for transaction {}", currentTransactionVoteData.getHash());
@@ -109,9 +163,9 @@ public class DspVoteService extends BaseNodeDspVoteService {
                     } else {
                         log.debug("Undecided majority for transaction {}", currentTransactionVoteData.getHash());
                     }
-                    transactionVotes.put(currentTransactionVoteData);
                 }
             }
+            removeLockFromLocksMap(transactionHash);
         }
     }
 
