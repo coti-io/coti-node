@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-public class ZeroSpendTransactionService {
+public class ZeroSpendTransactionService {   //todo DAG delete it
 
     @Autowired
     private INetworkService networkService;

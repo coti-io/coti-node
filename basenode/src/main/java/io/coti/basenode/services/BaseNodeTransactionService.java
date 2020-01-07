@@ -140,20 +140,20 @@ public class BaseNodeTransactionService implements ITransactionService {
         List<Hash> childrenTransactions = transactionData.getChildrenTransactionHashes();
         try {
             transactionHelper.startHandleTransaction(transactionData);
-            while (hasOneOfParentsProcessing(transactionData)) {
-                parentProcessingTransactions.put(transactionData.getHash(), transactionData);
-                synchronized (transactionData) {
-                    transactionData.wait();
-                }
-            }
+//            while (hasOneOfParentsProcessing(transactionData)) {   //todo DAG remove check
+//                parentProcessingTransactions.put(transactionData.getHash(), transactionData);
+//                synchronized (transactionData) {
+//                    transactionData.wait();
+//                }
+//            }
             if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
                 log.error("Data Integrity validation failed: {}", transactionData.getHash());
                 return;
             }
-            if (hasOneOfParentsMissing(transactionData)) {
-                postponedTransactions.add(transactionData);
-                return;
-            }
+//            if (hasOneOfParentsMissing(transactionData)) {  //todo DAG remove check
+//                postponedTransactions.add(transactionData);
+//                return;
+//            }
             if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
                 log.error("Balance check failed: {}", transactionData.getHash());
                 return;
@@ -163,38 +163,38 @@ public class BaseNodeTransactionService implements ITransactionService {
 
             continueHandlePropagatedTransaction(transactionData);
             transactionHelper.setTransactionStateToFinished(transactionData);
-        } catch (InterruptedException e) {
-            log.info("Transaction thread wait interrupted");
-            Thread.currentThread().interrupt();
+//        } catch (InterruptedException e) {
+//            log.info("Transaction thread wait interrupted");
+//            Thread.currentThread().interrupt();
         } catch (Exception e) {
             log.error("Transaction propagation handler error:");
             e.printStackTrace();
         } finally {
             boolean isTransactionFinished = transactionHelper.isTransactionFinished(transactionData);
             transactionHelper.endHandleTransaction(transactionData);
-            for (Hash childrenTransactionHash : childrenTransactions) {
-                TransactionData childrenTransaction = parentProcessingTransactions.get(childrenTransactionHash);
-                if (childrenTransaction != null)
-                    synchronized (childrenTransaction) {
-                        childrenTransaction.notify();
-                        parentProcessingTransactions.remove(childrenTransactionHash);
-                    }
-            }
+//            for (Hash childrenTransactionHash : childrenTransactions) {  //todo DAG remove check
+//                TransactionData childrenTransaction = parentProcessingTransactions.get(childrenTransactionHash);
+//                if (childrenTransaction != null)
+//                    synchronized (childrenTransaction) {
+//                        childrenTransaction.notify();
+//                        parentProcessingTransactions.remove(childrenTransactionHash);
+//                    }
+//            }
             if (isTransactionFinished) {
                 DspConsensusResult postponedDspConsensusResult = dspVoteService.getPostponedDspConsensusResult(transactionData.getHash());
                 if (postponedDspConsensusResult != null) {
                     dspVoteService.handleVoteConclusion(postponedDspConsensusResult);
                 }
-                List<TransactionData> postponedParentTransactions = postponedTransactions.stream().filter(
-                        postponedTransactionData ->
-                                (postponedTransactionData.getRightParentHash() != null && postponedTransactionData.getRightParentHash().equals(transactionData.getHash())) ||
-                                        (postponedTransactionData.getLeftParentHash() != null && postponedTransactionData.getLeftParentHash().equals(transactionData.getHash())))
-                        .collect(Collectors.toList());
-                postponedParentTransactions.forEach(postponedTransaction -> {
-                    log.debug("Handling postponed transaction : {}, parent of transaction: {}", postponedTransaction.getHash(), transactionData.getHash());
-                    postponedTransactions.remove(postponedTransaction);
-                    handlePropagatedTransaction(postponedTransaction);
-                });
+//                List<TransactionData> postponedParentTransactions = postponedTransactions.stream().filter( //todo DAG remove check
+//                        postponedTransactionData ->
+//                                (postponedTransactionData.getRightParentHash() != null && postponedTransactionData.getRightParentHash().equals(transactionData.getHash())) ||
+//                                        (postponedTransactionData.getLeftParentHash() != null && postponedTransactionData.getLeftParentHash().equals(transactionData.getHash())))
+//                        .collect(Collectors.toList());
+//                postponedParentTransactions.forEach(postponedTransaction -> {
+//                    log.debug("Handling postponed transaction : {}, parent of transaction: {}", postponedTransaction.getHash(), transactionData.getHash());
+//                    postponedTransactions.remove(postponedTransaction);
+//                    handlePropagatedTransaction(postponedTransaction);
+//                });
             }
 
         }

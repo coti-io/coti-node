@@ -32,48 +32,48 @@ public class SourceStarvationService {
     @Autowired
     private TransactionCreationService transactionCreationService;
 
-    @Scheduled(fixedDelay = SOURCE_STARVATION_CHECK_TASK_DELAY)
-    public void checkSourcesStarvation() {
-        log.debug("Checking Source Starvation");
-        Instant now = Instant.now();
-        ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster = clusterService.getCopyTrustChainConfirmationCluster();
-        LinkedList<TransactionData> topologicalOrderedGraph = new LinkedList<>();
-        ConcurrentHashMap<Hash, Instant> nonZeroSpendChainTransactions = new ConcurrentHashMap<>();
-
-        clusterHelper.sortByTopologicalOrder(trustChainConfirmationCluster, topologicalOrderedGraph);
-
-        for (int i = topologicalOrderedGraph.size() - 1; i >= 0; i--) {
-            TransactionData transactionData = topologicalOrderedGraph.get(i);
-            if (!transactionData.getType().equals(TransactionType.ZeroSpend)) {
-                nonZeroSpendChainTransactions.put(transactionData.getHash(), transactionData.getAttachmentTime());
-            }
-            parentInNonZeroChain(transactionData.getLeftParentHash(), transactionData.getHash(), nonZeroSpendChainTransactions);
-            parentInNonZeroChain(transactionData.getRightParentHash(), transactionData.getHash(), nonZeroSpendChainTransactions);
-
-            if (transactionData.getChildrenTransactionHashes().size() == 0 && nonZeroSpendChainTransactions.containsKey(transactionData.getHash())) {
-                long minimumWaitingTimeInMilliseconds = (long) (100 - transactionData.getSenderTrustScore() + MINIMUM_WAIT_TIME_IN_SECONDS) * 1000;
-                long actualWaitingTimeInMilliseconds = Duration.between(nonZeroSpendChainTransactions.get(transactionData.getHash()), now).toMillis();
-                log.debug("Waiting transaction: {}. Time without attachment: {}, Minimum wait time: {}", transactionData.getHash(), millisecondsToMinutes(actualWaitingTimeInMilliseconds), millisecondsToMinutes(minimumWaitingTimeInMilliseconds));
-                if (actualWaitingTimeInMilliseconds > minimumWaitingTimeInMilliseconds) {
-                    transactionCreationService.createNewStarvationZeroSpendTransaction(transactionData);
-                }
-            }
-        }
-
-        List<Set<TransactionData>> sourceListsByTrustScore = clusterService.getSourceListsByTrustScore();
-        boolean isTrustScoreRangeContainsSource = false;
-        for (int i = 1; i <= 100; i++) {
-            if (!sourceListsByTrustScore.get(i).isEmpty()) {
-                isTrustScoreRangeContainsSource = true;
-            }
-            if (i % 10 == 0) {
-                if (!isTrustScoreRangeContainsSource) {
-                    transactionCreationService.createNewGenesisZeroSpendTransaction(new Double(i));
-                }
-                isTrustScoreRangeContainsSource = false;
-            }
-        }
-    }
+//    @Scheduled(fixedDelay = SOURCE_STARVATION_CHECK_TASK_DELAY)  //todo DAG remove check
+//    public void checkSourcesStarvation() {
+//        log.debug("Checking Source Starvation");
+//        Instant now = Instant.now();
+//        ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster = clusterService.getCopyTrustChainConfirmationCluster();
+//        LinkedList<TransactionData> topologicalOrderedGraph = new LinkedList<>();
+//        ConcurrentHashMap<Hash, Instant> nonZeroSpendChainTransactions = new ConcurrentHashMap<>();
+//
+//        clusterHelper.sortByTopologicalOrder(trustChainConfirmationCluster, topologicalOrderedGraph);
+//
+//        for (int i = topologicalOrderedGraph.size() - 1; i >= 0; i--) {
+//            TransactionData transactionData = topologicalOrderedGraph.get(i);
+//            if (!transactionData.getType().equals(TransactionType.ZeroSpend)) {
+//                nonZeroSpendChainTransactions.put(transactionData.getHash(), transactionData.getAttachmentTime());
+//            }
+//            parentInNonZeroChain(transactionData.getLeftParentHash(), transactionData.getHash(), nonZeroSpendChainTransactions);
+//            parentInNonZeroChain(transactionData.getRightParentHash(), transactionData.getHash(), nonZeroSpendChainTransactions);
+//
+//            if (transactionData.getChildrenTransactionHashes().size() == 0 && nonZeroSpendChainTransactions.containsKey(transactionData.getHash())) {
+//                long minimumWaitingTimeInMilliseconds = (long) (100 - transactionData.getSenderTrustScore() + MINIMUM_WAIT_TIME_IN_SECONDS) * 1000;
+//                long actualWaitingTimeInMilliseconds = Duration.between(nonZeroSpendChainTransactions.get(transactionData.getHash()), now).toMillis();
+//                log.debug("Waiting transaction: {}. Time without attachment: {}, Minimum wait time: {}", transactionData.getHash(), millisecondsToMinutes(actualWaitingTimeInMilliseconds), millisecondsToMinutes(minimumWaitingTimeInMilliseconds));
+//                if (actualWaitingTimeInMilliseconds > minimumWaitingTimeInMilliseconds) {
+//                    transactionCreationService.createNewStarvationZeroSpendTransaction(transactionData);
+//                }
+//            }
+//        }
+//
+//        List<Set<TransactionData>> sourceListsByTrustScore = clusterService.getSourceListsByTrustScore();
+//        boolean isTrustScoreRangeContainsSource = false;
+//        for (int i = 1; i <= 100; i++) {
+//            if (!sourceListsByTrustScore.get(i).isEmpty()) {
+//                isTrustScoreRangeContainsSource = true;
+//            }
+//            if (i % 10 == 0) {
+//                if (!isTrustScoreRangeContainsSource) {
+//                    transactionCreationService.createNewGenesisZeroSpendTransaction(new Double(i));
+//                }
+//                isTrustScoreRangeContainsSource = false;
+//            }
+//        }
+//    }
 
     private void parentInNonZeroChain(Hash parentHash, Hash transactionHash, ConcurrentHashMap<Hash, Instant> nonZeroSpendChainTransactions) {
         if (parentHash != null) {

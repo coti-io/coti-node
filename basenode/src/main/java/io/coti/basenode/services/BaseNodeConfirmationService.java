@@ -78,12 +78,12 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                     return;
                 }
                 dspConfirmed.incrementAndGet();
-                if (transactionData.isTrustChainConsensus()) {
+//                if (transactionData.isTrustChainConsensus()) { //todo DAG remove check
                     totalConfirmed.incrementAndGet();
                     transactionData.getBaseTransactions().forEach(baseTransactionData ->
                             balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount())
                     );
-                }
+//                }
                 transactionIndexData = nextTransactionIndexData;
             }
         } finally {
@@ -111,12 +111,13 @@ public class BaseNodeConfirmationService implements IConfirmationService {
 
     private void updateConfirmedTransactionHandler(ConfirmationData confirmationData) {
         transactions.lockAndGetByHash(confirmationData.getHash(), transactionData -> {
-            if (confirmationData instanceof TccInfo) {
-                transactionData.setTrustChainConsensus(true);
-                transactionData.setTrustChainConsensusTime(((TccInfo) confirmationData).getTrustChainConsensusTime());
-                transactionData.setTrustChainTrustScore(((TccInfo) confirmationData).getTrustChainTrustScore());
-                trustChainConfirmed.incrementAndGet();
-            } else if (confirmationData instanceof DspConsensusResult) {
+//            if (confirmationData instanceof TccInfo) {    //todo DAG remove check
+//                transactionData.setTrustChainConsensus(true);
+//                transactionData.setTrustChainConsensusTime(((TccInfo) confirmationData).getTrustChainConsensusTime());
+//                transactionData.setTrustChainTrustScore(((TccInfo) confirmationData).getTrustChainTrustScore());
+//                trustChainConfirmed.incrementAndGet();
+//            } else
+            if (confirmationData instanceof DspConsensusResult) {
                 transactionData.setDspConsensusResult((DspConsensusResult) confirmationData);
                 if (!insertNewTransactionIndex(transactionData)) {
                     return;
@@ -155,9 +156,9 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     private void processConfirmedTransaction(TransactionData transactionData) {
-        Instant trustChainConsensusTime = transactionData.getTrustChainConsensusTime();
+//        Instant trustChainConsensusTime = transactionData.getTrustChainConsensusTime();    //todo DAG remove check
         Instant dspConsensusTime = transactionData.getDspConsensusResult().getIndexingTime();
-        Instant transactionConsensusUpdateTime = trustChainConsensusTime.isAfter(dspConsensusTime) ? trustChainConsensusTime : dspConsensusTime;
+        Instant transactionConsensusUpdateTime = /*trustChainConsensusTime.isAfter(dspConsensusTime) ? trustChainConsensusTime : */dspConsensusTime;
         transactionData.setTransactionConsensusUpdateTime(transactionConsensusUpdateTime);
         transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount()));
         totalConfirmed.incrementAndGet();
@@ -247,19 +248,19 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     private void processMissingDspConfirmedTransaction(TransactionData transactionData) {
         continueHandleDSPConfirmedTransaction(transactionData);
         dspConfirmed.incrementAndGet();
-        if (transactionData.isTrustChainConsensus()) {
+//        if (transactionData.isTrustChainConsensus()) {//todo DAG remove check
             transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount()));
             totalConfirmed.incrementAndGet();
-        }
+//        }
     }
 
     @Override
-    public void setTccToTrue(TccInfo tccInfo) {
-        try {
-            confirmationQueue.put(tccInfo);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+    public void setTccToTrue(TccInfo tccInfo) { //todo DAG remove check
+//        try {
+//            confirmationQueue.put(tccInfo);
+//        } catch (InterruptedException e) {
+//            Thread.currentThread().interrupt();
+//        }
     }
 
     @Override

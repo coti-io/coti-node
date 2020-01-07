@@ -331,7 +331,7 @@ public class TransactionHelper implements ITransactionHelper {
 
     @Override
     public boolean isConfirmed(TransactionData transactionData) {
-        return transactionData.isTrustChainConsensus() && isDspConfirmed(transactionData);
+        return /*transactionData.isTrustChainConsensus() &&*/ isDspConfirmed(transactionData);   //todo DAG remove check
     }
 
     @Override
