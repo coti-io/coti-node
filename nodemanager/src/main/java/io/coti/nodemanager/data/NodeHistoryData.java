@@ -2,35 +2,31 @@ package io.coti.nodemanager.data;
 
 
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.interfaces.IEntity;
 import lombok.Data;
-
-import java.util.LinkedList;
+import org.apache.commons.collections4.map.LinkedMap;
 
 @Data
 public class NodeHistoryData implements IEntity {
 
-    private static final long serialVersionUID = -6158422478371753336L;
-    private Hash nodeHash;
-    private NodeType nodeType;
-    private NetworkNodeStatus nodeStatus;
-    private LinkedList<NodeNetworkDataTimestamp> nodeHistory = new LinkedList<>();
+    private static final long serialVersionUID = 1342674273074140300L;
+    private Hash nodeHistoryHash;  //compound
+    private LinkedMap<Hash, NodeNetworkDataRecord> nodeHistory = new LinkedMap<>();
 
-    public NodeHistoryData(NetworkNodeStatus nodeStatus, Hash nodeHash, NodeType nodeType) {
-        this.nodeType = nodeType;
-        this.nodeStatus = nodeStatus;
-        this.nodeHash = nodeHash;
+    public NodeHistoryData() {
+    }
+
+    public NodeHistoryData(Hash nodeHistoryHash) {
+        this.nodeHistoryHash = nodeHistoryHash;
     }
 
     @Override
     public Hash getHash() {
-        return nodeHash;
+        return nodeHistoryHash;
     }
 
     @Override
     public void setHash(Hash hash) {
-        nodeHash = hash;
+        nodeHistoryHash = hash;
     }
-
 }

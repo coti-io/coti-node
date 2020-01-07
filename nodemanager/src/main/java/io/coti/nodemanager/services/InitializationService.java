@@ -59,13 +59,12 @@ public class InitializationService {
             nodeManagementService.init();
             communicationService.initPublisher(propagationPort, NodeType.NodeManager);
             healthCheckService.init();
+        } catch (CotiRunTimeException e) {
+            log.error("Errors at {}", this.getClass().getSimpleName());
+            e.logMessage();
         } catch (Exception e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
-            if (e instanceof CotiRunTimeException) {
-                ((CotiRunTimeException) e).logMessage();
-            } else {
-                log.error("{}: {}", e.getClass().getName(), e.getMessage());
-            }
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
             System.exit(SpringApplication.exit(applicationContext));
         }
     }

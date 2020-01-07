@@ -3,6 +3,7 @@ package io.coti.nodemanager.services;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.services.interfaces.INetworkService;
+import io.coti.nodemanager.data.NetworkNodeStatus;
 import io.coti.nodemanager.model.ActiveNodes;
 import io.coti.nodemanager.services.interfaces.IHealthCheckService;
 import io.coti.nodemanager.services.interfaces.INodeManagementService;
@@ -11,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -134,7 +137,7 @@ public class HealthCheckService implements IHealthCheckService {
 
     private void deleteNodeRecord(NetworkNodeData networkNodeData) {
         log.info("Deleting {} of address {} and port {}", networkNodeData.getNodeType(), networkNodeData.getAddress(), networkNodeData.getHttpPort());
-        nodeManagementService.insertDeletedNodeRecord(networkNodeData);
+        nodeManagementService.writeNodeHistory(networkNodeData, NetworkNodeStatus.INACTIVE, LocalDateTime.now(ZoneOffset.UTC));
         activeNodes.delete(networkNodeData);
     }
 
