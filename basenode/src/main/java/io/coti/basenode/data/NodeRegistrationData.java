@@ -29,10 +29,6 @@ public class NodeRegistrationData implements IEntity, ISignValidatable {
     @Valid
     private SignatureData registrarSignature;
 
-    public NodeRegistrationData() {
-        // Empty constructor
-    }
-
     @Override
     @JsonIgnore
     public Hash getHash() {

@@ -7,8 +7,8 @@ import lombok.Data;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.nio.ByteBuffer;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.concurrent.ConcurrentSkipListMap;
 
@@ -18,7 +18,7 @@ public class NodeDayMapData implements IEntity {
     private static final long serialVersionUID = 7144081521147671251L;
     private Hash nodeHash;
     private NodeType nodeType;
-    private LocalDateTime activationDateTime;
+    private Instant activationDateTime;
     private ConcurrentSkipListMap<LocalDate, Hash> nodeDayMap;
     private NetworkNodeStatus nodeStatus;
     private Pair<LocalDate, Hash> statusChainRef;
@@ -27,7 +27,7 @@ public class NodeDayMapData implements IEntity {
     private NodeDayMapData() {
     }
 
-    public NodeDayMapData(Hash nodeHash, LocalDateTime activationDateTime) {
+    public NodeDayMapData(Hash nodeHash, Instant activationDateTime) {
         this.nodeHash = nodeHash;
         this.activationDateTime = activationDateTime;
         nodeDayMap = new ConcurrentSkipListMap<>();

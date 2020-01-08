@@ -7,9 +7,9 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 
 @Data
 public class NodeNetworkDataRecord implements Serializable {
@@ -17,7 +17,7 @@ public class NodeNetworkDataRecord implements Serializable {
     private static final long serialVersionUID = 7814283160669885668L;
 
     private Hash hash;
-    private LocalDateTime recordStartDateTime;
+    private Instant recordTime;
     private NetworkNodeStatus nodeStatus;
     private NetworkNodeData networkNodeData;
     private Pair<LocalDate, Hash> statusChainRef;
@@ -25,15 +25,15 @@ public class NodeNetworkDataRecord implements Serializable {
     public NodeNetworkDataRecord() {
     }
 
-    public NodeNetworkDataRecord(LocalDateTime recordStartDateTime, NetworkNodeStatus nodeStatus, NetworkNodeData networkNodeData) {
-        this.recordStartDateTime = recordStartDateTime;
+    public NodeNetworkDataRecord(Instant recordTime, NetworkNodeStatus nodeStatus, NetworkNodeData networkNodeData) {
+        this.recordTime = recordTime;
         this.nodeStatus = nodeStatus;
         this.networkNodeData = networkNodeData;
         this.hash = calculateHash();
-        this.statusChainRef = Pair.of(recordStartDateTime.toLocalDate(), this.hash);
+        this.statusChainRef = Pair.of(recordTime.atZone(ZoneId.of("UTC")).toLocalDate(), this.hash);
     }
 
     private Hash calculateHash() {
-        return new Hash(ByteBuffer.allocate(Long.BYTES).putLong(this.recordStartDateTime.toInstant(ZoneOffset.UTC).toEpochMilli()).array());
+        return new Hash(ByteBuffer.allocate(Long.BYTES).putLong(this.recordTime.toEpochMilli()).array());
     }
 }

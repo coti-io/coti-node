@@ -21,5 +21,5 @@ public interface INodeManagementService {
 
     SingleNodeDetailsForWallet getOneNodeDetailsForWallet();
 
-    void writeNodeHistory(NetworkNodeData networkNodeData, NetworkNodeStatus inactive, LocalDateTime eventDateTime);
+    void addNodeHistory(NetworkNodeData networkNodeData, NetworkNodeStatus inactive, LocalDateTime eventDateTime);
 }

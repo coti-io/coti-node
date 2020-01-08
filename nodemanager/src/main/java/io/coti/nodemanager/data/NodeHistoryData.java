@@ -10,7 +10,7 @@ import org.apache.commons.collections4.map.LinkedMap;
 public class NodeHistoryData implements IEntity {
 
     private static final long serialVersionUID = 1342674273074140300L;
-    private Hash nodeHistoryHash;  //compound
+    private Hash nodeHistoryHash;
     private LinkedMap<Hash, NodeNetworkDataRecord> nodeHistory = new LinkedMap<>();
 
     public NodeHistoryData() {

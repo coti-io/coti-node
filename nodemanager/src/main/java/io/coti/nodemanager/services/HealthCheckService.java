@@ -137,7 +137,7 @@ public class HealthCheckService implements IHealthCheckService {
 
     private void deleteNodeRecord(NetworkNodeData networkNodeData) {
         log.info("Deleting {} of address {} and port {}", networkNodeData.getNodeType(), networkNodeData.getAddress(), networkNodeData.getHttpPort());
-        nodeManagementService.writeNodeHistory(networkNodeData, NetworkNodeStatus.INACTIVE, LocalDateTime.now(ZoneOffset.UTC));
+        nodeManagementService.addNodeHistory(networkNodeData, NetworkNodeStatus.INACTIVE, LocalDateTime.now(ZoneOffset.UTC));
         activeNodes.delete(networkNodeData);
     }
 

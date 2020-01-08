@@ -19,7 +19,7 @@ public class NodeNetworkResponseData implements Serializable {
     }
 
     public NodeNetworkResponseData(NodeNetworkDataRecord nodeNetworkDataRecord) {
-        this.recordDateTime = nodeNetworkDataRecord.getRecordStartDateTime();
+        this.recordDateTime = nodeNetworkDataRecord.getRecordTime();
         this.nodeStatus = nodeNetworkDataRecord.getNodeStatus();
     }
 }
