@@ -102,6 +102,8 @@ public abstract class BaseNodeInitializationService {
     protected ApplicationContext applicationContext;
     @Autowired
     private BuildProperties buildProperties;
+    @Autowired
+    private IUnconfirmedReceivedTransactionService unconfirmedReceivedTransactionService;
 
     public void init() {
         log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());
@@ -117,6 +119,7 @@ public abstract class BaseNodeInitializationService {
         transactionIndexService.init();
         dspVoteService.init();
         transactionService.init();
+        unconfirmedReceivedTransactionService.init();
         potService.init();
         initCommunication();
         log.info("The communication initialization is done");

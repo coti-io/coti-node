@@ -73,6 +73,8 @@ public class TransactionService extends BaseNodeTransactionService {
     private IChunkService chunkService;
     @Autowired
     private PotService potService;
+    @Autowired
+    private UnconfirmedReceivedTransactionService unconfirmedReceivedTransactionService;
     private BlockingQueue<ReducedTransactionData> explorerIndexQueue;
     private Thread explorerIndexThread;
     private IndexedNavigableSet<ReducedTransactionData> explorerIndexedTransactionSet;
@@ -100,6 +102,8 @@ public class TransactionService extends BaseNodeTransactionService {
                         request.type);
         try {
             log.debug("New transaction request is being processed. Transaction Hash = {}", request.hash);
+
+            unconfirmedReceivedTransactionService.removeConfirmedReceiptTransaction(transactionData.getHash());
 
             if (transactionHelper.isTransactionExists(transactionData)) {
                 log.debug("Received existing transaction: {}", transactionData.getHash());
