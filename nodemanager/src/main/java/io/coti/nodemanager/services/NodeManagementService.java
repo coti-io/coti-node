@@ -21,9 +21,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -88,7 +88,7 @@ public class NodeManagementService implements INodeManagementService {
             }
             ActiveNodeData activeNodeData = new ActiveNodeData(networkNodeData.getHash(), networkNodeData);
             activeNodes.put(activeNodeData);
-            addNodeHistory(networkNodeData, NetworkNodeStatus.ACTIVE, LocalDateTime.now(ZoneOffset.UTC));
+            addNodeHistory(networkNodeData, NetworkNodeStatus.ACTIVE, Instant.now());
             propagateNetworkChanges();
             Thread.sleep(3000); // a delay for other nodes to make changes with the newly added node
             return ResponseEntity.status(HttpStatus.OK).body(String.format(NODE_ADDED_TO_NETWORK, networkNodeData.getNodeHash()));
@@ -98,23 +98,23 @@ public class NodeManagementService implements INodeManagementService {
         }
     }
 
-    public void addNodeHistory(NetworkNodeData networkNodeData, NetworkNodeStatus nodeStatus, LocalDateTime currentEventDateTime) {
+    public void addNodeHistory(NetworkNodeData networkNodeData, NetworkNodeStatus nodeStatus, Instant currentEventDateTime) {
         if (networkNodeData == null) {
             return;
         }
         Hash nodeHash = networkNodeData.getNodeHash();
         try {
             synchronized (addLockToLockMap(nodeHash)) {
-                LocalDate currentEventDate = currentEventDateTime.toLocalDate();
+                LocalDate currentEventDate = currentEventDateTime.atZone(ZoneId.of("UTC")).toLocalDate();
                 NodeDayMapData nodeDayMapsByHash = nodeDayMaps.getByHash(nodeHash);
                 if (nodeDayMapsByHash == null) {
-                    writeNodeHistoryInitNewNode(networkNodeData, nodeStatus, nodeHash, currentEventDateTime);
+                    addNodeHistoryInitNewNode(networkNodeData, nodeStatus, nodeHash, currentEventDateTime);
                 } else {
-                    LocalDate lastDateInNodeDayMap = nodeDayMapsByHash.getNodeDayMap().lastKey();
+                    LocalDate lastDateInNodeDayMap = nodeDayMapsByHash.getNodeDaySet().last();
                     if (lastDateInNodeDayMap.isBefore(currentEventDate)) {
-                        writeNodeHistoryEventInNewDate(nodeDayMapsByHash, currentEventDateTime, nodeStatus, networkNodeData);
+                        addNodeHistoryEventInNewDate(nodeDayMapsByHash, currentEventDateTime, nodeStatus, networkNodeData);
                     } else {
-                        writeNodeHistoryExistingDateNewEntry(networkNodeData, nodeStatus, currentEventDateTime, nodeDayMapsByHash);
+                        addNodeHistoryExistingDateNewEntry(networkNodeData, nodeStatus, currentEventDateTime, nodeDayMapsByHash);
                     }
                 }
             }
@@ -124,26 +124,24 @@ public class NodeManagementService implements INodeManagementService {
 
     }
 
-    private void writeNodeHistoryInitNewNode(NetworkNodeData networkNodeData, NetworkNodeStatus nodeStatus,
-                                             Hash nodeHash, LocalDateTime currentEventDateTime) {
-        NodeDayMapData nodeDayMapsByHash = new NodeDayMapData(nodeHash, currentEventDateTime);
-        LocalDate currentEventDate = currentEventDateTime.toLocalDate();
+    private void addNodeHistoryInitNewNode(NetworkNodeData networkNodeData, NetworkNodeStatus nodeStatus,
+                                           Hash nodeHash, Instant currentEventDateTime) {
+        NodeDayMapData nodeDayMapsByHash = new NodeDayMapData(nodeHash);
+        LocalDate currentEventDate = currentEventDateTime.atZone(ZoneId.of("UTC")).toLocalDate();
         Hash calculateNodeHistoryDataHash = nodeDayMapsByHash.calculateNodeHistoryDataHash(currentEventDate);
-        nodeDayMapsByHash.getNodeDayMap().put(currentEventDate, calculateNodeHistoryDataHash);
-        NodeHistoryData newNodeHistoryByHash = writeNodeHistoryPutNodeNetworkDataRecordForNewDate(currentEventDateTime, nodeStatus, networkNodeData, calculateNodeHistoryDataHash);
+        nodeDayMapsByHash.getNodeDaySet().add(currentEventDate);
+        NodeHistoryData newNodeHistoryByHash = addNodeHistoryPutNodeNetworkDataRecordForNewDate(currentEventDateTime, nodeStatus, networkNodeData, calculateNodeHistoryDataHash);
         nodeHistory.put(newNodeHistoryByHash);
 
         Hash nodeHistoryLastEntryHash = newNodeHistoryByHash.getNodeHistory().lastKey();
         Pair<LocalDate, Hash> pair = Pair.of(currentEventDate, nodeHistoryLastEntryHash);
 
-        nodeDayMapsByHash.setStatusChainRef(pair);
-        nodeDayMapsByHash.setNodeStatus(nodeStatus);
-        nodeDayMapsByHash.setChainHead(false);
+        getNodeCurrentNetworkDataRecord(nodeDayMapsByHash).setStatusChainRef(pair);
         nodeDayMaps.put(nodeDayMapsByHash);
         log.debug("New node was inserted the db. node: {}", nodeHash);
     }
 
-    private NodeHistoryData writeNodeHistoryPutNodeNetworkDataRecordForNewDate(LocalDateTime currentEventDateTime, NetworkNodeStatus nodeStatus, NetworkNodeData networkNodeData, Hash newEventDateCalculatedNodeDateHash) {
+    private NodeHistoryData addNodeHistoryPutNodeNetworkDataRecordForNewDate(Instant currentEventDateTime, NetworkNodeStatus nodeStatus, NetworkNodeData networkNodeData, Hash newEventDateCalculatedNodeDateHash) {
         NodeHistoryData newNodeHistoryByHash = new NodeHistoryData(newEventDateCalculatedNodeDateHash);
         NodeNetworkDataRecord newNodeNetworkDataRecord =
                 new NodeNetworkDataRecord(currentEventDateTime, nodeStatus, networkNodeData);
@@ -151,47 +149,70 @@ public class NodeManagementService implements INodeManagementService {
         return newNodeHistoryByHash;
     }
 
-    private void writeNodeHistoryEventInNewDate(NodeDayMapData nodeDayMapsByHash, LocalDateTime currentEventDateTime,
-                                                NetworkNodeStatus nodeStatus, NetworkNodeData networkNodeData) {
-        LocalDate currentEventDate = currentEventDateTime.toLocalDate();
+    private void addNodeHistoryEventInNewDate(NodeDayMapData nodeDayMapsByHash, Instant currentEventDateTime,
+                                              NetworkNodeStatus nodeStatus, NetworkNodeData networkNodeData) {
+        LocalDate currentEventDate = currentEventDateTime.atZone(ZoneId.of("UTC")).toLocalDate();
         Hash newEventDateCalculatedNodeDateHash = nodeDayMapsByHash.calculateNodeHistoryDataHash(currentEventDate);
-        NodeHistoryData newNodeHistoryByHash = writeNodeHistoryPutNodeNetworkDataRecordForNewDate(currentEventDateTime, nodeStatus, networkNodeData, newEventDateCalculatedNodeDateHash);
+        NodeHistoryData newNodeHistoryByHash = addNodeHistoryPutNodeNetworkDataRecordForNewDate(currentEventDateTime, nodeStatus, networkNodeData, newEventDateCalculatedNodeDateHash);
         nodeHistory.put(newNodeHistoryByHash);
 
-        writeNodeHistoryUpdateNodeDayMap(nodeDayMapsByHash, nodeStatus, currentEventDate, newNodeHistoryByHash);
+        addNodeHistoryUpdateNodeDayMap(nodeDayMapsByHash, nodeStatus, currentEventDate, newNodeHistoryByHash);
     }
 
-    private void writeNodeHistoryUpdateNodeDayMap(NodeDayMapData nodeDayMapsByHash, NetworkNodeStatus nodeStatus, LocalDate currentEventDate, NodeHistoryData existingEventDateNodeHistoryData) {
+    private void addNodeHistoryUpdateNodeDayMap(NodeDayMapData nodeDayMapsByHash, NetworkNodeStatus nodeStatus, LocalDate currentEventDate, NodeHistoryData existingEventDateNodeHistoryData) {
         Pair<LocalDate, Hash> pair;
 
-        boolean isSameStatus = nodeStatus == nodeDayMapsByHash.getNodeStatus();
-        if (nodeDayMapsByHash.isChainHead() && isSameStatus) {
-            Map.Entry<LocalDate, Hash> lastDateWithEventEntry = nodeDayMapsByHash.getNodeDayMap().lastEntry();
-            NodeHistoryData nodeHistoryLastDate = nodeHistory.getByHash(lastDateWithEventEntry.getValue());
+        NetworkNodeStatus previousNodeStatus = getNodeCurrentStatus(nodeDayMapsByHash);
+        boolean isChainHead = isChainHead(nodeDayMapsByHash, previousNodeStatus);
+
+        boolean isSameStatus = nodeStatus == previousNodeStatus;
+        if (isChainHead && isSameStatus) {
+            LocalDate lastDateWithEvent = nodeDayMapsByHash.getNodeDaySet().last();
+            NodeHistoryData nodeHistoryLastDate = nodeHistory.getByHash(nodeDayMapsByHash.calculateNodeHistoryDataHash(lastDateWithEvent));
             LinkedMap<Hash, NodeNetworkDataRecord> lastDateWithEventsNodeHistory = nodeHistoryLastDate.getNodeHistory();
             Hash previousNodeNetworkDataRecordHash = lastDateWithEventsNodeHistory.lastKey();
-            pair = Pair.of(lastDateWithEventEntry.getKey(), previousNodeNetworkDataRecordHash);
+            pair = Pair.of(lastDateWithEvent, previousNodeNetworkDataRecordHash);
         } else {
-            pair = nodeDayMapsByHash.getStatusChainRef();
+            pair = getNodeCurrentNetworkDataRecord(nodeDayMapsByHash).getStatusChainRef();
         }
-        nodeDayMapsByHash.setChainHead(!isSameStatus);
-        nodeDayMapsByHash.setNodeStatus(nodeStatus);
-        nodeDayMapsByHash.setStatusChainRef(pair);
-        nodeDayMapsByHash.getNodeDayMap().putIfAbsent(currentEventDate, nodeDayMapsByHash.calculateNodeHistoryDataHash(currentEventDate));
+        getNodeCurrentNetworkDataRecord(nodeDayMapsByHash).setStatusChainRef(pair);
+        nodeDayMapsByHash.getNodeDaySet().add(currentEventDate);
         nodeDayMaps.put(nodeDayMapsByHash);
         existingEventDateNodeHistoryData.getNodeHistory().get(existingEventDateNodeHistoryData.getNodeHistory().lastKey()).setStatusChainRef(pair);
         nodeHistory.put(existingEventDateNodeHistoryData);
     }
 
-    private void writeNodeHistoryExistingDateNewEntry(NetworkNodeData networkNodeData, NetworkNodeStatus nodeStatus, LocalDateTime currentEventDateTime,
-                                                      NodeDayMapData nodeDayMapsByHash) {
-        LocalDate currentEventDate = currentEventDateTime.toLocalDate();
-        Hash existingEventDateCalculatedNodeDateHash = nodeDayMapsByHash.getNodeDayMap().lastEntry().getValue();
+    private boolean isChainHead(NodeDayMapData nodeDayMapsByHash, NetworkNodeStatus previousNodeStatus) {
+        NodeNetworkDataRecord previousNodeNetworkDataRecord = getNodeCurrentNetworkDataRecord(nodeDayMapsByHash);
+        Pair<LocalDate, Hash> previousStatusChainRef = previousNodeNetworkDataRecord.getStatusChainRef();
+        NodeNetworkDataRecord previousTwiceNodeNetworkDataRecord = getNodeNetworkDataRecordByChainRef(nodeDayMapsByHash, previousStatusChainRef);
+        NetworkNodeStatus previousTwiceNodeStatus = previousTwiceNodeNetworkDataRecord.getNodeStatus();
+        return previousNodeStatus != previousTwiceNodeStatus;
+    }
+
+    protected NodeNetworkDataRecord getNodeNetworkDataRecordByChainRef(NodeDayMapData nodeDayMapsByHash, Pair<LocalDate, Hash> chainRef) {
+        return nodeHistory.getByHash(nodeDayMapsByHash.calculateNodeHistoryDataHash(chainRef.getLeft())).getNodeHistory().get(chainRef.getRight());
+    }
+
+    private NodeNetworkDataRecord getNodeCurrentNetworkDataRecord(NodeDayMapData nodeDayMapsByHash) {
+        NodeHistoryData nodeHistoryData = nodeHistory.getByHash(nodeDayMapsByHash.calculateNodeHistoryDataHash(nodeDayMapsByHash.getNodeDaySet().last()));
+        return nodeHistoryData.getNodeHistory().get(nodeHistoryData.getNodeHistory().lastKey());
+    }
+
+    private NetworkNodeStatus getNodeCurrentStatus(NodeDayMapData nodeDayMapsByHash) {
+        NodeNetworkDataRecord nodeNetworkDataRecord = getNodeCurrentNetworkDataRecord(nodeDayMapsByHash);
+        return nodeNetworkDataRecord.getNodeStatus();
+    }
+
+    private void addNodeHistoryExistingDateNewEntry(NetworkNodeData networkNodeData, NetworkNodeStatus nodeStatus, Instant currentEventDateTime,
+                                                    NodeDayMapData nodeDayMapsByHash) {
+        LocalDate currentEventDate = currentEventDateTime.atZone(ZoneId.of("UTC")).toLocalDate();
+        Hash existingEventDateCalculatedNodeDateHash = nodeDayMapsByHash.calculateNodeHistoryDataHash(nodeDayMapsByHash.getNodeDaySet().last());
         NodeHistoryData existingEventDateNodeHistoryData = nodeHistory.getByHash(existingEventDateCalculatedNodeDateHash);
         NodeNetworkDataRecord newNodeNetworkDataRecord = new NodeNetworkDataRecord(currentEventDateTime, nodeStatus, networkNodeData);
         existingEventDateNodeHistoryData.getNodeHistory().put(newNodeNetworkDataRecord.getHash(), newNodeNetworkDataRecord);
 
-        writeNodeHistoryUpdateNodeDayMap(nodeDayMapsByHash, nodeStatus, currentEventDate, existingEventDateNodeHistoryData);
+        addNodeHistoryUpdateNodeDayMap(nodeDayMapsByHash, nodeStatus, currentEventDate, existingEventDateNodeHistoryData);
     }
 
     @Override

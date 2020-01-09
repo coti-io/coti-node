@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -137,7 +138,7 @@ public class HealthCheckService implements IHealthCheckService {
 
     private void deleteNodeRecord(NetworkNodeData networkNodeData) {
         log.info("Deleting {} of address {} and port {}", networkNodeData.getNodeType(), networkNodeData.getAddress(), networkNodeData.getHttpPort());
-        nodeManagementService.addNodeHistory(networkNodeData, NetworkNodeStatus.INACTIVE, LocalDateTime.now(ZoneOffset.UTC));
+        nodeManagementService.addNodeHistory(networkNodeData, NetworkNodeStatus.INACTIVE, Instant.now());
         activeNodes.delete(networkNodeData);
     }
 

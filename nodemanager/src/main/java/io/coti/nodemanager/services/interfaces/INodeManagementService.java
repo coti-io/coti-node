@@ -5,7 +5,7 @@ import io.coti.nodemanager.data.NetworkNodeStatus;
 import io.coti.nodemanager.http.data.SingleNodeDetailsForWallet;
 import org.springframework.http.ResponseEntity;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -21,5 +21,5 @@ public interface INodeManagementService {
 
     SingleNodeDetailsForWallet getOneNodeDetailsForWallet();
 
-    void addNodeHistory(NetworkNodeData networkNodeData, NetworkNodeStatus inactive, LocalDateTime eventDateTime);
+    void addNodeHistory(NetworkNodeData networkNodeData, NetworkNodeStatus nodeStatus, Instant currentEventDateTime);
 }

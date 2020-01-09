@@ -5,6 +5,7 @@ import io.coti.nodemanager.data.NodeNetworkDataRecord;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Data
@@ -12,7 +13,7 @@ public class NodeNetworkResponseData implements Serializable {
 
     private static final long serialVersionUID = 7814283160669885668L;
 
-    private LocalDateTime recordDateTime;
+    private Instant recordDateTime;
     private NetworkNodeStatus nodeStatus;
 
     public NodeNetworkResponseData() {

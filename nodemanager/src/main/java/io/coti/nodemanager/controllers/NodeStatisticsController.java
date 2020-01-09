@@ -1,6 +1,7 @@
 package io.coti.nodemanager.controllers;
 
 
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.nodemanager.http.GetNodeDailyStatisticsResponse;
 import io.coti.nodemanager.http.GetNodeEventStatisticsResponse;
 import io.coti.nodemanager.http.GetNodeStatisticsRequest;
@@ -40,5 +41,10 @@ public class NodeStatisticsController {
     public ResponseEntity<GetNodeStatisticsResponse> getNodeStatsTotal(@Valid @RequestBody GetNodeStatisticsRequest getNodeStatisticsRequest) {
         GetNodeStatisticsResponse getNodeStatisticsResponse = new GetNodeStatisticsResponse(networkHistoryService.getNodeStatsTotal(getNodeStatisticsRequest));
         return ResponseEntity.ok(getNodeStatisticsResponse);
+    }
+
+    @GetMapping(path = "/totalsByPercentage")
+    public ResponseEntity<IResponse> getNodeStatsTotalPercentage(@Valid @RequestBody GetNodeStatisticsRequest getNodeStatisticsRequest) {
+        return networkHistoryService.getNodeActivityPercentage(getNodeStatisticsRequest);
     }
 }
