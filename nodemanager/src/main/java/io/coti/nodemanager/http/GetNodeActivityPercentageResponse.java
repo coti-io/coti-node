@@ -5,9 +5,9 @@ import lombok.Data;
 
 @Data
 public class GetNodeActivityPercentageResponse extends BaseResponse {
-    private long activityPercentage;
+    private double activityPercentage;
 
-    public GetNodeActivityPercentageResponse(long activityPercentage) {
+    public GetNodeActivityPercentageResponse(double activityPercentage) {
         this.activityPercentage = activityPercentage;
     }
 

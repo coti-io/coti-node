@@ -163,7 +163,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
                 eventsListIndex += 1;
             }
             if (currentNetworkNodeStatus == NetworkNodeStatus.ACTIVE) {
-                upTime += lastActive.until(localDate.plusDays(1).atStartOfDay(), ChronoUnit.SECONDS);
+                upTime += lastActive.until(localDate.plusDays(1).atStartOfDay().atZone(ZoneId.of("UTC")).toInstant(), ChronoUnit.SECONDS);
             }
 
             NodeDailyStatisticsData nodeDailyStatisticsData = new NodeDailyStatisticsData(localDate, upTime, restarts, downEvents);
@@ -211,7 +211,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
             }
         }
         if (currentNetworkNodeStatus == NetworkNodeStatus.ACTIVE) {
-            upTime += lastActive.until(endDate.plusDays(1).atStartOfDay(), ChronoUnit.SECONDS);
+            upTime += lastActive.until(endDate.plusDays(1).atStartOfDay().atZone(ZoneId.of("UTC")).toInstant(), ChronoUnit.SECONDS);
         }
 
         return new NodeStatisticsData(upTime, restarts, downEvents);
@@ -241,12 +241,12 @@ public class NetworkHistoryService implements INetworkHistoryService {
         }
 
         long activityUpTimeInSeconds = getActivityUpTimeInSeconds(startDate, endDate, nodeDayMapData);
-        long numberOfDays = Duration.between(startDate, endDate).toDays() + 1;
+        long numberOfDays = startDate.until(endDate, ChronoUnit.DAYS) + 1;
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new GetNodeActivityPercentageResponse(activityUpTimeInSeconds / (numberOfDays * NUMBER_OF_SECONDS_IN_DAY)));
+                .body(new GetNodeActivityPercentageResponse(((double)activityUpTimeInSeconds) / (numberOfDays * NUMBER_OF_SECONDS_IN_DAY) * 100));
     }
 
-    private long getActivityUpTimeInSeconds(LocalDate startDate, LocalDate endDate, NodeDayMapData nodeDayMapData) {
+    private long getActivityUpTimeInSeconds(LocalDate startDate, LocalDate endDate, NodeDayMapData nodeDayMapData) {  // todo check calculation
         long activityUpTimeInSeconds = 0;
         LocalDate ceilingDate = nodeDayMapData.getNodeDaySet().ceiling(endDate);
         LocalDate lastDateWithEvent = ceilingDate == null ? nodeDayMapData.getNodeDaySet().last() : ceilingDate;
@@ -256,7 +256,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
         LinkedMap<Hash, NodeNetworkDataRecord> lastDateWithEventNodeHistory = lastDateWithEventNodeHistoryData.getNodeHistory();
         NodeNetworkDataRecord lastDateWithEventLastEventNodeNetworkDataRecord = lastDateWithEventNodeHistory.get(lastDateWithEventNodeHistory.lastKey());
         if (lastDateWithEventLastEventNodeNetworkDataRecord.getNodeStatus() == NetworkNodeStatus.ACTIVE) {
-            activityUpTimeInSeconds += lastDateWithEventLastEventNodeNetworkDataRecord.getRecordTime().until(endDate.plusDays(1).atStartOfDay(), ChronoUnit.SECONDS);
+            activityUpTimeInSeconds += lastDateWithEventLastEventNodeNetworkDataRecord.getRecordTime().until(endDate.plusDays(1).atStartOfDay().atZone(ZoneId.of("UTC")).toInstant(), ChronoUnit.SECONDS);
         }
 
         NodeNetworkDataRecord previousNodeNetworkDataRecordByChainRef = lastDateWithEventLastEventNodeNetworkDataRecord;
