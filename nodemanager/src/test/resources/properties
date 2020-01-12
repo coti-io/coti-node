@@ -1,0 +1,4 @@
+// do not take it to dev
+database.folder.name=rocksDB
+application.name=/home/anton/IdeaProjects/coti-node/NodeManager
+logging.file.name=NodeManager
