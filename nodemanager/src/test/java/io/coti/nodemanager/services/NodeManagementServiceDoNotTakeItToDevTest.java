@@ -208,7 +208,7 @@ public class NodeManagementServiceDoNotTakeItToDevTest {
 
         for (int i = 0; i < 40; i++) {
             for (int j = 0; j < 24; j++) {
-                for (int k = 0; k < 60; k++) {  // or 60
+                for (int k = 0; k < 5; k++) {  // or 60
                     nodeStatus = NetworkNodeStatus.ACTIVE;
                     localDateTime = LocalDateTime.of(startDateTime.getYear(), startDateTime.getMonth(), startDateTime.getDayOfMonth(), j, k, 0).toInstant(ZoneOffset.UTC);
                     nodeManagementService.addNodeHistory(networkNodeData3, nodeStatus, localDateTime);
