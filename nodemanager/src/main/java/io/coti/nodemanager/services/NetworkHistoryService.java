@@ -21,7 +21,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -243,7 +242,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
         long activityUpTimeInSeconds = getActivityUpTimeInSeconds(startDate, endDate, nodeDayMapData);
         long numberOfDays = startDate.until(endDate, ChronoUnit.DAYS) + 1;
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new GetNodeActivityPercentageResponse(((double)activityUpTimeInSeconds) / (numberOfDays * NUMBER_OF_SECONDS_IN_DAY) * 100));
+                .body(new GetNodeActivityPercentageResponse(((double) activityUpTimeInSeconds) / (numberOfDays * NUMBER_OF_SECONDS_IN_DAY) * 100));
     }
 
     private long getActivityUpTimeInSeconds(LocalDate startDate, LocalDate endDate, NodeDayMapData nodeDayMapData) {  // todo check calculation
@@ -269,8 +268,9 @@ public class NetworkHistoryService implements INetworkHistoryService {
             previousNodeNetworkDataRecordByChainRef = currentNodeNetworkDataRecordByChainRef;
             currentNodeNetworkDataRecordByChainRef = nodeManagementService.getNodeNetworkDataRecordByChainRef(nodeDayMapData, previousNodeNetworkDataRecordByChainRef.getStatusChainRef());
         }
-        if (!currentNodeNetworkDataRecordByChainRef.getStatusChainRef().getLeft().isBefore(startDate) && previousNodeNetworkDataRecordByChainRef.getNodeStatus() != NetworkNodeStatus.ACTIVE) {
-            activityUpTimeInSeconds += previousNodeNetworkDataRecordByChainRef.getRecordTime().atZone(ZoneId.of("UTC")).toLocalDate().atStartOfDay().until(previousNodeNetworkDataRecordByChainRef.getRecordTime(), ChronoUnit.SECONDS);
+        if (currentNodeNetworkDataRecordByChainRef.getStatusChainRef().getLeft().isBefore(startDate) && previousNodeNetworkDataRecordByChainRef.getNodeStatus() != NetworkNodeStatus.ACTIVE) {
+            activityUpTimeInSeconds += currentNodeNetworkDataRecordByChainRef.getRecordTime().until(previousNodeNetworkDataRecordByChainRef.getRecordTime(), ChronoUnit.SECONDS);
+            activityUpTimeInSeconds += previousNodeNetworkDataRecordByChainRef.getRecordTime().atZone(ZoneId.of("UTC")).toLocalDate().atStartOfDay().until(LocalDateTime.ofInstant(previousNodeNetworkDataRecordByChainRef.getRecordTime(), ZoneOffset.UTC), ChronoUnit.SECONDS);
         }
         return activityUpTimeInSeconds;
     }
