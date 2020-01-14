@@ -33,8 +33,8 @@ import java.util.concurrent.atomic.AtomicLong;
 @Service
 public abstract class BaseNodeInitializationService {
 
-    private final static String NODE_REGISTRATION = "/node/node_registration";
-    private final static String NODE_MANAGER_NODES_ENDPOINT = "/nodes";
+    private static final String NODE_REGISTRATION = "/node/node_registration";
+    private static final String NODE_MANAGER_NODES_ENDPOINT = "/nodes";
     @Value("${network}")
     protected NetworkType networkType;
     @Value("${server.ip}")

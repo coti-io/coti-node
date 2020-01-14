@@ -14,8 +14,8 @@ public class GetNodeStatisticsRequest extends Request {
     @NotNull
     private @Valid Hash nodeHash;
     @NotNull
-    private LocalDate startDate;
+    private @Valid LocalDate startDate;
     @NotNull
-    private LocalDate endDate;
+    private @Valid LocalDate endDate;
 
 }

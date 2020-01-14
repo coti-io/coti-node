@@ -18,11 +18,9 @@ public class NodeDayMapData implements IEntity {
     private NodeType nodeType;
     private ConcurrentSkipListSet<LocalDate> nodeDaySet;
 
-    private NodeDayMapData() {
-    }
-
-    public NodeDayMapData(Hash nodeHash) {
+    public NodeDayMapData(Hash nodeHash, NodeType nodeType) {
         this.nodeHash = nodeHash;
+        this.nodeType = nodeType;
         nodeDaySet = new ConcurrentSkipListSet<>();
     }
 
