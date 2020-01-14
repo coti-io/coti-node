@@ -263,6 +263,8 @@ public class NetworkHistoryService implements INetworkHistoryService {
             lastRelevantNodeNetworkDataRecord = lastDateWithEventNodeHistory.get(lastDateWithEventNodeHistory.lastKey());
             if (!lastRelevantNodeNetworkDataRecord.getNodeStatus().equals(NetworkNodeStatus.ACTIVE)) {
                 endInstant = lastRelevantNodeNetworkDataRecord.getRecordTime();
+            } else {
+                activityUpTimeInSeconds += lastDateWithEventNodeHistory.get(lastDateWithEventNodeHistory.lastKey()).getRecordTime().until(localDateToInstant(endDate), ChronoUnit.SECONDS);
             }
         } else {
             lastRelevantNodeNetworkDataRecord = lastDateWithEventNodeHistory.get(lastDateWithEventNodeHistory.firstKey());
@@ -279,10 +281,10 @@ public class NetworkHistoryService implements INetworkHistoryService {
             lastRelevantNodeNetworkDataRecord = nodeNetworkDataRecordByChainRef;
         }
 
-        while (startInstant != localDateToInstant(startDate)) {
+        while (startInstant != localDateToInstant(startDate) && lastRelevantNodeNetworkDataRecord!=null) {
             endInstant = lastRelevantNodeNetworkDataRecord.getRecordTime();
             nodeNetworkDataRecordByChainRef = getNodeNetworkDataRecordByChainRef(lastRelevantNodeNetworkDataRecord);
-            if (nodeNetworkDataRecordByChainRef.getRecordTime().isAfter(startInstant)) {
+            if (nodeNetworkDataRecordByChainRef.getRecordTime().isAfter(localDateToInstant(startDate))) {
                 startInstant = nodeNetworkDataRecordByChainRef.getRecordTime();
             } else {
                 startInstant = localDateToInstant(startDate);
