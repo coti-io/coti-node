@@ -1,10 +1,10 @@
 package io.coti.nodemanager.model;
 
 import io.coti.basenode.model.Collection;
-import io.coti.nodemanager.data.NodeDayMapData;
+import io.coti.nodemanager.data.NodeDailyActivityData;
 import org.springframework.stereotype.Service;
 
 @Service
-public class NodeDayMaps extends Collection<NodeDayMapData> {
+public class NodeDailyActivities extends Collection<NodeDailyActivityData> {
 
 }

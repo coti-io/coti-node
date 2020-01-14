@@ -8,7 +8,7 @@ import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.nodemanager.data.*;
 import io.coti.nodemanager.http.data.SingleNodeDetailsForWallet;
 import io.coti.nodemanager.model.ActiveNodes;
-import io.coti.nodemanager.model.NodeDayMaps;
+import io.coti.nodemanager.model.NodeDailyActivities;
 import io.coti.nodemanager.model.NodeHistory;
 import io.coti.nodemanager.services.interfaces.INodeManagementService;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +52,7 @@ public class NodeManagementService implements INodeManagementService {
     @Autowired
     private StakingService stakingService;
     @Autowired
-    private NodeDayMaps nodeDayMaps;
+    private NodeDailyActivities nodeDailyActivities;
     @Autowired
     private NetworkHistoryService networkHistoryService;
     @Value("${server.ip}")
@@ -106,13 +106,13 @@ public class NodeManagementService implements INodeManagementService {
         try {
             synchronized (addLockToLockMap(nodeHash)) {
                 LocalDate currentEventDate = currentEventDateTime.atZone(ZoneId.of("UTC")).toLocalDate();
-                NodeDayMapData nodeDayMapData = nodeDayMaps.getByHash(nodeHash);
-                if (nodeDayMapData == null) {
-                    nodeDayMapData = new NodeDayMapData(nodeHash, networkNodeData.getNodeType());
+                NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
+                if (nodeDailyActivityData == null) {
+                    nodeDailyActivityData = new NodeDailyActivityData(nodeHash, networkNodeData.getNodeType());
                 }
                 NodeNetworkDataRecord newNodeNetworkDataRecord =
                         new NodeNetworkDataRecord(currentEventDateTime, nodeStatus, networkNodeData);
-                addReferenceToNodeNetworkDataRecord(nodeDayMapData, nodeHash, newNodeNetworkDataRecord);
+                addReferenceToNodeNetworkDataRecord(nodeDailyActivityData, nodeHash, newNodeNetworkDataRecord);
                 Hash nodeHistoryDataHash = networkHistoryService.calculateNodeHistoryDataHash(nodeHash, currentEventDate);
                 NodeHistoryData nodeHistoryData = nodeHistory.getByHash(nodeHistoryDataHash);
                 if (nodeHistoryData == null) {
@@ -120,8 +120,8 @@ public class NodeManagementService implements INodeManagementService {
                 }
                 nodeHistoryData.getNodeNetworkDataRecordMap().put(newNodeNetworkDataRecord.getHash(), newNodeNetworkDataRecord);
                 nodeHistory.put(nodeHistoryData);
-                nodeDayMapData.getNodeDaySet().add(currentEventDate);
-                nodeDayMaps.put(nodeDayMapData);
+                nodeDailyActivityData.getNodeDaySet().add(currentEventDate);
+                nodeDailyActivities.put(nodeDailyActivityData);
             }
         } finally {
             removeLockFromLocksMap(nodeHash);
@@ -129,15 +129,15 @@ public class NodeManagementService implements INodeManagementService {
 
     }
 
-    private void addReferenceToNodeNetworkDataRecord(NodeDayMapData nodeDayMapData, Hash nodeHash, NodeNetworkDataRecord nodeNetworkDataRecord) {
+    private void addReferenceToNodeNetworkDataRecord(NodeDailyActivityData nodeDailyActivityData, Hash nodeHash, NodeNetworkDataRecord nodeNetworkDataRecord) {
 
-        ConcurrentSkipListSet<LocalDate> nodeDaySet = nodeDayMapData.getNodeDaySet();
+        ConcurrentSkipListSet<LocalDate> nodeDaySet = nodeDailyActivityData.getNodeDaySet();
         if (nodeDaySet.isEmpty()) {
             return;
         }
         Pair<LocalDate, Hash> reference;
 
-        LocalDate lastDate = nodeDayMapData.getNodeDaySet().last();
+        LocalDate lastDate = nodeDailyActivityData.getNodeDaySet().last();
         Hash calculateNodeHistoryDataHash = networkHistoryService.calculateNodeHistoryDataHash(nodeHash, lastDate);
         NodeHistoryData nodeHistoryData = nodeHistory.getByHash(calculateNodeHistoryDataHash);
         NodeNetworkDataRecord lastNodeNetworkDataRecord = networkHistoryService.getLastNodeNetworkDataRecord(nodeHistoryData);

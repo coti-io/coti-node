@@ -6,13 +6,11 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 @Data
 public class NodeNetworkResponseData implements Serializable {
 
     private static final long serialVersionUID = 7814283160669885668L;
-
     private Instant recordDateTime;
     private NetworkNodeStatus nodeStatus;
 

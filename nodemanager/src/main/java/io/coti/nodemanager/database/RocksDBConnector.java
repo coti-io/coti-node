@@ -2,7 +2,7 @@ package io.coti.nodemanager.database;
 
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.nodemanager.model.ActiveNodes;
-import io.coti.nodemanager.model.NodeDayMaps;
+import io.coti.nodemanager.model.NodeDailyActivities;
 import io.coti.nodemanager.model.NodeHistory;
 import io.coti.nodemanager.model.StakingNodes;
 import org.rocksdb.RocksDB;
@@ -22,7 +22,7 @@ public class RocksDBConnector extends BaseNodeRocksDBConnector {
                 new String(RocksDB.DEFAULT_COLUMN_FAMILY),
                 ActiveNodes.class.getName(),
                 NodeHistory.class.getName(),
-                NodeDayMaps.class.getName(),
+                NodeDailyActivities.class.getName(),
                 StakingNodes.class.getName());
     }
 }

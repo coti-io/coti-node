@@ -11,14 +11,14 @@ import java.time.ZoneOffset;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 @Data
-public class NodeDayMapData implements IEntity {
+public class NodeDailyActivityData implements IEntity {
 
     private static final long serialVersionUID = 7144081521147671251L;
     private Hash nodeHash;
     private NodeType nodeType;
     private ConcurrentSkipListSet<LocalDate> nodeDaySet;
 
-    public NodeDayMapData(Hash nodeHash, NodeType nodeType) {
+    public NodeDailyActivityData(Hash nodeHash, NodeType nodeType) {
         this.nodeHash = nodeHash;
         this.nodeType = nodeType;
         nodeDaySet = new ConcurrentSkipListSet<>();
