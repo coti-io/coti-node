@@ -1,6 +1,7 @@
 package io.coti.nodemanager.services.interfaces;
 
 import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.nodemanager.data.NodeActivityData;
 import io.coti.nodemanager.data.NodeHistoryData;
 import io.coti.nodemanager.http.GetNodeStatisticsRequest;
 import io.coti.nodemanager.http.data.NodeDailyStatisticsData;
@@ -22,4 +23,8 @@ public interface INetworkHistoryService {
     NodeStatisticsData getNodeStatsTotal(GetNodeStatisticsRequest getNodeStatisticsRequest);
 
     ResponseEntity<IResponse> getNodeActivityPercentage(GetNodeStatisticsRequest getNodeStatisticsRequest);
+
+    ResponseEntity<IResponse> getNodeActivityInSeconds(GetNodeStatisticsRequest getNodeStatisticsRequest);
+
+    NodeActivityData getNodeActivity(GetNodeStatisticsRequest getNodeStatisticsRequest);
 }

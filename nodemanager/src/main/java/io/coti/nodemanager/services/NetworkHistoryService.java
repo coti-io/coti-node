@@ -3,10 +3,9 @@ package io.coti.nodemanager.services;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.nodemanager.data.NetworkNodeStatus;
-import io.coti.nodemanager.data.NodeDayMapData;
-import io.coti.nodemanager.data.NodeHistoryData;
-import io.coti.nodemanager.data.NodeNetworkDataRecord;
+import io.coti.nodemanager.data.*;
+import io.coti.nodemanager.exceptions.NetworkHistoryValidationException;
+import io.coti.nodemanager.http.GetNodeActivityInSecondsResponse;
 import io.coti.nodemanager.http.GetNodeActivityPercentageResponse;
 import io.coti.nodemanager.http.GetNodeStatisticsRequest;
 import io.coti.nodemanager.http.data.NodeDailyStatisticsData;
@@ -222,31 +221,52 @@ public class NetworkHistoryService implements INetworkHistoryService {
 
     @Override
     public ResponseEntity<IResponse> getNodeActivityPercentage(GetNodeStatisticsRequest getNodeStatisticsRequest) {
+        try {
+            NodeActivityData nodeActivityData = getNodeActivity(getNodeStatisticsRequest);
+
+            long activityUpTimeInSeconds = nodeActivityData.getActivityUpTimeInSeconds();
+            long numberOfDays = nodeActivityData.getNumberOfDays();
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(new GetNodeActivityPercentageResponse(((double) activityUpTimeInSeconds) / (numberOfDays * NUMBER_OF_SECONDS_IN_DAY) * 100));
+        } catch (NetworkHistoryValidationException e) {
+            return ResponseEntity.badRequest().body(new Response(e.getMessage(), STATUS_ERROR));
+        }
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getNodeActivityInSeconds(GetNodeStatisticsRequest getNodeStatisticsRequest) {
+        try {
+            NodeActivityData nodeActivityData = getNodeActivity(getNodeStatisticsRequest);
+            return ResponseEntity.ok()
+                    .body(new GetNodeActivityInSecondsResponse(nodeActivityData));
+        } catch (NetworkHistoryValidationException e) {
+            return ResponseEntity.badRequest().body(new Response(e.getMessage(), STATUS_ERROR));
+        }
+    }
+
+    @Override
+    public NodeActivityData getNodeActivity(GetNodeStatisticsRequest getNodeStatisticsRequest) {
         Hash nodeHash = getNodeStatisticsRequest.getNodeHash();
         LocalDate startDate = getNodeStatisticsRequest.getStartDate();
         LocalDate endDate = getNodeStatisticsRequest.getEndDate();
         if (endDate.isBefore(startDate)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new Response("Invalid dates range Start:" + startDate + " End:" + endDate, STATUS_ERROR));
+            throw new NetworkHistoryValidationException("Invalid dates range Start: " + startDate + " End: " + endDate);
         }
         LocalDate todayLocalDate = Instant.now().atZone(ZoneId.of("UTC")).toLocalDate();
         endDate = endDate.isAfter(todayLocalDate) ? todayLocalDate : endDate;
         NodeDayMapData nodeDayMapData = nodeDayMaps.getByHash(nodeHash);
         if (nodeDayMapData == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new Response("Invalid node hash " + nodeHash, STATUS_ERROR));
+            throw new NetworkHistoryValidationException("Invalid node hash " + nodeHash);
         }
         LocalDate firstDateWithEvent = nodeDayMapData.getNodeDaySet().first();
         startDate = startDate.isBefore(firstDateWithEvent) ? firstDateWithEvent : startDate;
         if (endDate.isBefore(startDate)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new Response("Invalid dates range End:" + endDate + " before node started at:" + startDate, STATUS_ERROR));
+            throw new NetworkHistoryValidationException("Invalid dates range End: " + endDate + " before node started at: " + startDate);
         }
 
         long activityUpTimeInSeconds = getActivityUpTimeInSeconds(startDate, endDate, nodeDayMapData);
         long numberOfDays = startDate.until(endDate, ChronoUnit.DAYS) + 1;
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(new GetNodeActivityPercentageResponse(((double) activityUpTimeInSeconds) / (numberOfDays * NUMBER_OF_SECONDS_IN_DAY) * 100));
+        return new NodeActivityData(activityUpTimeInSeconds, numberOfDays);
     }
 
     private long getActivityUpTimeInSeconds(LocalDate startDate, LocalDate endDate, NodeDayMapData nodeDayMapData) {
@@ -279,7 +299,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
             lastRelevantNodeNetworkDataRecord = nodeNetworkDataRecordByChainRef;
         }
 
-        while (startInstant != localDateToInstant(startDate)) {
+        while (startInstant != localDateToInstant(startDate) && lastRelevantNodeNetworkDataRecord != null) {
             endInstant = lastRelevantNodeNetworkDataRecord.getRecordTime();
             nodeNetworkDataRecordByChainRef = getNodeNetworkDataRecordByChainRef(lastRelevantNodeNetworkDataRecord);
             if (nodeNetworkDataRecordByChainRef.getRecordTime().isAfter(startInstant)) {
@@ -295,7 +315,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
 
     public NodeNetworkDataRecord getNodeNetworkDataRecordByChainRef(NodeNetworkDataRecord nodeNetworkDataRecord) {
         Pair<LocalDate, Hash> chainRef = nodeNetworkDataRecord.getStatusChainRef();
-        if(chainRef == null) {
+        if (chainRef == null) {
             return null;
         }
         Hash recordHash = chainRef.getRight();
