@@ -75,17 +75,7 @@ public class NodeManagementService implements INodeManagementService {
     public ResponseEntity<String> addNode(NetworkNodeData networkNodeData) {
         try {
             networkService.validateNetworkNodeData(networkNodeData);
-            if (networkService.isNodeExistsOnMemory(networkNodeData)) {
-                boolean isUpdated = networkService.updateNetworkNode(networkNodeData);
-                if (isUpdated) {
-                    ActiveNodeData activeNodeData = activeNodes.getByHash(networkNodeData.getHash());
-                    if (activeNodeData == null) {
-                        log.error("Node {} wasn't found in activeNode table but was found in memory!", networkNodeData.getNodeHash());
-                    }
-                }
-            } else {
-                networkService.addNode(networkNodeData);
-            }
+            networkService.addNode(networkNodeData);
             ActiveNodeData activeNodeData = new ActiveNodeData(networkNodeData.getHash(), networkNodeData);
             activeNodes.put(activeNodeData);
             addNodeHistory(networkNodeData, NetworkNodeStatus.ACTIVE, Instant.now());

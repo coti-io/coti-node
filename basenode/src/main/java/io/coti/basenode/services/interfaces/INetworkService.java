@@ -25,13 +25,9 @@ public interface INetworkService {
 
     void removeNode(NetworkNodeData networkNodeData);
 
-    boolean updateNetworkNode(NetworkNodeData networkNodeData);
-
     void validateNetworkNodeData(NetworkNodeData networkNodeData) throws ValidationException;
 
     boolean validateFeeData(FeeData feeData);
-
-    boolean isNodeExistsOnMemory(NetworkNodeData networkNodeData);
 
     List<NetworkNodeData> getShuffledNetworkNodeDataListFromMapValues(NodeType nodeType);
 

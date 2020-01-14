@@ -143,7 +143,7 @@ public class BaseNodeNetworkService implements INetworkService {
             if (!NodeTypeService.valueOf(networkNodeData.getNodeType().toString()).isMultipleNode()) {
                 setSingleNodeData(networkNodeData.getNodeType(), networkNodeData);
             } else {
-                getMapFromFactory(networkNodeData.getNodeType()).putIfAbsent(networkNodeData.getHash(), networkNodeData);
+                getMapFromFactory(networkNodeData.getNodeType()).put(networkNodeData.getHash(), networkNodeData);
             }
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
@@ -165,27 +165,6 @@ public class BaseNodeNetworkService implements INetworkService {
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
         }
-    }
-
-    public boolean updateNetworkNode(NetworkNodeData networkNodeData) {
-        NetworkNodeData node;
-        if (!NodeTypeService.valueOf(networkNodeData.getNodeType().toString()).isMultipleNode()) {
-            node = singleNodeNetworkDataMap.get(networkNodeData.getNodeType());
-        } else {
-            Map<Hash, NetworkNodeData> networkMapToChange = getMapFromFactory(networkNodeData.getNodeType());
-            node = networkMapToChange.get(networkNodeData.getNodeHash());
-        }
-        if (node != null) {
-            node.setAddress(networkNodeData.getAddress());
-            node.setHttpPort(networkNodeData.getHttpPort());
-            node.setReceivingPort(networkNodeData.getReceivingPort());
-            node.setPropagationPort(networkNodeData.getPropagationPort());
-            node.setWebServerUrl(networkNodeData.getWebServerUrl());
-            node.setNodeSignature(networkNodeData.getNodeSignature());
-            node.setSignerHash(networkNodeData.getSignerHash());
-            return true;
-        }
-        return false;
     }
 
     @Override
@@ -216,23 +195,6 @@ public class BaseNodeNetworkService implements INetworkService {
     public boolean validateFeeData(FeeData feeData) {
         return feeData.getFeePercentage().compareTo(new BigDecimal("0")) >= 0 && feeData.getFeePercentage().compareTo(new BigDecimal("100")) < 100 &&
                 feeData.getMinimumFee().compareTo(feeData.getMaximumFee()) <= 0;
-    }
-
-
-    @Override
-    public boolean isNodeExistsOnMemory(NetworkNodeData networkNodeData) {
-        try {
-            if (!NodeTypeService.valueOf(networkNodeData.getNodeType().toString()).isMultipleNode()) {
-                return singleNodeNetworkDataMap.containsKey(networkNodeData.getNodeType()) &&
-                        singleNodeNetworkDataMap.get(networkNodeData.getNodeType()) != null &&
-                        singleNodeNetworkDataMap.get(networkNodeData.getNodeType()).getNodeHash().equals(networkNodeData.getNodeHash());
-            } else {
-                return getMapFromFactory(networkNodeData.getNodeType()).containsKey(networkNodeData.getHash()) &&
-                        getMapFromFactory(networkNodeData.getNodeType()).get(networkNodeData.getHash()).getNodeHash().equals(networkNodeData.getNodeHash());
-            }
-        } catch (NullPointerException e) {
-            return false;
-        }
     }
 
     @Override
