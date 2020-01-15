@@ -73,7 +73,8 @@ public class NodeManagementServiceDoNotTakeItToDevTest {
     private static final Hash fakeNode3 = new Hash("0aa389aa3d8b31ecc5b2fa9164a0a2f52fb59165730de4527441b0278e5e47e51e3e1e69cf24a1a0bb58a53b262c185c4400f0d2f89b469c9498b6ed517b7398");
     private static final Hash fakeNode4 = new Hash("e70a7477209fa59b3e866b33184ae47e5bed0d202c7214a4a93fd2592b11c3b567f2e85d28f3fc415401bb5a6b8be9eae5e77aa18d7e042c33ba91396d3cd970");
     private static final Hash fakeNode5 = new Hash("5a4a7a8b72384bd6310135fdd939d1b105aec81a6ad72d745e5636770690a17c31eb6a775860b65b6211ec27d0690802032123a7f34f3acb68ed5d66366cd003");
-    private static final Hash fakeNode6 = new Hash("cd10ad2f479647dab74c0017958399a9ce87a56672bfd36739c70c4ddd2b2b5f451ff5deb10c86b745fcfa08dcb3ff1f331124bca608f5eab247ad1ec6e18281");
+//    private static final Hash fakeNode6 = new Hash("cd10ad2f479647dab74c0017958399a9ce87a56672bfd36739c70c4ddd2b2b5f451ff5deb10c86b745fcfa08dcb3ff1f331124bca608f5eab247ad1ec6e18281");
+    private static final Hash fakeNode7 = new Hash("cd10ad2f479647dab74c0017958399a9ce87a56672bfd36739c70c4ddd2b2b5f451ff5deb10c86b745fcfa08dcb3ff1f331124bca608f5eab247ad1ec6e18281");
 
     @Test
     public void addNodeHistoryTest() {
@@ -299,35 +300,78 @@ public class NodeManagementServiceDoNotTakeItToDevTest {
 
         log.info("fakeNode5 finished");
 
-        NetworkNodeData networkNodeData6 = new NetworkNodeData();
-        networkNodeData6.setHash(fakeNode6);
-        networkNodeData6.setNodeType(NodeType.FullNode);
-        networkNodeData6.setAddress("test");
-        networkNodeData6.setHttpPort("000");
-        networkNodeData6.setPropagationPort("000");
-        networkNodeData6.setReceivingPort("000");
-        networkNodeData6.setNetworkType(NetworkType.TestNet);
-        networkNodeData6.setTrustScore(17.0);
-        networkNodeData6.setWebServerUrl("test");
-        networkNodeData6.setFeeData(new FeeData(BigDecimal.valueOf(0.1), BigDecimal.valueOf(0.1), BigDecimal.valueOf(0.1)));
-        networkNodeData6.setNodeSignature(new SignatureData("test", "test"));
-        networkNodeData6.setNodeRegistrationData(new NodeRegistrationData());
+//        NetworkNodeData networkNodeData6 = new NetworkNodeData();
+//        networkNodeData6.setHash(fakeNode6);
+//        networkNodeData6.setNodeType(NodeType.FullNode);
+//        networkNodeData6.setAddress("test");
+//        networkNodeData6.setHttpPort("000");
+//        networkNodeData6.setPropagationPort("000");
+//        networkNodeData6.setReceivingPort("000");
+//        networkNodeData6.setNetworkType(NetworkType.TestNet);
+//        networkNodeData6.setTrustScore(17.0);
+//        networkNodeData6.setWebServerUrl("test");
+//        networkNodeData6.setFeeData(new FeeData(BigDecimal.valueOf(0.1), BigDecimal.valueOf(0.1), BigDecimal.valueOf(0.1)));
+//        networkNodeData6.setNodeSignature(new SignatureData("test", "test"));
+//        networkNodeData6.setNodeRegistrationData(new NodeRegistrationData());
+//
+//        networkNodeData6.getNodeRegistrationData().setNodeHash(fakeNode6);
+//        networkNodeData6.getNodeRegistrationData().setNodeType(NodeType.FullNode.toString());
+//        networkNodeData6.getNodeRegistrationData().setNetworkType(NetworkType.TestNet.toString());
+//        networkNodeData6.getNodeRegistrationData().setCreationTime(Instant.now());
+//        networkNodeData6.getNodeRegistrationData().setRegistrarHash(new Hash("00"));
+//        networkNodeData6.getNodeRegistrationData().setRegistrarSignature(new SignatureData("test", "test"));
+//
+//        eventDateTime = LocalDateTime.of(2019, 11, 27, 10, 0, 0).toInstant(ZoneOffset.UTC);
+//        nodeStatus = NetworkNodeStatus.ACTIVE;
+//        nodeManagementService.addNodeHistory(networkNodeData6, nodeStatus, eventDateTime);
+//
+//        eventDateTime = LocalDateTime.of(2020, 1, 1, 10, 0, 0).toInstant(ZoneOffset.UTC);
+//        nodeStatus = NetworkNodeStatus.INACTIVE;
+//        nodeManagementService.addNodeHistory(networkNodeData6, nodeStatus, eventDateTime);
+//
+//        log.info("fakeNode6 finished");
 
-        networkNodeData6.getNodeRegistrationData().setNodeHash(fakeNode6);
-        networkNodeData6.getNodeRegistrationData().setNodeType(NodeType.FullNode.toString());
-        networkNodeData6.getNodeRegistrationData().setNetworkType(NetworkType.TestNet.toString());
-        networkNodeData6.getNodeRegistrationData().setCreationTime(Instant.now());
-        networkNodeData6.getNodeRegistrationData().setRegistrarHash(new Hash("00"));
-        networkNodeData6.getNodeRegistrationData().setRegistrarSignature(new SignatureData("test", "test"));
+        NetworkNodeData networkNodeData7 = new NetworkNodeData();
+        networkNodeData7.setHash(fakeNode7);
+        networkNodeData7.setNodeType(NodeType.FullNode);
+        networkNodeData7.setAddress("test");
+        networkNodeData7.setHttpPort("000");
+        networkNodeData7.setPropagationPort("000");
+        networkNodeData7.setReceivingPort("000");
+        networkNodeData7.setNetworkType(NetworkType.TestNet);
+        networkNodeData7.setTrustScore(37.0);
+        networkNodeData7.setWebServerUrl("test");
+        networkNodeData7.setFeeData(new FeeData(BigDecimal.valueOf(0.7), BigDecimal.valueOf(0.7), BigDecimal.valueOf(0.7)));
+        networkNodeData7.setNodeSignature(new SignatureData("test", "test"));
+        networkNodeData7.setNodeRegistrationData(new NodeRegistrationData());
 
-        eventDateTime = LocalDateTime.of(2019, 11, 27, 10, 0, 0).toInstant(ZoneOffset.UTC);
-        nodeStatus = NetworkNodeStatus.ACTIVE;
-        nodeManagementService.addNodeHistory(networkNodeData6, nodeStatus, eventDateTime);
+        networkNodeData7.getNodeRegistrationData().setNodeHash(fakeNode7);
+        networkNodeData7.getNodeRegistrationData().setNodeType(NodeType.FullNode.toString());
+        networkNodeData7.getNodeRegistrationData().setNetworkType(NetworkType.TestNet.toString());
+        networkNodeData7.getNodeRegistrationData().setCreationTime(Instant.now());
+        networkNodeData7.getNodeRegistrationData().setRegistrarHash(new Hash("00"));
+        networkNodeData7.getNodeRegistrationData().setRegistrarSignature(new SignatureData("test", "test"));
 
-        eventDateTime = LocalDateTime.of(2020, 1, 1, 10, 0, 0).toInstant(ZoneOffset.UTC);
-        nodeStatus = NetworkNodeStatus.INACTIVE;
-        nodeManagementService.addNodeHistory(networkNodeData6, nodeStatus, eventDateTime);
+        startDateTime = LocalDateTime.of(2011, 1, 1, 0, 0, 0);
 
-        log.info("fakeNode6 finished");
+        for (int i = 0; i < 2555; i++) {
+            for (int j = 0; j < 4; j++) {
+                for (int k = 0; k < 2; k++) {  // or 60
+                    nodeStatus = NetworkNodeStatus.ACTIVE;
+                    localDateTime = LocalDateTime.of(startDateTime.getYear(), startDateTime.getMonth(), startDateTime.getDayOfMonth(), j, k, 0).toInstant(ZoneOffset.UTC);
+                    nodeManagementService.addNodeHistory(networkNodeData7, nodeStatus, localDateTime);
+
+                    int remainder = i % 100;
+                    if(remainder == 0 && j==1 && k==1) {
+                        nodeStatus = NetworkNodeStatus.INACTIVE;
+                        localDateTime = LocalDateTime.of(startDateTime.getYear(), startDateTime.getMonth(), startDateTime.getDayOfMonth(), j, k, 30).toInstant(ZoneOffset.UTC);
+                        nodeManagementService.addNodeHistory(networkNodeData7, nodeStatus, localDateTime);
+                    }
+                }
+            }
+//            log.info("fakeNode7 finished" + startDateTime);
+            startDateTime = startDateTime.plusDays(1);
+        }
+        log.info("fakeNode7 finished" + startDateTime);
     }
 }
