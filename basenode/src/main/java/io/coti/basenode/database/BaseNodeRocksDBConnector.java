@@ -36,7 +36,8 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     private String dbPath;
     private RocksDB db;
     protected List<String> columnFamilyClassNames;
-    protected List<String> resetColumnFamilyNames;
+    protected List<String> resetColumnFamilyNames = new ArrayList<>();
+    private List<String> resetTransactionColumnFamilyNames;
     private Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
 
     public void init() {
@@ -60,12 +61,11 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
                 TransactionVotes.class.getName(),
                 NodeRegistrations.class.getName()
         ));
-        resetColumnFamilyNames = new ArrayList<>(Arrays.asList(
+        resetTransactionColumnFamilyNames = new ArrayList<>(Arrays.asList(
                 Transactions.class.getName(),
                 AddressTransactionsHistories.class.getName(),
                 TransactionIndexes.class.getName()
         ));
-
     }
 
     public void init(String dbPath) {
@@ -79,13 +79,20 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             } else {
                 openDB();
             }
-            if (resetTransactions) {
-                resetColumnFamilies();
-            }
+
+            populateResetColumnFamilyNames();
+            resetColumnFamilies();
+
         } catch (DataBaseException e) {
             throw new DataBaseException("Error initiating Rocks DB.\n" + e.getMessage(), e);
         } catch (Exception e) {
             throw new DataBaseException("Error initiating Rocks DB.", e);
+        }
+    }
+
+    protected void populateResetColumnFamilyNames() {
+        if (resetTransactions) {
+            resetColumnFamilyNames.addAll(resetTransactionColumnFamilyNames);
         }
     }
 

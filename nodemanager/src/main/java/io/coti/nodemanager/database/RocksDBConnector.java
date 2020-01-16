@@ -6,6 +6,7 @@ import io.coti.nodemanager.model.NodeDailyActivities;
 import io.coti.nodemanager.model.NodeHistory;
 import io.coti.nodemanager.model.StakingNodes;
 import org.rocksdb.RocksDB;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,8 @@ import java.util.Arrays;
 @Primary
 public class RocksDBConnector extends BaseNodeRocksDBConnector {
 
+    @Value("${reset.nodehistory: false}")
+    private boolean resetNodeHistory;
 
     @Override
     protected void setColumnFamily() {
@@ -24,5 +27,15 @@ public class RocksDBConnector extends BaseNodeRocksDBConnector {
                 NodeHistory.class.getName(),
                 NodeDailyActivities.class.getName(),
                 StakingNodes.class.getName());
+    }
+
+    @Override
+    protected void populateResetColumnFamilyNames() {
+        if (resetNodeHistory) {
+            resetColumnFamilyNames.addAll(Arrays.asList(
+                    NodeHistory.class.getName(),
+                    NodeDailyActivities.class.getName()
+            ));
+        }
     }
 }

@@ -62,6 +62,7 @@ public class InitializationService {
         } catch (CotiRunTimeException e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
             e.logMessage();
+            System.exit(SpringApplication.exit(applicationContext));
         } catch (Exception e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
