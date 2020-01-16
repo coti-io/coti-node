@@ -27,4 +27,6 @@ public interface INetworkHistoryService {
     ResponseEntity<IResponse> getNodeActivityInSeconds(GetNodeStatisticsRequest getNodeStatisticsRequest);
 
     NodeActivityData getNodeActivity(GetNodeStatisticsRequest getNodeStatisticsRequest);
+
+    ResponseEntity<IResponse> getNodeActivityInSecondsByDay(GetNodeStatisticsRequest getNodeStatisticsRequest);
 }

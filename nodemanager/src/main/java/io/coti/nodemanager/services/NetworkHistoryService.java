@@ -5,6 +5,7 @@ import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.nodemanager.data.*;
 import io.coti.nodemanager.exceptions.NetworkHistoryValidationException;
+import io.coti.nodemanager.http.GetNodeActivityInSecondsPerDaysResponse;
 import io.coti.nodemanager.http.GetNodeActivityInSecondsResponse;
 import io.coti.nodemanager.http.GetNodeActivityPercentageResponse;
 import io.coti.nodemanager.http.GetNodeStatisticsRequest;
@@ -27,12 +28,11 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static java.time.temporal.ChronoUnit.DAYS;
 
 @Service
 public class NetworkHistoryService implements INetworkHistoryService {
@@ -265,8 +265,61 @@ public class NetworkHistoryService implements INetworkHistoryService {
         }
 
         long activityUpTimeInSeconds = getActivityUpTimeInSeconds(startDate, endDate, nodeDailyActivityData);
-        long numberOfDays = startDate.until(endDate, ChronoUnit.DAYS) + 1;
+        long numberOfDays = startDate.until(endDate, DAYS) + 1;
         return new NodeActivityData(activityUpTimeInSeconds, numberOfDays);
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getNodeActivityInSecondsByDay(GetNodeStatisticsRequest getNodeStatisticsRequest) {
+        try {
+            Map<LocalDate, Pair> upTimesByDates = getNodeActivityPerDay(getNodeStatisticsRequest);
+            return ResponseEntity.ok()
+                    .body(new GetNodeActivityInSecondsPerDaysResponse(upTimesByDates));
+        } catch (NetworkHistoryValidationException e) {
+            return ResponseEntity.badRequest().body(new Response(e.getMessage(), STATUS_ERROR));
+        }
+    }
+
+    private Map<LocalDate, Pair> getNodeActivityPerDay(GetNodeStatisticsRequest getNodeStatisticsRequest) {
+        Map<LocalDate, Pair> nodeActivityPerDayMap = new LinkedHashMap<>();
+
+        Hash nodeHash = getNodeStatisticsRequest.getNodeHash();
+        LocalDate requestedStartDate = getNodeStatisticsRequest.getStartDate();
+        LocalDate requestedEndDate = getNodeStatisticsRequest.getEndDate();
+
+        if (requestedEndDate.isBefore(requestedStartDate)) {
+            throw new NetworkHistoryValidationException("Invalid dates range Start: " + requestedStartDate + " End: " + requestedEndDate);
+        }
+        LocalDate todayLocalDate = LocalDate.now(ZoneId.of("UTC"));
+        LocalDate endDate = requestedEndDate.isAfter(todayLocalDate) ? todayLocalDate : requestedEndDate;
+        NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
+        if (nodeDailyActivityData == null) {
+            throw new NetworkHistoryValidationException("Invalid node hash " + nodeHash);
+        }
+        LocalDate firstDateWithEvent = nodeDailyActivityData.getNodeDaySet().first();
+        LocalDate startDate = requestedStartDate.isBefore(firstDateWithEvent) ? firstDateWithEvent : requestedStartDate;
+        if (endDate.isBefore(startDate)) {
+            throw new NetworkHistoryValidationException("Invalid dates range End: " + endDate + " before node started at: " + startDate);
+        }
+
+        long numOfRequestedDaysPriorNodeCreation = DAYS.between(requestedStartDate, firstDateWithEvent);
+        for (int extraDays = 0; extraDays < numOfRequestedDaysPriorNodeCreation; extraDays++) {
+            nodeActivityPerDayMap.put(requestedStartDate.plusDays(extraDays), Pair.of(0, 0));
+        }
+
+        LocalDate localDate = startDate;
+        while (!localDate.isAfter(endDate)) {
+            long dayUpTimeInSeconds = getActivityUpTimeInSeconds(localDate, localDate, nodeDailyActivityData);
+            nodeActivityPerDayMap.put(localDate, Pair.of(dayUpTimeInSeconds, NUMBER_OF_SECONDS_IN_DAY - dayUpTimeInSeconds));
+            localDate = localDate.plusDays(1);
+        }
+
+        long numOfRequestedDaysInFuture = DAYS.between(endDate, requestedEndDate);
+        for (int extraDays = 1; extraDays <= numOfRequestedDaysInFuture; extraDays++) {
+            nodeActivityPerDayMap.put(endDate.plusDays(extraDays), Pair.of(0, 0));
+        }
+
+        return nodeActivityPerDayMap;
     }
 
     private long getActivityUpTimeInSeconds(LocalDate startDate, LocalDate endDate, NodeDailyActivityData nodeDailyActivityData) {

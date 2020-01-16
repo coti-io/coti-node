@@ -52,4 +52,9 @@ public class NodeStatisticsController {
     public ResponseEntity<IResponse> getNodeActivityInSeconds(@Valid @RequestBody GetNodeStatisticsRequest getNodeStatisticsRequest) {
         return networkHistoryService.getNodeActivityInSeconds(getNodeStatisticsRequest);
     }
+
+    @PostMapping(path = "/totalsInSecondsByDay")
+    public ResponseEntity<IResponse> getNodeActivityInSecondsByDay(@Valid @RequestBody GetNodeStatisticsRequest getNodeStatisticsRequest) {
+        return networkHistoryService.getNodeActivityInSecondsByDay(getNodeStatisticsRequest);
+    }
 }
