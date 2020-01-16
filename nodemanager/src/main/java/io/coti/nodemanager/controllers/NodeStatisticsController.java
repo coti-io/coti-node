@@ -2,10 +2,7 @@ package io.coti.nodemanager.controllers;
 
 
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.nodemanager.http.GetNodeDailyStatisticsResponse;
-import io.coti.nodemanager.http.GetNodeEventStatisticsResponse;
-import io.coti.nodemanager.http.GetNodeStatisticsRequest;
-import io.coti.nodemanager.http.GetNodeStatisticsResponse;
+import io.coti.nodemanager.http.*;
 import io.coti.nodemanager.services.interfaces.INetworkHistoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,4 +49,15 @@ public class NodeStatisticsController {
     public ResponseEntity<IResponse> getNodeActivityInSeconds(@Valid @RequestBody GetNodeStatisticsRequest getNodeStatisticsRequest) {
         return networkHistoryService.getNodeActivityInSeconds(getNodeStatisticsRequest);
     }
+
+    @PostMapping(path = "/totalsInSecondsByDay")
+    public ResponseEntity<IResponse> getNodeActivityInSecondsByDay(@Valid @RequestBody GetNodeStatisticsRequest getNodeStatisticsRequest) {
+        return networkHistoryService.getNodeActivityInSecondsByDay(getNodeStatisticsRequest);
+    }
+
+    @PostMapping(path = "/nodeActivationTime")
+    public ResponseEntity<IResponse> getNodeActivationDay(@Valid @RequestBody GetNodeActivationTimeRequest getNodeActivationTimeRequest) {
+        return networkHistoryService.getNodeActivationTime(getNodeActivationTimeRequest);
+    }
+
 }
