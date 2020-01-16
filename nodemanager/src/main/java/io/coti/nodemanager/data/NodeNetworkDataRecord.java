@@ -33,4 +33,8 @@ public class NodeNetworkDataRecord implements Serializable {
     private Hash calculateHash() {
         return new Hash(ByteBuffer.allocate(Long.BYTES).putLong(this.recordTime.toEpochMilli()).array());
     }
+
+    public Instant getRecordTime() {
+        return recordTime.minusNanos(recordTime.getNano());
+    }
 }

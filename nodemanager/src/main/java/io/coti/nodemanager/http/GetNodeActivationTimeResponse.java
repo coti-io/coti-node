@@ -3,14 +3,14 @@ package io.coti.nodemanager.http;
 import io.coti.basenode.http.BaseResponse;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 public class GetNodeActivationTimeResponse extends BaseResponse {
 
-    private LocalDateTime activationTime;
+    private Instant activationTime;
 
-    public GetNodeActivationTimeResponse(LocalDateTime activationTime) {
+    public GetNodeActivationTimeResponse(Instant activationTime) {
         this.activationTime = activationTime;
     }
 }

@@ -10,6 +10,7 @@ import io.coti.nodemanager.http.data.NodeNetworkResponseData;
 import io.coti.nodemanager.http.data.NodeStatisticsData;
 import org.springframework.http.ResponseEntity;
 
+import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -27,7 +28,7 @@ public interface INetworkHistoryService {
 
     ResponseEntity<IResponse> getNodeActivityInSeconds(GetNodeStatisticsRequest getNodeStatisticsRequest);
 
-    NodeActivityData getNodeActivity(GetNodeStatisticsRequest getNodeStatisticsRequest);
+    NodeActivityData getNodeActivity(GetNodeStatisticsRequest getNodeStatisticsRequest, Instant now);
 
     ResponseEntity<IResponse> getNodeActivityInSecondsByDay(GetNodeStatisticsRequest getNodeStatisticsRequest);
 

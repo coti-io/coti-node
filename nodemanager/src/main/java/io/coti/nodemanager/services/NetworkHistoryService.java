@@ -20,7 +20,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
-import java.time.*;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -217,8 +220,10 @@ public class NetworkHistoryService implements INetworkHistoryService {
     @Override
     public ResponseEntity<IResponse> getNodeActivityPercentage(GetNodeStatisticsRequest getNodeStatisticsRequest) {
         try {
-            NodeActivityData nodeActivityData = getNodeActivity(getNodeStatisticsRequest);
-            long nodeExclusionPeriodInSeconds = getNodeExclusionPeriodInSeconds(getNodeStatisticsRequest);
+            Instant now = Instant.now();
+            now = now.minusNanos(now.getNano());
+            NodeActivityData nodeActivityData = getNodeActivity(getNodeStatisticsRequest, now);
+            long nodeExclusionPeriodInSeconds = getNodeExclusionPeriodInSeconds(getNodeStatisticsRequest, now);
             long activityUpTimeInSeconds = nodeActivityData.getActivityUpTimeInSeconds();
             long numberOfDays = nodeActivityData.getNumberOfDays();
             long maxExpectedUpTimeInSeconds = numberOfDays * NUMBER_OF_SECONDS_IN_DAY - nodeExclusionPeriodInSeconds;
@@ -229,7 +234,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
         }
     }
 
-    private long getNodeExclusionPeriodInSeconds(GetNodeStatisticsRequest getNodeStatisticsRequest) {
+    private long getNodeExclusionPeriodInSeconds(GetNodeStatisticsRequest getNodeStatisticsRequest, Instant now) {
         Hash nodeHash = getNodeStatisticsRequest.getNodeHash();
         LocalDate startDate = getNodeStatisticsRequest.getStartDate();
         LocalDate endDate = getNodeStatisticsRequest.getEndDate();
@@ -237,7 +242,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
 
         LocalDate todayLocalDate = LocalDate.now(ZoneId.of("UTC"));
         if (endDate.isEqual(todayLocalDate)) {
-            nodeExclusionPeriodInSeconds += max(0, Instant.now().until(endDate.plusDays(1).atStartOfDay().atZone(ZoneId.of("UTC")).toInstant(), ChronoUnit.SECONDS));
+            nodeExclusionPeriodInSeconds += max(0, now.until(endDate.plusDays(1).atStartOfDay().atZone(ZoneId.of("UTC")).toInstant(), ChronoUnit.SECONDS));
         }
         NodeNetworkDataRecord nodeNetworkDataRecord = getNodeNetworkFirstDataRecord(nodeHash);
         Instant activationInstant = nodeNetworkDataRecord.getRecordTime();
@@ -251,7 +256,9 @@ public class NetworkHistoryService implements INetworkHistoryService {
     @Override
     public ResponseEntity<IResponse> getNodeActivityInSeconds(GetNodeStatisticsRequest getNodeStatisticsRequest) {
         try {
-            NodeActivityData nodeActivityData = getNodeActivity(getNodeStatisticsRequest);
+            Instant now = Instant.now();
+            now = now.minusNanos(now.getNano());
+            NodeActivityData nodeActivityData = getNodeActivity(getNodeStatisticsRequest, now);
             return ResponseEntity.ok()
                     .body(new GetNodeActivityInSecondsResponse(nodeActivityData));
         } catch (NetworkHistoryValidationException e) {
@@ -260,7 +267,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
     }
 
     @Override
-    public NodeActivityData getNodeActivity(GetNodeStatisticsRequest getNodeStatisticsRequest) {
+    public NodeActivityData getNodeActivity(GetNodeStatisticsRequest getNodeStatisticsRequest, Instant now) {
         Hash nodeHash = getNodeStatisticsRequest.getNodeHash();
         LocalDate startDate = getNodeStatisticsRequest.getStartDate();
         LocalDate endDate = getNodeStatisticsRequest.getEndDate();
@@ -279,7 +286,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
             throw new NetworkHistoryValidationException("Invalid dates range End: " + endDate + " before node started at: " + startDate);
         }
 
-        long activityUpTimeInSeconds = getActivityUpTimeInSeconds(startDate, endDate, nodeDailyActivityData);
+        long activityUpTimeInSeconds = getActivityUpTimeInSeconds(startDate, endDate, nodeDailyActivityData, now);
         long numberOfDays = startDate.until(endDate, DAYS) + 1;
         return new NodeActivityData(activityUpTimeInSeconds, numberOfDays);
     }
@@ -300,9 +307,8 @@ public class NetworkHistoryService implements INetworkHistoryService {
         try {
             Hash nodeHash = getNodeActivationTimeRequest.getNodeHash();
             NodeNetworkDataRecord nodeNetworkDataRecord = getNodeNetworkFirstDataRecord(nodeHash);
-            LocalDateTime localDateTime = LocalDateTime.ofInstant(nodeNetworkDataRecord.getRecordTime(), ZoneOffset.UTC);
             return ResponseEntity.ok()
-                    .body(new GetNodeActivationTimeResponse(localDateTime));
+                    .body(new GetNodeActivationTimeResponse(nodeNetworkDataRecord.getRecordTime()));
         } catch (NetworkHistoryValidationException e) {
             return ResponseEntity.badRequest().body(new Response(e.getMessage(), STATUS_ERROR));
         }
@@ -349,7 +355,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
 
         LocalDate localDate = startDate;
         while (!localDate.isAfter(endDate)) {
-            long dayUpTimeInSeconds = getActivityUpTimeInSeconds(localDate, localDate, nodeDailyActivityData);
+            long dayUpTimeInSeconds = getActivityUpTimeInSeconds(localDate, localDate, nodeDailyActivityData, Instant.now());
             nodeActivityPerDayMap.put(localDate, Pair.of(dayUpTimeInSeconds, NUMBER_OF_SECONDS_IN_DAY - dayUpTimeInSeconds));
             localDate = localDate.plusDays(1);
         }
@@ -362,7 +368,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
         return nodeActivityPerDayMap;
     }
 
-    private long getActivityUpTimeInSeconds(LocalDate startDate, LocalDate endDate, NodeDailyActivityData nodeDailyActivityData) {
+    private long getActivityUpTimeInSeconds(LocalDate startDate, LocalDate endDate, NodeDailyActivityData nodeDailyActivityData, Instant now) {
         long activityUpTimeInSeconds = 0;
         LocalDate ceilingDate = nodeDailyActivityData.getNodeDaySet().ceiling(endDate);
         LocalDate lastDateWithEvent = Optional.ofNullable(ceilingDate).orElse(nodeDailyActivityData.getNodeDaySet().last());
@@ -377,7 +383,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
             if (!lastRelevantNodeNetworkDataRecord.getNodeStatus().equals(NetworkNodeStatus.ACTIVE)) {
                 endInstant = lastRelevantNodeNetworkDataRecord.getRecordTime();
             } else {
-                endInstant = LocalDate.now(ZoneId.of("UTC")).equals(endDate) ? Instant.now() : localDateToInstant(endDate.plusDays(1));
+                endInstant = LocalDate.now(ZoneId.of("UTC")).equals(endDate) ? now : localDateToInstant(endDate.plusDays(1));
             }
         } else {
             lastRelevantNodeNetworkDataRecord = lastRelevantNodeNetworkRecordMap.get(lastRelevantNodeNetworkRecordMap.firstKey());
