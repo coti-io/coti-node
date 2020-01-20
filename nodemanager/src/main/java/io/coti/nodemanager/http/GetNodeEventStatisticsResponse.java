@@ -8,9 +8,9 @@ import java.util.List;
 
 @Data
 public class GetNodeEventStatisticsResponse extends BaseResponse {
-    private List<NodeNetworkResponseData> nodeEventsList;
+    private List<Object> nodeEventsList;
 
-    public GetNodeEventStatisticsResponse(List<NodeNetworkResponseData> nodeEventsList) {
+    public GetNodeEventStatisticsResponse(List<Object> nodeEventsList) {
         this.nodeEventsList = nodeEventsList;
     }
 }

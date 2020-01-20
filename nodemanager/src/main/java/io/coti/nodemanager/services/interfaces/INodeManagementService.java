@@ -1,7 +1,10 @@
 package io.coti.nodemanager.services.interfaces;
 
 import io.coti.basenode.data.NetworkNodeData;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.nodemanager.data.NetworkNodeStatus;
+import io.coti.nodemanager.http.AddNodeBeginEventPairAdminRequest;
+import io.coti.nodemanager.http.AddNodeEventAdminRequest;
 import io.coti.nodemanager.http.data.SingleNodeDetailsForWallet;
 import org.springframework.http.ResponseEntity;
 
@@ -22,4 +25,8 @@ public interface INodeManagementService {
     SingleNodeDetailsForWallet getOneNodeDetailsForWallet();
 
     void addNodeHistory(NetworkNodeData networkNodeData, NetworkNodeStatus nodeStatus, Instant currentEventDateTime);
+
+    ResponseEntity<IResponse> addNodeBeginEventPairAdmin(AddNodeBeginEventPairAdminRequest request);
+
+    ResponseEntity<IResponse> addNodeEventAdmin(AddNodeEventAdminRequest request);
 }

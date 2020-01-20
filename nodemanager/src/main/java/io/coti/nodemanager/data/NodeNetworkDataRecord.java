@@ -7,6 +7,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 
@@ -31,7 +32,8 @@ public class NodeNetworkDataRecord implements Serializable {
     }
 
     private Hash calculateHash() {
-        return new Hash(ByteBuffer.allocate(Long.BYTES).putLong(this.recordTime.toEpochMilli()).array());
+        byte[] nodeStatusBytes = nodeStatus.toString().getBytes(StandardCharsets.UTF_8);
+        return new Hash(ByteBuffer.allocate(Long.BYTES + nodeStatusBytes.length).putLong(this.recordTime.toEpochMilli()).put(nodeStatusBytes).array());
     }
 
     public Instant getRecordTime() {
