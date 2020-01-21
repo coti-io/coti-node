@@ -1,6 +1,7 @@
 package io.coti.basenode.services.interfaces;
 
 import io.coti.basenode.data.*;
+import io.coti.basenode.data.interfaces.IPropagatable;
 
 import javax.validation.ValidationException;
 import java.util.Collection;

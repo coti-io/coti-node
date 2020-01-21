@@ -23,8 +23,6 @@ import java.util.Map;
 public class NetworkService extends BaseNodeNetworkService {
 
     @Autowired
-    private ICommunicationService communicationService;
-    @Autowired
     private ISender sender;
     private List<NetworkNodeData> connectedDspNodes = new ArrayList<>(2);
 

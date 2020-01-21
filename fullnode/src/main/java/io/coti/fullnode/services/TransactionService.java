@@ -156,7 +156,10 @@ public class TransactionService extends BaseNodeTransactionService {
             webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
             addToExplorerIndexes(transactionData);
             final TransactionData finalTransactionData = transactionData;
+//            if (!finalTransactionData.getTransactionDescription().equals("dontsend")) {   // todo delete after test
             ((NetworkService) networkService).sendDataToConnectedDspNodes(finalTransactionData);
+//            }
+            transactionCuratorService.addUnconfirmedTransaction(transactionData.getHash());
             transactionHelper.setTransactionStateToFinished(transactionData);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
@@ -433,7 +436,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
 
     @Override
-    protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
+    protected void continueHandlePropagatedTransaction(TransactionData transactionData, boolean opinionOnTheTransaction) {
         webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
         addToExplorerIndexes(transactionData);
     }

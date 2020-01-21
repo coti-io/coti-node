@@ -22,7 +22,7 @@ public interface IBalanceService {
 
     void rollbackBaseTransactions(TransactionData transactionData);
 
-    void validateBalances();
+    void validateBalancesOnInit();
 
     void updateBalanceFromClusterStamp(Hash addressHash, BigDecimal amount) throws IllegalArgumentException;
 

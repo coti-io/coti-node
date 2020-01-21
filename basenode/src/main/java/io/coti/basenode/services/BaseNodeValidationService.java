@@ -61,10 +61,14 @@ public class BaseNodeValidationService implements IValidationService {
     }
 
     @Override
-    public boolean validatePropagatedTransactionDataIntegrity(TransactionData transactionData) {
-        return validateTransactionDataIntegrity(transactionData) && validateTransactionNodeSignature(transactionData) &&
-                //validateTransactionTrustScore(transactionData) &&
-                validateBaseTransactionAmounts(transactionData) && validatePot(transactionData);
+    public boolean validatePropagatedTransactionIntegrityPhase1(TransactionData transactionData) {
+        return validateTransactionDataIntegrity(transactionData) && validateTransactionNodeSignature(transactionData);
+    //        && validateTransactionTrustScore(transactionData)
+    }
+
+    @Override
+    public boolean validatePropagatedTransactionIntegrityPhase2(TransactionData transactionData) {
+        return validateBaseTransactionAmounts(transactionData) && validatePot(transactionData);
     }
 
     @Override
@@ -98,12 +102,6 @@ public class BaseNodeValidationService implements IValidationService {
     }
 
     @Override
-    public boolean fullValidation(TransactionData transactionData) {
-        return true;
-    }
-
-
-    @Override
     public boolean validatePot(TransactionData transactionData) {
         return EnumSet.of(TransactionType.ZeroSpend, TransactionType.Initial).contains(transactionData.getType()) || potService.validatePot(transactionData);
     }
@@ -120,7 +118,7 @@ public class BaseNodeValidationService implements IValidationService {
 
     @Override
     public boolean validateGetAddressesResponse(GetHistoryAddressesResponse getHistoryAddressesResponse) {
-        return !getHistoryAddressesResponse.getAddressHashesToAddresses().entrySet().stream().anyMatch(entry ->
+        return getHistoryAddressesResponse.getAddressHashesToAddresses().entrySet().stream().noneMatch(entry ->
                 entry.getValue() != null && !entry.getKey().equals(entry.getValue().getHash())
         );
     }

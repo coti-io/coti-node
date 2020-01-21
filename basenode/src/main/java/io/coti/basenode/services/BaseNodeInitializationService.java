@@ -102,6 +102,8 @@ public abstract class BaseNodeInitializationService {
     protected ApplicationContext applicationContext;
     @Autowired
     private BuildProperties buildProperties;
+    @Autowired
+    private ITransactionCuratorService transactionCuratorService;
 
     public void init() {
         log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());
@@ -117,6 +119,7 @@ public abstract class BaseNodeInitializationService {
         transactionIndexService.init();
         dspVoteService.init();
         transactionService.init();
+        transactionCuratorService.init();
         potService.init();
         initCommunication();
         log.info("The communication initialization is done");
@@ -151,7 +154,7 @@ public abstract class BaseNodeInitializationService {
             if (networkService.getRecoveryServerAddress() != null) {
                 transactionSynchronizationService.requestMissingTransactions(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
             }
-            balanceService.validateBalances();
+            balanceService.validateBalancesOnInit();
             log.info("Transactions Load completed");
             clusterService.finalizeInit();
         } catch (TransactionSyncException e) {

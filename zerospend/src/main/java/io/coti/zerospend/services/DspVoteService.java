@@ -180,17 +180,24 @@ public class DspVoteService extends BaseNodeDspVoteService {
         mapHashToDspVote.forEach((hash, dspVote) -> dspVotes.add(dspVote));
         dspConsensusResult.setDspVotes(dspVotes);
         setIndexForDspResult(transactionData, dspConsensusResult);
-        confirmationService.setDspcToTrue(dspConsensusResult);
+        confirmationService.setDspcToTrueOrFalse(dspConsensusResult);
         propagationPublisher.propagate(dspConsensusResult, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode));
         transactionHashToVotesListMapping.remove(transactionHash);
     }
 
     public synchronized void setIndexForDspResult(TransactionData transactionData, DspConsensusResult dspConsensusResult) {
-        dspConsensusResult.setIndex(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
-        dspConsensusResult.setIndexingTime(Instant.now());
-        dspConsensusCrypto.signMessage(dspConsensusResult);
-        transactionData.setDspConsensusResult(dspConsensusResult);
-        transactionIndexService.insertNewTransactionIndex(transactionData);
+        if (dspConsensusResult.isDspConsensus()) {
+            dspConsensusResult.setIndex(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
+            dspConsensusResult.setIndexingTime(Instant.now());
+            dspConsensusCrypto.signMessage(dspConsensusResult);
+            transactionData.setDspConsensusResult(dspConsensusResult);
+            transactionIndexService.insertNewTransactionIndex(transactionData);
+        } else {
+            dspConsensusResult.setIndex(0);  //todo in fact, there is a transaction with zero index - zerospend first transaction. maybe use real index?
+            dspConsensusResult.setIndexingTime(Instant.now());
+            dspConsensusCrypto.signMessage(dspConsensusResult);
+            transactionData.setDspConsensusResult(dspConsensusResult);
+        }
     }
 
     public void publishDecision(Hash transactionHash) {

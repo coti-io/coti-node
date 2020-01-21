@@ -118,6 +118,10 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                 trustChainConfirmed.incrementAndGet();
             } else if (confirmationData instanceof DspConsensusResult) {
                 transactionData.setDspConsensusResult((DspConsensusResult) confirmationData);
+                if (!((DspConsensusResult) confirmationData).isDspConsensus()) {
+                    transactions.put(transactionData);
+                    return;
+                }
                 if (!insertNewTransactionIndex(transactionData)) {
                     return;
                 }
@@ -128,6 +132,9 @@ public class BaseNodeConfirmationService implements IConfirmationService {
             }
             if (transactionHelper.isConfirmed(transactionData)) {
                 processConfirmedTransaction(transactionData);
+            }
+            if (transactionHelper.isTccConfirmedDspRejected(transactionData)) {
+                processDSPRejectedTransaction(transactionData);
             }
             transactions.put(transactionData);
         });
@@ -146,7 +153,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         } else {
             long index = dspConsensusResult.getIndex() + 1;
             while (waitingDspConsensusResults.containsKey(index)) {
-                setDspcToTrue(waitingDspConsensusResults.get(index));
+                setDspcToTrueOrFalse(waitingDspConsensusResults.get(index));
                 waitingDspConsensusResults.remove(index);
                 index++;
             }
@@ -168,6 +175,14 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         });
 
         continueHandleAddressHistoryChanges(transactionData);
+    }
+
+    private void processDSPRejectedTransaction(TransactionData transactionData) {
+        Instant trustChainConsensusTime = transactionData.getTrustChainConsensusTime();
+        Instant dspConsensusTime = transactionData.getDspConsensusResult().getIndexingTime();
+        Instant transactionConsensusUpdateTime = trustChainConsensusTime.isAfter(dspConsensusTime) ? trustChainConsensusTime : dspConsensusTime;
+        transactionData.setTransactionConsensusUpdateTime(transactionConsensusUpdateTime);
+        balanceService.rollbackBaseTransactions(transactionData);
     }
 
     protected void continueHandleDSPConfirmedTransaction(TransactionData transactionData) {
@@ -263,7 +278,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     @Override
-    public void setDspcToTrue(DspConsensusResult dspConsensusResult) {
+    public void setDspcToTrueOrFalse(DspConsensusResult dspConsensusResult) {
         try {
             confirmationQueue.put(dspConsensusResult);
         } catch (InterruptedException e) {

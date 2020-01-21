@@ -193,15 +193,13 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     public boolean isTransactionAlreadyPropagated(TransactionData transactionData) {
-        synchronized (transactionData) {
-            if (isTransactionExists(transactionData)) {
-                if (!isTransactionHashProcessing(transactionData.getHash())) {
-                    addDspResultToDb(transactionData.getDspConsensusResult());
-                }
-                return true;
+        if (isTransactionExists(transactionData)) {
+            if (!isTransactionHashProcessing(transactionData.getHash())) {
+                addDspResultToDb(transactionData.getDspConsensusResult());
             }
-            return false;
+            return true;
         }
+        return false;
     }
 
     private void addDspResultToDb(DspConsensusResult dspConsensusResult) {
@@ -209,7 +207,7 @@ public class TransactionHelper implements ITransactionHelper {
             return;
         }
         if (transactionIndexes.getByHash(new Hash(dspConsensusResult.getIndex())) == null) {
-            confirmationService.setDspcToTrue(dspConsensusResult);
+            confirmationService.setDspcToTrueOrFalse(dspConsensusResult);
         }
 
     }
@@ -252,14 +250,13 @@ public class TransactionHelper implements ITransactionHelper {
             rollbackTransaction(transactionData);
         }
 
-        synchronized (transactionData) {
-            transactionHashToTransactionStateStackMapping.remove(transactionData.getHash());
-        }
+        transactionHashToTransactionStateStackMapping.remove(transactionData.getHash());
     }
 
     @Override
     public boolean isTransactionFinished(TransactionData transactionData) {
-        return transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).peek().equals(FINISHED);
+        return !isTransactionHashProcessing(transactionData.getHash())
+                || transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).peek().equals(FINISHED);
     }
 
     private void rollbackTransaction(TransactionData transactionData) {
@@ -315,7 +312,7 @@ public class TransactionHelper implements ITransactionHelper {
             addNoneIndexedTransaction(transactionData);
         }
         if (transactionData.getDspConsensusResult() != null) {
-            confirmationService.setDspcToTrue(transactionData.getDspConsensusResult());
+            confirmationService.setDspcToTrueOrFalse(transactionData.getDspConsensusResult());
         }
         updateAddressTransactionHistory(transactionData);
         clusterService.attachToCluster(transactionData);
@@ -335,8 +332,18 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     @Override
+    public boolean isTccConfirmedDspRejected(TransactionData transactionData) {
+        return transactionData.isTrustChainConsensus() && isDspRejected(transactionData);
+    }
+
+    @Override
     public boolean isDspConfirmed(TransactionData transactionData) {
         return transactionData.getDspConsensusResult() != null && transactionData.getDspConsensusResult().isDspConsensus() && transactionIndexes.getByHash(new Hash(transactionData.getDspConsensusResult().getIndex())) != null;
+    }
+
+    @Override
+    public boolean isDspRejected(TransactionData transactionData) {
+        return transactionData.getDspConsensusResult() != null && !transactionData.getDspConsensusResult().isDspConsensus();
     }
 
     @Override

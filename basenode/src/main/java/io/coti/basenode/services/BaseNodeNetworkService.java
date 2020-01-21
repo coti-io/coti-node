@@ -46,7 +46,7 @@ public class BaseNodeNetworkService implements INetworkService {
     private String nodeManagerPropagationAddress;
     private String connectToNetworkUrl;
     @Autowired
-    private ICommunicationService communicationService;
+    protected ICommunicationService communicationService;
     @Autowired
     private NetworkNodeCrypto networkNodeCrypto;
     @Autowired
