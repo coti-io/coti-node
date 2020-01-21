@@ -141,6 +141,11 @@
             <version>1.11.519</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>commons-validator</groupId>
+            <artifactId>commons-validator</artifactId>
+            <version>1.6</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

@@ -1,10 +1,7 @@
 package io.coti.nodemanager.database;
 
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
-import io.coti.nodemanager.model.ActiveNodes;
-import io.coti.nodemanager.model.NodeDailyActivities;
-import io.coti.nodemanager.model.NodeHistory;
-import io.coti.nodemanager.model.StakingNodes;
+import io.coti.nodemanager.model.*;
 import org.rocksdb.RocksDB;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
@@ -26,7 +23,8 @@ public class RocksDBConnector extends BaseNodeRocksDBConnector {
                 ActiveNodes.class.getName(),
                 NodeHistory.class.getName(),
                 NodeDailyActivities.class.getName(),
-                StakingNodes.class.getName());
+                StakingNodes.class.getName(),
+                ReservedDomains.class.getName());
     }
 
     @Override

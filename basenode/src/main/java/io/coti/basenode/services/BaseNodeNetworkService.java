@@ -11,6 +11,7 @@ import io.coti.basenode.http.Response;
 import io.coti.basenode.services.interfaces.ICommunicationService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.validator.routines.InetAddressValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -26,6 +27,10 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.validation.ValidationException;
 import java.math.BigDecimal;
+import java.net.Inet4Address;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -185,10 +190,50 @@ public class BaseNodeNetworkService implements INetworkService {
             log.error("Invalid registrar node hash for node {}", networkNodeData.getNodeHash());
             throw new NetworkNodeValidationException(INVALID_NODE_REGISTRAR);
         }
+        if (networkNodeData.getNodeType().equals(NodeType.FullNode)) {
+            validateDomain(networkNodeData);
+        }
+
         if (networkNodeData.getNodeType().equals(NodeType.FullNode) && !validateFeeData(networkNodeData.getFeeData())) {
             log.error("Invalid fee data for full node {}", networkNodeData.getNodeHash());
             throw new NetworkNodeValidationException(INVALID_FULL_NODE_FEE);
         }
+    }
+
+    private void validateDomain(NetworkNodeData networkNodeData) {
+        InetAddressValidator validator = InetAddressValidator.getInstance();
+        String ip = networkNodeData.getAddress();
+        if (!validator.isValidInet4Address(ip)) {
+            log.error("Invalid IP, expected IPV4, received address{}", ip);
+            throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_IP_VERSION);
+        }
+        String webServerUrl = networkNodeData.getWebServerUrl();
+        String domainName = getDomainName(webServerUrl);
+        if (ip == null || domainName == null ) {
+            log.error("Node registration requires both IP: {}, and URL address: {}", ip, webServerUrl);
+            throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_NULL_IP_OR_URL_SERVER);
+        }
+        try {
+            if (!Inet4Address.getByName(domainName).getHostAddress().equals(ip)) {
+                log.error("Invalid IP: {}, does not match address: {}", ip, webServerUrl);
+                throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_URL_SERVER);
+            }
+        } catch (UnknownHostException e) {
+            log.error("IP could not be verified: {} ", e.getMessage());
+            throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_IP_FOR_URL_SERVER);
+        }
+    }
+
+    @Override
+    public String getDomainName(String webServerUrl) {
+        URL url = null;
+        try {
+            url = new URL(webServerUrl);
+        } catch (MalformedURLException e) {
+            log.error("Node registration requires a valid URL address: {}", webServerUrl);
+            throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_URL_SERVER);
+        }
+        return url == null ? null : url.getHost();
     }
 
     @Override

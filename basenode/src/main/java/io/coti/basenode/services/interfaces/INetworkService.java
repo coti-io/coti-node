@@ -55,4 +55,6 @@ public interface INetworkService {
 
     void connectToNetwork();
 
+    String getDomainName(String webServerUrl);
+
 }
