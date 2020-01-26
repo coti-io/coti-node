@@ -39,4 +39,9 @@ public class NodeNetworkDataRecord implements Serializable {
     public Instant getRecordTime() {
         return recordTime.minusNanos(recordTime.getNano());
     }
+
+    public boolean isOriginalEvent() {
+        return !(this.networkNodeData.getAddress() == null || this.networkNodeData.getAddress().isEmpty()
+                || this.networkNodeData.getHttpPort() == null || this.networkNodeData.getHttpPort().isEmpty());
+    }
 }
