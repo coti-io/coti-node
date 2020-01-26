@@ -7,7 +7,10 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.*;
 import io.coti.nodemanager.data.NetworkNodeStatus;
 import io.coti.nodemanager.database.RocksDBConnector;
+import io.coti.nodemanager.http.AddNodeBeginEventPairAdminRequest;
 import io.coti.nodemanager.http.AddNodeEventAdminRequest;
+import io.coti.nodemanager.http.GetNodeActivationTimeRequest;
+import io.coti.nodemanager.http.GetNodeActivationTimeResponse;
 import io.coti.nodemanager.model.ActiveNodes;
 import io.coti.nodemanager.model.NodeDailyActivities;
 import io.coti.nodemanager.model.NodeHistory;
@@ -508,4 +511,103 @@ public class NodeManagementServiceDoNotTakeItToDevTest {
         Assert.assertTrue(responseResponseEntity.getStatusCode().equals(HttpStatus.BAD_REQUEST));
 
     }
+
+    @Test
+    public void getActivationTimes() {
+        NetworkNodeData networkNodeData7 = new NetworkNodeData();
+        networkNodeData7.setHash(fakeNode7);
+        networkNodeData7.setNodeType(NodeType.FullNode);
+        networkNodeData7.setAddress("test");
+        networkNodeData7.setHttpPort("000");
+        networkNodeData7.setPropagationPort("000");
+        networkNodeData7.setReceivingPort("000");
+        networkNodeData7.setNetworkType(NetworkType.TestNet);
+        networkNodeData7.setTrustScore(37.0);
+        networkNodeData7.setWebServerUrl("test");
+        networkNodeData7.setFeeData(new FeeData(BigDecimal.valueOf(0.7), BigDecimal.valueOf(0.7), BigDecimal.valueOf(0.7)));
+        networkNodeData7.setNodeSignature(new SignatureData("test", "test"));
+        networkNodeData7.setNodeRegistrationData(new NodeRegistrationData());
+
+        networkNodeData7.getNodeRegistrationData().setNodeHash(fakeNode7);
+        networkNodeData7.getNodeRegistrationData().setNodeType(NodeType.FullNode.toString());
+        networkNodeData7.getNodeRegistrationData().setNetworkType(NetworkType.TestNet.toString());
+        networkNodeData7.getNodeRegistrationData().setCreationTime(Instant.now());
+        networkNodeData7.getNodeRegistrationData().setRegistrarHash(new Hash("00"));
+        networkNodeData7.getNodeRegistrationData().setRegistrarSignature(new SignatureData("test", "test"));
+
+        LocalDateTime startDateTime = LocalDateTime.of(2020, 1, 5, 0, 0, 0);
+
+        NetworkNodeStatus nodeStatus;
+        Instant localDateTime;
+        int iPlace;
+
+        nodeStatus = NetworkNodeStatus.ACTIVE;
+        iPlace = 1;
+        localDateTime = LocalDateTime.of(startDateTime.getYear(), startDateTime.getMonth(), startDateTime.getDayOfMonth(), iPlace, iPlace, 0).toInstant(ZoneOffset.UTC);
+        nodeManagementService.addNodeHistory(networkNodeData7, nodeStatus, localDateTime);
+
+        nodeStatus = NetworkNodeStatus.INACTIVE;
+        iPlace = 2;
+        localDateTime = LocalDateTime.of(startDateTime.getYear(), startDateTime.getMonth(), startDateTime.getDayOfMonth(), iPlace, iPlace, 0).toInstant(ZoneOffset.UTC);
+        nodeManagementService.addNodeHistory(networkNodeData7, nodeStatus, localDateTime);
+
+        nodeStatus = NetworkNodeStatus.ACTIVE;
+        iPlace = 3;
+        localDateTime = LocalDateTime.of(startDateTime.getYear(), startDateTime.getMonth(), startDateTime.getDayOfMonth(), iPlace, iPlace, 0).toInstant(ZoneOffset.UTC);
+        nodeManagementService.addNodeHistory(networkNodeData7, nodeStatus, localDateTime);
+
+        nodeStatus = NetworkNodeStatus.ACTIVE;
+        iPlace = 4;
+        localDateTime = LocalDateTime.of(startDateTime.getYear(), startDateTime.getMonth(), startDateTime.getDayOfMonth(), iPlace, iPlace, 0).toInstant(ZoneOffset.UTC);
+        nodeManagementService.addNodeHistory(networkNodeData7, nodeStatus, localDateTime);
+
+        nodeStatus = NetworkNodeStatus.ACTIVE;
+        iPlace = 5;
+        localDateTime = LocalDateTime.of(startDateTime.getYear(), startDateTime.getMonth(), startDateTime.getDayOfMonth() + 2, iPlace, iPlace, 0).toInstant(ZoneOffset.UTC);
+        nodeManagementService.addNodeHistory(networkNodeData7, nodeStatus, localDateTime);
+
+
+        GetNodeActivationTimeRequest getNodeActivationTimeRequest = new GetNodeActivationTimeRequest();
+        getNodeActivationTimeRequest.setNodeHash(fakeNode7);
+        ResponseEntity<IResponse> responseResponseEntity = networkHistoryService.getNodeActivationTime(getNodeActivationTimeRequest);
+
+        Assert.assertTrue(responseResponseEntity.getStatusCode().equals(HttpStatus.OK));
+        GetNodeActivationTimeResponse getNodeActivationTimeResponse = (GetNodeActivationTimeResponse) responseResponseEntity.getBody();
+        Assert.assertTrue(getNodeActivationTimeResponse.getActivationTime().equals(getNodeActivationTimeResponse.getOriginalActivationTime()));
+
+
+        Instant newEventDateTime = LocalDateTime.of(2020, 1, 1, 0, 7, 0).toInstant(ZoneOffset.UTC);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String eventDateTime = formatter.format(newEventDateTime.atZone(ZoneId.of("UTC")));
+//        String eventNodeStatus = NetworkNodeStatus.ACTIVE.toString();
+//
+//        AddNodeEventAdminRequest addNodeEventAdminRequest = new AddNodeEventAdminRequest(fakeNode7, eventDateTime, NodeTypeName.FullNode.toString(), eventNodeStatus);
+//        responseResponseEntity = nodeManagementService.addNodeEventSingleAdmin(addNodeEventAdminRequest);
+//
+//        Assert.assertTrue(responseResponseEntity.getStatusCode().equals(HttpStatus.OK));
+//
+//        ResponseEntity<IResponse> responseResponseEntity2 = networkHistoryService.getNodeActivationTime(getNodeActivationTimeRequest);
+//
+//        Assert.assertTrue(responseResponseEntity2.getStatusCode().equals(HttpStatus.OK));
+//        GetNodeActivationTimeResponse getNodeActivationTimeResponse2 = (GetNodeActivationTimeResponse) responseResponseEntity2.getBody();
+//
+//        Assert.assertTrue(getNodeActivationTimeResponse2.getActivationTime().isBefore(getNodeActivationTimeResponse2.getOriginalActivationTime()));
+
+        AddNodeBeginEventPairAdminRequest addNodeBeginPairEventRequest = new AddNodeBeginEventPairAdminRequest();
+        addNodeBeginPairEventRequest.setNodeHash(fakeNode7);
+        addNodeBeginPairEventRequest.setStartDateTimeUTC(eventDateTime);
+
+        responseResponseEntity = nodeManagementService.addNodeBeginEventPairAdmin(addNodeBeginPairEventRequest);
+        Assert.assertTrue(responseResponseEntity.getStatusCode().equals(HttpStatus.OK));
+
+        ResponseEntity<IResponse> responseResponseEntity2 = networkHistoryService.getNodeActivationTime(getNodeActivationTimeRequest);
+
+        Assert.assertTrue(responseResponseEntity2.getStatusCode().equals(HttpStatus.OK));
+        GetNodeActivationTimeResponse getNodeActivationTimeResponse2 = (GetNodeActivationTimeResponse) responseResponseEntity2.getBody();
+
+        Assert.assertTrue(getNodeActivationTimeResponse2.getActivationTime().isBefore(getNodeActivationTimeResponse2.getOriginalActivationTime()));
+
+    }
+
+
 }
