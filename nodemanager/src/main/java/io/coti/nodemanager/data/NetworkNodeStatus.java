@@ -13,11 +13,11 @@ public enum NetworkNodeStatus {
 
     public static NetworkNodeStatus enumFromString(String text) {
         for (NetworkNodeStatus value : NetworkNodeStatus.values()) {
-            if (value.text.equalsIgnoreCase(text)) {
+            if (value.text.equals(text)) {
                 return value;
             }
         }
-        throw new IllegalArgumentException(String.format("User type %s doesn't exist", text));
+        throw new IllegalArgumentException(String.format("Node status %s doesn't exist", text));
     }
 
     @Override

@@ -170,13 +170,13 @@ public class NodeManagementService implements INodeManagementService {
                     body(new Response(String.format(ADDING_EVENT_PAIR_FAILED, nodeHash)));
         }
 
-        addNodeEventAdminRequest = new AddNodeEventAdminRequest(nodeHash, request.getStartDateTimeUTC(), NodeTypeName.FullNode.toString(), NetworkNodeStatus.ACTIVE.toString());
+        addNodeEventAdminRequest = new AddNodeEventAdminRequest(nodeHash, request.getStartDateTimeUTC(), NodeTypeName.FullNode.getNode(), NetworkNodeStatus.ACTIVE.toString());
         ResponseEntity<IResponse> response1 = addNodeEventAdmin(addNodeEventAdminRequest, true);
         if (response1.getStatusCode() != HttpStatus.OK) {
             return response1;
         }
 
-        addNodeEventAdminRequest = new AddNodeEventAdminRequest(nodeHash, formatter.format(localDateTimeForSecondEvent), NodeTypeName.FullNode.toString(), NetworkNodeStatus.INACTIVE.toString());
+        addNodeEventAdminRequest = new AddNodeEventAdminRequest(nodeHash, formatter.format(localDateTimeForSecondEvent), NodeTypeName.FullNode.getNode(), NetworkNodeStatus.INACTIVE.toString());
         return addNodeEventAdmin(addNodeEventAdminRequest, true);
     }
 
