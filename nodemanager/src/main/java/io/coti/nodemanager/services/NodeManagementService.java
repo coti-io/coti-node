@@ -236,9 +236,7 @@ public class NodeManagementService implements INodeManagementService {
                     body(new Response(String.format(ADDING_EVENT_INCORRECT_INACTIVE_STATUS, nodeHash)));
         }
 
-        NetworkNodeStatus previousEventStatus = null;
-
-        previousEventStatus = getNodeStatusOfPreviousActivityEvent(nodeHash, instantDateTimeEvent, localDateForEvent);
+        NetworkNodeStatus previousEventStatus = getNodeStatusOfPreviousActivityEvent(nodeHash, instantDateTimeEvent, localDateForEvent);
 
         if (previousEventStatus != null && NetworkNodeStatus.enumFromString(request.getNodeStatus()).equals(previousEventStatus)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).
@@ -321,7 +319,7 @@ public class NodeManagementService implements INodeManagementService {
         if (nodeDailyActivityDataForChecks != null) {
             LocalDate floorLocalDateForNewEvent = nodeDailyActivityDataForChecks.getNodeDaySet().floor(localDateForEvent);
             if (floorLocalDateForNewEvent != null) {
-                Hash nodeHistoryDataHashForEventForChecks = networkHistoryService.calculateNodeHistoryDataHash(nodeHash, localDateForEvent);
+                Hash nodeHistoryDataHashForEventForChecks = networkHistoryService.calculateNodeHistoryDataHash(nodeHash, floorLocalDateForNewEvent);
                 NodeHistoryData nodeHistoryDataForEvent = nodeHistory.getByHash(nodeHistoryDataHashForEventForChecks);
                 if (floorLocalDateForNewEvent.equals(localDateForEvent)) {
                     LinkedMap<Hash, NodeNetworkDataRecord> nodeNetworkDataRecordMap = nodeHistoryDataForEvent.getNodeNetworkDataRecordMap();
@@ -337,10 +335,11 @@ public class NodeManagementService implements INodeManagementService {
                         }
                     } else {
                         for (Map.Entry<Hash, NodeNetworkDataRecord> entry : nodeNetworkDataRecordMap.entrySet()) {
-                            if (!entry.getValue().getRecordTime().isAfter(instantDateTimeEvent)) {
-                                previousEventStatus = entry.getValue().getNodeStatus();
+                            if (!entry.getValue().getRecordTime().isBefore(instantDateTimeEvent)) {
+                                previousEventStatus = previousNodeNetworkDataRecord.getNodeStatus();
                                 break;
                             }
+                            previousNodeNetworkDataRecord = entry.getValue();
                         }
                     }
                 } else {
