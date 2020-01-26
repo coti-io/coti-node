@@ -307,11 +307,38 @@ public class NetworkHistoryService implements INetworkHistoryService {
         try {
             Hash nodeHash = getNodeActivationTimeRequest.getNodeHash();
             NodeNetworkDataRecord nodeNetworkDataRecord = getNodeNetworkFirstDataRecord(nodeHash);
+            NodeNetworkDataRecord originalActivationDataRecord = nodeNetworkDataRecord;
+            if (!nodeNetworkDataRecord.isOriginalEvent()) {
+                originalActivationDataRecord = getOriginalActivationEventRecord(nodeHash);
+            }
             return ResponseEntity.ok()
-                    .body(new GetNodeActivationTimeResponse(nodeNetworkDataRecord.getRecordTime()));
+                    .body(new GetNodeActivationTimeResponse(nodeNetworkDataRecord.getRecordTime(), originalActivationDataRecord.getRecordTime()));
         } catch (NetworkHistoryValidationException e) {
             return ResponseEntity.badRequest().body(new Response(e.getMessage(), STATUS_ERROR));
         }
+    }
+
+    private NodeNetworkDataRecord getOriginalActivationEventRecord(Hash nodeHash) {
+        NodeNetworkDataRecord originalActivationEventRecord = null;
+        NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
+        if (nodeDailyActivityData == null) {
+            throw new NetworkHistoryValidationException("Invalid node hash " + nodeHash);
+        }
+        for (LocalDate localDate : nodeDailyActivityData.getNodeDaySet()) {
+            Hash localDateWithEventHash =
+                    calculateNodeHistoryDataHash(nodeDailyActivityData.getNodeHash(), localDate);
+            NodeHistoryData nodeHistoryByHash = nodeHistory.getByHash(localDateWithEventHash);
+            Optional<Map.Entry<Hash, NodeNetworkDataRecord>> hashNodeNetworkDataRecordEntry = nodeHistoryByHash.getNodeNetworkDataRecordMap().entrySet().stream()
+                    .filter(nodeNetworkDataRecord ->
+                            nodeNetworkDataRecord.getValue().getNodeStatus().equals(NetworkNodeStatus.ACTIVE)
+                                    && nodeNetworkDataRecord.getValue().isOriginalEvent()
+                    ).findFirst();
+            if (hashNodeNetworkDataRecordEntry.isPresent()) {
+                originalActivationEventRecord = hashNodeNetworkDataRecordEntry.get().getValue();
+                break;
+            }
+        }
+        return originalActivationEventRecord;
     }
 
     private NodeNetworkDataRecord getNodeNetworkFirstDataRecord(Hash nodeHash) {
