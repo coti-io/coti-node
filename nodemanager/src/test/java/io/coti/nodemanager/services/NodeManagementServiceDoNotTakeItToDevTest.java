@@ -387,7 +387,7 @@ public class NodeManagementServiceDoNotTakeItToDevTest {
         Random rand = new Random();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-        for (int i = 0; i < 1000; i++){
+        for (int i = 0; i < 6; i++){
             int timeShift = rand.nextInt(1000) +1 ;
             String eventDateTime = formatter.format(startDateTime.plusSeconds(timeShift).atZone(ZoneId.of("UTC")));
 
@@ -399,10 +399,69 @@ public class NodeManagementServiceDoNotTakeItToDevTest {
             }
 
             AddNodeEventAdminRequest addNodeEventAdminRequest = new AddNodeEventAdminRequest(fakeNode8, eventDateTime, NodeTypeName.FullNode.toString(), nodeStatus);
-            nodeManagementService.addNodeEventAdmin(addNodeEventAdminRequest);
+            nodeManagementService.addNodeEventSingleAdmin(addNodeEventAdminRequest);
         }
 
         log.info("fakeNode8 finished");
     }
 
+
+    @Test
+    public void addNodeEvent_afterActiveChainHead() {
+        NetworkNodeData networkNodeData7 = new NetworkNodeData();
+        networkNodeData7.setHash(fakeNode7);
+        networkNodeData7.setNodeType(NodeType.FullNode);
+        networkNodeData7.setAddress("test");
+        networkNodeData7.setHttpPort("000");
+        networkNodeData7.setPropagationPort("000");
+        networkNodeData7.setReceivingPort("000");
+        networkNodeData7.setNetworkType(NetworkType.TestNet);
+        networkNodeData7.setTrustScore(37.0);
+        networkNodeData7.setWebServerUrl("test");
+        networkNodeData7.setFeeData(new FeeData(BigDecimal.valueOf(0.7), BigDecimal.valueOf(0.7), BigDecimal.valueOf(0.7)));
+        networkNodeData7.setNodeSignature(new SignatureData("test", "test"));
+        networkNodeData7.setNodeRegistrationData(new NodeRegistrationData());
+
+        networkNodeData7.getNodeRegistrationData().setNodeHash(fakeNode7);
+        networkNodeData7.getNodeRegistrationData().setNodeType(NodeType.FullNode.toString());
+        networkNodeData7.getNodeRegistrationData().setNetworkType(NetworkType.TestNet.toString());
+        networkNodeData7.getNodeRegistrationData().setCreationTime(Instant.now());
+        networkNodeData7.getNodeRegistrationData().setRegistrarHash(new Hash("00"));
+        networkNodeData7.getNodeRegistrationData().setRegistrarSignature(new SignatureData("test", "test"));
+
+        LocalDateTime startDateTime = LocalDateTime.of(2020, 1, 1, 0, 0, 0);
+
+        NetworkNodeStatus nodeStatus;
+        Instant localDateTime;
+        int iPlace;
+
+        nodeStatus = NetworkNodeStatus.ACTIVE;
+        iPlace = 1;
+        localDateTime = LocalDateTime.of(startDateTime.getYear(), startDateTime.getMonth(), startDateTime.getDayOfMonth(), iPlace, iPlace, 0).toInstant(ZoneOffset.UTC);
+        nodeManagementService.addNodeHistory(networkNodeData7, nodeStatus, localDateTime);
+
+        nodeStatus = NetworkNodeStatus.INACTIVE;
+        iPlace = 2;
+        localDateTime = LocalDateTime.of(startDateTime.getYear(), startDateTime.getMonth(), startDateTime.getDayOfMonth(), iPlace, iPlace, 0).toInstant(ZoneOffset.UTC);
+        nodeManagementService.addNodeHistory(networkNodeData7, nodeStatus, localDateTime);
+
+        nodeStatus = NetworkNodeStatus.ACTIVE;
+        iPlace = 3;
+        localDateTime = LocalDateTime.of(startDateTime.getYear(), startDateTime.getMonth(), startDateTime.getDayOfMonth(), iPlace, iPlace, 0).toInstant(ZoneOffset.UTC);
+        nodeManagementService.addNodeHistory(networkNodeData7, nodeStatus, localDateTime);
+
+        nodeStatus = NetworkNodeStatus.ACTIVE;
+        iPlace = 4;
+        localDateTime = LocalDateTime.of(startDateTime.getYear(), startDateTime.getMonth(), startDateTime.getDayOfMonth(), iPlace, iPlace, 0).toInstant(ZoneOffset.UTC);
+        nodeManagementService.addNodeHistory(networkNodeData7, nodeStatus, localDateTime);
+
+        Instant newEventDateTime = LocalDateTime.of(2020, 1, startDateTime.getDayOfMonth(), 3, 7, 0).toInstant(ZoneOffset.UTC);;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String eventDateTime = formatter.format(newEventDateTime.atZone(ZoneId.of("UTC")));
+        String eventNodeStatus = NetworkNodeStatus.ACTIVE.toString();
+
+        AddNodeEventAdminRequest addNodeEventAdminRequest = new AddNodeEventAdminRequest(fakeNode7, eventDateTime, NodeTypeName.FullNode.toString(), eventNodeStatus);
+        nodeManagementService.addNodeEventSingleAdmin(addNodeEventAdminRequest);
+
+    }
 }
