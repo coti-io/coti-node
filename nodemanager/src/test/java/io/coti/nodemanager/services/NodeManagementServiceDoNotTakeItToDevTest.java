@@ -3,6 +3,7 @@ package io.coti.nodemanager.services;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.data.NodeTypeName;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.*;
 import io.coti.nodemanager.data.NetworkNodeStatus;
 import io.coti.nodemanager.database.RocksDBConnector;
@@ -13,6 +14,7 @@ import io.coti.nodemanager.model.NodeHistory;
 import io.coti.nodemanager.model.StakingNodes;
 import io.coti.nodemanager.services.interfaces.IHealthCheckService;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,8 @@ import org.springframework.boot.info.BuildProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContext;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -382,17 +386,18 @@ public class NodeManagementServiceDoNotTakeItToDevTest {
     @Test
     public void addNodeEventAdminTest() {
 
-        Instant startDateTime = LocalDateTime.of(2019, 10, 01, 10, 0, 0).toInstant(ZoneOffset.UTC);;
+        Instant startDateTime = LocalDateTime.of(2019, 10, 01, 10, 0, 0).toInstant(ZoneOffset.UTC);
+        ;
         final Hash fakeNode8 = new Hash("6d27574a68615aca022d628046d3c01b3e370969cb9ed54ada1234f684e849a9bdc6a0ecc83872aa4b27ef2c15fb086b1529fc61c5a98b1d0438053cdb2679bc");
         Random rand = new Random();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-        for (int i = 0; i < 6; i++){
-            int timeShift = rand.nextInt(1000) +1 ;
+        for (int i = 0; i < 6; i++) {
+            int timeShift = rand.nextInt(1000) + 1;
             String eventDateTime = formatter.format(startDateTime.plusSeconds(timeShift).atZone(ZoneId.of("UTC")));
 
             String nodeStatus;
-            if(rand.nextInt(2) == 0) {
+            if (rand.nextInt(2) == 0) {
                 nodeStatus = NetworkNodeStatus.INACTIVE.toString();
             } else {
                 nodeStatus = NetworkNodeStatus.ACTIVE.toString();
@@ -407,7 +412,7 @@ public class NodeManagementServiceDoNotTakeItToDevTest {
 
 
     @Test
-    public void addNodeEvent_afterActiveChainHead() {
+    public void addNodeEvent_failValidation_failedToAdd() {
         NetworkNodeData networkNodeData7 = new NetworkNodeData();
         networkNodeData7.setHash(fakeNode7);
         networkNodeData7.setNodeType(NodeType.FullNode);
@@ -455,13 +460,52 @@ public class NodeManagementServiceDoNotTakeItToDevTest {
         localDateTime = LocalDateTime.of(startDateTime.getYear(), startDateTime.getMonth(), startDateTime.getDayOfMonth(), iPlace, iPlace, 0).toInstant(ZoneOffset.UTC);
         nodeManagementService.addNodeHistory(networkNodeData7, nodeStatus, localDateTime);
 
-        Instant newEventDateTime = LocalDateTime.of(2020, 1, startDateTime.getDayOfMonth(), 3, 7, 0).toInstant(ZoneOffset.UTC);;
+        nodeStatus = NetworkNodeStatus.ACTIVE;
+        iPlace = 5;
+        localDateTime = LocalDateTime.of(startDateTime.getYear(), startDateTime.getMonth(), startDateTime.getDayOfMonth() + 2, iPlace, iPlace, 0).toInstant(ZoneOffset.UTC);
+        nodeManagementService.addNodeHistory(networkNodeData7, nodeStatus, localDateTime);
+
+        Instant newEventDateTime = LocalDateTime.of(2020, 1, startDateTime.getDayOfMonth(), 3, 7, 0).toInstant(ZoneOffset.UTC);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String eventDateTime = formatter.format(newEventDateTime.atZone(ZoneId.of("UTC")));
         String eventNodeStatus = NetworkNodeStatus.ACTIVE.toString();
 
         AddNodeEventAdminRequest addNodeEventAdminRequest = new AddNodeEventAdminRequest(fakeNode7, eventDateTime, NodeTypeName.FullNode.toString(), eventNodeStatus);
-        nodeManagementService.addNodeEventSingleAdmin(addNodeEventAdminRequest);
+        ResponseEntity<IResponse> responseResponseEntity = nodeManagementService.addNodeEventSingleAdmin(addNodeEventAdminRequest);
+
+        Assert.assertTrue(responseResponseEntity.getStatusCode().equals(HttpStatus.BAD_REQUEST));
+
+        addNodeEventAdminRequest.setNodeStatus(NetworkNodeStatus.INACTIVE.toString());
+        responseResponseEntity = nodeManagementService.addNodeEventSingleAdmin(addNodeEventAdminRequest);
+
+        Assert.assertTrue(responseResponseEntity.getStatusCode().equals(HttpStatus.BAD_REQUEST));
+
+        newEventDateTime = LocalDateTime.of(2020, 2, startDateTime.getDayOfMonth(), 3, 7, 0).toInstant(ZoneOffset.UTC);
+        eventDateTime = formatter.format(newEventDateTime.atZone(ZoneId.of("UTC")));
+        addNodeEventAdminRequest.setRecordDateTimeUTC(eventDateTime);
+        addNodeEventAdminRequest.setNodeStatus(NetworkNodeStatus.ACTIVE.toString());
+
+        responseResponseEntity = nodeManagementService.addNodeEventSingleAdmin(addNodeEventAdminRequest);
+
+        Assert.assertTrue(responseResponseEntity.getStatusCode().equals(HttpStatus.BAD_REQUEST));
+
+        newEventDateTime = LocalDateTime.of(2020, 1, startDateTime.getDayOfMonth() + 1, 3, 7, 0).toInstant(ZoneOffset.UTC);
+        eventDateTime = formatter.format(newEventDateTime.atZone(ZoneId.of("UTC")));
+        addNodeEventAdminRequest.setRecordDateTimeUTC(eventDateTime);
+        addNodeEventAdminRequest.setNodeStatus(NetworkNodeStatus.ACTIVE.toString());
+
+        responseResponseEntity = nodeManagementService.addNodeEventSingleAdmin(addNodeEventAdminRequest);
+
+        Assert.assertTrue(responseResponseEntity.getStatusCode().equals(HttpStatus.BAD_REQUEST));
+
+        newEventDateTime = LocalDateTime.of(2020, 1, startDateTime.getDayOfMonth() + 2, 3, 7, 0).toInstant(ZoneOffset.UTC);
+        eventDateTime = formatter.format(newEventDateTime.atZone(ZoneId.of("UTC")));
+        addNodeEventAdminRequest.setRecordDateTimeUTC(eventDateTime);
+        addNodeEventAdminRequest.setNodeStatus(NetworkNodeStatus.ACTIVE.toString());
+
+        responseResponseEntity = nodeManagementService.addNodeEventSingleAdmin(addNodeEventAdminRequest);
+
+        Assert.assertTrue(responseResponseEntity.getStatusCode().equals(HttpStatus.BAD_REQUEST));
 
     }
 }
