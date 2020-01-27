@@ -31,6 +31,17 @@
         <version>2.0.3.RELEASE</version>
         <relativePath/>
     </parent>
+    <repositories>
+        <repository>
+            <id>central</id>
+            <name>Central Repository</name>
+            <url>https://repo.maven.apache.org/maven2</url> <!-- the https you've been looking for -->
+            <layout>default</layout>
+            <snapshots>
+                <enabled>false</enabled> <!-- or set to true if desired, default is false -->
+            </snapshots>
+        </repository>
+    </repositories>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

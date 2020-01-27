@@ -30,7 +30,6 @@ import java.math.BigDecimal;
 import java.net.Inet4Address;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -191,7 +190,7 @@ public class BaseNodeNetworkService implements INetworkService {
             throw new NetworkNodeValidationException(INVALID_NODE_REGISTRAR);
         }
         if (networkNodeData.getNodeType().equals(NodeType.FullNode)) {
-            validateDomain(networkNodeData);
+            validateHost(networkNodeData);
         }
 
         if (networkNodeData.getNodeType().equals(NodeType.FullNode) && !validateFeeData(networkNodeData.getFeeData())) {
@@ -200,38 +199,38 @@ public class BaseNodeNetworkService implements INetworkService {
         }
     }
 
-    private void validateDomain(NetworkNodeData networkNodeData) {
+    private void validateHost(NetworkNodeData networkNodeData) {
         InetAddressValidator validator = InetAddressValidator.getInstance();
         String ip = networkNodeData.getAddress();
         if (!validator.isValidInet4Address(ip)) {
-            log.error("Invalid IP, expected IPV4, received address{}", ip);
+            log.error("Invalid IP, expected IPV4, received ip {}", ip);
             throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_IP_VERSION);
         }
         String webServerUrl = networkNodeData.getWebServerUrl();
-        String domainName = getDomainName(webServerUrl);
-        if (ip == null || domainName == null ) {
-            log.error("Node registration requires both IP: {}, and URL address: {}", ip, webServerUrl);
-            throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_NULL_IP_OR_URL_SERVER);
+        String host = getHost(webServerUrl);
+        if (host == null) {
+            log.error("Node registration requires host. Server url: {}", webServerUrl);
+            throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_SERVER_URL_MISSING_HOST);
         }
         try {
-            if (!Inet4Address.getByName(domainName).getHostAddress().equals(ip)) {
-                log.error("Invalid IP: {}, does not match address: {}", ip, webServerUrl);
-                throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_URL_SERVER);
+            if (!Inet4Address.getByName(host).getHostAddress().equals(ip)) {
+                log.error("Invalid IP: {}, does not match host: {}", ip, host);
+                throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_IP_FOR_SERVER_URL);
             }
-        } catch (UnknownHostException e) {
+        } catch (Exception e) {
             log.error("IP could not be verified: {} ", e.getMessage());
-            throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_IP_FOR_URL_SERVER);
+            throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_IP_FOR_SERVER_URL, e);
         }
     }
 
     @Override
-    public String getDomainName(String webServerUrl) {
-        URL url = null;
+    public String getHost(String webServerUrl) {
+        URL url;
         try {
             url = new URL(webServerUrl);
         } catch (MalformedURLException e) {
             log.error("Node registration requires a valid URL address: {}", webServerUrl);
-            throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_URL_SERVER);
+            throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_SERVER_URL, e);
         }
         return url == null ? null : url.getHost();
     }
@@ -390,7 +389,7 @@ public class BaseNodeNetworkService implements INetworkService {
             ResponseEntity<String> response = restTemplate.exchange(connectToNetworkUrl, HttpMethod.PUT, entity, String.class);
             log.info("{}", response.getBody());
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            throw new NetworkException(String.format("Connect to network failed. Node manager response: %s", new Gson().fromJson(e.getResponseBodyAsString(), Response.class).getMessage()));
+            throw new NetworkException(String.format("Connect to network failed. Node manager response: %s", e.getResponseBodyAsString()));
         } catch (Exception e) {
             throw new NetworkException("Connect to network failed.", e);
         }

@@ -24,7 +24,7 @@ public class RocksDBConnector extends BaseNodeRocksDBConnector {
                 NodeHistory.class.getName(),
                 NodeDailyActivities.class.getName(),
                 StakingNodes.class.getName(),
-                ReservedDomains.class.getName());
+                ReservedHosts.class.getName());
     }
 
     @Override

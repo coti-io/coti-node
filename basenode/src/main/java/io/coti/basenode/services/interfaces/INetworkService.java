@@ -55,6 +55,6 @@ public interface INetworkService {
 
     void connectToNetwork();
 
-    String getDomainName(String webServerUrl);
+    String getHost(String webServerUrl);
 
 }

@@ -39,10 +39,10 @@ public class BaseNodeHttpStringConstants {
     public static final String INVALID_SIGNATURE = "Invalid signature";
     public static final String INVALID_NODE_REGISTRAR = "Invalid node registrar";
     public static final String INVALID_NODE_REGISTRATION_IP_VERSION = "Invalid node registration IP version";
-    public static final String INVALID_NODE_REGISTRATION_URL_SERVER = "Invalid node registration server URL";
-    public static final String INVALID_NODE_REGISTRATION_NULL_IP_OR_URL_SERVER = "Invalid node registration IP or server URL are null";
-    public static final String INVALID_NODE_REGISTRATION_URL_RESERVED = "Invalid node registration server URL, domain reserved to another user";
-    public static final String INVALID_NODE_REGISTRATION_IP_FOR_URL_SERVER = "Invalid node registration server URL not matching expected IPV4";
+    public static final String INVALID_NODE_REGISTRATION_SERVER_URL = "Invalid node registration server URL";
+    public static final String INVALID_NODE_REGISTRATION_SERVER_URL_MISSING_HOST = "Missing host for node registration server url";
+    public static final String INVALID_NODE_REGISTRATION_URL_RESERVED = "Invalid node registration server URL, host reserved to another user";
+    public static final String INVALID_NODE_REGISTRATION_IP_FOR_SERVER_URL = "Invalid node registration server URL: host is not matching with expected ip";
     public static final String INVALID_NODE_REGISTRATION_SIGNATURE = "Invalid node registration signature";
     public static final String INVALID_NETWORK_TYPE = "Network type should be %s. Invalid network type %s";
     public static final String INVALID_TRANSACTION_TIME_FIELD = "Invalid transaction time field. Current node time: %s";

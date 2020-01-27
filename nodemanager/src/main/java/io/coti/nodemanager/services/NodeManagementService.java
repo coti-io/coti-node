@@ -4,6 +4,7 @@ import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
+import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.exceptions.NetworkNodeValidationException;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.nodemanager.data.*;
@@ -11,7 +12,7 @@ import io.coti.nodemanager.http.data.SingleNodeDetailsForWallet;
 import io.coti.nodemanager.model.ActiveNodes;
 import io.coti.nodemanager.model.NodeDailyActivities;
 import io.coti.nodemanager.model.NodeHistory;
-import io.coti.nodemanager.model.ReservedDomains;
+import io.coti.nodemanager.model.ReservedHosts;
 import io.coti.nodemanager.services.interfaces.INodeManagementService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.map.HashedMap;
@@ -23,7 +24,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -37,7 +37,6 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.stream.Collectors;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_NODE_REGISTRATION_URL_RESERVED;
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_NODE_REGISTRATION_URL_SERVER;
 import static io.coti.nodemanager.http.HttpStringConstants.NODE_ADDED_TO_NETWORK;
 
 @Slf4j
@@ -54,7 +53,7 @@ public class NodeManagementService implements INodeManagementService {
     @Autowired
     private ActiveNodes activeNodes;
     @Autowired
-    private ReservedDomains reservedDomains;
+    private ReservedHosts reservedHosts;
     @Autowired
     private INetworkService networkService;
     @Autowired
@@ -83,7 +82,7 @@ public class NodeManagementService implements INodeManagementService {
     public ResponseEntity<String> addNode(NetworkNodeData networkNodeData) {
         try {
             networkService.validateNetworkNodeData(networkNodeData);
-            validateDomainReservedToUser(networkNodeData);
+            validateReservedHostToNode(networkNodeData);
             networkService.addNode(networkNodeData);
             ActiveNodeData activeNodeData = new ActiveNodeData(networkNodeData.getHash(), networkNodeData);
             activeNodes.put(activeNodeData);
@@ -91,38 +90,37 @@ public class NodeManagementService implements INodeManagementService {
             propagateNetworkChanges();
             Thread.sleep(3000); // a delay for other nodes to make changes with the newly added node
             return ResponseEntity.status(HttpStatus.OK).body(String.format(NODE_ADDED_TO_NETWORK, networkNodeData.getNodeHash()));
+        } catch (CotiRunTimeException e) {
+            e.logMessage();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         } catch (Exception e) {
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         }
+
     }
 
-    private void validateDomainReservedToUser(NetworkNodeData networkNodeData) {
+    private void validateReservedHostToNode(NetworkNodeData networkNodeData) {
         if (networkNodeData.getNodeType().equals(NodeType.FullNode)) {
             String webServerUrl = networkNodeData.getWebServerUrl();
-            String domainName = networkService.getDomainName(webServerUrl);
-            if (domainName == null) {
-                log.error("Invalid URL: {},  failed to identify domain name", webServerUrl);
-                throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_URL_SERVER);
-            }
+            String host = networkService.getHost(webServerUrl);
 
-            Hash domainHash = calculateDomainHash(domainName);
-            ReservedDomainData reservedDomainData = reservedDomains.getByHash(domainHash);
+            Hash domainHash = calculateHostHash(host);
+            ReservedHostData reservedHostData = reservedHosts.getByHash(domainHash);
             Hash nodeHash = networkNodeData.getNodeHash();
-            if (reservedDomainData == null) {
-                reservedDomains.put(new ReservedDomainData(domainHash, nodeHash));
+            if (reservedHostData == null) {
+                reservedHosts.put(new ReservedHostData(domainHash, nodeHash));
             } else {
-                if (!reservedDomainData.getUserHash().equals(nodeHash)) {
-                    log.error("Invalid Domain: {},  already reserved to a different user", webServerUrl);
+                if (!reservedHostData.getNodeHash().equals(nodeHash)) {
+                    log.error("Invalid host. The host {} is already reserved to a different user", host);
                     throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_URL_RESERVED);
                 }
             }
         }
     }
 
-    private Hash calculateDomainHash(String webServerUrl) {
-        byte[] webServerUrlBytes = webServerUrl.getBytes(StandardCharsets.UTF_8);
-        return new Hash(ByteBuffer.allocate(webServerUrlBytes.length).put(webServerUrlBytes).array());
+    private Hash calculateHostHash(String host) {
+        return new Hash(host.getBytes(StandardCharsets.UTF_8));
     }
 
     public void addNodeHistory(NetworkNodeData networkNodeData, NetworkNodeStatus nodeStatus, Instant currentEventDateTime) {

@@ -1,10 +1,13 @@
 package io.coti.basenode.exceptions;
 
-import javax.validation.ValidationException;
-
-public class NetworkNodeValidationException extends ValidationException {
+public class NetworkNodeValidationException extends CotiRunTimeException {
 
     public NetworkNodeValidationException(String message) {
         super(message);
     }
+
+    public NetworkNodeValidationException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
 }
