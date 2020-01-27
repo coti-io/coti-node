@@ -28,7 +28,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.*;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -163,8 +162,7 @@ public class NodeManagementService implements INodeManagementService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).
                     body(new Response(String.format(ADDING_EVENT_PAIR_FAILED, nodeHash)));
         }
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        LocalDateTime localDateTimeEvent = LocalDateTime.parse(request.getStartDateTimeUTC(), formatter);
+        LocalDateTime localDateTimeEvent = LocalDateTime.ofInstant(request.getStartDateTimeUTC(), ZoneOffset.UTC);
         if (!localDateTimeForSecondEvent.isAfter(localDateTimeEvent)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).
                     body(new Response(String.format(ADDING_EVENT_PAIR_FAILED, nodeHash)));
@@ -176,7 +174,7 @@ public class NodeManagementService implements INodeManagementService {
             return response1;
         }
 
-        addNodeEventAdminRequest = new AddNodeEventAdminRequest(nodeHash, formatter.format(localDateTimeForSecondEvent), NodeTypeName.FullNode.getNode(), NetworkNodeStatus.INACTIVE.toString());
+        addNodeEventAdminRequest = new AddNodeEventAdminRequest(nodeHash, request.getStartDateTimeUTC(), NodeTypeName.FullNode.getNode(), NetworkNodeStatus.INACTIVE.toString());
         return addNodeEventAdmin(addNodeEventAdminRequest, true);
     }
 
@@ -221,8 +219,7 @@ public class NodeManagementService implements INodeManagementService {
 
         Hash nodeHash = request.getNodeHash();
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        LocalDateTime localDateTimeEvent = LocalDateTime.parse(request.getRecordDateTimeUTC(), formatter);
+        LocalDateTime localDateTimeEvent = LocalDateTime.ofInstant(request.getRecordDateTimeUTC(), ZoneOffset.UTC);
         Instant instantDateTimeEvent = localDateTimeEvent.toInstant(ZoneOffset.UTC);
         LocalDate localDateForEvent = localDateTimeEvent.toLocalDate();
 
@@ -366,7 +363,7 @@ public class NodeManagementService implements INodeManagementService {
             } else {
                 if (checkIfNodeEventByRefIsActive(nodeDailyActivityData.getNodeHash(), eventDate, eventNodeHistoryData, nodeNetworkDataRecord.getStatusChainRef())) {
                     return nodeNetworkDataRecord.getStatusChainRef();
-                } else{
+                } else {
                     return new ImmutablePair<>(eventDate, nodeNetworkDataRecordHash);
                 }
             }
@@ -388,7 +385,7 @@ public class NodeManagementService implements INodeManagementService {
                 } else {
                     if (checkIfNodeEventByRefIsActive(nodeDailyActivityData.getNodeHash(), localDate, nodeHistoryData, nodeNetworkDataRecord.getStatusChainRef())) {
                         return nodeNetworkDataRecord.getStatusChainRef();
-                    } else{
+                    } else {
                         return new ImmutablePair<>(localDate, nodeNetworkDataRecordHash);
                     }
                 }

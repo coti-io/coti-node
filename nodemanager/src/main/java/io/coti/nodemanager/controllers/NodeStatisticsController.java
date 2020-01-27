@@ -33,6 +33,7 @@ public class NodeStatisticsController {
         GetNodeEventStatisticsResponse getNodeEventStatisticsResponse = new GetNodeEventStatisticsResponse(networkHistoryService.getNodeEvents(getNodeStatisticsRequest, true));
         return ResponseEntity.ok(getNodeEventStatisticsResponse);
     }
+
     @PostMapping(path = "/days")
     public ResponseEntity<GetNodeDailyStatisticsResponse> getNodeDailyStats(@Valid @RequestBody GetNodeStatisticsRequest getNodeStatisticsRequest) {
         GetNodeDailyStatisticsResponse getNodeDailyStatisticsResponse = new GetNodeDailyStatisticsResponse(networkHistoryService.getNodeDailyStats(getNodeStatisticsRequest));
