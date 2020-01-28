@@ -43,6 +43,8 @@ public class BaseNodeNetworkService implements INetworkService {
     private String kycServerPublicKey;
     @Value("${network}")
     protected NetworkType networkType;
+    @Value("${validate.server.url:true}")
+    private boolean validateServerUrl;
     private String nodeManagerPropagationAddress;
     private String connectToNetworkUrl;
     @Autowired
@@ -187,7 +189,7 @@ public class BaseNodeNetworkService implements INetworkService {
             log.error("Invalid registrar node hash for node {}", networkNodeData.getNodeHash());
             throw new NetworkNodeValidationException(INVALID_NODE_REGISTRAR);
         }
-        if (networkNodeData.getNodeType().equals(NodeType.FullNode)) {
+        if (networkNodeData.getNodeType().equals(NodeType.FullNode) && validateServerUrl) {
             validateAddressAndServerUrl(networkNodeData);
         }
 
