@@ -19,6 +19,7 @@ public class NodeNetworkDataRecord implements Serializable {
     private NetworkNodeStatus nodeStatus;
     private NetworkNodeData networkNodeData;
     private Pair<LocalDate, Hash> statusChainRef;
+    private boolean notOriginalEvent;
 
     public NodeNetworkDataRecord() {
     }
@@ -36,10 +37,5 @@ public class NodeNetworkDataRecord implements Serializable {
 
     public Instant getRecordTime() {
         return recordTime.minusNanos(recordTime.getNano());
-    }
-
-    public boolean isOriginalEvent() {
-        return !(this.networkNodeData.getAddress() == null || this.networkNodeData.getAddress().isEmpty()
-                || this.networkNodeData.getHttpPort() == null || this.networkNodeData.getHttpPort().isEmpty());
     }
 }

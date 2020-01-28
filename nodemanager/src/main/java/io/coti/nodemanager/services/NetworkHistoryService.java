@@ -308,7 +308,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
             Hash nodeHash = getNodeActivationTimeRequest.getNodeHash();
             NodeNetworkDataRecord nodeNetworkDataRecord = getNodeNetworkFirstDataRecord(nodeHash);
             NodeNetworkDataRecord originalActivationDataRecord = nodeNetworkDataRecord;
-            if (!nodeNetworkDataRecord.isOriginalEvent()) {
+            if (nodeNetworkDataRecord.isNotOriginalEvent()) {
                 originalActivationDataRecord = getOriginalActivationEventRecord(nodeHash);
             }
             return ResponseEntity.ok()
@@ -331,7 +331,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
             Optional<Map.Entry<Hash, NodeNetworkDataRecord>> hashNodeNetworkDataRecordEntry = nodeHistoryByHash.getNodeNetworkDataRecordMap().entrySet().stream()
                     .filter(nodeNetworkDataRecord ->
                             nodeNetworkDataRecord.getValue().getNodeStatus().equals(NetworkNodeStatus.ACTIVE)
-                                    && nodeNetworkDataRecord.getValue().isOriginalEvent()
+                                    && !nodeNetworkDataRecord.getValue().isNotOriginalEvent()
                     ).findFirst();
             if (hashNodeNetworkDataRecordEntry.isPresent()) {
                 originalActivationEventRecord = hashNodeNetworkDataRecordEntry.get().getValue();

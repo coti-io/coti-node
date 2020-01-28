@@ -1,13 +1,11 @@
 package io.coti.basenode.services;
 
-import com.google.gson.Gson;
 import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeRegistrationCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.NetworkException;
 import io.coti.basenode.exceptions.NetworkNodeValidationException;
 import io.coti.basenode.http.CustomHttpComponentsClientHttpRequestFactory;
-import io.coti.basenode.http.Response;
 import io.coti.basenode.services.interfaces.ICommunicationService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
@@ -190,7 +188,7 @@ public class BaseNodeNetworkService implements INetworkService {
             throw new NetworkNodeValidationException(INVALID_NODE_REGISTRAR);
         }
         if (networkNodeData.getNodeType().equals(NodeType.FullNode)) {
-            validateHost(networkNodeData);
+            validateAddressAndServerUrl(networkNodeData);
         }
 
         if (networkNodeData.getNodeType().equals(NodeType.FullNode) && !validateFeeData(networkNodeData.getFeeData())) {
@@ -199,40 +197,56 @@ public class BaseNodeNetworkService implements INetworkService {
         }
     }
 
-    private void validateHost(NetworkNodeData networkNodeData) {
+    private void validateAddressAndServerUrl(NetworkNodeData networkNodeData) {
         InetAddressValidator validator = InetAddressValidator.getInstance();
         String ip = networkNodeData.getAddress();
         if (!validator.isValidInet4Address(ip)) {
             log.error("Invalid IP, expected IPV4, received ip {}", ip);
-            throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_IP_VERSION);
+            throw new NetworkNodeValidationException(INVALID_NODE_IP_VERSION);
         }
         String webServerUrl = networkNodeData.getWebServerUrl();
+        String protocol = getProtocol(webServerUrl);
+        if (protocol == null || protocol != "https") {
+            log.error("Server url requires ssl. Server url: {}", webServerUrl);
+            throw new NetworkNodeValidationException(INVALID_NODE_SERVER_URL_SSL_REQUIRED);
+        }
         String host = getHost(webServerUrl);
         if (host == null) {
-            log.error("Node registration requires host. Server url: {}", webServerUrl);
-            throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_SERVER_URL_MISSING_HOST);
+            log.error("Server url requires host. Server url: {}", webServerUrl);
+            throw new NetworkNodeValidationException(INVALID_NODE_SERVER_URL_MISSING_HOST);
         }
         try {
             if (!Inet4Address.getByName(host).getHostAddress().equals(ip)) {
                 log.error("Invalid IP: {}, does not match host: {}", ip, host);
-                throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_IP_FOR_SERVER_URL);
+                throw new NetworkNodeValidationException(INVALID_NODE_IP_FOR_SERVER_URL);
             }
         } catch (Exception e) {
             log.error("IP could not be verified: {} ", e.getMessage());
-            throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_IP_FOR_SERVER_URL, e);
+            throw new NetworkNodeValidationException(INVALID_NODE_IP_FOR_SERVER_URL, e);
         }
     }
 
     @Override
     public String getHost(String webServerUrl) {
+        URL url = getUrl(webServerUrl);
+        return url == null ? null : url.getHost();
+    }
+
+    @Override
+    public String getProtocol(String webServerUrl) {
+        URL url = getUrl(webServerUrl);
+        return url == null ? null : url.getProtocol();
+    }
+
+    private URL getUrl(String webServerUrl) {
         URL url;
         try {
             url = new URL(webServerUrl);
         } catch (MalformedURLException e) {
             log.error("Node registration requires a valid URL address: {}", webServerUrl);
-            throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_SERVER_URL, e);
+            throw new NetworkNodeValidationException(INVALID_NODE_SERVER_URL, e);
         }
-        return url == null ? null : url.getHost();
+        return url;
     }
 
     @Override

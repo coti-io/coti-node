@@ -27,6 +27,8 @@ public interface INetworkService {
 
     void validateNetworkNodeData(NetworkNodeData networkNodeData) throws ValidationException;
 
+    String getProtocol(String webServerUrl);
+
     boolean validateFeeData(FeeData feeData);
 
     List<NetworkNodeData> getShuffledNetworkNodeDataListFromMapValues(NodeType nodeType);

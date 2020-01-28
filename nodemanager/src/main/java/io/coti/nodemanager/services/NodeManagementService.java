@@ -36,7 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.stream.Collectors;
 
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_NODE_REGISTRATION_URL_RESERVED;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_NODE_SERVER_URL_RESERVED;
 import static io.coti.nodemanager.http.HttpStringConstants.NODE_ADDED_TO_NETWORK;
 
 @Slf4j
@@ -113,7 +113,7 @@ public class NodeManagementService implements INodeManagementService {
             } else {
                 if (!reservedHostData.getNodeHash().equals(nodeHash)) {
                     log.error("Invalid host. The host {} is already reserved to a different user", host);
-                    throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_URL_RESERVED);
+                    throw new NetworkNodeValidationException(INVALID_NODE_SERVER_URL_RESERVED);
                 }
             }
         }
