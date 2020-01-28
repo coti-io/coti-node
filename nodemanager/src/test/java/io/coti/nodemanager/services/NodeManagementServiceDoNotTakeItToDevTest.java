@@ -7,14 +7,11 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.*;
 import io.coti.nodemanager.data.NetworkNodeStatus;
 import io.coti.nodemanager.database.RocksDBConnector;
-import io.coti.nodemanager.http.AddNodeBeginEventPairAdminRequest;
-import io.coti.nodemanager.http.AddNodeEventAdminRequest;
+//import io.coti.nodemanager.http.AddNodeBeginEventPairAdminRequest;
+//import io.coti.nodemanager.http.AddNodeEventAdminRequest;
 import io.coti.nodemanager.http.GetNodeActivationTimeRequest;
 import io.coti.nodemanager.http.GetNodeActivationTimeResponse;
-import io.coti.nodemanager.model.ActiveNodes;
-import io.coti.nodemanager.model.NodeDailyActivities;
-import io.coti.nodemanager.model.NodeHistory;
-import io.coti.nodemanager.model.StakingNodes;
+import io.coti.nodemanager.model.*;
 import io.coti.nodemanager.services.interfaces.IHealthCheckService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
@@ -47,6 +44,8 @@ public class NodeManagementServiceDoNotTakeItToDevTest {
     private NodeManagementService nodeManagementService;
     @Autowired
     private NetworkHistoryService networkHistoryService;
+    @MockBean
+    private ReservedHosts reservedHosts;
     @Autowired
     private InitializationService initializationService;
     @Autowired
@@ -219,9 +218,9 @@ public class NodeManagementServiceDoNotTakeItToDevTest {
         LocalDateTime startDateTime = LocalDateTime.of(2019, 11, 25, 0, 0, 0);
         Instant localDateTime;
 
-        for (int i = 0; i < 40; i++) {
-            for (int j = 0; j < 24; j++) {
-                for (int k = 0; k < 10; k++) {  // or 60
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 2; j++) {
+                for (int k = 0; k < 1; k++) {  // or 60
                     nodeStatus = NetworkNodeStatus.ACTIVE;
                     localDateTime = LocalDateTime.of(startDateTime.getYear(), startDateTime.getMonth(), startDateTime.getDayOfMonth(), j, k, 0).toInstant(ZoneOffset.UTC);
                     nodeManagementService.addNodeHistory(networkNodeData3, nodeStatus, localDateTime);
@@ -402,8 +401,8 @@ public class NodeManagementServiceDoNotTakeItToDevTest {
                 nodeStatus = NetworkNodeStatus.ACTIVE.toString();
             }
 
-            AddNodeEventAdminRequest addNodeEventAdminRequest = new AddNodeEventAdminRequest(fakeNode8, eventInstant, NodeTypeName.FullNode.getNode(), nodeStatus);
-            nodeManagementService.addNodeEventSingleAdmin(addNodeEventAdminRequest);
+//            AddNodeEventAdminRequest addNodeEventAdminRequest = new AddNodeEventAdminRequest(fakeNode8, eventInstant, NodeTypeName.FullNode.getNode(), nodeStatus);
+//            nodeManagementService.addNodeEventSingleAdmin(addNodeEventAdminRequest);
         }
 
         log.info("fakeNode8 finished");
@@ -467,39 +466,39 @@ public class NodeManagementServiceDoNotTakeItToDevTest {
         Instant newEventDateTime = LocalDateTime.of(2020, 1, startDateTime.getDayOfMonth(), 3, 7, 0).toInstant(ZoneOffset.UTC);
         String eventNodeStatus = NetworkNodeStatus.ACTIVE.toString();
 
-        AddNodeEventAdminRequest addNodeEventAdminRequest = new AddNodeEventAdminRequest(fakeNode7, newEventDateTime, NodeTypeName.FullNode.toString(), eventNodeStatus);
-        ResponseEntity<IResponse> responseResponseEntity = nodeManagementService.addNodeEventSingleAdmin(addNodeEventAdminRequest);
-
-        Assert.assertTrue(responseResponseEntity.getStatusCode().equals(HttpStatus.BAD_REQUEST));
-
-        addNodeEventAdminRequest.setNodeStatus(NetworkNodeStatus.INACTIVE.toString());
-        responseResponseEntity = nodeManagementService.addNodeEventSingleAdmin(addNodeEventAdminRequest);
-
-        Assert.assertTrue(responseResponseEntity.getStatusCode().equals(HttpStatus.BAD_REQUEST));
-
-        newEventDateTime = LocalDateTime.of(2020, 2, startDateTime.getDayOfMonth(), 3, 7, 0).toInstant(ZoneOffset.UTC);
-        addNodeEventAdminRequest.setRecordDateTimeUTC(newEventDateTime);
-        addNodeEventAdminRequest.setNodeStatus(NetworkNodeStatus.ACTIVE.toString());
-
-        responseResponseEntity = nodeManagementService.addNodeEventSingleAdmin(addNodeEventAdminRequest);
-
-        Assert.assertTrue(responseResponseEntity.getStatusCode().equals(HttpStatus.BAD_REQUEST));
-
-        newEventDateTime = LocalDateTime.of(2020, 1, startDateTime.getDayOfMonth() + 1, 3, 7, 0).toInstant(ZoneOffset.UTC);
-        addNodeEventAdminRequest.setRecordDateTimeUTC(newEventDateTime);
-        addNodeEventAdminRequest.setNodeStatus(NetworkNodeStatus.ACTIVE.toString());
-
-        responseResponseEntity = nodeManagementService.addNodeEventSingleAdmin(addNodeEventAdminRequest);
-
-        Assert.assertTrue(responseResponseEntity.getStatusCode().equals(HttpStatus.BAD_REQUEST));
-
-        newEventDateTime = LocalDateTime.of(2020, 1, startDateTime.getDayOfMonth() + 2, 3, 7, 0).toInstant(ZoneOffset.UTC);
-        addNodeEventAdminRequest.setRecordDateTimeUTC(newEventDateTime);
-        addNodeEventAdminRequest.setNodeStatus(NetworkNodeStatus.ACTIVE.toString());
-
-        responseResponseEntity = nodeManagementService.addNodeEventSingleAdmin(addNodeEventAdminRequest);
-
-        Assert.assertTrue(responseResponseEntity.getStatusCode().equals(HttpStatus.BAD_REQUEST));
+//        AddNodeEventAdminRequest addNodeEventAdminRequest = new AddNodeEventAdminRequest(fakeNode7, newEventDateTime, NodeTypeName.FullNode.toString(), eventNodeStatus);
+//        ResponseEntity<IResponse> responseResponseEntity = nodeManagementService.addNodeEventSingleAdmin(addNodeEventAdminRequest);
+//
+//        Assert.assertTrue(responseResponseEntity.getStatusCode().equals(HttpStatus.BAD_REQUEST));
+//
+//        addNodeEventAdminRequest.setNodeStatus(NetworkNodeStatus.INACTIVE.toString());
+//        responseResponseEntity = nodeManagementService.addNodeEventSingleAdmin(addNodeEventAdminRequest);
+//
+//        Assert.assertTrue(responseResponseEntity.getStatusCode().equals(HttpStatus.BAD_REQUEST));
+//
+//        newEventDateTime = LocalDateTime.of(2020, 2, startDateTime.getDayOfMonth(), 3, 7, 0).toInstant(ZoneOffset.UTC);
+//        addNodeEventAdminRequest.setRecordDateTimeUTC(newEventDateTime);
+//        addNodeEventAdminRequest.setNodeStatus(NetworkNodeStatus.ACTIVE.toString());
+//
+//        responseResponseEntity = nodeManagementService.addNodeEventSingleAdmin(addNodeEventAdminRequest);
+//
+//        Assert.assertTrue(responseResponseEntity.getStatusCode().equals(HttpStatus.BAD_REQUEST));
+//
+//        newEventDateTime = LocalDateTime.of(2020, 1, startDateTime.getDayOfMonth() + 1, 3, 7, 0).toInstant(ZoneOffset.UTC);
+//        addNodeEventAdminRequest.setRecordDateTimeUTC(newEventDateTime);
+//        addNodeEventAdminRequest.setNodeStatus(NetworkNodeStatus.ACTIVE.toString());
+//
+//        responseResponseEntity = nodeManagementService.addNodeEventSingleAdmin(addNodeEventAdminRequest);
+//
+//        Assert.assertTrue(responseResponseEntity.getStatusCode().equals(HttpStatus.BAD_REQUEST));
+//
+//        newEventDateTime = LocalDateTime.of(2020, 1, startDateTime.getDayOfMonth() + 2, 3, 7, 0).toInstant(ZoneOffset.UTC);
+//        addNodeEventAdminRequest.setRecordDateTimeUTC(newEventDateTime);
+//        addNodeEventAdminRequest.setNodeStatus(NetworkNodeStatus.ACTIVE.toString());
+//
+//        responseResponseEntity = nodeManagementService.addNodeEventSingleAdmin(addNodeEventAdminRequest);
+//
+//        Assert.assertTrue(responseResponseEntity.getStatusCode().equals(HttpStatus.BAD_REQUEST));
 
     }
 
@@ -581,17 +580,17 @@ public class NodeManagementServiceDoNotTakeItToDevTest {
 //
 //        Assert.assertTrue(getNodeActivationTimeResponse2.getActivationTime().isBefore(getNodeActivationTimeResponse2.getOriginalActivationTime()));
 
-        AddNodeBeginEventPairAdminRequest addNodeBeginPairEventRequest = new AddNodeBeginEventPairAdminRequest();
-        addNodeBeginPairEventRequest.setNodeHash(fakeNode7);
-        addNodeBeginPairEventRequest.setStartDateTimeUTC(newEventDateTime);
-
-        responseResponseEntity = nodeManagementService.addNodeBeginEventPairAdmin(addNodeBeginPairEventRequest);
-        Assert.assertTrue(responseResponseEntity.getStatusCode().equals(HttpStatus.OK));
-
-        ResponseEntity<IResponse> responseResponseEntity2 = networkHistoryService.getNodeActivationTime(getNodeActivationTimeRequest);
-
-        Assert.assertTrue(responseResponseEntity2.getStatusCode().equals(HttpStatus.OK));
-        GetNodeActivationTimeResponse getNodeActivationTimeResponse2 = (GetNodeActivationTimeResponse) responseResponseEntity2.getBody();
+//        AddNodeBeginEventPairAdminRequest addNodeBeginPairEventRequest = new AddNodeBeginEventPairAdminRequest();
+//        addNodeBeginPairEventRequest.setNodeHash(fakeNode7);
+//        addNodeBeginPairEventRequest.setStartDateTimeUTC(newEventDateTime);
+//
+//        responseResponseEntity = nodeManagementService.addNodeBeginEventPairAdmin(addNodeBeginPairEventRequest);
+//        Assert.assertTrue(responseResponseEntity.getStatusCode().equals(HttpStatus.OK));
+//
+//        ResponseEntity<IResponse> responseResponseEntity2 = networkHistoryService.getNodeActivationTime(getNodeActivationTimeRequest);
+//
+//        Assert.assertTrue(responseResponseEntity2.getStatusCode().equals(HttpStatus.OK));
+//        GetNodeActivationTimeResponse getNodeActivationTimeResponse2 = (GetNodeActivationTimeResponse) responseResponseEntity2.getBody();
 
 //        Assert.assertTrue(getNodeActivationTimeResponse2.getActivationTime().isBefore(getNodeActivationTimeResponse2.getOriginalActivationTime()));
 
