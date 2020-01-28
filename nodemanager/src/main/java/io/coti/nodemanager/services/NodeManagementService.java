@@ -156,14 +156,14 @@ public class NodeManagementService implements INodeManagementService {
 
         AddNodeEventAdminRequest addNodeEventAdminRequest;
         Hash nodeHash = request.getNodeHash();
-        LocalDateTime localDateTimeForSecondEvent = findVeryFirstActiveEvent(nodeHash);
+        Instant dateTimeForSecondEvent = findVeryFirstActiveEvent(nodeHash);
 
-        if (localDateTimeForSecondEvent == null) {
+        if (dateTimeForSecondEvent == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).
                     body(new Response(String.format(ADDING_EVENT_PAIR_FAILED, nodeHash)));
         }
-        LocalDateTime localDateTimeEvent = LocalDateTime.ofInstant(request.getStartDateTimeUTC(), ZoneOffset.UTC);
-        if (!localDateTimeForSecondEvent.isAfter(localDateTimeEvent)) {
+        Instant dateTimeEvent = request.getStartDateTimeUTC();
+        if (!dateTimeForSecondEvent.isAfter(dateTimeEvent)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).
                     body(new Response(String.format(ADDING_EVENT_PAIR_FAILED, nodeHash)));
         }
@@ -174,11 +174,11 @@ public class NodeManagementService implements INodeManagementService {
             return response1;
         }
 
-        addNodeEventAdminRequest = new AddNodeEventAdminRequest(nodeHash, request.getStartDateTimeUTC(), NodeTypeName.FullNode.getNode(), NetworkNodeStatus.INACTIVE.toString());
+        addNodeEventAdminRequest = new AddNodeEventAdminRequest(nodeHash, dateTimeForSecondEvent, NodeTypeName.FullNode.getNode(), NetworkNodeStatus.INACTIVE.toString());
         return addNodeEventAdmin(addNodeEventAdminRequest, true);
     }
 
-    private LocalDateTime findVeryFirstActiveEvent(Hash nodeHash) {
+    private Instant findVeryFirstActiveEvent(Hash nodeHash) {
         NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
         if (nodeDailyActivityData == null) {
             return null;
@@ -197,7 +197,7 @@ public class NodeManagementService implements INodeManagementService {
                 if (nodeNetworkDataRecord.getNodeStatus() != NetworkNodeStatus.ACTIVE) {
                     return null;
                 } else {
-                    return nodeNetworkDataRecord.getRecordTime().atZone(ZoneId.of("UTC")).toLocalDateTime();
+                    return nodeNetworkDataRecord.getRecordTime();
                 }
             } else {
                 localDate = nodeDailyActivityData.getNodeDaySet().higher(localDate);
@@ -219,9 +219,8 @@ public class NodeManagementService implements INodeManagementService {
 
         Hash nodeHash = request.getNodeHash();
 
-        LocalDateTime localDateTimeEvent = LocalDateTime.ofInstant(request.getRecordDateTimeUTC(), ZoneOffset.UTC);
-        Instant instantDateTimeEvent = localDateTimeEvent.toInstant(ZoneOffset.UTC);
-        LocalDate localDateForEvent = localDateTimeEvent.toLocalDate();
+        Instant instantDateTimeEvent = request.getRecordDateTimeUTC();
+        LocalDate localDateForEvent = LocalDateTime.ofInstant(instantDateTimeEvent, ZoneOffset.UTC).toLocalDate();
 
         Instant nowInstant = Instant.now().atZone(ZoneId.of("UTC")).toInstant();
         if (instantDateTimeEvent.isAfter(nowInstant)) {
