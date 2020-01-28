@@ -16,9 +16,9 @@ public class GetDisputesData implements ISignable, ISignValidatable {
 
     private List<Hash> disputeHashes;
     @NotNull
-    private ActionSide disputeSide;
+    private @Valid ActionSide disputeSide;
     @NotNull
-    private Hash userHash;
+    private @Valid Hash userHash;
     @NotNull
     private @Valid SignatureData userSignature;
 

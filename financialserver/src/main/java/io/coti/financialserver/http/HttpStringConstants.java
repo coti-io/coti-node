@@ -14,6 +14,7 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String DISPUTE_MERCHANT_NOT_FOUND = "Merchant not found";
     public static final String DISPUTE_NOT_FOUND = "Dispute not found";
     public static final String DISPUTE_UNAUTHORIZED = "Unauthorized dispute request";
+    public static final String DISPUTE_INVALID_SIDE = "Invalid dispute side";
     public static final String DISPUTE_ITEM_NOT_FOUND = "Dispute item not found";
     public static final String DISPUTE_ITEM_STATUS_FINAL = "Dispute item status is final. It can not be changed";
     public static final String DISPUTE_ITEM_STATUS_INVALID_CHANGE = "Dispute item status change is invalid";

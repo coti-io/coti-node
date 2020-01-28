@@ -185,12 +185,14 @@ public class DisputeService {
 
         Collection<UserDisputesData> userDisputesCollection = userDisputesCollectionMap.get(getDisputesData.getDisputeSide());
         if (userDisputesCollection == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_UNAUTHORIZED, STATUS_ERROR));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_INVALID_SIDE, STATUS_ERROR));
         }
-        UserDisputesData userDisputesData = userDisputesCollection.getByHash(getDisputesData.getUserHash());
 
+        List<DisputeData> disputesData = new ArrayList<>();
+
+        UserDisputesData userDisputesData = userDisputesCollection.getByHash(getDisputesData.getUserHash());
         if (userDisputesData == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_UNAUTHORIZED, STATUS_ERROR));
+            return ResponseEntity.status(HttpStatus.OK).body(new GetDisputesResponse(disputesData, getDisputesData.getDisputeSide(), getDisputesData.getUserHash()));
         }
 
         List<Hash> userDisputeHashes = userDisputesData.getDisputeHashes();
@@ -199,19 +201,14 @@ public class DisputeService {
             getDisputesData.setDisputeHashes(userDisputesData.getDisputeHashes());
         }
 
-        List<DisputeData> disputesData = new ArrayList<>();
-
         for (Hash disputeHash : getDisputesData.getDisputeHashes()) {
-            DisputeData disputeData = disputes.getByHash(disputeHash);
-
-            if (disputeData == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(disputeHash + " " + DISPUTE_NOT_FOUND, STATUS_ERROR));
-            }
-
             if (!userDisputeHashes.contains(disputeHash)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_UNAUTHORIZED, STATUS_ERROR));
             }
-
+            DisputeData disputeData = disputes.getByHash(disputeHash);
+            if (disputeData == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(disputeHash + " " + DISPUTE_NOT_FOUND, STATUS_ERROR));
+            }
             disputesData.add(disputeData);
         }
 
