@@ -80,9 +80,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                 dspConfirmed.incrementAndGet();
                 if (transactionData.isTrustChainConsensus()) {
                     totalConfirmed.incrementAndGet();
-                    transactionData.getBaseTransactions().forEach(baseTransactionData ->
-                            balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount())
-                    );
+                    balanceService.commitBaseTransactions(transactionData);
                 }
                 transactionIndexData = nextTransactionIndexData;
             }
@@ -166,13 +164,8 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         Instant dspConsensusTime = transactionData.getDspConsensusResult().getIndexingTime();
         Instant transactionConsensusUpdateTime = trustChainConsensusTime.isAfter(dspConsensusTime) ? trustChainConsensusTime : dspConsensusTime;
         transactionData.setTransactionConsensusUpdateTime(transactionConsensusUpdateTime);
-        transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount()));
         totalConfirmed.incrementAndGet();
-
-        transactionData.getBaseTransactions().forEach(baseTransactionData -> {
-            Hash addressHash = baseTransactionData.getAddressHash();
-            balanceService.continueHandleBalanceChanges(addressHash);
-        });
+        balanceService.commitBaseTransactions(transactionData);
 
         continueHandleAddressHistoryChanges(transactionData);
     }
@@ -263,8 +256,8 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         continueHandleDSPConfirmedTransaction(transactionData);
         dspConfirmed.incrementAndGet();
         if (transactionData.isTrustChainConsensus()) {
-            transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount()));
             totalConfirmed.incrementAndGet();
+            balanceService.commitBaseTransactions(transactionData);
         }
     }
 

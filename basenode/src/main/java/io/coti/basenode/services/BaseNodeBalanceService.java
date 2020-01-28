@@ -80,6 +80,15 @@ public class BaseNodeBalanceService implements IBalanceService {
     }
 
     @Override
+    public void commitBaseTransactions(TransactionData transactionData) {
+        transactionData.getBaseTransactions().forEach(baseTransactionData -> {
+                updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount());
+                continueHandleBalanceChanges(baseTransactionData.getAddressHash());
+        });
+
+    }
+
+    @Override
     public void rollbackBaseTransactions(TransactionData transactionData) {
         log.warn("Rollback transaction {} ", transactionData.getHash());
         transactionData.getBaseTransactions().forEach(baseTransactionData ->

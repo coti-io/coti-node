@@ -20,6 +20,8 @@ public interface IBalanceService {
 
     void continueHandleBalanceChanges(Hash addressHash);
 
+    void commitBaseTransactions(TransactionData transactionData);
+
     void rollbackBaseTransactions(TransactionData transactionData);
 
     void validateBalancesOnInit();

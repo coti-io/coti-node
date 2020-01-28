@@ -186,18 +186,11 @@ public class DspVoteService extends BaseNodeDspVoteService {
     }
 
     public synchronized void setIndexForDspResult(TransactionData transactionData, DspConsensusResult dspConsensusResult) {
-        if (dspConsensusResult.isDspConsensus()) {
-            dspConsensusResult.setIndex(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
-            dspConsensusResult.setIndexingTime(Instant.now());
-            dspConsensusCrypto.signMessage(dspConsensusResult);
-            transactionData.setDspConsensusResult(dspConsensusResult);
-            transactionIndexService.insertNewTransactionIndex(transactionData);
-        } else {
-            dspConsensusResult.setIndex(0);  //todo in fact, there is a transaction with zero index - zerospend first transaction. maybe use real index?
-            dspConsensusResult.setIndexingTime(Instant.now());
-            dspConsensusCrypto.signMessage(dspConsensusResult);
-            transactionData.setDspConsensusResult(dspConsensusResult);
-        }
+        dspConsensusResult.setIndex(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
+        dspConsensusResult.setIndexingTime(Instant.now());
+        dspConsensusCrypto.signMessage(dspConsensusResult);
+        transactionData.setDspConsensusResult(dspConsensusResult);
+        transactionIndexService.insertNewTransactionIndex(transactionData);
     }
 
     public void publishDecision(Hash transactionHash) {
