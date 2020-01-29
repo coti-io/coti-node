@@ -269,6 +269,7 @@ public class NodeManagementService implements INodeManagementService {
         NetworkNodeStatus nodeStatusForEvent = NetworkNodeStatus.enumFromString(request.getNodeStatus());
         NodeNetworkDataRecord newNodeNetworkDataRecord =
                 new NodeNetworkDataRecord(instantDateTimeEvent, nodeStatusForEvent, networkNodeData);
+        newNodeNetworkDataRecord.setNotOriginalEvent(true);
 
         try {
             synchronized (addLockToLockMap(nodeHash)) {
