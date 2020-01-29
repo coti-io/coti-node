@@ -41,7 +41,7 @@ public class BaseNodeHttpStringConstants {
     public static final String INVALID_NODE_IP_VERSION = "Invalid node IP version";
     public static final String INVALID_NODE_SERVER_URL = "Invalid node server URL";
     public static final String INVALID_NODE_SERVER_URL_MISSING_HOST = "Missing host for node server url";
-    public static final String INVALID_NODE_SERVER_URL_RESERVED = "Invalid node server URL: host reserved to another user";
+    public static final String INVALID_NODE_SERVER_URL_HOST_RESERVED = "Invalid node server URL: host reserved to another user";
     public static final String INVALID_NODE_SERVER_URL_SSL_REQUIRED = "Invalid node server URL: SSL required";
     public static final String INVALID_NODE_IP_FOR_SERVER_URL = "Invalid node server URL: host is not matching with expected ip";
     public static final String INVALID_NODE_REGISTRATION_SIGNATURE = "Invalid node registration signature";
