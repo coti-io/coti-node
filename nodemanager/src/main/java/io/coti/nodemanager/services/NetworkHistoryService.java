@@ -271,10 +271,12 @@ public class NetworkHistoryService implements INetworkHistoryService {
         Hash nodeHash = getNodeStatisticsRequest.getNodeHash();
         LocalDate startDate = getNodeStatisticsRequest.getStartDate();
         LocalDate endDate = getNodeStatisticsRequest.getEndDate();
-        NodeDailyActivityData nodeDailyActivityData = getNodeDailyActivityDataVerifyRange(nodeHash, startDate, endDate);
+        if (endDate.isBefore(startDate)) {
+            throw new NetworkHistoryValidationException("Invalid dates range Start: " + startDate + " End: " + endDate);
+        }
+        NodeDailyActivityData nodeDailyActivityData = getNodeDailyActivityData(nodeHash);
         LocalDate todayLocalDate = LocalDate.now(ZoneId.of("UTC"));
         endDate = endDate.isAfter(todayLocalDate) ? todayLocalDate : endDate;
-
 
         LocalDate firstDateWithEvent = nodeDailyActivityData.getNodeDaySet().first();
         startDate = getFirstRelevantDate(startDate, endDate, firstDateWithEvent);
@@ -284,13 +286,10 @@ public class NetworkHistoryService implements INetworkHistoryService {
         return new NodeActivityData(activityUpTimeInSeconds, numberOfDays);
     }
 
-    private NodeDailyActivityData getNodeDailyActivityDataVerifyRange(Hash nodeHash, LocalDate startDate, LocalDate endDate) {
+    private NodeDailyActivityData getNodeDailyActivityData(Hash nodeHash) {
         NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
         if (nodeDailyActivityData == null) {
             throw new NetworkHistoryValidationException("Invalid node hash " + nodeHash);
-        }
-        if (endDate.isBefore(startDate)) {
-            throw new NetworkHistoryValidationException("Invalid dates range Start: " + startDate + " End: " + endDate);
         }
         return nodeDailyActivityData;
     }
@@ -363,9 +362,12 @@ public class NetworkHistoryService implements INetworkHistoryService {
         Hash nodeHash = getNodeStatisticsRequest.getNodeHash();
         LocalDate requestedStartDate = getNodeStatisticsRequest.getStartDate();
         LocalDate requestedEndDate = getNodeStatisticsRequest.getEndDate();
+        if (requestedEndDate.isBefore(requestedStartDate)) {
+            throw new NetworkHistoryValidationException("Invalid dates range Start: " + requestedStartDate + " End: " + requestedEndDate);
+        }
         LocalDate todayLocalDate = LocalDate.now(ZoneId.of("UTC"));
 
-        NodeDailyActivityData nodeDailyActivityData = getNodeDailyActivityDataVerifyRange(nodeHash, requestedStartDate, requestedEndDate);
+        NodeDailyActivityData nodeDailyActivityData = getNodeDailyActivityData(nodeHash);
 
         LocalDate endDate = requestedEndDate.isAfter(todayLocalDate) ? todayLocalDate : requestedEndDate;
         LocalDate firstDateWithEvent = nodeDailyActivityData.getNodeDaySet().first();
