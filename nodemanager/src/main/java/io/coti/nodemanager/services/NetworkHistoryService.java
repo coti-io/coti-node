@@ -351,7 +351,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
         NodeNetworkDataRecord originalActivationEventRecord = null;
         NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
         if (nodeDailyActivityData == null) {
-            throw new NetworkHistoryValidationException(String.format("Node hash does not have activity" , nodeHash));
+            throw new NetworkHistoryValidationException("Node hash does not have activity");
         }
         for (LocalDate localDate : nodeDailyActivityData.getNodeDaySet()) {
             Hash localDateWithEventHash =
@@ -373,7 +373,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
     private NodeNetworkDataRecord getNodeNetworkFirstDataRecord(Hash nodeHash) {
         NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
         if (nodeDailyActivityData == null) {
-            throw new NetworkHistoryValidationException(String.format("Node hash does not have activity" , nodeHash));
+            throw new NetworkHistoryValidationException("Node hash does not have activity");
         }
         Hash firstDateWithEventHash =
                 calculateNodeHistoryDataHash(nodeDailyActivityData.getNodeHash(), nodeDailyActivityData.getNodeDaySet().first());
