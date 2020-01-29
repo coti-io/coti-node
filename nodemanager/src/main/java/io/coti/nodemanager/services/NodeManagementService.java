@@ -143,11 +143,7 @@ public class NodeManagementService implements INodeManagementService {
                 NodeNetworkDataRecord newNodeNetworkDataRecord =
                         new NodeNetworkDataRecord(currentEventDateTime, nodeStatus, networkNodeData);
                 addReferenceToNodeNetworkDataRecord(nodeDailyActivityData, nodeHash, newNodeNetworkDataRecord);
-                Hash nodeHistoryDataHash = networkHistoryService.calculateNodeHistoryDataHash(nodeHash, currentEventDate);
-                NodeHistoryData nodeHistoryData = nodeHistory.getByHash(nodeHistoryDataHash);
-                if (nodeHistoryData == null) {
-                    nodeHistoryData = new NodeHistoryData(nodeHistoryDataHash);
-                }
+                NodeHistoryData nodeHistoryData = getOrCreateNodeHistoryData(nodeHash, currentEventDate);
                 nodeHistoryData.getNodeNetworkDataRecordMap().put(newNodeNetworkDataRecord.getHash(), newNodeNetworkDataRecord);
                 nodeHistory.put(nodeHistoryData);
                 nodeDailyActivityData.getNodeDaySet().add(currentEventDate);
@@ -156,7 +152,15 @@ public class NodeManagementService implements INodeManagementService {
         } finally {
             removeLockFromLocksMap(nodeHash);
         }
+    }
 
+    private NodeHistoryData getOrCreateNodeHistoryData(Hash nodeHash, LocalDate currentEventDate) {
+        Hash nodeHistoryDataHash = networkHistoryService.calculateNodeHistoryDataHash(nodeHash, currentEventDate);
+        NodeHistoryData nodeHistoryData = nodeHistory.getByHash(nodeHistoryDataHash);
+        if (nodeHistoryData == null) {
+            nodeHistoryData = new NodeHistoryData(nodeHistoryDataHash);
+        }
+        return nodeHistoryData;
     }
 
     private void addReferenceToNodeNetworkDataRecord(NodeDailyActivityData nodeDailyActivityData, Hash nodeHash, NodeNetworkDataRecord nodeNetworkDataRecord) {
@@ -182,7 +186,6 @@ public class NodeManagementService implements INodeManagementService {
             reference = new ImmutablePair<>(lastNodeNetworkDataRecord.getRecordTime().atZone(ZoneId.of("UTC")).toLocalDate(), lastNodeNetworkDataRecord.getHash());
         }
         nodeNetworkDataRecord.setStatusChainRef(reference);
-
     }
 
 
@@ -249,30 +252,15 @@ public class NodeManagementService implements INodeManagementService {
         return addNodeEventAdmin(request, false);
     }
 
-
     private ResponseEntity<IResponse> addNodeEventAdmin(AddNodeEventAdminRequest request, boolean isPair) {
 
         Hash nodeHash = request.getNodeHash();
-
         Instant instantDateTimeEvent = request.getRecordDateTimeUTC();
         LocalDate localDateForEvent = LocalDateTime.ofInstant(instantDateTimeEvent, ZoneOffset.UTC).toLocalDate();
 
         Instant nowInstant = Instant.now().atZone(ZoneId.of("UTC")).toInstant();
-        if (instantDateTimeEvent.isAfter(nowInstant)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).
-                    body(new Response(String.format(ADDING_EVENT_INCORRECT_FUTURE_TIME, nodeHash)));
-        }
-        if (!isPair && NetworkNodeStatus.enumFromString(request.getNodeStatus()).equals(NetworkNodeStatus.INACTIVE)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).
-                    body(new Response(String.format(ADDING_EVENT_INCORRECT_INACTIVE_STATUS, nodeHash)));
-        }
-
-        NetworkNodeStatus previousEventStatus = getNodeStatusOfPreviousActivityEvent(nodeHash, instantDateTimeEvent, localDateForEvent);
-
-        if (previousEventStatus != null && NetworkNodeStatus.enumFromString(request.getNodeStatus()).equals(previousEventStatus)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).
-                    body(new Response(String.format(ADDING_EVENT_CONSECUTIVE_SAME_STATUS, nodeHash)));
-        }
+        ResponseEntity<IResponse> validationResponse = validateAddNodeEventRequest(request, isPair, nodeHash, instantDateTimeEvent, localDateForEvent, nowInstant);
+        if (validationResponse != null) return validationResponse;
 
         NetworkNodeData networkNodeData = new NetworkNodeData();
         networkNodeData.setHash(nodeHash);
@@ -292,11 +280,7 @@ public class NodeManagementService implements INodeManagementService {
                     nodeDailyActivities.put(nodeDailyActivityData);
                 }
 
-                Hash nodeHistoryDataHashForEvent = networkHistoryService.calculateNodeHistoryDataHash(nodeHash, localDateForEvent);
-                NodeHistoryData nodeHistoryDataForEvent = nodeHistory.getByHash(nodeHistoryDataHashForEvent);
-                if (nodeHistoryDataForEvent == null) {
-                    nodeHistoryDataForEvent = new NodeHistoryData(nodeHistoryDataHashForEvent);
-                }
+                NodeHistoryData nodeHistoryDataForEvent = getOrCreateNodeHistoryData(nodeHash, localDateForEvent);
                 nodeHistoryDataForEvent.setNodeNetworkDataRecordMap(reCreateLinkedMapNodeNetworkDataRecord(nodeHistoryDataForEvent.getNodeNetworkDataRecordMap(), newNodeNetworkDataRecord));
 
                 Pair<LocalDate, Hash> reference = findReferenceToPreviousEvent(nodeDailyActivityData, nodeHistoryDataForEvent, newNodeNetworkDataRecord, localDateForEvent);
@@ -329,11 +313,9 @@ public class NodeManagementService implements INodeManagementService {
                     }
                     localDate = nodeDailyActivityData.getNodeDaySet().higher(localDate);
                 }
-
                 return ResponseEntity.status(HttpStatus.OK).
                         body(new Response(String.format(NODE_HISTORY_RECORD_HAS_BEEN_ADDED_MANUALLY, nodeHash)));
             }
-
         } catch (Exception e) {
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
             return ResponseEntity
@@ -342,6 +324,25 @@ public class NodeManagementService implements INodeManagementService {
         } finally {
             removeLockFromLocksMap(nodeHash);
         }
+    }
+
+    private ResponseEntity<IResponse> validateAddNodeEventRequest(AddNodeEventAdminRequest request, boolean isPair, Hash nodeHash, Instant instantDateTimeEvent, LocalDate localDateForEvent, Instant nowInstant) {
+        if (instantDateTimeEvent.isAfter(nowInstant)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).
+                    body(new Response(String.format(ADDING_EVENT_INCORRECT_FUTURE_TIME, nodeHash)));
+        }
+        if (!isPair && NetworkNodeStatus.enumFromString(request.getNodeStatus()).equals(NetworkNodeStatus.INACTIVE)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).
+                    body(new Response(String.format(ADDING_EVENT_INCORRECT_INACTIVE_STATUS, nodeHash)));
+        }
+
+        NetworkNodeStatus previousEventStatus = getNodeStatusOfPreviousActivityEvent(nodeHash, instantDateTimeEvent, localDateForEvent);
+
+        if (previousEventStatus != null && NetworkNodeStatus.enumFromString(request.getNodeStatus()).equals(previousEventStatus)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).
+                    body(new Response(String.format(ADDING_EVENT_CONSECUTIVE_SAME_STATUS, nodeHash)));
+        }
+        return null;
     }
 
     private NetworkNodeStatus getNodeStatusOfPreviousActivityEvent(Hash nodeHash, Instant instantDateTimeEvent, LocalDate localDateForEvent) {
@@ -353,27 +354,7 @@ public class NodeManagementService implements INodeManagementService {
                 Hash nodeHistoryDataHashForEventForChecks = networkHistoryService.calculateNodeHistoryDataHash(nodeHash, floorLocalDateForNewEvent);
                 NodeHistoryData nodeHistoryDataForEvent = nodeHistory.getByHash(nodeHistoryDataHashForEventForChecks);
                 if (floorLocalDateForNewEvent.equals(localDateForEvent)) {
-                    LinkedMap<Hash, NodeNetworkDataRecord> nodeNetworkDataRecordMap = nodeHistoryDataForEvent.getNodeNetworkDataRecordMap();
-                    NodeNetworkDataRecord previousNodeNetworkDataRecord = nodeNetworkDataRecordMap.get(nodeNetworkDataRecordMap.firstKey());
-                    if (previousNodeNetworkDataRecord.getRecordTime().isAfter(instantDateTimeEvent)) {
-                        Pair<LocalDate, Hash> statusChainRef = previousNodeNetworkDataRecord.getStatusChainRef();
-                        if (statusChainRef != null) {
-                            Hash nodeHistoryDataHashForEventByRef = networkHistoryService.calculateNodeHistoryDataHash(nodeHash, statusChainRef.getLeft());
-                            NodeHistoryData nodeHistoryDataForEventByRef = nodeHistory.getByHash(nodeHistoryDataHashForEventByRef);
-                            NodeNetworkDataRecord nodeNetworkDataRecordByRef =
-                                    nodeHistoryDataForEventByRef.getNodeNetworkDataRecordMap().get(nodeHistoryDataForEventByRef.getNodeNetworkDataRecordMap().lastKey());
-                            previousEventStatus = nodeNetworkDataRecordByRef.getNodeStatus();
-                        }
-                    } else {
-                        for (Map.Entry<Hash, NodeNetworkDataRecord> entry : nodeNetworkDataRecordMap.entrySet()) {
-                            if (!entry.getValue().getRecordTime().isBefore(instantDateTimeEvent)) {
-                                previousEventStatus = previousNodeNetworkDataRecord.getNodeStatus();
-                                break;
-                            }
-                            previousNodeNetworkDataRecord = entry.getValue();
-                            previousEventStatus = previousNodeNetworkDataRecord.getNodeStatus();
-                        }
-                    }
+                    previousEventStatus = getNodeStatusOfPreviousActivityEventFromNodeHistoryData(nodeHash, instantDateTimeEvent, previousEventStatus, nodeHistoryDataForEvent);
                 } else {
                     previousEventStatus = nodeHistoryDataForEvent.getNodeNetworkDataRecordMap().get(nodeHistoryDataForEvent.getNodeNetworkDataRecordMap().lastKey()).getNodeStatus();
                 }
@@ -382,9 +363,33 @@ public class NodeManagementService implements INodeManagementService {
         return previousEventStatus;
     }
 
+    private NetworkNodeStatus getNodeStatusOfPreviousActivityEventFromNodeHistoryData(Hash nodeHash, Instant instantDateTimeEvent, NetworkNodeStatus previousEventStatus, NodeHistoryData nodeHistoryDataForEvent) {
+        LinkedMap<Hash, NodeNetworkDataRecord> nodeNetworkDataRecordMap = nodeHistoryDataForEvent.getNodeNetworkDataRecordMap();
+        NodeNetworkDataRecord previousNodeNetworkDataRecord = nodeNetworkDataRecordMap.get(nodeNetworkDataRecordMap.firstKey());
+        if (previousNodeNetworkDataRecord.getRecordTime().isAfter(instantDateTimeEvent)) {
+            Pair<LocalDate, Hash> statusChainRef = previousNodeNetworkDataRecord.getStatusChainRef();
+            if (statusChainRef != null) {
+                Hash nodeHistoryDataHashForEventByRef = networkHistoryService.calculateNodeHistoryDataHash(nodeHash, statusChainRef.getLeft());
+                NodeHistoryData nodeHistoryDataForEventByRef = nodeHistory.getByHash(nodeHistoryDataHashForEventByRef);
+                NodeNetworkDataRecord nodeNetworkDataRecordByRef =
+                        nodeHistoryDataForEventByRef.getNodeNetworkDataRecordMap().get(nodeHistoryDataForEventByRef.getNodeNetworkDataRecordMap().lastKey());
+                previousEventStatus = nodeNetworkDataRecordByRef.getNodeStatus();
+            }
+        } else {
+            for (Map.Entry<Hash, NodeNetworkDataRecord> entry : nodeNetworkDataRecordMap.entrySet()) {
+                if (!entry.getValue().getRecordTime().isBefore(instantDateTimeEvent)) {
+                    previousEventStatus = previousNodeNetworkDataRecord.getNodeStatus();
+                    break;
+                }
+                previousNodeNetworkDataRecord = entry.getValue();
+                previousEventStatus = previousNodeNetworkDataRecord.getNodeStatus();
+            }
+        }
+        return previousEventStatus;
+    }
+
     private Pair<LocalDate, Hash> findReferenceToPreviousEvent(NodeDailyActivityData nodeDailyActivityData, NodeHistoryData eventNodeHistoryData,
                                                                NodeNetworkDataRecord newNodeNetworkDataRecord, LocalDate eventDate) {
-
         Hash nodeNetworkDataRecordHash = eventNodeHistoryData.getNodeNetworkDataRecordMap().previousKey(newNodeNetworkDataRecord.getHash());
         NodeNetworkDataRecord nodeNetworkDataRecord = null;
 
@@ -392,15 +397,7 @@ public class NodeManagementService implements INodeManagementService {
             nodeNetworkDataRecord = eventNodeHistoryData.getNodeNetworkDataRecordMap().get(nodeNetworkDataRecordHash);
         }
         if (nodeNetworkDataRecordHash != null) {
-            if (nodeNetworkDataRecord.getNodeStatus() == NetworkNodeStatus.INACTIVE || nodeNetworkDataRecord.getStatusChainRef() == null) {
-                return new ImmutablePair<>(eventDate, nodeNetworkDataRecordHash);
-            } else {
-                if (checkIfNodeEventByRefIsActive(nodeDailyActivityData.getNodeHash(), eventDate, eventNodeHistoryData, nodeNetworkDataRecord.getStatusChainRef())) {
-                    return nodeNetworkDataRecord.getStatusChainRef();
-                } else {
-                    return new ImmutablePair<>(eventDate, nodeNetworkDataRecordHash);
-                }
-            }
+            return getLocalDateHashPair(nodeDailyActivityData, eventNodeHistoryData, eventDate, nodeNetworkDataRecordHash, nodeNetworkDataRecord);
         }
 
         LocalDate localDate = nodeDailyActivityData.getNodeDaySet().lower(eventDate);
@@ -414,19 +411,23 @@ public class NodeManagementService implements INodeManagementService {
                 nodeNetworkDataRecordHash = nodeHistoryData.getNodeNetworkDataRecordMap().lastKey();
                 nodeNetworkDataRecord = nodeHistoryData.getNodeNetworkDataRecordMap().get(nodeNetworkDataRecordHash);
 
-                if (nodeNetworkDataRecord.getNodeStatus() == NetworkNodeStatus.INACTIVE || nodeNetworkDataRecord.getStatusChainRef() == null) {
-                    return new ImmutablePair<>(localDate, nodeNetworkDataRecordHash);
-                } else {
-                    if (checkIfNodeEventByRefIsActive(nodeDailyActivityData.getNodeHash(), localDate, nodeHistoryData, nodeNetworkDataRecord.getStatusChainRef())) {
-                        return nodeNetworkDataRecord.getStatusChainRef();
-                    } else {
-                        return new ImmutablePair<>(localDate, nodeNetworkDataRecordHash);
-                    }
-                }
+                return getLocalDateHashPair(nodeDailyActivityData, nodeHistoryData, localDate, nodeNetworkDataRecordHash, nodeNetworkDataRecord);
             }
             localDate = nodeDailyActivityData.getNodeDaySet().lower(localDate);
         }
         return null;
+    }
+
+    private Pair<LocalDate, Hash> getLocalDateHashPair(NodeDailyActivityData nodeDailyActivityData, NodeHistoryData eventNodeHistoryData, LocalDate eventDate, Hash nodeNetworkDataRecordHash, NodeNetworkDataRecord nodeNetworkDataRecord) {
+        if (nodeNetworkDataRecord.getNodeStatus() == NetworkNodeStatus.INACTIVE || nodeNetworkDataRecord.getStatusChainRef() == null) {
+            return new ImmutablePair<>(eventDate, nodeNetworkDataRecordHash);
+        } else {
+            if (checkIfNodeEventByRefIsActive(nodeDailyActivityData.getNodeHash(), eventDate, eventNodeHistoryData, nodeNetworkDataRecord.getStatusChainRef())) {
+                return nodeNetworkDataRecord.getStatusChainRef();
+            } else {
+                return new ImmutablePair<>(eventDate, nodeNetworkDataRecordHash);
+            }
+        }
     }
 
     private boolean checkIfNodeEventByRefIsActive(Hash nodeHash, LocalDate localDate, NodeHistoryData nodeHistoryData, Pair<LocalDate, Hash> reference) {
