@@ -82,7 +82,7 @@ public class NodeManagementService implements INodeManagementService {
     public ResponseEntity<String> addNode(NetworkNodeData networkNodeData) {
         try {
             networkService.validateNetworkNodeData(networkNodeData);
-                validateReservedHostToNode(networkNodeData);
+            validateReservedHostToNode(networkNodeData);
             networkService.addNode(networkNodeData);
             ActiveNodeData activeNodeData = new ActiveNodeData(networkNodeData.getHash(), networkNodeData);
             activeNodes.put(activeNodeData);
@@ -133,6 +133,9 @@ public class NodeManagementService implements INodeManagementService {
                 LocalDate currentEventDate = currentEventDateTime.atZone(ZoneId.of("UTC")).toLocalDate();
                 NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
                 if (nodeDailyActivityData == null) {
+                    if (nodeStatus != NetworkNodeStatus.ACTIVE) {
+                        return;
+                    }
                     nodeDailyActivityData = new NodeDailyActivityData(nodeHash, networkNodeData.getNodeType());
                 }
                 NodeNetworkDataRecord newNodeNetworkDataRecord =
