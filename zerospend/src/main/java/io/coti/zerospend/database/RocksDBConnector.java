@@ -15,11 +15,12 @@ public class RocksDBConnector extends BaseNodeRocksDBConnector {
     @Value("${reset.currencies: false}")
     private boolean resetCurrencies;
 
-    protected boolean reset() {
-        boolean reset = super.reset();
-        resetColumnFamilyNames.addAll(Arrays.asList(
-                Currencies.class.getName()
-        ));
-        return reset || resetCurrencies;
+    @Override
+    protected void populateResetColumnFamilyNames() {
+        if (resetCurrencies) {
+            resetColumnFamilyNames.addAll(Arrays.asList(
+                    Currencies.class.getName()
+            ));
+        }
     }
 }
