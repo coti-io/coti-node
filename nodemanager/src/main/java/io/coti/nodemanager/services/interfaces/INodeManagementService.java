@@ -28,5 +28,5 @@ public interface INodeManagementService {
 
     ResponseEntity<IResponse> addNodeBeginEventPairAdmin(AddNodeBeginEventPairAdminRequest request);
 
-    ResponseEntity<IResponse> addNodeEventSingleAdmin(AddNodeEventAdminRequest request);
+    ResponseEntity<IResponse> addSingleNodeEvent(AddNodeEventAdminRequest request);
 }

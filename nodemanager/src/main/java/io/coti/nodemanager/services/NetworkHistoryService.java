@@ -351,7 +351,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
         NodeNetworkDataRecord originalActivationEventRecord = null;
         NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
         if (nodeDailyActivityData == null) {
-            throw new NetworkHistoryValidationException(String.format("Node hash does not have activity" , nodeHash));
+            throw new NetworkHistoryValidationException(String.format("Node hash does not have activity", nodeHash));
         }
         for (LocalDate localDate : nodeDailyActivityData.getNodeDaySet()) {
             Hash localDateWithEventHash =
@@ -373,7 +373,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
     private NodeNetworkDataRecord getNodeNetworkFirstDataRecord(Hash nodeHash) {
         NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
         if (nodeDailyActivityData == null) {
-            throw new NetworkHistoryValidationException(String.format("Node hash does not have activity" , nodeHash));
+            throw new NetworkHistoryValidationException(String.format("Node hash does not have activity", nodeHash));
         }
         Hash firstDateWithEventHash =
                 calculateNodeHistoryDataHash(nodeDailyActivityData.getNodeHash(), nodeDailyActivityData.getNodeDaySet().first());
@@ -524,6 +524,19 @@ public class NetworkHistoryService implements INetworkHistoryService {
 
     public NodeNetworkDataRecord getLastNodeNetworkDataRecord(NodeHistoryData nodeHistoryData) {
         return nodeHistoryData.getNodeNetworkDataRecordMap().get(nodeHistoryData.getNodeNetworkDataRecordMap().lastKey());
+    }
+
+    private NodeNetworkDataRecord getFirstNodeNetworkDataRecord(Hash nodeHash) {
+        NodeDailyActivityData nodeDailyActivityData = getNodeDailyActivityData(nodeHash);
+        LocalDate firstLocalDate = nodeDailyActivityData.getNodeDaySet().first();
+        Hash nodeHistoryDataHash = calculateNodeHistoryDataHash(nodeHash, firstLocalDate);
+        NodeHistoryData nodeHistoryData = nodeHistory.getByHash(nodeHistoryDataHash);
+        return nodeHistoryData.getNodeNetworkDataRecordMap().get(nodeHistoryData.getNodeNetworkDataRecordMap().firstKey());
+    }
+
+    @Override
+    public Instant getFirstNodeNetworkDataRecordTime(Hash nodeHash) {
+        return getFirstNodeNetworkDataRecord(nodeHash).getRecordTime();
     }
 
 }
