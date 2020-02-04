@@ -349,11 +349,7 @@ public class NodeManagementService implements INodeManagementService {
                     localNodeHistoryData = getNextDateNodeHistoryData(previousEventLocalDate, localNodeHistoryData, nodeNetworkDataRecordHash, nodeHash, nodeDailyActivityData);
                     if (localNodeHistoryData != null) {
                         nodeNetworkDataRecordHash = localNodeHistoryData.getNodeNetworkDataRecordMap().firstKey();
-                    } else {
-                        return;
                     }
-                } else {
-                    return;
                 }
             }
         }
