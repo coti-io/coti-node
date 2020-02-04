@@ -292,7 +292,7 @@ public class NodeManagementService implements INodeManagementService {
                 newNodeNetworkDataRecord.setStatusChainRef(reference);
                 nodeHistory.put(nodeHistoryDataForEvent);
 
-                updateNodeHistoryDataForDate(nodeHistoryDataForEvent, newNodeNetworkDataRecord, localDateForEvent);
+                updateReferencesAfterNewNetworkEvent(nodeHistoryDataForEvent, newNodeNetworkDataRecord, localDateForEvent);
 
                 return ResponseEntity.status(HttpStatus.OK).
                         body(new Response(String.format(NODE_HISTORY_RECORD_HAS_BEEN_ADDED_MANUALLY, nodeHash)));
@@ -307,13 +307,11 @@ public class NodeManagementService implements INodeManagementService {
         }
     }
 
-    private void updateNodeHistoryDataForDate(NodeHistoryData nodeHistoryData, NodeNetworkDataRecord newNodeNetworkDataRecord,
-                                              LocalDate localDateForEvent) {
-        boolean flippedStatus = false;
+    private void updateReferencesAfterNewNetworkEvent(NodeHistoryData nodeHistoryData, NodeNetworkDataRecord newNodeNetworkDataRecord,
+                                                      LocalDate localDateForEvent) {
         NodeHistoryData localNodeHistoryData = nodeHistoryData;
         NetworkNodeStatus newNodeNetworkDataRecordNodeStatus = newNodeNetworkDataRecord.getNodeStatus();
-        Hash nodeNetworkDataRecordHash;
-        nodeNetworkDataRecordHash = nodeHistoryData.getNodeNetworkDataRecordMap().nextKey(newNodeNetworkDataRecord.getHash());
+        Hash nodeNetworkDataRecordHash = nodeHistoryData.getNodeNetworkDataRecordMap().nextKey(newNodeNetworkDataRecord.getHash());
 
         Hash nodeHash = newNodeNetworkDataRecord.getNetworkNodeData().getNodeHash();
         NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
@@ -324,38 +322,24 @@ public class NodeManagementService implements INodeManagementService {
         }
         Pair<LocalDate, Hash> eventDateHashPair = getLocalDateHashPair(newNodeNetworkDataRecord);
 
-        NodeNetworkDataRecord nodeNetworkDataRecord = null;
-        NodeNetworkDataRecord previousNodeNetworkDataRecord = null;
+        boolean flippedStatus = false;
+        NodeNetworkDataRecord nodeNetworkDataRecord;
+        NodeNetworkDataRecord flippedStatusFirstNodeNetworkDataRecord = null;
         boolean isFirstNewStatus = true;
         while (nodeNetworkDataRecordHash != null) {
-            previousNodeNetworkDataRecord = nodeNetworkDataRecord != null ? nodeNetworkDataRecord : null;
             nodeNetworkDataRecord = localNodeHistoryData.getNodeNetworkDataRecordMap().get(nodeNetworkDataRecordHash);
             if (!flippedStatus) {
-                if (nodeNetworkDataRecord.getNodeStatus() != newNodeNetworkDataRecordNodeStatus) {
+                if (isFirstNewStatus && nodeNetworkDataRecord.getNodeStatus() != newNodeNetworkDataRecordNodeStatus) {
+                    flippedStatusFirstNodeNetworkDataRecord = nodeNetworkDataRecord;
                     isFirstNewStatus = false;
                 }
-                if(!nodeNetworkDataRecord.equals(newNodeNetworkDataRecord)) {
+                if (!nodeNetworkDataRecord.equals(newNodeNetworkDataRecord)) {
                     nodeNetworkDataRecord.setStatusChainRef(eventDateHashPair);
                 }
                 flippedStatus = nodeNetworkDataRecord.getNodeStatus() != newNodeNetworkDataRecordNodeStatus;
             } else {
-                if (isFirstNewStatus || nodeNetworkDataRecord.getNodeStatus() != newNodeNetworkDataRecordNodeStatus) {
-                    nodeNetworkDataRecord.setStatusChainRef(eventDateHashPair);
-                    isFirstNewStatus = false;
-                }
-                eventDateHashPair = getLocalDateHashPair(nodeNetworkDataRecord);
-                if (nodeNetworkDataRecord.getNodeStatus() == newNodeNetworkDataRecordNodeStatus) {
-                    nodeHistory.put(localNodeHistoryData);
-                    NodeNetworkDataRecord nodeNetworkDataRecordByChainRef =
-                            networkHistoryService.getNodeNetworkDataRecordByChainRef(networkHistoryService.getNodeNetworkDataRecordByChainRef(nodeNetworkDataRecord));
-                    if (nodeNetworkDataRecordByChainRef == null
-                            || !nodeNetworkDataRecordByChainRef.getHash().equals(newNodeNetworkDataRecord.getHash())) {
-                        nodeNetworkDataRecord.setStatusChainRef(getLocalDateHashPair(previousNodeNetworkDataRecord));
-                    }
-
-                    nodeHistory.put(localNodeHistoryData);
+                if (updateReferencesAfterStatusFlip(newNodeNetworkDataRecord, localNodeHistoryData, newNodeNetworkDataRecordNodeStatus, nodeNetworkDataRecord, flippedStatusFirstNodeNetworkDataRecord))
                     return;
-                }
             }
             nodeNetworkDataRecordHash = localNodeHistoryData.getNodeNetworkDataRecordMap().nextKey(nodeNetworkDataRecordHash);
             if (nodeNetworkDataRecordHash == null) {
@@ -373,6 +357,24 @@ public class NodeManagementService implements INodeManagementService {
                 }
             }
         }
+    }
+
+    private boolean updateReferencesAfterStatusFlip(NodeNetworkDataRecord newNodeNetworkDataRecord, NodeHistoryData localNodeHistoryData, NetworkNodeStatus newNodeNetworkDataRecordNodeStatus, NodeNetworkDataRecord nodeNetworkDataRecord, NodeNetworkDataRecord flippedStatusFirstNodeNetworkDataRecord) {
+        if (nodeNetworkDataRecord.getNodeStatus() != newNodeNetworkDataRecordNodeStatus) {
+            nodeNetworkDataRecord.setStatusChainRef(getLocalDateHashPair(flippedStatusFirstNodeNetworkDataRecord));
+        }
+        if (nodeNetworkDataRecord.getNodeStatus() == newNodeNetworkDataRecordNodeStatus) {
+            nodeHistory.put(localNodeHistoryData);
+            NodeNetworkDataRecord nodeNetworkDataRecordByChainRef =
+                    networkHistoryService.getNodeNetworkDataRecordByChainRef(networkHistoryService.getNodeNetworkDataRecordByChainRef(nodeNetworkDataRecord));
+            if (nodeNetworkDataRecordByChainRef == null
+                    || !nodeNetworkDataRecordByChainRef.getHash().equals(newNodeNetworkDataRecord.getHash())) {
+                nodeNetworkDataRecord.setStatusChainRef(getLocalDateHashPair(flippedStatusFirstNodeNetworkDataRecord));
+            }
+            nodeHistory.put(localNodeHistoryData);
+            return true;
+        }
+        return false;
     }
 
     private NodeHistoryData getNextDateNodeHistoryData(LocalDate localDateForEvent, NodeHistoryData localNodeHistoryData,
