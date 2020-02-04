@@ -59,4 +59,5 @@ public interface INetworkService {
 
     String getHost(String webServerUrl);
 
+    void recoveryOnReconnect(String publisherAddressAndPort, NodeType publisherNodeType);
 }

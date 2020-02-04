@@ -38,7 +38,7 @@ public class TransactionService extends BaseNodeTransactionService {
     private Transactions transactions;
 
     @Override
-    protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
+    protected void continueHandlePropagatedTransaction(TransactionData transactionData, boolean opinionOnTheTransaction) {
         if (EnumSet.of(TransactionType.Initial).contains(transactionData.getType())) {
             try {
                 Thread.sleep(1000);

@@ -48,7 +48,7 @@ public class BaseNodeNetworkService implements INetworkService {
     private String nodeManagerPropagationAddress;
     private String connectToNetworkUrl;
     @Autowired
-    private ICommunicationService communicationService;
+    protected ICommunicationService communicationService;
     @Autowired
     private NetworkNodeCrypto networkNodeCrypto;
     @Autowired
@@ -409,6 +409,11 @@ public class BaseNodeNetworkService implements INetworkService {
         } catch (Exception e) {
             throw new NetworkException("Connect to network failed.", e);
         }
+    }
+
+    @Override
+    public void recoveryOnReconnect(String publisherAddressAndPort, NodeType publisherNodeType) {
+        // implemented for Full Node, DSP Node, TS Node, History Node, Finacial server
     }
 
 }

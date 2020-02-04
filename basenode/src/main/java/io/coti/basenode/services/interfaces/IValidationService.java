@@ -16,7 +16,9 @@ public interface IValidationService {
 
     boolean validateTransactionDataIntegrity(TransactionData transactionData);
 
-    boolean validatePropagatedTransactionDataIntegrity(TransactionData transactionData);
+    boolean validatePropagatedTransactionIntegrityPhase1(TransactionData transactionData);
+
+    boolean validatePropagatedTransactionIntegrityPhase2(TransactionData transactionData);
 
     boolean validateTransactionNodeSignature(TransactionData transactionData);
 
@@ -29,8 +31,6 @@ public interface IValidationService {
     boolean validateBalancesAndAddToPreBalance(TransactionData transactionData);
 
     <T extends BaseTransactionData & ITrustScoreNodeValidatable> boolean validateBaseTransactionTrustScoreNodeResult(T baseTransactionData);
-
-    boolean fullValidation(TransactionData transactionData);
 
     boolean validatePot(TransactionData transactionData);
 

@@ -26,7 +26,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Service
 public class TransactionService extends BaseNodeTransactionService {
 
-    private Queue<TransactionData> transactionsToValidate;
+    private Queue<TransactionData> transactionsToVotePositive;
+    private Queue<TransactionData> transactionsToVoteNegative;
+    private Queue<TransactionData> transactionsToPropagateFromMissing;
     private AtomicBoolean isValidatorRunning;
     @Autowired
     private ITransactionHelper transactionHelper;
@@ -43,11 +45,14 @@ public class TransactionService extends BaseNodeTransactionService {
 
     @Override
     public void init() {
-        transactionsToValidate = new PriorityQueue<>();
+        transactionsToVotePositive = new PriorityQueue<>();
+        transactionsToVoteNegative = new PriorityQueue<>();
+        transactionsToPropagateFromMissing = new PriorityQueue<>();
         isValidatorRunning = new AtomicBoolean(false);
         super.init();
     }
 
+    @Override
     public void handleNewTransactionFromFullNode(TransactionData transactionData) {
         try {
             log.debug("Running new transactions from full node handler");
@@ -56,13 +61,19 @@ public class TransactionService extends BaseNodeTransactionService {
                 return;
             }
             transactionHelper.startHandleTransaction(transactionData);
-            if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData) ||
-                    !validationService.validateBalancesAndAddToPreBalance(transactionData)) {
+            if (!validationService.validatePropagatedTransactionIntegrityPhase1(transactionData)) {
                 log.info("Invalid Transaction Received!");
+                return;
+            }
+            if (hasOneOfParentsMissing(transactionData)) {
+                if (!postponedTransactions.containsKey(transactionData)) {
+                    postponedTransactions.put(transactionData, true);
+                }
                 return;
             }
             transactionHelper.attachTransactionToCluster(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
+//            if (!transactionData.getTransactionDescription().equals("dontsend")) {   // todo delete after test
             propagationPublisher.propagate(transactionData, Arrays.asList(
                     NodeType.FullNode,
                     NodeType.TrustScoreNode,
@@ -70,45 +81,95 @@ public class TransactionService extends BaseNodeTransactionService {
                     NodeType.ZeroSpendServer,
                     NodeType.FinancialServer,
                     NodeType.HistoryNode));
+//            }
+            transactionCuratorService.addUnconfirmedTransaction(transactionData.getHash());
+            if (validationService.validatePropagatedTransactionIntegrityPhase2(transactionData) &&
+                    validationService.validateBalancesAndAddToPreBalance(transactionData)) {
+                transactionsToVotePositive.add(transactionData);
+            } else {
+                transactionsToVoteNegative.add(transactionData);
+            }
             transactionHelper.setTransactionStateToFinished(transactionData);
-            transactionsToValidate.add(transactionData);
         } catch (Exception ex) {
             log.error("Exception while handling transaction {}", transactionData, ex);
         } finally {
+            boolean isTransactionFinished = transactionHelper.isTransactionFinished(transactionData);
             transactionHelper.endHandleTransaction(transactionData);
+            if (isTransactionFinished) {
+                processPostponedTransactions(transactionData);
+            }
         }
     }
 
     @Scheduled(fixedRate = 1000)
-    private void checkAttachedTransactions() {
+    private void processTransactionsVotes() {
         if (!isValidatorRunning.compareAndSet(false, true)) {
             return;
         }
-        while (!transactionsToValidate.isEmpty()) {
-            TransactionData transactionData = transactionsToValidate.remove();
+        while (!transactionsToVotePositive.isEmpty()) {
+            TransactionData transactionData = transactionsToVotePositive.remove();
             log.debug("DSP Fully Checking transaction: {}", transactionData.getHash());
             TransactionDspVote transactionDspVote = new TransactionDspVote(
                     transactionData.getHash(),
-                    validationService.fullValidation(transactionData));
+                    true);
             transactionDspVoteCrypto.signMessage(transactionDspVote);
             String zerospendReceivingAddress = networkService.getSingleNodeData(NodeType.ZeroSpendServer).getReceivingFullAddress();
             log.debug("Sending DSP vote to {} for transaction {}", zerospendReceivingAddress, transactionData.getHash());
             sender.send(transactionDspVote, zerospendReceivingAddress);
         }
+        while (!transactionsToVoteNegative.isEmpty()) {
+            TransactionData transactionData = transactionsToVoteNegative.remove();
+            log.debug("DSP incorrect transaction: {}", transactionData.getHash());
+            TransactionDspVote transactionDspVote = new TransactionDspVote(
+                    transactionData.getHash(),
+                    false);
+            transactionDspVoteCrypto.signMessage(transactionDspVote);
+            String zerospendReceivingAddress = networkService.getSingleNodeData(NodeType.ZeroSpendServer).getReceivingFullAddress();
+            log.debug("Sending DSP negative vote to {} for transaction {}", zerospendReceivingAddress, transactionData.getHash());
+            sender.send(transactionDspVote, zerospendReceivingAddress);
+        }
         isValidatorRunning.set(false);
     }
 
-    public void continueHandlePropagatedTransaction(TransactionData transactionData) {
+    @Override
+    public void continueHandlePropagatedTransaction(TransactionData transactionData, boolean opinionOnTheTransaction) {
         propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
         if (!EnumSet.of(TransactionType.ZeroSpend, TransactionType.Initial).contains(transactionData.getType())) {
-            transactionsToValidate.add(transactionData);
+            if (opinionOnTheTransaction) {
+                transactionsToVotePositive.add(transactionData);
+            } else {
+                transactionsToVoteNegative.add(transactionData);
+            }
         }
 
     }
 
     @Override
     protected void propagateMissingTransaction(TransactionData transactionData) {
-        log.debug("Propagate missing transaction {} by {} to {}", transactionData.getHash(), NodeType.DspNode, NodeType.FullNode);
-        propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
+        transactionsToPropagateFromMissing.add(transactionData);
     }
+
+    @Override
+    public void delayedMissingTransactionsPropagation() {
+        Thread delayedTransactionPropagationThread = delayedMissingTransactionPropagationThread();
+
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        delayedTransactionPropagationThread.start();
+
+    }
+
+    private Thread delayedMissingTransactionPropagationThread() {
+        return new Thread(() -> {
+            while (!transactionsToPropagateFromMissing.isEmpty()) {
+                TransactionData transactionData = transactionsToPropagateFromMissing.remove();
+                log.debug("Propagate missing transaction {} by {} to {}", transactionData.getHash(), NodeType.DspNode, NodeType.FullNode);
+                propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
+            }
+        });
+    }
+
 }

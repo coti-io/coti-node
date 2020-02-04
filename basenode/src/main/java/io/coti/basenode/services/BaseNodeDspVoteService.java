@@ -9,6 +9,7 @@ import io.coti.basenode.exceptions.DspConsensusResultException;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IConfirmationService;
 import io.coti.basenode.services.interfaces.IDspVoteService;
+import io.coti.basenode.services.interfaces.ITransactionCuratorService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,8 @@ public class BaseNodeDspVoteService implements IDspVoteService {
     @Autowired
     private DspConsensusCrypto dspConsensusCrypto;
     @Autowired
+    private ITransactionCuratorService transactionCuratorService;
+    @Autowired
     private Transactions transactions;
     private Map<Hash, DspConsensusResult> postponedDspConsensusResultsMap;
 
@@ -42,7 +45,7 @@ public class BaseNodeDspVoteService implements IDspVoteService {
         try {
             log.debug("Received DspConsensus result for transaction: {}", dspConsensusResult.getHash());
             handleVoteConclusionResult(dspConsensusResult);
-            confirmationService.setDspcToTrue(dspConsensusResult);
+            confirmationService.setDspcToTrueOrFalse(dspConsensusResult);
             continueHandleVoteConclusion(dspConsensusResult);
             postponedDspConsensusResultsMap.remove(dspConsensusResult.getHash());
         } catch (Exception e) {
@@ -59,6 +62,7 @@ public class BaseNodeDspVoteService implements IDspVoteService {
             postponedDspConsensusResultsMap.put(dspConsensusResult.getHash(), dspConsensusResult);
             throw new DspConsensusResultException(String.format("DspConsensus result is for a non-existing transaction %s. ", dspConsensusResult.getHash()));
         }
+        transactionCuratorService.removeConfirmedReceiptTransaction(transactionData.getHash());
         if (transactionData.getDspConsensusResult() != null) {
             log.debug("DspConsensus result already exists for transaction {}", dspConsensusResult.getHash());
             return;
@@ -66,7 +70,7 @@ public class BaseNodeDspVoteService implements IDspVoteService {
         if (dspConsensusResult.isDspConsensus()) {
             log.debug("Valid vote conclusion received for transaction: {}", dspConsensusResult.getHash());
         } else {
-            log.debug("Invalid vote conclusion received for transaction: {}", dspConsensusResult.getHash());
+            log.debug("Negative vote conclusion received for transaction: {}", dspConsensusResult.getHash());
         }
 
         log.debug("DspConsensus result for transaction: Hash= {}, DspVoteResult= {}, Index= {}", dspConsensusResult.getHash(), dspConsensusResult.isDspConsensus(), dspConsensusResult.getIndex());
