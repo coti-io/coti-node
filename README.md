@@ -6,7 +6,7 @@ COTI Node
 
 [![GitHub Stars](https://img.shields.io/github/stars/coti-io/coti-node.svg)](https://github.com/coti-io/coti-node/stargazers)
 [![GitHub Issues](https://img.shields.io/github/issues/coti-io/coti-node.svg)](https://github.com/coti-io/coti-node/issues)
-[![Current Version](https://img.shields.io/badge/version-1.1.0.RELEASE-green.svg)](https://github.com/coti-io/coti-node/)
+[![Current Version](https://img.shields.io/badge/version-1.2.0.SNAPSHOT-yellow.svg)](https://github.com/coti-io/coti-node/)
 [![Discord Server](https://img.shields.io/discord/386571547508473876.svg)](https://discord.me/coti)
 
 ---
