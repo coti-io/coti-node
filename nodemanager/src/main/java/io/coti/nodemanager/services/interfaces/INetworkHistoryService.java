@@ -1,8 +1,10 @@
 package io.coti.nodemanager.services.interfaces;
 
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.nodemanager.data.NodeActivityData;
 import io.coti.nodemanager.data.NodeHistoryData;
+import io.coti.nodemanager.data.NodeNetworkDataRecord;
 import io.coti.nodemanager.http.GetNodeActivationTimeRequest;
 import io.coti.nodemanager.http.GetNodeStatisticsRequest;
 import io.coti.nodemanager.http.data.NodeDailyStatisticsData;
@@ -32,4 +34,6 @@ public interface INetworkHistoryService {
     ResponseEntity<IResponse> getNodeActivityInSecondsByDay(GetNodeStatisticsRequest getNodeStatisticsRequest);
 
     ResponseEntity<IResponse> getNodeActivationTime(GetNodeActivationTimeRequest getNodeActivationTimeRequest);
+
+    Instant getFirstNodeNetworkDataRecordTime(Hash nodeHash);
 }

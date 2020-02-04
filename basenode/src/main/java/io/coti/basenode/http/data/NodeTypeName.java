@@ -14,7 +14,7 @@ public enum NodeTypeName {
     private NodeType nodeType;
     private String node;
 
-    private NodeTypeName(NodeType nodeType, String node) {
+    NodeTypeName(NodeType nodeType, String node) {
         this.nodeType = nodeType;
         this.node = node;
     }

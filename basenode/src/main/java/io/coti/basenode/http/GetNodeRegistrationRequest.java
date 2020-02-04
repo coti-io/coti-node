@@ -19,7 +19,7 @@ public class GetNodeRegistrationRequest extends Request implements ISignable {
     private String nodeType;
     private String networkType;
 
-    public GetNodeRegistrationRequest(@NotNull NodeType nodeType, @NotNull NetworkType networkType) {
+    public GetNodeRegistrationRequest(NodeType nodeType, NetworkType networkType) {
         this.nodeType = NodeTypeName.valueOf(nodeType.toString()).getNode();
         this.networkType = NetworkTypeName.valueOf(networkType.toString()).getNetwork();
     }

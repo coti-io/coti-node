@@ -7,7 +7,6 @@ import io.coti.basenode.data.NodeType;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.exceptions.NetworkNodeValidationException;
 import io.coti.basenode.http.Response;
-import io.coti.basenode.http.data.NodeTypeName;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.nodemanager.data.*;
@@ -31,7 +30,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
-import java.time.*;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -197,81 +198,45 @@ public class NodeManagementService implements INodeManagementService {
 
         AddNodeEventAdminRequest addNodeEventAdminRequest;
         Hash nodeHash = request.getNodeHash();
-        Instant dateTimeForSecondEvent = findVeryFirstActiveEvent(nodeHash);
+        Instant currentFirstEventTime = networkHistoryService.getFirstNodeNetworkDataRecordTime(nodeHash);
 
-        if (dateTimeForSecondEvent == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).
-                    body(new Response(String.format(ADDING_EVENT_PAIR_FAILED, nodeHash)));
-        }
-        Instant dateTimeEvent = request.getStartDateTimeUTC();
-        if (!dateTimeForSecondEvent.isAfter(dateTimeEvent)) {
+        Instant startTime = request.getStartTime();
+        if (!currentFirstEventTime.isAfter(startTime)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).
                     body(new Response(String.format(ADDING_EVENT_PAIR_FAILED, nodeHash)));
         }
 
-        addNodeEventAdminRequest = new AddNodeEventAdminRequest(nodeHash, request.getStartDateTimeUTC(), NodeTypeName.FullNode.getNode(), NetworkNodeStatus.ACTIVE.toString());
-        ResponseEntity<IResponse> response1 = addNodeEventAdmin(addNodeEventAdminRequest, true);
-        if (response1.getStatusCode() != HttpStatus.OK) {
-            return response1;
-        }
+        addNodeEventAdminRequest = new AddNodeEventAdminRequest(nodeHash, request.getStartTime(), NodeType.FullNode, NetworkNodeStatus.ACTIVE);
+        addNodeEventAdmin(addNodeEventAdminRequest, true);
 
-        addNodeEventAdminRequest = new AddNodeEventAdminRequest(nodeHash, dateTimeForSecondEvent, NodeTypeName.FullNode.getNode(), NetworkNodeStatus.INACTIVE.toString());
+        addNodeEventAdminRequest = new AddNodeEventAdminRequest(nodeHash, currentFirstEventTime, NodeType.FullNode, NetworkNodeStatus.INACTIVE);
         return addNodeEventAdmin(addNodeEventAdminRequest, true);
     }
 
-    private Instant findVeryFirstActiveEvent(Hash nodeHash) {
-        NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
-        if (nodeDailyActivityData == null) {
-            return null;
-        }
-
-        LocalDate localDate = nodeDailyActivityData.getNodeDaySet().first();
-
-        NodeHistoryData nodeHistoryData = null;
-        while (nodeHistoryData == null) {
-            Hash nodeHistoryDataHash = networkHistoryService.calculateNodeHistoryDataHash(nodeHash, localDate);
-            nodeHistoryData = nodeHistory.getByHash(nodeHistoryDataHash);
-
-            if (nodeHistoryData != null && !nodeHistoryData.getNodeNetworkDataRecordMap().isEmpty()) {
-                Hash nodeNetworkDataRecordHash = nodeHistoryData.getNodeNetworkDataRecordMap().firstKey();
-                NodeNetworkDataRecord nodeNetworkDataRecord = nodeHistoryData.getNodeNetworkDataRecordMap().get(nodeNetworkDataRecordHash);
-                if (nodeNetworkDataRecord.getNodeStatus() != NetworkNodeStatus.ACTIVE) {
-                    return null;
-                } else {
-                    return nodeNetworkDataRecord.getRecordTime();
-                }
-            } else {
-                localDate = nodeDailyActivityData.getNodeDaySet().higher(localDate);
-                if (localDate == null) {
-                    return null;
-                }
-            }
-        }
-        return null;
-    }
 
     @Override
-    public ResponseEntity<IResponse> addNodeEventSingleAdmin(AddNodeEventAdminRequest request) {
+    public ResponseEntity<IResponse> addSingleNodeEvent(AddNodeEventAdminRequest request) {
         return addNodeEventAdmin(request, false);
     }
 
     private ResponseEntity<IResponse> addNodeEventAdmin(AddNodeEventAdminRequest request, boolean isPair) {
 
         Hash nodeHash = request.getNodeHash();
-        Instant instantDateTimeEvent = request.getRecordDateTimeUTC();
-        LocalDate localDateForEvent = LocalDateTime.ofInstant(instantDateTimeEvent, ZoneOffset.UTC).toLocalDate();
+        Instant recordTime = request.getRecordTime();
+        NodeType nodeType = request.getNodeType();
+        NetworkNodeStatus nodeStatus = request.getNodeStatus();
+        LocalDate localDateForEvent = recordTime.atZone(ZoneId.of("UTC")).toLocalDate();
 
-        Instant nowInstant = Instant.now().atZone(ZoneId.of("UTC")).toInstant();
-        ResponseEntity<IResponse> validationResponse = validateAddNodeEventRequest(request, isPair, nodeHash, instantDateTimeEvent, localDateForEvent, nowInstant);
+        Instant nowInstant = Instant.now();
+        ResponseEntity<IResponse> validationResponse = validateAddNodeEventRequest(nodeStatus, isPair, nodeHash, recordTime, localDateForEvent, nowInstant);
         if (validationResponse != null) return validationResponse;
 
         NetworkNodeData networkNodeData = new NetworkNodeData();
         networkNodeData.setHash(nodeHash);
-        networkNodeData.setNodeType(NodeTypeName.getNodeType(request.getNodeType()));
+        networkNodeData.setNodeType(nodeType);
 
-        NetworkNodeStatus nodeStatusForEvent = NetworkNodeStatus.enumFromString(request.getNodeStatus());
         NodeNetworkDataRecord newNodeNetworkDataRecord =
-                new NodeNetworkDataRecord(instantDateTimeEvent, nodeStatusForEvent, networkNodeData);
+                new NodeNetworkDataRecord(recordTime, nodeStatus, networkNodeData);
         newNodeNetworkDataRecord.setNotOriginalEvent(true);
 
         try {
@@ -390,19 +355,19 @@ public class NodeManagementService implements INodeManagementService {
         return new ImmutablePair<>(eventLocalDate, newNodeNetworkDataRecord.getHash());
     }
 
-    private ResponseEntity<IResponse> validateAddNodeEventRequest(AddNodeEventAdminRequest request, boolean isPair, Hash nodeHash, Instant instantDateTimeEvent, LocalDate localDateForEvent, Instant nowInstant) {
+    private ResponseEntity<IResponse> validateAddNodeEventRequest(NetworkNodeStatus nodeStatus, boolean isPair, Hash nodeHash, Instant instantDateTimeEvent, LocalDate localDateForEvent, Instant nowInstant) {
         if (instantDateTimeEvent.isAfter(nowInstant)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).
                     body(new Response(String.format(ADDING_EVENT_INCORRECT_FUTURE_TIME, nodeHash)));
         }
-        if (!isPair && NetworkNodeStatus.enumFromString(request.getNodeStatus()).equals(NetworkNodeStatus.INACTIVE)) {
+        if (!isPair && nodeStatus.equals(NetworkNodeStatus.INACTIVE)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).
                     body(new Response(String.format(ADDING_EVENT_INCORRECT_INACTIVE_STATUS, nodeHash)));
         }
 
         NetworkNodeStatus previousEventStatus = getNodeStatusOfPreviousActivityEvent(nodeHash, instantDateTimeEvent, localDateForEvent);
 
-        if (previousEventStatus != null && NetworkNodeStatus.enumFromString(request.getNodeStatus()).equals(previousEventStatus)) {
+        if (previousEventStatus != null && nodeStatus.equals(previousEventStatus)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).
                     body(new Response(String.format(ADDING_EVENT_CONSECUTIVE_SAME_STATUS, nodeHash)));
         }

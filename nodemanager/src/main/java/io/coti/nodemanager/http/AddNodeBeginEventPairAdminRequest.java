@@ -11,12 +11,10 @@ import java.time.Instant;
 
 @Data
 public class AddNodeBeginEventPairAdminRequest extends Request {
+
     @NotNull
     private @Valid Hash nodeHash;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "UTC")
-    private @NotNull @Valid Instant startDateTimeUTC;
-
-    public AddNodeBeginEventPairAdminRequest() {
-    }
+    private @NotNull @Valid Instant startTime;
 
 }

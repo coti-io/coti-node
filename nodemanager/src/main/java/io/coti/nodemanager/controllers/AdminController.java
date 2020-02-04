@@ -31,12 +31,12 @@ public class AdminController {
         return stakingService.getStakerList();
     }
 
-    @PutMapping(path = "/addnodeevent")
-    public ResponseEntity<IResponse> addNodeEventAdmin(@Valid @RequestBody AddNodeEventAdminRequest request) {
-        return nodeManagementService.addNodeEventSingleAdmin(request);
+    @PutMapping(path = "/node/event")
+    public ResponseEntity<IResponse> addSingleNodeEvent(@Valid @RequestBody AddNodeEventAdminRequest request) {
+        return nodeManagementService.addSingleNodeEvent(request);
     }
 
-    @PutMapping(path = "/addnodebegineventpair")
+    @PutMapping(path = "/node/event/pair")
     public ResponseEntity<IResponse> addNodeBeginEventPairAdmin(@Valid @RequestBody AddNodeBeginEventPairAdminRequest request) {
         return nodeManagementService.addNodeBeginEventPairAdmin(request);
     }
