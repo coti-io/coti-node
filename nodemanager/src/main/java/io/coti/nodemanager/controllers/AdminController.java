@@ -37,7 +37,7 @@ public class AdminController {
     }
 
     @PutMapping(path = "/node/event/pair")
-    public ResponseEntity<IResponse> addNodeBeginEventPairAdmin(@Valid @RequestBody AddNodePairEventRequest request) {
+    public ResponseEntity<IResponse> addPairNodeEvent(@Valid @RequestBody AddNodePairEventRequest request) {
         return nodeManagementService.addPairNodeEvent(request);
     }
 }

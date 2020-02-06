@@ -21,8 +21,8 @@ public class AddNodePairEventRequest extends Request {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "UTC")
     private @Valid Instant endTime;
     @NotNull
-    private NodeType nodeType;
+    private @Valid NodeType nodeType;
     @NotNull
-    private NetworkNodeStatus firstEventNodeStatus;
+    private @Valid NetworkNodeStatus firstEventNodeStatus;
 
 }

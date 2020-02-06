@@ -13,6 +13,7 @@ import io.coti.nodemanager.model.NodeDailyActivities;
 import io.coti.nodemanager.model.NodeHistory;
 import io.coti.nodemanager.services.interfaces.INetworkHistoryService;
 import org.apache.commons.collections4.map.LinkedMap;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -325,7 +326,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
         NodeNetworkDataRecord originalActivationEventRecord = null;
         NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
         if (nodeDailyActivityData == null) {
-            throw new NetworkHistoryValidationException(String.format("Node hash does not have activity" , nodeHash));
+            throw new NetworkHistoryValidationException(String.format("Node hash does not have activity", nodeHash));
         }
         for (LocalDate localDate : nodeDailyActivityData.getNodeDaySet()) {
             Hash localDateWithEventHash =
@@ -347,7 +348,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
     private NodeNetworkDataRecord getNodeNetworkFirstDataRecord(Hash nodeHash) {
         NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
         if (nodeDailyActivityData == null) {
-            throw new NetworkHistoryValidationException(String.format("Node hash does not have activity" , nodeHash));
+            throw new NetworkHistoryValidationException(String.format("Node hash does not have activity", nodeHash));
         }
         Hash firstDateWithEventHash =
                 calculateNodeHistoryDataHash(nodeDailyActivityData.getNodeHash(), nodeDailyActivityData.getNodeDaySet().first());
@@ -496,8 +497,41 @@ public class NetworkHistoryService implements INetworkHistoryService {
         return localDate.atStartOfDay().toInstant(ZoneOffset.UTC);
     }
 
+    @Override
+    public Pair<LocalDate, Hash> getReferenceToRecord(NodeNetworkDataRecord nodeNetworkDataRecord) {
+        return new ImmutablePair<>(nodeNetworkDataRecord.getRecordTime().atZone(ZoneId.of("UTC")).toLocalDate(), nodeNetworkDataRecord.getHash());
+    }
+
+    @Override
+    public NodeNetworkDataRecord getLastNodeNetworkDataRecord(Hash nodeHash) {
+        NodeNetworkDataRecord nodeNetworkDataRecord = null;
+        NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
+        if (nodeDailyActivityData != null) {
+            nodeNetworkDataRecord = getLastNodeNetworkDataRecord(nodeHash, nodeDailyActivityData);
+        }
+        return nodeNetworkDataRecord;
+    }
+
+    @Override
+    public NodeNetworkDataRecord getLastNodeNetworkDataRecord(Hash nodeHash, NodeDailyActivityData nodeDailyActivityData) {
+        NodeNetworkDataRecord nodeNetworkDataRecord = null;
+        ConcurrentSkipListSet<LocalDate> nodeDaySet = nodeDailyActivityData.getNodeDaySet();
+        if (!nodeDaySet.isEmpty()) {
+            LocalDate lastLocalDate = nodeDailyActivityData.getNodeDaySet().last();
+            NodeHistoryData nodeHistoryData = getNodeHistoryData(nodeHash, lastLocalDate);
+            nodeNetworkDataRecord = getLastNodeNetworkDataRecord(nodeHistoryData);
+        }
+        return nodeNetworkDataRecord;
+    }
+
+    @Override
     public NodeNetworkDataRecord getLastNodeNetworkDataRecord(NodeHistoryData nodeHistoryData) {
         return nodeHistoryData.getNodeNetworkDataRecordMap().get(nodeHistoryData.getNodeNetworkDataRecordMap().lastKey());
     }
 
+    @Override
+    public NodeHistoryData getNodeHistoryData(Hash nodeHash, LocalDate localDate) {
+        Hash nodeHistoryDataHashForEvent = calculateNodeHistoryDataHash(nodeHash, localDate);
+        return nodeHistory.getByHash(nodeHistoryDataHashForEvent);
+    }
 }
