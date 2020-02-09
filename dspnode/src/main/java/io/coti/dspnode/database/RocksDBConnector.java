@@ -1,9 +1,7 @@
-package io.coti.fullnode.database;
+package io.coti.dspnode.database;
 
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
-import io.coti.basenode.model.RequestedAddressHashes;
 import io.coti.basenode.model.UnconfirmedReceivedTransactionHashes;
-import io.coti.fullnode.model.ExplorerIndexes;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
@@ -17,8 +15,6 @@ public class RocksDBConnector extends BaseNodeRocksDBConnector {
     public void setColumnFamily() {
         super.setColumnFamily();
         columnFamilyClassNames.addAll(Arrays.asList(
-                ExplorerIndexes.class.getName(),
-                RequestedAddressHashes.class.getName(),
                 UnconfirmedReceivedTransactionHashes.class.getName()
         ));
     }

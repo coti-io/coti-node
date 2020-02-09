@@ -48,6 +48,7 @@ public class TransactionService extends BaseNodeTransactionService {
         super.init();
     }
 
+    @Override
     public void handleNewTransactionFromFullNode(TransactionData transactionData) {
         try {
             log.debug("Running new transactions from full node handler");
@@ -61,6 +62,12 @@ public class TransactionService extends BaseNodeTransactionService {
                 log.info("Invalid Transaction Received!");
                 return;
             }
+            if (hasOneOfParentsMissing(transactionData)) {
+                if (!postponedTransactions.containsKey(transactionData)) {
+                    postponedTransactions.put(transactionData, true);
+                }
+                return;
+            }
             transactionHelper.attachTransactionToCluster(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
             propagationPublisher.propagate(transactionData, Arrays.asList(
@@ -70,12 +77,17 @@ public class TransactionService extends BaseNodeTransactionService {
                     NodeType.ZeroSpendServer,
                     NodeType.FinancialServer,
                     NodeType.HistoryNode));
+            transactionPropagationCheckService.addUnconfirmedTransaction(transactionData.getHash());
             transactionHelper.setTransactionStateToFinished(transactionData);
             transactionsToValidate.add(transactionData);
         } catch (Exception ex) {
             log.error("Exception while handling transaction {}", transactionData, ex);
         } finally {
+            boolean isTransactionFinished = transactionHelper.isTransactionFinished(transactionData);
             transactionHelper.endHandleTransaction(transactionData);
+            if (isTransactionFinished) {
+                processPostponedTransactions(transactionData);
+            }
         }
     }
 
