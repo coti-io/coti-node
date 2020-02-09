@@ -208,7 +208,7 @@ public class NodeManagementService implements INodeManagementService {
                     nodeDailyActivities.put(nodeDailyActivityData);
                 }
 
-                NodeHistoryData nodeHistoryDataForEvent = getOrCreateNodeHistoryData(nodeHash, localDateForEvent);
+                NodeHistoryData nodeHistoryDataForEvent = getOrCreateNodeHistoryData(nodeHash, localDateForEvent, nodeType);
                 nodeHistoryDataForEvent.getNodeNetworkDataRecordMap().put(newNodeNetworkDataRecord.getHash(), newNodeNetworkDataRecord);
                 nodeHistory.put(nodeHistoryDataForEvent);
 
@@ -258,7 +258,7 @@ public class NodeManagementService implements INodeManagementService {
 
                 if (networkRecordAfterPair != null) {
                     networkRecordAfterPair.setStatusChainRef(networkHistoryService.getReferenceToRecord(newPairEndNodeNetworkDataRecord));
-                    NodeHistoryData nodeHistoryDataForEventAfterPair = getOrCreateNodeHistoryData(nodeHash, networkRecordAfterPair.getRecordTime().atZone(ZoneId.of("UTC")).toLocalDate());
+                    NodeHistoryData nodeHistoryDataForEventAfterPair = getOrCreateNodeHistoryData(nodeHash, networkRecordAfterPair.getRecordTime().atZone(ZoneId.of("UTC")).toLocalDate(), nodeType);
                     nodeHistory.put(nodeHistoryDataForEventAfterPair);
                 }
 
@@ -282,10 +282,10 @@ public class NodeManagementService implements INodeManagementService {
                                                                            NodeNetworkDataRecord previousNodeNetworkDataRecord, NetworkNodeStatus eventNodeStatus, boolean asFirst) {
         LocalDate localDate = eventRecordTime.atZone(ZoneId.of("UTC")).toLocalDate();
         NodeNetworkDataRecord newNodeNetworkDataRecord = createManualNodeNetworkDataRecord(nodeHash, nodeType, eventNodeStatus, eventRecordTime);
-        if(previousNodeNetworkDataRecord!=null){
+        if (previousNodeNetworkDataRecord != null) {
             newNodeNetworkDataRecord.setStatusChainRef(networkHistoryService.getReferenceToRecord(previousNodeNetworkDataRecord));
         }
-        NodeHistoryData nodeHistoryData = getOrCreateNodeHistoryData(nodeHash, localDate);
+        NodeHistoryData nodeHistoryData = getOrCreateNodeHistoryData(nodeHash, localDate, nodeType);
         nodeHistoryData.setNodeNetworkDataRecordMap(reCreateLinkedMapNodeNetworkDataRecord(nodeHistoryData.getNodeNetworkDataRecordMap(), newNodeNetworkDataRecord, asFirst));
         nodeHistory.put(nodeHistoryData);
         return newNodeNetworkDataRecord;
@@ -479,10 +479,17 @@ public class NodeManagementService implements INodeManagementService {
         return newNodeNetworkDataRecord;
     }
 
-    private NodeHistoryData getOrCreateNodeHistoryData(Hash nodeHash, LocalDate currentEventDate) {
+    private NodeHistoryData getOrCreateNodeHistoryData(Hash nodeHash, LocalDate currentEventDate, NodeType nodeType) {
         Hash nodeHistoryDataHash = networkHistoryService.calculateNodeHistoryDataHash(nodeHash, currentEventDate);
         NodeHistoryData nodeHistoryData = nodeHistory.getByHash(nodeHistoryDataHash);
         if (nodeHistoryData == null) {
+            NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
+            if (nodeDailyActivityData == null) {
+                nodeDailyActivityData = new NodeDailyActivityData(nodeHash, nodeType);
+            }
+            ConcurrentSkipListSet<LocalDate> nodeDaySet = nodeDailyActivityData.getNodeDaySet();
+            nodeDaySet.add(currentEventDate);
+            nodeDailyActivities.put(nodeDailyActivityData);
             nodeHistoryData = new NodeHistoryData(nodeHistoryDataHash);
         }
         return nodeHistoryData;

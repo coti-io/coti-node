@@ -9,6 +9,7 @@ import io.coti.nodemanager.data.NodeNetworkDataRecord;
 import io.coti.nodemanager.http.GetNodeActivationTimeRequest;
 import io.coti.nodemanager.http.GetNodeStatisticsRequest;
 import io.coti.nodemanager.http.data.NodeDailyStatisticsData;
+import io.coti.nodemanager.http.data.NodeNetworkRecordResponseData;
 import io.coti.nodemanager.http.data.NodeStatisticsData;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,9 @@ public interface INetworkHistoryService {
 
     List<NodeHistoryData> getNodesHistory();
 
-    LinkedList<Object> getNodeEvents(GetNodeStatisticsRequest getNodeStatisticsRequest, boolean rawData);
+    LinkedList<NodeNetworkRecordResponseData> getNodeEventsResponse(GetNodeStatisticsRequest getNodeStatisticsRequest);
+
+    LinkedList<NodeNetworkDataRecord> getNodeEvents(GetNodeStatisticsRequest getNodeStatisticsRequest);
 
     List<NodeDailyStatisticsData> getNodeDailyStats(GetNodeStatisticsRequest getNodeStatisticsRequest);
 

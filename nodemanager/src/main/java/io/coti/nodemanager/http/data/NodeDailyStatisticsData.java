@@ -7,6 +7,7 @@ import java.time.LocalDate;
 
 @Data
 public class NodeDailyStatisticsData implements Serializable {
+
     private LocalDate recordDate;
     private long nodeUpSecond;
     private long nodeRestarts;

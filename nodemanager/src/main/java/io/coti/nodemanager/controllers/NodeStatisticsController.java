@@ -24,13 +24,7 @@ public class NodeStatisticsController {
 
     @PostMapping(path = "/events")
     public ResponseEntity<GetNodeEventStatisticsResponse> getNodeEvents(@Valid @RequestBody GetNodeStatisticsRequest getNodeStatisticsRequest) {
-        GetNodeEventStatisticsResponse getNodeEventStatisticsResponse = new GetNodeEventStatisticsResponse(networkHistoryService.getNodeEvents(getNodeStatisticsRequest, false));
-        return ResponseEntity.ok(getNodeEventStatisticsResponse);
-    }
-
-    @PostMapping(path = "/eventsrawdata")
-    public ResponseEntity<GetNodeEventStatisticsResponse> getNodeEventsRawData(@Valid @RequestBody GetNodeStatisticsRequest getNodeStatisticsRequest) {
-        GetNodeEventStatisticsResponse getNodeEventStatisticsResponse = new GetNodeEventStatisticsResponse(networkHistoryService.getNodeEvents(getNodeStatisticsRequest, true));
+        GetNodeEventStatisticsResponse getNodeEventStatisticsResponse = new GetNodeEventStatisticsResponse(networkHistoryService.getNodeEventsResponse(getNodeStatisticsRequest));
         return ResponseEntity.ok(getNodeEventStatisticsResponse);
     }
 
