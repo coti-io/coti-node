@@ -36,7 +36,7 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.ADDRESS_BATCH_UP
 @Service
 public class BaseNodeAddressService implements IAddressService {
 
-    protected final int TRUSTED_RESULT_MAX_DURATION_IN_MILLIS = 600_000;
+    protected static final int TRUSTED_RESULT_MAX_DURATION_IN_MILLIS = 600_000;
     @Autowired
     private Addresses addresses;
     @Autowired
@@ -74,8 +74,7 @@ public class BaseNodeAddressService implements IAddressService {
             addNewAddress(addressData);
             continueHandleGeneratedAddress(addressData);
         } catch (Exception e) {
-            log.error("Error at handlePropagatedAddress");
-            e.printStackTrace();
+            log.error("Error at handlePropagatedAddress", e);
         }
     }
 
@@ -128,8 +127,9 @@ public class BaseNodeAddressService implements IAddressService {
                 fileOutputStream.close();
             }
         } catch (IOException e) {
-
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(String.format(ADDRESS_BATCH_UPLOAD_ERROR, e.getMessage())));
         }
+
         String line;
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName))) {
             while ((line = bufferedReader.readLine()) != null) {
@@ -143,7 +143,7 @@ public class BaseNodeAddressService implements IAddressService {
                 addressResponseDataList.forEach(addressResponseData -> addresses.put(new AddressData(new Hash(addressResponseData.getAddress()), addressResponseData.getCreationTime())));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Address batch upload error", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(String.format(ADDRESS_BATCH_UPLOAD_ERROR, e.getMessage())));
         }
         return ResponseEntity.status(HttpStatus.OK).body(new Response(ADDRESS_BATCH_UPLOADED));

@@ -61,6 +61,7 @@ public class BaseNodeBalanceService implements IBalanceService {
 
     @Override
     public void continueHandleBalanceChanges(Hash addressHash) {
+        // implemented by the sub classes
     }
 
     @Override
@@ -101,7 +102,7 @@ public class BaseNodeBalanceService implements IBalanceService {
     }
 
     @Override
-    public void updateBalanceFromClusterStamp(Hash addressHash, BigDecimal amount) throws IllegalArgumentException {
+    public void updateBalanceFromClusterStamp(Hash addressHash, BigDecimal amount) {
         if (balanceMap.containsKey(addressHash)) {
             log.error("The address {} was already found in the clusterstamp", addressHash);
             throw new IllegalArgumentException(String.format("The address %s was already found in the clusterstamp", addressHash));

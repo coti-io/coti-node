@@ -44,7 +44,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
 
     public void init() {
         confirmationQueue = new LinkedBlockingQueue<>();
-        confirmedTransactionsThread = new Thread(() -> updateConfirmedTransactions());
+        confirmedTransactionsThread = new Thread(this::updateConfirmedTransactions);
         confirmedTransactionsThread.start();
         log.info("{} is up", this.getClass().getSimpleName());
     }
@@ -103,7 +103,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         }
         LinkedList<ConfirmationData> remainingConfirmedTransactions = new LinkedList<>();
         confirmationQueue.drainTo(remainingConfirmedTransactions);
-        if (remainingConfirmedTransactions.size() != 0) {
+        if (!remainingConfirmedTransactions.isEmpty()) {
             log.info("Please wait to process {} remaining confirmed transaction(s)", remainingConfirmedTransactions.size());
             remainingConfirmedTransactions.forEach(this::updateConfirmedTransactionHandler);
         }
@@ -171,11 +171,11 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     protected void continueHandleDSPConfirmedTransaction(TransactionData transactionData) {
-        log.debug("Continue to handle DSP confirmed transaction by base node");
+        // implemented by the sub classes
     }
 
     protected void continueHandleAddressHistoryChanges(TransactionData transactionData) {
-        log.debug("Continue to handle address history changes by base node");
+        // implemented by the sub classes
     }
 
     @Override

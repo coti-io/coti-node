@@ -267,8 +267,8 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
         String folderDelimiter = "/";
         String folderNameDelimiter = "-";
         Set<Long> s3Backups = new HashSet<>();
-        remoteBackups.forEach(backup -> {
-            String[] backupPathArray = backup.split(folderDelimiter);
+        remoteBackups.forEach(remoteBackup -> {
+            String[] backupPathArray = remoteBackup.split(folderDelimiter);
             if (backupPathArray.length > INDEX_OF_BACKUP_TIMESTAMP_IN_PATH) {
                 String[] folderNameArray = backupPathArray[INDEX_OF_BACKUP_TIMESTAMP_IN_PATH].split(folderNameDelimiter);
                 if (folderNameArray.length > INDEX_OF_BACKUP_TIMESTAMP_IN_FOLDER_NAME)

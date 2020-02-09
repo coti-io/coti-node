@@ -13,10 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -32,7 +29,7 @@ public class AddressController {
     @Autowired
     private AddressService addressService;
 
-    @RequestMapping(method = RequestMethod.PUT)
+    @PutMapping()
     public ResponseEntity<IResponse> addAddress(@Valid @RequestBody AddressRequest addAddressRequest) {
 
         if (addressService.validateAddress(addAddressRequest.getAddress())) {
@@ -53,7 +50,7 @@ public class AddressController {
         }
     }
 
-    @RequestMapping(method = RequestMethod.POST)
+    @PostMapping()
     public ResponseEntity<AddressesExistsResponse> addressExists(@Valid @RequestBody AddressBulkRequest addressRequest) {
         List<Hash> addressHashes = addressRequest.getAddresses();
         AddressesExistsResponse addressResponse = new AddressesExistsResponse();
@@ -66,7 +63,7 @@ public class AddressController {
         return ResponseEntity.status(HttpStatus.OK).body(addressResponse);
     }
 
-    @RequestMapping(value = "/history", method = RequestMethod.POST)
+    @PostMapping(value = "/history")
     public ResponseEntity<AddressesExistsResponse> addressesCheckExistenceAndRequestHistoryNode(@Valid @RequestBody AddressBulkRequest addressRequest) {
         return ResponseEntity.status(HttpStatus.OK).body(addressService.addressesCheckExistenceAndRequestHistoryNode(addressRequest));
     }

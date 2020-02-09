@@ -1,26 +1,17 @@
 package io.coti.fullnode.http;
 
-import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.data.AddressStatus;
+import lombok.Data;
 
+@Data
 public class AddAddressResponse extends BaseResponse {
 
-
-    public String address;
-    public AddressStatus addressStatus;
-
-
-    public AddAddressResponse(Hash addressHash, AddressStatus status) {
-        this(addressHash.toHexString(), status);
-    }
+    private String address;
+    private AddressStatus addressStatus;
 
     public AddAddressResponse(String address, AddressStatus status) {
-
         this.address = address;
         this.addressStatus = status;
-
     }
-
-
 }

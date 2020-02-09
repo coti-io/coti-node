@@ -1,6 +1,5 @@
 package io.coti.storagenode.services;
 
-import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.crypto.GetHistoryAddressesRequestCrypto;
 import io.coti.basenode.crypto.GetHistoryAddressesResponseCrypto;
 import io.coti.basenode.data.AddressData;
@@ -31,8 +30,6 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 @Slf4j
 public class AddressStorageService extends EntityStorageService {
 
-    @Autowired
-    private JacksonSerializer jacksonSerializer;
     @Autowired
     private BaseNodeValidationService validationService;
     @Autowired
@@ -69,12 +66,10 @@ public class AddressStorageService extends EntityStorageService {
         return validationService.validateAddress(addressData.getHash());
     }
 
-    public Map<Hash, AddressData> getObjectsMapFromJsonMap(HashMap<Hash, String> responsesMap) {
-        Map<Hash, AddressData> hashAddressDataMap = responsesMap.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e ->
+    public Map<Hash, AddressData> getObjectsMapFromJsonMap(Map<Hash, String> responsesMap) {
+        return responsesMap.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e ->
                 jacksonSerializer.deserialize(e.getValue())
         ));
-
-        return hashAddressDataMap;
     }
 
     @Override

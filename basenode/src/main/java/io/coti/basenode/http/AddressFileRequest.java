@@ -7,6 +7,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 public class AddressFileRequest extends Request {
+
     @NotNull
     private MultipartFile file;
 }

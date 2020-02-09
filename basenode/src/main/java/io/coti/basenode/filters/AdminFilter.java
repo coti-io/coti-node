@@ -17,7 +17,7 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.UNAUTHORIZED_IP_
 @Slf4j
 public class AdminFilter implements Filter {
 
-    private static HashSet<String> whiteListIps;
+    private HashSet<String> whiteListIps;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {

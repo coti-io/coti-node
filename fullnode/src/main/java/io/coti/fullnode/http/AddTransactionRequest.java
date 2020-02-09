@@ -2,6 +2,7 @@ package io.coti.fullnode.http;
 
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.Request;
+import lombok.Data;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
@@ -9,23 +10,26 @@ import javax.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.List;
 
+@Data
 public class AddTransactionRequest extends Request {
+
     @NotEmpty
-    public List<@Valid BaseTransactionData> baseTransactions;
+    private List<@Valid BaseTransactionData> baseTransactions;
     @NotNull
-    public Hash hash;
+    private @Valid Hash hash;
     @NotEmpty
-    public String transactionDescription;
+    private String transactionDescription;
     @NotNull
-    public Instant createTime;
+    private Instant createTime;
     @NotEmpty
-    public List<@Valid TransactionTrustScoreData> trustScoreResults;
+    private List<@Valid TransactionTrustScoreData> trustScoreResults;
     @NotNull
-    public Hash senderHash;
+    private Hash senderHash;
     @NotNull
-    public @Valid SignatureData senderSignature;
+    private @Valid SignatureData senderSignature;
     @NotNull
-    public TransactionType type;
+    private TransactionType type;
+
 }
 
 

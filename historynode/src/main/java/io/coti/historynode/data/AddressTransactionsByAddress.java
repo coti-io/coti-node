@@ -28,6 +28,6 @@ public class AddressTransactionsByAddress implements IEntity {
 
     @Override
     public void setHash(Hash hash) {
-
+        this.address = hash;
     }
 }

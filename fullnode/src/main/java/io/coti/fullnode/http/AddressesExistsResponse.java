@@ -8,7 +8,7 @@ import java.util.LinkedHashMap;
 @Data
 public class AddressesExistsResponse extends BaseResponse {
 
-    public LinkedHashMap<String, Boolean> addresses;
+    private LinkedHashMap<String, Boolean> addresses;
 
     public AddressesExistsResponse() {
         addresses = new LinkedHashMap<>();

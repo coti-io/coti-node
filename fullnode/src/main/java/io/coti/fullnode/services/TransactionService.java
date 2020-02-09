@@ -90,16 +90,16 @@ public class TransactionService extends BaseNodeTransactionService {
     public ResponseEntity<Response> addNewTransaction(AddTransactionRequest request) {
         TransactionData transactionData =
                 new TransactionData(
-                        request.baseTransactions,
-                        request.hash,
-                        request.transactionDescription,
-                        request.trustScoreResults,
-                        request.createTime,
-                        request.senderHash,
-                        request.senderSignature,
-                        request.type);
+                        request.getBaseTransactions(),
+                        request.getHash(),
+                        request.getTransactionDescription(),
+                        request.getTrustScoreResults(),
+                        request.getCreateTime(),
+                        request.getSenderHash(),
+                        request.getSenderSignature(),
+                        request.getType());
         try {
-            log.debug("New transaction request is being processed. Transaction Hash = {}", request.hash);
+            log.debug("New transaction request is being processed. Transaction Hash = {}", request.getHash());
 
             if (transactionHelper.isTransactionExists(transactionData)) {
                 log.debug("Received existing transaction: {}", transactionData.getHash());

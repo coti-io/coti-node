@@ -20,10 +20,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -81,7 +78,7 @@ public class AddressService extends BaseNodeAddressService {
             return false;
         });
 
-        if (addressHashes.size() > 0) {
+        if (!addressHashes.isEmpty()) {
             fillUnknownAddressesFromHistoryResponse(addressHashes, addressHashToFoundStatusMap, historyNodeHttpAddress);
         }
 
@@ -134,9 +131,10 @@ public class AddressService extends BaseNodeAddressService {
 
     private String getHistoryNodeHttpAddress() {
         Map<Hash, NetworkNodeData> historyNodeMap = networkService.getMapFromFactory(NodeType.HistoryNode);
-        if (historyNodeMap.isEmpty()) {
+        Optional<NetworkNodeData> historyNode = historyNodeMap.values().stream().findFirst();
+        if (!historyNode.isPresent()) {
             return null;
         }
-        return historyNodeMap.values().stream().findFirst().get().getHttpFullAddress();
+        return historyNode.get().getHttpFullAddress();
     }
 }

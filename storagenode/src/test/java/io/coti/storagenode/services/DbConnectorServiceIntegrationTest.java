@@ -37,7 +37,7 @@ import static testUtils.TestUtils.*;
 @RunWith(SpringRunner.class)
 public class DbConnectorServiceIntegrationTest {
 
-    private final static int NUMBER_OF_OBJECTS = 6;
+    private static final int NUMBER_OF_OBJECTS = 6;
 
     private Map<String, String> indexes;
 

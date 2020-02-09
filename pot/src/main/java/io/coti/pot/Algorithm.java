@@ -53,9 +53,8 @@ public class Algorithm implements IAlgorithm {
         return cryptoHashAlgorithm.digest(input);
     }
 
-    private java.security.MessageDigest getBouncyCastle(AlgorithmTypes hashingAlgorithm) throws NoSuchAlgorithmException {
-        MessageDigest messageDigest = MessageDigest.getInstance(hashingAlgorithm.toString().replace('_', '-'), new BouncyCastleProvider());
-        return messageDigest;
+    private MessageDigest getBouncyCastle(AlgorithmTypes hashingAlgorithm) throws NoSuchAlgorithmException {
+        return MessageDigest.getInstance(hashingAlgorithm.toString().replace('_', '-'), new BouncyCastleProvider());
     }
 
     private Digest getCryptoHash(AlgorithmTypes hashingAlgorithm) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {

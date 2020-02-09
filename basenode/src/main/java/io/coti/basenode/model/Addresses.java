@@ -6,7 +6,4 @@ import org.springframework.stereotype.Service;
 @Service
 public class Addresses extends Collection<AddressData> {
 
-    public void init() {
-        super.init();
-    }
 }

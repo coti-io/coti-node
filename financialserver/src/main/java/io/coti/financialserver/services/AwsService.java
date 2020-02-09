@@ -21,9 +21,9 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 public class AwsService extends BaseNodeAwsService {
 
     @Value("${aws.s3.bucket.name}")
-    private String BUCKET_NAME;
+    private String bucketName;
     @Value("${aws.s3.bucket.name.distribution}")
-    private String BUCKET_NAME_DISTRIBUTION;
+    private String bucketNameDistribution;
 
     @Override
     public void init() {
@@ -35,7 +35,7 @@ public class AwsService extends BaseNodeAwsService {
 
     public String uploadDisputeDocument(Hash documentHash, File file, String contentType) {
         String fileName = documentHash.toString();
-        return uploadDocument(file, contentType, fileName, BUCKET_NAME);
+        return uploadDocument(file, contentType, fileName, bucketName);
     }
 
     public String uploadDocument(File file, String contentType, String fileName, String bucketName) {
@@ -60,14 +60,14 @@ public class AwsService extends BaseNodeAwsService {
     }
 
     public S3Object getS3Object(String fileName) {
-        return s3Client.getObject(BUCKET_NAME, fileName);
+        return s3Client.getObject(bucketName, fileName);
     }
 
     public void downloadFundDistributionFile(String fileName) {
-        downloadFile(fileName, BUCKET_NAME_DISTRIBUTION);
+        downloadFile(fileName, bucketNameDistribution);
     }
 
     public String uploadFundDistributionResultFile(String fileName, File file, String contentType) {
-        return uploadDocument(file, contentType, fileName, BUCKET_NAME_DISTRIBUTION);
+        return uploadDocument(file, contentType, fileName, bucketNameDistribution);
     }
 }
