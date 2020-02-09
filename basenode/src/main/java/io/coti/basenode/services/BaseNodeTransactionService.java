@@ -14,8 +14,6 @@ import reactor.core.publisher.FluxSink;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,11 +39,13 @@ public class BaseNodeTransactionService implements ITransactionService {
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
+    protected ITransactionPropagationCheckService transactionPropagationCheckService;
+    @Autowired
     private JacksonSerializer jacksonSerializer;
     @Autowired
     private TransactionIndexes transactionIndexes;
     private Map<Hash, TransactionData> parentProcessingTransactions = new ConcurrentHashMap<>();
-    private List<TransactionData> postponedTransactions = new LinkedList<>();
+    protected Map<TransactionData, Boolean> postponedTransactions = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
 
     @Override
     public void init() {
@@ -134,10 +134,10 @@ public class BaseNodeTransactionService implements ITransactionService {
     @Override
     public void handlePropagatedTransaction(TransactionData transactionData) {
         if (transactionHelper.isTransactionAlreadyPropagated(transactionData)) {
+            transactionPropagationCheckService.removeTransactionHashFromUnconfirmedOnBackPropagation(transactionData.getHash());
             log.debug("Transaction already exists: {}", transactionData.getHash());
             return;
         }
-        List<Hash> childrenTransactions = transactionData.getChildrenTransactionHashes();
         try {
             transactionHelper.startHandleTransaction(transactionData);
             while (hasOneOfParentsProcessing(transactionData)) {
@@ -151,7 +151,9 @@ public class BaseNodeTransactionService implements ITransactionService {
                 return;
             }
             if (hasOneOfParentsMissing(transactionData)) {
-                postponedTransactions.add(transactionData);
+                if (!postponedTransactions.containsKey(transactionData)) {
+                    postponedTransactions.put(transactionData, false);
+                }
                 return;
             }
             if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
@@ -172,7 +174,7 @@ public class BaseNodeTransactionService implements ITransactionService {
         } finally {
             boolean isTransactionFinished = transactionHelper.isTransactionFinished(transactionData);
             transactionHelper.endHandleTransaction(transactionData);
-            for (Hash childrenTransactionHash : childrenTransactions) {
+            for (Hash childrenTransactionHash : transactionData.getChildrenTransactionHashes()) {
                 TransactionData childrenTransaction = parentProcessingTransactions.get(childrenTransactionHash);
                 if (childrenTransaction != null)
                     synchronized (childrenTransaction) {
@@ -181,24 +183,36 @@ public class BaseNodeTransactionService implements ITransactionService {
                     }
             }
             if (isTransactionFinished) {
-                DspConsensusResult postponedDspConsensusResult = dspVoteService.getPostponedDspConsensusResult(transactionData.getHash());
-                if (postponedDspConsensusResult != null) {
-                    dspVoteService.handleVoteConclusion(postponedDspConsensusResult);
-                }
-                List<TransactionData> postponedParentTransactions = postponedTransactions.stream().filter(
-                        postponedTransactionData ->
-                                (postponedTransactionData.getRightParentHash() != null && postponedTransactionData.getRightParentHash().equals(transactionData.getHash())) ||
-                                        (postponedTransactionData.getLeftParentHash() != null && postponedTransactionData.getLeftParentHash().equals(transactionData.getHash())))
-                        .collect(Collectors.toList());
-                postponedParentTransactions.forEach(postponedTransaction -> {
-                    log.debug("Handling postponed transaction : {}, parent of transaction: {}", postponedTransaction.getHash(), transactionData.getHash());
-                    postponedTransactions.remove(postponedTransaction);
-                    handlePropagatedTransaction(postponedTransaction);
-                });
+                processPostponedTransactions(transactionData);
             }
-
         }
+    }
 
+    protected void processPostponedTransactions(TransactionData transactionData) {
+        DspConsensusResult postponedDspConsensusResult = dspVoteService.getPostponedDspConsensusResult(transactionData.getHash());
+        if (postponedDspConsensusResult != null) {
+            dspVoteService.handleVoteConclusion(postponedDspConsensusResult);
+        }
+        Map<TransactionData, Boolean> postponedParentTransactions = postponedTransactions.entrySet().stream().filter(
+                postponedTransactionMapEntry ->
+                        (postponedTransactionMapEntry.getKey().getRightParentHash() != null
+                                && postponedTransactionMapEntry.getKey().getRightParentHash().equals(transactionData.getHash()))
+                                || (postponedTransactionMapEntry.getKey().getLeftParentHash() != null
+                                && postponedTransactionMapEntry.getKey().getLeftParentHash().equals(transactionData.getHash())))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        postponedParentTransactions.forEach((key, value) -> {
+            log.debug("Handling postponed transaction : {}, parent of transaction: {}", key.getHash(), transactionData.getHash());
+            postponedTransactions.remove(key);
+            if (value) {
+                handleNewTransactionFromFullNode(key);
+            } else {
+                handlePropagatedTransaction(key);
+            }
+        });
+    }
+
+    public void handleNewTransactionFromFullNode(TransactionData transactionData) {
+        // implemented for DSP Node
     }
 
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
@@ -255,7 +269,7 @@ public class BaseNodeTransactionService implements ITransactionService {
                 (transactionData.getRightParentHash() != null && transactionHelper.isTransactionHashProcessing(transactionData.getRightParentHash()));
     }
 
-    private boolean hasOneOfParentsMissing(TransactionData transactionData) {
+    protected boolean hasOneOfParentsMissing(TransactionData transactionData) {
         return (transactionData.getLeftParentHash() != null && transactions.getByHash(transactionData.getLeftParentHash()) == null) ||
                 (transactionData.getRightParentHash() != null && transactions.getByHash(transactionData.getRightParentHash()) == null);
     }

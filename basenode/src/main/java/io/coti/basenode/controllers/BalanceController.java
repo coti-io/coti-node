@@ -1,4 +1,4 @@
-package io.coti.fullnode.controllers;
+package io.coti.basenode.controllers;
 
 import io.coti.basenode.http.GetBalancesRequest;
 import io.coti.basenode.http.GetBalancesResponse;
