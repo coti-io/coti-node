@@ -45,6 +45,11 @@ public class NodeStatisticsController {
         return networkHistoryService.getNodeActivityPercentage(getNodeStatisticsRequest);
     }
 
+    @PostMapping(path = "/totalsByPercentageNodes")
+    public ResponseEntity<IResponse> getNodeActivityPercentage(@Valid @RequestBody GetNodesActivityPercentageRequest getNodesActivityPercentageRequest) {
+        return networkHistoryService.getNodesActivityPercentage(getNodesActivityPercentageRequest);
+    }
+
     @PostMapping(path = "/totalsInSeconds")
     public ResponseEntity<IResponse> getNodeActivityInSeconds(@Valid @RequestBody GetNodeStatisticsRequest getNodeStatisticsRequest) {
         return networkHistoryService.getNodeActivityInSeconds(getNodeStatisticsRequest);
