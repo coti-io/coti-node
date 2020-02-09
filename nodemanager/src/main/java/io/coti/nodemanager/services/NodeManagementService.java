@@ -257,8 +257,8 @@ public class NodeManagementService implements INodeManagementService {
                 NodeNetworkDataRecord newPairEndNodeNetworkDataRecord = addNodeNetworkDataRecordForPairNodeEvent(nodeHash, nodeType, pairRequestEndTime, newPairStartNodeNetworkDataRecord, secondEventNodeStatus, true);
 
                 if (networkRecordAfterPair != null) {
-                    networkRecordAfterPair.setStatusChainRef(networkHistoryService.getReferenceToRecord(newPairEndNodeNetworkDataRecord));
                     NodeHistoryData nodeHistoryDataForEventAfterPair = getOrCreateNodeHistoryData(nodeHash, networkRecordAfterPair.getRecordTime().atZone(ZoneId.of("UTC")).toLocalDate(), nodeType);
+                    nodeHistoryDataForEventAfterPair.getNodeNetworkDataRecordMap().get(networkRecordAfterPair.getHash()).setStatusChainRef(networkHistoryService.getReferenceToRecord(newPairEndNodeNetworkDataRecord));
                     nodeHistory.put(nodeHistoryDataForEventAfterPair);
                 }
 
