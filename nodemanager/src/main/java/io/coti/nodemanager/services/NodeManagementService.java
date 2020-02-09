@@ -282,7 +282,9 @@ public class NodeManagementService implements INodeManagementService {
                                                                            NodeNetworkDataRecord previousNodeNetworkDataRecord, NetworkNodeStatus eventNodeStatus, boolean asFirst) {
         LocalDate localDate = eventRecordTime.atZone(ZoneId.of("UTC")).toLocalDate();
         NodeNetworkDataRecord newNodeNetworkDataRecord = createManualNodeNetworkDataRecord(nodeHash, nodeType, eventNodeStatus, eventRecordTime);
-        newNodeNetworkDataRecord.setStatusChainRef(networkHistoryService.getReferenceToRecord(previousNodeNetworkDataRecord));
+        if(previousNodeNetworkDataRecord!=null){
+            newNodeNetworkDataRecord.setStatusChainRef(networkHistoryService.getReferenceToRecord(previousNodeNetworkDataRecord));
+        }
         NodeHistoryData nodeHistoryData = getOrCreateNodeHistoryData(nodeHash, localDate);
         nodeHistoryData.setNodeNetworkDataRecordMap(reCreateLinkedMapNodeNetworkDataRecord(nodeHistoryData.getNodeNetworkDataRecordMap(), newNodeNetworkDataRecord, asFirst));
         nodeHistory.put(nodeHistoryData);
