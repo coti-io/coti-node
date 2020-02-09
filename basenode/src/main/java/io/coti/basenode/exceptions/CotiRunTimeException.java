@@ -21,7 +21,7 @@ public class CotiRunTimeException extends RuntimeException {
 
     public void logMessage() {
         log.error("{} :", getClass().getName());
-        Arrays.asList(getMessage().split("\n")).forEach(error -> log.error(error));
+        Arrays.asList(getMessage().split("\n")).forEach(log::error);
         if (getCause() != null) {
             log.error("Cause: {}", getCause().toString());
         }

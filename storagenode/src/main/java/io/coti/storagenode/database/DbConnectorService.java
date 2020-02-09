@@ -46,7 +46,6 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 @Service
 public class DbConnectorService implements IDbConnectorService {
 
-    private static final String INDEX_TYPE = "json";
     public static final int INDEX_NUMBER_OF_SHARDS = 1;
     public static final int INDEX_NUMBER_OF_REPLICAS = 2;
     private final String ELASTICSEARCH_HOST_IP;

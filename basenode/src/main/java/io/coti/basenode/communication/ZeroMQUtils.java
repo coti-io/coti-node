@@ -5,6 +5,10 @@ import org.zeromq.ZMQException;
 
 public class ZeroMQUtils {
 
+    private ZeroMQUtils() {
+
+    }
+
     public static int bindToRandomPort(ZMQ.Socket socket) {
         boolean success = false;
         int socketNumber = 10000;

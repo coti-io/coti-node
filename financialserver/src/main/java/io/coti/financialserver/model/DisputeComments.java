@@ -7,7 +7,4 @@ import org.springframework.stereotype.Service;
 @Service
 public class DisputeComments extends Collection<DisputeCommentData> {
 
-    public void init() {
-        super.init();
-    }
 }

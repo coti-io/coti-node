@@ -18,7 +18,7 @@ public class DisputeDocumentCrypto extends SignatureCrypto<DisputeDocumentData> 
         byte[] itemIdsInBytes = new byte[0];
         if (documentData.getItemIds() != null) {
             ByteBuffer itemIdsBuffer = ByteBuffer.allocate(documentData.getItemIds().size() * Long.BYTES);
-            documentData.getItemIds().forEach(itemId -> itemIdsBuffer.putLong(itemId));
+            documentData.getItemIds().forEach(itemIdsBuffer::putLong);
             itemIdsInBytes = itemIdsBuffer.array();
         }
         byte[] descriptionInBytes = documentData.getDescription() != null ? documentData.getDescription().getBytes(StandardCharsets.UTF_8) : new byte[0];

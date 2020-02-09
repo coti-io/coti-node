@@ -22,18 +22,18 @@ public class DocumentController {
     @Autowired
     private DocumentService documentService;
 
-    @RequestMapping(path = "/upload", method = RequestMethod.POST)
+    @PostMapping(path = "/upload")
     public ResponseEntity<IResponse> newDocument(@ModelAttribute @Valid NewDocumentRequest request) {
         return documentService.newDocument(request);
     }
 
-    @RequestMapping(path = "/names", method = RequestMethod.POST)
+    @PostMapping(path = "/names")
     public ResponseEntity<IResponse> getDocumentNames(@RequestBody @Valid GetDocumentNamesRequest request) {
 
         return documentService.getDocumentNames(request);
     }
 
-    @RequestMapping(path = "/{userHash}/{r}/{s}/{documentHash}", method = RequestMethod.GET)
+    @GetMapping(path = "/{userHash}/{r}/{s}/{documentHash}")
     public void getDocumentFile(@ModelAttribute @Valid GetDocumentFileRequest request, HttpServletResponse response) throws IOException {
 
         documentService.getDocumentFile(request, response);

@@ -7,8 +7,4 @@ import org.springframework.stereotype.Service;
 @Service
 public class TokenSaleDistributions extends Collection<TokenSaleDistributionData> {
 
-    public void init() {
-        super.init();
-    }
-
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class Transactions extends Collection<TransactionData> {
 
+    @Override
     public void init() {
         super.init();
         generateLockObjects();

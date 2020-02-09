@@ -21,7 +21,6 @@ public class TrustScoreCrypto extends SignatureValidationCrypto<TrustScoreData> 
                 put(userHashInBytes).putDouble(trustScoreData.getKycTrustScore()).put(userTypeBytes);
 
         byte[] trustScoreMessageInBytes = trustScoreMessageBuffer.array();
-        byte[] cryptoHashedMessage = CryptoHelper.cryptoHash(trustScoreMessageInBytes).getBytes();
-        return cryptoHashedMessage;
+        return CryptoHelper.cryptoHash(trustScoreMessageInBytes).getBytes();
     }
 }

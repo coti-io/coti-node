@@ -47,7 +47,7 @@ public class TrustScoreService implements ITrustScoreService {
     @Override
     public Double getTrustScore(NetworkNodeData networkNodeData, List<NetworkNodeData> trustScoreNodeList) {
         GetTrustScoreRequest getTrustScoreRequest = new GetTrustScoreRequest();
-        getTrustScoreRequest.userHash = networkNodeData.getNodeHash();
+        getTrustScoreRequest.setUserHash(networkNodeData.getNodeHash());
         ResponseEntity<Object> trustScoreResponse = null;
         for (NetworkNodeData trustScoreNode : trustScoreNodeList) {
             try {

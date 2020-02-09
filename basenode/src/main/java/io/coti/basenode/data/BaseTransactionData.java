@@ -12,7 +12,6 @@ import java.time.Instant;
 
 @Data
 @JsonTypeInfo(use = JsonTypeInfo.Id.CUSTOM,
-        include = JsonTypeInfo.As.PROPERTY,
         property = "name")
 @JsonTypeIdResolver(BaseTransactionDataResolver.class)
 public abstract class BaseTransactionData implements Serializable {

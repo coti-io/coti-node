@@ -10,6 +10,7 @@ import java.util.Map;
 
 @Data
 public class GetNetworkDetailsResponse extends BaseResponse {
+    
     private Map<String, List<SingleNodeDetailsForWallet>> nodes;
 
     public GetNetworkDetailsResponse(Map<String, List<SingleNodeDetailsForWallet>> nodes) {

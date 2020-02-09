@@ -119,9 +119,9 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     private List<String> getColumnFamilyNamesFromDB() {
         try (Options options = new Options()) {
             List<byte[]> columnFamilies = RocksDB.listColumnFamilies(options, dbPath);
-            return columnFamilies.stream().map(dbColumnFamily -> new String(dbColumnFamily)).collect(Collectors.toList());
+            return columnFamilies.stream().map(String::new).collect(Collectors.toList());
         } catch (Exception e) {
-            throw new DataBaseException(String.format("Error at getting column families.", e));
+            throw new DataBaseException("Error at getting column families.", e);
         }
     }
 
@@ -260,9 +260,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
 
     public RocksIterator getIterator(String columnFamilyName) {
         RocksIterator it = null;
-        try {
-            ReadOptions readOptions = new ReadOptions();
-
+        try (ReadOptions readOptions = new ReadOptions()) {
             ColumnFamilyHandle columnFamilyHandler = classNameToColumnFamilyHandleMapping.get(columnFamilyName);
             it = db.newIterator(columnFamilyHandler, readOptions);
             if (columnFamilyHandler == null) {
@@ -333,7 +331,8 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         }
     }
 
-    private IEntity get(Class<?> entityClass, Hash key) {
+    @Override
+    public IEntity get(Class<?> entityClass, Hash key) {
         try {
             Hash entityHash = new Hash(db.get(
                     classNameToColumnFamilyHandleMapping.get(entityClass.getName()), key.getBytes()));

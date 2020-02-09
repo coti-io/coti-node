@@ -6,30 +6,25 @@ import io.coti.basenode.http.GetHistoryTransactionsRequest;
 import io.coti.basenode.http.data.GetHashToPropagatable;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.storagenode.services.TransactionStorageService;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
-import static org.springframework.web.bind.annotation.RequestMethod.PUT;
-
-
-@Slf4j
 @RestController
 public class TransactionController {
 
     @Autowired
     private TransactionStorageService transactionStorageService;
 
-    @RequestMapping(value = "/transactions", method = PUT)
+    @PutMapping(value = "/transactions")
     public ResponseEntity<IResponse> storeMultipleTransactionsToStorage(@Valid @RequestBody AddEntitiesBulkRequest addEntitiesBulkRequest) {
         return transactionStorageService.storeMultipleObjectsToStorage(addEntitiesBulkRequest.getHashToEntityJsonDataMap());
     }

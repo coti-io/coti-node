@@ -19,6 +19,7 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.TRANSACTION_RESP
 
 @Data
 public class TransactionResponseData implements ITransactionResponseData {
+
     private String hash;
     private BigDecimal amount;
     private TransactionType type;
@@ -35,8 +36,7 @@ public class TransactionResponseData implements ITransactionResponseData {
     private Boolean isValid;
     private String transactionDescription;
 
-
-    public TransactionResponseData() {
+    private TransactionResponseData() {
     }
 
     public TransactionResponseData(TransactionData transactionData) {

@@ -20,7 +20,7 @@ import java.util.concurrent.ExecutorService;
 public class PotService extends BaseNodePotService {
 
     private static HashMap<Integer, ExecutorService> queuesPot = new HashMap<>();
-    public static HashMap<Integer, MonitorBucketStatistics> monitorStatistics = new LinkedHashMap<>();
+    protected static HashMap<Integer, MonitorBucketStatistics> monitorStatistics = new LinkedHashMap<>();
 
     public void init() {
         for (int i = 10; i <= 100; i = i + 10) {

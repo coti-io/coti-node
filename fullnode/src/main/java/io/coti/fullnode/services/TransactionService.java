@@ -76,13 +76,14 @@ public class TransactionService extends BaseNodeTransactionService {
     private BlockingQueue<ReducedTransactionData> explorerIndexQueue;
     private Thread explorerIndexThread;
     private IndexedNavigableSet<ReducedTransactionData> explorerIndexedTransactionSet;
+    @Autowired
     private ResendTransactionRequestCrypto resendTransactionRequestCrypto;
 
     @Override
     public void init() {
         explorerIndexedTransactionSet = new IndexedTreeSet<>();
         explorerIndexQueue = new LinkedBlockingQueue<>();
-        explorerIndexThread = new Thread(() -> updateExplorerIndex());
+        explorerIndexThread = new Thread(this::updateExplorerIndex);
         explorerIndexThread.start();
         super.init();
     }

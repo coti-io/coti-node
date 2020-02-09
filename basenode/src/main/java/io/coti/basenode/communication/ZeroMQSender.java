@@ -46,7 +46,6 @@ public class ZeroMQSender implements ISender {
                 log.debug("Message {} was sent to {}", toSend, toSend.getClass().getName());
             } catch (ZMQException exception) {
                 log.error("Exception in sending", exception);
-                return;
             }
         }
     }

@@ -120,7 +120,7 @@ public class BaseNodeValidationService implements IValidationService {
 
     @Override
     public boolean validateGetAddressesResponse(GetHistoryAddressesResponse getHistoryAddressesResponse) {
-        return !getHistoryAddressesResponse.getAddressHashesToAddresses().entrySet().stream().anyMatch(entry ->
+        return getHistoryAddressesResponse.getAddressHashesToAddresses().entrySet().stream().noneMatch(entry ->
                 entry.getValue() != null && !entry.getKey().equals(entry.getValue().getHash())
         );
     }

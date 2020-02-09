@@ -22,7 +22,6 @@ public class DspConsensusCrypto extends SignatureCrypto<DspConsensusResult> {
                 put(transactionHashInBytes).put(indexInBytes).put(indexingTimeInBytes);
 
         byte[] dspConsensusMessageInBytes = dspConsensusMessageBuffer.array();
-        byte[] cryptoHashedMessage = CryptoHelper.cryptoHash(dspConsensusMessageInBytes).getBytes();
-        return cryptoHashedMessage;
+        return CryptoHelper.cryptoHash(dspConsensusMessageInBytes).getBytes();
     }
 }

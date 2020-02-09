@@ -3,13 +3,15 @@ package io.coti.fullnode.websocket.data;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.data.TransactionResponseData;
 import io.coti.basenode.http.data.TransactionStatus;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Data
 public class NotifyTransactionChange {
 
-    public TransactionStatus status;
-    public TransactionResponseData transactionData;
+    private TransactionStatus status;
+    private TransactionResponseData transactionData;
 
     public NotifyTransactionChange(TransactionData transactionData, TransactionStatus transactionStatus) {
         this.status = transactionStatus;

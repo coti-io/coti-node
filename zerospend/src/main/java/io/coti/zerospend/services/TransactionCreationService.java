@@ -123,7 +123,6 @@ public class TransactionCreationService {
         TransactionData transactionData = new TransactionData(baseTransactions, description.name(), trustScore, Instant.now(), TransactionType.ZeroSpend);
         transactionData.setAttachmentTime(Instant.now());
 
-
         transactionCryptoCreator.signBaseTransactions(transactionData, addressHashToAddressIndexMap);
         transactionCrypto.signMessage(transactionData);
         return transactionData;

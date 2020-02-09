@@ -1,5 +1,7 @@
 package io.coti.basenode.database.interfaces;
 
+import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.interfaces.IEntity;
 import org.rocksdb.RocksIterator;
 import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
@@ -29,6 +31,8 @@ public interface IDatabaseConnector {
     RocksIterator getIterator(String columnFamilyName);
 
     boolean isEmpty(String columnFamilyName);
+
+    IEntity get(Class<?> entityClass, Hash key);
 
     void shutdown();
 

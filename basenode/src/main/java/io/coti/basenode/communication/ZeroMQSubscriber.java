@@ -31,9 +31,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 @Service
 public class ZeroMQSubscriber implements IPropagationSubscriber {
 
-    private final int HEARTBEAT_INTERVAL = 10000;
-    private final int INITIAL_DELAY = 5000;
-    private final int FIXED_DELAY = 5000;
+    private static final int HEARTBEAT_INTERVAL = 10000;
+    private static final int INITIAL_DELAY = 5000;
+    private static final int FIXED_DELAY = 5000;
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket propagationReceiver;
     private Map<String, ConnectedNodeData> connectedNodes = new ConcurrentHashMap<>();
@@ -100,7 +100,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     }
 
     public void initPropagationHandler() {
-        messagesQueueHandlerThread = new Thread(() -> handleMessagesQueueTask());
+        messagesQueueHandlerThread = new Thread(this::handleMessagesQueueTask);
         messagesQueueHandlerThread.start();
     }
 
@@ -114,19 +114,18 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                 log.info("ZMQ subscriber message handler interrupted");
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
-                log.error("ZMQ message handler task error: ");
-                e.printStackTrace();
+                log.error("ZMQ message handler task error", e);
             }
         }
         LinkedList<ZeroMQMessageData> remainingMessages = new LinkedList<>();
         messageQueue.drainTo(remainingMessages);
-        if (remainingMessages.size() != 0) {
+        if (!remainingMessages.isEmpty()) {
             log.info("Please wait to process {} remaining messages", remainingMessages.size());
             remainingMessages.forEach(zeroMQMessageData -> {
                 try {
                     propagationProcess(zeroMQMessageData);
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
+                } catch (Exception e) {
+                    log.error("ZMQ message handler task error", e);
                 }
             });
         }

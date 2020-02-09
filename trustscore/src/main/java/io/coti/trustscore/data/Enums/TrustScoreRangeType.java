@@ -17,7 +17,7 @@ public enum TrustScoreRangeType {
                 return value;
             }
         }
-        throw new IllegalArgumentException(String.format("got trust score range type name {}, which not exists", text));
+        throw new IllegalArgumentException(String.format("got trust score range type name %s, which not exists", text));
     }
 
     @Override

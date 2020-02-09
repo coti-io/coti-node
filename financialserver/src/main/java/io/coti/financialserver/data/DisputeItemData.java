@@ -21,18 +21,11 @@ public class DisputeItemData implements Serializable {
     private String name;
     @NotNull
     private DisputeReason reason;
-    private DisputeItemStatus status;
-    private List<Hash> disputeDocumentHashes;
-    private List<Hash> disputeCommentHashes;
-    private List<DisputeItemVoteData> disputeItemVotesData;
+    private DisputeItemStatus status = DisputeItemStatus.Recall;
+    private List<Hash> disputeDocumentHashes = new ArrayList<>();
+    private List<Hash> disputeCommentHashes = new ArrayList<>();
+    private List<DisputeItemVoteData> disputeItemVotesData = new ArrayList<>();
     private Instant arbitratorsDecisionTime;
-
-    public DisputeItemData() {
-        disputeDocumentHashes = new ArrayList<>();
-        disputeCommentHashes = new ArrayList<>();
-        disputeItemVotesData = new ArrayList<>();
-        status = DisputeItemStatus.Recall;
-    }
 
     public void addDocumentHash(Hash documentHash) {
         disputeDocumentHashes.add(documentHash);

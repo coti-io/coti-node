@@ -7,8 +7,8 @@ import java.time.Duration;
 @Data
 public class MonitorBucketStatistics {
 
-    public Duration totalTime;
-    public long numberOfTransaction;
+    private Duration totalTime;
+    private long numberOfTransaction;
 
     public MonitorBucketStatistics() {
         this.totalTime = Duration.ZERO;

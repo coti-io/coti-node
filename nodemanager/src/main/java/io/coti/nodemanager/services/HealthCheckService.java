@@ -40,7 +40,7 @@ public class HealthCheckService implements IHealthCheckService {
 
     @Override
     public void init() {
-        healthCheckThread = new Thread(() -> nodesHealthCheck());
+        healthCheckThread = new Thread(this::nodesHealthCheck);
         healthCheckThread.start();
     }
 

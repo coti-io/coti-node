@@ -15,8 +15,6 @@ public class LiveViewController {
     @MessageMapping("/getfullgraph")
     @SendTo("/topic/fullGraph")
     public GraphData getGraph(String message) {
-        GraphData data = liveViewService.getFullGraph();
-
-        return data;
+        return liveViewService.getFullGraph();
     }
 }

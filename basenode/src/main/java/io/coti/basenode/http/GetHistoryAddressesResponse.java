@@ -18,7 +18,7 @@ public class GetHistoryAddressesResponse extends BaseResponse implements ISignVa
     @NotEmpty
     private Map<Hash, AddressData> addressHashesToAddresses;
     @NotNull
-    public Instant createTime;
+    private Instant createTime;
     @NotNull
     private SignatureData signature;
     @NotNull

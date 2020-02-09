@@ -36,19 +36,22 @@ public class CryptoHelper {
     public static final int ADDRESS_SIZE_IN_BYTES = 68;
     public static final int ADDRESS_CHECKSUM_SIZE_IN_BYTES = 4;
 
+    private CryptoHelper() {
+
+    }
+
     public static PublicKey getPublicKeyFromHexString(String pubKeyHex) throws NoSuchAlgorithmException, InvalidKeySpecException {
         String pointX = pubKeyHex.substring(0, (pubKeyHex.length() / 2));
         String pointY = pubKeyHex.substring(pubKeyHex.length() / 2);
 
-        BigInteger p256_xp = new BigInteger(pointX, 16);
-        BigInteger p256_yp = new BigInteger(pointY, 16);
+        BigInteger p256X = new BigInteger(pointX, 16);
+        BigInteger p256Y = new BigInteger(pointY, 16);
 
-        ECPoint point = curve.getCurve().createPoint(p256_xp, p256_yp);
+        ECPoint point = curve.getCurve().createPoint(p256X, p256Y);
         ECPublicKeySpec publicSpec = new ECPublicKeySpec(point, spec);
         KeyFactory keyfac = KeyFactory.getInstance(EC_ALGORITHM, new BouncyCastleProvider());
 
-        PublicKey pubKey = keyfac.generatePublic(publicSpec);
-        return pubKey;
+        return keyfac.generatePublic(publicSpec);
     }
 
     public static boolean verifyByPublicKey(byte[] originalMessageToVerify, String rHex, String sHex, String publicKey) throws InvalidKeySpecException, NoSuchAlgorithmException {
@@ -105,13 +108,17 @@ public class CryptoHelper {
     private static String paddingPublicKey(String x, String y) {
         String paddingLetter = "0";
 
-        while (x.length() < 64) {
-            x = paddingLetter + x;
+        StringBuilder xBuilder = new StringBuilder(x);
+        while (xBuilder.length() < 64) {
+            xBuilder.insert(0, paddingLetter);
         }
+        x = xBuilder.toString();
 
-        while (y.length() < 64) {
-            y = paddingLetter + y;
+        StringBuilder yBuilder = new StringBuilder(y);
+        while (yBuilder.length() < 64) {
+            yBuilder.insert(0, paddingLetter);
         }
+        y = yBuilder.toString();
         return x + y;
     }
 
@@ -144,8 +151,7 @@ public class CryptoHelper {
 
         byte[] addressWithoutPadding = CryptoHelper.removeLeadingZerosFromAddress(array);
         checksum.update(addressWithoutPadding, 0, addressWithoutPadding.length);
-        byte[] checksumValue = ByteBuffer.allocate(4).putInt((int) checksum.getValue()).array();
-        return checksumValue;
+        return ByteBuffer.allocate(4).putInt((int) checksum.getValue()).array();
     }
 
 
@@ -175,7 +181,6 @@ public class CryptoHelper {
     public static Hash cryptoHash(byte[] input) {
         Keccak.Digest256 digest = new Keccak.Digest256();
         digest.update(input);
-        Hash hash = new Hash(digest.digest());
-        return hash;
+        return new Hash(digest.digest());
     }
 }

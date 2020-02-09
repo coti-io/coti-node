@@ -37,7 +37,4 @@ public class NodeCryptoHelper {
         return new Hash(nodePublicKey);
     }
 
-    public static Hash getNodeAddress() {
-        return CryptoHelper.getAddressFromPrivateKey(nodePrivateKey);
-    }
 }

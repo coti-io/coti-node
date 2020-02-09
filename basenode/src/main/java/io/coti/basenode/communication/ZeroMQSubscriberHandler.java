@@ -33,7 +33,7 @@ public class ZeroMQSubscriberHandler implements ISubscriberHandler {
         messageTypeToSubscriberHandlerMap = new HashMap<>();
         EnumSet.allOf(SubscriberMessageType.class).forEach(subscriberMessageType -> {
             injectSubscriberMessageHandleServices(subscriberMessageType);
-            messageTypeToSubscriberHandlerMap.put(subscriberMessageType.toString(), publisherNodeType -> subscriberMessageType.getHandler(publisherNodeType));
+            messageTypeToSubscriberHandlerMap.put(subscriberMessageType.toString(), subscriberMessageType::getHandler);
         });
     }
 

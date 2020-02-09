@@ -74,7 +74,7 @@ public class DistributeTokenService {
             return ResponseEntity.status(HttpStatus.SC_BAD_REQUEST).body(new Response(DISTRIBUTION_REQUEST_HANDLED_PREVIOUSLY, STATUS_ERROR));
         }
 
-        tokenSaleDistributionData.getTokenDistributionDataEntries().forEach(entry -> distributeTokenByEntry(entry));
+        tokenSaleDistributionData.getTokenDistributionDataEntries().forEach(this::distributeTokenByEntry);
 
         tokenSaleDistributions.put(tokenSaleDistributionData);
 

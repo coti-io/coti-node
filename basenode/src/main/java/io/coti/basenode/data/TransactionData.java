@@ -100,7 +100,7 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
 
     @JsonIgnore
     public boolean isSource() {
-        return childrenTransactionHashes == null || childrenTransactionHashes.size() == 0;
+        return childrenTransactionHashes == null || childrenTransactionHashes.isEmpty();
     }
 
     @JsonIgnore

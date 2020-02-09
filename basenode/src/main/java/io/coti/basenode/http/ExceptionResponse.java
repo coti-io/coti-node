@@ -1,7 +1,11 @@
 package io.coti.basenode.http;
 
+import lombok.Data;
+
+@Data
 public class ExceptionResponse extends Response {
-    public String type;
+
+    private String type;
 
     public ExceptionResponse(String message, String errorType) {
         super(message);

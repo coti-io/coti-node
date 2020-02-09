@@ -202,7 +202,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
                 .getDspHashToVoteMapping()
                 .values()
                 .stream()
-                .filter(vote -> vote.isValidTransaction())
+                .filter(DspVote::isValidTransaction)
                 .count();
         long totalVotersCount = currentVotes.getLegalVoterDspHashes().size();
         return positiveVotersCount > totalVotersCount / 2;

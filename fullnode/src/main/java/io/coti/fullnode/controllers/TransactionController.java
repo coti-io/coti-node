@@ -40,7 +40,7 @@ public class TransactionController {
 
     @PostMapping()
     public ResponseEntity<IResponse> getTransactionDetails(@Valid @RequestBody GetTransactionRequest getTransactionRequest) {
-        return transactionService.getTransactionDetails(getTransactionRequest.transactionHash);
+        return transactionService.getTransactionDetails(getTransactionRequest.getTransactionHash());
     }
 
     @PostMapping(value = "/multiple")

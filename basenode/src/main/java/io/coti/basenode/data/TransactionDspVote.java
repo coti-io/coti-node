@@ -39,6 +39,7 @@ public class TransactionDspVote extends DspVote implements IPropagatable, ISigna
         voterDspHash = signerHash;
     }
 
+    @Override
     public String toString() {
         return String.format("Transaction Hash= %s, Voter Hash= %s, IsValid= %s", transactionHash, voterDspHash, validTransaction);
     }
