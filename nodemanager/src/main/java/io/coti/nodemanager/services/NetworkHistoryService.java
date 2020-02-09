@@ -50,12 +50,12 @@ public class NetworkHistoryService implements INetworkHistoryService {
     }
 
     @Override
-    public LinkedList<NodeNetworkResponseData> getNodeEvents(GetNodeStatisticsRequest getNodeStatisticsRequest) {
+    public LinkedList<Object> getNodeEvents(GetNodeStatisticsRequest getNodeStatisticsRequest, boolean rawData) {
         Hash nodeHash = getNodeStatisticsRequest.getNodeHash();
         LocalDate startDate = getNodeStatisticsRequest.getStartDate();
         LocalDate endDate = getNodeStatisticsRequest.getEndDate();
 
-        LinkedList<NodeNetworkResponseData> nodeEvents = new LinkedList<>();
+        LinkedList<Object> nodeEvents = new LinkedList<>();
         NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
         if (nodeDailyActivityData == null) {
             return nodeEvents;
@@ -95,7 +95,11 @@ public class NetworkHistoryService implements INetworkHistoryService {
                     for (LinkedMap.Entry<Hash, NodeNetworkDataRecord> nodeNetworkDataRecordEntry : nodeHistoryData.getNodeNetworkDataRecordMap().entrySet()) {
                         if (nodeNetworkDataRecordEntry.getValue().getNodeStatus() == NetworkNodeStatus.ACTIVE
                                 || nodeNetworkDataRecordEntry.getValue().getNodeStatus() == NetworkNodeStatus.INACTIVE) {
-                            nodeEvents.add(new NodeNetworkResponseData(nodeNetworkDataRecordEntry.getValue()));
+                            if (rawData) {
+                                nodeEvents.add(nodeNetworkDataRecordEntry.getValue());
+                            } else {
+                                nodeEvents.add(new NodeNetworkResponseData(nodeNetworkDataRecordEntry.getValue()));
+                            }
                             if (beforePeriodEventRef == null) {
                                 beforePeriodEventRef = nodeNetworkDataRecordEntry.getValue().getStatusChainRef();
                             }
@@ -110,8 +114,12 @@ public class NetworkHistoryService implements INetworkHistoryService {
             Hash prevDateHashEntryHash = nodeDailyActivityData.calculateNodeHistoryDataHash(beforePeriodEventRef.getLeft());
             NodeHistoryData nodeHistoryData = nodeHistory.getByHash(prevDateHashEntryHash);
             if (nodeHistoryData != null && !nodeHistoryData.getNodeNetworkDataRecordMap().isEmpty()) {
-                NodeNetworkResponseData nodeNetworkResponseData = new NodeNetworkResponseData(nodeHistoryData.getNodeNetworkDataRecordMap().get(beforePeriodEventRef.getRight()));
-                nodeEvents.addFirst(nodeNetworkResponseData);
+                if (rawData) {
+                    nodeEvents.addFirst(nodeHistoryData.getNodeNetworkDataRecordMap().get(beforePeriodEventRef.getRight()));
+                } else {
+                    NodeNetworkResponseData nodeNetworkResponseData = new NodeNetworkResponseData(nodeHistoryData.getNodeNetworkDataRecordMap().get(beforePeriodEventRef.getRight()));
+                    nodeEvents.addFirst(nodeNetworkResponseData);
+                }
             }
         }
         return nodeEvents;
@@ -122,15 +130,15 @@ public class NetworkHistoryService implements INetworkHistoryService {
         LocalDate startDate = getNodeStatisticsRequest.getStartDate();
         LocalDate endDate = getNodeStatisticsRequest.getEndDate();
 
-        LinkedList<NodeNetworkResponseData> eventsList = getNodeEvents(getNodeStatisticsRequest);
+        LinkedList<Object> eventsList = getNodeEvents(getNodeStatisticsRequest, false);
         List<NodeDailyStatisticsData> nodeStatisticsList = new LinkedList<>();
         if (eventsList == null || eventsList.isEmpty()) {
             return nodeStatisticsList;
         }
 
         NetworkNodeStatus currentNetworkNodeStatus = NetworkNodeStatus.INACTIVE;
-        if (eventsList.getFirst().getRecordDateTime().atZone(ZoneId.of("UTC")).toLocalDate().isBefore(startDate)) {
-            currentNetworkNodeStatus = eventsList.getFirst().getNodeStatus();
+        if (((NodeNetworkResponseData) eventsList.getFirst()).getRecordDateTime().atZone(ZoneId.of("UTC")).toLocalDate().isBefore(startDate)) {
+            currentNetworkNodeStatus = ((NodeNetworkResponseData) eventsList.getFirst()).getNodeStatus();
         }
         int eventsListIndex = 0;
 
@@ -141,12 +149,12 @@ public class NetworkHistoryService implements INetworkHistoryService {
             Instant lastActive = localDate.atStartOfDay().atZone(ZoneId.of("UTC")).toInstant();
 
             while (eventsListIndex < eventsList.size() && eventsList.get(eventsListIndex) != null
-                    && eventsList.get(eventsListIndex).getRecordDateTime().atZone(ZoneId.of("UTC")).toLocalDate().isBefore(localDate)) {
+                    && ((NodeNetworkResponseData) eventsList.get(eventsListIndex)).getRecordDateTime().atZone(ZoneId.of("UTC")).toLocalDate().isBefore(localDate)) {
                 eventsListIndex += 1;
             }
             while (eventsListIndex < eventsList.size()
-                    && eventsList.get(eventsListIndex).getRecordDateTime().atZone(ZoneId.of("UTC")).toLocalDate().isEqual(localDate)) {
-                NodeNetworkResponseData nodeNetworkResponseData = eventsList.get(eventsListIndex);
+                    && ((NodeNetworkResponseData) eventsList.get(eventsListIndex)).getRecordDateTime().atZone(ZoneId.of("UTC")).toLocalDate().isEqual(localDate)) {
+                NodeNetworkResponseData nodeNetworkResponseData = (NodeNetworkResponseData) eventsList.get(eventsListIndex);
                 if (nodeNetworkResponseData.getNodeStatus() == NetworkNodeStatus.ACTIVE) {
                     restarts += 1;
                     if (currentNetworkNodeStatus == NetworkNodeStatus.INACTIVE) {
@@ -178,14 +186,14 @@ public class NetworkHistoryService implements INetworkHistoryService {
         LocalDate startDate = getNodeStatisticsRequest.getStartDate();
         LocalDate endDate = getNodeStatisticsRequest.getEndDate();
 
-        LinkedList<NodeNetworkResponseData> eventsList = getNodeEvents(getNodeStatisticsRequest);
+        LinkedList<Object> eventsList = getNodeEvents(getNodeStatisticsRequest, false);
         if (eventsList == null || eventsList.isEmpty()) {
             return new NodeStatisticsData(0, 0, 0);
         }
 
         NetworkNodeStatus currentNetworkNodeStatus = NetworkNodeStatus.INACTIVE;
-        if (eventsList.getFirst().getRecordDateTime().atZone(ZoneId.of("UTC")).toLocalDate().isBefore(startDate)) {
-            currentNetworkNodeStatus = eventsList.getFirst().getNodeStatus();
+        if (((NodeNetworkResponseData) eventsList.getFirst()).getRecordDateTime().atZone(ZoneId.of("UTC")).toLocalDate().isBefore(startDate)) {
+            currentNetworkNodeStatus = ((NodeNetworkResponseData) eventsList.getFirst()).getNodeStatus();
         }
 
         long upTime = 0;
@@ -193,21 +201,21 @@ public class NetworkHistoryService implements INetworkHistoryService {
         int downEvents = 0;
         Instant lastActive = startDate.atStartOfDay().atZone(ZoneId.of("UTC")).toInstant();
 
-        for (NodeNetworkResponseData nodeNetworkResponseData : eventsList) {
-            if (!nodeNetworkResponseData.getRecordDateTime().isBefore(startDate.atStartOfDay().atZone(ZoneId.of("UTC")).toInstant())) {
-                if (nodeNetworkResponseData.getNodeStatus() == NetworkNodeStatus.ACTIVE) {
+        for (Object nodeNetworkResponseData : eventsList) {
+            if (!((NodeNetworkResponseData) nodeNetworkResponseData).getRecordDateTime().isBefore(startDate.atStartOfDay().atZone(ZoneId.of("UTC")).toInstant())) {
+                if (((NodeNetworkResponseData) nodeNetworkResponseData).getNodeStatus() == NetworkNodeStatus.ACTIVE) {
                     restarts += 1;
                     if (currentNetworkNodeStatus == NetworkNodeStatus.INACTIVE) {
-                        lastActive = nodeNetworkResponseData.getRecordDateTime();
+                        lastActive = ((NodeNetworkResponseData) nodeNetworkResponseData).getRecordDateTime();
                     }
-                    currentNetworkNodeStatus = nodeNetworkResponseData.getNodeStatus();
+                    currentNetworkNodeStatus = ((NodeNetworkResponseData) nodeNetworkResponseData).getNodeStatus();
                 } else {
                     downEvents += 1;
                     if (currentNetworkNodeStatus == NetworkNodeStatus.ACTIVE) {
-                        upTime += lastActive.until(nodeNetworkResponseData.getRecordDateTime(), ChronoUnit.SECONDS);
-                        lastActive = nodeNetworkResponseData.getRecordDateTime();
+                        upTime += lastActive.until(((NodeNetworkResponseData) nodeNetworkResponseData).getRecordDateTime(), ChronoUnit.SECONDS);
+                        lastActive = ((NodeNetworkResponseData) nodeNetworkResponseData).getRecordDateTime();
                     }
-                    currentNetworkNodeStatus = nodeNetworkResponseData.getNodeStatus();
+                    currentNetworkNodeStatus = ((NodeNetworkResponseData) nodeNetworkResponseData).getNodeStatus();
                 }
             }
         }
