@@ -329,10 +329,8 @@ public class NetworkHistoryService implements INetworkHistoryService {
             throw new NetworkHistoryValidationException(String.format("Node hash does not have activity", nodeHash));
         }
         for (LocalDate localDate : nodeDailyActivityData.getNodeDaySet()) {
-            Hash localDateWithEventHash =
-                    calculateNodeHistoryDataHash(nodeDailyActivityData.getNodeHash(), localDate);
-            NodeHistoryData nodeHistoryByHash = nodeHistory.getByHash(localDateWithEventHash);
-            Optional<Map.Entry<Hash, NodeNetworkDataRecord>> hashNodeNetworkDataRecordEntry = nodeHistoryByHash.getNodeNetworkDataRecordMap().entrySet().stream()
+            NodeHistoryData nodeHistoryData = getNodeHistoryData(nodeDailyActivityData.getNodeHash(), localDate);
+            Optional<Map.Entry<Hash, NodeNetworkDataRecord>> hashNodeNetworkDataRecordEntry = nodeHistoryData.getNodeNetworkDataRecordMap().entrySet().stream()
                     .filter(nodeNetworkDataRecord ->
                             nodeNetworkDataRecord.getValue().getNodeStatus().equals(NetworkNodeStatus.ACTIVE)
                                     && !nodeNetworkDataRecord.getValue().isNotOriginalEvent()
@@ -350,9 +348,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
         if (nodeDailyActivityData == null) {
             throw new NetworkHistoryValidationException(String.format("Node hash does not have activity", nodeHash));
         }
-        Hash firstDateWithEventHash =
-                calculateNodeHistoryDataHash(nodeDailyActivityData.getNodeHash(), nodeDailyActivityData.getNodeDaySet().first());
-        NodeHistoryData firstDateWithEventNodeHistoryData = nodeHistory.getByHash(firstDateWithEventHash);
+        NodeHistoryData firstDateWithEventNodeHistoryData = getNodeHistoryData(nodeDailyActivityData.getNodeHash(), nodeDailyActivityData.getNodeDaySet().first());
         return firstDateWithEventNodeHistoryData.getNodeNetworkDataRecordMap()
                 .get(firstDateWithEventNodeHistoryData.getNodeNetworkDataRecordMap().firstKey());
     }
@@ -406,8 +402,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
         long activityUpTimeInSeconds = 0;
         LocalDate ceilingDate = nodeDailyActivityData.getNodeDaySet().ceiling(endDate);
         LocalDate lastDateWithEvent = Optional.ofNullable(ceilingDate).orElse(nodeDailyActivityData.getNodeDaySet().last());
-        Hash lastDateWithEventHash = calculateNodeHistoryDataHash(nodeDailyActivityData.getNodeHash(), lastDateWithEvent);
-        NodeHistoryData lastDateWithEventNodeHistoryData = nodeHistory.getByHash(lastDateWithEventHash);
+        NodeHistoryData lastDateWithEventNodeHistoryData = getNodeHistoryData(nodeDailyActivityData.getNodeHash(), lastDateWithEvent);
         LinkedMap<Hash, NodeNetworkDataRecord> lastRelevantNodeNetworkRecordMap = lastDateWithEventNodeHistoryData.getNodeNetworkDataRecordMap();
         NodeNetworkDataRecord lastRelevantNodeNetworkDataRecord;
         Instant endInstant;
@@ -526,6 +521,11 @@ public class NetworkHistoryService implements INetworkHistoryService {
 
     @Override
     public NodeNetworkDataRecord getLastNodeNetworkDataRecord(NodeHistoryData nodeHistoryData) {
+        return nodeHistoryData.getNodeNetworkDataRecordMap().get(nodeHistoryData.getNodeNetworkDataRecordMap().lastKey());
+    }
+
+    @Override
+    public NodeNetworkDataRecord getFirstNodeNetworkDataRecord(NodeHistoryData nodeHistoryData) {
         return nodeHistoryData.getNodeNetworkDataRecordMap().get(nodeHistoryData.getNodeNetworkDataRecordMap().lastKey());
     }
 

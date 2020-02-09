@@ -47,5 +47,7 @@ public interface INetworkHistoryService {
 
     NodeNetworkDataRecord getLastNodeNetworkDataRecord(NodeHistoryData nodeHistoryData);
 
+    NodeNetworkDataRecord getFirstNodeNetworkDataRecord(NodeHistoryData nodeHistoryData);
+
     NodeHistoryData getNodeHistoryData(Hash nodeHash, LocalDate localDate);
 }
