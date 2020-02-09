@@ -5,6 +5,7 @@ import io.coti.nodemanager.data.NodeActivityData;
 import io.coti.nodemanager.data.NodeHistoryData;
 import io.coti.nodemanager.http.GetNodeActivationTimeRequest;
 import io.coti.nodemanager.http.GetNodeStatisticsRequest;
+import io.coti.nodemanager.http.GetNodesActivityPercentageRequest;
 import io.coti.nodemanager.http.data.NodeDailyStatisticsData;
 import io.coti.nodemanager.http.data.NodeNetworkResponseData;
 import io.coti.nodemanager.http.data.NodeStatisticsData;
@@ -24,6 +25,8 @@ public interface INetworkHistoryService {
 
     NodeStatisticsData getNodeStatsTotal(GetNodeStatisticsRequest getNodeStatisticsRequest);
 
+    ResponseEntity<IResponse> getNodesActivityPercentage(GetNodesActivityPercentageRequest getNodesActivityPercentageRequest);
+
     ResponseEntity<IResponse> getNodeActivityPercentage(GetNodeStatisticsRequest getNodeStatisticsRequest);
 
     ResponseEntity<IResponse> getNodeActivityInSeconds(GetNodeStatisticsRequest getNodeStatisticsRequest);
@@ -33,4 +36,6 @@ public interface INetworkHistoryService {
     ResponseEntity<IResponse> getNodeActivityInSecondsByDay(GetNodeStatisticsRequest getNodeStatisticsRequest);
 
     ResponseEntity<IResponse> getNodeActivationTime(GetNodeActivationTimeRequest getNodeActivationTimeRequest);
+
+
 }

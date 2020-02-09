@@ -6,6 +6,7 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.nodemanager.data.*;
 import io.coti.nodemanager.exceptions.NetworkHistoryValidationException;
 import io.coti.nodemanager.http.*;
+import io.coti.nodemanager.http.data.NodeActivityPercentageData;
 import io.coti.nodemanager.http.data.NodeDailyStatisticsData;
 import io.coti.nodemanager.http.data.NodeNetworkResponseData;
 import io.coti.nodemanager.http.data.NodeStatisticsData;
@@ -218,26 +219,55 @@ public class NetworkHistoryService implements INetworkHistoryService {
     }
 
     @Override
+    public ResponseEntity<IResponse> getNodesActivityPercentage(GetNodesActivityPercentageRequest getNodesActivityPercentageRequest) {
+        Instant now = Instant.now();
+        now = now.minusNanos(now.getNano());
+        LocalDate startDate = getNodesActivityPercentageRequest.getStartDate();
+        LocalDate endDate = getNodesActivityPercentageRequest.getEndDate();
+        Map<Hash, NodeActivityPercentageData> nodeHashToActivityPercentage = new HashMap<>();
+
+        Instant finalNow = now;
+        getNodesActivityPercentageRequest.getNodeHashes().forEach(nodeHash -> {
+            try {
+                NodeActivityData nodeActivityData = getNodeActivity(nodeHash, startDate, endDate, finalNow);
+                long nodeExclusionPeriodInSeconds = getNodeExclusionPeriodInSeconds(nodeHash, startDate, endDate, finalNow);
+                double percentage = getPercentage(nodeActivityData, nodeExclusionPeriodInSeconds);
+                nodeHashToActivityPercentage.put(nodeHash, new NodeActivityPercentageData(true, percentage));
+            } catch (NetworkHistoryValidationException e) {
+                nodeHashToActivityPercentage.put(nodeHash, new NodeActivityPercentageData(false, 0));
+            }
+        });
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new GetNodesActivityPercentageResponse(nodeHashToActivityPercentage));
+    }
+
+    private double getPercentage(NodeActivityData nodeActivityData, long nodeExclusionPeriodInSeconds) {
+        long activityUpTimeInSeconds = nodeActivityData.getActivityUpTimeInSeconds();
+        long numberOfDays = nodeActivityData.getNumberOfDays();
+        long maxExpectedUpTimeInSeconds = numberOfDays * NUMBER_OF_SECONDS_IN_DAY - nodeExclusionPeriodInSeconds;
+        return ((double) activityUpTimeInSeconds) / (maxExpectedUpTimeInSeconds) * 100;
+    }
+
+    @Override
     public ResponseEntity<IResponse> getNodeActivityPercentage(GetNodeStatisticsRequest getNodeStatisticsRequest) {
         try {
             Instant now = Instant.now();
             now = now.minusNanos(now.getNano());
             NodeActivityData nodeActivityData = getNodeActivity(getNodeStatisticsRequest, now);
             long nodeExclusionPeriodInSeconds = getNodeExclusionPeriodInSeconds(getNodeStatisticsRequest, now);
-            long activityUpTimeInSeconds = nodeActivityData.getActivityUpTimeInSeconds();
-            long numberOfDays = nodeActivityData.getNumberOfDays();
-            long maxExpectedUpTimeInSeconds = numberOfDays * NUMBER_OF_SECONDS_IN_DAY - nodeExclusionPeriodInSeconds;
+            double percentage = getPercentage(nodeActivityData, nodeExclusionPeriodInSeconds);
             return ResponseEntity.status(HttpStatus.OK)
-                    .body(new GetNodeActivityPercentageResponse(((double) activityUpTimeInSeconds) / (maxExpectedUpTimeInSeconds) * 100));
+                    .body(new GetNodeActivityPercentageResponse(percentage));
         } catch (NetworkHistoryValidationException e) {
             return ResponseEntity.badRequest().body(new Response(e.getMessage(), STATUS_ERROR));
         }
     }
 
     private long getNodeExclusionPeriodInSeconds(GetNodeStatisticsRequest getNodeStatisticsRequest, Instant now) {
-        Hash nodeHash = getNodeStatisticsRequest.getNodeHash();
-        LocalDate startDate = getNodeStatisticsRequest.getStartDate();
-        LocalDate endDate = getNodeStatisticsRequest.getEndDate();
+        return getNodeExclusionPeriodInSeconds(getNodeStatisticsRequest.getNodeHash(), getNodeStatisticsRequest.getStartDate(), getNodeStatisticsRequest.getEndDate(), now);
+    }
+
+    private long getNodeExclusionPeriodInSeconds(Hash nodeHash, LocalDate startDate, LocalDate endDate, Instant now) {
         long nodeExclusionPeriodInSeconds = 0;
 
         LocalDate todayLocalDate = LocalDate.now(ZoneId.of("UTC"));
@@ -266,11 +296,13 @@ public class NetworkHistoryService implements INetworkHistoryService {
         }
     }
 
+
     @Override
     public NodeActivityData getNodeActivity(GetNodeStatisticsRequest getNodeStatisticsRequest, Instant now) {
-        Hash nodeHash = getNodeStatisticsRequest.getNodeHash();
-        LocalDate startDate = getNodeStatisticsRequest.getStartDate();
-        LocalDate endDate = getNodeStatisticsRequest.getEndDate();
+        return getNodeActivity(getNodeStatisticsRequest.getNodeHash(), getNodeStatisticsRequest.getStartDate(), getNodeStatisticsRequest.getEndDate(), now);
+    }
+
+    private NodeActivityData getNodeActivity(Hash nodeHash, LocalDate startDate, LocalDate endDate, Instant now) {
         if (endDate.isBefore(startDate)) {
             throw new NetworkHistoryValidationException("Invalid dates range Start: " + startDate + " End: " + endDate);
         }
@@ -321,11 +353,12 @@ public class NetworkHistoryService implements INetworkHistoryService {
         }
     }
 
+
     private NodeNetworkDataRecord getOriginalActivationEventRecord(Hash nodeHash) {
         NodeNetworkDataRecord originalActivationEventRecord = null;
         NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
         if (nodeDailyActivityData == null) {
-            throw new NetworkHistoryValidationException(String.format("Node hash does not have activity" , nodeHash));
+            throw new NetworkHistoryValidationException(String.format("Node hash does not have activity", nodeHash));
         }
         for (LocalDate localDate : nodeDailyActivityData.getNodeDaySet()) {
             Hash localDateWithEventHash =
@@ -347,7 +380,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
     private NodeNetworkDataRecord getNodeNetworkFirstDataRecord(Hash nodeHash) {
         NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
         if (nodeDailyActivityData == null) {
-            throw new NetworkHistoryValidationException(String.format("Node hash does not have activity" , nodeHash));
+            throw new NetworkHistoryValidationException(String.format("Node hash does not have activity", nodeHash));
         }
         Hash firstDateWithEventHash =
                 calculateNodeHistoryDataHash(nodeDailyActivityData.getNodeHash(), nodeDailyActivityData.getNodeDaySet().first());
