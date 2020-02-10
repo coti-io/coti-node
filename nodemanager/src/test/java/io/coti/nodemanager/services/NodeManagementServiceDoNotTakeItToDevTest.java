@@ -551,7 +551,7 @@ public class NodeManagementServiceDoNotTakeItToDevTest {
         localDateTime = LocalDateTime.of(startDateTime.getYear(), startDateTime.getMonth(), startDateTime.getDayOfMonth(), iPlace, iPlace, 0).toInstant(ZoneOffset.UTC);
         nodeManagementService.addNodeHistory(networkNodeData7, nodeStatus, localDateTime);
 
-        nodeStatus = NetworkNodeStatus.ACTIVE;
+        nodeStatus = NetworkNodeStatus.INACTIVE;
         iPlace = 4;
         localDateTime = LocalDateTime.of(startDateTime.getYear(), startDateTime.getMonth(), startDateTime.getDayOfMonth(), iPlace, iPlace, 0).toInstant(ZoneOffset.UTC);
         nodeManagementService.addNodeHistory(networkNodeData7, nodeStatus, localDateTime);
@@ -561,7 +561,7 @@ public class NodeManagementServiceDoNotTakeItToDevTest {
         localDateTime = LocalDateTime.of(startDateTime.getYear(), startDateTime.getMonth(), startDateTime.getDayOfMonth() + 2, iPlace, iPlace, 0).toInstant(ZoneOffset.UTC);
         nodeManagementService.addNodeHistory(networkNodeData7, nodeStatus, localDateTime);
 
-        nodeStatus = NetworkNodeStatus.INACTIVE;
+        nodeStatus = NetworkNodeStatus.ACTIVE;
         iPlace = 6;
         localDateTime = LocalDateTime.of(startDateTime.getYear(), startDateTime.getMonth(), startDateTime.getDayOfMonth() + 2, iPlace, iPlace, 0).toInstant(ZoneOffset.UTC);
         nodeManagementService.addNodeHistory(networkNodeData7, nodeStatus, localDateTime);
@@ -577,14 +577,18 @@ public class NodeManagementServiceDoNotTakeItToDevTest {
 
 
         // For pair at start
-        Instant newEventDateTime = LocalDateTime.of(2020, 1, 1, 0, 7, 0).toInstant(ZoneOffset.UTC);
+//        Instant newEventDateTime = LocalDateTime.of(2020, 1, 1, 0, 7, 0).toInstant(ZoneOffset.UTC);
+//        Instant endEventDateTime = LocalDateTime.of(2020, 1, 3, 0, 8, 0).toInstant(ZoneOffset.UTC);
+
+//        Instant newEventDateTime = LocalDateTime.of(2020, 1, 6, 0, 7, 0).toInstant(ZoneOffset.UTC);
+//        Instant endEventDateTime = LocalDateTime.of(2020, 1, 6, 0, 8, 0).toInstant(ZoneOffset.UTC);
         // For single active after inactive
-//        Instant newEventDateTime = LocalDateTime.of(2020, 1, 5, 2, 7, 0).toInstant(ZoneOffset.UTC);
+        Instant newEventDateTime = LocalDateTime.of(2020, 1, 5, 2, 7, 0).toInstant(ZoneOffset.UTC);
         // For Active at the end
 //        Instant newEventDateTime = LocalDateTime.of(2020, 1, startDateTime.getDayOfMonth() + 3, 0, 7, 0).toInstant(ZoneOffset.UTC);
-        NetworkNodeStatus eventNodeStatus = NetworkNodeStatus.ACTIVE;
+        NetworkNodeStatus eventNodeStatus = NetworkNodeStatus.INACTIVE;
 
-        boolean addSingle = false;
+        boolean addSingle = true;
         if (addSingle) {
             AddNodeSingleEventRequest addNodeEventAdminRequest = new AddNodeSingleEventRequest(fakeNode7, newEventDateTime, NodeType.FullNode, eventNodeStatus);
             responseResponseEntity = nodeManagementService.addSingleNodeEvent(addNodeEventAdminRequest);
@@ -603,6 +607,8 @@ public class NodeManagementServiceDoNotTakeItToDevTest {
             addNodeBeginPairEventRequest.setStartTime(newEventDateTime);
             addNodeBeginPairEventRequest.setNodeType(NodeType.FullNode);
             addNodeBeginPairEventRequest.setFirstEventNodeStatus(NetworkNodeStatus.ACTIVE);
+
+//            addNodeBeginPairEventRequest.setEndTime(endEventDateTime);
 
             responseResponseEntity = nodeManagementService.addPairNodeEvent(addNodeBeginPairEventRequest);
             Assert.assertTrue(responseResponseEntity.getStatusCode().equals(HttpStatus.OK));
