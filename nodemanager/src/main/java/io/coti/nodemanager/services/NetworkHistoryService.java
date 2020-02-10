@@ -6,10 +6,7 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.nodemanager.data.*;
 import io.coti.nodemanager.exceptions.NetworkHistoryValidationException;
 import io.coti.nodemanager.http.*;
-import io.coti.nodemanager.http.data.NodeActivityPercentageData;
-import io.coti.nodemanager.http.data.NodeDailyStatisticsData;
-import io.coti.nodemanager.http.data.NodeNetworkRecordResponseData;
-import io.coti.nodemanager.http.data.NodeStatisticsData;
+import io.coti.nodemanager.http.data.*;
 import io.coti.nodemanager.model.NodeDailyActivities;
 import io.coti.nodemanager.model.NodeHistory;
 import io.coti.nodemanager.services.interfaces.INetworkHistoryService;
@@ -234,15 +231,15 @@ public class NetworkHistoryService implements INetworkHistoryService {
         LocalDate endDate = getNodesActivityPercentageRequest.getEndDate();
         Map<Hash, NodeActivityPercentageData> nodeHashToActivityPercentage = new HashMap<>();
 
-        Instant finalNow = now;
+        final Instant finalNow = now;
         getNodesActivityPercentageRequest.getNodeHashes().forEach(nodeHash -> {
             try {
                 NodeActivityData nodeActivityData = getNodeActivity(nodeHash, startDate, endDate, finalNow);
                 long nodeExclusionPeriodInSeconds = getNodeExclusionPeriodInSeconds(nodeHash, startDate, endDate, finalNow);
                 double percentage = getPercentage(nodeActivityData, nodeExclusionPeriodInSeconds);
-                nodeHashToActivityPercentage.put(nodeHash, new NodeActivityPercentageData(true, percentage));
+                nodeHashToActivityPercentage.put(nodeHash, new NodeActivityPercentageData(percentage));
             } catch (NetworkHistoryValidationException e) {
-                nodeHashToActivityPercentage.put(nodeHash, new NodeActivityPercentageData(false, 0));
+                nodeHashToActivityPercentage.put(nodeHash, new NodeActivityPercentageErrorData(e.getMessage()));
             }
         });
         return ResponseEntity.status(HttpStatus.OK)

@@ -6,14 +6,15 @@ import java.io.Serializable;
 
 @Data
 public class NodeActivityPercentageData implements Serializable {
-    boolean status;
-    double percentage;
 
-    public NodeActivityPercentageData() {
+    protected boolean status;
+    protected double percentage;
+
+    protected NodeActivityPercentageData() {
     }
 
-    public NodeActivityPercentageData(boolean status, double percentage) {
-        this.status = status;
+    public NodeActivityPercentageData(double percentage) {
+        this.status = true;
         this.percentage = percentage;
     }
 }

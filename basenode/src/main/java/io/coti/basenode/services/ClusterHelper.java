@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 @Slf4j
 @Service
@@ -20,7 +21,7 @@ public class ClusterHelper implements IClusterHelper {
     private Transactions transactions;
 
     @Override
-    public void sortByTopologicalOrder(ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster, LinkedList<TransactionData> topologicalOrderedGraph) {
+    public void sortByTopologicalOrder(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster, LinkedList<TransactionData> topologicalOrderedGraph) {
         Map<Hash, TransactionData> childrenToAdd = new ConcurrentHashMap<>();
         trustChainConfirmationCluster.forEach((hash, transactionData) -> {
             transactionData.setVisit(false);
@@ -48,7 +49,7 @@ public class ClusterHelper implements IClusterHelper {
         });
     }
 
-    private void topologicalSortingHelper(TransactionData parentTransactionData, ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster, LinkedList<TransactionData> topologicalOrderedGraph) {
+    private void topologicalSortingHelper(TransactionData parentTransactionData, ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster, LinkedList<TransactionData> topologicalOrderedGraph) {
         for (Hash transactionDataHash : parentTransactionData.getChildrenTransactionHashes()) {
             TransactionData childTransactionData = trustChainConfirmationCluster.get(transactionDataHash);
             if (childTransactionData != null && !childTransactionData.isVisit()) {

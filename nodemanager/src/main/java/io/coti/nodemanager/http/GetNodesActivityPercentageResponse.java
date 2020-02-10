@@ -12,9 +12,6 @@ public class GetNodesActivityPercentageResponse extends BaseResponse {
 
     private Map<Hash, NodeActivityPercentageData> nodeHashToActivityPercentage;
 
-    public GetNodesActivityPercentageResponse() {
-    }
-
     public GetNodesActivityPercentageResponse(Map<Hash, NodeActivityPercentageData> nodeHashToActivityPercentage) {
         this.nodeHashToActivityPercentage = nodeHashToActivityPercentage;
     }

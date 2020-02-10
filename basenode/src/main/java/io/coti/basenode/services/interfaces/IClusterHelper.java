@@ -4,10 +4,10 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 
 import java.util.LinkedList;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public interface IClusterHelper {
 
-    void sortByTopologicalOrder(ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster, LinkedList<TransactionData> topologicalOrderedGraph);
+    void sortByTopologicalOrder(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster, LinkedList<TransactionData> topologicalOrderedGraph);
 
 }

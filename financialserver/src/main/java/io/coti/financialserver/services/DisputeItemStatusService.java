@@ -31,11 +31,9 @@ public enum DisputeItemStatusService {
 
         @Override
         public void changeDisputeStatus(DisputeData disputeData) throws Exception {
-            if (existRecallDisputeItems(disputeData)) {
-                return;
-            } else if (!existClaimDisputeItems(disputeData)) {
+            if (!existClaimDisputeItems(disputeData)) {
                 DisputeStatusService.Closed.changeStatus(disputeData);
-            } else {
+            } else if (!existRecallDisputeItems(disputeData)) {
                 DisputeStatusService.Claim.changeStatus(disputeData);
             }
 

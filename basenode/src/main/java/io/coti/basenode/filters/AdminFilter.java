@@ -9,7 +9,7 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.HashSet;
+import java.util.Set;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.UNAUTHORIZED_IP_ACCESS;
@@ -17,7 +17,7 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.UNAUTHORIZED_IP_
 @Slf4j
 public class AdminFilter implements Filter {
 
-    private HashSet<String> whiteListIps;
+    private Set<String> whiteListIps;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -52,7 +52,7 @@ public class AdminFilter implements Filter {
         return remoteAddr;
     }
 
-    public void setWhiteListIps(HashSet<String> whiteListIps) {
+    public void setWhiteListIps(Set<String> whiteListIps) {
         this.whiteListIps = whiteListIps;
     }
 

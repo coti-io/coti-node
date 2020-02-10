@@ -227,7 +227,7 @@ public abstract class BaseNodeInitializationService {
                 nodeRegistrations.put(nodeRegistrationData);
             }
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            throw new NetworkException(String.format("Error at registration of node. Registrar response: \n %s", e.getResponseBodyAsString()), e);
+            throw new NetworkException(String.format("Error at registration of node. Registrar response: %n %s", e.getResponseBodyAsString()), e);
         } catch (Exception e) {
             throw new NetworkException("Error at registration of node.", e);
         }

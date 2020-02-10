@@ -15,6 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 @Slf4j
 @Service
@@ -23,12 +24,12 @@ public class TrustChainConfirmationService {
 
     @Value("${cluster.trust.chain.threshold}")
     private int threshold;
-    private ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster;
+    private ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster;
     private LinkedList<TransactionData> topologicalOrderedGraph;
     @Autowired
     private IClusterHelper clusterHelper;
 
-    public void init(ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster) {
+    public void init(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster) {
         this.trustChainConfirmationCluster = new ConcurrentHashMap<>(trustChainConfirmationCluster);
         topologicalOrderedGraph = new LinkedList<>();
         clusterHelper.sortByTopologicalOrder(trustChainConfirmationCluster, topologicalOrderedGraph);
