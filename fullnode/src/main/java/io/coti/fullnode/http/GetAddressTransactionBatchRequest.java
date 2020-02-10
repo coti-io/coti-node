@@ -10,6 +10,7 @@ import java.util.List;
 
 @Data
 public class GetAddressTransactionBatchRequest extends Request {
+
     @NotEmpty(message = "Addresses must not be blank")
-    public List<@Valid Hash> addresses;
+    private List<@Valid Hash> addresses;
 }

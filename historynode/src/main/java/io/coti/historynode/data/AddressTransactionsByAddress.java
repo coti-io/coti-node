@@ -11,6 +11,7 @@ import java.util.HashSet;
 @Data
 public class AddressTransactionsByAddress implements IEntity {
 
+    private static final long serialVersionUID = -2778931749700204850L;
     private Hash address;
     private HashMap<LocalDate, HashSet<Hash>> transactionHashesByDates;
     private LocalDate startDate;

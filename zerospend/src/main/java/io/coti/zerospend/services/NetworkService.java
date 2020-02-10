@@ -36,8 +36,7 @@ public class NetworkService extends BaseNodeNetworkService {
 
             setNetworkData(newNetworkData);
         } catch (Exception e) {
-            log.error("Handle network changes error");
-            e.printStackTrace();
+            log.error("Handle network changes error", e);
         }
     }
 

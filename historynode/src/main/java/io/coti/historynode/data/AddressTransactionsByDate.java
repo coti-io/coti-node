@@ -14,6 +14,7 @@ import java.util.HashSet;
 @Data
 public class AddressTransactionsByDate implements IEntity {
 
+    private static final long serialVersionUID = 4576893520654304534L;
     private Hash hash;
     private Instant date;
     private HashSet<Hash> transactionHashes;

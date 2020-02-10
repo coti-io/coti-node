@@ -166,7 +166,7 @@ public class RollingReserveService {
 
         recourseClaimData = recourseClaims.getByHash(recourseClaimData.getMerchantHash());
 
-        if (recourseClaimData.getTransactionHashes().contains(transactionData)) {
+        if (recourseClaimData.getTransactionHashes().contains(transactionData.getHash())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(ALREADY_GOT_THIS_RECOURSE_CLAIM, STATUS_ERROR));
         }
 
@@ -220,8 +220,7 @@ public class RollingReserveService {
             log.info("Rolling reserve release date set success for transaction {} and merchant {}", transactionData.getHash(), merchantHash);
 
         } catch (Exception e) {
-            log.error("Rolling reserve release date set error for transaction {} and merchant {}", transactionData.getHash(), merchantHash);
-            e.printStackTrace();
+            log.error("Rolling reserve release date set error for transaction {} and merchant {}", transactionData.getHash(), merchantHash, e);
         }
     }
 

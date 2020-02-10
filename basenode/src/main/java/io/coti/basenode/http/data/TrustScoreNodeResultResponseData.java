@@ -2,10 +2,12 @@ package io.coti.basenode.http.data;
 
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.TrustScoreNodeResultData;
+import io.coti.basenode.http.data.interfaces.IResponseData;
 import lombok.Data;
 
 @Data
-public class TrustScoreNodeResultResponseData {
+public class TrustScoreNodeResultResponseData implements IResponseData {
+
     private String trustScoreNodeHash;
     private SignatureData trustScoreNodeSignature;
     private boolean valid;

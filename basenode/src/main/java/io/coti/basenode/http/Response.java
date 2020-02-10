@@ -4,7 +4,8 @@ import lombok.Data;
 
 @Data
 public class Response extends BaseResponse {
-    public String message;
+
+    protected String message;
 
     public Response() {
         this("");

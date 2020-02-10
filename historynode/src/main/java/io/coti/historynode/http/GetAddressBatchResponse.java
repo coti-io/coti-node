@@ -8,7 +8,8 @@ import java.util.List;
 
 @Data
 public class GetAddressBatchResponse implements IResponse {
-    List<AddressData> addresses;
+
+    private List<AddressData> addresses;
 
     public GetAddressBatchResponse(List<AddressData> addresses) {
         this.addresses = addresses;

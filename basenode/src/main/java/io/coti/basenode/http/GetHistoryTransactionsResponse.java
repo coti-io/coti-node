@@ -8,7 +8,7 @@ import java.util.Map;
 @Data
 public class GetHistoryTransactionsResponse extends BaseResponse {
 
-    public Map<Hash, String> entitiesBulkResponses;
+    private Map<Hash, String> entitiesBulkResponses;
 
     public GetHistoryTransactionsResponse() {
     }

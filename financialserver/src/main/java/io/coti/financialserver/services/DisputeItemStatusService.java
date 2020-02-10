@@ -161,7 +161,7 @@ public enum DisputeItemStatusService {
     }
 
     public void changeDisputeItemsStatuses(DisputeData disputeData) {
-
+        // implemented by sub classes
     }
 
     public void changePreClaimDisputeItemsStatuses(DisputeData disputeData) {
@@ -197,7 +197,7 @@ public enum DisputeItemStatusService {
 
     public void createChargeBackTransaction(DisputeData disputeData) {
         List<DisputeItemData> refundableDisputeItems = disputeData.getDisputeItems().stream().filter(disputeItemData -> valueOf(disputeItemData.getStatus().toString()).isRefundable()).collect(Collectors.toList());
-        if (refundableDisputeItems.size() != 0) {
+        if (!refundableDisputeItems.isEmpty()) {
             BigDecimal refundAmount = refundableDisputeItems.stream().map(DisputeItemData::getPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
             TransactionData transactionData = transactions.getByHash(disputeData.getTransactionHash());
             rollingReserveService.chargebackConsumer(disputeData, transactionData.getSenderHash(), refundAmount);

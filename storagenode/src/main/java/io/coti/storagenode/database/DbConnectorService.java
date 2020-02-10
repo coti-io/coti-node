@@ -137,7 +137,7 @@ public class DbConnectorService implements IDbConnectorService {
             }
             return getResponse;
         } catch (Exception e) {
-            throw new DbConnectorException(String.format("Error at get object from db by hash : {}", e.getMessage()));
+            throw new DbConnectorException(String.format("Error at get object from db by hash : %s", e.getMessage()));
         }
     }
 
@@ -158,7 +158,7 @@ public class DbConnectorService implements IDbConnectorService {
 
             return bulkResponse;
         } catch (IOException e) {
-            throw new DbConnectorException(String.format("Error at insert multi objects to db: {}", e.getMessage()));
+            throw new DbConnectorException(String.format("Error at insert multi objects to db: %s", e.getMessage()));
         }
 
     }
@@ -181,7 +181,7 @@ public class DbConnectorService implements IDbConnectorService {
 
             return multiGetResponse;
         } catch (IOException e) {
-            throw new DbConnectorException(String.format("Error at get multi objects from db: {}", e.getMessage()));
+            throw new DbConnectorException(String.format("Error at get multi objects from db: %s", e.getMessage()));
         }
 
     }
@@ -218,7 +218,7 @@ public class DbConnectorService implements IDbConnectorService {
             }
             return indexResponse;
         } catch (Exception e) {
-            throw new DbConnectorException(String.format("Error at insert object to db: {}", e.getMessage()));
+            throw new DbConnectorException(String.format("Error at insert object to db: %s", e.getMessage()));
         }
     }
 

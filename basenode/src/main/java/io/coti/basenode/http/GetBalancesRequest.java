@@ -10,6 +10,6 @@ import java.util.List;
 public class GetBalancesRequest extends Request {
 
     @NotNull(message = "Addresses must not be blank")
-    public List<Hash> addresses;
+    private List<Hash> addresses;
 
 }

@@ -36,6 +36,7 @@ public class InitializationService extends BaseNodeInitializationService {
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
+    @Override
     public void init() {
         try {
             super.init();
@@ -73,13 +74,13 @@ public class InitializationService extends BaseNodeInitializationService {
             }
 
             super.initServices();
+        } catch (CotiRunTimeException e) {
+            log.error("Errors at {}", this.getClass().getSimpleName());
+            e.logMessage();
+            System.exit(SpringApplication.exit(applicationContext));
         } catch (Exception e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
-            if (e instanceof CotiRunTimeException) {
-                ((CotiRunTimeException) e).logMessage();
-            } else {
-                log.error("{}: {}", e.getClass().getName(), e.getMessage());
-            }
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
             System.exit(SpringApplication.exit(applicationContext));
         }
     }

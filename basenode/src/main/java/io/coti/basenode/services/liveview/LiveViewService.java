@@ -9,6 +9,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Vector;
 
 @Slf4j
@@ -22,7 +23,7 @@ public class LiveViewService {
 
     public LiveViewService() {
         this.graphData = new GraphData();
-        this.graphData.transactions = new Vector<>();
+        this.graphData.setTransactions(new Vector<>());
     }
 
     public GraphData getFullGraph() {
@@ -48,7 +49,7 @@ public class LiveViewService {
             graphTransactionData.setRightParent(transactionData.getRightParentHash().toHexString());
         }
         setGraphTransactionDataDatesFromTransactionData(transactionData, graphTransactionData);
-        graphData.transactions.add(graphTransactionData);
+        graphData.getTransactions().add(graphTransactionData);
 
         sendTransaction(graphTransactionData);
     }
@@ -59,11 +60,12 @@ public class LiveViewService {
         graphTransactionData.setTrustScore(transactionData.getSenderTrustScore());
         graphTransactionData.setStatus(newStatus);
         setGraphTransactionDataDatesFromTransactionData(transactionData, graphTransactionData);
-        int index = graphData.transactions.indexOf(graphTransactionData);
+        List<GraphTransactionData> transactions = graphData.getTransactions();
+        int index = transactions.indexOf(graphTransactionData);
         if (index == -1) {
-            graphData.transactions.add(graphTransactionData);
+            transactions.add(graphTransactionData);
         } else {
-            graphData.transactions.set(index, graphTransactionData);
+            transactions.set(index, graphTransactionData);
         }
         sendTransaction(graphTransactionData);
     }

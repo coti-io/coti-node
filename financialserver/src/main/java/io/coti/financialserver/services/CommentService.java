@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static io.coti.financialserver.http.HttpStringConstants.*;
 
@@ -98,10 +99,11 @@ public class CommentService {
         if (!disputeService.isAuthorizedDisputeDetailDisplay(disputeData, getDisputeCommentsData.getUserHash())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_COMMENT_UNAUTHORIZED, STATUS_ERROR));
         }
-        DisputeItemData disputeItemData = disputeData.getDisputeItems().stream().filter(disputeItem -> disputeItem.getId().equals(getDisputeCommentsData.getItemId())).findFirst().get();
-        if (disputeItemData == null) {
+        Optional<DisputeItemData> optionalDisputeItemData = disputeData.getDisputeItems().stream().filter(disputeItem -> disputeItem.getId().equals(getDisputeCommentsData.getItemId())).findFirst();
+        if (!optionalDisputeItemData.isPresent()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ITEM_NOT_FOUND, STATUS_ERROR));
         }
+        DisputeItemData disputeItemData = optionalDisputeItemData.get();
         List<Hash> disputeCommentHashes = disputeItemData.getDisputeCommentHashes() != null ? disputeItemData.getDisputeCommentHashes() : new ArrayList<>();
         List<DisputeCommentData> disputeCommentDataList = new ArrayList<>();
         disputeCommentHashes.forEach(disputeCommentHash -> disputeCommentDataList.add(disputeComments.getByHash(disputeCommentHash)));

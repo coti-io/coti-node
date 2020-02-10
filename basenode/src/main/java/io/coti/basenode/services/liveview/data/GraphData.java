@@ -6,5 +6,6 @@ import java.util.List;
 
 @Data
 public class GraphData {
-    public List<GraphTransactionData> transactions;
+
+    private List<GraphTransactionData> transactions;
 }

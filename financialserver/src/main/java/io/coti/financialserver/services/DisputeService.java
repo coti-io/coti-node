@@ -28,8 +28,6 @@ import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.*;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import static io.coti.financialserver.http.HttpStringConstants.*;
 
@@ -105,11 +103,11 @@ public class DisputeService {
         BigDecimal disputeAmount = BigDecimal.ZERO;
 
         for (DisputeItemData item : disputeData.getDisputeItems()) {
-            Supplier<Stream<PaymentItemData>> paymentItemsStreamSupplier = () -> paymentItems.stream().filter(paymentItemData -> paymentItemData.getItemId().equals(item.getId()));
-            if (itemIds.contains(item.getId()) || paymentItemsStreamSupplier.get().count() == 0) {
+            Optional<PaymentItemData> optionalPaymentItemData = paymentItems.stream().filter(paymentItemData -> paymentItemData.getItemId().equals(item.getId())).findFirst();
+            if (itemIds.contains(item.getId()) || !optionalPaymentItemData.isPresent()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_ITEMS_INVALID, STATUS_ERROR));
             }
-            PaymentItemData paymentItemData = paymentItemsStreamSupplier.get().findFirst().get();
+            PaymentItemData paymentItemData = optionalPaymentItemData.get();
             item.setPrice(paymentItemData.getItemPrice());
             item.setQuantity(paymentItemData.getItemQuantity());
             item.setName(paymentItemData.getItemName());
@@ -292,16 +290,16 @@ public class DisputeService {
 
         int random;
 
-        List<String> arbitratorUserHashes = new ArrayList<>(this.arbitratorUserHashes);
+        List<String> arbitratorUserHashList = new ArrayList<>(this.arbitratorUserHashes);
         for (int i = 0; i < COUNT_ARBITRATORS_PER_DISPUTE; i++) {
 
-            random = (int) ((Math.random() * arbitratorUserHashes.size()));
+            random = new Random().nextInt(arbitratorUserHashList.size());
 
-            Hash arbitratorHash = new Hash(arbitratorUserHashes.get(random));
+            Hash arbitratorHash = new Hash(arbitratorUserHashList.get(random));
             disputeData.getArbitratorHashes().add(arbitratorHash);
             addUserDisputeHash(ActionSide.Arbitrator, arbitratorHash, disputeData.getHash());
 
-            arbitratorUserHashes.remove(random);
+            arbitratorUserHashList.remove(random);
         }
 
         webSocketService.notifyOnDisputeToArbitrators(disputeData);

@@ -6,6 +6,7 @@ import lombok.Data;
 
 @Data
 public class GetTransactionResponse extends BaseResponse {
+
     private TransactionResponseData transactionData;
 
     public GetTransactionResponse(TransactionResponseData transactionResponseData) {

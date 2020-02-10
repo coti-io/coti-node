@@ -22,6 +22,6 @@ public class InitialFundData implements IEntity {
 
     @Override
     public void setHash(Hash hash) {
-
+        this.fundAddress = hash;
     }
 }

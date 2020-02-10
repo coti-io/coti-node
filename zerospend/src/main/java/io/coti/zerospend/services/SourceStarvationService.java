@@ -23,8 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class SourceStarvationService {
 
-    private final long MINIMUM_WAIT_TIME_IN_SECONDS = 10;
-    private final long SOURCE_STARVATION_CHECK_TASK_DELAY = 10000;
+    private static final long MINIMUM_WAIT_TIME_IN_SECONDS = 10;
+    private static final long SOURCE_STARVATION_CHECK_TASK_DELAY = 10000;
     @Autowired
     private IClusterService clusterService;
     @Autowired
@@ -50,7 +50,7 @@ public class SourceStarvationService {
             parentInNonZeroChain(transactionData.getLeftParentHash(), transactionData.getHash(), nonZeroSpendChainTransactions);
             parentInNonZeroChain(transactionData.getRightParentHash(), transactionData.getHash(), nonZeroSpendChainTransactions);
 
-            if (transactionData.getChildrenTransactionHashes().size() == 0 && nonZeroSpendChainTransactions.containsKey(transactionData.getHash())) {
+            if (transactionData.getChildrenTransactionHashes().isEmpty() && nonZeroSpendChainTransactions.containsKey(transactionData.getHash())) {
                 long minimumWaitingTimeInMilliseconds = (long) (100 - transactionData.getSenderTrustScore() + MINIMUM_WAIT_TIME_IN_SECONDS) * 1000;
                 long actualWaitingTimeInMilliseconds = Duration.between(nonZeroSpendChainTransactions.get(transactionData.getHash()), now).toMillis();
                 log.debug("Waiting transaction: {}. Time without attachment: {}, Minimum wait time: {}", transactionData.getHash(), millisecondsToMinutes(actualWaitingTimeInMilliseconds), millisecondsToMinutes(minimumWaitingTimeInMilliseconds));

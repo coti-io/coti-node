@@ -3,6 +3,7 @@ package io.coti.financialserver.data;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -10,6 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Data
 public class RollingReserveReleaseDateData implements IEntity {
 
@@ -27,7 +29,7 @@ public class RollingReserveReleaseDateData implements IEntity {
         try {
             this.date = formatter.parse(formatter.format(date));
         } catch (ParseException e) {
-            e.printStackTrace();
+            log.error("Set date error", e);
         }
     }
 

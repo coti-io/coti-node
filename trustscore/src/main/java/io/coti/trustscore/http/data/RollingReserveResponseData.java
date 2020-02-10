@@ -4,6 +4,7 @@ import io.coti.basenode.data.BaseTransactionName;
 import io.coti.basenode.data.RollingReserveData;
 import io.coti.basenode.data.TrustScoreNodeResultData;
 import io.coti.basenode.http.data.TrustScoreNodeResultResponseData;
+import io.coti.basenode.http.data.interfaces.IResponseData;
 import lombok.Data;
 
 import java.time.Instant;
@@ -11,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class RollingReserveResponseData {
+public class RollingReserveResponseData implements IResponseData {
 
     private String hash;
     private String amount;

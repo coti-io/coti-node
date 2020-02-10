@@ -67,7 +67,7 @@ public class AddressStorageService extends EntityStorageService {
     }
 
     public Map<Hash, AddressData> getObjectsMapFromJsonMap(Map<Hash, String> responsesMap) {
-        return responsesMap.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e ->
+        return responsesMap.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e ->
                 jacksonSerializer.deserialize(e.getValue())
         ));
     }

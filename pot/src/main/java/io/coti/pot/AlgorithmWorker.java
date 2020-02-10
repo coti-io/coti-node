@@ -44,7 +44,7 @@ class AlgorithmWorker implements IAlgorithmWorker {
             IAlgorithm.AlgorithmTypes hashingAlgorithm = ordering.getHashingAlgorithms().get(i);
             byte[] hashedData = concatAndHash(hashingAlgorithm, lastCorrectHash, nonce[i]);
             BigInteger currentOutput = new BigInteger(1, hashedData);
-            if (currentOutput.compareTo(targetOutput) != -1) {
+            if (currentOutput.compareTo(targetOutput) > -1) {
                 return false;
             }
             lastCorrectHash = hashedData;
@@ -60,7 +60,7 @@ class AlgorithmWorker implements IAlgorithmWorker {
         do {
             hashedData = concatAndHash(hashingAlgorithm, lastCorrectHash, nonce);
             BigInteger currentOutput = new BigInteger(1, hashedData);
-            validHash = (currentOutput.compareTo(targetOutput) == -1);
+            validHash = (currentOutput.compareTo(targetOutput) < 0);
             nonce = nonce + 1;
         } while (!validHash);
         return nonce - 1;

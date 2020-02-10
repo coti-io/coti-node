@@ -22,7 +22,7 @@ public class DatesHelper {
         try {
             date = formatter.parse(formatter.format(date));
         } catch (ParseException e) {
-            e.printStackTrace();
+            log.error("Get date number of days after today error", e);
         }
 
         DateUtils.addDays(date, numberOfDays);

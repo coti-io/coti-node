@@ -15,7 +15,7 @@ public class FundDistributionFileResultCrypto extends SignatureCrypto<FundDistri
 
         ByteBuffer fundDistributionFileResultBuffer =
                 ByteBuffer.allocate(fundDistributionFileResultData.getMessageByteSize());
-        fundDistributionFileResultData.getSignatureMessage().forEach(byteArray -> fundDistributionFileResultBuffer.put(byteArray));
+        fundDistributionFileResultData.getSignatureMessage().forEach(fundDistributionFileResultBuffer::put);
 
         byte[] clusterStampInBytes = fundDistributionFileResultBuffer.array();
         return CryptoHelper.cryptoHash(clusterStampInBytes).getBytes();

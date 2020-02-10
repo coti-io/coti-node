@@ -3,12 +3,14 @@ package io.coti.fullnode.http.data;
 import io.coti.basenode.data.BaseTransactionName;
 import io.coti.basenode.data.FullNodeFeeData;
 import io.coti.basenode.data.SignatureData;
+import io.coti.basenode.http.data.interfaces.IResponseData;
 import lombok.Data;
 
 import java.time.Instant;
 
 @Data
-public class FullNodeFeeResponseData {
+public class FullNodeFeeResponseData implements IResponseData {
+
     private String hash;
     private String amount;
     private String originalAmount;

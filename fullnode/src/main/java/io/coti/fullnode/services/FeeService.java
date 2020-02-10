@@ -67,7 +67,13 @@ public class FeeService {
                 amount = new BigDecimal(0);
             } else {
                 BigDecimal fee = originalAmount.multiply(feePercentage).divide(new BigDecimal(100));
-                amount = (fee.compareTo(minimumFee) <= 0 ? minimumFee : fee.compareTo(maximumFee) >= 0 ? maximumFee : fee);
+                if (fee.compareTo(minimumFee) <= 0) {
+                    amount = minimumFee;
+                } else if (fee.compareTo(maximumFee) >= 0) {
+                    amount = maximumFee;
+                } else {
+                    amount = fee;
+                }
             }
 
             if (amount.scale() > CURRENCY_SCALE) {

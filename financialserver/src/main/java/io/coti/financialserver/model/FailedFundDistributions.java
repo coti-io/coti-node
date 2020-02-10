@@ -7,9 +7,4 @@ import org.springframework.stereotype.Service;
 @Service
 public class FailedFundDistributions extends Collection<FailedFundDistributionData> {
 
-    @Override
-    public void init() {
-        super.init();
-    }
-
 }
