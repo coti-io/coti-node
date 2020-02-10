@@ -40,10 +40,11 @@ public class BaseNodeHttpStringConstants {
     public static final String INVALID_NODE_REGISTRAR = "Invalid node registrar";
     public static final String INVALID_NODE_IP_VERSION = "Invalid node IP version";
     public static final String INVALID_NODE_SERVER_URL = "Invalid node server URL";
-    public static final String INVALID_NODE_SERVER_URL_MISSING_HOST = "Missing host for node server url";
-    public static final String INVALID_NODE_SERVER_URL_HOST_RESERVED = "Invalid node server URL: host reserved to another user";
-    public static final String INVALID_NODE_SERVER_URL_SSL_REQUIRED = "Invalid node server URL: SSL required";
-    public static final String INVALID_NODE_IP_FOR_SERVER_URL = "Invalid node server URL: host is not matching with expected ip";
+    public static final String INVALID_NODE_SERVER_URL_UNKNOWN_HOST = "Invalid node server URL %s: unknown host. Dns record not found";
+    public static final String INVALID_NODE_SERVER_URL_EMPTY_HOST = "Invalid node server URL %s: empty host";
+    public static final String INVALID_NODE_SERVER_URL_HOST_RESERVED = "Invalid node server URL %s: host %s reserved to another user";
+    public static final String INVALID_NODE_SERVER_URL_SSL_REQUIRED = "Invalid node server URL %s: SSL required";
+    public static final String INVALID_NODE_IP_FOR_SERVER_URL = "Invalid node server URL %s: host %s is not matching with ip %s. The expected ip is %s";
     public static final String INVALID_NODE_REGISTRATION_SIGNATURE = "Invalid node registration signature";
     public static final String INVALID_NETWORK_TYPE = "Network type should be %s. Invalid network type %s";
     public static final String INVALID_TRANSACTION_TIME_FIELD = "Invalid transaction time field. Current node time: %s";

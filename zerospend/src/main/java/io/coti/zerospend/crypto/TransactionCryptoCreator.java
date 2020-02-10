@@ -27,7 +27,7 @@ public class TransactionCryptoCreator {
             for (BaseTransactionData baseTransactionData : transactionData.getInputBaseTransactions()) {
                 BaseTransactionCrypto.valueOf(baseTransactionData.getClass().getSimpleName()).signMessage(transactionData, baseTransactionData, addressHashToAddressIndexMap.get(baseTransactionData.getAddressHash()));
             }
-        } catch (ClassNotFoundException e) {
+        } catch (Exception e) {
             log.error("ZeroSpend transaction signing base transactions error", e);
         }
     }

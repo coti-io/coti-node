@@ -38,11 +38,6 @@ public class TrustScoreController {
         return trustScoreService.getTransactionTrustScore(request);
     }
 
-//    @RequestMapping(path = "/insertevent", method = RequestMethod.PUT)
-//    public ResponseEntity<IResponse> insertTrustScoreEvent(@Valid @RequestBody InsertEventRequest request) {
-//        return trustScoreService.addKycServerEvent(request);  //change the name
-//    }
-
     @PutMapping(path = "/usertype")
     public ResponseEntity<IResponse> setUserType(@Valid @RequestBody SetUserTypeRequest request) {
         return trustScoreService.setUserType(request);

@@ -120,7 +120,7 @@ public class NodeManagementService implements INodeManagementService {
             } else {
                 if (!reservedHostData.getNodeHash().equals(nodeHash)) {
                     log.error("Invalid host. The host {} is already reserved to a different user", host);
-                    throw new NetworkNodeValidationException(INVALID_NODE_SERVER_URL_HOST_RESERVED);
+                    throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_HOST_RESERVED, webServerUrl, host));
                 }
             }
         }

@@ -138,7 +138,7 @@ public class TransactionHelper implements ITransactionHelper {
 
             return TransactionTypeValidation.valueOf(transactionType.toString()).validateBaseTransactions(transactionData);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Validate transaction type error", e);
             return false;
         }
     }
@@ -159,7 +159,7 @@ public class TransactionHelper implements ITransactionHelper {
             return isTrustScoreNodeResultValid(trustScoreNodeValidatable.getTrustScoreNodeResult());
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Validate base transaction trust score node result error", e);
             return false;
         }
     }
@@ -193,15 +193,13 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     public boolean isTransactionAlreadyPropagated(TransactionData transactionData) {
-        synchronized (transactionData) {
-            if (isTransactionExists(transactionData)) {
-                if (!isTransactionHashProcessing(transactionData.getHash())) {
-                    addDspResultToDb(transactionData.getDspConsensusResult());
-                }
-                return true;
+        if (isTransactionExists(transactionData)) {
+            if (!isTransactionHashProcessing(transactionData.getHash())) {
+                addDspResultToDb(transactionData.getDspConsensusResult());
             }
-            return false;
+            return true;
         }
+        return false;
     }
 
     private void addDspResultToDb(DspConsensusResult dspConsensusResult) {
@@ -251,10 +249,7 @@ public class TransactionHelper implements ITransactionHelper {
         } else {
             rollbackTransaction(transactionData);
         }
-
-        synchronized (transactionData) {
-            transactionHashToTransactionStateStackMapping.remove(transactionData.getHash());
-        }
+        transactionHashToTransactionStateStackMapping.remove(transactionData.getHash());
     }
 
     @Override

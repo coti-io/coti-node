@@ -74,7 +74,6 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private PotService potService;
     private BlockingQueue<ReducedTransactionData> explorerIndexQueue;
-    private Thread explorerIndexThread;
     private IndexedNavigableSet<ReducedTransactionData> explorerIndexedTransactionSet;
     @Autowired
     private ResendTransactionRequestCrypto resendTransactionRequestCrypto;
@@ -83,7 +82,7 @@ public class TransactionService extends BaseNodeTransactionService {
     public void init() {
         explorerIndexedTransactionSet = new IndexedTreeSet<>();
         explorerIndexQueue = new LinkedBlockingQueue<>();
-        explorerIndexThread = new Thread(this::updateExplorerIndex);
+        Thread explorerIndexThread = new Thread(this::updateExplorerIndex);
         explorerIndexThread.start();
         super.init();
     }

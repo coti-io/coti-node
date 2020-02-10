@@ -1,6 +1,5 @@
 package io.coti.storagenode.services;
 
-import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.GetHistoryTransactionsRequest;
@@ -29,8 +28,6 @@ public class TransactionStorageService extends EntityStorageService {
     private static final int POOL_MAX_SIZE = 20;
     @Autowired
     private BaseNodeValidationService validationService;
-    @Autowired
-    private JacksonSerializer jacksonSerializer;
 
     @PostConstruct
     public void init() {
@@ -67,7 +64,9 @@ public class TransactionStorageService extends EntityStorageService {
 
             List<Hash> transactionHashes = getHistoryTransactionsRequest.getTransactionHashes();
             List<List<Hash>> blocksOfHashes = divideHashesToBlocks(transactionHashes);
-
+            if (blocksOfHashes == null) {
+                return;
+            }
             ExecutorService executorPool = Executors.newFixedThreadPool(Math.min(blocksOfHashes.size(), POOL_MAX_SIZE));
 
             for (int blockNumber = 0; blockNumber < blocksOfHashes.size(); blockNumber++) {
@@ -97,10 +96,10 @@ public class TransactionStorageService extends EntityStorageService {
                 }
             } catch (InterruptedException e) {
                 executorPool.shutdownNow();
+                Thread.currentThread().interrupt();
             }
         } catch (Exception e) {
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
-            return;
         }
 
     }
@@ -109,8 +108,7 @@ public class TransactionStorageService extends EntityStorageService {
         if (hashes == null || hashes.isEmpty()) {
             return null;
         }
-        List<List<Hash>> hashesBlocks = ListUtils.partition(hashes, BLOCK_SIZE);
-        return hashesBlocks;
+        return ListUtils.partition(hashes, BLOCK_SIZE);
     }
 
     private class WorkerThread implements Runnable {

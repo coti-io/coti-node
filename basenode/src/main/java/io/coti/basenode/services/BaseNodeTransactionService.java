@@ -202,7 +202,7 @@ public class BaseNodeTransactionService implements ITransactionService {
     }
 
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
-        log.debug("Continue to handle propagated transaction {} by base node", transactionData.getHash());
+        // implemented by sub classes
     }
 
     public void handleMissingTransaction(TransactionData transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes) {

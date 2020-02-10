@@ -167,8 +167,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         } catch (ClassCastException e) {
             log.error("Invalid request received: " + e.getMessage());
         } catch (Exception e) {
-            log.error("ZMQ subscriber message handler error");
-            e.printStackTrace();
+            log.error("ZMQ subscriber message handler error", e);
         }
     }
 

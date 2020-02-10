@@ -23,9 +23,9 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import javax.validation.ValidationException;
 import java.math.BigDecimal;
 import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
@@ -172,7 +172,7 @@ public class BaseNodeNetworkService implements INetworkService {
     }
 
     @Override
-    public void validateNetworkNodeData(NetworkNodeData networkNodeData) throws ValidationException {
+    public void validateNetworkNodeData(NetworkNodeData networkNodeData) {
         if (!networkNodeData.getNetworkType().equals(networkType)) {
             log.error("Invalid network type {} by node {}", networkNodeData.getNetworkType(), networkNodeData.getNodeHash());
             throw new NetworkNodeValidationException(String.format(INVALID_NETWORK_TYPE, networkType, networkNodeData.getNetworkType()));
@@ -207,48 +207,48 @@ public class BaseNodeNetworkService implements INetworkService {
             throw new NetworkNodeValidationException(INVALID_NODE_IP_VERSION);
         }
         String webServerUrl = networkNodeData.getWebServerUrl();
-        String protocol = getProtocol(webServerUrl);
-        if (protocol == null || !protocol.equals("https")) {
-            log.error("Server url requires ssl. Server url: {}", webServerUrl);
-            throw new NetworkNodeValidationException(INVALID_NODE_SERVER_URL_SSL_REQUIRED);
+        String protocol;
+        try {
+            protocol = getProtocol(webServerUrl);
+        } catch (Exception e) {
+            throw new NetworkNodeValidationException(INVALID_NODE_SERVER_URL, e);
+        }
+        if (!protocol.equals("https")) {
+            throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_SSL_REQUIRED, webServerUrl));
         }
         String host = getHost(webServerUrl);
-        if (host == null) {
-            log.error("Server url requires host. Server url: {}", webServerUrl);
-            throw new NetworkNodeValidationException(INVALID_NODE_SERVER_URL_MISSING_HOST);
+        if (host.isEmpty()) {
+            throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_EMPTY_HOST, webServerUrl));
         }
+        InetAddress inetAddress;
         try {
-            if (!Inet4Address.getByName(host).getHostAddress().equals(ip)) {
-                log.error("Invalid IP: {}, does not match host: {}", ip, host);
-                throw new NetworkNodeValidationException(INVALID_NODE_IP_FOR_SERVER_URL);
-            }
+            inetAddress = Inet4Address.getByName(host);
         } catch (Exception e) {
-            log.error("IP could not be verified: {} ", e.getMessage());
-            throw new NetworkNodeValidationException(INVALID_NODE_IP_FOR_SERVER_URL, e);
+            throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_UNKNOWN_HOST, webServerUrl), e);
+        }
+        String expectedIp = inetAddress.getHostAddress();
+        if (!expectedIp.equals(ip)) {
+            throw new NetworkNodeValidationException(String.format(INVALID_NODE_IP_FOR_SERVER_URL, webServerUrl, host, ip, expectedIp));
         }
     }
 
     @Override
     public String getHost(String webServerUrl) {
-        URL url = getUrl(webServerUrl);
-        return url == null ? null : url.getHost();
+        return getUrl(webServerUrl).getHost();
     }
 
     @Override
     public String getProtocol(String webServerUrl) {
-        URL url = getUrl(webServerUrl);
-        return url == null ? null : url.getProtocol();
+        return getUrl(webServerUrl).getProtocol();
     }
 
     private URL getUrl(String webServerUrl) {
-        URL url;
         try {
-            url = new URL(webServerUrl);
+            return new URL(webServerUrl);
         } catch (MalformedURLException e) {
             log.error("Node registration requires a valid URL address: {}", webServerUrl);
             throw new NetworkNodeValidationException(INVALID_NODE_SERVER_URL, e);
         }
-        return url;
     }
 
     @Override
@@ -259,14 +259,15 @@ public class BaseNodeNetworkService implements INetworkService {
 
     @Override
     public List<NetworkNodeData> getShuffledNetworkNodeDataListFromMapValues(NodeType nodeType) {
+
         try {
             Map<Hash, NetworkNodeData> dataMap = getMapFromFactory(nodeType);
             List<NetworkNodeData> nodeDataList = new LinkedList<>(dataMap.values());
             Collections.shuffle(nodeDataList);
             return nodeDataList;
         } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-            return null;
+            log.error("Get shuffled network node list from map values", e);
+            return new LinkedList<>();
         }
     }
 

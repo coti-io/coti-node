@@ -11,7 +11,6 @@ import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.Vector;
 
 import static java.util.stream.Collectors.toList;
 
@@ -40,25 +39,29 @@ public class SourceSelector implements ISourceSelector {
             List<Set<TransactionData>> trustScoreToSourceListMapping,
             double transactionTrustScore) {
 
+        List<TransactionData> neighbourSources = new LinkedList<>();
+
         int roundedTrustScore = (int) Math.round(transactionTrustScore);
         int numberOfSources = getNumberOfSources(trustScoreToSourceListMapping);
-        int lowIndex = roundedTrustScore - 1;
-        int highIndex = roundedTrustScore + 1;
-        List<TransactionData> neighbourSources = new LinkedList<>();
-        neighbourSources.addAll(trustScoreToSourceListMapping.get(roundedTrustScore));
+        if (numberOfSources > 0) {
+            int lowIndex = roundedTrustScore - 1;
+            int highIndex = roundedTrustScore + 1;
 
-        for (int trustScoreDifference = 0; trustScoreDifference < maxNeighbourhoodRadius; trustScoreDifference++) {
-            if (lowIndex >= 0) {
-                neighbourSources.addAll(trustScoreToSourceListMapping.get(lowIndex));
+            neighbourSources.addAll(trustScoreToSourceListMapping.get(roundedTrustScore));
+
+            for (int trustScoreDifference = 0; trustScoreDifference < maxNeighbourhoodRadius; trustScoreDifference++) {
+                if (lowIndex >= 0) {
+                    neighbourSources.addAll(trustScoreToSourceListMapping.get(lowIndex));
+                }
+                if (highIndex <= 100) {
+                    neighbourSources.addAll(trustScoreToSourceListMapping.get(highIndex));
+                }
+                if ((double) neighbourSources.size() / numberOfSources > (double) minSourcePercentage / 100) {
+                    break;
+                }
+                lowIndex--;
+                highIndex++;
             }
-            if (highIndex <= 100) {
-                neighbourSources.addAll(trustScoreToSourceListMapping.get(highIndex));
-            }
-            if ((double) neighbourSources.size() / numberOfSources > (double) minSourcePercentage / 100) {
-                break;
-            }
-            lowIndex--;
-            highIndex++;
         }
         return neighbourSources;
     }
@@ -90,7 +93,7 @@ public class SourceSelector implements ISourceSelector {
                         map(s -> Duration.between(s.getAttachmentTime(), now).toMillis()).mapToLong(Long::longValue).sum();
 
         // Now choose sources, randomly weighted by timestamp difference ("older" transactions have a bigger chance to be selected)
-        List<TransactionData> randomWeightedSources = new Vector<>();
+        List<TransactionData> randomWeightedSources = new LinkedList<>();
         while (randomWeightedSources.size() < 2) {
 
             int randomIndex = -1;
@@ -105,10 +108,9 @@ public class SourceSelector implements ISourceSelector {
 
             TransactionData randomSource = olderSources.get(randomIndex);
 
-            if (randomWeightedSources.size() == 0)
+            if (randomWeightedSources.isEmpty() || (randomWeightedSources.size() == 1 && randomSource != randomWeightedSources.iterator().next())) {
                 randomWeightedSources.add(randomSource);
-            else if (randomWeightedSources.size() == 1 && randomSource != randomWeightedSources.iterator().next())
-                randomWeightedSources.add(randomSource);
+            }
         }
 
         return randomWeightedSources;

@@ -103,8 +103,7 @@ public class TrustScoreService implements ITrustScoreService {
     }
 
     private Map<Hash, NetworkNodeData> createNodeMapFromList(List<NetworkNodeData> networkNodeData) {
-        Map<Hash, NetworkNodeData> ans = networkNodeData.stream().collect(Collectors.toMap(x -> x.getHash(), x -> x));
-        return ans;
+        return networkNodeData.stream().collect(Collectors.toMap(NetworkNodeData::getHash, x -> x));
     }
 
     private NodeTrustScoreResponse sendTrustScoreRequestToFirstTrustScoreNode(NetworkNodeData firstTrustScoreNode, NodeTrustScoreRequest nodeTrustScoreRequest) {
@@ -181,8 +180,7 @@ public class TrustScoreService implements ITrustScoreService {
 
     private List<NetworkNodeData> chooseTrustScoreNodesFromList(List<NetworkNodeData> trustScoreNodeList) {
         Collections.shuffle(trustScoreNodeList);
-        List<NetworkNodeData> trustScoreNodesToSend = trustScoreNodeList.stream().limit(NUM_OF_TRUSTSCORE_NODES).collect(Collectors.toList());
-        return trustScoreNodesToSend;
+        return trustScoreNodeList.stream().limit(NUM_OF_TRUSTSCORE_NODES).collect(Collectors.toList());
     }
 
 }

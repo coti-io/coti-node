@@ -3,10 +3,12 @@ package io.coti.basenode.crypto;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.ISignValidatable;
+import lombok.extern.slf4j.Slf4j;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
+@Slf4j
 public abstract class SignatureValidationCrypto<T extends ISignValidatable> {
 
     public abstract byte[] getSignatureMessage(T signValidatable);
@@ -15,7 +17,7 @@ public abstract class SignatureValidationCrypto<T extends ISignValidatable> {
         try {
             return CryptoHelper.verifyByPublicKey(this.getSignatureMessage(signValidatable), this.getSignature(signValidatable).getR(), this.getSignature(signValidatable).getS(), this.getSignerHash(signValidatable).toHexString());
         } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            log.error("Verify signature error", e);
             return false;
         }
     }

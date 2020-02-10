@@ -2,7 +2,6 @@ package io.coti.basenode.services.interfaces;
 
 import io.coti.basenode.data.*;
 
-import javax.validation.ValidationException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +24,7 @@ public interface INetworkService {
 
     void removeNode(NetworkNodeData networkNodeData);
 
-    void validateNetworkNodeData(NetworkNodeData networkNodeData) throws ValidationException;
+    void validateNetworkNodeData(NetworkNodeData networkNodeData);
 
     String getProtocol(String webServerUrl);
 

@@ -43,7 +43,6 @@ public class TransactionIndexService {
             transactionHelper.removeNoneIndexedTransaction(transactionData);
             return true;
         } else {
-            //   log.error("Index is not of the last transaction: Index={}, currentLast={}", transactionData.getDspConsensusResult().getIndex(), lastTransactionIndexData.getIndex());
             return false;
         }
     }

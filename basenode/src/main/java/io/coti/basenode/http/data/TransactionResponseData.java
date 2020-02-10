@@ -7,6 +7,7 @@ import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.exceptions.TransactionException;
 import io.coti.basenode.http.data.interfaces.ITransactionResponseData;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -17,6 +18,7 @@ import java.util.List;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.TRANSACTION_RESPONSE_ERROR;
 
+@Slf4j
 @Data
 public class TransactionResponseData implements ITransactionResponseData {
 
@@ -53,7 +55,7 @@ public class TransactionResponseData implements ITransactionResponseData {
                     Constructor<? extends BaseTransactionResponseData> constructor = baseTransactionResponseDataClass.getConstructor(BaseTransactionData.class);
                     baseTransactions.add(constructor.newInstance(baseTransactionData));
                 } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
-                    e.printStackTrace();
+                    log.error("Transaction response error", e);
                     throw new TransactionException(TRANSACTION_RESPONSE_ERROR);
                 }
             });

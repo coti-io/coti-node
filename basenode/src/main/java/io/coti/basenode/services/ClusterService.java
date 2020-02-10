@@ -172,12 +172,11 @@ public class ClusterService implements IClusterService {
                         trustScoreToTransactionMappingSnapshot,
                         transactionData.getSenderTrustScore());
 
-        if (selectedSourcesForAttachment.size() == 0) {
+        if (selectedSourcesForAttachment.isEmpty()) {
             return;
         }
-        if (selectedSourcesForAttachment.size() > 0) {
-            transactionData.setLeftParentHash(selectedSourcesForAttachment.get(0).getHash());
-        }
+
+        transactionData.setLeftParentHash(selectedSourcesForAttachment.get(0).getHash());
         if (selectedSourcesForAttachment.size() > 1) {
             transactionData.setRightParentHash(selectedSourcesForAttachment.get(1).getHash());
         }

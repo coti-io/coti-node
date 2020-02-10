@@ -8,7 +8,8 @@ import java.util.HashMap;
 
 @Data
 public class StoreEntitiesToStorageResponse extends Response {
-    public HashMap<Hash, Boolean> entitiesSentToStorage;
+
+    private HashMap<Hash, Boolean> entitiesSentToStorage;
 
     public StoreEntitiesToStorageResponse(HashMap<Hash, Boolean> entitiesSentToStorage) {
         this.entitiesSentToStorage = entitiesSentToStorage;

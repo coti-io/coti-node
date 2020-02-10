@@ -6,7 +6,4 @@ import org.springframework.stereotype.Component;
 @Component
 public class TransactionIndexes extends Collection<TransactionIndexData> {
 
-    public void init() {
-        super.init();
-    }
 }

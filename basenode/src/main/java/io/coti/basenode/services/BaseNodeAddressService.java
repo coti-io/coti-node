@@ -79,7 +79,7 @@ public class BaseNodeAddressService implements IAddressService {
     }
 
     protected void continueHandleGeneratedAddress(AddressData addressData) {
-
+        // implemented by sub classes
     }
 
     @Override

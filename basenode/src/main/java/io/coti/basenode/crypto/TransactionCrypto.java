@@ -3,11 +3,13 @@ package io.coti.basenode.crypto;
 import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;
 import java.util.List;
 
+@Slf4j
 @Component
 public class TransactionCrypto extends SignatureCrypto<TransactionData> {
 
@@ -58,8 +60,8 @@ public class TransactionCrypto extends SignatureCrypto<TransactionData> {
 
             Hash transactionHash = getHashFromBaseTransactionHashesData(transactionData);
             transactionData.setHash(transactionHash);
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            log.error("Transaction crypto set transaction hash error", e);
         }
 
     }

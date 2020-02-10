@@ -7,7 +7,4 @@ import org.springframework.stereotype.Service;
 @Service
 public class StakingNodes extends Collection<StakingNodeData> {
 
-    public void init() {
-        super.init();
-    }
 }

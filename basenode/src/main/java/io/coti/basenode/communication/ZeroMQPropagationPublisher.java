@@ -86,8 +86,7 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
             while (!contextTerminated && !Thread.currentThread().isInterrupted()) {
                 try {
                     ZeroMQMessageData messageData = publishMessageQueue.take();
-                    propagator.sendMore(messageData.getChannel().getBytes());
-                    propagator.send(messageData.getMessage());
+                    publish(messageData);
                 } catch (InterruptedException e) {
                     log.info("Publisher thread interrupted");
                     Thread.currentThread().interrupt();
@@ -100,17 +99,23 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
                     }
                 }
             }
-            LinkedList<ZeroMQMessageData> remainingMessages = new LinkedList<>();
-            publishMessageQueue.drainTo(remainingMessages);
-            if (!remainingMessages.isEmpty()) {
-                log.info("Please wait to publish {} remaining messages", remainingMessages.size());
-                remainingMessages.forEach(messageData -> {
-                    propagator.sendMore(messageData.getChannel().getBytes());
-                    propagator.send(messageData.getMessage());
-                });
-            }
+            publishRemainingMessages();
         });
         publishMessageThread.start();
+    }
+
+    private void publish(ZeroMQMessageData messageData) {
+        propagator.sendMore(messageData.getChannel().getBytes());
+        propagator.send(messageData.getMessage());
+    }
+
+    private void publishRemainingMessages() {
+        LinkedList<ZeroMQMessageData> remainingMessages = new LinkedList<>();
+        publishMessageQueue.drainTo(remainingMessages);
+        if (!remainingMessages.isEmpty()) {
+            log.info("Please wait to publish {} remaining messages", remainingMessages.size());
+            remainingMessages.forEach(this::publish);
+        }
     }
 
     public void shutdown() {

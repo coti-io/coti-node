@@ -24,7 +24,7 @@ public enum BehaviorEventsScoreType {
                 return value;
             }
         }
-        throw new IllegalArgumentException(String.format("got event name {}, which not exists", text));
+        throw new IllegalArgumentException(String.format("got event name %s, which not exists", text));
     }
 
     @Override

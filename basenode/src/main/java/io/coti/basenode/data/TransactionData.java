@@ -60,11 +60,11 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
         this.createTime = createTime;
         this.type = type;
         this.senderTrustScore = senderTrustScore;
-        BigDecimal amount = BigDecimal.ZERO;
+        BigDecimal totalAmount = BigDecimal.ZERO;
         for (BaseTransactionData baseTransaction : baseTransactions) {
-            amount = amount.add(baseTransaction.getAmount().signum() > 0 ? baseTransaction.getAmount() : BigDecimal.ZERO);
+            totalAmount = totalAmount.add(baseTransaction.getAmount().signum() > 0 ? baseTransaction.getAmount() : BigDecimal.ZERO);
         }
-        this.amount = amount;
+        this.amount = totalAmount;
         this.initTransactionData();
     }
 
@@ -77,11 +77,11 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
         this.senderHash = senderHash;
         this.senderSignature = senderSignature;
         this.trustScoreResults = trustScoreResults;
-        BigDecimal amount = BigDecimal.ZERO;
+        BigDecimal totalAmount = BigDecimal.ZERO;
         for (BaseTransactionData baseTransaction : baseTransactions) {
-            amount = amount.add(baseTransaction.getAmount().signum() > 0 ? baseTransaction.getAmount() : BigDecimal.ZERO);
+            totalAmount = totalAmount.add(baseTransaction.getAmount().signum() > 0 ? baseTransaction.getAmount() : BigDecimal.ZERO);
         }
-        this.amount = amount;
+        this.amount = totalAmount;
         this.initTransactionData();
     }
 

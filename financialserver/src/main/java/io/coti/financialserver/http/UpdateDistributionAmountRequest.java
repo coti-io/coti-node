@@ -8,7 +8,6 @@ import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
 
 @Data
 public class UpdateDistributionAmountRequest {
@@ -21,10 +20,6 @@ public class UpdateDistributionAmountRequest {
     private BigDecimal distributionAmount;
 
     public void setDistributionDate(String distributionDate) {
-        try {
-            this.distributionDate = LocalDate.parse(distributionDate).atStartOfDay();
-        } catch (DateTimeParseException e) {
-            return;
-        }
+        this.distributionDate = LocalDate.parse(distributionDate).atStartOfDay();
     }
 }
