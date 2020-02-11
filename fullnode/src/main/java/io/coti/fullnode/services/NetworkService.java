@@ -6,8 +6,10 @@ import io.coti.basenode.data.NetworkData;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.interfaces.IPropagatable;
+import io.coti.basenode.exceptions.TransactionSyncException;
 import io.coti.basenode.services.BaseNodeNetworkService;
-import io.coti.basenode.services.interfaces.ICommunicationService;
+import io.coti.basenode.services.TransactionIndexService;
+import io.coti.basenode.services.interfaces.ITransactionSynchronizationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +25,12 @@ import java.util.Map;
 public class NetworkService extends BaseNodeNetworkService {
 
     @Autowired
-    private ICommunicationService communicationService;
-    @Autowired
     private ISender sender;
+    @Autowired
+    private TransactionIndexService transactionIndexService;
+    @Autowired
+    private ITransactionSynchronizationService transactionSynchronizationService;
+
     private List<NetworkNodeData> connectedDspNodes = new ArrayList<>(2);
 
     @Override
@@ -50,7 +55,6 @@ public class NetworkService extends BaseNodeNetworkService {
         }
 
         setNetworkData(newNetworkData);
-
     }
 
     public void addToConnectedDspNodes(NetworkNodeData networkNodeData) {
@@ -64,6 +68,37 @@ public class NetworkService extends BaseNodeNetworkService {
     @Override
     public boolean isNodeConnectedToNetwork(NetworkData newNetworkData) {
         return newNetworkData.getMultipleNodeMaps().get(NodeType.FullNode).get(networkNodeData.getNodeHash()) != null;
+    }
+
+    @Override
+    public synchronized void recoveryOnReconnect(String publisherAddressAndPort, NodeType publisherNodeType) {
+        if (publisherNodeType != NodeType.DspNode) {
+            return;
+        }
+        boolean ifNeedRecovery = false;
+
+        NetworkNodeData recoveryServerNetworkNodeData = multipleNodeMaps.get(NodeType.DspNode).values().stream().filter(networkNode ->
+                networkNode.getHttpFullAddress().equals(recoveryServerAddress)).findFirst().orElse(null);
+        String oldRecoveryServerAddress = recoveryServerAddress;
+        if (recoveryServerNetworkNodeData == null) {
+            List<NetworkNodeData> dspNetworkNodeData = getShuffledNetworkNodeDataListFromMapValues(NodeType.DspNode);
+            if (!dspNetworkNodeData.isEmpty()) {
+                recoveryServerNetworkNodeData = dspNetworkNodeData.get(0);
+                setRecoveryServerAddress(recoveryServerNetworkNodeData.getHttpFullAddress());
+                ifNeedRecovery = !recoveryServerAddress.equals(oldRecoveryServerAddress);
+            }
+        }
+//        ifNeedRecovery = ifNeedRecovery || recoveryServerNetworkNodeData == null
+//                                        || publisherAddressAndPort.equals(recoveryServerNetworkNodeData.getPropagationFullAddress());
+
+        if (ifNeedRecovery && recoveryServerAddress != null && transactionIndexService.getLastTransactionIndexData() != null) {
+            try {
+                transactionSynchronizationService.requestMissingTransactions(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
+            } catch (TransactionSyncException e) {
+                recoveryServerAddress = null;
+            }
+        }
+
     }
 
 }

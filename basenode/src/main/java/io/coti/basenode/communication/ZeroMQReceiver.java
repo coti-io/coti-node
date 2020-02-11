@@ -22,14 +22,14 @@ public class ZeroMQReceiver implements IReceiver {
     private ISerializer serializer;
 
     @Override
-    public void init(String receivingPort, HashMap<String, Consumer<Object>> classNameToHandlerMapping) {
+    public Thread init(String receivingPort, HashMap<String, Consumer<Object>> classNameToHandlerMapping) {
         this.classNameToHandlerMapping = classNameToHandlerMapping;
         zeroMQContext = ZMQ.context(1);
         receiver = zeroMQContext.socket(SocketType.ROUTER);
         receiver.bind("tcp://*:" + receivingPort);
         log.info("Zero MQ Client Connected!");
         Thread receiverThread = new Thread(this::runReceiveLoop);
-        receiverThread.start();
+        return receiverThread;
     }
 
     private void runReceiveLoop() {
