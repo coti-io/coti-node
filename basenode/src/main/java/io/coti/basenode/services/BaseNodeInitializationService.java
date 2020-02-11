@@ -155,7 +155,7 @@ public abstract class BaseNodeInitializationService {
             if (networkService.getRecoveryServerAddress() != null) {
                 transactionSynchronizationService.requestMissingTransactions(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
             }
-            balanceService.validateBalances();
+            balanceService.validateBalancesOnInit();
             log.info("Transactions Load completed");
             clusterService.finalizeInit();
         } catch (TransactionSyncException e) {

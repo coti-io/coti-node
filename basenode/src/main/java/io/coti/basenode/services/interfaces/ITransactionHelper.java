@@ -42,7 +42,13 @@ public interface ITransactionHelper {
 
     boolean isConfirmed(TransactionData transactionData);
 
+    boolean isTccConfirmedDspRejected(TransactionData transactionData);
+
     boolean isDspConfirmed(TransactionData transactionData);
+
+    boolean isDspRejected(TransactionData transactionData);
+
+    boolean hasDspVotingAndIndexed(TransactionData transactionData);
 
     Hash getReceiverBaseTransactionAddressHash(TransactionData transactionData);
 

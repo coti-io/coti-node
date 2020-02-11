@@ -434,7 +434,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
 
     @Override
-    protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
+    protected void continueHandlePropagatedTransaction(TransactionData transactionData, boolean opinionOnTheTransaction) {
         webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
         addToExplorerIndexes(transactionData);
     }

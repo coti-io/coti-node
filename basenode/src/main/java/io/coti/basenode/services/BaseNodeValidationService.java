@@ -61,10 +61,14 @@ public class BaseNodeValidationService implements IValidationService {
     }
 
     @Override
-    public boolean validatePropagatedTransactionDataIntegrity(TransactionData transactionData) {
-        return validateTransactionDataIntegrity(transactionData) && validateTransactionNodeSignature(transactionData) &&
-                //validateTransactionTrustScore(transactionData) &&
-                validateBaseTransactionAmounts(transactionData) && validatePot(transactionData);
+    public boolean validatePropagatedTransactionIntegrityPhase1(TransactionData transactionData) {
+        return validateTransactionDataIntegrity(transactionData) && validateTransactionNodeSignature(transactionData);
+    //        && validateTransactionTrustScore(transactionData)
+    }
+
+    @Override
+    public boolean validatePropagatedTransactionIntegrityPhase2(TransactionData transactionData) {
+        return validateBaseTransactionAmounts(transactionData) && validatePot(transactionData);
     }
 
     @Override
@@ -96,12 +100,6 @@ public class BaseNodeValidationService implements IValidationService {
     public <T extends BaseTransactionData & ITrustScoreNodeValidatable> boolean validateBaseTransactionTrustScoreNodeResult(T baseTransactionData) {
         return transactionHelper.validateBaseTransactionTrustScoreNodeResult(baseTransactionData);
     }
-
-    @Override
-    public boolean fullValidation(TransactionData transactionData) {
-        return true;
-    }
-
 
     @Override
     public boolean validatePot(TransactionData transactionData) {
