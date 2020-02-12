@@ -1,8 +1,8 @@
 package io.coti.nodemanager.http;
 
 import io.coti.basenode.http.BaseResponse;
+import io.coti.nodemanager.http.data.NodeDailyActivityResponseData;
 import lombok.Data;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.LocalDate;
 import java.util.Map;
@@ -10,9 +10,9 @@ import java.util.Map;
 @Data
 public class GetNodeActivityInSecondsPerDaysResponse extends BaseResponse {
 
-    private Map<LocalDate, Pair> upTimesByDates;
+    private Map<LocalDate, NodeDailyActivityResponseData> upTimesByDates;
 
-    public GetNodeActivityInSecondsPerDaysResponse(Map<LocalDate, Pair> upTimesByDates) {
+    public GetNodeActivityInSecondsPerDaysResponse(Map<LocalDate, NodeDailyActivityResponseData> upTimesByDates) {
         this.upTimesByDates = upTimesByDates;
     }
 }
