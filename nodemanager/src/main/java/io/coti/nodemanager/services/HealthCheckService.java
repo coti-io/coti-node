@@ -37,15 +37,13 @@ public class HealthCheckService implements IHealthCheckService {
     private RestTemplate restTemplate;
     @Autowired
     private INetworkService networkService;
-    private Thread healthCheckThread;
     private Map<Hash, Thread> hashToThreadMap = new ConcurrentHashMap<>();
     private Map<Hash, Hash> lockNodeHashMap = new ConcurrentHashMap<>();
 
     @Override
     public void init() {
-        healthCheckThread = new Thread(this::nodesHealthCheck);
+        nodesHealthCheck();
         initRestTemplate();
-        healthCheckThread.start();
     }
 
     private void initRestTemplate() {
@@ -56,15 +54,10 @@ public class HealthCheckService implements IHealthCheckService {
     }
 
     public void nodesHealthCheck() {
-        while (!Thread.currentThread().isInterrupted()) {
-            try {
-                Thread.sleep(5000);
-                checkNodesList(networkService.getNetworkNodeDataList());
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            } catch (Exception e) {
-                log.error("Exception in health check: ", e);
-            }
+        try {
+            checkNodesList(networkService.getNetworkNodeDataList());
+        } catch (Exception e) {
+            log.error("Exception in health check: ", e);
         }
     }
 
@@ -115,29 +108,34 @@ public class HealthCheckService implements IHealthCheckService {
     private void checkNodesList(List<NetworkNodeData> nodesList) {
         ThreadFactory threadFactory = Executors.defaultThreadFactory();
         try {
-            nodesList.forEach(networkNodeData -> {
-                Hash nodeHash = networkNodeData.getNodeHash();
-                synchronized (addLockToLockMap(nodeHash)) {
-                    Runnable nodeMonitorTask = () -> monitorNode(networkNodeData);
-                    Thread thread = hashToThreadMap.get(nodeHash);
-                    if (thread == null) {
-                        thread = threadFactory.newThread(nodeMonitorTask);
-                        thread.setName(nodeHash.toString());
-                        hashToThreadMap.putIfAbsent(nodeHash, thread);
-                        thread.start();
-                    }
-                }
-                removeLockFromLocksMap(nodeHash);
-            });
+            nodesList.forEach(networkNodeData -> initNodeMonitorThreadIfAbsent(threadFactory, networkNodeData));
         } catch (Exception e) {
             log.error("Error while checking nodeList", e);
+        }
+    }
+
+    public void initNodeMonitorThreadIfAbsent(ThreadFactory threadFactory, NetworkNodeData networkNodeData) {
+        Hash nodeHash = networkNodeData.getNodeHash();
+        try {
+            synchronized (addLockToLockMap(nodeHash)) {
+                Runnable nodeMonitorTask = () -> monitorNode(networkNodeData);
+                Thread thread = hashToThreadMap.get(nodeHash);
+                if (thread == null) {
+                    thread = threadFactory.newThread(nodeMonitorTask);
+                    thread.setName(nodeHash.toString());
+                    hashToThreadMap.putIfAbsent(nodeHash, thread);
+                    thread.start();
+                }
+            }
+        } finally {
+            removeLockFromLocksMap(nodeHash);
         }
     }
 
     private void monitorNode(NetworkNodeData networkNodeData) {
         Hash nodeHash = networkNodeData.getNodeHash();
         boolean terminateThread = false;
-        while (!Thread.currentThread().isInterrupted() || terminateThread) {
+        while (!Thread.currentThread().isInterrupted() && !terminateThread) {
             try {
                 Thread.sleep(5000);
                 NetworkNodeData networkNodeDataToRemove = checkAndDeleteNodeIfNeeded(networkNodeData);
@@ -163,11 +161,11 @@ public class HealthCheckService implements IHealthCheckService {
 
     public void shutdown() {
         log.info("Shutting down {}", this.getClass().getSimpleName());
-        healthCheckThread.interrupt();
         try {
-            healthCheckThread.join();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            hashToThreadMap.entrySet().forEach(hashToThreadEntry ->
+                    hashToThreadEntry.getValue().interrupt()
+            );
+        } catch (Exception e) {
             log.error("Interrupted shutdown health check service");
         }
     }

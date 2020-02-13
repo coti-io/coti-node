@@ -18,6 +18,7 @@ import io.coti.nodemanager.model.ActiveNodes;
 import io.coti.nodemanager.model.NodeDailyActivities;
 import io.coti.nodemanager.model.NodeHistory;
 import io.coti.nodemanager.model.ReservedHosts;
+import io.coti.nodemanager.services.interfaces.IHealthCheckService;
 import io.coti.nodemanager.services.interfaces.INodeManagementService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.map.HashedMap;
@@ -40,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_NODE_SERVER_URL_HOST_RESERVED;
@@ -69,6 +71,8 @@ public class NodeManagementService implements INodeManagementService {
     private NodeDailyActivities nodeDailyActivities;
     @Autowired
     private NetworkHistoryService networkHistoryService;
+    @Autowired
+    private IHealthCheckService healthCheckService;
     @Value("${server.ip}")
     private String nodeManagerIp;
     @Value("${propagation.port}")
@@ -91,6 +95,7 @@ public class NodeManagementService implements INodeManagementService {
             networkService.validateNetworkNodeData(networkNodeData);
             validateReservedHostToNode(networkNodeData);
             networkService.addNode(networkNodeData);
+            healthCheckService.initNodeMonitorThreadIfAbsent(Executors.defaultThreadFactory(), networkNodeData);
             ActiveNodeData activeNodeData = new ActiveNodeData(networkNodeData.getHash(), networkNodeData);
             activeNodes.put(activeNodeData);
             addNodeHistory(networkNodeData, NetworkNodeStatus.ACTIVE, Instant.now());
