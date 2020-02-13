@@ -9,17 +9,17 @@ import io.coti.nodemanager.services.interfaces.IHealthCheckService;
 import io.coti.nodemanager.services.interfaces.INodeManagementService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.*;
-
-import static java.lang.Math.min;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -28,30 +28,38 @@ public class HealthCheckService implements IHealthCheckService {
     private static final String NODE_HASH_END_POINT = "/nodeHash";
     private static final int RETRY_INTERVAL_IN_SECONDS = 20;
     private static final int MAX_NUM_OF_TRIES = 3;
+    public static final int CONNECT_TIMEOUT = 3000;
+    public static final int READ_TIMEOUT = 3000;
     @Autowired
     private INodeManagementService nodeManagementService;
     @Autowired
     private ActiveNodes activeNodes;
-    @Autowired
     private RestTemplate restTemplate;
     @Autowired
     private INetworkService networkService;
     private Thread healthCheckThread;
+    private Map<Hash, Thread> hashThreadConcurrentHashMap = new ConcurrentHashMap<>();
+    private Map<Hash, Hash> lockNodeHashMap = new ConcurrentHashMap<>();
 
     @Override
     public void init() {
         healthCheckThread = new Thread(this::nodesHealthCheck);
+        initRestTemplate();
         healthCheckThread.start();
+    }
+
+    private void initRestTemplate() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(CONNECT_TIMEOUT);
+        factory.setReadTimeout(READ_TIMEOUT);
+        restTemplate = new RestTemplate(factory);
     }
 
     public void nodesHealthCheck() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 Thread.sleep(5000);
-                boolean networkChanged = checkNodesList(networkService.getNetworkNodeDataList());
-                if (networkChanged) {
-                    nodeManagementService.propagateNetworkChanges();
-                }
+                checkNodesList(networkService.getNetworkNodeDataList());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
@@ -95,43 +103,56 @@ public class HealthCheckService implements IHealthCheckService {
         return false;
     }
 
-    private boolean checkAndDeleteNodeIfNeeded(NetworkNodeData networkNodeData, List<NetworkNodeData> nodesToRemove) {
+    private NetworkNodeData checkAndDeleteNodeIfNeeded(NetworkNodeData networkNodeData) {
+        NetworkNodeData nodeToRemove = null;
         if (!isNodeConnected(networkNodeData)) {
             deleteNodeRecord(networkNodeData);
-            nodesToRemove.add(networkNodeData);
-            return true;
+            nodeToRemove = networkNodeData;
         }
-        return false;
+        return nodeToRemove;
     }
 
-    private boolean checkNodesList(List<NetworkNodeData> nodesList) {
-        boolean networkChanged = false;
-        if (!nodesList.isEmpty()) {
-            ExecutorService executorService = Executors.newFixedThreadPool(min(20, nodesList.size()));
-            List<NetworkNodeData> nodesToRemove = new LinkedList<>();
-            try {
-                List<Callable<Boolean>> nodeCheckTasks = new ArrayList<>(nodesList.size());
-                Iterator<NetworkNodeData> iterator = nodesList.iterator();
-                while (iterator.hasNext()) {
-                    NetworkNodeData networkNodeData = iterator.next();
-                    nodeCheckTasks.add(() -> checkAndDeleteNodeIfNeeded(networkNodeData, nodesToRemove));
-                }
-                List<Future<Boolean>> checkNodeFutures = executorService.invokeAll(nodeCheckTasks);
-                for (Future<Boolean> future : checkNodeFutures) {
-                    if (future.get()) {
-                        networkChanged = true;
+    private void checkNodesList(List<NetworkNodeData> nodesList) {
+        ThreadFactory threadFactory = Executors.defaultThreadFactory();
+        try {
+            nodesList.forEach(networkNodeData -> {
+                Hash nodeHash = networkNodeData.getNodeHash();
+                synchronized (addLockToLockMap(nodeHash)) {
+                    Runnable nodeMonitorTask = () -> monitorNode(networkNodeData);
+                    Thread thread = hashThreadConcurrentHashMap.get(nodeHash);
+                    if (thread == null) {
+                        thread = threadFactory.newThread(nodeMonitorTask);
+                        thread.setName(nodeHash.toString());
+                        hashThreadConcurrentHashMap.putIfAbsent(nodeHash, thread);
+                        thread.start();
                     }
                 }
-                executorService.shutdown();
-                nodesToRemove.forEach(networkNode -> networkService.removeNode(networkNode));
+                removeLockFromLocksMap(nodeHash);
+            });
+        } catch (
+                Exception e) {
+            log.error("Error while checking nodeList", e);
+        }
+    }
+
+    private void monitorNode(NetworkNodeData networkNodeData) {
+        Hash nodeHash = networkNodeData.getNodeHash();
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                Thread.sleep(5000);
+                NetworkNodeData networkNodeDataToRemove = checkAndDeleteNodeIfNeeded(networkNodeData);
+                if (networkNodeDataToRemove != null) {
+                    networkService.removeNode(networkNodeDataToRemove);
+                    nodeManagementService.propagateNetworkChanges();
+                    hashThreadConcurrentHashMap.remove(nodeHash);
+                    throw new InterruptedException();
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                executorService.shutdown();
             } catch (Exception e) {
-                log.error("Error while checking nodeList", e);
+                log.error("Exception in monitorNode: ", e);
             }
         }
-        return networkChanged;
     }
 
     private void deleteNodeRecord(NetworkNodeData networkNodeData) {
@@ -148,6 +169,30 @@ public class HealthCheckService implements IHealthCheckService {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.error("Interrupted shutdown health check service");
+        }
+    }
+
+    public Hash addLockToLockMap(Hash hash) {
+        return addLockToLockMap(lockNodeHashMap, hash);
+    }
+
+    private Hash addLockToLockMap(Map<Hash, Hash> locksIdentityMap, Hash hash) {
+        synchronized (locksIdentityMap) {
+            locksIdentityMap.putIfAbsent(hash, hash);
+            return locksIdentityMap.get(hash);
+        }
+    }
+
+    public void removeLockFromLocksMap(Hash hash) {
+        removeLockFromLocksMap(lockNodeHashMap, hash);
+    }
+
+    private void removeLockFromLocksMap(Map<Hash, Hash> locksIdentityMap, Hash hash) {
+        synchronized (locksIdentityMap) {
+            Hash hashLock = locksIdentityMap.get(hash);
+            if (hashLock != null) {
+                locksIdentityMap.remove(hash);
+            }
         }
     }
 

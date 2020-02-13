@@ -57,5 +57,4 @@ public interface INetworkService {
     void connectToNetwork();
 
     String getHost(String webServerUrl);
-
 }
