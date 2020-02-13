@@ -68,7 +68,7 @@ public class BaseNodeValidationService implements IValidationService {
 
     @Override
     public boolean validatePropagatedTransactionIntegrityPhase2(TransactionData transactionData) {
-        return validateBaseTransactionAmounts(transactionData) && validatePot(transactionData);
+        return validatePot(transactionData);
     }
 
     @Override
@@ -84,11 +84,6 @@ public class BaseNodeValidationService implements IValidationService {
     @Override
     public boolean validateTransactionTrustScore(TransactionData transactionData) {
         return transactionHelper.validateTrustScore(transactionData);
-    }
-
-    @Override
-    public boolean validateBaseTransactionAmounts(TransactionData transactionData) {
-        return transactionHelper.validateBaseTransactionAmounts(transactionData.getBaseTransactions());
     }
 
     @Override

@@ -26,8 +26,6 @@ public interface IValidationService {
 
     boolean validateTransactionTrustScore(TransactionData transactionData);
 
-    boolean validateBaseTransactionAmounts(TransactionData transactionData);
-
     boolean validateBalancesAndAddToPreBalance(TransactionData transactionData);
 
     <T extends BaseTransactionData & ITrustScoreNodeValidatable> boolean validateBaseTransactionTrustScoreNodeResult(T baseTransactionData);
