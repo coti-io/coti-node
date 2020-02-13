@@ -38,7 +38,7 @@ public class HealthCheckService implements IHealthCheckService {
     @Autowired
     private INetworkService networkService;
     private Thread healthCheckThread;
-    private Map<Hash, Thread> hashThreadConcurrentHashMap = new ConcurrentHashMap<>();
+    private Map<Hash, Thread> hashToThreadMap = new ConcurrentHashMap<>();
     private Map<Hash, Hash> lockNodeHashMap = new ConcurrentHashMap<>();
 
     @Override
@@ -119,33 +119,33 @@ public class HealthCheckService implements IHealthCheckService {
                 Hash nodeHash = networkNodeData.getNodeHash();
                 synchronized (addLockToLockMap(nodeHash)) {
                     Runnable nodeMonitorTask = () -> monitorNode(networkNodeData);
-                    Thread thread = hashThreadConcurrentHashMap.get(nodeHash);
+                    Thread thread = hashToThreadMap.get(nodeHash);
                     if (thread == null) {
                         thread = threadFactory.newThread(nodeMonitorTask);
                         thread.setName(nodeHash.toString());
-                        hashThreadConcurrentHashMap.putIfAbsent(nodeHash, thread);
+                        hashToThreadMap.putIfAbsent(nodeHash, thread);
                         thread.start();
                     }
                 }
                 removeLockFromLocksMap(nodeHash);
             });
-        } catch (
-                Exception e) {
+        } catch (Exception e) {
             log.error("Error while checking nodeList", e);
         }
     }
 
     private void monitorNode(NetworkNodeData networkNodeData) {
         Hash nodeHash = networkNodeData.getNodeHash();
-        while (!Thread.currentThread().isInterrupted()) {
+        boolean terminateThread = false;
+        while (!Thread.currentThread().isInterrupted() || terminateThread) {
             try {
                 Thread.sleep(5000);
                 NetworkNodeData networkNodeDataToRemove = checkAndDeleteNodeIfNeeded(networkNodeData);
                 if (networkNodeDataToRemove != null) {
                     networkService.removeNode(networkNodeDataToRemove);
                     nodeManagementService.propagateNetworkChanges();
-                    hashThreadConcurrentHashMap.remove(nodeHash);
-                    throw new InterruptedException();
+                    hashToThreadMap.remove(nodeHash);
+                    terminateThread = true;
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
