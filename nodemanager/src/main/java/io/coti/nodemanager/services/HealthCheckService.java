@@ -28,8 +28,8 @@ public class HealthCheckService implements IHealthCheckService {
     private static final String NODE_HASH_END_POINT = "/nodeHash";
     private static final int RETRY_INTERVAL_IN_SECONDS = 20;
     private static final int MAX_NUM_OF_TRIES = 3;
-    public static final int CONNECT_TIMEOUT = 3000;
-    public static final int READ_TIMEOUT = 3000;
+    private static final int CONNECT_TIMEOUT = 5000;
+    private static final int READ_TIMEOUT = 5000;
     @Autowired
     private INodeManagementService nodeManagementService;
     @Autowired
@@ -39,6 +39,7 @@ public class HealthCheckService implements IHealthCheckService {
     private INetworkService networkService;
     private Map<Hash, Thread> hashToThreadMap = new ConcurrentHashMap<>();
     private Map<Hash, Hash> lockNodeHashMap = new ConcurrentHashMap<>();
+    private final Object lock = new Object();
 
     @Override
     public void init() {
@@ -120,13 +121,20 @@ public class HealthCheckService implements IHealthCheckService {
             synchronized (addLockToLockMap(nodeHash)) {
                 Runnable nodeMonitorTask = () -> monitorNode(networkNodeData);
                 Thread thread = hashToThreadMap.get(nodeHash);
-                if (thread == null) {
-                    thread = threadFactory.newThread(nodeMonitorTask);
-                    thread.setName(nodeHash.toString());
-                    hashToThreadMap.putIfAbsent(nodeHash, thread);
-                    thread.start();
+                if (thread != null) {
+                    thread.interrupt();
+                    try {
+                        thread.join();
+                    } catch (InterruptedException e) {
+                        thread.interrupt();
+                    }
                 }
+                thread = threadFactory.newThread(nodeMonitorTask);
+                thread.setName(nodeHash.toString());
+                hashToThreadMap.put(nodeHash, thread);
+                thread.start();
             }
+
         } finally {
             removeLockFromLocksMap(nodeHash);
         }
@@ -162,34 +170,31 @@ public class HealthCheckService implements IHealthCheckService {
     public void shutdown() {
         log.info("Shutting down {}", this.getClass().getSimpleName());
         try {
-            hashToThreadMap.entrySet().forEach(hashToThreadEntry ->
-                    hashToThreadEntry.getValue().interrupt()
-            );
+            hashToThreadMap.forEach((nodeHash, thread) -> {
+                thread.interrupt();
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    thread.interrupt();
+                }
+            });
         } catch (Exception e) {
             log.error("Interrupted shutdown health check service");
         }
     }
 
-    public Hash addLockToLockMap(Hash hash) {
-        return addLockToLockMap(lockNodeHashMap, hash);
-    }
-
-    private Hash addLockToLockMap(Map<Hash, Hash> locksIdentityMap, Hash hash) {
-        synchronized (locksIdentityMap) {
-            locksIdentityMap.putIfAbsent(hash, hash);
-            return locksIdentityMap.get(hash);
+    private Hash addLockToLockMap(Hash hash) {
+        synchronized (lock) {
+            lockNodeHashMap.putIfAbsent(hash, hash);
+            return lockNodeHashMap.get(hash);
         }
     }
 
-    public void removeLockFromLocksMap(Hash hash) {
-        removeLockFromLocksMap(lockNodeHashMap, hash);
-    }
-
-    private void removeLockFromLocksMap(Map<Hash, Hash> locksIdentityMap, Hash hash) {
-        synchronized (locksIdentityMap) {
-            Hash hashLock = locksIdentityMap.get(hash);
+    private void removeLockFromLocksMap(Hash hash) {
+        synchronized (lock) {
+            Hash hashLock = lockNodeHashMap.get(hash);
             if (hashLock != null) {
-                locksIdentityMap.remove(hash);
+                lockNodeHashMap.remove(hash);
             }
         }
     }

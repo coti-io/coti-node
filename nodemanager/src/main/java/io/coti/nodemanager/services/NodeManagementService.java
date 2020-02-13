@@ -52,9 +52,9 @@ import static io.coti.nodemanager.http.HttpStringConstants.*;
 @Service
 public class NodeManagementService implements INodeManagementService {
 
-    public static final String FULL_NODES_FOR_WALLET_KEY = "FullNodes";
-    public static final String TRUST_SCORE_NODES_FOR_WALLET_KEY = "TrustScoreNodes";
-    public static final String FINANCIAL_SERVER_FOR_WALLET_KEY = "FinancialServer";
+    private static final String FULL_NODES_FOR_WALLET_KEY = "FullNodes";
+    private static final String TRUST_SCORE_NODES_FOR_WALLET_KEY = "TrustScoreNodes";
+    private static final String FINANCIAL_SERVER_FOR_WALLET_KEY = "FinancialServer";
     @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired
@@ -95,10 +95,10 @@ public class NodeManagementService implements INodeManagementService {
             networkService.validateNetworkNodeData(networkNodeData);
             validateReservedHostToNode(networkNodeData);
             networkService.addNode(networkNodeData);
-            healthCheckService.initNodeMonitorThreadIfAbsent(Executors.defaultThreadFactory(), networkNodeData);
             ActiveNodeData activeNodeData = new ActiveNodeData(networkNodeData.getHash(), networkNodeData);
             activeNodes.put(activeNodeData);
             addNodeHistory(networkNodeData, NetworkNodeStatus.ACTIVE, Instant.now());
+            healthCheckService.initNodeMonitorThreadIfAbsent(Executors.defaultThreadFactory(), networkNodeData);
             propagateNetworkChanges();
             Thread.sleep(3000); // a delay for other nodes to make changes with the newly added node
             return ResponseEntity.status(HttpStatus.OK).body(String.format(NODE_ADDED_TO_NETWORK, networkNodeData.getNodeHash()));
