@@ -11,13 +11,9 @@ public interface ITransactionPropagationCheckService {
 
     void addUnconfirmedTransaction(Hash transactionHash);
 
-    void addUnconfirmedTransaction(Hash transactionHash, int retries);
-
     void removeTransactionHashFromUnconfirmed(Hash transactionHash);
 
     void removeTransactionHashFromUnconfirmedOnBackPropagation(Hash transactionHash);
-
-    void removeTransactionHashFromUnconfirmedTransaction(Hash transactionHash);
 
     void sendUnconfirmedReceivedTransactions(long period);
 

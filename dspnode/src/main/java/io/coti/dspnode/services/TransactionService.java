@@ -48,14 +48,14 @@ public class TransactionService extends BaseNodeTransactionService {
         super.init();
     }
 
-    @Override
     public void handleNewTransactionFromFullNode(TransactionData transactionData) {
+        log.debug("Running new transactions from full node handler");
+        if (transactionHelper.isTransactionAlreadyPropagated(transactionData)) {
+            log.debug("Transaction already exists: {}", transactionData.getHash());
+            return;
+        }
         try {
-            log.debug("Running new transactions from full node handler");
-            if (transactionHelper.isTransactionAlreadyPropagated(transactionData)) {
-                log.debug("Transaction already exists: {}", transactionData.getHash());
-                return;
-            }
+
             transactionHelper.startHandleTransaction(transactionData);
             if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData) ||
                     !validationService.validateBalancesAndAddToPreBalance(transactionData)) {
@@ -88,6 +88,15 @@ public class TransactionService extends BaseNodeTransactionService {
             if (isTransactionFinished) {
                 processPostponedTransactions(transactionData);
             }
+        }
+    }
+
+    @Override
+    protected void handlePostPonedTransaction(TransactionData postponedTransaction, boolean isTransactionFromFullNode) {
+        if (isTransactionFromFullNode) {
+            handleNewTransactionFromFullNode(postponedTransaction);
+        } else {
+            handlePropagatedTransaction(postponedTransaction);
         }
     }
 

@@ -169,8 +169,7 @@ public class BaseNodeTransactionService implements ITransactionService {
             log.info("Transaction thread wait interrupted");
             Thread.currentThread().interrupt();
         } catch (Exception e) {
-            log.error("Transaction propagation handler error:");
-            e.printStackTrace();
+            log.error("Transaction propagation handler error:", e);
         } finally {
             boolean isTransactionFinished = transactionHelper.isTransactionFinished(transactionData);
             transactionHelper.endHandleTransaction(transactionData);
@@ -200,19 +199,17 @@ public class BaseNodeTransactionService implements ITransactionService {
                                 || (postponedTransactionMapEntry.getKey().getLeftParentHash() != null
                                 && postponedTransactionMapEntry.getKey().getLeftParentHash().equals(transactionData.getHash())))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        postponedParentTransactions.forEach((key, value) -> {
-            log.debug("Handling postponed transaction : {}, parent of transaction: {}", key.getHash(), transactionData.getHash());
-            postponedTransactions.remove(key);
-            if (value) {
-                handleNewTransactionFromFullNode(key);
-            } else {
-                handlePropagatedTransaction(key);
-            }
+        postponedParentTransactions.forEach((postponedTransaction, isTransactionFromFullNode) -> {
+            log.debug("Handling postponed transaction : {}, parent of transaction: {}", postponedTransaction.getHash(), transactionData.getHash());
+            postponedTransactions.remove(postponedTransaction);
+            handlePostPonedTransaction(postponedTransaction, isTransactionFromFullNode);
         });
     }
 
-    public void handleNewTransactionFromFullNode(TransactionData transactionData) {
-        // implemented for DSP Node
+    protected void handlePostPonedTransaction(TransactionData postponedTransaction, boolean isTransactionFromFullNode) {
+        if (!isTransactionFromFullNode) {
+            handlePropagatedTransaction(postponedTransaction);
+        }
     }
 
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {

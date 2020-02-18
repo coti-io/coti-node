@@ -254,8 +254,7 @@ public class TransactionHelper implements ITransactionHelper {
 
     @Override
     public boolean isTransactionFinished(TransactionData transactionData) {
-        return !isTransactionHashProcessing(transactionData.getHash())
-                || transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).peek().equals(FINISHED);
+        return transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).peek().equals(FINISHED);
     }
 
     private void rollbackTransaction(TransactionData transactionData) {

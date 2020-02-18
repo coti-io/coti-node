@@ -28,7 +28,6 @@ public class BaseNodeTransactionPropagationCheckService implements ITransactionP
     private ITransactionHelper transactionHelper;
     @Autowired
     protected UnconfirmedReceivedTransactionHashes unconfirmedReceivedTransactionHashes;
-
     protected Map<Hash, UnconfirmedReceivedTransactionHashData> unconfirmedReceivedTransactionHashesMap;
     protected Map<Hash, Hash> lockVotedTransactionRecordHashMap = new ConcurrentHashMap<>();
     private final Object lock = new Object();
@@ -70,7 +69,7 @@ public class BaseNodeTransactionPropagationCheckService implements ITransactionP
         // implemented for full nodes and dsp nodes
     }
 
-    public void addUnconfirmedTransaction(Hash transactionHash, int retries) {
+    protected void addUnconfirmedTransaction(Hash transactionHash, int retries) {
         try {
             synchronized (addLockToLockMap(transactionHash)) {
                 unconfirmedReceivedTransactionHashesMap.put(transactionHash, new UnconfirmedReceivedTransactionHashData(transactionHash, retries));
@@ -86,8 +85,7 @@ public class BaseNodeTransactionPropagationCheckService implements ITransactionP
         // implemented for full nodes and dsp nodes
     }
 
-    @Override
-    public void removeTransactionHashFromUnconfirmedTransaction(Hash transactionHash) {
+    protected void removeTransactionHashFromUnconfirmedTransaction(Hash transactionHash) {
         if (unconfirmedReceivedTransactionHashesMap.containsKey(transactionHash)) {
             doRemoveConfirmedReceiptTransaction(transactionHash);
         }
@@ -145,25 +143,17 @@ public class BaseNodeTransactionPropagationCheckService implements ITransactionP
     }
 
     protected Hash addLockToLockMap(Hash hash) {
-        return addLockToLockMap(lockVotedTransactionRecordHashMap, hash);
-    }
-
-    private Hash addLockToLockMap(Map<Hash, Hash> locksIdentityMap, Hash hash) {
         synchronized (lock) {
-            locksIdentityMap.putIfAbsent(hash, hash);
-            return locksIdentityMap.get(hash);
+            lockVotedTransactionRecordHashMap.putIfAbsent(hash, hash);
+            return lockVotedTransactionRecordHashMap.get(hash);
         }
     }
 
     protected void removeLockFromLocksMap(Hash hash) {
-        removeLockFromLocksMap(lockVotedTransactionRecordHashMap, hash);
-    }
-
-    private void removeLockFromLocksMap(Map<Hash, Hash> locksIdentityMap, Hash hash) {
         synchronized (lock) {
-            Hash hashLock = locksIdentityMap.get(hash);
+            Hash hashLock = lockVotedTransactionRecordHashMap.get(hash);
             if (hashLock != null) {
-                locksIdentityMap.remove(hash);
+                lockVotedTransactionRecordHashMap.remove(hash);
             }
         }
     }

@@ -10,7 +10,6 @@ import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.exceptions.DataBaseRecoveryException;
 import io.coti.basenode.exceptions.DataBaseRestoreException;
 import io.coti.basenode.http.GetBackupBucketResponse;
-import io.coti.basenode.http.HttpJacksonSerializer;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.SerializableResponse;
 import io.coti.basenode.http.interfaces.IResponse;
@@ -74,8 +73,6 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private INetworkService networkService;
     @Autowired
     private RestTemplate restTemplate;
-    @Autowired
-    private HttpJacksonSerializer jacksonSerializer;
     private String localBackupFolderPath;
     private String remoteBackupFolderPath;
     private String backupS3Path;

@@ -14,11 +14,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class TransactionPropagationCheckService extends BaseNodeTransactionPropagationCheckService {
 
-    @Autowired
-    protected NetworkService networkService;
-
     private static final long PERIOD_IN_SECONDS_BEFORE_PROPAGATE_AGAIN_FULL_NODE = 60;
     private static final int NUMBER_OF_RETRIES_FULL_NODE = 3;
+    @Autowired
+    protected NetworkService networkService;
 
     @Override
     public void init() {
