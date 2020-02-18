@@ -151,10 +151,7 @@ public class BaseNodeTransactionPropagationCheckService implements ITransactionP
 
     protected void removeLockFromLocksMap(Hash hash) {
         synchronized (lock) {
-            Hash hashLock = lockVotedTransactionRecordHashMap.get(hash);
-            if (hashLock != null) {
-                lockVotedTransactionRecordHashMap.remove(hash);
-            }
+            lockVotedTransactionRecordHashMap.remove(hash);
         }
     }
 

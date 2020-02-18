@@ -240,7 +240,7 @@ public class DisputeService {
         return ResponseEntity.status(HttpStatus.OK).body(new GetDisputeHistoryResponse(disputeEventResponses));
     }
 
-    public Boolean isAuthorizedDisputeDetailDisplay(DisputeData disputeData, Hash userHash) {
+    public boolean isAuthorizedDisputeDetailDisplay(DisputeData disputeData, Hash userHash) {
 
         return userHash.equals(disputeData.getConsumerHash()) || userHash.equals(disputeData.getMerchantHash()) || disputeData.getArbitratorHashes().contains(userHash);
     }

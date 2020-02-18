@@ -7,10 +7,7 @@ import io.coti.financialserver.services.CommentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
@@ -22,13 +19,13 @@ public class CommentController {
     @Autowired
     private CommentService commentService;
 
-    @RequestMapping(method = RequestMethod.PUT)
+    @PutMapping()
     public ResponseEntity<IResponse> newComment(@Valid @RequestBody NewCommentRequest request) {
 
         return commentService.newComment(request);
     }
 
-    @RequestMapping(method = RequestMethod.POST)
+    @PostMapping()
     public ResponseEntity<IResponse> getComments(@Valid @RequestBody GetCommentsRequest request) {
 
         return commentService.getComments(request);

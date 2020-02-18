@@ -37,6 +37,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
     private INetworkService networkService;
     private ConcurrentMap<Hash, List<DspVote>> transactionHashToVotesListMapping;
     private Map<Hash, Hash> lockVotedTransactionRecordHashMap = new ConcurrentHashMap<>();
+    private final Object lock = new Object();
     private Map<Hash, HashSet<TransactionDspVote>> missingTransactionsAwaitingHandling;
 
     @Override
@@ -46,27 +47,16 @@ public class DspVoteService extends BaseNodeDspVoteService {
         super.init();
     }
 
-    protected Hash addLockToLockMap(Hash hash) {
-        return addLockToLockMap(lockVotedTransactionRecordHashMap, hash);
-    }
-
-    private Hash addLockToLockMap(Map<Hash, Hash> locksIdentityMap, Hash hash) {
-        synchronized (locksIdentityMap) {
-            locksIdentityMap.putIfAbsent(hash, hash);
-            return locksIdentityMap.get(hash);
+    private Hash addLockToLockMap(Hash hash) {
+        synchronized (lock) {
+            lockVotedTransactionRecordHashMap.putIfAbsent(hash, hash);
+            return lockVotedTransactionRecordHashMap.get(hash);
         }
     }
 
-    protected void removeLockFromLocksMap(Hash hash) {
-        removeLockFromLocksMap(lockVotedTransactionRecordHashMap, hash);
-    }
-
-    private void removeLockFromLocksMap(Map<Hash, Hash> locksIdentityMap, Hash hash) {
-        synchronized (locksIdentityMap) {
-            Hash hashLock = locksIdentityMap.get(hash);
-            if (hashLock != null) {
-                locksIdentityMap.remove(hash);
-            }
+    private void removeLockFromLocksMap(Hash hash) {
+        synchronized (lock) {
+            lockVotedTransactionRecordHashMap.remove(hash);
         }
     }
 

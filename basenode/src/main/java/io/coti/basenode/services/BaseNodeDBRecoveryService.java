@@ -45,6 +45,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private static final int INDEX_OF_BACKUP_TIMESTAMP_IN_PATH = 3;
     private static final int INDEX_OF_BACKUP_TIMESTAMP_IN_FOLDER_NAME = 1;
     private static final int ALLOWED_NUMBER_OF_BACKUPS = 2;
+    private static final String BACK_UP_FOLDER_PREFIX = "/backup-";
     @Value("${db.backup}")
     private boolean backup;
     @Value("${db.backup.bucket}")
@@ -131,13 +132,13 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                 }
                 File backupFolderToUpload = new File(remoteBackupFolderPath);
                 log.info("Uploading remote backup to S3 bucket");
-                awsService.uploadFolderAndContentsToS3(backupBucket, backupS3Path + "/backup-" + Instant.now().toEpochMilli(), backupFolderToUpload);
+                awsService.uploadFolderAndContentsToS3(backupBucket, backupS3Path + BACK_UP_FOLDER_PREFIX + Instant.now().toEpochMilli(), backupFolderToUpload);
                 if (!backupFiles.isEmpty()) {
                     Set<Long> s3BackupTimeStampSet = getS3BackupTimeStampSet(backupFiles);
                     if (s3BackupTimeStampSet.size() >= ALLOWED_NUMBER_OF_BACKUPS) {
-                        List<Long> s3BackupTimeStamps = s3BackupTimeStampSet.stream().collect(Collectors.toList());
+                        List<Long> s3BackupTimeStamps = new ArrayList<>(s3BackupTimeStampSet);
                         Collections.sort(s3BackupTimeStamps);
-                        String[] backupFoldersToRemove = s3BackupTimeStamps.stream().limit(s3BackupTimeStampSet.size() - ALLOWED_NUMBER_OF_BACKUPS + 1).map(s3BackupTimeStamp -> backupS3Path + "/backup-" + s3BackupTimeStamp.toString()).toArray(String[]::new);
+                        String[] backupFoldersToRemove = s3BackupTimeStamps.stream().limit((long) s3BackupTimeStampSet.size() - ALLOWED_NUMBER_OF_BACKUPS + 1).map(s3BackupTimeStamp -> backupS3Path + BACK_UP_FOLDER_PREFIX + s3BackupTimeStamp.toString()).toArray(String[]::new);
                         backupFiles = backupFiles.stream().filter(backupFile -> StringUtils.startsWithAny(backupFile, backupFoldersToRemove)).collect(Collectors.toList());
                         awsService.deleteFolderAndContentsFromS3(backupFiles, backupBucket);
                     }
@@ -257,7 +258,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private String getLatestS3Backup(List<String> remoteBackups, String backupNodeHashS3Path) {
         Set<Long> s3Backups = getS3BackupTimeStampSet(remoteBackups);
         Long backupTimeStamp = Collections.max(s3Backups);
-        return backupNodeHashS3Path + "/backup-" + backupTimeStamp.toString();
+        return backupNodeHashS3Path + BACK_UP_FOLDER_PREFIX + backupTimeStamp.toString();
     }
 
     private Set<Long> getS3BackupTimeStampSet(List<String> remoteBackups) {
