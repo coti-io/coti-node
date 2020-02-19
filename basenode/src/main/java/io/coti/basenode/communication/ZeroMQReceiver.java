@@ -28,8 +28,7 @@ public class ZeroMQReceiver implements IReceiver {
         receiver = zeroMQContext.socket(SocketType.ROUTER);
         receiver.bind("tcp://*:" + receivingPort);
         log.info("Zero MQ Client Connected!");
-        Thread receiverThread = new Thread(this::runReceiveLoop);
-        return receiverThread;
+        return new Thread(this::runReceiveLoop);
     }
 
     private void runReceiveLoop() {

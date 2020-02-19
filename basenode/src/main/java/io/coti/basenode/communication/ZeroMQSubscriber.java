@@ -61,9 +61,6 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         zeroMQContext = ZMQ.context(1);
         propagationReceiver = zeroMQContext.socket(SocketType.SUB);
         propagationReceiver.setHWM(10000);
-//        propagationReceiver.setTCPKeepAlive(1);
-//        propagationReceiver.setTCPKeepAliveIdle(30000);
-//        propagationReceiver.setTCPKeepAliveInterval(30000);
         ZeroMQUtils.bindToRandomPort(propagationReceiver);
     }
 
