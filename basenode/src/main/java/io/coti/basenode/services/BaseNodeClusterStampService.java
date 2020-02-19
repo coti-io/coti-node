@@ -187,8 +187,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     private void loadAllClusterStamps() {
         log.info("Loading clusterstamp files");
         loadClusterStamp(majorClusterStampName);
-        tokenClusterStampHashToName.values().forEach(clusterStampNameData ->
-                loadClusterStamp(clusterStampNameData));
+        tokenClusterStampHashToName.values().forEach(this::loadClusterStamp);
     }
 
     protected void addClusterStampName(ClusterStampNameData clusterStampNameData) {
@@ -281,7 +280,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             mintingService.updateMintingBalanceFromClusterStamp(clusterStampCurrencyMap, currencyGenesisAddress);
             log.info("Finished to load clusterstamp file {}", clusterStampFileName);
         } catch (ClusterStampException e) {
-            throw new ClusterStampException(String.format("Errors on clusterstamp file %s loading.\n", clusterStampFileName) + e.getMessage(), e);
+            throw new ClusterStampException(String.format("Errors on clusterstamp file %s loading.%n", clusterStampFileName) + e.getMessage(), e);
         } catch (Exception e) {
             throw new ClusterStampException(String.format("Errors on clusterstamp file %s loading.", clusterStampFileName), e);
         }
@@ -389,8 +388,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         List<ClusterStampNameData> missingTokens = validateNoExcessTokensAndGetMissingTokens(getClusterStampFileNamesResponse);
         downloadAndAddClusterStamps(missingTokens);
         if (!isStartup) {
-            missingTokens.forEach(clusterStampNameData ->
-                    loadClusterStamp(clusterStampNameData));
+            missingTokens.forEach(this::loadClusterStamp);
         }
     }
 
@@ -402,8 +400,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         downloadAndAddClusterStamps(missingTokens);
         if (!isStartup) {
             loadClusterStamp(majorClusterStampName);
-            missingTokens.forEach(clusterStampNameData ->
-                    loadClusterStamp(clusterStampNameData));
+            missingTokens.forEach(this::loadClusterStamp);
         }
     }
 
@@ -508,7 +505,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             clusterStampData.getSignatureMessage().add(balanceInBytes);
             clusterStampData.incrementMessageByteSize(balanceInBytes.length);
         } catch (ClusterStampException e) {
-            throw new ClusterStampException(String.format("Error at filling balance from line of clusterstamp %s.\n", clusterStampFileName) + e.getMessage(), e);
+            throw new ClusterStampException(String.format("Error at filling balance from line of clusterstamp %s.%n", clusterStampFileName) + e.getMessage(), e);
         } catch (Exception e) {
             throw new ClusterStampException(String.format("Error at filling balance from line of clusterstamp %s.", clusterStampFileName), e);
         }
@@ -563,7 +560,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData, String
             clusterStampFileLocation) {
-        throw new ClusterStampValidationException(String.format("Clusterstamp file has no signature."));
+        throw new ClusterStampValidationException(String.format("Clusterstamp file %s has no signature.", clusterStampFileLocation));
     }
 
     private void handleClusterStampWithSignature(ClusterStampData clusterStampData) {
