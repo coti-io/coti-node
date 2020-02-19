@@ -74,11 +74,11 @@ public class InitializationService extends BaseNodeInitializationService {
             }
 
             super.initServices();
+            receiverThread.start();
         } catch (CotiRunTimeException e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
             e.logMessage();
             System.exit(SpringApplication.exit(applicationContext));
-            receiverThread.start();
         } catch (Exception e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
             log.error("{}: {}", e.getClass().getName(), e.getMessage());

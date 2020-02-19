@@ -88,10 +88,8 @@ public class NetworkService extends BaseNodeNetworkService {
                 ifNeedRecovery = !recoveryServerAddress.equals(oldRecoveryServerAddress);
             }
         }
-//        ifNeedRecovery = ifNeedRecovery || recoveryServerNetworkNodeData == null
-//                                        || publisherAddressAndPort.equals(recoveryServerNetworkNodeData.getPropagationFullAddress());
 
-        if (ifNeedRecovery && recoveryServerAddress != null && transactionIndexService.getLastTransactionIndexData() != null) {
+        if (ifNeedRecovery && transactionIndexService.getLastTransactionIndexData() != null) {
             try {
                 transactionSynchronizationService.requestMissingTransactions(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
             } catch (TransactionSyncException e) {

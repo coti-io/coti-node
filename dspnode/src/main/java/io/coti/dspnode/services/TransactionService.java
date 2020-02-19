@@ -129,14 +129,12 @@ public class TransactionService extends BaseNodeTransactionService {
     @Override
     public void delayedMissingTransactionsPropagation() {
         Thread delayedTransactionPropagationThread = delayedMissingTransactionPropagationThread();
-
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
         delayedTransactionPropagationThread.start();
-
     }
 
     private Thread delayedMissingTransactionPropagationThread() {

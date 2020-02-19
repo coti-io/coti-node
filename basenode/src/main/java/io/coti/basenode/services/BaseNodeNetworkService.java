@@ -414,7 +414,7 @@ public class BaseNodeNetworkService implements INetworkService {
 
     @Override
     public void recoveryOnReconnect(String publisherAddressAndPort, NodeType publisherNodeType) {
-        // implemented for DSP Node
+        // implemented for Full Node
     }
 
 }
