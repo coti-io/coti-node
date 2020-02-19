@@ -92,7 +92,7 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     @Override
-    protected void handlePostPonedTransaction(TransactionData postponedTransaction, boolean isTransactionFromFullNode) {
+    protected void handlePostponedTransaction(TransactionData postponedTransaction, boolean isTransactionFromFullNode) {
         if (isTransactionFromFullNode) {
             handleNewTransactionFromFullNode(postponedTransaction);
         } else {

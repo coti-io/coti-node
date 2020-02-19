@@ -202,11 +202,11 @@ public class BaseNodeTransactionService implements ITransactionService {
         postponedParentTransactions.forEach((postponedTransaction, isTransactionFromFullNode) -> {
             log.debug("Handling postponed transaction : {}, parent of transaction: {}", postponedTransaction.getHash(), transactionData.getHash());
             postponedTransactions.remove(postponedTransaction);
-            handlePostPonedTransaction(postponedTransaction, isTransactionFromFullNode);
+            handlePostponedTransaction(postponedTransaction, isTransactionFromFullNode);
         });
     }
 
-    protected void handlePostPonedTransaction(TransactionData postponedTransaction, boolean isTransactionFromFullNode) {
+    protected void handlePostponedTransaction(TransactionData postponedTransaction, boolean isTransactionFromFullNode) {
         if (!isTransactionFromFullNode) {
             handlePropagatedTransaction(postponedTransaction);
         }

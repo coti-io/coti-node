@@ -142,14 +142,14 @@ public class BaseNodeTransactionPropagationCheckService implements ITransactionP
         // implemented for full nodes and dsp nodes
     }
 
-    protected Hash addLockToLockMap(Hash hash) {
+    private Hash addLockToLockMap(Hash hash) {
         synchronized (lock) {
             lockVotedTransactionRecordHashMap.putIfAbsent(hash, hash);
             return lockVotedTransactionRecordHashMap.get(hash);
         }
     }
 
-    protected void removeLockFromLocksMap(Hash hash) {
+    private void removeLockFromLocksMap(Hash hash) {
         synchronized (lock) {
             lockVotedTransactionRecordHashMap.remove(hash);
         }
