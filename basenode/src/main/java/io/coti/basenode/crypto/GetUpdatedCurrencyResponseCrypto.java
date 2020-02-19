@@ -33,9 +33,9 @@ public class GetUpdatedCurrencyResponseCrypto extends SignatureCrypto<GetUpdated
         for (Map.Entry<CurrencyType, HashSet<CurrencyData>> entry : currencyDataByType.entrySet()) {
             if (!entry.getValue().isEmpty()) {
                 currencyMapBuffer.put(entry.getKey().getText().getBytes());
-                entry.getValue().forEach(currencyData -> {
-                    currencyMapBuffer.put(currencyData.getHash().getBytes());
-                });
+                entry.getValue().forEach(currencyData ->
+                        currencyMapBuffer.put(currencyData.getHash().getBytes())
+                );
             }
         }
 

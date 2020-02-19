@@ -129,21 +129,20 @@ public class BaseNodeBalanceService implements IBalanceService {
 
     @Override
     public void validateBalances() {
-        preBalanceMap.forEach((hash, currencyHashPreBalanceMap) -> {
-            currencyHashPreBalanceMap.forEach((currencyHash, preBalance) -> {
-                if (preBalance.signum() == -1) {
-                    throw new BalanceException(String.format("PreBalance Validation failed with preBalance %s for address %s and currency %s", preBalance, hash, currencyHash));
-                }
-            });
-
-        });
-        balanceMap.forEach((hash, currencyHashBalanceMap) -> {
-            currencyHashBalanceMap.forEach((currencyHash, balance) -> {
-                if (balance.signum() == -1) {
-                    throw new BalanceException(String.format("Balance Validation failed with balance %s for address %s and currency %s", balance, hash, currencyHash));
-                }
-            });
-        });
+        preBalanceMap.forEach((hash, currencyHashPreBalanceMap) ->
+                currencyHashPreBalanceMap.forEach((currencyHash, preBalance) -> {
+                    if (preBalance.signum() == -1) {
+                        throw new BalanceException(String.format("PreBalance Validation failed with preBalance %s for address %s and currency %s", preBalance, hash, currencyHash));
+                    }
+                })
+        );
+        balanceMap.forEach((hash, currencyHashBalanceMap) ->
+                currencyHashBalanceMap.forEach((currencyHash, balance) -> {
+                    if (balance.signum() == -1) {
+                        throw new BalanceException(String.format("Balance Validation failed with balance %s for address %s and currency %s", balance, hash, currencyHash));
+                    }
+                })
+        );
         log.info("Balance Validation completed");
     }
 
