@@ -129,6 +129,7 @@ public abstract class BaseNodeInitializationService {
         networkService.connectToNetwork();
         propagationSubscriber.initPropagationHandler();
         monitorService.init();
+        transactionService.delayedMissingTransactionsPropagation();
     }
 
     private void initTransactionSync() {

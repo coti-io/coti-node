@@ -59,7 +59,7 @@ public class InitializationService extends BaseNodeInitializationService {
             classNameToReceiverHandlerMapping.put(
                     TransactionDspVote.class.getName(), data ->
                             dspVoteService.receiveDspVote((TransactionDspVote) data));
-            communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
+            Thread receiverThread = communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
 
             communicationService.initPublisher(propagationPort, NodeType.ZeroSpendServer);
 
@@ -72,6 +72,7 @@ public class InitializationService extends BaseNodeInitializationService {
             }
 
             super.initServices();
+            receiverThread.start();
 
             if (transactions.isEmpty()) {
                 transactionCreationService.createGenesisTransactions();

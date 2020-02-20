@@ -62,7 +62,7 @@ public class InitializationService extends BaseNodeInitializationService {
             classNameToReceiverHandlerMapping.put(AddressData.class.getName(), data ->
                     addressService.handleNewAddressFromFullNode((AddressData) data));
 
-            communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
+            Thread receiverThread = communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
             communicationService.addSender(zerospendNetworkNodeData.getReceivingFullAddress());
             communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress(), NodeType.ZeroSpendServer);
             List<NetworkNodeData> dspNetworkNodeDataList = networkService.getMapFromFactory(NodeType.DspNode).values().stream()
@@ -74,6 +74,7 @@ public class InitializationService extends BaseNodeInitializationService {
             }
 
             super.initServices();
+            receiverThread.start();
         } catch (CotiRunTimeException e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
             e.logMessage();

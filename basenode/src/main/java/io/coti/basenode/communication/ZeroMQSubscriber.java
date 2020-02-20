@@ -8,6 +8,7 @@ import io.coti.basenode.communication.interfaces.ISubscriberHandler;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.IPropagatable;
+import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -46,6 +47,8 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     private NodeType subscriberNodeType;
     @Autowired
     private ISubscriberHandler subscriberHandler;
+    @Autowired
+    private INetworkService networkService;
 
     @PostConstruct
     private void init() {
@@ -58,6 +61,9 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         zeroMQContext = ZMQ.context(1);
         propagationReceiver = zeroMQContext.socket(SocketType.SUB);
         propagationReceiver.setHWM(10000);
+//        propagationReceiver.setTCPKeepAlive(1);
+//        propagationReceiver.setTCPKeepAliveIdle(30000);
+//        propagationReceiver.setTCPKeepAliveInterval(30000);
         ZeroMQUtils.bindToRandomPort(propagationReceiver);
     }
 
@@ -177,8 +183,8 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         if (propagationReceiver.connect(publisherAddressAndPort)) {
             log.info("Subscriber connected to server {} of node type {}", publisherAddressAndPort, publisherNodeType);
             subscribeAll(publisherAddressAndPort, publisherNodeType);
+            networkService.recoveryOnReconnect(publisherAddressAndPort, publisherNodeType);
             connectedNodes.put(publisherAddressAndPort, new ConnectedNodeData(publisherNodeType, Instant.now()));
-
         } else {
             log.error("Unable to connect to server {} of node type {}", publisherAddressAndPort, publisherNodeType);
         }

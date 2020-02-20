@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 public interface ICommunicationService {
     void initSubscriber(NodeType nodeType, EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap);
 
-    void initReceiver(String receivingPort, HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping);
+    Thread initReceiver(String receivingPort, HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping);
 
     void addSender(String receivingServerAddress);
 

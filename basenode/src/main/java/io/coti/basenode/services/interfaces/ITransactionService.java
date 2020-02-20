@@ -22,6 +22,8 @@ public interface ITransactionService {
 
     Thread monitorTransactionThread(String type, AtomicLong transactionNumber, AtomicLong receivedTransactionNumber);
 
+    void delayedMissingTransactionsPropagation();
+
     int totalPostponedTransactions();
 
     void addToExplorerIndexes(TransactionData transactionData);
