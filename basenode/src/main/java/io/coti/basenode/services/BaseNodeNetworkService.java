@@ -77,7 +77,7 @@ public class BaseNodeNetworkService implements INetworkService {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error at last state of network", e);
         }
     }
 
@@ -110,8 +110,7 @@ public class BaseNodeNetworkService implements INetworkService {
     public Map<Hash, NetworkNodeData> getMapFromFactory(NodeType nodeType) {
         Map<Hash, NetworkNodeData> mapToGet = multipleNodeMaps.get(nodeType);
         if (mapToGet == null) {
-            log.error("Unsupported networkNodeData type : {}", nodeType);
-            throw new IllegalArgumentException("Unsupported networkNodeData type");
+            throw new IllegalArgumentException(String.format("Unsupported networkNodeData type : %s", nodeType));
         }
         return mapToGet;
     }
@@ -119,16 +118,14 @@ public class BaseNodeNetworkService implements INetworkService {
     @Override
     public NetworkNodeData getSingleNodeData(NodeType nodeType) {
         if (!singleNodeNetworkDataMap.containsKey(nodeType)) {
-            log.error("Unsupported networkNodeData type : {}", nodeType);
-            throw new IllegalArgumentException("Unsupported networkNodeData type");
+            throw new IllegalArgumentException(String.format("Unsupported networkNodeData type : %s", nodeType));
         }
         return singleNodeNetworkDataMap.get(nodeType);
     }
 
     private void setSingleNodeData(NodeType nodeType, NetworkNodeData newNetworkNodeData) {
         if (!singleNodeNetworkDataMap.containsKey(nodeType)) {
-            log.error("Unsupported networkNodeData type : {}", nodeType);
-            throw new IllegalArgumentException("Unsupported networkNodeData type");
+            throw new IllegalArgumentException(String.format("Unsupported networkNodeData type : %s", nodeType));
         }
         if (newNetworkNodeData != null && !newNetworkNodeData.getNodeType().equals(nodeType)) {
             log.error("Invalid networkNodeData type : {}", nodeType);
@@ -139,36 +136,30 @@ public class BaseNodeNetworkService implements INetworkService {
 
     @Override
     public void addNode(NetworkNodeData networkNodeData) {
-        try {
-            if (networkNodeData.getNodeHash() == null || networkNodeData.getNodeType() == null) {
-                log.error("Invalid networkNodeData adding request");
-                throw new IllegalArgumentException("Invalid networkNodeData adding request");
-            }
-            if (!NodeTypeService.valueOf(networkNodeData.getNodeType().toString()).isMultipleNode()) {
-                setSingleNodeData(networkNodeData.getNodeType(), networkNodeData);
-            } else {
-                getMapFromFactory(networkNodeData.getNodeType()).put(networkNodeData.getHash(), networkNodeData);
-            }
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
+
+        if (networkNodeData.getNodeHash() == null || networkNodeData.getNodeType() == null) {
+            log.error("Invalid networkNodeData adding request");
+            throw new IllegalArgumentException("Invalid networkNodeData adding request");
         }
+        if (!NodeTypeService.valueOf(networkNodeData.getNodeType().toString()).isMultipleNode()) {
+            setSingleNodeData(networkNodeData.getNodeType(), networkNodeData);
+        } else {
+            getMapFromFactory(networkNodeData.getNodeType()).put(networkNodeData.getHash(), networkNodeData);
+        }
+
     }
 
     @Override
     public void removeNode(NetworkNodeData networkNodeData) {
-        try {
-            if (!NodeTypeService.valueOf(networkNodeData.getNodeType().toString()).isMultipleNode()) {
-                setSingleNodeData(networkNodeData.getNodeType(), null);
-            } else {
-                if (getMapFromFactory(networkNodeData.getNodeType()).remove(networkNodeData.getHash()) == null) {
-                    log.info("NetworkNode {} of type {} isn't found", networkNodeData.getNodeHash(), networkNodeData.getNodeType());
-                    return;
-                }
+        if (!NodeTypeService.valueOf(networkNodeData.getNodeType().toString()).isMultipleNode()) {
+            setSingleNodeData(networkNodeData.getNodeType(), null);
+        } else {
+            if (getMapFromFactory(networkNodeData.getNodeType()).remove(networkNodeData.getHash()) == null) {
+                log.info("NetworkNode {} of type {} isn't found", networkNodeData.getNodeHash(), networkNodeData.getNodeType());
+                return;
             }
-            log.info("NetworkNode {}  of type {} is deleted", networkNodeData.getNodeHash(), networkNodeData.getNodeType());
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
         }
+        log.info("NetworkNode {}  of type {} is deleted", networkNodeData.getNodeHash(), networkNodeData.getNodeType());
     }
 
     @Override
@@ -349,7 +340,7 @@ public class BaseNodeNetworkService implements INetworkService {
                     communicationService.addSender(newSingleNodeData.getReceivingFullAddress());
                 }
             }
-            if (recoveryServerAddress != null && (singleNodeData == null || singleNodeData != null && recoveryServerAddress.equals(singleNodeData.getHttpFullAddress()))) {
+            if (recoveryServerAddress != null && (singleNodeData == null || recoveryServerAddress.equals(singleNodeData.getHttpFullAddress()))) {
                 recoveryServerAddress = newSingleNodeData.getHttpFullAddress();
             }
             setSingleNodeData(singleNodeType, newSingleNodeData);

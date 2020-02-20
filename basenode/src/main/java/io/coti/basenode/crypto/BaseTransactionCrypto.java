@@ -4,14 +4,9 @@ import io.coti.basenode.crypto.interfaces.IBaseTransactionCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -19,10 +14,10 @@ import java.util.List;
 
 @Slf4j
 public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
-    InputBaseTransactionData {
+    INPUT_BASE_TRANSACTION_DATA(InputBaseTransactionData.class) {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData inputBaseTransactionData) {
-            if (!InputBaseTransactionData.class.isInstance(inputBaseTransactionData)) {
+            if (!(inputBaseTransactionData instanceof InputBaseTransactionData)) {
                 throw new IllegalArgumentException("");
             }
             return getBaseMessageInBytes(inputBaseTransactionData);
@@ -33,14 +28,14 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
             return transactionData.getHash().getBytes();
         }
     },
-    PaymentInputBaseTransactionData {
+    PAYMENT_INPUT_BASE_TRANSACTION_DATA(PaymentInputBaseTransactionData.class) {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
-            if (!PaymentInputBaseTransactionData.class.isInstance(baseTransactionData)) {
+            if (!(baseTransactionData instanceof PaymentInputBaseTransactionData)) {
                 throw new IllegalArgumentException("");
             }
             PaymentInputBaseTransactionData paymentInputBaseTransactionData = (PaymentInputBaseTransactionData) baseTransactionData;
-            byte[] inputMessageInBytes = this.InputBaseTransactionData.getMessageInBytes(baseTransactionData);
+            byte[] inputMessageInBytes = BaseTransactionCrypto.INPUT_BASE_TRANSACTION_DATA.getMessageInBytes(baseTransactionData);
 
             int itemsByteSize = 0;
             List<PaymentItemData> items = ((PaymentInputBaseTransactionData) baseTransactionData).getItems();
@@ -66,31 +61,31 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
             return transactionData.getHash().getBytes();
         }
     },
-    FullNodeFeeData {
+    FULL_NODE_FEE_DATA(FullNodeFeeData.class) {
         @Override
-        public byte[] getMessageInBytes(BaseTransactionData fullNodeFeeData) {
-            if (!FullNodeFeeData.class.isInstance(fullNodeFeeData)) {
+        public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
+            if (!(baseTransactionData instanceof FullNodeFeeData)) {
                 throw new IllegalArgumentException("");
             }
 
             try {
-                return getOutputMessageInBytes((FullNodeFeeData) fullNodeFeeData);
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
+                return getOutputMessageInBytes((FullNodeFeeData) baseTransactionData);
+            } catch (Exception e) {
+                log.error("Error at getting message in byte", e);
                 return new byte[0];
             }
         }
 
         @Override
-        public void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData, int index) throws ClassNotFoundException {
-            baseTransactionData.setSignature(nodeCryptoHelper.signMessage(this.getSignatureMessage(transactionData), index));
+        public void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData, int index) {
+            baseTransactionData.setSignature(NodeCryptoHelper.signMessage(this.getSignatureMessage(transactionData), index));
 
         }
     },
-    NetworkFeeData {
+    NETWORK_FEE_DATA(NetworkFeeData.class) {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
-            if (!NetworkFeeData.class.isInstance(baseTransactionData)) {
+            if (!(baseTransactionData instanceof NetworkFeeData)) {
                 throw new IllegalArgumentException("");
             }
 
@@ -103,18 +98,18 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
                 ByteBuffer baseTransactionBuffer = ByteBuffer.allocate(outputMessageInBytes.length + bytesOfReducedAmount.length).
                         put(outputMessageInBytes).put(bytesOfReducedAmount);
                 return baseTransactionBuffer.array();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                log.error("Error at getting message in byte", e);
                 return new byte[0];
             }
 
         }
 
     },
-    RollingReserveData {
+    ROLLING_RESERVE_DATA(RollingReserveData.class) {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
-            if (!RollingReserveData.class.isInstance(baseTransactionData)) {
+            if (!(baseTransactionData instanceof RollingReserveData)) {
                 throw new IllegalArgumentException("");
             }
 
@@ -127,17 +122,17 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
                 ByteBuffer baseTransactionBuffer = ByteBuffer.allocate(outputMessageInBytes.length + bytesOfReducedAmount.length).
                         put(outputMessageInBytes).put(bytesOfReducedAmount);
                 return baseTransactionBuffer.array();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                log.error("Error at getting message in byte", e);
                 return new byte[0];
             }
         }
 
     },
-    ReceiverBaseTransactionData {
+    RECEIVER_BASE_TRANSACTION_DATA(ReceiverBaseTransactionData.class) {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
-            if (!ReceiverBaseTransactionData.class.isInstance(baseTransactionData)) {
+            if (!(baseTransactionData instanceof ReceiverBaseTransactionData)) {
                 throw new IllegalArgumentException("");
             }
 
@@ -149,8 +144,8 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
                         put(outputMessageInBytes).put(receiverDescriptionInBytes);
 
                 return receiverBaseTransactionBuffer.array();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                log.error("Error at getting message in byte", e);
                 return new byte[0];
             }
         }
@@ -162,19 +157,19 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
             }
             try {
                 return CryptoHelper.verifyByPublicKey(getSignatureMessage(transactionData), baseTransactionData.getSignatureData().getR(), baseTransactionData.getSignatureData().getS(), getPublicKey(baseTransactionData));
-            } catch (ClassNotFoundException | NoSuchAlgorithmException | InvalidKeySpecException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                log.error("Error at verifying signature", e);
                 return false;
             }
         }
 
         @Override
-        public byte[] getSignatureMessage(TransactionData transactionData) throws ClassNotFoundException {
+        public byte[] getSignatureMessage(TransactionData transactionData) {
             ByteBuffer baseTransactionHashBuffer = ByteBuffer.allocate(3 * BASE_TRANSACTION_HASH_SIZE);
             for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
-                if (Class.forName(PACKAGE_PATH + "NetworkFeeData").isInstance(baseTransactionData)
-                        || Class.forName(PACKAGE_PATH + "RollingReserveData").isInstance(baseTransactionData)
-                        || Class.forName(PACKAGE_PATH + "ReceiverBaseTransactionData").isInstance(baseTransactionData)) {
+                if (baseTransactionData instanceof NetworkFeeData
+                        || baseTransactionData instanceof RollingReserveData
+                        || baseTransactionData instanceof ReceiverBaseTransactionData) {
                     baseTransactionHashBuffer.put(baseTransactionData.getHash().getBytes());
                 }
             }
@@ -183,24 +178,29 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     };
 
     protected static final int BASE_TRANSACTION_HASH_SIZE = 32;
-    protected static final String PACKAGE_PATH = "io.coti.basenode.data.";
-    protected NodeCryptoHelper nodeCryptoHelper;
+    private Class<? extends BaseTransactionData> baseTransactionClass;
 
-    @Component
-    public static class BaseTransactionCryptoInjector {
-        @Autowired
-        private NodeCryptoHelper nodeCryptoHelper;
-
-        @PostConstruct
-        public void postConstruct() {
-            for (BaseTransactionCrypto baseTransactionCrypto : EnumSet.allOf(BaseTransactionCrypto.class))
-                baseTransactionCrypto.nodeCryptoHelper = nodeCryptoHelper;
-        }
+    <T extends BaseTransactionData> BaseTransactionCrypto(Class<T> baseTransactionClass) {
+        this.baseTransactionClass = baseTransactionClass;
     }
 
     @Override
-    public void setBaseTransactionHash(BaseTransactionData baseTransactionData) throws ClassNotFoundException {
-        if (!Class.forName(PACKAGE_PATH + name()).isInstance(baseTransactionData)) {
+    public Class<? extends BaseTransactionData> getBaseTransactionClass() {
+        return this.baseTransactionClass;
+    }
+
+    public static BaseTransactionCrypto getByBaseTransactionClass(Class<? extends BaseTransactionData> baseTransactionClass) {
+        for (BaseTransactionCrypto baseTransactionCrypto : values()) {
+            if (baseTransactionCrypto.baseTransactionClass.equals(baseTransactionClass)) {
+                return baseTransactionCrypto;
+            }
+        }
+        throw new IllegalArgumentException("Invalid base transaction class");
+    }
+
+    @Override
+    public void setBaseTransactionHash(BaseTransactionData baseTransactionData) {
+        if (!this.baseTransactionClass.isInstance(baseTransactionData)) {
             throw new IllegalArgumentException("");
         }
         baseTransactionData.setHash(createBaseTransactionHashFromData(baseTransactionData));
@@ -216,19 +216,19 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     @Override
     public boolean isBaseTransactionValid(TransactionData transactionData, BaseTransactionData baseTransactionData) {
         try {
-            return Class.forName(PACKAGE_PATH + name()).isInstance(baseTransactionData) && this.createBaseTransactionHashFromData(baseTransactionData).equals(baseTransactionData.getHash())
+            return this.baseTransactionClass.isInstance(baseTransactionData) && this.createBaseTransactionHashFromData(baseTransactionData).equals(baseTransactionData.getHash())
                     && CryptoHelper.isAddressValid(baseTransactionData.getAddressHash()) && verifySignature(transactionData, baseTransactionData);
 
-        } catch (ClassNotFoundException | InvalidKeySpecException | NoSuchAlgorithmException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            log.error("Error at checking the validity of base transaction", e);
             return false;
 
         }
     }
 
     @Override
-    public void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData, int index) throws ClassNotFoundException {
-        baseTransactionData.setSignature(nodeCryptoHelper.signMessage(this.getSignatureMessage(transactionData), index));
+    public void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData, int index) {
+        baseTransactionData.setSignature(NodeCryptoHelper.signMessage(this.getSignatureMessage(transactionData), index));
 
     }
 
@@ -236,17 +236,17 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     public <T extends BaseTransactionData & ITrustScoreNodeValidatable> void signMessage(TransactionData transactionData, T baseTransactionData, TrustScoreNodeResultData trustScoreNodeResultData) throws ClassNotFoundException {
 
         List<TrustScoreNodeResultData> trustScoreNodeResult = baseTransactionData.getTrustScoreNodeResult() != null ? baseTransactionData.getTrustScoreNodeResult() : new ArrayList<>();
-        trustScoreNodeResultData.setSignature(nodeCryptoHelper.signMessage(this.getSignatureMessage(transactionData, trustScoreNodeResultData)));
+        trustScoreNodeResultData.setSignature(NodeCryptoHelper.signMessage(this.getSignatureMessage(transactionData, trustScoreNodeResultData)));
         trustScoreNodeResult.add(trustScoreNodeResultData);
         baseTransactionData.setTrustScoreNodeResult(trustScoreNodeResult);
 
     }
 
     @Override
-    public boolean verifySignature(TransactionData transactionData, BaseTransactionData baseTransactionData) throws ClassNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException {
+    public boolean verifySignature(TransactionData transactionData, BaseTransactionData baseTransactionData) {
 
         try {
-            if (ITrustScoreNodeValidatable.class.isAssignableFrom(Class.forName(PACKAGE_PATH + name()))) {
+            if (ITrustScoreNodeValidatable.class.isAssignableFrom(this.baseTransactionClass)) {
                 ITrustScoreNodeValidatable trustScoreNodeValidatable = (ITrustScoreNodeValidatable) baseTransactionData;
                 for (TrustScoreNodeResultData trustScoreNodeResultData : trustScoreNodeValidatable.getTrustScoreNodeResult()) {
                     if (!CryptoHelper.verifyByPublicKey(getSignatureMessage(transactionData, trustScoreNodeResultData), trustScoreNodeResultData.getSignature().getR(), trustScoreNodeResultData.getSignature().getS(), getPublicKey(trustScoreNodeResultData))) {
@@ -256,7 +256,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
                 return true;
             }
             return CryptoHelper.verifyByPublicKey(getSignatureMessage(transactionData), baseTransactionData.getSignatureData().getR(), baseTransactionData.getSignatureData().getS(), getPublicKey(baseTransactionData));
-        } catch (ClassNotFoundException | InvalidKeySpecException | NoSuchAlgorithmException e) {
+        } catch (Exception e) {
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
             return false;
         }
@@ -274,9 +274,9 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     }
 
     @Override
-    public byte[] getSignatureMessage(TransactionData transactionData) throws ClassNotFoundException {
+    public byte[] getSignatureMessage(TransactionData transactionData) {
         for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
-            if (Class.forName(PACKAGE_PATH + name()).isInstance(baseTransactionData)) {
+            if (this.baseTransactionClass.isInstance(baseTransactionData)) {
                 return baseTransactionData.getHash().getBytes();
             }
         }
@@ -284,9 +284,9 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     }
 
     @Override
-    public byte[] getSignatureMessage(TransactionData transactionData, TrustScoreNodeResultData trustScoreNodeResultData) throws ClassNotFoundException {
+    public byte[] getSignatureMessage(TransactionData transactionData, TrustScoreNodeResultData trustScoreNodeResultData) {
         for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
-            if (Class.forName(PACKAGE_PATH + name()).isInstance(baseTransactionData)) {
+            if (this.baseTransactionClass.isInstance(baseTransactionData)) {
                 byte[] baseTransactionHashInBytes = baseTransactionData.getHash().getBytes();
 
                 ByteBuffer validBaseTransactionBuffer = ByteBuffer.allocate(1);
@@ -318,8 +318,8 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     }
 
 
-    protected <T extends OutputBaseTransactionData> byte[] getOutputMessageInBytes(T outputBaseTransactionData) throws ClassNotFoundException {
-        if (!OutputBaseTransactionData.class.isAssignableFrom(Class.forName(PACKAGE_PATH + name()))) {
+    protected <T extends OutputBaseTransactionData> byte[] getOutputMessageInBytes(T outputBaseTransactionData) {
+        if (!OutputBaseTransactionData.class.isAssignableFrom(this.baseTransactionClass)) {
             throw new IllegalArgumentException("");
         }
         byte[] baseMessageInBytes = getBaseMessageInBytes(outputBaseTransactionData);

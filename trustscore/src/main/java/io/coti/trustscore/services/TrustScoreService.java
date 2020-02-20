@@ -115,7 +115,7 @@ public class TrustScoreService {
             }
 
             BucketEventData bucketEventData = (BucketEventData) bucketEvents.getByHash(getBucketHashByUserHashAndEventType(request));
-            if (bucketEventData.getEventDataHashToEventDataMap().get(request.uniqueIdentifier) != null) {
+            if (bucketEventData.getEventDataHashToEventDataMap().get(request.getUniqueIdentifier()) != null) {
                 return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST)
                         .body(new Response(KYC_SERVER_EVENT_EXIST, STATUS_ERROR));
@@ -465,7 +465,7 @@ public class TrustScoreService {
     }
 
     private IResponse sendToSuitableService(InsertEventRequest request) throws Exception {
-        switch (request.eventType) {
+        switch (request.getEventType()) {
             case INITIAL_EVENT: {
                 return sendToBucketInitialTrustScoreEventsService(request);
             }
@@ -497,7 +497,7 @@ public class TrustScoreService {
                 bucketInitialTrustScoreEventsData);
 
         bucketEvents.put(bucketInitialTrustScoreEventsData);
-        return new SetInitialTrustScoreEventResponse(request.userHash, request.eventType, request.getInitialTrustScoreType(), request.getScore());
+        return new SetInitialTrustScoreEventResponse(request.getUserHash(), request.getEventType(), request.getInitialTrustScoreType(), request.getScore());
     }
 
     private IResponse sendToHighFrequencyEventScoreService(InsertEventRequest request) {
@@ -511,7 +511,7 @@ public class TrustScoreService {
             bucketEvents.put(bucketChargeBackEventsData);
 
             Hash transactionDataHash = (request.getTransactionData() != null) ? request.getTransactionData().getHash() : null;
-            return new SetHighFrequencyEventScoreResponse(request.userHash, request.eventType, request.getHighFrequencyEventScoreType(), transactionDataHash);
+            return new SetHighFrequencyEventScoreResponse(request.getUserHash(), request.getEventType(), request.getHighFrequencyEventScoreType(), transactionDataHash);
         }
         return new Response(ILLEGAL_EVENT_FROM_KYC_SERVER, API_SERVER_ERROR);
     }
@@ -529,7 +529,7 @@ public class TrustScoreService {
         } catch (Exception e) {
             log.error(e.toString());
         }
-        return new SetNotFulfilmentEventScoreResponse(request.userHash, request.eventType, request.getCompensableEventScoreType());
+        return new SetNotFulfilmentEventScoreResponse(request.getUserHash(), request.getEventType(), request.getCompensableEventScoreType());
     }
 
     private IResponse sendToBucketBehaviorEventsService(InsertEventRequest request) {
@@ -546,12 +546,12 @@ public class TrustScoreService {
         }
 
         Hash transactionDataHash = (request.getTransactionData() != null) ? request.getTransactionData().getHash() : null;
-        return new SetBehaviorEventResponse(request.userHash, request.eventType, request.getBehaviorEventsScoreType(), transactionDataHash);
+        return new SetBehaviorEventResponse(request.getUserHash(), request.getEventType(), request.getBehaviorEventsScoreType(), transactionDataHash);
     }
 
 
     private Hash getBucketHashByUserHashAndEventType(InsertEventRequest request) {
-        return getBucketHashByUserHashAndEventType(request.userHash, request.eventType);
+        return getBucketHashByUserHashAndEventType(request.getUserHash(), request.getEventType());
     }
 
     private Hash getBucketHashByUserHashAndEventType(Hash userHash, EventType eventType) {

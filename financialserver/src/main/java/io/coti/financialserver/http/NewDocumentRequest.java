@@ -12,6 +12,7 @@ import java.util.List;
 
 @Data
 public class NewDocumentRequest extends Request {
+
     @NotNull
     private Hash userHash;
     @NotNull

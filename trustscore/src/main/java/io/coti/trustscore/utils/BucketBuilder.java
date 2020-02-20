@@ -34,7 +34,7 @@ public class BucketBuilder {
         InsertEventRequest insertEventRequest = new InsertEventRequest();
         insertEventRequest.setUserHash(userHash);
         insertEventRequest.setSignature(signature);
-        insertEventRequest.eventType = EventType.TRANSACTION;
+        insertEventRequest.setEventType(EventType.TRANSACTION);
         insertEventRequest.setTransactionData(transactionData);
         return insertEventRequest;
     }

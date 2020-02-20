@@ -27,5 +27,6 @@ public class TransactionIndexData implements IEntity {
 
     @Override
     public void setHash(Hash hash) {
+        //no implementation
     }
 }

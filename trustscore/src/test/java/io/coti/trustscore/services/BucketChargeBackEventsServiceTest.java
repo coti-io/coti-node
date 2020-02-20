@@ -116,10 +116,10 @@ public class BucketChargeBackEventsServiceTest {
     private InsertEventRequest buildChargeBackDataRequest(TransactionData transactionData) {
         InsertEventRequest insertEventRequest = new InsertEventRequest();
         insertEventRequest.setUserHash(transactionData.getSenderHash());
-        insertEventRequest.eventType = EventType.HIGH_FREQUENCY_EVENTS;
+        insertEventRequest.setEventType(EventType.HIGH_FREQUENCY_EVENTS);
         insertEventRequest.setHighFrequencyEventScoreType(HighFrequencyEventScoreType.CHARGE_BACK);
         insertEventRequest.setTransactionData(transactionData);
-        insertEventRequest.uniqueIdentifier = generateRandomHash(72);
+        insertEventRequest.setUniqueIdentifier(generateRandomHash(72));
         return insertEventRequest;
     }
 }

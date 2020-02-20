@@ -77,6 +77,7 @@ public class NodeManagementService implements INodeManagementService {
     private String nodeManagerIp;
     @Value("${propagation.port}")
     private String propagationPort;
+    private final Object lock = new Object();
     private Map<Hash, Hash> lockNodeHistoryRecordHashMap = new ConcurrentHashMap<>();
 
     @Override
@@ -550,27 +551,16 @@ public class NodeManagementService implements INodeManagementService {
         return singleNodeDetailsForWallet;
     }
 
-    protected Hash addLockToLockMap(Hash hash) {
-        return addLockToLockMap(lockNodeHistoryRecordHashMap, hash);
-    }
-
-    private Hash addLockToLockMap(Map<Hash, Hash> locksIdentityMap, Hash hash) {
-        synchronized (locksIdentityMap) {
-            locksIdentityMap.putIfAbsent(hash, hash);
-            return locksIdentityMap.get(hash);
+    private Hash addLockToLockMap(Hash hash) {
+        synchronized (lock) {
+            lockNodeHistoryRecordHashMap.putIfAbsent(hash, hash);
+            return lockNodeHistoryRecordHashMap.get(hash);
         }
     }
 
-    protected void removeLockFromLocksMap(Hash hash) {
-        removeLockFromLocksMap(lockNodeHistoryRecordHashMap, hash);
-    }
-
-    private void removeLockFromLocksMap(Map<Hash, Hash> locksIdentityMap, Hash hash) {
-        synchronized (locksIdentityMap) {
-            Hash hashLock = locksIdentityMap.get(hash);
-            if (hashLock != null) {
-                locksIdentityMap.remove(hash);
-            }
+    private void removeLockFromLocksMap(Hash hash) {
+        synchronized (lock) {
+            lockNodeHistoryRecordHashMap.remove(hash);
         }
     }
 

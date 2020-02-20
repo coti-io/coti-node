@@ -4,10 +4,11 @@ import io.coti.basenode.data.FeeData;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NetworkType;
 import io.coti.basenode.data.NodeType;
+import io.coti.basenode.http.data.interfaces.IResponseData;
 import lombok.Data;
 
 @Data
-public class NetworkNodeResponseData {
+public class NetworkNodeResponseData implements IResponseData {
 
     private String nodeHash;
     private NodeType nodeType;

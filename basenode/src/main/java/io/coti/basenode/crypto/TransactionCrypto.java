@@ -54,7 +54,7 @@ public class TransactionCrypto extends SignatureCrypto<TransactionData> {
         try {
             for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
                 if (baseTransactionData.getHash() == null) {
-                    BaseTransactionCrypto.valueOf(baseTransactionData.getClass().getSimpleName()).setBaseTransactionHash(baseTransactionData);
+                    BaseTransactionCrypto.getByBaseTransactionClass(baseTransactionData.getClass()).setBaseTransactionHash(baseTransactionData);
                 }
             }
 
@@ -79,7 +79,7 @@ public class TransactionCrypto extends SignatureCrypto<TransactionData> {
         if (!this.isTransactionHashCorrect(transactionData))
             return false;
         for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
-            if (!BaseTransactionCrypto.valueOf(baseTransactionData.getClass().getSimpleName()).isBaseTransactionValid(transactionData, baseTransactionData))
+            if (!BaseTransactionCrypto.getByBaseTransactionClass(baseTransactionData.getClass()).isBaseTransactionValid(transactionData, baseTransactionData))
                 return false;
         }
         return true;

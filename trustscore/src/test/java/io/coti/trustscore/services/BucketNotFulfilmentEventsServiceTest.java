@@ -58,9 +58,9 @@ public class BucketNotFulfilmentEventsServiceTest {
     private InsertEventRequest buildBehaviorEventsDataRequest(CompensableEventScoreType compensableEventScoreType) {
         InsertEventRequest insertEventRequest = new InsertEventRequest();
         insertEventRequest.setUserHash(generateRandomHash(64));
-        insertEventRequest.eventType = EventType.NOT_FULFILMENT_EVENT;
+        insertEventRequest.setEventType(EventType.NOT_FULFILMENT_EVENT);
         insertEventRequest.setCompensableEventScoreType(compensableEventScoreType);
-        insertEventRequest.uniqueIdentifier = generateRandomHash(64);
+        insertEventRequest.setUniqueIdentifier(generateRandomHash(64));
         insertEventRequest.setDebtAmount(10000);
         insertEventRequest.setOtherUserHash(generateRandomHash(64));
         return insertEventRequest;

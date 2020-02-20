@@ -27,8 +27,8 @@ public class NodeCryptoHelper {
     }
 
     public Hash generateAddress(String seed, Integer index) {
-        if (this.seed == null) {
-            this.seed = seed;
+        if (NodeCryptoHelper.seed == null) {
+            NodeCryptoHelper.seed = seed;
         }
         return CryptoHelper.generateAddress(seed, index);
     }

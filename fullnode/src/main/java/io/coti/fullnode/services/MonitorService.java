@@ -17,12 +17,12 @@ public class MonitorService extends BaseNodeMonitorService {
 
     @Override
     public void lastState() {
-
+        // implemented by sub classes
     }
 
     @Scheduled(initialDelay = 1000, fixedDelay = 60000)
     public void lastPot() {
-        potService.monitorStatistics.forEach((bucketNumber, statistic) -> {
+        PotService.monitorStatistics.forEach((bucketNumber, statistic) -> {
             if (statistic.getNumberOfTransaction() > 0) {
                 HashMap<String, Integer> executorSizes = potService.executorSizes(bucketNumber);
                 log.info("Proof of Trust Range= {}-{}, NumberOfTransaction = {}, AverageTime = {} ms, ActiveThreads = {}, MaximumPoolSize = {}, QueueSize = {}",

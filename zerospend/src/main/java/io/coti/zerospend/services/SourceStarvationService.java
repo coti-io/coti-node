@@ -68,7 +68,7 @@ public class SourceStarvationService {
             }
             if (i % 10 == 0) {
                 if (!isTrustScoreRangeContainsSource) {
-                    transactionCreationService.createNewGenesisZeroSpendTransaction(new Double(i));
+                    transactionCreationService.createNewGenesisZeroSpendTransaction(i);
                 }
                 isTrustScoreRangeContainsSource = false;
             }
@@ -80,7 +80,7 @@ public class SourceStarvationService {
             Instant parentAttachmentTime = nonZeroSpendChainTransactions.get(parentHash);
             if (parentAttachmentTime != null) {
                 Instant transactionAttachTime = nonZeroSpendChainTransactions.get(transactionHash);
-                if (transactionAttachTime == null || transactionAttachTime != null && transactionAttachTime.isBefore(parentAttachmentTime)) {
+                if (transactionAttachTime == null || transactionAttachTime.isBefore(parentAttachmentTime)) {
                     transactionAttachTime = parentAttachmentTime;
                 }
                 nonZeroSpendChainTransactions.put(transactionHash, transactionAttachTime);

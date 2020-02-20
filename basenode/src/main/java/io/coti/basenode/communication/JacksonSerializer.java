@@ -7,11 +7,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.coti.basenode.communication.interfaces.ISerializer;
 import io.coti.basenode.data.interfaces.IPropagatable;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 
+@Slf4j
 @Service
 public class JacksonSerializer implements ISerializer {
 
@@ -30,7 +32,7 @@ public class JacksonSerializer implements ISerializer {
         try {
             return serializer.writeValueAsBytes(entity);
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            log.error("Error at jackson byte array serializer", e);
             return null;
         }
     }
@@ -40,7 +42,7 @@ public class JacksonSerializer implements ISerializer {
         try {
             return serializer.writeValueAsString(entity);
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            log.error("Error at jackson serializer", e);
             return null;
         }
     }

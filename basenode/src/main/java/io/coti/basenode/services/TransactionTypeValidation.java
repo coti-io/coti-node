@@ -9,29 +9,29 @@ import java.util.List;
 
 @Slf4j
 public enum TransactionTypeValidation implements ITransactionTypeValidation {
-    Payment(TransactionType.Payment) {
+    PAYMENT(TransactionType.Payment) {
         @Override
         public boolean validateInputBaseTransactions(TransactionData transactionData) {
             if (!type.equals(transactionData.getType())) {
                 throw new IllegalArgumentException(INVALID_TRANSACTION_TYPE);
             }
             List<InputBaseTransactionData> inputBaseTransactions = transactionData.getInputBaseTransactions();
-            return inputBaseTransactions.stream().filter(inputBaseTransactionData -> PaymentInputBaseTransactionData.class.isInstance(inputBaseTransactionData)).count() == 1
-                    && PaymentInputBaseTransactionData.class.isInstance(inputBaseTransactions.get(0));
+            return inputBaseTransactions.stream().filter(PaymentInputBaseTransactionData.class::isInstance).count() == 1
+                    && inputBaseTransactions.get(0) instanceof PaymentInputBaseTransactionData;
         }
     },
-    Transfer(TransactionType.Transfer) {
+    TRANSFER(TransactionType.Transfer) {
         @Override
         public boolean validateReducedAmount(List<OutputBaseTransactionData> outputBaseTransactions) {
             BigDecimal reducedAmount = BigDecimal.ZERO;
             BigDecimal fullNodeFeeAmount = BigDecimal.ZERO;
 
             for (OutputBaseTransactionData outputBaseTransactionData : outputBaseTransactions) {
-                if (FullNodeFeeData.class.isInstance(outputBaseTransactionData)) {
+                if (outputBaseTransactionData instanceof FullNodeFeeData) {
                     fullNodeFeeAmount = outputBaseTransactionData.getAmount();
-                } else if (NetworkFeeData.class.isInstance(outputBaseTransactionData)) {
+                } else if (outputBaseTransactionData instanceof NetworkFeeData) {
                     reducedAmount = ((NetworkFeeData) outputBaseTransactionData).getReducedAmount();
-                } else if (ReceiverBaseTransactionData.class.isInstance(outputBaseTransactionData)) {
+                } else if (outputBaseTransactionData instanceof ReceiverBaseTransactionData) {
                     return (reducedAmount == null && outputBaseTransactionData.getOriginalAmount().compareTo(outputBaseTransactionData.getAmount()) == 0) ||
                             (reducedAmount != null && outputBaseTransactionData.getOriginalAmount().compareTo(reducedAmount.add(fullNodeFeeAmount)) == 0);
                 }
@@ -39,7 +39,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
             return false;
         }
     },
-    ZeroSpend(TransactionType.ZeroSpend) {
+    ZERO_SPEND(TransactionType.ZeroSpend) {
         @Override
         public boolean validateInputBaseTransactions(TransactionData transactionData) {
             if (!type.equals(transactionData.getType())) {
@@ -50,13 +50,13 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
         }
 
     },
-    Initial(TransactionType.Initial) {
+    INITIAL(TransactionType.Initial) {
         @Override
         public boolean validateBaseTransactions(TransactionData transactionData) {
             try {
                 return validateInputBaseTransactions(transactionData) && validateOutputBaseTransactions(transactionData, true);
             } catch (IllegalArgumentException e) {
-                log.error("Errors during validation of base transactions: {}", e);
+                log.error("Errors during validation of base transactions: ", e);
                 return false;
             }
         }
@@ -73,11 +73,19 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
     };
 
     protected static final String INVALID_TRANSACTION_TYPE = "Invalid transaction type";
-    protected static final String PACKAGE_PATH = "io.coti.basenode.data.";
     protected TransactionType type;
 
     TransactionTypeValidation(TransactionType type) {
         this.type = type;
+    }
+
+    public static TransactionTypeValidation getByType(TransactionType transactionType) {
+        for (TransactionTypeValidation transactionTypeValidation : values()) {
+            if (transactionTypeValidation.type.equals(transactionType)) {
+                return transactionTypeValidation;
+            }
+        }
+        throw new IllegalArgumentException(INVALID_TRANSACTION_TYPE);
     }
 
     @Override
@@ -85,7 +93,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
         try {
             return validateInputBaseTransactions(transactionData) && validateOutputBaseTransactions(transactionData, false);
         } catch (IllegalArgumentException e) {
-            log.error("Errors of an illegal argument during validation of base transactions: {}", e);
+            log.error("Errors of an illegal argument during validation of base transactions: ", e);
             return false;
         }
     }
@@ -106,7 +114,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
             }
 
             List<OutputBaseTransactionData> outputBaseTransactions = transactionData.getOutputBaseTransactions();
-            List<String> outputBaseTransactionNames = OutputBaseTransactionName.getOutputBaseTransactionsByType(type);
+            List<OutputBaseTransactionName> outputBaseTransactionNames = OutputBaseTransactionName.getOutputBaseTransactionsByType(type);
             if (outputBaseTransactionNames.size() != outputBaseTransactions.size()) {
                 return false;
             }
@@ -115,7 +123,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
 
             for (int i = 0; i < outputBaseTransactions.size(); i++) {
                 OutputBaseTransactionData outputBaseTransactionData = outputBaseTransactions.get(i);
-                if (!Class.forName(PACKAGE_PATH + outputBaseTransactionNames.get(i)).equals(outputBaseTransactionData.getClass())) {
+                if (!outputBaseTransactionNames.get(i).getOutputBaseTransactionClass().isInstance(outputBaseTransactionData)) {
                     return false;
                 }
                 if (!originalAmount.equals(BigDecimal.ZERO) && originalAmount.compareTo(outputBaseTransactionData.getOriginalAmount()) != 0) {
@@ -126,8 +134,8 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
             }
 
             return skipValidationOfReducedAmount || validateReducedAmount(outputBaseTransactions);
-        } catch (ClassNotFoundException e) {
-            log.error("Errors of class not found during validation of output base transactions: {}", e);
+        } catch (Exception e) {
+            log.error("Errors of class not found during validation of output base transactions: ", e);
             return false;
         }
     }
@@ -138,10 +146,10 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
         BigDecimal reducedTotalOutputTransactionAmount = BigDecimal.ZERO;
 
         for (OutputBaseTransactionData outputBaseTransactionData : outputBaseTransactions) {
-            if (NetworkFeeData.class.isInstance(outputBaseTransactionData)) {
+            if (outputBaseTransactionData instanceof NetworkFeeData) {
                 reducedAmount = ((NetworkFeeData) outputBaseTransactionData).getReducedAmount();
             }
-            if (!FullNodeFeeData.class.isInstance(outputBaseTransactionData)) {
+            if (!(outputBaseTransactionData instanceof FullNodeFeeData)) {
                 reducedTotalOutputTransactionAmount = reducedTotalOutputTransactionAmount.add(outputBaseTransactionData.getAmount());
             }
         }

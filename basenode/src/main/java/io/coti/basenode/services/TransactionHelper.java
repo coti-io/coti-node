@@ -136,7 +136,7 @@ public class TransactionHelper implements ITransactionHelper {
                 return false;
             }
 
-            return TransactionTypeValidation.valueOf(transactionType.toString()).validateBaseTransactions(transactionData);
+            return TransactionTypeValidation.getByType(transactionType).validateBaseTransactions(transactionData);
         } catch (Exception e) {
             log.error("Validate transaction type error", e);
             return false;
@@ -146,7 +146,7 @@ public class TransactionHelper implements ITransactionHelper {
     @Override
     public boolean validateBaseTransactionTrustScoreNodeResults(TransactionData transactionData) {
         for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
-            if (ITrustScoreNodeValidatable.class.isAssignableFrom(baseTransactionData.getClass()) && !validateBaseTransactionTrustScoreNodeResult((ITrustScoreNodeValidatable) baseTransactionData)) {
+            if (baseTransactionData instanceof ITrustScoreNodeValidatable && !validateBaseTransactionTrustScoreNodeResult((ITrustScoreNodeValidatable) baseTransactionData)) {
                 return false;
             }
         }

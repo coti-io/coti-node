@@ -6,6 +6,7 @@ import io.coti.basenode.data.TransactionData;
 import java.util.List;
 
 public interface ITransactionTypeValidation {
+
     boolean validateBaseTransactions(TransactionData transactionData);
 
     boolean validateInputBaseTransactions(TransactionData transactionData);

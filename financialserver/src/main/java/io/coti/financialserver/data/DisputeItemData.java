@@ -39,7 +39,7 @@ public class DisputeItemData implements Serializable {
         disputeItemVotesData.add(disputeItemVoteData);
     }
 
-    public Boolean arbitratorAlreadyVoted(Hash arbitratorHash) {
+    public boolean arbitratorAlreadyVoted(Hash arbitratorHash) {
         for (DisputeItemVoteData disputeItemVoteData : disputeItemVotesData) {
             if (disputeItemVoteData.getArbitratorHash().equals(arbitratorHash)) {
                 return true;

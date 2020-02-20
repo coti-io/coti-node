@@ -37,7 +37,7 @@ public class NetworkData implements IPropagatable {
 
     }
 
-    @JsonInclude(JsonInclude.Include.ALWAYS)
+    @JsonInclude()
     public Map<NodeType, NetworkNodeData> getSingleNodeNetworkDataMap() {
         return singleNodeNetworkDataMap;
     }

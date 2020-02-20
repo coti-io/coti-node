@@ -166,24 +166,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                     deleteBackup(localBackupFolderPath);
                     dBConnector.generateDataBaseBackup(localBackupFolderPath);
                 }
-                try {
-                    deleteBackup(remoteBackupFolderPath);
-                    final String restoreBucket = getBackupBucketFromRestoreNode();
-                    List<String> s3BackupFolderAndContents = awsService.listS3Paths(restoreBucket, restoreS3Path);
-                    if (s3BackupFolderAndContents.isEmpty()) {
-                        throw new DataBaseRestoreException(String.format("Couldn't complete restore. No backups found at %s/%s", restoreBucket, restoreS3Path));
-
-                    }
-                    String latestS3Backup = getLatestS3Backup(s3BackupFolderAndContents, restoreS3Path);
-                    log.info("Downloading remote backup from S3 bucket");
-                    awsService.downloadFolderAndContents(restoreBucket, latestS3Backup, remoteBackupFolderPath);
-                    dBConnector.restoreDataBase(remoteBackupFolderPath);
-                } catch (Exception e) {
-                    dBConnector.restoreDataBase(localBackupFolderPath);
-                    throw e;
-                } finally {
-                    deleteBackup(remoteBackupFolderPath);
-                }
+                restoreDBFromRemote();
             }
             log.info("Finished DB restore flow");
         } catch (DataBaseRecoveryException e) {
@@ -192,6 +175,27 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
             throw new DataBaseRecoveryException("Restore database error.", e);
         }
 
+    }
+
+    private void restoreDBFromRemote() {
+        try {
+            deleteBackup(remoteBackupFolderPath);
+            final String restoreBucket = getBackupBucketFromRestoreNode();
+            List<String> s3BackupFolderAndContents = awsService.listS3Paths(restoreBucket, restoreS3Path);
+            if (s3BackupFolderAndContents.isEmpty()) {
+                throw new DataBaseRestoreException(String.format("Couldn't complete restore. No backups found at %s/%s", restoreBucket, restoreS3Path));
+
+            }
+            String latestS3Backup = getLatestS3Backup(s3BackupFolderAndContents, restoreS3Path);
+            log.info("Downloading remote backup from S3 bucket");
+            awsService.downloadFolderAndContents(restoreBucket, latestS3Backup, remoteBackupFolderPath);
+            dBConnector.restoreDataBase(remoteBackupFolderPath);
+        } catch (Exception e) {
+            dBConnector.restoreDataBase(localBackupFolderPath);
+            throw e;
+        } finally {
+            deleteBackup(remoteBackupFolderPath);
+        }
     }
 
     private String getBackupBucketFromRestoreNode() {

@@ -10,7 +10,7 @@ public enum NetworkTypeName {
     private NetworkType networkType;
     private String network;
 
-    private NetworkTypeName(NetworkType networkType, String network) {
+    NetworkTypeName(NetworkType networkType, String network) {
         this.networkType = networkType;
         this.network = network;
     }

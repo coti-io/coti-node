@@ -55,14 +55,14 @@ public class TransactionIndexService {
         lastTransactionIndexData = transactionIndexData;
     }
 
-    public static TransactionIndexData getNextIndexData(TransactionIndexData currentLastTransactionIndexData, TransactionData newTransactionData) {
+    public TransactionIndexData getNextIndexData(TransactionIndexData currentLastTransactionIndexData, TransactionData newTransactionData) {
         return new TransactionIndexData(
                 newTransactionData.getHash(),
                 currentLastTransactionIndexData.getIndex() + 1,
                 getAccumulatedHash(currentLastTransactionIndexData.getAccumulatedHash(), newTransactionData.getHash(), currentLastTransactionIndexData.getIndex() + 1));
     }
 
-    public static byte[] getAccumulatedHash(byte[] previousAccumulatedHash, Hash newTransactionHash, long newIndex) {
+    public byte[] getAccumulatedHash(byte[] previousAccumulatedHash, Hash newTransactionHash, long newIndex) {
         byte[] newTransactionHashBytes = newTransactionHash.getBytes();
         ByteBuffer combinedHash = ByteBuffer.allocate(previousAccumulatedHash.length + newTransactionHashBytes.length + Long.BYTES);
         combinedHash.put(previousAccumulatedHash).put(newTransactionHashBytes).putLong(newIndex);

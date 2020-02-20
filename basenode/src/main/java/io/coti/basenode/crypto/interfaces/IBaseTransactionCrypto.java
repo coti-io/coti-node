@@ -6,19 +6,18 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TrustScoreNodeResultData;
 import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-
 public interface IBaseTransactionCrypto {
     byte[] getMessageInBytes(BaseTransactionData baseTransactionData);
 
-    void setBaseTransactionHash(BaseTransactionData baseTransactionData) throws ClassNotFoundException;
+    Class<? extends BaseTransactionData> getBaseTransactionClass();
 
-    byte[] getSignatureMessage(TransactionData transactionData) throws ClassNotFoundException;
+    void setBaseTransactionHash(BaseTransactionData baseTransactionData);
 
-    byte[] getSignatureMessage(TransactionData transactionData, TrustScoreNodeResultData trustScoreNodeResultData) throws ClassNotFoundException;
+    byte[] getSignatureMessage(TransactionData transactionData);
 
-    void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData, int index) throws ClassNotFoundException;
+    byte[] getSignatureMessage(TransactionData transactionData, TrustScoreNodeResultData trustScoreNodeResultData);
+
+    void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData, int index);
 
     <T extends BaseTransactionData & ITrustScoreNodeValidatable> void signMessage(TransactionData transactionData, T baseTransactionData, TrustScoreNodeResultData trustScoreNodeResultData) throws ClassNotFoundException;
 
@@ -30,6 +29,6 @@ public interface IBaseTransactionCrypto {
 
     boolean isBaseTransactionValid(TransactionData transactionData, BaseTransactionData baseTransactionData);
 
-    boolean verifySignature(TransactionData transactionData, BaseTransactionData baseTransactionData) throws ClassNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException;
+    boolean verifySignature(TransactionData transactionData, BaseTransactionData baseTransactionData);
 
 }

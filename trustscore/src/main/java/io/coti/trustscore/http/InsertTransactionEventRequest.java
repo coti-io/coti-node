@@ -13,14 +13,10 @@ import java.util.Date;
 public class InsertTransactionEventRequest extends Request {
 
     @NotNull
-    public Date eventDate;
-
+    private Date eventDate;
     @NotNull
-    public Hash userHash;
-
-    //@NotNull
-    public SignatureData signature;
-
-    public TransactionData transactionData;
+    private Hash userHash;
+    private SignatureData signature;
+    private TransactionData transactionData;
 
 }

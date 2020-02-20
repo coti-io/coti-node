@@ -12,7 +12,6 @@ import reactor.core.publisher.Flux;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.io.IOException;
 
 @Slf4j
 @RestController
@@ -22,7 +21,7 @@ public class TransactionBatchController {
     private ITransactionService transactionService;
 
     @GetMapping(value = "/transaction_batch")
-    public void getTransactionBatch(@RequestParam @Valid @NotNull Long starting_index, HttpServletResponse response) throws IOException {
+    public void getTransactionBatch(@RequestParam @Valid @NotNull Long starting_index, HttpServletResponse response) {
         transactionService.getTransactionBatch(starting_index, response);
     }
 

@@ -14,20 +14,16 @@ import java.time.Instant;
 public class InsertEventRequest extends Request {
 
     @NotNull
-    public Instant eventDate;
-
+    private Instant eventDate;
     @NotNull
-    public Hash userHash;
-
+    private Hash userHash;
     @NotNull
-    public EventType eventType;
+    private EventType eventType;
     @NotNull
-    public Hash signerHash;
+    private Hash signerHash;
     @NotNull
-    public SignatureData signature;
-
-    public Hash uniqueIdentifier;
-
+    private SignatureData signature;
+    private Hash uniqueIdentifier;
     private BehaviorEventsScoreType behaviorEventsScoreType;
     private InitialTrustScoreType initialTrustScoreType;
     private HighFrequencyEventScoreType highFrequencyEventScoreType;
