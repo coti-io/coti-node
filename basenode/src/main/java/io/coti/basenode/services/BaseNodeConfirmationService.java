@@ -179,7 +179,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         // implemented by the sub classes
     }
 
-    protected void continueHandleAddressHistoryChanges(TransactionData transactionData) {
+    protected void continueHandleAddressHistoryChanges(TransactionData transactionData, TransactionStatus transactionStatus) {
         // implemented by the sub classes
     }
 
