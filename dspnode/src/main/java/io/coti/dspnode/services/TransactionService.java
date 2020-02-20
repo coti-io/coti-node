@@ -26,7 +26,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Service
 public class TransactionService extends BaseNodeTransactionService {
 
-    private Queue<TransactionData> transactionsToValidate;
+    private Queue<TransactionData> transactionsToVotePositive;
+    private Queue<TransactionData> transactionsToVoteNegative;
     private Queue<TransactionData> transactionsToPropagateFromMissing;
     private AtomicBoolean isValidatorRunning;
     @Autowired
@@ -44,7 +45,8 @@ public class TransactionService extends BaseNodeTransactionService {
 
     @Override
     public void init() {
-        transactionsToValidate = new PriorityQueue<>();
+        transactionsToVotePositive = new PriorityQueue<>();
+        transactionsToVoteNegative = new PriorityQueue<>();
         transactionsToPropagateFromMissing = new PriorityQueue<>();
         isValidatorRunning = new AtomicBoolean(false);
         super.init();
@@ -59,8 +61,7 @@ public class TransactionService extends BaseNodeTransactionService {
         try {
 
             transactionHelper.startHandleTransaction(transactionData);
-            if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData) ||
-                    !validationService.validateBalancesAndAddToPreBalance(transactionData)) {
+            if (!validationService.validatePropagatedTransactionIntegrityPhase1(transactionData)) {
                 log.info("Invalid Transaction Received!");
                 return;
             }
@@ -80,8 +81,13 @@ public class TransactionService extends BaseNodeTransactionService {
                     NodeType.FinancialServer,
                     NodeType.HistoryNode));
             transactionPropagationCheckService.addUnconfirmedTransaction(transactionData.getHash());
+            if (validationService.validatePropagatedTransactionIntegrityPhase2(transactionData) &&
+                    validationService.validateBalancesAndAddToPreBalance(transactionData)) {
+                transactionsToVotePositive.add(transactionData);
+            } else {
+                transactionsToVoteNegative.add(transactionData);
+            }
             transactionHelper.setTransactionStateToFinished(transactionData);
-            transactionsToValidate.add(transactionData);
         } catch (Exception ex) {
             log.error("Exception while handling transaction {}", transactionData, ex);
         } finally {
@@ -103,29 +109,44 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     @Scheduled(fixedRate = 1000)
-    private void checkAttachedTransactions() {
+    private void processTransactionsVotes() {
         if (!isValidatorRunning.compareAndSet(false, true)) {
             return;
         }
-        while (!transactionsToValidate.isEmpty()) {
-            TransactionData transactionData = transactionsToValidate.remove();
+        while (!transactionsToVotePositive.isEmpty()) {
+            TransactionData transactionData = transactionsToVotePositive.remove();
             log.debug("DSP Fully Checking transaction: {}", transactionData.getHash());
             TransactionDspVote transactionDspVote = new TransactionDspVote(
                     transactionData.getHash(),
-                    validationService.fullValidation(transactionData));
+                    true);
             transactionDspVoteCrypto.signMessage(transactionDspVote);
             String zerospendReceivingAddress = networkService.getSingleNodeData(NodeType.ZeroSpendServer).getReceivingFullAddress();
             log.debug("Sending DSP vote to {} for transaction {}", zerospendReceivingAddress, transactionData.getHash());
+            sender.send(transactionDspVote, zerospendReceivingAddress);
+        }
+        while (!transactionsToVoteNegative.isEmpty()) {
+            TransactionData transactionData = transactionsToVoteNegative.remove();
+            log.debug("DSP incorrect transaction: {}", transactionData.getHash());
+            TransactionDspVote transactionDspVote = new TransactionDspVote(
+                    transactionData.getHash(),
+                    false);
+            transactionDspVoteCrypto.signMessage(transactionDspVote);
+            String zerospendReceivingAddress = networkService.getSingleNodeData(NodeType.ZeroSpendServer).getReceivingFullAddress();
+            log.debug("Sending DSP negative vote to {} for transaction {}", zerospendReceivingAddress, transactionData.getHash());
             sender.send(transactionDspVote, zerospendReceivingAddress);
         }
         isValidatorRunning.set(false);
     }
 
     @Override
-    protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
+    protected void continueHandlePropagatedTransaction(TransactionData transactionData, boolean opinionOnTheTransaction) {
         propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
         if (!EnumSet.of(TransactionType.ZeroSpend, TransactionType.Initial).contains(transactionData.getType())) {
-            transactionsToValidate.add(transactionData);
+            if (opinionOnTheTransaction) {
+                transactionsToVotePositive.add(transactionData);
+            } else {
+                transactionsToVoteNegative.add(transactionData);
+            }
         }
 
     }

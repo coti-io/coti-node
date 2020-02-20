@@ -61,7 +61,7 @@ public class TransactionService extends BaseNodeTransactionService {
     private HttpJacksonSerializer jacksonSerializer;
 
     @Override
-    protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
+    protected void continueHandlePropagatedTransaction(TransactionData transactionData, boolean opinionOnTheTransaction) {
         log.debug("Continue to handle propagated transaction {} by history node", transactionData.getHash());
         addToHistoryTransactionIndexes(transactionData);
     }

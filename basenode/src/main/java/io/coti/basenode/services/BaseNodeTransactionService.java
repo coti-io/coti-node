@@ -29,7 +29,7 @@ public class BaseNodeTransactionService implements ITransactionService {
     @Autowired
     private IValidationService validationService;
     @Autowired
-    private IDspVoteService dspVoteService;
+    protected IDspVoteService dspVoteService;
     @Autowired
     private IConfirmationService confirmationService;
     @Autowired
@@ -146,7 +146,7 @@ public class BaseNodeTransactionService implements ITransactionService {
                     transactionData.wait();
                 }
             }
-            if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
+            if (!validationService.validatePropagatedTransactionIntegrityPhase1(transactionData)) {
                 log.error("Data Integrity validation failed: {}", transactionData.getHash());
                 return;
             }
@@ -156,14 +156,17 @@ public class BaseNodeTransactionService implements ITransactionService {
                 }
                 return;
             }
-            if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
-                log.error("Balance check failed: {}", transactionData.getHash());
-                return;
-            }
             transactionHelper.attachTransactionToCluster(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
 
-            continueHandlePropagatedTransaction(transactionData);
+            boolean opinionOnTheTransaction;
+            if (validationService.validatePropagatedTransactionIntegrityPhase2(transactionData) && validationService.validateBalancesAndAddToPreBalance(transactionData)) {
+                opinionOnTheTransaction = true;
+            } else {
+                opinionOnTheTransaction = false;
+                log.error("Transaction integrity or balance check failed: {}", transactionData.getHash());
+            }
+            continueHandlePropagatedTransaction(transactionData, opinionOnTheTransaction);
             transactionHelper.setTransactionStateToFinished(transactionData);
         } catch (InterruptedException e) {
             log.info("Transaction thread wait interrupted");
@@ -212,7 +215,7 @@ public class BaseNodeTransactionService implements ITransactionService {
         }
     }
 
-    protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
+    protected void continueHandlePropagatedTransaction(TransactionData transactionData, boolean opinionOnTheTransaction) {
         // implemented by sub classes
     }
 
