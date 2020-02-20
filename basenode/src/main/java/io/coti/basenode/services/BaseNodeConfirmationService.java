@@ -157,20 +157,21 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     private void processConfirmedTransaction(TransactionData transactionData) {
-        Instant trustChainConsensusTime = transactionData.getTrustChainConsensusTime();
-        Instant dspConsensusTime = transactionData.getDspConsensusResult().getIndexingTime();
-        Instant transactionConsensusUpdateTime = trustChainConsensusTime.isAfter(dspConsensusTime) ? trustChainConsensusTime : dspConsensusTime;
-        transactionData.setTransactionConsensusUpdateTime(transactionConsensusUpdateTime);
+        processTransaction(transactionData);
         totalConfirmed.incrementAndGet();
         balanceService.commitBaseTransactions(transactionData);
         continueHandleAddressHistoryChanges(transactionData, TransactionStatus.CONFIRMED);
     }
 
-    private void processDSPRejectedTransaction(TransactionData transactionData) {
+    private void processTransaction(TransactionData transactionData) {
         Instant trustChainConsensusTime = transactionData.getTrustChainConsensusTime();
         Instant dspConsensusTime = transactionData.getDspConsensusResult().getIndexingTime();
         Instant transactionConsensusUpdateTime = trustChainConsensusTime.isAfter(dspConsensusTime) ? trustChainConsensusTime : dspConsensusTime;
         transactionData.setTransactionConsensusUpdateTime(transactionConsensusUpdateTime);
+    }
+
+    private void processDSPRejectedTransaction(TransactionData transactionData) {
+        processTransaction(transactionData);
         balanceService.rollbackBaseTransactions(transactionData);
         continueHandleAddressHistoryChanges(transactionData, TransactionStatus.REJECTED);
     }
