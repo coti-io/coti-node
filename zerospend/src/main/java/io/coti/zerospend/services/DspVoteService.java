@@ -82,7 +82,6 @@ public class DspVoteService extends BaseNodeDspVoteService {
         } finally {
             removeLockFromLocksMap(transactionHash);
         }
-
     }
 
     private void handlePostponedTransactionDspVote(TransactionDspVote transactionDspVote, TransactionVoteData transactionVoteData) {
@@ -124,7 +123,6 @@ public class DspVoteService extends BaseNodeDspVoteService {
                     log.info("Transaction {} does not exist for dsp vote. Vote processing is delayed.", transactionHash);
                     return;
                 }
-
                 handleDspVote(transactionDspVote, transactionVoteData, voterDspHash, transactionHash);
             }
         } finally {

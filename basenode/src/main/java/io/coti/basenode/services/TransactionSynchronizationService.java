@@ -5,6 +5,8 @@ import io.coti.basenode.data.AddressTransactionsHistory;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.exceptions.TransactionSyncException;
+import io.coti.basenode.http.GetTransactionRequest;
+import io.coti.basenode.http.GetTransactionResponse;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +26,8 @@ import java.util.concurrent.atomic.AtomicLong;
 public class TransactionSynchronizationService implements ITransactionSynchronizationService {
 
     private static final String RECOVERY_NODE_GET_BATCH_ENDPOINT = "/transaction_batch";
-    private static final String STARTING_INDEX_URL_PARAM_ENDPOINT = "?starting_index=";
+    private static final String RECOVERY_NODE_GET_SINGLE_ENDPOINT = "/transaction/hash";
+    private static final String STARTING_INDEX_URL_PARAM_ENDPOINT = "?startingIndex=";
     private static final long MAXIMUM_BUFFER_SIZE = 300000;
     @Autowired
     private ITransactionHelper transactionHelper;
@@ -91,7 +94,23 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
         } catch (Exception e) {
             throw new TransactionSyncException("Error at missing transactions from recovery Node", e);
         }
+    }
 
+    public TransactionData requestSingleMissingTransactionFromRecovery(Hash transactionHash) {
+        GetTransactionRequest getTransactionRequest = new GetTransactionRequest(transactionHash);
+        TransactionData transactionData = null;
+        try {
+            GetTransactionResponse getTransactionResponse =
+                    restTemplate.postForObject(networkService.getRecoveryServerAddress() + RECOVERY_NODE_GET_SINGLE_ENDPOINT,
+                            getTransactionRequest, GetTransactionResponse.class);
+            if (getTransactionResponse != null) {
+                transactionData = getTransactionResponse.getTransactionData();
+            }
+        } catch (Exception e) {
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
+            return null;
+        }
+        return transactionData;
     }
 
     private Thread insertMissingTransactionThread(List<TransactionData> missingTransactions, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, AtomicLong completedMissingTransactionNumber, Thread monitorMissingTransactionThread, AtomicBoolean finishedToReceive) {

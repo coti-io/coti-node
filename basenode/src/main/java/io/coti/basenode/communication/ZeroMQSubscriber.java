@@ -5,9 +5,11 @@ import io.coti.basenode.communication.data.ZeroMQMessageData;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.communication.interfaces.ISerializer;
 import io.coti.basenode.communication.interfaces.ISubscriberHandler;
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.IPropagatable;
+import io.coti.basenode.services.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -38,19 +40,24 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     private ZMQ.Socket propagationReceiver;
     private Map<String, ConnectedNodeData> connectedNodes = new ConcurrentHashMap<>();
     private BlockingQueue<ZeroMQMessageData> messageQueue;
+    private BlockingQueue<ZeroMQMessageData> heartBeatQueue;
     private Thread propagationReceiverThread;
     private Thread messagesQueueHandlerThread;
+    private Thread heartBeatQueueHandlerThread;
     @Autowired
     private ISerializer serializer;
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap;
     private NodeType subscriberNodeType;
     @Autowired
     private ISubscriberHandler subscriberHandler;
+    @Autowired
+    private ITransactionService transactionService;
 
     @PostConstruct
     private void init() {
         initSockets();
         messageQueue = new LinkedBlockingQueue<>();
+        heartBeatQueue = new LinkedBlockingQueue<>();
         subscriberHandler.init();
     }
 
@@ -80,7 +87,12 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                     String channel = propagationReceiver.recvStr();
                     log.debug("Received a new message on channel: {}", channel);
                     byte[] message = propagationReceiver.recv();
-                    messageQueue.put(new ZeroMQMessageData(channel, message));
+                    if (channel.contains("HeartBeat")) {
+                        heartBeatQueue.put(new ZeroMQMessageData(channel, message));
+                    } else {
+                        messageQueue.put(new ZeroMQMessageData(channel, message));
+                        updateForReceivedTransaction(channel, message);
+                    }
                 } catch (InterruptedException e) {
                     log.info("ZMQ subscriber propagation receiver interrupted");
                     Thread.currentThread().interrupt();
@@ -95,13 +107,41 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
             propagationReceiver.close();
         });
         propagationReceiverThread.start();
+    }
 
+    private void updateForReceivedTransaction(String channel, byte[] message) {
+        if (isChannelTransactionData(channel)) {
+            Hash transactionHash = getTransactionHashFromMessage(message);
+            transactionService.addReceivedTransactionHash(transactionHash);
+        }
+    }
 
+    private boolean isChannelTransactionData(String channel) {
+        String[] channelArray = channel.split("-");
+        Class<? extends IPropagatable> propagatedMessageType = null;
+        try {
+            propagatedMessageType = (Class<? extends IPropagatable>) Class.forName(channelArray[0]);
+        } catch (ClassNotFoundException e) {
+            log.error("Zero MQ failed to identify type of message", e);
+            return false;
+        }
+        if (propagatedMessageType == null) {
+            return false;
+        }
+        String propagatedMessageTypeSimpleName = propagatedMessageType.getSimpleName();
+        return propagatedMessageTypeSimpleName.equals(SubscriberMessageType.TRANSACTION_DATA.toString());
+    }
+
+    private Hash getTransactionHashFromMessage(byte[] message) {
+        IEntity messageData = serializer.deserialize(message);
+        return messageData.getHash();
     }
 
     public void initPropagationHandler() {
         messagesQueueHandlerThread = new Thread(this::handleMessagesQueueTask);
         messagesQueueHandlerThread.start();
+        heartBeatQueueHandlerThread = new Thread(this::handleHeartBeatQueue);
+        heartBeatQueueHandlerThread.start();
     }
 
     private void handleMessagesQueueTask() {
@@ -129,28 +169,46 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                 }
             });
         }
+    }
 
+    private void handleHeartBeatQueue() {
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                ZeroMQMessageData zeroMQMessageData = heartBeatQueue.take();
+                log.debug("HeartBeat ZMQ message arrived: {}", zeroMQMessageData);
+                String serverAddress = new String(zeroMQMessageData.getMessage());
+                updatePublisherLastConnectionTime(serverAddress);
+            } catch (InterruptedException e) {
+                log.info("ZMQ subscriber message handler interrupted");
+                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                log.error("ZMQ message handler task error: ", e);
+            }
+        }
+        LinkedList<ZeroMQMessageData> remainingMessages = new LinkedList<>();
+        heartBeatQueue.drainTo(remainingMessages);
+        if (!remainingMessages.isEmpty()) {
+            log.info("Please wait to process {} remaining messages", remainingMessages.size());
+            remainingMessages.forEach(zeroMQMessageData -> {
+                String serverAddress = new String(zeroMQMessageData.getMessage());
+                updatePublisherLastConnectionTime(serverAddress);
+            });
+        }
     }
 
     private void propagationProcess(ZeroMQMessageData zeroMQMessageData) throws ClassNotFoundException {
         String channel = zeroMQMessageData.getChannel();
         byte[] message = zeroMQMessageData.getMessage();
-        if (channel.contains("HeartBeat")) {
-            String serverAddress = new String(message);
-            updatePublisherLastConnectionTime(serverAddress);
-        } else {
-            String[] channelArray = channel.split("-");
-            Class<? extends IPropagatable> propagatedMessageType = (Class<? extends IPropagatable>) Class.forName(channelArray[0]);
-            NodeType publisherNodeType = NodeType.valueOf(channelArray[1]);
-            String serverAddress = channelArray[3];
-            updatePublisherLastConnectionTime(serverAddress);
-            publisherNodeTypeToMessageTypesMap.get(publisherNodeType).forEach(messageType -> {
-
-                if (messageType.equals(propagatedMessageType)) {
-                    handleMessageData(message, propagatedMessageType, publisherNodeType);
-                }
-            });
-        }
+        String[] channelArray = channel.split("-");
+        Class<? extends IPropagatable> propagatedMessageType = (Class<? extends IPropagatable>) Class.forName(channelArray[0]);
+        NodeType publisherNodeType = NodeType.valueOf(channelArray[1]);
+        String serverAddress = channelArray[3];
+        updatePublisherLastConnectionTime(serverAddress);
+        publisherNodeTypeToMessageTypesMap.get(publisherNodeType).forEach(messageType -> {
+            if (messageType.equals(propagatedMessageType)) {
+                handleMessageData(message, propagatedMessageType, publisherNodeType);
+            }
+        });
     }
 
     private void updatePublisherLastConnectionTime(String publisherAddressAndPort) {

@@ -4,21 +4,32 @@ import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.data.DspConsensusResult;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.http.GetTransactionRequest;
+import io.coti.basenode.http.GetTransactionResponse;
+import io.coti.basenode.http.Response;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.FluxSink;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.TRANSACTION_DOESNT_EXIST_MESSAGE;
+
 
 @Slf4j
 @Service
@@ -46,9 +57,11 @@ public class BaseNodeTransactionService implements ITransactionService {
     private TransactionIndexes transactionIndexes;
     private Map<Hash, TransactionData> parentProcessingTransactions = new ConcurrentHashMap<>();
     protected Map<TransactionData, Boolean> postponedTransactions = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
+    private HashSet<Hash> transactionsAwaitingHandlingSet;
 
     @Override
     public void init() {
+        transactionsAwaitingHandlingSet = new HashSet<>();
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
@@ -74,7 +87,6 @@ public class BaseNodeTransactionService implements ITransactionService {
                 output.write(jacksonSerializer.serialize(transactions.getByHash(hash)));
                 output.flush();
                 transactionNumber.incrementAndGet();
-
             }
 
         } catch (Exception e) {
@@ -105,7 +117,6 @@ public class BaseNodeTransactionService implements ITransactionService {
             for (Hash hash : transactionHelper.getNoneIndexedTransactionHashes()) {
                 sink.next(jacksonSerializer.serialize((transactions.getByHash(hash))));
                 transactionNumber.incrementAndGet();
-
             }
             sink.complete();
         } catch (Exception e) {
@@ -116,6 +127,18 @@ public class BaseNodeTransactionService implements ITransactionService {
                 monitorTransactionBatch.interrupt();
             }
         }
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getSingleTransaction(GetTransactionRequest getTransactionRequest) {
+        Hash transactionHash = getTransactionRequest.getTransactionHash();
+        TransactionData transactionData = transactions.getByHash(transactionHash);
+        if (transactionData != null) {
+            return ResponseEntity.status(HttpStatus.OK).body(new GetTransactionResponse(transactionData));
+        }
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new Response(TRANSACTION_DOESNT_EXIST_MESSAGE, STATUS_ERROR));
     }
 
     private Thread monitorTransactionBatch(long threadId, AtomicLong transactionNumber) {
@@ -213,26 +236,23 @@ public class BaseNodeTransactionService implements ITransactionService {
     }
 
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
+        transactionsAwaitingHandlingSet.remove(transactionData.getHash());
         // implemented by sub classes
     }
 
     public void handleMissingTransaction(TransactionData transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes) {
-
         if (!transactionHelper.isTransactionExists(transactionData)) {
-
             transactions.put(transactionData);
             addToExplorerIndexes(transactionData);
             transactionHelper.incrementTotalTransactions();
 
             confirmationService.insertMissingTransaction(transactionData);
             propagateMissingTransaction(transactionData);
-
         } else {
             transactions.put(transactionData);
             confirmationService.insertMissingConfirmation(transactionData, trustChainUnconfirmedExistingTransactionHashes);
         }
         clusterService.addMissingTransactionOnInit(transactionData, trustChainUnconfirmedExistingTransactionHashes);
-
     }
 
     protected void propagateMissingTransaction(TransactionData transactionData) {
@@ -273,5 +293,15 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     public int totalPostponedTransactions() {
         return postponedTransactions.size();
+    }
+
+    @Override
+    public boolean isTransactionReceived(Hash transactionHash) {
+        return transactionsAwaitingHandlingSet.contains(transactionHash);
+    }
+
+    @Override
+    public void addReceivedTransactionHash(Hash transactionHash) {
+        transactionsAwaitingHandlingSet.add(transactionHash);
     }
 }
