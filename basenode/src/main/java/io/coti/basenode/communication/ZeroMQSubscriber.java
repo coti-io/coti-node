@@ -8,6 +8,7 @@ import io.coti.basenode.communication.interfaces.ISubscriberHandler;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.PublisherHeartBeatData;
 import io.coti.basenode.data.interfaces.IPropagatable;
+import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -40,6 +41,8 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     private NodeType subscriberNodeType;
     @Autowired
     private ISubscriberHandler subscriberHandler;
+    @Autowired
+    private INetworkService networkService;
 
 
     @Override
@@ -103,6 +106,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
 
     }
 
+    @Override
     public void initPropagationHandler() {
         messageTypeToThreadMap.values().forEach(Thread::start);
     }
@@ -117,7 +121,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                 log.info("ZMQ subscriber message handler interrupted");
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
-                log.error("ZMQ message handler task error", e);
+                log.error("ZMQ subscriber message handler task error", e);
             }
         }
         LinkedList<ZeroMQMessageData> remainingMessages = new LinkedList<>();
@@ -128,7 +132,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                 try {
                     propagationProcess(zeroMQMessageData);
                 } catch (Exception e) {
-                    log.error("ZMQ message handler task error", e);
+                    log.error("ZMQ subscriber message handler task error", e);
                 }
             });
         }
@@ -180,8 +184,8 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         if (propagationReceiver.connect(publisherAddressAndPort)) {
             log.info("Subscriber connected to server {} of node type {}", publisherAddressAndPort, publisherNodeType);
             subscribeAll(publisherAddressAndPort, publisherNodeType);
+            networkService.recoveryOnReconnect(publisherAddressAndPort, publisherNodeType);
             connectedNodes.put(publisherAddressAndPort, new ConnectedNodeData(publisherNodeType, Instant.now()));
-
         } else {
             log.error("Unable to connect to server {} of node type {}", publisherAddressAndPort, publisherNodeType);
         }

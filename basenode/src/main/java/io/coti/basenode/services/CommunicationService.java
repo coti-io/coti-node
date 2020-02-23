@@ -46,6 +46,7 @@ public class CommunicationService implements ICommunicationService {
     @Override
     public void initReceiver(String receivingPort, HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping) {
         receiver.init(receivingPort, classNameToReceiverHandlerMapping);
+        receiver.startListening();
     }
 
     @Override
