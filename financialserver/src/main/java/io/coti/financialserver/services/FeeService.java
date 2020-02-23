@@ -80,11 +80,11 @@ public class FeeService {
         return nodeCryptoHelper.generateAddress(seed, (int) ReservedAddress.NETWORK_FEE_POOL.getIndex());
     }
 
-    protected void setTokenGenerationFeeHash(TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData) throws ClassNotFoundException {
-        BaseTransactionCrypto.TokenGenerationFeeBaseTransactionData.setBaseTransactionHash(tokenGenerationFeeBaseTransactionData);
+    protected void setTokenGenerationFeeHash(TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData) {
+        BaseTransactionCrypto.TOKEN_GENERATION_FEE_BASE_TRANSACTION_DATA.setBaseTransactionHash(tokenGenerationFeeBaseTransactionData);
     }
 
     protected void signTokenGenerationFee(TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData) {
-        tokenGenerationFeeBaseTransactionData.setSignature(nodeCryptoHelper.signMessage(tokenGenerationFeeBaseTransactionData.getHash().getBytes()));
+        tokenGenerationFeeBaseTransactionData.setSignature(NodeCryptoHelper.signMessage(tokenGenerationFeeBaseTransactionData.getHash().getBytes()));
     }
 }

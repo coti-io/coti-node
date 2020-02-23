@@ -106,10 +106,10 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         }
 
     },
-    TokenGenerationFeeBaseTransactionData {
+    TOKEN_GENERATION_FEE_BASE_TRANSACTION_DATA(TokenGenerationFeeBaseTransactionData.class) {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
-            if (!TokenGenerationFeeBaseTransactionData.class.isInstance(baseTransactionData)) {
+            if (!(baseTransactionData instanceof TokenGenerationFeeBaseTransactionData)) {
                 throw new IllegalArgumentException("");
             }
 
@@ -119,8 +119,8 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
                 return ByteBuffer.allocate(outputMessageInBytes.length + serviceDataInBytes.length).
                         put(outputMessageInBytes).put(serviceDataInBytes).array();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                log.error("Error at getting message in byte", e);
                 return new byte[0];
             }
         }
@@ -131,10 +131,10 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         }
 
     },
-    TokenMintingFeeBaseTransactionData {
+    TOKEN_MINTING_FEE_BASE_TRANSACTION_DATA(TokenMintingFeeBaseTransactionData.class) {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
-            if (!TokenMintingFeeBaseTransactionData.class.isInstance(baseTransactionData)) {
+            if (!(baseTransactionData instanceof TokenMintingFeeBaseTransactionData)) {
                 throw new IllegalArgumentException("");
             }
 
@@ -144,8 +144,8 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
                 return ByteBuffer.allocate(outputMessageInBytes.length + serviceDataInBytes.length).
                         put(outputMessageInBytes).put(serviceDataInBytes).array();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                log.error("Error at getting message in byte", e);
                 return new byte[0];
             }
         }
@@ -382,17 +382,5 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
                 put(baseMessageInBytes).put(bytesOfOriginalAmount);
 
         return outputBaseTransactionBuffer.array();
-    }
-
-    @Component
-    public static class BaseTransactionCryptoInjector {
-        @Autowired
-        private NodeCryptoHelper nodeCryptoHelper;
-
-        @PostConstruct
-        public void postConstruct() {
-            for (BaseTransactionCrypto baseTransactionCrypto : EnumSet.allOf(BaseTransactionCrypto.class))
-                baseTransactionCrypto.nodeCryptoHelper = nodeCryptoHelper;
-        }
     }
 }
