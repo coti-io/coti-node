@@ -239,6 +239,11 @@ public class BaseNodeTransactionService implements ITransactionService {
         log.debug("Propagate missing transaction {} by base node", transactionData.getHash());
     }
 
+    @Override
+    public void delayedMissingTransactionsPropagation() {
+        // implemented for DSP Node
+    }
+
     public Thread monitorTransactionThread(String type, AtomicLong transactionNumber, AtomicLong receivedTransactionNumber) {
         return new Thread(() -> {
             while (!Thread.currentThread().isInterrupted()) {

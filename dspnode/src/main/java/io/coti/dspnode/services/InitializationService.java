@@ -1,5 +1,6 @@
 package io.coti.dspnode.services;
 
+import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
@@ -33,6 +34,8 @@ public class InitializationService extends BaseNodeInitializationService {
     private AddressService addressService;
     @Autowired
     private ICommunicationService communicationService;
+    @Autowired
+    private IReceiver messageReceiver;
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
@@ -74,6 +77,7 @@ public class InitializationService extends BaseNodeInitializationService {
             }
 
             super.initServices();
+            messageReceiver.initReceiverHandler();
         } catch (CotiRunTimeException e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
             e.logMessage();
