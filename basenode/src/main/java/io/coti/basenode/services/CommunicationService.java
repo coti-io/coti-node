@@ -35,6 +35,7 @@ public class CommunicationService implements ICommunicationService {
 
     @Override
     public void initSubscriber(NodeType subscriberNodeType, EnumMap<NodeType, List<Class<? extends IPropagatable>>> initialPublisherNodeTypeToMessageTypesMap) {
+        propagationSubscriber.init();
         propagationSubscriber.setSubscriberNodeType(subscriberNodeType);
         EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = initialPublisherNodeTypeToMessageTypesMap;
         publisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.NodeManager, Arrays.asList(NetworkData.class));

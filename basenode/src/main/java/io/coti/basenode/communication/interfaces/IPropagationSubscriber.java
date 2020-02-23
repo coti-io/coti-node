@@ -10,6 +10,8 @@ public interface IPropagationSubscriber {
 
     void startListening();
 
+    void init();
+
     void setSubscriberNodeType(NodeType subscriberNodeType);
 
     void setPublisherNodeTypeToMessageTypesMap(EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap);

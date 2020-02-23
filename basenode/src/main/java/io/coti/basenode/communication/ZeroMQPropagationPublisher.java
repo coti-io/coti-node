@@ -4,6 +4,7 @@ import io.coti.basenode.communication.data.ZeroMQMessageData;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.ISerializer;
 import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.PublisherHeartBeatData;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,10 +63,10 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
 
     private <T extends IPropagatable> void propagateToNode(T toPropagate, NodeType subscriberNodeType) {
         String serverAddress = "tcp://" + publisherIp + ":" + propagationPort;
-        log.debug("Propagating {} to {}", toPropagate.getHash(), Channel.getChannelString(toPropagate.getClass(), publisherNodeType, subscriberNodeType, serverAddress));
+        log.debug("Propagating {} to {}", toPropagate.getHash(), Channel.getChannelString(toPropagate.getClass(), serverAddress, publisherNodeType, subscriberNodeType));
         byte[] message = serializer.serialize(toPropagate);
         if (!zeroMQContext.isClosed()) {
-            publishMessageQueue.add(new ZeroMQMessageData(Channel.getChannelString(toPropagate.getClass(), publisherNodeType, subscriberNodeType, serverAddress), message));
+            publishMessageQueue.add(new ZeroMQMessageData(Channel.getChannelString(toPropagate.getClass(), serverAddress, publisherNodeType, subscriberNodeType), message));
         }
     }
 
@@ -74,10 +75,9 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
         if (propagator != null) {
             String serverAddress = "tcp://" + publisherIp + ":" + propagationPort;
             if (!zeroMQContext.isClosed()) {
-                publishMessageQueue.add(new ZeroMQMessageData("HeartBeat " + serverAddress, serverAddress.getBytes()));
+                publishMessageQueue.add(new ZeroMQMessageData(Channel.getChannelString(PublisherHeartBeatData.class, serverAddress), serializer.serialize(new PublisherHeartBeatData(serverAddress))));
             }
         }
-
     }
 
     public void setPublishMessageThread() {
