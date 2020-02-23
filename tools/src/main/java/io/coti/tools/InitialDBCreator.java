@@ -3,12 +3,14 @@ package io.coti.tools;
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 
+@Slf4j
 public class InitialDBCreator {
     public static void main(String[] args) {
-        System.out.println("Deleting initialDB folder...");
+        log.error("Deleting initialDB folder...");
         deleteInitialDatabaseFolder();
         BaseNodeRocksDBConnector connector = new BaseNodeRocksDBConnector();
         connector.init("initialDatabase");

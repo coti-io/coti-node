@@ -30,7 +30,7 @@ public class ChunkService extends BaseNodeChunkService {
                     TransactionData transactionData = getHashToTransactionData.getData();
                     if (transactionData != null) {
                         if (transactionData.getHash().equals(getHashToTransactionData.getHash())) {
-                            if (firstTransactionArrived.get() == true) {
+                            if (firstTransactionArrived.get()) {
                                 sendChunk(",", output);
                             } else {
                                 firstTransactionArrived.set(true);

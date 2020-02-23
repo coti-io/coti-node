@@ -71,7 +71,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
             try {
                 return getOutputMessageInBytes((FullNodeFeeData) baseTransactionData);
             } catch (Exception e) {
-                log.error("Error at getting message in byte", e);
+                log.error(GET_MESSAGE_IN_BYTE_ERROR, e);
                 return new byte[0];
             }
         }
@@ -99,7 +99,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
                         put(outputMessageInBytes).put(bytesOfReducedAmount);
                 return baseTransactionBuffer.array();
             } catch (Exception e) {
-                log.error("Error at getting message in byte", e);
+                log.error(GET_MESSAGE_IN_BYTE_ERROR, e);
                 return new byte[0];
             }
 
@@ -123,7 +123,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
                         put(outputMessageInBytes).put(bytesOfReducedAmount);
                 return baseTransactionBuffer.array();
             } catch (Exception e) {
-                log.error("Error at getting message in byte", e);
+                log.error(GET_MESSAGE_IN_BYTE_ERROR, e);
                 return new byte[0];
             }
         }
@@ -145,7 +145,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
                 return receiverBaseTransactionBuffer.array();
             } catch (Exception e) {
-                log.error("Error at getting message in byte", e);
+                log.error(GET_MESSAGE_IN_BYTE_ERROR, e);
                 return new byte[0];
             }
         }
@@ -178,6 +178,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     };
 
     protected static final int BASE_TRANSACTION_HASH_SIZE = 32;
+    protected static final String GET_MESSAGE_IN_BYTE_ERROR = "Error at getting message in byte";
     private Class<? extends BaseTransactionData> baseTransactionClass;
 
     <T extends BaseTransactionData> BaseTransactionCrypto(Class<T> baseTransactionClass) {

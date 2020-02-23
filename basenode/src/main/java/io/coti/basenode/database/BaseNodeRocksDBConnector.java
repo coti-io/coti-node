@@ -253,7 +253,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         try {
             return db.get(classNameToColumnFamilyHandleMapping.get(columnFamilyName), key);
         } catch (RocksDBException e) {
-            e.printStackTrace();
+            log.error("Error at getting by key from db", e);
             return null;
         }
     }
@@ -285,7 +285,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             db.put(classNameToColumnFamilyHandleMapping.get(columnFamilyName), key, value);
             return true;
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error at putting to db", e);
             return false;
         }
     }
@@ -296,7 +296,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             db.put(classNameToColumnFamilyHandleMapping.get(columnFamilyName), writeOptions, key, value);
             return true;
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error at putting to db with write options", e);
             return false;
         }
     }
@@ -317,7 +317,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             db.write(new WriteOptions(), writeBatch);
             return true;
         } catch (RocksDBException e) {
-            e.printStackTrace();
+            log.error("Error at putting by batch to db", e);
             return false;
         }
     }
@@ -327,7 +327,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         try {
             db.delete(classNameToColumnFamilyHandleMapping.get(columnFamilyName), key);
         } catch (RocksDBException e) {
-            e.printStackTrace();
+            log.error("Error at deleting from db", e);
         }
     }
 
@@ -338,7 +338,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
                     classNameToColumnFamilyHandleMapping.get(entityClass.getName()), key.getBytes()));
             return (IEntity) SerializationUtils.deserialize(entityHash.getBytes());
         } catch (RocksDBException e) {
-            e.printStackTrace();
+            log.error("Error at getting from db", e);
             return null;
         }
     }

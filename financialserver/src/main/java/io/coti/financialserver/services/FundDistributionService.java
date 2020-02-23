@@ -155,10 +155,7 @@ public class FundDistributionService {
             return distributionFileVerificationResponse;
         }
 
-        ResponseEntity<IResponse> responseEntity = updateWithTransactionsEntriesFromVerifiedFile(fundDistributionFileDataEntries, new AtomicLong(0), new AtomicLong(0));
-
-        return responseEntity;
-
+        return updateWithTransactionsEntriesFromVerifiedFile(fundDistributionFileDataEntries, new AtomicLong(0), new AtomicLong(0));
     }
 
     public ResponseEntity<IResponse> distributeFundFromFile(AddFundDistributionsRequest request) {

@@ -15,10 +15,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -61,7 +58,7 @@ public class ClusterService implements IClusterService {
         updateParentsByMissingTransaction(transactionData, trustChainUnconfirmedExistingTransactionHashes);
         if (!transactionData.isTrustChainConsensus()) {
             addTransactionToTrustChainConfirmationCluster(transactionData);
-        } else if (transactionData.isTrustChainConsensus() && trustChainUnconfirmedExistingTransactionHashes.remove(transactionData.getHash())) {
+        } else if (trustChainUnconfirmedExistingTransactionHashes.remove(transactionData.getHash())) {
             removeTransactionFromTrustChainConfirmationCluster(transactionData);
         }
     }
@@ -181,7 +178,7 @@ public class ClusterService implements IClusterService {
             transactionData.setRightParentHash(selectedSourcesForAttachment.get(1).getHash());
         }
 
-        List<Hash> selectedSourceHashes = selectedSourcesForAttachment.stream().map(source -> source.getHash()).collect(Collectors.toList());
+        List<Hash> selectedSourceHashes = selectedSourcesForAttachment.stream().map(TransactionData::getHash).collect(Collectors.toList());
         log.debug("For transaction with hash: {} we found the following sources: {}", transactionData.getHash(), selectedSourceHashes);
     }
 
@@ -192,7 +189,7 @@ public class ClusterService implements IClusterService {
 
     @Override
     public Set<Hash> getTrustChainConfirmationTransactionHashes() {
-        return trustChainConfirmationCluster.keySet().stream().collect(Collectors.toSet());
+        return new HashSet<>(trustChainConfirmationCluster.keySet());
     }
 
     @Override
