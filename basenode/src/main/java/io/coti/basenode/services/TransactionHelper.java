@@ -139,7 +139,7 @@ public class TransactionHelper implements ITransactionHelper {
                 return false;
             }
 
-            return TransactionTypeValidation.getByType(transactionType).validateBaseTransactions(transactionData);
+            return TransactionTypeValidation.getByType(transactionType).validateBaseTransactions(transactionData, nativeCurrencyHash);
         } catch (Exception e) {
             log.error("Validate transaction type error", e);
             return false;
