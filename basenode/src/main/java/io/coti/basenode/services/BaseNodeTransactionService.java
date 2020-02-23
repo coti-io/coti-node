@@ -44,7 +44,6 @@ public class BaseNodeTransactionService implements ITransactionService {
     private JacksonSerializer jacksonSerializer;
     @Autowired
     private TransactionIndexes transactionIndexes;
-    private Map<Hash, TransactionData> parentProcessingTransactions = new ConcurrentHashMap<>();
     protected Map<TransactionData, Boolean> postponedTransactions = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
 
     @Override
@@ -140,12 +139,6 @@ public class BaseNodeTransactionService implements ITransactionService {
         }
         try {
             transactionHelper.startHandleTransaction(transactionData);
-            while (hasOneOfParentsProcessing(transactionData)) {
-                parentProcessingTransactions.put(transactionData.getHash(), transactionData);
-                synchronized (transactionData) {
-                    transactionData.wait();
-                }
-            }
             if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
                 log.error("Data Integrity validation failed: {}", transactionData.getHash());
                 return;
@@ -165,22 +158,11 @@ public class BaseNodeTransactionService implements ITransactionService {
 
             continueHandlePropagatedTransaction(transactionData);
             transactionHelper.setTransactionStateToFinished(transactionData);
-        } catch (InterruptedException e) {
-            log.info("Transaction thread wait interrupted");
-            Thread.currentThread().interrupt();
         } catch (Exception e) {
             log.error("Transaction propagation handler error:", e);
         } finally {
             boolean isTransactionFinished = transactionHelper.isTransactionFinished(transactionData);
             transactionHelper.endHandleTransaction(transactionData);
-            for (Hash childrenTransactionHash : transactionData.getChildrenTransactionHashes()) {
-                TransactionData childrenTransaction = parentProcessingTransactions.get(childrenTransactionHash);
-                if (childrenTransaction != null)
-                    synchronized (childrenTransaction) {
-                        childrenTransaction.notify();
-                        parentProcessingTransactions.remove(childrenTransactionHash);
-                    }
-            }
             if (isTransactionFinished) {
                 processPostponedTransactions(transactionData);
             }

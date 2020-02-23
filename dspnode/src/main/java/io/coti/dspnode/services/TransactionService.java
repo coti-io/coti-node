@@ -55,17 +55,19 @@ public class TransactionService extends BaseNodeTransactionService {
             return;
         }
         try {
-
             transactionHelper.startHandleTransaction(transactionData);
-            if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData) ||
-                    !validationService.validateBalancesAndAddToPreBalance(transactionData)) {
-                log.info("Invalid Transaction Received!");
+            if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
+            	log.error("Data Integrity validation failed: {}", transactionData.getHash());
                 return;
             }
             if (hasOneOfParentsMissing(transactionData)) {
                 if (!postponedTransactions.containsKey(transactionData)) {
                     postponedTransactions.put(transactionData, true);
                 }
+                return;
+            }
+            if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
+                log.error("Balance check failed: {}", transactionData.getHash());
                 return;
             }
             transactionHelper.attachTransactionToCluster(transactionData);
