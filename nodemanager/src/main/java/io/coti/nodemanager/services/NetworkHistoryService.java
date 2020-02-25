@@ -276,8 +276,8 @@ public class NetworkHistoryService implements INetworkHistoryService {
         long nodeExclusionPeriodInSeconds = 0;
 
         LocalDate todayLocalDate = LocalDate.now(ZoneId.of("UTC"));
-        if (endDate.isEqual(todayLocalDate)) {
-            nodeExclusionPeriodInSeconds += max(0, now.until(endDate.plusDays(1).atStartOfDay().atZone(ZoneId.of("UTC")).toInstant(), ChronoUnit.SECONDS));
+        if (!endDate.isBefore(todayLocalDate)) {
+            nodeExclusionPeriodInSeconds += max(0, now.until(todayLocalDate.plusDays(1).atStartOfDay().atZone(ZoneId.of("UTC")).toInstant(), ChronoUnit.SECONDS));
         }
         NodeNetworkDataRecord nodeNetworkDataRecord = getNodeNetworkFirstDataRecord(nodeHash);
         Instant activationInstant = nodeNetworkDataRecord.getRecordTime();
