@@ -1,9 +1,6 @@
 package io.coti.basenode.http.data;
 
-import io.coti.basenode.data.BaseTransactionData;
-import io.coti.basenode.data.BaseTransactionName;
-import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.TransactionType;
+import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.TransactionException;
 import io.coti.basenode.http.data.interfaces.ITransactionResponseData;
 import lombok.Data;
@@ -29,6 +26,7 @@ public class TransactionResponseData implements ITransactionResponseData {
     private String leftParentHash;
     private String rightParentHash;
     private boolean trustChainConsensus;
+    private DspConsensusResult dspConsensusResult;
     private double trustChainTrustScore;
     private Instant transactionConsensusUpdateTime;
     private Instant createTime;
@@ -74,6 +72,7 @@ public class TransactionResponseData implements ITransactionResponseData {
         transactionData.getChildrenTransactionHashes().forEach(childrenTransactionHash -> childrenTransactionHashes.add(childrenTransactionHash.toHexString()));
         transactionDescription = transactionData.getTransactionDescription();
         isValid = transactionData.isValid();
+        dspConsensusResult = transactionData.getDspConsensusResult();
     }
 
 
