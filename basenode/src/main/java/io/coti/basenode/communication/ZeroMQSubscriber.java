@@ -36,7 +36,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     @Autowired
     private ISerializer serializer;
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap;
-    private Map<Class<? extends IPropagatable>, Thread> messageTypeToThreadMap = new HashMap<>();
+    private Map<String, Thread> queueNameToThreadMap = new HashMap<>();
     private NodeType subscriberNodeType;
     @Autowired
     private ISubscriberHandler subscriberHandler;
@@ -46,7 +46,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     public void init() {
         initSockets();
         BlockingQueue<ZeroMQMessageData> messageQueue = ZeroMQSubscriberQueue.HEARTBEAT.getQueue();
-        messageTypeToThreadMap.put(PublisherHeartBeatData.class, new Thread(() -> this.handleMessagesQueueTask(messageQueue)));
+        queueNameToThreadMap.put(ZeroMQSubscriberQueue.HEARTBEAT.name(), new Thread(() -> this.handleMessagesQueueTask(messageQueue)));
         subscriberHandler.init();
     }
 
@@ -66,8 +66,8 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     public void setPublisherNodeTypeToMessageTypesMap(EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap) {
         this.publisherNodeTypeToMessageTypesMap = publisherNodeTypeToMessageTypesMap;
         publisherNodeTypeToMessageTypesMap.forEach(((nodeType, classes) -> classes.forEach(messageType -> {
-            BlockingQueue<ZeroMQMessageData> messageQueue = ZeroMQSubscriberQueue.getQueue(messageType);
-            messageTypeToThreadMap.putIfAbsent(messageType, new Thread(() -> this.handleMessagesQueueTask(messageQueue)));
+            ZeroMQSubscriberQueue queueEnum = ZeroMQSubscriberQueue.getQueueEnum(messageType);
+            queueNameToThreadMap.putIfAbsent(queueEnum.toString(), new Thread(() -> this.handleMessagesQueueTask(queueEnum.getQueue())));
         })));
     }
 
@@ -104,7 +104,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     }
 
     public void initPropagationHandler() {
-        messageTypeToThreadMap.values().forEach(Thread::start);
+        queueNameToThreadMap.values().forEach(Thread::start);
     }
 
     private void handleMessagesQueueTask(BlockingQueue<ZeroMQMessageData> messageQueue) {
@@ -248,7 +248,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                 zeroMQContext.term();
                 propagationReceiverThread.interrupt();
                 propagationReceiverThread.join();
-                messageTypeToThreadMap.values().forEach(thread -> {
+                queueNameToThreadMap.values().forEach(thread -> {
                     try {
                         thread.interrupt();
                         thread.join();

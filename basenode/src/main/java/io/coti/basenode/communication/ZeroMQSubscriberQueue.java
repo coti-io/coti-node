@@ -30,8 +30,11 @@ public enum ZeroMQSubscriberQueue {
     }
 
     public static <T extends IPropagatable> BlockingQueue<ZeroMQMessageData> getQueue(Class<T> messageType) {
-        return ZeroMQSubscriberQueues.messageTypeToQueueMap.get(messageType).queue;
+        return getQueueEnum(messageType).queue;
     }
 
+    public static <T extends IPropagatable>  ZeroMQSubscriberQueue getQueueEnum(Class<T> messageType) {
+        return ZeroMQSubscriberQueues.messageTypeToQueueMap.get(messageType);
+    }
 
 }
