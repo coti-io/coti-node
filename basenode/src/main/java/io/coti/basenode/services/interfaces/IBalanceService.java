@@ -20,9 +20,11 @@ public interface IBalanceService {
 
     void continueHandleBalanceChanges(Hash addressHash);
 
+    void commitBaseTransactions(TransactionData transactionData);
+
     void rollbackBaseTransactions(TransactionData transactionData);
 
-    void validateBalances();
+    void validateBalancesOnInit();
 
     void updateBalanceFromClusterStamp(Hash addressHash, BigDecimal amount);
 
