@@ -82,6 +82,7 @@ public class NodeManagementServiceDoNotTakeItToDevTest {
     @MockBean
     private BuildProperties buildProperties;
 
+
     private static final Hash fakeNode1 = new Hash("76d7f333480680c06df7d5c3cc17ffe2dc052597ae857285e57da249f4df344cf3e112739eca2aea63437f9e9819fac909ab93801b99853c779d8b6f5dcafb74");
     private static final Hash fakeNode2 = new Hash("a2d27c3248e3530c55ca0941fd0fe5f419efcb6f923e54fe83ec5024040f86d107c6882f6a2435408964c2e9f522579248c8a983a2761a03ba253e7ca7898e53");
     private static final Hash fakeNode3 = new Hash("0aa389aa3d8b31ecc5b2fa9164a0a2f52fb59165730de4527441b0278e5e47e51e3e1e69cf24a1a0bb58a53b262c185c4400f0d2f89b469c9498b6ed517b7398");
@@ -411,6 +412,59 @@ public class NodeManagementServiceDoNotTakeItToDevTest {
         }
 
         log.info("fakeNode8 finished");
+    }
+
+
+    @Test
+    public void addNodeHistoryTest_rocksDBChecks() {
+        Instant preStart = Instant.now();
+        log.info("Test about to start {}", preStart);
+
+        NetworkNodeData networkNodeData7 = new NetworkNodeData();
+        networkNodeData7.setHash(fakeNode7);
+        networkNodeData7.setNodeType(NodeType.FullNode);
+        networkNodeData7.setAddress("test");
+        networkNodeData7.setHttpPort("000");
+        networkNodeData7.setPropagationPort("000");
+        networkNodeData7.setReceivingPort("000");
+        networkNodeData7.setNetworkType(NetworkType.TestNet);
+        networkNodeData7.setTrustScore(37.0);
+        networkNodeData7.setWebServerUrl("test");
+        networkNodeData7.setFeeData(new FeeData(BigDecimal.valueOf(0.7), BigDecimal.valueOf(0.7), BigDecimal.valueOf(0.7)));
+        networkNodeData7.setNodeSignature(new SignatureData("test", "test"));
+        networkNodeData7.setNodeRegistrationData(new NodeRegistrationData());
+
+        networkNodeData7.getNodeRegistrationData().setNodeHash(fakeNode7);
+        networkNodeData7.getNodeRegistrationData().setNodeType(NodeType.FullNode.toString());
+        networkNodeData7.getNodeRegistrationData().setNetworkType(NetworkType.TestNet.toString());
+        networkNodeData7.getNodeRegistrationData().setCreationTime(Instant.now());
+        networkNodeData7.getNodeRegistrationData().setRegistrarHash(new Hash("00"));
+        networkNodeData7.getNodeRegistrationData().setRegistrarSignature(new SignatureData("test", "test"));
+
+        Instant startDateTime = LocalDateTime.of(2018, 1, 1, 0, 0, 0).toInstant(ZoneOffset.UTC);;
+
+        NetworkNodeStatus nodeStatus = NetworkNodeStatus.ACTIVE;
+        Random rand = new Random();
+
+        for (int i = 0; i < 60000; i++) {
+            int timeShift = rand.nextInt(1000) + 1 + i * 100;
+            Instant eventInstant = startDateTime.plusSeconds(timeShift);
+
+            nodeManagementService.addNodeHistory(networkNodeData7, nodeStatus, eventInstant);
+        }
+
+        log.info("fakeNode7 finished");
+        Instant postEnd = Instant.now();
+        log.info("Test ended {} after {} ms", postEnd, postEnd.toEpochMilli()-preStart.toEpochMilli());
+    }
+
+    @Test
+    public void timeRocksDBCheck() {
+        Instant preStart = Instant.now();
+        log.info("Test about to start {}", preStart);
+        NetworkNodeData networkNodeData7 = new NetworkNodeData();
+        Instant postEnd = Instant.now();
+        log.info("Test ended {} after {} ms", postEnd, postEnd.toEpochMilli()-preStart.toEpochMilli());
     }
 
 

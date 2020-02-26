@@ -16,6 +16,7 @@ import org.springframework.util.SerializationUtils;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -178,7 +179,14 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             initiateColumnFamilyDescriptors(dbColumnFamilies, columnFamilyDescriptors);
             dbOptions.setCreateIfMissing(true);
             dbOptions.setCreateMissingColumnFamilies(true);
+            dbOptions.setAtomicFlush(false);
+//            dbOptions.setDbWriteBufferSize(256000000);
+            dbOptions.setMaxTotalWalSize(256000000);
+            Instant preStart = Instant.now();
+            log.info("open DB about to start {}", preStart);
             db = RocksDB.open(dbOptions, dbPath, columnFamilyDescriptors, columnFamilyHandles);
+            Instant postEnd = Instant.now();
+            log.info("open DB just ended {} after {} ms", postEnd, postEnd.toEpochMilli()-preStart.toEpochMilli());
             populateColumnFamilies(dbColumnFamilies, columnFamilyHandles);
         } catch (Exception e) {
             throw new DataBaseException("Error opening Rocks DB.", e);
