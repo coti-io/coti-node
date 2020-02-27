@@ -178,6 +178,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             initiateColumnFamilyDescriptors(dbColumnFamilies, columnFamilyDescriptors);
             dbOptions.setCreateIfMissing(true);
             dbOptions.setCreateMissingColumnFamilies(true);
+            dbOptions.setMaxTotalWalSize(268435456);
             db = RocksDB.open(dbOptions, dbPath, columnFamilyDescriptors, columnFamilyHandles);
             populateColumnFamilies(dbColumnFamilies, columnFamilyHandles);
         } catch (Exception e) {
