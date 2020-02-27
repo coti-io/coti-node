@@ -1,5 +1,6 @@
 package io.coti.zerospend.services;
 
+import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
@@ -35,6 +36,8 @@ public class InitializationService extends BaseNodeInitializationService {
     @Autowired
     private ICommunicationService communicationService;
     @Autowired
+    private IReceiver messageReceiver;
+    @Autowired
     private DspVoteService dspVoteService;
     @Autowired
     private TransactionCreationService transactionCreationService;
@@ -60,7 +63,6 @@ public class InitializationService extends BaseNodeInitializationService {
                     TransactionDspVote.class.getName(), data ->
                             dspVoteService.receiveDspVote((TransactionDspVote) data));
             communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
-
             communicationService.initPublisher(propagationPort, NodeType.ZeroSpendServer);
 
             networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.DspNode).values());
@@ -72,6 +74,7 @@ public class InitializationService extends BaseNodeInitializationService {
             }
 
             super.initServices();
+            messageReceiver.initReceiverHandler();
 
             if (transactions.isEmpty()) {
                 transactionCreationService.createGenesisTransactions();

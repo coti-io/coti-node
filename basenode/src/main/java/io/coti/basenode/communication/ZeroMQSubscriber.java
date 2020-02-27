@@ -103,6 +103,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
 
     }
 
+    @Override
     public void initPropagationHandler() {
         queueNameToThreadMap.values().forEach(Thread::start);
     }
@@ -117,7 +118,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                 log.info("ZMQ subscriber message handler interrupted");
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
-                log.error("ZMQ message handler task error", e);
+                log.error("ZMQ subscriber message handler task error", e);
             }
         }
         LinkedList<ZeroMQMessageData> remainingMessages = new LinkedList<>();
@@ -128,7 +129,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                 try {
                     propagationProcess(zeroMQMessageData);
                 } catch (Exception e) {
-                    log.error("ZMQ message handler task error", e);
+                    log.error("ZMQ subscriber message handler task error", e);
                 }
             });
         }
