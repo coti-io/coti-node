@@ -178,6 +178,9 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             initiateColumnFamilyDescriptors(dbColumnFamilies, columnFamilyDescriptors);
             dbOptions.setCreateIfMissing(true);
             dbOptions.setCreateMissingColumnFamilies(true);
+            dbOptions.setAtomicFlush(false);
+//            dbOptions.setDbWriteBufferSize(256000000);
+//            dbOptions.setMaxTotalWalSize(256000000);
             db = RocksDB.open(dbOptions, dbPath, columnFamilyDescriptors, columnFamilyHandles);
             populateColumnFamilies(dbColumnFamilies, columnFamilyHandles);
         } catch (Exception e) {
