@@ -31,7 +31,7 @@ import static utils.TransactionTestUtils.createRandomTransaction;
 
 @Slf4j
 @ContextConfiguration(classes = {RocksDBConnector.class, InitializationService.class, Addresses.class, AddressData.class, Transactions.class, AddressService.class,
-        IValidationService.class, RocksDBConnector.class})
+        IValidationService.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
 @SpringBootTest()
@@ -48,8 +48,6 @@ public class DatabaseTest {
     private WebSocketSender webSocketSender;
     @MockBean
     private NetworkService networkService;
-    //    @Autowired
-//    private Addresses addresses;
     @MockBean
     private RequestedAddressHashes requestedAddressHashes;
     @MockBean
@@ -72,7 +70,7 @@ public class DatabaseTest {
     private AddressTransactionsHistories addressTransactionsHistories;
     @MockBean
     private TransactionIndexes transactionIndexes;
-    @MockBean
+    @Autowired
     private TransactionVotes transactionVotes;
     @MockBean
     private NodeRegistrations nodeRegistrations;
@@ -118,6 +116,11 @@ public class DatabaseTest {
 
         Instant postEnd = Instant.now();
         log.info("Test ended {} after {} ms", postEnd, postEnd.toEpochMilli() - preStart.toEpochMilli());
+    }
+
+    @Test
+    public void storeTransctionsVotes() {
+
     }
 
     @Test
