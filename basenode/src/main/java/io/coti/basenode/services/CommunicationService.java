@@ -14,10 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -37,10 +34,9 @@ public class CommunicationService implements ICommunicationService {
     public void initSubscriber(NodeType subscriberNodeType, EnumMap<NodeType, List<Class<? extends IPropagatable>>> initialPublisherNodeTypeToMessageTypesMap) {
         propagationSubscriber.init();
         propagationSubscriber.setSubscriberNodeType(subscriberNodeType);
-        EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = initialPublisherNodeTypeToMessageTypesMap;
-        publisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.NodeManager, Arrays.asList(NetworkData.class));
-        publisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.DspNode, Arrays.asList(TransactionData.class, AddressData.class));
-        propagationSubscriber.setPublisherNodeTypeToMessageTypesMap(publisherNodeTypeToMessageTypesMap);
+        initialPublisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.NodeManager, Collections.singletonList(NetworkData.class));
+        initialPublisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.DspNode, Arrays.asList(TransactionData.class, AddressData.class));
+        propagationSubscriber.setPublisherNodeTypeToMessageTypesMap(initialPublisherNodeTypeToMessageTypesMap);
     }
 
     @Override

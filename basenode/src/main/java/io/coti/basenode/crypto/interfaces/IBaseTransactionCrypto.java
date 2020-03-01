@@ -19,7 +19,7 @@ public interface IBaseTransactionCrypto {
 
     void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData, int index);
 
-    <T extends BaseTransactionData & ITrustScoreNodeValidatable> void signMessage(TransactionData transactionData, T baseTransactionData, TrustScoreNodeResultData trustScoreNodeResultData) throws ClassNotFoundException;
+    <T extends BaseTransactionData & ITrustScoreNodeValidatable> void signMessage(TransactionData transactionData, T baseTransactionData, TrustScoreNodeResultData trustScoreNodeResultData);
 
     String getPublicKey(BaseTransactionData receiverBaseTransactionData);
 

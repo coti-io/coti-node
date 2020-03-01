@@ -57,7 +57,7 @@ public class TransactionService extends BaseNodeTransactionService {
         try {
             transactionHelper.startHandleTransaction(transactionData);
             if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
-            	log.error("Data Integrity validation failed: {}", transactionData.getHash());
+                log.error("Data Integrity validation failed: {}", transactionData.getHash());
                 return;
             }
             if (hasOneOfParentsMissing(transactionData)) {

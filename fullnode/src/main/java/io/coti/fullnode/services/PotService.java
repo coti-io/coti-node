@@ -13,6 +13,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 @Slf4j
@@ -22,6 +23,7 @@ public class PotService extends BaseNodePotService {
     private static HashMap<Integer, ExecutorService> queuesPot = new HashMap<>();
     protected static HashMap<Integer, MonitorBucketStatistics> monitorStatistics = new LinkedHashMap<>();
 
+    @Override
     public void init() {
         for (int i = 10; i <= 100; i = i + 10) {
             monitorStatistics.put(i, new MonitorBucketStatistics());
@@ -52,9 +54,9 @@ public class PotService extends BaseNodePotService {
         monitorStatistics.get(bucketChoice).addTransactionStatistics(Duration.between(starts, ends));
     }
 
-    public HashMap<String, Integer> executorSizes(int bucketNumber) {
+    public Map<String, Integer> executorSizes(int bucketNumber) {
         PriorityExecutor executor = (PriorityExecutor) queuesPot.get(bucketNumber);
-        HashMap<String, Integer> executorSizes = new HashMap<>();
+        Map<String, Integer> executorSizes = new HashMap<>();
         executorSizes.put("ActiveThreads", executor.getActiveCount());
         executorSizes.put("MaximumPoolSize", executor.getMaximumPoolSize());
         executorSizes.put("QueueSize", executor.getQueue().size());

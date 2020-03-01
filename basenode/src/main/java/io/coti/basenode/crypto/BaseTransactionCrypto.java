@@ -234,7 +234,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     }
 
     @Override
-    public <T extends BaseTransactionData & ITrustScoreNodeValidatable> void signMessage(TransactionData transactionData, T baseTransactionData, TrustScoreNodeResultData trustScoreNodeResultData) throws ClassNotFoundException {
+    public <T extends BaseTransactionData & ITrustScoreNodeValidatable> void signMessage(TransactionData transactionData, T baseTransactionData, TrustScoreNodeResultData trustScoreNodeResultData) {
 
         List<TrustScoreNodeResultData> trustScoreNodeResult = baseTransactionData.getTrustScoreNodeResult() != null ? baseTransactionData.getTrustScoreNodeResult() : new ArrayList<>();
         trustScoreNodeResultData.setSignature(NodeCryptoHelper.signMessage(this.getSignatureMessage(transactionData, trustScoreNodeResultData)));

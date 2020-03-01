@@ -153,11 +153,11 @@ public class RollingReserveService {
 
     }
 
-    public void setRollingReserveNodeFeeHash(RollingReserveData rollingReserveData) throws ClassNotFoundException {
+    public void setRollingReserveNodeFeeHash(RollingReserveData rollingReserveData) {
         BaseTransactionCrypto.ROLLING_RESERVE_DATA.setBaseTransactionHash(rollingReserveData);
     }
 
-    public void signRollingReserveFee(RollingReserveData rollingReserveData, boolean isValid) throws ClassNotFoundException {
+    public void signRollingReserveFee(RollingReserveData rollingReserveData, boolean isValid) {
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
         baseTransactions.add(rollingReserveData);
         BaseTransactionCrypto.ROLLING_RESERVE_DATA.signMessage(new TransactionData(baseTransactions), rollingReserveData, new TrustScoreNodeResultData(NodeCryptoHelper.getNodeHash(), isValid));
@@ -186,7 +186,7 @@ public class RollingReserveService {
 
     private BigDecimal calculateRollingReserveAmount(BigDecimal reducedAmount, double trustScore) {
         double reserveRate = (trustScore == 0) ? MAX_ROLLING_RESERVE_RATE : Math.min(MAX_ROLLING_RESERVE_RATE / trustScore, MAX_ROLLING_RESERVE_RATE);
-        BigDecimal rollingReserveAmount = reducedAmount.multiply(new BigDecimal(reserveRate / 100));
+        BigDecimal rollingReserveAmount = reducedAmount.multiply(BigDecimal.valueOf(reserveRate / 100));
         if (rollingReserveAmount.scale() > CURRENCY_SCALE) {
             rollingReserveAmount = rollingReserveAmount.setScale(CURRENCY_SCALE, RoundingMode.DOWN);
         }
