@@ -236,8 +236,8 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     }
 
     @Override
-    public int getMessageQueueSize() {
-        return ZeroMQSubscriberQueue.TRANSACTION.getQueue().size();
+    public int getMessageQueueSize(ZeroMQSubscriberQueue zeroMQSubscriberQueue) {
+        return zeroMQSubscriberQueue.getQueue().size();
     }
 
     @Override
