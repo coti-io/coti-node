@@ -11,4 +11,5 @@ public interface IDspVoteService {
 
     DspConsensusResult getPostponedDspConsensusResult(Hash transactionHash);
 
+    int getMissingTransactionsAwaitingHandling();
 }

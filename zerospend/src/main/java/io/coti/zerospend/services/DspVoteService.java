@@ -1,5 +1,6 @@
 package io.coti.zerospend.services;
 
+import io.coti.basenode.communication.ZeroMQSubscriberQueue;
 import io.coti.basenode.crypto.DspConsensusCrypto;
 import io.coti.basenode.crypto.TransactionDspVoteCrypto;
 import io.coti.basenode.data.*;
@@ -121,7 +122,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
                 if (transactionVoteData == null) {
                     missingTransactionsAwaitingHandling.putIfAbsent(transactionHash, new HashSet<>());
                     missingTransactionsAwaitingHandling.get(transactionHash).add(transactionDspVote);
-                    log.info("Transaction {} does not exist for dsp vote. Vote processing is delayed.", transactionHash);
+                    log.debug("Transaction {} does not exist for dsp vote. Vote processing is delayed.", transactionHash);
                     return;
                 }
 
@@ -207,5 +208,10 @@ public class DspVoteService extends BaseNodeDspVoteService {
                 .count();
         long totalVotersCount = currentVotes.getLegalVoterDspHashes().size();
         return negativeVotersCount > totalVotersCount / 2;
+    }
+
+    @Override
+    public int getMissingTransactionsAwaitingHandling() {
+        return missingTransactionsAwaitingHandling.size();
     }
 }
