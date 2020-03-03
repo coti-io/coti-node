@@ -1,5 +1,6 @@
 package io.coti.zerospend.services;
 
+import io.coti.basenode.communication.ZeroMQSubscriberQueue;
 import io.coti.basenode.crypto.DspConsensusCrypto;
 import io.coti.basenode.crypto.TransactionDspVoteCrypto;
 import io.coti.basenode.data.*;
@@ -192,5 +193,10 @@ public class DspVoteService extends BaseNodeDspVoteService {
                 .count();
         long totalVotersCount = currentVotes.getLegalVoterDspHashes().size();
         return negativeVotersCount > totalVotersCount / 2;
+    }
+
+    @Override
+    public int getMissingTransactionsAwaitingHandling() {
+        return missingTransactionsAwaitingHandling.size();
     }
 }
