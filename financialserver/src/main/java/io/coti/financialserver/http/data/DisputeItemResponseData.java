@@ -11,6 +11,7 @@ import java.util.List;
 
 @Data
 public class DisputeItemResponseData {
+
     private Long id;
     private BigDecimal price;
     private int quantity;

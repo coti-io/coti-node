@@ -7,7 +7,4 @@ import org.springframework.stereotype.Service;
 @Service
 public class BucketChargeBackEvents extends Collection<BucketChargeBackEventsData> {
 
-    public void init() {
-        super.init();
-    }
 }

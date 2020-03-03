@@ -7,6 +7,7 @@ import lombok.Data;
 
 @Data
 public class ArbitratorDisputeItemResponseData extends DisputeItemResponseData {
+
     private DisputeItemVoteResponseData arbitratorItemVote;
 
     public ArbitratorDisputeItemResponseData(DisputeItemData disputeItemData, Hash arbitratorHash) {

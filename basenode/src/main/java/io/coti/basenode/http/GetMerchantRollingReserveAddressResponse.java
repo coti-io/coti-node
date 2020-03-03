@@ -8,7 +8,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Data
-public class GetMerchantRollingReserveAddressResponse extends Response {
+public class GetMerchantRollingReserveAddressResponse extends BaseResponse {
 
     @NotNull
     @Valid
@@ -17,12 +17,7 @@ public class GetMerchantRollingReserveAddressResponse extends Response {
     private GetMerchantRollingReserveAddressResponse() {
     }
 
-    public GetMerchantRollingReserveAddressResponse(String message, String status) {
-        super(message, status);
-    }
-
     public GetMerchantRollingReserveAddressResponse(Hash merchantHash, Hash merchantRollingReserveAddress) {
-        super();
         this.merchantRollingReserveAddressData = new MerchantRollingReserveAddressData(merchantHash, merchantRollingReserveAddress);
     }
 

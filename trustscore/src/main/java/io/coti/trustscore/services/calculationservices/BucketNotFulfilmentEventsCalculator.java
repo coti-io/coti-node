@@ -27,7 +27,7 @@ public class BucketNotFulfilmentEventsCalculator extends BucketCalculator {
 
     public static void init(RulesData rulesData) {
         userTypeToBehaviorEventsScoreMap = rulesData.getUserTypeToUserScoreMap().entrySet().stream().
-                collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getCompensableEventsScore()));
+                collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getCompensableEventsScore()));
     }
 
     @Override

@@ -8,7 +8,7 @@ import java.util.*;
 class AlgorithmOrder implements IAlgorithmOrder {
 
     private final List<IAlgorithm.AlgorithmTypes> hashingAlgorithms = new ArrayList<>();
-    private final Map<IAlgorithm.AlgorithmTypes, IAlgorithm> algorithmMap = new HashMap<>();
+    private final Map<IAlgorithm.AlgorithmTypes, IAlgorithm> algorithmMap = new EnumMap<>(IAlgorithm.AlgorithmTypes.class);
 
     public List<IAlgorithm.AlgorithmTypes> getHashingAlgorithms() {
         return this.hashingAlgorithms;

@@ -21,7 +21,7 @@ public class DecayCalculator<T extends EventScore> implements IDecayCalculator {
 
     @Override
     public Map<T, Double> calculate(int numberOfDecays) {
-        return eventScoresToOldValueMap.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e ->
+        return eventScoresToOldValueMap.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e ->
                 MathCalculation.evaluateExpression(e.getKey().getDecay().replaceAll("T", String.valueOf(numberOfDecays))) * e.getValue()));
     }
 

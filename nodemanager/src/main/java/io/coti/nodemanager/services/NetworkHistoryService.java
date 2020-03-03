@@ -98,7 +98,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
             while (localDate != null && !localDate.isAfter(endDate)) {
                 NodeHistoryData nodeHistoryData = nodeHistory.getByHash(nodeDailyActivityData.calculateNodeHistoryDataHash(localDate));
                 if (nodeHistoryData != null) {
-                    for (LinkedMap.Entry<Hash, NodeNetworkDataRecord> nodeNetworkDataRecordEntry : nodeHistoryData.getNodeNetworkDataRecordMap().entrySet()) {
+                    for (Map.Entry<Hash, NodeNetworkDataRecord> nodeNetworkDataRecordEntry : nodeHistoryData.getNodeNetworkDataRecordMap().entrySet()) {
                         if (nodeNetworkDataRecordEntry.getValue().getNodeStatus() == NetworkNodeStatus.ACTIVE
                                 || nodeNetworkDataRecordEntry.getValue().getNodeStatus() == NetworkNodeStatus.INACTIVE) {
                             nodeEvents.add(nodeNetworkDataRecordEntry.getValue());

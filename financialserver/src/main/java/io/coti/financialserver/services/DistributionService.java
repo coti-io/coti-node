@@ -34,11 +34,11 @@ public class DistributionService {
     public void distributeToInitialFunds() {
         Hash cotiGenesisAddress = nodeCryptoHelper.generateAddress(seed, COTI_GENESIS_ADDRESS_INDEX);
         EnumSet<ReservedAddress> initialFundDistributionAddresses = ReservedAddress.getInitialFundDistributionAddresses();
-        initialFundDistributionAddresses.forEach(addressIndex -> {
-            Hash fundAddress = nodeCryptoHelper.generateAddress(seed, Math.toIntExact(addressIndex.getIndex()));
+        initialFundDistributionAddresses.forEach(initialFundDistributionAddress -> {
+            Hash fundAddress = nodeCryptoHelper.generateAddress(seed, Math.toIntExact(initialFundDistributionAddress.getIndex()));
 
             if (!isInitialTransactionExistsByAddress(fundAddress)) {
-                BigDecimal amount = getInitialAmountByAddressIndex(addressIndex);
+                BigDecimal amount = getInitialAmountByReservedAddress(initialFundDistributionAddress);
                 Hash initialTransactionHash;
                 try {
                     initialTransactionHash = transactionCreationService.createInitialTransactionToFund(amount, cotiGenesisAddress, fundAddress, COTI_GENESIS_ADDRESS_INDEX);
@@ -57,10 +57,10 @@ public class DistributionService {
         return initialFunds.getByHash(fundAddress) != null;
     }
 
-    private BigDecimal getInitialAmountByAddressIndex(ReservedAddress addressIndex) {
+    private BigDecimal getInitialAmountByReservedAddress(ReservedAddress reservedAddress) {
         BigDecimal amount = BigDecimal.ZERO;
-        if (addressIndex.isInitialFundDistribution()) {
-            switch (addressIndex) {
+        if (reservedAddress.isInitialFundDistribution()) {
+            switch (reservedAddress) {
                 case TOKEN_SALE:
                     amount = new BigDecimal(INITIAL_AMOUNT_FOR_TOKEN_SALE);
                     break;

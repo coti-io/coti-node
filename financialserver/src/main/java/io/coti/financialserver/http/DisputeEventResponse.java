@@ -25,7 +25,7 @@ public class DisputeEventResponse {
         hash = disputeEventData.getHash().toString();
         creationTime = disputeEventData.getCreationTime();
         this.eventDisplaySide = eventDisplaySide;
-        DisputeEventResponseDataClass disputeEventResponseDataClass = DisputeEventResponseDataClass.valueOf(disputeEventData.getEventObject().getClass().getSimpleName());
+        DisputeEventResponseDataClass disputeEventResponseDataClass = DisputeEventResponseDataClass.getByDisputeEventClass(disputeEventData.getEventObject().getClass());
         event = disputeEventResponseDataClass.getFinancialServerEvent();
         eventObject = disputeEventResponseDataClass.getEventObject(disputeEventData, userHash, eventDisplaySide);
         this.eventRead = eventRead;

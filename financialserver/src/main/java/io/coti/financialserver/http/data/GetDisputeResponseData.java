@@ -13,6 +13,7 @@ import java.util.List;
 
 @Data
 public abstract class GetDisputeResponseData implements IDisputeEventResponseData {
+
     protected String hash;
     protected String transactionHash;
     protected Instant transactionCreationTime;

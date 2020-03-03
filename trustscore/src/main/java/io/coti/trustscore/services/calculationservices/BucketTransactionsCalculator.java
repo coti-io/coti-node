@@ -37,10 +37,10 @@ public class BucketTransactionsCalculator extends BucketCalculator {
 
     public static void init(RulesData rulesData) {
         userToTransactionEventsScoreMapping = rulesData.getUserTypeToUserScoreMap().entrySet().stream().
-                collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getTransactionEventScore()));
+                collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getTransactionEventScore()));
     }
 
-
+    @Override
     public boolean decayScores(BucketEventData bucketTransactionEventsData) {
         if (!bucketTransactionEventsData.lastUpdateBeforeToday()) {
             return false;
@@ -229,7 +229,7 @@ public class BucketTransactionsCalculator extends BucketCalculator {
                 = bucketTransactionEventsData.getCurrentMonthDayToBalanceCountAndContribution();
         return currentMonthBalanceByDayMap.entrySet().stream()
                 .filter(x -> x.getValue().getContribution() == 0)
-                .collect(Collectors.toMap(e -> e.getKey(), e -> nonlinearFormula.replace("B", String.valueOf(e.getValue().getCount()))));//.concat(
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> nonlinearFormula.replace("B", String.valueOf(e.getValue().getCount()))));//.concat(
     }
 
     private void updateCurrentMonthBalanceContribution() {

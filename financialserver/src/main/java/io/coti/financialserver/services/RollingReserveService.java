@@ -277,7 +277,7 @@ public class RollingReserveService {
             recourseClaimData.getDisputeHashes().add(disputeData.getHash());
             recourseClaimData.setAmountToPay(recourseClaimData.getAmountToPay().add(remainingChargebackAmount));
 
-            propagationPublisher.propagate(recourseClaimData, Arrays.asList(NodeType.TrustScoreNode));
+            propagationPublisher.propagate(recourseClaimData, Collections.singletonList(NodeType.TrustScoreNode));
             recourseClaims.put(recourseClaimData);
         }
 

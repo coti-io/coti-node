@@ -113,8 +113,7 @@ public class NetworkFeeService {
             return ResponseEntity.status(HttpStatus.OK)
                     .body(new NetworkFeeResponse(new NetworkFeeResponseData(networkFeeData)));
         } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new RuntimeException(e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
         }
     }
 
@@ -161,12 +160,12 @@ public class NetworkFeeService {
                 && validateNetworkFeeCrypto(networkFeeData) && transactionHelper.validateBaseTransactionTrustScoreNodeResult(networkFeeData);
     }
 
-    public void setNetworkFeeHash(NetworkFeeData networkFeeData) throws ClassNotFoundException {
+    private void setNetworkFeeHash(NetworkFeeData networkFeeData) {
         BaseTransactionCrypto.NETWORK_FEE_DATA.setBaseTransactionHash(networkFeeData);
     }
 
 
-    public void signNetworkFee(NetworkFeeData networkFeeData, boolean isValid) throws ClassNotFoundException {
+    private void signNetworkFee(NetworkFeeData networkFeeData, boolean isValid) {
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
         baseTransactions.add(networkFeeData);
         BaseTransactionCrypto.NETWORK_FEE_DATA.signMessage(new TransactionData(baseTransactions), networkFeeData, new TrustScoreNodeResultData(NodeCryptoHelper.getNodeHash(), isValid));

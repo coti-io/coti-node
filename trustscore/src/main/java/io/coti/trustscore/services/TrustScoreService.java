@@ -3,6 +3,7 @@ package io.coti.trustscore.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.crypto.ExpandedTransactionTrustScoreCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.http.GetUserTrustScoreResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.TransactionTrustScoreResponseData;
@@ -54,46 +55,31 @@ public class TrustScoreService {
 
     @Autowired
     private ExpandedTransactionTrustScoreCrypto expandedTransactionTrustScoreCrypto;
-
     @Autowired
     private TrustScoreCrypto trustScoreCrypto;
-
-
     @Autowired
     private TrustScoreUserTypeCrypto trustScoreUserTypeCrypto;
-
     @Autowired
     private TrustScoreEventCrypto trustScoreEventCrypto;
-
     @Autowired
     private TrustScores trustScores;
-
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
-
     @Autowired
     private BucketTransactionService bucketTransactionService;
-
     @Autowired
     private BucketBehaviorEventsService bucketBehaviorEventsService;
-
     @Autowired
     private BucketInitialTrustScoreEventsService bucketInitialTrustScoreEventsService;
-
     @Autowired
     private BucketChargeBackEventsService bucketChargeBackEventsService;
-
     @Autowired
     private BucketNotFulfilmentEventsService bucketNotFulfilmentEventsService;
-
     @Autowired
     private BucketEvents bucketEvents;
-
     @Autowired
     private GetTransactionTrustScoreRequestCrypto getTransactionTrustScoreRequestCrypto;
-
     private List<IBucketEventService> bucketEventServiceList;
-
     private RulesData rulesData;
 
     @PostConstruct
@@ -174,7 +160,6 @@ public class TrustScoreService {
 
     private boolean changingIsLegal(TrustScoreData trustScoreData) {
         return trustScoreData.getUserType().equals(UserType.CONSUMER);
-//        return true; // not commit this trustScoreData.getUserType().equals(UserType.CONSUMER);
     }
 
     public ResponseEntity<IResponse> getUserTrustScore(Hash userHash) {
@@ -224,7 +209,7 @@ public class TrustScoreService {
                     .body(new Response(NON_EXISTING_USER_MESSAGE, STATUS_ERROR));
         }
 
-        List<BucketEventData> bucketEventDataList = new ArrayList<BucketEventData>();
+        List<BucketEventData> bucketEventDataList = new ArrayList<>();
         for (IBucketEventService bucketEventService : bucketEventServiceList) {
             BucketEventData bucketEventData =
                     (BucketEventData) bucketEvents.getByHash(trustScoreData.getEventTypeToBucketHashMap().get(bucketEventService.getBucketEventType()));
@@ -340,7 +325,7 @@ public class TrustScoreService {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error at adding transaction to TS calculation", e);
         }
 
     }
@@ -377,8 +362,10 @@ public class TrustScoreService {
                 bucketEvents.put(bucketEventData);
                 trustScoreData.getEventTypeToBucketHashMap().put(event, bucketEventData.getHash());
             }
-        } catch (IllegalAccessException | InstantiationException e) {
-            log.error(e.toString());
+        } catch (CotiRunTimeException e) {
+            e.logMessage();
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
     }
 
@@ -464,22 +451,22 @@ public class TrustScoreService {
         return rulesData;
     }
 
-    private IResponse sendToSuitableService(InsertEventRequest request) throws Exception {
+    private IResponse sendToSuitableService(InsertEventRequest request) {
         switch (request.getEventType()) {
-            case INITIAL_EVENT: {
+            case INITIAL_EVENT:
                 return sendToBucketInitialTrustScoreEventsService(request);
-            }
-            case HIGH_FREQUENCY_EVENTS: {
+
+            case HIGH_FREQUENCY_EVENTS:
                 return sendToHighFrequencyEventScoreService(request);
-            }
-            case BEHAVIOR_EVENT: {
+
+            case BEHAVIOR_EVENT:
                 return sendToBucketBehaviorEventsService(request);
-            }
-            case NOT_FULFILMENT_EVENT: {
+
+            case NOT_FULFILMENT_EVENT:
                 return sendToBucketNotFulfilmentEventsService(request);
-            }
+
             default:
-                throw new Exception(ILLEGAL_EVENT_FROM_KYC_SERVER);
+                throw new IllegalArgumentException(ILLEGAL_EVENT_FROM_KYC_SERVER);
         }
     }
 

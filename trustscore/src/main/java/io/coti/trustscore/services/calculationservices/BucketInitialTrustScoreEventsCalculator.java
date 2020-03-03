@@ -24,7 +24,7 @@ public class BucketInitialTrustScoreEventsCalculator extends BucketCalculator {
 
     public static void init(RulesData rulesData) {
         userTypeToInitialTrustEventsScoreMap = rulesData.getUserTypeToUserScoreMap().entrySet().stream().
-                collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getInitialTrustScore()));
+                collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getInitialTrustScore()));
     }
 
     @Override

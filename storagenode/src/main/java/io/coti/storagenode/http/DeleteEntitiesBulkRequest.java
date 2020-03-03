@@ -8,6 +8,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 public class DeleteEntitiesBulkRequest extends Request {
+
     @NotEmpty(message = "hashAndIndexNameMap must not be empty")
     private Map<Hash, String> hashAndIndexNameMap;
 
@@ -15,7 +16,7 @@ public class DeleteEntitiesBulkRequest extends Request {
         hashAndIndexNameMap = new Hashtable<>();
     }
 
-    public DeleteEntitiesBulkRequest(@NotEmpty(message = "hashAndIndexNameMap must not be empty") Map<Hash, String> hashAndIndexNameMap) {
+    public DeleteEntitiesBulkRequest(Map<Hash, String> hashAndIndexNameMap) {
         this.hashAndIndexNameMap = hashAndIndexNameMap;
     }
 }
