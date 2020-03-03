@@ -85,5 +85,9 @@ public class BaseNodeDspVoteService implements IDspVoteService {
         return postponedDspConsensusResultsMap.get(transactionHash);
     }
 
+    @Override
+    public int getMissingTransactionsAwaitingHandling() {
+        return 0;
+    }
 
 }
