@@ -1,6 +1,6 @@
 package io.coti.fullnode.controllers;
 
-import io.coti.basenode.http.BaseResponse;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.fullnode.http.FullNodeFeeRequest;
 import io.coti.fullnode.services.FeeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +20,7 @@ public class FeeController {
     private FeeService feeService;
 
     @PutMapping()
-    public ResponseEntity<BaseResponse> createFullNodeFee(@Valid @RequestBody FullNodeFeeRequest fullNodeFeeRequest) {
+    public ResponseEntity<IResponse> createFullNodeFee(@Valid @RequestBody FullNodeFeeRequest fullNodeFeeRequest) {
         return feeService.createFullNodeFee(fullNodeFeeRequest);
     }
 }

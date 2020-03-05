@@ -143,9 +143,9 @@ public class TransactionStorageService extends EntityStorageService {
 
         private void queueTransactionsDataBlock(Map<Hash, String> transactionMap, BlockingQueue<GetHashToPropagatable<TransactionData>> retrievedTransactionQueue) {
 
-            transactionMap.entrySet().forEach(entry -> {
-                TransactionData transactionData = jacksonSerializer.deserialize(entry.getValue());
-                GetHashToPropagatable<TransactionData> transactionDataPair = new GetHashToPropagatable<>(entry.getKey(), transactionData);
+            transactionMap.forEach((key, value) -> {
+                TransactionData transactionData = jacksonSerializer.deserialize(value);
+                GetHashToPropagatable<TransactionData> transactionDataPair = new GetHashToPropagatable<>(key, transactionData);
                 try {
                     retrievedTransactionQueue.put(transactionDataPair);
                 } catch (InterruptedException e) {

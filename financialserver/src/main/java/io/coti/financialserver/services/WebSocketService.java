@@ -7,7 +7,7 @@ import io.coti.financialserver.crypto.DisputeEventReadCrypto;
 import io.coti.financialserver.data.*;
 import io.coti.financialserver.data.interfaces.IDisputeEvent;
 import io.coti.financialserver.http.DisputeEventReadRequest;
-import io.coti.financialserver.http.DisputeEventResponse;
+import io.coti.financialserver.http.data.DisputeEventResponseData;
 import io.coti.financialserver.model.DisputeEvents;
 import io.coti.financialserver.model.DisputeHistory;
 import io.coti.financialserver.model.UnreadUserDisputeEvents;
@@ -61,7 +61,7 @@ public class WebSocketService {
 
     public void notifyOnDisputeEventRead(DisputeEventData disputeEventData, Hash userHash, ActionSide eventDisplaySide) {
 
-        messagingSender.convertAndSend("/topic/user/" + userHash, new DisputeEventResponse(disputeEventData, userHash, eventDisplaySide, true));
+        messagingSender.convertAndSend("/topic/user/" + userHash, new DisputeEventResponseData(disputeEventData, userHash, eventDisplaySide, true));
     }
 
     public void notifyOnNewDispute(DisputeData disputeData) {
@@ -139,7 +139,7 @@ public class WebSocketService {
                 unreadUserDisputeEvents.put(unreadUserDisputeEventData);
             }
 
-            messagingSender.convertAndSend("/topic/user/" + userHash, new DisputeEventResponse(disputeEventData, userHash, eventDisplaySide, eventRead));
+            messagingSender.convertAndSend("/topic/user/" + userHash, new DisputeEventResponseData(disputeEventData, userHash, eventDisplaySide, eventRead));
         });
         if (updateDisputeHistory) {
             DisputeHistoryData disputeHistoryData = disputeHistory.getByHash(disputeHash);

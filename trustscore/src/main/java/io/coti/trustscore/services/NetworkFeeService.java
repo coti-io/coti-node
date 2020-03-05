@@ -91,8 +91,8 @@ public class NetworkFeeService {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new NetworkFeeResponse(networkFeeResponseData));
         } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new RuntimeException(e);
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
         }
     }
 
@@ -135,7 +135,7 @@ public class NetworkFeeService {
                 && isNetworkFeeValid(networkFeeData, userHash);
     }
 
-    public boolean isNetworkFeeValid(NetworkFeeData networkFeeData, Hash userHash) {
+    private boolean isNetworkFeeValid(NetworkFeeData networkFeeData, Hash userHash) {
         TrustScoreData trustScoreData = trustScores.getByHash(userHash);
         if (trustScoreData == null) {
             return false;

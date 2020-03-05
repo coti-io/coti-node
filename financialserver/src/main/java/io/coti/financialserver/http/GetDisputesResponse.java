@@ -20,6 +20,6 @@ public class GetDisputesResponse extends BaseResponse {
         super();
 
         this.disputesData = new ArrayList<>();
-        disputesData.forEach(disputeData -> this.disputesData.add(GetDisputeResponseClass.valueOf(actionSide.toString()).getNewInstance(disputeData, userHash)));
+        disputesData.forEach(disputeData -> this.disputesData.add(GetDisputeResponseClass.getByActionSide(actionSide).getNewInstance(disputeData, userHash)));
     }
 }

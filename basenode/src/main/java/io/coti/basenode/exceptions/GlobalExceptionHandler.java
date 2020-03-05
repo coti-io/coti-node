@@ -24,10 +24,12 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final String EXCEPTION_MESSAGE = "Exception message: ";
+
     @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class, UnexpectedTypeException.class})
     public ResponseEntity<ExceptionResponse> handleArgumentNotValid(Exception e) {
         log.info("Received a request with missing or invalid parameters.");
-        log.info("Exception message: " + e);
+        log.info(EXCEPTION_MESSAGE + e);
         return new ResponseEntity<>(
                 new ExceptionResponse(INVALID_PARAMETERS_MESSAGE, API_CLIENT_ERROR), HttpStatus.BAD_REQUEST);
     }
@@ -43,7 +45,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ExceptionResponse> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
         log.info("Received a request with unsupported method");
-        log.info("Exception message: " + e.getMessage());
+        log.info(EXCEPTION_MESSAGE + e.getMessage());
         return new ResponseEntity<>(
                 new ExceptionResponse(METHOD_NOT_SUPPORTED, API_CLIENT_ERROR), HttpStatus.NOT_FOUND);
     }
@@ -51,7 +53,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<ExceptionResponse> handleNoHandlerFoundException(NoHandlerFoundException e) {
         log.info("Received a request with no handler");
-        log.info("Exception message: " + e.getMessage());
+        log.info(EXCEPTION_MESSAGE + e.getMessage());
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setContentType(MediaType.APPLICATION_JSON);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).headers(responseHeaders).body(new ExceptionResponse(e.getMessage(), API_CLIENT_ERROR));
@@ -60,7 +62,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RequestRejectedException.class)
     public ResponseEntity<ExceptionResponse> handleRequestRejectedException(RequestRejectedException e) {
         log.info("Received a rejected request");
-        log.info("Exception message: " + e.getMessage());
+        log.info(EXCEPTION_MESSAGE + e.getMessage());
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setContentType(MediaType.APPLICATION_JSON);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).headers(responseHeaders).body(new ExceptionResponse(e.getMessage(), API_CLIENT_ERROR));
@@ -69,7 +71,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ExceptionResponse> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
         log.info("Received a request with missing parameters.");
-        log.info("Exception message: " + e);
+        log.info(EXCEPTION_MESSAGE + e);
         return new ResponseEntity<>(
                 new ExceptionResponse(INVALID_PARAMETERS_MESSAGE, API_CLIENT_ERROR), HttpStatus.BAD_REQUEST);
     }

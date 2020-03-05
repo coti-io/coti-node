@@ -243,11 +243,6 @@ public class BaseNodeTransactionService implements ITransactionService {
         log.debug("Adding the transaction {} to explorer indexes by base node", transactionData.getHash());
     }
 
-    private boolean hasOneOfParentsProcessing(TransactionData transactionData) {
-        return (transactionData.getLeftParentHash() != null && transactionHelper.isTransactionHashProcessing(transactionData.getLeftParentHash())) ||
-                (transactionData.getRightParentHash() != null && transactionHelper.isTransactionHashProcessing(transactionData.getRightParentHash()));
-    }
-
     protected boolean hasOneOfParentsMissing(TransactionData transactionData) {
         return (transactionData.getLeftParentHash() != null && transactions.getByHash(transactionData.getLeftParentHash()) == null) ||
                 (transactionData.getRightParentHash() != null && transactions.getByHash(transactionData.getRightParentHash()) == null);

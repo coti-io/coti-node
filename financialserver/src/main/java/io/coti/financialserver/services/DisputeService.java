@@ -14,6 +14,7 @@ import io.coti.financialserver.crypto.GetDisputeHistoryCrypto;
 import io.coti.financialserver.crypto.GetDisputesCrypto;
 import io.coti.financialserver.data.*;
 import io.coti.financialserver.http.*;
+import io.coti.financialserver.http.data.DisputeEventResponseData;
 import io.coti.financialserver.http.data.GetDisputeHistoryData;
 import io.coti.financialserver.http.data.GetDisputesData;
 import io.coti.financialserver.model.*;
@@ -220,7 +221,7 @@ public class DisputeService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
 
-        List<DisputeEventResponse> disputeEventResponses = new ArrayList<>();
+        List<DisputeEventResponseData> disputeEventResponses = new ArrayList<>();
 
         DisputeHistoryData disputeHistoryData = disputeHistory.getByHash(getDisputeHistoryData.getDisputeHash());
         if (disputeHistoryData != null) {
@@ -232,7 +233,7 @@ public class DisputeService {
                     if (unreadUserDisputeEventData != null && unreadUserDisputeEventData.getDisputeEventHashToEventDisplaySideMap().get(disputeEventHash) != null) {
                         eventRead = false;
                     }
-                    disputeEventResponses.add(new DisputeEventResponse(disputeEvents.getByHash(disputeEventHash), getDisputeHistoryData.getUserHash(), eventDisplaySide, eventRead));
+                    disputeEventResponses.add(new DisputeEventResponseData(disputeEvents.getByHash(disputeEventHash), getDisputeHistoryData.getUserHash(), eventDisplaySide, eventRead));
                 }
             });
         }
@@ -256,7 +257,7 @@ public class DisputeService {
         disputes.put(disputeData);
     }
 
-    public void updateAfterVote(DisputeData disputeData, DisputeItemData disputeItemData) throws Exception {
+    public void updateAfterVote(DisputeData disputeData, DisputeItemData disputeItemData) {
 
         int arbitratorsCount = disputeData.getArbitratorHashes().size();
         int majorityOfVotes = ((int) Math.floor(arbitratorsCount / 2)) + 1;
@@ -276,10 +277,10 @@ public class DisputeService {
         }
 
         if (votesForConsumer >= majorityOfVotes) {
-            DisputeItemStatusService.AcceptedByArbitrators.changeStatus(disputeData, disputeItemData.getId(), ActionSide.FinancialServer);
+            DisputeItemStatusService.ACCEPTED_BY_ARBITRATORS.changeStatus(disputeData, disputeItemData.getId(), ActionSide.FinancialServer);
 
         } else if (votesForMerchant >= majorityOfVotes || disputeItemVotes.size() == arbitratorsCount) {
-            DisputeItemStatusService.RejectedByArbitrators.changeStatus(disputeData, disputeItemData.getId(), ActionSide.FinancialServer);
+            DisputeItemStatusService.REJECTED_BY_ARBITRATORS.changeStatus(disputeData, disputeItemData.getId(), ActionSide.FinancialServer);
         }
 
         disputeData.setUpdateTime(Instant.now());
@@ -326,7 +327,7 @@ public class DisputeService {
 
         for (Hash disputeHash : transactionDisputesData.getDisputeHashes()) {
             disputeData = disputes.getByHash(disputeHash);
-            if (disputeData.getDisputeStatus().equals(DisputeStatus.Recall) || !DisputeStatusService.valueOf(disputeData.getDisputeStatus().toString()).isFinalStatus()) {
+            if (disputeData.getDisputeStatus().equals(DisputeStatus.Recall) || !DisputeStatusService.getByDisputeStatus(disputeData.getDisputeStatus()).isFinalStatus()) {
                 return true;
             }
         }

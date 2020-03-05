@@ -26,8 +26,7 @@ public class BaseNodePotService implements IPotService {
     public boolean validatePot(TransactionData transactionData) {
         ProofOfTrust pot = new ProofOfTrust(
                 transactionData.getRoundedSenderTrustScore());
-        boolean valid = pot.verify(transactionData.getHash().
+        return pot.verify(transactionData.getHash().
                 getBytes(), transactionData.getNonces(), targetDifficulty);
-        return valid;
     }
 }

@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.EnumSet;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -33,7 +33,7 @@ public class DistributionService {
 
     public void distributeToInitialFunds() {
         Hash cotiGenesisAddress = nodeCryptoHelper.generateAddress(seed, COTI_GENESIS_ADDRESS_INDEX);
-        EnumSet<ReservedAddress> initialFundDistributionAddresses = ReservedAddress.getInitialFundDistributionAddresses();
+        Set<ReservedAddress> initialFundDistributionAddresses = ReservedAddress.getInitialFundDistributionAddresses();
         initialFundDistributionAddresses.forEach(initialFundDistributionAddress -> {
             Hash fundAddress = nodeCryptoHelper.generateAddress(seed, Math.toIntExact(initialFundDistributionAddress.getIndex()));
 

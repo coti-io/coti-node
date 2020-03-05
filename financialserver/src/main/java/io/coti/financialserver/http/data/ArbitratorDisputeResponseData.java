@@ -19,7 +19,7 @@ public class ArbitratorDisputeResponseData extends GetDisputeResponseData {
     private void setDisputeItems(List<DisputeItemData> disputeItems, Hash arbitratorHash) {
 
         disputeItems.forEach(disputeItemData -> {
-            if (!DisputeItemStatusService.valueOf(disputeItemData.getStatus().toString()).isPreClaim()) {
+            if (!DisputeItemStatusService.getByDisputeItemStatus(disputeItemData.getStatus()).isPreClaim()) {
                 this.disputeItems.add(new ArbitratorDisputeItemResponseData(disputeItemData, arbitratorHash));
             }
         });

@@ -56,7 +56,7 @@ public class ItemService {
 
         for (Long itemId : disputeUpdateItemData.getItemIds()) {
             try {
-                DisputeItemStatusService.valueOf(disputeUpdateItemData.getStatus().toString()).changeStatus(disputeData, itemId, actionSide);
+                DisputeItemStatusService.getByDisputeItemStatus(disputeUpdateItemData.getStatus()).changeStatus(disputeData, itemId, actionSide);
             } catch (Exception e) {
                 log.error("{}: {}", e.getClass().getName(), e.getMessage());
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(e.getMessage(), STATUS_ERROR));

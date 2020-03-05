@@ -1,6 +1,8 @@
 package io.coti.financialserver.exceptions;
 
-public class DisputeChangeStatusException extends Exception {
+import io.coti.basenode.exceptions.CotiRunTimeException;
+
+public class DisputeChangeStatusException extends CotiRunTimeException {
 
     public DisputeChangeStatusException(String message) {
         super(message);

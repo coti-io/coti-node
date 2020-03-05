@@ -1,6 +1,7 @@
 package io.coti.financialserver.data;
 
 import java.util.EnumSet;
+import java.util.Set;
 
 public enum ReservedAddress {
     GENESIS_ONE(0),
@@ -41,8 +42,8 @@ public enum ReservedAddress {
         return index > GENESIS_TWO.getIndex() && index < PRIVATE_SALE.getIndex();
     }
 
-    public static EnumSet<ReservedAddress> getInitialFundDistributionAddresses() {
-        EnumSet<ReservedAddress> initialFundDistributionAddresses = EnumSet.noneOf(ReservedAddress.class);
+    public static Set<ReservedAddress> getInitialFundDistributionAddresses() {
+        Set<ReservedAddress> initialFundDistributionAddresses = EnumSet.noneOf(ReservedAddress.class);
         for (ReservedAddress reservedAddress : values()) {
             if (reservedAddress.isInitialFundDistribution()) {
                 initialFundDistributionAddresses.add(reservedAddress);

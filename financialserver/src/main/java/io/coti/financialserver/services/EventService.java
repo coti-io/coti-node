@@ -6,9 +6,9 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.financialserver.crypto.GetUnreadEventsCrypto;
 import io.coti.financialserver.data.ActionSide;
 import io.coti.financialserver.data.UnreadUserDisputeEventData;
-import io.coti.financialserver.http.DisputeEventResponse;
 import io.coti.financialserver.http.GetUnreadEventsRequest;
 import io.coti.financialserver.http.GetUnreadEventsResponse;
+import io.coti.financialserver.http.data.DisputeEventResponseData;
 import io.coti.financialserver.http.data.GetUnreadEventsData;
 import io.coti.financialserver.model.DisputeEvents;
 import io.coti.financialserver.model.UnreadUserDisputeEvents;
@@ -43,14 +43,14 @@ public class EventService {
         if (!getUnreadEventsCrypto.verifySignature(getUnreadEventsData)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
         }
-        List<DisputeEventResponse> disputeEventResponses = new ArrayList<>();
+        List<DisputeEventResponseData> disputeEventResponses = new ArrayList<>();
 
         UnreadUserDisputeEventData unreadUserDisputeEventData = unreadUserDisputeEvents.getByHash(getUnreadEventsData.getUserHash());
         if (unreadUserDisputeEventData != null) {
             Map<Hash, ActionSide> disputeEventHashToEventDisplaySideMap = unreadUserDisputeEventData.getDisputeEventHashToEventDisplaySideMap();
 
             disputeEventHashToEventDisplaySideMap.forEach((disputeHash, eventDisplaySide) ->
-                    disputeEventResponses.add(new DisputeEventResponse(disputeEvents.getByHash(disputeHash), getUnreadEventsData.getUserHash(), eventDisplaySide, false))
+                    disputeEventResponses.add(new DisputeEventResponseData(disputeEvents.getByHash(disputeHash), getUnreadEventsData.getUserHash(), eventDisplaySide, false))
             );
         }
         return ResponseEntity.status(HttpStatus.OK).body(new GetUnreadEventsResponse(disputeEventResponses));

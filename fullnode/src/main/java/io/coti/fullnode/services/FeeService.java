@@ -6,8 +6,8 @@ import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.FullNodeFeeData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.fullnode.crypto.FullNodeFeeRequestCrypto;
 import io.coti.fullnode.http.FullNodeFeeRequest;
@@ -51,7 +51,7 @@ public class FeeService {
     @Autowired
     private IValidationService validationService;
 
-    public ResponseEntity<BaseResponse> createFullNodeFee(FullNodeFeeRequest fullNodeFeeRequest) {
+    public ResponseEntity<IResponse> createFullNodeFee(FullNodeFeeRequest fullNodeFeeRequest) {
         try {
             if (!fullNodeFeeRequestCrypto.verifySignature(fullNodeFeeRequest)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));

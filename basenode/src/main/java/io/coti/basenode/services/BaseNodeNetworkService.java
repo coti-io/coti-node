@@ -148,7 +148,7 @@ public class BaseNodeNetworkService implements INetworkService {
             log.error("Invalid networkNodeData adding request");
             throw new IllegalArgumentException("Invalid networkNodeData adding request");
         }
-        if (!NodeTypeService.valueOf(networkNodeData.getNodeType().toString()).isMultipleNode()) {
+        if (!NodeTypeService.getByNodeType(networkNodeData.getNodeType()).isMultipleNode()) {
             setSingleNodeData(networkNodeData.getNodeType(), networkNodeData);
         } else {
             getMapFromFactory(networkNodeData.getNodeType()).put(networkNodeData.getHash(), networkNodeData);
@@ -158,7 +158,7 @@ public class BaseNodeNetworkService implements INetworkService {
 
     @Override
     public void removeNode(NetworkNodeData networkNodeData) {
-        if (!NodeTypeService.valueOf(networkNodeData.getNodeType().toString()).isMultipleNode()) {
+        if (!NodeTypeService.getByNodeType(networkNodeData.getNodeType()).isMultipleNode()) {
             setSingleNodeData(networkNodeData.getNodeType(), null);
         } else {
             if (getMapFromFactory(networkNodeData.getNodeType()).remove(networkNodeData.getHash()) == null) {
@@ -272,10 +272,10 @@ public class BaseNodeNetworkService implements INetworkService {
     @Override
     public List<NetworkNodeData> getNetworkNodeDataList() {
         List<NetworkNodeData> networkNodeDataList = new ArrayList<>();
-        multipleNodeMaps.forEach((nodeType, hashNetworkNodeDataMap) -> hashNetworkNodeDataMap.forEach(((hash, networkNodeData) -> networkNodeDataList.add(networkNodeData))));
-        singleNodeNetworkDataMap.forEach(((nodeType, networkNodeData) -> {
-            if (networkNodeData != null && networkNodeData.getNodeHash() != null) {
-                networkNodeDataList.add(networkNodeData);
+        multipleNodeMaps.forEach((nodeType, nodeHashToNodeInNetworkMap) -> nodeHashToNodeInNetworkMap.forEach(((nodeHash, nodeInNetwork) -> networkNodeDataList.add(nodeInNetwork))));
+        singleNodeNetworkDataMap.forEach(((nodeType, nodeInNetwork) -> {
+            if (nodeInNetwork != null && nodeInNetwork.getNodeHash() != null) {
+                networkNodeDataList.add(nodeInNetwork);
             }
         }));
         return networkNodeDataList;

@@ -15,7 +15,7 @@ public enum DisputeEventResponseDataClass {
     DISPUTE(DisputeData.class, GetDisputeResponseData.class, FinancialServerEvent.NewDispute) {
         @Override
         public IDisputeEventResponseData getEventObject(DisputeEventData disputeEventData, Hash userHash, ActionSide evenDisplaySide) {
-            return GetDisputeResponseClass.valueOf(evenDisplaySide.toString()).getNewInstance((DisputeData) disputeEventData.getEventObject(), userHash);
+            return GetDisputeResponseClass.getByActionSide(evenDisplaySide).getNewInstance((DisputeData) disputeEventData.getEventObject(), userHash);
         }
     },
     DISPUTE_COMMENT(DisputeCommentData.class, GetCommentResponseData.class, FinancialServerEvent.NewDisputeComment),
