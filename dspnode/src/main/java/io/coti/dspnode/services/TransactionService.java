@@ -11,6 +11,7 @@ import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
+import io.coti.dspnode.model.UnconfirmedTransactionDspVotes;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -40,6 +41,8 @@ public class TransactionService extends BaseNodeTransactionService {
     private TransactionDspVoteCrypto transactionDspVoteCrypto;
     @Autowired
     private INetworkService networkService;
+    @Autowired
+    private UnconfirmedTransactionDspVotes unconfirmedTransactionDspVotes;
 
     @Override
     public void init() {
@@ -79,7 +82,7 @@ public class TransactionService extends BaseNodeTransactionService {
                     NodeType.ZeroSpendServer,
                     NodeType.FinancialServer,
                     NodeType.HistoryNode));
-            transactionPropagationCheckService.addUnconfirmedTransaction(transactionData.getHash());
+            transactionPropagationCheckService.addUnconfirmedTransaction(transactionData.getHash(), false);
             transactionHelper.setTransactionStateToFinished(transactionData);
             transactionsToValidate.add(transactionData);
         } catch (Exception ex) {
@@ -117,6 +120,7 @@ public class TransactionService extends BaseNodeTransactionService {
             String zerospendReceivingAddress = networkService.getSingleNodeData(NodeType.ZeroSpendServer).getReceivingFullAddress();
             log.debug("Sending DSP vote to {} for transaction {}", zerospendReceivingAddress, transactionData.getHash());
             sender.send(transactionDspVote, zerospendReceivingAddress);
+            transactionPropagationCheckService.addUnconfirmedTransactionDSPVote(transactionDspVote);
         }
         isValidatorRunning.set(false);
     }
@@ -126,6 +130,7 @@ public class TransactionService extends BaseNodeTransactionService {
         propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
         if (!EnumSet.of(TransactionType.ZeroSpend, TransactionType.Initial).contains(transactionData.getType())) {
             transactionsToValidate.add(transactionData);
+            transactionPropagationCheckService.addUnconfirmedTransaction(transactionData.getHash(), true);
         }
 
     }

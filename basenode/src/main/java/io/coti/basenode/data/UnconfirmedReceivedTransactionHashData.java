@@ -12,11 +12,13 @@ public class UnconfirmedReceivedTransactionHashData implements IEntity {
     private Hash transactionHash;
     private Instant createdTime;
     private int retries;
+    private boolean dSPVoteOnly;
 
-    public UnconfirmedReceivedTransactionHashData(Hash transactionHash, int retries) {
+    public UnconfirmedReceivedTransactionHashData(Hash transactionHash, int retries, boolean dSPVoteOnly) {
         this.transactionHash = transactionHash;
         this.createdTime = Instant.now();
         this.retries = retries;
+        this.dSPVoteOnly = dSPVoteOnly;
     }
 
     @Override
