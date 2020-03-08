@@ -27,8 +27,8 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
     }
 
     @Override
-    public void addUnconfirmedTransaction(Hash transactionHash) {
-        addUnconfirmedTransaction(transactionHash, NUMBER_OF_RETRIES_FULL_NODE);
+    public void addUnconfirmedTransaction(Hash transactionHash, boolean dSPVoteOnly) {
+        addUnconfirmedTransaction(transactionHash, NUMBER_OF_RETRIES_FULL_NODE, dSPVoteOnly);
     }
 
     @Override
@@ -47,7 +47,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
     }
 
     @Override
-    public void sendUnconfirmedReceivedTransactions(TransactionData transactionData) {
+    public void sendUnconfirmedReceivedTransactions(TransactionData transactionData, boolean dSPVoteOnly) {
         networkService.sendDataToConnectedDspNodes(transactionData);
     }
 }

@@ -157,7 +157,7 @@ public class TransactionService extends BaseNodeTransactionService {
             addToExplorerIndexes(transactionData);
             final TransactionData finalTransactionData = transactionData;
             ((NetworkService) networkService).sendDataToConnectedDspNodes(finalTransactionData);
-            transactionPropagationCheckService.addUnconfirmedTransaction(transactionData.getHash());
+            transactionPropagationCheckService.addUnconfirmedTransaction(transactionData.getHash(), false);
             transactionHelper.setTransactionStateToFinished(transactionData);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
