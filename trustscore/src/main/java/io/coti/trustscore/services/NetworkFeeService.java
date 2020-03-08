@@ -166,9 +166,9 @@ public class NetworkFeeService {
             }
             double userTrustScore = trustScoreService.calculateUserTrustScore(trustScoreData);
             calculatedNetworkFee = calculateNetworkFeeAmount(getUserNetworkFeeByTrustScoreRange(userTrustScore), networkFeeData.getOriginalAmount());
-            CurrencyData currencyData = currencies.getByHash(networkFeeData.getOriginalCurrencyHash());
         } else {
-            if (currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.REGULAR_CMD_TOKEN){
+            CurrencyData currencyData = currencies.getByHash(networkFeeData.getOriginalCurrencyHash());
+            if (currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.REGULAR_CMD_TOKEN) {
                 calculatedNetworkFee = regularTokenNetworkFee;
             } else {
                 return false;   // change it together with createNetworkFee
