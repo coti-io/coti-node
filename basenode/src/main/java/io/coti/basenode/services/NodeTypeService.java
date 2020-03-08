@@ -16,7 +16,7 @@ public enum NodeTypeService {
     private boolean multipleNode;
 
     private static class NodeTypeServices {
-        private static final Map<NodeType, NodeTypeService> nodeTypeServiceMap = new HashMap<>();
+        private static final Map<NodeType, NodeTypeService> nodeTypeServiceMap = new EnumMap<>(NodeType.class);
     }
 
     NodeTypeService(NodeType nodeType, boolean multipleNode) {

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -27,23 +28,23 @@ public class TransactionIndexService {
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
-    public synchronized Boolean insertNewTransactionIndex(TransactionData transactionData) {
+    public synchronized Optional<Boolean> insertNewTransactionIndex(TransactionData transactionData) {
         if (transactionData.getDspConsensusResult() == null) {
             log.error("Invalid transaction index for transaction {}", transactionData.getHash());
-            return null;
+            return Optional.empty();
         }
         if (transactionData.getDspConsensusResult().getIndex() < lastTransactionIndexData.getIndex() + 1) {
             log.debug("Already inserted index {}", transactionData.getDspConsensusResult().getIndex());
-            return null;
+            return Optional.empty();
         }
         if (transactionData.getDspConsensusResult().getIndex() == lastTransactionIndexData.getIndex() + 1) {
             log.debug("Inserting new transaction {} with index: {}", transactionData.getHash(), lastTransactionIndexData.getIndex() + 1);
             lastTransactionIndexData = getNextIndexData(lastTransactionIndexData, transactionData);
             transactionIndexes.put(lastTransactionIndexData);
             transactionHelper.removeNoneIndexedTransaction(transactionData);
-            return true;
+            return Optional.of(Boolean.TRUE);
         } else {
-            return false;
+            return Optional.of(Boolean.FALSE);
         }
     }
 

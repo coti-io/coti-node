@@ -11,10 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -135,12 +132,13 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     protected boolean insertNewTransactionIndex(TransactionData transactionData) {
-        Boolean insertNewTransactionIndex = transactionIndexService.insertNewTransactionIndex(transactionData);
-        if (insertNewTransactionIndex == null) {
+        Optional<Boolean> optionalInsertNewTransactionIndex = transactionIndexService.insertNewTransactionIndex(transactionData);
+        if (!optionalInsertNewTransactionIndex.isPresent()) {
             return false;
         }
+        Boolean isNewTransactionIndexInserted = optionalInsertNewTransactionIndex.get();
         DspConsensusResult dspConsensusResult = transactionData.getDspConsensusResult();
-        if (!insertNewTransactionIndex) {
+        if (Boolean.FALSE.equals(isNewTransactionIndexInserted)) {
             waitingDspConsensusResults.put(dspConsensusResult.getIndex(), dspConsensusResult);
             return false;
         } else {
@@ -224,12 +222,13 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     private void insertMissingTransactionIndex(TransactionData transactionData) {
-        Boolean insertNewTransactionIndex = transactionIndexService.insertNewTransactionIndex(transactionData);
-        if (insertNewTransactionIndex == null) {
+        Optional<Boolean> optionalInsertNewTransactionIndex = transactionIndexService.insertNewTransactionIndex(transactionData);
+        if (!optionalInsertNewTransactionIndex.isPresent()) {
             return;
         }
+        Boolean isNewTransactionIndexInserted = optionalInsertNewTransactionIndex.get();
         DspConsensusResult dspConsensusResult = transactionData.getDspConsensusResult();
-        if (!insertNewTransactionIndex) {
+        if (Boolean.FALSE.equals(isNewTransactionIndexInserted)) {
             waitingMissingTransactionIndexes.put(dspConsensusResult.getIndex(), transactionData);
         } else {
             processMissingDspConfirmedTransaction(transactionData);

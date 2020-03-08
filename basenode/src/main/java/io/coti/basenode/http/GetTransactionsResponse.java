@@ -18,8 +18,6 @@ public class GetTransactionsResponse extends BaseResponse {
     }
 
     public GetTransactionsResponse(List<TransactionData> transactionsData) {
-        super();
-
         this.transactionsData = new ArrayList<>();
 
         for (TransactionData transactionData : transactionsData) {

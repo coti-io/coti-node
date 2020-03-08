@@ -34,7 +34,7 @@ public class NetworkData implements IPropagatable {
 
     @Override
     public void setHash(Hash hash) {
-
+        // no implementation
     }
 
     @JsonInclude()

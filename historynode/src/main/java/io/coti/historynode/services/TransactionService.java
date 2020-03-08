@@ -28,10 +28,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
@@ -164,7 +161,7 @@ public class TransactionService extends BaseNodeTransactionService {
         startDate = (startDate != null) ? startDate : addressTransactionsByAddress.getStartDate();
         endDate = (endDate != null) ? endDate : calculateInstantLocalDate(Instant.now());
 
-        HashMap<LocalDate, HashSet<Hash>> transactionHashesByDates = addressTransactionsByAddress.getTransactionHashesByDates();
+        Map<LocalDate, HashSet<Hash>> transactionHashesByDates = addressTransactionsByAddress.getTransactionHashesByDates();
         while (!startDate.isAfter(endDate)) {
             HashSet<Hash> hashesOfDate = transactionHashesByDates.get(startDate);
             if (hashesOfDate != null) {

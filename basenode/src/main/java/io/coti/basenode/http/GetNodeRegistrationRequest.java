@@ -9,8 +9,6 @@ import io.coti.basenode.http.data.NetworkTypeName;
 import io.coti.basenode.http.data.NodeTypeName;
 import lombok.Data;
 
-import javax.validation.constraints.NotNull;
-
 @Data
 public class GetNodeRegistrationRequest extends Request implements ISignable {
 
@@ -19,9 +17,9 @@ public class GetNodeRegistrationRequest extends Request implements ISignable {
     private String nodeType;
     private String networkType;
 
-    public GetNodeRegistrationRequest(@NotNull NodeType nodeType, @NotNull NetworkType networkType) {
-        this.nodeType = NodeTypeName.valueOf(nodeType.toString()).getNode();
-        this.networkType = NetworkTypeName.valueOf(networkType.toString()).getNetwork();
+    public GetNodeRegistrationRequest(NodeType nodeType, NetworkType networkType) {
+        this.nodeType = NodeTypeName.getByNodeType(nodeType).getNode();
+        this.networkType = NetworkTypeName.getByNetworkType(networkType).getNetwork();
     }
 
     @Override
