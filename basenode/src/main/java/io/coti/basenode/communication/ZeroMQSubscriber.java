@@ -90,10 +90,10 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                     if (e.getErrorCode() == ZMQ.Error.ETERM.getCode()) {
                         contextTerminated = true;
                     } else {
-                        log.error("ZeroMQ exception at propagation receiver thread", e);
+                        log.error("ZeroMQ exception at subscriber thread", e);
                     }
                 } catch (Exception e) {
-                    log.error("Error at propagation receiver thread", e);
+                    log.error("Error at subscriber thread", e);
                 }
             }
             propagationReceiver.close();

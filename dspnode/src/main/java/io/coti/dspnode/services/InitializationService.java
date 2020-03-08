@@ -58,14 +58,14 @@ public class InitializationService extends BaseNodeInitializationService {
             }
             networkService.setRecoveryServerAddress(zerospendNetworkNodeData.getHttpFullAddress());
             communicationService.initPublisher(propagationPort, NodeType.DspNode);
+
             HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping = new HashMap<>();
             classNameToReceiverHandlerMapping.put(TransactionData.class.getName(), data ->
                     transactionService.handleNewTransactionFromFullNode((TransactionData) data));
-
             classNameToReceiverHandlerMapping.put(AddressData.class.getName(), data ->
                     addressService.handleNewAddressFromFullNode((AddressData) data));
-
             communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
+
             communicationService.addSender(zerospendNetworkNodeData.getReceivingFullAddress());
             communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress(), NodeType.ZeroSpendServer);
             List<NetworkNodeData> dspNetworkNodeDataList = networkService.getMapFromFactory(NodeType.DspNode).values().stream()
@@ -73,7 +73,7 @@ public class InitializationService extends BaseNodeInitializationService {
                     .collect(Collectors.toList());
             networkService.addListToSubscription(dspNetworkNodeDataList);
             if (networkService.getSingleNodeData(NodeType.FinancialServer) != null) {
-                networkService.addListToSubscription(new ArrayList<>(Arrays.asList(networkService.getSingleNodeData(NodeType.FinancialServer))));
+                networkService.addListToSubscription(new ArrayList<>(Collections.singletonList(networkService.getSingleNodeData(NodeType.FinancialServer))));
             }
 
             super.initServices();

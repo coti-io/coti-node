@@ -11,7 +11,7 @@ import java.util.Arrays;
 
 @Primary
 @Service
-public class TrustScoreRocksDBConnector extends BaseNodeRocksDBConnector {
+public class RocksDBConnector extends BaseNodeRocksDBConnector {
 
     @Override
     public void setColumnFamily() {
