@@ -441,7 +441,7 @@ public class NodeManagementServiceDoNotTakeItToDevTest {
         NetworkNodeStatus nodeStatus = NetworkNodeStatus.ACTIVE;
         Random rand = new Random();
 
-        for (int i = 0; i < 60000; i++) {
+        for (int i = 0; i < 180000; i++) {
             int timeShift = rand.nextInt(1000) + 1 + i * 100;
             Instant eventInstant = startDateTime.plusSeconds(timeShift);
 

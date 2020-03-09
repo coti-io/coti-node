@@ -182,6 +182,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             dbOptions.setAtomicFlush(false);
 //            dbOptions.setDbWriteBufferSize(256000000);
 //            dbOptions.setMaxTotalWalSize(256000000);
+//            dbOptions.setMaxTotalWalSize(256000000);
             db = RocksDB.open(dbOptions, dbPath, columnFamilyDescriptors, columnFamilyHandles);
             populateColumnFamilies(dbColumnFamilies, columnFamilyHandles);
         } catch (Exception e) {
