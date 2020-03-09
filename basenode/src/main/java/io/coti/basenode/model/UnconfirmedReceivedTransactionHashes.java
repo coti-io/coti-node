@@ -4,6 +4,6 @@ import io.coti.basenode.data.UnconfirmedReceivedTransactionHashData;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UnconfirmedReceivedTransactionHashes extends Collection<UnconfirmedReceivedTransactionHashData> {
+public class UnconfirmedReceivedTransactionHashes<T extends UnconfirmedReceivedTransactionHashData> extends Collection<T> {
 
 }

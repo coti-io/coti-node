@@ -2,19 +2,20 @@ package io.coti.dspnode.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.ISender;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.NodeType;
-import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.TransactionDspVote;
+import io.coti.basenode.data.*;
 import io.coti.basenode.services.BaseNodeTransactionPropagationCheckService;
 import io.coti.basenode.services.interfaces.INetworkService;
+import io.coti.dspnode.data.UnconfirmedReceivedTransactionHashDspData;
 import io.coti.dspnode.model.UnconfirmedTransactionDspVotes;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -40,8 +41,26 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
     }
 
     @Override
+    public void updateRecoveredUnconfirmedReceivedTransactions() {
+        List<Hash> confirmedReceiptTransactions = new ArrayList<>();
+        unconfirmedReceivedTransactionHashes.forEach(unconfirmedReceivedTransactionHashData -> {
+            Hash transactionHash = ((UnconfirmedReceivedTransactionHashDspData) unconfirmedReceivedTransactionHashData).getTransactionHash();
+            if (isTransactionHashDSPConfirmed(transactionHash)) {
+                confirmedReceiptTransactions.add(transactionHash);
+            } else {
+                unconfirmedReceivedTransactionHashesMap.put(transactionHash, (UnconfirmedReceivedTransactionHashData) unconfirmedReceivedTransactionHashData);
+            }
+        });
+        confirmedReceiptTransactions.forEach(confirmedTransactionHash -> {
+            unconfirmedReceivedTransactionHashes.deleteByHash(confirmedTransactionHash);
+            removeConfirmedReceiptTransactionDSPVote(confirmedTransactionHash);
+        });
+    }
+
     public void addUnconfirmedTransaction(Hash transactionHash, boolean dSPVoteOnly) {
-        addUnconfirmedTransaction(transactionHash, NUMBER_OF_RETRIES_DSP_NODE, dSPVoteOnly);
+        UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData =
+                new UnconfirmedReceivedTransactionHashDspData(transactionHash, NUMBER_OF_RETRIES_DSP_NODE, dSPVoteOnly);
+        addUnconfirmedTransaction(transactionHash, unconfirmedReceivedTransactionHashData);
     }
 
     @Override
@@ -73,7 +92,6 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         sendUnconfirmedReceivedTransactions(PERIOD_IN_SECONDS_BEFORE_PROPAGATE_AGAIN_DSP_NODE);
     }
 
-    @Override
     public void sendUnconfirmedReceivedTransactions(TransactionData transactionData, boolean dSPVoteOnly) {
         TransactionDspVote transactionDspVote = unconfirmedTransactionDspVotes.getByHash(transactionData.getHash());
         if (transactionDspVote != null) {
@@ -90,6 +108,22 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
                     NodeType.FinancialServer,
                     NodeType.HistoryNode));
         }
+    }
 
+    @Override
+    protected <T extends UnconfirmedReceivedTransactionHashData> void sendUnconfirmedReceivedTransactions(Map.Entry<Hash, T> entry) {
+        try {
+            synchronized (addLockToLockMap(entry.getKey())) {
+                TransactionData transactionData = transactions.getByHash(entry.getKey());
+                if (transactionData == null) {
+                    entry.getValue().setRetries(0);
+                } else {
+                    sendUnconfirmedReceivedTransactions(transactionData, ((UnconfirmedReceivedTransactionHashDspData) entry.getValue()).isDSPVoteOnly());
+                    entry.getValue().setRetries(entry.getValue().getRetries() - 1);
+                }
+            }
+        } finally {
+            removeLockFromLocksMap(entry.getKey());
+        }
     }
 }
