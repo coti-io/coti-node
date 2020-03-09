@@ -6,6 +6,7 @@ import io.coti.basenode.data.interfaces.IEntity;
 import lombok.Data;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Set;
 
 @Data
@@ -47,6 +48,11 @@ public class AddressTransactionsHistory implements IEntity {
             return false;
         }
         return hash.equals(((AddressTransactionsHistory) other).hash);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(hash.getBytes());
     }
 }
 

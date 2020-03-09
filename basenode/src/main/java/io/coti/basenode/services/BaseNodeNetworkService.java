@@ -103,6 +103,7 @@ public class BaseNodeNetworkService implements INetworkService {
     }
 
     public boolean isNodeConnectedToNetwork(NetworkData networkData) {
+        log.debug("{} is connected to network", networkData);
         return true;
     }
 
@@ -117,7 +118,7 @@ public class BaseNodeNetworkService implements INetworkService {
     public Map<Hash, NetworkNodeData> getMapFromFactory(NodeType nodeType) {
         Map<Hash, NetworkNodeData> mapToGet = multipleNodeMaps.get(nodeType);
         if (mapToGet == null) {
-            throw new IllegalArgumentException(String.format("Unsupported networkNodeData type : %s", nodeType));
+            throw new IllegalArgumentException(String.format(INVALID_NODE_TYPE, nodeType));
         }
         return mapToGet;
     }
@@ -125,14 +126,14 @@ public class BaseNodeNetworkService implements INetworkService {
     @Override
     public NetworkNodeData getSingleNodeData(NodeType nodeType) {
         if (!singleNodeNetworkDataMap.containsKey(nodeType)) {
-            throw new IllegalArgumentException(String.format("Unsupported networkNodeData type : %s", nodeType));
+            throw new IllegalArgumentException(String.format(INVALID_NODE_TYPE, nodeType));
         }
         return singleNodeNetworkDataMap.get(nodeType);
     }
 
     private void setSingleNodeData(NodeType nodeType, NetworkNodeData newNetworkNodeData) {
         if (!singleNodeNetworkDataMap.containsKey(nodeType)) {
-            throw new IllegalArgumentException(String.format("Unsupported networkNodeData type : %s", nodeType));
+            throw new IllegalArgumentException(String.format(INVALID_NODE_TYPE, nodeType));
         }
         if (newNetworkNodeData != null && !newNetworkNodeData.getNodeType().equals(nodeType)) {
             log.error("Invalid networkNodeData type : {}", nodeType);

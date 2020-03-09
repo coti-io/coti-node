@@ -1,6 +1,20 @@
 package io.coti.basenode.http.data;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum AddressStatus {
-    Created,
-    Exists
+    CREATED("Created"),
+    EXISTS("Exists");
+
+    private String status;
+
+    AddressStatus(String status) {
+        this.status = status;
+    }
+
+    @JsonValue
+    @Override
+    public String toString() {
+        return status;
+    }
 }

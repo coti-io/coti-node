@@ -4,6 +4,7 @@ import io.coti.basenode.data.interfaces.IPropagatable;
 import lombok.Data;
 
 import java.time.Instant;
+import java.util.Arrays;
 
 @Data
 public class AddressData implements IPropagatable {
@@ -45,5 +46,10 @@ public class AddressData implements IPropagatable {
             return false;
         }
         return hash.equals(((AddressData) other).hash);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(hash.getBytes());
     }
 }

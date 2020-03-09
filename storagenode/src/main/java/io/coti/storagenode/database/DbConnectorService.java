@@ -28,6 +28,7 @@ import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -48,41 +49,42 @@ public class DbConnectorService implements IDbConnectorService {
 
     public static final int INDEX_NUMBER_OF_SHARDS = 1;
     public static final int INDEX_NUMBER_OF_REPLICAS = 2;
-    private final String ELASTICSEARCH_HOST_IP;
-    private final int ELASTICSEARCH_HOST_PORT1;
-    private final int ELASTICSEARCH_HOST_PORT2;
-    private final String ELASTICSEARCH_SECONDARY_HOST_IP;
-    private final int ELASTICSEARCH_SECONDARY_HOST_PORT1;
-    private final int ELASTICSEARCH_SECONDARY_HOST_PORT2;
+    private final String elasticsearchHostIp;
+    private final int elasticsearchHostPort1;
+    private final int elasticsearchHostPort2;
+    private final String elasticsearchSecondaryHostIp;
+    private final int elasticsearchSecondaryHostPort1;
+    private final int elasticsearchSecondaryHostPort2;
     private RestHighLevelClient restClient;
     private RestHighLevelClient restColdStorageClient;
 
-    private DbConnectorService(@Value("${elasticsearch.host.ip}") final String ELASTICSEARCH_HOST_IP,
-                               @Value("${elasticsearch.host.port1}") final int ELASTICSEARCH_HOST_PORT1,
-                               @Value("${elasticsearch.host.port2}") final int ELASTICSEARCH_HOST_PORT2,
-                               @Value("${elasticsearch.secondary.host.ip}") final String ELASTICSEARCH_SECONDARY_HOST_IP,
-                               @Value("${elasticsearch.secondary.host.port1}") final int ELASTICSEARCH_SECONDARY_HOST_PORT1,
-                               @Value("${elasticsearch.secondary.host.port2}") final int ELASTICSEARCH_SECONDARY_HOST_PORT2
+    @Autowired
+    private DbConnectorService(@Value("${elasticsearch.host.ip}") final String elasticsearchHostIp,
+                               @Value("${elasticsearch.host.port1}") final int elasticsearchHostPort1,
+                               @Value("${elasticsearch.host.port2}") final int elasticsearchHostPort2,
+                               @Value("${elasticsearch.secondary.host.ip}") final String elasticsearchSecondaryHostIp,
+                               @Value("${elasticsearch.secondary.host.port1}") final int elasticsearchSecondaryHostPort1,
+                               @Value("${elasticsearch.secondary.host.port2}") final int elasticsearchSecondaryHostPort2
 
     ) {
-        this.ELASTICSEARCH_HOST_IP = ELASTICSEARCH_HOST_IP;
-        this.ELASTICSEARCH_HOST_PORT1 = ELASTICSEARCH_HOST_PORT1;
-        this.ELASTICSEARCH_HOST_PORT2 = ELASTICSEARCH_HOST_PORT2;
-        this.ELASTICSEARCH_SECONDARY_HOST_IP = ELASTICSEARCH_SECONDARY_HOST_IP;
-        this.ELASTICSEARCH_SECONDARY_HOST_PORT1 = ELASTICSEARCH_SECONDARY_HOST_PORT1;
-        this.ELASTICSEARCH_SECONDARY_HOST_PORT2 = ELASTICSEARCH_SECONDARY_HOST_PORT2;
+        this.elasticsearchHostIp = elasticsearchHostIp;
+        this.elasticsearchHostPort1 = elasticsearchHostPort1;
+        this.elasticsearchHostPort2 = elasticsearchHostPort2;
+        this.elasticsearchSecondaryHostIp = elasticsearchSecondaryHostIp;
+        this.elasticsearchSecondaryHostPort1 = elasticsearchSecondaryHostPort1;
+        this.elasticsearchSecondaryHostPort2 = elasticsearchSecondaryHostPort2;
 
     }
 
     public void init() {
         try {
             restClient = new RestHighLevelClient(RestClient.builder(
-                    new HttpHost(ELASTICSEARCH_HOST_IP, ELASTICSEARCH_HOST_PORT1),
-                    new HttpHost(ELASTICSEARCH_HOST_IP, ELASTICSEARCH_HOST_PORT2)
+                    new HttpHost(elasticsearchHostIp, elasticsearchHostPort1),
+                    new HttpHost(elasticsearchHostIp, elasticsearchHostPort2)
             ));
             restColdStorageClient = new RestHighLevelClient(RestClient.builder(
-                    new HttpHost(ELASTICSEARCH_SECONDARY_HOST_IP, ELASTICSEARCH_SECONDARY_HOST_PORT1),
-                    new HttpHost(ELASTICSEARCH_SECONDARY_HOST_IP, ELASTICSEARCH_SECONDARY_HOST_PORT2)
+                    new HttpHost(elasticsearchSecondaryHostIp, elasticsearchSecondaryHostPort1),
+                    new HttpHost(elasticsearchSecondaryHostIp, elasticsearchSecondaryHostPort2)
             ));
         } catch (Exception e) {
             throw new DbConnectorException(e.getMessage());
@@ -113,12 +115,11 @@ public class DbConnectorService implements IDbConnectorService {
         }
 
         ClusterGetSettingsRequest clusterGetSettingsRequest = new ClusterGetSettingsRequest();
-        ClusterGetSettingsResponse getSettings = restClient.cluster().getSettings(clusterGetSettingsRequest, RequestOptions.DEFAULT);
-        return getSettings;
+        return restClient.cluster().getSettings(clusterGetSettingsRequest, RequestOptions.DEFAULT);
     }
 
     private String getSearchShardsDetails(String index) {
-        final String uri = "http://" + ELASTICSEARCH_HOST_IP + ":" + ELASTICSEARCH_HOST_PORT1 + "/" + index + "/" + "_search_shards";
+        final String uri = "http://" + elasticsearchHostIp + ":" + elasticsearchHostPort1 + "/" + index + "/" + "_search_shards";
         RestTemplate restTemplate = new RestTemplate();
         return restTemplate.getForObject(uri, String.class);
     }
@@ -252,17 +253,7 @@ public class DbConnectorService implements IDbConnectorService {
         try {
             XContentBuilder builder = jsonBuilder();
             builder.startObject();
-            {
-                builder.startObject("properties");
-                {
-                    builder.startObject(objectName);
-                    {
-                        builder.field("type", "text");
-                    }
-                    builder.endObject();
-                }
-                builder.endObject();
-            }
+            buildObjectName(objectName, builder);
             builder.endObject();
             PutMappingRequest request = new PutMappingRequest(index);
 //        request.type(INDEX_TYPE);
@@ -275,6 +266,18 @@ public class DbConnectorService implements IDbConnectorService {
         } catch (Exception e) {
             throw new DbConnectorException(String.format("Error at creating mapping. %s: %s", e.getClass().getName(), e.getMessage()));
         }
+    }
+
+    private void buildObjectName(String objectName, XContentBuilder builder) throws IOException {
+        builder.startObject("properties");
+        {
+            builder.startObject(objectName);
+            {
+                builder.field("type", "text");
+            }
+            builder.endObject();
+        }
+        builder.endObject();
     }
 
 

@@ -1,6 +1,7 @@
 package io.coti.basenode.http;
 
 public class BaseNodeHttpStringConstants {
+
     public static final String STATUS_SUCCESS = "Success";
     public static final String STATUS_ERROR = "Error";
     public static final String SERVER_ERROR = "Server error";
@@ -47,6 +48,7 @@ public class BaseNodeHttpStringConstants {
     public static final String INVALID_NODE_IP_FOR_SERVER_URL = "Invalid node server URL %s: host %s is not matching with ip %s. The expected ip is %s";
     public static final String INVALID_NODE_REGISTRATION_SIGNATURE = "Invalid node registration signature";
     public static final String INVALID_NETWORK_TYPE = "Network type should be %s. Invalid network type %s";
+    public static final String INVALID_NODE_TYPE = "Unsupported node type : %s";
     public static final String INVALID_TRANSACTION_TIME_FIELD = "Invalid transaction time field. Current node time: %s";
     public static final String INVALID_AMOUNT = "Invalid amount";
     public static final String INVALID_AMOUNT_VS_FULL_NODE_FEE = "Transaction amount should be greater than minimum full node fee %s";

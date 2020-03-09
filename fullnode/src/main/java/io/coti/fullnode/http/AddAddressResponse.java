@@ -10,8 +10,8 @@ public class AddAddressResponse extends BaseResponse {
     private String address;
     private AddressStatus addressStatus;
 
-    public AddAddressResponse(String address, AddressStatus status) {
+    public AddAddressResponse(String address, AddressStatus addressStatus) {
         this.address = address;
-        this.addressStatus = status;
+        this.addressStatus = addressStatus;
     }
 }

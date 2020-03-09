@@ -54,7 +54,7 @@ public class InitializationService extends BaseNodeInitializationService {
             super.createNetworkNodeData();
             super.getNetwork();
 
-            publisherNodeTypeToMessageTypesMap.put(NodeType.FinancialServer, Arrays.asList(TransactionData.class));
+            publisherNodeTypeToMessageTypesMap.put(NodeType.FinancialServer, Collections.singletonList(TransactionData.class));
 
             communicationService.initSubscriber(NodeType.ZeroSpendServer, publisherNodeTypeToMessageTypesMap);
 
@@ -67,7 +67,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
             networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.DspNode).values());
             if (networkService.getSingleNodeData(NodeType.FinancialServer) != null) {
-                networkService.addListToSubscription(new ArrayList<>(Arrays.asList(networkService.getSingleNodeData(NodeType.FinancialServer))));
+                networkService.addListToSubscription(new ArrayList<>(Collections.singletonList(networkService.getSingleNodeData(NodeType.FinancialServer))));
             }
             if (!recoveryServerAddress.isEmpty()) {
                 networkService.setRecoveryServerAddress(recoveryServerAddress);
