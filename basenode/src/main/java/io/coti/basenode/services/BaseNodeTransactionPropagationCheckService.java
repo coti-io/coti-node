@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,23 +47,6 @@ public class BaseNodeTransactionPropagationCheckService implements ITransactionP
 
     @Override
     public void updateRecoveredUnconfirmedReceivedTransactions() {
-        List<Hash> confirmedReceiptTransactions = new ArrayList<>();
-        unconfirmedReceivedTransactionHashes.forEach(unconfirmedReceivedTransactionHashData -> {
-            Hash transactionHash = unconfirmedReceivedTransactionHashData.getTransactionHash();
-            if (isTransactionHashDSPConfirmed(transactionHash)) {
-                confirmedReceiptTransactions.add(transactionHash);
-            } else {
-                unconfirmedReceivedTransactionHashesMap.put(transactionHash, unconfirmedReceivedTransactionHashData);
-            }
-        });
-        confirmedReceiptTransactions.forEach(confirmedTransactionHash -> {
-            unconfirmedReceivedTransactionHashes.deleteByHash(confirmedTransactionHash);
-            removeConfirmedReceiptTransactionDSPVote(confirmedTransactionHash);
-        });
-    }
-
-    @Override
-    public void addUnconfirmedTransaction(Hash transactionHash, boolean dSPVoteOnly) {
         // implemented for full nodes and dsp nodes
     }
 
@@ -73,8 +55,12 @@ public class BaseNodeTransactionPropagationCheckService implements ITransactionP
         // implemented for dsp nodes
     }
 
-    protected void addUnconfirmedTransaction(Hash transactionHash, int retries, boolean dSPVoteOnly) {
-        UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData = new UnconfirmedReceivedTransactionHashData(transactionHash, retries, dSPVoteOnly);
+    protected void addUnconfirmedTransaction(Hash transactionHash, int retries) {
+        UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData = new UnconfirmedReceivedTransactionHashData(transactionHash, retries);
+        addUnconfirmedTransaction(transactionHash, unconfirmedReceivedTransactionHashData);
+    }
+
+    protected <T extends UnconfirmedReceivedTransactionHashData> void addUnconfirmedTransaction(Hash transactionHash, T unconfirmedReceivedTransactionHashData) {
         try {
             synchronized (addLockToLockMap(transactionHash)) {
                 unconfirmedReceivedTransactionHashesMap.put(transactionHash, unconfirmedReceivedTransactionHashData);
@@ -133,24 +119,7 @@ public class BaseNodeTransactionPropagationCheckService implements ITransactionP
         unconfirmedTransactionsToRemove.forEach(this::doRemoveConfirmedReceiptTransaction);
     }
 
-    private void sendUnconfirmedReceivedTransactions(Map.Entry<Hash, UnconfirmedReceivedTransactionHashData> entry) {
-        try {
-            synchronized (addLockToLockMap(entry.getKey())) {
-                TransactionData transactionData = transactions.getByHash(entry.getKey());
-                if (transactionData == null) {
-                    entry.getValue().setRetries(0);
-                } else {
-                    sendUnconfirmedReceivedTransactions(transactionData, entry.getValue().isDSPVoteOnly());
-                    entry.getValue().setRetries(entry.getValue().getRetries() - 1);
-                }
-            }
-        } finally {
-            removeLockFromLocksMap(entry.getKey());
-        }
-    }
-
-    @Override
-    public void sendUnconfirmedReceivedTransactions(TransactionData transactionData, boolean dSPVoteOnly) {
+    protected <T extends UnconfirmedReceivedTransactionHashData> void sendUnconfirmedReceivedTransactions(Map.Entry<Hash, T> entry) {
         // implemented for full nodes and dsp nodes
     }
 

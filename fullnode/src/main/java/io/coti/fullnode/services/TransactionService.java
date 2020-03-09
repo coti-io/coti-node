@@ -73,6 +73,8 @@ public class TransactionService extends BaseNodeTransactionService {
     private IChunkService chunkService;
     @Autowired
     private PotService potService;
+    @Autowired
+    private TransactionPropagationCheckService transactionPropagationCheckService;
     private BlockingQueue<ReducedTransactionData> explorerIndexQueue;
     private IndexedNavigableSet<ReducedTransactionData> explorerIndexedTransactionSet;
     @Autowired
@@ -157,7 +159,7 @@ public class TransactionService extends BaseNodeTransactionService {
             addToExplorerIndexes(transactionData);
             final TransactionData finalTransactionData = transactionData;
             ((NetworkService) networkService).sendDataToConnectedDspNodes(finalTransactionData);
-            transactionPropagationCheckService.addUnconfirmedTransaction(transactionData.getHash(), false);
+            transactionPropagationCheckService.addUnconfirmedTransaction(transactionData.getHash());
             transactionHelper.setTransactionStateToFinished(transactionData);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
