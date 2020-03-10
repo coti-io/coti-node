@@ -26,7 +26,6 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
-import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -221,7 +220,7 @@ public class BaseNodeNetworkService implements INetworkService {
         }
         InetAddress inetAddress;
         try {
-            inetAddress = Inet4Address.getByName(host);
+            inetAddress = InetAddress.getByName(host);
         } catch (Exception e) {
             throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_UNKNOWN_HOST, webServerUrl), e);
         }
@@ -297,12 +296,7 @@ public class BaseNodeNetworkService implements INetworkService {
         connectedDspNodes.removeIf(dspNode -> {
             boolean remove = !(newDspNodeMap.containsKey(dspNode.getNodeHash()) && newDspNodeMap.get(dspNode.getNodeHash()).getAddress().equals(dspNode.getAddress()));
             if (remove) {
-                log.info("Disconnecting from dsp {} from subscribing and receiving", dspNode.getAddress());
-                communicationService.removeSubscription(dspNode.getPropagationFullAddress(), NodeType.DspNode);
-                communicationService.removeSender(dspNode.getReceivingFullAddress(), NodeType.DspNode);
-                if (recoveryServerAddress != null && recoveryServerAddress.equals(dspNode.getHttpFullAddress())) {
-                    recoveryServerAddress = null;
-                }
+                handleConnectedDspNodeRemove(dspNode);
             } else {
                 NetworkNodeData newDspNode = newDspNodeMap.get(dspNode.getNodeHash());
                 if (!newDspNode.getPropagationPort().equals(dspNode.getPropagationPort())) {
@@ -321,6 +315,15 @@ public class BaseNodeNetworkService implements INetworkService {
             return remove;
         });
 
+    }
+
+    private void handleConnectedDspNodeRemove(NetworkNodeData dspNode) {
+        log.info("Disconnecting from dsp {} from subscribing and receiving", dspNode.getAddress());
+        communicationService.removeSubscription(dspNode.getPropagationFullAddress(), NodeType.DspNode);
+        communicationService.removeSender(dspNode.getReceivingFullAddress(), NodeType.DspNode);
+        if (recoveryServerAddress != null && recoveryServerAddress.equals(dspNode.getHttpFullAddress())) {
+            recoveryServerAddress = null;
+        }
     }
 
     @Override

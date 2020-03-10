@@ -161,7 +161,7 @@ public class NetworkFeeService {
     }
 
     private void setNetworkFeeHash(NetworkFeeData networkFeeData) {
-        BaseTransactionCrypto.NETWORK_FEE_DATA.setBaseTransactionHash(networkFeeData);
+        BaseTransactionCrypto.NETWORK_FEE_DATA.createAndSetBaseTransactionHash(networkFeeData);
     }
 
 

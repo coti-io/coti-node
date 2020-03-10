@@ -11,7 +11,7 @@ public interface IBaseTransactionCrypto {
 
     Class<? extends BaseTransactionData> getBaseTransactionClass();
 
-    void setBaseTransactionHash(BaseTransactionData baseTransactionData);
+    void createAndSetBaseTransactionHash(BaseTransactionData baseTransactionData);
 
     byte[] getSignatureMessage(TransactionData transactionData);
 

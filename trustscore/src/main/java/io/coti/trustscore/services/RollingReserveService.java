@@ -154,7 +154,7 @@ public class RollingReserveService {
     }
 
     private void setRollingReserveNodeFeeHash(RollingReserveData rollingReserveData) {
-        BaseTransactionCrypto.ROLLING_RESERVE_DATA.setBaseTransactionHash(rollingReserveData);
+        BaseTransactionCrypto.ROLLING_RESERVE_DATA.createAndSetBaseTransactionHash(rollingReserveData);
     }
 
     private void signRollingReserveFee(RollingReserveData rollingReserveData, boolean isValid) {

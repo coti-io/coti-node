@@ -260,7 +260,7 @@ public class DisputeService {
     public void updateAfterVote(DisputeData disputeData, DisputeItemData disputeItemData) {
 
         int arbitratorsCount = disputeData.getArbitratorHashes().size();
-        int majorityOfVotes = ((int) Math.floor(arbitratorsCount / 2)) + 1;
+        int majorityOfVotes = (int) Math.floor((double) arbitratorsCount / 2) + 1;
 
         int votesForConsumer = 0;
         int votesForMerchant = 0;

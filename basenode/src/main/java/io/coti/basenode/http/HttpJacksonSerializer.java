@@ -30,7 +30,7 @@ public class HttpJacksonSerializer implements ISerializer {
             return serializer.writeValueAsBytes(entity);
         } catch (JsonProcessingException e) {
             log.error("Error at jackson byte array serializer", e);
-            return null;
+            return new byte[0];
         }
     }
 

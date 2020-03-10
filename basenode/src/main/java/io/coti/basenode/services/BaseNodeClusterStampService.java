@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Service
@@ -54,16 +55,16 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(clusterstampFile))) {
             String line;
-            int relevantLineNumber = 0;
-            int signatureRelevantLines = 0;
+            AtomicInteger relevantLineNumber = new AtomicInteger(0);
+            AtomicInteger signatureRelevantLines = new AtomicInteger(0);
             boolean reachedSignatureSection = false;
             boolean finishedBalances = false;
 
             while ((line = bufferedReader.readLine()) != null) {
                 line = line.trim();
-                relevantLineNumber++;
+                relevantLineNumber.incrementAndGet();
                 if (line.isEmpty()) {
-                    if (relevantLineNumber < NUMBER_OF_GENESIS_ADDRESSES_MIN_LINES) {
+                    if (relevantLineNumber.get() < NUMBER_OF_GENESIS_ADDRESSES_MIN_LINES) {
                         throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
                     } else {
                         if (!finishedBalances)
@@ -81,16 +82,16 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                             else
                                 reachedSignatureSection = true;
                         } else {
-                            signatureRelevantLines++;
+                            signatureRelevantLines.incrementAndGet();
                             fillSignatureDataFromLine(clusterStampData, line, signatureRelevantLines);
                         }
 
                     }
                 }
             }
-            if (signatureRelevantLines == 0) {
+            if (signatureRelevantLines.get() == 0) {
                 handleClusterStampWithoutSignature(clusterStampData);
-            } else if (signatureRelevantLines == 1) {
+            } else if (signatureRelevantLines.get() == 1) {
                 throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
             } else {
                 handleClusterStampWithSignature(clusterStampData);
@@ -121,8 +122,8 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         clusterStampData.incrementMessageByteSize(balanceInBytes.length);
     }
 
-    private void fillSignatureDataFromLine(ClusterStampData clusterStampData, String line, int signatureRelevantLines) {
-        if (signatureRelevantLines > 2) {
+    private void fillSignatureDataFromLine(ClusterStampData clusterStampData, String line, AtomicInteger signatureRelevantLines) {
+        if (signatureRelevantLines.get() > 2) {
             throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
         }
 
@@ -131,12 +132,12 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         if (signatureDetails.length != NUMBER_OF_SIGNATURE_LINE_DETAILS) {
             throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
         }
-        String signaturePrefix = (signatureRelevantLines == 1) ? "r" : "s";
+        String signaturePrefix = (signatureRelevantLines.get() == 1) ? "r" : "s";
         if (!signatureDetails[0].equalsIgnoreCase(signaturePrefix)) {
             throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
         }
 
-        if (signatureRelevantLines == 1) {
+        if (signatureRelevantLines.get() == 1) {
             SignatureData signature = new SignatureData();
             clusterStampData.setSignature(signature);
             clusterStampData.getSignature().setR(signatureDetails[1]);

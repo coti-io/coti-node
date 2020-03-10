@@ -200,7 +200,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     }
 
     @Override
-    public void setBaseTransactionHash(BaseTransactionData baseTransactionData) {
+    public void createAndSetBaseTransactionHash(BaseTransactionData baseTransactionData) {
         if (!this.baseTransactionClass.isInstance(baseTransactionData)) {
             throw new IllegalArgumentException("");
         }

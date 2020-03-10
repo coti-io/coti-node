@@ -103,7 +103,7 @@ public class FeeService {
     }
 
     public void setFullNodeFeeHash(FullNodeFeeData fullNodeFeeData) {
-        BaseTransactionCrypto.FULL_NODE_FEE_DATA.setBaseTransactionHash(fullNodeFeeData);
+        BaseTransactionCrypto.FULL_NODE_FEE_DATA.createAndSetBaseTransactionHash(fullNodeFeeData);
     }
 
     public void signFullNodeFee(FullNodeFeeData fullNodeFeeData) {

@@ -10,7 +10,4 @@ public class GetHistoryTransactionsResponse extends BaseResponse {
 
     private Map<Hash, String> entitiesBulkResponses;
 
-    public GetHistoryTransactionsResponse() {
-    }
-
 }
