@@ -16,10 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.PriorityQueue;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
@@ -79,7 +76,7 @@ public class TransactionService extends BaseNodeTransactionService {
                     NodeType.ZeroSpendServer,
                     NodeType.FinancialServer,
                     NodeType.HistoryNode));
-            transactionPropagationCheckService.addUnconfirmedTransaction(transactionData.getHash());
+            transactionPropagationCheckService.addNewUnconfirmedTransaction(transactionData.getHash());
             transactionHelper.setTransactionStateToFinished(transactionData);
             transactionsToValidate.add(transactionData);
         } catch (Exception ex) {
@@ -117,15 +114,17 @@ public class TransactionService extends BaseNodeTransactionService {
             String zerospendReceivingAddress = networkService.getSingleNodeData(NodeType.ZeroSpendServer).getReceivingFullAddress();
             log.debug("Sending DSP vote to {} for transaction {}", zerospendReceivingAddress, transactionData.getHash());
             sender.send(transactionDspVote, zerospendReceivingAddress);
+            transactionPropagationCheckService.addUnconfirmedTransactionDSPVote(transactionDspVote);
         }
         isValidatorRunning.set(false);
     }
 
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
-        propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
+        propagationPublisher.propagate(transactionData, Collections.singletonList(NodeType.FullNode));
         if (!EnumSet.of(TransactionType.ZeroSpend, TransactionType.Initial).contains(transactionData.getType())) {
             transactionsToValidate.add(transactionData);
+            transactionPropagationCheckService.addPropagatedUnconfirmedTransaction(transactionData.getHash());
         }
 
     }
@@ -133,6 +132,6 @@ public class TransactionService extends BaseNodeTransactionService {
     @Override
     protected void propagateMissingTransaction(TransactionData transactionData) {
         log.debug("Propagate missing transaction {} by {} to {}", transactionData.getHash(), NodeType.DspNode, NodeType.FullNode);
-        propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
+        propagationPublisher.propagate(transactionData, Collections.singletonList(NodeType.FullNode));
     }
 }
