@@ -5,7 +5,7 @@ import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.data.*;
 import io.coti.basenode.services.BaseNodeTransactionPropagationCheckService;
 import io.coti.basenode.services.interfaces.INetworkService;
-import io.coti.dspnode.data.UnconfirmedReceivedTransactionHashDSPData;
+import io.coti.dspnode.data.UnconfirmedReceivedTransactionHashDspNodeData;
 import io.coti.dspnode.model.UnconfirmedTransactionDspVotes;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,11 +39,11 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
     public void init() {
         super.init();
         unconfirmedReceivedTransactionHashesMap = new ConcurrentHashMap<>();
-        updateRecoveredUnconfirmedReceivedTransactions();
-        updateRecoveredUnconfirmedPropagatedTransactions();
+        recoverUnconfirmedReceivedTransactions();
+        recoverUnconfirmedPropagatedTransactions();
     }
 
-    public void updateRecoveredUnconfirmedPropagatedTransactions() {
+    private void recoverUnconfirmedPropagatedTransactions() {
         List<Hash> confirmedReceiptTransactions = new ArrayList<>();
         unconfirmedTransactionDspVotes.forEach(transactionDspVote -> {
             Hash transactionHash = transactionDspVote.getTransactionHash();
@@ -60,15 +60,15 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
 
     @Override
     public void putNewUnconfirmedTransaction(UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData) {
-        UnconfirmedReceivedTransactionHashDSPData unconfirmedReceivedTransactionHashDSPData =
-                new UnconfirmedReceivedTransactionHashDSPData(unconfirmedReceivedTransactionHashData, NUMBER_OF_RETRIES_DSP_NODE);
-        unconfirmedReceivedTransactionHashesMap.put(unconfirmedReceivedTransactionHashData.getTransactionHash(), unconfirmedReceivedTransactionHashDSPData);
+        UnconfirmedReceivedTransactionHashDspNodeData unconfirmedReceivedTransactionHashDspNodeData =
+                new UnconfirmedReceivedTransactionHashDspNodeData(unconfirmedReceivedTransactionHashData, NUMBER_OF_RETRIES_DSP_NODE);
+        unconfirmedReceivedTransactionHashesMap.put(unconfirmedReceivedTransactionHashData.getTransactionHash(), unconfirmedReceivedTransactionHashDspNodeData);
     }
 
     private void putNewUnconfirmedVote(TransactionDspVote transactionDspVote) {
-        UnconfirmedReceivedTransactionHashDSPData unconfirmedReceivedTransactionHashDSPData =
-                new UnconfirmedReceivedTransactionHashDSPData(transactionDspVote.getTransactionHash(), NUMBER_OF_RETRIES_DSP_NODE, true);
-        unconfirmedReceivedTransactionHashesMap.put(transactionDspVote.getTransactionHash(), unconfirmedReceivedTransactionHashDSPData);
+        UnconfirmedReceivedTransactionHashDspNodeData unconfirmedReceivedTransactionHashDspNodeData =
+                new UnconfirmedReceivedTransactionHashDspNodeData(transactionDspVote.getTransactionHash(), NUMBER_OF_RETRIES_DSP_NODE, true);
+        unconfirmedReceivedTransactionHashesMap.put(transactionDspVote.getTransactionHash(), unconfirmedReceivedTransactionHashDspNodeData);
     }
 
     @Override
@@ -81,14 +81,14 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         doAddUnconfirmedTransaction(transactionHash, true);
     }
 
-    private void doAddUnconfirmedTransaction(Hash transactionHash, boolean dSPVoteOnly) {
-        UnconfirmedReceivedTransactionHashDSPData unconfirmedReceivedTransactionHashDSPData =
-                new UnconfirmedReceivedTransactionHashDSPData(transactionHash, NUMBER_OF_RETRIES_DSP_NODE, dSPVoteOnly);
+    private void doAddUnconfirmedTransaction(Hash transactionHash, boolean dspVoteOnly) {
+        UnconfirmedReceivedTransactionHashDspNodeData unconfirmedReceivedTransactionHashDspNodeData =
+                new UnconfirmedReceivedTransactionHashDspNodeData(transactionHash, NUMBER_OF_RETRIES_DSP_NODE, dspVoteOnly);
         try {
             synchronized (addLockToLockMap(transactionHash)) {
-                unconfirmedReceivedTransactionHashesMap.put(transactionHash, unconfirmedReceivedTransactionHashDSPData);
-                if (!dSPVoteOnly) {
-                    unconfirmedReceivedTransactionHashes.put(unconfirmedReceivedTransactionHashDSPData);
+                unconfirmedReceivedTransactionHashesMap.put(transactionHash, unconfirmedReceivedTransactionHashDspNodeData);
+                if (!dspVoteOnly) {
+                    unconfirmedReceivedTransactionHashes.put(unconfirmedReceivedTransactionHashDspNodeData);
                 }
             }
         } finally {
@@ -130,23 +130,23 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         List<Hash> unconfirmedTransactionsToRemove = unconfirmedReceivedTransactionHashesMap
                 .entrySet()
                 .stream()
-                .filter(entry -> ((UnconfirmedReceivedTransactionHashDSPData) entry.getValue()).getRetries() <= 0)
+                .filter(entry -> ((UnconfirmedReceivedTransactionHashDspNodeData) entry.getValue()).getRetries() <= 0)
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
 
-        unconfirmedTransactionsToRemove.forEach(this::doRemoveConfirmedReceiptTransaction);
+        unconfirmedTransactionsToRemove.forEach(this::removeConfirmedReceiptTransaction);
     }
 
     private void sendUnconfirmedReceivedTransactionsDSP(Map.Entry<Hash, UnconfirmedReceivedTransactionHashData> entry) {
         try {
-            UnconfirmedReceivedTransactionHashDSPData unconfirmedReceivedTransactionHashDSPData = (UnconfirmedReceivedTransactionHashDSPData) entry.getValue();
+            UnconfirmedReceivedTransactionHashDspNodeData unconfirmedReceivedTransactionHashDspNodeData = (UnconfirmedReceivedTransactionHashDspNodeData) entry.getValue();
             synchronized (addLockToLockMap(entry.getKey())) {
                 TransactionData transactionData = transactions.getByHash(entry.getKey());
                 if (transactionData == null) {
-                    unconfirmedReceivedTransactionHashDSPData.setRetries(0);
+                    unconfirmedReceivedTransactionHashDspNodeData.setRetries(0);
                 } else {
-                    sendUnconfirmedReceivedTransactionsDSP(transactionData, unconfirmedReceivedTransactionHashDSPData.isDSPVoteOnly());
-                    unconfirmedReceivedTransactionHashDSPData.setRetries(unconfirmedReceivedTransactionHashDSPData.getRetries() - 1);
+                    sendUnconfirmedReceivedTransactionsDSP(transactionData, unconfirmedReceivedTransactionHashDspNodeData.isDspVoteOnly());
+                    unconfirmedReceivedTransactionHashDspNodeData.setRetries(unconfirmedReceivedTransactionHashDspNodeData.getRetries() - 1);
                 }
             }
         } finally {

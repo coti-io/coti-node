@@ -4,7 +4,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.UnconfirmedReceivedTransactionHashData;
 import io.coti.basenode.services.BaseNodeTransactionPropagationCheckService;
-import io.coti.fullnode.data.UnconfirmedReceivedTransactionHashFullnodeData;
+import io.coti.fullnode.data.UnconfirmedReceivedTransactionHashFullNodeData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -29,21 +29,21 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
     public void init() {
         super.init();
         unconfirmedReceivedTransactionHashesMap = new ConcurrentHashMap<>();
-        updateRecoveredUnconfirmedReceivedTransactions();
+        recoverUnconfirmedReceivedTransactions();
     }
 
     @Override
     public void putNewUnconfirmedTransaction(UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData) {
-        UnconfirmedReceivedTransactionHashFullnodeData unconfirmedReceivedTransactionHashFullnodeData =
-                new UnconfirmedReceivedTransactionHashFullnodeData(unconfirmedReceivedTransactionHashData, NUMBER_OF_RETRIES_FULL_NODE);
+        UnconfirmedReceivedTransactionHashFullNodeData unconfirmedReceivedTransactionHashFullnodeData =
+                new UnconfirmedReceivedTransactionHashFullNodeData(unconfirmedReceivedTransactionHashData, NUMBER_OF_RETRIES_FULL_NODE);
         unconfirmedReceivedTransactionHashesMap.put(unconfirmedReceivedTransactionHashData.getTransactionHash(), unconfirmedReceivedTransactionHashFullnodeData);
     }
 
     @Override
     public void addNewUnconfirmedTransaction(Hash transactionHash) {
 
-        UnconfirmedReceivedTransactionHashFullnodeData unconfirmedReceivedTransactionHashFullnodeData =
-                new UnconfirmedReceivedTransactionHashFullnodeData(transactionHash, NUMBER_OF_RETRIES_FULL_NODE);
+        UnconfirmedReceivedTransactionHashFullNodeData unconfirmedReceivedTransactionHashFullnodeData =
+                new UnconfirmedReceivedTransactionHashFullNodeData(transactionHash, NUMBER_OF_RETRIES_FULL_NODE);
         try {
             synchronized (addLockToLockMap(transactionHash)) {
                 unconfirmedReceivedTransactionHashesMap.put(transactionHash, unconfirmedReceivedTransactionHashFullnodeData);
@@ -74,16 +74,16 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         List<Hash> unconfirmedTransactionsToRemove = unconfirmedReceivedTransactionHashesMap
                 .entrySet()
                 .stream()
-                .filter(entry -> ((UnconfirmedReceivedTransactionHashFullnodeData) entry.getValue()).getRetries() <= 0)
+                .filter(entry -> ((UnconfirmedReceivedTransactionHashFullNodeData) entry.getValue()).getRetries() <= 0)
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
 
-        unconfirmedTransactionsToRemove.forEach(this::doRemoveConfirmedReceiptTransaction);
+        unconfirmedTransactionsToRemove.forEach(this::removeConfirmedReceiptTransaction);
     }
 
     private void sendUnconfirmedReceivedTransactionsFullnode(Map.Entry<Hash, UnconfirmedReceivedTransactionHashData> entry) {
         try {
-            UnconfirmedReceivedTransactionHashFullnodeData unconfirmedReceivedTransactionHashFullnodeData = (UnconfirmedReceivedTransactionHashFullnodeData) entry.getValue();
+            UnconfirmedReceivedTransactionHashFullNodeData unconfirmedReceivedTransactionHashFullnodeData = (UnconfirmedReceivedTransactionHashFullNodeData) entry.getValue();
             synchronized (addLockToLockMap(entry.getKey())) {
                 TransactionData transactionData = transactions.getByHash(entry.getKey());
                 if (transactionData == null) {
