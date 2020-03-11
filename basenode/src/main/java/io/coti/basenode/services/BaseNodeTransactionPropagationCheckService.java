@@ -45,7 +45,7 @@ public class BaseNodeTransactionPropagationCheckService implements ITransactionP
     }
 
     @Override
-    public void updateRecoveredUnconfirmedReceivedTransactions() {
+    public void recoverUnconfirmedReceivedTransactions() {
         List<Hash> confirmedReceiptTransactions = new ArrayList<>();
         unconfirmedReceivedTransactionHashes.forEach(unconfirmedReceivedTransactionHashData -> {
             Hash transactionHash = unconfirmedReceivedTransactionHashData.getTransactionHash();
@@ -88,11 +88,11 @@ public class BaseNodeTransactionPropagationCheckService implements ITransactionP
 
     protected void removeTransactionHashFromUnconfirmedTransaction(Hash transactionHash) {
         if (unconfirmedReceivedTransactionHashesMap.containsKey(transactionHash)) {
-            doRemoveConfirmedReceiptTransaction(transactionHash);
+            removeConfirmedReceiptTransaction(transactionHash);
         }
     }
 
-    protected void doRemoveConfirmedReceiptTransaction(Hash transactionHash) {
+    protected void removeConfirmedReceiptTransaction(Hash transactionHash) {
         synchronized (addLockToLockMap(transactionHash)) {
             unconfirmedReceivedTransactionHashesMap.remove(transactionHash);
             unconfirmedReceivedTransactionHashes.deleteByHash(transactionHash);

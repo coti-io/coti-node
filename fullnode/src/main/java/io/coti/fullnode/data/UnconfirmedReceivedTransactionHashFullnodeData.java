@@ -5,16 +5,16 @@ import io.coti.basenode.data.UnconfirmedReceivedTransactionHashData;
 import lombok.Data;
 
 @Data
-public class UnconfirmedReceivedTransactionHashFullnodeData extends UnconfirmedReceivedTransactionHashData {
+public class UnconfirmedReceivedTransactionHashFullNodeData extends UnconfirmedReceivedTransactionHashData {
 
     private int retries;
 
-    public UnconfirmedReceivedTransactionHashFullnodeData(Hash transactionHash, int retries) {
+    public UnconfirmedReceivedTransactionHashFullNodeData(Hash transactionHash, int retries) {
         super(transactionHash);
         this.retries = retries;
     }
 
-    public UnconfirmedReceivedTransactionHashFullnodeData(UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData, int retries) {
+    public UnconfirmedReceivedTransactionHashFullNodeData(UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData, int retries) {
         super(unconfirmedReceivedTransactionHashData);
         this.retries = retries;
     }

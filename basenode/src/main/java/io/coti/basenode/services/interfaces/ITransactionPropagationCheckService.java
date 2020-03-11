@@ -8,7 +8,7 @@ public interface ITransactionPropagationCheckService {
 
     void init();
 
-    void updateRecoveredUnconfirmedReceivedTransactions();
+    void recoverUnconfirmedReceivedTransactions();
 
     void addNewUnconfirmedTransaction(Hash transactionHash);
 
