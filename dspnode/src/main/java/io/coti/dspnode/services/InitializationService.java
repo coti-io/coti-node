@@ -78,6 +78,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
             super.initServices();
             messageReceiver.initReceiverHandler();
+            transactionService.delayedMissingTransactionsPropagation();
         } catch (CotiRunTimeException e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
             e.logMessage();

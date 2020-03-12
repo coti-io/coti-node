@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class TransactionService extends BaseNodeTransactionService {
 
     private Queue<TransactionData> transactionsToValidate;
+    private Queue<TransactionData> transactionsToPropagateFromMissing;
     private AtomicBoolean isValidatorRunning;
     @Autowired
     private ITransactionHelper transactionHelper;
@@ -43,6 +44,7 @@ public class TransactionService extends BaseNodeTransactionService {
     @Override
     public void init() {
         transactionsToValidate = new PriorityQueue<>();
+        transactionsToPropagateFromMissing = new PriorityQueue<>();
         isValidatorRunning = new AtomicBoolean(false);
         super.init();
     }
@@ -141,7 +143,26 @@ public class TransactionService extends BaseNodeTransactionService {
 
     @Override
     protected void propagateMissingTransaction(TransactionData transactionData) {
-        log.debug("Propagate missing transaction {} by {} to {}", transactionData.getHash(), NodeType.DspNode, NodeType.FullNode);
-        propagationPublisher.propagate(transactionData, Collections.singletonList(NodeType.FullNode));
+        transactionsToPropagateFromMissing.add(transactionData);
+    }
+
+    public void delayedMissingTransactionsPropagation() {
+        Thread delayedTransactionPropagationThread = delayedMissingTransactionPropagationThread();
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        delayedTransactionPropagationThread.start();
+    }
+
+    private Thread delayedMissingTransactionPropagationThread() {
+        return new Thread(() -> {
+            while (!transactionsToPropagateFromMissing.isEmpty()) {
+                TransactionData transactionData = transactionsToPropagateFromMissing.remove();
+                log.debug("Propagate missing transaction {} by {} to {}", transactionData.getHash(), NodeType.DspNode, NodeType.FullNode);
+                propagationPublisher.propagate(transactionData, Collections.singletonList(NodeType.FullNode));
+            }
+        });
     }
 }
