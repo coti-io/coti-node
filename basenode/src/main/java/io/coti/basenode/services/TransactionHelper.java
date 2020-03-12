@@ -193,23 +193,7 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     public boolean isTransactionAlreadyPropagated(TransactionData transactionData) {
-        if (isTransactionExists(transactionData)) {
-            if (!isTransactionHashProcessing(transactionData.getHash())) {
-                addDspResultToDb(transactionData.getDspConsensusResult());
-            }
-            return true;
-        }
-        return false;
-    }
-
-    private void addDspResultToDb(DspConsensusResult dspConsensusResult) {
-        if (dspConsensusResult == null) {
-            return;
-        }
-        if (transactionIndexes.getByHash(new Hash(dspConsensusResult.getIndex())) == null) {
-            confirmationService.setDspcToTrue(dspConsensusResult);
-        }
-
+        return isTransactionExists(transactionData);
     }
 
     public boolean validateTrustScore(TransactionData transactionData) {
