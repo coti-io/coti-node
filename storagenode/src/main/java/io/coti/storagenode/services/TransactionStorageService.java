@@ -15,6 +15,7 @@ import reactor.core.publisher.FluxSink;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
@@ -78,30 +79,38 @@ public class TransactionStorageService extends EntityStorageService {
 
             OutputStream output = response.getOutputStream();
 
-            while (!Thread.currentThread().isInterrupted() && uncompletedTransactionCounter > 0) {
-                try {
-                    GetHashToPropagatable<TransactionData> getHashToTransactionData = retrievedTransactionQueue.take();
-                    output.write(jacksonSerializer.serialize(getHashToTransactionData));
-                    output.flush();
-                    uncompletedTransactionCounter--;
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
+            handleRetrievedTransactionsFromElasticSearch(retrievedTransactionQueue, uncompletedTransactionCounter, output);
 
             executorPool.shutdown();
-            try {
-                if (!executorPool.awaitTermination(500, TimeUnit.MILLISECONDS)) {
-                    executorPool.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                executorPool.shutdownNow();
-                Thread.currentThread().interrupt();
-            }
+            awaitTerminationForExecutorPool(executorPool);
         } catch (Exception e) {
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
         }
 
+    }
+
+    private void handleRetrievedTransactionsFromElasticSearch(BlockingQueue<GetHashToPropagatable<TransactionData>> retrievedTransactionQueue, int uncompletedTransactionCounter, OutputStream output) throws IOException {
+        while (!Thread.currentThread().isInterrupted() && uncompletedTransactionCounter > 0) {
+            try {
+                GetHashToPropagatable<TransactionData> getHashToTransactionData = retrievedTransactionQueue.take();
+                output.write(jacksonSerializer.serialize(getHashToTransactionData));
+                output.flush();
+                uncompletedTransactionCounter--;
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    private void awaitTerminationForExecutorPool(ExecutorService executorPool) {
+        try {
+            if (!executorPool.awaitTermination(500, TimeUnit.MILLISECONDS)) {
+                executorPool.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executorPool.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 
     private List<List<Hash>> divideHashesToBlocks(List<Hash> hashes) {

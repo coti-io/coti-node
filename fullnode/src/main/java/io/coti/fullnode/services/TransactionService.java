@@ -155,8 +155,7 @@ public class TransactionService extends BaseNodeTransactionService {
             transactionHelper.setTransactionStateToSaved(transactionData);
             webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
             addToExplorerIndexes(transactionData);
-            final TransactionData finalTransactionData = transactionData;
-            ((NetworkService) networkService).sendDataToConnectedDspNodes(finalTransactionData);
+            ((NetworkService) networkService).sendDataToConnectedDspNodes(transactionData);
             transactionPropagationCheckService.addUnconfirmedTransaction(transactionData.getHash());
             transactionHelper.setTransactionStateToFinished(transactionData);
             return ResponseEntity

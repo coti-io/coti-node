@@ -271,10 +271,9 @@ public class TransactionHelper implements ITransactionHelper {
                 case RECEIVED:
                     transactionHashToTransactionStateStackMapping.remove(transactionData.getHash());
                     break;
-                default: {
+                default:
                     log.error("Transaction {} has a state {} which is illegal in rollback scenario", transactionData, transactionState);
                     throw new IllegalArgumentException("Invalid transaction state");
-                }
             }
         }
     }

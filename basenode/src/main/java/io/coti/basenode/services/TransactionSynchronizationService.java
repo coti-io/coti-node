@@ -40,49 +40,29 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
     private JacksonSerializer jacksonSerializer;
     @Autowired
     private RestTemplate restTemplate;
+    private final Object finishLock = new Object();
 
-    public void requestMissingTransactions(long firstMissingTransactionIndex) {
+    public synchronized void requestMissingTransactions(long firstMissingTransactionIndex) {
         try {
             log.info("Starting to get missing transactions");
             List<TransactionData> missingTransactions = new ArrayList<>();
             Set<Hash> trustChainUnconfirmedExistingTransactionHashes = clusterService.getTrustChainConfirmationTransactionHashes();
             AtomicLong completedMissingTransactionNumber = new AtomicLong(0);
             AtomicLong receivedMissingTransactionNumber = new AtomicLong(0);
-            AtomicBoolean finishedToReceive = new AtomicBoolean(false);
+            final AtomicBoolean finishedToReceive = new AtomicBoolean(false);
+            final AtomicBoolean finishedToInsert = new AtomicBoolean(false);
             Thread monitorMissingTransactionThread = transactionService.monitorTransactionThread("missing", completedMissingTransactionNumber, receivedMissingTransactionNumber);
-            Thread insertMissingTransactionThread = insertMissingTransactionThread(missingTransactions, trustChainUnconfirmedExistingTransactionHashes, completedMissingTransactionNumber, monitorMissingTransactionThread, finishedToReceive);
-            ResponseExtractor responseExtractor = response -> {
-                byte[] buf = new byte[Math.toIntExact(MAXIMUM_BUFFER_SIZE)];
-                int offset = 0;
-                int n;
-                while ((n = response.getBody().read(buf, offset, buf.length - offset)) > 0) {
-                    try {
-                        TransactionData missingTransaction = jacksonSerializer.deserialize(buf);
-                        if (missingTransaction != null) {
-                            missingTransactions.add(missingTransaction);
-                            receivedMissingTransactionNumber.incrementAndGet();
-                            if (!insertMissingTransactionThread.isAlive()) {
-                                insertMissingTransactionThread.start();
-                            }
-                            Arrays.fill(buf, 0, offset + n, (byte) 0);
-                            offset = 0;
-                        } else {
-                            offset += n;
-                        }
-
-                    } catch (Exception e) {
-                        throw new TransactionSyncException("Error at getting chunks", e);
-                    }
-                }
-                return null;
-            };
+            Thread insertMissingTransactionThread = insertMissingTransactionThread(missingTransactions, trustChainUnconfirmedExistingTransactionHashes, completedMissingTransactionNumber, monitorMissingTransactionThread, finishedToReceive, finishedToInsert);
+            ResponseExtractor responseExtractor = getResponseExtractorForMissingTransactionChunks(missingTransactions, receivedMissingTransactionNumber, insertMissingTransactionThread);
             restTemplate.execute(networkService.getRecoveryServerAddress() + RECOVERY_NODE_GET_BATCH_ENDPOINT
                     + STARTING_INDEX_URL_PARAM_ENDPOINT + firstMissingTransactionIndex, HttpMethod.GET, null, responseExtractor);
             if (insertMissingTransactionThread.isAlive()) {
                 log.info("Received all {} missing transactions from recovery server", receivedMissingTransactionNumber);
-                synchronized (finishedToReceive) {
+                synchronized (finishLock) {
                     finishedToReceive.set(true);
-                    finishedToReceive.wait();
+                    while (!finishedToInsert.get()) {
+                        finishLock.wait(1000);
+                    }
                 }
             }
             log.info("Finished to get missing transactions");
@@ -94,35 +74,68 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
 
     }
 
-    private Thread insertMissingTransactionThread(List<TransactionData> missingTransactions, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, AtomicLong completedMissingTransactionNumber, Thread monitorMissingTransactionThread, AtomicBoolean finishedToReceive) {
+    private ResponseExtractor getResponseExtractorForMissingTransactionChunks(List<TransactionData> missingTransactions, AtomicLong receivedMissingTransactionNumber, Thread insertMissingTransactionThread) {
+        return response -> {
+            byte[] buf = new byte[Math.toIntExact(MAXIMUM_BUFFER_SIZE)];
+            int offset = 0;
+            int n;
+            while ((n = response.getBody().read(buf, offset, buf.length - offset)) > 0) {
+                try {
+                    TransactionData missingTransaction = jacksonSerializer.deserialize(buf);
+                    if (missingTransaction != null) {
+                        missingTransactions.add(missingTransaction);
+                        receivedMissingTransactionNumber.incrementAndGet();
+                        if (!insertMissingTransactionThread.isAlive()) {
+                            insertMissingTransactionThread.start();
+                        }
+                        Arrays.fill(buf, 0, offset + n, (byte) 0);
+                        offset = 0;
+                    } else {
+                        offset += n;
+                    }
+
+                } catch (Exception e) {
+                    throw new TransactionSyncException("Error at getting chunks", e);
+                }
+            }
+            return null;
+        };
+    }
+
+    private Thread insertMissingTransactionThread(List<TransactionData> missingTransactions, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, AtomicLong completedMissingTransactionNumber, Thread monitorMissingTransactionThread, final AtomicBoolean finishedToReceive, final AtomicBoolean finishedToInsert) {
         return new Thread(() -> {
             Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap = new ConcurrentHashMap<>();
             int offset = 0;
-            int nextOffSet;
-            int missingTransactionsSize;
             monitorMissingTransactionThread.start();
 
-            while ((missingTransactionsSize = missingTransactions.size()) > offset || !finishedToReceive.get()) {
-                if (missingTransactionsSize - 1 > offset || (missingTransactionsSize - 1 == offset && missingTransactions.get(offset) != null)) {
-                    nextOffSet = offset + (finishedToReceive.get() ? missingTransactionsSize - offset : 1);
-                    for (int i = offset; i < nextOffSet; i++) {
-                        TransactionData transactionData = missingTransactions.get(i);
-                        transactionService.handleMissingTransaction(transactionData, trustChainUnconfirmedExistingTransactionHashes);
-                        transactionHelper.updateAddressTransactionHistory(addressToTransactionsHistoryMap, transactionData);
-                        missingTransactions.set(i, null);
-                        completedMissingTransactionNumber.incrementAndGet();
-                    }
-                    offset = nextOffSet;
-                }
-            }
-            addressTransactionsHistories.putBatch(addressToTransactionsHistoryMap);
+            insertMissingTransactions(missingTransactions, trustChainUnconfirmedExistingTransactionHashes, completedMissingTransactionNumber, finishedToReceive, addressToTransactionsHistoryMap, offset);
             monitorMissingTransactionThread.interrupt();
-            synchronized (finishedToReceive) {
-                finishedToReceive.notify();
+            synchronized (finishLock) {
+                finishedToInsert.set(true);
+                finishLock.notifyAll();
             }
 
         });
 
+    }
+
+    private void insertMissingTransactions(List<TransactionData> missingTransactions, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, AtomicLong completedMissingTransactionNumber, AtomicBoolean finishedToReceive, Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap, int offset) {
+        int missingTransactionsSize;
+        int nextOffSet;
+        while ((missingTransactionsSize = missingTransactions.size()) > offset || !finishedToReceive.get()) {
+            if (missingTransactionsSize - 1 > offset || (missingTransactionsSize - 1 == offset && missingTransactions.get(offset) != null)) {
+                nextOffSet = offset + (finishedToReceive.get() ? missingTransactionsSize - offset : 1);
+                for (int i = offset; i < nextOffSet; i++) {
+                    TransactionData transactionData = missingTransactions.get(i);
+                    transactionService.handleMissingTransaction(transactionData, trustChainUnconfirmedExistingTransactionHashes);
+                    transactionHelper.updateAddressTransactionHistory(addressToTransactionsHistoryMap, transactionData);
+                    missingTransactions.set(i, null);
+                    completedMissingTransactionNumber.incrementAndGet();
+                }
+                offset = nextOffSet;
+            }
+        }
+        addressTransactionsHistories.putBatch(addressToTransactionsHistoryMap);
     }
 
 }

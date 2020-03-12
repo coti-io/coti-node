@@ -42,6 +42,28 @@ public class SourceStarvationService {
 
         clusterHelper.sortByTopologicalOrder(trustChainConfirmationCluster, topologicalOrderedGraph);
 
+        createNewStarvationZeroSpendTransactions(now, topologicalOrderedGraph, nonZeroSpendChainTransactions);
+
+        createNewGenesisZeroSpendTransactions();
+    }
+
+    private void createNewGenesisZeroSpendTransactions() {
+        List<Set<TransactionData>> sourceListsByTrustScore = clusterService.getSourceListsByTrustScore();
+        boolean isTrustScoreRangeContainsSource = false;
+        for (int i = 1; i <= 100; i++) {
+            if (!sourceListsByTrustScore.get(i).isEmpty()) {
+                isTrustScoreRangeContainsSource = true;
+            }
+            if (i % 10 == 0) {
+                if (!isTrustScoreRangeContainsSource) {
+                    transactionCreationService.createNewGenesisZeroSpendTransaction(i);
+                }
+                isTrustScoreRangeContainsSource = false;
+            }
+        }
+    }
+
+    private void createNewStarvationZeroSpendTransactions(Instant now, LinkedList<TransactionData> topologicalOrderedGraph, ConcurrentHashMap<Hash, Instant> nonZeroSpendChainTransactions) {
         for (int i = topologicalOrderedGraph.size() - 1; i >= 0; i--) {
             TransactionData transactionData = topologicalOrderedGraph.get(i);
             if (!transactionData.getType().equals(TransactionType.ZeroSpend)) {
@@ -59,31 +81,16 @@ public class SourceStarvationService {
                 }
             }
         }
-
-        List<Set<TransactionData>> sourceListsByTrustScore = clusterService.getSourceListsByTrustScore();
-        boolean isTrustScoreRangeContainsSource = false;
-        for (int i = 1; i <= 100; i++) {
-            if (!sourceListsByTrustScore.get(i).isEmpty()) {
-                isTrustScoreRangeContainsSource = true;
-            }
-            if (i % 10 == 0) {
-                if (!isTrustScoreRangeContainsSource) {
-                    transactionCreationService.createNewGenesisZeroSpendTransaction(i);
-                }
-                isTrustScoreRangeContainsSource = false;
-            }
-        }
     }
 
     private void parentInNonZeroChain(Hash parentHash, Hash transactionHash, ConcurrentHashMap<Hash, Instant> nonZeroSpendChainTransactions) {
         if (parentHash != null) {
             Instant parentAttachmentTime = nonZeroSpendChainTransactions.get(parentHash);
             if (parentAttachmentTime != null) {
-                Instant transactionAttachTime = nonZeroSpendChainTransactions.get(transactionHash);
-                if (transactionAttachTime == null || transactionAttachTime.isBefore(parentAttachmentTime)) {
-                    transactionAttachTime = parentAttachmentTime;
-                }
-                nonZeroSpendChainTransactions.put(transactionHash, transactionAttachTime);
+                nonZeroSpendChainTransactions.computeIfPresent(transactionHash, (transactionHashKey, transactionAttachmentTime) ->
+                        transactionAttachmentTime.isAfter(parentAttachmentTime) ? parentAttachmentTime : transactionAttachmentTime
+                );
+                nonZeroSpendChainTransactions.putIfAbsent(transactionHash, parentAttachmentTime);
             }
         }
     }
