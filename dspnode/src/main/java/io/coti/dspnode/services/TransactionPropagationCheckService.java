@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 public class TransactionPropagationCheckService extends BaseNodeTransactionPropagationCheckService {
 
     private static final long PERIOD_IN_SECONDS_BEFORE_PROPAGATE_AGAIN_DSP_NODE = 60;
-    private static final int NUMBER_OF_RETRIES_DSP_NODE = 3;
+    private static final int NUMBER_OF_RETRIES_DSP_NODE = 5;
     @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired

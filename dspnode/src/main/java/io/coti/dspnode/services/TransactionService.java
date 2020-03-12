@@ -49,12 +49,22 @@ public class TransactionService extends BaseNodeTransactionService {
 
     public void handleNewTransactionFromFullNode(TransactionData transactionData) {
         log.debug("Running new transactions from full node handler");
-        if (transactionHelper.isTransactionAlreadyPropagated(transactionData)) {
+        boolean isTransactionAlreadyPropagated;
+        try {
+            synchronized (addLockToLockMap(transactionData.getHash())) {
+                isTransactionAlreadyPropagated = transactionHelper.isTransactionAlreadyPropagated(transactionData);
+                if (!isTransactionAlreadyPropagated) {
+                    transactionHelper.startHandleTransaction(transactionData);
+                }
+            }
+        } finally {
+            removeLockFromLocksMap(transactionData.getHash());
+        }
+        if (isTransactionAlreadyPropagated) {
             log.debug("Transaction already exists: {}", transactionData.getHash());
             return;
         }
         try {
-            transactionHelper.startHandleTransaction(transactionData);
             if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
                 log.error("Data Integrity validation failed: {}", transactionData.getHash());
                 return;
