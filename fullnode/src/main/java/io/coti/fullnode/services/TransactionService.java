@@ -20,10 +20,7 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
-import io.coti.basenode.services.interfaces.IChunkService;
-import io.coti.basenode.services.interfaces.IClusterService;
-import io.coti.basenode.services.interfaces.INetworkService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.interfaces.*;
 import io.coti.fullnode.crypto.ResendTransactionRequestCrypto;
 import io.coti.fullnode.http.*;
 import io.coti.fullnode.websocket.WebSocketSender;
@@ -73,10 +70,14 @@ public class TransactionService extends BaseNodeTransactionService {
     private IChunkService chunkService;
     @Autowired
     private PotService potService;
+    @Autowired
+    protected ITransactionPropagationCheckService transactionPropagationCheckService;
+
     private BlockingQueue<ReducedTransactionData> explorerIndexQueue;
     private IndexedNavigableSet<ReducedTransactionData> explorerIndexedTransactionSet;
     @Autowired
     private ResendTransactionRequestCrypto resendTransactionRequestCrypto;
+
 
     @Override
     public void init() {
@@ -452,4 +453,8 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
+    @Override
+    public void removeTransactionHashFromUnconfirmed(TransactionData transactionData) {
+        transactionPropagationCheckService.removeTransactionHashFromUnconfirmed(transactionData.getHash());
+    }
 }

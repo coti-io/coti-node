@@ -39,8 +39,6 @@ public class BaseNodeTransactionService implements ITransactionService {
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
-    protected ITransactionPropagationCheckService transactionPropagationCheckService;
-    @Autowired
     private JacksonSerializer jacksonSerializer;
     @Autowired
     private TransactionIndexes transactionIndexes;
@@ -133,7 +131,7 @@ public class BaseNodeTransactionService implements ITransactionService {
     @Override
     public void handlePropagatedTransaction(TransactionData transactionData) {
         if (transactionHelper.isTransactionAlreadyPropagated(transactionData)) {
-            transactionPropagationCheckService.removeTransactionHashFromUnconfirmedOnBackPropagation(transactionData.getHash());
+            removeTransactionHashFromUnconfirmed(transactionData);
             log.debug("Transaction already exists: {}", transactionData.getHash());
             return;
         }
@@ -167,6 +165,10 @@ public class BaseNodeTransactionService implements ITransactionService {
                 processPostponedTransactions(transactionData);
             }
         }
+    }
+
+    public void removeTransactionHashFromUnconfirmed(TransactionData transactionData) {
+        // Implemented by Full Node
     }
 
     protected void processPostponedTransactions(TransactionData transactionData) {

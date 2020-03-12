@@ -33,6 +33,13 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
     }
 
     @Override
+    public void removeConfirmedReceivedTransactions(List<Hash> confirmedReceiptTransactions) {
+        confirmedReceiptTransactions.forEach(confirmedTransactionHash ->
+                unconfirmedReceivedTransactionHashes.deleteByHash(confirmedTransactionHash)
+        );
+    }
+
+    @Override
     public void putNewUnconfirmedTransaction(UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData) {
         UnconfirmedReceivedTransactionHashFullNodeData unconfirmedReceivedTransactionHashFullnodeData =
                 new UnconfirmedReceivedTransactionHashFullNodeData(unconfirmedReceivedTransactionHashData, NUMBER_OF_RETRIES_FULL_NODE);
@@ -55,13 +62,12 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
     }
 
     @Override
-    public void removeTransactionHashFromUnconfirmed(Hash transactionHash) {
-        removeTransactionHashFromUnconfirmedTransaction(transactionHash);
-    }
-
-    @Override
-    public void removeTransactionHashFromUnconfirmedOnBackPropagation(Hash transactionHash) {
-        removeTransactionHashFromUnconfirmed(transactionHash);
+    public void removeConfirmedReceiptTransaction(Hash transactionHash) {
+        synchronized (addLockToLockMap(transactionHash)) {
+            unconfirmedReceivedTransactionHashesMap.remove(transactionHash);
+            unconfirmedReceivedTransactionHashes.deleteByHash(transactionHash);
+        }
+        removeLockFromLocksMap(transactionHash);
     }
 
     @Scheduled(initialDelay = 60000, fixedDelay = 60000)
