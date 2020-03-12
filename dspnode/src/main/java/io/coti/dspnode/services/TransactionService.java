@@ -37,6 +37,8 @@ public class TransactionService extends BaseNodeTransactionService {
     private TransactionDspVoteCrypto transactionDspVoteCrypto;
     @Autowired
     private INetworkService networkService;
+    @Autowired
+    private TransactionPropagationCheckService transactionPropagationCheckService;
 
     @Override
     public void init() {

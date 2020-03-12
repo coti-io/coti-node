@@ -1,8 +1,9 @@
 package io.coti.basenode.services.interfaces;
 
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.TransactionDspVote;
 import io.coti.basenode.data.UnconfirmedReceivedTransactionHashData;
+
+import java.util.List;
 
 public interface ITransactionPropagationCheckService {
 
@@ -10,18 +11,18 @@ public interface ITransactionPropagationCheckService {
 
     void recoverUnconfirmedReceivedTransactions();
 
-    void addNewUnconfirmedTransaction(Hash transactionHash);
+    default void addNewUnconfirmedTransaction(Hash transactionHash) {
+    }
 
-    void addPropagatedUnconfirmedTransaction(Hash transactionHash);
+    default void removeConfirmedReceivedTransactions(List<Hash> confirmedReceiptTransactions) {
+    }
 
-    void addUnconfirmedTransactionDSPVote(TransactionDspVote transactionDspVote);
-
-    void putNewUnconfirmedTransaction(UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData);
+    default void putNewUnconfirmedTransaction(UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData) {
+    }
 
     void removeTransactionHashFromUnconfirmed(Hash transactionHash);
 
-    void removeConfirmedReceiptTransactionDSPVote(Hash transactionHash);
-
-    void removeTransactionHashFromUnconfirmedOnBackPropagation(Hash transactionHash);
+    default void removeConfirmedReceiptTransaction(Hash transactionHash) {
+    }
 
 }

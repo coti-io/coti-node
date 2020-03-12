@@ -2,7 +2,6 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.TransactionDspVote;
 import io.coti.basenode.data.UnconfirmedReceivedTransactionHashData;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.model.UnconfirmedReceivedTransactionHashes;
@@ -55,61 +54,14 @@ public class BaseNodeTransactionPropagationCheckService implements ITransactionP
                 putNewUnconfirmedTransaction(unconfirmedReceivedTransactionHashData);
             }
         });
-        confirmedReceiptTransactions.forEach(confirmedTransactionHash -> {
-            unconfirmedReceivedTransactionHashes.deleteByHash(confirmedTransactionHash);
-            removeConfirmedReceiptTransactionDSPVote(confirmedTransactionHash);
-        });
-    }
-
-    @Override
-    public void putNewUnconfirmedTransaction(UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData) {
-        // implemented for full nodes and dsp nodes
-    }
-
-    @Override
-    public void addNewUnconfirmedTransaction(Hash transactionHash) {
-        // implemented for full nodes and dsp nodes
-    }
-
-    @Override
-    public void addPropagatedUnconfirmedTransaction(Hash transactionHash) {
-        // implemented for dsp nodes
-    }
-
-    @Override
-    public void addUnconfirmedTransactionDSPVote(TransactionDspVote transactionDspVote) {
-        // implemented for dsp nodes
+        removeConfirmedReceivedTransactions(confirmedReceiptTransactions);
     }
 
     @Override
     public void removeTransactionHashFromUnconfirmed(Hash transactionHash) {
-        // implemented for full nodes and dsp nodes
-    }
-
-    protected void removeTransactionHashFromUnconfirmedTransaction(Hash transactionHash) {
         if (unconfirmedReceivedTransactionHashesMap.containsKey(transactionHash)) {
             removeConfirmedReceiptTransaction(transactionHash);
         }
-    }
-
-    protected void removeConfirmedReceiptTransaction(Hash transactionHash) {
-        synchronized (addLockToLockMap(transactionHash)) {
-            unconfirmedReceivedTransactionHashesMap.remove(transactionHash);
-            unconfirmedReceivedTransactionHashes.deleteByHash(transactionHash);
-            removeConfirmedReceiptTransactionDSPVote(transactionHash);
-        }
-        removeLockFromLocksMap(transactionHash);
-    }
-
-    @Override
-    public void removeConfirmedReceiptTransactionDSPVote(Hash transactionHash) {
-        // implemented for dsp nodes
-    }
-
-
-    @Override
-    public void removeTransactionHashFromUnconfirmedOnBackPropagation(Hash transactionHash) {
-        // implemented for full nodes
     }
 
     protected Hash addLockToLockMap(Hash hash) {
@@ -124,5 +76,4 @@ public class BaseNodeTransactionPropagationCheckService implements ITransactionP
             lockVotedTransactionRecordHashMap.remove(hash);
         }
     }
-
 }

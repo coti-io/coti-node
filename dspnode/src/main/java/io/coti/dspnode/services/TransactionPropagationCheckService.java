@@ -59,6 +59,14 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
     }
 
     @Override
+    public void removeConfirmedReceivedTransactions(List<Hash> confirmedReceiptTransactions) {
+        confirmedReceiptTransactions.forEach(confirmedTransactionHash -> {
+            unconfirmedReceivedTransactionHashes.deleteByHash(confirmedTransactionHash);
+            removeConfirmedReceiptTransactionDSPVote(confirmedTransactionHash);
+        });
+    }
+
+    @Override
     public void putNewUnconfirmedTransaction(UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData) {
         UnconfirmedReceivedTransactionHashDspNodeData unconfirmedReceivedTransactionHashDspNodeData =
                 new UnconfirmedReceivedTransactionHashDspNodeData(unconfirmedReceivedTransactionHashData, NUMBER_OF_RETRIES_DSP_NODE);
@@ -76,7 +84,6 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         doAddUnconfirmedTransaction(transactionHash, false);
     }
 
-    @Override
     public void addPropagatedUnconfirmedTransaction(Hash transactionHash) {
         doAddUnconfirmedTransaction(transactionHash, true);
     }
@@ -96,7 +103,6 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         }
     }
 
-    @Override
     public void addUnconfirmedTransactionDSPVote(TransactionDspVote transactionDspVote) {
         Hash transactionHash = transactionDspVote.getTransactionHash();
         try {
@@ -111,11 +117,18 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
     }
 
     @Override
-    public void removeTransactionHashFromUnconfirmed(Hash transactionHash) {
-        removeTransactionHashFromUnconfirmedTransaction(transactionHash);
+    public void removeConfirmedReceiptTransaction(Hash transactionHash) {
+        try {
+            synchronized (addLockToLockMap(transactionHash)) {
+                unconfirmedReceivedTransactionHashesMap.remove(transactionHash);
+                unconfirmedReceivedTransactionHashes.deleteByHash(transactionHash);
+                removeConfirmedReceiptTransactionDSPVote(transactionHash);
+            }
+        } finally {
+            removeLockFromLocksMap(transactionHash);
+        }
     }
 
-    @Override
     public void removeConfirmedReceiptTransactionDSPVote(Hash transactionHash) {
         unconfirmedTransactionDspVotes.deleteByHash(transactionHash);
     }
