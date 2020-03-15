@@ -17,9 +17,13 @@ public class UnconfirmedReceivedTransactionHashDspNodeData extends UnconfirmedRe
     }
 
     public UnconfirmedReceivedTransactionHashDspNodeData(UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData, int retries) {
+        this(unconfirmedReceivedTransactionHashData, retries, false);
+    }
+
+    public UnconfirmedReceivedTransactionHashDspNodeData(UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData, int retries, boolean dspVoteOnly) {
         super(unconfirmedReceivedTransactionHashData);
         this.retries = retries;
-        this.dspVoteOnly = false;
+        this.dspVoteOnly = dspVoteOnly;
     }
 
 }

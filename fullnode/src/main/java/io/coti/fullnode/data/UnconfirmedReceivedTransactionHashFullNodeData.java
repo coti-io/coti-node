@@ -6,6 +6,7 @@ import lombok.Data;
 
 @Data
 public class UnconfirmedReceivedTransactionHashFullNodeData extends UnconfirmedReceivedTransactionHashData {
+
     private int retries;
 
     public UnconfirmedReceivedTransactionHashFullNodeData(Hash transactionHash, int retries) {

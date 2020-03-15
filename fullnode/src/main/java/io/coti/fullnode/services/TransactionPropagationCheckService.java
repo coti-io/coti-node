@@ -41,23 +41,25 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
 
     @Override
     public void putNewUnconfirmedTransaction(UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData) {
-        UnconfirmedReceivedTransactionHashFullNodeData unconfirmedReceivedTransactionHashFullnodeData =
+        putToUnconfirmedReceivedTransactionHashesMap(unconfirmedReceivedTransactionHashData);
+    }
+
+    private void putToUnconfirmedReceivedTransactionHashesMap(UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData) {
+        UnconfirmedReceivedTransactionHashFullNodeData unconfirmedReceivedTransactionHashFullNodeData =
                 new UnconfirmedReceivedTransactionHashFullNodeData(unconfirmedReceivedTransactionHashData, NUMBER_OF_RETRIES_FULL_NODE);
-        unconfirmedReceivedTransactionHashesMap.put(unconfirmedReceivedTransactionHashData.getTransactionHash(), unconfirmedReceivedTransactionHashFullnodeData);
+        unconfirmedReceivedTransactionHashesMap.put(unconfirmedReceivedTransactionHashData.getTransactionHash(), unconfirmedReceivedTransactionHashFullNodeData);
     }
 
     @Override
     public void addNewUnconfirmedTransaction(Hash transactionHash) {
-
-        UnconfirmedReceivedTransactionHashFullNodeData unconfirmedReceivedTransactionHashFullnodeData =
-                new UnconfirmedReceivedTransactionHashFullNodeData(transactionHash, NUMBER_OF_RETRIES_FULL_NODE);
         try {
             synchronized (addLockToLockMap(transactionHash)) {
-                unconfirmedReceivedTransactionHashesMap.put(transactionHash, unconfirmedReceivedTransactionHashFullnodeData);
-                unconfirmedReceivedTransactionHashes.put(unconfirmedReceivedTransactionHashFullnodeData);
+                UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData = new UnconfirmedReceivedTransactionHashData(transactionHash);
+                putToUnconfirmedReceivedTransactionHashesMap(unconfirmedReceivedTransactionHashData);
+                unconfirmedReceivedTransactionHashes.put(unconfirmedReceivedTransactionHashData);
             }
         } finally {
-            removeLockFromLocksMap(transactionHash);
+            removeLockFromLockMap(transactionHash);
         }
     }
 
@@ -67,7 +69,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
             unconfirmedReceivedTransactionHashesMap.remove(transactionHash);
             unconfirmedReceivedTransactionHashes.deleteByHash(transactionHash);
         }
-        removeLockFromLocksMap(transactionHash);
+        removeLockFromLockMap(transactionHash);
     }
 
     @Scheduled(initialDelay = 60000, fixedDelay = 60000)
@@ -100,7 +102,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
                 }
             }
         } finally {
-            removeLockFromLocksMap(entry.getKey());
+            removeLockFromLockMap(entry.getKey());
         }
     }
 

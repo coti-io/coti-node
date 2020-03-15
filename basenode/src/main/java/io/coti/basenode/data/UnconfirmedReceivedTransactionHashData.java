@@ -12,7 +12,9 @@ public class UnconfirmedReceivedTransactionHashData implements IEntity {
     private Hash transactionHash;
     private Instant createdTime;
 
-    public UnconfirmedReceivedTransactionHashData(){}
+    protected UnconfirmedReceivedTransactionHashData() {
+
+    }
 
     public UnconfirmedReceivedTransactionHashData(Hash transactionHash) {
         this.transactionHash = transactionHash;

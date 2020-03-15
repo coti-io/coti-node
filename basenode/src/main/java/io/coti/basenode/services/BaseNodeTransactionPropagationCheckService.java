@@ -27,7 +27,7 @@ public class BaseNodeTransactionPropagationCheckService implements ITransactionP
     @Autowired
     protected UnconfirmedReceivedTransactionHashes unconfirmedReceivedTransactionHashes;
     protected Map<Hash, UnconfirmedReceivedTransactionHashData> unconfirmedReceivedTransactionHashesMap;
-    protected Map<Hash, Hash> lockVotedTransactionRecordHashMap = new ConcurrentHashMap<>();
+    private final Map<Hash, Hash> lockVotedTransactionRecordHashMap = new ConcurrentHashMap<>();
     private final Object lock = new Object();
 
     @Override
@@ -71,7 +71,7 @@ public class BaseNodeTransactionPropagationCheckService implements ITransactionP
         }
     }
 
-    protected void removeLockFromLocksMap(Hash hash) {
+    protected void removeLockFromLockMap(Hash hash) {
         synchronized (lock) {
             lockVotedTransactionRecordHashMap.remove(hash);
         }
