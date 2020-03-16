@@ -89,7 +89,7 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     public ResponseEntity<Response> addNewTransaction(AddTransactionRequest request) {
-        TransactionData transactionData =
+        final TransactionData transactionData =
                 new TransactionData(
                         request.getBaseTransactions(),
                         request.getHash(),

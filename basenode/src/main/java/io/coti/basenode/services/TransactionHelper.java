@@ -22,6 +22,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static io.coti.basenode.data.TransactionState.*;
@@ -47,7 +48,7 @@ public class TransactionHelper implements ITransactionHelper {
     private TransactionIndexes transactionIndexes;
     @Autowired
     private ExpandedTransactionTrustScoreCrypto expandedTransactionTrustScoreCrypto;
-    private Map<Hash, Stack<TransactionState>> transactionHashToTransactionStateStackMapping;
+    private Map<Hash, Deque<TransactionState>> transactionHashToTransactionStateStackMapping;
     private AtomicLong totalTransactions = new AtomicLong(0);
     private Set<Hash> noneIndexedTransactionHashes;
 
@@ -236,7 +237,7 @@ public class TransactionHelper implements ITransactionHelper {
 
     public void startHandleTransaction(TransactionData transactionData) {
 
-        transactionHashToTransactionStateStackMapping.put(transactionData.getHash(), new Stack());
+        transactionHashToTransactionStateStackMapping.put(transactionData.getHash(), new ConcurrentLinkedDeque<>());
         transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(RECEIVED);
     }
 
@@ -254,11 +255,11 @@ public class TransactionHelper implements ITransactionHelper {
 
     @Override
     public boolean isTransactionFinished(TransactionData transactionData) {
-        return transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).peek().equals(FINISHED);
+        return transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).element().equals(FINISHED);
     }
 
     private void rollbackTransaction(TransactionData transactionData) {
-        Stack<TransactionState> currentTransactionStateStack = transactionHashToTransactionStateStackMapping.get(transactionData.getHash());
+        Deque<TransactionState> currentTransactionStateStack = transactionHashToTransactionStateStackMapping.get(transactionData.getHash());
         while (!currentTransactionStateStack.isEmpty()) {
             TransactionState transactionState = currentTransactionStateStack.pop();
             switch (transactionState) {
