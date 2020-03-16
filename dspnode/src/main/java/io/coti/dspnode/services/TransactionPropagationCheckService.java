@@ -137,6 +137,9 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
 
     @Scheduled(initialDelay = 60000, fixedDelay = 60000)
     private void propagateUnconfirmedReceivedTransactions() {
+        if (!unconfirmedReceivedTransactionHashesMap.isEmpty()) {
+            unconfirmedReceivedTransactionHashesMap.forEach((key, value) -> log.warn(key.toString()));
+        }   // todo delete after tests
         unconfirmedReceivedTransactionHashesMap
                 .entrySet()
                 .stream()
