@@ -131,7 +131,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         }
     }
 
-    public void removeConfirmedReceiptTransactionDSPVote(Hash transactionHash) {
+    private void removeConfirmedReceiptTransactionDSPVote(Hash transactionHash) {
         unconfirmedTransactionDspVotes.deleteByHash(transactionHash);
     }
 
@@ -169,14 +169,14 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         }
     }
 
-    public void sendUnconfirmedReceivedTransactionsDSP(TransactionData transactionData, boolean dSPVoteOnly) {
+    private void sendUnconfirmedReceivedTransactionsDSP(TransactionData transactionData, boolean dspVoteOnly) {
         TransactionDspVote transactionDspVote = unconfirmedTransactionDspVotes.getByHash(transactionData.getHash());
         if (transactionDspVote != null) {
-            String zerospendReceivingAddress = networkService.getSingleNodeData(NodeType.ZeroSpendServer).getReceivingFullAddress();
-            sender.send(transactionDspVote, zerospendReceivingAddress);
+            String zeroSpendReceivingAddress = networkService.getSingleNodeData(NodeType.ZeroSpendServer).getReceivingFullAddress();
+            sender.send(transactionDspVote, zeroSpendReceivingAddress);
         }
 
-        if (!dSPVoteOnly) {
+        if (!dspVoteOnly) {
             propagationPublisher.propagate(transactionData, Arrays.asList(
                     NodeType.FullNode,
                     NodeType.TrustScoreNode,

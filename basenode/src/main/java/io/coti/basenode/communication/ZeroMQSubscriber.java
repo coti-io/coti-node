@@ -77,15 +77,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
             boolean contextTerminated = false;
             while (!contextTerminated && !Thread.currentThread().isInterrupted()) {
                 try {
-                    String channel = propagationReceiver.recvStr();
-                    log.debug("Received a new message on channel: {}", channel);
-                    String[] channelArray = channel.split("-");
-                    Class<? extends IPropagatable> propagatedMessageType = (Class<? extends IPropagatable>) Class.forName(channelArray[0]);
-                    byte[] message = propagationReceiver.recv();
-                    ZeroMQSubscriberQueue.getQueue(propagatedMessageType).put(new ZeroMQMessageData(channel, message));
-                } catch (InterruptedException e) {
-                    log.info("ZMQ subscriber propagation receiver interrupted");
-                    Thread.currentThread().interrupt();
+                    addToMessageQueue();
                 } catch (ZMQException e) {
                     if (e.getErrorCode() == ZMQ.Error.ETERM.getCode()) {
                         contextTerminated = true;
@@ -101,6 +93,20 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         propagationReceiverThread.start();
 
 
+    }
+
+    private void addToMessageQueue() throws ClassNotFoundException {
+        try {
+            String channel = propagationReceiver.recvStr();
+            log.debug("Received a new message on channel: {}", channel);
+            String[] channelArray = channel.split("-");
+            Class<? extends IPropagatable> propagatedMessageType = (Class<? extends IPropagatable>) Class.forName(channelArray[0]);
+            byte[] message = propagationReceiver.recv();
+            ZeroMQSubscriberQueue.getQueue(propagatedMessageType).put(new ZeroMQMessageData(channel, message));
+        } catch (InterruptedException e) {
+            log.info("ZMQ subscriber propagation receiver interrupted");
+            Thread.currentThread().interrupt();
+        }
     }
 
     @Override

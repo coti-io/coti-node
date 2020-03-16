@@ -65,20 +65,23 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
 
     @Override
     public void removeConfirmedReceiptTransaction(Hash transactionHash) {
-        synchronized (addLockToLockMap(transactionHash)) {
-            unconfirmedReceivedTransactionHashesMap.remove(transactionHash);
-            unconfirmedReceivedTransactionHashes.deleteByHash(transactionHash);
+        try {
+            synchronized (addLockToLockMap(transactionHash)) {
+                unconfirmedReceivedTransactionHashesMap.remove(transactionHash);
+                unconfirmedReceivedTransactionHashes.deleteByHash(transactionHash);
+            }
+        } finally {
+            removeLockFromLockMap(transactionHash);
         }
-        removeLockFromLockMap(transactionHash);
     }
 
     @Scheduled(initialDelay = 60000, fixedDelay = 60000)
-    private void sendUnconfirmedReceivedTransactionsFullnode() {
+    private void sendUnconfirmedReceivedTransactionsFullNode() {
         unconfirmedReceivedTransactionHashesMap
                 .entrySet()
                 .stream()
                 .filter(entry -> entry.getValue().getCreatedTime().plusSeconds(PERIOD_IN_SECONDS_BEFORE_PROPAGATE_AGAIN_FULL_NODE).isBefore(Instant.now()))
-                .forEach(this::sendUnconfirmedReceivedTransactionsFullnode);
+                .forEach(this::sendUnconfirmedReceivedTransactionsFullNode);
         List<Hash> unconfirmedTransactionsToRemove = unconfirmedReceivedTransactionHashesMap
                 .entrySet()
                 .stream()
@@ -89,7 +92,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         unconfirmedTransactionsToRemove.forEach(this::removeConfirmedReceiptTransaction);
     }
 
-    private void sendUnconfirmedReceivedTransactionsFullnode(Map.Entry<Hash, UnconfirmedReceivedTransactionHashData> entry) {
+    private void sendUnconfirmedReceivedTransactionsFullNode(Map.Entry<Hash, UnconfirmedReceivedTransactionHashData> entry) {
         try {
             UnconfirmedReceivedTransactionHashFullNodeData unconfirmedReceivedTransactionHashFullnodeData = (UnconfirmedReceivedTransactionHashFullNodeData) entry.getValue();
             synchronized (addLockToLockMap(entry.getKey())) {
@@ -97,7 +100,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
                 if (transactionData == null) {
                     unconfirmedReceivedTransactionHashFullnodeData.setRetries(0);
                 } else {
-                    sendUnconfirmedReceivedTransactionsFullnode(transactionData);
+                    sendUnconfirmedReceivedTransactionsFullNode(transactionData);
                     unconfirmedReceivedTransactionHashFullnodeData.setRetries(unconfirmedReceivedTransactionHashFullnodeData.getRetries() - 1);
                 }
             }
@@ -106,7 +109,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         }
     }
 
-    public void sendUnconfirmedReceivedTransactionsFullnode(TransactionData transactionData) {
+    private void sendUnconfirmedReceivedTransactionsFullNode(TransactionData transactionData) {
         networkService.sendDataToConnectedDspNodes(transactionData);
     }
 }

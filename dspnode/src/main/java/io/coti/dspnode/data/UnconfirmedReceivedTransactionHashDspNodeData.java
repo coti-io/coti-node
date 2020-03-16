@@ -1,6 +1,5 @@
 package io.coti.dspnode.data;
 
-import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.UnconfirmedReceivedTransactionHashData;
 import lombok.Data;
 
@@ -9,16 +8,6 @@ public class UnconfirmedReceivedTransactionHashDspNodeData extends UnconfirmedRe
 
     private int retries;
     private boolean dspVoteOnly;
-
-    public UnconfirmedReceivedTransactionHashDspNodeData(Hash transactionHash, int retries, boolean dspVoteOnly) {
-        super(transactionHash);
-        this.retries = retries;
-        this.dspVoteOnly = dspVoteOnly;
-    }
-
-    public UnconfirmedReceivedTransactionHashDspNodeData(UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData, int retries) {
-        this(unconfirmedReceivedTransactionHashData, retries, false);
-    }
 
     public UnconfirmedReceivedTransactionHashDspNodeData(UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData, int retries, boolean dspVoteOnly) {
         super(unconfirmedReceivedTransactionHashData);

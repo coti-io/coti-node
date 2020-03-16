@@ -45,7 +45,9 @@ public class PotService extends BaseNodePotService {
         Instant starts = Instant.now();
         synchronized (transactionData) {
             try {
-                transactionData.wait();
+                while (transactionData.getNonces() == null) {
+                    transactionData.wait(1000);
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

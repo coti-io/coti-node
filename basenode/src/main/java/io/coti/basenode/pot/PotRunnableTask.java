@@ -21,7 +21,7 @@ public class PotRunnableTask implements Comparable<PotRunnableTask>, Runnable {
     public void run() {
         potAction(transactionData);
         synchronized (transactionData) {
-            transactionData.notify();
+            transactionData.notifyAll();
         }
     }
 

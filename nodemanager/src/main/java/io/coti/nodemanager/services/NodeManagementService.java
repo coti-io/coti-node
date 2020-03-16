@@ -78,7 +78,7 @@ public class NodeManagementService implements INodeManagementService {
     @Value("${propagation.port}")
     private String propagationPort;
     private final Object lock = new Object();
-    private Map<Hash, Hash> lockNodeHistoryRecordHashMap = new ConcurrentHashMap<>();
+    private final Map<Hash, Hash> lockNodeHistoryRecordHashMap = new ConcurrentHashMap<>();
 
     @Override
     public void init() {

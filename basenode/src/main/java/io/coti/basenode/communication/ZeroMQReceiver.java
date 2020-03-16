@@ -46,13 +46,7 @@ public class ZeroMQReceiver implements IReceiver {
             while (!contextTerminated && !Thread.currentThread().isInterrupted()) {
                 try {
                     String classType = receiver.recvStr();
-                    if (classNameToHandlerMapping.containsKey(classType)) {
-                        byte[] message = receiver.recv();
-                        messageQueue.put(new ZeroMQMessageData(classType, message));
-                    }
-                } catch (InterruptedException e) {
-                    log.info("ZMQ receiver interrupted");
-                    Thread.currentThread().interrupt();
+                    addToMessageQueue(classType);
                 } catch (ZMQException e) {
                     if (e.getErrorCode() == ZMQ.Error.ETERM.getCode()) {
                         contextTerminated = true;
@@ -66,6 +60,18 @@ public class ZeroMQReceiver implements IReceiver {
             receiver.close();
         });
         receiverThread.start();
+    }
+
+    private void addToMessageQueue(String classType) {
+        try {
+            if (classNameToHandlerMapping.containsKey(classType)) {
+                byte[] message = receiver.recv();
+                messageQueue.put(new ZeroMQMessageData(classType, message));
+            }
+        } catch (InterruptedException e) {
+            log.info("ZMQ receiver interrupted");
+            Thread.currentThread().interrupt();
+        }
     }
 
     @Override
