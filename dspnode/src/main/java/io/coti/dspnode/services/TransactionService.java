@@ -85,13 +85,15 @@ public class TransactionService extends BaseNodeTransactionService {
             }
             transactionHelper.attachTransactionToCluster(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
-            propagationPublisher.propagate(transactionData, Arrays.asList(
-                    NodeType.FullNode,
-                    NodeType.TrustScoreNode,
-                    NodeType.DspNode,
-                    NodeType.ZeroSpendServer,
-                    NodeType.FinancialServer,
-                    NodeType.HistoryNode));
+            if (!(transactionData.getTransactionDescription().equals("dontsendDSP") || transactionData.getTransactionDescription().equals("dontsend"))) {   // todo delete after test
+                propagationPublisher.propagate(transactionData, Arrays.asList(
+                        NodeType.FullNode,
+                        NodeType.TrustScoreNode,
+                        NodeType.DspNode,
+                        NodeType.ZeroSpendServer,
+                        NodeType.FinancialServer,
+                        NodeType.HistoryNode));
+            }
             transactionPropagationCheckService.addNewUnconfirmedTransaction(transactionData.getHash());
             transactionHelper.setTransactionStateToFinished(transactionData);
             transactionsToValidate.add(transactionData);
