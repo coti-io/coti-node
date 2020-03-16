@@ -59,7 +59,7 @@ public class BaseNodeTransactionPropagationCheckService implements ITransactionP
 
     @Override
     public void removeTransactionHashFromUnconfirmed(Hash transactionHash) {
-        if (unconfirmedReceivedTransactionHashesMap.containsKey(transactionHash)) {
+        if (unconfirmedReceivedTransactionHashesMap != null && unconfirmedReceivedTransactionHashesMap.containsKey(transactionHash)) {
             removeConfirmedReceiptTransaction(transactionHash);
         }
     }
