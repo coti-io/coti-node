@@ -16,7 +16,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Queue;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
@@ -42,7 +46,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
     @Override
     public void init() {
-        transactionsToValidate = new PriorityQueue<>();
+        transactionsToValidate = new PriorityBlockingQueue<>();
         isValidatorRunning = new AtomicBoolean(false);
         super.init();
     }
