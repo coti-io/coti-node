@@ -35,7 +35,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.CLUSTERSTAMP_MAJOR_NOT_FOUND;
@@ -441,7 +440,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         });
         if (!localTokens.isEmpty()) {
             StringBuilder sb = new StringBuilder("Excess tokens found locally: ");
-            localTokens.values().forEach(excessLocalClusterStampNameData -> sb.append(getClusterStampFileName(excessLocalClusterStampNameData) + " "));
+            localTokens.values().forEach(excessLocalClusterStampNameData -> sb.append(getClusterStampFileName(excessLocalClusterStampNameData)).append(" "));
             throw new ClusterStampValidationException(sb.toString());
         }
         return missingClusterStamps;
@@ -476,7 +475,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     }
 
     private List<ClusterStampNameData> getLocalTokensList() {
-        return tokenClusterStampHashToName.values().stream().collect(Collectors.toList());
+        return new ArrayList<>(tokenClusterStampHashToName.values());
     }
 
     private void fillBalanceFromLine(ClusterStampData clusterStampData, String line, Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap, String clusterStampFileName) {
@@ -535,7 +534,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         clusterStampCurrencyData.setAmount(subtractedCurrencyAmount);
     }
 
-    private void fillSignatureDataFromLine(ClusterStampData clusterStampData, String line, int signatureRelevantLines) {
+    private void fillSignatureDataFromLine(ClusterStampData clusterStampData, String line, AtomicInteger signatureRelevantLines) {
         if (signatureRelevantLines.get() > 2) {
             throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
         }
