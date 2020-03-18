@@ -13,11 +13,14 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class BaseNodeFileSystemService {
+
+    private static final String PATH_DELIMITER = "/";
 
     public void createFolder(String folderPath) {
         try {
@@ -38,7 +41,7 @@ public class BaseNodeFileSystemService {
     public List<String> listFolderFileNames(String folderPath) {
         try {
             File folder = new File(folderPath);
-            return Arrays.stream(folder.listFiles()).map(file -> file.getName()).collect(Collectors.toList());
+            return Arrays.stream(Objects.requireNonNull(folder.listFiles())).map(File::getName).collect(Collectors.toList());
         } catch (Exception e) {
             throw new FileSystemException(String.format("List folder file names error. %s: %s", e.getClass().getName(), e.getMessage()));
         }
@@ -61,17 +64,19 @@ public class BaseNodeFileSystemService {
     }
 
     public void createFile(String dirPath, String fileName) {
-        String fullPath = dirPath + "/" + fileName;
+        String fullPath = dirPath + PATH_DELIMITER + fileName;
         File file = new File(fullPath);
         try {
-            file.createNewFile();
+            if (!file.createNewFile()) {
+                throw new FileSystemException(String.format("Create file error for path %s", fullPath));
+            }
         } catch (IOException e) {
             throw new FileSystemException(String.format("Create file error. %s: %s", e.getClass().getName(), e.getMessage()));
         }
     }
 
     public void createAndWriteLineToFile(String dirPath, String fileName, String line) {
-        String relativePath = dirPath + "/" + fileName;
+        String relativePath = dirPath + PATH_DELIMITER + fileName;
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(relativePath))) {
             writer.write(line);
             writer.newLine();

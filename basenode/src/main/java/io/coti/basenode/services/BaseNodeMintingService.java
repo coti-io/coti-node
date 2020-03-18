@@ -24,9 +24,9 @@ public class BaseNodeMintingService implements IMintingService {
     protected Currencies currencies;
     @Autowired
     protected IBalanceService balanceService;
-
     private Map<Hash, BigDecimal> mintingMap;
-    private Map<Hash, Hash> lockMintingRecordHashMap = new ConcurrentHashMap<>();
+    private final Object lock = new Object();
+    private final Map<Hash, Hash> lockMintingRecordHashMap = new ConcurrentHashMap<>();
 
     public void init() {
         mintingMap = new ConcurrentHashMap<>();
@@ -40,27 +40,16 @@ public class BaseNodeMintingService implements IMintingService {
         return null;
     }
 
-    protected Hash addLockToLockMap(Hash hash) {
-        return addLockToLockMap(lockMintingRecordHashMap, hash);
-    }
-
-    private Hash addLockToLockMap(Map<Hash, Hash> locksIdentityMap, Hash hash) {
-        synchronized (locksIdentityMap) {
-            locksIdentityMap.putIfAbsent(hash, hash);
-            return locksIdentityMap.get(hash);
+    private Hash addLockToLockMap(Hash hash) {
+        synchronized (lock) {
+            lockMintingRecordHashMap.putIfAbsent(hash, hash);
+            return lockMintingRecordHashMap.get(hash);
         }
     }
 
-    protected void removeLockFromLocksMap(Hash hash) {
-        removeLockFromLocksMap(lockMintingRecordHashMap, hash);
-    }
-
-    private void removeLockFromLocksMap(Map<Hash, Hash> locksIdentityMap, Hash hash) {
-        synchronized (locksIdentityMap) {
-            Hash hashLock = locksIdentityMap.get(hash);
-            if (hashLock != null) {
-                locksIdentityMap.remove(hash);
-            }
+    private void removeLockFromLocksMap(Hash hash) {
+        synchronized (lock) {
+            lockMintingRecordHashMap.remove(hash);
         }
     }
 
@@ -68,32 +57,35 @@ public class BaseNodeMintingService implements IMintingService {
     public boolean checkMintingAmountAndAddToAllocatedAmount(TransactionData transactionData) {
         TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = getTokenMintingFeeData(transactionData);
         Hash tokenHash = tokenMintingFeeBaseTransactionData.getServiceData().getMintingCurrencyHash();
-        synchronized (addLockToLockMap(tokenHash)) {
-            BigDecimal tokenAmount = tokenMintingFeeBaseTransactionData.getServiceData().getMintingAmount();
+        try {
+            synchronized (addLockToLockMap(tokenHash)) {
+                BigDecimal tokenAmount = tokenMintingFeeBaseTransactionData.getServiceData().getMintingAmount();
 
-            CurrencyData currencyFromDB = currencyService.getCurrencyFromDB(tokenHash);
-            if (currencyFromDB == null) {
-                log.error("Error in Minting check. Token {} is invalid", tokenHash);
-                return false;
-            }
-            if (currencyFromDB.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
-                log.error("Error in Minting check. Token {} is Native currency", tokenHash);
-                return false;
-            }
-            BigDecimal tokenAllocatedAmount = getTokenAllocatedAmount(tokenHash);
-            if (tokenAllocatedAmount == null || currencyFromDB.getTotalSupply().subtract(tokenAllocatedAmount.add(tokenAmount)).signum() < 0) {
-                log.error("Error in Minting check. Token {} amount {} is too much", tokenHash, tokenAmount);
-                return false;
-            }
-            Hash receiverAddress = tokenMintingFeeBaseTransactionData.getServiceData().getReceiverAddress();
-            if (!CryptoHelper.isAddressValid(receiverAddress)) {
-                log.error("Error in Minting check. Token {} receiver address {} is invalid", tokenHash, receiverAddress);
-                return false;
-            }
+                CurrencyData currencyFromDB = currencyService.getCurrencyFromDB(tokenHash);
+                if (currencyFromDB == null) {
+                    log.error("Error in Minting check. Token {} is invalid", tokenHash);
+                    return false;
+                }
+                if (currencyFromDB.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
+                    log.error("Error in Minting check. Token {} is Native currency", tokenHash);
+                    return false;
+                }
+                BigDecimal tokenAllocatedAmount = getTokenAllocatedAmount(tokenHash);
+                if (tokenAllocatedAmount == null || currencyFromDB.getTotalSupply().subtract(tokenAllocatedAmount.add(tokenAmount)).signum() < 0) {
+                    log.error("Error in Minting check. Token {} amount {} is too much", tokenHash, tokenAmount);
+                    return false;
+                }
+                Hash receiverAddress = tokenMintingFeeBaseTransactionData.getServiceData().getReceiverAddress();
+                if (!CryptoHelper.isAddressValid(receiverAddress)) {
+                    log.error("Error in Minting check. Token {} receiver address {} is invalid", tokenHash, receiverAddress);
+                    return false;
+                }
 
-            mintingMap.put(tokenHash, tokenAllocatedAmount.add(tokenAmount));
+                mintingMap.put(tokenHash, tokenAllocatedAmount.add(tokenAmount));
+            }
+        } finally {
+            removeLockFromLocksMap(tokenHash);
         }
-        removeLockFromLocksMap(tokenHash);
         return true;
     }
 
@@ -101,15 +93,17 @@ public class BaseNodeMintingService implements IMintingService {
     public void revertMintingAllocation(TransactionData transactionData) {
         TokenMintingFeeBaseTransactionData tokenMintingFeeData = getTokenMintingFeeData(transactionData);
         Hash tokenHash = tokenMintingFeeData.getCurrencyHash();
-        synchronized (addLockToLockMap(tokenHash)) {
-            CurrencyData currencyFromDB = currencyService.getCurrencyFromDB(tokenHash);
-            BigDecimal tokenAllocatedAmount = this.getTokenAllocatedAmount(tokenHash);
-            if (currencyFromDB == null || tokenAllocatedAmount == null) {
-                log.error("Error in Minting revert. Token {} is invalid", tokenHash);
-                removeLockFromLocksMap(tokenHash);
-                return;
+        try {
+            synchronized (addLockToLockMap(tokenHash)) {
+                CurrencyData currencyFromDB = currencyService.getCurrencyFromDB(tokenHash);
+                BigDecimal tokenAllocatedAmount = this.getTokenAllocatedAmount(tokenHash);
+                if (currencyFromDB == null || tokenAllocatedAmount == null) {
+                    log.error("Error in Minting revert. Token {} is invalid", tokenHash);
+                    return;
+                }
+                mintingMap.put(tokenHash, tokenAllocatedAmount.subtract(tokenMintingFeeData.getAmount()));
             }
-            mintingMap.put(tokenHash, tokenAllocatedAmount.subtract(tokenMintingFeeData.getAmount()));
+        } finally {
             removeLockFromLocksMap(tokenHash);
         }
     }
@@ -145,9 +139,7 @@ public class BaseNodeMintingService implements IMintingService {
 
     @Override
     public void updateMintingBalanceFromClusterStamp(Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap, Hash currencyGenesisAddress) {
-        clusterStampCurrencyMap.entrySet().stream().forEach(entry -> {
-            Hash currencyHash = entry.getKey();
-            ClusterStampCurrencyData clusterStampCurrencyData = entry.getValue();
+        clusterStampCurrencyMap.forEach((currencyHash, clusterStampCurrencyData) -> {
             BigDecimal totalSupply = clusterStampCurrencyData.getTotalSupply();
             BigDecimal genesisAddressBalance = balanceService.getBalance(currencyGenesisAddress, currencyHash);
             mintingMap.put(currencyHash, totalSupply.subtract(genesisAddressBalance));

@@ -10,11 +10,9 @@ import io.coti.basenode.exceptions.CurrencyException;
 import io.coti.basenode.exceptions.CurrencyValidationException;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.model.Currencies;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeCurrencyService;
 import io.coti.basenode.services.TransactionHelper;
-import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IClusterStampService;
 import io.coti.basenode.services.interfaces.IMintingService;
 import io.coti.financialserver.crypto.GenerateTokenRequestCrypto;
@@ -52,6 +50,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
 
     public static final String GENERATED_TOKEN_ENDPOINT = "/currencies/token";
     private static final String GET_NATIVE_CURRENCY_ENDPOINT = "/currencies/native";
+    private static final String EXCEPTION_MESSAGE = "%s. Exception: %s";
     private final Map<Hash, Hash> lockUserHashMap = new ConcurrentHashMap<>();
     private final Map<Hash, Hash> lockTransactionHashMap = new ConcurrentHashMap<>();
     private final Set<String> processingCurrencyNameSet = Sets.newConcurrentHashSet();
@@ -75,8 +74,6 @@ public class CurrencyService extends BaseNodeCurrencyService {
     @Autowired
     private Transactions transactions;
     @Autowired
-    private Currencies currencies;
-    @Autowired
     private TransactionHelper transactionHelper;
     @Autowired
     private IClusterStampService clusterStampService;
@@ -84,9 +81,6 @@ public class CurrencyService extends BaseNodeCurrencyService {
     private FeeService feeService;
     @Autowired
     private IMintingService mintingService;
-    @Autowired
-    private IBalanceService balanceService;
-
     private BlockingQueue<TransactionData> pendingCurrencyTransactionQueue;
     private BlockingQueue<TransactionData> tokenGenerationTransactionQueue;
     private Thread pendingCurrencyTransactionThread;
@@ -224,13 +218,13 @@ public class CurrencyService extends BaseNodeCurrencyService {
             Hash tokenHash = validateUniquenessAndAddToken(generateTokenRequest);
             return ResponseEntity.status(HttpStatus.CREATED).body(new GenerateTokenResponse(tokenHash));
         } catch (CurrencyValidationException e) {
-            String error = String.format("%s. Exception: %s", TOKEN_GENERATION_REQUEST_FAILURE, e.getMessageAndCause());
+            String error = String.format(EXCEPTION_MESSAGE, TOKEN_GENERATION_REQUEST_FAILURE, e.getMessageAndCause());
             return ResponseEntity.badRequest().body(new Response(error, STATUS_ERROR));
         } catch (CotiRunTimeException e) {
-            String error = String.format("%s. Exception: %s", TOKEN_GENERATION_REQUEST_FAILURE, e.getMessageAndCause());
+            String error = String.format(EXCEPTION_MESSAGE, TOKEN_GENERATION_REQUEST_FAILURE, e.getMessageAndCause());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(error, STATUS_ERROR));
         } catch (Exception e) {
-            String error = String.format("%s. Exception: %s", TOKEN_GENERATION_REQUEST_FAILURE, e.getMessage());
+            String error = String.format(EXCEPTION_MESSAGE, TOKEN_GENERATION_REQUEST_FAILURE, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(error, STATUS_ERROR));
         } finally {
             removeOccupyLocksFromProcessingSets(generateTokenRequest);
@@ -245,13 +239,13 @@ public class CurrencyService extends BaseNodeCurrencyService {
             currencyHash = requestCurrencyData.calculateHash();
             validateCurrencyUniqueness(currencyHash, currencyName);
         } catch (CurrencyValidationException e) {
-            String error = String.format("%s. Exception: %s", TOKEN_GENERATION_FEE_FAILURE, e.getMessageAndCause());
+            String error = String.format(EXCEPTION_MESSAGE, TOKEN_GENERATION_FEE_FAILURE, e.getMessageAndCause());
             return ResponseEntity.badRequest().body(new Response(error, STATUS_ERROR));
         } catch (CotiRunTimeException e) {
-            String error = String.format("%s. Exception: %s", TOKEN_GENERATION_FEE_FAILURE, e.getMessageAndCause());
+            String error = String.format(EXCEPTION_MESSAGE, TOKEN_GENERATION_FEE_FAILURE, e.getMessageAndCause());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(error, STATUS_ERROR));
         } catch (Exception e) {
-            String error = String.format("%s. Exception: %s", TOKEN_GENERATION_FEE_FAILURE, e.getMessage());
+            String error = String.format(EXCEPTION_MESSAGE, TOKEN_GENERATION_FEE_FAILURE, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(error, STATUS_ERROR));
         }
 

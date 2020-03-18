@@ -174,8 +174,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             }
             Map<CurrencyType, HashSet<Hash>> existingCurrencyHashesByType = getUpdatedCurrencyRequest.getCurrencyHashesByType();
             getRequiringUpdateOfCurrencyDataByType(existingCurrencyHashesByType, fluxSink);
-        } catch (Exception e) {
-
         } finally {
             fluxSink.complete();
         }
