@@ -285,7 +285,7 @@ public class MintingService extends BaseNodeMintingService {
     }
 
     private void setTokenMintingFeeHash(TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData) {
-        BaseTransactionCrypto.TOKEN_MINTING_FEE_BASE_TRANSACTION_DATA.setBaseTransactionHash(tokenMintingFeeBaseTransactionData);
+        BaseTransactionCrypto.TOKEN_MINTING_FEE_BASE_TRANSACTION_DATA.createAndSetBaseTransactionHash(tokenMintingFeeBaseTransactionData);
     }
 
     private void signTokenMintingFee(TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData) {
