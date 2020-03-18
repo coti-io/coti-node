@@ -120,7 +120,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
                 return ByteBuffer.allocate(outputMessageInBytes.length + serviceDataInBytes.length).
                         put(outputMessageInBytes).put(serviceDataInBytes).array();
             } catch (Exception e) {
-                log.error("Error at getting message in byte", e);
+                log.error(GET_MESSAGE_IN_BYTE_ERROR, e);
                 return new byte[0];
             }
         }
@@ -145,7 +145,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
                 return ByteBuffer.allocate(outputMessageInBytes.length + serviceDataInBytes.length).
                         put(outputMessageInBytes).put(serviceDataInBytes).array();
             } catch (Exception e) {
-                log.error("Error at getting message in byte", e);
+                log.error(GET_MESSAGE_IN_BYTE_ERROR, e);
                 return new byte[0];
             }
         }

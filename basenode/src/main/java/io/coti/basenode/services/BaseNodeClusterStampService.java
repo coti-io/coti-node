@@ -63,13 +63,13 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     private static final int CURRENCY_HASH_INDEX_IN_CLUSTERSTAMP_LINE = 2;
     private static final int NUMBER_OF_SIGNATURE_LINE_DETAILS = 2;
     private static final int LONG_MAX_LENGTH = 19;
-    protected static final String BAD_CSV_FILE_FORMAT = "Bad csv file format";
+    private static final String BAD_CSV_FILE_FORMAT = "Bad csv file format";
     private static final String SIGNATURE_LINE_TOKEN = "# Signature";
     private static final String CLUSTERSTAMP_FILE_PREFIX = "clusterstamp";
     private static final String CLUSTERSTAMP_FILE_TYPE = "csv";
     private static final String CLUSTERSTAMP_ENDPOINT = "/clusterstamps";
-    protected static ClusterStampNameData majorClusterStampName;
-    protected static Map<Hash, ClusterStampNameData> tokenClusterStampHashToName;
+    protected ClusterStampNameData majorClusterStampName;
+    private Map<Hash, ClusterStampNameData> tokenClusterStampHashToName;
     @Value("${clusterstamp.folder}")
     protected String clusterStampFolder;
     protected String clusterStampBucketName;
