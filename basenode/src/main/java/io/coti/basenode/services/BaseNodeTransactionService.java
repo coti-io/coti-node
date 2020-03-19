@@ -134,13 +134,23 @@ public class BaseNodeTransactionService implements ITransactionService {
     @Override
     public void handlePropagatedTransaction(TransactionData transactionData) {
 
+        boolean isTransactionAlreadyPropagated;
         try {
-            if (checkTransactionAlreadyPropagatedAndStartHandle(transactionData)) {
-                removeTransactionHashFromUnconfirmed(transactionData);
-                log.debug("Transaction already exists: {}", transactionData.getHash());
-                return;
+            synchronized (addLockToLockMap(transactionData.getHash())) {
+                isTransactionAlreadyPropagated = transactionHelper.isTransactionAlreadyPropagated(transactionData);
+                if (!isTransactionAlreadyPropagated) {
+                    transactionHelper.startHandleTransaction(transactionData);
+                }
             }
-
+        } finally {
+            removeLockFromLocksMap(transactionData.getHash());
+        }
+        if (isTransactionAlreadyPropagated) {
+            removeTransactionHashFromUnconfirmed(transactionData);
+            log.debug("Transaction already exists: {}", transactionData.getHash());
+            return;
+        }
+        try {
             if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
                 log.error("Data Integrity validation failed: {}", transactionData.getHash());
                 return;
@@ -168,20 +178,6 @@ public class BaseNodeTransactionService implements ITransactionService {
             if (isTransactionFinished) {
                 processPostponedTransactions(transactionData);
             }
-        }
-    }
-
-    protected boolean checkTransactionAlreadyPropagatedAndStartHandle(TransactionData transactionData) {
-        try {
-            synchronized (addLockToLockMap(transactionData.getHash())) {
-                boolean isTransactionAlreadyPropagated = transactionHelper.isTransactionAlreadyPropagated(transactionData);
-                if (!isTransactionAlreadyPropagated) {
-                    transactionHelper.startHandleTransaction(transactionData);
-                }
-                return isTransactionAlreadyPropagated;
-            }
-        } finally {
-            removeLockFromLocksMap(transactionData.getHash());
         }
     }
 
