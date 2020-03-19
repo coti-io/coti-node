@@ -17,7 +17,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -136,9 +135,7 @@ public class BaseNodeTransactionService implements ITransactionService {
     public void handlePropagatedTransaction(TransactionData transactionData) {
 
         try {
-            AtomicBoolean isTransactionAlreadyPropagated = new AtomicBoolean(false);
-            checkTransactionAlreadyPropagatedAndStartHandle(transactionData, isTransactionAlreadyPropagated);
-            if (isTransactionAlreadyPropagated.get()) {
+            if (checkTransactionAlreadyPropagatedAndStartHandle(transactionData)) {
                 removeTransactionHashFromUnconfirmed(transactionData);
                 log.debug("Transaction already exists: {}", transactionData.getHash());
                 return;
@@ -174,13 +171,14 @@ public class BaseNodeTransactionService implements ITransactionService {
         }
     }
 
-    protected void checkTransactionAlreadyPropagatedAndStartHandle(TransactionData transactionData, AtomicBoolean isTransactionAlreadyPropagated) {
+    protected boolean checkTransactionAlreadyPropagatedAndStartHandle(TransactionData transactionData) {
         try {
             synchronized (addLockToLockMap(transactionData.getHash())) {
-                isTransactionAlreadyPropagated.set(transactionHelper.isTransactionAlreadyPropagated(transactionData));
-                if (!isTransactionAlreadyPropagated.get()) {
+                boolean isTransactionAlreadyPropagated = transactionHelper.isTransactionAlreadyPropagated(transactionData);
+                if (!isTransactionAlreadyPropagated) {
                     transactionHelper.startHandleTransaction(transactionData);
                 }
+                return isTransactionAlreadyPropagated;
             }
         } finally {
             removeLockFromLocksMap(transactionData.getHash());

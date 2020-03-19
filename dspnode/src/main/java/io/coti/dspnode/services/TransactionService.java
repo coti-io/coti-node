@@ -54,9 +54,7 @@ public class TransactionService extends BaseNodeTransactionService {
     public void handleNewTransactionFromFullNode(TransactionData transactionData) {
         log.debug("Running new transactions from full node handler");
         try {
-            AtomicBoolean isTransactionAlreadyPropagated = new AtomicBoolean(false);
-            checkTransactionAlreadyPropagatedAndStartHandle(transactionData, isTransactionAlreadyPropagated);
-            if (isTransactionAlreadyPropagated.get()) {
+            if (checkTransactionAlreadyPropagatedAndStartHandle(transactionData)) {
                 log.debug("Transaction already exists: {}", transactionData.getHash());
                 return;
             }
