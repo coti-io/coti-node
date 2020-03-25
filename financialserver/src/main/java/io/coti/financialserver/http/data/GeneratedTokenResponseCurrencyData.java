@@ -26,7 +26,7 @@ public class GeneratedTokenResponseCurrencyData {
     protected BigDecimal mintedAmount;
     protected BigDecimal requestedMintingAmount;
 
-    public GeneratedTokenResponseCurrencyData(CurrencyData token) {
+    public GeneratedTokenResponseCurrencyData(CurrencyData token) { //todo check fields
         this.currencyName = token.getName();
         this.currencySymbol = token.getSymbol();
         this.currencyHash = token.getHash().toString();
@@ -36,9 +36,7 @@ public class GeneratedTokenResponseCurrencyData {
         this.originatorHash = token.getOriginatorHash().toString();
         this.originatorSignature = token.getOriginatorSignature();
         this.currencyType = token.getCurrencyTypeData().getCurrencyType();
-        this.creationTime = token.getCreationTime();
-        this.registrarHash = token.getRegistrarHash().toString();
-        this.registrarSignature = token.getRegistrarSignature();
+        this.creationTime = token.getCreateTime();
         this.mintedAmount = BigDecimal.ZERO;
         this.requestedMintingAmount = BigDecimal.ZERO;
     }

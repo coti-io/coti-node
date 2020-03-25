@@ -6,6 +6,7 @@ import io.coti.basenode.http.HttpJacksonSerializer;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Currencies;
+import io.coti.basenode.model.CurrencyNameIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeClusterStampService;
 import io.coti.basenode.services.BaseNodeCurrencyService;
@@ -19,8 +20,6 @@ import io.coti.financialserver.http.GetCurrenciesRequest;
 import io.coti.financialserver.http.GetCurrenciesResponse;
 import io.coti.financialserver.http.GetTokenGenerationDataResponse;
 import io.coti.financialserver.http.GetUserTokensRequest;
-import io.coti.financialserver.model.CurrencyNameIndexes;
-import io.coti.financialserver.model.PendingCurrencies;
 import io.coti.financialserver.model.UserTokenGenerations;
 import org.junit.Assert;
 import org.junit.Before;
@@ -67,8 +66,6 @@ public class CurrencyServiceTests {
     @MockBean
     private UserTokenGenerations userTokenGenerations;
     @MockBean
-    private PendingCurrencies pendingCurrencies;
-    @MockBean
     private Currencies currencies;
 
     //
@@ -79,7 +76,7 @@ public class CurrencyServiceTests {
     @MockBean
     private GenerateTokenRequestCrypto generateTokenRequestCrypto;
     @MockBean
-    private CurrencyOriginatorCrypto currencyOriginatorCrypto;
+    private OriginatorCurrencyCrypto originatorCurrencyCrypto;
     @MockBean
     private CurrencyTypeRegistrationCrypto currencyTypeRegistrationCrypto;
     @MockBean
@@ -132,7 +129,7 @@ public class CurrencyServiceTests {
         currencyData.setDescription("Dummy token for testing");
         currencyData.setTotalSupply(new BigDecimal("100"));
         currencyData.setScale(8);
-        currencyData.setCreationTime(Instant.now());
+        currencyData.setCreateTime(Instant.now());
 
         currencyData2 = new CurrencyData();
         currencyData2.setHash(currencyHash2);
@@ -142,7 +139,7 @@ public class CurrencyServiceTests {
         currencyData2.setDescription("Dummy token for testing");
         currencyData2.setTotalSupply(new BigDecimal("100"));
         currencyData2.setScale(8);
-        currencyData2.setCreationTime(Instant.now());
+        currencyData2.setCreateTime(Instant.now());
 
         nativeCurrencyHash = new Hash(7777);
         nativeCurrencyData = new CurrencyData();
@@ -153,7 +150,7 @@ public class CurrencyServiceTests {
         nativeCurrencyData.setDescription("native description");
         nativeCurrencyData.setTotalSupply(new BigDecimal(20000));
         nativeCurrencyData.setScale(8);
-        nativeCurrencyData.setCreationTime(Instant.now());
+        nativeCurrencyData.setCreateTime(Instant.now());
     }
 
     @Before
@@ -234,7 +231,7 @@ public class CurrencyServiceTests {
     @Test
     public void getUserTokenGenerationData_onlyPendingToken_shouldReturnResponseWithPendingTransactionAndCurrency() {
 
-        when(pendingCurrencies.getByHash(currencyData.getHash())).thenReturn(currencyData);
+//        when(pendingCurrencies.getByHash(currencyData.getHash())).thenReturn(currencyData);
 
         Map<Hash, Hash> transactionHashToCurrencyHash = new HashMap<>();
         transactionHashToCurrencyHash.put(transactionHash, currencyData.getHash());

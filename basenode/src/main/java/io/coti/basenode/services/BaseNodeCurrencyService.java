@@ -1,15 +1,16 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.crypto.CurrencyOriginatorCrypto;
 import io.coti.basenode.crypto.CurrencyRegistrarCrypto;
-import io.coti.basenode.crypto.CurrencyTypeRegistrationCrypto;
+import io.coti.basenode.crypto.CurrencyTypeCrypto;
 import io.coti.basenode.crypto.GetUpdatedCurrencyRequestCrypto;
+import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CurrencyException;
 import io.coti.basenode.http.CustomRequestCallBack;
 import io.coti.basenode.http.GetUpdatedCurrencyRequest;
 import io.coti.basenode.http.HttpJacksonSerializer;
 import io.coti.basenode.model.Currencies;
+import io.coti.basenode.model.CurrencyNameIndexes;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IChunkService;
 import io.coti.basenode.services.interfaces.ICurrencyService;
@@ -39,6 +40,8 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Autowired
     protected Currencies currencies;
     @Autowired
+    protected CurrencyNameIndexes currencyNameIndexes;
+    @Autowired
     protected INetworkService networkService;
     @Autowired
     protected RestTemplate restTemplate;
@@ -47,11 +50,11 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Autowired
     private GetUpdatedCurrencyRequestCrypto getUpdatedCurrencyRequestCrypto;
     @Autowired
-    protected CurrencyTypeRegistrationCrypto currencyTypeRegistrationCrypto;
+    protected CurrencyTypeCrypto currencyTypeCrypto;
     @Autowired
     private HttpJacksonSerializer jacksonSerializer;
     @Autowired
-    private CurrencyOriginatorCrypto currencyOriginatorCrypto;
+    private OriginatorCurrencyCrypto originatorCurrencyCrypto;
     @Autowired
     private CurrencyRegistrarCrypto currencyRegistrarCrypto;
     @Autowired
@@ -126,7 +129,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         updateCurrencyHashByTypeMap(recoveredCurrencyData);
     }
 
-    private void verifyValidNativeCurrencyPresent() {
+    private void verifyValidNativeCurrencyPresent() { // todo there is no currencyRegistrarCrypto
         HashSet<Hash> nativeCurrencyHashes = currencyHashByTypeMap.get(CurrencyType.NATIVE_COIN);
         if (nativeCurrencyHashes == null || nativeCurrencyHashes.isEmpty() || nativeCurrencyHashes.size() != NUMBER_OF_NATIVE_CURRENCY) {
             throw new CurrencyException("Failed to retrieve native currency data");
@@ -136,7 +139,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                 throw new CurrencyException("Failed to verify native currency data of " + nativeCurrency.getHash());
             } else {
                 CurrencyTypeRegistrationData nativeCurrencyTypeRegistrationData = new CurrencyTypeRegistrationData(nativeCurrency);
-                if (!currencyTypeRegistrationCrypto.verifySignature(nativeCurrencyTypeRegistrationData)) {
+                if (!currencyTypeCrypto.verifySignature(nativeCurrencyTypeRegistrationData)) {
                     throw new CurrencyException("Failed to verify native currency data type of " + nativeCurrencyTypeRegistrationData.getCurrencyType().getText());
                 }
             }
@@ -207,7 +210,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     private boolean validateInitiatedToken(CurrencyData currencyData) {
-        if (!currencyOriginatorCrypto.verifySignature(currencyData)) {
+        if (!originatorCurrencyCrypto.verifySignature(currencyData)) {
             log.error("Failed to verify propagated currency {} originator already exists", currencyData.getName());
             return false;
         }
@@ -255,10 +258,23 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         }
         currencies.put(currencyData);
         updateCurrencyHashByTypeMap(currencyData);
+        updateCurrencyNameIndex(currencyData);
     }
 
+    private void updateCurrencyNameIndex(CurrencyData currencyData) {
+        currencyNameIndexes.put(new CurrencyNameIndexData(currencyData.getName(), currencyData.getHash()));
+    }
 
     public boolean verifyCurrencyExists(Hash currencyDataHash) {
         return currencies.getByHash(currencyDataHash) != null;
+    }
+
+    protected void validateCurrencyUniqueness(Hash currencyHash, String currencyName) {
+        if (currencyNameIndexes.getByHash(new CurrencyNameIndexData(currencyName, currencyHash).getHash()) != null) {
+            throw new CurrencyException("Currency name is already in use.");
+        }
+        if (currencies.getByHash(currencyHash) != null) {
+            throw new CurrencyException("Currency symbol is already in use.");
+        }
     }
 }

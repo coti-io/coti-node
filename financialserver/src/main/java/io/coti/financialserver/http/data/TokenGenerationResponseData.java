@@ -19,12 +19,12 @@ public class TokenGenerationResponseData implements Serializable {
     private BigDecimal feeAmount;
 
     public TokenGenerationResponseData(TokenGenerationData tokenGenerationData) {
-        this.name = tokenGenerationData.getName();
-        this.symbol = tokenGenerationData.getSymbol();
-        this.generatingCurrencyHash = tokenGenerationData.getGeneratingCurrencyHash().toString();
-        this.totalSupply = tokenGenerationData.getTotalSupply();
-        this.scale = tokenGenerationData.getScale();
-        this.createTime = tokenGenerationData.getCreateTime();
+        this.name = tokenGenerationData.getOriginatorCurrencyData().getName();
+        this.symbol = tokenGenerationData.getOriginatorCurrencyData().getSymbol();
+        this.generatingCurrencyHash = tokenGenerationData.getOriginatorCurrencyData().calculateHash().toString();
+        this.totalSupply = tokenGenerationData.getOriginatorCurrencyData().getTotalSupply();
+        this.scale = tokenGenerationData.getOriginatorCurrencyData().getScale();
+        this.createTime = tokenGenerationData.getCurrencyTypeData().getCreateTime();
         this.feeAmount = tokenGenerationData.getFeeAmount();
     }
 }

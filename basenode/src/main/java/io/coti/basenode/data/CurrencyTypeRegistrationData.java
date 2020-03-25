@@ -10,7 +10,7 @@ import java.time.Instant;
 
 @Data
 public class CurrencyTypeRegistrationData extends CurrencyTypeData implements IPropagatable, ISignable, ISignValidatable {
-
+// todo delete it
     private Hash currencyHash;
     private Hash registrarHash;
 
@@ -20,13 +20,13 @@ public class CurrencyTypeRegistrationData extends CurrencyTypeData implements IP
     public CurrencyTypeRegistrationData(CurrencyData currencyData) {
         super(currencyData.getCurrencyTypeData());
         this.currencyHash = currencyData.getHash();
-        this.registrarHash = currencyData.getRegistrarHash();
+//        this.registrarHash = currencyData.getRegistrarHash();
     }
 
     public CurrencyTypeRegistrationData(Hash currencyHash, CurrencyType currencyType, Instant creationTime) {
         this.currencyHash = currencyHash;
-        this.currencyType = currencyType;
-        this.creationTime = creationTime;
+//        this.currencyType = currencyType;
+//        this.creationTime = creationTime;
     }
 
     @JsonIgnore
@@ -43,7 +43,7 @@ public class CurrencyTypeRegistrationData extends CurrencyTypeData implements IP
     @JsonIgnore
     @Override
     public SignatureData getSignature() {
-        return registrarSignature;
+        return null;
     }
 
     @JsonIgnore
@@ -59,6 +59,5 @@ public class CurrencyTypeRegistrationData extends CurrencyTypeData implements IP
 
     @Override
     public void setSignature(SignatureData signature) {
-        registrarSignature = signature;
     }
 }

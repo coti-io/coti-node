@@ -12,45 +12,30 @@ import java.time.Instant;
 @Data
 public class TokenGenerationData implements ITokenServiceData {
 
-    @NotNull
-    private String name;
-    @NotNull
-    private String symbol;
-    @NotNull
-    private Hash generatingCurrencyHash;
-    @NotNull
-    private BigDecimal totalSupply;
-    @NotNull
-    private int scale;
-    @NotNull
-    private Instant createTime;
-    @NotNull
+    private OriginatorCurrencyData originatorCurrencyData;
+    private CurrencyTypeData currencyTypeData;
     private BigDecimal feeAmount;
 
     private TokenGenerationData() {
     }
 
-    public TokenGenerationData(String name, String symbol, Hash generatingCurrencyHash, BigDecimal totalSupply, int scale, Instant createTime, BigDecimal feeAmount) {
-        this.name = name;
-        this.symbol = symbol;
-        this.generatingCurrencyHash = generatingCurrencyHash;
-        this.totalSupply = totalSupply;
-        this.scale = scale;
-        this.createTime = createTime;
+    public TokenGenerationData(OriginatorCurrencyData originatorCurrencyData, CurrencyTypeData currencyTypeData, BigDecimal feeAmount) {
+        this.originatorCurrencyData = originatorCurrencyData;
+        this.currencyTypeData = currencyTypeData;
         this.feeAmount = feeAmount;
     }
 
     @Override
     public byte[] getMessageInBytes() {
-        byte[] bytesOfName = name.getBytes();
-        byte[] bytesOfSymbol = symbol.getBytes();
-        byte[] bytesOfCurrencyHash = generatingCurrencyHash.getBytes();
-        byte[] bytesOfTotalSupply = totalSupply.stripTrailingZeros().toPlainString().getBytes(StandardCharsets.UTF_8);
+        byte[] bytesOfName = originatorCurrencyData.name.getBytes();
+        byte[] bytesOfSymbol = originatorCurrencyData.symbol.getBytes();
+        byte[] bytesOfCurrencyHash = originatorCurrencyData.calculateHash().getBytes();
+        byte[] bytesOfTotalSupply = originatorCurrencyData.totalSupply.stripTrailingZeros().toPlainString().getBytes(StandardCharsets.UTF_8);
         byte[] bytesOfFeeAmount = feeAmount.stripTrailingZeros().toPlainString().getBytes(StandardCharsets.UTF_8);
 
         return ByteBuffer.allocate(bytesOfName.length + bytesOfSymbol.length + bytesOfCurrencyHash.length + bytesOfTotalSupply.length +
                 +Integer.BYTES + Long.BYTES + bytesOfFeeAmount.length)
                 .put(bytesOfName).put(bytesOfSymbol).put(bytesOfCurrencyHash).put(bytesOfTotalSupply)
-                .putInt(scale).putLong(createTime.toEpochMilli()).put(bytesOfFeeAmount).array();
+                .putInt(originatorCurrencyData.scale).putLong(currencyTypeData.getCreateTime().toEpochMilli()).put(bytesOfFeeAmount).array();
     }
 }
