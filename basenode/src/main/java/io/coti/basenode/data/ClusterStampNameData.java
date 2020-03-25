@@ -53,4 +53,9 @@ public class ClusterStampNameData implements IEntity {
     public boolean isMajor() {
         return type == ClusterStampType.MAJOR;
     }
+
+    @JsonIgnore
+    public boolean isCurrencies() {
+        return type == ClusterStampType.CURRENCIES;
+    }
 }

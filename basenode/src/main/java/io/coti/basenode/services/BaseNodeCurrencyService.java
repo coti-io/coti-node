@@ -194,6 +194,18 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         baseNodeClusterStampService.handleInitiatedTokenNotice(initiatedTokenNoticeData);
     }
 
+    @Override
+    public void generateNativeCurrency() {
+        throw new CurrencyException("Attempted to generate Native currency.");
+    }
+
+    @Override
+    public void updateCurrenciesFromClusterStamp(Map<Hash, CurrencyData> clusterStampCurrenciesMap, Hash genesisAddress) {
+        clusterStampCurrenciesMap.forEach((currencyHash, clusterStampCurrencyData) ->
+            currencies.put(clusterStampCurrencyData)
+        );
+    }
+
     private boolean validateInitiatedToken(CurrencyData currencyData) {
         if (!currencyOriginatorCrypto.verifySignature(currencyData)) {
             log.error("Failed to verify propagated currency {} originator already exists", currencyData.getName());
