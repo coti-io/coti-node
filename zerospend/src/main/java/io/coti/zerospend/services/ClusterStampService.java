@@ -166,11 +166,4 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     protected void setClusterStampSignerHash(ClusterStampData clusterStampData) {
         clusterStampData.setSignerHash(networkService.getNetworkNodeData().getNodeHash());
     }
-
-    public ClusterStampNameData handleNewToken(CurrencyData currencyData) {
-        ClusterStampNameData clusterStampNameData = handleNewCurrencyByType(currencyData, ClusterStampType.TOKEN);
-        loadClusterStamp(clusterStampNameData);
-        uploadClusterStamp(clusterStampNameData);
-        return clusterStampNameData;
-    }
 }
