@@ -50,7 +50,9 @@ public class CurrencyService extends BaseNodeCurrencyService {
         currencyData.setScale(nativeCurrencyScale);
         currencyData.setCreateTime(creationTime);
         currencyData.setDescription(nativeCurrencyDescription);
-        currencyData.setCurrencyTypeData(new CurrencyTypeData(CurrencyType.NATIVE_COIN, creationTime));
+        CurrencyTypeData currencyTypeData = new CurrencyTypeData(CurrencyType.NATIVE_COIN, creationTime);
+        currencyTypeData.setSymbol(currencyData.getSymbol());
+        currencyData.setCurrencyTypeData(currencyTypeData);
         currencyData.setHash();
 
         currencyTypeCrypto.signMessage(currencyData.getCurrencyTypeData());
