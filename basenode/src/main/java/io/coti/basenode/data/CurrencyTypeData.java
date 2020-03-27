@@ -10,7 +10,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.nio.ByteBuffer;
 import java.time.Instant;
 
 @Data
@@ -18,12 +17,11 @@ public class CurrencyTypeData implements ISignable, ISignValidatable, Serializab
 
     @NotEmpty
     private String symbol;
-    @NotEmpty
+    @NotNull
     private CurrencyType currencyType;
-    @NotEmpty
-    private CurrencyRateSourceType currencyRateSourceType;
     @NotNull
     private Instant createTime;
+    private CurrencyRateSourceType currencyRateSourceType;
     private String rateSource;
     private String protectionModel;
     @NotNull
@@ -34,12 +32,7 @@ public class CurrencyTypeData implements ISignable, ISignValidatable, Serializab
     protected CurrencyTypeData() {
     }
 
-    public CurrencyTypeData(CurrencyTypeData currencyTypeData) {
-        currencyType = currencyTypeData.getCurrencyType();
-        createTime = currencyTypeData.getCreateTime();
-    }
-
-    public CurrencyTypeData(CurrencyType currencyType, Instant createTime) {  // todo check constructors
+    public CurrencyTypeData(CurrencyType currencyType, Instant createTime) {
         this.currencyType = currencyType;
         this.createTime = createTime;
     }

@@ -129,18 +129,17 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         updateCurrencyHashByTypeMap(recoveredCurrencyData);
     }
 
-    private void verifyValidNativeCurrencyPresent() { // todo there is no currencyRegistrarCrypto
+    private void verifyValidNativeCurrencyPresent() {
         HashSet<Hash> nativeCurrencyHashes = currencyHashByTypeMap.get(CurrencyType.NATIVE_COIN);
         if (nativeCurrencyHashes == null || nativeCurrencyHashes.isEmpty() || nativeCurrencyHashes.size() != NUMBER_OF_NATIVE_CURRENCY) {
             throw new CurrencyException("Failed to retrieve native currency data");
         } else {
             CurrencyData nativeCurrency = currencies.getByHash(nativeCurrencyHashes.iterator().next());
-            if (!currencyRegistrarCrypto.verifySignature(nativeCurrency)) {
+            if (!originatorCurrencyCrypto.verifySignature(nativeCurrency)) {
                 throw new CurrencyException("Failed to verify native currency data of " + nativeCurrency.getHash());
             } else {
-                CurrencyTypeRegistrationData nativeCurrencyTypeRegistrationData = new CurrencyTypeRegistrationData(nativeCurrency);
-                if (!currencyTypeCrypto.verifySignature(nativeCurrencyTypeRegistrationData)) {
-                    throw new CurrencyException("Failed to verify native currency data type of " + nativeCurrencyTypeRegistrationData.getCurrencyType().getText());
+                if (!currencyTypeCrypto.verifySignature(nativeCurrency.getCurrencyTypeData())) {
+                    throw new CurrencyException("Failed to verify native currency data type of " + nativeCurrency.getCurrencyTypeData().getCurrencyType().getText());
                 }
             }
             if (getNativeCurrency() == null) {

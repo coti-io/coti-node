@@ -78,8 +78,6 @@ public class CurrencyServiceTests {
     @MockBean
     private OriginatorCurrencyCrypto originatorCurrencyCrypto;
     @MockBean
-    private CurrencyTypeRegistrationCrypto currencyTypeRegistrationCrypto;
-    @MockBean
     private Transactions transactions;
 
     //from base node

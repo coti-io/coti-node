@@ -6,7 +6,6 @@ import io.coti.basenode.data.OriginatorCurrencyData;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.http.Request;
-import io.coti.financialserver.http.data.CurrencyDataForFee;
 import lombok.Data;
 
 import javax.validation.Valid;
