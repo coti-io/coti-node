@@ -32,9 +32,7 @@ import static testUtils.CurrencyServiceTestUtils.createCurrencyData;
         BaseNodeNetworkService.class, RestTemplate.class, CurrencyRegistrarCrypto.class,
         ApplicationContext.class,
         GetUpdatedCurrencyRequestCrypto.class, GetUpdatedCurrencyResponseCrypto.class,
-        CurrencyTypeRegistrationCrypto.class
-
-
+        CurrencyTypeCrypto.class
 })
 
 @TestPropertySource(locations = "classpath:test.properties")
@@ -56,6 +54,8 @@ public class BaseNodeCurrencyServiceTest {
     @Autowired
     private CurrencyRegistrarCrypto currencyRegistrarCrypto;
     @Autowired
+    private CurrencyTypeCrypto currencyTypeCrypto;
+    @Autowired
     private ApplicationContext applicationContext;
     @Autowired
     private GetUpdatedCurrencyRequestCrypto getUpdatedCurrencyRequestCrypto;
@@ -66,9 +66,6 @@ public class BaseNodeCurrencyServiceTest {
     private Currencies currencies;
     @MockBean
     private BaseNodeNetworkService baseNodeNetworkService;
-    @Autowired
-    private CurrencyTypeRegistrationCrypto currencyTypeRegistrationCrypto;
-
 
     @Before
     public void init() {
@@ -129,10 +126,8 @@ public class BaseNodeCurrencyServiceTest {
 
     protected void setAndSignCurrencyDataByType(CurrencyData currencyData, CurrencyType currencyType) {
         CurrencyTypeData currencyTypeData = new CurrencyTypeData(currencyType, Instant.now());
-        CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(currencyData.getHash(),
-                currencyType, Instant.now());
 //        currencyTypeCrypto.signMessage(currencyTypeData);
-        currencyTypeRegistrationCrypto.signMessage(currencyTypeRegistrationData);
+        currencyTypeCrypto.signMessage(currencyTypeData);
         currencyData.setCurrencyTypeData(currencyTypeData);
         currencyRegistrarCrypto.signMessage(currencyData);
     }

@@ -17,9 +17,8 @@ public class CurrencyServiceTestUtils {
         currencyData.setHash(hash);
         currencyData.setTotalSupply(new BigDecimal("700000"));
         currencyData.setScale(8);
-        currencyData.setCreationTime(Instant.now());
+        currencyData.setCreateTime(Instant.now());
         currencyData.setDescription("tempDescription");
-        currencyData.setRegistrarHash(new Hash("tempRegistrar"));
         currencyData.setSignerHash(new Hash("tempSigner"));
         currencyData.setOriginatorHash(new Hash("tempOriginator"));
         return currencyData;

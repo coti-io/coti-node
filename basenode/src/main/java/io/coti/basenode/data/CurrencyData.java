@@ -1,9 +1,6 @@
 package io.coti.basenode.data;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.coti.basenode.data.interfaces.IPropagatable;
-import io.coti.basenode.data.interfaces.ISignValidatable;
-import io.coti.basenode.data.interfaces.ISignable;
 import io.coti.basenode.exceptions.CurrencyException;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -15,18 +12,13 @@ import java.util.regex.Pattern;
 
 @Slf4j
 @Data
-public class CurrencyData extends OriginatorCurrencyData implements IPropagatable, ISignable, ISignValidatable {
+public class CurrencyData extends OriginatorCurrencyData implements IPropagatable {
 
-    @NotNull
-    private @Valid Hash hash;
-    @NotNull
-    private @Valid CurrencyTypeData currencyTypeData;
-    @NotNull
-    private Instant creationTime;
-    @NotNull
-    private @Valid Hash registrarHash;
-    @NotNull
-    private @Valid SignatureData registrarSignature;
+    private Hash hash;
+    private CurrencyTypeData currencyTypeData;
+    private Instant createTime;
+    private Hash currencyGeneratingTransactionHash;
+    private Hash currencyLastTypeChangingTransactionHash;
 
     public CurrencyData() {
         super();
@@ -36,11 +28,12 @@ public class CurrencyData extends OriginatorCurrencyData implements IPropagatabl
         super(originatorCurrencyData);
     }
 
-    public CurrencyData(OriginatorCurrencyData originatorCurrencyData, CurrencyTypeData currencyTypeData) {
+    public CurrencyData(OriginatorCurrencyData originatorCurrencyData, CurrencyTypeData currencyTypeData, Instant createTime, Hash currencyGeneratingTransactionHash, Hash currencyLastTypeChangingTransactionHash) {
         super(originatorCurrencyData);
-        creationTime = currencyTypeData.creationTime;
+        this.createTime = createTime;
         this.currencyTypeData = currencyTypeData;
-        setHash();
+        this.currencyGeneratingTransactionHash = currencyGeneratingTransactionHash;
+        this.currencyLastTypeChangingTransactionHash = currencyLastTypeChangingTransactionHash;
     }
 
     public void setHash() {
@@ -67,29 +60,5 @@ public class CurrencyData extends OriginatorCurrencyData implements IPropagatabl
             throw new CurrencyException(String.format("Attempted to set an invalid currency symbol of %s.", symbol));
         }
         this.symbol = symbol;
-    }
-
-    @JsonIgnore
-    @Override
-    public SignatureData getSignature() {
-        return registrarSignature;
-    }
-
-    @JsonIgnore
-    @Override
-    public Hash getSignerHash() {
-        return registrarHash;
-    }
-
-    @JsonIgnore
-    @Override
-    public void setSignerHash(Hash signerHash) {
-        this.registrarHash = signerHash;
-    }
-
-    @JsonIgnore
-    @Override
-    public void setSignature(SignatureData signature) {
-        this.registrarSignature = signature;
     }
 }
