@@ -1,6 +1,9 @@
 package io.coti.basenode.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.coti.basenode.crypto.CryptoHelper;
+import io.coti.basenode.data.interfaces.ISignValidatable;
+import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 import org.hibernate.validator.constraints.Range;
 
@@ -12,7 +15,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Data
-public class OriginatorCurrencyData implements Serializable {
+public class OriginatorCurrencyData implements ISignable, ISignValidatable, Serializable {
 
     @NotEmpty
     protected String name;
@@ -40,6 +43,28 @@ public class OriginatorCurrencyData implements Serializable {
         scale = originatorCurrencyData.getScale();
         originatorHash = originatorCurrencyData.getOriginatorHash();
         originatorSignature = originatorCurrencyData.getOriginatorSignature();
+    }
+
+    @JsonIgnore
+    @Override
+    public SignatureData getSignature() {
+        return originatorSignature;
+    }
+
+    @Override
+    public Hash getSignerHash() {
+        return originatorHash;
+    }
+
+    @Override
+    public void setSignerHash(Hash signerHash) {
+        this.originatorHash = signerHash;
+    }
+
+    @JsonIgnore
+    @Override
+    public void setSignature(SignatureData signature) {
+        this.originatorSignature = signature;
     }
 
     public Hash calculateHash() {

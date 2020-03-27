@@ -6,63 +6,60 @@ import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.nio.ByteBuffer;
 import java.time.Instant;
 
 @Data
 public class CurrencyTypeData implements ISignable, ISignValidatable, Serializable {
 
-    protected CurrencyType currencyType;
-    protected Instant creationTime;
-    private Hash hash;
-    protected SignatureData registrarSignature;
-
-    public void setHash() {
-        byte[] typeTextInBytes = currencyType.getText().getBytes();
-        final long creationTimeAsLong = this.creationTime.toEpochMilli();
-        byte[] concatDataFields = ByteBuffer.allocate(typeTextInBytes.length + Long.BYTES).
-                put(typeTextInBytes).putLong(creationTimeAsLong).array();
-        this.hash = CryptoHelper.cryptoHash(concatDataFields);
-    }
+    @NotEmpty
+    private String symbol;
+    @NotNull
+    private CurrencyType currencyType;
+    @NotNull
+    private Instant createTime;
+    private CurrencyRateSourceType currencyRateSourceType;
+    private String rateSource;
+    private String protectionModel;
+    @NotNull
+    private @Valid Hash originatorHash;
+    @NotNull
+    private @Valid SignatureData originatorSignature;
 
     protected CurrencyTypeData() {
     }
 
-    public CurrencyTypeData(CurrencyTypeData currencyTypeData) {
-        currencyType = currencyTypeData.getCurrencyType();
-        creationTime = currencyTypeData.getCreationTime();
-        registrarSignature = currencyTypeData.getRegistrarSignature();
-        hash = currencyTypeData.getHash();
-    }
-
-    public CurrencyTypeData(CurrencyType currencyType, Instant creationTime) {
+    public CurrencyTypeData(CurrencyType currencyType, Instant createTime) {
         this.currencyType = currencyType;
-        this.creationTime = creationTime;
-        this.registrarSignature = null;
-        setHash();
+        this.createTime = createTime;
     }
 
     @JsonIgnore
     @Override
     public SignatureData getSignature() {
-        return registrarSignature;
+        return originatorSignature;
     }
 
     @Override
     public Hash getSignerHash() {
-        return null;
+        return originatorHash;
     }
 
     @Override
     public void setSignerHash(Hash signerHash) {
-        // no implementation
+        this.originatorHash = signerHash;
     }
 
     @JsonIgnore
     @Override
     public void setSignature(SignatureData signature) {
-        this.registrarSignature = signature;
+        this.originatorSignature = signature;
     }
 
+    public Hash calculateHash() {
+        return CryptoHelper.cryptoHash(symbol.getBytes(), 224);
+    }
 }

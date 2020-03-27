@@ -12,7 +12,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 public class GenerateTokenRequest extends Request implements ISignValidatable {
-
+    //todo delete it
     @NotNull
     private @Valid Hash transactionHash;
     @NotNull

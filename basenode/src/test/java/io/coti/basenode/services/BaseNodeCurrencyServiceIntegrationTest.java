@@ -44,8 +44,7 @@ import static testUtils.CurrencyServiceTestUtils.createCurrencyData;
         RestTemplate.class, ApplicationContext.class, CommunicationService.class,
         ZeroMQReceiver.class, ZeroMQSubscriber.class, ZeroMQPropagationPublisher.class, ZeroMQSender.class,
         HttpJacksonSerializer.class, JacksonSerializer.class, ZeroMQSubscriberHandler.class,
-        GetUpdatedCurrencyRequestCrypto.class, GetUpdatedCurrencyResponseCrypto.class,
-        CurrencyTypeRegistrationCrypto.class
+        GetUpdatedCurrencyRequestCrypto.class, GetUpdatedCurrencyResponseCrypto.class
 })
 
 @TestPropertySource(locations = "classpath:test.properties")
@@ -103,8 +102,6 @@ public class BaseNodeCurrencyServiceIntegrationTest {
     private GetUpdatedCurrencyRequestCrypto getUpdatedCurrencyRequestCrypto;
     @Autowired
     private GetUpdatedCurrencyResponseCrypto getUpdatedCurrencyResponseCrypto;
-    @Autowired
-    private CurrencyTypeRegistrationCrypto currencyTypeRegistrationCrypto;
 
     @Before
     public void init() {
