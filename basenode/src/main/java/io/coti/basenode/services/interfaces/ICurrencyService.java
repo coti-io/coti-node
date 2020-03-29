@@ -6,6 +6,8 @@ import io.coti.basenode.data.InitiatedTokenNoticeData;
 import io.coti.basenode.http.GetUpdatedCurrencyRequest;
 import reactor.core.publisher.FluxSink;
 
+import java.util.Map;
+
 public interface ICurrencyService {
 
     void init();
@@ -25,4 +27,8 @@ public interface ICurrencyService {
     CurrencyData getCurrencyFromDB(Hash currencyHash);
 
     void handleInitiatedTokenNotice(InitiatedTokenNoticeData initiatedTokenNoticeData);
+
+    void generateNativeCurrency();
+
+    void updateCurrenciesFromClusterStamp(Map<Hash, CurrencyData> clusterStampCurrenciesMap, Hash genesisAddress);
 }

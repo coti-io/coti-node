@@ -40,7 +40,8 @@ public class CurrencyService extends BaseNodeCurrencyService {
         }
     }
 
-    private void generateNativeCurrency() {
+    @Override
+    public void generateNativeCurrency() {
         CurrencyData currencyData = new CurrencyData();
         Instant creationTime = Instant.now();
         currencyData.setName(nativeCurrencyName);
