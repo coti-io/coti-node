@@ -32,8 +32,6 @@ public class TransactionService extends BaseNodeTransactionService {
     private ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
     @Autowired
     private CurrencyService currencyService;
-    @Autowired
-    private MintingService mintingService;
 
     public ResponseEntity<IResponse> setReceiverBaseTransactionOwner(TransactionRequest transactionRequest) {
 
@@ -64,7 +62,7 @@ public class TransactionService extends BaseNodeTransactionService {
             case Payment:
                 ReceiverBaseTransactionOwnerData rbtOwnerData = receiverBaseTransactionOwners.getByHash(transactionHelper.getReceiverBaseTransactionHash(transactionData));
                 if (rbtOwnerData == null) {
-                    log.error("Owner(merchant) not found for RBT hash in received transaction.", transactionData);
+                    log.error("Owner(merchant) not found for RBT hash in received transaction {}.", transactionData.getHash());
                 } else {
                     rollingReserveService.setRollingReserveReleaseDate(transactionData, rbtOwnerData.getMerchantHash());
                 }

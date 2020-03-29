@@ -11,7 +11,7 @@ public abstract class TokenFeeBaseTransactionData extends OutputBaseTransactionD
 
     private Hash signerHash;
 
-    public TokenFeeBaseTransactionData() {
+    protected TokenFeeBaseTransactionData() {
         super();
     }
 

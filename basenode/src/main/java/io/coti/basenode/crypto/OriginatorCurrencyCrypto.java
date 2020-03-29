@@ -1,9 +1,6 @@
 package io.coti.basenode.crypto;
 
-import io.coti.basenode.data.CurrencyData;
-import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.OriginatorCurrencyData;
-import io.coti.basenode.data.SignatureData;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
