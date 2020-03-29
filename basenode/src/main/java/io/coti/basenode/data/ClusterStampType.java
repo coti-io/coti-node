@@ -4,7 +4,7 @@ import java.util.Optional;
 
 public enum ClusterStampType {
     MAJOR("M"),
-    TOKEN("T");
+    CURRENCIES("C");
 
     private String mark;
 

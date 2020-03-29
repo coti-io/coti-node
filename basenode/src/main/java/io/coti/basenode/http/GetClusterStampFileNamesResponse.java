@@ -10,16 +10,14 @@ import lombok.Data;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import java.util.List;
 
 @Data
 public class GetClusterStampFileNamesResponse extends BaseResponse implements ISignValidatable, ISignable, IPropagatable {
 
     @NotEmpty
+    private @Valid ClusterStampNameData currencies;
+    @NotEmpty
     private @Valid ClusterStampNameData major;
-    @NotNull
-    private List<@Valid ClusterStampNameData> tokenClusterStampNames;
     @NotEmpty
     private String clusterStampBucketName;
     @NotEmpty
