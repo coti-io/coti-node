@@ -9,7 +9,7 @@ import java.nio.ByteBuffer;
 
 @Service
 public class GenerateTokenRequestCrypto extends SignatureValidationCrypto<GenerateTokenRequest> {
-//todo delete it
+    //todo delete it
     @Override
     public byte[] getSignatureMessage(GenerateTokenRequest generateTokenRequest) {
 

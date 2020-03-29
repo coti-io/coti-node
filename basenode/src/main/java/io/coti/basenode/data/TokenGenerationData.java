@@ -3,11 +3,9 @@ package io.coti.basenode.data;
 import io.coti.basenode.data.interfaces.ITokenServiceData;
 import lombok.Data;
 
-import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 
 @Data
 public class TokenGenerationData implements ITokenServiceData {

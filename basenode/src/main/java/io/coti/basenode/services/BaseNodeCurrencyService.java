@@ -204,7 +204,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Override
     public void updateCurrenciesFromClusterStamp(Map<Hash, CurrencyData> clusterStampCurrenciesMap, Hash genesisAddress) {
         clusterStampCurrenciesMap.forEach((currencyHash, clusterStampCurrencyData) ->
-            currencies.put(clusterStampCurrencyData)
+                currencies.put(clusterStampCurrencyData)
         );
     }
 

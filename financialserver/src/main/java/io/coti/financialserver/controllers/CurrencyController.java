@@ -26,8 +26,6 @@ public class CurrencyController {
         return currencyService.getUserTokens(getUserTokensRequest);
     }
 
-//    @PutMapping(path = "/token/typechange") // todo add it
-
     @PostMapping(path = "/token/generate")
     public ResponseEntity<IResponse> getTokenGenerationFee(@Valid @RequestBody GenerateTokenFeeRequest generateTokenFeeRequest) {
         return currencyService.getTokenGenerationFee(generateTokenFeeRequest);
@@ -42,8 +40,6 @@ public class CurrencyController {
     public ResponseEntity<IResponse> getTokenMintingFee(@Valid @RequestBody TokenMintingFeeRequest tokenMintingFeeRequest) {
         return mintingService.getTokenMintingFee(tokenMintingFeeRequest);
     }
-
-//    @GetMapping(path = "/token/history")   //todo add it
 
     @GetMapping(path = "/token/mint/history")
     public ResponseEntity<IResponse> getTokenMintingHistory(@Valid @RequestBody GetMintingHistoryRequest getMintingHistoryRequest) {

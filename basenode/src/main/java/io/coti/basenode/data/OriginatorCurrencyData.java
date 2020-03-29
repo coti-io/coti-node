@@ -51,6 +51,7 @@ public class OriginatorCurrencyData implements ISignable, ISignValidatable, Seri
         return originatorSignature;
     }
 
+    @JsonIgnore
     @Override
     public Hash getSignerHash() {
         return originatorHash;
@@ -61,7 +62,6 @@ public class OriginatorCurrencyData implements ISignable, ISignValidatable, Seri
         this.originatorHash = signerHash;
     }
 
-    @JsonIgnore
     @Override
     public void setSignature(SignatureData signature) {
         this.originatorSignature = signature;
