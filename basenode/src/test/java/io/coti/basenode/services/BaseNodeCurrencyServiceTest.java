@@ -35,7 +35,7 @@ import static testUtils.CurrencyServiceTestUtils.createCurrencyData;
         BaseNodeNetworkService.class, RestTemplate.class, CurrencyRegistrarCrypto.class,
         ApplicationContext.class,
         GetUpdatedCurrencyRequestCrypto.class, GetUpdatedCurrencyResponseCrypto.class,
-        CurrencyTypeCrypto.class
+        CurrencyTypeRegistrationCrypto.class
 })
 
 @TestPropertySource(locations = "classpath:test.properties")
@@ -57,7 +57,7 @@ public class BaseNodeCurrencyServiceTest {
     @Autowired
     private CurrencyRegistrarCrypto currencyRegistrarCrypto;
     @Autowired
-    private CurrencyTypeCrypto currencyTypeCrypto;
+    private CurrencyTypeRegistrationCrypto currencyTypeRegistrationCrypto;
     @Autowired
     private ApplicationContext applicationContext;
     @Autowired
@@ -130,7 +130,7 @@ public class BaseNodeCurrencyServiceTest {
     protected void setAndSignCurrencyDataByType(CurrencyData currencyData, CurrencyType currencyType) {
         CurrencyTypeData currencyTypeData = new CurrencyTypeData(currencyType, Instant.now());
 //        currencyTypeCrypto.signMessage(currencyTypeData);
-        currencyTypeCrypto.signMessage(currencyTypeData);
+        currencyTypeRegistrationCrypto.signMessage(currencyTypeData);
         currencyData.setCurrencyTypeData(currencyTypeData);
         currencyRegistrarCrypto.signMessage(currencyData);
     }

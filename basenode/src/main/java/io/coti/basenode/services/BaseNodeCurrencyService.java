@@ -1,7 +1,7 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.crypto.CurrencyRegistrarCrypto;
-import io.coti.basenode.crypto.CurrencyTypeCrypto;
+import io.coti.basenode.crypto.CurrencyTypeRegistrationCrypto;
 import io.coti.basenode.crypto.GetUpdatedCurrencyRequestCrypto;
 import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.*;
@@ -50,7 +50,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Autowired
     private GetUpdatedCurrencyRequestCrypto getUpdatedCurrencyRequestCrypto;
     @Autowired
-    protected CurrencyTypeCrypto currencyTypeCrypto;
+    protected CurrencyTypeRegistrationCrypto currencyTypeRegistrationCrypto;
     @Autowired
     private HttpJacksonSerializer jacksonSerializer;
     @Autowired
@@ -134,11 +134,14 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         if (nativeCurrencyHashes == null || nativeCurrencyHashes.isEmpty() || nativeCurrencyHashes.size() != NUMBER_OF_NATIVE_CURRENCY) {
             throw new CurrencyException("Failed to retrieve native currency data");
         } else {
-            CurrencyData nativeCurrency = currencies.getByHash(nativeCurrencyHashes.iterator().next());
+            Hash nativeCurrencyHash = nativeCurrencyHashes.iterator().next();
+            CurrencyData nativeCurrency = currencies.getByHash(nativeCurrencyHash);
             if (!originatorCurrencyCrypto.verifySignature(nativeCurrency)) {
                 throw new CurrencyException("Failed to verify native currency data of " + nativeCurrency.getHash());
             } else {
-                if (!currencyTypeCrypto.verifySignature(nativeCurrency.getCurrencyTypeData())) {
+                CurrencyTypeData naticeCurrencyTypeData = nativeCurrency.getCurrencyTypeData();
+                CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(nativeCurrencyHash, naticeCurrencyTypeData);
+                if (!currencyTypeRegistrationCrypto.verifySignature(currencyTypeRegistrationData)) {
                     throw new CurrencyException("Failed to verify native currency data type of " + nativeCurrency.getCurrencyTypeData().getCurrencyType().getText());
                 }
             }

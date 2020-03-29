@@ -25,15 +25,10 @@ public class TokenGenerationData implements ITokenServiceData {
 
     @Override
     public byte[] getMessageInBytes() {
-        byte[] bytesOfName = originatorCurrencyData.name.getBytes();
-        byte[] bytesOfSymbol = originatorCurrencyData.symbol.getBytes();
         byte[] bytesOfCurrencyHash = originatorCurrencyData.calculateHash().getBytes();
-        byte[] bytesOfTotalSupply = originatorCurrencyData.totalSupply.stripTrailingZeros().toPlainString().getBytes(StandardCharsets.UTF_8);
         byte[] bytesOfFeeAmount = feeAmount.stripTrailingZeros().toPlainString().getBytes(StandardCharsets.UTF_8);
 
-        return ByteBuffer.allocate(bytesOfName.length + bytesOfSymbol.length + bytesOfCurrencyHash.length + bytesOfTotalSupply.length +
-                +Integer.BYTES + Long.BYTES + bytesOfFeeAmount.length)
-                .put(bytesOfName).put(bytesOfSymbol).put(bytesOfCurrencyHash).put(bytesOfTotalSupply)
-                .putInt(originatorCurrencyData.scale).putLong(currencyTypeData.getCreateTime().toEpochMilli()).put(bytesOfFeeAmount).array();
+        return ByteBuffer.allocate(bytesOfCurrencyHash.length + bytesOfFeeAmount.length)
+                .put(bytesOfCurrencyHash).put(bytesOfFeeAmount).array();
     }
 }

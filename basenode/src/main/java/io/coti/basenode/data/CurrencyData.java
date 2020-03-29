@@ -28,6 +28,7 @@ public class CurrencyData extends OriginatorCurrencyData implements IPropagatabl
 
     public CurrencyData(OriginatorCurrencyData originatorCurrencyData, CurrencyTypeData currencyTypeData, Instant createTime, Hash currencyGeneratingTransactionHash, Hash currencyLastTypeChangingTransactionHash) {
         super(originatorCurrencyData);
+        setHash();
         this.createTime = createTime;
         this.currencyTypeData = currencyTypeData;
         this.currencyGeneratingTransactionHash = currencyGeneratingTransactionHash;
