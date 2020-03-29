@@ -2,7 +2,10 @@ package io.coti.basenode.services;
 
 
 import io.coti.basenode.crypto.*;
-import io.coti.basenode.data.*;
+import io.coti.basenode.data.CurrencyData;
+import io.coti.basenode.data.CurrencyType;
+import io.coti.basenode.data.CurrencyTypeData;
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.model.Currencies;
@@ -32,7 +35,7 @@ import static testUtils.CurrencyServiceTestUtils.createCurrencyData;
         BaseNodeNetworkService.class, RestTemplate.class, CurrencyRegistrarCrypto.class,
         ApplicationContext.class,
         GetUpdatedCurrencyRequestCrypto.class, GetUpdatedCurrencyResponseCrypto.class,
-        CurrencyTypeCrypto.class
+        CurrencyTypeRegistrationCrypto.class
 })
 
 @TestPropertySource(locations = "classpath:test.properties")
@@ -54,7 +57,7 @@ public class BaseNodeCurrencyServiceTest {
     @Autowired
     private CurrencyRegistrarCrypto currencyRegistrarCrypto;
     @Autowired
-    private CurrencyTypeCrypto currencyTypeCrypto;
+    private CurrencyTypeRegistrationCrypto currencyTypeRegistrationCrypto;
     @Autowired
     private ApplicationContext applicationContext;
     @Autowired
@@ -127,7 +130,7 @@ public class BaseNodeCurrencyServiceTest {
     protected void setAndSignCurrencyDataByType(CurrencyData currencyData, CurrencyType currencyType) {
         CurrencyTypeData currencyTypeData = new CurrencyTypeData(currencyType, Instant.now());
 //        currencyTypeCrypto.signMessage(currencyTypeData);
-        currencyTypeCrypto.signMessage(currencyTypeData);
+        currencyTypeRegistrationCrypto.signMessage(currencyTypeData);
         currencyData.setCurrencyTypeData(currencyTypeData);
         currencyRegistrarCrypto.signMessage(currencyData);
     }

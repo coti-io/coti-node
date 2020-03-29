@@ -1,33 +1,26 @@
 package io.coti.basenode.data;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.coti.basenode.crypto.CryptoHelper;
-import io.coti.basenode.data.interfaces.ISignValidatable;
-import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.Instant;
 
 @Data
-public class CurrencyTypeData implements ISignable, ISignValidatable, Serializable {
+public class CurrencyTypeData implements Serializable {
 
-    @NotEmpty
-    private String symbol;
     @NotNull
-    private CurrencyType currencyType;
+    protected CurrencyType currencyType;
     @NotNull
-    private Instant createTime;
-    private CurrencyRateSourceType currencyRateSourceType;
-    private String rateSource;
-    private String protectionModel;
+    protected Instant createTime;
+    protected CurrencyRateSourceType currencyRateSourceType;
+    protected String rateSource;
+    protected String protectionModel;
     @NotNull
-    private @Valid Hash originatorHash;
+    protected @Valid Hash signerHash;
     @NotNull
-    private @Valid SignatureData originatorSignature;
+    protected @Valid SignatureData signature;
 
     protected CurrencyTypeData() {
     }
@@ -37,29 +30,13 @@ public class CurrencyTypeData implements ISignable, ISignValidatable, Serializab
         this.createTime = createTime;
     }
 
-    @JsonIgnore
-    @Override
-    public SignatureData getSignature() {
-        return originatorSignature;
-    }
-
-    @Override
-    public Hash getSignerHash() {
-        return originatorHash;
-    }
-
-    @Override
-    public void setSignerHash(Hash signerHash) {
-        this.originatorHash = signerHash;
-    }
-
-    @JsonIgnore
-    @Override
-    public void setSignature(SignatureData signature) {
-        this.originatorSignature = signature;
-    }
-
-    public Hash calculateHash() {
-        return CryptoHelper.cryptoHash(symbol.getBytes(), 224);
+    protected CurrencyTypeData(CurrencyTypeData currencyTypeData) {
+        currencyType = currencyTypeData.getCurrencyType();
+        createTime = currencyTypeData.getCreateTime();
+        currencyRateSourceType = currencyTypeData.getCurrencyRateSourceType();
+        rateSource = currencyTypeData.getRateSource();
+        protectionModel = currencyTypeData.getProtectionModel();
+        signerHash = currencyTypeData.getSignerHash();
+        signature = currencyTypeData.getSignature();
     }
 }

@@ -2,7 +2,10 @@ package io.coti.financialserver.services;
 
 import io.coti.basenode.crypto.BaseTransactionCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
-import io.coti.basenode.data.*;
+import io.coti.basenode.data.CurrencyData;
+import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.TokenGenerationData;
+import io.coti.basenode.data.TokenGenerationFeeBaseTransactionData;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.ICurrencyService;
@@ -77,7 +80,7 @@ public class FeeService {
 
     protected void setTokenGenerationFeeHash(TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData) {
         BaseTransactionCrypto.TOKEN_GENERATION_FEE_BASE_TRANSACTION_DATA.createAndSetBaseTransactionHash(tokenGenerationFeeBaseTransactionData);
-    } //todo check hash generation
+    }
 
     protected void signTokenGenerationFee(TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData) {
         tokenGenerationFeeBaseTransactionData.setSignature(NodeCryptoHelper.signMessage(tokenGenerationFeeBaseTransactionData.getHash().getBytes()));

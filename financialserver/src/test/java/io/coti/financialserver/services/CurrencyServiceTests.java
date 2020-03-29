@@ -1,6 +1,9 @@
 package io.coti.financialserver.services;
 
-import io.coti.basenode.crypto.*;
+import io.coti.basenode.crypto.CurrencyRegistrarCrypto;
+import io.coti.basenode.crypto.GetUpdatedCurrencyRequestCrypto;
+import io.coti.basenode.crypto.NodeCryptoHelper;
+import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.HttpJacksonSerializer;
 import io.coti.basenode.http.Response;
@@ -14,7 +17,6 @@ import io.coti.basenode.services.TransactionHelper;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IChunkService;
 import io.coti.basenode.services.interfaces.INetworkService;
-import io.coti.financialserver.crypto.GenerateTokenRequestCrypto;
 import io.coti.financialserver.crypto.GetUserTokensRequestCrypto;
 import io.coti.financialserver.http.GetCurrenciesRequest;
 import io.coti.financialserver.http.GetCurrenciesResponse;
@@ -73,8 +75,6 @@ public class CurrencyServiceTests {
     private CurrencyNameIndexes currencyNameIndexes;
     @MockBean
     protected INetworkService networkService;
-    @MockBean
-    private GenerateTokenRequestCrypto generateTokenRequestCrypto;
     @MockBean
     private OriginatorCurrencyCrypto originatorCurrencyCrypto;
     @MockBean

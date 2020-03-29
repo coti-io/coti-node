@@ -1,6 +1,5 @@
 package io.coti.basenode.model;
 
-import io.coti.basenode.model.Collection;
 import io.coti.basenode.data.CurrencyNameIndexData;
 import org.springframework.stereotype.Service;
 

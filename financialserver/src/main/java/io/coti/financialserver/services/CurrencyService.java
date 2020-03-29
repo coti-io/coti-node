@@ -1,7 +1,6 @@
 package io.coti.financialserver.services;
 
 import com.google.gson.Gson;
-import io.coti.basenode.crypto.CurrencyTypeCrypto;
 import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CotiRunTimeException;
@@ -12,7 +11,6 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeCurrencyService;
 import io.coti.basenode.services.TransactionHelper;
-import io.coti.basenode.services.interfaces.IClusterStampService;
 import io.coti.basenode.services.interfaces.IMintingService;
 import io.coti.financialserver.crypto.GetUserTokensRequestCrypto;
 import io.coti.financialserver.http.*;
@@ -42,7 +40,6 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 @Service
 public class CurrencyService extends BaseNodeCurrencyService {
 
-    public static final String GENERATED_TOKEN_ENDPOINT = "/currencies/token";
     private static final String GET_NATIVE_CURRENCY_ENDPOINT = "/currencies/native";
     private static final String EXCEPTION_MESSAGE = "%s. Exception: %s";
     private final Map<Hash, Hash> lockUserHashMap = new ConcurrentHashMap<>();
@@ -56,13 +53,9 @@ public class CurrencyService extends BaseNodeCurrencyService {
     @Autowired
     private OriginatorCurrencyCrypto originatorCurrencyCrypto;
     @Autowired
-    private CurrencyTypeCrypto currencyTypeCrypto;
-    @Autowired
     private Transactions transactions;
     @Autowired
     private TransactionHelper transactionHelper;
-    @Autowired
-    private IClusterStampService clusterStampService;
     @Autowired
     private FeeService feeService;
     @Autowired
@@ -174,10 +167,12 @@ public class CurrencyService extends BaseNodeCurrencyService {
         Hash currencyHash;
         try {
             OriginatorCurrencyData originatorCurrencyData = generateTokenRequest.getOriginatorCurrencyData();
+            CurrencyTypeData currencyTypeData = generateTokenRequest.getCurrencyTypeData();
             String currencyName = originatorCurrencyData.getName();
             currencyHash = originatorCurrencyData.calculateHash();
             validateCurrencyUniqueness(currencyHash, currencyName);
-            if (!originatorCurrencyCrypto.verifySignature(originatorCurrencyData) || !currencyTypeCrypto.verifySignature(generateTokenRequest.getCurrencyTypeData())) {
+            CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(currencyHash, currencyTypeData);
+            if (!originatorCurrencyCrypto.verifySignature(originatorCurrencyData) || !currencyTypeRegistrationCrypto.verifySignature(currencyTypeRegistrationData)) {
                 throw new CurrencyValidationException(TOKEN_GENERATION_REQUEST_INVALID_SIGNATURE);
             }
         } catch (CurrencyValidationException e) {
