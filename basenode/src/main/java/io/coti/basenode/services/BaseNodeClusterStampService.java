@@ -235,7 +235,8 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     private void loadCurrenciesClusterStamp(ClusterStampNameData currenciesClusterStampNameData) {
         String clusterStampFileName = getClusterStampFileName(currenciesClusterStampNameData);
-        log.info("Starting to load currencies clusterstamp file {}", clusterStampFileName);
+//        log.info("Starting to load currencies clusterstamp file {}", clusterStampFileName);
+        log.info("Starting to load currencies clusterstamp file {} at {}", clusterStampFileName, Instant.now());
         String clusterStampFileLocation = clusterStampFolder + clusterStampFileName;
         File clusterstampFile = new File(clusterStampFileLocation);
         ClusterStampData clusterStampData = new ClusterStampData();
@@ -316,8 +317,10 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             } else {
                 handleClusterStampWithSignature(clusterStampData);
             }
+            log.info("Finished to load currencies clusterstamp file {} at {}", clusterStampFileName, Instant.now());
             currencyService.updateCurrenciesFromClusterStamp(clusterStampCurrenciesMap, currencyGenesisAddress);
-            log.info("Finished to load currencies clusterstamp file {}", clusterStampFileName);
+            log.info("Finished DB updatesfor currencies clusterstamp file {} at {}", clusterStampFileName, Instant.now());
+//            log.info("Finished to load currencies clusterstamp file {}", clusterStampFileName);
         } catch (ClusterStampException e) {
             throw new ClusterStampException(String.format("Errors on clusterstamp file %s loading.%n", clusterStampFileName) + e.getMessage(), e);
         } catch (Exception e) {

@@ -3,19 +3,14 @@ package io.coti.basenode.services;
 import io.coti.basenode.communication.*;
 import io.coti.basenode.communication.interfaces.*;
 import io.coti.basenode.crypto.*;
-import io.coti.basenode.data.CurrencyData;
-import io.coti.basenode.data.CurrencyType;
-import io.coti.basenode.data.CurrencyTypeData;
-import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.*;
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
+import io.coti.basenode.exceptions.FileSystemException;
 import io.coti.basenode.http.HttpJacksonSerializer;
 import io.coti.basenode.http.interfaces.ISerializer;
 import io.coti.basenode.model.*;
-import io.coti.basenode.services.interfaces.IAddressService;
-import io.coti.basenode.services.interfaces.IDspVoteService;
-import io.coti.basenode.services.interfaces.INetworkService;
-import io.coti.basenode.services.interfaces.ITransactionService;
+import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Before;
@@ -28,10 +23,15 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.util.SerializationUtils;
 import org.springframework.web.client.RestTemplate;
 import testUtils.BaseNodeTestUtils;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.HashSet;
 
 import static testUtils.CurrencyServiceTestUtils.createCurrencyData;
@@ -44,7 +44,12 @@ import static testUtils.CurrencyServiceTestUtils.createCurrencyData;
         RestTemplate.class, ApplicationContext.class, CommunicationService.class,
         ZeroMQReceiver.class, ZeroMQSubscriber.class, ZeroMQPropagationPublisher.class, ZeroMQSender.class,
         HttpJacksonSerializer.class, JacksonSerializer.class, ZeroMQSubscriberHandler.class,
-        GetUpdatedCurrencyRequestCrypto.class, GetUpdatedCurrencyResponseCrypto.class
+        GetUpdatedCurrencyRequestCrypto.class, GetUpdatedCurrencyResponseCrypto.class,
+        CurrencyNameIndexes.class, CurrencyTypeCrypto.class, OriginatorCurrencyCrypto.class,
+        BaseNodeClusterStampService.class, TrustChainConfirmationService.class, ClusterHelper.class,
+        ClusterStampCrypto.class, GetClusterStampFileNamesCrypto.class, BaseNodeAwsService.class,
+        LastClusterStampVersions.class, BaseNodeFileSystemService.class, BaseNodeMintingService.class
+
 })
 
 @TestPropertySource(locations = "classpath:test.properties")
@@ -102,11 +107,24 @@ public class BaseNodeCurrencyServiceIntegrationTest {
     private GetUpdatedCurrencyRequestCrypto getUpdatedCurrencyRequestCrypto;
     @Autowired
     private GetUpdatedCurrencyResponseCrypto getUpdatedCurrencyResponseCrypto;
+    @MockBean
+    private IChunkService chunkService;
+    @Autowired
+    private BaseNodeClusterStampService baseNodeClusterStampService;
+    @MockBean
+    private IBalanceService balanceService;
+    @Autowired
+    private IClusterHelper clusterHelper;
+    @MockBean
+    private IAwsService awsService;
+//    @MockBean
+//    private  IMintingService mintingService;
+
 
     @Before
     public void init() {
         baseNodeRocksDBConnector.init();
-        baseNodeCurrencyService.init();
+//        baseNodeCurrencyService.init();
     }
 
     //    @Test
@@ -266,6 +284,44 @@ public class BaseNodeCurrencyServiceIntegrationTest {
 //        currencyTypeRegistrationCrypto.signMessage(currencyTypeRegistrationData);
         currencyData.setCurrencyTypeData(currencyTypeData);
         currencyRegistrarCrypto.signMessage(currencyData);
+    }
+
+    //    @Test
+    public void prepareCurrenciesFileFewAdditionalCurrencies() {
+        int iTokenIndex = 1;
+        CurrencyData currencyData1 = createCurrencyData("TokenN" + iTokenIndex, "TOKENS", new Hash(iTokenIndex));
+        iTokenIndex = 2;
+        CurrencyData currencyData2 = createCurrencyData("TokenN" + iTokenIndex, "TOKENS", new Hash(iTokenIndex));
+        iTokenIndex = 3;
+        CurrencyData currencyData3 = createCurrencyData("TokenN" + iTokenIndex, "TOKENS", new Hash(iTokenIndex));
+
+        ClusterStampNameData clusterStampNameData = new ClusterStampNameData(ClusterStampType.CURRENCIES);
+        String clusterStampFileName = "testCurrenciesClusterStamp.csv";
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(clusterStampFileName))) {
+            writer.write(Base64.getEncoder().encodeToString(SerializationUtils.serialize(currencyData1)));
+            writer.newLine();
+            writer.write(Base64.getEncoder().encodeToString(SerializationUtils.serialize(currencyData2)));
+            writer.newLine();
+            writer.write(Base64.getEncoder().encodeToString(SerializationUtils.serialize(currencyData3)));
+            writer.newLine();
+        } catch (IOException e) {
+            throw new FileSystemException(String.format("Create and write file error. %s: %s", e.getClass().getName(), e.getMessage()));
+        }
+    }
+
+//    @Test
+    public void prepareCurrenciesFileMultipleAdditionalCurrencies() {
+        ClusterStampNameData clusterStampNameData = new ClusterStampNameData(ClusterStampType.CURRENCIES);
+        String clusterStampFileName = "testMultipleCurrenciesClusterStamp.csv";
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(clusterStampFileName))) {
+            for (int index = 0; index < 20000; ) {
+                index++;
+                writer.write(Base64.getEncoder().encodeToString(SerializationUtils.serialize(createCurrencyData("TKNM" + index, "TKNM", new Hash(index)))));
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            throw new FileSystemException(String.format("Create and write file error. %s: %s", e.getClass().getName(), e.getMessage()));
+        }
     }
 
 }

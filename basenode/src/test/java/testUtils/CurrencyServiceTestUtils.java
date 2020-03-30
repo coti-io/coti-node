@@ -1,6 +1,8 @@
 package testUtils;
 
 import io.coti.basenode.data.CurrencyData;
+import io.coti.basenode.data.CurrencyType;
+import io.coti.basenode.data.CurrencyTypeData;
 import io.coti.basenode.data.Hash;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,6 +23,9 @@ public class CurrencyServiceTestUtils {
         currencyData.setDescription("tempDescription");
         currencyData.setSignerHash(new Hash("tempSigner"));
         currencyData.setOriginatorHash(new Hash("tempOriginator"));
+        CurrencyTypeData currencyTypeData = new CurrencyTypeData(CurrencyType.REGULAR_CMD_TOKEN, Instant.now());
+        currencyTypeData.setSymbol(symbol);
+        currencyData.setCurrencyTypeData(currencyTypeData);
         return currencyData;
     }
 }
