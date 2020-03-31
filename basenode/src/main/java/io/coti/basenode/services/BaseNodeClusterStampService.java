@@ -638,12 +638,4 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         clusterStampData.setSignerHash(networkService.getSingleNodeData(NodeType.ZeroSpendServer).getNodeHash());
     }
 
-    @Override
-    public void handleInitiatedTokenNotice(InitiatedTokenNoticeData initiatedTokenNoticeData) {
-        if (!isClusterStampNameExists(initiatedTokenNoticeData.getClusterStampNameData())) {
-            downloadAndAddSingleClusterStamp(initiatedTokenNoticeData.getClusterStampNameData());
-            loadClusterStamp(initiatedTokenNoticeData.getClusterStampNameData());
-        }
-    }
-
 }
