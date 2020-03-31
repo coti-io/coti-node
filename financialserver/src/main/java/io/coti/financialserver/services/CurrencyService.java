@@ -89,28 +89,28 @@ public class CurrencyService extends BaseNodeCurrencyService {
         addToTransactionQueue(tokenGenerationTransactionQueue, transactionData);
     }
 
-    @Override
-    public void updateCurrencies() {
-        try {
-            CurrencyData nativeCurrencyData = getNativeCurrency();
-            if (nativeCurrencyData == null) {
-                String recoveryServerAddress = networkService.getRecoveryServerAddress();
-                nativeCurrencyData = restTemplate.getForObject(recoveryServerAddress + GET_NATIVE_CURRENCY_ENDPOINT, CurrencyData.class);
-                if (nativeCurrencyData == null) {
-                    throw new CurrencyException("Native currency recovery failed. Recovery sent null native currency");
-                } else {
-                    putCurrencyData(nativeCurrencyData);
-                    setNativeCurrencyData(nativeCurrencyData);
-                }
-            }
-        } catch (CurrencyException e) {
-            throw e;
-        } catch (HttpClientErrorException | HttpServerErrorException e) {
-            throw new CurrencyException(String.format("Native currency recovery failed. %s: %s", e.getClass().getName(), new Gson().fromJson(e.getResponseBodyAsString(), Response.class).getMessage()));
-        } catch (Exception e) {
-            throw new CurrencyException(String.format("Native currency recovery failed. %s: %s", e.getClass().getName(), e.getMessage()));
-        }
-    }
+//    @Override
+//    public void updateCurrencies() {
+//        try {
+//            CurrencyData nativeCurrencyData = getNativeCurrency();
+//            if (nativeCurrencyData == null) {
+//                String recoveryServerAddress = networkService.getRecoveryServerAddress();
+//                nativeCurrencyData = restTemplate.getForObject(recoveryServerAddress + GET_NATIVE_CURRENCY_ENDPOINT, CurrencyData.class);
+//                if (nativeCurrencyData == null) {
+//                    throw new CurrencyException("Native currency recovery failed. Recovery sent null native currency");
+//                } else {
+//                    putCurrencyData(nativeCurrencyData);
+//                    setNativeCurrencyData(nativeCurrencyData);
+//                }
+//            }
+//        } catch (CurrencyException e) {
+//            throw e;
+//        } catch (HttpClientErrorException | HttpServerErrorException e) {
+//            throw new CurrencyException(String.format("Native currency recovery failed. %s: %s", e.getClass().getName(), new Gson().fromJson(e.getResponseBodyAsString(), Response.class).getMessage()));
+//        } catch (Exception e) {
+//            throw new CurrencyException(String.format("Native currency recovery failed. %s: %s", e.getClass().getName(), e.getMessage()));
+//        }
+//    }
 
 
     public ResponseEntity<IResponse> getUserTokens(GetUserTokensRequest getUserTokensRequest) {
