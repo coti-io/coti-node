@@ -10,7 +10,9 @@ public enum CurrencyRateSourceType {
     RATES_SERVER("Rates Server");
 
     private String text;
-    private static final Map<String, CurrencyRateSourceType> textToCurrencyRateSourceTypeMap = new HashMap<>();
+    private static class CurrencyRateSourceTypes {
+        private static final Map<String, CurrencyRateSourceType> textToCurrencyRateSourceTypeMap = new HashMap<>();
+    }
 
     CurrencyRateSourceType(String text) {
         this.text = text;
@@ -18,7 +20,7 @@ public enum CurrencyRateSourceType {
     }
 
     private void setTextToCurrencyRateSourceTypeMap(String text) {
-        textToCurrencyRateSourceTypeMap.put(text, this);
+        CurrencyRateSourceTypes.textToCurrencyRateSourceTypeMap.put(text, this);
     }
 
     public String getText() {
@@ -26,7 +28,7 @@ public enum CurrencyRateSourceType {
     }
 
     public static CurrencyRateSourceType getByText(String text) {
-        return Optional.ofNullable(textToCurrencyRateSourceTypeMap.get(text))
+        return Optional.ofNullable(CurrencyRateSourceTypes.textToCurrencyRateSourceTypeMap.get(text))
                 .orElseThrow(() -> new IllegalArgumentException("No currency rate source type exists for the giving text"));
     }
 

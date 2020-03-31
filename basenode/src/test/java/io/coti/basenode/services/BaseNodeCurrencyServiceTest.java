@@ -126,7 +126,7 @@ public class BaseNodeCurrencyServiceTest {
 
     protected void setAndSignCurrencyDataByType(CurrencyData currencyData, CurrencyType currencyType) {
         CurrencyTypeData currencyTypeData = new CurrencyTypeData(currencyType, Instant.now());
-        CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(currencyData.getHash(), currencyTypeData);
+        CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(currencyData.getSymbol(), currencyTypeData);
 //        currencyTypeCrypto.signMessage(currencyTypeData);
         currencyTypeRegistrationCrypto.signMessage(currencyTypeRegistrationData);
         currencyData.setCurrencyTypeData(currencyTypeData);

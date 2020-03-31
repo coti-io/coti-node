@@ -53,7 +53,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
         currencyData.setCurrencyTypeData(currencyTypeData);
         currencyData.setHash();
 
-        CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(currencyData.getHash(), currencyTypeData);
+        CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(currencyData.getSymbol(), currencyTypeData);
         currencyTypeRegistrationCrypto.signMessage(currencyTypeRegistrationData);
         currencyTypeData.setSignerHash(currencyTypeRegistrationData.getSignerHash());
         currencyTypeData.setSignature(currencyTypeRegistrationData.getSignature());

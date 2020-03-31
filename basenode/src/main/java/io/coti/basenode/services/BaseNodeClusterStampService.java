@@ -79,6 +79,8 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     protected String clusterStampBucketName;
     @Value("${application.name}")
     private String applicationName;
+    @Value("${get.cluster.stamp.from.recovery.server:true}")
+    private boolean getClusterStampFromRecoveryServer;
     private Hash currencyGenesisAddress;
     @Autowired
     protected IBalanceService balanceService;
@@ -111,7 +113,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             fileSystemService.createFolder(clusterStampFolder);
             initLocalClusterStampNames();
             fillClusterStampNamesMap();
-            getClusterStampFromRecoveryServer(true);
+            if (getClusterStampFromRecoveryServer) {
+                getClusterStampFromRecoveryServer(true);
+            }
             loadAllClusterStamps();
             log.info("{} is up", this.getClass().getSimpleName());
         } catch (ClusterStampException e) {
