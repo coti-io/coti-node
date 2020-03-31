@@ -103,7 +103,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 //        getUpdatedCurrencyDataFromRecoveryServer(getUpdatedCurrencyRequest);
         // todo delete all this stuff
 
-        verifyValidNativeCurrencyPresent();
+//        verifyValidNativeCurrencyPresent();
     }
 
     private void getUpdatedCurrencyDataFromRecoveryServer(GetUpdatedCurrencyRequest getUpdatedCurrencyRequest) {
