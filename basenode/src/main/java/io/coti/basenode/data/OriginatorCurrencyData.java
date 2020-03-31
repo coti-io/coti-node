@@ -13,6 +13,7 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
 
 @Data
 public class OriginatorCurrencyData implements ISignable, ISignValidatable, Serializable {
@@ -43,6 +44,16 @@ public class OriginatorCurrencyData implements ISignable, ISignValidatable, Seri
         scale = originatorCurrencyData.getScale();
         originatorHash = originatorCurrencyData.getOriginatorHash();
         originatorSignature = originatorCurrencyData.getOriginatorSignature();
+    }
+
+    public byte[] getMessageInBytes() {
+        byte[] nameInBytes = name.getBytes();
+        byte[] symbolInBytes = symbol.getBytes();
+        byte[] descriptionInBytes = description.getBytes();
+        byte[] totalSupplyInBytes = totalSupply.stripTrailingZeros().toPlainString().getBytes();
+        byte[] scaleInBytes = ByteBuffer.allocate(Integer.BYTES).putInt(scale).array();
+        return ByteBuffer.allocate(nameInBytes.length + symbolInBytes.length + descriptionInBytes.length + totalSupplyInBytes.length + scaleInBytes.length)
+                .put(nameInBytes).put(symbolInBytes).put(descriptionInBytes).put(totalSupplyInBytes).put(scaleInBytes).array();
     }
 
     @JsonIgnore
