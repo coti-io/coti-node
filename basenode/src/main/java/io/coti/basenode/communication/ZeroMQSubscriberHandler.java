@@ -2,7 +2,10 @@ package io.coti.basenode.communication;
 
 import io.coti.basenode.communication.interfaces.ISubscriberHandler;
 import io.coti.basenode.data.NodeType;
-import io.coti.basenode.services.interfaces.*;
+import io.coti.basenode.services.interfaces.IAddressService;
+import io.coti.basenode.services.interfaces.IDspVoteService;
+import io.coti.basenode.services.interfaces.INetworkService;
+import io.coti.basenode.services.interfaces.ITransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -24,8 +27,6 @@ public class ZeroMQSubscriberHandler implements ISubscriberHandler {
     private IDspVoteService dspVoteService;
     @Autowired
     private INetworkService networkService;
-    @Autowired
-    private ICurrencyService currencyService;
 
     @Override
     public void init() {
@@ -41,7 +42,6 @@ public class ZeroMQSubscriberHandler implements ISubscriberHandler {
         subscriberMessageType.addressService = addressService;
         subscriberMessageType.dspVoteService = dspVoteService;
         subscriberMessageType.networkService = networkService;
-        subscriberMessageType.currencyService = currencyService;
     }
 
     @Override

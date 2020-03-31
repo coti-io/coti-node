@@ -169,6 +169,10 @@ public class BaseNodeTransactionService implements ITransactionService {
                 log.error("Minting balance check failed: {}", transactionData.getHash());
                 return;
             }
+            if (transactionData.getType() == TransactionType.TokenGenerationFee && !validationService.checkTokenUniqueness(transactionData)) {
+                log.error("Not unique token generation attempt by transaction: {}", transactionData.getHash());
+                return;
+            }
             transactionHelper.attachTransactionToCluster(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
 

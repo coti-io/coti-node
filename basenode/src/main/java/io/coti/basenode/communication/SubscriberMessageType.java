@@ -33,12 +33,6 @@ public enum SubscriberMessageType implements ISubscriberMessageType {
         public Consumer<IPropagatable> getHandler(NodeType publisherNodeType) {
             return networkData -> networkService.handleNetworkChanges((NetworkData) networkData);
         }
-    },
-    INITIATED_TOKEN_NOTICE_DATA(InitiatedTokenNoticeData.class) {
-        @Override
-        public Consumer<Object> getHandler(NodeType publisherNodeType) {
-            return initiatedTokenNoticeData -> currencyService.handleInitiatedTokenNotice((InitiatedTokenNoticeData) initiatedTokenNoticeData);
-        }
     };
 
     protected ITransactionService transactionService;

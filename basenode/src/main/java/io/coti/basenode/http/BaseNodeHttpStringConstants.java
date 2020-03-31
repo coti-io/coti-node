@@ -26,6 +26,7 @@ public class BaseNodeHttpStringConstants {
     public static final String AUTHENTICATION_FAILED_MESSAGE = "Authentication failed!";
     public static final String INSUFFICIENT_FUNDS_MESSAGE = "Balance for address is insufficient!";
     public static final String INSUFFICIENT_MINTING_FUNDS_MESSAGE = "Minting balance for address is insufficient!";
+    public static final String NOT_UNIQUE_TOKEN_GENERATION_TRANSACTION = "Not unique token generation attempt!";
     public static final String ILLEGAL_BASE_TRANSACTIONS_AMOUNT = "Illegal transaction - sum of base transactions must be 0!";
     public static final String INVALID_TRUST_SCORE_MESSAGE = "Invalid sender trust score!";
 
@@ -65,7 +66,6 @@ public class BaseNodeHttpStringConstants {
     public static final String EMPTY_SEARCH_RESULT = "Search result is empty";
 
     public static final String NATIVE_COIN_NOT_FOUND = "Native coin not found";
-    public static final String NO_VALID_NATIVE_COIN_NOT_FOUND = "No valid native coin was found";
     public static final String DOCUMENT_NOT_FOUND = "Document not found";
 
     public static final String NOT_BACKUP_NODE = "The node is not a backup node";

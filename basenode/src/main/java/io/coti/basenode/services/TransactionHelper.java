@@ -316,6 +316,15 @@ public class TransactionHelper implements ITransactionHelper {
         return true;
     }
 
+    @Override
+    public boolean checkTokenUniqueness(TransactionData transactionData) {
+        if(!currencyService.checkCurrencyUniqueness(transactionData)) {
+            return false;
+        }
+        transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(PAYLOAD_CHECKED);
+        return true;
+    }
+
     public void attachTransactionToCluster(TransactionData transactionData) {
         transactionData.setTrustChainConsensus(false);
         transactionData.setTrustChainTrustScore(0);

@@ -2,7 +2,6 @@ package io.coti.basenode.services.interfaces;
 
 import io.coti.basenode.data.CurrencyData;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.InitiatedTokenNoticeData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.GetUpdatedCurrencyRequest;
 import reactor.core.publisher.FluxSink;
@@ -29,8 +28,6 @@ public interface ICurrencyService {
 
     CurrencyData getCurrencyFromDB(Hash currencyHash);
 
-    void handleInitiatedTokenNotice(InitiatedTokenNoticeData initiatedTokenNoticeData);
-
     void generateNativeCurrency();
 
     void updateCurrenciesFromClusterStamp(Map<Hash, CurrencyData> clusterStampCurrenciesMap, Hash genesisAddress);
@@ -38,4 +35,6 @@ public interface ICurrencyService {
     void handleExistingTransaction(TransactionData transactionData);
 
     void handleMissingTransaction(TransactionData transactionData);
+
+    boolean checkCurrencyUniqueness(TransactionData transactionData);
 }

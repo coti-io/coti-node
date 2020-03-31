@@ -98,6 +98,11 @@ public class BaseNodeValidationService implements IValidationService {
     }
 
     @Override
+    public boolean checkTokenUniqueness(TransactionData transactionData) {
+        return transactionHelper.checkTokenUniqueness(transactionData);
+    }
+
+    @Override
     public <T extends BaseTransactionData & ITrustScoreNodeValidatable> boolean validateBaseTransactionTrustScoreNodeResult(T baseTransactionData) {
         return transactionHelper.validateBaseTransactionTrustScoreNodeResult(baseTransactionData);
     }
