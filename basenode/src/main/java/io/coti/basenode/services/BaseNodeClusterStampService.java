@@ -194,9 +194,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     private void loadAllClusterStamps() {
         log.info("Loading clusterstamp files");
-        if (shouldUpdateClusterStampDBVersion()) {
-            loadCurrenciesClusterStamp(currenciesClusterStampName);
-        }
+        loadCurrenciesClusterStamp(currenciesClusterStampName);
         loadClusterStamp(majorClusterStampName);
     }
 
