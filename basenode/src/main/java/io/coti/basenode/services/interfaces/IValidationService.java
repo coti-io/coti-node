@@ -28,6 +28,8 @@ public interface IValidationService {
 
     boolean validateBalancesAndAddToPreBalance(TransactionData transactionData);
 
+    boolean checkTokenUniqueness(TransactionData transactionData);
+
     <T extends BaseTransactionData & ITrustScoreNodeValidatable> boolean validateBaseTransactionTrustScoreNodeResult(T baseTransactionData);
 
     boolean fullValidation(TransactionData transactionData);

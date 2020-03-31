@@ -34,6 +34,8 @@ public interface ITransactionHelper {
 
     boolean checkBalancesAndAddToPreBalance(TransactionData transactionData);
 
+    boolean checkTokenUniqueness(TransactionData transactionData);
+
     void attachTransactionToCluster(TransactionData transactionData);
 
     void setTransactionStateToSaved(TransactionData transactionData);

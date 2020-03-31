@@ -1,6 +1,5 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.crypto.CurrencyRegistrarCrypto;
 import io.coti.basenode.crypto.CurrencyTypeRegistrationCrypto;
 import io.coti.basenode.crypto.GetUpdatedCurrencyRequestCrypto;
 import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
@@ -57,8 +56,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     private HttpJacksonSerializer jacksonSerializer;
     @Autowired
     private OriginatorCurrencyCrypto originatorCurrencyCrypto;
-    @Autowired
-    private CurrencyRegistrarCrypto currencyRegistrarCrypto;
     @Autowired
     private IChunkService chunkService;
     @Autowired
@@ -193,16 +190,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     @Override
-    public void handleInitiatedTokenNotice(InitiatedTokenNoticeData initiatedTokenNoticeData) {
-        CurrencyData currencyData = initiatedTokenNoticeData.getCurrencyData();
-        if (!validateInitiatedToken(currencyData)) {
-            return;
-        }
-        putCurrencyData(currencyData);
-        baseNodeClusterStampService.handleInitiatedTokenNotice(initiatedTokenNoticeData);
-    }
-
-    @Override
     public void generateNativeCurrency() {
         throw new CurrencyException("Attempted to generate Native currency.");
     }
@@ -254,26 +241,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         return currencyData;
     }
 
-    private boolean validateInitiatedToken(CurrencyData currencyData) {
-        if (!originatorCurrencyCrypto.verifySignature(currencyData)) {
-            log.error("Failed to verify propagated currency {} originator already exists", currencyData.getName());
-            return false;
-        }
-        if (!currencyRegistrarCrypto.verifySignature(currencyData)) {
-            log.error("Failed to verify propagated currency {} registrar already exists", currencyData.getName());
-            return false;
-        }
-        if (verifyCurrencyExists(currencyData.getHash())) {
-            log.error("Propagated currency {} already exists", currencyData.getName());
-            return false;
-        }
-        if (currencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
-            log.error("Propagated currency {} marked as native", currencyData.getName());
-            return false;
-        }
-        return true;
-    }
-
     private void getRequiringUpdateOfCurrencyDataByType(Map<CurrencyType, HashSet<Hash>> existingCurrencyHashesByType, FluxSink<CurrencyData> fluxSink) {
         currencyHashByTypeMap.forEach((localCurrencyType, localCurrencyHashes) -> {
             HashSet<Hash> existingCurrencyHashes = existingCurrencyHashesByType.get(localCurrencyType);
@@ -322,4 +289,26 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             throw new CurrencyException("Currency symbol is already in use.");
         }
     }
+
+    @Override
+    public boolean checkCurrencyUniqueness(TransactionData transactionData) {
+        TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = getTokenGenerationFeeData(transactionData);
+        Hash currencyHash = tokenGenerationFeeBaseTransactionData.getServiceData().getOriginatorCurrencyData().calculateHash();
+        if (currencyNameIndexes.getByHash(new CurrencyNameIndexData(tokenGenerationFeeBaseTransactionData.getServiceData().getOriginatorCurrencyData().getName(), currencyHash).getHash()) != null) {
+            return false;
+        }
+        if (currencies.getByHash(currencyHash) != null) {
+            return false;
+        }
+        return true;
+    }
+
+    protected TokenGenerationFeeBaseTransactionData getTokenGenerationFeeData(TransactionData tokenGenerationTransaction) {
+        return (TokenGenerationFeeBaseTransactionData) tokenGenerationTransaction
+                .getBaseTransactions()
+                .stream()
+                .filter(t -> t instanceof TokenGenerationFeeBaseTransactionData)
+                .findFirst().orElse(null);
+    }
+
 }

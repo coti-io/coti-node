@@ -271,6 +271,12 @@ public class TransactionService extends BaseNodeTransactionService {
             log.error("Minting balance check failed: {}", transactionData.getHash());
             throw new TransactionValidationException(INSUFFICIENT_MINTING_FUNDS_MESSAGE);
         }
+
+        if (transactionData.getType() == TransactionType.TokenGenerationFee
+                && !validationService.checkTokenUniqueness(transactionData)) {
+            log.error("Token uniqueness check failed: {}", transactionData.getHash());
+            throw new TransactionValidationException(NOT_UNIQUE_TOKEN_GENERATION_TRANSACTION);
+        }
     }
 
     public void getTransactions(GetTransactionsRequest getTransactionsRequest, HttpServletResponse response) {
