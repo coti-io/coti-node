@@ -10,16 +10,16 @@ public class CurrencyTypeRegistrationCrypto extends SignatureCrypto<CurrencyType
 
     @Override
     public byte[] getSignatureMessage(CurrencyTypeRegistrationData currencyTypeRegistrationData) {
-        byte[] currencyHashInBytes = currencyTypeRegistrationData.getCurrencyHash().getBytes();
+        byte[] symbolInBytes = currencyTypeRegistrationData.getSymbol().getBytes();
         byte[] currencyTypeInBytes = currencyTypeRegistrationData.getCurrencyType().name().getBytes();
         byte[] bytesOfCurrencyRateSourceType = currencyTypeRegistrationData.getCurrencyRateSourceType() == null ? new byte[0] : currencyTypeRegistrationData.getCurrencyRateSourceType().name().getBytes();
         byte[] bytesOfRateSource = currencyTypeRegistrationData.getRateSource() == null ? new byte[0] : currencyTypeRegistrationData.getRateSource().getBytes();
         byte[] bytesOfProtectionModel = currencyTypeRegistrationData.getProtectionModel() == null ? new byte[0] : currencyTypeRegistrationData.getProtectionModel().getBytes();
         byte[] creationTimeInBytes = ByteBuffer.allocate(Long.BYTES).putLong(currencyTypeRegistrationData.getCreateTime().toEpochMilli()).array();
 
-        ByteBuffer currencyTypeRegistrationBuffer = ByteBuffer.allocate(currencyHashInBytes.length + currencyTypeInBytes.length
+        ByteBuffer currencyTypeRegistrationBuffer = ByteBuffer.allocate(symbolInBytes.length + currencyTypeInBytes.length
                 + bytesOfCurrencyRateSourceType.length + bytesOfRateSource.length + bytesOfProtectionModel.length + creationTimeInBytes.length)
-                .put(currencyHashInBytes).put(currencyTypeInBytes).put(bytesOfCurrencyRateSourceType).put(bytesOfRateSource).put(bytesOfProtectionModel).put(creationTimeInBytes);
+                .put(symbolInBytes).put(currencyTypeInBytes).put(bytesOfCurrencyRateSourceType).put(bytesOfRateSource).put(bytesOfProtectionModel).put(creationTimeInBytes);
         return CryptoHelper.cryptoHash(currencyTypeRegistrationBuffer.array()).getBytes();
     }
 

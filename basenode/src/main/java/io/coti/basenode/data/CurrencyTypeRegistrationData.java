@@ -7,10 +7,10 @@ import lombok.Data;
 @Data
 public class CurrencyTypeRegistrationData extends CurrencyTypeData implements ISignable, ISignValidatable {
 
-    private Hash currencyHash;
+    private String symbol;
 
-    public CurrencyTypeRegistrationData(Hash currencyHash, CurrencyTypeData currencyTypeData) {
+    public CurrencyTypeRegistrationData(String symbol, CurrencyTypeData currencyTypeData) {
         super(currencyTypeData);
-        this.currencyHash = currencyHash;
+        this.symbol = symbol;
     }
 }

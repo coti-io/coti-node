@@ -171,7 +171,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
             String currencyName = originatorCurrencyData.getName();
             currencyHash = originatorCurrencyData.calculateHash();
             validateCurrencyUniqueness(currencyHash, currencyName);
-            CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(currencyHash, currencyTypeData);
+            CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(originatorCurrencyData.getSymbol(), currencyTypeData);
             if (!originatorCurrencyCrypto.verifySignature(originatorCurrencyData) || !currencyTypeRegistrationCrypto.verifySignature(currencyTypeRegistrationData)) {
                 throw new CurrencyValidationException(TOKEN_GENERATION_REQUEST_INVALID_SIGNATURE);
             }

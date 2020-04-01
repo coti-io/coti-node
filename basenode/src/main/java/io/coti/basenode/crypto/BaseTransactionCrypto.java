@@ -228,7 +228,10 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     protected static final int BASE_TRANSACTION_HASH_SIZE = 32;
     protected static final String GET_MESSAGE_IN_BYTE_ERROR = "Error at getting message in byte";
     private Class<? extends BaseTransactionData> baseTransactionClass;
-    private static final Map<Class<? extends BaseTransactionData>, BaseTransactionCrypto> baseTransactionClassToCryptoMap = new HashMap<>();
+
+    private static class BaseTransactionCryptos {
+        private static final Map<Class<? extends BaseTransactionData>, BaseTransactionCrypto> baseTransactionClassToCryptoMap = new HashMap<>();
+    }
 
     <T extends BaseTransactionData> BaseTransactionCrypto(Class<T> baseTransactionClass) {
         this.baseTransactionClass = baseTransactionClass;
@@ -236,7 +239,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     }
 
     private <T extends BaseTransactionData> void putBaseTransactionClassToBaseTransactionCryptoMap(Class<T> baseTransactionClass) {
-        baseTransactionClassToCryptoMap.put(baseTransactionClass, this);
+        BaseTransactionCryptos.baseTransactionClassToCryptoMap.put(baseTransactionClass, this);
     }
 
     @Override
@@ -245,7 +248,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     }
 
     public static BaseTransactionCrypto getByBaseTransactionClass(Class<? extends BaseTransactionData> baseTransactionClass) {
-        return Optional.ofNullable(baseTransactionClassToCryptoMap.get(baseTransactionClass))
+        return Optional.ofNullable(BaseTransactionCryptos.baseTransactionClassToCryptoMap.get(baseTransactionClass))
                 .orElseThrow(() -> new IllegalArgumentException("Invalid base transaction class"));
     }
 
