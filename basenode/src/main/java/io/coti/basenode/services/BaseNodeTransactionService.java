@@ -52,6 +52,8 @@ public class BaseNodeTransactionService implements ITransactionService {
     private INetworkService networkService;
     @Autowired
     private IMintingService mintingService;
+    @Autowired
+    private ICurrencyService currencyService;
     protected Map<TransactionData, Boolean> postponedTransactions = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
 
     @Override
@@ -223,6 +225,7 @@ public class BaseNodeTransactionService implements ITransactionService {
             transactionHelper.incrementTotalTransactions();
 
             confirmationService.insertMissingTransaction(transactionData);
+            currencyService.handleMissingTransaction(transactionData);
             continueHandleMissingTransaction(transactionData);
 
         } else {
