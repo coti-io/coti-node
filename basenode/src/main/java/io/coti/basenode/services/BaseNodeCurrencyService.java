@@ -199,6 +199,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         clusterStampCurrenciesMap.forEach((currencyHash, clusterStampCurrencyData) ->
                 currencies.put(clusterStampCurrencyData)
         );
+        updateCurrencyHashByTypeMapFromExistingCurrencies();
     }
 
     @Override

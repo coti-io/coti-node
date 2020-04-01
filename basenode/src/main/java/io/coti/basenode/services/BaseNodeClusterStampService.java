@@ -194,7 +194,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     private void loadAllClusterStamps() {
         log.info("Loading clusterstamp files");
-        loadCurrenciesClusterStamp(currenciesClusterStampName);
+        loadCurrenciesClusterStamp(currenciesClusterStampName, shouldUpdateClusterStampDBVersion());
         loadClusterStamp(majorClusterStampName);
     }
 
@@ -237,7 +237,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         return sb.append(".").append(CLUSTERSTAMP_FILE_TYPE).toString();
     }
 
-    private void loadCurrenciesClusterStamp(ClusterStampNameData currenciesClusterStampNameData) {
+    private void loadCurrenciesClusterStamp(ClusterStampNameData currenciesClusterStampNameData, boolean updateCurrencies) {
         String clusterStampFileName = getClusterStampFileName(currenciesClusterStampNameData);
         log.info("Starting to load currencies clusterstamp file {}", clusterStampFileName);
         String clusterStampFileLocation = clusterStampFolder + clusterStampFileName;
@@ -320,7 +320,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             } else {
                 handleClusterStampWithSignature(clusterStampData);
             }
-            currencyService.updateCurrenciesFromClusterStamp(clusterStampCurrenciesMap, currencyGenesisAddress);
+            if (updateCurrencies) {
+                currencyService.updateCurrenciesFromClusterStamp(clusterStampCurrenciesMap, currencyGenesisAddress);
+            }
             log.info("Finished to load currencies clusterstamp file {}", clusterStampFileName);
         } catch (ClusterStampException e) {
             throw new ClusterStampException(String.format("Errors on clusterstamp file %s loading.%n", clusterStampFileName) + e.getMessage(), e);
