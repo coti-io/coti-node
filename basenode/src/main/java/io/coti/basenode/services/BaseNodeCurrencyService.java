@@ -99,10 +99,11 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     @Override
     public void updateCurrencies() {
-        GetUpdatedCurrencyRequest getUpdatedCurrencyRequest = new GetUpdatedCurrencyRequest();
-        getUpdatedCurrencyRequest.setCurrencyHashesByType(currencyHashByTypeMap);
-        getUpdatedCurrencyRequestCrypto.signMessage(getUpdatedCurrencyRequest);
-        getUpdatedCurrencyDataFromRecoveryServer(getUpdatedCurrencyRequest);
+//        GetUpdatedCurrencyRequest getUpdatedCurrencyRequest = new GetUpdatedCurrencyRequest();
+//        getUpdatedCurrencyRequest.setCurrencyHashesByType(currencyHashByTypeMap);
+//        getUpdatedCurrencyRequestCrypto.signMessage(getUpdatedCurrencyRequest);
+//        getUpdatedCurrencyDataFromRecoveryServer(getUpdatedCurrencyRequest);
+        // todo delete all this stuff
 
 //        verifyValidNativeCurrencyPresent();
     }
@@ -141,8 +142,8 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             if (!originatorCurrencyCrypto.verifySignature(nativeCurrency)) {
                 throw new CurrencyException("Failed to verify native currency data of " + nativeCurrency.getHash());
             } else {
-                CurrencyTypeData naticeCurrencyTypeData = nativeCurrency.getCurrencyTypeData();
-                CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(nativeCurrencyHash, naticeCurrencyTypeData);
+                CurrencyTypeData nativeCurrencyTypeData = nativeCurrency.getCurrencyTypeData();
+                CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(nativeCurrency.getSymbol(), nativeCurrencyTypeData);
                 if (!currencyTypeRegistrationCrypto.verifySignature(currencyTypeRegistrationData)) {
                     throw new CurrencyException("Failed to verify native currency data type of " + nativeCurrency.getCurrencyTypeData().getCurrencyType().getText());
                 }

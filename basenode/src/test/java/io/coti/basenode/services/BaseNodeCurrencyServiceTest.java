@@ -2,10 +2,7 @@ package io.coti.basenode.services;
 
 
 import io.coti.basenode.crypto.*;
-import io.coti.basenode.data.CurrencyData;
-import io.coti.basenode.data.CurrencyType;
-import io.coti.basenode.data.CurrencyTypeData;
-import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.*;
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.model.Currencies;
@@ -129,6 +126,7 @@ public class BaseNodeCurrencyServiceTest {
 
     protected void setAndSignCurrencyDataByType(CurrencyData currencyData, CurrencyType currencyType) {
         CurrencyTypeData currencyTypeData = new CurrencyTypeData(currencyType, Instant.now());
+        CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(currencyData.getSymbol(), currencyTypeData);
 //        currencyTypeCrypto.signMessage(currencyTypeData);
 //        currencyTypeRegistrationCrypto.signMessage(currencyTypeData);
         currencyData.setCurrencyTypeData(currencyTypeData);
