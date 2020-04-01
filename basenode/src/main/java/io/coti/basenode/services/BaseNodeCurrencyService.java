@@ -24,9 +24,11 @@ import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 import reactor.core.publisher.FluxSink;
 
+import java.time.Instant;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -102,7 +104,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         getUpdatedCurrencyRequestCrypto.signMessage(getUpdatedCurrencyRequest);
         getUpdatedCurrencyDataFromRecoveryServer(getUpdatedCurrencyRequest);
 
-        verifyValidNativeCurrencyPresent();
+//        verifyValidNativeCurrencyPresent();
     }
 
     private void getUpdatedCurrencyDataFromRecoveryServer(GetUpdatedCurrencyRequest getUpdatedCurrencyRequest) {
@@ -209,6 +211,46 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         clusterStampCurrenciesMap.forEach((currencyHash, clusterStampCurrencyData) ->
                 currencies.put(clusterStampCurrencyData)
         );
+        updateCurrencyHashByTypeMapFromExistingCurrencies();
+    }
+
+    @Override
+    public void handleExistingTransaction(TransactionData transactionData) {
+        TransactionType transactionType = transactionData.getType();
+        if (transactionType == TransactionType.TokenGenerationFee) {
+            CurrencyData currencyData = getCurrencyData(transactionData);
+            if (currencyData != null) {
+                currencies.put(currencyData);
+            }
+        }
+    }
+
+    @Override
+    public void handleMissingTransaction(TransactionData transactionData) {
+        if (transactionData.getType() == TransactionType.TokenGenerationFee) {
+            CurrencyData currencyData = getCurrencyData(transactionData);
+            if (currencyData != null) {
+                currencies.put(currencyData);
+            }
+        }
+    }
+
+    @Override
+    public CurrencyData getCurrencyData(TransactionData transactionData) {
+        CurrencyData currencyData = null;
+        Optional<BaseTransactionData> firstBaseTransactionData = transactionData.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData instanceof TokenGenerationFeeBaseTransactionData).findFirst();
+        if (firstBaseTransactionData.isPresent()) {
+            TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = (TokenGenerationFeeBaseTransactionData) firstBaseTransactionData.get();
+            TokenGenerationData tokenGenerationData = tokenGenerationFeeBaseTransactionData.getServiceData();
+            Hash currencyLastTypeChangingTransactionHash = transactionData.getHash();
+            OriginatorCurrencyData originatorCurrencyData = tokenGenerationData.getOriginatorCurrencyData();
+            CurrencyTypeData currencyTypeData = tokenGenerationData.getCurrencyTypeData();
+            Instant createTime = tokenGenerationFeeBaseTransactionData.getCreateTime();
+            Hash currencyGeneratingTransactionHash = transactionData.getHash();
+            currencyData = new CurrencyData(originatorCurrencyData, currencyTypeData, createTime, currencyGeneratingTransactionHash, currencyLastTypeChangingTransactionHash);
+            currencyData.setHash();
+        }
+        return currencyData;
     }
 
     private boolean validateInitiatedToken(CurrencyData currencyData) {

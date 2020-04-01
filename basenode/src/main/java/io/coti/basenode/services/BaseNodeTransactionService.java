@@ -51,6 +51,8 @@ public class BaseNodeTransactionService implements ITransactionService {
     private INetworkService networkService;
     @Autowired
     private IMintingService mintingService;
+    @Autowired
+    private ICurrencyService currencyService;
     protected Map<TransactionData, Boolean> postponedTransactions = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
     private final LockData transactionLockData = new LockData();
 
@@ -242,6 +244,7 @@ public class BaseNodeTransactionService implements ITransactionService {
             });
             missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> confirmationService.insertMissingTransaction(transactionData));
             transactionHelper.incrementTotalTransactions();
+            currencyService.handleMissingTransaction(transactionData);
             continueHandleMissingTransaction(transactionData);
         } else {
             missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> confirmationService.insertMissingConfirmation(transactionData, trustChainUnconfirmedExistingTransactionHashes));

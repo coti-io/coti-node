@@ -149,6 +149,7 @@ public abstract class BaseNodeInitializationService {
 
     public void initTransactionSync() {
         try {
+            boolean isClusterStampNewer = clusterStampService.shouldUpdateClusterStampDBVersion();
             transactionService.resetOldClusterStampTransactions();
             log.info("Starting to read existing transactions");
             AtomicLong completedExistedTransactionNumber = new AtomicLong(0);
@@ -164,7 +165,7 @@ public abstract class BaseNodeInitializationService {
                 if (!monitorExistingTransactions.isAlive()) {
                     monitorExistingTransactions.start();
                 }
-                handleExistingTransaction(transactionData);
+                handleExistingTransaction(maxTransactionIndex, transactionData, isClusterStampNewer);
                 completedExistedTransactionNumber.incrementAndGet();
             });
             if (executorServicesInitiated.get()) {
@@ -203,11 +204,15 @@ public abstract class BaseNodeInitializationService {
         databaseConnector.init();
     }
 
-    private void handleExistingTransaction(TransactionData transactionData) {
+    private void handleExistingTransaction(AtomicLong maxTransactionIndex, TransactionData transactionData, boolean isClusterStampNewer) {
         existingTransactionExecutorMap.get(InitializationTransactionHandlerType.CLUSTER).submit(() -> clusterService.addExistingTransactionOnInit(transactionData));
         existingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> confirmationService.insertSavedTransaction(transactionData, indexToTransactionMap));
         existingTransactionExecutorMap.get(InitializationTransactionHandlerType.TRANSACTION).submit(() -> transactionService.addToExplorerIndexes(transactionData));
         mintingService.handleExistingTransaction(transactionData);
+        if (isClusterStampNewer) {
+            currencyService.handleExistingTransaction(transactionData);
+        }
+        transactionService.addToExplorerIndexes(transactionData);
         transactionHelper.incrementTotalTransactions();
     }
 

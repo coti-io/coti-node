@@ -13,6 +13,7 @@ import org.springframework.util.SerializationUtils;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Base64;
 
 
@@ -63,35 +64,37 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Override
     protected void fillClusterStampNamesMap() {
         super.fillClusterStampNamesMap();
+
+        long versionTimeInMillis = Instant.now().toEpochMilli();
         if (currenciesClusterStampName == null) {
-            handleMissingCurrenciesClusterStamp();
+            handleMissingCurrenciesClusterStamp(versionTimeInMillis);
         }
         if (majorClusterStampName == null) {
-            handleMissingMajor();
+            handleMissingMajor(versionTimeInMillis);
         }
     }
 
-    private void handleMissingMajor() {
+    private void handleMissingMajor(long versionTimeInMillis) {
         CurrencyData nativeCurrency = currencyService.getNativeCurrency();
         if (nativeCurrency == null) {
             throw new ClusterStampException("Unable to start zero spend server. Native token not found.");
         }
-        handleNewCurrencyByType(nativeCurrency, ClusterStampType.MAJOR);
+        handleNewCurrencyByType(nativeCurrency, ClusterStampType.MAJOR, versionTimeInMillis);
         uploadMajorClusterStamp = true;
     }
 
-    private void handleMissingCurrenciesClusterStamp() {
+    private void handleMissingCurrenciesClusterStamp(long versionTimeInMillis) {
         CurrencyData nativeCurrency = currencyService.getNativeCurrency();
         if (nativeCurrency == null) {
             currencyService.generateNativeCurrency();
             nativeCurrency = currencyService.getNativeCurrency();
         }
-        generateCurrencyClusterStampFromNativeCurrency(nativeCurrency);
+        generateCurrencyClusterStampFromNativeCurrency(nativeCurrency, versionTimeInMillis);
         uploadCurrenciesClusterStamp = true;
     }
 
-    private ClusterStampNameData handleNewCurrencyByType(CurrencyData currency, ClusterStampType clusterStampType) {
-        ClusterStampNameData clusterStampNameData = new ClusterStampNameData(clusterStampType);
+    private ClusterStampNameData handleNewCurrencyByType(CurrencyData currency, ClusterStampType clusterStampType, long versionTimeInMillis) {
+        ClusterStampNameData clusterStampNameData = new ClusterStampNameData(clusterStampType, versionTimeInMillis);
         generateOneLineClusterStampFile(clusterStampNameData, currency);
         addClusterStampName(clusterStampNameData);
         return clusterStampNameData;
@@ -108,14 +111,14 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         return sb.toString();
     }
 
-    private void generateCurrencyClusterStampFromNativeCurrency(CurrencyData nativeCurrency) {
+    private void generateCurrencyClusterStampFromNativeCurrency(CurrencyData nativeCurrency, long versionTimeInMillis) {
         if (currencyAddress == null) {
             throw new ClusterStampException("Unable to start zero spend server. Genesis address not found.");
         }
         if (nativeCurrency == null) {
             throw new ClusterStampException("Unable to start zero spend server. Native token not found.");
         }
-        ClusterStampNameData clusterStampNameData = new ClusterStampNameData(ClusterStampType.CURRENCIES);
+        ClusterStampNameData clusterStampNameData = new ClusterStampNameData(ClusterStampType.CURRENCIES, versionTimeInMillis);
         String clusterStampFileName = getClusterStampFileName(clusterStampNameData);
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(clusterStampFolder + "/" + clusterStampFileName))) {
             writer.write(CURRENCY_GENESIS_ADDRESS_HEADER);
