@@ -1,6 +1,5 @@
 package io.coti.financialserver.services;
 
-import com.google.gson.Gson;
 import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CotiRunTimeException;
@@ -23,8 +22,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -40,7 +37,6 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 @Service
 public class CurrencyService extends BaseNodeCurrencyService {
 
-    private static final String GET_NATIVE_CURRENCY_ENDPOINT = "/currencies/native";
     private static final String EXCEPTION_MESSAGE = "%s. Exception: %s";
     private final Map<Hash, Hash> lockUserHashMap = new ConcurrentHashMap<>();
     private final Map<Hash, Hash> lockTransactionHashMap = new ConcurrentHashMap<>();
@@ -88,30 +84,6 @@ public class CurrencyService extends BaseNodeCurrencyService {
     public void addToTokenGenerationTransactionQueue(TransactionData transactionData) {
         addToTransactionQueue(tokenGenerationTransactionQueue, transactionData);
     }
-
-//    @Override
-//    public void updateCurrencies() {
-//        try {
-//            CurrencyData nativeCurrencyData = getNativeCurrency();
-//            if (nativeCurrencyData == null) {
-//                String recoveryServerAddress = networkService.getRecoveryServerAddress();
-//                nativeCurrencyData = restTemplate.getForObject(recoveryServerAddress + GET_NATIVE_CURRENCY_ENDPOINT, CurrencyData.class);
-//                if (nativeCurrencyData == null) {
-//                    throw new CurrencyException("Native currency recovery failed. Recovery sent null native currency");
-//                } else {
-//                    putCurrencyData(nativeCurrencyData);
-//                    setNativeCurrencyData(nativeCurrencyData);
-//                }
-//            }
-//        } catch (CurrencyException e) {
-//            throw e;
-//        } catch (HttpClientErrorException | HttpServerErrorException e) {
-//            throw new CurrencyException(String.format("Native currency recovery failed. %s: %s", e.getClass().getName(), new Gson().fromJson(e.getResponseBodyAsString(), Response.class).getMessage()));
-//        } catch (Exception e) {
-//            throw new CurrencyException(String.format("Native currency recovery failed. %s: %s", e.getClass().getName(), e.getMessage()));
-//        }
-//    }
-
 
     public ResponseEntity<IResponse> getUserTokens(GetUserTokensRequest getUserTokensRequest) {
         try {
