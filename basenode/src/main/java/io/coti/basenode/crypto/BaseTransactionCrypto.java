@@ -235,10 +235,6 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
     <T extends BaseTransactionData> BaseTransactionCrypto(Class<T> baseTransactionClass) {
         this.baseTransactionClass = baseTransactionClass;
-        putBaseTransactionClassToBaseTransactionCryptoMap(baseTransactionClass);
-    }
-
-    private <T extends BaseTransactionData> void putBaseTransactionClassToBaseTransactionCryptoMap(Class<T> baseTransactionClass) {
         BaseTransactionCryptos.baseTransactionClassToCryptoMap.put(baseTransactionClass, this);
     }
 
