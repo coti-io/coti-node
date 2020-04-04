@@ -10,16 +10,13 @@ public enum CurrencyRateSourceType {
     RATES_SERVER("Rates Server");
 
     private String text;
+
     private static class CurrencyRateSourceTypes {
         private static final Map<String, CurrencyRateSourceType> textToCurrencyRateSourceTypeMap = new HashMap<>();
     }
 
     CurrencyRateSourceType(String text) {
         this.text = text;
-        setTextToCurrencyRateSourceTypeMap(text);
-    }
-
-    private void setTextToCurrencyRateSourceTypeMap(String text) {
         CurrencyRateSourceTypes.textToCurrencyRateSourceTypeMap.put(text, this);
     }
 
