@@ -17,6 +17,7 @@ public class CurrencyData extends OriginatorCurrencyData implements IPropagatabl
     private Instant createTime;
     private Hash currencyGeneratingTransactionHash;
     private Hash currencyLastTypeChangingTransactionHash;
+    private boolean confirmed;
 
     public CurrencyData() {
         super();
