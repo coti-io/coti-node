@@ -2,6 +2,7 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.crypto.CurrencyTypeRegistrationCrypto;
 import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
+import io.coti.basenode.crypto.TokenMintingCrypto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,10 +15,13 @@ public class TransactionTypeValidationInjector {
     private OriginatorCurrencyCrypto originatorCurrencyCrypto;
     @Autowired
     private CurrencyTypeRegistrationCrypto currencyTypeRegistrationCrypto;
+    @Autowired
+    private TokenMintingCrypto tokenMintingCrypto;
 
     @PostConstruct
     public void init() {
         TransactionTypeValidation.TOKEN_GENERATION_FEE.originatorCurrencyCrypto = originatorCurrencyCrypto;
         TransactionTypeValidation.TOKEN_GENERATION_FEE.currencyTypeRegistrationCrypto = currencyTypeRegistrationCrypto;
+        TransactionTypeValidation.TOKEN_MINTING_FEE.tokenMintingCrypto = tokenMintingCrypto;
     }
 }

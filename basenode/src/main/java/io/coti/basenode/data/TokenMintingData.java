@@ -7,8 +7,6 @@ import lombok.Data;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 
 @Data
@@ -33,14 +31,6 @@ public class TokenMintingData implements ITokenServiceData, ISignValidatable {
 
     @Override
     public byte[] getMessageInBytes() {
-        byte[] bytesOfCurrencyHash = mintingCurrencyHash.getBytes();
-        byte[] bytesOfAmount = mintingAmount.stripTrailingZeros().toPlainString().getBytes(StandardCharsets.UTF_8);
-        byte[] bytesOfFeeAmount = feeAmount != null ? feeAmount.stripTrailingZeros().toPlainString().getBytes(StandardCharsets.UTF_8) : new byte[0];
-        byte[] bytesOfReceiverAddress = receiverAddress.getBytes();
-
-        return ByteBuffer.allocate(bytesOfCurrencyHash.length + bytesOfAmount.length + bytesOfFeeAmount.length
-                + bytesOfReceiverAddress.length + Long.BYTES)
-                .put(bytesOfCurrencyHash).put(bytesOfAmount).put(bytesOfFeeAmount).put(bytesOfReceiverAddress)
-                .putLong(createTime.toEpochMilli()).array();
+        return signature.getR().concat(signature.getS()).getBytes();
     }
 }
