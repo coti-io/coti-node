@@ -318,7 +318,7 @@ public class TransactionHelper implements ITransactionHelper {
 
     @Override
     public boolean checkTokenUniqueness(TransactionData transactionData) {
-        if(!currencyService.checkCurrencyUniqueness(transactionData)) {
+        if (!currencyService.checkCurrencyUniqueness(transactionData)) {
             return false;
         }
         transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(PAYLOAD_CHECKED);

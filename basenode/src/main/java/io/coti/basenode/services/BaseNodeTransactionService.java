@@ -50,8 +50,6 @@ public class BaseNodeTransactionService implements ITransactionService {
     @Autowired
     private INetworkService networkService;
     @Autowired
-    private IMintingService mintingService;
-    @Autowired
     private ICurrencyService currencyService;
     protected Map<TransactionData, Boolean> postponedTransactions = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
     private final LockData transactionLockData = new LockData();
@@ -165,12 +163,12 @@ public class BaseNodeTransactionService implements ITransactionService {
                 log.error("Balance check failed: {}", transactionData.getHash());
                 return;
             }
-            if (transactionData.getType() == TransactionType.TokenMintingFee && !validationService.validateTokenMintingAndAddToAllocatedAmount(transactionData)) {
-                log.error("Minting balance check failed: {}", transactionData.getHash());
+            if (transactionData.getType().equals(TransactionType.TokenGenerationFee) && !validationService.checkTokenUniqueness(transactionData)) {
+                log.error("Not unique token generation attempt by transaction: {}", transactionData.getHash());
                 return;
             }
-            if (transactionData.getType() == TransactionType.TokenGenerationFee && !validationService.checkTokenUniqueness(transactionData)) {
-                log.error("Not unique token generation attempt by transaction: {}", transactionData.getHash());
+            if (transactionData.getType().equals(TransactionType.TokenMintingFee) && !validationService.validateTokenMintingAndAddToAllocatedAmount(transactionData)) {
+                log.error("Minting balance check failed: {}", transactionData.getHash());
                 return;
             }
             transactionHelper.attachTransactionToCluster(transactionData);

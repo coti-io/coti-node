@@ -1,5 +1,7 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.crypto.CurrencyTypeRegistrationCrypto;
+import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.services.interfaces.ITransactionTypeValidation;
 import lombok.extern.slf4j.Slf4j;
@@ -67,13 +69,29 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
         }
 
     },
-    TokenGenerationFee(TransactionType.TokenGenerationFee) {
+    TOKEN_GENERATION_FEE(TransactionType.TokenGenerationFee) {
         @Override
         public boolean validateBaseTransactions(TransactionData transactionData, Hash nativeCurrencyHash) {
-            return validateBaseTransactions(transactionData, true, nativeCurrencyHash);
+            return validateBaseTransactions(transactionData, true, nativeCurrencyHash) && validateTokenGenerationData(transactionData);
+        }
+
+        private boolean validateTokenGenerationData(TransactionData transactionData) {
+            List<OutputBaseTransactionData> outputBaseTransactions = transactionData.getOutputBaseTransactions();
+            for (OutputBaseTransactionData outputBaseTransactionData : outputBaseTransactions) {
+                if (outputBaseTransactionData instanceof TokenGenerationFeeBaseTransactionData) {
+                    TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = (TokenGenerationFeeBaseTransactionData) outputBaseTransactionData;
+                    TokenGenerationData tokenGenerationData = tokenGenerationFeeBaseTransactionData.getServiceData();
+                    OriginatorCurrencyData originatorCurrencyData = tokenGenerationData.getOriginatorCurrencyData();
+                    CurrencyTypeData currencyTypeData = tokenGenerationData.getCurrencyTypeData();
+                    CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(originatorCurrencyData.getSymbol(), currencyTypeData);
+                    return originatorCurrencyCrypto.verifySignature(originatorCurrencyData) && currencyTypeRegistrationCrypto.verifySignature(currencyTypeRegistrationData)
+                            && tokenGenerationData.getFeeAmount().equals(tokenGenerationFeeBaseTransactionData.getAmount());
+                }
+            }
+            return true;
         }
     },
-    TokenMintingFee(TransactionType.TokenMintingFee) {
+    TOKEN_MINTING_FEE(TransactionType.TokenMintingFee) {
         @Override
         public boolean validateBaseTransactions(TransactionData transactionData, Hash nativeCurrencyHash) {
             return validateBaseTransactions(transactionData, true, nativeCurrencyHash);
@@ -82,6 +100,8 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
 
     protected static final String INVALID_TRANSACTION_TYPE = "Invalid transaction type";
     protected TransactionType type;
+    protected OriginatorCurrencyCrypto originatorCurrencyCrypto;
+    protected CurrencyTypeRegistrationCrypto currencyTypeRegistrationCrypto;
 
     TransactionTypeValidation(TransactionType type) {
         this.type = type;
