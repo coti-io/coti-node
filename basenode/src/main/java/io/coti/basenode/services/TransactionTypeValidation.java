@@ -2,6 +2,7 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.crypto.CurrencyTypeRegistrationCrypto;
 import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
+import io.coti.basenode.crypto.TokenMintingCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.services.interfaces.ITransactionTypeValidation;
 import lombok.extern.slf4j.Slf4j;
@@ -94,7 +95,19 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
     TOKEN_MINTING_FEE(TransactionType.TokenMintingFee) {
         @Override
         public boolean validateBaseTransactions(TransactionData transactionData, Hash nativeCurrencyHash) {
-            return validateBaseTransactions(transactionData, true, nativeCurrencyHash);
+            return validateBaseTransactions(transactionData, true, nativeCurrencyHash) && validateTokenMintingData(transactionData);
+        }
+
+        private boolean validateTokenMintingData(TransactionData transactionData) {
+            List<OutputBaseTransactionData> outputBaseTransactions = transactionData.getOutputBaseTransactions();
+            for (OutputBaseTransactionData outputBaseTransactionData : outputBaseTransactions) {
+                if (outputBaseTransactionData instanceof TokenMintingFeeBaseTransactionData) {
+                    TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = (TokenMintingFeeBaseTransactionData) outputBaseTransactionData;
+                    TokenMintingData tokenMintingData = tokenMintingFeeBaseTransactionData.getServiceData();
+                    return tokenMintingCrypto.verifySignature(tokenMintingData) && (tokenMintingData.getFeeAmount() == null || tokenMintingData.getFeeAmount().equals(tokenMintingFeeBaseTransactionData.getAmount()));
+                }
+            }
+            return true;
         }
     };
 
@@ -102,6 +115,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
     protected TransactionType type;
     protected OriginatorCurrencyCrypto originatorCurrencyCrypto;
     protected CurrencyTypeRegistrationCrypto currencyTypeRegistrationCrypto;
+    protected TokenMintingCrypto tokenMintingCrypto;
 
     TransactionTypeValidation(TransactionType type) {
         this.type = type;
