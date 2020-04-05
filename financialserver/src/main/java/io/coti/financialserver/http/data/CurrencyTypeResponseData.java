@@ -17,8 +17,8 @@ public class CurrencyTypeResponseData implements IResponseData {
     private CurrencyRateSourceType currencyRateSourceType;
     private String rateSource;
     private String protectionModel;
-    private String originatorHash;
-    private SignatureData originatorSignature;
+    private String signerHash;
+    private SignatureData signature;
 
     public CurrencyTypeResponseData(TokenGenerationData tokenGenerationData) {
         this.currencyType = tokenGenerationData.getCurrencyTypeData().getCurrencyType();
@@ -26,7 +26,7 @@ public class CurrencyTypeResponseData implements IResponseData {
         this.currencyRateSourceType = tokenGenerationData.getCurrencyTypeData().getCurrencyRateSourceType();
         this.rateSource = tokenGenerationData.getCurrencyTypeData().getRateSource();
         this.protectionModel = tokenGenerationData.getCurrencyTypeData().getProtectionModel();
-        this.originatorHash = tokenGenerationData.getCurrencyTypeData().getSignerHash().toString();
-        this.originatorSignature = tokenGenerationData.getCurrencyTypeData().getSignature();
+        this.signerHash = tokenGenerationData.getCurrencyTypeData().getSignerHash().toString();
+        this.signature = tokenGenerationData.getCurrencyTypeData().getSignature();
     }
 }
