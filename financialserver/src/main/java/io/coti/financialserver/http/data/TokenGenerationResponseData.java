@@ -1,6 +1,5 @@
 package io.coti.financialserver.http.data;
 
-import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.TokenGenerationData;
 import io.coti.basenode.http.data.interfaces.IResponseData;
 import lombok.Data;

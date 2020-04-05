@@ -266,16 +266,16 @@ public class TransactionService extends BaseNodeTransactionService {
             throw new TransactionValidationException(INSUFFICIENT_FUNDS_MESSAGE);
         }
 
-        if (transactionData.getType() == TransactionType.TokenMintingFee
-                && !validationService.validateTokenMintingAndAddToAllocatedAmount(transactionData)) {
-            log.error("Minting balance check failed: {}", transactionData.getHash());
-            throw new TransactionValidationException(INSUFFICIENT_MINTING_FUNDS_MESSAGE);
-        }
-
         if (transactionData.getType() == TransactionType.TokenGenerationFee
                 && !validationService.checkTokenUniqueness(transactionData)) {
             log.error("Token uniqueness check failed: {}", transactionData.getHash());
             throw new TransactionValidationException(NOT_UNIQUE_TOKEN_GENERATION_TRANSACTION);
+        }
+
+        if (transactionData.getType() == TransactionType.TokenMintingFee
+                && !validationService.validateTokenMintingAndAddToAllocatedAmount(transactionData)) {
+            log.error("Minting balance check failed: {}", transactionData.getHash());
+            throw new TransactionValidationException(INSUFFICIENT_MINTING_FUNDS_MESSAGE);
         }
     }
 

@@ -1,5 +1,7 @@
 package io.coti.basenode.data;
 
+import io.coti.basenode.crypto.CurrencyTypeRegistrationCrypto;
+import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.interfaces.ITokenServiceData;
 import lombok.Data;
 
@@ -25,9 +27,9 @@ public class TokenGenerationData implements ITokenServiceData {
 
     @Override
     public byte[] getMessageInBytes() {
-        byte[] bytesOfOriginatorCurrencyData = originatorCurrencyData.getMessageInBytes();
+        byte[] bytesOfOriginatorCurrencyData = OriginatorCurrencyCrypto.getMessageInBytes(originatorCurrencyData);
         CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(originatorCurrencyData.getSymbol(), currencyTypeData);
-        byte[] bytesOfCurrencyTypeData = currencyTypeRegistrationData.getMessageInBytes();
+        byte[] bytesOfCurrencyTypeData = CurrencyTypeRegistrationCrypto.getMessageInBytes(currencyTypeRegistrationData);
         byte[] bytesOfFeeAmount = feeAmount.stripTrailingZeros().toPlainString().getBytes(StandardCharsets.UTF_8);
 
         return ByteBuffer.allocate(bytesOfOriginatorCurrencyData.length + bytesOfCurrencyTypeData.length + bytesOfFeeAmount.length)

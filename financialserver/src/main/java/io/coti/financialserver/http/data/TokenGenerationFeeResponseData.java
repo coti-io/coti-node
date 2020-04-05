@@ -15,7 +15,7 @@ public class TokenGenerationFeeResponseData implements IResponse {
     private BigDecimal originalAmount;
     private String addressHash;
     private String currencyHash;
-    TokenGenerationResponseData serviceData;
+    private TokenGenerationResponseData serviceData;
     private String signerHash;
     private Instant createTime;
     private String name;
