@@ -70,7 +70,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
         }
 
     },
-    TOKEN_GENERATION_FEE(TransactionType.TokenGenerationFee) {
+    TOKEN_GENERATION(TransactionType.TokenGeneration) {
         @Override
         public boolean validateBaseTransactions(TransactionData transactionData, Hash nativeCurrencyHash) {
             return validateBaseTransactions(transactionData, true, nativeCurrencyHash) && validateTokenGenerationData(transactionData);
@@ -92,7 +92,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
             return true;
         }
     },
-    TOKEN_MINTING_FEE(TransactionType.TokenMintingFee) {
+    TOKEN_MINTING(TransactionType.TokenMinting) {
         @Override
         public boolean validateBaseTransactions(TransactionData transactionData, Hash nativeCurrencyHash) {
             return validateBaseTransactions(transactionData, true, nativeCurrencyHash) && validateTokenMintingData(transactionData);

@@ -6,6 +6,6 @@ public enum TransactionType {
     Transfer,
     ZeroSpend,
     Chargeback,
-    TokenGenerationFee,
-    TokenMintingFee
+    TokenGeneration,
+    TokenMinting
 }

@@ -161,11 +161,11 @@ public class BaseNodeTransactionService implements ITransactionService {
                 log.error("Balance check failed: {}", transactionData.getHash());
                 return;
             }
-            if (transactionData.getType().equals(TransactionType.TokenGenerationFee) && !validationService.checkTokenUniqueness(transactionData)) {
+            if (transactionData.getType().equals(TransactionType.TokenGeneration) && !validationService.checkTokenUniqueness(transactionData)) {
                 log.error("Not unique token generation attempt by transaction: {}", transactionData.getHash());
                 return;
             }
-            if (transactionData.getType().equals(TransactionType.TokenMintingFee) && !validationService.validateTokenMintingAndAddToAllocatedAmount(transactionData)) {
+            if (transactionData.getType().equals(TransactionType.TokenMinting) && !validationService.validateTokenMintingAndAddToAllocatedAmount(transactionData)) {
                 log.error("Minting balance check failed: {}", transactionData.getHash());
                 return;
             }

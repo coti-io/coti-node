@@ -104,7 +104,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         }
 
     },
-    TOKEN_GENERATION_FEE_BASE_TRANSACTION_DATA(TokenGenerationFeeBaseTransactionData.class) {
+    TOKEN_GENERATION_BASE_TRANSACTION_DATA(TokenGenerationFeeBaseTransactionData.class) {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
             if (!(baseTransactionData instanceof TokenGenerationFeeBaseTransactionData)) {
@@ -129,7 +129,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         }
 
     },
-    TOKEN_MINTING_FEE_BASE_TRANSACTION_DATA(TokenMintingFeeBaseTransactionData.class) {
+    TOKEN_MINTING_BASE_TRANSACTION_DATA(TokenMintingFeeBaseTransactionData.class) {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
             if (!(baseTransactionData instanceof TokenMintingFeeBaseTransactionData)) {
