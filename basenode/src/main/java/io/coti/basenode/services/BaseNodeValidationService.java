@@ -98,8 +98,8 @@ public class BaseNodeValidationService implements IValidationService {
     }
 
     @Override
-    public boolean checkTokenUniqueness(TransactionData transactionData) {
-        return transactionHelper.checkTokenUniqueness(transactionData);
+    public boolean validateCurrencyUniquenessAndAddUnconfirmedRecord(TransactionData transactionData) {
+        return transactionHelper.validateCurrencyUniquenessAndAddUnconfirmedRecord(transactionData);
     }
 
     @Override

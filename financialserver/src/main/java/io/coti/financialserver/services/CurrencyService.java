@@ -1,6 +1,5 @@
 package io.coti.financialserver.services;
 
-import com.google.gson.Gson;
 import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CotiRunTimeException;
@@ -9,29 +8,22 @@ import io.coti.basenode.exceptions.CurrencyValidationException;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
+import io.coti.basenode.model.UserTokenGenerations;
 import io.coti.basenode.services.BaseNodeCurrencyService;
-import io.coti.basenode.services.TransactionHelper;
 import io.coti.basenode.services.interfaces.IMintingService;
 import io.coti.financialserver.crypto.GetUserTokensRequestCrypto;
 import io.coti.financialserver.http.*;
 import io.coti.financialserver.http.data.GeneratedTokenResponseData;
 import io.coti.financialserver.http.data.GetCurrencyResponseData;
-import io.coti.financialserver.model.UserTokenGenerations;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.financialserver.http.HttpStringConstants.*;
@@ -40,10 +32,7 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 @Service
 public class CurrencyService extends BaseNodeCurrencyService {
 
-    private static final String GET_NATIVE_CURRENCY_ENDPOINT = "/currencies/native";
     private static final String EXCEPTION_MESSAGE = "%s. Exception: %s";
-    private final Map<Hash, Hash> lockUserHashMap = new ConcurrentHashMap<>();
-    private final Map<Hash, Hash> lockTransactionHashMap = new ConcurrentHashMap<>();
     @Value("${currency.genesis.address}")
     private Hash currencyGenesisAddress;
     @Autowired
@@ -55,63 +44,9 @@ public class CurrencyService extends BaseNodeCurrencyService {
     @Autowired
     private Transactions transactions;
     @Autowired
-    private TransactionHelper transactionHelper;
-    @Autowired
     private FeeService feeService;
     @Autowired
     private IMintingService mintingService;
-    private BlockingQueue<TransactionData> tokenGenerationTransactionQueue;
-    private Thread tokenGenerationTransactionThread;
-    private final Object lock = new Object();
-
-    @Override
-    public void init() {
-        super.init();
-        initQueuesAndThreads();
-    }
-
-    private void initQueuesAndThreads() {
-        tokenGenerationTransactionQueue = new LinkedBlockingQueue<>();
-        tokenGenerationTransactionThread = new Thread(this::handlePropagatedTokenGenerationTransactions);
-        tokenGenerationTransactionThread.start();
-    }
-
-    private void addToTransactionQueue(BlockingQueue<TransactionData> queue, TransactionData transactionData) {
-        try {
-            queue.put(transactionData);
-        } catch (InterruptedException e) {
-            log.error("Interrupted while waiting for insertion of transaction {} into blocking queue.", transactionData.getHash());
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    public void addToTokenGenerationTransactionQueue(TransactionData transactionData) {
-        addToTransactionQueue(tokenGenerationTransactionQueue, transactionData);
-    }
-
-    @Override
-    public void updateCurrencies() {
-        try {
-            CurrencyData nativeCurrencyData = getNativeCurrency();
-            if (nativeCurrencyData == null) {
-                String recoveryServerAddress = networkService.getRecoveryServerAddress();
-                nativeCurrencyData = restTemplate.getForObject(recoveryServerAddress + GET_NATIVE_CURRENCY_ENDPOINT, CurrencyData.class);
-                if (nativeCurrencyData == null) {
-                    throw new CurrencyException("Native currency recovery failed. Recovery sent null native currency");
-                } else {
-                    putCurrencyData(nativeCurrencyData);
-                    setNativeCurrencyData(nativeCurrencyData);
-                }
-            }
-        } catch (CurrencyException e) {
-            throw e;
-        } catch (HttpClientErrorException | HttpServerErrorException e) {
-            throw new CurrencyException(String.format("Native currency recovery failed. %s: %s", e.getClass().getName(), new Gson().fromJson(e.getResponseBodyAsString(), Response.class).getMessage()));
-        } catch (Exception e) {
-            throw new CurrencyException(String.format("Native currency recovery failed. %s: %s", e.getClass().getName(), e.getMessage()));
-        }
-    }
-
 
     public ResponseEntity<IResponse> getUserTokens(GetUserTokensRequest getUserTokensRequest) {
         try {
@@ -167,7 +102,12 @@ public class CurrencyService extends BaseNodeCurrencyService {
         Hash currencyHash;
         try {
             OriginatorCurrencyData originatorCurrencyData = generateTokenRequest.getOriginatorCurrencyData();
+            originatorCurrencyData.validateName();
+            originatorCurrencyData.validateSymbol();
             CurrencyTypeData currencyTypeData = generateTokenRequest.getCurrencyTypeData();
+            if (currencyTypeData.getCurrencyType() != CurrencyType.REGULAR_CMD_TOKEN) {
+                throw new CurrencyValidationException(TOKEN_GENERATION_REQUEST_NOT_REGULAR_CMD_TOKEN);
+            }
             String currencyName = originatorCurrencyData.getName();
             currencyHash = originatorCurrencyData.calculateHash();
             validateCurrencyUniqueness(currencyHash, currencyName);
@@ -189,65 +129,6 @@ public class CurrencyService extends BaseNodeCurrencyService {
         return feeService.createTokenGenerationFee(generateTokenRequest);
     }
 
-//    private void removeOccupyLocksFromProcessingSets(GenerateTokenRequest generateTokenRequest) {
-//        removeLockFromProcessingSet(processingCurrencySymbolSet, generateTokenRequest.getOriginatorCurrencyData().getSymbol());
-//        removeLockFromProcessingSet(processingCurrencyNameSet, generateTokenRequest.getOriginatorCurrencyData().getName());
-//    }
-//
-//    private void occupyLocksToProcessingSets(GenerateTokenRequest generateTokenRequest) {
-//        addLockToProcessingSet(processingCurrencyNameSet, generateTokenRequest.getOriginatorCurrencyData().getName());
-//        addLockToProcessingSet(processingCurrencySymbolSet, generateTokenRequest.getOriginatorCurrencyData().getSymbol());
-//    }
-
-    private Hash validateUniquenessAndAddToken(GenerateTokenRequest generateTokenRequest) {   // todo move it to base class and do generation
-        OriginatorCurrencyData originatorCurrencyData = generateTokenRequest.getOriginatorCurrencyData();
-        String currencyName = originatorCurrencyData.getName();
-        Hash userHash = generateTokenRequest.getSignerHash();
-        CurrencyData currencyData;
-        boolean tokenConfirmed = false;
-        synchronized (addLockToLockMap(lockUserHashMap, userHash)) {
-            UserTokenGenerationData userTokenGenerationData = userTokenGenerations.getByHash(userHash);
-            if (userTokenGenerationData == null) {
-                throw new CurrencyException("Couldn't find Token generation data to match token generation request. Transaction was not propagated yet.");
-            }
-            Hash requestTransactionHash = generateTokenRequest.getTransactionHash();
-            Hash currencyHash = originatorCurrencyData.calculateHash();
-
-//            validateTransactionAvailability(userTokenGenerationData, requestTransactionHash);
-            validateTransactionAmount(originatorCurrencyData, requestTransactionHash);
-            validateCurrencyUniqueness(currencyHash, currencyName);
-
-            CurrencyType currencyType = CurrencyType.REGULAR_CMD_TOKEN;
-            CurrencyTypeData currencyTypeData = new CurrencyTypeData(currencyType, Instant.now());
-//            setSignedCurrencyTypeData(currencyData, currencyType);
-//            currencyRegistrarCrypto.signMessage(currencyData);
-
-            synchronized (addLockToLockMap(lockTransactionHashMap, requestTransactionHash)) {
-                TransactionData tokenGenerationTransactionData = transactions.getByHash(requestTransactionHash);
-                TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = null;   //todo get TokenGenerationFeeBaseTransactionData
-                currencyData = new CurrencyData(tokenGenerationFeeBaseTransactionData.getServiceData().getOriginatorCurrencyData(),
-                        tokenGenerationFeeBaseTransactionData.getServiceData().getCurrencyTypeData(),
-                        tokenGenerationTransactionData.getDspConsensusResult().getIndexingTime(),
-                        requestTransactionHash, null);
-
-                Hash requestCurrencyDataHash = currencyData.getHash();
-                userTokenGenerationData.getTransactionHashToCurrencyMap().put(requestTransactionHash, requestCurrencyDataHash);
-                if (transactionHelper.isConfirmed(tokenGenerationTransactionData)) {
-                    putCurrencyData(currencyData);
-                    tokenConfirmed = true;
-                }
-                removeLockFromLocksMap(lockTransactionHashMap, requestTransactionHash);
-            }
-            userTokenGenerations.put(userTokenGenerationData);
-            removeLockFromLocksMap(lockUserHashMap, generateTokenRequest.getSignerHash());
-        }
-        if (tokenConfirmed) {
-//            sendGeneratedToken(currencyData);
-        }
-
-        return currencyData.getHash();
-    }
-
     private void validateTransactionAmount(OriginatorCurrencyData requestCurrencyData, Hash requestTransactionHash) {
         TransactionData tokenGenerationTransactionData = transactions.getByHash(requestTransactionHash);
         BaseTransactionData tokenServiceFeeData = tokenGenerationTransactionData.getBaseTransactions().stream()
@@ -257,62 +138,6 @@ public class CurrencyService extends BaseNodeCurrencyService {
             throw new CurrencyException(String.format("The token generation fees in the transaction %s is not correct", requestTransactionHash));
         }
     }
-
-    private Hash addLockToLockMap(Map<Hash, Hash> locksIdentityMap, Hash hash) {
-        synchronized (lock) {
-            locksIdentityMap.putIfAbsent(hash, hash);
-            return locksIdentityMap.get(hash);
-        }
-    }
-
-    private void removeLockFromLocksMap(Map<Hash, Hash> locksIdentityMap, Hash hash) {
-        synchronized (lock) {
-            Hash hashLock = locksIdentityMap.get(hash);
-            if (hashLock != null) {
-                locksIdentityMap.remove(hash);
-            }
-        }
-    }
-
-//    private void addLockToProcessingSet(Set<String> lockProcessingSet, String lock) {
-//        synchronized (lockProcessingSet) {
-//            if (lockProcessingSet.contains(lock)) {
-//                throw new CurrencyException(String.format("%s is in progress", lock));
-//            } else {
-//                lockProcessingSet.add(lock);
-//            }
-//        }
-//    }
-//
-//    private void removeLockFromProcessingSet(Set<String> lockProcessingSet, String lock) {
-//        synchronized (lockProcessingSet) {
-//            lockProcessingSet.remove(lock);
-//        }
-//    }
-
-    private void handlePropagatedTokenGenerationTransactions() {  // todo move it to base method and use
-        while (!Thread.currentThread().isInterrupted()) {
-            try {
-                TransactionData tokenGenerationTransaction = tokenGenerationTransactionQueue.take();
-                Hash userHash = tokenGenerationTransaction.getSenderHash();
-                synchronized (addLockToLockMap(lockUserHashMap, userHash)) {
-                    UserTokenGenerationData userTokenGenerationData = userTokenGenerations.getByHash(userHash);
-                    if (userTokenGenerationData == null) {
-                        Map<Hash, Hash> transactionHashToCurrencyMap = new HashMap<>();
-                        transactionHashToCurrencyMap.put(tokenGenerationTransaction.getHash(), null);
-                        userTokenGenerations.put(new UserTokenGenerationData(userHash, transactionHashToCurrencyMap));
-                    } else {
-                        userTokenGenerationData.getTransactionHashToCurrencyMap().put(tokenGenerationTransaction.getHash(), null);
-                        userTokenGenerations.put(userTokenGenerationData);
-                    }
-                    removeLockFromLocksMap(lockUserHashMap, userHash);
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-    }
-
 
     public ResponseEntity<IResponse> getCurrenciesForWallet(GetCurrenciesRequest getCurrenciesRequest) {
         List<GetCurrencyResponseData> tokenDetails = new ArrayList<>();

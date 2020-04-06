@@ -83,6 +83,12 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
                     TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = (TokenGenerationFeeBaseTransactionData) outputBaseTransactionData;
                     TokenGenerationData tokenGenerationData = tokenGenerationFeeBaseTransactionData.getServiceData();
                     OriginatorCurrencyData originatorCurrencyData = tokenGenerationData.getOriginatorCurrencyData();
+                    try {
+                        originatorCurrencyData.validateSymbol();
+                        originatorCurrencyData.validateName();
+                    } catch (Exception e) {
+                        return false;
+                    }
                     CurrencyTypeData currencyTypeData = tokenGenerationData.getCurrencyTypeData();
                     CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(originatorCurrencyData.getSymbol(), currencyTypeData);
                     return originatorCurrencyCrypto.verifySignature(originatorCurrencyData) && currencyTypeRegistrationCrypto.verifySignature(currencyTypeRegistrationData)

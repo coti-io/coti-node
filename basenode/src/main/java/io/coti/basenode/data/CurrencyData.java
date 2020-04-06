@@ -1,17 +1,16 @@
 package io.coti.basenode.data;
 
 import io.coti.basenode.data.interfaces.IPropagatable;
-import io.coti.basenode.exceptions.CurrencyException;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
-import java.util.regex.Pattern;
 
 @Slf4j
 @Data
 public class CurrencyData extends OriginatorCurrencyData implements IPropagatable {
 
+    private static final long serialVersionUID = -6040661248851422391L;
     private Hash hash;
     private CurrencyTypeData currencyTypeData;
     private Instant createTime;
@@ -27,38 +26,18 @@ public class CurrencyData extends OriginatorCurrencyData implements IPropagatabl
         super(originatorCurrencyData);
     }
 
-    public CurrencyData(OriginatorCurrencyData originatorCurrencyData, CurrencyTypeData currencyTypeData, Instant createTime, Hash currencyGeneratingTransactionHash, Hash currencyLastTypeChangingTransactionHash) {
+    public CurrencyData(OriginatorCurrencyData originatorCurrencyData, CurrencyTypeData currencyTypeData, Instant createTime,
+                        Hash currencyGeneratingTransactionHash, Hash currencyLastTypeChangingTransactionHash, boolean confirmed) {
         super(originatorCurrencyData);
         setHash();
         this.createTime = createTime;
         this.currencyTypeData = currencyTypeData;
         this.currencyGeneratingTransactionHash = currencyGeneratingTransactionHash;
         this.currencyLastTypeChangingTransactionHash = currencyLastTypeChangingTransactionHash;
+        this.confirmed = confirmed;
     }
 
     public void setHash() {
         hash = super.calculateHash();
-    }
-
-    @Override
-    public void setName(String name) {
-        if (name.length() != name.trim().length()) {
-            throw new CurrencyException(String.format("Attempted to set an invalid currency name with spaces at the start or the end %s.", name));
-        }
-        final String[] words = name.split(" ");
-        for (String word : words) {
-            if (word == null || word.isEmpty() || !Pattern.compile("[A-Za-z0-9]+").matcher(word).matches()) {
-                throw new CurrencyException(String.format("Attempted to set an invalid currency name with the word %s.", name));
-            }
-        }
-        this.name = name;
-    }
-
-    @Override
-    public void setSymbol(String symbol) {
-        if (!Pattern.compile("[A-Z]{0,15}").matcher(symbol).matches()) {
-            throw new CurrencyException(String.format("Attempted to set an invalid currency symbol of %s.", symbol));
-        }
-        this.symbol = symbol;
     }
 }
