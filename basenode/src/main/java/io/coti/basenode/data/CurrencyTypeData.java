@@ -10,6 +10,7 @@ import java.time.Instant;
 @Data
 public class CurrencyTypeData implements Serializable {
 
+    private static final long serialVersionUID = -1294909068013238552L;
     @NotNull
     protected CurrencyType currencyType;
     @NotNull

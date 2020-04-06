@@ -161,7 +161,7 @@ public class BaseNodeTransactionService implements ITransactionService {
                 log.error("Balance check failed: {}", transactionData.getHash());
                 return;
             }
-            if (transactionData.getType().equals(TransactionType.TokenGeneration) && !validationService.checkTokenUniqueness(transactionData)) {
+            if (transactionData.getType().equals(TransactionType.TokenGeneration) && !validationService.validateCurrencyUniquenessAndAddUnconfirmedRecord(transactionData)) {
                 log.error("Not unique token generation attempt by transaction: {}", transactionData.getHash());
                 return;
             }
