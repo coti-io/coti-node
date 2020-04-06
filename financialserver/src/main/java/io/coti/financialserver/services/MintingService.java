@@ -106,13 +106,13 @@ public class MintingService extends BaseNodeMintingService {
 
             return createTokenMintingFee(tokenMintingData, currencyData, tokenMintingFeeRequest.getMintingFeeQuoteData());
         } catch (CurrencyValidationException e) {
-            String error = String.format("%s. Exception: %s", TOKEN_MINTING_FEE_FAILURE, e.getMessageAndCause());
+            String error = String.format("%s. Exception: %s", TOKEN_MINTING_FAILURE, e.getMessageAndCause());
             return ResponseEntity.badRequest().body(new Response(error, STATUS_ERROR));
         } catch (CotiRunTimeException e) {
-            String error = String.format("%s. Exception: %s", TOKEN_MINTING_FEE_FAILURE, e.getMessageAndCause());
+            String error = String.format("%s. Exception: %s", TOKEN_MINTING_FAILURE, e.getMessageAndCause());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(error, STATUS_ERROR));
         } catch (Exception e) {
-            String error = String.format("%s. Exception: %s", TOKEN_MINTING_FEE_FAILURE, e.getMessage());
+            String error = String.format("%s. Exception: %s", TOKEN_MINTING_FAILURE, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(error, STATUS_ERROR));
         }
     }
@@ -285,7 +285,7 @@ public class MintingService extends BaseNodeMintingService {
     }
 
     private void setTokenMintingFeeHash(TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData) {
-        BaseTransactionCrypto.TOKEN_MINTING_FEE_BASE_TRANSACTION_DATA.createAndSetBaseTransactionHash(tokenMintingFeeBaseTransactionData);
+        BaseTransactionCrypto.TOKEN_MINTING_BASE_TRANSACTION_DATA.createAndSetBaseTransactionHash(tokenMintingFeeBaseTransactionData);
     }
 
     private void signTokenMintingFee(TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData) {

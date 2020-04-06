@@ -205,7 +205,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Override
     public void handleExistingTransaction(TransactionData transactionData) {
         TransactionType transactionType = transactionData.getType();
-        if (transactionType == TransactionType.TokenGenerationFee) {
+        if (transactionType == TransactionType.TokenGeneration) {
             CurrencyData currencyData = getCurrencyData(transactionData);
             if (currencyData != null) {
                 currencies.put(currencyData);
@@ -215,7 +215,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     @Override
     public void handleMissingTransaction(TransactionData transactionData) {
-        if (transactionData.getType() == TransactionType.TokenGenerationFee) {
+        if (transactionData.getType() == TransactionType.TokenGeneration) {
             CurrencyData currencyData = getCurrencyData(transactionData);
             if (currencyData != null) {
                 currencies.put(currencyData);
