@@ -32,6 +32,11 @@ public class CurrencyService extends BaseNodeCurrencyService {
     private OriginatorCurrencyCrypto originatorCurrencyCrypto;
 
     @Override
+    public void init() {
+        super.init();
+        updateCurrencies();
+    }
+
     public void updateCurrencies() {
         CurrencyData nativeCurrencyData = getNativeCurrency();
         if (nativeCurrencyData == null) {
