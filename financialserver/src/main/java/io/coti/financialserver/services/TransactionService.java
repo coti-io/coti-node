@@ -67,9 +67,6 @@ public class TransactionService extends BaseNodeTransactionService {
                     rollingReserveService.setRollingReserveReleaseDate(transactionData, rbtOwnerData.getMerchantHash());
                 }
                 break;
-            case TokenGeneration:
-                currencyService.addToTokenGenerationTransactionQueue(transactionData);
-                break;
             default:
         }
     }

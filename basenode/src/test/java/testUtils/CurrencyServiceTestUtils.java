@@ -14,6 +14,8 @@ public class CurrencyServiceTestUtils {
         CurrencyData currencyData = new CurrencyData();
         currencyData.setName(name);
         currencyData.setSymbol(symbol);
+        currencyData.validateName();
+        currencyData.validateSymbol();
         currencyData.setHash(hash);
         currencyData.setTotalSupply(new BigDecimal("700000"));
         currencyData.setScale(8);

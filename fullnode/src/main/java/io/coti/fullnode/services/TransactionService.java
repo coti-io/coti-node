@@ -265,7 +265,7 @@ public class TransactionService extends BaseNodeTransactionService {
         }
 
         if (transactionData.getType() == TransactionType.TokenGeneration
-                && !validationService.checkTokenUniqueness(transactionData)) {
+                && !validationService.validateCurrencyUniquenessAndAddUnconfirmedRecord(transactionData)) {
             log.error("Token uniqueness check failed: {}", transactionData.getHash());
             throw new TransactionValidationException(NOT_UNIQUE_TOKEN_GENERATION_TRANSACTION);
         }

@@ -5,7 +5,7 @@ import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IConfirmationService;
-import io.coti.basenode.services.interfaces.IMintingService;
+import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +25,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     @Autowired
     private IBalanceService balanceService;
     @Autowired
-    private IMintingService mintingService;
+    private ICurrencyService currencyService;
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -168,6 +168,10 @@ public class BaseNodeConfirmationService implements IConfirmationService {
             balanceService.continueHandleBalanceChanges(addressHash, currencyHash);
         });
 
+        if (transactionData.getType() == TransactionType.TokenGeneration) {
+            currencyService.addConfirmedCurrency(transactionData);
+        }
+
         continueHandleAddressHistoryChanges(transactionData);
         continueHandleConfirmedTransaction(transactionData);
     }
@@ -181,6 +185,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     protected void continueHandleConfirmedTransaction(TransactionData transactionData) {
+        // implemented by the sub classes
     }
 
     @Override

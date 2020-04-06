@@ -14,8 +14,6 @@ public interface ICurrencyService {
 
     void updateCurrencies();
 
-    boolean verifyCurrencyExists(Hash currencyDataHash);
-
     CurrencyData getNativeCurrency();
 
     Hash getNativeCurrencyHash();
@@ -36,5 +34,7 @@ public interface ICurrencyService {
 
     void handleMissingTransaction(TransactionData transactionData);
 
-    boolean checkCurrencyUniqueness(TransactionData transactionData);
+    boolean validateCurrencyUniquenessAndAddUnconfirmedRecord(TransactionData transactionData);
+
+    void addConfirmedCurrency(TransactionData transactionData);
 }

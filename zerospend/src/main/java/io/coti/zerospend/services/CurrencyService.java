@@ -45,12 +45,15 @@ public class CurrencyService extends BaseNodeCurrencyService {
         Instant createTime = Instant.now();
         currencyData.setName(nativeCurrencyName);
         currencyData.setSymbol(nativeCurrencySymbol.toUpperCase());
+        currencyData.validateName();
+        currencyData.validateSymbol();
         currencyData.setTotalSupply(nativeCurrencyTotalSupply);
         currencyData.setScale(nativeCurrencyScale);
         currencyData.setCreateTime(createTime);
         currencyData.setDescription(nativeCurrencyDescription);
         CurrencyTypeData currencyTypeData = new CurrencyTypeData(CurrencyType.NATIVE_COIN, createTime);
         currencyData.setCurrencyTypeData(currencyTypeData);
+        currencyData.setConfirmed(true);
         currencyData.setHash();
 
         CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(currencyData.getSymbol(), currencyTypeData);

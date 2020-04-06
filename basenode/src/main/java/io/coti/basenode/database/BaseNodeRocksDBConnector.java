@@ -65,7 +65,8 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
                 NodeRegistrations.class.getName(),
                 Currencies.class.getName(),
                 CurrencyNameIndexes.class.getName(),
-                LastClusterStampVersions.class.getName()
+                LastClusterStampVersions.class.getName(),
+                UserTokenGenerations.class.getName()
         ));
         resetTransactionColumnFamilyNames = new ArrayList<>(Arrays.asList(
                 Transactions.class.getName(),
