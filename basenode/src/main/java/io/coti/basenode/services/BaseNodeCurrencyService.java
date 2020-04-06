@@ -142,9 +142,9 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         if (transactionData.getType() == TransactionType.TokenGenerationFee) {
             CurrencyData currencyData = getCurrencyData(transactionData);
             if (currencyData != null) {
-//                if (dspConsensus) {
-//                    currencyData.setConfirmed(true);
-//                }
+                if (dspConsensus) {
+                    currencyData.setConfirmed(true);
+                }
                 currencies.put(currencyData);
             }
         }
