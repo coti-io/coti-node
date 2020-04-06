@@ -79,7 +79,7 @@ public class FeeService {
     }
 
     protected void setTokenGenerationFeeHash(TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData) {
-        BaseTransactionCrypto.TOKEN_GENERATION_FEE_BASE_TRANSACTION_DATA.createAndSetBaseTransactionHash(tokenGenerationFeeBaseTransactionData);
+        BaseTransactionCrypto.TOKEN_GENERATION_BASE_TRANSACTION_DATA.createAndSetBaseTransactionHash(tokenGenerationFeeBaseTransactionData);
     }
 
     protected void signTokenGenerationFee(TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData) {

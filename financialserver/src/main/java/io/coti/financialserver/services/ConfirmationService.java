@@ -16,9 +16,9 @@ public class ConfirmationService extends BaseNodeConfirmationService {
 
     @Override
     protected void continueHandleConfirmedTransaction(TransactionData transactionData) {
-        if (transactionData.getType() == TransactionType.TokenGenerationFee) {
+        if (transactionData.getType() == TransactionType.TokenGeneration) {
 //            currencyService.addToPendingCurrencyTransactionQueue(transactionData);
-        } else if (transactionData.getType() == TransactionType.TokenMintingFee) {
+        } else if (transactionData.getType() == TransactionType.TokenMinting) {
             mintingService.addToConfirmedTokenMintingFeeTransactionQueue(transactionData);
         }
     }

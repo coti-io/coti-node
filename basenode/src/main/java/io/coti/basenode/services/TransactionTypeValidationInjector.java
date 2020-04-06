@@ -20,8 +20,8 @@ public class TransactionTypeValidationInjector {
 
     @PostConstruct
     public void init() {
-        TransactionTypeValidation.TOKEN_GENERATION_FEE.originatorCurrencyCrypto = originatorCurrencyCrypto;
-        TransactionTypeValidation.TOKEN_GENERATION_FEE.currencyTypeRegistrationCrypto = currencyTypeRegistrationCrypto;
-        TransactionTypeValidation.TOKEN_MINTING_FEE.tokenMintingCrypto = tokenMintingCrypto;
+        TransactionTypeValidation.TOKEN_GENERATION.originatorCurrencyCrypto = originatorCurrencyCrypto;
+        TransactionTypeValidation.TOKEN_GENERATION.currencyTypeRegistrationCrypto = currencyTypeRegistrationCrypto;
+        TransactionTypeValidation.TOKEN_MINTING.tokenMintingCrypto = tokenMintingCrypto;
     }
 }

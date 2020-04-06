@@ -284,7 +284,7 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     private void revertPayloadAction(TransactionData transactionData) {
-        if (transactionData.getType() == TransactionType.TokenMintingFee) {
+        if (transactionData.getType() == TransactionType.TokenMinting) {
             log.error("Reverting minting transaction: {}", transactionData.getHash());
             mintingService.revertMintingAllocation(transactionData);
         }

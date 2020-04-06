@@ -119,7 +119,7 @@ public class BaseNodeMintingService implements IMintingService {
     @Override
     public void handleExistingTransaction(TransactionData transactionData) {
         TransactionType transactionType = transactionData.getType();
-        if (transactionType == TransactionType.TokenMintingFee) {
+        if (transactionType == TransactionType.TokenMinting) {
             TokenMintingFeeBaseTransactionData tokenMintingFeeData = getTokenMintingFeeData(transactionData);
             if (tokenMintingFeeData != null) {
                 Hash tokenHash = tokenMintingFeeData.getServiceData().getMintingCurrencyHash();
