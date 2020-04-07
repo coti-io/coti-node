@@ -120,15 +120,26 @@ public class BaseNodeMintingService implements IMintingService {
     public void handleExistingTransaction(TransactionData transactionData) {
         TransactionType transactionType = transactionData.getType();
         if (transactionType == TransactionType.TokenMinting) {
-            TokenMintingFeeBaseTransactionData tokenMintingFeeData = getTokenMintingFeeData(transactionData);
-            if (tokenMintingFeeData != null) {
-                Hash tokenHash = tokenMintingFeeData.getServiceData().getMintingCurrencyHash();
-                BigDecimal newMintingRequestedAmount = tokenMintingFeeData.getServiceData().getMintingAmount();
-                BigDecimal tokenAllocatedAmount = getTokenAllocatedAmount(tokenHash);
-                if (getTokenAllocatedAmount(tokenHash) != null) {
-                    mintingMap.put(tokenHash, newMintingRequestedAmount.add(tokenAllocatedAmount));
-                }
+            updateMintingMap(transactionData);
+        }
+    }
+
+    private void updateMintingMap(TransactionData transactionData) {
+        TokenMintingFeeBaseTransactionData tokenMintingFeeData = getTokenMintingFeeData(transactionData);
+        if (tokenMintingFeeData != null) {
+            Hash tokenHash = tokenMintingFeeData.getServiceData().getMintingCurrencyHash();
+            BigDecimal newMintingRequestedAmount = tokenMintingFeeData.getServiceData().getMintingAmount();
+            BigDecimal tokenAllocatedAmount = getTokenAllocatedAmount(tokenHash);
+            if (getTokenAllocatedAmount(tokenHash) != null) {
+                mintingMap.put(tokenHash, newMintingRequestedAmount.add(tokenAllocatedAmount));
             }
+        }
+    }
+
+    @Override
+    public void handleMissingTransaction(TransactionData transactionData) {
+        if (transactionData.getType() == TransactionType.TokenMinting) {
+            updateMintingMap(transactionData);
         }
     }
 
@@ -143,7 +154,6 @@ public class BaseNodeMintingService implements IMintingService {
             BigDecimal totalSupply = clusterStampCurrencyData.getTotalSupply();
             BigDecimal genesisAddressBalance = balanceService.getBalance(currencyGenesisAddress, currencyHash);
             mintingMap.put(currencyHash, totalSupply.subtract(genesisAddressBalance));
-
         });
     }
 }
