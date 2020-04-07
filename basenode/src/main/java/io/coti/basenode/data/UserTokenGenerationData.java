@@ -8,6 +8,7 @@ import java.util.Map;
 @Data
 public class UserTokenGenerationData implements IEntity {
 
+    private static final long serialVersionUID = 528108391452597319L;
     private Hash userHash;
     private Map<Hash, Hash> transactionHashToCurrencyMap;
 
