@@ -1,9 +1,14 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.crypto.CurrencyTypeRegistrationCrypto;
+import io.coti.basenode.crypto.GetTokenDetailsRequestCrypto;
+import io.coti.basenode.crypto.GetUserTokensRequestCrypto;
 import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CurrencyException;
+import io.coti.basenode.http.*;
+import io.coti.basenode.http.data.TokenGenerationResponseData;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Currencies;
 import io.coti.basenode.model.CurrencyNameIndexes;
 import io.coti.basenode.model.UserCurrencyIndexes;
@@ -14,15 +19,20 @@ import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 
 @Slf4j
 @Service
@@ -44,6 +54,10 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Autowired
     private OriginatorCurrencyCrypto originatorCurrencyCrypto;
     @Autowired
+    private GetUserTokensRequestCrypto getUserTokensRequestCrypto;
+    @Autowired
+    private GetTokenDetailsRequestCrypto getTokenDetailsRequestCrypto;
+    @Autowired
     protected IBalanceService balanceService;
     @Autowired
     private UserCurrencyIndexes userCurrencyIndexes;
@@ -51,8 +65,10 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     private ITransactionHelper transactionHelper;
     private Map<Hash, Hash> lockHashMap = new ConcurrentHashMap<>();
     private final Object lock = new Object();
+    private Map<Hash, BigDecimal> mintingMap;
 
     public void init() {
+        mintingMap = new ConcurrentHashMap<>();
         try {
             nativeCurrencyData = null;
             setNativeCurrencyFromExistingCurrencies();
@@ -62,6 +78,18 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         } catch (Exception e) {
             throw new CurrencyException("Error at currency service init.", e);
         }
+    }
+
+    public BigDecimal getTokenAllocatedAmount(Hash tokenHash) {
+        if (mintingMap.get(tokenHash) != null) {
+            return mintingMap.get(tokenHash);
+        }
+        return BigDecimal.ZERO;
+    }
+
+    @Override
+    public void putToMintingMap(Hash tokenHash, BigDecimal amount) {
+        mintingMap.put(tokenHash, amount);
     }
 
     private void setNativeCurrencyFromExistingCurrencies() {
@@ -264,6 +292,59 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             removeLockFromLocksMap(currencyHash);
         }
     }
+
+    public ResponseEntity<IResponse> getUserTokens(GetUserTokensRequest getUserTokensRequest) {
+        try {
+            if (!getUserTokensRequestCrypto.verifySignature(getUserTokensRequest)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
+            }
+            UserCurrencyIndexData userCurrencyIndexData = userCurrencyIndexes.getByHash(getUserTokensRequest.getUserHash());
+            GetUserTokensDataResponse getUserTokensDataResponse = new GetUserTokensDataResponse();
+            HashSet<TokenGenerationResponseData> userTokens = new HashSet<>();
+            getUserTokensDataResponse.setUserTokens(userTokens);
+            if (userCurrencyIndexData == null) {
+                return ResponseEntity.ok(getUserTokensDataResponse);
+            }
+            HashSet<Hash> tokens = userCurrencyIndexData.getTokens();
+            tokens.forEach(entry ->
+                    userTokens.add(fillTokenGenerationResponseData(entry)));
+            return ResponseEntity.ok(getUserTokensDataResponse);
+        } catch (Exception e) {
+            log.error("Error at getting user tokens: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.toString(), STATUS_ERROR));
+        }
+    }
+
+    public ResponseEntity<IResponse> getTokenDetails(GetTokenDetailsRequest getTokenDetailsRequest) {
+        try {
+            if (!getTokenDetailsRequestCrypto.verifySignature(getTokenDetailsRequest)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
+            }
+            Hash currencyHash = getTokenDetailsRequest.getCurrencyHash();
+            GetTokenDetailsResponse getTokenDetailsResponse = new GetTokenDetailsResponse();
+            TokenGenerationResponseData tokenGenerationResponseData = fillTokenGenerationResponseData(currencyHash);
+            getTokenDetailsResponse.setToken(tokenGenerationResponseData);
+            return ResponseEntity.ok(getTokenDetailsResponse);
+        } catch (Exception e) {
+            log.error("Error at getting user tokens: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.toString(), STATUS_ERROR));
+        }
+    }
+
+    private TokenGenerationResponseData fillTokenGenerationResponseData(Hash currencyHash) {
+        CurrencyData currencyData = currencies.getByHash(currencyHash);
+        if (currencyData == null) {
+            throw new CurrencyException(String.format("Unidentified currency hash: %s", currencyHash));
+        }
+        TokenGenerationResponseData tokenGenerationResponseData = new TokenGenerationResponseData(currencyData);
+
+        BigDecimal mintedAmount = getTokenAllocatedAmount(currencyHash);
+        BigDecimal notMintedRest = currencyData.getTotalSupply().subtract(mintedAmount);
+        tokenGenerationResponseData.setMintedAmount(mintedAmount);
+        tokenGenerationResponseData.setNotMintedRest(notMintedRest);
+        return tokenGenerationResponseData;
+    }
+
 
     protected TokenGenerationFeeBaseTransactionData getTokenGenerationFeeData(TransactionData tokenGenerationTransaction) {
         return (TokenGenerationFeeBaseTransactionData) tokenGenerationTransaction

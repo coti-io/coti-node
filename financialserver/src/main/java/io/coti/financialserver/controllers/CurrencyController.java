@@ -21,11 +21,6 @@ public class CurrencyController {
     @Autowired
     private MintingService mintingService;
 
-    @PostMapping(path = "/token/user")
-    public ResponseEntity<IResponse> getUserTokens(@Valid @RequestBody GetUserTokensRequest getUserTokensRequest) {
-        return currencyService.getUserTokens(getUserTokensRequest);
-    }
-
 //    @PutMapping(path = "/token/typechange") // todo add it
 
     @PostMapping(path = "/token/generate")

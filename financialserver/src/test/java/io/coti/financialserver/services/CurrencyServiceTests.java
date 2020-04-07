@@ -1,8 +1,11 @@
 package io.coti.financialserver.services;
 
+import io.coti.basenode.crypto.GetUserTokensRequestCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.http.GetUserTokensDataResponse;
+import io.coti.basenode.http.GetUserTokensRequest;
 import io.coti.basenode.http.HttpJacksonSerializer;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
@@ -15,11 +18,8 @@ import io.coti.basenode.services.TransactionHelper;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IChunkService;
 import io.coti.basenode.services.interfaces.INetworkService;
-import io.coti.financialserver.crypto.GetUserTokensRequestCrypto;
 import io.coti.financialserver.http.GetCurrenciesRequest;
 import io.coti.financialserver.http.GetCurrenciesResponse;
-import io.coti.financialserver.http.GetTokenGenerationDataResponse;
-import io.coti.financialserver.http.GetUserTokensRequest;
 import io.coti.financialserver.model.UserTokenGenerations;
 import org.junit.Assert;
 import org.junit.Before;
@@ -179,7 +179,7 @@ public class CurrencyServiceTests {
         //TODO 9/24/2019 astolia: mock signed request
         //getUserTokensRequestCrypto.signMessage(getUserTokensRequest);
         ResponseEntity actual = currencyService.getUserTokens(getUserTokensRequest);
-        ResponseEntity expected = ResponseEntity.ok(new GetTokenGenerationDataResponse());
+        ResponseEntity expected = ResponseEntity.ok(new GetUserTokensDataResponse());
         Assert.assertEquals(expected, actual);
     }
 
@@ -196,10 +196,10 @@ public class CurrencyServiceTests {
 //        getUserTokensRequestCrypto.signMessage(getUserTokensRequest);
         ResponseEntity actual = currencyService.getUserTokens(getUserTokensRequest);
 
-        GetTokenGenerationDataResponse getTokenGenerationDataResponse = new GetTokenGenerationDataResponse();
+        GetUserTokensDataResponse getUserTokensDataResponse = new GetUserTokensDataResponse();
         //TODO 9/24/2019 astolia: change according to implementation change
 //        getTokenGenerationDataResponse.addUnusedConfirmedTransaction(transactionHash);
-        ResponseEntity expected = ResponseEntity.ok(getTokenGenerationDataResponse);
+        ResponseEntity expected = ResponseEntity.ok(getUserTokensDataResponse);
         Assert.assertEquals(expected, actual);
     }
 
@@ -219,10 +219,10 @@ public class CurrencyServiceTests {
 //        getUserTokensRequestCrypto.signMessage(getUserTokensRequest);
         ResponseEntity actual = currencyService.getUserTokens(getUserTokensRequest);
 
-        GetTokenGenerationDataResponse getTokenGenerationDataResponse = new GetTokenGenerationDataResponse();
+        GetUserTokensDataResponse getUserTokensDataResponse = new GetUserTokensDataResponse();
         //TODO 9/24/2019 astolia: change according to implementation change
 //        getTokenGenerationDataResponse.addCompletedTransactionHashToGeneratedCurrency(transactionHash, currencyData);
-        ResponseEntity expected = ResponseEntity.ok(getTokenGenerationDataResponse);
+        ResponseEntity expected = ResponseEntity.ok(getUserTokensDataResponse);
         Assert.assertEquals(expected, actual);
     }
 
@@ -243,10 +243,10 @@ public class CurrencyServiceTests {
 //        getUserTokensRequestCrypto.signMessage(getUserTokensRequest);
         ResponseEntity actual = currencyService.getUserTokens(getUserTokensRequest);
 
-        GetTokenGenerationDataResponse getTokenGenerationDataResponse = new GetTokenGenerationDataResponse();
+        GetUserTokensDataResponse getUserTokensDataResponse = new GetUserTokensDataResponse();
         //TODO 9/24/2019 astolia: change according to implementation change
 //        getTokenGenerationDataResponse.addPendingTransactionHashToGeneratedCurrency(transactionHash, currencyData);
-        ResponseEntity expected = ResponseEntity.ok(getTokenGenerationDataResponse);
+        ResponseEntity expected = ResponseEntity.ok(getUserTokensDataResponse);
         Assert.assertEquals(expected, actual);
     }
 

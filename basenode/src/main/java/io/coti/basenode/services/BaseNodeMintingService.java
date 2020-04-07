@@ -24,20 +24,11 @@ public class BaseNodeMintingService implements IMintingService {
     protected Currencies currencies;
     @Autowired
     protected IBalanceService balanceService;
-    private Map<Hash, BigDecimal> mintingMap;
     private final Object lock = new Object();
     private final Map<Hash, Hash> lockMintingRecordHashMap = new ConcurrentHashMap<>();
 
     public void init() {
-        mintingMap = new ConcurrentHashMap<>();
         log.info("{} is up", this.getClass().getSimpleName());
-    }
-
-    public BigDecimal getTokenAllocatedAmount(Hash tokenHash) {
-        if (mintingMap.get(tokenHash) != null) {
-            return mintingMap.get(tokenHash);
-        }
-        return null;
     }
 
     private Hash addLockToLockMap(Hash hash) {
@@ -70,7 +61,7 @@ public class BaseNodeMintingService implements IMintingService {
                     log.error("Error in Minting check. Token {} is Native currency", tokenHash);
                     return false;
                 }
-                BigDecimal tokenAllocatedAmount = getTokenAllocatedAmount(tokenHash);
+                BigDecimal tokenAllocatedAmount = currencyService.getTokenAllocatedAmount(tokenHash);
                 if (tokenAllocatedAmount == null || currencyFromDB.getTotalSupply().subtract(tokenAllocatedAmount.add(tokenAmount)).signum() < 0) {
                     log.error("Error in Minting check. Token {} amount {} is too much", tokenHash, tokenAmount);
                     return false;
@@ -81,7 +72,7 @@ public class BaseNodeMintingService implements IMintingService {
                     return false;
                 }
 
-                mintingMap.put(tokenHash, tokenAllocatedAmount.add(tokenAmount));
+                currencyService.putToMintingMap(tokenHash, tokenAllocatedAmount.add(tokenAmount));
             }
         } finally {
             removeLockFromLocksMap(tokenHash);
@@ -96,12 +87,12 @@ public class BaseNodeMintingService implements IMintingService {
         try {
             synchronized (addLockToLockMap(tokenHash)) {
                 CurrencyData currencyFromDB = currencyService.getCurrencyFromDB(tokenHash);
-                BigDecimal tokenAllocatedAmount = this.getTokenAllocatedAmount(tokenHash);
+                BigDecimal tokenAllocatedAmount = currencyService.getTokenAllocatedAmount(tokenHash);
                 if (currencyFromDB == null || tokenAllocatedAmount == null) {
                     log.error("Error in Minting revert. Token {} is invalid", tokenHash);
                     return;
                 }
-                mintingMap.put(tokenHash, tokenAllocatedAmount.subtract(tokenMintingFeeData.getAmount()));
+                currencyService.putToMintingMap(tokenHash, tokenAllocatedAmount.subtract(tokenMintingFeeData.getAmount()));
             }
         } finally {
             removeLockFromLocksMap(tokenHash);
@@ -129,9 +120,9 @@ public class BaseNodeMintingService implements IMintingService {
         if (tokenMintingFeeData != null) {
             Hash tokenHash = tokenMintingFeeData.getServiceData().getMintingCurrencyHash();
             BigDecimal newMintingRequestedAmount = tokenMintingFeeData.getServiceData().getMintingAmount();
-            BigDecimal tokenAllocatedAmount = getTokenAllocatedAmount(tokenHash);
-            if (getTokenAllocatedAmount(tokenHash) != null) {
-                mintingMap.put(tokenHash, newMintingRequestedAmount.add(tokenAllocatedAmount));
+            BigDecimal tokenAllocatedAmount = currencyService.getTokenAllocatedAmount(tokenHash);
+            if (currencyService.getTokenAllocatedAmount(tokenHash) != null) {
+                currencyService.putToMintingMap(tokenHash, newMintingRequestedAmount.add(tokenAllocatedAmount));
             }
         }
     }
@@ -153,7 +144,7 @@ public class BaseNodeMintingService implements IMintingService {
         clusterStampCurrencyMap.forEach((currencyHash, clusterStampCurrencyData) -> {
             BigDecimal totalSupply = clusterStampCurrencyData.getTotalSupply();
             BigDecimal genesisAddressBalance = balanceService.getBalance(currencyGenesisAddress, currencyHash);
-            mintingMap.put(currencyHash, totalSupply.subtract(genesisAddressBalance));
+            currencyService.putToMintingMap(currencyHash, totalSupply.subtract(genesisAddressBalance));
         });
     }
 }

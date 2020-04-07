@@ -144,7 +144,7 @@ public class MintingService extends BaseNodeMintingService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_MINTING_REQUEST_INVALID_FOR_THE_QUOTE, STATUS_ERROR));
         }
         if (currencyData.getTotalSupply()
-                .subtract(getTokenAllocatedAmount(tokenMintingData.getMintingCurrencyHash()).add(tokenMintingData.getMintingAmount())).signum() < 0) {
+                .subtract(currencyService.getTokenAllocatedAmount(tokenMintingData.getMintingCurrencyHash()).add(tokenMintingData.getMintingAmount())).signum() < 0) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_MINTING_REQUEST_INVALID_AMOUNT, STATUS_ERROR));
         }
         return null;
@@ -304,7 +304,7 @@ public class MintingService extends BaseNodeMintingService {
                     BigDecimal mintingAmount = mintingRecordData.getMintingHistory().values().stream()
                             .map(MintingHistoryData::getMintingAmount)
                             .reduce(BigDecimal.ZERO, BigDecimal::add);
-                    BigDecimal tokenMintedFoundAmount = getTokenAllocatedAmount(tokenHash);
+                    BigDecimal tokenMintedFoundAmount = currencyService.getTokenAllocatedAmount(tokenHash);
                     if (!mintingAmount.equals(tokenMintedFoundAmount)) {
                         log.error("Minting balance validation identified mismatch for currency {}, expected {} found {}",
                                 tokenHash, mintingAmount, tokenMintedFoundAmount);

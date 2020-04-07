@@ -3,7 +3,12 @@ package io.coti.basenode.services.interfaces;
 import io.coti.basenode.data.CurrencyData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.http.GetTokenDetailsRequest;
+import io.coti.basenode.http.GetUserTokensRequest;
+import io.coti.basenode.http.interfaces.IResponse;
+import org.springframework.http.ResponseEntity;
 
+import java.math.BigDecimal;
 import java.util.Map;
 
 public interface ICurrencyService {
@@ -31,4 +36,12 @@ public interface ICurrencyService {
     boolean validateCurrencyUniquenessAndAddUnconfirmedRecord(TransactionData transactionData);
 
     void addConfirmedCurrency(TransactionData transactionData);
+
+    ResponseEntity<IResponse> getUserTokens(GetUserTokensRequest getUserTokensRequest);
+
+    void putToMintingMap(Hash tokenHash, BigDecimal amount);
+
+    BigDecimal getTokenAllocatedAmount(Hash tokenHash);
+
+    ResponseEntity<IResponse> getTokenDetails(GetTokenDetailsRequest getTokenDetailsRequest);
 }
