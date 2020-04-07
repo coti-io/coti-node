@@ -1,6 +1,5 @@
 package io.coti.financialserver.services;
 
-import io.coti.basenode.crypto.GetUpdatedCurrencyRequestCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.*;
@@ -84,8 +83,6 @@ public class CurrencyServiceTests {
     protected RestTemplate restTemplate;
     @MockBean
     protected ApplicationContext applicationContext;
-    @MockBean
-    private GetUpdatedCurrencyRequestCrypto getUpdatedCurrencyRequestCrypto;
     @MockBean
     private HttpJacksonSerializer jacksonSerializer;
     @MockBean
