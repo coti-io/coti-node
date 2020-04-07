@@ -6,7 +6,7 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CurrencyException;
 import io.coti.basenode.model.Currencies;
 import io.coti.basenode.model.CurrencyNameIndexes;
-import io.coti.basenode.model.UserTokenGenerations;
+import io.coti.basenode.model.UserCurrencyIndexes;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.INetworkService;
@@ -19,6 +19,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,7 +46,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Autowired
     protected IBalanceService balanceService;
     @Autowired
-    private UserTokenGenerations userTokenGenerations;
+    private UserCurrencyIndexes userCurrencyIndexes;
     @Autowired
     private ITransactionHelper transactionHelper;
     private Map<Hash, Hash> lockHashMap = new ConcurrentHashMap<>();
@@ -245,14 +246,14 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                 currencies.put(currencyData);
                 try {
                     synchronized (addLockToLockMap(originatorHash)) {
-                        UserTokenGenerationData userTokenGenerationData = userTokenGenerations.getByHash(originatorHash);
-                        if (userTokenGenerationData == null) {
-                            Map<Hash, Hash> transactionHashToCurrencyMap = new HashMap<>();
-                            transactionHashToCurrencyMap.put(transactionData.getHash(), currencyHash);
-                            userTokenGenerations.put(new UserTokenGenerationData(originatorCurrencyData.getOriginatorHash(), transactionHashToCurrencyMap));
+                        UserCurrencyIndexData userCurrencyIndexData = userCurrencyIndexes.getByHash(originatorHash);
+                        if (userCurrencyIndexData == null) {
+                            HashSet<Hash> tokensHashSet = new HashSet<>();
+                            tokensHashSet.add(currencyHash);
+                            userCurrencyIndexes.put(new UserCurrencyIndexData(originatorCurrencyData.getOriginatorHash(), tokensHashSet));
                         } else {
-                            userTokenGenerationData.getTransactionHashToCurrencyMap().put(originatorHash, currencyHash);
-                            userTokenGenerations.put(userTokenGenerationData);
+                            userCurrencyIndexData.getTokens().add(currencyHash);
+                            userCurrencyIndexes.put(userCurrencyIndexData);
                         }
                     }
                 } finally {
