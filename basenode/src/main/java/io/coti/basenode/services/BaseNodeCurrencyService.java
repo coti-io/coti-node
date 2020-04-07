@@ -1,11 +1,9 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.crypto.CurrencyTypeRegistrationCrypto;
-import io.coti.basenode.crypto.GetUpdatedCurrencyRequestCrypto;
 import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CurrencyException;
-import io.coti.basenode.http.GetUpdatedCurrencyRequest;
 import io.coti.basenode.model.Currencies;
 import io.coti.basenode.model.CurrencyNameIndexes;
 import io.coti.basenode.model.UserTokenGenerations;
@@ -18,18 +16,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import reactor.core.publisher.FluxSink;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
 public class BaseNodeCurrencyService implements ICurrencyService {
 
-    private static final int NUMBER_OF_NATIVE_CURRENCY = 1;
-    private EnumMap<CurrencyType, HashSet<Hash>> currencyHashByTypeMap;
     protected CurrencyData nativeCurrencyData;
     @Autowired
     protected Currencies currencies;
@@ -41,8 +38,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     protected RestTemplate restTemplate;
     @Autowired
     protected ApplicationContext applicationContext;
-    @Autowired
-    private GetUpdatedCurrencyRequestCrypto getUpdatedCurrencyRequestCrypto;
     @Autowired
     protected CurrencyTypeRegistrationCrypto currencyTypeRegistrationCrypto;
     @Autowired
@@ -58,10 +53,8 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     public void init() {
         try {
-            currencyHashByTypeMap = new EnumMap<>(CurrencyType.class);
             nativeCurrencyData = null;
-            updateCurrencyHashByTypeMapFromExistingCurrencies();
-            updateCurrencies();
+            setNativeCurrencyFromExistingCurrencies();
             log.info("{} is up", this.getClass().getSimpleName());
         } catch (CurrencyException e) {
             throw new CurrencyException("Error at currency service init.\n" + e.getMessage(), e);
@@ -70,54 +63,13 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         }
     }
 
-    public void updateCurrencyHashByTypeMapFromExistingCurrencies() {
-        currencies.forEach(this::updateCurrencyHashByTypeMap);
+    private void setNativeCurrencyFromExistingCurrencies() {
         if (!currencies.isEmpty()) {
-            verifyValidNativeCurrencyPresent();
-        }
-    }
-
-    protected void updateCurrencyHashByTypeMap(CurrencyData currencyData) {
-        CurrencyType currencyType = currencyData.getCurrencyTypeData().getCurrencyType();
-        currencyHashByTypeMap.putIfAbsent(currencyType, new HashSet<>());
-        currencyHashByTypeMap.get(currencyType).add(currencyData.getHash());
-    }
-
-    protected HashSet getCurrencyHashesByCurrencyType(CurrencyType currencyType) {
-        return currencyHashByTypeMap.get(currencyType);
-    }
-
-    @Override
-    public void updateCurrencies() {
-    }
-
-    protected void replaceExistingCurrencyDataDueToTypeChange(CurrencyData originalCurrencyData, CurrencyData recoveredCurrencyData) {
-        CurrencyType originalCurrencyType = originalCurrencyData.getCurrencyTypeData().getCurrencyType();
-        currencies.delete(originalCurrencyData);
-        currencies.put(recoveredCurrencyData);
-        currencyHashByTypeMap.get(originalCurrencyType).remove(originalCurrencyData.getHash());
-        updateCurrencyHashByTypeMap(recoveredCurrencyData);
-    }
-
-    private void verifyValidNativeCurrencyPresent() {
-        HashSet<Hash> nativeCurrencyHashes = currencyHashByTypeMap.get(CurrencyType.NATIVE_COIN);
-        if (nativeCurrencyHashes == null || nativeCurrencyHashes.isEmpty() || nativeCurrencyHashes.size() != NUMBER_OF_NATIVE_CURRENCY) {
-            throw new CurrencyException("Failed to retrieve native currency data");
-        } else {
-            Hash nativeCurrencyHash = nativeCurrencyHashes.iterator().next();
-            CurrencyData nativeCurrency = currencies.getByHash(nativeCurrencyHash);
-            if (!originatorCurrencyCrypto.verifySignature(nativeCurrency)) {
-                throw new CurrencyException("Failed to verify native currency data of " + nativeCurrency.getHash());
-            } else {
-                CurrencyTypeData nativeCurrencyTypeData = nativeCurrency.getCurrencyTypeData();
-                CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(nativeCurrency.getSymbol(), nativeCurrencyTypeData);
-                if (!currencyTypeRegistrationCrypto.verifySignature(currencyTypeRegistrationData)) {
-                    throw new CurrencyException("Failed to verify native currency data type of " + nativeCurrency.getCurrencyTypeData().getCurrencyType().getText());
+            currencies.forEach(currencyData -> {
+                if (currencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
+                    verifyNativeCurrency(currencyData);
                 }
-            }
-            if (getNativeCurrency() == null) {
-                setNativeCurrencyData(nativeCurrency);
-            }
+            });
         }
     }
 
@@ -142,19 +94,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     @Override
-    public void getUpdatedCurrencyBatch(GetUpdatedCurrencyRequest getUpdatedCurrencyRequest, FluxSink<CurrencyData> fluxSink) {
-        try {
-            if (!getUpdatedCurrencyRequestCrypto.verifySignature(getUpdatedCurrencyRequest)) {
-                log.error("Authorization check failed on request to get updated currencies.");
-            }
-            Map<CurrencyType, HashSet<Hash>> existingCurrencyHashesByType = getUpdatedCurrencyRequest.getCurrencyHashesByType();
-            getRequiringUpdateOfCurrencyDataByType(existingCurrencyHashesByType, fluxSink);
-        } finally {
-            fluxSink.complete();
-        }
-    }
-
-    @Override
     public CurrencyData getCurrencyFromDB(Hash currencyHash) {
         return currencies.getByHash(currencyHash);
     }
@@ -166,10 +105,34 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     @Override
     public void updateCurrenciesFromClusterStamp(Map<Hash, CurrencyData> clusterStampCurrenciesMap, Hash genesisAddress) {
-        clusterStampCurrenciesMap.forEach((currencyHash, clusterStampCurrencyData) ->
-                currencies.put(clusterStampCurrencyData)
+        clusterStampCurrenciesMap.forEach((currencyHash, clusterStampCurrencyData) -> {
+                    currencies.put(clusterStampCurrencyData);
+                    if (clusterStampCurrencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
+                        verifyNativeCurrency(clusterStampCurrencyData);
+                    }
+                }
         );
-        updateCurrencyHashByTypeMapFromExistingCurrencies();
+    }
+
+    private void verifyNativeCurrency(CurrencyData nativeCurrency) {
+        if (nativeCurrency == null) {
+            throw new CurrencyException("Failed to verify native currency data exists");
+        }
+        if (!originatorCurrencyCrypto.verifySignature(nativeCurrency)) {
+            throw new CurrencyException("Failed to verify native currency data of " + nativeCurrency.getHash());
+        } else {
+            CurrencyTypeData nativeCurrencyTypeData = nativeCurrency.getCurrencyTypeData();
+            CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(nativeCurrency.getSymbol(), nativeCurrencyTypeData);
+            if (!currencyTypeRegistrationCrypto.verifySignature(currencyTypeRegistrationData)) {
+                throw new CurrencyException("Failed to verify native currency data type of " + nativeCurrency.getCurrencyTypeData().getCurrencyType().getText());
+            }
+        }
+        if (currencies.getByHash(nativeCurrency.getHash()) == null) {
+            currencies.put(nativeCurrency);
+        }
+        if (this.nativeCurrencyData == null) {
+            setNativeCurrencyData(nativeCurrency);
+        }
     }
 
     @Override
@@ -185,9 +148,13 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     @Override
     public void handleMissingTransaction(TransactionData transactionData) {
+        boolean dspConsensus = transactionData.getDspConsensusResult().isDspConsensus();
         if (transactionData.getType() == TransactionType.TokenGeneration) {
             CurrencyData currencyData = getCurrencyData(transactionData);
             if (currencyData != null) {
+                if (dspConsensus) {
+                    currencyData.setConfirmed(true);
+                }
                 currencies.put(currencyData);
             }
         }
@@ -212,35 +179,12 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         return currencyData;
     }
 
-    private void getRequiringUpdateOfCurrencyDataByType(Map<CurrencyType, HashSet<Hash>> existingCurrencyHashesByType, FluxSink<CurrencyData> fluxSink) {
-        currencyHashByTypeMap.forEach((localCurrencyType, localCurrencyHashes) -> {
-            HashSet<Hash> existingCurrencyHashes = existingCurrencyHashesByType.get(localCurrencyType);
-
-            localCurrencyHashes.forEach(localCurrencyHash -> {
-                if (existingCurrencyHashes == null || existingCurrencyHashes.isEmpty() ||
-                        !existingCurrencyHashes.contains(localCurrencyHash)) {
-                    sendUpdatedCurrencyData(localCurrencyHash, fluxSink);
-                }
-            });
-        });
-    }
-
-    private void sendUpdatedCurrencyData(Hash localCurrencyHash, FluxSink<CurrencyData> fluxSink) {
-        CurrencyData updatedCurrencyData = currencies.getByHash(localCurrencyHash);
-        if (updatedCurrencyData != null) {
-            fluxSink.next(updatedCurrencyData);
-        } else {
-            throw new CurrencyException(String.format("Failed to retrieve currencyData %s", localCurrencyHash));
-        }
-    }
-
     @Override
     public void putCurrencyData(CurrencyData currencyData) {
         if (currencyData == null) {
             throw new CurrencyException("Failed to add an empty currency");
         }
         currencies.put(currencyData);
-        updateCurrencyHashByTypeMap(currencyData);
         updateCurrencyNameIndex(currencyData);
     }
 
