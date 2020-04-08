@@ -47,7 +47,7 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 @Service
 public class MintingService extends BaseNodeMintingService {
 
-    private final static int MINTING_FEE_QUOTE_EXPIRATION_MINUTES = 60;
+    private static final int MINTING_FEE_QUOTE_EXPIRATION_MINUTES = 60;
     @Value("${financialserver.seed}")
     private String seed;
     @Autowired
