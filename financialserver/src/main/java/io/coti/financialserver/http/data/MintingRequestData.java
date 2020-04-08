@@ -19,7 +19,6 @@ import java.time.Instant;
 @Data
 public class MintingRequestData implements IEntity, ISignable, ISignValidatable {
 
-    public static transient final int REQUEST_TERM_MINUTES = 60;
     private static final long serialVersionUID = 3621567796701993855L;
     @NotNull
     private Hash hash;
