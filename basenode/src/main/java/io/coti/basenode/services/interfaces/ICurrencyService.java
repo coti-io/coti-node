@@ -28,7 +28,9 @@ public interface ICurrencyService {
 
     void generateNativeCurrency();
 
-    void updateCurrenciesFromClusterStamp(Map<Hash, CurrencyData> clusterStampCurrenciesMap, Hash genesisAddress);
+    void updateCurrenciesFromClusterStamp(Map<Hash, CurrencyData> clusterStampCurrenciesMap);
+
+    void updateMintingAvailableMapFromClusterStamp(Map<Hash, CurrencyData> clusterStampCurrenciesMap);
 
     void handleExistingTransaction(TransactionData transactionData);
 
@@ -46,7 +48,9 @@ public interface ICurrencyService {
 
     void putToMintingMap(Hash tokenHash, BigDecimal amount);
 
-    BigDecimal getTokenAllocatedAmount(Hash tokenHash);
+    BigDecimal getTokenMintableAmount(Hash tokenHash);
 
     ResponseEntity<IResponse> getTokenDetails(GetTokenDetailsRequest getTokenDetailsRequest);
+
+    void validateAvailableAmountToBeMinted();
 }

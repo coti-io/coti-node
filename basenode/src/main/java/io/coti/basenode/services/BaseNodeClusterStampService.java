@@ -216,16 +216,6 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         }
     }
 
-    private boolean isClusterStampNameExists(ClusterStampNameData clusterStampNameData) {
-        if (clusterStampNameData.isMajor()) {
-            return majorClusterStampName.equals(clusterStampNameData);
-        }
-        if (clusterStampNameData.isCurrencies()) {
-            return currenciesClusterStampName.equals(clusterStampNameData);
-        }
-        return false;
-    }
-
     protected String getClusterStampFileName(ClusterStampNameData clusterStampNameData) {
         Long versionTimeMillis = clusterStampNameData.getVersionTimeMillis();
         Long creationTimeMillis = clusterStampNameData.getCreationTimeMillis();
@@ -321,8 +311,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                 handleClusterStampWithSignature(clusterStampData);
             }
             if (updateCurrencies) {
-                currencyService.updateCurrenciesFromClusterStamp(clusterStampCurrenciesMap, currencyGenesisAddress);
+                currencyService.updateCurrenciesFromClusterStamp(clusterStampCurrenciesMap);
             }
+            currencyService.updateMintingAvailableMapFromClusterStamp(clusterStampCurrenciesMap);
             log.info("Finished to load currencies clusterstamp file {}", clusterStampFileName);
         } catch (ClusterStampException e) {
             throw new ClusterStampException(String.format("Errors on clusterstamp file %s loading.%n", clusterStampFileName) + e.getMessage(), e);
