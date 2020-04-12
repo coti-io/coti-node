@@ -4,6 +4,7 @@ import io.coti.basenode.crypto.CurrencyTypeRegistrationCrypto;
 import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.crypto.TokenMintingCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.ITransactionTypeValidation;
 import lombok.extern.slf4j.Slf4j;
 
@@ -84,8 +85,8 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
                     TokenGenerationData tokenGenerationData = tokenGenerationFeeBaseTransactionData.getServiceData();
                     OriginatorCurrencyData originatorCurrencyData = tokenGenerationData.getOriginatorCurrencyData();
                     try {
-                        originatorCurrencyData.validateSymbol();
-                        originatorCurrencyData.validateName();
+                        currencyService.validateName(originatorCurrencyData);
+                        currencyService.validateSymbol(originatorCurrencyData);
                     } catch (Exception e) {
                         return false;
                     }
@@ -122,6 +123,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
     protected OriginatorCurrencyCrypto originatorCurrencyCrypto;
     protected CurrencyTypeRegistrationCrypto currencyTypeRegistrationCrypto;
     protected TokenMintingCrypto tokenMintingCrypto;
+    protected ICurrencyService currencyService;
 
     TransactionTypeValidation(TransactionType type) {
         this.type = type;

@@ -32,10 +32,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -136,15 +133,15 @@ public class MintingService extends BaseNodeMintingService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_MINTING_REQUEST_INVALID_ADDRESS, STATUS_ERROR));
         }
 
-        if (!currencyData.getOriginatorHash().equals(tokenMintingData.getSignerHash()) ||
-                (mintingFeeQuoteData != null && (!isStillValid(mintingFeeQuoteData) ||
-                        !mintingFeeQuoteData.getMintingAmount().equals(tokenMintingData.getMintingAmount())
-                        || !mintingFeeQuoteData.getCurrencyHash().equals(tokenMintingData.getMintingCurrencyHash())
-                        || !mintingFeeQuoteData.getMintingFee().equals(tokenMintingData.getFeeAmount())))) {
+        if (mintingFeeQuoteData != null && (!isStillValid(mintingFeeQuoteData) ||
+                !mintingFeeQuoteData.getMintingAmount().equals(tokenMintingData.getMintingAmount())
+                || !mintingFeeQuoteData.getCurrencyHash().equals(tokenMintingData.getMintingCurrencyHash())
+                || !mintingFeeQuoteData.getMintingFee().equals(tokenMintingData.getFeeAmount()))) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_MINTING_REQUEST_INVALID_FOR_THE_QUOTE, STATUS_ERROR));
         }
+        BigDecimal tokenAllocatedAmount = Optional.ofNullable(currencyService.getTokenAllocatedAmount(tokenMintingData.getMintingCurrencyHash())).orElse(BigDecimal.ZERO);
         if (currencyData.getTotalSupply()
-                .subtract(currencyService.getTokenAllocatedAmount(tokenMintingData.getMintingCurrencyHash()).add(tokenMintingData.getMintingAmount())).signum() < 0) {
+                .subtract(tokenAllocatedAmount.add(tokenMintingData.getMintingAmount())).signum() < 0) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_MINTING_REQUEST_INVALID_AMOUNT, STATUS_ERROR));
         }
         return null;

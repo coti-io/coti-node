@@ -4,8 +4,8 @@ import io.coti.basenode.crypto.GetUserTokensRequestCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.*;
-import io.coti.basenode.http.GetUserTokensDataResponse;
 import io.coti.basenode.http.GetUserTokensRequest;
+import io.coti.basenode.http.GetUserTokensResponse;
 import io.coti.basenode.http.HttpJacksonSerializer;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
@@ -56,7 +56,7 @@ import static org.mockito.Mockito.when;
 public class CurrencyServiceTests {
 
     @Autowired
-    private CurrencyService currencyService;
+    private static CurrencyService currencyService;
     @Autowired
     private BaseNodeCurrencyService baseNodeCurrencyService;
     @Autowired
@@ -117,8 +117,8 @@ public class CurrencyServiceTests {
         currencyData.setHash(currencyHash);
         currencyData.setName("AlexToken");
         currencyData.setSymbol("ALX");
-        currencyData.validateName();
-        currencyData.validateSymbol();
+        currencyService.validateName(currencyData);
+        currencyService.validateSymbol(currencyData);
         currencyData.setCurrencyTypeData(new CurrencyTypeData(CurrencyType.PAYMENT_CMD_TOKEN, Instant.now()));
         currencyData.setDescription("Dummy token for testing");
         currencyData.setTotalSupply(new BigDecimal("100"));
@@ -129,8 +129,8 @@ public class CurrencyServiceTests {
         currencyData2.setHash(currencyHash2);
         currencyData2.setName("Tomeroken");
         currencyData2.setSymbol("TMR");
-        currencyData2.validateName();
-        currencyData2.validateSymbol();
+        currencyService.validateName(currencyData2);
+        currencyService.validateSymbol(currencyData2);
         currencyData2.setCurrencyTypeData(new CurrencyTypeData(CurrencyType.PAYMENT_CMD_TOKEN, Instant.now()));
         currencyData2.setDescription("Dummy token for testing");
         currencyData2.setTotalSupply(new BigDecimal("100"));
@@ -142,8 +142,8 @@ public class CurrencyServiceTests {
         nativeCurrencyData.setHash(nativeCurrencyHash);
         nativeCurrencyData.setName("Coti");
         nativeCurrencyData.setSymbol("COTI");
-        nativeCurrencyData.validateName();
-        nativeCurrencyData.validateSymbol();
+        currencyService.validateName(nativeCurrencyData);
+        currencyService.validateSymbol(nativeCurrencyData);
         nativeCurrencyData.setCurrencyTypeData(new CurrencyTypeData(CurrencyType.NATIVE_COIN, Instant.now()));
         nativeCurrencyData.setDescription("native description");
         nativeCurrencyData.setTotalSupply(new BigDecimal(20000));
@@ -179,7 +179,7 @@ public class CurrencyServiceTests {
         //TODO 9/24/2019 astolia: mock signed request
         //getUserTokensRequestCrypto.signMessage(getUserTokensRequest);
         ResponseEntity actual = currencyService.getUserTokens(getUserTokensRequest);
-        ResponseEntity expected = ResponseEntity.ok(new GetUserTokensDataResponse());
+        ResponseEntity expected = ResponseEntity.ok(new GetUserTokensResponse());
         Assert.assertEquals(expected, actual);
     }
 
@@ -196,10 +196,10 @@ public class CurrencyServiceTests {
 //        getUserTokensRequestCrypto.signMessage(getUserTokensRequest);
         ResponseEntity actual = currencyService.getUserTokens(getUserTokensRequest);
 
-        GetUserTokensDataResponse getUserTokensDataResponse = new GetUserTokensDataResponse();
+        GetUserTokensResponse getUserTokensResponse = new GetUserTokensResponse();
         //TODO 9/24/2019 astolia: change according to implementation change
 //        getTokenGenerationDataResponse.addUnusedConfirmedTransaction(transactionHash);
-        ResponseEntity expected = ResponseEntity.ok(getUserTokensDataResponse);
+        ResponseEntity expected = ResponseEntity.ok(getUserTokensResponse);
         Assert.assertEquals(expected, actual);
     }
 
@@ -219,10 +219,10 @@ public class CurrencyServiceTests {
 //        getUserTokensRequestCrypto.signMessage(getUserTokensRequest);
         ResponseEntity actual = currencyService.getUserTokens(getUserTokensRequest);
 
-        GetUserTokensDataResponse getUserTokensDataResponse = new GetUserTokensDataResponse();
+        GetUserTokensResponse getUserTokensResponse = new GetUserTokensResponse();
         //TODO 9/24/2019 astolia: change according to implementation change
 //        getTokenGenerationDataResponse.addCompletedTransactionHashToGeneratedCurrency(transactionHash, currencyData);
-        ResponseEntity expected = ResponseEntity.ok(getUserTokensDataResponse);
+        ResponseEntity expected = ResponseEntity.ok(getUserTokensResponse);
         Assert.assertEquals(expected, actual);
     }
 
@@ -243,10 +243,10 @@ public class CurrencyServiceTests {
 //        getUserTokensRequestCrypto.signMessage(getUserTokensRequest);
         ResponseEntity actual = currencyService.getUserTokens(getUserTokensRequest);
 
-        GetUserTokensDataResponse getUserTokensDataResponse = new GetUserTokensDataResponse();
+        GetUserTokensResponse getUserTokensResponse = new GetUserTokensResponse();
         //TODO 9/24/2019 astolia: change according to implementation change
 //        getTokenGenerationDataResponse.addPendingTransactionHashToGeneratedCurrency(transactionHash, currencyData);
-        ResponseEntity expected = ResponseEntity.ok(getUserTokensDataResponse);
+        ResponseEntity expected = ResponseEntity.ok(getUserTokensResponse);
         Assert.assertEquals(expected, actual);
     }
 

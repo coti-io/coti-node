@@ -6,9 +6,7 @@ import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.exceptions.CurrencyValidationException;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeCurrencyService;
-import io.coti.basenode.services.interfaces.IMintingService;
 import io.coti.financialserver.http.GenerateTokenFeeRequest;
 import io.coti.financialserver.http.GetCurrenciesRequest;
 import io.coti.financialserver.http.GetCurrenciesResponse;
@@ -34,20 +32,16 @@ public class CurrencyService extends BaseNodeCurrencyService {
     @Autowired
     private OriginatorCurrencyCrypto originatorCurrencyCrypto;
     @Autowired
-    private Transactions transactions;
-    @Autowired
     private FeeService feeService;
-    @Autowired
-    private IMintingService mintingService;
 
     public ResponseEntity<IResponse> getTokenGenerationFee(GenerateTokenFeeRequest generateTokenRequest) {
         Hash currencyHash;
         try {
             OriginatorCurrencyData originatorCurrencyData = generateTokenRequest.getOriginatorCurrencyData();
-            originatorCurrencyData.validateName();
-            originatorCurrencyData.validateSymbol();
+            validateName(originatorCurrencyData);
+            validateSymbol(originatorCurrencyData);
             CurrencyTypeData currencyTypeData = generateTokenRequest.getCurrencyTypeData();
-            if (currencyTypeData.getCurrencyType() != CurrencyType.REGULAR_CMD_TOKEN) {
+            if (!currencyTypeData.getCurrencyType().equals(CurrencyType.REGULAR_CMD_TOKEN)) {
                 throw new CurrencyValidationException(TOKEN_GENERATION_REQUEST_NOT_REGULAR_CMD_TOKEN);
             }
             String currencyName = originatorCurrencyData.getName();

@@ -6,6 +6,7 @@ import io.coti.basenode.crypto.GetUserTokensRequestCrypto;
 import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CurrencyException;
+import io.coti.basenode.exceptions.CurrencyValidationException;
 import io.coti.basenode.http.*;
 import io.coti.basenode.http.data.TokenGenerationResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
@@ -29,7 +30,9 @@ import java.time.Instant;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
@@ -80,11 +83,12 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         }
     }
 
+    @Override
     public BigDecimal getTokenAllocatedAmount(Hash tokenHash) {
         if (mintingMap.get(tokenHash) != null) {
-            return mintingMap.get(tokenHash);
+            return new BigDecimal(mintingMap.get(tokenHash).toString());
         }
-        return BigDecimal.ZERO;
+        return null;
     }
 
     @Override
@@ -167,7 +171,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Override
     public void handleExistingTransaction(TransactionData transactionData) {
         TransactionType transactionType = transactionData.getType();
-        if (transactionType == TransactionType.TokenGeneration) {
+        if (transactionType.equals(TransactionType.TokenGeneration)) {
             CurrencyData currencyData = getCurrencyData(transactionData);
             if (currencyData != null) {
                 currencies.put(currencyData);
@@ -178,7 +182,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Override
     public void handleMissingTransaction(TransactionData transactionData) {
         boolean dspConsensus = transactionData.getDspConsensusResult().isDspConsensus();
-        if (transactionData.getType() == TransactionType.TokenGeneration) {
+        if (transactionData.getType().equals(TransactionType.TokenGeneration)) {
             CurrencyData currencyData = getCurrencyData(transactionData);
             if (currencyData != null) {
                 if (dspConsensus) {
@@ -226,8 +230,30 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             throw new CurrencyException("Currency name is already in use.");
         }
         CurrencyData currencyData = currencies.getByHash(currencyHash);
-        if (currencyData != null && currencyData.isConfirmed()) {
+        if (currencyData != null) {
             throw new CurrencyException("Currency symbol is already in use.");
+        }
+    }
+
+    @Override
+    public void validateName(OriginatorCurrencyData originatorCurrencyData) {
+        String name = originatorCurrencyData.getName();
+        if (name.length() != name.trim().length()) {
+            throw new CurrencyValidationException(String.format("Attempted to set an invalid currency name with spaces at the start or the end %s.", name));
+        }
+        final String[] words = name.split(" ");
+        for (String word : words) {
+            if (word == null || word.isEmpty() || !Pattern.compile("[A-Za-z0-9]+").matcher(word).matches()) {
+                throw new CurrencyValidationException(String.format("Attempted to set an invalid currency name with the word %s.", name));
+            }
+        }
+    }
+
+    @Override
+    public void validateSymbol(OriginatorCurrencyData originatorCurrencyData) {
+        String symbol = originatorCurrencyData.getSymbol();
+        if (!Pattern.compile("[A-Z]{0,15}").matcher(symbol).matches()) {
+            throw new CurrencyException(String.format("Attempted to set an invalid currency symbol of %s.", symbol));
         }
     }
 
@@ -280,7 +306,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                             tokensHashSet.add(currencyHash);
                             userCurrencyIndexes.put(new UserCurrencyIndexData(originatorCurrencyData.getOriginatorHash(), tokensHashSet));
                         } else {
-                            userCurrencyIndexData.getTokens().add(currencyHash);
+                            userCurrencyIndexData.getTokenHashes().add(currencyHash);
                             userCurrencyIndexes.put(userCurrencyIndexData);
                         }
                     }
@@ -299,19 +325,19 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
             }
             UserCurrencyIndexData userCurrencyIndexData = userCurrencyIndexes.getByHash(getUserTokensRequest.getUserHash());
-            GetUserTokensDataResponse getUserTokensDataResponse = new GetUserTokensDataResponse();
-            HashSet<TokenGenerationResponseData> userTokens = new HashSet<>();
-            getUserTokensDataResponse.setUserTokens(userTokens);
+            GetUserTokensResponse getUserTokensResponse = new GetUserTokensResponse();
             if (userCurrencyIndexData == null) {
-                return ResponseEntity.ok(getUserTokensDataResponse);
+                return ResponseEntity.ok(getUserTokensResponse);
             }
-            HashSet<Hash> tokens = userCurrencyIndexData.getTokens();
-            tokens.forEach(entry ->
-                    userTokens.add(fillTokenGenerationResponseData(entry)));
-            return ResponseEntity.ok(getUserTokensDataResponse);
+            Set<TokenGenerationResponseData> userTokens = new HashSet<>();
+            Set<Hash> tokenHashes = userCurrencyIndexData.getTokenHashes();
+            tokenHashes.forEach(tokenHash ->
+                    userTokens.add(fillTokenGenerationResponseData(tokenHash)));
+            getUserTokensResponse.setUserTokens(userTokens);
+            return ResponseEntity.ok(getUserTokensResponse);
         } catch (Exception e) {
             log.error("Error at getting user tokens: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.toString(), STATUS_ERROR));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
         }
     }
 
@@ -327,7 +353,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             return ResponseEntity.ok(getTokenDetailsResponse);
         } catch (Exception e) {
             log.error("Error at getting user tokens: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.toString(), STATUS_ERROR));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
         }
     }
 
@@ -338,7 +364,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         }
         TokenGenerationResponseData tokenGenerationResponseData = new TokenGenerationResponseData(currencyData);
 
-        BigDecimal mintedAmount = getTokenAllocatedAmount(currencyHash);
+        BigDecimal mintedAmount = Optional.ofNullable(getTokenAllocatedAmount(currencyHash)).orElse(BigDecimal.ZERO);
         BigDecimal notMintedRest = currencyData.getTotalSupply().subtract(mintedAmount);
         tokenGenerationResponseData.setMintedAmount(mintedAmount);
         tokenGenerationResponseData.setNotMintedRest(notMintedRest);
