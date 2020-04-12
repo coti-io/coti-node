@@ -16,6 +16,6 @@ public interface IClusterStampService {
 
     ResponseEntity<IResponse> getRequiredClusterStampNames();
 
-    void getClusterStampFromRecoveryServer(boolean isStartup);
+    void getClusterStampFromRecoveryServer();
 
 }

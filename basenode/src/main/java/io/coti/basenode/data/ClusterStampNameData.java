@@ -50,12 +50,12 @@ public class ClusterStampNameData implements IEntity {
     }
 
     @JsonIgnore
-    public boolean isMajor() {
-        return type == ClusterStampType.MAJOR;
+    public boolean isBalance() {
+        return type == ClusterStampType.BALANCE;
     }
 
     @JsonIgnore
-    public boolean isCurrencies() {
-        return type == ClusterStampType.CURRENCIES;
+    public boolean isCurrency() {
+        return type == ClusterStampType.CURRENCY;
     }
 }
