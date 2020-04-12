@@ -139,9 +139,9 @@ public class MintingService extends BaseNodeMintingService {
                 || !mintingFeeQuoteData.getMintingFee().equals(tokenMintingData.getFeeAmount()))) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_MINTING_REQUEST_INVALID_FOR_THE_QUOTE, STATUS_ERROR));
         }
-        BigDecimal tokenAllocatedAmount = Optional.ofNullable(currencyService.getTokenAllocatedAmount(tokenMintingData.getMintingCurrencyHash())).orElse(BigDecimal.ZERO);
+        BigDecimal mintableAmount = Optional.ofNullable(currencyService.getTokenMintableAmount(tokenMintingData.getMintingCurrencyHash())).orElse(BigDecimal.ZERO);
         if (currencyData.getTotalSupply()
-                .subtract(tokenAllocatedAmount.add(tokenMintingData.getMintingAmount())).signum() < 0) {
+                .subtract(mintableAmount.add(tokenMintingData.getMintingAmount())).signum() < 0) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_MINTING_REQUEST_INVALID_AMOUNT, STATUS_ERROR));
         }
         return null;
@@ -296,15 +296,16 @@ public class MintingService extends BaseNodeMintingService {
 
     @Override
     public void validateMintingBalances() {
+        super.validateMintingBalances();
         mintingRecords.forEach(mintingRecordData -> {
                     Hash tokenHash = mintingRecordData.getHash();
                     BigDecimal mintingAmount = mintingRecordData.getMintingHistory().values().stream()
                             .map(MintingHistoryData::getMintingAmount)
                             .reduce(BigDecimal.ZERO, BigDecimal::add);
-                    BigDecimal tokenMintedFoundAmount = currencyService.getTokenAllocatedAmount(tokenHash);
-                    if (!mintingAmount.equals(tokenMintedFoundAmount)) {
+                    BigDecimal mintableAmount = currencyService.getTokenMintableAmount(tokenHash);
+                    if (!mintingAmount.equals(mintableAmount)) {
                         log.error("Minting balance validation identified mismatch for currency {}, expected {} found {}",
-                                tokenHash, mintingAmount, tokenMintedFoundAmount);
+                                tokenHash, mintingAmount, mintableAmount);
                     }
                 }
         );

@@ -68,10 +68,10 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     private ITransactionHelper transactionHelper;
     private Map<Hash, Hash> lockHashMap = new ConcurrentHashMap<>();
     private final Object lock = new Object();
-    private Map<Hash, BigDecimal> mintingMap;
+    private Map<Hash, BigDecimal> currencyHashToMintableAmountMap;
 
     public void init() {
-        mintingMap = new ConcurrentHashMap<>();
+        currencyHashToMintableAmountMap = new ConcurrentHashMap<>();
         try {
             nativeCurrencyData = null;
             setNativeCurrencyFromExistingCurrencies();
@@ -84,16 +84,16 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     @Override
-    public BigDecimal getTokenAllocatedAmount(Hash tokenHash) {
-        if (mintingMap.get(tokenHash) != null) {
-            return new BigDecimal(mintingMap.get(tokenHash).toString());
+    public BigDecimal getTokenMintableAmount(Hash tokenHash) {
+        if (currencyHashToMintableAmountMap.get(tokenHash) != null) {
+            return new BigDecimal(currencyHashToMintableAmountMap.get(tokenHash).toString());
         }
         return null;
     }
 
     @Override
     public void putToMintingMap(Hash tokenHash, BigDecimal amount) {
-        mintingMap.put(tokenHash, amount);
+        currencyHashToMintableAmountMap.put(tokenHash, amount);
     }
 
     private void setNativeCurrencyFromExistingCurrencies() {
@@ -137,11 +137,21 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     @Override
-    public void updateCurrenciesFromClusterStamp(Map<Hash, CurrencyData> clusterStampCurrenciesMap, Hash genesisAddress) {
+    public void updateCurrenciesFromClusterStamp(Map<Hash, CurrencyData> clusterStampCurrenciesMap) {
         clusterStampCurrenciesMap.forEach((currencyHash, clusterStampCurrencyData) -> {
                     currencies.put(clusterStampCurrencyData);
                     if (clusterStampCurrencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
                         verifyNativeCurrency(clusterStampCurrencyData);
+                    }
+                }
+        );
+    }
+
+    @Override
+    public void updateMintingAvailableMapFromClusterStamp(Map<Hash, CurrencyData> clusterStampCurrenciesMap) {
+        clusterStampCurrenciesMap.forEach((currencyHash, clusterStampCurrencyData) -> {
+                    if (!clusterStampCurrencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
+                        currencyHashToMintableAmountMap.putIfAbsent(currencyHash, clusterStampCurrencyData.getTotalSupply());
                     }
                 }
         );
@@ -357,6 +367,15 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         }
     }
 
+    @Override
+    public void validateAvailableAmountToBeMinted() {
+        currencyHashToMintableAmountMap.forEach((currencyHash, availableAmountToBeMinted) -> {
+            if (availableAmountToBeMinted.signum() < 0) {
+                throw new CurrencyException(String.format("Minting amount exceeded availability for currency hash: %s", currencyHash));
+            }
+        });
+    }
+
     private TokenGenerationResponseData fillTokenGenerationResponseData(Hash currencyHash) {
         CurrencyData currencyData = currencies.getByHash(currencyHash);
         if (currencyData == null) {
@@ -364,10 +383,10 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         }
         TokenGenerationResponseData tokenGenerationResponseData = new TokenGenerationResponseData(currencyData);
 
-        BigDecimal mintedAmount = Optional.ofNullable(getTokenAllocatedAmount(currencyHash)).orElse(BigDecimal.ZERO);
-        BigDecimal notMintedRest = currencyData.getTotalSupply().subtract(mintedAmount);
-        tokenGenerationResponseData.setMintedAmount(mintedAmount);
-        tokenGenerationResponseData.setNotMintedRest(notMintedRest);
+        BigDecimal mintableAmount = Optional.ofNullable(getTokenMintableAmount(currencyHash)).orElse(BigDecimal.ZERO);
+        BigDecimal alreadyMintedAmount = currencyData.getTotalSupply().subtract(mintableAmount);
+        tokenGenerationResponseData.setMintedAmount(alreadyMintedAmount);
+        tokenGenerationResponseData.setNotMintedRest(mintableAmount);
         return tokenGenerationResponseData;
     }
 
