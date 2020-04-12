@@ -4,13 +4,14 @@ import io.coti.basenode.data.CurrencyData;
 import io.coti.basenode.data.CurrencyRateSourceType;
 import io.coti.basenode.data.CurrencyType;
 import io.coti.basenode.data.SignatureData;
+import io.coti.basenode.http.data.interfaces.IResponseData;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
-public class TokenGenerationResponseData {
+public class TokenGenerationResponseData implements IResponseData {
 
     private String currencyName;
     private String currencySymbol;

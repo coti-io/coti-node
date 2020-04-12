@@ -172,7 +172,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
             balanceService.continueHandleBalanceChanges(addressHash, currencyHash);
         });
 
-        if (transactionData.getType() == TransactionType.TokenGeneration) {
+        if (transactionData.getType().equals(TransactionType.TokenGeneration)) {
             currencyService.addConfirmedCurrency(transactionData);
         }
 

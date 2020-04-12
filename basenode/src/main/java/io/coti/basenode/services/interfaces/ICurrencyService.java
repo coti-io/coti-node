@@ -2,6 +2,7 @@ package io.coti.basenode.services.interfaces;
 
 import io.coti.basenode.data.CurrencyData;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.OriginatorCurrencyData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.GetTokenDetailsRequest;
 import io.coti.basenode.http.GetUserTokensRequest;
@@ -32,6 +33,10 @@ public interface ICurrencyService {
     void handleExistingTransaction(TransactionData transactionData);
 
     void handleMissingTransaction(TransactionData transactionData);
+
+    void validateName(OriginatorCurrencyData originatorCurrencyData);
+
+    void validateSymbol(OriginatorCurrencyData originatorCurrencyData);
 
     boolean validateCurrencyUniquenessAndAddUnconfirmedRecord(TransactionData transactionData);
 

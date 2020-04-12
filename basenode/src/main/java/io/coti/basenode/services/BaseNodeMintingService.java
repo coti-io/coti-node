@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -61,8 +62,8 @@ public class BaseNodeMintingService implements IMintingService {
                     log.error("Error in Minting check. Token {} is Native currency", tokenHash);
                     return false;
                 }
-                BigDecimal tokenAllocatedAmount = currencyService.getTokenAllocatedAmount(tokenHash);
-                if (tokenAllocatedAmount == null || currencyFromDB.getTotalSupply().subtract(tokenAllocatedAmount.add(tokenAmount)).signum() < 0) {
+                BigDecimal tokenAllocatedAmount = Optional.ofNullable(currencyService.getTokenAllocatedAmount(tokenHash)).orElse(BigDecimal.ZERO);
+                if (currencyFromDB.getTotalSupply().subtract(tokenAllocatedAmount.add(tokenAmount)).signum() < 0) {
                     log.error("Error in Minting check. Token {} amount {} is too much", tokenHash, tokenAmount);
                     return false;
                 }
@@ -110,7 +111,7 @@ public class BaseNodeMintingService implements IMintingService {
     @Override
     public void handleExistingTransaction(TransactionData transactionData) {
         TransactionType transactionType = transactionData.getType();
-        if (transactionType == TransactionType.TokenMinting) {
+        if (transactionType.equals(TransactionType.TokenMinting)) {
             updateMintingMap(transactionData);
         }
     }
@@ -121,7 +122,7 @@ public class BaseNodeMintingService implements IMintingService {
             Hash tokenHash = tokenMintingFeeData.getServiceData().getMintingCurrencyHash();
             BigDecimal newMintingRequestedAmount = tokenMintingFeeData.getServiceData().getMintingAmount();
             BigDecimal tokenAllocatedAmount = currencyService.getTokenAllocatedAmount(tokenHash);
-            if (currencyService.getTokenAllocatedAmount(tokenHash) != null) {
+            if (tokenAllocatedAmount != null) {
                 currencyService.putToMintingMap(tokenHash, newMintingRequestedAmount.add(tokenAllocatedAmount));
             }
         }
@@ -129,22 +130,21 @@ public class BaseNodeMintingService implements IMintingService {
 
     @Override
     public void handleMissingTransaction(TransactionData transactionData) {
-        if (transactionData.getType() == TransactionType.TokenMinting) {
+        if (transactionData.getType().equals(TransactionType.TokenMinting)) {
             updateMintingMap(transactionData);
         }
     }
 
     @Override
     public void validateMintingBalances() {
-        // To be validated only by Financial server
+
     }
 
     @Override
-    public void updateMintingBalanceFromClusterStamp(Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap, Hash currencyGenesisAddress) {
+    public void updateMintingBalanceFromClusterStamp(Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap) {
         clusterStampCurrencyMap.forEach((currencyHash, clusterStampCurrencyData) -> {
             BigDecimal totalSupply = clusterStampCurrencyData.getTotalSupply();
-            BigDecimal genesisAddressBalance = balanceService.getBalance(currencyGenesisAddress, currencyHash);
-            currencyService.putToMintingMap(currencyHash, totalSupply.subtract(genesisAddressBalance));
+            currencyService.putToMintingMap(currencyHash, totalSupply.subtract(clusterStampCurrencyData.getAmount()));
         });
     }
 }

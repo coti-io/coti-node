@@ -50,8 +50,8 @@ public class CurrencyService extends BaseNodeCurrencyService {
         Instant createTime = Instant.now();
         currencyData.setName(nativeCurrencyName);
         currencyData.setSymbol(nativeCurrencySymbol.toUpperCase());
-        currencyData.validateName();
-        currencyData.validateSymbol();
+        validateName(currencyData);
+        validateSymbol(currencyData);
         currencyData.setTotalSupply(nativeCurrencyTotalSupply);
         currencyData.setScale(nativeCurrencyScale);
         currencyData.setCreateTime(createTime);
