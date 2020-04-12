@@ -147,16 +147,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         );
     }
 
-    @Override
-    public void updateMintingAvailableMapFromClusterStamp(Map<Hash, CurrencyData> clusterStampCurrenciesMap) {
-        clusterStampCurrenciesMap.forEach((currencyHash, clusterStampCurrencyData) -> {
-                    if (!clusterStampCurrencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
-                        currencyHashToMintableAmountMap.putIfAbsent(currencyHash, clusterStampCurrencyData.getTotalSupply());
-                    }
-                }
-        );
-    }
-
     private void verifyNativeCurrency(CurrencyData nativeCurrency) {
         if (nativeCurrency == null) {
             throw new CurrencyException("Failed to verify native currency data exists");

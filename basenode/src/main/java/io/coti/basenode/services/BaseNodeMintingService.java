@@ -146,10 +146,7 @@ public class BaseNodeMintingService implements IMintingService {
     }
 
     @Override
-    public void updateMintingBalanceFromClusterStamp(Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap) {
-        clusterStampCurrencyMap.forEach((currencyHash, clusterStampCurrencyData) -> {
-            BigDecimal totalSupply = clusterStampCurrencyData.getTotalSupply();
-            currencyService.putToMintingMap(currencyHash, totalSupply.subtract(clusterStampCurrencyData.getAmount()));
-        });
+    public void updateMintingAvailableMapFromClusterStamp(Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap) {
+        clusterStampCurrencyMap.forEach((currencyHash, clusterStampCurrencyData) -> currencyService.putToMintingMap(currencyHash, clusterStampCurrencyData.getAmount()));
     }
 }

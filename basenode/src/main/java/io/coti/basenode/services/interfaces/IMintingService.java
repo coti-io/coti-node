@@ -20,5 +20,5 @@ public interface IMintingService {
 
     void validateMintingBalances();
 
-    void updateMintingBalanceFromClusterStamp(Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap);
+    void updateMintingAvailableMapFromClusterStamp(Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap);
 }

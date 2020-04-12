@@ -1,15 +1,22 @@
 package io.coti.basenode.data;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 public enum ClusterStampType {
-    MAJOR("M"),
-    CURRENCIES("C");
+    CURRENCY("C"),
+    BALANCE("B");
 
     private String mark;
 
+    private static final class ClusterStampTypes {
+        private static final Map<String, ClusterStampType> markToClusterStampTypeMap = new HashMap<>();
+    }
+
     ClusterStampType(String mark) {
         this.mark = mark;
+        ClusterStampTypes.markToClusterStampTypeMap.put(mark, this);
     }
 
     public String getMark() {
@@ -17,11 +24,6 @@ public enum ClusterStampType {
     }
 
     public static Optional<ClusterStampType> getTypeByMark(String clusterStampTypeMark) {
-        for (ClusterStampType clusterStampType : values()) {
-            if (clusterStampType.getMark().equals(clusterStampTypeMark)) {
-                return Optional.of(clusterStampType);
-            }
-        }
-        return Optional.empty();
+        return Optional.ofNullable(ClusterStampTypes.markToClusterStampTypeMap.get(clusterStampTypeMark));
     }
 }
