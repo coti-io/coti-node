@@ -140,7 +140,7 @@ public abstract class BaseNodeInitializationService {
     public void initTransactionSync() {
         try {
             boolean isClusterStampNewer = clusterStampService.shouldUpdateClusterStampDBVersion();
-            transactionService.resetOldClusterStampTransactions();
+            transactionService.resetOldClusterStampTransactions(isClusterStampNewer);
             AtomicLong maxTransactionIndex = new AtomicLong(-1);
             log.info("Starting to read existing transactions");
             AtomicLong completedExistedTransactionNumber = new AtomicLong(0);
@@ -149,7 +149,7 @@ public abstract class BaseNodeInitializationService {
                 if (!monitorExistingTransactions.isAlive()) {
                     monitorExistingTransactions.start();
                 }
-                handleExistingTransaction(maxTransactionIndex, transactionData, isClusterStampNewer);
+                handleExistingTransaction(maxTransactionIndex, transactionData);
                 completedExistedTransactionNumber.incrementAndGet();
             });
             if (monitorExistingTransactions.isAlive()) {
@@ -184,13 +184,10 @@ public abstract class BaseNodeInitializationService {
         databaseConnector.init();
     }
 
-    private void handleExistingTransaction(AtomicLong maxTransactionIndex, TransactionData transactionData, boolean isClusterStampNewer) {
+    private void handleExistingTransaction(AtomicLong maxTransactionIndex, TransactionData transactionData) {
         clusterService.addExistingTransactionOnInit(transactionData);
         confirmationService.insertSavedTransaction(transactionData, maxTransactionIndex);
         mintingService.handleExistingTransaction(transactionData);
-        if (isClusterStampNewer) {
-            currencyService.handleExistingTransaction(transactionData);
-        }
         transactionService.addToExplorerIndexes(transactionData);
         transactionHelper.incrementTotalTransactions();
     }

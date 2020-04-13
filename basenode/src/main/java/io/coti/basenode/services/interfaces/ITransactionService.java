@@ -26,5 +26,5 @@ public interface ITransactionService {
 
     void addToExplorerIndexes(TransactionData transactionData);
 
-    void resetOldClusterStampTransactions();
+    void resetOldClusterStampTransactions(boolean isClusterStampNewer);
 }

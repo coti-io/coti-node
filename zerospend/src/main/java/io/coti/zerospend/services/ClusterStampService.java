@@ -25,9 +25,9 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Value("${currency.genesis.address}")
     private String currencyAddress;
     @Value("${upload.clusterstamp}")
-    private boolean uploadMajorClusterStamp;
+    private boolean uploadClusterStamp;
     @Value("${upload.currencies.clusterstamp}")
-    private boolean uploadCurrenciesClusterStamp;
+    private boolean uploadCurrencyClusterStamp;
 
     @Value("${aws.s3.bucket.name.clusterstamp}")
     private void setClusterStampBucketName(String clusterStampBucketName) {
@@ -37,24 +37,23 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Override
     public void init() {
         super.init();
-        if (uploadMajorClusterStamp) {
-            uploadMajorClusterStamp();
-        }
-        if (uploadCurrenciesClusterStamp) {
-            uploadCurrenciesClusterStamp();
+        if (uploadClusterStamp) {
+            uploadCurrencyClusterStamp();
+            uploadBalanceClusterStamp();
         }
     }
 
-    private void uploadCurrenciesClusterStamp() {
-        log.info("Starting to upload currencies clusterstamp");
+    private void uploadCurrencyClusterStamp() {
+        log.info("Starting to upload currency clusterstamp");
         uploadClusterStamp(currencyClusterStampName);
-        log.info("Finished to upload currencies clusterstamp");
+        log.info("Finished to upload currency clusterstamp");
+
     }
 
-    private void uploadMajorClusterStamp() {
-        log.info("Starting to upload major clusterstamp");
+    private void uploadBalanceClusterStamp() {
+        log.info("Starting to upload balance clusterstamp");
         uploadClusterStamp(balanceClusterStampName);
-        log.info("Finished to upload major clusterstamp");
+        log.info("Finished to upload balance clusterstamp");
     }
 
     private void uploadClusterStamp(ClusterStampNameData clusterStampNameData) {
@@ -74,15 +73,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         }
     }
 
-    private void handleMissingBalanceClusterStamp(long versionTimeInMillis) {
-        CurrencyData nativeCurrency = currencyService.getNativeCurrency();
-        if (nativeCurrency == null) {
-            throw new ClusterStampException("Unable to start zero spend server. Native token not found.");
-        }
-        handleNewCurrencyByType(nativeCurrency, ClusterStampType.BALANCE, versionTimeInMillis);
-        uploadMajorClusterStamp = true;
-    }
-
     private void handleMissingCurrencyClusterStamp(long versionTimeInMillis) {
         CurrencyData nativeCurrency = currencyService.getNativeCurrency();
         if (nativeCurrency == null) {
@@ -90,7 +80,16 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             nativeCurrency = currencyService.getNativeCurrency();
         }
         generateCurrencyClusterStampFromNativeCurrency(nativeCurrency, versionTimeInMillis);
-        uploadCurrenciesClusterStamp = true;
+        uploadClusterStamp = true;
+    }
+
+    private void handleMissingBalanceClusterStamp(long versionTimeInMillis) {
+        CurrencyData nativeCurrency = currencyService.getNativeCurrency();
+        if (nativeCurrency == null) {
+            throw new ClusterStampException("Unable to start zero spend server. Native token not found.");
+        }
+        handleNewCurrencyByType(nativeCurrency, ClusterStampType.BALANCE, versionTimeInMillis);
+        uploadClusterStamp = true;
     }
 
     private ClusterStampNameData handleNewCurrencyByType(CurrencyData currency, ClusterStampType clusterStampType, long versionTimeInMillis) {
@@ -129,7 +128,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             writer.newLine();
             writer.write(Base64.getEncoder().encodeToString(SerializationUtils.serialize(nativeCurrency)));
             writer.newLine();
-            currencyClusterStampName = validateNameAndGetClusterStampNameData(clusterStampFileName);
+            addClusterStampName(clusterStampNameData);
         } catch (IOException e) {
             throw new FileSystemException(String.format("Create and write file error. %s: %s", e.getClass().getName(), e.getMessage()));
         }
@@ -141,14 +140,10 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     }
 
     @Override
-    protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData, String clusterstampFileLocation, boolean isMajor) {
+    protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData, String clusterstampFileLocation) {
         clusterStampCrypto.signMessage(clusterStampData);
         updateClusterStampFileWithSignature(clusterStampData.getSignature(), clusterstampFileLocation);
-        if (isMajor) {
-            uploadMajorClusterStamp = true;
-        } else {
-            uploadCurrenciesClusterStamp = true;
-        }
+        uploadClusterStamp = true;
     }
 
     private void updateClusterStampFileWithSignature(SignatureData signature, String clusterstampFileLocation) {

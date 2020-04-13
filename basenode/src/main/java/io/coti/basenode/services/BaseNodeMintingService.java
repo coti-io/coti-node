@@ -2,6 +2,7 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.*;
+import io.coti.basenode.exceptions.MintingException;
 import io.coti.basenode.model.Currencies;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.ICurrencyService;
@@ -74,7 +75,7 @@ public class BaseNodeMintingService implements IMintingService {
                     return false;
                 }
 
-                currencyService.putToMintingMap(tokenHash, mintableAmount);
+                currencyService.putToMintableAmountMap(tokenHash, mintableAmount);
             }
         } finally {
             removeLockFromLocksMap(tokenHash);
@@ -94,7 +95,7 @@ public class BaseNodeMintingService implements IMintingService {
                     log.error("Error in Minting revert. Token {} is invalid", tokenHash);
                     return;
                 }
-                currencyService.putToMintingMap(tokenHash, mintableAmount.add(tokenMintingFeeData.getAmount()));
+                currencyService.putToMintableAmountMap(tokenHash, mintableAmount.add(tokenMintingFeeData.getAmount()));
             }
         } finally {
             removeLockFromLocksMap(tokenHash);
@@ -113,11 +114,11 @@ public class BaseNodeMintingService implements IMintingService {
     public void handleExistingTransaction(TransactionData transactionData) {
         TransactionType transactionType = transactionData.getType();
         if (transactionType.equals(TransactionType.TokenMinting)) {
-            updateMintingMap(transactionData);
+            updateMintableAmountMap(transactionData);
         }
     }
 
-    private void updateMintingMap(TransactionData transactionData) {
+    private void updateMintableAmountMap(TransactionData transactionData) {
         TokenMintingFeeBaseTransactionData tokenMintingFeeData = getTokenMintingFeeData(transactionData);
         if (tokenMintingFeeData != null) {
             Hash tokenHash = tokenMintingFeeData.getServiceData().getMintingCurrencyHash();
@@ -125,10 +126,9 @@ public class BaseNodeMintingService implements IMintingService {
             BigDecimal mintableAmount = currencyService.getTokenMintableAmount(tokenHash);
             if (mintableAmount != null) {
                 BigDecimal updatedAvailableTokenToBeMintedAmount = mintableAmount.subtract(newMintingRequestedAmount);
-                if (updatedAvailableTokenToBeMintedAmount.signum() < 0) {
-                    log.error("Error attempting to mint more than available for token {}", tokenHash);
-                }
-                currencyService.putToMintingMap(tokenHash, updatedAvailableTokenToBeMintedAmount);
+                currencyService.putToMintableAmountMap(tokenHash, updatedAvailableTokenToBeMintedAmount);
+            } else {
+                throw new MintingException(String.format("Invalid token hash %s to mind", tokenHash));
             }
         }
     }
@@ -136,17 +136,21 @@ public class BaseNodeMintingService implements IMintingService {
     @Override
     public void handleMissingTransaction(TransactionData transactionData) {
         if (transactionData.getType().equals(TransactionType.TokenMinting)) {
-            updateMintingMap(transactionData);
+            updateMintableAmountMap(transactionData);
         }
     }
 
     @Override
     public void validateMintingBalances() {
-        currencyService.validateAvailableAmountToBeMinted();
+        // implemented by sub classes
     }
 
     @Override
     public void updateMintingAvailableMapFromClusterStamp(Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap) {
-        clusterStampCurrencyMap.forEach((currencyHash, clusterStampCurrencyData) -> currencyService.putToMintingMap(currencyHash, clusterStampCurrencyData.getAmount()));
+        clusterStampCurrencyMap.forEach((currencyHash, clusterStampCurrencyData) -> {
+            if (!clusterStampCurrencyData.isNativeCurrency()) {
+                currencyService.putToMintableAmountMap(currencyHash, clusterStampCurrencyData.getAmount());
+            }
+        });
     }
 }

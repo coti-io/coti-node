@@ -92,7 +92,10 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     @Override
-    public void putToMintingMap(Hash tokenHash, BigDecimal amount) {
+    public void putToMintableAmountMap(Hash tokenHash, BigDecimal amount) {
+        if (amount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new CurrencyException(String.format("Minting amount exceeded availability for token hash: %s", tokenHash));
+        }
         currencyHashToMintableAmountMap.put(tokenHash, amount);
     }
 
@@ -355,15 +358,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             log.error("Error at getting user tokens: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
         }
-    }
-
-    @Override
-    public void validateAvailableAmountToBeMinted() {
-        currencyHashToMintableAmountMap.forEach((currencyHash, availableAmountToBeMinted) -> {
-            if (availableAmountToBeMinted.signum() < 0) {
-                throw new CurrencyException(String.format("Minting amount exceeded availability for currency hash: %s", currencyHash));
-            }
-        });
     }
 
     private TokenGenerationResponseData fillTokenGenerationResponseData(Hash currencyHash) {

@@ -44,11 +44,9 @@ public interface ICurrencyService {
 
     ResponseEntity<IResponse> getUserTokens(GetUserTokensRequest getUserTokensRequest);
 
-    void putToMintingMap(Hash tokenHash, BigDecimal amount);
+    void putToMintableAmountMap(Hash tokenHash, BigDecimal amount);
 
     BigDecimal getTokenMintableAmount(Hash tokenHash);
 
     ResponseEntity<IResponse> getTokenDetails(GetTokenDetailsRequest getTokenDetailsRequest);
-
-    void validateAvailableAmountToBeMinted();
 }

@@ -159,20 +159,9 @@ public class BaseNodeTransactionService implements ITransactionService {
                 }
                 return;
             }
-            if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
-                log.error("Balance check failed: {}", transactionData.getHash());
+            if (!validateAndAttachTransaction(transactionData)) {
                 return;
             }
-            if (transactionData.getType().equals(TransactionType.TokenGeneration) && !validationService.validateCurrencyUniquenessAndAddUnconfirmedRecord(transactionData)) {
-                log.error("Not unique token generation attempt by transaction: {}", transactionData.getHash());
-                return;
-            }
-            if (transactionData.getType().equals(TransactionType.TokenMinting) && !validationService.validateTokenMintingAndAddToAllocatedAmount(transactionData)) {
-                log.error("Minting balance check failed: {}", transactionData.getHash());
-                return;
-            }
-            transactionHelper.attachTransactionToCluster(transactionData);
-            transactionHelper.setTransactionStateToSaved(transactionData);
 
             continueHandlePropagatedTransaction(transactionData);
             transactionHelper.setTransactionStateToFinished(transactionData);
@@ -185,6 +174,24 @@ public class BaseNodeTransactionService implements ITransactionService {
                 processPostponedTransactions(transactionData);
             }
         }
+    }
+
+    protected boolean validateAndAttachTransaction(TransactionData transactionData) {
+        if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
+            log.error("Balance check failed: {}", transactionData.getHash());
+            return false;
+        }
+        if (transactionData.getType().equals(TransactionType.TokenGeneration) && !validationService.validateCurrencyUniquenessAndAddUnconfirmedRecord(transactionData)) {
+            log.error("Not unique token generation attempt by transaction: {}", transactionData.getHash());
+            return false;
+        }
+        if (transactionData.getType().equals(TransactionType.TokenMinting) && !validationService.validateTokenMintingAndAddToAllocatedAmount(transactionData)) {
+            log.error("Minting balance check failed: {}", transactionData.getHash());
+            return false;
+        }
+        transactionHelper.attachTransactionToCluster(transactionData);
+        transactionHelper.setTransactionStateToSaved(transactionData);
+        return true;
     }
 
     public void removeTransactionHashFromUnconfirmed(TransactionData transactionData) {
@@ -277,8 +284,8 @@ public class BaseNodeTransactionService implements ITransactionService {
     }
 
     @Override
-    public void resetOldClusterStampTransactions() {
-        if (clusterStampService.shouldUpdateClusterStampDBVersion()) {
+    public void resetOldClusterStampTransactions(boolean isClusterStampNewer) {
+        if (isClusterStampNewer) {
             if (clusterStampService.isClusterStampDBVersionExist() && networkService.getRecoveryServerAddress() != null) {
                 log.info("Starting to reset old clusterstamp transactions");
                 databaseConnector.resetTransactionColumnFamilies();
