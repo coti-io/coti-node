@@ -36,6 +36,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.CLUSTERSTAMP_MAJOR_NOT_FOUND;
@@ -230,7 +231,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         return sb.append(".").append(CLUSTERSTAMP_FILE_TYPE).toString();
     }
 
-    private void loadCurrencyClusterStamp(ClusterStampNameData currencyClusterStampNameData, Map<Hash, CurrencyData> clusterStampCurrencyMap, boolean updateCurrencies) {
+    private void loadCurrencyClusterStamp(ClusterStampNameData currencyClusterStampNameData, Map<Hash, CurrencyData> currencyMap, boolean updateCurrencies) {
         String clusterStampFileName = getClusterStampFileName(currencyClusterStampNameData);
         log.info("Starting to load currency clusterstamp file {}", clusterStampFileName);
         String clusterStampFileLocation = clusterStampFolder + clusterStampFileName;
@@ -239,7 +240,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(clusterstampFile))) {
             String line;
             boolean reachedCurrenciesSection = false;
-            boolean reachedSignatureSection = false;
+            AtomicBoolean reachedSignatureSection = new AtomicBoolean(false);
             boolean finishedCurrencies = false;
             AtomicInteger relevantLineNumber = new AtomicInteger(0);
             AtomicInteger signatureRelevantLines = new AtomicInteger(0);
@@ -249,23 +250,23 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                 relevantLineNumber.incrementAndGet();
                 if (line.isEmpty()) {
                     if (relevantLineNumber.get() < NUMBER_OF_CURRENCY_GENESIS_ADDRESS_MIN_LINES) {
-                        throw new ClusterStampValidationException(String.format("Currencies clusterstamp file %s has less than necessary number of currency lines", clusterStampFileName));
+                        throw new ClusterStampValidationException(String.format("Currency clusterstamp file %s has less than necessary number of currency lines", clusterStampFileName));
                     } else {
                         if (!finishedCurrencies)
                             finishedCurrencies = true;
                         else
-                            throw new ClusterStampValidationException(String.format("Unnecessary empty line at currencies clusterstamp file %s.", clusterStampFileName));
+                            throw new ClusterStampValidationException(String.format("Unnecessary empty line at currency clusterstamp file %s.", clusterStampFileName));
                     }
                 } else {
                     if (!reachedCurrenciesSection) {
                         if (!line.contentEquals(CURRENCY_GENESIS_ADDRESS_HEADER)) {
-                            throw new ClusterStampValidationException(String.format("Currencies clusterstamp file %s expected currency genesis address header", clusterStampFileName));
+                            throw new ClusterStampValidationException(String.format("Currency clusterstamp file %s expected currency genesis address header", clusterStampFileName));
                         } else {
                             line = bufferedReader.readLine();
                             relevantLineNumber.incrementAndGet();
                             line = line.trim();
                             if (line.isEmpty()) {
-                                throw new ClusterStampValidationException(String.format("Currencies clusterstamp file %s expected currency genesis address", clusterStampFileName));
+                                throw new ClusterStampValidationException(String.format("Currency clusterstamp file %s expected currency genesis address", clusterStampFileName));
                             } else {
                                 currencyGenesisAddress = new Hash(line);
                                 byte[] genesisAddressInBytes = currencyGenesisAddress.getBytes();
@@ -275,7 +276,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                                 relevantLineNumber.incrementAndGet();
                                 line = line.trim();
                                 if (line.isEmpty() || !line.contentEquals(CURRENCIES_DETAILS_HEADER)) {
-                                    throw new ClusterStampValidationException(String.format("Currencies clusterstamp file %s expected currencies header", clusterStampFileName));
+                                    throw new ClusterStampValidationException(String.format("Currency clusterstamp file %s expected currencies header", clusterStampFileName));
                                 } else {
                                     reachedCurrenciesSection = true;
                                 }
@@ -285,17 +286,20 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                         if (!finishedCurrencies) {
                             byte[] currencyDataInBytes = Base64.getDecoder().decode(line);
                             CurrencyData currencyData = (CurrencyData) SerializationUtils.deserialize(currencyDataInBytes);
-                            clusterStampCurrencyMap.put(currencyData.getHash(), currencyData);
+                            if (currencyData == null) {
+                                throw new ClusterStampValidationException(String.format("Currency clusterstamp file %s contains invalid currency line", clusterStampFileName));
+                            }
+                            currencyMap.put(currencyData.getHash(), currencyData);
 
                             log.trace("The currency hash {} was loaded from the currency clusterstamp", currencyData.getHash());
                             clusterStampData.getSignatureMessage().add(currencyDataInBytes);
                             clusterStampData.incrementMessageByteSize(currencyDataInBytes.length);
                         } else {
-                            if (!reachedSignatureSection) {
+                            if (!reachedSignatureSection.get()) {
                                 if (!line.contentEquals(SIGNATURE_LINE_TOKEN)) {
                                     throw new ClusterStampValidationException(String.format("Invalid signature line notification at currencies clusterstamp file %s", clusterStampFileName));
                                 } else {
-                                    reachedSignatureSection = true;
+                                    reachedSignatureSection.set(true);
                                 }
                             } else {
                                 signatureRelevantLines.incrementAndGet();
@@ -306,20 +310,20 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                 }
             }
             if (signatureRelevantLines.get() == 0) {
-                handleClusterStampWithoutSignature(clusterStampData, clusterStampFileLocation, false);
+                handleClusterStampWithoutSignature(clusterStampData, clusterStampFileLocation);
             } else if (signatureRelevantLines.get() == 1) {
                 throw new ClusterStampValidationException(String.format("Signature lines can not be a single line at currencies clusterstamp file %s", clusterStampFileName));
             } else {
                 handleClusterStampWithSignature(clusterStampData);
             }
             if (updateCurrencies) {
-                currencyService.updateCurrenciesFromClusterStamp(clusterStampCurrencyMap);
+                currencyService.updateCurrenciesFromClusterStamp(currencyMap);
             }
             log.info("Finished to load currency clusterstamp file {}", clusterStampFileName);
         } catch (ClusterStampException e) {
-            throw new ClusterStampException(String.format("Errors on clusterstamp file %s loading.%n", clusterStampFileName) + e.getMessage(), e);
+            throw new ClusterStampException(String.format("Errors on currency clusterstamp file %s loading.%n", clusterStampFileName) + e.getMessage(), e);
         } catch (Exception e) {
-            throw new ClusterStampException(String.format("Errors on clusterstamp file %s loading.", clusterStampFileName), e);
+            throw new ClusterStampException(String.format("Errors on currency clusterstamp file %s loading.", clusterStampFileName), e);
         }
 
     }
@@ -367,7 +371,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                 }
             }
             if (signatureRelevantLines.get() == 0) {
-                handleClusterStampWithoutSignature(clusterStampData, clusterStampFileLocation, true);
+                handleClusterStampWithoutSignature(clusterStampData, clusterStampFileLocation);
             } else if (signatureRelevantLines.get() == 1) {
                 throw new ClusterStampValidationException(String.format("Signature lines can not be a single line at clusterstamp file %s", clusterStampFileName));
             } else {
@@ -376,9 +380,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             mintingService.updateMintingAvailableMapFromClusterStamp(clusterStampCurrencyMap);
             log.info("Finished to load balance clusterstamp file {}", clusterStampFileName);
         } catch (ClusterStampException e) {
-            throw new ClusterStampException(String.format("Errors on clusterstamp file %s loading.%n", clusterStampFileName) + e.getMessage(), e);
+            throw new ClusterStampException(String.format("Errors on balance clusterstamp file %s loading.%n", clusterStampFileName) + e.getMessage(), e);
         } catch (Exception e) {
-            throw new ClusterStampException(String.format("Errors on clusterstamp file %s loading.", clusterStampFileName), e);
+            throw new ClusterStampException(String.format("Errors on balance clusterstamp file %s loading.", clusterStampFileName), e);
         }
     }
 
@@ -432,12 +436,13 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         LastClusterStampVersionData lastVersionData = lastClusterStampVersions.get();
         ClusterStampNameData recoveryCurrencyClusterStampName = getClusterStampFileNamesResponse.getCurrencyClusterStampName();
         ClusterStampNameData recoveryBalanceClusterStampName = getClusterStampFileNamesResponse.getBalanceClusterStampName();
-        return lastVersionData == null || lastVersionData.getVersionTimeMillis() == null || (recoveryCurrencyClusterStampName != null &&
+        return recoveryCurrencyClusterStampName != null &&
                 recoveryBalanceClusterStampName != null && recoveryCurrencyClusterStampName.getVersionTimeMillis().equals(recoveryBalanceClusterStampName.getVersionTimeMillis()) &&
-                validateVersion(lastVersionData.getVersionTimeMillis(), recoveryCurrencyClusterStampName.getVersionTimeMillis()));
+                (lastVersionData == null || lastVersionData.getVersionTimeMillis() == null ||
+                        validateVersion(recoveryCurrencyClusterStampName.getVersionTimeMillis(), lastVersionData.getVersionTimeMillis()));
     }
 
-    private boolean validateVersion(Long clusterStampDBVersion, Long clusterStampFileVersion) {
+    private boolean validateVersion(Long clusterStampFileVersion, Long clusterStampDBVersion) {
         return clusterStampFileVersion >= clusterStampDBVersion;
     }
 
@@ -575,7 +580,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     }
 
     protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData, String
-            clusterStampFileLocation, boolean isMajor) {
+            clusterStampFileLocation) {
         throw new ClusterStampValidationException(String.format("Clusterstamp file %s has no signature.", clusterStampFileLocation));
     }
 

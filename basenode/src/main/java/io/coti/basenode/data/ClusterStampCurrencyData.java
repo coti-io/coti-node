@@ -9,13 +9,15 @@ import java.math.BigDecimal;
 @Data
 public class ClusterStampCurrencyData {
 
-    private BigDecimal totalSupply;
+    private final BigDecimal totalSupply;
     private BigDecimal amount;
-    private int scale;
+    private final int scale;
+    private final boolean nativeCurrency;
 
     public ClusterStampCurrencyData(CurrencyData currencyData) {
         this.totalSupply = currencyData.getTotalSupply();
         this.amount = currencyData.getTotalSupply();
         this.scale = currencyData.getScale();
+        this.nativeCurrency = currencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN);
     }
 }

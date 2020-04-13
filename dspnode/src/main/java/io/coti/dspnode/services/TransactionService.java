@@ -69,20 +69,9 @@ public class TransactionService extends BaseNodeTransactionService {
                 }
                 return;
             }
-            if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
-                log.error("Balance check failed: {}", transactionData.getHash());
+            if (!validateAndAttachTransaction(transactionData)) {
                 return;
             }
-            if (transactionData.getType().equals(TransactionType.TokenGeneration) && !validationService.validateCurrencyUniquenessAndAddUnconfirmedRecord(transactionData)) {
-                log.error("Not unique token generation attempt by transaction: {}", transactionData.getHash());
-                return;
-            }
-            if (transactionData.getType().equals(TransactionType.TokenMinting) && !validationService.validateTokenMintingAndAddToAllocatedAmount(transactionData)) {
-                log.error("Minting balance check failed: {}", transactionData.getHash());
-                return;
-            }
-            transactionHelper.attachTransactionToCluster(transactionData);
-            transactionHelper.setTransactionStateToSaved(transactionData);
             propagationPublisher.propagate(transactionData, Arrays.asList(
                     NodeType.FullNode,
                     NodeType.TrustScoreNode,
