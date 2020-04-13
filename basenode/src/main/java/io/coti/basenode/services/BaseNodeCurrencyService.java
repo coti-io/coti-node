@@ -301,6 +301,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                     currencyData.setConfirmed(true);
                 }
                 currencies.put(currencyData);
+                currencyHashToMintableAmountMap.put(currencyHash, originatorCurrencyData.getTotalSupply());
                 try {
                     synchronized (addLockToLockMap(originatorHash)) {
                         UserCurrencyIndexData userCurrencyIndexData = userCurrencyIndexes.getByHash(originatorHash);
