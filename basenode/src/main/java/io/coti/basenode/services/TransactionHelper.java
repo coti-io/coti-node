@@ -309,7 +309,7 @@ public class TransactionHelper implements ITransactionHelper {
 
     @Override
     public boolean checkTokenMintingAndAddToAllocatedAmount(TransactionData transactionData) {
-        if (!mintingService.checkMintingAmountAndAddToAllocatedAmount(transactionData)) {
+        if (!mintingService.checkMintingAmountAndUpdateMintableAmount(transactionData)) {
             return false;
         }
         transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(PAYLOAD_CHECKED);

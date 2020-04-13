@@ -172,17 +172,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     @Override
-    public void handleExistingTransaction(TransactionData transactionData) {
-        TransactionType transactionType = transactionData.getType();
-        if (transactionType.equals(TransactionType.TokenGeneration)) {
-            CurrencyData currencyData = getCurrencyData(transactionData);
-            if (currencyData != null) {
-                currencies.put(currencyData);
-            }
-        }
-    }
-
-    @Override
     public void handleMissingTransaction(TransactionData transactionData) {
         boolean dspConsensus = transactionData.getDspConsensusResult().isDspConsensus();
         if (transactionData.getType().equals(TransactionType.TokenGeneration)) {
@@ -301,7 +290,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                     currencyData.setConfirmed(true);
                 }
                 currencies.put(currencyData);
-                currencyHashToMintableAmountMap.put(currencyHash, originatorCurrencyData.getTotalSupply());
+                putToMintableAmountMap(currencyHash, originatorCurrencyData.getTotalSupply());
                 try {
                     synchronized (addLockToLockMap(originatorHash)) {
                         UserCurrencyIndexData userCurrencyIndexData = userCurrencyIndexes.getByHash(originatorHash);
@@ -371,7 +360,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         BigDecimal mintableAmount = Optional.ofNullable(getTokenMintableAmount(currencyHash)).orElse(BigDecimal.ZERO);
         BigDecimal alreadyMintedAmount = currencyData.getTotalSupply().subtract(mintableAmount);
         tokenGenerationResponseData.setMintedAmount(alreadyMintedAmount);
-        tokenGenerationResponseData.setNotMintedRest(mintableAmount);
+        tokenGenerationResponseData.setMintableAmount(mintableAmount);
         return tokenGenerationResponseData;
     }
 

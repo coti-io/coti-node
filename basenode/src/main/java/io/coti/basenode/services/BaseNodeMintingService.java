@@ -47,7 +47,7 @@ public class BaseNodeMintingService implements IMintingService {
     }
 
     @Override
-    public boolean checkMintingAmountAndAddToAllocatedAmount(TransactionData transactionData) {
+    public boolean checkMintingAmountAndUpdateMintableAmount(TransactionData transactionData) {
         TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = getTokenMintingFeeData(transactionData);
         Hash tokenHash = tokenMintingFeeBaseTransactionData.getServiceData().getMintingCurrencyHash();
         try {
@@ -125,8 +125,7 @@ public class BaseNodeMintingService implements IMintingService {
             BigDecimal newMintingRequestedAmount = tokenMintingFeeData.getServiceData().getMintingAmount();
             BigDecimal mintableAmount = currencyService.getTokenMintableAmount(tokenHash);
             if (mintableAmount != null) {
-                BigDecimal updatedAvailableTokenToBeMintedAmount = mintableAmount.subtract(newMintingRequestedAmount);
-                currencyService.putToMintableAmountMap(tokenHash, updatedAvailableTokenToBeMintedAmount);
+                currencyService.putToMintableAmountMap(tokenHash, mintableAmount.subtract(newMintingRequestedAmount));
             } else {
                 throw new MintingException(String.format("Invalid token hash %s to mind", tokenHash));
             }
