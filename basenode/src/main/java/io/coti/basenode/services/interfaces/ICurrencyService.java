@@ -30,8 +30,6 @@ public interface ICurrencyService {
 
     void updateCurrenciesFromClusterStamp(Map<Hash, CurrencyData> clusterStampCurrenciesMap);
 
-    void handleExistingTransaction(TransactionData transactionData);
-
     void handleMissingTransaction(TransactionData transactionData);
 
     void validateName(OriginatorCurrencyData originatorCurrencyData);

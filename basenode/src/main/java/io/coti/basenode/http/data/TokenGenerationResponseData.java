@@ -32,7 +32,7 @@ public class TokenGenerationResponseData implements IResponseData {
     private String protectionModel;
 
     private BigDecimal mintedAmount;
-    private BigDecimal notMintedRest;
+    private BigDecimal mintableAmount;
 
     public TokenGenerationResponseData(CurrencyData token) {
         this.currencyName = token.getName();
@@ -54,6 +54,6 @@ public class TokenGenerationResponseData implements IResponseData {
         this.protectionModel = token.getCurrencyTypeData().getProtectionModel();
 
         this.mintedAmount = BigDecimal.ZERO;
-        this.notMintedRest = this.totalSupply;
+        this.mintableAmount = this.totalSupply;
     }
 }

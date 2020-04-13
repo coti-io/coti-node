@@ -10,7 +10,7 @@ public interface IMintingService {
 
     void init();
 
-    boolean checkMintingAmountAndAddToAllocatedAmount(TransactionData transactionData);
+    boolean checkMintingAmountAndUpdateMintableAmount(TransactionData transactionData);
 
     void revertMintingAllocation(TransactionData transactionData);
 
