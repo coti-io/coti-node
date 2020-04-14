@@ -44,8 +44,8 @@ public class TokenGenerationResponseData implements IResponseData {
         this.originatorHash = token.getOriginatorHash().toString();
         this.originatorSignature = token.getOriginatorSignature();
         this.createTime = token.getCreateTime();
-        this.currencyGeneratingTransactionHash = token.getCurrencyGeneratingTransactionHash().toString();
-        this.currencyLastTypeChangingTransactionHash = token.getCurrencyLastTypeChangingTransactionHash().toString();
+        this.currencyGeneratingTransactionHash = (token.getCurrencyGeneratingTransactionHash() == null ? "" : token.getCurrencyGeneratingTransactionHash()).toString();
+        this.currencyLastTypeChangingTransactionHash = (token.getCurrencyLastTypeChangingTransactionHash() == null ? "" : token.getCurrencyLastTypeChangingTransactionHash()).toString();
         this.confirmed = token.isConfirmed();
 
         this.currencyType = token.getCurrencyTypeData().getCurrencyType();
@@ -54,6 +54,6 @@ public class TokenGenerationResponseData implements IResponseData {
         this.protectionModel = token.getCurrencyTypeData().getProtectionModel();
 
         this.mintedAmount = BigDecimal.ZERO;
-        this.mintableAmount = this.totalSupply;
+        this.mintableAmount = BigDecimal.ZERO;
     }
 }

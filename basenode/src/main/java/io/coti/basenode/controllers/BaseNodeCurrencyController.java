@@ -1,6 +1,7 @@
 package io.coti.basenode.controllers;
 
 import io.coti.basenode.http.GetTokenDetailsRequest;
+import io.coti.basenode.http.GetTokenSymbolDetailsRequest;
 import io.coti.basenode.http.GetUserTokensRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.ICurrencyService;
@@ -30,5 +31,10 @@ public class BaseNodeCurrencyController {
     @PostMapping(path = "/token/details")
     public ResponseEntity<IResponse> getTokenDetails(@Valid @RequestBody GetTokenDetailsRequest getTokenDetailsRequest) {
         return currencyService.getTokenDetails(getTokenDetailsRequest);
+    }
+
+    @PostMapping(path = "/token/symbol/details")
+    public ResponseEntity<IResponse> getSymbolDetails(@Valid @RequestBody GetTokenSymbolDetailsRequest getTokenSymbolDetailsRequest) {
+        return currencyService.getTokenSymbolDetails(getTokenSymbolDetailsRequest);
     }
 }
