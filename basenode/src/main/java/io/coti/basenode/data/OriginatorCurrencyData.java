@@ -1,7 +1,6 @@
 package io.coti.basenode.data;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
@@ -68,7 +67,4 @@ public class OriginatorCurrencyData implements ISignable, ISignValidatable, Seri
         this.originatorSignature = signature;
     }
 
-    public static Hash calculateHash(String symbol) {
-        return CryptoHelper.cryptoHash(symbol.getBytes(), 224);
-    }
 }

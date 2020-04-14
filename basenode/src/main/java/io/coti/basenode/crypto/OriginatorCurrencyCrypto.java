@@ -1,5 +1,6 @@
 package io.coti.basenode.crypto;
 
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.OriginatorCurrencyData;
 import io.coti.basenode.data.SignatureData;
 import org.springframework.stereotype.Service;
@@ -24,5 +25,9 @@ public class OriginatorCurrencyCrypto extends SignatureCrypto<OriginatorCurrency
     public static byte[] getMessageInBytes(OriginatorCurrencyData currencyData) {
         SignatureData signatureData = currencyData.getSignature();
         return signatureData.getR().concat(signatureData.getS()).getBytes();
+    }
+
+    public static Hash calculateHash(String symbol) {
+        return CryptoHelper.cryptoHash(symbol.getBytes(), 224);
     }
 }

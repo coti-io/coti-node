@@ -1,5 +1,6 @@
 package io.coti.basenode.data;
 
+import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,6 @@ public class CurrencyData extends OriginatorCurrencyData implements IPropagatabl
     }
 
     public void setHash() {
-        hash = calculateHash(this.symbol);
+        hash = OriginatorCurrencyCrypto.calculateHash(this.symbol);
     }
 }

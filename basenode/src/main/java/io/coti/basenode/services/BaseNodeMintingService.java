@@ -2,7 +2,7 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.*;
-import io.coti.basenode.exceptions.MintingException;
+import io.coti.basenode.exceptions.CurrencyException;
 import io.coti.basenode.model.Currencies;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.ICurrencyService;
@@ -50,22 +50,21 @@ public class BaseNodeMintingService implements IMintingService {
     public boolean checkMintingAmountAndUpdateMintableAmount(TransactionData transactionData) {
         TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = getTokenMintingFeeData(transactionData);
         Hash tokenHash = tokenMintingFeeBaseTransactionData.getServiceData().getMintingCurrencyHash();
+        BigDecimal tokenAmount = tokenMintingFeeBaseTransactionData.getServiceData().getMintingAmount();
         try {
             synchronized (addLockToLockMap(tokenHash)) {
-                BigDecimal tokenAmount = tokenMintingFeeBaseTransactionData.getServiceData().getMintingAmount();
 
-                CurrencyData currencyFromDB = currencyService.getCurrencyFromDB(tokenHash);
-                if (currencyFromDB == null) {
+                CurrencyData currencyData = currencies.getByHash(tokenHash);
+                if (currencyData == null) {
                     log.error("Error in Minting check. Token {} is invalid", tokenHash);
                     return false;
                 }
-                if (currencyFromDB.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
+                if (currencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
                     log.error("Error in Minting check. Token {} is Native currency", tokenHash);
                     return false;
                 }
-                BigDecimal mintableAmount =
-                        Optional.ofNullable(currencyService.getTokenMintableAmount(tokenHash)).orElse(BigDecimal.ZERO).subtract(tokenAmount);
-                if (mintableAmount.signum() < 0) {
+                BigDecimal restAfterMinting = Optional.ofNullable(currencyService.getTokenMintableAmount(tokenHash)).orElse(BigDecimal.ZERO).subtract(tokenAmount);
+                if (restAfterMinting.signum() < 0) {
                     log.error("Error in Minting check. Token {} amount {} is too much", tokenHash, tokenAmount);
                     return false;
                 }
@@ -75,7 +74,7 @@ public class BaseNodeMintingService implements IMintingService {
                     return false;
                 }
 
-                currencyService.putToMintableAmountMap(tokenHash, mintableAmount);
+                currencyService.putToMintableAmountMap(tokenHash, restAfterMinting);
             }
         } finally {
             removeLockFromLocksMap(tokenHash);
@@ -89,7 +88,7 @@ public class BaseNodeMintingService implements IMintingService {
         Hash tokenHash = tokenMintingFeeData.getCurrencyHash();
         try {
             synchronized (addLockToLockMap(tokenHash)) {
-                CurrencyData currencyFromDB = currencyService.getCurrencyFromDB(tokenHash);
+                CurrencyData currencyFromDB = currencies.getByHash(tokenHash);
                 BigDecimal mintableAmount = currencyService.getTokenMintableAmount(tokenHash);
                 if (currencyFromDB == null || mintableAmount == null) {
                     log.error("Error in Minting revert. Token {} is invalid", tokenHash);
@@ -100,6 +99,40 @@ public class BaseNodeMintingService implements IMintingService {
         } finally {
             removeLockFromLocksMap(tokenHash);
         }
+    }
+
+
+    @Override
+    public void doTokenMinting(TransactionData transactionData) {
+        TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = getTokenMintingFeeData(transactionData);
+        if (tokenMintingFeeBaseTransactionData == null) {
+            log.error("TokenMinting transaction {} without TMBT", transactionData.getHash());
+            return;
+        }
+        TokenMintingData tokenMintingFeeBaseTransactionServiceData = tokenMintingFeeBaseTransactionData.getServiceData();
+        BigDecimal tokenAmount = tokenMintingFeeBaseTransactionData.getServiceData().getMintingAmount();
+        Hash tokenHash = tokenMintingFeeBaseTransactionServiceData.getMintingCurrencyHash();
+//        MintingRecordData mintingRecordData = mintingRecords.getByHash(tokenHash);
+//        if (mintingRecordData == null) {
+//            mintingRecordData = new MintingRecordData(tokenHash);
+//        }  todo
+
+        CurrencyData currencyData = currencies.getByHash(tokenHash);
+        if (currencyData == null) {
+            log.error("Error in Minting check. Token {} is invalid", tokenHash);
+            return;
+        }
+        if (currencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
+            log.error("Error in Minting check. Token {} is Native currency", tokenHash);
+            return;
+        }
+        Hash receiverAddress = tokenMintingFeeBaseTransactionData.getServiceData().getReceiverAddress();
+        if (!CryptoHelper.isAddressValid(receiverAddress)) {
+            log.error("Error in Minting check. Token {} receiver address {} is invalid", tokenHash, receiverAddress);
+            return;
+        }
+        balanceService.updateBalance(receiverAddress, tokenHash, tokenAmount);
+        balanceService.updatePreBalance(receiverAddress, tokenHash, tokenAmount);
     }
 
     protected TokenMintingFeeBaseTransactionData getTokenMintingFeeData(TransactionData tokenMintingTransaction) {
@@ -114,40 +147,41 @@ public class BaseNodeMintingService implements IMintingService {
     public void handleExistingTransaction(TransactionData transactionData) {
         TransactionType transactionType = transactionData.getType();
         if (transactionType.equals(TransactionType.TokenMinting)) {
-            updateMintableAmountMap(transactionData);
+            updateMintableAmountMapAndBalance(transactionData);
         }
     }
 
-    private void updateMintableAmountMap(TransactionData transactionData) {
+    private void updateMintableAmountMapAndBalance(TransactionData transactionData) {
         TokenMintingFeeBaseTransactionData tokenMintingFeeData = getTokenMintingFeeData(transactionData);
         if (tokenMintingFeeData != null) {
             Hash tokenHash = tokenMintingFeeData.getServiceData().getMintingCurrencyHash();
-            BigDecimal newMintingRequestedAmount = tokenMintingFeeData.getServiceData().getMintingAmount();
+            BigDecimal mintingRequestedAmount = tokenMintingFeeData.getServiceData().getMintingAmount();
+            Hash receiverAddress = tokenMintingFeeData.getServiceData().getReceiverAddress();
             BigDecimal mintableAmount = currencyService.getTokenMintableAmount(tokenHash);
             if (mintableAmount != null) {
-                currencyService.putToMintableAmountMap(tokenHash, mintableAmount.subtract(newMintingRequestedAmount));
+                currencyService.putToMintableAmountMap(tokenHash, mintableAmount.subtract(mintingRequestedAmount));
             } else {
-                throw new MintingException(String.format("Invalid token hash %s to mind", tokenHash));
+                currencyService.putToMintableAmountMap(tokenHash, mintingRequestedAmount.negate());
             }
+            balanceService.updateBalance(receiverAddress, tokenHash, mintingRequestedAmount);
+            balanceService.updatePreBalance(receiverAddress, tokenHash, mintingRequestedAmount);
         }
     }
 
     @Override
     public void handleMissingTransaction(TransactionData transactionData) {
         if (transactionData.getType().equals(TransactionType.TokenMinting)) {
-            updateMintableAmountMap(transactionData);
+            updateMintableAmountMapAndBalance(transactionData);
         }
-    }
-
-    @Override
-    public void validateMintingBalances() {
-        // implemented by sub classes
     }
 
     @Override
     public void updateMintingAvailableMapFromClusterStamp(Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap) {
         clusterStampCurrencyMap.forEach((currencyHash, clusterStampCurrencyData) -> {
             if (!clusterStampCurrencyData.isNativeCurrency()) {
+                if (clusterStampCurrencyData.getAmount().compareTo(BigDecimal.ZERO) < 0) {
+                    throw new CurrencyException(String.format("Minting amount exceeded availability for token hash: %s", currencyHash));
+                }
                 currencyService.putToMintableAmountMap(currencyHash, clusterStampCurrencyData.getAmount());
             }
         });
