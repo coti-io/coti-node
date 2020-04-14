@@ -68,7 +68,7 @@ public class OriginatorCurrencyData implements ISignable, ISignValidatable, Seri
         this.originatorSignature = signature;
     }
 
-    public Hash calculateHash() {
+    public static Hash calculateHash(String symbol) {
         return CryptoHelper.cryptoHash(symbol.getBytes(), 224);
     }
 }

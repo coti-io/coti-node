@@ -38,6 +38,6 @@ public class CurrencyData extends OriginatorCurrencyData implements IPropagatabl
     }
 
     public void setHash() {
-        hash = super.calculateHash();
+        hash = calculateHash(this.symbol);
     }
 }
