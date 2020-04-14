@@ -163,7 +163,6 @@ public abstract class BaseNodeInitializationService {
                 transactionSynchronizationService.requestMissingTransactions(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
             }
             balanceService.validateBalances();
-            mintingService.validateMintingBalances();
             log.info("Transactions Load completed");
             clusterService.finalizeInit();
         } catch (TransactionSyncException e) {
@@ -187,6 +186,7 @@ public abstract class BaseNodeInitializationService {
     private void handleExistingTransaction(AtomicLong maxTransactionIndex, TransactionData transactionData) {
         clusterService.addExistingTransactionOnInit(transactionData);
         confirmationService.insertSavedTransaction(transactionData, maxTransactionIndex);
+        currencyService.handleExistingTransaction(transactionData);
         mintingService.handleExistingTransaction(transactionData);
         transactionService.addToExplorerIndexes(transactionData);
         transactionHelper.incrementTotalTransactions();

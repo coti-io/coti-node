@@ -18,7 +18,7 @@ public interface IMintingService {
 
     void handleMissingTransaction(TransactionData transactionData);
 
-    void validateMintingBalances();
-
     void updateMintingAvailableMapFromClusterStamp(Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap);
+
+    void doTokenMinting(TransactionData transactionData);
 }

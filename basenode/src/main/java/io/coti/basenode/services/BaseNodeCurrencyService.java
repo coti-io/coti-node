@@ -92,9 +92,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     @Override
     public void putToMintableAmountMap(Hash tokenHash, BigDecimal amount) {
-        if (amount.compareTo(BigDecimal.ZERO) < 0) {
-            throw new CurrencyException(String.format("Minting amount exceeded availability for token hash: %s", tokenHash));
-        }
         currencyHashToMintableAmountMap.put(tokenHash, amount);
     }
 
@@ -126,11 +123,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             throw new CurrencyException("Native currency is missing.");
         }
         return nativeCurrencyData.getHash();
-    }
-
-    @Override
-    public CurrencyData getCurrencyFromDB(Hash currencyHash) {
-        return currencies.getByHash(currencyHash);
     }
 
     @Override
@@ -171,6 +163,28 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     @Override
+    public void handleExistingTransaction(TransactionData transactionData) {
+        TransactionType transactionType = transactionData.getType();
+        if (transactionType.equals(TransactionType.TokenGeneration)) {
+            updateMintableAmountMap(transactionData);
+        }
+    }
+
+    private void updateMintableAmountMap(TransactionData transactionData) {
+        TokenGenerationFeeBaseTransactionData tokenGenerationFeeData = getTokenGenerationFeeData(transactionData);
+        if (tokenGenerationFeeData != null) {
+            Hash tokenHash = OriginatorCurrencyCrypto.calculateHash(tokenGenerationFeeData.getServiceData().getOriginatorCurrencyData().getSymbol());
+            BigDecimal totalSupply = tokenGenerationFeeData.getServiceData().getOriginatorCurrencyData().getTotalSupply();
+            BigDecimal mintableAmount = getTokenMintableAmount(tokenHash);
+            if (mintableAmount != null) {
+                putToMintableAmountMap(tokenHash, mintableAmount.add(totalSupply));
+            } else {
+                putToMintableAmountMap(tokenHash, totalSupply);
+            }
+        }
+    }
+
+    @Override
     public void handleMissingTransaction(TransactionData transactionData) {
         boolean dspConsensus = transactionData.getDspConsensusResult().isDspConsensus();
         if (transactionData.getType().equals(TransactionType.TokenGeneration)) {
@@ -180,6 +194,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                     currencyData.setConfirmed(true);
                 }
                 currencies.put(currencyData);
+                updateMintableAmountMap(transactionData);
             }
         }
     }
@@ -253,7 +268,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = getTokenGenerationFeeData(transactionData);
         OriginatorCurrencyData originatorCurrencyData = tokenGenerationFeeBaseTransactionData.getServiceData().getOriginatorCurrencyData();
         CurrencyTypeData currencyTypeData = tokenGenerationFeeBaseTransactionData.getServiceData().getCurrencyTypeData();
-        Hash currencyHash = OriginatorCurrencyData.calculateHash(originatorCurrencyData.getSymbol());
+        Hash currencyHash = OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol());
         try {
             synchronized (addLockToLockMap(currencyHash)) {
                 if (currencyNameIndexes.getByHash(new CurrencyNameIndexData(originatorCurrencyData.getName(), currencyHash).getHash()) != null) {
@@ -277,7 +292,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = getTokenGenerationFeeData(transactionData);
         OriginatorCurrencyData originatorCurrencyData = tokenGenerationFeeBaseTransactionData.getServiceData().getOriginatorCurrencyData();
         Hash originatorHash = originatorCurrencyData.getOriginatorHash();
-        Hash currencyHash = OriginatorCurrencyData.calculateHash(originatorCurrencyData.getSymbol());
+        Hash currencyHash = OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol());
         try {
             synchronized (addLockToLockMap(currencyHash)) {
                 CurrencyData currencyData = currencies.getByHash(currencyHash);
@@ -354,7 +369,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             if (!getTokenSymbolDetailsRequestCrypto.verifySignature(getTokenSymbolDetailsRequest)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
             }
-            Hash currencyHash = OriginatorCurrencyData.calculateHash(getTokenSymbolDetailsRequest.getSymbol());
+            Hash currencyHash = OriginatorCurrencyCrypto.calculateHash(getTokenSymbolDetailsRequest.getSymbol());
             GetTokenDetailsResponse getTokenDetailsResponse = new GetTokenDetailsResponse();
             TokenGenerationResponseData tokenGenerationResponseData = fillTokenGenerationResponseData(currencyHash);
             getTokenDetailsResponse.setToken(tokenGenerationResponseData);

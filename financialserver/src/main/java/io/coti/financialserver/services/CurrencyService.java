@@ -45,7 +45,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
                 throw new CurrencyValidationException(TOKEN_GENERATION_REQUEST_NOT_REGULAR_CMD_TOKEN);
             }
             String currencyName = originatorCurrencyData.getName();
-            currencyHash = OriginatorCurrencyData.calculateHash(originatorCurrencyData.getSymbol());
+            currencyHash = OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol());
             validateCurrencyUniqueness(currencyHash, currencyName);
             CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(originatorCurrencyData.getSymbol(), currencyTypeData);
             if (!originatorCurrencyCrypto.verifySignature(originatorCurrencyData) || !currencyTypeRegistrationCrypto.verifySignature(currencyTypeRegistrationData)) {
@@ -69,7 +69,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
         List<GetCurrencyResponseData> tokenDetails = new ArrayList<>();
         getCurrenciesRequest.getTokenHashes().forEach(tokenHash -> {
             if (!tokenHash.equals(nativeCurrencyData.getHash())) {
-                CurrencyData tokenData = getCurrencyFromDB(tokenHash);
+                CurrencyData tokenData = currencies.getByHash(tokenHash);
                 if (tokenData != null) {
                     tokenDetails.add(new GetCurrencyResponseData(tokenData));
                 }

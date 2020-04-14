@@ -25,8 +25,6 @@ public interface ICurrencyService {
 
     void putCurrencyData(CurrencyData currencyData);
 
-    CurrencyData getCurrencyFromDB(Hash currencyHash);
-
     void generateNativeCurrency();
 
     void updateCurrenciesFromClusterStamp(Map<Hash, CurrencyData> clusterStampCurrenciesMap);
@@ -50,4 +48,6 @@ public interface ICurrencyService {
     ResponseEntity<IResponse> getTokenDetails(GetTokenDetailsRequest getTokenDetailsRequest);
 
     ResponseEntity<IResponse> getTokenSymbolDetails(GetTokenSymbolDetailsRequest getTokenSymbolDetailsRequest);
+
+    void handleExistingTransaction(TransactionData transactionData);
 }
