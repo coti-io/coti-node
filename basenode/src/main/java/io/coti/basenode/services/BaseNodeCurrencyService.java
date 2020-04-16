@@ -38,6 +38,7 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 @Service
 public class BaseNodeCurrencyService implements ICurrencyService {
 
+    public static final String ERROR_AT_GETTING_USER_TOKENS = "Error at getting user tokens: ";
     protected CurrencyData nativeCurrencyData;
     @Autowired
     protected Currencies currencies;
@@ -343,7 +344,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             getUserTokensResponse.setUserTokens(userTokens);
             return ResponseEntity.ok(getUserTokensResponse);
         } catch (Exception e) {
-            log.error("Error at getting user tokens: " + e.getMessage());
+            log.error(ERROR_AT_GETTING_USER_TOKENS + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
         }
     }
@@ -354,12 +355,9 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
             }
             Hash currencyHash = getTokenDetailsRequest.getCurrencyHash();
-            GetTokenDetailsResponse getTokenDetailsResponse = new GetTokenDetailsResponse();
-            TokenGenerationResponseData tokenGenerationResponseData = fillTokenGenerationResponseData(currencyHash);
-            getTokenDetailsResponse.setToken(tokenGenerationResponseData);
-            return ResponseEntity.ok(getTokenDetailsResponse);
+            return getTokenDetails(currencyHash);
         } catch (Exception e) {
-            log.error("Error at getting user tokens: " + e.getMessage());
+            log.error(ERROR_AT_GETTING_USER_TOKENS + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
         }
     }
@@ -370,14 +368,18 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
             }
             Hash currencyHash = OriginatorCurrencyCrypto.calculateHash(getTokenSymbolDetailsRequest.getSymbol());
-            GetTokenDetailsResponse getTokenDetailsResponse = new GetTokenDetailsResponse();
-            TokenGenerationResponseData tokenGenerationResponseData = fillTokenGenerationResponseData(currencyHash);
-            getTokenDetailsResponse.setToken(tokenGenerationResponseData);
-            return ResponseEntity.ok(getTokenDetailsResponse);
+            return getTokenDetails(currencyHash);
         } catch (Exception e) {
-            log.error("Error at getting user tokens: " + e.getMessage());
+            log.error(ERROR_AT_GETTING_USER_TOKENS + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
         }
+    }
+
+    private ResponseEntity<IResponse> getTokenDetails(Hash currencyHash) {
+        GetTokenDetailsResponse getTokenDetailsResponse = new GetTokenDetailsResponse();
+        TokenGenerationResponseData tokenGenerationResponseData = fillTokenGenerationResponseData(currencyHash);
+        getTokenDetailsResponse.setToken(tokenGenerationResponseData);
+        return ResponseEntity.ok(getTokenDetailsResponse);
     }
 
     private TokenGenerationResponseData fillTokenGenerationResponseData(Hash currencyHash) {
