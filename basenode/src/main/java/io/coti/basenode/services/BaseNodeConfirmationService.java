@@ -192,7 +192,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     protected void continueHandleConfirmedTransaction(TransactionData transactionData) {
-        // implemented by the sub classes  todo there is no use of it now
+        // implemented by the sub classes
     }
 
     @Override

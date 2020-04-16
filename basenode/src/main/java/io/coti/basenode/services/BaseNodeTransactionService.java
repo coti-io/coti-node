@@ -234,9 +234,7 @@ public class BaseNodeTransactionService implements ITransactionService {
             transactions.put(transactionData);
             addToExplorerIndexes(transactionData);
             transactionHelper.incrementTotalTransactions();
-
             confirmationService.insertMissingTransaction(transactionData);
-            currencyService.handleMissingTransaction(transactionData);
             mintingService.handleMissingTransaction(transactionData);
             continueHandleMissingTransaction(transactionData);
 
@@ -244,6 +242,7 @@ public class BaseNodeTransactionService implements ITransactionService {
             transactions.put(transactionData);
             confirmationService.insertMissingConfirmation(transactionData, trustChainUnconfirmedExistingTransactionHashes);
         }
+        currencyService.handleMissingTransaction(transactionData);
         clusterService.addMissingTransactionOnInit(transactionData, trustChainUnconfirmedExistingTransactionHashes);
 
     }

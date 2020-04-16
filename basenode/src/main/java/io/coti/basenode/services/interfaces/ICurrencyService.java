@@ -23,6 +23,8 @@ public interface ICurrencyService {
 
     CurrencyData getCurrencyData(TransactionData transactionData);
 
+    void updateMintableAmountMapAndBalance(TransactionData transactionData);
+
     void putCurrencyData(CurrencyData currencyData);
 
     void generateNativeCurrency();

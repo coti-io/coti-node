@@ -403,6 +403,24 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     @Override
+    public TokenGenerationFeeBaseTransactionData getTokenGenerationFeeData(TransactionData tokenGenerationTransaction) {
+        return (TokenGenerationFeeBaseTransactionData) tokenGenerationTransaction
+                .getBaseTransactions()
+                .stream()
+                .filter(t -> t instanceof TokenGenerationFeeBaseTransactionData)
+                .findFirst().orElse(null);
+    }
+
+    @Override
+    public TokenMintingFeeBaseTransactionData getTokenMintingFeeData(TransactionData tokenMintingTransaction) {
+        return (TokenMintingFeeBaseTransactionData) tokenMintingTransaction
+                .getBaseTransactions()
+                .stream()
+                .filter(t -> t instanceof TokenMintingFeeBaseTransactionData)
+                .findFirst().orElse(null);
+    }
+
+    @Override
     public long getTotalTransactions() {
         return totalTransactions.get();
     }

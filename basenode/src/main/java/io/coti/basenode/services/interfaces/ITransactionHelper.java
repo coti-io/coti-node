@@ -66,6 +66,10 @@ public interface ITransactionHelper {
 
     boolean isTransactionAlreadyPropagated(TransactionData transactionData);
 
+    TokenGenerationFeeBaseTransactionData getTokenGenerationFeeData(TransactionData tokenGenerationTransaction);
+
+    TokenMintingFeeBaseTransactionData getTokenMintingFeeData(TransactionData tokenMintingTransaction);
+
     long getTotalTransactions();
 
     long incrementTotalTransactions();
