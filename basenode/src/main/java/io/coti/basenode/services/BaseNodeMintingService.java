@@ -7,6 +7,7 @@ import io.coti.basenode.model.Currencies;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.IMintingService;
+import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,8 @@ public class BaseNodeMintingService implements IMintingService {
     protected Currencies currencies;
     @Autowired
     protected IBalanceService balanceService;
+    @Autowired
+    protected ITransactionHelper transactionHelper;
     private final Object lock = new Object();
     private final Map<Hash, Hash> lockMintingRecordHashMap = new ConcurrentHashMap<>();
 
@@ -48,7 +51,7 @@ public class BaseNodeMintingService implements IMintingService {
 
     @Override
     public boolean checkMintingAmountAndUpdateMintableAmount(TransactionData transactionData) {
-        TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = getTokenMintingFeeData(transactionData);
+        TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = transactionHelper.getTokenMintingFeeData(transactionData);
         Hash tokenHash = tokenMintingFeeBaseTransactionData.getServiceData().getMintingCurrencyHash();
         BigDecimal tokenAmount = tokenMintingFeeBaseTransactionData.getServiceData().getMintingAmount();
         try {
@@ -84,7 +87,7 @@ public class BaseNodeMintingService implements IMintingService {
 
     @Override
     public void revertMintingAllocation(TransactionData transactionData) {
-        TokenMintingFeeBaseTransactionData tokenMintingFeeData = getTokenMintingFeeData(transactionData);
+        TokenMintingFeeBaseTransactionData tokenMintingFeeData = transactionHelper.getTokenMintingFeeData(transactionData);
         Hash tokenHash = tokenMintingFeeData.getCurrencyHash();
         try {
             synchronized (addLockToLockMap(tokenHash)) {
@@ -104,7 +107,7 @@ public class BaseNodeMintingService implements IMintingService {
 
     @Override
     public void doTokenMinting(TransactionData transactionData) {
-        TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = getTokenMintingFeeData(transactionData);
+        TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = transactionHelper.getTokenMintingFeeData(transactionData);
         if (tokenMintingFeeBaseTransactionData == null) {
             log.error("TokenMinting transaction {} without TMBT", transactionData.getHash());
             return;
@@ -145,33 +148,17 @@ public class BaseNodeMintingService implements IMintingService {
 
     @Override
     public void handleExistingTransaction(TransactionData transactionData) {
-        TransactionType transactionType = transactionData.getType();
-        if (transactionType.equals(TransactionType.TokenMinting)) {
-            updateMintableAmountMapAndBalance(transactionData);
-        }
-    }
-
-    private void updateMintableAmountMapAndBalance(TransactionData transactionData) {
-        TokenMintingFeeBaseTransactionData tokenMintingFeeData = getTokenMintingFeeData(transactionData);
-        if (tokenMintingFeeData != null) {
-            Hash tokenHash = tokenMintingFeeData.getServiceData().getMintingCurrencyHash();
-            BigDecimal mintingRequestedAmount = tokenMintingFeeData.getServiceData().getMintingAmount();
-            Hash receiverAddress = tokenMintingFeeData.getServiceData().getReceiverAddress();
-            BigDecimal mintableAmount = currencyService.getTokenMintableAmount(tokenHash);
-            if (mintableAmount != null) {
-                currencyService.putToMintableAmountMap(tokenHash, mintableAmount.subtract(mintingRequestedAmount));
-            } else {
-                currencyService.putToMintableAmountMap(tokenHash, mintingRequestedAmount.negate());
-            }
-            balanceService.updateBalance(receiverAddress, tokenHash, mintingRequestedAmount);
-            balanceService.updatePreBalance(receiverAddress, tokenHash, mintingRequestedAmount);
-        }
+        handleTransaction(transactionData);
     }
 
     @Override
     public void handleMissingTransaction(TransactionData transactionData) {
+        handleTransaction(transactionData);
+    }
+
+    private void handleTransaction(TransactionData transactionData) {
         if (transactionData.getType().equals(TransactionType.TokenMinting)) {
-            updateMintableAmountMapAndBalance(transactionData);
+            currencyService.updateMintableAmountMapAndBalance(transactionData);
         }
     }
 

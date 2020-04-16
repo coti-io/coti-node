@@ -199,7 +199,11 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         Map<Hash, CurrencyData> currencyMap = new HashMap<>();
         loadCurrencyClusterStamp(currencyClusterStampName, currencyMap, shouldUpdateClusterStampDBVersion());
         Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap = new HashMap<>();
-        currencyMap.forEach((currencyHash, currencyData) -> clusterStampCurrencyMap.put(currencyHash, new ClusterStampCurrencyData(currencyData)));
+        currencyMap.forEach((currencyHash, currencyData) -> {
+            if (!currencyData.isConfirmed()) {
+                clusterStampCurrencyMap.put(currencyHash, new ClusterStampCurrencyData(currencyData));
+            }
+        });
         loadBalanceClusterStamp(balanceClusterStampName, clusterStampCurrencyMap);
     }
 

@@ -24,10 +24,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
@@ -69,6 +66,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     private Map<Hash, Hash> lockHashMap = new ConcurrentHashMap<>();
     private final Object lock = new Object();
     private Map<Hash, BigDecimal> currencyHashToMintableAmountMap;
+    private Map<Hash, Set<TransactionData>> postponedTokenMintingTransactionsMap;
 
     public void init() {
         currencyHashToMintableAmountMap = new ConcurrentHashMap<>();
@@ -165,38 +163,61 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     @Override
     public void handleExistingTransaction(TransactionData transactionData) {
-        TransactionType transactionType = transactionData.getType();
-        if (transactionType.equals(TransactionType.TokenGeneration)) {
-            updateMintableAmountMap(transactionData);
-        }
-    }
-
-    private void updateMintableAmountMap(TransactionData transactionData) {
-        TokenGenerationFeeBaseTransactionData tokenGenerationFeeData = getTokenGenerationFeeData(transactionData);
-        if (tokenGenerationFeeData != null) {
-            Hash tokenHash = OriginatorCurrencyCrypto.calculateHash(tokenGenerationFeeData.getServiceData().getOriginatorCurrencyData().getSymbol());
-            BigDecimal totalSupply = tokenGenerationFeeData.getServiceData().getOriginatorCurrencyData().getTotalSupply();
-            BigDecimal mintableAmount = getTokenMintableAmount(tokenHash);
-            if (mintableAmount != null) {
-                putToMintableAmountMap(tokenHash, mintableAmount.add(totalSupply));
-            } else {
-                putToMintableAmountMap(tokenHash, totalSupply);
-            }
-        }
+        handleTransaction(transactionData);
     }
 
     @Override
     public void handleMissingTransaction(TransactionData transactionData) {
-        boolean dspConsensus = transactionData.getDspConsensusResult().isDspConsensus();
+        handleTransaction(transactionData);
         if (transactionData.getType().equals(TransactionType.TokenGeneration)) {
-            CurrencyData currencyData = getCurrencyData(transactionData);
-            if (currencyData != null) {
-                if (dspConsensus) {
-                    currencyData.setConfirmed(true);
-                }
-                currencies.put(currencyData);
-                updateMintableAmountMap(transactionData);
+            TokenGenerationFeeBaseTransactionData tokenGenerationFeeData = transactionHelper.getTokenGenerationFeeData(transactionData);
+            if (tokenGenerationFeeData != null) {
+                OriginatorCurrencyData originatorCurrencyData = tokenGenerationFeeData.getServiceData().getOriginatorCurrencyData();
+                Hash tokenHash = OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol());
+                Hash originatorHash = originatorCurrencyData.getOriginatorHash();
+                addToUserCurrencyIndexes(originatorHash, tokenHash);
             }
+        }
+    }
+
+    private void handleTransaction(TransactionData transactionData) {
+        if (transactionData.getType().equals(TransactionType.TokenGeneration)) {
+            boolean confirmed = transactionHelper.isConfirmed(transactionData);
+            if (confirmed) {
+                CurrencyData currencyData = getCurrencyData(transactionData);
+                if (currencyData != null && !currencyData.isConfirmed()) {
+                    currencyData.setConfirmed(true);
+                    initializeMintableAmountEntry(transactionData);
+                    currencies.put(currencyData);
+                }
+            }
+        }
+    }
+
+    private void initializeMintableAmountEntry(TransactionData transactionData) {
+        TokenGenerationFeeBaseTransactionData tokenGenerationFeeData = transactionHelper.getTokenGenerationFeeData(transactionData);
+        if (tokenGenerationFeeData != null) {
+            Hash tokenHash = OriginatorCurrencyCrypto.calculateHash(tokenGenerationFeeData.getServiceData().getOriginatorCurrencyData().getSymbol());
+            BigDecimal totalSupply = tokenGenerationFeeData.getServiceData().getOriginatorCurrencyData().getTotalSupply();
+            BigDecimal mintableAmount = getTokenMintableAmount(tokenHash);
+            if (mintableAmount == null) {
+                putToMintableAmountMap(tokenHash, totalSupply);
+                postponedTokenMintingTransactionsMap.get(tokenHash).forEach(this::updateMintableAmountMapAndBalance);
+            } else {
+                throw new CurrencyException(String.format("Attempting to generate existing token %s", tokenHash));
+            }
+        }
+    }
+
+    private void addToUserCurrencyIndexes(Hash originatorHash, Hash currencyHash) {
+        UserCurrencyIndexData userCurrencyIndexData = userCurrencyIndexes.getByHash(originatorHash);
+        if (userCurrencyIndexData == null) {
+            HashSet<Hash> tokensHashSet = new HashSet<>();
+            tokensHashSet.add(currencyHash);
+            userCurrencyIndexes.put(new UserCurrencyIndexData(originatorHash, tokensHashSet));
+        } else {
+            userCurrencyIndexData.getTokenHashes().add(currencyHash);
+            userCurrencyIndexes.put(userCurrencyIndexData);
         }
     }
 
@@ -217,6 +238,31 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             currencyData.setHash();
         }
         return currencyData;
+    }
+
+    @Override
+    public void updateMintableAmountMapAndBalance(TransactionData transactionData) {
+        TokenMintingFeeBaseTransactionData tokenMintingFeeData = transactionHelper.getTokenMintingFeeData(transactionData);
+        if (tokenMintingFeeData != null) {
+            Hash tokenHash = tokenMintingFeeData.getServiceData().getMintingCurrencyHash();
+            BigDecimal mintingRequestedAmount = tokenMintingFeeData.getServiceData().getMintingAmount();
+            Hash receiverAddress = tokenMintingFeeData.getServiceData().getReceiverAddress();
+            BigDecimal mintableAmount = getTokenMintableAmount(tokenHash);
+            if (mintableAmount != null) {
+                putToMintableAmountMap(tokenHash, mintableAmount.subtract(mintingRequestedAmount));
+            } else {
+                postponedTokenMintingTransactionsMap.computeIfPresent(tokenHash, (hash, transactionSet) -> {
+                    transactionSet.add(transactionData);
+                    return transactionSet;
+                });
+                postponedTokenMintingTransactionsMap.putIfAbsent(tokenHash, new HashSet<>(Collections.singletonList(transactionData)));
+            }
+            boolean confirmed = transactionHelper.isConfirmed(transactionData);
+            if (confirmed) {
+                balanceService.updateBalance(receiverAddress, tokenHash, mintingRequestedAmount);
+                balanceService.updatePreBalance(receiverAddress, tokenHash, mintingRequestedAmount);
+            }
+        }
     }
 
     @Override
@@ -266,7 +312,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     @Override
     public boolean validateCurrencyUniquenessAndAddUnconfirmedRecord(TransactionData transactionData) {
-        TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = getTokenGenerationFeeData(transactionData);
+        TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = transactionHelper.getTokenGenerationFeeData(transactionData);
         OriginatorCurrencyData originatorCurrencyData = tokenGenerationFeeBaseTransactionData.getServiceData().getOriginatorCurrencyData();
         CurrencyTypeData currencyTypeData = tokenGenerationFeeBaseTransactionData.getServiceData().getCurrencyTypeData();
         Hash currencyHash = OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol());
@@ -290,7 +336,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     public void addConfirmedCurrency(TransactionData transactionData) {
-        TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = getTokenGenerationFeeData(transactionData);
+        TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = transactionHelper.getTokenGenerationFeeData(transactionData);
         OriginatorCurrencyData originatorCurrencyData = tokenGenerationFeeBaseTransactionData.getServiceData().getOriginatorCurrencyData();
         Hash originatorHash = originatorCurrencyData.getOriginatorHash();
         Hash currencyHash = OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol());
@@ -308,15 +354,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                 putToMintableAmountMap(currencyHash, originatorCurrencyData.getTotalSupply());
                 try {
                     synchronized (addLockToLockMap(originatorHash)) {
-                        UserCurrencyIndexData userCurrencyIndexData = userCurrencyIndexes.getByHash(originatorHash);
-                        if (userCurrencyIndexData == null) {
-                            HashSet<Hash> tokensHashSet = new HashSet<>();
-                            tokensHashSet.add(currencyHash);
-                            userCurrencyIndexes.put(new UserCurrencyIndexData(originatorCurrencyData.getOriginatorHash(), tokensHashSet));
-                        } else {
-                            userCurrencyIndexData.getTokenHashes().add(currencyHash);
-                            userCurrencyIndexes.put(userCurrencyIndexData);
-                        }
+                        addToUserCurrencyIndexes(originatorHash, currencyHash);
                     }
                 } finally {
                     removeLockFromLocksMap(originatorHash);
@@ -399,15 +437,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         tokenGenerationResponseData.setMintedAmount(alreadyMintedAmount);
         tokenGenerationResponseData.setMintableAmount(mintableAmount);
         return tokenGenerationResponseData;
-    }
-
-
-    protected TokenGenerationFeeBaseTransactionData getTokenGenerationFeeData(TransactionData tokenGenerationTransaction) {
-        return (TokenGenerationFeeBaseTransactionData) tokenGenerationTransaction
-                .getBaseTransactions()
-                .stream()
-                .filter(t -> t instanceof TokenGenerationFeeBaseTransactionData)
-                .findFirst().orElse(null);
     }
 
     private Hash addLockToLockMap(Hash hash) {
