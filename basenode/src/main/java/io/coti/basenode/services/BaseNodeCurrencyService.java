@@ -200,7 +200,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                     if (transactionConfirmed && !isCurrencyNameUnique(currencyData.getHash(), currencyData.getName())) {
                         CurrencyNameIndexData previousCurrencyNameIndexData = currencyNameIndexes.getByHash(CryptoHelper.cryptoHash(currencyData.getName().getBytes()));
                         currencies.deleteByHash(previousCurrencyNameIndexData.getCurrencyHash());
-                        currencyNameIndexes.put(new CurrencyNameIndexData(currencyData.getName(), currencyData.getHash()));
                     }
                     if (isCurrencyNameUnique(currencyData.getHash(), currencyData.getName())) {
                         currencies.put(currencyData);
@@ -217,7 +216,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                     if (currencyData.isConfirmed()) {
                         initializeMintableAmountEntry(transactionData);
                     }
-                } else if (!currencyData.getCurrencyGeneratingTransactionHash().equals(transactionData.getHash()) && transactionConfirmed) {
+                } else if (transactionConfirmed) {
                     Instant createTime = tokenGenerationFeeBaseTransactionData.getCreateTime();
                     CurrencyData newCurrencyData = getCurrencyDataInstance(tokenGenerationData, createTime, originatorCurrencyData, transactionData);
                     currencies.put(newCurrencyData);
