@@ -67,10 +67,12 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     private final Object lock = new Object();
     private Map<Hash, BigDecimal> currencyHashToMintableAmountMap;
     private Map<Hash, Set<TransactionData>> postponedTokenMintingTransactionsMap;
+    private Map<Hash, Boolean> mintingTransactionToConfirmationMap;
 
     public void init() {
         currencyHashToMintableAmountMap = new ConcurrentHashMap<>();
         postponedTokenMintingTransactionsMap = new ConcurrentHashMap<>();
+        mintingTransactionToConfirmationMap = new ConcurrentHashMap<>();
         try {
             nativeCurrencyData = null;
             setNativeCurrencyFromExistingCurrencies();
@@ -183,16 +185,64 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     private void handleTransaction(TransactionData transactionData) {
         if (transactionData.getType().equals(TransactionType.TokenGeneration)) {
-            boolean confirmed = transactionHelper.isConfirmed(transactionData);
-            if (confirmed) {
-                CurrencyData currencyData = getCurrencyData(transactionData);
-                if (currencyData != null && !currencyData.isConfirmed()) {
-                    currencyData.setConfirmed(true);
+            TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData;
+            Optional<BaseTransactionData> firstBaseTransactionData = transactionData.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData instanceof TokenGenerationFeeBaseTransactionData).findFirst();
+            if (firstBaseTransactionData.isPresent()) {
+                tokenGenerationFeeBaseTransactionData = (TokenGenerationFeeBaseTransactionData) firstBaseTransactionData.get();
+                TokenGenerationData tokenGenerationData = tokenGenerationFeeBaseTransactionData.getServiceData();
+                OriginatorCurrencyData originatorCurrencyData = tokenGenerationData.getOriginatorCurrencyData();
+                boolean transactionConfirmed = transactionHelper.isConfirmed(transactionData);
+                CurrencyData currencyData = getCurrencyDataFromDB(originatorCurrencyData);
+
+                if (currencyData == null) {
+                    Instant createTime = tokenGenerationFeeBaseTransactionData.getCreateTime();
+                    currencyData = getCurrencyDataInstance(tokenGenerationData, createTime, originatorCurrencyData, transactionData);
+                    if (transactionConfirmed && !isCurrencyNameUnique(currencyData.getHash(), currencyData.getName())) {
+                        CurrencyNameIndexData previousCurrencyNameIndexData = currencyNameIndexes.getByHash(CryptoHelper.cryptoHash(currencyData.getName().getBytes()));
+                        currencies.deleteByHash(previousCurrencyNameIndexData.getCurrencyHash());
+                        currencyNameIndexes.put(new CurrencyNameIndexData(currencyData.getName(), currencyData.getHash()));
+                    }
+                    if (isCurrencyNameUnique(currencyData.getHash(), currencyData.getName())) {
+                        currencies.put(currencyData);
+                        currencyNameIndexes.put(new CurrencyNameIndexData(currencyData.getName(), currencyData.getHash()));
+                        if (currencyData.isConfirmed()) {
+                            initializeMintableAmountEntry(transactionData);
+                        }
+                    }
+                } else if (currencyData.getCurrencyGeneratingTransactionHash().equals(transactionData.getHash())) {
+                    if (transactionConfirmed && !currencyData.isConfirmed()) {
+                        currencyData.setConfirmed(true);
+                        currencies.put(currencyData);
+                    }
+                    if (currencyData.isConfirmed()) {
+                        initializeMintableAmountEntry(transactionData);
+                    }
+                } else if (!currencyData.getCurrencyGeneratingTransactionHash().equals(transactionData.getHash()) && transactionConfirmed) {
+                    Instant createTime = tokenGenerationFeeBaseTransactionData.getCreateTime();
+                    CurrencyData newCurrencyData = getCurrencyDataInstance(tokenGenerationData, createTime, originatorCurrencyData, transactionData);
+                    currencies.put(newCurrencyData);
+                    if (!newCurrencyData.getName().equals(currencyData.getName())) {
+                        currencyNameIndexes.deleteByHash(CryptoHelper.cryptoHash(currencyData.getName().getBytes()));
+                        currencyNameIndexes.put(new CurrencyNameIndexData(newCurrencyData.getName(), newCurrencyData.getHash()));
+                    }
                     initializeMintableAmountEntry(transactionData);
-                    currencies.put(currencyData);
                 }
-            } 
+            }
         }
+    }
+
+    @Override
+    public CurrencyData getCurrencyDataFromDB(OriginatorCurrencyData originatorCurrencyData) {
+
+        Hash tokenHash = OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol());
+        return currencies.getByHash(tokenHash);
+    }
+
+    private CurrencyData getCurrencyDataInstance(TokenGenerationData tokenGenerationData, Instant createTime, OriginatorCurrencyData originatorCurrencyData, TransactionData transactionData) {
+        CurrencyTypeData currencyTypeData = tokenGenerationData.getCurrencyTypeData();
+        Hash currencyGeneratingTransactionHash = transactionData.getHash();
+        return new CurrencyData(originatorCurrencyData, currencyTypeData, createTime,
+                currencyGeneratingTransactionHash, currencyGeneratingTransactionHash, transactionHelper.isConfirmed(transactionData));
     }
 
     private void initializeMintableAmountEntry(TransactionData transactionData) {
@@ -226,24 +276,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         }
     }
 
-    @Override
-    public CurrencyData getCurrencyData(TransactionData transactionData) {
-        CurrencyData currencyData = null;
-        Optional<BaseTransactionData> firstBaseTransactionData = transactionData.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData instanceof TokenGenerationFeeBaseTransactionData).findFirst();
-        if (firstBaseTransactionData.isPresent()) {
-            TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = (TokenGenerationFeeBaseTransactionData) firstBaseTransactionData.get();
-            TokenGenerationData tokenGenerationData = tokenGenerationFeeBaseTransactionData.getServiceData();
-            Hash currencyLastTypeChangingTransactionHash = transactionData.getHash();
-            OriginatorCurrencyData originatorCurrencyData = tokenGenerationData.getOriginatorCurrencyData();
-            CurrencyTypeData currencyTypeData = tokenGenerationData.getCurrencyTypeData();
-            Instant createTime = tokenGenerationFeeBaseTransactionData.getCreateTime();
-            Hash currencyGeneratingTransactionHash = transactionData.getHash();
-            currencyData = new CurrencyData(originatorCurrencyData, currencyTypeData, createTime,
-                    currencyGeneratingTransactionHash, currencyLastTypeChangingTransactionHash, transactionHelper.isConfirmed(transactionData));
-            currencyData.setHash();
-        }
-        return currencyData;
-    }
 
     @Override
     public void updateMintableAmountMapAndBalance(TransactionData transactionData) {
@@ -253,19 +285,24 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             BigDecimal mintingRequestedAmount = tokenMintingFeeData.getServiceData().getMintingAmount();
             Hash receiverAddress = tokenMintingFeeData.getServiceData().getReceiverAddress();
             BigDecimal mintableAmount = getTokenMintableAmount(tokenHash);
+            boolean confirmed = transactionHelper.isConfirmed(transactionData);
             if (mintableAmount != null) {
-                putToMintableAmountMap(tokenHash, mintableAmount.subtract(mintingRequestedAmount));
+                Boolean previousMintingTransactionConfirmed = mintingTransactionToConfirmationMap.get(transactionData.getHash());
+                if (previousMintingTransactionConfirmed == null) {
+                    putToMintableAmountMap(tokenHash, mintableAmount.subtract(mintingRequestedAmount));
+                }
+                if (previousMintingTransactionConfirmed == null && confirmed || previousMintingTransactionConfirmed != null && !previousMintingTransactionConfirmed.equals(confirmed)) {
+                    balanceService.updateBalance(receiverAddress, tokenHash, mintingRequestedAmount);
+                    balanceService.updatePreBalance(receiverAddress, tokenHash, mintingRequestedAmount);
+                }
+                mintingTransactionToConfirmationMap.put(transactionData.getHash(), confirmed);
+
             } else {
                 postponedTokenMintingTransactionsMap.computeIfPresent(tokenHash, (hash, transactionSet) -> {
                     transactionSet.add(transactionData);
                     return transactionSet;
                 });
                 postponedTokenMintingTransactionsMap.putIfAbsent(tokenHash, new HashSet<>(Collections.singletonList(transactionData)));
-            }
-            boolean confirmed = transactionHelper.isConfirmed(transactionData);
-            if (confirmed) {
-                balanceService.updateBalance(receiverAddress, tokenHash, mintingRequestedAmount);
-                balanceService.updatePreBalance(receiverAddress, tokenHash, mintingRequestedAmount);
             }
         }
     }
@@ -284,13 +321,17 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     protected void validateCurrencyUniqueness(Hash currencyHash, String currencyName) {
-        if (currencyNameIndexes.getByHash(new CurrencyNameIndexData(currencyName, currencyHash).getHash()) != null) {
+        if (!isCurrencyNameUnique(currencyHash, currencyName)) {
             throw new CurrencyException("Currency name is already in use.");
         }
         CurrencyData currencyData = currencies.getByHash(currencyHash);
         if (currencyData != null) {
             throw new CurrencyException("Currency symbol is already in use.");
         }
+    }
+
+    private boolean isCurrencyNameUnique(Hash currencyHash, String currencyName) {
+        return currencyNameIndexes.getByHash(new CurrencyNameIndexData(currencyName, currencyHash).getHash()) != null;
     }
 
     @Override
