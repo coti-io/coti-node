@@ -70,6 +70,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     public void init() {
         currencyHashToMintableAmountMap = new ConcurrentHashMap<>();
+        postponedTokenMintingTransactionsMap = new ConcurrentHashMap<>();
         try {
             nativeCurrencyData = null;
             setNativeCurrencyFromExistingCurrencies();
@@ -190,7 +191,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                     initializeMintableAmountEntry(transactionData);
                     currencies.put(currencyData);
                 }
-            }
+            } 
         }
     }
 
@@ -202,7 +203,11 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             BigDecimal mintableAmount = getTokenMintableAmount(tokenHash);
             if (mintableAmount == null) {
                 putToMintableAmountMap(tokenHash, totalSupply);
-                postponedTokenMintingTransactionsMap.get(tokenHash).forEach(this::updateMintableAmountMapAndBalance);
+                Set<TransactionData> setTransactionData = postponedTokenMintingTransactionsMap.get(tokenHash);
+                if (setTransactionData != null) {
+                    setTransactionData.forEach(this::updateMintableAmountMapAndBalance);
+                    postponedTokenMintingTransactionsMap.remove(tokenHash);
+                }
             } else {
                 throw new CurrencyException(String.format("Attempting to generate existing token %s", tokenHash));
             }
