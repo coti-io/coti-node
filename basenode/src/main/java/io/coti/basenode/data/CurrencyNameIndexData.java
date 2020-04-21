@@ -6,6 +6,7 @@ import lombok.Data;
 
 @Data
 public class CurrencyNameIndexData implements IEntity {
+
     private Hash hash;
     private Hash currencyHash;
 
