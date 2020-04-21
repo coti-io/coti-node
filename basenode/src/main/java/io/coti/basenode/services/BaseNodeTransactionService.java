@@ -230,19 +230,17 @@ public class BaseNodeTransactionService implements ITransactionService {
     public void handleMissingTransaction(TransactionData transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes) {
 
         if (!transactionHelper.isTransactionExists(transactionData)) {
-
             transactions.put(transactionData);
             addToExplorerIndexes(transactionData);
             transactionHelper.incrementTotalTransactions();
             confirmationService.insertMissingTransaction(transactionData);
-            mintingService.handleMissingTransaction(transactionData);
             continueHandleMissingTransaction(transactionData);
-
         } else {
             transactions.put(transactionData);
             confirmationService.insertMissingConfirmation(transactionData, trustChainUnconfirmedExistingTransactionHashes);
         }
         currencyService.handleMissingTransaction(transactionData);
+        mintingService.handleMissingTransaction(transactionData);
         clusterService.addMissingTransactionOnInit(transactionData, trustChainUnconfirmedExistingTransactionHashes);
 
     }

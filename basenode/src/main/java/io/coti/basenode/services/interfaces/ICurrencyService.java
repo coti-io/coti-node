@@ -21,7 +21,7 @@ public interface ICurrencyService {
 
     Hash getNativeCurrencyHash();
 
-    CurrencyData getCurrencyData(TransactionData transactionData);
+    CurrencyData getCurrencyDataFromDB(OriginatorCurrencyData originatorCurrencyData);
 
     void updateMintableAmountMapAndBalance(TransactionData transactionData);
 
