@@ -2,6 +2,7 @@ package io.coti.nodemanager.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.LockData;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.exceptions.CotiRunTimeException;
@@ -39,7 +40,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -77,8 +77,7 @@ public class NodeManagementService implements INodeManagementService {
     private String nodeManagerIp;
     @Value("${propagation.port}")
     private String propagationPort;
-    private final Object lock = new Object();
-    private final Map<Hash, Hash> lockNodeHistoryRecordHashMap = new ConcurrentHashMap<>();
+    private final LockData nodeHashLockData = new LockData();
 
     @Override
     public void init() {
@@ -142,7 +141,7 @@ public class NodeManagementService implements INodeManagementService {
         }
         Hash nodeHash = networkNodeData.getNodeHash();
         try {
-            synchronized (addLockToLockMap(nodeHash)) {
+            synchronized (nodeHashLockData.addLockToLockMap(nodeHash)) {
                 LocalDate currentEventDate = currentEventDateTime.atZone(ZoneId.of("UTC")).toLocalDate();
                 NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
                 if (nodeDailyActivityData == null) {
@@ -165,7 +164,7 @@ public class NodeManagementService implements INodeManagementService {
                 nodeDailyActivities.put(nodeDailyActivityData);
             }
         } finally {
-            removeLockFromLocksMap(nodeHash);
+            nodeHashLockData.removeLockFromLocksMap(nodeHash);
         }
 
     }
@@ -200,7 +199,7 @@ public class NodeManagementService implements INodeManagementService {
         LocalDate localDateForEvent = recordTime.atZone(ZoneId.of("UTC")).toLocalDate();
 
         try {
-            synchronized (addLockToLockMap(nodeHash)) {
+            synchronized (nodeHashLockData.addLockToLockMap(nodeHash)) {
                 Instant nowInstant = Instant.now();
                 NodeNetworkDataRecord lastNodeNetworkDataRecord = networkHistoryService.getLastNodeNetworkDataRecord(request.getNodeHash());
 
@@ -230,7 +229,7 @@ public class NodeManagementService implements INodeManagementService {
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new Response(e.getMessage(), SERVER_ERROR));
         } finally {
-            removeLockFromLocksMap(nodeHash);
+            nodeHashLockData.removeLockFromLocksMap(nodeHash);
         }
     }
 
@@ -243,7 +242,7 @@ public class NodeManagementService implements INodeManagementService {
         Instant pairRequestEndTime = request.getEndTime();
 
         try {
-            synchronized (addLockToLockMap(nodeHash)) {
+            synchronized (nodeHashLockData.addLockToLockMap(nodeHash)) {
                 Instant nowInstant = Instant.now();
                 NodeNetworkDataRecord networkRecordBeforePair = getPreviousNetworkRecord(request.getNodeHash(), pairRequestStartTime);
                 NodeNetworkDataRecord networkRecordAfterPair;
@@ -280,7 +279,7 @@ public class NodeManagementService implements INodeManagementService {
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new Response(e.getMessage(), SERVER_ERROR));
         } finally {
-            removeLockFromLocksMap(nodeHash);
+            nodeHashLockData.removeLockFromLocksMap(nodeHash);
         }
     }
 
@@ -550,18 +549,4 @@ public class NodeManagementService implements INodeManagementService {
         }
         return singleNodeDetailsForWallet;
     }
-
-    private Hash addLockToLockMap(Hash hash) {
-        synchronized (lock) {
-            lockNodeHistoryRecordHashMap.putIfAbsent(hash, hash);
-            return lockNodeHistoryRecordHashMap.get(hash);
-        }
-    }
-
-    private void removeLockFromLocksMap(Hash hash) {
-        synchronized (lock) {
-            lockNodeHistoryRecordHashMap.remove(hash);
-        }
-    }
-
 }

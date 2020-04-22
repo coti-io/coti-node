@@ -93,7 +93,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
 
     private void addUnconfirmedTransaction(Hash transactionHash, boolean dspVoteOnly) {
         try {
-            synchronized (addLockToLockMap(transactionHash)) {
+            synchronized (transactionHashLockData.addLockToLockMap(transactionHash)) {
                 UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData = new UnconfirmedReceivedTransactionHashData(transactionHash);
                 putToUnconfirmedReceivedTransactionHashesMap(unconfirmedReceivedTransactionHashData, dspVoteOnly);
                 if (!dspVoteOnly) {
@@ -101,33 +101,33 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
                 }
             }
         } finally {
-            removeLockFromLockMap(transactionHash);
+            transactionHashLockData.removeLockFromLocksMap(transactionHash);
         }
     }
 
     public void addUnconfirmedTransactionDSPVote(TransactionDspVote transactionDspVote) {
         Hash transactionHash = transactionDspVote.getTransactionHash();
         try {
-            synchronized (addLockToLockMap(transactionHash)) {
+            synchronized (transactionHashLockData.addLockToLockMap(transactionHash)) {
                 if (unconfirmedReceivedTransactionHashesMap.containsKey(transactionHash)) {
                     unconfirmedTransactionDspVotes.put(transactionDspVote);
                 }
             }
         } finally {
-            removeLockFromLockMap(transactionHash);
+            transactionHashLockData.removeLockFromLocksMap(transactionHash);
         }
     }
 
     @Override
     public void removeConfirmedReceiptTransaction(Hash transactionHash) {
         try {
-            synchronized (addLockToLockMap(transactionHash)) {
+            synchronized (transactionHashLockData.addLockToLockMap(transactionHash)) {
                 unconfirmedReceivedTransactionHashesMap.remove(transactionHash);
                 unconfirmedReceivedTransactionHashes.deleteByHash(transactionHash);
                 removeConfirmedReceiptTransactionDSPVote(transactionHash);
             }
         } finally {
-            removeLockFromLockMap(transactionHash);
+            transactionHashLockData.removeLockFromLocksMap(transactionHash);
         }
     }
 
@@ -153,10 +153,12 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
     }
 
     private void sendUnconfirmedReceivedTransactionsDSP(Map.Entry<Hash, UnconfirmedReceivedTransactionHashData> entry) {
+        Hash transactionHash = entry.getKey();
+        UnconfirmedReceivedTransactionHashDspNodeData unconfirmedReceivedTransactionHashDspNodeData = (UnconfirmedReceivedTransactionHashDspNodeData) entry.getValue();
         try {
-            UnconfirmedReceivedTransactionHashDspNodeData unconfirmedReceivedTransactionHashDspNodeData = (UnconfirmedReceivedTransactionHashDspNodeData) entry.getValue();
-            synchronized (addLockToLockMap(entry.getKey())) {
-                TransactionData transactionData = transactions.getByHash(entry.getKey());
+
+            synchronized (transactionHashLockData.addLockToLockMap(transactionHash)) {
+                TransactionData transactionData = transactions.getByHash(transactionHash);
                 if (transactionData == null) {
                     unconfirmedReceivedTransactionHashDspNodeData.setRetries(0);
                 } else {
@@ -165,7 +167,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
                 }
             }
         } finally {
-            removeLockFromLockMap(entry.getKey());
+            transactionHashLockData.removeLockFromLocksMap(transactionHash);
         }
     }
 

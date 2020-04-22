@@ -1,6 +1,7 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.LockData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.UnconfirmedReceivedTransactionHashData;
 import io.coti.basenode.model.Transactions;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
@@ -27,8 +27,7 @@ public class BaseNodeTransactionPropagationCheckService implements ITransactionP
     @Autowired
     protected UnconfirmedReceivedTransactionHashes unconfirmedReceivedTransactionHashes;
     protected Map<Hash, UnconfirmedReceivedTransactionHashData> unconfirmedReceivedTransactionHashesMap;
-    private final Map<Hash, Hash> lockVotedTransactionRecordHashMap = new ConcurrentHashMap<>();
-    private final Object lock = new Object();
+    protected final LockData transactionHashLockData = new LockData();
 
     @Override
     public void init() {
@@ -61,19 +60,6 @@ public class BaseNodeTransactionPropagationCheckService implements ITransactionP
     public void removeTransactionHashFromUnconfirmed(Hash transactionHash) {
         if (unconfirmedReceivedTransactionHashesMap != null && unconfirmedReceivedTransactionHashesMap.containsKey(transactionHash)) {
             removeConfirmedReceiptTransaction(transactionHash);
-        }
-    }
-
-    protected Hash addLockToLockMap(Hash hash) {
-        synchronized (lock) {
-            lockVotedTransactionRecordHashMap.putIfAbsent(hash, hash);
-            return lockVotedTransactionRecordHashMap.get(hash);
-        }
-    }
-
-    protected void removeLockFromLockMap(Hash hash) {
-        synchronized (lock) {
-            lockVotedTransactionRecordHashMap.remove(hash);
         }
     }
 }
