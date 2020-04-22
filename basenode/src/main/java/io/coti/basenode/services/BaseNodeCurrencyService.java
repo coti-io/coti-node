@@ -63,8 +63,9 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     private UserCurrencyIndexes userCurrencyIndexes;
     @Autowired
     private ITransactionHelper transactionHelper;
-    private Map<Hash, Hash> lockHashMap = new ConcurrentHashMap<>();
-    private final Object lock = new Object();
+    private final LockData currencyLockData = new LockData();
+    private final LockData currencyNameLockData = new LockData();
+    private final LockData originatorHashLockData = new LockData();
     private Map<Hash, BigDecimal> currencyHashToMintableAmountMap;
     private Map<Hash, Set<TransactionData>> postponedTokenMintingTransactionsMap;
     private Map<Hash, Boolean> mintingTransactionToConfirmationMap;
@@ -199,11 +200,14 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                     currencyData = getCurrencyDataInstance(tokenGenerationData, createTime, originatorCurrencyData, transactionData);
                     if (transactionConfirmed && !isCurrencyNameUnique(currencyData.getHash(), currencyData.getName())) {
                         CurrencyNameIndexData previousCurrencyNameIndexData = currencyNameIndexes.getByHash(CryptoHelper.cryptoHash(currencyData.getName().getBytes()));
-                        currencies.deleteByHash(previousCurrencyNameIndexData.getCurrencyHash());
+                        Hash previousCurrencyHash = previousCurrencyNameIndexData.getCurrencyHash();
+                        removeUserCurrencyIndexByCurrencyHash(previousCurrencyHash);
+                        currencies.deleteByHash(previousCurrencyHash);
                     }
                     if (isCurrencyNameUnique(currencyData.getHash(), currencyData.getName())) {
                         currencies.put(currencyData);
                         currencyNameIndexes.put(new CurrencyNameIndexData(currencyData.getName(), currencyData.getHash()));
+                        addToUserCurrencyIndexes(currencyData.getOriginatorHash(), currencyData.getHash());
                         if (currencyData.isConfirmed()) {
                             initializeMintableAmountEntry(transactionData);
                         }
@@ -224,9 +228,42 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                         currencyNameIndexes.deleteByHash(CryptoHelper.cryptoHash(currencyData.getName().getBytes()));
                         currencyNameIndexes.put(new CurrencyNameIndexData(newCurrencyData.getName(), newCurrencyData.getHash()));
                     }
+                    if (!currencyData.getOriginatorHash().equals(newCurrencyData.getOriginatorHash())) {
+                        removeUserCurrencyIndexByCurrencyHash(currencyData.getHash());
+                        addToUserCurrencyIndexes(newCurrencyData.getOriginatorHash(), newCurrencyData.getHash());
+                    }
                     initializeMintableAmountEntry(transactionData);
                 }
             }
+        }
+    }
+
+    private void addToUserCurrencyIndexes(Hash originatorHash, Hash currencyHash) {
+        UserCurrencyIndexData userCurrencyIndexData = userCurrencyIndexes.getByHash(originatorHash);
+        if (userCurrencyIndexData == null) {
+            Set<Hash> tokensHashSet = new HashSet<>();
+            userCurrencyIndexData = new UserCurrencyIndexData(originatorHash, tokensHashSet);
+        }
+        userCurrencyIndexData.getTokenHashes().add(currencyHash);
+        userCurrencyIndexes.put(userCurrencyIndexData);
+    }
+
+    private void removeFromUserCurrencyIndexes(Hash originatorHash, Hash currencyHash) {
+        UserCurrencyIndexData userCurrencyIndexData = userCurrencyIndexes.getByHash(originatorHash);
+        if (userCurrencyIndexData != null) {
+            Set<Hash> tokenHashSet = userCurrencyIndexData.getTokenHashes();
+            tokenHashSet.remove(currencyHash);
+            if (tokenHashSet.isEmpty()) {
+                userCurrencyIndexes.deleteByHash(originatorHash);
+            }
+        }
+    }
+
+    private void removeUserCurrencyIndexByCurrencyHash(Hash currencyHash) {
+        CurrencyData currencyData = currencies.getByHash(currencyHash);
+        if (currencyData != null) {
+            Hash originatorHash = currencyData.getOriginatorHash();
+            removeFromUserCurrencyIndexes(originatorHash, currencyHash);
         }
     }
 
@@ -262,19 +299,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             }
         }
     }
-
-    private void addToUserCurrencyIndexes(Hash originatorHash, Hash currencyHash) {
-        UserCurrencyIndexData userCurrencyIndexData = userCurrencyIndexes.getByHash(originatorHash);
-        if (userCurrencyIndexData == null) {
-            HashSet<Hash> tokensHashSet = new HashSet<>();
-            tokensHashSet.add(currencyHash);
-            userCurrencyIndexes.put(new UserCurrencyIndexData(originatorHash, tokensHashSet));
-        } else {
-            userCurrencyIndexData.getTokenHashes().add(currencyHash);
-            userCurrencyIndexes.put(userCurrencyIndexData);
-        }
-    }
-
 
     @Override
     public void updateMintableAmountMapAndBalance(TransactionData transactionData) {
@@ -319,20 +343,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         currencyNameIndexes.put(new CurrencyNameIndexData(currencyData.getName(), currencyData.getHash()));
     }
 
-    protected void validateCurrencyUniqueness(Hash currencyHash, String currencyName) {
-        if (!isCurrencyNameUnique(currencyHash, currencyName)) {
-            throw new CurrencyException("Currency name is already in use.");
-        }
-        CurrencyData currencyData = currencies.getByHash(currencyHash);
-        if (currencyData != null) {
-            throw new CurrencyException("Currency symbol is already in use.");
-        }
-    }
-
-    private boolean isCurrencyNameUnique(Hash currencyHash, String currencyName) {
-        return currencyNameIndexes.getByHash(new CurrencyNameIndexData(currencyName, currencyHash).getHash()) != null;
-    }
-
     @Override
     public void validateName(OriginatorCurrencyData originatorCurrencyData) {
         String name = originatorCurrencyData.getName();
@@ -355,28 +365,47 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         }
     }
 
+    protected void validateCurrencyUniqueness(Hash currencyHash, String currencyName) {
+        if (!isCurrencyNameUnique(currencyHash, currencyName)) {
+            throw new CurrencyException("Currency name is already in use.");
+        }
+        if (!isCurrencySymbolUnique(currencyHash)) {
+            throw new CurrencyException("Currency symbol is already in use.");
+        }
+    }
+
+    private boolean isCurrencyNameUnique(Hash currencyHash, String currencyName) {
+        return currencyNameIndexes.getByHash(new CurrencyNameIndexData(currencyName, currencyHash).getHash()) != null;
+    }
+
+    private boolean isCurrencySymbolUnique(Hash currencyHash) {
+        return currencies.getByHash(currencyHash) != null;
+    }
+
     @Override
     public boolean validateCurrencyUniquenessAndAddUnconfirmedRecord(TransactionData transactionData) {
         TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = transactionHelper.getTokenGenerationFeeData(transactionData);
         OriginatorCurrencyData originatorCurrencyData = tokenGenerationFeeBaseTransactionData.getServiceData().getOriginatorCurrencyData();
         CurrencyTypeData currencyTypeData = tokenGenerationFeeBaseTransactionData.getServiceData().getCurrencyTypeData();
         Hash currencyHash = OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol());
+        Hash currencyNameHash = CryptoHelper.cryptoHash(originatorCurrencyData.getName().getBytes());
         try {
-            synchronized (addLockToLockMap(currencyHash)) {
-                if (currencyNameIndexes.getByHash(new CurrencyNameIndexData(originatorCurrencyData.getName(), currencyHash).getHash()) != null) {
-                    return false;
+            synchronized (currencyLockData.addLockToLockMap(currencyHash)) {
+                synchronized (currencyNameLockData.addLockToLockMap(currencyNameHash)) {
+                    if (!isCurrencyNameUnique(currencyHash, originatorCurrencyData.getName()) || !isCurrencySymbolUnique(currencyHash)) {
+                        return false;
+                    }
+                    CurrencyData currencyData = new CurrencyData(originatorCurrencyData, currencyTypeData, tokenGenerationFeeBaseTransactionData.getCreateTime(),
+                            transactionData.getHash(), transactionData.getHash(), false);
+                    currencies.put(currencyData);
+                    currencyNameIndexes.put(new CurrencyNameIndexData(currencyData.getName(), currencyHash));
+                    addToUserCurrencyIndexes(currencyData.getOriginatorHash(), currencyHash);
+                    return true;
                 }
-                if (currencies.getByHash(currencyHash) != null) {
-                    return false;
-                }
-                CurrencyData currencyData = new CurrencyData(originatorCurrencyData, currencyTypeData, transactionData.getCreateTime(),
-                        transactionData.getHash(), transactionData.getHash(), false);
-                currencies.put(currencyData);
-                // transactionData.getCreateTime  not the time from dspconsensus, because the record should be the same time in all nodes.
-                return true;
             }
         } finally {
-            removeLockFromLocksMap(currencyHash);
+            currencyNameLockData.removeLockFromLocksMap(currencyNameHash);
+            currencyLockData.removeLockFromLocksMap(currencyHash);
         }
     }
 
@@ -386,7 +415,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         Hash originatorHash = originatorCurrencyData.getOriginatorHash();
         Hash currencyHash = OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol());
         try {
-            synchronized (addLockToLockMap(currencyHash)) {
+            synchronized (currencyLockData.addLockToLockMap(currencyHash)) {
                 CurrencyData currencyData = currencies.getByHash(currencyHash);
                 if (currencyData == null) {
                     CurrencyTypeData currencyTypeData = tokenGenerationFeeBaseTransactionData.getServiceData().getCurrencyTypeData();
@@ -398,15 +427,15 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                 currencies.put(currencyData);
                 putToMintableAmountMap(currencyHash, originatorCurrencyData.getTotalSupply());
                 try {
-                    synchronized (addLockToLockMap(originatorHash)) {
+                    synchronized (originatorHashLockData.addLockToLockMap(originatorHash)) {
                         addToUserCurrencyIndexes(originatorHash, currencyHash);
                     }
                 } finally {
-                    removeLockFromLocksMap(originatorHash);
+                    originatorHashLockData.removeLockFromLocksMap(originatorHash);
                 }
             }
         } finally {
-            removeLockFromLocksMap(currencyHash);
+            currencyLockData.removeLockFromLocksMap(currencyHash);
         }
     }
 
@@ -482,18 +511,5 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         tokenGenerationResponseData.setMintedAmount(alreadyMintedAmount);
         tokenGenerationResponseData.setMintableAmount(mintableAmount);
         return tokenGenerationResponseData;
-    }
-
-    private Hash addLockToLockMap(Hash hash) {
-        synchronized (lock) {
-            lockHashMap.putIfAbsent(hash, hash);   // use the same map for two locks, it is ok, these hashes are even of different lengths
-            return lockHashMap.get(hash);
-        }
-    }
-
-    private void removeLockFromLocksMap(Hash hash) {
-        synchronized (lock) {
-            lockHashMap.remove(hash);
-        }
     }
 }

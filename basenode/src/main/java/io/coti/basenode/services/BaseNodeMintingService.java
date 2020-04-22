@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
@@ -29,24 +28,10 @@ public class BaseNodeMintingService implements IMintingService {
     protected IBalanceService balanceService;
     @Autowired
     protected ITransactionHelper transactionHelper;
-    private final Object lock = new Object();
-    private final Map<Hash, Hash> lockMintingRecordHashMap = new ConcurrentHashMap<>();
+    private final LockData tokenHashLockData = new LockData();
 
     public void init() {
         log.info("{} is up", this.getClass().getSimpleName());
-    }
-
-    private Hash addLockToLockMap(Hash hash) {
-        synchronized (lock) {
-            lockMintingRecordHashMap.putIfAbsent(hash, hash);
-            return lockMintingRecordHashMap.get(hash);
-        }
-    }
-
-    private void removeLockFromLocksMap(Hash hash) {
-        synchronized (lock) {
-            lockMintingRecordHashMap.remove(hash);
-        }
     }
 
     @Override
@@ -55,7 +40,7 @@ public class BaseNodeMintingService implements IMintingService {
         Hash tokenHash = tokenMintingFeeBaseTransactionData.getServiceData().getMintingCurrencyHash();
         BigDecimal tokenAmount = tokenMintingFeeBaseTransactionData.getServiceData().getMintingAmount();
         try {
-            synchronized (addLockToLockMap(tokenHash)) {
+            synchronized (tokenHashLockData.addLockToLockMap(tokenHash)) {
 
                 CurrencyData currencyData = currencies.getByHash(tokenHash);
                 if (currencyData == null) {
@@ -80,7 +65,7 @@ public class BaseNodeMintingService implements IMintingService {
                 currencyService.putToMintableAmountMap(tokenHash, restAfterMinting);
             }
         } finally {
-            removeLockFromLocksMap(tokenHash);
+            tokenHashLockData.removeLockFromLocksMap(tokenHash);
         }
         return true;
     }
@@ -90,7 +75,7 @@ public class BaseNodeMintingService implements IMintingService {
         TokenMintingFeeBaseTransactionData tokenMintingFeeData = transactionHelper.getTokenMintingFeeData(transactionData);
         Hash tokenHash = tokenMintingFeeData.getCurrencyHash();
         try {
-            synchronized (addLockToLockMap(tokenHash)) {
+            synchronized (tokenHashLockData.addLockToLockMap(tokenHash)) {
                 CurrencyData currencyFromDB = currencies.getByHash(tokenHash);
                 BigDecimal mintableAmount = currencyService.getTokenMintableAmount(tokenHash);
                 if (currencyFromDB == null || mintableAmount == null) {
@@ -100,7 +85,7 @@ public class BaseNodeMintingService implements IMintingService {
                 currencyService.putToMintableAmountMap(tokenHash, mintableAmount.add(tokenMintingFeeData.getAmount()));
             }
         } finally {
-            removeLockFromLocksMap(tokenHash);
+            tokenHashLockData.removeLockFromLocksMap(tokenHash);
         }
     }
 
