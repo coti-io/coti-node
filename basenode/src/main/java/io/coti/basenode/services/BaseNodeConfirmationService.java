@@ -118,7 +118,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                 if (!insertNewTransactionIndex(transactionData)) {
                     return;
                 }
-                if (transactionHelper.isDspConfirmed(transactionData) && transactionHelper.hasDspVotingAndIndexed(transactionData)) {
+                if (transactionHelper.isDspConfirmed(transactionData)) {
                     continueHandleDSPConfirmedTransaction(transactionData);
                     dspConfirmed.incrementAndGet();
                 }
@@ -126,7 +126,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
             if (transactionHelper.isConfirmed(transactionData)) {
                 processConfirmedTransaction(transactionData);
             }
-            if (transactionHelper.isTccConfirmedDspRejected(transactionData)) {
+            if (transactionHelper.isTccConfirmedAndDspRejected(transactionData)) {
                 processDSPRejectedTransaction(transactionData);
             }
             transactions.put(transactionData);
@@ -135,7 +135,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
 
     private void processConfirmedTransaction(TransactionData transactionData) {
         Hash transactionDataHash = transactionData.getHash();
-        if (!transactionData.getValid()) {
+        if (Boolean.FALSE.equals(transactionData.isValid())) {
             if (!balanceService.checkBalancesAndAddToPreBalance(transactionData.getBaseTransactions())) {
                 transactionData.getInputBaseTransactions().forEach(inputBaseTransactionData -> {
                     Hash addressHash = inputBaseTransactionData.getAddressHash();
@@ -175,7 +175,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
 
     private void processDSPRejectedTransaction(TransactionData transactionData) {
         processTransaction(transactionData);
-        if (transactionData.getValid()) {
+        if (Boolean.TRUE.equals(transactionData.isValid())) {
             balanceService.rollbackBaseTransactions(transactionData);
             Set<Hash> baseTransactionsAddresses = Sets.newConcurrentHashSet();
             transactionData.getInputBaseTransactions().forEach(inputBaseTransactionData -> baseTransactionsAddresses.add(inputBaseTransactionData.getAddressHash()));
@@ -203,7 +203,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         } else {
             long index = dspConsensusResult.getIndex() + 1;
             while (waitingDspConsensusResults.containsKey(index)) {
-                setDspcToTrueOrFalse(waitingDspConsensusResults.get(index));
+                setDspc(waitingDspConsensusResults.get(index));
                 waitingDspConsensusResults.remove(index);
                 index++;
             }
@@ -222,7 +222,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
 
     @Override
     public void insertSavedTransaction(TransactionData transactionData, Map<Long, ReducedExistingTransactionData> indexToTransactionMap) {
-        boolean isDspConfirmed = transactionHelper.isDspConfirmed(transactionData) && transactionHelper.hasDspVotingAndIndexed(transactionData);
+        boolean isDspConfirmed = transactionHelper.isDspConfirmed(transactionData) && transactionHelper.hasDspResultAndIndexed(transactionData);
         transactionData.getBaseTransactions().forEach(baseTransactionData ->
                 balanceService.updatePreBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount())
         );
@@ -257,7 +257,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     private void insertMissingDspConfirmation(TransactionData transactionData) {
-        if (!transactionHelper.isDspConfirmed(transactionData) || !transactionHelper.hasDspVotingAndIndexed(transactionData)) {
+        if (!transactionHelper.isDspConfirmed(transactionData) || !transactionHelper.hasDspResultAndIndexed(transactionData)) {
             transactionHelper.addNoneIndexedTransaction(transactionData);
         }
         if (transactionData.getDspConsensusResult() != null) {
@@ -291,7 +291,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         continueHandleDSPConfirmedTransaction(transactionData);
         dspConfirmed.incrementAndGet();
         if (transactionData.isTrustChainConsensus()) {
-            if (transactionData.getValid()) {
+            if (Boolean.TRUE.equals(transactionData.isValid())) {
                 transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount()));
                 totalConfirmed.incrementAndGet();
             } else {
@@ -310,7 +310,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     @Override
-    public void setDspcToTrueOrFalse(DspConsensusResult dspConsensusResult) {
+    public void setDspc(DspConsensusResult dspConsensusResult) {
         try {
             confirmationQueue.put(dspConsensusResult);
         } catch (InterruptedException e) {

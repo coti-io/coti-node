@@ -37,7 +37,7 @@ public class BaseNodeTransactionPropagationCheckService implements ITransactionP
     protected boolean isTransactionHashDSPConfirmed(Hash transactionHash) {
         TransactionData transactionData = transactions.getByHash(transactionHash);
         if (transactionData != null) {
-            return transactionHelper.isDspConfirmed(transactionData) && transactionHelper.hasDspVotingAndIndexed(transactionData);
+            return transactionHelper.isDspConfirmed(transactionData) && transactionHelper.hasDspResultAndIndexed(transactionData);
         }
         return false;
     }
