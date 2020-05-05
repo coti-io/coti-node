@@ -30,8 +30,6 @@ public interface IValidationService {
 
     <T extends BaseTransactionData & ITrustScoreNodeValidatable> boolean validateBaseTransactionTrustScoreNodeResult(T baseTransactionData);
 
-    boolean fullValidation(TransactionData transactionData);
-
     boolean validatePot(TransactionData transactionData);
 
     boolean validateTransactionTimeFields(TransactionData transactionData);

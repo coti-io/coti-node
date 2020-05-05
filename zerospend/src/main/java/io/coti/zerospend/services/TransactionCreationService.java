@@ -52,10 +52,6 @@ public class TransactionCreationService {
     }
 
     public String createNewZeroSpendTransaction(TransactionData incomingTransactionData, ZeroSpendTransactionType zeroSpendTransactionType) {
-        if (!validationService.fullValidation(incomingTransactionData)) {
-            log.error("Validation for waiting source  failed! requesting transaction {}", incomingTransactionData);
-            return "Invalid";
-        }
         TransactionData zeroSpendTransaction = createZeroSpendTransaction(incomingTransactionData, zeroSpendTransactionType);
         sendTransactionToPublisher(zeroSpendTransaction);
         return "Ok";
