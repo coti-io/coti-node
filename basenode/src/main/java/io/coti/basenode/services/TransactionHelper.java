@@ -207,7 +207,7 @@ public class TransactionHelper implements ITransactionHelper {
             return;
         }
         if (transactionIndexes.getByHash(new Hash(dspConsensusResult.getIndex())) == null) {
-            confirmationService.setDspcToTrueOrFalse(dspConsensusResult);
+            confirmationService.setDspc(dspConsensusResult);
         }
 
     }
@@ -307,11 +307,11 @@ public class TransactionHelper implements ITransactionHelper {
         transactionData.setChildrenTransactionHashes(new ArrayList<>());
         transactions.put(transactionData);
         totalTransactions.incrementAndGet();
-        if (!isDspConfirmed(transactionData) || !hasDspVotingAndIndexed(transactionData)) {
+        if (!isDspConfirmed(transactionData) || !hasDspResultAndIndexed(transactionData)) {
             addNoneIndexedTransaction(transactionData);
         }
         if (transactionData.getDspConsensusResult() != null) {
-            confirmationService.setDspcToTrueOrFalse(transactionData.getDspConsensusResult());
+            confirmationService.setDspc(transactionData.getDspConsensusResult());
         }
         updateAddressTransactionHistory(transactionData);
         clusterService.attachToCluster(transactionData);
@@ -327,26 +327,26 @@ public class TransactionHelper implements ITransactionHelper {
 
     @Override
     public boolean isConfirmed(TransactionData transactionData) {
-        return transactionData.isTrustChainConsensus() && isDspConfirmed(transactionData) && hasDspVotingAndIndexed(transactionData);
+        return transactionData.isTrustChainConsensus() && isDspConfirmed(transactionData);
     }
 
     @Override
-    public boolean isTccConfirmedDspRejected(TransactionData transactionData) {
+    public boolean isTccConfirmedAndDspRejected(TransactionData transactionData) {
         return transactionData.isTrustChainConsensus() && isDspRejected(transactionData);
     }
 
     @Override
     public boolean isDspConfirmed(TransactionData transactionData) {
-        return transactionData.getDspConsensusResult() != null && transactionData.getDspConsensusResult().isDspConsensus() && transactionIndexes.getByHash(new Hash(transactionData.getDspConsensusResult().getIndex())) != null;
+        return hasDspResultAndIndexed(transactionData) && transactionData.getDspConsensusResult().isDspConsensus();
     }
 
     @Override
     public boolean isDspRejected(TransactionData transactionData) {
-        return transactionData.getDspConsensusResult() != null && !transactionData.getDspConsensusResult().isDspConsensus();
+        return hasDspResultAndIndexed(transactionData) && !transactionData.getDspConsensusResult().isDspConsensus();
     }
 
     @Override
-    public boolean hasDspVotingAndIndexed(TransactionData transactionData) {
+    public boolean hasDspResultAndIndexed(TransactionData transactionData) {
         return transactionData.getDspConsensusResult() != null && transactionIndexes.getByHash(new Hash(transactionData.getDspConsensusResult().getIndex())) != null;
     }
 

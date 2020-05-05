@@ -19,7 +19,7 @@ public interface IConfirmationService {
 
     void setTccToTrue(TccInfo tccInfo);
 
-    void setDspcToTrueOrFalse(DspConsensusResult dspConsensusResult);
+    void setDspc(DspConsensusResult dspConsensusResult);
 
     long getTotalConfirmed();
 
