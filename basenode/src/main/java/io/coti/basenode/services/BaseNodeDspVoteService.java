@@ -45,7 +45,7 @@ public class BaseNodeDspVoteService implements IDspVoteService {
         try {
             log.debug("Received DspConsensus result for transaction: {}", dspConsensusResult.getHash());
             handleVoteConclusionResult(dspConsensusResult);
-            confirmationService.setDspcToTrue(dspConsensusResult);
+            confirmationService.setDspcToTrueOrFalse(dspConsensusResult);
             continueHandleVoteConclusion(dspConsensusResult);
             postponedDspConsensusResultsMap.remove(dspConsensusResult.getHash());
         } catch (Exception e) {
@@ -70,7 +70,7 @@ public class BaseNodeDspVoteService implements IDspVoteService {
         if (dspConsensusResult.isDspConsensus()) {
             log.debug("Valid vote conclusion received for transaction: {}", dspConsensusResult.getHash());
         } else {
-            log.debug("Invalid vote conclusion received for transaction: {}", dspConsensusResult.getHash());
+            log.debug("Negative vote conclusion received for transaction: {}", dspConsensusResult.getHash());
         }
 
         log.debug("DspConsensus result for transaction: Hash= {}, DspVoteResult= {}, Index= {}", dspConsensusResult.getHash(), dspConsensusResult.isDspConsensus(), dspConsensusResult.getIndex());
