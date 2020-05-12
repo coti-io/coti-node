@@ -35,11 +35,12 @@ public class BaseNodeMonitorService implements IMonitorService {
     @Scheduled(initialDelay = 1000, fixedDelay = 5000)
     public void lastState() {
         if (allowTransactionMonitoring) {
-            log.info("Transactions = {}, TccConfirmed = {}, DspConfirmed = {}, Confirmed = {}, LastIndex = {}, Sources = {}, PostponedTransactions = {}, PropagationQueue = {}",
+            log.info("Transactions = {}, Consensus = {}, TccConfirmed = {}, DspConfirmed = {}, DspRejected = {}, LastIndex = {}, Sources = {}, PostponedTransactions = {}, PropagationQueue = {}",
                     transactionHelper.getTotalTransactions(),
+                    confirmationService.getTotalConsensus(),
                     confirmationService.getTrustChainConfirmed(),
                     confirmationService.getDspConfirmed(),
-                    confirmationService.getTotalConfirmed(),
+                    confirmationService.getDspRejected(),
                     transactionIndexService.getLastTransactionIndexData().getIndex(),
                     clusterService.getTotalSources(),
                     transactionService.totalPostponedTransactions(),
