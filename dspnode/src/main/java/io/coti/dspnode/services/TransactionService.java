@@ -71,6 +71,7 @@ public class TransactionService extends BaseNodeTransactionService {
             }
             boolean validBalancesAndAddedToPreBalance = validationService.validateBalancesAndAddToPreBalance(transactionData);
             if (!validBalancesAndAddedToPreBalance) {
+                transactionData.setValid(false);
                 log.error("Balance check failed: {}", transactionData.getHash());
             }
             transactionHelper.attachTransactionToCluster(transactionData);
