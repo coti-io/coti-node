@@ -34,7 +34,6 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     @Autowired
     private Transactions transactions;
     private BlockingQueue<ConfirmationData> confirmationQueue;
-    private BlockingQueue<DspConsensusResult> dspConsensusQueue;
     private Map<Long, DspConsensusResult> waitingDspConsensusResults = new ConcurrentHashMap<>();
     private Map<Long, TransactionData> waitingMissingTransactionIndexes = new ConcurrentHashMap<>();
     private Map<Hash, LinkedHashSet<Hash>> waitingDSPConsensusTransactionsByAddress = new ConcurrentHashMap<>();
@@ -43,16 +42,11 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     private AtomicLong dspConfirmed = new AtomicLong(0);
     private AtomicLong dspRejected = new AtomicLong(0);
     private Thread confirmedTransactionsThread;
-    private Thread dspConsensusTransactionsThread;
 
     public void init() {
         confirmationQueue = new LinkedBlockingQueue<>();
         confirmedTransactionsThread = new Thread(this::updateConfirmedTransactions);
         confirmedTransactionsThread.start();
-
-        dspConsensusQueue = new LinkedBlockingQueue<>();
-        dspConsensusTransactionsThread = new Thread(this::updateDSPConsensusTransactions);
-        dspConsensusTransactionsThread.start();
 
         log.info("{} is up", this.getClass().getSimpleName());
     }
@@ -113,23 +107,6 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         }
     }
 
-    private void updateDSPConsensusTransactions() {
-        while (!Thread.currentThread().isInterrupted()) {
-            try {
-                ConfirmationData confirmationData = dspConsensusQueue.take();
-                updateConfirmedTransactionHandler(confirmationData);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-        LinkedList<ConfirmationData> remainingDSPConsensusTransactions = new LinkedList<>();
-        dspConsensusQueue.drainTo(remainingDSPConsensusTransactions);
-        if (!remainingDSPConsensusTransactions.isEmpty()) {
-            log.info("Please wait to process {} remaining DSP consensus transaction(s)", remainingDSPConsensusTransactions.size());
-            remainingDSPConsensusTransactions.forEach(this::updateConfirmedTransactionHandler);
-        }
-    }
-
     private void updateConfirmedTransactionHandler(ConfirmationData confirmationData) {
         transactions.lockAndGetByHash(confirmationData.getHash(), transactionData -> {
             Boolean transactionDataOriginallyValid = transactionData.isValid();
@@ -139,10 +116,15 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                 transactionData.setTrustChainTrustScore(((TccInfo) confirmationData).getTrustChainTrustScore());
                 trustChainConfirmed.incrementAndGet();
             } else if (confirmationData instanceof DspConsensusResult) {
+                if (transactionData.getDspConsensusResult() != null) {
+                    log.error("Dsp consensus result already executed for transaction {}", transactionData.getHash());
+                    return;
+                }
                 transactionData.setDspConsensusResult((DspConsensusResult) confirmationData);
-                if ((!transactionHelper.getNoneIndexedTransactionHashes().contains(transactionData.getHash())
-                        || !insertNewTransactionIndex(transactionData))
-                        && !isNeededResourceAllocated(transactionData, transactionDataOriginallyValid)) {
+                Optional<Boolean> optionalInsertNewTransactionIndex = insertNewTransactionIndex(transactionData);
+
+                if ((optionalInsertNewTransactionIndex.isPresent() && Boolean.FALSE.equals(optionalInsertNewTransactionIndex.get())) ||
+                        !isNeededResourceAllocated(transactionData, transactionDataOriginallyValid)) {
                     return;
                 }
                 if (transactionHelper.isDspConfirmed(transactionData)) {
@@ -156,7 +138,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                     dspRejected.incrementAndGet();
                 }
             }
-            if (transactionHelper.isConfirmed(transactionData) && transactionData.getDspConsensusResult() == null) {
+            if (transactionHelper.isConfirmed(transactionData)) {
                 processConfirmedTransaction(transactionData);
             }
             transactions.put(transactionData);
@@ -200,7 +182,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
             dspResultConsensusHashes.forEach(dspResultConsensusHash -> {
                 TransactionData waitingTransactionData = transactions.getByHash(dspResultConsensusHash);
                 updateConfirmedTransactionHandler(waitingTransactionData.getDspConsensusResult());
-                setDspConsensus(waitingTransactionData.getDspConsensusResult());
+                setDspc(waitingTransactionData.getDspConsensusResult());
             });
         }
     }
@@ -226,16 +208,15 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         transactionData.setTransactionConsensusUpdateTime(transactionConsensusUpdateTime);
     }
 
-    protected boolean insertNewTransactionIndex(TransactionData transactionData) {
+    protected Optional<Boolean> insertNewTransactionIndex(TransactionData transactionData) {
         Optional<Boolean> optionalInsertNewTransactionIndex = transactionIndexService.insertNewTransactionIndex(transactionData);
         if (!optionalInsertNewTransactionIndex.isPresent()) {
-            return false;
+            return optionalInsertNewTransactionIndex;
         }
         Boolean isNewTransactionIndexInserted = optionalInsertNewTransactionIndex.get();
         DspConsensusResult dspConsensusResult = transactionData.getDspConsensusResult();
         if (Boolean.FALSE.equals(isNewTransactionIndexInserted)) {
             waitingDspConsensusResults.put(dspConsensusResult.getIndex(), dspConsensusResult);
-            return false;
         } else {
             long index = dspConsensusResult.getIndex() + 1;
             while (waitingDspConsensusResults.containsKey(index)) {
@@ -243,8 +224,8 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                 waitingDspConsensusResults.remove(index);
                 index++;
             }
-            return true;
         }
+        return optionalInsertNewTransactionIndex;
     }
 
     protected void continueHandleDSPConfirmedTransaction(TransactionData transactionData) {
@@ -284,7 +265,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         if (transactionData.isTrustChainConsensus()) {
             trustChainConfirmed.incrementAndGet();
         }
-        insertMissingDspConfirmation(transactionData);
+        insertMissingDspConsensus(transactionData);
     }
 
     @Override
@@ -292,11 +273,11 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         if (trustChainUnconfirmedExistingTransactionHashes.contains(transactionData.getHash()) && transactionData.isTrustChainConsensus()) {
             trustChainConfirmed.incrementAndGet();
         }
-        insertMissingDspConfirmation(transactionData);
+        insertMissingDspConsensus(transactionData);
     }
 
-    private void insertMissingDspConfirmation(TransactionData transactionData) {
-        if (!transactionHelper.isDspConfirmed(transactionData) || !transactionHelper.hasDspResultAndIndexed(transactionData)) {
+    private void insertMissingDspConsensus(TransactionData transactionData) {
+        if (!transactionHelper.hasDspResultAndIndexed(transactionData)) {
             transactionHelper.addNoneIndexedTransaction(transactionData);
         }
         if (transactionData.getDspConsensusResult() != null) {
@@ -314,26 +295,30 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         if (Boolean.FALSE.equals(isNewTransactionIndexInserted)) {
             waitingMissingTransactionIndexes.put(dspConsensusResult.getIndex(), transactionData);
         } else {
-            processMissingDspConfirmedTransaction(transactionData);
+            processMissingDspConsensusTransaction(transactionData);
             long index = dspConsensusResult.getIndex() + 1;
             while (waitingMissingTransactionIndexes.containsKey(index)) {
                 TransactionData waitingMissingTransactionData = waitingMissingTransactionIndexes.get(index);
                 transactionIndexService.insertNewTransactionIndex(waitingMissingTransactionData);
-                processMissingDspConfirmedTransaction(waitingMissingTransactionData);
+                processMissingDspConsensusTransaction(waitingMissingTransactionData);
                 waitingMissingTransactionIndexes.remove(index);
                 index++;
             }
         }
     }
 
-    private void processMissingDspConfirmedTransaction(TransactionData transactionData) {
+    private void processMissingDspConsensusTransaction(TransactionData transactionData) {
         continueHandleDSPConfirmedTransaction(transactionData);
-        dspConfirmed.incrementAndGet();
+        if (transactionHelper.isDspConfirmed(transactionData)) {
+            dspConfirmed.incrementAndGet();
+        } else {
+            dspRejected.incrementAndGet();
+        }
         if (transactionData.isTrustChainConsensus()) {
             if (Boolean.TRUE.equals(transactionData.isValid())) {
                 transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount()));
-                totalConsensus.incrementAndGet();
             }
+            totalConsensus.incrementAndGet();
         }
     }
 
@@ -350,15 +335,6 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     public void setDspc(DspConsensusResult dspConsensusResult) {
         try {
             confirmationQueue.put(dspConsensusResult);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    @Override
-    public void setDspConsensus(DspConsensusResult dspConsensusResult) {
-        try {
-            dspConsensusQueue.put(dspConsensusResult);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -387,10 +363,8 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     public void shutdown() {
         log.info("Shutting down {}", this.getClass().getSimpleName());
         confirmedTransactionsThread.interrupt();
-        dspConsensusTransactionsThread.interrupt();
         try {
             confirmedTransactionsThread.join();
-            dspConsensusTransactionsThread.join();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.error("Interrupted shutdown {}", this.getClass().getSimpleName());
