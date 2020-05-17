@@ -21,8 +21,6 @@ public interface IConfirmationService {
 
     void setDspc(DspConsensusResult dspConsensusResult);
 
-    void setDspConsensus(DspConsensusResult dspConsensusResult);
-
     long getTotalConsensus();
 
     long getTrustChainConfirmed();
