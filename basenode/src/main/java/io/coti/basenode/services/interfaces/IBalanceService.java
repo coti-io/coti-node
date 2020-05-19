@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.TreeMap;
 
 public interface IBalanceService {
 
@@ -37,4 +38,6 @@ public interface IBalanceService {
     BigDecimal getBalance(Hash addressHash, Hash currencyHash);
 
     BigDecimal getPreBalance(Hash addressHash, Hash currencyHash);
+
+    TreeMap<Hash, BigDecimal> getSortedBalance(Hash currencyHash);
 }
