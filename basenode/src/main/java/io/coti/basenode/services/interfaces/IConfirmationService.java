@@ -1,19 +1,17 @@
 package io.coti.basenode.services.interfaces;
 
-import io.coti.basenode.data.DspConsensusResult;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.TccInfo;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 
+import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
 
 public interface IConfirmationService {
+
     void init();
 
-    void setLastDspConfirmationIndex(AtomicLong maxTransactionIndex);
+    void setLastDspConfirmationIndex(Map<Long, ReducedExistingTransactionData> indexToTransactionMap);
 
-    void insertSavedTransaction(TransactionData transactionData, AtomicLong maxTransactionIndex);
+    void insertSavedTransaction(TransactionData transactionData, Map<Long, ReducedExistingTransactionData> indexToTransactionMap);
 
     void insertMissingTransaction(TransactionData transactionData);
 
