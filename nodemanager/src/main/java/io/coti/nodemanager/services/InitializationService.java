@@ -46,6 +46,9 @@ public class InitializationService {
     private ApplicationContext applicationContext;
     @Autowired
     private BuildProperties buildProperties;
+    @Autowired
+    private IPropagationSubscriber propagationSubscriber;
+    private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
     private void init() {
@@ -57,6 +60,8 @@ public class InitializationService {
             networkService.init();
             insertActiveNodesToMemory();
             nodeManagementService.init();
+            propagationSubscriber.startListening();
+            propagationSubscriber.initPropagationHandler();
             communicationService.initPublisher(propagationPort, NodeType.NodeManager);
             healthCheckService.init();
         } catch (CotiRunTimeException e) {
