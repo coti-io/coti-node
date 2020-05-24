@@ -4,6 +4,10 @@ import com.google.gson.Gson;
 import io.coti.basenode.crypto.ClusterStampCrypto;
 import io.coti.basenode.crypto.GetClusterStampFileNamesCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.data.messages.StateMessage;
+import io.coti.basenode.data.messages.StateMessageClusterStampExecutePayload;
+import io.coti.basenode.data.messages.StateMessageClusterStampInitiatedPayload;
+import io.coti.basenode.data.messages.StateMessageLastClusterStampIndexPayload;
 import io.coti.basenode.exceptions.ClusterStampException;
 import io.coti.basenode.exceptions.ClusterStampValidationException;
 import io.coti.basenode.http.GetClusterStampFileNamesResponse;
@@ -44,7 +48,7 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 
 @Slf4j
 @Service
-public class BaseNodeClusterStampService implements IClusterStampService {
+public abstract class BaseNodeClusterStampService implements IClusterStampService {
 
     private static final int CLUSTERSTAMP_NAME_ARRAY_NOT_UPDATED_LENGTH = 3;
     private static final int CLUSTERSTAMP_UPDATE_TIME_AND_FILE_TYPE_NOT_UPDATED_INDEX = 2;
@@ -599,4 +603,19 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         clusterStampData.setSignerHash(networkService.getSingleNodeData(NodeType.ZeroSpendServer).getNodeHash());
     }
 
+    @Override
+    public void clusterStampInitiate(StateMessage stateMessage, StateMessageClusterStampInitiatedPayload stateMessageClusterstampInitiatedPayload) {
+        // implemented in subclasses
+    }
+
+    @Override
+    public boolean checkLastConfirmedIndex(StateMessageLastClusterStampIndexPayload stateMessageLastClusterStampIndexPayload) {
+        // implemented in subclasses
+        return false;
+    }
+
+    @Override
+    public void clusterStampExecute(StateMessage stateMessage, StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload){
+        // implemented in subclasses
+    }
 }

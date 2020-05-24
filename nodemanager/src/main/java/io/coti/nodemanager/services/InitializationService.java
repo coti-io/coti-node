@@ -1,6 +1,10 @@
 package io.coti.nodemanager.services;
 
+import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.interfaces.IPropagatable;
+import io.coti.basenode.data.messages.GeneralVoteMessage;
+import io.coti.basenode.data.messages.StateMessage;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.services.interfaces.*;
@@ -17,6 +21,9 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -43,6 +50,10 @@ public class InitializationService {
     @Autowired
     private ICommunicationService communicationService;
     @Autowired
+    private IStateMessageService stateMessageService;
+    @Autowired
+    private IGeneralVoteService generalVoteService;
+    @Autowired
     private ApplicationContext applicationContext;
     @Autowired
     private BuildProperties buildProperties;
@@ -58,12 +69,19 @@ public class InitializationService {
             awsService.init();
             dbRecoveryService.init();
             networkService.init();
+
+            publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(StateMessage.class, GeneralVoteMessage.class));
+            publisherNodeTypeToMessageTypesMap.put(NodeType.DspNode, Arrays.asList(StateMessage.class, GeneralVoteMessage.class));
+            communicationService.initSubscriber(NodeType.NodeManager, publisherNodeTypeToMessageTypesMap);
+
             insertActiveNodesToMemory();
             nodeManagementService.init();
             propagationSubscriber.startListening();
             propagationSubscriber.initPropagationHandler();
             communicationService.initPublisher(propagationPort, NodeType.NodeManager);
             healthCheckService.init();
+            stateMessageService.init();
+            generalVoteService.init();
         } catch (CotiRunTimeException e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
             e.logMessage();

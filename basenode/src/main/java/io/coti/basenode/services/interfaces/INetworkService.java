@@ -57,4 +57,6 @@ public interface INetworkService {
     void connectToNetwork();
 
     String getHost(String webServerUrl);
+
+    NodeType getNetworkNodeType(Hash nodeHash);
 }

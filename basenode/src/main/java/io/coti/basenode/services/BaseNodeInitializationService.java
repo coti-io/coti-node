@@ -108,6 +108,10 @@ public abstract class BaseNodeInitializationService {
     private ICurrencyService currencyService;
     @Autowired
     private IMintingService mintingService;
+    @Autowired
+    private IStateMessageService stateMessageService;
+    @Autowired
+    private IGeneralVoteService generalVoteService;
 
     public void init() {
         log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());
@@ -134,6 +138,8 @@ public abstract class BaseNodeInitializationService {
         networkService.setConnectToNetworkUrl(nodeManagerHttpAddress + NODE_MANAGER_NODES_ENDPOINT);
         networkService.connectToNetwork();
         propagationSubscriber.initPropagationHandler();
+        stateMessageService.init();
+        generalVoteService.init();
         monitorService.init();
     }
 

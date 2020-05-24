@@ -1,12 +1,23 @@
 package io.coti.zerospend.services;
 
+import io.coti.basenode.communication.interfaces.IPropagationPublisher;
+import io.coti.basenode.crypto.GeneralMessageCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.data.messages.StateMessage;
+import io.coti.basenode.data.messages.StateMessageClusterStampExecutePayload;
+import io.coti.basenode.data.messages.StateMessageClusterStampInitiatedPayload;
+import io.coti.basenode.data.messages.StateMessageLastClusterStampIndexPayload;
 import io.coti.basenode.exceptions.ClusterStampException;
 import io.coti.basenode.exceptions.ClusterStampValidationException;
 import io.coti.basenode.exceptions.FileSystemException;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeClusterStampService;
+import io.coti.basenode.services.ClusterService;
+import io.coti.basenode.services.TransactionIndexService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
 
@@ -14,6 +25,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Base64;
 
 
@@ -28,6 +40,17 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private boolean uploadClusterStamp;
     @Value("${upload.currencies.clusterstamp}")
     private boolean uploadCurrencyClusterStamp;
+    @Autowired
+    protected IPropagationPublisher propagationPublisher;
+    @Autowired
+    protected GeneralMessageCrypto generalMessageCrypto;
+    @Autowired
+    private ClusterService clusterService;
+    @Autowired
+    private TransactionIndexService transactionIndexService;
+    static final long CLUSTER_STAMP_INITIATED_DELAY = 100;
+    private Thread clusterStampCreationThread;
+
 
     @Value("${aws.s3.bucket.name.clusterstamp}")
     private void setClusterStampBucketName(String clusterStampBucketName) {
@@ -163,5 +186,55 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Override
     protected void setClusterStampSignerHash(ClusterStampData clusterStampData) {
         clusterStampData.setSignerHash(networkService.getNetworkNodeData().getNodeHash());
+    }
+
+    public ResponseEntity<IResponse> initiateClusterStamp() {
+        StateMessageClusterStampInitiatedPayload stateMessageClusterstampInitiatedPayload = new StateMessageClusterStampInitiatedPayload(CLUSTER_STAMP_INITIATED_DELAY);
+        StateMessage stateMessage = new StateMessage(stateMessageClusterstampInitiatedPayload);
+        stateMessage.setHash(new Hash(generalMessageCrypto.getSignatureMessage(stateMessage)));
+        generalMessageCrypto.signMessage(stateMessage);
+        propagationPublisher.propagate(stateMessage, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
+        log.info("Manually initiated clusterstamp" + stateMessage.getHash().toString());
+        clusterStampCreationThread = new Thread(this::clusterStampCreation);
+        clusterStampCreationThread.start();
+        return ResponseEntity.ok().body(null);
+    }
+
+    private void clusterStampCreation() {
+        try {
+//            Thread.sleep(CLUSTER_STAMP_INITIATED_DELAY*900); // todo temporary shortened delay
+            Thread.sleep(5000);
+        } catch (Exception ignored) {
+            // ignored exception
+        }
+
+        long lastConfirmedIndex = clusterService.maxIndexOfNotConfirmed();
+        if (lastConfirmedIndex <= 0) {
+            lastConfirmedIndex = transactionIndexService.getLastTransactionIndexData().getIndex();
+        }
+
+        StateMessageLastClusterStampIndexPayload stateMessageLastClusterStampIndexPayload = new StateMessageLastClusterStampIndexPayload(lastConfirmedIndex);
+        StateMessage stateMessage = new StateMessage(stateMessageLastClusterStampIndexPayload);
+        stateMessage.setHash(new Hash(generalMessageCrypto.getSignatureMessage(stateMessage)));
+        generalMessageCrypto.signMessage(stateMessage);
+        log.info("Initiate voting for the last clusterstamp index" + String.valueOf(lastConfirmedIndex) + " " + stateMessage.getHash().toString());
+        propagationPublisher.propagate(stateMessage, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
+        // todo resending (3 times ?)
+
+
+        // testexecution
+        try {
+            Thread.sleep(5000);
+        } catch (Exception ignored) {
+            // ignored exception
+        }
+        StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload = new StateMessageClusterStampExecutePayload(stateMessage.getHash());
+        StateMessage stateMessageExecute = new StateMessage(stateMessageClusterStampExecutePayload);
+        stateMessageExecute.setHash(new Hash(generalMessageCrypto.getSignatureMessage(stateMessageExecute)));
+        generalMessageCrypto.signMessage(stateMessageExecute);
+        log.info("Initiate clusterstamp execution " + stateMessage.getHash().toString());
+        propagationPublisher.propagate(stateMessageExecute, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
+
+
     }
 }

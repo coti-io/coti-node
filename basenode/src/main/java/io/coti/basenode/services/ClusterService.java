@@ -19,6 +19,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -201,5 +202,13 @@ public class ClusterService implements IClusterService {
     public List<Set<TransactionData>> getSourceListsByTrustScore() {
         return Collections.unmodifiableList(sourceListsByTrustScore);
     }
+
+    public long maxIndexOfNotConfirmed(){
+        return trustChainConfirmationCluster.values().stream()
+                .filter(transactionData -> transactionData.getDspConsensusResult() != null)
+                .mapToLong(transactionData-> transactionData.getDspConsensusResult().getIndex())
+                .min().orElse(0) - 1;
+    }
+
 
 }

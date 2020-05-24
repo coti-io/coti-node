@@ -11,4 +11,6 @@ public interface IReceiver {
     void initReceiverHandler();
 
     void shutdown();
+
+    void setMessageQueuePausedUntil(long pauseTime);
 }

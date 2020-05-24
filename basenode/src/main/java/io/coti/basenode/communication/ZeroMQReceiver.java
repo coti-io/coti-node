@@ -10,6 +10,7 @@ import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.concurrent.BlockingQueue;
@@ -24,6 +25,7 @@ public class ZeroMQReceiver implements IReceiver {
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket receiver;
     private BlockingQueue<ZeroMQMessageData> messageQueue;
+    private Instant messageQueuePausedUntil;
     private Thread receiverThread;
     private Thread messagesQueueHandlerThread;
     @Autowired
@@ -36,6 +38,7 @@ public class ZeroMQReceiver implements IReceiver {
         receiver = zeroMQContext.socket(SocketType.ROUTER);
         receiver.bind("tcp://*:" + receivingPort);
         log.info("Zero MQ Client Connected!");
+        messageQueuePausedUntil = Instant.ofEpochSecond(0);
         messageQueue = new LinkedBlockingQueue<>();
     }
 
@@ -84,6 +87,13 @@ public class ZeroMQReceiver implements IReceiver {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 ZeroMQMessageData zeroMQMessageData = messageQueue.take();
+                while (Instant.now().isBefore(messageQueuePausedUntil)) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (Exception ignored) {
+                        // ignored exception
+                    }
+                }
                 Consumer<Object> consumer = classNameToHandlerMapping.get(zeroMQMessageData.getChannel());
                 if (consumer != null) {
                     consumer.accept(serializer.deserialize(zeroMQMessageData.getMessage()));
@@ -110,6 +120,11 @@ public class ZeroMQReceiver implements IReceiver {
                 }
             });
         }
+    }
+
+    @Override
+    public void setMessageQueuePausedUntil(long pauseTime) {
+        this.messageQueuePausedUntil = Instant.now().plusSeconds(pauseTime);
     }
 
     @Override
