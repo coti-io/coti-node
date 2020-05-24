@@ -24,7 +24,8 @@ import java.util.stream.Collectors;
 @Service
 public class ClusterService implements IClusterService {
 
-    private List<Set<TransactionData>> sourceListsByTrustScore = new ArrayList<>();
+    private List<Set<Hash>> sourceSetsByTrustScore = new ArrayList<>();
+    private ConcurrentHashMap<Hash, TransactionData> sourceMap;
     @Autowired
     private Transactions transactions;
     @Autowired
@@ -40,14 +41,16 @@ public class ClusterService implements IClusterService {
     @PostConstruct
     public void init() {
         trustChainConfirmationCluster = new ConcurrentHashMap<>();
+        sourceSetsByTrustScore = new ArrayList<>();
+        sourceMap = new ConcurrentHashMap<>();
         for (int i = 0; i <= 100; i++) {
-            sourceListsByTrustScore.add(Sets.newConcurrentHashSet());
+            sourceSetsByTrustScore.add(Sets.newConcurrentHashSet());
         }
     }
 
     @Override
     public void addExistingTransactionOnInit(TransactionData transactionData) {
-        updateParents(transactionData);
+        removeTransactionParentsFromSources(transactionData);
         if (!transactionData.isTrustChainConsensus()) {
             addTransactionToTrustChainConfirmationCluster(transactionData);
         }
@@ -134,26 +137,31 @@ public class ClusterService implements IClusterService {
     }
 
     private void removeTransactionFromSources(Hash transactionHash) {
-        TransactionData transactionData = transactions.getByHash(transactionHash);
-        if (transactionData != null && sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).remove(transactionData)) {
+        TransactionData transactionData = sourceMap.remove(transactionHash);
+        if (transactionData != null) {
+            sourceSetsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).remove(transactionHash);
             totalSources.decrementAndGet();
         }
     }
 
     private void addTransactionToTrustChainConfirmationCluster(TransactionData transactionData) {
-        trustChainConfirmationCluster.put(transactionData.getHash(), transactionData);
+        Hash transactionHash = transactionData.getHash();
+        trustChainConfirmationCluster.put(transactionHash, transactionData);
 
-        if (transactionData.isSource() && sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionData)) {
+        if (transactionData.isSource() && sourceMap.put(transactionHash, transactionData) == null) {
+            sourceSetsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionHash);
             totalSources.incrementAndGet();
         }
 
-        log.debug("Added New Transaction with hash:{}", transactionData.getHash());
+        log.debug("Added New Transaction with hash:{}", transactionHash);
     }
 
     private void removeTransactionFromTrustChainConfirmationCluster(TransactionData transactionData) {
+        Hash transactionHash = transactionData.getHash();
         trustChainConfirmationCluster.remove(transactionData.getHash());
 
-        if (transactionData.isSource() && sourceListsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).remove(transactionData)) {
+        if (transactionData.isSource() && sourceMap.remove(transactionHash) != null) {
+            sourceSetsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).remove(transactionHash);
             totalSources.decrementAndGet();
         }
 
@@ -161,12 +169,13 @@ public class ClusterService implements IClusterService {
 
     @Override
     public void selectSources(TransactionData transactionData) {
-        List<Set<TransactionData>> trustScoreToTransactionMappingSnapshot =
-                Collections.unmodifiableList(sourceListsByTrustScore);
-
+        List<Set<Hash>> trustScoreToTransactionMappingSnapshot =
+                Collections.unmodifiableList(sourceSetsByTrustScore);
+        Map<Hash, TransactionData> sourceMapSnapshot = SerializationUtils.clone(sourceMap);
         List<TransactionData> selectedSourcesForAttachment =
                 sourceSelector.selectSourcesForAttachment(
                         trustScoreToTransactionMappingSnapshot,
+                        sourceMapSnapshot,
                         transactionData.getSenderTrustScore());
 
         if (selectedSourcesForAttachment.isEmpty()) {
@@ -198,8 +207,8 @@ public class ClusterService implements IClusterService {
     }
 
     @Override
-    public List<Set<TransactionData>> getSourceListsByTrustScore() {
-        return Collections.unmodifiableList(sourceListsByTrustScore);
+    public List<Set<Hash>> getSourceSetsByTrustScore() {
+        return Collections.unmodifiableList(sourceSetsByTrustScore);
     }
 
 }

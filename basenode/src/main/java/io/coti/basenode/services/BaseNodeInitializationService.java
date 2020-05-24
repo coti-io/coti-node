@@ -27,8 +27,15 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PreDestroy;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
@@ -106,6 +113,11 @@ public abstract class BaseNodeInitializationService {
     private BuildProperties buildProperties;
     @Autowired
     private ITransactionPropagationCheckService transactionPropagationCheckService;
+    private final Map<Long, ReducedExistingTransactionData> indexToTransactionMap = new HashMap<>();
+    ExecutorService clusterExecutorService;
+    ExecutorService confirmationExecutorService;
+    List<Future> clusterFutures;
+    List<Future> confirmationFutures;
 
     public void init() {
         log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());
@@ -135,17 +147,45 @@ public abstract class BaseNodeInitializationService {
 
     private void initTransactionSync() {
         try {
-            Map<Long, ReducedExistingTransactionData> indexToTransactionMap = new HashMap<>();
             log.info("Starting to read existing transactions");
             AtomicLong completedExistedTransactionNumber = new AtomicLong(0);
             Thread monitorExistingTransactions = transactionService.monitorTransactionThread("existing", completedExistedTransactionNumber, null);
+            final AtomicBoolean executorServicesInitiated = new AtomicBoolean(false);
             transactions.forEach(transactionData -> {
+                if (!executorServicesInitiated.get()) {
+                    clusterExecutorService = Executors.newFixedThreadPool(1);
+                    clusterFutures = new ArrayList<>();
+                    confirmationExecutorService = Executors.newFixedThreadPool(1);
+                    confirmationFutures = new ArrayList<>();
+                    executorServicesInitiated.set(true);
+                }
+
                 if (!monitorExistingTransactions.isAlive()) {
                     monitorExistingTransactions.start();
                 }
-                handleExistingTransaction(indexToTransactionMap, transactionData);
+                handleExistingTransaction(transactionData);
                 completedExistedTransactionNumber.incrementAndGet();
             });
+            if (executorServicesInitiated.get()) {
+                for (Future clusterFuture : clusterFutures) {
+                    try {
+                        clusterFuture.get();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    } catch (ExecutionException e) {
+                        log.error(e.getMessage());
+                    }
+                }
+                for (Future confirmationFuture : confirmationFutures) {
+                    try {
+                        confirmationFuture.get();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    } catch (ExecutionException e) {
+                        log.error(e.getMessage());
+                    }
+                }
+            }
             if (monitorExistingTransactions.isAlive()) {
                 monitorExistingTransactions.interrupt();
                 monitorExistingTransactions.join();
@@ -174,14 +214,14 @@ public abstract class BaseNodeInitializationService {
         propagationSubscriber.startListening();
     }
 
-    public void initDB() {
+    protected void initDB() {
         databaseConnector.init();
     }
 
-    private void handleExistingTransaction(Map<Long, ReducedExistingTransactionData> indexToTransactionMap, TransactionData transactionData) {
-        clusterService.addExistingTransactionOnInit(transactionData);
+    private void handleExistingTransaction(TransactionData transactionData) {
+        clusterFutures.add(clusterExecutorService.submit(() -> clusterService.addExistingTransactionOnInit(transactionData)));
 
-        confirmationService.insertSavedTransaction(transactionData, indexToTransactionMap);
+        confirmationFutures.add(confirmationExecutorService.submit(() -> confirmationService.insertSavedTransaction(transactionData, indexToTransactionMap)));
 
         transactionService.addToExplorerIndexes(transactionData);
         transactionHelper.incrementTotalTransactions();

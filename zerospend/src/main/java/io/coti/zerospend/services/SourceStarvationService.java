@@ -48,7 +48,7 @@ public class SourceStarvationService {
     }
 
     private void createNewGenesisZeroSpendTransactions() {
-        List<Set<TransactionData>> sourceListsByTrustScore = clusterService.getSourceListsByTrustScore();
+        List<Set<Hash>> sourceListsByTrustScore = clusterService.getSourceSetsByTrustScore();
         boolean isTrustScoreRangeContainsSource = false;
         for (int i = 1; i <= 100; i++) {
             if (!sourceListsByTrustScore.get(i).isEmpty()) {
