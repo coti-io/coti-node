@@ -18,10 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -203,6 +200,15 @@ public class BaseNodeBalanceService implements IBalanceService {
 
     protected Hash getNativeCurrencyHashIfNull(Hash currencyHash) {
         return Optional.ofNullable(currencyHash).orElse(currencyService.getNativeCurrencyHash());
+    }
+
+    @Override
+    public TreeMap<Hash, BigDecimal> getSortedBalance(Hash currencyHash) {
+        TreeMap<Hash, BigDecimal> currencySortedMap = new TreeMap();
+        balanceMap.get(currencyHash).forEach((address, balance)-> {
+            currencySortedMap.put(address, balance);
+        });
+        return currencySortedMap;
     }
 
 }

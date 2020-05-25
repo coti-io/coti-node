@@ -19,7 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.SerializationUtils;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -143,14 +142,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         ClusterStampNameData clusterStampNameData = new ClusterStampNameData(ClusterStampType.CURRENCY, versionTimeInMillis);
         String clusterStampFileName = getClusterStampFileName(clusterStampNameData);
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(clusterStampFolder + "/" + clusterStampFileName))) {
-            writer.write(CURRENCY_GENESIS_ADDRESS_HEADER);
-            writer.newLine();
-            writer.write(currencyAddress);
-            writer.newLine();
-            writer.write(CURRENCIES_DETAILS_HEADER);
-            writer.newLine();
-            writer.write(Base64.getEncoder().encodeToString(SerializationUtils.serialize(nativeCurrency)));
-            writer.newLine();
+            writeNativeCurrencyDetails(nativeCurrency, writer, currencyAddress);
             addClusterStampName(clusterStampNameData);
         } catch (IOException e) {
             throw new FileSystemException(String.format("Create and write file error. %s: %s", e.getClass().getName(), e.getMessage()));
@@ -163,15 +155,15 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     }
 
     @Override
-    protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData, String clusterstampFileLocation) {
+    protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData, String clusterStampFileLocation) {
         clusterStampCrypto.signMessage(clusterStampData);
-        updateClusterStampFileWithSignature(clusterStampData.getSignature(), clusterstampFileLocation);
+        updateClusterStampFileWithSignature(clusterStampData.getSignature(), clusterStampFileLocation);
         uploadClusterStamp = true;
     }
 
-    private void updateClusterStampFileWithSignature(SignatureData signature, String clusterstampFileLocation) {
-        try (FileWriter clusterstampFileWriter = new FileWriter(clusterstampFileLocation, true);
-             BufferedWriter clusterStampBufferedWriter = new BufferedWriter(clusterstampFileWriter)) {
+    private void updateClusterStampFileWithSignature(SignatureData signature, String clusterStampFileLocation) {
+        try (FileWriter clusterStampFileWriter = new FileWriter(clusterStampFileLocation, true);
+             BufferedWriter clusterStampBufferedWriter = new BufferedWriter(clusterStampFileWriter)) {
             clusterStampBufferedWriter.newLine();
             clusterStampBufferedWriter.append("# Signature");
             clusterStampBufferedWriter.newLine();
