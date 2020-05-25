@@ -260,17 +260,17 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     }
 
     public RocksIterator getIterator(String columnFamilyName) {
-        RocksIterator it = null;
         try (ReadOptions readOptions = new ReadOptions()) {
             ColumnFamilyHandle columnFamilyHandler = classNameToColumnFamilyHandleMapping.get(columnFamilyName);
-            it = db.newIterator(columnFamilyHandler, readOptions);
             if (columnFamilyHandler == null) {
                 log.error("Column family {} iterator wasn't found ", columnFamilyName);
+                return null;
             }
+            return db.newIterator(columnFamilyHandler, readOptions);
         } catch (Exception ex) {
             log.error("Exception while getting iterator of {}", columnFamilyName, ex);
+            return null;
         }
-        return it;
     }
 
     @Override

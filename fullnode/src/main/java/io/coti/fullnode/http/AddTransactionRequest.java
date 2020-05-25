@@ -1,7 +1,7 @@
 package io.coti.fullnode.http;
 
 import io.coti.basenode.data.*;
-import io.coti.basenode.http.Request;
+import io.coti.basenode.http.interfaces.IRequest;
 import lombok.Data;
 
 import javax.validation.Valid;
@@ -11,7 +11,7 @@ import java.time.Instant;
 import java.util.List;
 
 @Data
-public class AddTransactionRequest extends Request {
+public class AddTransactionRequest implements IRequest {
 
     @NotEmpty
     private List<@Valid BaseTransactionData> baseTransactions;

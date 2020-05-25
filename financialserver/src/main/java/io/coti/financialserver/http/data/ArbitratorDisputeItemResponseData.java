@@ -4,8 +4,10 @@ import io.coti.basenode.data.Hash;
 import io.coti.financialserver.data.DisputeItemData;
 import io.coti.financialserver.data.DisputeItemVoteData;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class ArbitratorDisputeItemResponseData extends DisputeItemResponseData {
 
     private DisputeItemVoteResponseData arbitratorItemVote;

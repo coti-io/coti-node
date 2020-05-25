@@ -107,9 +107,8 @@ public class TrustScoreService implements ITrustScoreService {
     }
 
     private NodeTrustScoreResponse sendTrustScoreRequestToFirstTrustScoreNode(NetworkNodeData firstTrustScoreNode, NodeTrustScoreRequest nodeTrustScoreRequest) {
-        ResponseEntity<NodeTrustScoreResponse> trustScoreResponseEntity = null;
         try {
-            trustScoreResponseEntity = httpRequest.postForEntity(
+            ResponseEntity<NodeTrustScoreResponse> trustScoreResponseEntity = httpRequest.postForEntity(
                     firstTrustScoreNode.getHttpFullAddress() + TRUSTSCORE_DATA_ENDPOINT, nodeTrustScoreRequest, NodeTrustScoreResponse.class);
             if (!HttpStatus.OK.equals(trustScoreResponseEntity.getStatusCode())) {
                 log.error("Trust score node {} returned bad status code: {}", firstTrustScoreNode.getHttpFullAddress(), trustScoreResponseEntity);
@@ -119,10 +118,12 @@ public class TrustScoreService implements ITrustScoreService {
                 log.error("Trust score node {} returned null body: {}", firstTrustScoreNode.getHttpFullAddress(), trustScoreResponseEntity);
                 return new NodeTrustScoreResponse();
             }
+            return trustScoreResponseEntity.getBody();
         } catch (Exception ex) {
             log.error("Error while contacting trustScoreNode {} exception", firstTrustScoreNode.getHttpFullAddress(), ex);
+            return new NodeTrustScoreResponse();
         }
-        return trustScoreResponseEntity.getBody();
+
     }
 
     private void sendTrustScoreRequestForValidation(List<NetworkNodeData> trustScoreNodes, NodeTrustScoreResponse trustScoreResponseToAggregate) {
@@ -130,10 +131,8 @@ public class TrustScoreService implements ITrustScoreService {
     }
 
     private void sendTrustScoreResponseToAggregate(NetworkNodeData networkNodeData, NodeTrustScoreResponse trustScoreResponseToAggregate) {
-
-        ResponseEntity<NodeTrustScoreResponse> trustScoreResponseEntity = null;
         try {
-            trustScoreResponseEntity = httpRequest.postForEntity(
+            ResponseEntity<NodeTrustScoreResponse> trustScoreResponseEntity = httpRequest.postForEntity(
                     networkNodeData.getHttpFullAddress() + TRUSTSCORE_AGGREGATION_DATA_ENDPOINT, trustScoreResponseToAggregate, NodeTrustScoreResponse.class);
             if (!HttpStatus.OK.equals(trustScoreResponseEntity.getStatusCode())) {
                 log.error("Trust score node {} returned bad status code: {}", networkNodeData.getHttpFullAddress(), trustScoreResponseEntity);
@@ -141,12 +140,10 @@ public class TrustScoreService implements ITrustScoreService {
             }
             if (trustScoreResponseEntity.getBody() == null) {
                 log.error("Trust score node {} returned null body: {}", networkNodeData.getHttpFullAddress(), trustScoreResponseEntity);
-                return;
             }
         } catch (Exception ex) {
             log.error("Error while contacting trustScoreNode {} exception", networkNodeData.getHttpFullAddress(), ex);
         }
-        trustScoreResponseToAggregate = trustScoreResponseEntity.getBody();
     }
 
     private boolean validateTrustScoreNodesConsensus(NodeTrustScoreData nodeTrustScoreResponse) {

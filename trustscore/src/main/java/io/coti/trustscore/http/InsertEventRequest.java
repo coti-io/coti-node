@@ -3,7 +3,7 @@ package io.coti.trustscore.http;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.http.Request;
+import io.coti.basenode.http.interfaces.IRequest;
 import io.coti.trustscore.data.Enums.*;
 import lombok.Data;
 
@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull;
 import java.time.Instant;
 
 @Data
-public class InsertEventRequest extends Request {
+public class InsertEventRequest implements IRequest {
 
     @NotNull
     private Instant eventDate;

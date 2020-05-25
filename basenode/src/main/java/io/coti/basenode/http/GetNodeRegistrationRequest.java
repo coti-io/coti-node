@@ -7,10 +7,11 @@ import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.ISignable;
 import io.coti.basenode.http.data.NetworkTypeName;
 import io.coti.basenode.http.data.NodeTypeName;
+import io.coti.basenode.http.interfaces.IRequest;
 import lombok.Data;
 
 @Data
-public class GetNodeRegistrationRequest extends Request implements ISignable {
+public class GetNodeRegistrationRequest implements ISignable, IRequest {
 
     private String nodeHash;
     private SignatureData nodeSignature;

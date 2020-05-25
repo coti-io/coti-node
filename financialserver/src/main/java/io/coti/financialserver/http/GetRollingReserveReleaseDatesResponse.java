@@ -6,10 +6,12 @@ import io.coti.financialserver.data.MerchantRollingReserveData;
 import io.coti.financialserver.data.RecourseClaimData;
 import io.coti.financialserver.data.RollingReserveReleaseStatus;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.Map;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class GetRollingReserveReleaseDatesResponse extends BaseResponse {
 
     private String merchantHashString;

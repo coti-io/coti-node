@@ -3,7 +3,7 @@ package io.coti.fullnode.http;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.ISignValidatable;
-import io.coti.basenode.http.Request;
+import io.coti.basenode.http.interfaces.IRequest;
 import lombok.Data;
 
 import javax.validation.Valid;
@@ -12,7 +12,7 @@ import javax.validation.constraints.Positive;
 import java.math.BigDecimal;
 
 @Data
-public class FullNodeFeeRequest extends Request implements ISignValidatable {
+public class FullNodeFeeRequest implements ISignValidatable, IRequest {
 
     private boolean feeIncluded;
     @Positive
