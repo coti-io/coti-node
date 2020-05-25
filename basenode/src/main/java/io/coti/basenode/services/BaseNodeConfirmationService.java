@@ -73,8 +73,8 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                 dspConfirmed.incrementAndGet();
                 if (reducedExistingTransactionData.isTrustChainConsensus()) {
                     totalConfirmed.incrementAndGet();
-                    reducedExistingTransactionData.getAddressAmountMap().forEach((address, amount) ->
-                            balanceService.updateBalance(address, amount)
+                    reducedExistingTransactionData.getAddressAmounts().forEach(addressAmount ->
+                            balanceService.updateBalance(addressAmount.getKey(), addressAmount.getValue())
                     );
                 }
                 transactionIndexData = nextTransactionIndexData;

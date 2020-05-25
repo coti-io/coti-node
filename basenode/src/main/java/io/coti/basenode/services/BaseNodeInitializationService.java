@@ -27,9 +27,10 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PreDestroy;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
+import java.util.EnumMap;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -109,17 +110,13 @@ public abstract class BaseNodeInitializationService {
     @Autowired
     private ITransactionPropagationCheckService transactionPropagationCheckService;
     private final Map<Long, ReducedExistingTransactionData> indexToTransactionMap = new HashMap<>();
-    EnumMap<ExistingTransactionHandlerType, ExecutorData> existingTransactionExecutorMap;
-    ExecutorService clusterExecutorService;
-    ExecutorService confirmationExecutorService;
-    List<Future> clusterFutures;
-    List<Future> confirmationFutures;
+    private EnumMap<ExistingTransactionHandlerType, ExecutorData> existingTransactionExecutorMap;
 
     public void init() {
         log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());
     }
 
-    public void initServices() {
+    protected void initServices() {
         awsService.init();
         dbRecoveryService.init();
         addressService.init();
