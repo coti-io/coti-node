@@ -8,6 +8,10 @@ public class LockData {
 
     private final Map<Hash, AtomicInteger> lockHashMap = new ConcurrentHashMap<>();
 
+    public AtomicInteger getByHash(Hash hash) {
+        return lockHashMap.get(hash);
+    }
+
     public AtomicInteger addLockToLockMap(Hash hash) {
         synchronized (this) {
             lockHashMap.computeIfPresent(hash, (lockHash, counter) -> {

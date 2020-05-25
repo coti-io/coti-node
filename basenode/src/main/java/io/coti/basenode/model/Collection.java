@@ -51,12 +51,17 @@ public abstract class Collection<T extends IEntity> {
     }
 
     public T getByHash(Hash hash) {
-        byte[] bytes = databaseConnector.getByKey(columnFamilyName, hash.getBytes());
-        T deserialized = (T) SerializationUtils.deserialize(bytes);
-        if (deserialized instanceof IEntity) {
-            deserialized.setHash(hash);
+        try {
+            byte[] bytes = databaseConnector.getByKey(columnFamilyName, hash.getBytes());
+            T deserialized = (T) SerializationUtils.deserialize(bytes);
+            if (deserialized != null) {
+                deserialized.setHash(hash);
+            }
+            return deserialized;
+        } catch (Exception e) {
+            log.error("Error at getting by hash from column family {}", columnFamilyName, e);
+            return null;
         }
-        return deserialized;
     }
 
     public List<T> getByPrefix(String strPrefix) {
@@ -74,17 +79,16 @@ public abstract class Collection<T extends IEntity> {
     }
 
     public void forEach(Consumer<T> consumer) {
-        RocksIterator iterator = databaseConnector.getIterator(columnFamilyName);
-        try {
+        try (RocksIterator iterator = databaseConnector.getIterator(columnFamilyName)) {
             iterator.seekToFirst();
             while (iterator.isValid()) {
                 T deserialized = (T) SerializationUtils.deserialize(iterator.value());
-                deserialized.setHash(new Hash(iterator.key()));
+                if (deserialized != null) {
+                    deserialized.setHash(new Hash(iterator.key()));
+                }
                 consumer.accept(deserialized);
                 iterator.next();
             }
-        } finally {
-            iterator.close();
         }
     }
 
@@ -96,7 +100,7 @@ public abstract class Collection<T extends IEntity> {
             throw new IllegalArgumentException(String.format("Hash bytes should be of minimum size %s", LOCK_BYTE_ARRAY_SIZE));
         }
 
-        byte[] lockByteArray = lockByteArrayMap.get(new Hash(Arrays.copyOfRange(hash.getBytes(), 0, LOCK_BYTE_ARRAY_SIZE)));
+        final byte[] lockByteArray = lockByteArrayMap.get(new Hash(Arrays.copyOfRange(hash.getBytes(), 0, LOCK_BYTE_ARRAY_SIZE)));
         if (lockByteArray == null) {
             throw new IllegalArgumentException("Hash lock object doesn't exist");
         }
@@ -111,12 +115,9 @@ public abstract class Collection<T extends IEntity> {
     }
 
     public boolean isEmpty() {
-        RocksIterator iterator = databaseConnector.getIterator(columnFamilyName);
-        try {
+        try (RocksIterator iterator = databaseConnector.getIterator(columnFamilyName)) {
             iterator.seekToFirst();
             return !iterator.isValid();
-        } finally {
-            iterator.close();
         }
     }
 
@@ -125,15 +126,12 @@ public abstract class Collection<T extends IEntity> {
     }
 
     public void deleteAll() {
-        RocksIterator iterator = databaseConnector.getIterator(columnFamilyName);
-        try {
+        try (RocksIterator iterator = databaseConnector.getIterator(columnFamilyName)) {
             iterator.seekToFirst();
             while (iterator.isValid()) {
                 databaseConnector.delete(columnFamilyName, iterator.key());
                 iterator.next();
             }
-        } finally {
-            iterator.close();
         }
     }
 

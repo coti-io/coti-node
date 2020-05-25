@@ -3,7 +3,7 @@ package io.coti.nodemanager.http;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NodeType;
-import io.coti.basenode.http.Request;
+import io.coti.basenode.http.interfaces.IRequest;
 import io.coti.nodemanager.data.NetworkNodeStatus;
 import lombok.Data;
 
@@ -12,7 +12,7 @@ import javax.validation.constraints.NotNull;
 import java.time.Instant;
 
 @Data
-public class AddNodePairEventRequest extends Request {
+public class AddNodePairEventRequest implements IRequest {
 
     @NotNull
     private @Valid Hash nodeHash;

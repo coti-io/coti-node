@@ -7,11 +7,13 @@ import io.coti.financialserver.data.DisputeData;
 import io.coti.financialserver.http.data.GetDisputeResponseClass;
 import io.coti.financialserver.http.data.GetDisputeResponseData;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class GetDisputesResponse extends BaseResponse {
 
     private List<GetDisputeResponseData> disputesData;

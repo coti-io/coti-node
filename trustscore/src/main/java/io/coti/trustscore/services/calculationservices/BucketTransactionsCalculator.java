@@ -12,6 +12,7 @@ import io.coti.trustscore.services.calculationservices.interfaces.IScoreCalculat
 import io.coti.trustscore.utils.DatesCalculation;
 import javafx.util.Pair;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.Collections;
 import java.util.Date;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class BucketTransactionsCalculator extends BucketCalculator {
 
     private static final int MONTH_LENGTH = 30;
