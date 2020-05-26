@@ -22,12 +22,6 @@ public class StateMessageService extends BaseNodeStateMessageService {
 
     @Override
     public void continueHandleStateMessage(StateMessage stateMessage) {
-        if (incorrectMessageSender(stateMessage)) {
-            return;
-        }
-        if (incorrectMessageSenderSignature(stateMessage)) {
-            return;
-        }
         if (stateMessage.getMessagePayload().getGeneralMessageType() == GeneralMessageType.CLUSTER_STAMP_INITIATED) {
             transactionPropagationCheckService.setPauseResending(true);  // todo restart it
         }

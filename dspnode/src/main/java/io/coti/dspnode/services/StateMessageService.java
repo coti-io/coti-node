@@ -24,18 +24,12 @@ public class StateMessageService extends BaseNodeStateMessageService {
 
     @Override
     public void continueHandleStateMessage(StateMessage stateMessage) {
-        if (incorrectMessageSender(stateMessage)) {
-            return;
-        }
-        if (incorrectMessageSenderSignature(stateMessage)) {
-            return;
-        }
         switch (stateMessage.getMessagePayload().getGeneralMessageType()) {
             case CLUSTER_STAMP_INITIATED:
                 clusterStampService.clusterStampInitiate(stateMessage, (StateMessageClusterStampInitiatedPayload) stateMessage.getMessagePayload());
                 break;
             case CLUSTER_STAMP_PREPARE_INDEX:
-                startCollectingVotes(stateMessage.getHash());
+                generalVoteService.startCollectingVotes(stateMessage);
                 generalVoteService.castVoteForClusterstampIndex(stateMessage.getHash(), clusterStampService.checkLastConfirmedIndex((StateMessageLastClusterStampIndexPayload) stateMessage.getMessagePayload()));
                 break;
             case CLUSTER_STAMP_EXECUTE:
@@ -45,10 +39,5 @@ public class StateMessageService extends BaseNodeStateMessageService {
                 log.error("Unexpected message type: {}", stateMessage.getMessagePayload().getGeneralMessageType());
         }
     }
-
-    private void startCollectingVotes(Hash voteHash) {
-// todo do it
-    }
-
 
 }

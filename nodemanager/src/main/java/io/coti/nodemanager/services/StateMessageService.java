@@ -21,18 +21,14 @@ public class StateMessageService extends BaseNodeStateMessageService {
 
     @Override
     public void continueHandleStateMessage(StateMessage stateMessage) {
-        if (incorrectMessageSender(stateMessage)) {
-            return;
-        }
-        if (incorrectMessageSenderSignature(stateMessage)) {
-            return;
-        }
         switch (stateMessage.getMessagePayload().getGeneralMessageType()) {
             case CLUSTER_STAMP_EXECUTE:
                 clusterStampService.clusterStampExecute(stateMessage, (StateMessageClusterStampExecutePayload) stateMessage.getMessagePayload());
                 break;
-            case CLUSTER_STAMP_INITIATED:
             case CLUSTER_STAMP_PREPARE_INDEX:
+                generalVoteService.startCollectingVotes(stateMessage);
+                break;
+            case CLUSTER_STAMP_INITIATED:
                 break;
             default:
                 log.error("Unexpected message type: {}", stateMessage.getMessagePayload().getGeneralMessageType());

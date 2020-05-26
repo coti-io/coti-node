@@ -8,15 +8,13 @@ import java.nio.ByteBuffer;
 @Data
 public class GeneralVoteClusterStampIndexPayload extends MessagePayload {
 
-    private boolean vote;
     private Hash voteHash;
 
     public GeneralVoteClusterStampIndexPayload() {
     }
 
-    public GeneralVoteClusterStampIndexPayload(Hash voteHash, boolean vote) {
+    public GeneralVoteClusterStampIndexPayload(Hash voteHash) {
         super(GeneralMessageType.CLUSTER_STAMP_INDEX_VOTE);
-        this.vote = vote;
         this.voteHash = voteHash;
     }
 
@@ -24,7 +22,7 @@ public class GeneralVoteClusterStampIndexPayload extends MessagePayload {
     public byte[] getMessageInBytes() {
         byte[] broadcastTypeBytes = generalMessageType.name().getBytes();
         byte[] voteHashInBytes = voteHash.getBytes();
-        return ByteBuffer.allocate(broadcastTypeBytes.length + voteHashInBytes.length + 1).put(broadcastTypeBytes).put(voteHashInBytes).put(vote ? (byte) 1 : (byte) 0).array();
+        return ByteBuffer.allocate(broadcastTypeBytes.length + voteHashInBytes.length).put(broadcastTypeBytes).put(voteHashInBytes).array();
     }
 
 }

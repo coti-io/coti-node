@@ -1,48 +1,27 @@
 package io.coti.basenode.data;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.coti.basenode.data.interfaces.IPropagatable;
-import io.coti.basenode.data.interfaces.ISignValidatable;
-import io.coti.basenode.data.interfaces.ISignable;
+import io.coti.basenode.data.interfaces.IEntity;
+import io.coti.basenode.data.messages.MessagePayload;
 import lombok.Data;
 
-import java.util.List;
+import java.util.Map;
 
 @Data
-public class GeneralVoteResult implements IPropagatable, ISignable, ISignValidatable {
-    // todo not finished
-    private GeneralVoteType generalVoteType;
-    private String generalVoteMessage;
-    private Hash hash;
-    private Hash signerHash;
-    private SignatureData signatureData;
-    private List<GeneralVote> generalVotes;
-    private boolean isConsensus;
+public class GeneralVoteResult implements IEntity {
 
-//    public GeneralVoteResult(){}
+    private static final long serialVersionUID = -4221139981200256982L;
+    private Hash hash;
+    private Map<Hash, GeneralVote> hashToVoteMapping;
+    private MessagePayload theMatter;
+    private boolean isConsensus;
+    private boolean whichConsensus;
 
     private GeneralVoteResult() {
     }
 
-    @Override
-    @JsonIgnore
-    public SignatureData getSignature() {
-        return signatureData;
+    public GeneralVoteResult(Hash hash, MessagePayload theMatter) {
+        this.hash = hash;
+        this.theMatter = theMatter;
     }
 
-    @Override
-    public void setSignature(SignatureData signature) {
-        this.signatureData = signature;
-    }
-
-    @Override
-    @JsonIgnore
-    public Hash getSignerHash() {
-        return signerHash;
-    }
-
-    @Override
-    public void setSignerHash(Hash signerHash) {
-        this.signerHash = signerHash;
-    }
 }

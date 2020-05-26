@@ -5,8 +5,11 @@ import lombok.Data;
 @Data
 public class GeneralVoteMessage extends GeneralMessage {
 
-    public GeneralVoteMessage(MessagePayload messagePayload) {
+    private boolean vote;
+
+    public GeneralVoteMessage(MessagePayload messagePayload, boolean vote) {
         super(messagePayload);
+        this.vote = vote;
     }
 
     private GeneralVoteMessage() {

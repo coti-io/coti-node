@@ -4,6 +4,7 @@ import io.coti.basenode.crypto.GeneralMessageCrypto;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.messages.GeneralMessageType;
 import io.coti.basenode.data.messages.StateMessage;
+import io.coti.basenode.services.interfaces.IGeneralVoteService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.IStateMessageService;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,8 @@ public class BaseNodeStateMessageService implements IStateMessageService {
     private INetworkService networkService;
     @Autowired
     private GeneralMessageCrypto generalMessageCrypto;
+    @Autowired
+    protected IGeneralVoteService generalVoteService;
 
     private EnumMap<NodeType, List<GeneralMessageType>> publisherNodeTypeToGeneralMessageTypesMap = new EnumMap<>(NodeType.class);
 
@@ -37,6 +40,12 @@ public class BaseNodeStateMessageService implements IStateMessageService {
     @Override
     public void handleStateMessage(StateMessage stateMessage) {
         log.info("State message received: " + stateMessage.getMessagePayload().getGeneralMessageType().toString());
+        if (incorrectMessageSender(stateMessage)) {
+            return;
+        }
+        if (incorrectMessageSenderSignature(stateMessage)) {
+            return;
+        }
         continueHandleStateMessage(stateMessage);
     }
 

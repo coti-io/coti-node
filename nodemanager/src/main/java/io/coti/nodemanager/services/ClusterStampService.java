@@ -118,7 +118,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             clusterStampBufferedWriter.newLine();
             clusterStampBufferedWriter.append("# Votes");
             clusterStampBufferedWriter.newLine();
-            for (GeneralVote generalVote : generalVoteResult.getGeneralVotes()) {
+            for (GeneralVote generalVote : generalVoteResult.getHashToVoteMapping().values()) {
                 writeGeneralVoteDetails(clusterStampBufferedWriter, generalVote);
             }
         } catch (Exception e) {
