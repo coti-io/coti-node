@@ -3,6 +3,7 @@ package io.coti.basenode.services;
 import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.data.DspConsensusResult;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.LockData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
@@ -17,6 +18,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -43,8 +45,7 @@ public class BaseNodeTransactionService implements ITransactionService {
     @Autowired
     private TransactionIndexes transactionIndexes;
     protected Map<TransactionData, Boolean> postponedTransactions = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
-    protected Map<Hash, Hash> lockTransactionHashMap = new ConcurrentHashMap<>();
-    private final Object lock = new Object();
+    private final LockData transactionLockData = new LockData();
 
     @Override
     public void init() {
@@ -132,23 +133,15 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     @Override
     public void handlePropagatedTransaction(TransactionData transactionData) {
-        boolean isTransactionAlreadyPropagated;
+        AtomicBoolean isTransactionAlreadyPropagated = new AtomicBoolean(false);
+
         try {
-            synchronized (addLockToLockMap(transactionData.getHash())) {
-                isTransactionAlreadyPropagated = transactionHelper.isTransactionAlreadyPropagated(transactionData);
-                if (!isTransactionAlreadyPropagated) {
-                    transactionHelper.startHandleTransaction(transactionData);
-                }
+            checkTransactionAlreadyPropagatedAndStartHandle(transactionData, isTransactionAlreadyPropagated);
+            if (isTransactionAlreadyPropagated.get()) {
+                removeTransactionHashFromUnconfirmed(transactionData);
+                log.debug("Transaction already exists: {}", transactionData.getHash());
+                return;
             }
-        } finally {
-            removeLockFromLocksMap(transactionData.getHash());
-        }
-        if (isTransactionAlreadyPropagated) {
-            removeTransactionHashFromUnconfirmed(transactionData);
-            log.debug("Transaction already exists: {}", transactionData.getHash());
-            return;
-        }
-        try {
             if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
                 log.error("Data Integrity validation failed: {}", transactionData.getHash());
                 return;
@@ -171,11 +164,26 @@ public class BaseNodeTransactionService implements ITransactionService {
         } catch (Exception e) {
             log.error("Transaction propagation handler error:", e);
         } finally {
-            boolean isTransactionFinished = transactionHelper.isTransactionFinished(transactionData);
-            transactionHelper.endHandleTransaction(transactionData);
-            if (isTransactionFinished) {
-                processPostponedTransactions(transactionData);
+            if (!isTransactionAlreadyPropagated.get()) {
+                boolean isTransactionFinished = transactionHelper.isTransactionFinished(transactionData);
+                transactionHelper.endHandleTransaction(transactionData);
+                if (isTransactionFinished) {
+                    processPostponedTransactions(transactionData);
+                }
             }
+        }
+    }
+
+    protected void checkTransactionAlreadyPropagatedAndStartHandle(TransactionData transactionData, AtomicBoolean isTransactionAlreadyPropagated) {
+        try {
+            synchronized (transactionLockData.addLockToLockMap(transactionData.getHash())) {
+                isTransactionAlreadyPropagated.set(transactionHelper.isTransactionAlreadyPropagated(transactionData));
+                if (!isTransactionAlreadyPropagated.get()) {
+                    transactionHelper.startHandleTransaction(transactionData);
+                }
+            }
+        } finally {
+            transactionLockData.removeLockFromLocksMap(transactionData.getHash());
         }
     }
 
@@ -265,18 +273,4 @@ public class BaseNodeTransactionService implements ITransactionService {
     public int totalPostponedTransactions() {
         return postponedTransactions.size();
     }
-
-    protected Hash addLockToLockMap(Hash hash) {
-        synchronized (lock) {
-            lockTransactionHashMap.putIfAbsent(hash, hash);
-            return lockTransactionHashMap.get(hash);
-        }
-    }
-
-    protected void removeLockFromLocksMap(Hash hash) {
-        synchronized (lock) {
-            lockTransactionHashMap.remove(hash);
-        }
-    }
-
 }

@@ -49,22 +49,14 @@ public class TransactionService extends BaseNodeTransactionService {
 
     public void handleNewTransactionFromFullNode(TransactionData transactionData) {
         log.debug("Running new transactions from full node handler");
-        boolean isTransactionAlreadyPropagated;
+        AtomicBoolean isTransactionAlreadyPropagated = new AtomicBoolean(false);
+
         try {
-            synchronized (addLockToLockMap(transactionData.getHash())) {
-                isTransactionAlreadyPropagated = transactionHelper.isTransactionAlreadyPropagated(transactionData);
-                if (!isTransactionAlreadyPropagated) {
-                    transactionHelper.startHandleTransaction(transactionData);
-                }
+            checkTransactionAlreadyPropagatedAndStartHandle(transactionData, isTransactionAlreadyPropagated);
+            if (isTransactionAlreadyPropagated.get()) {
+                log.debug("Transaction already exists: {}", transactionData.getHash());
+                return;
             }
-        } finally {
-            removeLockFromLocksMap(transactionData.getHash());
-        }
-        if (isTransactionAlreadyPropagated) {
-            log.debug("Transaction already exists: {}", transactionData.getHash());
-            return;
-        }
-        try {
             if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
                 log.error("Data Integrity validation failed: {}", transactionData.getHash());
                 return;
@@ -94,10 +86,12 @@ public class TransactionService extends BaseNodeTransactionService {
         } catch (Exception ex) {
             log.error("Exception while handling transaction {}", transactionData, ex);
         } finally {
-            boolean isTransactionFinished = transactionHelper.isTransactionFinished(transactionData);
-            transactionHelper.endHandleTransaction(transactionData);
-            if (isTransactionFinished) {
-                processPostponedTransactions(transactionData);
+            if (!isTransactionAlreadyPropagated.get()) {
+                boolean isTransactionFinished = transactionHelper.isTransactionFinished(transactionData);
+                transactionHelper.endHandleTransaction(transactionData);
+                if (isTransactionFinished) {
+                    processPostponedTransactions(transactionData);
+                }
             }
         }
     }
