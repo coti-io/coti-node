@@ -33,6 +33,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.*;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
@@ -59,6 +60,15 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
     private static final int CLUSTERSTAMP_UPDATE_TIME_INDEX = 0;
     private static final int CLUSTERSTAMP_VERSION_TIME_NOT_UPDATED_INDEX = 0;
     private static final int CLUSTERSTAMP_FILE_TYPE_INDEX = 1;
+    private static final int CLUSTERSTAMP_CANDIDATE_NAME_ARRAY_NOT_UPDATED_LENGTH = 4;
+    private static final int CLUSTERSTAMP_CANDIDATE_NAME_ARRAY_LENGTH = 5;
+    private static final int CLUSTERSTAMP_CANDIDATE_VERSION_TIME = 2;
+    private static final int CLUSTERSTAMP_CANDIDATE_UPDATE_TIME = 3;
+    private static final int CLUSTERSTAMP_CANDIDATE_HASH_NOT_UPDATED_INDEX = 3;
+    private static final int CLUSTERSTAMP_CANDIDATE_HASH_UPDATED_INDEX = 4;
+    private static final int CLUSTERSTAMP_CANDIDATE_FILE_NAME_PREFIX_INDEX = 0;
+    private static final int CLUSTERSTAMP_CANDIDATE_FILE_TYPE_SUFFIX_INDEX = 1;
+    private static final int CLUSTERSTAMP_CANDIDATE_PREFIX_AND_SUFFIX_ARRAY_LENGTH = 2;
     private static final int NUMBER_OF_GENESIS_ADDRESSES_MIN_LINES = 1; // Genesis One and Two + heading
     private static final int DETAILS_IN_CLUSTERSTAMP_LINE_WITHOUT_CURRENCY_HASH = 2;
     private static final int DETAILS_IN_CLUSTERSTAMP_LINE_WITH_CURRENCY_HASH = 3;
@@ -89,9 +99,10 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
     @Value("${get.cluster.stamp.from.recovery.server:true}")
     private boolean getClusterStampFromRecoveryServer;
     private Hash currencyGenesisAddress;
-    private Hash candidateCurrencyClusterStampHash;
-    private Hash candidateBalanceClusterStampHash;
+    protected Hash candidateCurrencyClusterStampHash;
+    protected Hash candidateBalanceClusterStampHash;
     private SortedMap<Hash, CurrencyData> currencySortedMap;
+    private GeneralVoteResult generalVoteResult;
 
     @Autowired
     protected IBalanceService balanceService;
@@ -153,7 +164,6 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
             if (clusterStampNameData.isBalance() && balanceClusterStampName != null) {
                 throw new ClusterStampException(String.format("Error, Multiple local balance clusterstamps found: [%s, %s] .Please remove excess clusterstamps and restart.", balanceClusterStampName, getClusterStampFileName(clusterStampNameData)));
             }
-
             addClusterStampName(clusterStampNameData);
         }
     }
@@ -206,17 +216,58 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
         return NumberUtils.isDigits(string) && string.length() <= LONG_MAX_LENGTH;
     }
 
+    protected ClusterStampNameData validateNameAndGetCandidateClusterStampNameData(String clusterStampFileName) {
+        String[] clusterStampNamePrefixSuffixDelimitedPart = clusterStampFileName.split("\\.");
+        if (clusterStampNamePrefixSuffixDelimitedPart.length != CLUSTERSTAMP_CANDIDATE_PREFIX_AND_SUFFIX_ARRAY_LENGTH) {
+            throw new ClusterStampException(String.format("Bad cluster stamp file name structure: %s.", clusterStampFileName));
+        }
+
+        String[] delimitedFileName = clusterStampNamePrefixSuffixDelimitedPart[CLUSTERSTAMP_CANDIDATE_FILE_NAME_PREFIX_INDEX].split("_");
+        if (delimitedFileName.length != CLUSTERSTAMP_CANDIDATE_NAME_ARRAY_NOT_UPDATED_LENGTH && delimitedFileName.length != CLUSTERSTAMP_CANDIDATE_NAME_ARRAY_LENGTH) {
+            throw new ClusterStampValidationException(String.format("Bad candidate cluster stamp file name: %s. Please correct candidate clusterstamp file name", clusterStampFileName));
+        }
+        String clusterStampFileType = clusterStampNamePrefixSuffixDelimitedPart[CLUSTERSTAMP_CANDIDATE_FILE_TYPE_SUFFIX_INDEX];
+        String clusterStampConstantPrefix = delimitedFileName[CLUSTERSTAMP_CONST_PREFIX_INDEX];
+        String clusterStampTypeMark = delimitedFileName[CLUSTERSTAMP_TYPE_MARK_INDEX];
+
+        String clusterStampVersionTime = delimitedFileName[CLUSTERSTAMP_CANDIDATE_VERSION_TIME];
+        String clusterStampUpdateTime;
+        String clusterStampHash;
+        if (delimitedFileName.length == CLUSTERSTAMP_CANDIDATE_NAME_ARRAY_NOT_UPDATED_LENGTH) {
+            clusterStampUpdateTime = clusterStampVersionTime;
+            clusterStampHash = delimitedFileName[CLUSTERSTAMP_CANDIDATE_HASH_NOT_UPDATED_INDEX];
+        } else {
+            clusterStampUpdateTime = delimitedFileName[CLUSTERSTAMP_CANDIDATE_UPDATE_TIME];
+            clusterStampHash = delimitedFileName[CLUSTERSTAMP_CANDIDATE_HASH_UPDATED_INDEX];
+        }
+
+        if (!validateCandidateClusterStampFileName(clusterStampConstantPrefix, clusterStampTypeMark, clusterStampVersionTime, clusterStampUpdateTime, clusterStampFileType, clusterStampHash)) {
+            throw new ClusterStampValidationException(String.format("Bad candidate cluster stamp file name: %s. Please correct clusterstamp name and restart.", clusterStampFileName));
+        }
+        return new ClusterStampNameData(ClusterStampType.getTypeByMark(clusterStampTypeMark).get(), clusterStampVersionTime, clusterStampUpdateTime);
+    }
+
+    private boolean validateCandidateClusterStampFileName(String clusterStampConstantPrefix, String clusterStampTypeMark, String clusterStampVersionTime, String clusterStampUpdateTime, String clusterStampFileType, String clusterStampHash) {
+        try {
+            DatatypeConverter.parseHexBinary(clusterStampHash);
+        } catch (Exception e) {
+            log.error("Illegal hash string: {}", clusterStampHash);
+            return false;
+        }
+        return validateClusterStampFileName(clusterStampConstantPrefix, clusterStampTypeMark, clusterStampVersionTime, clusterStampUpdateTime, clusterStampFileType);
+    }
+
     private void loadAllClusterStamps() {
         log.info("Loading clusterstamp files");
         Map<Hash, CurrencyData> currencyMap = new HashMap<>();
-        loadCurrencyClusterStamp(currencyClusterStampName, currencyMap, shouldUpdateClusterStampDBVersion());
+        loadCurrencyClusterStamp(currencyClusterStampName, currencyMap, shouldUpdateClusterStampDBVersion(), false, false);
         Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap = new HashMap<>();
         currencyMap.forEach((currencyHash, currencyData) -> {
             if (currencyData.isConfirmed()) {
                 clusterStampCurrencyMap.put(currencyHash, new ClusterStampCurrencyData(currencyData));
             }
         });
-        loadBalanceClusterStamp(balanceClusterStampName, clusterStampCurrencyMap);
+        loadBalanceClusterStamp(balanceClusterStampName, clusterStampCurrencyMap, false, false);
     }
 
     protected void addClusterStampName(ClusterStampNameData clusterStampNameData) {
@@ -257,7 +308,8 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
         return sb.toString();
     }
 
-    private void loadCurrencyClusterStamp(ClusterStampNameData currencyClusterStampNameData, Map<Hash, CurrencyData> currencyMap, boolean updateCurrencies) {
+    protected void loadCurrencyClusterStamp(ClusterStampNameData currencyClusterStampNameData, Map<Hash, CurrencyData> currencyMap,
+                                            boolean updateCurrencies, boolean appendVotes, boolean hashCalculation) {
         String clusterStampFileName = getClusterStampFileName(currencyClusterStampNameData);
         log.info("Starting to load currency clusterstamp file {}", clusterStampFileName);
         String clusterStampFileLocation = clusterStampFolder + clusterStampFileName;
@@ -342,8 +394,15 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
             } else {
                 handleClusterStampWithSignature(clusterStampData);
             }
-            if (updateCurrencies) {
-                currencyService.updateCurrenciesFromClusterStamp(currencyMap);
+            if (!hashCalculation) {
+                if (updateCurrencies) {
+                    currencyService.updateCurrenciesFromClusterStamp(currencyMap);
+                }
+            } else {
+                setCandidateCurrencyClusterStampHash(calculateClusterStampDataMessageHash(clusterStampData));
+            }
+            if (appendVotes) {
+                handleClusterStampWithoutVotes(clusterStampData, clusterStampFileLocation, signatureRelevantLines);
             }
             log.info("Finished to load currency clusterstamp file {}", clusterStampFileName);
         } catch (ClusterStampException e) {
@@ -353,7 +412,8 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
         }
     }
 
-    protected void loadBalanceClusterStamp(ClusterStampNameData clusterStampNameData, Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap) {
+    protected void loadBalanceClusterStamp(ClusterStampNameData clusterStampNameData, Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap,
+                                           boolean appendVotes, boolean hashCalculation) {
         String clusterStampFileName = getClusterStampFileName(clusterStampNameData);
         log.info("Starting to load balance clusterstamp file {}", clusterStampFileName);
         String clusterStampFileLocation = clusterStampFolder + clusterStampFileName;
@@ -402,7 +462,15 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
             } else {
                 handleClusterStampWithSignature(clusterStampData);
             }
-            mintingService.updateMintingAvailableMapFromClusterStamp(clusterStampCurrencyMap);
+            if (!hashCalculation) {
+                mintingService.updateMintingAvailableMapFromClusterStamp(clusterStampCurrencyMap);
+            } else {
+                setCandidateBalanceClusterStampHash(calculateClusterStampDataMessageHash(clusterStampData));
+            }
+
+            if (appendVotes) {
+                handleClusterStampWithoutVotes(clusterStampData, clusterStampFileLocation, signatureRelevantLines);
+            }
             log.info("Finished to load balance clusterstamp file {}", clusterStampFileName);
         } catch (ClusterStampException e) {
             throw new ClusterStampException(String.format("Errors on balance clusterstamp file %s loading.%n", clusterStampFileName) + e.getMessage(), e);
@@ -583,7 +651,7 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
 
     private void fillSignatureDataFromLine(ClusterStampData clusterStampData, String line, AtomicInteger signatureRelevantLines) {
         if (signatureRelevantLines.get() > 2) {
-            throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
+            return;
         }
 
         String[] signatureDetails;
@@ -604,8 +672,7 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
             clusterStampData.getSignature().setS(signatureDetails[1]);
     }
 
-    protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData, String
-            clusterStampFileLocation) {
+    protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData, String clusterStampFileLocation) {
         throw new ClusterStampValidationException(String.format("Clusterstamp file %s has no signature.", clusterStampFileLocation));
     }
 
@@ -614,6 +681,10 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
         if (!clusterStampCrypto.verifySignature(clusterStampData)) {
             throw new ClusterStampValidationException("Invalid signature.");
         }
+    }
+
+    protected void handleClusterStampWithoutVotes(ClusterStampData clusterStampData, String clusterStampFileLocation, AtomicInteger signatureRelevantLines) {
+        throw new ClusterStampValidationException(String.format("Clusterstamp file %s illegal attempt to add votes.", clusterStampFileLocation));
     }
 
     protected void setClusterStampSignerHash(ClusterStampData clusterStampData) {
@@ -632,9 +703,10 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
     }
 
     @Override
-    public void clusterStampExecute(StateMessage stateMessage, StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload){
+    public void clusterStampExecute(StateMessage stateMessage, StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload) {
         // implemented in subclasses
     }
+
     private void createClusterStampFiles(boolean uploadFile) {
         Long versionTimeMillis = Instant.now().toEpochMilli();
         String versionTimeMillisString = String.valueOf(versionTimeMillis);
@@ -743,9 +815,9 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
             generateCurrencyBalanceLines(clusterStampData, nativeCurrencyHash, sortedBalance, writer);
 
             currencySortedMap.forEach((currencyHash, currencyData) ->
-                currencySortedMap.keySet().stream().map(hash -> currencySortedMap.get(hash))
-                        .filter(additionalCurrencyData -> !additionalCurrencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN))
-                        .forEach(additionalCurrencyData -> generateCurrencyBalanceLines(clusterStampData, additionalCurrencyData.getHash(), sortedBalance, writer))
+                    currencySortedMap.keySet().stream().map(hash -> currencySortedMap.get(hash))
+                            .filter(additionalCurrencyData -> !additionalCurrencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN))
+                            .forEach(additionalCurrencyData -> generateCurrencyBalanceLines(clusterStampData, additionalCurrencyData.getHash(), sortedBalance, writer))
             );
             writeSignature(clusterStampData, writer);
         } catch (IOException e) {
@@ -796,4 +868,11 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
         this.candidateBalanceClusterStampHash = candidateBalanceClusterStampHash;
     }
 
+    protected GeneralVoteResult getGeneralVoteResult() {
+        return generalVoteResult;
+    }
+
+    protected void setGeneralVoteResult(GeneralVoteResult generalVoteResult) {
+        this.generalVoteResult = generalVoteResult;
+    }
 }
