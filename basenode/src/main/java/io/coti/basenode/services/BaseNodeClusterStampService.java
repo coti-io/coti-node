@@ -16,6 +16,7 @@ import io.coti.basenode.http.Response;
 import io.coti.basenode.http.SerializableResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Currencies;
+import io.coti.basenode.model.GeneralVoteResults;
 import io.coti.basenode.model.LastClusterStampVersions;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
@@ -130,6 +131,8 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
     protected ApplicationContext applicationContext;
     @Autowired
     protected IMintingService mintingService;
+    @Autowired
+    protected GeneralVoteResults generalVoteResults;
 
     @Override
     public void init() {

@@ -7,10 +7,7 @@ import io.coti.basenode.services.BaseNodeNetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -32,5 +29,12 @@ public class NetworkService extends BaseNodeNetworkService {
                 summaryMap.get(nodeTypeAsString).add(nodeData.getHttpFullAddress());
             }
         }
+    }
+
+    public List<Hash> getPotentialVotersNetworkSummary() {
+        Map<Hash, NetworkNodeData> nodeDataMap = getMapFromFactory(NodeType.DspNode);
+        NetworkNodeData zeroSpendNodeData = getSingleNodeData(NodeType.ZeroSpendServer);
+        nodeDataMap.put(zeroSpendNodeData.getNodeHash(),zeroSpendNodeData);
+        return new ArrayList<>(nodeDataMap.keySet());
     }
 }

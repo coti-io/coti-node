@@ -87,7 +87,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         } catch (Exception e) {
             throw new ClusterStampException(String.format("Errors on processing clusterstamp files %s %s loading.", currencyClusterStampFileName, balanceClusterStampFileName), e);
         }
-
     }
 
     private boolean validateMajorityVotesForClusterStampFilesHashes() {
