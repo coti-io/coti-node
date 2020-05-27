@@ -1,11 +1,13 @@
 package io.coti.nodemanager.services;
 
 import io.coti.basenode.crypto.SetNewClusterStampsRequestCrypto;
-import io.coti.basenode.data.*;
+import io.coti.basenode.data.ClusterStampCurrencyData;
+import io.coti.basenode.data.ClusterStampNameData;
+import io.coti.basenode.data.CurrencyData;
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.messages.StateMessage;
 import io.coti.basenode.data.messages.StateMessageClusterStampExecutePayload;
 import io.coti.basenode.exceptions.ClusterStampException;
-import io.coti.basenode.exceptions.ClusterStampValidationException;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.SetNewClusterStampsRequest;
 import io.coti.basenode.http.SetNewClusterStampsResponse;
@@ -17,12 +19,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
@@ -30,8 +29,6 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 @Slf4j
 @Service
 public class ClusterStampService extends BaseNodeClusterStampService {
-
-    private static final int NUMBER_OF_INITIAL_SIGNATURE_LINES = 2;
 
     @Autowired
     private SetNewClusterStampsRequestCrypto setNewClusterStampsRequestCrypto;
@@ -66,10 +63,10 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             downloadSingleClusterStampCandidate(candidateClusterStampBucketName, balanceClusterStampFileName);
 
             Map<Hash, CurrencyData> currencyMap = new HashMap<>();
-            loadCurrencyClusterStamp(currencyClusterStampName, currencyMap, shouldUpdateClusterStampDBVersion(), true, true);
+            loadCurrencyClusterStamp(currencyClusterStampName, currencyMap, shouldUpdateClusterStampDBVersion(), true);
 
             Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap = new HashMap<>();
-            loadBalanceClusterStamp(balanceClusterStampName, clusterStampCurrencyMap, true, true);
+            loadBalanceClusterStamp(balanceClusterStampName, clusterStampCurrencyMap, true);
 
             validateMajorityVotesForClusterStampFilesHashes();
 
@@ -106,33 +103,4 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         }
     }
 
-    @Override
-    protected void handleClusterStampWithoutVotes(ClusterStampData clusterStampData, String clusterStampFileLocation, AtomicInteger signatureRelevantLines) {
-        if (signatureRelevantLines.intValue() > NUMBER_OF_INITIAL_SIGNATURE_LINES) {
-            throw new ClusterStampValidationException(String.format("Votes can not be added to a file with signature lines exceeding the expected 2 at clusterstamp file %s", clusterStampFileLocation));
-        }
-        GeneralVoteResult generalVoteResult = getGeneralVoteResult();
-        try (FileWriter clusterStampFileWriter = new FileWriter(clusterStampFileLocation, true);
-             BufferedWriter clusterStampBufferedWriter = new BufferedWriter(clusterStampFileWriter)) {
-            clusterStampBufferedWriter.newLine();
-            clusterStampBufferedWriter.append("# Votes");
-            clusterStampBufferedWriter.newLine();
-            for (GeneralVote generalVote : generalVoteResult.getHashToVoteMapping().values()) {
-                writeGeneralVoteDetails(clusterStampBufferedWriter, generalVote);
-            }
-        } catch (Exception e) {
-            throw new ClusterStampValidationException("Exception at clusterstamp signing.", e);
-        }
-    }
-
-    private void writeGeneralVoteDetails(BufferedWriter clusterStampBufferedWriter, GeneralVote generalVote) throws IOException {
-        clusterStampBufferedWriter.append("k," + generalVote.getVoterHash());
-        clusterStampBufferedWriter.newLine();
-        clusterStampBufferedWriter.append("b," + generalVote.isVoteValid());
-        clusterStampBufferedWriter.newLine();
-        clusterStampBufferedWriter.append("r," + generalVote.getSignature().getR());
-        clusterStampBufferedWriter.newLine();
-        clusterStampBufferedWriter.append("s," + generalVote.getSignature().getS());
-        clusterStampBufferedWriter.newLine();
-    }
 }

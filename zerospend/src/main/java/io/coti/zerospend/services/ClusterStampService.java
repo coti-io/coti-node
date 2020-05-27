@@ -32,6 +32,7 @@ import java.util.Arrays;
 public class ClusterStampService extends BaseNodeClusterStampService {
 
     private static final String CLUSTERSTAMP_DELIMITER = ",";
+    private static final int NUMBER_OF_INITIAL_SIGNATURE_LINES = 2;
     @Value("${currency.genesis.address}")
     private String currencyAddress;
     @Value("${upload.clusterstamp}")
@@ -48,7 +49,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private TransactionIndexService transactionIndexService;
     static final long CLUSTER_STAMP_INITIATED_DELAY = 100;
     private Thread clusterStampCreationThread;
-
 
     @Value("${aws.s3.bucket.name.clusterstamp}")
     private void setClusterStampBucketName(String clusterStampBucketName) {
@@ -225,7 +225,32 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         generalMessageCrypto.signMessage(stateMessageExecute);
         log.info("Initiate clusterstamp execution " + stateMessage.getHash().toString());
         propagationPublisher.propagate(stateMessageExecute, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
+    }
 
+    @Override
+    protected void addVotesToClusterStamp(ClusterStampData clusterStampData, String clusterStampFileLocation) {
+        GeneralVoteResult generalVoteResult = getGeneralVoteResult();
+        try (FileWriter clusterStampFileWriter = new FileWriter(clusterStampFileLocation, true);
+             BufferedWriter clusterStampBufferedWriter = new BufferedWriter(clusterStampFileWriter)) {
+            clusterStampBufferedWriter.newLine();
+            clusterStampBufferedWriter.append("# Votes");
+            clusterStampBufferedWriter.newLine();
+            for (GeneralVote generalVote : generalVoteResult.getHashToVoteMapping().values()) {
+                writeGeneralVoteDetails(clusterStampBufferedWriter, generalVote);
+            }
+        } catch (Exception e) {
+            throw new ClusterStampValidationException("Exception at clusterstamp signing.", e);
+        }
+    }
 
+    private void writeGeneralVoteDetails(BufferedWriter clusterStampBufferedWriter, GeneralVote generalVote) throws IOException {
+        clusterStampBufferedWriter.append("k," + generalVote.getVoterHash());
+        clusterStampBufferedWriter.newLine();
+        clusterStampBufferedWriter.append("b," + generalVote.isVoteValid());
+        clusterStampBufferedWriter.newLine();
+        clusterStampBufferedWriter.append("r," + generalVote.getSignature().getR());
+        clusterStampBufferedWriter.newLine();
+        clusterStampBufferedWriter.append("s," + generalVote.getSignature().getS());
+        clusterStampBufferedWriter.newLine();
     }
 }
