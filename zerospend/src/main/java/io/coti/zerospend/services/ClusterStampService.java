@@ -14,6 +14,7 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeClusterStampService;
 import io.coti.basenode.services.ClusterService;
 import io.coti.basenode.services.TransactionIndexService;
+import io.coti.basenode.services.interfaces.IGeneralVoteService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,7 +48,10 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private ClusterService clusterService;
     @Autowired
     private TransactionIndexService transactionIndexService;
-    static final long CLUSTER_STAMP_INITIATED_DELAY = 100;
+    @Autowired
+    private IGeneralVoteService generalVoteService;
+    private static final long CLUSTER_STAMP_INITIATED_DELAY = 100;
+    private static final int NUMBER_OF_RESENDS = 3;
     private Thread clusterStampCreationThread;
 
     @Value("${aws.s3.bucket.name.clusterstamp}")
@@ -208,12 +212,20 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         StateMessage stateMessage = new StateMessage(stateMessageLastClusterStampIndexPayload);
         stateMessage.setHash(new Hash(generalMessageCrypto.getSignatureMessage(stateMessage)));
         generalMessageCrypto.signMessage(stateMessage);
-        log.info("Initiate voting for the last clusterstamp index" + String.valueOf(lastConfirmedIndex) + " " + stateMessage.getHash().toString());
+        generalVoteService.startCollectingVotes(stateMessage);
+        log.info(String.format("Initiate voting for the last clusterstamp index %d %s", lastConfirmedIndex, stateMessage.getHash().toString()));
         propagationPublisher.propagate(stateMessage, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
-        // todo resending (3 times ?)
 
+        for (int i=0; i < NUMBER_OF_RESENDS; i++){
+            try {
+                Thread.sleep(5000);
+            } catch (Exception ignored) {
+                // ignored exception
+            }
+            propagationPublisher.propagate(stateMessage, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
+        }
 
-        // testexecution
+        // testexecution  todo delete it
         try {
             Thread.sleep(5000);
         } catch (Exception ignored) {
@@ -225,6 +237,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         generalMessageCrypto.signMessage(stateMessageExecute);
         log.info("Initiate clusterstamp execution " + stateMessage.getHash().toString());
         propagationPublisher.propagate(stateMessageExecute, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
+        // end testexecution
     }
 
     @Override
@@ -246,7 +259,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private void writeGeneralVoteDetails(BufferedWriter clusterStampBufferedWriter, GeneralVote generalVote) throws IOException {
         clusterStampBufferedWriter.append("k," + generalVote.getVoterHash());
         clusterStampBufferedWriter.newLine();
-        clusterStampBufferedWriter.append("b," + generalVote.isVoteValid());
+        clusterStampBufferedWriter.append("b," + generalVote.isVote());
         clusterStampBufferedWriter.newLine();
         clusterStampBufferedWriter.append("r," + generalVote.getSignature().getR());
         clusterStampBufferedWriter.newLine();

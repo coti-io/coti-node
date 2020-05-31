@@ -11,9 +11,10 @@ public class GeneralVoteCrypto extends SignatureCrypto<GeneralVoteMessage> {
     @Override
     public byte[] getSignatureMessage(GeneralVoteMessage generalVoteMessage) {
         byte[] stateMessageInBytes = generalVoteMessage.getMessagePayload().getMessageInBytes();
+        byte[] voteHashInBytes = generalVoteMessage.getVoteHash().getBytes();
 
-        ByteBuffer broadcastDataBuffer = ByteBuffer.allocate(Long.BYTES + stateMessageInBytes.length + 1)
-                .putLong(generalVoteMessage.getCreateTime().toEpochMilli()).put(stateMessageInBytes).put(generalVoteMessage.isVote() ? (byte) 1 : (byte) 0);
+        ByteBuffer broadcastDataBuffer = ByteBuffer.allocate(Long.BYTES + stateMessageInBytes.length + voteHashInBytes.length + 1)
+                .putLong(generalVoteMessage.getCreateTime().toEpochMilli()).put(stateMessageInBytes).put(voteHashInBytes).put(generalVoteMessage.isVote() ? (byte) 1 : (byte) 0);
         return CryptoHelper.cryptoHash(broadcastDataBuffer.array()).getBytes();
     }
 }

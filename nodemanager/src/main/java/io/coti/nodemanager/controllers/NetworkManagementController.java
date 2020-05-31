@@ -48,10 +48,10 @@ public class NetworkManagementController {
         return ResponseEntity.ok(summaryVerboseResponse);
     }
 
-    @GetMapping(path = "/network_voters")
+    @GetMapping(path = "/validators")
     public ResponseEntity<GetNetworkVotersResponse> getNetworkVoters() {
-        List<Hash> potentialVotersNetworkSummary = networkService.getPotentialVotersNetworkSummary();
-        GetNetworkVotersResponse getNetworkVotersResponse = new GetNetworkVotersResponse(potentialVotersNetworkSummary);
+        List<Hash> allCurrentValidators = networkService.getCurrentValidators();
+        GetNetworkVotersResponse getNetworkVotersResponse = new GetNetworkVotersResponse(allCurrentValidators);
         getNetworkVotersCrypto.signMessage(getNetworkVotersResponse);
         return ResponseEntity.ok(getNetworkVotersResponse);
     }

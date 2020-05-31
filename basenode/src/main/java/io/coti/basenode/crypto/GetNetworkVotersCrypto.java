@@ -14,7 +14,7 @@ public class GetNetworkVotersCrypto extends SignatureCrypto<GetNetworkVotersResp
     @Override
     public byte[] getSignatureMessage(GetNetworkVotersResponse getNetworkVotersResponse) {
         Instant createTime = getNetworkVotersResponse.getCreateTime();
-        List<Hash> potentialVotersNetworkSummary = getNetworkVotersResponse.getPotentialVotersNetworkSummary();
+        List<Hash> potentialVotersNetworkSummary = getNetworkVotersResponse.getAllCurrentValidators();
         int byteBufferSize = Long.BYTES + potentialVotersNetworkSummary.stream().mapToInt(hash -> hash.getBytes().length).sum();
         ByteBuffer getNetworkVoteResponseBuffer = ByteBuffer.allocate(byteBufferSize);
         getNetworkVoteResponseBuffer.putLong(createTime.toEpochMilli());

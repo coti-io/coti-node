@@ -8,7 +8,7 @@ import java.io.Serializable;
 @Data
 public class GeneralVote implements Serializable {
 
-    protected boolean voteValid;
+    protected boolean vote;
     protected Hash voterHash;
     protected SignatureData signature;
 
@@ -16,7 +16,7 @@ public class GeneralVote implements Serializable {
     }
 
     public GeneralVote(GeneralVoteMessage generalVoteMessage) {
-        this.voteValid = generalVoteMessage.isVote();
+        this.vote = generalVoteMessage.isVote();
         this.voterHash = generalVoteMessage.getSignerHash();
         this.signature = generalVoteMessage.getSignature();
     }

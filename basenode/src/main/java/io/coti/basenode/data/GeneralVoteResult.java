@@ -13,8 +13,8 @@ public class GeneralVoteResult implements IEntity {
     private Hash hash;
     private Map<Hash, GeneralVote> hashToVoteMapping;
     private MessagePayload theMatter;
-    private boolean isConsensus;
-    private boolean whichConsensus;
+    private boolean isConsensusReached;
+    private boolean isConsensusPositive;
 
     private GeneralVoteResult() {
     }

@@ -59,4 +59,6 @@ public interface INetworkService {
     String getHost(String webServerUrl);
 
     NodeType getNetworkNodeType(Hash nodeHash);
+
+    long countDSPNodes();
 }

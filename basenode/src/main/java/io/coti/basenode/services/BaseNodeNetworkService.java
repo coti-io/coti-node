@@ -428,6 +428,11 @@ public class BaseNodeNetworkService implements INetworkService {
         }
         return null;
     }
+
+    @Override
+    public long countDSPNodes() {
+        return multipleNodeMaps.get(NodeType.DspNode).entrySet().size();
+    }
 }
 
 

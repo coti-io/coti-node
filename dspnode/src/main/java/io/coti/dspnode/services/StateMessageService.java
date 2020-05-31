@@ -18,8 +18,6 @@ public class StateMessageService extends BaseNodeStateMessageService {
 
     @Autowired
     private IClusterStampService clusterStampService;
-    @Autowired
-    private IGeneralVoteService generalVoteService;
 
 
     @Override
