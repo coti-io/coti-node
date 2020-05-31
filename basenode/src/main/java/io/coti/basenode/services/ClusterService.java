@@ -171,7 +171,7 @@ public class ClusterService implements IClusterService {
     public void selectSources(TransactionData transactionData) {
         List<Set<Hash>> trustScoreToTransactionMappingSnapshot =
                 Collections.unmodifiableList(sourceSetsByTrustScore);
-        Map<Hash, TransactionData> sourceMapSnapshot = SerializationUtils.clone(sourceMap);
+        Map<Hash, TransactionData> sourceMapSnapshot = Collections.unmodifiableMap(sourceMap);
         List<TransactionData> selectedSourcesForAttachment =
                 sourceSelector.selectSourcesForAttachment(
                         trustScoreToTransactionMappingSnapshot,
