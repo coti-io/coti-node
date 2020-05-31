@@ -18,14 +18,15 @@ import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class ClusterService implements IClusterService {
 
-    private List<Set<Hash>> sourceSetsByTrustScore = new ArrayList<>();
-    private ConcurrentHashMap<Hash, TransactionData> sourceMap;
+    private ArrayList<HashSet<Hash>> sourceSetsByTrustScore;
+    private HashMap<Hash, TransactionData> sourceMap;
     @Autowired
     private Transactions transactions;
     @Autowired
@@ -37,14 +38,15 @@ public class ClusterService implements IClusterService {
     private boolean isStarted;
     private ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster;
     private AtomicLong totalSources = new AtomicLong(0);
+    private ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
     @PostConstruct
     public void init() {
         trustChainConfirmationCluster = new ConcurrentHashMap<>();
         sourceSetsByTrustScore = new ArrayList<>();
-        sourceMap = new ConcurrentHashMap<>();
+        sourceMap = new HashMap<>();
         for (int i = 0; i <= 100; i++) {
-            sourceSetsByTrustScore.add(Sets.newConcurrentHashSet());
+            sourceSetsByTrustScore.add(Sets.newHashSet());
         }
     }
 
@@ -137,10 +139,15 @@ public class ClusterService implements IClusterService {
     }
 
     private void removeTransactionFromSources(Hash transactionHash) {
-        TransactionData transactionData = sourceMap.remove(transactionHash);
-        if (transactionData != null) {
-            sourceSetsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).remove(transactionHash);
-            totalSources.decrementAndGet();
+        try {
+            readWriteLock.writeLock().lock();
+            TransactionData transactionData = sourceMap.remove(transactionHash);
+            if (transactionData != null) {
+                sourceSetsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).remove(transactionHash);
+                totalSources.decrementAndGet();
+            }
+        } finally {
+            readWriteLock.writeLock().unlock();
         }
     }
 
@@ -148,9 +155,14 @@ public class ClusterService implements IClusterService {
         Hash transactionHash = transactionData.getHash();
         trustChainConfirmationCluster.put(transactionHash, transactionData);
 
-        if (transactionData.isSource() && sourceMap.put(transactionHash, transactionData) == null) {
-            sourceSetsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionHash);
-            totalSources.incrementAndGet();
+        try {
+            readWriteLock.writeLock().lock();
+            if (transactionData.isSource() && sourceMap.put(transactionHash, transactionData) == null) {
+                sourceSetsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionHash);
+                totalSources.incrementAndGet();
+            }
+        } finally {
+            readWriteLock.writeLock().unlock();
         }
 
         log.debug("Added New Transaction with hash:{}", transactionHash);
@@ -160,18 +172,28 @@ public class ClusterService implements IClusterService {
         Hash transactionHash = transactionData.getHash();
         trustChainConfirmationCluster.remove(transactionData.getHash());
 
-        if (transactionData.isSource() && sourceMap.remove(transactionHash) != null) {
-            sourceSetsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).remove(transactionHash);
-            totalSources.decrementAndGet();
+        try {
+            readWriteLock.writeLock().lock();
+            if (transactionData.isSource() && sourceMap.remove(transactionHash) != null) {
+                sourceSetsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).remove(transactionHash);
+                totalSources.decrementAndGet();
+            }
+        } finally {
+            readWriteLock.writeLock().unlock();
         }
-
     }
 
     @Override
     public void selectSources(TransactionData transactionData) {
-        List<Set<Hash>> trustScoreToTransactionMappingSnapshot =
-                Collections.unmodifiableList(sourceSetsByTrustScore);
-        Map<Hash, TransactionData> sourceMapSnapshot = Collections.unmodifiableMap(sourceMap);
+        ArrayList<HashSet<Hash>> trustScoreToTransactionMappingSnapshot;
+        Map<Hash, TransactionData> sourceMapSnapshot;
+        try {
+            readWriteLock.readLock().lock();
+            trustScoreToTransactionMappingSnapshot = SerializationUtils.clone(sourceSetsByTrustScore);
+            sourceMapSnapshot = SerializationUtils.clone(sourceMap);
+        } finally {
+            readWriteLock.readLock().unlock();
+        }
         List<TransactionData> selectedSourcesForAttachment =
                 sourceSelector.selectSourcesForAttachment(
                         trustScoreToTransactionMappingSnapshot,
@@ -207,8 +229,8 @@ public class ClusterService implements IClusterService {
     }
 
     @Override
-    public List<Set<Hash>> getSourceSetsByTrustScore() {
-        return Collections.unmodifiableList(sourceSetsByTrustScore);
+    public ArrayList<HashSet<Hash>> getSourceSetsByTrustScore() {
+        return SerializationUtils.clone(sourceSetsByTrustScore);
     }
 
 }

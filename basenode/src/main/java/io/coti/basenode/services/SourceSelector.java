@@ -9,10 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.stream.Collectors.toList;
 
@@ -27,7 +24,7 @@ public class SourceSelector implements ISourceSelector {
 
     @Override
     public List<TransactionData> selectSourcesForAttachment(
-            List<Set<Hash>> trustScoreToTransactionMapping,
+            ArrayList<HashSet<Hash>> trustScoreToTransactionMapping,
             Map<Hash, TransactionData> sourceMap, double transactionTrustScore) {
 
         List<TransactionData> neighbourSources = getNeighbourSources(
@@ -39,11 +36,10 @@ public class SourceSelector implements ISourceSelector {
     }
 
     private List<TransactionData> getNeighbourSources(
-            List<Set<Hash>> trustScoreToSourceListMapping,
+            ArrayList<HashSet<Hash>> trustScoreToSourceListMapping,
             Map<Hash, TransactionData> sourceMap, double transactionTrustScore) {
 
         List<TransactionData> neighbourSources = new LinkedList<>();
-
         int roundedTrustScore = (int) Math.round(transactionTrustScore);
         int numberOfSources = getNumberOfSources(trustScoreToSourceListMapping);
         if (numberOfSources > 0) {
@@ -67,9 +63,10 @@ public class SourceSelector implements ISourceSelector {
             }
         }
         return neighbourSources;
+
     }
 
-    private int getNumberOfSources(List<Set<Hash>> trustScoreToSourceListMapping) {
+    private int getNumberOfSources(ArrayList<HashSet<Hash>> trustScoreToSourceListMapping) {
         int numberOfSources = 0;
         for (Set<Hash> hashes : trustScoreToSourceListMapping) {
             if (hashes != null) {
