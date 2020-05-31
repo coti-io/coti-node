@@ -13,10 +13,7 @@ import org.springframework.stereotype.Service;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -48,7 +45,7 @@ public class SourceStarvationService {
     }
 
     private void createNewGenesisZeroSpendTransactions() {
-        List<Set<Hash>> sourceListsByTrustScore = clusterService.getSourceSetsByTrustScore();
+        ArrayList<HashSet<Hash>> sourceListsByTrustScore = clusterService.getSourceSetsByTrustScore();
         boolean isTrustScoreRangeContainsSource = false;
         for (int i = 1; i <= 100; i++) {
             if (!sourceListsByTrustScore.get(i).isEmpty()) {
