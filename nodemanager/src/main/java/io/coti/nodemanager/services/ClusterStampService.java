@@ -63,10 +63,10 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             downloadSingleClusterStampCandidate(candidateClusterStampBucketName, balanceClusterStampFileName);
 
             Map<Hash, CurrencyData> currencyMap = new HashMap<>();
-            loadCurrencyClusterStamp(currencyClusterStampName, currencyMap, shouldUpdateClusterStampDBVersion(), true);
+            loadCurrencyClusterStamp(currencyClusterStampFileName, currencyMap, shouldUpdateClusterStampDBVersion(), true);
 
             Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap = new HashMap<>();
-            loadBalanceClusterStamp(balanceClusterStampName, clusterStampCurrencyMap, true);
+            loadBalanceClusterStamp(balanceClusterStampFileName, clusterStampCurrencyMap, true);
 
             validateMajorityVotesForClusterStampFilesHashes();
 

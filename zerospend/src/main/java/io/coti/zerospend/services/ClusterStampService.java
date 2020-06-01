@@ -33,7 +33,6 @@ import java.util.Arrays;
 public class ClusterStampService extends BaseNodeClusterStampService {
 
     private static final String CLUSTERSTAMP_DELIMITER = ",";
-    private static final int NUMBER_OF_INITIAL_SIGNATURE_LINES = 2;
     @Value("${currency.genesis.address}")
     private String currencyAddress;
     @Value("${upload.clusterstamp}")
@@ -216,7 +215,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         log.info(String.format("Initiate voting for the last clusterstamp index %d %s", lastConfirmedIndex, stateMessage.getHash().toString()));
         propagationPublisher.propagate(stateMessage, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
 
-        for (int i=0; i < NUMBER_OF_RESENDS; i++){
+        for (int i = 0; i < NUMBER_OF_RESENDS; i++) {
             try {
                 Thread.sleep(5000);
             } catch (Exception ignored) {
@@ -240,9 +239,8 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         // end testexecution
     }
 
-    @Override
-    protected void addVotesToClusterStamp(ClusterStampData clusterStampData, String clusterStampFileLocation) {
-        GeneralVoteResult generalVoteResult = getGeneralVoteResult();
+    protected void addVotesToClusterStamp(String clusterStampFileLocation, ClusterStampType clusterStampType) {
+        GeneralVoteResult generalVoteResult = getVoteResult(clusterStampType);
         try (FileWriter clusterStampFileWriter = new FileWriter(clusterStampFileLocation, true);
              BufferedWriter clusterStampBufferedWriter = new BufferedWriter(clusterStampFileWriter)) {
             clusterStampBufferedWriter.newLine();
@@ -256,6 +254,10 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         }
     }
 
+    private GeneralVoteResult getVoteResult(ClusterStampType clusterStampType) {
+        return getGeneralVoteResult();
+    }
+
     private void writeGeneralVoteDetails(BufferedWriter clusterStampBufferedWriter, GeneralVote generalVote) throws IOException {
         clusterStampBufferedWriter.append("k," + generalVote.getVoterHash());
         clusterStampBufferedWriter.newLine();
@@ -265,5 +267,19 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         clusterStampBufferedWriter.newLine();
         clusterStampBufferedWriter.append("s," + generalVote.getSignature().getS());
         clusterStampBufferedWriter.newLine();
+    }
+
+    private void addVotesAndUploadCandidateClusterStamps(String candidateCurrencyClusterStampFileName, String candidateBalanceClusterStampFileName) {
+        String currencyClusterStampFilename = clusterStampFolder + FOLDER_DELIMITER + candidateCurrencyClusterStampFileName;
+        addVotesToClusterStamp(currencyClusterStampFilename, ClusterStampType.CURRENCY);
+        uploadCandidateClusterStamp(candidateCurrencyClusterStampFileName);
+
+        String balanceClusterStampFilename = clusterStampFolder + FOLDER_DELIMITER + candidateBalanceClusterStampFileName;
+        addVotesToClusterStamp(balanceClusterStampFilename, ClusterStampType.BALANCE);
+        uploadCandidateClusterStamp(candidateBalanceClusterStampFileName);
+    }
+
+    private void uploadCandidateClusterStamp(String candidateClusterStampFileName) {
+        awsService.uploadFileToS3(candidateClusterStampBucketName, clusterStampFolder + candidateClusterStampFileName);
     }
 }
