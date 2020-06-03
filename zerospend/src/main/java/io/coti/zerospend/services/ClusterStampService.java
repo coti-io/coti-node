@@ -167,7 +167,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         try (FileWriter clusterStampFileWriter = new FileWriter(clusterStampFileLocation, true);
              BufferedWriter clusterStampBufferedWriter = new BufferedWriter(clusterStampFileWriter)) {
             clusterStampBufferedWriter.newLine();
-            clusterStampBufferedWriter.append("# Signature");
+            clusterStampBufferedWriter.append(SIGNATURE_LINE_TOKEN);
             clusterStampBufferedWriter.newLine();
             clusterStampBufferedWriter.append("r," + signature.getR());
             clusterStampBufferedWriter.newLine();
@@ -244,7 +244,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         try (FileWriter clusterStampFileWriter = new FileWriter(clusterStampFileLocation, true);
              BufferedWriter clusterStampBufferedWriter = new BufferedWriter(clusterStampFileWriter)) {
             clusterStampBufferedWriter.newLine();
-            clusterStampBufferedWriter.append("# Votes");
+            clusterStampBufferedWriter.append(VOTES_LINE_TOKEN);
             clusterStampBufferedWriter.newLine();
             for (GeneralVote generalVote : generalVoteResult.getHashToVoteMapping().values()) {
                 writeGeneralVoteDetails(clusterStampBufferedWriter, generalVote);

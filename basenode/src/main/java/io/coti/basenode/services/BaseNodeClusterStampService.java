@@ -4,10 +4,7 @@ import com.google.gson.Gson;
 import io.coti.basenode.crypto.ClusterStampCrypto;
 import io.coti.basenode.crypto.GetClusterStampFileNamesCrypto;
 import io.coti.basenode.data.*;
-import io.coti.basenode.data.messages.StateMessage;
-import io.coti.basenode.data.messages.StateMessageClusterStampExecutePayload;
-import io.coti.basenode.data.messages.StateMessageClusterStampInitiatedPayload;
-import io.coti.basenode.data.messages.StateMessageLastClusterStampIndexPayload;
+import io.coti.basenode.data.messages.*;
 import io.coti.basenode.exceptions.ClusterStampException;
 import io.coti.basenode.exceptions.ClusterStampValidationException;
 import io.coti.basenode.exceptions.FileSystemException;
@@ -80,7 +77,8 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
     private static final int LONG_MAX_LENGTH = 19;
     private static final int NUMBER_OF_CURRENCY_GENESIS_ADDRESS_MIN_LINES = 4; // Heading + Genesis + Heading + Native currency
     private static final String BAD_CSV_FILE_FORMAT = "Bad csv file format";
-    private static final String SIGNATURE_LINE_TOKEN = "# Signature";
+    protected static final String SIGNATURE_LINE_TOKEN = "# Signature";
+    protected static final String VOTES_LINE_TOKEN = "# Votes";
     private static final String CLUSTERSTAMP_FILE_PREFIX = "clusterstamp";
     private static final String CLUSTERSTAMP_FILE_TYPE = "csv";
     private static final String CLUSTERSTAMP_ENDPOINT = "/clusterstamps";
@@ -104,6 +102,8 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
     protected Hash candidateBalanceClusterStampHash;
     private SortedMap<Hash, CurrencyData> currencySortedMap;
     private GeneralVoteResult generalVoteResult;
+    protected ClusterStampData currencyClusterStampData;
+    protected ClusterStampData balanceClusterStampData;
 
     @Autowired
     protected IBalanceService balanceService;
@@ -701,33 +701,27 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
     private void createClusterStampFiles() {
         Long versionTimeMillis = Instant.now().toEpochMilli();
         String versionTimeMillisString = String.valueOf(versionTimeMillis);
-        boolean deleteLocalCopy = true;
+        boolean writeLocalCopy = true;
 
-        createCandidateCurrencyClusterStampFile(versionTimeMillisString, deleteLocalCopy);
-        createCandidateBalanceClusterStampFile(versionTimeMillisString, deleteLocalCopy);
+        currencyClusterStampData = createCandidateCurrencyClusterStampFile(versionTimeMillisString, writeLocalCopy);
+        balanceClusterStampData = createCandidateBalanceClusterStampFile(versionTimeMillisString, writeLocalCopy);
     }
 
-    private void createCandidateCurrencyClusterStampFile(String versionTimeMillisString, boolean deleteLocalCopy) {
+    private ClusterStampData createCandidateCurrencyClusterStampFile(String versionTimeMillisString, boolean writeLocalCopy) {
         ClusterStampNameData newCurrencyClusterStampNameData = new ClusterStampNameData(ClusterStampType.CURRENCY, versionTimeMillisString, versionTimeMillisString);
         String candidateCurrencyClusterStampFileName = getCandidateClusterStampFileName(newCurrencyClusterStampNameData);
         String currencyClusterStampFilename = clusterStampFolder + FOLDER_DELIMITER + candidateCurrencyClusterStampFileName;
-        createCurrencyClusterStamp(currencyClusterStampFilename);
-        if (deleteLocalCopy) {
-            fileSystemService.deleteFile(currencyClusterStampFilename);
-        }
+        return  createCurrencyClusterStamp(currencyClusterStampFilename, writeLocalCopy);
     }
 
-    private void createCandidateBalanceClusterStampFile(String versionTimeMillisString, boolean deleteLocalCopy) {
+    private ClusterStampData createCandidateBalanceClusterStampFile(String versionTimeMillisString, boolean writeLocalCopy) {
         ClusterStampNameData newBalanceClusterStampNameData = new ClusterStampNameData(ClusterStampType.BALANCE, versionTimeMillisString, versionTimeMillisString);
         String candidateBalanceClusterStampFileName = getCandidateClusterStampFileName(newBalanceClusterStampNameData);
         String balanceClusterStampFilename = clusterStampFolder + FOLDER_DELIMITER + candidateBalanceClusterStampFileName;
-        createBalanceClusterStamp(balanceClusterStampFilename);
-        if (deleteLocalCopy) {
-            fileSystemService.deleteFile(balanceClusterStampFilename);
-        }
+        return createBalanceClusterStamp(balanceClusterStampFilename, writeLocalCopy);
     }
 
-    private void createCurrencyClusterStamp(String currencyClusterStampFilename) {
+    private ClusterStampData createCurrencyClusterStamp(String currencyClusterStampFilename, boolean writeLocalCopy) {
         sortCurrencies();
         ClusterStampData clusterStampData = new ClusterStampData();
         CurrencyData nativeCurrency = currencyService.getNativeCurrency();
@@ -742,25 +736,32 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
         }
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(currencyClusterStampFilename))) {
-            writeNativeCurrencyDetails(nativeCurrency, writer, String.valueOf(nativeCurrencyAddress));
-            generateCurrencyLines(clusterStampData, writer);
-            writeSignature(clusterStampData, writer);
+            if (writeLocalCopy) {
+                writeNativeCurrencyDetails(nativeCurrency, writer, String.valueOf(nativeCurrencyAddress));
+            }
+            generateCurrencyLines(clusterStampData, writer, writeLocalCopy);
+            if (writeLocalCopy) {
+                writeSignature(clusterStampData, writer);
+            }
         } catch (IOException e) {
             throw new FileSystemException(String.format("Create and write file error. %s: %s", e.getClass().getName(), e.getMessage()));
         }
         Hash calculateClusterStampDataMessageHash = calculateClusterStampDataMessageHash(clusterStampData);
+        setCandidateCurrencyClusterStampHash(calculateClusterStampDataMessageHash);
         if (calculateClusterStampDataMessageHash == null) {
             throw new ClusterStampException("Failed to calculate hash for cluster stamp " + currencyClusterStampFilename);
         }
-        setCandidateCurrencyClusterStampHash(calculateClusterStampDataMessageHash);
+        return clusterStampData;
     }
 
-    private void generateCurrencyLines(ClusterStampData clusterStampData, BufferedWriter writer) throws IOException {
+    private void generateCurrencyLines(ClusterStampData clusterStampData, BufferedWriter writer, boolean createLocalCopy) throws IOException {
         for (Map.Entry<Hash, CurrencyData> additionalCurrencyData : currencySortedMap.entrySet()) {
             if (!additionalCurrencyData.getValue().getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
                 String serializedCurrencyData = Base64.getEncoder().encodeToString(SerializationUtils.serialize(additionalCurrencyData));
-                writer.write(serializedCurrencyData);
-                writer.newLine();
+                if (createLocalCopy) {
+                    writer.write(serializedCurrencyData);
+                    writer.newLine();
+                }
                 byte[] currencyDataInBytes = Base64.getDecoder().decode(serializedCurrencyData);
                 clusterStampData.getSignatureMessage().add(currencyDataInBytes);
                 clusterStampData.incrementMessageByteSize(currencyDataInBytes.length);
@@ -808,38 +809,42 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
         writer.newLine();
     }
 
-    private void createBalanceClusterStamp(String balanceClusterStampFilename) {
+    private ClusterStampData createBalanceClusterStamp(String balanceClusterStampFilename, boolean writeLocalCopy) {
         ClusterStampData clusterStampData = new ClusterStampData();
         Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();
         TreeMap<Hash, BigDecimal> sortedBalance = balanceService.getSortedBalance(nativeCurrencyHash);
-
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(balanceClusterStampFilename))) {
-            generateCurrencyBalanceLines(clusterStampData, nativeCurrencyHash, sortedBalance, writer);
+            generateCurrencyBalanceLines(clusterStampData, nativeCurrencyHash, sortedBalance, writer, writeLocalCopy);
             currencySortedMap.forEach((currencyHash, currencyData) ->
                     currencySortedMap.keySet().stream().map(hash -> currencySortedMap.get(hash))
                             .filter(additionalCurrencyData -> !additionalCurrencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN))
-                            .forEach(additionalCurrencyData -> generateCurrencyBalanceLines(clusterStampData, additionalCurrencyData.getHash(), sortedBalance, writer))
+                            .forEach(additionalCurrencyData -> generateCurrencyBalanceLines(clusterStampData, additionalCurrencyData.getHash(), sortedBalance, writer, writeLocalCopy))
             );
-            writeSignature(clusterStampData, writer);
+            if (writeLocalCopy) {
+                writeSignature(clusterStampData, writer);
+            }
         } catch (IOException e) {
             throw new FileSystemException(String.format("Create and write file error. %s: %s", e.getClass().getName(), e.getMessage()));
         }
         Hash calculateClusterStampDataMessageHash = calculateClusterStampDataMessageHash(clusterStampData);
+        setCandidateBalanceClusterStampHash(calculateClusterStampDataMessageHash);
         if (calculateClusterStampDataMessageHash == null) {
             throw new ClusterStampException("Failed to calculate hash for cluster stamp " + balanceClusterStampFilename);
         }
-        setCandidateBalanceClusterStampHash(calculateClusterStampDataMessageHash);
+        return clusterStampData;
     }
 
-    private void generateCurrencyBalanceLines(ClusterStampData clusterStampData, Hash currencyHash, TreeMap<Hash, BigDecimal> sortedBalance, BufferedWriter writer) {
+    private void generateCurrencyBalanceLines(ClusterStampData clusterStampData, Hash currencyHash, TreeMap<Hash, BigDecimal> sortedBalance, BufferedWriter writer, boolean writeLocalCopy) {
         try {
             for (Map.Entry<Hash, BigDecimal> entry : sortedBalance.entrySet()) {
                 Hash addressHash = entry.getKey();
                 BigDecimal currencyAmountInAddress = entry.getValue();
-                StringBuilder sb = new StringBuilder();
-                String line = sb.append(addressHash).append(CLUSTERSTAMP_DELIMITER).append(currencyAmountInAddress.toString()).append(CLUSTERSTAMP_DELIMITER).append(currencyHash).toString();
-                writer.write(line);
-                writer.newLine();
+                if (writeLocalCopy) {
+                    StringBuilder sb = new StringBuilder();
+                    String line = sb.append(addressHash).append(CLUSTERSTAMP_DELIMITER).append(currencyAmountInAddress.toString()).append(CLUSTERSTAMP_DELIMITER).append(currencyHash).toString();
+                    writer.write(line);
+                    writer.newLine();
+                }
                 byte[] addressHashInBytes = addressHash.getBytes();
                 byte[] addressCurrencyAmountInBytes = currencyAmountInAddress.stripTrailingZeros().toPlainString().getBytes();
                 byte[] currencyHashInBytes = currencyHash.getBytes();
@@ -876,4 +881,74 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
     protected void setGeneralVoteResult(GeneralVoteResult generalVoteResult) {
         this.generalVoteResult = generalVoteResult;
     }
+
+    protected Map<Hash, GeneralVote> getVotesFromClusterStamp(String clusterStampFileName, Hash voteHash) {
+        String clusterStampFileLocation = clusterStampFolder + clusterStampFileName;
+        File clusterstampFile = new File(clusterStampFileLocation);
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(clusterstampFile))) {
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                line = line.trim();
+                if (!line.isEmpty() && line.contentEquals(SIGNATURE_LINE_TOKEN)) {
+                    return getVotes(bufferedReader, voteHash);
+                }
+            }
+        } catch (IOException e) {
+            throw new ClusterStampException("Unable to get votes from cluster stamp " + clusterStampFileName);
+        }
+        return null;
+    }
+
+    protected Map<Hash, GeneralVote> getVotes(BufferedReader bufferedReader, Hash voteHash) throws IOException {
+        Map<Hash, GeneralVote> hashToVoteMapping = new HashMap<>();
+
+        String line;
+        while ((line = bufferedReader.readLine()) != null) {
+
+            String[] lineDetails = line.split(",");
+            if (lineDetails.length != 2 || lineDetails[0].equals("k")) {
+                throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
+            }
+            Hash voterHash = new Hash(lineDetails[1]);
+
+            line = bufferedReader.readLine();
+            lineDetails = line.split(",");
+            if (lineDetails.length != 2 || lineDetails[0].equals("b")) {
+                throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
+            }
+            boolean votePositive = Boolean.parseBoolean(lineDetails[1]);
+
+            line = bufferedReader.readLine();
+            lineDetails = line.split(",");
+            if (lineDetails.length != 2 || lineDetails[0].equals("r")) {
+                throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
+            }
+            String signatureR = lineDetails[1];
+
+            line = bufferedReader.readLine();
+            lineDetails = line.split(",");
+            if (lineDetails.length != 2 || lineDetails[0].equals("s")) {
+                throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
+            }
+            String signatureS = lineDetails[1];
+
+            SignatureData signatureData = new SignatureData(signatureR, signatureS);
+
+            //TODO 6/2/2020 tomer: Adjust to specific payload intended for hash
+            StateMessageClusterStampExecutePayload messagePayload = new StateMessageClusterStampExecutePayload();
+
+            GeneralVoteMessage generalVoteMessage = new GeneralVoteMessage(messagePayload, voteHash, votePositive);
+            generalVoteMessage.setSignerHash(voterHash);
+            generalVoteMessage.setSignature(signatureData);
+            GeneralVote generalVote = new GeneralVote(generalVoteMessage);
+            hashToVoteMapping.put(generalVote.getVoterHash(), generalVote);
+
+
+        }
+
+
+        return hashToVoteMapping;
+    }
+
+
 }

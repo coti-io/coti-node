@@ -1,10 +1,7 @@
 package io.coti.nodemanager.services;
 
 import io.coti.basenode.crypto.SetNewClusterStampsRequestCrypto;
-import io.coti.basenode.data.ClusterStampCurrencyData;
-import io.coti.basenode.data.ClusterStampNameData;
-import io.coti.basenode.data.CurrencyData;
-import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.*;
 import io.coti.basenode.data.messages.StateMessage;
 import io.coti.basenode.data.messages.StateMessageClusterStampExecutePayload;
 import io.coti.basenode.exceptions.ClusterStampException;
@@ -21,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
@@ -44,7 +42,8 @@ public class ClusterStampService extends BaseNodeClusterStampService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
             }
             handlePotentialNewClusterStampFile(setNewClusterStampsRequest.getFolderPath(),
-                    setNewClusterStampsRequest.getCurrencyClusterStampFileName(), setNewClusterStampsRequest.getBalanceClusterStampFileName());
+                    setNewClusterStampsRequest.getCurrencyClusterStampFileName(), setNewClusterStampsRequest.getBalanceClusterStampFileName(),
+                    setNewClusterStampsRequest.getGeneralVoteResultHash());
         } catch (Exception e) {
             log.error("Error at getting new cluster stamp files candidates" + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
@@ -54,7 +53,8 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         return ResponseEntity.status(HttpStatus.CREATED).body(setNewClusterStampsResponse);
     }
 
-    private void handlePotentialNewClusterStampFile(String candidateClusterStampBucketName, String currencyClusterStampFileName, String balanceClusterStampFileName) {
+    private void handlePotentialNewClusterStampFile(String candidateClusterStampBucketName, String currencyClusterStampFileName,
+                                                    String balanceClusterStampFileName, Hash generalVoteResultHash) {
         try {
             ClusterStampNameData currencyClusterStampNameData = validateNameAndGetCandidateClusterStampNameData(currencyClusterStampFileName);
             ClusterStampNameData balanceClusterStampNameData = validateNameAndGetCandidateClusterStampNameData(balanceClusterStampFileName);
@@ -68,7 +68,15 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap = new HashMap<>();
             loadBalanceClusterStamp(balanceClusterStampFileName, clusterStampCurrencyMap, true);
 
-            validateMajorityVotesForClusterStampFilesHashes();
+            List<Hash> allCurrentValidators = networkService.getCurrentValidators();
+
+            if (!validateMajorityVotesForClusterStampFilesHashes(currencyClusterStampFileName, generalVoteResultHash, allCurrentValidators)) {
+                throw new ClusterStampException(String.format("Errors during cluster stamp %s votes validation", currencyClusterStampFileName));
+            }
+
+            if (!validateMajorityVotesForClusterStampFilesHashes(balanceClusterStampFileName, generalVoteResultHash, allCurrentValidators)) {
+                throw new ClusterStampException(String.format("Errors during cluster stamp %s votes validation", balanceClusterStampFileName));
+            }
 
             String currencyClusterStampTargetFilePath = clusterStampFolder + getClusterStampFileName(currencyClusterStampNameData);
             fileSystemService.renameFile(clusterStampFolder + currencyClusterStampFileName, currencyClusterStampTargetFilePath);
@@ -86,11 +94,16 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         }
     }
 
-    private boolean validateMajorityVotesForClusterStampFilesHashes() {
+    private boolean validateMajorityVotesForClusterStampFilesHashes(String clusterStampFileName, Hash generalVoteResultHash, List<Hash> allCurrentValidators) {
         //Validate Consensus, compare votes match hashes and that a true majority was reached
-//        GeneralVoteResult generalVoteResult = getGeneralVoteResult(); // check
-//        Hash candidateCurrencyClusterStampHash = getCandidateCurrencyClusterStampHash();
-//        Hash candidateBalanceClusterStampHash = getCandidateBalanceClusterStampHash();
+        GeneralVoteResult generalVoteResult = getGeneralVoteResult(); // check
+        Hash candidateCurrencyClusterStampHash = getCandidateCurrencyClusterStampHash();
+        Hash candidateBalanceClusterStampHash = getCandidateBalanceClusterStampHash();
+
+//        allCurrentValidators
+        Map<Hash, GeneralVote> votesFromClusterStamp = getVotesFromClusterStamp(clusterStampFileName, generalVoteResultHash);
+
+
         return true;
     }
 
