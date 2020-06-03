@@ -1,6 +1,7 @@
 package io.coti.basenode.services.interfaces;
 
 
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.messages.StateMessageClusterStampExecutePayload;
 import io.coti.basenode.data.messages.StateMessageClusterStampInitiatedPayload;
 import io.coti.basenode.data.messages.StateMessageLastClusterStampIndexPayload;
@@ -27,4 +28,8 @@ public interface IClusterStampService {
     boolean checkLastConfirmedIndex(StateMessageLastClusterStampIndexPayload stateMessageLastClusterStampIndexPayload);
 
     void clusterStampExecute(StateMessage stateMessage, StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload);
+
+    Hash getCandidateCurrencyClusterStampHash();
+
+    Hash getCandidateBalanceClusterStampHash();
 }

@@ -853,6 +853,7 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
         }
     }
 
+    @Override
     public Hash getCandidateCurrencyClusterStampHash() {
         return candidateCurrencyClusterStampHash;
     }
@@ -861,6 +862,7 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
         this.candidateCurrencyClusterStampHash = candidateCurrencyClusterStampHash;
     }
 
+    @Override
     public Hash getCandidateBalanceClusterStampHash() {
         return candidateBalanceClusterStampHash;
     }

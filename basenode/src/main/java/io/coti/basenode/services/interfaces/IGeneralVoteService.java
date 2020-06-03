@@ -12,5 +12,7 @@ public interface IGeneralVoteService {
 
     void startCollectingVotes(StateMessage voteHash);
 
-    void castVoteForClusterstampIndex(Hash voteHash, boolean vote);
+    void castVoteForClusterStampIndex(Hash voteHash, boolean vote);
+
+    void castVoteForClusterStampHash(Hash voteHash, boolean vote);
 }

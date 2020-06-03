@@ -223,20 +223,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             }
             propagationPublisher.propagate(stateMessage, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
         }
-
-        // testexecution  todo delete it
-        try {
-            Thread.sleep(5000);
-        } catch (Exception ignored) {
-            // ignored exception
-        }
-        StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload = new StateMessageClusterStampExecutePayload(stateMessage.getHash());
-        StateMessage stateMessageExecute = new StateMessage(stateMessageClusterStampExecutePayload);
-        stateMessageExecute.setHash(new Hash(generalMessageCrypto.getSignatureMessage(stateMessageExecute)));
-        generalMessageCrypto.signMessage(stateMessageExecute);
-        log.info("Initiate clusterstamp execution " + stateMessage.getHash().toString());
-        propagationPublisher.propagate(stateMessageExecute, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
-        // end testexecution
     }
 
     protected void addVotesToClusterStamp(String clusterStampFileLocation, ClusterStampType clusterStampType) {

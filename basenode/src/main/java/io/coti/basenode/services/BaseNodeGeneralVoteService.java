@@ -3,10 +3,7 @@ package io.coti.basenode.services;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.crypto.GeneralMessageCrypto;
 import io.coti.basenode.data.*;
-import io.coti.basenode.data.messages.GeneralMessageType;
-import io.coti.basenode.data.messages.GeneralVoteClusterStampIndexPayload;
-import io.coti.basenode.data.messages.GeneralVoteMessage;
-import io.coti.basenode.data.messages.StateMessage;
+import io.coti.basenode.data.messages.*;
 import io.coti.basenode.model.GeneralVoteResults;
 import io.coti.basenode.services.interfaces.IGeneralVoteService;
 import io.coti.basenode.services.interfaces.INetworkService;
@@ -109,14 +106,24 @@ public class BaseNodeGeneralVoteService implements IGeneralVoteService {
         }
     }
 
-    @Override
-    public void castVoteForClusterstampIndex(Hash voteHash, boolean vote) {
-        GeneralVoteClusterStampIndexPayload generalVoteClusterStampIndexPayload = new GeneralVoteClusterStampIndexPayload();
-        GeneralVoteMessage generalVoteMessage = new GeneralVoteMessage(generalVoteClusterStampIndexPayload, voteHash, vote);
+    private void castVote(MessagePayload messagePayload, Hash voteHash, boolean vote, String logMessage) {
+        GeneralVoteMessage generalVoteMessage = new GeneralVoteMessage(messagePayload, voteHash, vote);
         generalVoteMessage.setHash(new Hash(generalMessageCrypto.getSignatureMessage(generalVoteMessage)));
         generalMessageCrypto.signMessage(generalVoteMessage);
         propagationPublisher.propagate(generalVoteMessage, Arrays.asList(NodeType.DspNode, NodeType.ZeroSpendServer, NodeType.NodeManager));
-        log.info("Vote for clusterstamp " + (vote ? "True " : "False ") + generalVoteMessage.getHash().toString());
+        log.info("Vote for " + logMessage + " " + (vote ? "True " : "False ") + generalVoteMessage.getHash().toString());
+    }
+
+    @Override
+    public void castVoteForClusterStampIndex(Hash voteHash, boolean vote) {
+        GeneralVoteClusterStampIndexPayload generalVoteClusterStampIndexPayload = new GeneralVoteClusterStampIndexPayload();
+        castVote(generalVoteClusterStampIndexPayload, voteHash, vote, "clusterstamp highest index");
+    }
+
+    @Override
+    public void castVoteForClusterStampHash(Hash voteHash, boolean vote) {
+        GeneralVoteClusterStampHashPayload generalVoteClusterStampHashPayload = new GeneralVoteClusterStampHashPayload();
+        castVote(generalVoteClusterStampHashPayload, voteHash, vote, "clusterstamp hash");
     }
 
     protected boolean incorrectMessageSender(GeneralVoteMessage generalVoteMessage) {
