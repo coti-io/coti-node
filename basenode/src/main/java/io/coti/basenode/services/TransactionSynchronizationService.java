@@ -53,7 +53,7 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
             final AtomicBoolean finishedToInsert = new AtomicBoolean(false);
             Thread monitorMissingTransactionThread = transactionService.monitorTransactionThread("missing", completedMissingTransactionNumber, receivedMissingTransactionNumber);
             Thread insertMissingTransactionThread = insertMissingTransactionThread(missingTransactions, trustChainUnconfirmedExistingTransactionHashes, completedMissingTransactionNumber, monitorMissingTransactionThread, finishedToReceive, finishedToInsert);
-            ResponseExtractor responseExtractor = getResponseExtractorForMissingTransactionChunks(missingTransactions, receivedMissingTransactionNumber, insertMissingTransactionThread);
+            ResponseExtractor<Void> responseExtractor = getResponseExtractorForMissingTransactionChunks(missingTransactions, receivedMissingTransactionNumber, insertMissingTransactionThread);
             restTemplate.execute(networkService.getRecoveryServerAddress() + RECOVERY_NODE_GET_BATCH_ENDPOINT
                     + STARTING_INDEX_URL_PARAM_ENDPOINT + firstMissingTransactionIndex, HttpMethod.GET, null, responseExtractor);
             if (insertMissingTransactionThread.isAlive()) {
@@ -74,7 +74,7 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
 
     }
 
-    private ResponseExtractor getResponseExtractorForMissingTransactionChunks(List<TransactionData> missingTransactions, AtomicLong receivedMissingTransactionNumber, Thread insertMissingTransactionThread) {
+    private ResponseExtractor<Void> getResponseExtractorForMissingTransactionChunks(List<TransactionData> missingTransactions, AtomicLong receivedMissingTransactionNumber, Thread insertMissingTransactionThread) {
         return response -> {
             byte[] buf = new byte[Math.toIntExact(MAXIMUM_BUFFER_SIZE)];
             int offset = 0;

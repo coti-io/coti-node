@@ -45,7 +45,7 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private Transactions transactions;
     @Autowired
-    private StorageConnector storageConnector;
+    private StorageConnector<AddEntitiesBulkRequest, AddHistoryEntitiesResponse> storageConnector;
     @Autowired
     private AddressTransactionsByAddresses addressTransactionsByAddresses;
     @Autowired

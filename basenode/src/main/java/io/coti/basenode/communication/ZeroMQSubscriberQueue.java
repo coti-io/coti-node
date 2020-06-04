@@ -14,7 +14,7 @@ public enum ZeroMQSubscriberQueue {
     ADDRESS(new HashSet<>(Collections.singletonList(AddressData.class))),
     TRANSACTION(new HashSet<>(Arrays.asList(TransactionData.class, DspConsensusResult.class)));
 
-    private BlockingQueue<ZeroMQMessageData> queue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<ZeroMQMessageData> queue = new LinkedBlockingQueue<>();
 
     private static class ZeroMQSubscriberQueues {
         private static final Map<Class<? extends IPropagatable>, ZeroMQSubscriberQueue> messageTypeToQueueMap = new HashMap<>();

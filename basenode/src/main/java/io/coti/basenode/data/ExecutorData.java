@@ -15,7 +15,7 @@ import java.util.concurrent.Future;
 public class ExecutorData {
 
     private ExecutorService executorService;
-    private List<Future> futures;
+    private List<Future<?>> futures;
 
     public ExecutorData() {
         executorService = Executors.newFixedThreadPool(1);
@@ -27,7 +27,7 @@ public class ExecutorData {
     }
 
     public void waitForTermination() {
-        for (Future future : futures) {
+        for (Future<?> future : futures) {
             try {
                 future.get();
             } catch (InterruptedException e) {

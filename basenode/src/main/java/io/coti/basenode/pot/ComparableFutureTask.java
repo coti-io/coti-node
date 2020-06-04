@@ -27,4 +27,9 @@ public class ComparableFutureTask extends FutureTask<Void> implements Comparable
         }
         return this.priority == priority;
     }
+
+    @Override
+    public int hashCode() {
+        return priority;
+    }
 }

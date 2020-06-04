@@ -55,6 +55,9 @@ public abstract class Collection<T extends IEntity> {
     public T getByHash(Hash hash) {
         try {
             byte[] bytes = databaseConnector.getByKey(columnFamilyName, hash.getBytes());
+            if (bytes == null || bytes.length == 0) {
+                return null;
+            }
             T deserialized = (T) SerializationUtils.deserialize(bytes);
             if (deserialized != null) {
                 deserialized.setHash(hash);

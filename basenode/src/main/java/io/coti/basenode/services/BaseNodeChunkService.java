@@ -41,7 +41,7 @@ public class BaseNodeChunkService implements IChunkService {
     }
 
     @Override
-    public ResponseExtractor getResponseExtractor(Consumer<IPropagatable> consumer, int maxBufferSize) {
+    public ResponseExtractor<Void> getResponseExtractor(Consumer<IPropagatable> consumer, int maxBufferSize) {
         return response -> {
             try {
                 byte[] buf = new byte[maxBufferSize];

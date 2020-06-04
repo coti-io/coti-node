@@ -41,6 +41,8 @@ public class BaseNodeAddressService implements IAddressService {
     private Addresses addresses;
     @Autowired
     private IValidationService validationService;
+    @Autowired
+    private FileService fileService;
 
     public void init() {
         log.info("{} is up", this.getClass().getSimpleName());
@@ -122,9 +124,7 @@ public class BaseNodeAddressService implements IAddressService {
 
         try {
             if (file.createNewFile()) {
-                FileOutputStream fileOutputStream = new FileOutputStream(file);
-                fileOutputStream.write(multiPartFile.getBytes());
-                fileOutputStream.close();
+                fileService.writeToFile(multiPartFile, file);
             }
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(String.format(ADDRESS_BATCH_UPLOAD_ERROR, e.getMessage())));

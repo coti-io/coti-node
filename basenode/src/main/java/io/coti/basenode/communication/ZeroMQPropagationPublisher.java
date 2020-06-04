@@ -100,7 +100,7 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
                 }
             }
             publishRemainingMessages();
-        });
+        }, "PUB");
         publishMessageThread.start();
     }
 

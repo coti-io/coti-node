@@ -45,7 +45,7 @@ public enum DisputeItemStatusService {
 
         @Override
         public void changeDisputeStatus(DisputeData disputeData) {
-            this.CLAIM.changeDisputeStatus(disputeData);
+            DisputeItemStatusService.CLAIM.changeDisputeStatus(disputeData);
         }
     },
     CANCELED_BY_CONSUMER(DisputeItemStatus.CanceledByConsumer, EnumSet.of(DisputeItemStatus.Recall), ActionSide.Consumer, true, false, true) {

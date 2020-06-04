@@ -86,7 +86,7 @@ public class RollingReserveService {
         return lastAddressIndex.incrementAndGet();
     }
 
-    public ResponseEntity getRollingReserveData(GetMerchantRollingReserveDataRequest request) {
+    public ResponseEntity<IResponse> getRollingReserveData(GetMerchantRollingReserveDataRequest request) {
 
         RollingReserveReleaseDateData rollingReserveReleaseDateData;
         RollingReserveReleaseStatus rollingReserveReleaseStatus;
@@ -135,7 +135,7 @@ public class RollingReserveService {
         return ResponseEntity.status(HttpStatus.OK).body(new GetMerchantRollingReserveAddressResponse(merchantRollingReserveData.getMerchantHash(), merchantRollingReserveData.getRollingReserveAddress()));
     }
 
-    public ResponseEntity recourseClaim(RecourseClaimRequest request) {
+    public ResponseEntity<IResponse> recourseClaim(RecourseClaimRequest request) {
 
         RecourseClaimData recourseClaimData = request.getRecourseClaimData();
         RecourseClaimCrypto recourseClaimCrypto = new RecourseClaimCrypto();

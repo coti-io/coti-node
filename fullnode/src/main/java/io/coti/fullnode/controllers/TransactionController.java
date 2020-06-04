@@ -1,5 +1,6 @@
 package io.coti.fullnode.controllers;
 
+import io.coti.basenode.data.TransactionIndexData;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.TransactionIndexService;
@@ -79,7 +80,7 @@ public class TransactionController {
     }
 
     @GetMapping(value = "/index")
-    public ResponseEntity getCurrentIndex() {
+    public ResponseEntity<TransactionIndexData> getCurrentIndex() {
         return ResponseEntity.ok(transactionIndexService.getLastTransactionIndexData());
     }
 }

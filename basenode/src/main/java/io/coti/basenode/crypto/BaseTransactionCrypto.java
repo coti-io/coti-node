@@ -179,8 +179,9 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
     protected static final int BASE_TRANSACTION_HASH_SIZE = 32;
     protected static final String GET_MESSAGE_IN_BYTE_ERROR = "Error at getting message in byte";
-    private Class<? extends BaseTransactionData> baseTransactionClass;
+    private final Class<? extends BaseTransactionData> baseTransactionClass;
 
+    @SuppressWarnings("unused")
     <T extends BaseTransactionData> BaseTransactionCrypto(Class<T> baseTransactionClass) {
         this.baseTransactionClass = baseTransactionClass;
     }

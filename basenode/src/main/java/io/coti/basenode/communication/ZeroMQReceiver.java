@@ -76,7 +76,7 @@ public class ZeroMQReceiver implements IReceiver {
 
     @Override
     public void initReceiverHandler() {
-        messagesQueueHandlerThread = new Thread(this::handleMessagesQueueTask);
+        messagesQueueHandlerThread = new Thread(this::handleMessagesQueueTask, "ROUTER");
         messagesQueueHandlerThread.start();
     }
 

@@ -255,7 +255,7 @@ public class AddressServiceTest {
             if (expectedEntry.getValue() == null) {
                 Assert.assertEquals(null, actualEntry.getValue());
             } else if (actualEntry.getValue() == null) {
-                Assert.assertEquals(expectedEntry.getValue(), null);
+                Assert.assertEquals(null, expectedEntry.getValue());
             } else {
                 Assert.assertEquals(expectedEntry.getValue().getHash(), actualEntry.getValue().getHash());
             }

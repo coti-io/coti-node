@@ -236,7 +236,7 @@ public class TransactionHelper implements ITransactionHelper {
 
     public void startHandleTransaction(TransactionData transactionData) {
 
-        transactionHashToTransactionStateStackMapping.put(transactionData.getHash(), new Stack());
+        transactionHashToTransactionStateStackMapping.put(transactionData.getHash(), new Stack<>());
         transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(RECEIVED);
     }
 

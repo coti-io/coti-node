@@ -21,7 +21,6 @@ public class ZeroMQSender implements ISender {
 
     private ZMQ.Context zeroMQContext;
     private Map<String, ZMQ.Socket> receivingAddressToSenderSocketMapping;
-
     @Autowired
     private ISerializer serializer;
 

@@ -255,7 +255,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             return db.get(classNameToColumnFamilyHandleMapping.get(columnFamilyName), key);
         } catch (RocksDBException e) {
             log.error("Error at getting by key from db", e);
-            return null;
+            return new byte[0];
         }
     }
 

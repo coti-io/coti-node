@@ -31,22 +31,21 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     private static final int FIXED_DELAY = 5000;
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket propagationReceiver;
-    private Map<String, ConnectedNodeData> connectedNodes = new ConcurrentHashMap<>();
+    private final Map<String, ConnectedNodeData> connectedNodes = new ConcurrentHashMap<>();
     private Thread propagationReceiverThread;
     @Autowired
     private ISerializer serializer;
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap;
-    private Map<String, Thread> queueNameToThreadMap = new HashMap<>();
+    private final Map<String, Thread> queueNameToThreadMap = new HashMap<>();
     private NodeType subscriberNodeType;
     @Autowired
     private ISubscriberHandler subscriberHandler;
-
 
     @Override
     public void init() {
         initSockets();
         BlockingQueue<ZeroMQMessageData> messageQueue = ZeroMQSubscriberQueue.HEARTBEAT.getQueue();
-        queueNameToThreadMap.put(ZeroMQSubscriberQueue.HEARTBEAT.name(), new Thread(() -> this.handleMessagesQueueTask(messageQueue), ZeroMQSubscriberQueue.HEARTBEAT.name() + " subscriber"));
+        queueNameToThreadMap.put(ZeroMQSubscriberQueue.HEARTBEAT.name(), new Thread(() -> this.handleMessagesQueueTask(messageQueue), ZeroMQSubscriberQueue.HEARTBEAT.name() + " SUB"));
         subscriberHandler.init();
     }
 
@@ -67,7 +66,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         this.publisherNodeTypeToMessageTypesMap = publisherNodeTypeToMessageTypesMap;
         publisherNodeTypeToMessageTypesMap.forEach(((nodeType, classes) -> classes.forEach(messageType -> {
             ZeroMQSubscriberQueue queueEnum = ZeroMQSubscriberQueue.getQueueEnum(messageType);
-            queueNameToThreadMap.putIfAbsent(queueEnum.toString(), new Thread(() -> this.handleMessagesQueueTask(queueEnum.getQueue()), queueEnum.name() + " subscriber"));
+            queueNameToThreadMap.putIfAbsent(queueEnum.toString(), new Thread(() -> this.handleMessagesQueueTask(queueEnum.getQueue()), queueEnum.name() + " SUB"));
         })));
     }
 
@@ -91,8 +90,6 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
             propagationReceiver.close();
         });
         propagationReceiverThread.start();
-
-
     }
 
     private void addToMessageQueue() throws ClassNotFoundException {
