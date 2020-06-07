@@ -109,6 +109,8 @@ public abstract class BaseNodeInitializationService {
     private BuildProperties buildProperties;
     @Autowired
     private ITransactionPropagationCheckService transactionPropagationCheckService;
+    @Autowired
+    protected EventSchedulerService eventSchedulerService;
     private final Map<Long, ReducedExistingTransactionData> indexToTransactionMap = new HashMap<>();
     private EnumMap<ExistingTransactionHandlerType, ExecutorData> existingTransactionExecutorMap;
 
@@ -136,6 +138,7 @@ public abstract class BaseNodeInitializationService {
         networkService.connectToNetwork();
         propagationSubscriber.initPropagationHandler();
         monitorService.init();
+        eventSchedulerService.init();
     }
 
     private void initTransactionSync() {

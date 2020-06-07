@@ -24,6 +24,8 @@ public class BaseNodeShutDownService implements IShutDownService {
     protected IReceiver receiver;
     @Autowired
     protected IDatabaseConnector databaseConnector;
+    @Autowired
+    protected EventSchedulerService eventSchedulerService;
 
     public void shutdown() {
         shutDownServices();
@@ -35,5 +37,6 @@ public class BaseNodeShutDownService implements IShutDownService {
         propagationPublisher.shutdown();
         confirmationService.shutdown();
         databaseConnector.shutdown();
+        eventSchedulerService.shutdown();
     }
 }
