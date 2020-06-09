@@ -1,6 +1,6 @@
 package io.coti.basenode.data;
 
-public enum ExistingTransactionHandlerType {
+public enum InitializationTransactionHandlerType {
     CLUSTER,
     CONFIRMATION,
     TRANSACTION

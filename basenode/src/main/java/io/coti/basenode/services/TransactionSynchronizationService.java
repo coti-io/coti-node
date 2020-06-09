@@ -1,9 +1,7 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.communication.JacksonSerializer;
-import io.coti.basenode.data.AddressTransactionsHistory;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.TransactionSyncException;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.services.interfaces.*;
@@ -41,6 +39,7 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
     @Autowired
     private RestTemplate restTemplate;
     private final Object finishLock = new Object();
+    private EnumMap<InitializationTransactionHandlerType, ExecutorData> missingTransactionExecutorMap;
 
     public synchronized void requestMissingTransactions(long firstMissingTransactionIndex) {
         try {
@@ -86,6 +85,8 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
                         missingTransactions.add(missingTransaction);
                         receivedMissingTransactionNumber.incrementAndGet();
                         if (!insertMissingTransactionThread.isAlive()) {
+                            missingTransactionExecutorMap = new EnumMap<>(InitializationTransactionHandlerType.class);
+                            EnumSet.allOf(InitializationTransactionHandlerType.class).forEach(initializationTransactionHandlerType -> missingTransactionExecutorMap.put(initializationTransactionHandlerType, new ExecutorData()));
                             insertMissingTransactionThread.start();
                         }
                         Arrays.fill(buf, 0, offset + n, (byte) 0);
@@ -109,7 +110,14 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
             monitorMissingTransactionThread.start();
 
             insertMissingTransactions(missingTransactions, trustChainUnconfirmedExistingTransactionHashes, completedMissingTransactionNumber, finishedToReceive, addressToTransactionsHistoryMap, offset);
+            missingTransactionExecutorMap.forEach((initializationTransactionHandlerType, executorData) -> executorData.waitForTermination());
+
             monitorMissingTransactionThread.interrupt();
+            try {
+                monitorMissingTransactionThread.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
             synchronized (finishLock) {
                 finishedToInsert.set(true);
                 finishLock.notifyAll();
@@ -127,7 +135,7 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
                 nextOffSet = offset + (finishedToReceive.get() ? missingTransactionsSize - offset : 1);
                 for (int i = offset; i < nextOffSet; i++) {
                     TransactionData transactionData = missingTransactions.get(i);
-                    transactionService.handleMissingTransaction(transactionData, trustChainUnconfirmedExistingTransactionHashes);
+                    transactionService.handleMissingTransaction(transactionData, trustChainUnconfirmedExistingTransactionHashes, missingTransactionExecutorMap);
                     transactionHelper.updateAddressTransactionHistory(addressToTransactionsHistoryMap, transactionData);
                     missingTransactions.set(i, null);
                     completedMissingTransactionNumber.incrementAndGet();

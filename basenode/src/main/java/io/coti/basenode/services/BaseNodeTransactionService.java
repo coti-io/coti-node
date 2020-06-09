@@ -1,10 +1,7 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.communication.JacksonSerializer;
-import io.coti.basenode.data.DspConsensusResult;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.LockData;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
@@ -15,6 +12,7 @@ import reactor.core.publisher.FluxSink;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -220,22 +218,21 @@ public class BaseNodeTransactionService implements ITransactionService {
         // implemented by sub classes
     }
 
-    public void handleMissingTransaction(TransactionData transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes) {
-
-        if (!transactionHelper.isTransactionExists(transactionData)) {
-
-            transactions.put(transactionData);
-            addToExplorerIndexes(transactionData);
+    @Override
+    public void handleMissingTransaction(TransactionData transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, EnumMap<InitializationTransactionHandlerType, ExecutorData> missingTransactionExecutorMap) {
+        boolean transactionExists = transactionHelper.isTransactionExists(transactionData);
+        transactions.put(transactionData);
+        if (!transactionExists) {
+            missingTransactionExecutorMap.get(InitializationTransactionHandlerType.TRANSACTION).submit(() -> {
+                addToExplorerIndexes(transactionData);
+                propagateMissingTransaction(transactionData);
+            });
+            missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> confirmationService.insertMissingTransaction(transactionData));
             transactionHelper.incrementTotalTransactions();
-
-            confirmationService.insertMissingTransaction(transactionData);
-            propagateMissingTransaction(transactionData);
-
         } else {
-            transactions.put(transactionData);
-            confirmationService.insertMissingConfirmation(transactionData, trustChainUnconfirmedExistingTransactionHashes);
+            missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> confirmationService.insertMissingConfirmation(transactionData, trustChainUnconfirmedExistingTransactionHashes));
         }
-        clusterService.addMissingTransactionOnInit(transactionData, trustChainUnconfirmedExistingTransactionHashes);
+        missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CLUSTER).submit(() -> clusterService.addMissingTransactionOnInit(transactionData, trustChainUnconfirmedExistingTransactionHashes));
 
     }
 

@@ -110,7 +110,7 @@ public abstract class BaseNodeInitializationService {
     @Autowired
     private ITransactionPropagationCheckService transactionPropagationCheckService;
     private final Map<Long, ReducedExistingTransactionData> indexToTransactionMap = new HashMap<>();
-    private EnumMap<ExistingTransactionHandlerType, ExecutorData> existingTransactionExecutorMap;
+    private EnumMap<InitializationTransactionHandlerType, ExecutorData> existingTransactionExecutorMap;
 
     public void init() {
         log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());
@@ -146,8 +146,8 @@ public abstract class BaseNodeInitializationService {
             final AtomicBoolean executorServicesInitiated = new AtomicBoolean(false);
             transactions.forEach(transactionData -> {
                 if (!executorServicesInitiated.get()) {
-                    existingTransactionExecutorMap = new EnumMap<>(ExistingTransactionHandlerType.class);
-                    EnumSet.allOf(ExistingTransactionHandlerType.class).forEach(existingTransactionHandlerType -> existingTransactionExecutorMap.put(existingTransactionHandlerType, new ExecutorData()));
+                    existingTransactionExecutorMap = new EnumMap<>(InitializationTransactionHandlerType.class);
+                    EnumSet.allOf(InitializationTransactionHandlerType.class).forEach(initializationTransactionHandlerType -> existingTransactionExecutorMap.put(initializationTransactionHandlerType, new ExecutorData()));
                     executorServicesInitiated.set(true);
                 }
 
@@ -158,7 +158,7 @@ public abstract class BaseNodeInitializationService {
                 completedExistedTransactionNumber.incrementAndGet();
             });
             if (executorServicesInitiated.get()) {
-                existingTransactionExecutorMap.forEach((existingTransactionHandlerType, executorData) -> executorData.waitForTermination());
+                existingTransactionExecutorMap.forEach((initializationTransactionHandlerType, executorData) -> executorData.waitForTermination());
             }
             if (monitorExistingTransactions.isAlive()) {
                 monitorExistingTransactions.interrupt();
@@ -193,9 +193,9 @@ public abstract class BaseNodeInitializationService {
     }
 
     private void handleExistingTransaction(TransactionData transactionData) {
-        existingTransactionExecutorMap.get(ExistingTransactionHandlerType.CLUSTER).submit(() -> clusterService.addExistingTransactionOnInit(transactionData));
-        existingTransactionExecutorMap.get(ExistingTransactionHandlerType.CONFIRMATION).submit(() -> confirmationService.insertSavedTransaction(transactionData, indexToTransactionMap));
-        existingTransactionExecutorMap.get(ExistingTransactionHandlerType.TRANSACTION).submit(() -> transactionService.addToExplorerIndexes(transactionData));
+        existingTransactionExecutorMap.get(InitializationTransactionHandlerType.CLUSTER).submit(() -> clusterService.addExistingTransactionOnInit(transactionData));
+        existingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> confirmationService.insertSavedTransaction(transactionData, indexToTransactionMap));
+        existingTransactionExecutorMap.get(InitializationTransactionHandlerType.TRANSACTION).submit(() -> transactionService.addToExplorerIndexes(transactionData));
 
         transactionHelper.incrementTotalTransactions();
     }

@@ -2,11 +2,13 @@ package io.coti.basenode.data;
 
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class InputBaseTransactionData extends BaseTransactionData {
 
     private static final long serialVersionUID = -4057207259434521625L;

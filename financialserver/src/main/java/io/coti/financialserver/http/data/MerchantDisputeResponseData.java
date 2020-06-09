@@ -2,10 +2,12 @@ package io.coti.financialserver.http.data;
 
 import io.coti.financialserver.data.DisputeData;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class MerchantDisputeResponseData extends GetDisputeResponseData {
 
     private String merchantHash;
