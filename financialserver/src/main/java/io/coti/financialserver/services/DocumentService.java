@@ -76,7 +76,7 @@ public class DocumentService {
         }
 
         for (DisputeItemData disputeItemData : disputeItemsData) {
-            if (disputeItemData.getStatus() != DisputeItemStatus.Recall) {
+            if (disputeItemData.getStatus() != DisputeItemStatus.RECALL) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ITEM_PASSED_RECALL_STATUS, STATUS_ERROR));
             }
 

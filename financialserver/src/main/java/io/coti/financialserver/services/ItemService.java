@@ -87,7 +87,7 @@ public class ItemService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
         }
 
-        if (disputeData.getDisputeStatus() != DisputeStatus.Claim) {
+        if (disputeData.getDisputeStatus() != DisputeStatus.CLAIM) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_NOT_IN_CLAIM_STATUS, STATUS_ERROR));
         }
 

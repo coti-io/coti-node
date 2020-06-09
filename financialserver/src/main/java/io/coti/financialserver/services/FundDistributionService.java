@@ -105,12 +105,11 @@ public class FundDistributionService {
     }
 
     private void updateAddressToReservedBalanceMap(Hash receiverAddress, BigDecimal distributionAmount) {
-        ReservedBalanceData reservedBalanceData = addressToReservedBalanceMap.get(receiverAddress);
-        if (reservedBalanceData == null) {
-            reservedBalanceData = new ReservedBalanceData(BigDecimal.ZERO);
-            addressToReservedBalanceMap.put(receiverAddress, reservedBalanceData);
-        }
-        reservedBalanceData.setReservedAmount(reservedBalanceData.getReservedAmount().add(distributionAmount));
+        addressToReservedBalanceMap.computeIfPresent(receiverAddress, (receiverAddressKey, reservedBalanceData) -> {
+            reservedBalanceData.setReservedAmount(reservedBalanceData.getReservedAmount().add(distributionAmount));
+            return reservedBalanceData;
+        });
+        addressToReservedBalanceMap.putIfAbsent(receiverAddress, new ReservedBalanceData(distributionAmount));
     }
 
     private Hash getFundAddressHash(Fund fund) {
@@ -216,24 +215,14 @@ public class FundDistributionService {
         FundDistributionFileData fundDistributionFileData = request.getFundDistributionFileData(new Hash(kycServerPublicKey));
         String fileName = request.getFileName();
 
-        ResponseEntity<IResponse> response = verifyDailyDistributionFileByName(fundDistributionFileDataEntries, fundDistributionFileData, fileName);
-        if (response != null) {
-            return response;
-        }
-
-        return null;
+        return verifyDailyDistributionFileByName(fundDistributionFileDataEntries, fundDistributionFileData, fileName);
     }
 
     private ResponseEntity<IResponse> verifyDailyDistributionLocalFile(AddFundDistributionsRequest request, List<FundDistributionData> fundDistributionFileDataEntries) {
         FundDistributionFileData fundDistributionFileData = request.getFundDistributionFileData(new Hash(kycServerPublicKey));
         String fileName = request.getFileName();
 
-        ResponseEntity<IResponse> response = verifyDailyDistributionLocalFileByName(fundDistributionFileDataEntries, fundDistributionFileData, fileName);
-        if (response != null) {
-            return response;
-        }
-
-        return null;
+        return verifyDailyDistributionLocalFileByName(fundDistributionFileDataEntries, fundDistributionFileData, fileName);
     }
 
     private ResponseEntity<IResponse> verifyDailyDistributionLocalFileByName(List<FundDistributionData> fundDistributionFileDataEntries, FundDistributionFileData fundDistributionFileData, String fileName) {
@@ -637,7 +626,7 @@ public class FundDistributionService {
     }
 
     private String getEntryResultAsCommaDelimitedLine(FundDistributionFileEntryResultData entryResult) {
-        return Long.toString(entryResult.getId()) + COMMA_SEPARATOR + entryResult.getDistributionPool() + COMMA_SEPARATOR +
+        return entryResult.getId() + COMMA_SEPARATOR + entryResult.getDistributionPool() + COMMA_SEPARATOR +
                 entryResult.getSource() + COMMA_SEPARATOR + getEntryResultSourceFundAddress(entryResult).toString() + COMMA_SEPARATOR +
                 entryResult.getReceiverAddress() + COMMA_SEPARATOR + ((Boolean) entryResult.isAccepted()).toString() + COMMA_SEPARATOR +
                 entryResult.getStatus() + COMMA_SEPARATOR + entryResult.getTransactionHash() + "\n";

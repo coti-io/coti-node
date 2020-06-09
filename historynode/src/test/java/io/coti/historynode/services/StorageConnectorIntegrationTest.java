@@ -63,7 +63,7 @@ public class StorageConnectorIntegrationTest {
     public void retrieveAddresses_notStoredInStorage_shouldReturnMapWithNullValues() {
         int size = 3;
         List<AddressData> addresses = AddressTestUtils.generateListOfRandomAddressData(size);
-        GetHistoryAddressesRequest request = new GetHistoryAddressesRequest(addresses.stream().map(addressData -> addressData.getHash()).collect(Collectors.toList()));
+        GetHistoryAddressesRequest request = new GetHistoryAddressesRequest(addresses.stream().map(AddressData::getHash).collect(Collectors.toList()));
         getHistoryAddressesRequestCrypto.signMessage(request);
         ResponseEntity<GetHistoryAddressesResponse> retrieveResponse = storageConnector.retrieveFromStorage(storageNodeUrl + "/addresses", request, GetHistoryAddressesResponse.class);
         Assert.assertEquals(HttpStatus.OK, retrieveResponse.getStatusCode());
@@ -72,7 +72,7 @@ public class StorageConnectorIntegrationTest {
         for (Map.Entry<Hash, AddressData> entry : addressHashesToAddresses.entrySet()) {
             Assert.assertNull(entry.getValue());
         }
-        Assert.assertTrue(addressHashesToAddresses.keySet().containsAll(addresses.stream().map(a -> a.getHash()).collect(Collectors.toSet())));
+        Assert.assertTrue(addressHashesToAddresses.keySet().containsAll(addresses.stream().map(AddressData::getHash).collect(Collectors.toSet())));
     }
 
     //@Test
@@ -125,23 +125,23 @@ public class StorageConnectorIntegrationTest {
         // Store in elastic and check correct size and correct result values.
         List<AddressData> addresses = AddressTestUtils.generateListOfRandomAddressData(size);
         Map<Hash, String> hashToAddressDataJsonMap = new HashMap<>();
-        addresses.stream().forEach(addressData -> {
+        addresses.forEach(addressData -> {
             hashToAddressDataJsonMap.put(addressData.getHash(), jacksonSerializer.serializeAsString(addressData));
         });
         AddHistoryAddressesRequest storeRequest = new AddHistoryAddressesRequest(hashToAddressDataJsonMap);
         ResponseEntity<AddHistoryEntitiesResponse> storeResponse = storageConnector.storeInStorage(storageNodeUrl + "/addresses", storeRequest, AddHistoryEntitiesResponse.class);
         Assert.assertEquals(storeResponse.getBody().getHashToStoreResultMap().size(), size);
         Assert.assertEquals(HttpStatus.OK, storeResponse.getStatusCode());
-        storeResponse.getBody().getHashToStoreResultMap().values().forEach(storeResult -> Assert.assertTrue(storeResult));
+        storeResponse.getBody().getHashToStoreResultMap().values().forEach(Assert::assertTrue);
 
         // get from elastic addresses that were stored above. make sure correct Http status, correct size, correct address data.
-        GetHistoryAddressesRequest retrieveRequest = new GetHistoryAddressesRequest(addresses.stream().map(addressData -> addressData.getHash()).collect(Collectors.toList()));
+        GetHistoryAddressesRequest retrieveRequest = new GetHistoryAddressesRequest(addresses.stream().map(AddressData::getHash).collect(Collectors.toList()));
         getHistoryAddressesRequestCrypto.signMessage(retrieveRequest);
         ResponseEntity<GetHistoryAddressesResponse> retrieveResponse = storageConnector.retrieveFromStorage(storageNodeUrl + "/addresses", retrieveRequest, GetHistoryAddressesResponse.class);
-        Assert.assertEquals(retrieveResponse.getStatusCode(), HttpStatus.OK);
+        Assert.assertEquals(HttpStatus.OK, retrieveResponse.getStatusCode());
         Map<Hash, AddressData> addressHashesToAddresses = retrieveResponse.getBody().getAddressHashesToAddresses();
         Assert.assertEquals(addressHashesToAddresses.size(), size);
-        Set<Hash> hashes = addresses.stream().map(addressData -> addressData.getHash()).collect(Collectors.toSet());
+        Set<Hash> hashes = addresses.stream().map(AddressData::getHash).collect(Collectors.toSet());
         addressHashesToAddresses.values().forEach(addressData -> Assert.assertTrue(hashes.contains(addressData.getHash())));
     }
 

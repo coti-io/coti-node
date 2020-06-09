@@ -21,7 +21,7 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 
 public enum DisputeItemStatusService {
 
-    ACCEPTED_BY_MERCHANT(DisputeItemStatus.AcceptedByMerchant, EnumSet.of(DisputeItemStatus.Recall), ActionSide.Merchant, true, true, true) {
+    ACCEPTED_BY_MERCHANT(DisputeItemStatus.ACCEPTED_BY_MERCHANT, EnumSet.of(DisputeItemStatus.RECALL), ActionSide.Merchant, true, true, true) {
         @Override
         public void changeDisputeItemsStatuses(DisputeData disputeData) {
             changePreClaimDisputeItemsStatuses(disputeData);
@@ -37,7 +37,7 @@ public enum DisputeItemStatusService {
 
         }
     },
-    REJECTED_BY_MERCHANT(DisputeItemStatus.RejectedByMerchant, EnumSet.of(DisputeItemStatus.Recall), ActionSide.Merchant, false, false, true) {
+    REJECTED_BY_MERCHANT(DisputeItemStatus.REJECTED_BY_MERCHANT, EnumSet.of(DisputeItemStatus.RECALL), ActionSide.Merchant, false, false, true) {
         @Override
         public void changeDisputeItemsStatuses(DisputeData disputeData) {
             changePreClaimDisputeItemsStatuses(disputeData);
@@ -48,7 +48,7 @@ public enum DisputeItemStatusService {
             DisputeItemStatusService.CLAIM.changeDisputeStatus(disputeData);
         }
     },
-    CANCELED_BY_CONSUMER(DisputeItemStatus.CanceledByConsumer, EnumSet.of(DisputeItemStatus.Recall), ActionSide.Consumer, true, false, true) {
+    CANCELED_BY_CONSUMER(DisputeItemStatus.CANCELED_BY_CONSUMER, EnumSet.of(DisputeItemStatus.RECALL), ActionSide.Consumer, true, false, true) {
         @Override
         public void changeDisputeItemsStatuses(DisputeData disputeData) {
             changePreClaimDisputeItemsStatuses(disputeData);
@@ -65,10 +65,10 @@ public enum DisputeItemStatusService {
 
         private boolean isCanceledByConsumerForAllItems(DisputeData disputeData) {
             List<DisputeItemData> disputeItems = disputeData.getDisputeItems();
-            return disputeItems.stream().filter(disputeItemData -> disputeItemData.getStatus().equals(DisputeItemStatus.CanceledByConsumer)).count() == disputeItems.size();
+            return disputeItems.stream().filter(disputeItemData -> disputeItemData.getStatus().equals(DisputeItemStatus.CANCELED_BY_CONSUMER)).count() == disputeItems.size();
         }
     },
-    CLAIM(DisputeItemStatus.Claim, EnumSet.of(DisputeItemStatus.Recall, DisputeItemStatus.RejectedByMerchant), ActionSide.FinancialServer, false, false, false) {
+    CLAIM(DisputeItemStatus.CLAIM, EnumSet.of(DisputeItemStatus.RECALL, DisputeItemStatus.REJECTED_BY_MERCHANT), ActionSide.FinancialServer, false, false, false) {
         @Override
         public void changeDisputeStatus(DisputeData disputeData) {
             if (existRecallDisputeItems(disputeData)) {
@@ -77,13 +77,13 @@ public enum DisputeItemStatusService {
             DisputeStatusService.CLAIM.changeStatus(disputeData);
         }
     },
-    ACCEPTED_BY_ARBITRATORS(DisputeItemStatus.AcceptedByArbitrators, EnumSet.of(DisputeItemStatus.Claim), ActionSide.FinancialServer, true, true, false) {
+    ACCEPTED_BY_ARBITRATORS(DisputeItemStatus.ACCEPTED_BY_ARBITRATORS, EnumSet.of(DisputeItemStatus.CLAIM), ActionSide.FinancialServer, true, true, false) {
         @Override
         public void changeDisputeStatus(DisputeData disputeData) {
             changeDisputeStatusForPostClaimDisputeItem(disputeData);
         }
     },
-    REJECTED_BY_ARBITRATORS(DisputeItemStatus.RejectedByArbitrators, EnumSet.of(DisputeItemStatus.Claim), ActionSide.FinancialServer, true, false, false) {
+    REJECTED_BY_ARBITRATORS(DisputeItemStatus.REJECTED_BY_ARBITRATORS, EnumSet.of(DisputeItemStatus.CLAIM), ActionSide.FinancialServer, true, false, false) {
         @Override
         public void changeDisputeStatus(DisputeData disputeData) {
             changeDisputeStatusForPostClaimDisputeItem(disputeData);
@@ -93,12 +93,12 @@ public enum DisputeItemStatusService {
     protected WebSocketService webSocketService;
     protected Transactions transactions;
     protected RollingReserveService rollingReserveService;
-    private DisputeItemStatus newDisputeItemStatus;
-    private Set<DisputeItemStatus> previousDisputeItemStatuses;
-    private ActionSide actionSide;
-    private boolean finalStatus;
-    private boolean refundable;
-    private boolean preClaim;
+    private final DisputeItemStatus newDisputeItemStatus;
+    private final Set<DisputeItemStatus> previousDisputeItemStatuses;
+    private final ActionSide actionSide;
+    private final boolean finalStatus;
+    private final boolean refundable;
+    private final boolean preClaim;
 
     private static class DisputeItemStatusServices {
         private static final Map<DisputeItemStatus, DisputeItemStatusService> disputeItemStatusServiceMap = new EnumMap<>(DisputeItemStatus.class);
@@ -142,7 +142,7 @@ public enum DisputeItemStatusService {
         if (disputeItemData == null) {
             throw new DisputeItemChangeStatusException(DISPUTE_ITEM_NOT_FOUND);
         }
-        if (!disputeItemData.getStatus().equals(DisputeItemStatus.Recall) && valueOf(disputeItemData.getStatus().toString()).isFinalStatus()) {
+        if (!disputeItemData.getStatus().equals(DisputeItemStatus.RECALL) && valueOf(disputeItemData.getStatus().toString()).isFinalStatus()) {
             throw new DisputeItemChangeStatusException(DISPUTE_ITEM_STATUS_FINAL);
         }
         if (!previousDisputeItemStatuses.contains(disputeItemData.getStatus())) {
@@ -174,26 +174,26 @@ public enum DisputeItemStatusService {
             return;
         }
         disputeData.getDisputeItems().forEach(disputeItemData -> {
-            if (disputeItemData.getStatus().equals(DisputeItemStatus.RejectedByMerchant)) {
-                disputeItemData.setStatus(DisputeItemStatus.Claim);
+            if (disputeItemData.getStatus().equals(DisputeItemStatus.REJECTED_BY_MERCHANT)) {
+                disputeItemData.setStatus(DisputeItemStatus.CLAIM);
                 webSocketService.notifyOnItemStatusChange(disputeData, disputeItemData.getId(), ActionSide.FinancialServer);
             }
         });
     }
 
     public boolean existRecallDisputeItems(DisputeData disputeData) {
-        Stream<DisputeItemData> disputeItemDataStream = disputeData.getDisputeItems().stream().filter(disputeItemData -> disputeItemData.getStatus().equals(DisputeItemStatus.Recall));
+        Stream<DisputeItemData> disputeItemDataStream = disputeData.getDisputeItems().stream().filter(disputeItemData -> disputeItemData.getStatus().equals(DisputeItemStatus.RECALL));
         return disputeItemDataStream.count() != 0;
     }
 
     public boolean existClaimDisputeItems(DisputeData disputeData) {
-        Stream<DisputeItemData> disputeItemDataStream = disputeData.getDisputeItems().stream().filter(disputeItemData -> disputeItemData.getStatus().equals(DisputeItemStatus.Claim));
+        Stream<DisputeItemData> disputeItemDataStream = disputeData.getDisputeItems().stream().filter(disputeItemData -> disputeItemData.getStatus().equals(DisputeItemStatus.CLAIM));
         return disputeItemDataStream.count() != 0;
     }
 
     public void changeDisputeStatusForPostClaimDisputeItem(DisputeData disputeData) {
         for (DisputeItemData disputeItemData : disputeData.getDisputeItems()) {
-            if (disputeItemData.getStatus().equals(DisputeItemStatus.Claim)) {
+            if (disputeItemData.getStatus().equals(DisputeItemStatus.CLAIM)) {
                 return;
             }
         }
@@ -215,7 +215,7 @@ public enum DisputeItemStatusService {
     public boolean isFinalStatusForAllItems(DisputeData disputeData) {
         List<DisputeItemData> disputeItems = disputeData.getDisputeItems();
         for (DisputeItemData disputeItemData : disputeItems) {
-            if (disputeItemData.getStatus().equals(DisputeItemStatus.Recall) || !valueOf(disputeItemData.getStatus().toString()).isFinalStatus()) {
+            if (disputeItemData.getStatus().equals(DisputeItemStatus.RECALL) || !valueOf(disputeItemData.getStatus().toString()).isFinalStatus()) {
                 return false;
             }
         }

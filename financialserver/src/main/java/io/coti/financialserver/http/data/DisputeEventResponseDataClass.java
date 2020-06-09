@@ -12,22 +12,22 @@ import java.util.Map;
 
 @Slf4j
 public enum DisputeEventResponseDataClass {
-    DISPUTE(DisputeData.class, GetDisputeResponseData.class, FinancialServerEvent.NewDispute) {
+    DISPUTE(DisputeData.class, GetDisputeResponseData.class, FinancialServerEvent.NEW_DISPUTE) {
         @Override
         public IDisputeEventResponseData getEventObject(DisputeEventData disputeEventData, Hash userHash, ActionSide evenDisplaySide) {
             return GetDisputeResponseClass.getByActionSide(evenDisplaySide).getNewInstance((DisputeData) disputeEventData.getEventObject(), userHash);
         }
     },
-    DISPUTE_COMMENT(DisputeCommentData.class, GetCommentResponseData.class, FinancialServerEvent.NewDisputeComment),
-    DISPUTE_DOCUMENT(DisputeDocumentData.class, DocumentNameResponseData.class, FinancialServerEvent.NewDisputeDocument),
-    DISPUTE_STATUS_CHANGE_EVENT(DisputeStatusChangeEventData.class, DisputeStatusChangeResponseData.class, FinancialServerEvent.DisputeStatusUpdated),
-    DISPUTE_ITEM_STATUS_CHANGE_EVENT(DisputeItemStatusChangeEventData.class, DisputeItemStatusChangeResponseData.class, FinancialServerEvent.DisputeItemStatusUpdated),
-    DISPUTE_ITEM_VOTE(DisputeItemVoteData.class, DisputeItemVoteResponseData.class, FinancialServerEvent.NewDisputeItemVote);
+    DISPUTE_COMMENT(DisputeCommentData.class, GetCommentResponseData.class, FinancialServerEvent.NEW_DISPUTE_COMMENT),
+    DISPUTE_DOCUMENT(DisputeDocumentData.class, DocumentNameResponseData.class, FinancialServerEvent.NEW_DISPUTE_DOCUMENT),
+    DISPUTE_STATUS_CHANGE_EVENT(DisputeStatusChangeEventData.class, DisputeStatusChangeResponseData.class, FinancialServerEvent.DISPUTE_STATUS_UPDATED),
+    DISPUTE_ITEM_STATUS_CHANGE_EVENT(DisputeItemStatusChangeEventData.class, DisputeItemStatusChangeResponseData.class, FinancialServerEvent.DISPUTE_ITEM_STATUS_UPDATED),
+    DISPUTE_ITEM_VOTE(DisputeItemVoteData.class, DisputeItemVoteResponseData.class, FinancialServerEvent.NEW_DISPUTE_ITEM_VOTE);
 
 
-    private Class<? extends IDisputeEvent> disputeEventClass;
-    private Class<? extends IDisputeEventResponseData> disputeEventResponseClass;
-    private FinancialServerEvent financialServerEvent;
+    private final Class<? extends IDisputeEvent> disputeEventClass;
+    private final Class<? extends IDisputeEventResponseData> disputeEventResponseClass;
+    private final FinancialServerEvent financialServerEvent;
 
     private static class DisputeEventResponseDataClasses {
         private static final Map<Class<? extends IDisputeEvent>, DisputeEventResponseDataClass> disputeEventResponseDataClassMap = new HashMap<>();

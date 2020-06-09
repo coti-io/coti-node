@@ -184,7 +184,7 @@ public class RollingReserveService {
     public void setRollingReserveReleaseDate(TransactionData transactionData, Hash merchantHash) {
 
         try {
-            // TODO: Get number of days from transaction data
+            // Get number of days from transaction data
             Date date = DatesHelper.getDateNumberOfDaysAfterToday(ROLLING_RESERVE_DEFAULT_DAYS_TO_HOLD);
 
             Hash dateHash = new Hash(date.getTime());

@@ -67,7 +67,7 @@ public class AddressService extends BaseNodeAddressService {
                 GetHistoryAddressesResponse getHistoryAddressesResponseFromStorageNode = getAddressesFromStorage(addressesHashesToGetFromStorage);
                 Optional<ResponseEntity<IResponse>> responseValidationResult = validateStorageResponse(getHistoryAddressesResponseFromStorageNode);
                 if (responseValidationResult.isPresent()) {
-//                    return responseValidationResult.get();
+//                    return responseValidationResult.get()
                     getHistoryAddressesResponseMap = addressToAddressDataFromDB;
                 } else {
                     Map<Hash, AddressData> addressHashesToAddressesFromStorage = getHistoryAddressesResponseFromStorageNode.getAddressHashesToAddresses();

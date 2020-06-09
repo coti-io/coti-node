@@ -12,8 +12,8 @@ import static org.apache.commons.lang3.StringUtils.leftPad;
 
 public class DifficultyMultiplierTiming {
 
-    private static int sampleSize = 200;
-    private static int difficultyMultiplier = 2;
+    private static final int sampleSize = 200;
+    private static final int difficultyMultiplier = 2;
 
     @Test
     public void difficultyMultiplierTiming() {

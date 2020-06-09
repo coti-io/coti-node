@@ -14,7 +14,7 @@ public interface ITransactionService {
 
     void getTransactionBatch(long startingIndex, HttpServletResponse response);
 
-    void getTransactionBatch(long startingIndex, FluxSink sink);
+    void getTransactionBatch(long startingIndex, FluxSink<byte[]> sink);
 
     void handlePropagatedTransaction(TransactionData transactionData);
 

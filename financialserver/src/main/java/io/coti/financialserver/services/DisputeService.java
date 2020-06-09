@@ -69,7 +69,7 @@ public class DisputeService {
     private ITransactionHelper transactionHelper;
     @Autowired
     private WebSocketService webSocketService;
-    private Map<ActionSide, Collection<UserDisputesData>> userDisputesCollectionMap = new EnumMap<>(ActionSide.class);
+    private final Map<ActionSide, Collection<UserDisputesData>> userDisputesCollectionMap = new EnumMap<>(ActionSide.class);
 
     @PostConstruct
     public void init() {
@@ -156,7 +156,7 @@ public class DisputeService {
         disputes.put(disputeData);
         webSocketService.notifyOnNewDispute(disputeData);
 
-        return ResponseEntity.status(HttpStatus.OK).body(new GetDisputesResponse(Arrays.asList(disputeData), ActionSide.Consumer, disputeData.getConsumerHash()));
+        return ResponseEntity.status(HttpStatus.OK).body(new GetDisputesResponse(Collections.singletonList(disputeData), ActionSide.Consumer, disputeData.getConsumerHash()));
     }
 
     private void addUserDisputeHash(ActionSide actionSide, Hash userHash, Hash disputeHash) {
@@ -248,7 +248,7 @@ public class DisputeService {
 
     public void update(DisputeData disputeData) {
 
-        if (disputeData.getDisputeStatus().equals(DisputeStatus.Claim) && disputeData.getArbitratorHashes().isEmpty()) {
+        if (disputeData.getDisputeStatus().equals(DisputeStatus.CLAIM) && disputeData.getArbitratorHashes().isEmpty()) {
             assignToArbitrators(disputeData);
             disputeData.setArbitratorsAssignTime(Instant.now());
         }
@@ -269,9 +269,9 @@ public class DisputeService {
 
         for (DisputeItemVoteData disputeItemVoteData : disputeItemVotes) {
 
-            if (disputeItemVoteData.getStatus().equals(DisputeItemVoteStatus.AcceptedByArbitrator)) {
+            if (disputeItemVoteData.getStatus().equals(DisputeItemVoteStatus.ACCEPTED_BY_ARBITRATOR)) {
                 votesForConsumer++;
-            } else if (disputeItemVoteData.getStatus().equals(DisputeItemVoteStatus.RejectedByArbitrator)) {
+            } else if (disputeItemVoteData.getStatus().equals(DisputeItemVoteStatus.REJECTED_BY_ARBITRATOR)) {
                 votesForMerchant++;
             }
         }
@@ -292,7 +292,8 @@ public class DisputeService {
         int random;
 
         List<String> arbitratorUserHashList = new ArrayList<>(this.arbitratorUserHashes);
-        for (int i = 0; i < COUNT_ARBITRATORS_PER_DISPUTE; i++) {
+        int arbitratorsCount = 0;
+        while (arbitratorsCount < COUNT_ARBITRATORS_PER_DISPUTE) {
 
             random = new Random().nextInt(arbitratorUserHashList.size());
 
@@ -301,6 +302,7 @@ public class DisputeService {
             addUserDisputeHash(ActionSide.Arbitrator, arbitratorHash, disputeData.getHash());
 
             arbitratorUserHashList.remove(random);
+            arbitratorsCount++;
         }
 
         webSocketService.notifyOnDisputeToArbitrators(disputeData);
@@ -327,7 +329,7 @@ public class DisputeService {
 
         for (Hash disputeHash : transactionDisputesData.getDisputeHashes()) {
             disputeData = disputes.getByHash(disputeHash);
-            if (disputeData.getDisputeStatus().equals(DisputeStatus.Recall) || !DisputeStatusService.getByDisputeStatus(disputeData.getDisputeStatus()).isFinalStatus()) {
+            if (disputeData.getDisputeStatus().equals(DisputeStatus.RECALL) || !DisputeStatusService.getByDisputeStatus(disputeData.getDisputeStatus()).isFinalStatus()) {
                 return true;
             }
         }

@@ -17,6 +17,7 @@ import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -49,7 +50,7 @@ public class TransactionStorageService extends EntityStorageService {
         return new GetHistoryTransactionsResponse();
     }
 
-    public void retrieveMultipleObjectsInReactiveFromStorage(GetHistoryTransactionsRequest getHistoryTransactionsRequest, FluxSink sink) {
+    public void retrieveMultipleObjectsInReactiveFromStorage(GetHistoryTransactionsRequest getHistoryTransactionsRequest, FluxSink<GetHashToPropagatable<TransactionData>> sink) {
         try {
             getHistoryTransactionsRequest.getTransactionHashes().forEach(transactionHash -> sink.next(retrieveHashToObjectFromStorage(transactionHash)));
         } catch (Exception e) {
@@ -65,7 +66,7 @@ public class TransactionStorageService extends EntityStorageService {
 
             List<Hash> transactionHashes = getHistoryTransactionsRequest.getTransactionHashes();
             List<List<Hash>> blocksOfHashes = divideHashesToBlocks(transactionHashes);
-            if (blocksOfHashes == null) {
+            if (blocksOfHashes.isEmpty()) {
                 return;
             }
             ExecutorService executorPool = Executors.newFixedThreadPool(Math.min(blocksOfHashes.size(), POOL_MAX_SIZE));
@@ -115,15 +116,15 @@ public class TransactionStorageService extends EntityStorageService {
 
     private List<List<Hash>> divideHashesToBlocks(List<Hash> hashes) {
         if (hashes == null || hashes.isEmpty()) {
-            return null;
+            return new ArrayList<>();
         }
         return ListUtils.partition(hashes, BLOCK_SIZE);
     }
 
     private class WorkerThread implements Runnable {
-        private List<Hash> transactionHashes;
-        private int blockNumber;
-        private BlockingQueue<GetHashToPropagatable<TransactionData>> retrievedTransactionQueue;
+        private final List<Hash> transactionHashes;
+        private final int blockNumber;
+        private final BlockingQueue<GetHashToPropagatable<TransactionData>> retrievedTransactionQueue;
 
         public WorkerThread(List<Hash> transactionHashes, int blockNumber, BlockingQueue<GetHashToPropagatable<TransactionData>> retrievedTransactionQueue) {
             this.transactionHashes = transactionHashes;

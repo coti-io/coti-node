@@ -45,7 +45,7 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable, IDispu
 
     public void init() {
 
-        disputeStatus = DisputeStatus.Recall;
+        disputeStatus = DisputeStatus.RECALL;
         creationTime = Instant.now();
         updateTime = Instant.now();
         arbitratorHashes = new ArrayList<>();

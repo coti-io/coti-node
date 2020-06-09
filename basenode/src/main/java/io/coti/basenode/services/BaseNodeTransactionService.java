@@ -88,7 +88,7 @@ public class BaseNodeTransactionService implements ITransactionService {
     }
 
     @Override
-    public void getTransactionBatch(long startingIndex, FluxSink sink) {
+    public void getTransactionBatch(long startingIndex, FluxSink<byte[]> sink) {
         AtomicLong transactionNumber = new AtomicLong(0);
         Thread monitorTransactionBatch = monitorTransactionBatch(Thread.currentThread().getId(), transactionNumber);
 

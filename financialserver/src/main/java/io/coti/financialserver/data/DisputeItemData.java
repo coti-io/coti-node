@@ -21,7 +21,7 @@ public class DisputeItemData implements Serializable {
     private String name;
     @NotNull
     private DisputeReason reason;
-    private DisputeItemStatus status = DisputeItemStatus.Recall;
+    private DisputeItemStatus status = DisputeItemStatus.RECALL;
     private List<Hash> disputeDocumentHashes = new ArrayList<>();
     private List<Hash> disputeCommentHashes = new ArrayList<>();
     private List<DisputeItemVoteData> disputeItemVotesData = new ArrayList<>();

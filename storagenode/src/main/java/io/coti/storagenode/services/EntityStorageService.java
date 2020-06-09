@@ -39,11 +39,11 @@ public abstract class EntityStorageService implements IEntityStorageService {
 
     private <T extends IPropagatable> T retrieveObjectFromStorage(Hash hash) {
         boolean fromColdStorage = false;
-        String objectAsJson = objectService.getObjectByHash(hash, fromColdStorage, objectType);
+        String objectAsJson = objectService.getObjectByHash(hash, false, objectType);
 
         if (objectAsJson == null) {
             fromColdStorage = true;
-            objectAsJson = objectService.getObjectByHash(hash, fromColdStorage, objectType);
+            objectAsJson = objectService.getObjectByHash(hash, true, objectType);
             if (objectAsJson == null) {
                 return null;
             }
