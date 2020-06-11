@@ -5,6 +5,7 @@ import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +16,7 @@ public class ClusterStampData implements ISignable, ISignValidatable {
     private Hash zeroSpendServerHash;
     private List<byte[]> signatureMessage = new ArrayList<>();
     private int messageByteSize = 0;
+    private Instant createTime = Instant.now();
     private SignatureData zeroSpendSignature;
 
     @Override

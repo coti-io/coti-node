@@ -15,11 +15,9 @@ public class SetNewClusterStampsRequest extends Request implements ISignValidata
     @NotEmpty
     private String folderPath;
     @NotEmpty
-    private String currencyClusterStampFileName;
-    @NotEmpty
-    private String balanceClusterStampFileName;
+    private String clusterStampFileName;
     @NotNull
-    private @Valid Hash generalVoteResultHash;
+    private @Valid Hash expectedClusterStampHash;
 
     @NotNull
     private @Valid Hash signerHash;

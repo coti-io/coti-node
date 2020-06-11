@@ -1,15 +1,13 @@
 package io.coti.zerospend.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
-import io.coti.basenode.crypto.GeneralMessageCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.data.messages.GeneralVoteMessage;
 import io.coti.basenode.data.messages.StateMessage;
-import io.coti.basenode.data.messages.StateMessageClusterStampExecutePayload;
 import io.coti.basenode.data.messages.StateMessageClusterStampInitiatedPayload;
 import io.coti.basenode.data.messages.StateMessageLastClusterStampIndexPayload;
 import io.coti.basenode.exceptions.ClusterStampException;
-import io.coti.basenode.exceptions.ClusterStampValidationException;
-import io.coti.basenode.exceptions.FileSystemException;
+import io.coti.basenode.http.GetNetworkVotersResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeClusterStampService;
 import io.coti.basenode.services.ClusterService;
@@ -20,12 +18,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.SerializationUtils;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 
 
 @Slf4j
@@ -37,12 +36,9 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private String currencyAddress;
     @Value("${upload.clusterstamp}")
     private boolean uploadClusterStamp;
-    @Value("${upload.currencies.clusterstamp}")
-    private boolean uploadCurrencyClusterStamp;
     @Autowired
     protected IPropagationPublisher propagationPublisher;
-    @Autowired
-    protected GeneralMessageCrypto generalMessageCrypto;
+
     @Autowired
     private ClusterService clusterService;
     @Autowired
@@ -62,22 +58,14 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     public void init() {
         super.init();
         if (uploadClusterStamp) {
-            uploadCurrencyClusterStamp();
-            uploadBalanceClusterStamp();
+            uploadClusterStamp();
         }
     }
 
-    private void uploadCurrencyClusterStamp() {
-        log.info("Starting to upload currency clusterstamp");
-        uploadClusterStamp(currencyClusterStampName);
-        log.info("Finished to upload currency clusterstamp");
-
-    }
-
-    private void uploadBalanceClusterStamp() {
-        log.info("Starting to upload balance clusterstamp");
-        uploadClusterStamp(balanceClusterStampName);
-        log.info("Finished to upload balance clusterstamp");
+    private void uploadClusterStamp() {
+        log.info("Starting to upload clusterstamp");
+        uploadClusterStamp(clusterStampName);
+        log.info("Finished to upload clusterstamp");
     }
 
     private void uploadClusterStamp(ClusterStampNameData clusterStampNameData) {
@@ -88,98 +76,91 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     protected void fillClusterStampNamesMap() {
         super.fillClusterStampNamesMap();
 
-        long versionTimeInMillis = Instant.now().toEpochMilli();
-        if (currencyClusterStampName == null) {
-            handleMissingCurrencyClusterStamp(versionTimeInMillis);
-        }
-        if (balanceClusterStampName == null) {
-            handleMissingBalanceClusterStamp(versionTimeInMillis);
+        Instant now = Instant.now();
+        if (clusterStampName == null) {
+            handleMissingClusterStamp(now);
         }
     }
 
-    private void handleMissingCurrencyClusterStamp(long versionTimeInMillis) {
-        CurrencyData nativeCurrency = currencyService.getNativeCurrency();
-        if (nativeCurrency == null) {
-            currencyService.generateNativeCurrency();
-            nativeCurrency = currencyService.getNativeCurrency();
-        }
-        generateCurrencyClusterStampFromNativeCurrency(nativeCurrency, versionTimeInMillis);
+    private void handleMissingClusterStamp(Instant createTime) {
+        boolean prepareClusterStampLines = true;
+        ClusterStampData clusterStampData = new ClusterStampData();
+
+        prepareCandidateClusterStampHash(createTime, prepareClusterStampLines, clusterStampData, true);
+        Hash clusterStampDataMessageHash = getCandidateClusterStampHash();
+
+        GetNetworkVotersResponse getNetworkVotersResponse = getGetNetworkVotersResponse();
+        String voterNodesDetails = Base64.getEncoder().encodeToString(SerializationUtils.serialize(getNetworkVotersResponse));
+        updateClusterStampVoterNodesDetails(voterNodesDetails);
+
+        GeneralVoteMessage generalVoteMessage = createGeneralVoteMessage(createTime, clusterStampDataMessageHash);
+
+        validatorsVoteClusterStampSegmentLines = new ArrayList<>();
+        updateGeneralVoteMessageClusterStampSegment(prepareClusterStampLines, generalVoteMessage);
+        writeClusterStamp(createTime);
+
         uploadClusterStamp = true;
     }
 
-    private void handleMissingBalanceClusterStamp(long versionTimeInMillis) {
-        CurrencyData nativeCurrency = currencyService.getNativeCurrency();
-        if (nativeCurrency == null) {
-            throw new ClusterStampException("Unable to start zero spend server. Native token not found.");
-        }
-        handleNewCurrencyByType(nativeCurrency, ClusterStampType.BALANCE, versionTimeInMillis);
+    private void createClusterStampFile_example(Instant createTime) {
+        // Create cluster stamp hash
+        boolean prepareClusterStampLines = true;
+        ClusterStampData clusterStampData = new ClusterStampData();
+
+        prepareCandidateClusterStampHash(createTime, prepareClusterStampLines, clusterStampData, false);
+        Hash clusterStampDataMessageHash = getCandidateClusterStampHash();
+
+        // Update with voters snapshot
+        GetNetworkVotersResponse getNetworkVotersResponse = getGetNetworkVotersResponse();
+        String voterNodesDetails = Base64.getEncoder().encodeToString(SerializationUtils.serialize(getNetworkVotersResponse));
+        updateClusterStampVoterNodesDetails(voterNodesDetails);
+
+        validatorsVoteClusterStampSegmentLines = new ArrayList<>();
+        // For each vote
+        GeneralVoteMessage generalVoteMessage = createGeneralVoteMessage(createTime, clusterStampDataMessageHash);
+        updateGeneralVoteMessageClusterStampSegment(prepareClusterStampLines, generalVoteMessage);
+
+        writeClusterStamp(createTime);
+
         uploadClusterStamp = true;
     }
 
-    private ClusterStampNameData handleNewCurrencyByType(CurrencyData currency, ClusterStampType clusterStampType, long versionTimeInMillis) {
-        ClusterStampNameData clusterStampNameData = new ClusterStampNameData(clusterStampType, versionTimeInMillis);
-        generateOneLineClusterStampFile(clusterStampNameData, currency);
-        addClusterStampName(clusterStampNameData);
-        return clusterStampNameData;
+    @Override
+    protected GetNetworkVotersResponse getGetNetworkVotersResponse() {
+        return restTemplate.getForEntity(nodeManagerHttpAddress + NODE_MANAGER_VALIDATORS_ENDPOINT, GetNetworkVotersResponse.class).getBody();
     }
 
-    private void generateOneLineClusterStampFile(ClusterStampNameData clusterStamp, CurrencyData currencyData) {
-        String line = generateClusterStampLineFromNewCurrency(currencyData);
-        fileSystemService.createAndWriteLineToFile(clusterStampFolder, super.getClusterStampFileName(clusterStamp), line);
-    }
 
-    private String generateClusterStampLineFromNewCurrency(CurrencyData currencyData) {
+    private String generateClusterStampLineFromNewCurrency(ClusterStampData clusterStampData, CurrencyData currencyData) {
+        if (currencyAddress == null) {
+            throw new ClusterStampException("Unable to start zero spend server. Genesis address not found.");
+        }
         StringBuilder sb = new StringBuilder();
+        byte[] addressHashInBytes = this.currencyAddress.getBytes();
+        byte[] addressCurrencyAmountInBytes = currencyData.getTotalSupply().stripTrailingZeros().toPlainString().getBytes();
+        byte[] currencyHashInBytes = currencyData.getHash().getBytes();
+        byte[] balanceInBytes = ByteBuffer.allocate(addressHashInBytes.length + addressCurrencyAmountInBytes.length + currencyHashInBytes.length)
+                .put(addressHashInBytes).put(addressCurrencyAmountInBytes).put(currencyHashInBytes).array();
+        clusterStampData.getSignatureMessage().add(balanceInBytes);
+        clusterStampData.incrementMessageByteSize(balanceInBytes.length);
         sb.append(this.currencyAddress).append(CLUSTERSTAMP_DELIMITER).append(currencyData.getTotalSupply().toString()).append(CLUSTERSTAMP_DELIMITER).append(currencyData.getHash());
         return sb.toString();
     }
 
-    private void generateCurrencyClusterStampFromNativeCurrency(CurrencyData nativeCurrency, long versionTimeInMillis) {
-        if (currencyAddress == null) {
-            throw new ClusterStampException("Unable to start zero spend server. Genesis address not found.");
-        }
+    @Override
+    protected void prepareOnlyForNativeGenesisAddressBalanceClusterStampSegment(ClusterStampData clusterStampData, boolean prepareClusterStampLines, CurrencyData nativeCurrency) {
         if (nativeCurrency == null) {
             throw new ClusterStampException("Unable to start zero spend server. Native token not found.");
         }
-        ClusterStampNameData clusterStampNameData = new ClusterStampNameData(ClusterStampType.CURRENCY, versionTimeInMillis);
-        String clusterStampFileName = getClusterStampFileName(clusterStampNameData);
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(clusterStampFolder + "/" + clusterStampFileName))) {
-            writeNativeCurrencyDetails(nativeCurrency, writer, currencyAddress);
-            addClusterStampName(clusterStampNameData);
-        } catch (IOException e) {
-            throw new FileSystemException(String.format("Create and write file error. %s: %s", e.getClass().getName(), e.getMessage()));
+        String line = generateClusterStampLineFromNewCurrency(clusterStampData, nativeCurrency);
+        if (prepareClusterStampLines) {
+            balanceClusterStampSegmentLines.add(line);
         }
     }
 
     @Override
     protected void handleMissingRecoveryServer() {
         // Zero spend does nothing in this method.
-    }
-
-    @Override
-    protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData, String clusterStampFileLocation) {
-        clusterStampCrypto.signMessage(clusterStampData);
-        updateClusterStampFileWithSignature(clusterStampData.getSignature(), clusterStampFileLocation);
-        uploadClusterStamp = true;
-    }
-
-    private void updateClusterStampFileWithSignature(SignatureData signature, String clusterStampFileLocation) {
-        try (FileWriter clusterStampFileWriter = new FileWriter(clusterStampFileLocation, true);
-             BufferedWriter clusterStampBufferedWriter = new BufferedWriter(clusterStampFileWriter)) {
-            clusterStampBufferedWriter.newLine();
-            clusterStampBufferedWriter.append("# Signature");
-            clusterStampBufferedWriter.newLine();
-            clusterStampBufferedWriter.append("r," + signature.getR());
-            clusterStampBufferedWriter.newLine();
-            clusterStampBufferedWriter.append("s," + signature.getS());
-        } catch (Exception e) {
-            throw new ClusterStampValidationException("Exception at clusterstamp signing.", e);
-        }
-    }
-
-    @Override
-    protected void setClusterStampSignerHash(ClusterStampData clusterStampData) {
-        clusterStampData.setSignerHash(networkService.getNetworkNodeData().getNodeHash());
     }
 
     public ResponseEntity<IResponse> initiateClusterStamp() {
@@ -202,7 +183,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             // ignored exception
         }
 
-        long lastConfirmedIndex = clusterService.maxIndexOfNotConfirmed();
+        long lastConfirmedIndex = clusterService.getMaxIndexOfNotConfirmed();
         if (lastConfirmedIndex <= 0) {
             lastConfirmedIndex = transactionIndexService.getLastTransactionIndexData().getIndex();
         }
@@ -225,47 +206,4 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         }
     }
 
-    protected void addVotesToClusterStamp(String clusterStampFileLocation, ClusterStampType clusterStampType) {
-        GeneralVoteResult generalVoteResult = getVoteResult(clusterStampType);
-        try (FileWriter clusterStampFileWriter = new FileWriter(clusterStampFileLocation, true);
-             BufferedWriter clusterStampBufferedWriter = new BufferedWriter(clusterStampFileWriter)) {
-            clusterStampBufferedWriter.newLine();
-            clusterStampBufferedWriter.append("# Votes");
-            clusterStampBufferedWriter.newLine();
-            for (GeneralVote generalVote : generalVoteResult.getHashToVoteMapping().values()) {
-                writeGeneralVoteDetails(clusterStampBufferedWriter, generalVote);
-            }
-        } catch (Exception e) {
-            throw new ClusterStampValidationException("Exception at clusterstamp signing.", e);
-        }
-    }
-
-    private GeneralVoteResult getVoteResult(ClusterStampType clusterStampType) {
-        return getGeneralVoteResult();
-    }
-
-    private void writeGeneralVoteDetails(BufferedWriter clusterStampBufferedWriter, GeneralVote generalVote) throws IOException {
-        clusterStampBufferedWriter.append("k," + generalVote.getVoterHash());
-        clusterStampBufferedWriter.newLine();
-        clusterStampBufferedWriter.append("b," + generalVote.isVote());
-        clusterStampBufferedWriter.newLine();
-        clusterStampBufferedWriter.append("r," + generalVote.getSignature().getR());
-        clusterStampBufferedWriter.newLine();
-        clusterStampBufferedWriter.append("s," + generalVote.getSignature().getS());
-        clusterStampBufferedWriter.newLine();
-    }
-
-    private void addVotesAndUploadCandidateClusterStamps(String candidateCurrencyClusterStampFileName, String candidateBalanceClusterStampFileName) {
-        String currencyClusterStampFilename = clusterStampFolder + FOLDER_DELIMITER + candidateCurrencyClusterStampFileName;
-        addVotesToClusterStamp(currencyClusterStampFilename, ClusterStampType.CURRENCY);
-        uploadCandidateClusterStamp(candidateCurrencyClusterStampFileName);
-
-        String balanceClusterStampFilename = clusterStampFolder + FOLDER_DELIMITER + candidateBalanceClusterStampFileName;
-        addVotesToClusterStamp(balanceClusterStampFilename, ClusterStampType.BALANCE);
-        uploadCandidateClusterStamp(candidateBalanceClusterStampFileName);
-    }
-
-    private void uploadCandidateClusterStamp(String candidateClusterStampFileName) {
-        awsService.uploadFileToS3(candidateClusterStampBucketName, clusterStampFolder + candidateClusterStampFileName);
-    }
 }

@@ -433,6 +433,11 @@ public class BaseNodeNetworkService implements INetworkService {
     public long countDSPNodes() {
         return multipleNodeMaps.get(NodeType.DspNode).entrySet().size();
     }
+
+    @Override
+    public List<Hash> getCurrentValidators() {
+        throw new NetworkException("Attempted to get current validators.");
+    }
 }
 
 

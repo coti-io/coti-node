@@ -2,10 +2,12 @@ package io.coti.zerospend.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NodeType;
-import io.coti.basenode.data.messages.*;
+import io.coti.basenode.data.messages.GeneralVoteMessage;
+import io.coti.basenode.data.messages.StateMessage;
+import io.coti.basenode.data.messages.StateMessageClusterStampExecutePayload;
+import io.coti.basenode.data.messages.StateMessageClusterStampHashPayload;
 import io.coti.basenode.services.BaseNodeGeneralVoteService;
 import io.coti.basenode.services.interfaces.IClusterStampService;
-import io.coti.basenode.services.interfaces.IGeneralVoteService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,25 +30,27 @@ public class GeneralVoteService extends BaseNodeGeneralVoteService {
         switch (generalVoteMessage.getMessagePayload().getGeneralMessageType()) {
             case CLUSTER_STAMP_INDEX_VOTE:
                 //todo calculate clusterstampdata and hashes  - Tomer
+                clusterStampService.prepareCandidateClusterStampHash();
+                Hash clusterStampHash = clusterStampService.getCandidateClusterStampHash();
 
-                Hash clusterStampBalanceHash = clusterStampService.getCandidateBalanceClusterStampHash();
-                Hash clusterStampCurrencyHash = clusterStampService.getCandidateCurrencyClusterStampHash();
-
-                StateMessageClusterStampHashPayload stateMessageClusterStampBalanceHashPayload = new StateMessageClusterStampHashPayload(clusterStampBalanceHash);
+                StateMessageClusterStampHashPayload stateMessageClusterStampBalanceHashPayload = new StateMessageClusterStampHashPayload(clusterStampHash);
                 StateMessage stateBalanceHashMessage = new StateMessage(stateMessageClusterStampBalanceHashPayload);
                 stateBalanceHashMessage.setHash(new Hash(generalMessageCrypto.getSignatureMessage(stateBalanceHashMessage)));
                 generalMessageCrypto.signMessage(stateBalanceHashMessage);
                 startCollectingVotes(stateBalanceHashMessage);
-                log.info(String.format("Initiate voting for the balance clusterstamp hash %s %s", clusterStampBalanceHash.toHexString(), stateBalanceHashMessage.getHash().toString()));
+//                //TODO 6/11/2020 tomer: Need to align exact messages
+//                clusterStampService.updateGeneralVoteMessageClusterStampSegment(true, stateBalanceHashMessage);
+
+                log.info(String.format("Initiate voting for the balance clusterstamp hash %s %s", clusterStampHash.toHexString(), stateBalanceHashMessage.getHash().toString()));
                 propagationPublisher.propagate(stateBalanceHashMessage, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
 
-                StateMessageClusterStampHashPayload stateMessageClusterStampCurrencyHashPayload = new StateMessageClusterStampHashPayload(clusterStampCurrencyHash);
-                StateMessage stateCurrencyHashMessage = new StateMessage(stateMessageClusterStampCurrencyHashPayload);
-                stateCurrencyHashMessage.setHash(new Hash(generalMessageCrypto.getSignatureMessage(stateCurrencyHashMessage)));
-                generalMessageCrypto.signMessage(stateCurrencyHashMessage);
-                startCollectingVotes(stateCurrencyHashMessage);
-                log.info(String.format("Initiate voting for the currency clusterstamp hash %s %s", clusterStampCurrencyHash.toHexString(), stateCurrencyHashMessage.getHash().toString()));
-                propagationPublisher.propagate(stateCurrencyHashMessage, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
+//                StateMessageClusterStampHashPayload stateMessageClusterStampCurrencyHashPayload = new StateMessageClusterStampHashPayload(clusterStampCurrencyHash);
+//                StateMessage stateCurrencyHashMessage = new StateMessage(stateMessageClusterStampCurrencyHashPayload);
+//                stateCurrencyHashMessage.setHash(new Hash(generalMessageCrypto.getSignatureMessage(stateCurrencyHashMessage)));
+//                generalMessageCrypto.signMessage(stateCurrencyHashMessage);
+//                startCollectingVotes(stateCurrencyHashMessage);
+//                log.info(String.format("Initiate voting for the currency clusterstamp hash %s %s", clusterStampCurrencyHash.toHexString(), stateCurrencyHashMessage.getHash().toString()));
+//                propagationPublisher.propagate(stateCurrencyHashMessage, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
 
                 for (int i = 0; i < NUMBER_OF_RESENDS; i++) {
                     try {
@@ -55,7 +59,7 @@ public class GeneralVoteService extends BaseNodeGeneralVoteService {
                         // ignored exception
                     }
                     propagationPublisher.propagate(stateBalanceHashMessage, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
-                    propagationPublisher.propagate(stateCurrencyHashMessage, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
+//                    propagationPublisher.propagate(stateCurrencyHashMessage, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
                 }
                 break;
             case CLUSTER_STAMP_HASH_VOTE:

@@ -31,10 +31,11 @@ public class NetworkService extends BaseNodeNetworkService {
         }
     }
 
+    @Override
     public List<Hash> getCurrentValidators() {
         Map<Hash, NetworkNodeData> nodeDataMap = getMapFromFactory(NodeType.DspNode);
         NetworkNodeData zeroSpendNodeData = getSingleNodeData(NodeType.ZeroSpendServer);
-        nodeDataMap.put(zeroSpendNodeData.getNodeHash(),zeroSpendNodeData);
+        nodeDataMap.put(zeroSpendNodeData.getNodeHash(), zeroSpendNodeData);
         return new ArrayList<>(nodeDataMap.keySet());
     }
 }

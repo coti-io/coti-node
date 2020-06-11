@@ -61,4 +61,6 @@ public interface INetworkService {
     NodeType getNetworkNodeType(Hash nodeHash);
 
     long countDSPNodes();
+
+    List<Hash> getCurrentValidators();
 }

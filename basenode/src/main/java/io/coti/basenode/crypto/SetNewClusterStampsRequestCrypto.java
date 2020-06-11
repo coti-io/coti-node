@@ -11,12 +11,10 @@ public class SetNewClusterStampsRequestCrypto extends SignatureValidationCrypto<
     @Override
     public byte[] getSignatureMessage(SetNewClusterStampsRequest setNewClusterStampsRequest) {
         byte[] folderPathInBytes = setNewClusterStampsRequest.getFolderPath().getBytes();
-        byte[] currencyClusterStampFileNameInBytes = setNewClusterStampsRequest.getCurrencyClusterStampFileName().getBytes();
-        byte[] balanceClusterStampFileNameInBytes = setNewClusterStampsRequest.getBalanceClusterStampFileName().getBytes();
+        byte[] clusterStampFileNameInBytes = setNewClusterStampsRequest.getClusterStampFileName().getBytes();
 
-        ByteBuffer setNewClusterStampsRequestBuffer = ByteBuffer.allocate(folderPathInBytes.length
-                + currencyClusterStampFileNameInBytes.length + balanceClusterStampFileNameInBytes.length)
-                .put(folderPathInBytes).put(currencyClusterStampFileNameInBytes).put(balanceClusterStampFileNameInBytes);
+        ByteBuffer setNewClusterStampsRequestBuffer = ByteBuffer.allocate(folderPathInBytes.length + clusterStampFileNameInBytes.length)
+                .put(folderPathInBytes).put(clusterStampFileNameInBytes);
         return CryptoHelper.cryptoHash(setNewClusterStampsRequestBuffer.array()).getBytes();
     }
 }

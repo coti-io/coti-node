@@ -2,6 +2,8 @@ package io.coti.basenode.data.messages;
 
 import lombok.Data;
 
+import java.time.Instant;
+
 @Data
 public class StateMessage extends GeneralMessage {
 
@@ -12,5 +14,8 @@ public class StateMessage extends GeneralMessage {
         super(payload);
     }
 
+    public StateMessage(MessagePayload payload, Instant createTime) {
+        super(payload, createTime);
+    }
 
 }

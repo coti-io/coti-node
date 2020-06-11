@@ -40,7 +40,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     @Override
     public boolean checkLastConfirmedIndex(StateMessageLastClusterStampIndexPayload stateMessageLastClusterStampIndexPayload) {
-        long lastConfirmedIndex = clusterService.maxIndexOfNotConfirmed();
+        long lastConfirmedIndex = clusterService.getMaxIndexOfNotConfirmed();
         if (lastConfirmedIndex <= 0) {
             lastConfirmedIndex = transactionIndexService.getLastTransactionIndexData().getIndex();
         }

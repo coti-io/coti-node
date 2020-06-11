@@ -10,11 +10,10 @@ public class GetClusterStampFileNamesCrypto extends SignatureCrypto<GetClusterSt
 
     @Override
     public byte[] getSignatureMessage(GetClusterStampFileNamesResponse getClusterStampFileNamesResponse) {
-        byte[] currencyClusterStampNameInBytes = getClusterStampFileNamesResponse.getCurrencyClusterStampName().getHash().getBytes();
-        byte[] balanceClusterStampNameInBytes = getClusterStampFileNamesResponse.getBalanceClusterStampName().getHash().getBytes();
+        byte[] clusterStampNameInBytes = getClusterStampFileNamesResponse.getClusterStampName().getHash().getBytes();
         byte[] clusterStampBucketNameInBytes = getClusterStampFileNamesResponse.getClusterStampBucketName().getBytes();
-        byte[] getClusterStampFileNamesInBytes = ByteBuffer.allocate(balanceClusterStampNameInBytes.length + currencyClusterStampNameInBytes.length + clusterStampBucketNameInBytes.length)
-                .put(balanceClusterStampNameInBytes).put(currencyClusterStampNameInBytes).put(clusterStampBucketNameInBytes).array();
+        byte[] getClusterStampFileNamesInBytes = ByteBuffer.allocate(clusterStampNameInBytes.length + clusterStampBucketNameInBytes.length)
+                .put(clusterStampNameInBytes).put(clusterStampBucketNameInBytes).array();
         return CryptoHelper.cryptoHash(getClusterStampFileNamesInBytes).getBytes();
     }
 }

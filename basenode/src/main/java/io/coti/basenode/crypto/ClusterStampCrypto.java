@@ -12,8 +12,9 @@ public class ClusterStampCrypto extends SignatureCrypto<ClusterStampData> {
     public byte[] getSignatureMessage(ClusterStampData clusterStampData) {
 
         ByteBuffer clusterStampDataBuffer =
-                ByteBuffer.allocate(clusterStampData.getMessageByteSize());
+                ByteBuffer.allocate(clusterStampData.getMessageByteSize() + Long.BYTES);
         clusterStampData.getSignatureMessage().forEach(clusterStampDataBuffer::put);
+        clusterStampDataBuffer.putLong(clusterStampData.getCreateTime().toEpochMilli());
 
         byte[] clusterStampInBytes = clusterStampDataBuffer.array();
         return CryptoHelper.cryptoHash(clusterStampInBytes).getBytes();

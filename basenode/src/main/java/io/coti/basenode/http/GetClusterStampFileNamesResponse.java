@@ -15,9 +15,7 @@ import javax.validation.constraints.NotEmpty;
 public class GetClusterStampFileNamesResponse extends BaseResponse implements ISignValidatable, ISignable, IPropagatable {
 
     @NotEmpty
-    private @Valid ClusterStampNameData currencyClusterStampName;
-    @NotEmpty
-    private @Valid ClusterStampNameData balanceClusterStampName;
+    private @Valid ClusterStampNameData clusterStampName;
     @NotEmpty
     private String clusterStampBucketName;
     @NotEmpty

@@ -1,9 +1,7 @@
 package io.coti.nodemanager.services;
 
 import io.coti.basenode.crypto.SetNewClusterStampsRequestCrypto;
-import io.coti.basenode.data.ClusterStampCurrencyData;
 import io.coti.basenode.data.ClusterStampNameData;
-import io.coti.basenode.data.CurrencyData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.messages.StateMessage;
 import io.coti.basenode.data.messages.StateMessageClusterStampExecutePayload;
@@ -20,8 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
@@ -43,8 +39,8 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             if (!setNewClusterStampsRequestCrypto.verifySignature(setNewClusterStampsRequest)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
             }
-            handlePotentialNewClusterStampFile(setNewClusterStampsRequest.getFolderPath(),
-                    setNewClusterStampsRequest.getCurrencyClusterStampFileName(), setNewClusterStampsRequest.getBalanceClusterStampFileName());
+            handlePotentialNewClusterStampFile(setNewClusterStampsRequest.getFolderPath(), setNewClusterStampsRequest.getClusterStampFileName(),
+                    setNewClusterStampsRequest.getExpectedClusterStampHash());
         } catch (Exception e) {
             log.error("Error at getting new cluster stamp files candidates" + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
@@ -54,52 +50,27 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         return ResponseEntity.status(HttpStatus.CREATED).body(setNewClusterStampsResponse);
     }
 
-    private void handlePotentialNewClusterStampFile(String candidateClusterStampBucketName, String currencyClusterStampFileName, String balanceClusterStampFileName) {
+    private void handlePotentialNewClusterStampFile(String candidateClusterStampBucketName, String clusterStampFileName, Hash expectedClusterStampHash) {
         try {
-            ClusterStampNameData currencyClusterStampNameData = validateNameAndGetCandidateClusterStampNameData(currencyClusterStampFileName);
-            ClusterStampNameData balanceClusterStampNameData = validateNameAndGetCandidateClusterStampNameData(balanceClusterStampFileName);
-
-            downloadSingleClusterStampCandidate(candidateClusterStampBucketName, currencyClusterStampFileName);
-            downloadSingleClusterStampCandidate(candidateClusterStampBucketName, balanceClusterStampFileName);
-
-            Map<Hash, CurrencyData> currencyMap = new HashMap<>();
-            loadCurrencyClusterStamp(currencyClusterStampFileName, currencyMap, shouldUpdateClusterStampDBVersion(), true);
-
-            Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap = new HashMap<>();
-            loadBalanceClusterStamp(balanceClusterStampFileName, clusterStampCurrencyMap, true);
-
-            validateMajorityVotesForClusterStampFilesHashes();
-
-            String currencyClusterStampTargetFilePath = clusterStampFolder + getClusterStampFileName(currencyClusterStampNameData);
-            fileSystemService.renameFile(clusterStampFolder + currencyClusterStampFileName, currencyClusterStampTargetFilePath);
-
-            String balanceClusterStampTargetFilePath = clusterStampFolder + getClusterStampFileName(balanceClusterStampNameData);
-            fileSystemService.renameFile(clusterStampFolder + balanceClusterStampFileName, balanceClusterStampTargetFilePath);
-
-            awsService.uploadFileToS3(clusterStampBucketName, clusterStampFolder + getClusterStampFileName(currencyClusterStampNameData));
-            awsService.uploadFileToS3(clusterStampBucketName, clusterStampFolder + getClusterStampFileName(balanceClusterStampNameData));
-
+            ClusterStampNameData clusterStampNameData = validateNameAndGetCandidateClusterStampNameData(clusterStampFileName, expectedClusterStampHash);
+            downloadSingleClusterStampCandidate(candidateClusterStampBucketName, clusterStampFileName);
+            loadClusterStamp(clusterStampName, shouldUpdateClusterStampDBVersion(), true);
+            String clusterStampTargetFilePath = clusterStampFolder + getClusterStampFileName(clusterStampNameData);
+            fileSystemService.renameFile(clusterStampFolder + clusterStampFileName, clusterStampTargetFilePath);
+            awsService.uploadFileToS3(clusterStampBucketName, clusterStampFolder + getClusterStampFileName(clusterStampNameData));
         } catch (ClusterStampException e) {
-            throw new ClusterStampException(String.format("Errors on processing clusterstamp files %s %s loading.%n", currencyClusterStampFileName, balanceClusterStampFileName) + e.getMessage(), e);
+            throw new ClusterStampException(String.format("Errors on processing clusterstamp files %s loading.%n", clusterStampFileName) + e.getMessage(), e);
         } catch (Exception e) {
-            throw new ClusterStampException(String.format("Errors on processing clusterstamp files %s %s loading.", currencyClusterStampFileName, balanceClusterStampFileName), e);
+            throw new ClusterStampException(String.format("Errors on processing clusterstamp files %s loading.", clusterStampFileName), e);
         }
     }
 
-    private boolean validateMajorityVotesForClusterStampFilesHashes() {
-        //Validate Consensus, compare votes match hashes and that a true majority was reached
-//        GeneralVoteResult generalVoteResult = getGeneralVoteResult(); // check
-//        Hash candidateCurrencyClusterStampHash = getCandidateCurrencyClusterStampHash();
-//        Hash candidateBalanceClusterStampHash = getCandidateBalanceClusterStampHash();
-        return true;
-    }
-
-    private void downloadSingleClusterStampCandidate(String candidateClusterStampBucketName, String currencyClusterStampFileName) {
-        String currencyClusterStampFilePath = clusterStampFolder + currencyClusterStampFileName;
+    private void downloadSingleClusterStampCandidate(String candidateClusterStampBucketName, String clusterStampFileName) {
+        String clusterStampFilePath = clusterStampFolder + clusterStampFileName;
         try {
-            awsService.downloadFile(currencyClusterStampFilePath, candidateClusterStampBucketName);
+            awsService.downloadFile(clusterStampFilePath, candidateClusterStampBucketName);
         } catch (IOException e) {
-            throw new ClusterStampException(String.format("Couldn't download clusterstamp file %s.", currencyClusterStampFileName), e);
+            throw new ClusterStampException(String.format("Couldn't download clusterstamp file %s.", clusterStampFileName), e);
         }
     }
 

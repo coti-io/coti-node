@@ -24,6 +24,11 @@ public class GeneralMessage implements IPropagatable, ISignable, ISignValidatabl
         this.createTime = Instant.now();
     }
 
+    public GeneralMessage(MessagePayload messagePayload, Instant createTime) {
+        this.messagePayload = messagePayload;
+        this.createTime = createTime;
+    }
+
     public GeneralMessage() {
     }
 
