@@ -28,7 +28,7 @@ public class InitializationService extends BaseNodeInitializationService {
     private String serverPort;
     @Value("${server.url}")
     private String webServerUrl;
-    private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
+    private final EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
     @Override

@@ -43,7 +43,7 @@ public class InitializationService extends BaseNodeInitializationService {
     private TransactionCreationService transactionCreationService;
     @Autowired
     private Transactions transactions;
-    private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
+    private final EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
     @Override

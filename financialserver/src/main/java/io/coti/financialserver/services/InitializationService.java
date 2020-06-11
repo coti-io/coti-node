@@ -32,7 +32,7 @@ public class InitializationService extends BaseNodeInitializationService {
     private String webServerUrl;
     @Autowired
     private ICommunicationService communicationService;
-    private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
+    private final EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
     @Autowired
     private DistributionService distributionService;
     @Autowired

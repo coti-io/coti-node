@@ -32,11 +32,11 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     @Autowired
     private Transactions transactions;
     private BlockingQueue<ConfirmationData> confirmationQueue;
-    private Map<Long, DspConsensusResult> waitingDspConsensusResults = new ConcurrentHashMap<>();
-    private Map<Long, TransactionData> waitingMissingTransactionIndexes = new ConcurrentHashMap<>();
-    private AtomicLong totalConfirmed = new AtomicLong(0);
-    private AtomicLong trustChainConfirmed = new AtomicLong(0);
-    private AtomicLong dspConfirmed = new AtomicLong(0);
+    private final Map<Long, DspConsensusResult> waitingDspConsensusResults = new ConcurrentHashMap<>();
+    private final Map<Long, TransactionData> waitingMissingTransactionIndexes = new ConcurrentHashMap<>();
+    private final AtomicLong totalConfirmed = new AtomicLong(0);
+    private final AtomicLong trustChainConfirmed = new AtomicLong(0);
+    private final AtomicLong dspConfirmed = new AtomicLong(0);
     private Thread confirmedTransactionsThread;
 
     public void init() {

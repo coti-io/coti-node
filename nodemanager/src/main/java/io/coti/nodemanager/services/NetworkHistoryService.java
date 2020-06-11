@@ -71,10 +71,10 @@ public class NetworkHistoryService implements INetworkHistoryService {
         LocalDate localDate = nodeDaySet.ceiling(startDate);
         if (localDate == null) {
             LocalDate prevDate = nodeDaySet.floor(startDate);
-            while (beforePeriodEventRef == null) {
+            while (prevDate != null && beforePeriodEventRef == null) {
                 NodeHistoryData nodeHistoryData = nodeHistory.getByHash(nodeDailyActivityData.calculateNodeHistoryDataHash(prevDate));
                 LinkedMap<Hash, NodeNetworkDataRecord> nodeHistoryMap = nodeHistoryData.getNodeNetworkDataRecordMap();
-                if (nodeHistoryData != null && !nodeHistoryMap.isEmpty()) {
+                if (!nodeHistoryMap.isEmpty()) {
                     Hash nodeNetworkDataRecordHash = nodeHistoryMap.lastKey();
                     while (beforePeriodEventRef == null && nodeNetworkDataRecordHash != null) {
                         NodeNetworkDataRecord nodeNetworkDataRecord = nodeHistoryMap.get(nodeNetworkDataRecordHash);
@@ -87,9 +87,6 @@ public class NetworkHistoryService implements INetworkHistoryService {
                     }
                 }
                 prevDate = nodeDaySet.lower(prevDate);
-                if (prevDate == null) {
-                    break;
-                }
             }
         } else if (localDate.isAfter(endDate)) {
             NodeHistoryData nodeHistoryData = nodeHistory.getByHash(nodeDailyActivityData.calculateNodeHistoryDataHash(localDate));
@@ -346,35 +343,35 @@ public class NetworkHistoryService implements INetworkHistoryService {
     public ResponseEntity<IResponse> getNodeActivationTime(GetNodeActivationTimeRequest getNodeActivationTimeRequest) {
         try {
             Hash nodeHash = getNodeActivationTimeRequest.getNodeHash();
-            NodeNetworkDataRecord nodeNetworkDataRecord = getNodeNetworkFirstDataRecord(nodeHash);
-            NodeNetworkDataRecord originalActivationDataRecord = nodeNetworkDataRecord;
-            if (nodeNetworkDataRecord.isNotOriginalEvent()) {
-                originalActivationDataRecord = getOriginalActivationEventRecord(nodeHash);
-            }
+            NodeNetworkDataRecord firstActivationDataRecord = getNodeNetworkFirstDataRecord(nodeHash);
+            NodeNetworkDataRecord originalActivationDataRecord = getOriginalActivationEventRecord(nodeHash, firstActivationDataRecord);
+
             return ResponseEntity.ok()
-                    .body(new GetNodeActivationTimeResponse(nodeNetworkDataRecord.getRecordTime(), originalActivationDataRecord.getRecordTime()));
+                    .body(new GetNodeActivationTimeResponse(firstActivationDataRecord.getRecordTime(), originalActivationDataRecord.getRecordTime()));
         } catch (NetworkHistoryValidationException e) {
             return ResponseEntity.badRequest().body(new Response(e.getMessage(), STATUS_ERROR));
         }
     }
 
 
-    private NodeNetworkDataRecord getOriginalActivationEventRecord(Hash nodeHash) {
-        NodeNetworkDataRecord originalActivationEventRecord = null;
-        NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
-        if (nodeDailyActivityData == null) {
-            throw new NetworkHistoryValidationException("Node hash does not have activity");
-        }
-        for (LocalDate localDate : nodeDailyActivityData.getNodeDaySet()) {
-            NodeHistoryData nodeHistoryData = getNodeHistoryData(nodeDailyActivityData.getNodeHash(), localDate);
-            Optional<Map.Entry<Hash, NodeNetworkDataRecord>> hashNodeNetworkDataRecordEntry = nodeHistoryData.getNodeNetworkDataRecordMap().entrySet().stream()
-                    .filter(nodeNetworkDataRecord ->
-                            nodeNetworkDataRecord.getValue().getNodeStatus().equals(NetworkNodeStatus.ACTIVE)
-                                    && !nodeNetworkDataRecord.getValue().isNotOriginalEvent()
-                    ).findFirst();
-            if (hashNodeNetworkDataRecordEntry.isPresent()) {
-                originalActivationEventRecord = hashNodeNetworkDataRecordEntry.get().getValue();
-                break;
+    private NodeNetworkDataRecord getOriginalActivationEventRecord(Hash nodeHash, NodeNetworkDataRecord firstActivationDataRecord) {
+        NodeNetworkDataRecord originalActivationEventRecord = firstActivationDataRecord;
+        if (firstActivationDataRecord.isNotOriginalEvent()) {
+            NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
+            if (nodeDailyActivityData == null) {
+                throw new NetworkHistoryValidationException("Node hash does not have activity");
+            }
+            for (LocalDate localDate : nodeDailyActivityData.getNodeDaySet()) {
+                NodeHistoryData nodeHistoryData = getNodeHistoryData(nodeDailyActivityData.getNodeHash(), localDate);
+                Optional<Map.Entry<Hash, NodeNetworkDataRecord>> hashNodeNetworkDataRecordEntry = nodeHistoryData.getNodeNetworkDataRecordMap().entrySet().stream()
+                        .filter(nodeNetworkDataRecord ->
+                                nodeNetworkDataRecord.getValue().getNodeStatus().equals(NetworkNodeStatus.ACTIVE)
+                                        && !nodeNetworkDataRecord.getValue().isNotOriginalEvent()
+                        ).findFirst();
+                if (hashNodeNetworkDataRecordEntry.isPresent()) {
+                    originalActivationEventRecord = hashNodeNetworkDataRecordEntry.get().getValue();
+                    break;
+                }
             }
         }
         return originalActivationEventRecord;
@@ -474,6 +471,9 @@ public class NetworkHistoryService implements INetworkHistoryService {
             endInstant = lastRelevantNodeNetworkDataRecord.getRecordTime();
             lastRelevantNodeNetworkRecordMap = getNodeNetworkDataRecordMap(lastRelevantNodeNetworkDataRecord, lastRelevantNodeNetworkRecordMap);
             nodeNetworkDataRecordByChainRef = getNodeNetworkDataRecordByChainRef(lastRelevantNodeNetworkDataRecord, lastRelevantNodeNetworkRecordMap);
+            if (nodeNetworkDataRecordByChainRef == null) {
+                break;
+            }
             if (nodeNetworkDataRecordByChainRef.getRecordTime().isAfter(startInstant)) {
                 startInstant = nodeNetworkDataRecordByChainRef.getRecordTime();
             }
@@ -497,6 +497,9 @@ public class NetworkHistoryService implements INetworkHistoryService {
     }
 
     private NodeNetworkDataRecord getNodeNetworkDataRecordByChainRef(NodeNetworkDataRecord nodeNetworkDataRecord, LinkedMap<Hash, NodeNetworkDataRecord> nodeNetworkDataRecordMap) {
+        if (nodeNetworkDataRecordMap == null) {
+            return null;
+        }
         Pair<LocalDate, Hash> chainRef = nodeNetworkDataRecord.getStatusChainRef();
         if (chainRef == null) {
             return null;

@@ -61,7 +61,7 @@ public class NodeStatisticsController {
     }
 
     @PostMapping(path = "/nodeActivationTime")
-    public ResponseEntity<IResponse> getNodeActivationDay(@Valid @RequestBody GetNodeActivationTimeRequest getNodeActivationTimeRequest) {
+    public ResponseEntity<IResponse> getNodeActivationTime(@Valid @RequestBody GetNodeActivationTimeRequest getNodeActivationTimeRequest) {
         return networkHistoryService.getNodeActivationTime(getNodeActivationTimeRequest);
     }
 
