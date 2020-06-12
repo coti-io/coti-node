@@ -25,11 +25,13 @@ public class ZeroMQReceiver implements IReceiver {
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket receiver;
     private BlockingQueue<ZeroMQMessageData> messageQueue;
-    private Instant messageQueuePausedUntil;
     private Thread receiverThread;
     private Thread messagesQueueHandlerThread;
+    private boolean messageQueuePause;
+
     @Autowired
     private ISerializer serializer;
+    private static final long QUEUE_PAUSE_MILLISECONDS = 1000;
 
     @Override
     public void init(String receivingPort, HashMap<String, Consumer<Object>> classNameToHandlerMapping) {
@@ -38,7 +40,7 @@ public class ZeroMQReceiver implements IReceiver {
         receiver = zeroMQContext.socket(SocketType.ROUTER);
         receiver.bind("tcp://*:" + receivingPort);
         log.info("Zero MQ Client Connected!");
-        messageQueuePausedUntil = Instant.ofEpochSecond(0);
+        messageQueuePause = false;
         messageQueue = new LinkedBlockingQueue<>();
     }
 
@@ -87,12 +89,8 @@ public class ZeroMQReceiver implements IReceiver {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 ZeroMQMessageData zeroMQMessageData = messageQueue.take();
-                while (Instant.now().isBefore(messageQueuePausedUntil)) {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (Exception ignored) {
-                        // ignored exception
-                    }
+                while (messageQueuePause) {
+                    Thread.sleep(QUEUE_PAUSE_MILLISECONDS);
                 }
                 Consumer<Object> consumer = classNameToHandlerMapping.get(zeroMQMessageData.getChannel());
                 if (consumer != null) {
@@ -123,9 +121,20 @@ public class ZeroMQReceiver implements IReceiver {
     }
 
     @Override
-    public void setMessageQueuePausedUntil(long pauseTime) {
-        this.messageQueuePausedUntil = Instant.now().plusSeconds(pauseTime);
+    public void setMessageQueuePause() {
+        this.messageQueuePause = true;
     }
+
+    @Override
+    public boolean isMessageQueuePause() {
+        return this.messageQueuePause;
+    }
+
+    @Override
+    public void endMessageQueuePause(String ignored) {
+        this.messageQueuePause = false;
+    }
+
 
     @Override
     public void shutdown() {

@@ -112,6 +112,8 @@ public abstract class BaseNodeInitializationService {
     private IStateMessageService stateMessageService;
     @Autowired
     private IGeneralVoteService generalVoteService;
+    @Autowired
+    private VotingTimeoutService votingTimeoutService;
 
     public void init() {
         log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());
@@ -141,6 +143,7 @@ public abstract class BaseNodeInitializationService {
         stateMessageService.init();
         generalVoteService.init();
         monitorService.init();
+        votingTimeoutService.init();
     }
 
     public void initTransactionSync() {

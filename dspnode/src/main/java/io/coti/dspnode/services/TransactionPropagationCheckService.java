@@ -137,6 +137,9 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
 
     @Scheduled(initialDelay = 60000, fixedDelay = 60000)
     private void propagateUnconfirmedReceivedTransactions() {
+        if (resendingPause) {
+            return;
+        }
         unconfirmedReceivedTransactionHashesMap
                 .entrySet()
                 .stream()
@@ -151,6 +154,8 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
 
         unconfirmedTransactionsToRemove.forEach(this::removeConfirmedReceiptTransaction);
     }
+
+
 
     private void sendUnconfirmedReceivedTransactionsDSP(Map.Entry<Hash, UnconfirmedReceivedTransactionHashData> entry) {
         Hash transactionHash = entry.getKey();
