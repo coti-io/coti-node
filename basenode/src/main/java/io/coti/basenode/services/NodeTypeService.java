@@ -12,8 +12,8 @@ public enum NodeTypeService {
     FINANCIAL_SERVER(NodeType.FinancialServer, false),
     HISTORY_NODE(NodeType.HistoryNode, true);
 
-    private NodeType nodeType;
-    private boolean multipleNode;
+    private final NodeType nodeType;
+    private final boolean multipleNode;
 
     private static class NodeTypeServices {
         private static final Map<NodeType, NodeTypeService> nodeTypeServiceMap = new EnumMap<>(NodeType.class);

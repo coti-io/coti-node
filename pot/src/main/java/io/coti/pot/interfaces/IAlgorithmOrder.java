@@ -3,7 +3,7 @@ package io.coti.pot.interfaces;
 import java.util.List;
 
 public interface IAlgorithmOrder {
-    List<IAlgorithm.AlgorithmTypes> getHashingAlgorithms();
+    List<IAlgorithm.AlgorithmType> getHashingAlgorithms();
 
-    IAlgorithm getHashingAlgorithm(IAlgorithm.AlgorithmTypes algorithm);
+    IAlgorithm getHashingAlgorithm(IAlgorithm.AlgorithmType algorithm);
 }

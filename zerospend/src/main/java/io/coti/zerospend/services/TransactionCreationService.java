@@ -43,12 +43,12 @@ public class TransactionCreationService {
     @Value("${zerospend.seed}")
     private String seed;
 
-    public String createNewStarvationZeroSpendTransaction(TransactionData transactionData) {
-        return createNewZeroSpendTransaction(transactionData, STARVATION);
+    public void createNewStarvationZeroSpendTransaction(TransactionData transactionData) {
+        createNewZeroSpendTransaction(transactionData, STARVATION);
     }
 
-    public void createNewGenesisZeroSpendTransaction(double trustscore) {
-        createZeroSpendTransaction(trustscore, GENESIS);
+    public void createNewGenesisZeroSpendTransaction(double trustScore) {
+        createZeroSpendTransaction(trustScore, GENESIS);
     }
 
     public String createNewZeroSpendTransaction(TransactionData incomingTransactionData, ZeroSpendTransactionType zeroSpendTransactionType) {

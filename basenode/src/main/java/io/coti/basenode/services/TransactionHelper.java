@@ -48,7 +48,7 @@ public class TransactionHelper implements ITransactionHelper {
     @Autowired
     private ExpandedTransactionTrustScoreCrypto expandedTransactionTrustScoreCrypto;
     private Map<Hash, Stack<TransactionState>> transactionHashToTransactionStateStackMapping;
-    private AtomicLong totalTransactions = new AtomicLong(0);
+    private final AtomicLong totalTransactions = new AtomicLong(0);
     private Set<Hash> noneIndexedTransactionHashes;
 
     @PostConstruct

@@ -2,6 +2,7 @@ package io.coti.basenode.communication;
 
 import io.coti.basenode.communication.interfaces.ISubscriberHandler;
 import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.services.interfaces.IAddressService;
 import io.coti.basenode.services.interfaces.IDspVoteService;
 import io.coti.basenode.services.interfaces.INetworkService;
@@ -18,7 +19,7 @@ import java.util.function.Function;
 @Component
 public class ZeroMQSubscriberHandler implements ISubscriberHandler {
 
-    private Map<String, Function<NodeType, Consumer<Object>>> messageTypeToSubscriberHandlerMap;
+    private Map<String, Function<NodeType, Consumer<IPropagatable>>> messageTypeToSubscriberHandlerMap;
     @Autowired
     private ITransactionService transactionService;
     @Autowired
@@ -45,7 +46,7 @@ public class ZeroMQSubscriberHandler implements ISubscriberHandler {
     }
 
     @Override
-    public Function<NodeType, Consumer<Object>> get(String messageType) {
+    public Function<NodeType, Consumer<IPropagatable>> get(String messageType) {
         return messageTypeToSubscriberHandlerMap.get(messageType);
     }
 

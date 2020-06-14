@@ -14,6 +14,7 @@ import javax.validation.Valid;
 @Slf4j
 @Controller
 public class TransactionController {
+
     @Autowired
     private TransactionIndexService transactionIndexService;
 

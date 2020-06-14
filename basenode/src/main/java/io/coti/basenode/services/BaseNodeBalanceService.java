@@ -38,8 +38,8 @@ public class BaseNodeBalanceService implements IBalanceService {
 
             BigDecimal amount = baseTransactionData.getAmount();
             Hash addressHash = baseTransactionData.getAddressHash();
-            balanceInChangeMap.putIfAbsent(addressHash, balanceMap.containsKey(addressHash) ? balanceMap.get(addressHash) : BigDecimal.ZERO);
-            preBalanceInChangeMap.putIfAbsent(addressHash, preBalanceMap.containsKey(addressHash) ? preBalanceMap.get(addressHash) : BigDecimal.ZERO);
+            balanceInChangeMap.putIfAbsent(addressHash, balanceMap.getOrDefault(addressHash, BigDecimal.ZERO));
+            preBalanceInChangeMap.putIfAbsent(addressHash, preBalanceMap.getOrDefault(addressHash, BigDecimal.ZERO));
             if (amount.add(balanceInChangeMap.get(addressHash)).signum() < 0) {
                 log.error("Error in Balance check. Address {}  amount {} current Balance {} ", addressHash,
                         amount, balanceInChangeMap.get(addressHash));
@@ -132,12 +132,12 @@ public class BaseNodeBalanceService implements IBalanceService {
 
     @Override
     public BigDecimal getBalanceByAddress(Hash addressHash) {
-        return balanceMap.containsKey(addressHash) ? balanceMap.get(addressHash) : BigDecimal.ZERO;
+        return balanceMap.getOrDefault(addressHash, BigDecimal.ZERO);
     }
 
     @Override
     public BigDecimal getPreBalanceByAddress(Hash addressHash) {
-        return preBalanceMap.containsKey(addressHash) ? preBalanceMap.get(addressHash) : BigDecimal.ZERO;
+        return preBalanceMap.getOrDefault(addressHash, BigDecimal.ZERO);
     }
 
 }

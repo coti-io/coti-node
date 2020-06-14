@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 
 class AlgorithmWorker implements IAlgorithmWorker {
 
-    private IAlgorithmOrder ordering;
+    private final IAlgorithmOrder ordering;
 
     public AlgorithmWorker(IAlgorithmOrder ordering) {
         this.ordering = ordering;
@@ -23,7 +23,7 @@ class AlgorithmWorker implements IAlgorithmWorker {
         byte[] lastCorrectHash = data;
 
         for (int i = 0; i < nonces.length; i++) {
-            IAlgorithm.AlgorithmTypes hashingAlgorithm = ordering.getHashingAlgorithms().get(i);
+            IAlgorithm.AlgorithmType hashingAlgorithm = ordering.getHashingAlgorithms().get(i);
             int nonce = findNonce(hashingAlgorithm, lastCorrectHash, targetOutput);
             lastCorrectHash = concatAndHash(hashingAlgorithm, lastCorrectHash, nonce);
             nonces[i] = nonce;
@@ -41,7 +41,7 @@ class AlgorithmWorker implements IAlgorithmWorker {
         byte[] lastCorrectHash = data;
 
         for (int i = 0; i < nonce.length; i++) {
-            IAlgorithm.AlgorithmTypes hashingAlgorithm = ordering.getHashingAlgorithms().get(i);
+            IAlgorithm.AlgorithmType hashingAlgorithm = ordering.getHashingAlgorithms().get(i);
             byte[] hashedData = concatAndHash(hashingAlgorithm, lastCorrectHash, nonce[i]);
             BigInteger currentOutput = new BigInteger(1, hashedData);
             if (currentOutput.compareTo(targetOutput) > -1) {
@@ -52,7 +52,7 @@ class AlgorithmWorker implements IAlgorithmWorker {
         return true;
     }
 
-    private int findNonce(IAlgorithm.AlgorithmTypes hashingAlgorithm, byte[] lastCorrectHash, BigInteger targetOutput) {
+    private int findNonce(IAlgorithm.AlgorithmType hashingAlgorithm, byte[] lastCorrectHash, BigInteger targetOutput) {
         byte[] hashedData;
         boolean validHash;
         int nonce = 0;
@@ -66,7 +66,7 @@ class AlgorithmWorker implements IAlgorithmWorker {
         return nonce - 1;
     }
 
-    private byte[] concatAndHash(IAlgorithm.AlgorithmTypes hashingAlgorithm, byte[] data, int nonce) {
+    private byte[] concatAndHash(IAlgorithm.AlgorithmType hashingAlgorithm, byte[] data, int nonce) {
         byte[] nonceByte = ByteBuffer.allocate(4).putInt(nonce).array();
         data = ArrayUtils.addAll(data, nonceByte);
         data = ordering.getHashingAlgorithm(hashingAlgorithm).hash(data);

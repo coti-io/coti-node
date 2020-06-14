@@ -12,7 +12,7 @@ public class TrustScoreOrdering {
 
     @Test
     public void trustScoreOrdering() {
-        List<IAlgorithm.AlgorithmTypes> masterList = Arrays.asList(IAlgorithm.AlgorithmTypes.values());
+        List<IAlgorithm.AlgorithmType> masterList = Arrays.asList(IAlgorithm.AlgorithmType.values());
 
 
         for (int i = 0; i <= 100; i++) {
@@ -68,10 +68,10 @@ public class TrustScoreOrdering {
             assertEquals(hope, count3);
             assertEquals(hope, count4);
 
-            List<IAlgorithm.AlgorithmTypes> order1 = pow1.getHashingAlgorithms();
-            List<IAlgorithm.AlgorithmTypes> order2 = pow2.getHashingAlgorithms();
-            List<IAlgorithm.AlgorithmTypes> order3 = pow3.getHashingAlgorithms();
-            List<IAlgorithm.AlgorithmTypes> order4 = pow4.getHashingAlgorithms();
+            List<IAlgorithm.AlgorithmType> order1 = pow1.getHashingAlgorithms();
+            List<IAlgorithm.AlgorithmType> order2 = pow2.getHashingAlgorithms();
+            List<IAlgorithm.AlgorithmType> order3 = pow3.getHashingAlgorithms();
+            List<IAlgorithm.AlgorithmType> order4 = pow4.getHashingAlgorithms();
 
             assertEquals(order1, order3);
             assertEquals(order2, order4);
@@ -89,9 +89,9 @@ public class TrustScoreOrdering {
         }
     }
 
-    private void correctSubset(List<IAlgorithm.AlgorithmTypes> masterList, List<IAlgorithm.AlgorithmTypes> order, int count) {
-        List<IAlgorithm.AlgorithmTypes> shortList = masterList.subList(0, count);
-        for (IAlgorithm.AlgorithmTypes algo : order) {
+    private void correctSubset(List<IAlgorithm.AlgorithmType> masterList, List<IAlgorithm.AlgorithmType> order, int count) {
+        List<IAlgorithm.AlgorithmType> shortList = masterList.subList(0, count);
+        for (IAlgorithm.AlgorithmType algo : order) {
             assertTrue(shortList.contains(algo));
         }
     }

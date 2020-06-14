@@ -120,7 +120,7 @@ public class RollingReserveService {
             createRollingReserveDataForMerchant(merchantHash);
             merchantRollingReserveData = merchantRollingReserves.getByHash(merchantHash);
             propagationPublisher.propagate(new MerchantRollingReserveAddressData(merchantRollingReserveData.getHash(), merchantRollingReserveData.getRollingReserveAddress()),
-                    Arrays.asList(NodeType.TrustScoreNode));
+                    Collections.singletonList(NodeType.TrustScoreNode));
         }
         return merchantRollingReserveData;
     }

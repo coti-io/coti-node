@@ -224,8 +224,8 @@ public class BaseNodeAwsService implements IAwsService {
         TransferProgress progress = transfer.getProgress();
         long bytesTransferred = progress.getBytesTransferred();
         long total = progress.getTotalBytesToTransfer();
-        Double percentDone = progress.getPercentTransferred();
-        log.info("Transfer progress: {}%", percentDone.intValue());
+        double percentDone = progress.getPercentTransferred();
+        log.info("Transfer progress: {}%", (int) percentDone);
         log.info("{} bytes transferred out of {}", bytesTransferred, total);
         Transfer.TransferState transferState = transfer.getState();
         log.info("Transfer state: " + transferState);

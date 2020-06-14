@@ -19,9 +19,9 @@ import static io.coti.financialserver.http.HttpStringConstants.DISPUTE_STATUS_IN
 
 
 public enum DisputeStatusService {
-    CANCELED_BY_CONSUMER(DisputeStatus.CANCELED_BY_CONSUMER, EnumSet.of(DisputeStatus.RECALL), ActionSide.Consumer, true),
-    CLAIM(DisputeStatus.CLAIM, EnumSet.of(DisputeStatus.RECALL), ActionSide.FinancialServer, false),
-    CLOSED(DisputeStatus.CLOSED, EnumSet.of(DisputeStatus.RECALL, DisputeStatus.CLAIM), ActionSide.FinancialServer, true);
+    CANCELED_BY_CONSUMER(DisputeStatus.CANCELED_BY_CONSUMER, EnumSet.of(DisputeStatus.RECALL), ActionSide.CONSUMER, true),
+    CLAIM(DisputeStatus.CLAIM, EnumSet.of(DisputeStatus.RECALL), ActionSide.FINANCIAL_SERVER, false),
+    CLOSED(DisputeStatus.CLOSED, EnumSet.of(DisputeStatus.RECALL, DisputeStatus.CLAIM), ActionSide.FINANCIAL_SERVER, true);
 
     private DisputeStatus newDisputeStatus;
     private Set<DisputeStatus> previousDisputeStatuses;

@@ -11,15 +11,15 @@ public class ZeroMQUtils {
 
     public static int bindToRandomPort(ZMQ.Socket socket) {
         boolean success = false;
-        int socketNumber = 10000;
+        int port = 10000;
         while (!success) {
             try {
-                socket.bind("tcp://*:" + socketNumber);
+                socket.bind("tcp://*:" + port);
                 success = true;
             } catch (ZMQException exception) {
-                socketNumber++;
+                port++;
             }
         }
-        return socketNumber;
+        return port;
     }
 }

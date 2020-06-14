@@ -12,9 +12,9 @@ import java.util.Map;
 
 @Slf4j
 public enum GetDisputeResponseClass {
-    CONSUMER(ActionSide.Consumer, ConsumerDisputeResponseData.class),
-    MERCHANT(ActionSide.Merchant, MerchantDisputeResponseData.class),
-    ARBITRATOR(ActionSide.Arbitrator, ArbitratorDisputeResponseData.class) {
+    CONSUMER(ActionSide.CONSUMER, ConsumerDisputeResponseData.class),
+    MERCHANT(ActionSide.MERCHANT, MerchantDisputeResponseData.class),
+    ARBITRATOR(ActionSide.ARBITRATOR, ArbitratorDisputeResponseData.class) {
         @Override
         public GetDisputeResponseData getNewInstance(DisputeData disputeData, Hash userHash) {
             try {

@@ -37,7 +37,7 @@ public class TrustScoreTiming {
         System.out.println("----------------------------------------------------------------------------------------------------------");
         System.out.println();
 
-        for (int i = IAlgorithm.AlgorithmTypes.values().length - 1; i >= 0; i--) {
+        for (int i = IAlgorithm.AlgorithmType.values().length - 1; i >= 0; i--) {
             int trustScore = TrustScoreDifficulty.getTrustScoreFromSegment(i);
             byte[] diff = parseHexBinary(difficulty);
             System.out.println("trust score: " + trustScore);

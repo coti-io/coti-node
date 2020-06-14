@@ -37,8 +37,8 @@ public class ClusterService implements IClusterService {
     private TrustChainConfirmationService trustChainConfirmationService;
     private boolean isStarted;
     private ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster;
-    private AtomicLong totalSources = new AtomicLong(0);
-    private ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+    private final AtomicLong totalSources = new AtomicLong(0);
+    private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
     @PostConstruct
     public void init() {

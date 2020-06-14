@@ -38,7 +38,7 @@ public class HealthCheckService implements IHealthCheckService {
     private RestTemplate restTemplate;
     @Autowired
     private INetworkService networkService;
-    private Map<Hash, Thread> hashToThreadMap = new ConcurrentHashMap<>();
+    private final Map<Hash, Thread> hashToThreadMap = new ConcurrentHashMap<>();
     private final LockData nodeHashLockData = new LockData();
 
     @Override

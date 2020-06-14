@@ -73,9 +73,9 @@ public class DisputeService {
 
     @PostConstruct
     public void init() {
-        userDisputesCollectionMap.put(ActionSide.Consumer, consumerDisputes);
-        userDisputesCollectionMap.put(ActionSide.Merchant, merchantDisputes);
-        userDisputesCollectionMap.put(ActionSide.Arbitrator, arbitratorDisputes);
+        userDisputesCollectionMap.put(ActionSide.CONSUMER, consumerDisputes);
+        userDisputesCollectionMap.put(ActionSide.MERCHANT, merchantDisputes);
+        userDisputesCollectionMap.put(ActionSide.ARBITRATOR, arbitratorDisputes);
     }
 
     public ResponseEntity<IResponse> createDispute(NewDisputeRequest newDisputeRequest) {
@@ -150,13 +150,13 @@ public class DisputeService {
         transactionDisputesData.appendDisputeHash(disputeData.getHash());
         transactionDisputes.put(transactionDisputesData);
 
-        addUserDisputeHash(ActionSide.Consumer, disputeData.getConsumerHash(), disputeData.getHash());
-        addUserDisputeHash(ActionSide.Merchant, merchantHash, disputeData.getHash());
+        addUserDisputeHash(ActionSide.CONSUMER, disputeData.getConsumerHash(), disputeData.getHash());
+        addUserDisputeHash(ActionSide.MERCHANT, merchantHash, disputeData.getHash());
 
         disputes.put(disputeData);
         webSocketService.notifyOnNewDispute(disputeData);
 
-        return ResponseEntity.status(HttpStatus.OK).body(new GetDisputesResponse(Collections.singletonList(disputeData), ActionSide.Consumer, disputeData.getConsumerHash()));
+        return ResponseEntity.status(HttpStatus.OK).body(new GetDisputesResponse(Collections.singletonList(disputeData), ActionSide.CONSUMER, disputeData.getConsumerHash()));
     }
 
     private void addUserDisputeHash(ActionSide actionSide, Hash userHash, Hash disputeHash) {
@@ -277,10 +277,10 @@ public class DisputeService {
         }
 
         if (votesForConsumer >= majorityOfVotes) {
-            DisputeItemStatusService.ACCEPTED_BY_ARBITRATORS.changeStatus(disputeData, disputeItemData.getId(), ActionSide.FinancialServer);
+            DisputeItemStatusService.ACCEPTED_BY_ARBITRATORS.changeStatus(disputeData, disputeItemData.getId(), ActionSide.FINANCIAL_SERVER);
 
         } else if (votesForMerchant >= majorityOfVotes || disputeItemVotes.size() == arbitratorsCount) {
-            DisputeItemStatusService.REJECTED_BY_ARBITRATORS.changeStatus(disputeData, disputeItemData.getId(), ActionSide.FinancialServer);
+            DisputeItemStatusService.REJECTED_BY_ARBITRATORS.changeStatus(disputeData, disputeItemData.getId(), ActionSide.FINANCIAL_SERVER);
         }
 
         disputeData.setUpdateTime(Instant.now());
@@ -299,7 +299,7 @@ public class DisputeService {
 
             Hash arbitratorHash = new Hash(arbitratorUserHashList.get(random));
             disputeData.getArbitratorHashes().add(arbitratorHash);
-            addUserDisputeHash(ActionSide.Arbitrator, arbitratorHash, disputeData.getHash());
+            addUserDisputeHash(ActionSide.ARBITRATOR, arbitratorHash, disputeData.getHash());
 
             arbitratorUserHashList.remove(random);
             arbitratorsCount++;
@@ -368,9 +368,9 @@ public class DisputeService {
     public ActionSide getActionSide(DisputeData disputeData, Hash actionInitiatorHash) {
 
         if (disputeData.getConsumerHash().equals(actionInitiatorHash)) {
-            return ActionSide.Consumer;
+            return ActionSide.CONSUMER;
         } else if (disputeData.getMerchantHash().equals(actionInitiatorHash)) {
-            return ActionSide.Merchant;
+            return ActionSide.MERCHANT;
         }
 
         return null;

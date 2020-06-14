@@ -15,25 +15,25 @@ import java.util.function.Consumer;
 public enum SubscriberMessageType implements ISubscriberMessageType {
     TRANSACTION_DATA(TransactionData.class) {
         @Override
-        public Consumer<Object> getHandler(NodeType publisherNodeType) {
+        public Consumer<IPropagatable> getHandler(NodeType publisherNodeType) {
             return transactionData -> transactionService.handlePropagatedTransaction((TransactionData) transactionData);
         }
     },
     ADDRESS_DATA(AddressData.class) {
         @Override
-        public Consumer<Object> getHandler(NodeType publisherNodeType) {
+        public Consumer<IPropagatable> getHandler(NodeType publisherNodeType) {
             return addressData -> addressService.handlePropagatedAddress((AddressData) addressData);
         }
     },
     DSP_CONSENSUS_RESULT(DspConsensusResult.class) {
         @Override
-        public Consumer<Object> getHandler(NodeType publisherNodeType) {
+        public Consumer<IPropagatable> getHandler(NodeType publisherNodeType) {
             return dspConsensusResult -> dspVoteService.handleVoteConclusion((DspConsensusResult) dspConsensusResult);
         }
     },
     NETWORK_DATA(NetworkData.class) {
         @Override
-        public Consumer<Object> getHandler(NodeType publisherNodeType) {
+        public Consumer<IPropagatable> getHandler(NodeType publisherNodeType) {
             return networkData -> networkService.handleNetworkChanges((NetworkData) networkData);
         }
     };
@@ -42,7 +42,7 @@ public enum SubscriberMessageType implements ISubscriberMessageType {
     protected IAddressService addressService;
     protected IDspVoteService dspVoteService;
     protected INetworkService networkService;
-    private Class<? extends IPropagatable> messageTypeClass;
+    private final Class<? extends IPropagatable> messageTypeClass;
 
     SubscriberMessageType(Class<? extends IPropagatable> messageTypeClass) {
         this.messageTypeClass = messageTypeClass;

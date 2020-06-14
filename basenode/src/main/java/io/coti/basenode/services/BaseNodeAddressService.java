@@ -100,13 +100,15 @@ public class BaseNodeAddressService implements IAddressService {
             iterator.seekToFirst();
             while (iterator.isValid()) {
                 AddressData addressData = (AddressData) SerializationUtils.deserialize(iterator.value());
-                addressData.setHash(new Hash(iterator.key()));
-                output.write(new CustomGson().getInstance().toJson(new AddressResponseData(addressData)));
-                iterator.next();
-                if (iterator.isValid()) {
-                    output.write(",");
+                if (addressData != null) {
+                    addressData.setHash(new Hash(iterator.key()));
+                    output.write(new CustomGson().getInstance().toJson(new AddressResponseData(addressData)));
+                    iterator.next();
+                    if (iterator.isValid()) {
+                        output.write(",");
+                    }
+                    output.flush();
                 }
-                output.flush();
             }
             output.write("]");
             output.flush();

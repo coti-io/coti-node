@@ -38,7 +38,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     protected List<String> columnFamilyClassNames;
     protected List<String> resetColumnFamilyNames = new ArrayList<>();
     private List<String> resetTransactionColumnFamilyNames;
-    private Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
+    private final Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
 
     public void init() {
         setColumnFamily();
@@ -190,7 +190,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     private void initColumnFamilyClasses() {
         for (int i = 1; i < columnFamilyClassNames.size(); i++) {
             try {
-                ((Collection) ctx.getBean(Class.forName(columnFamilyClassNames.get(i)))).init();
+                ((Collection<?>) ctx.getBean(Class.forName(columnFamilyClassNames.get(i)))).init();
             } catch (Exception e) {
                 throw new DataBaseException("Error at init column family classes.", e);
             }
