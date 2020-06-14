@@ -15,4 +15,7 @@ public interface IGeneralVoteService {
     void castVoteForClusterStampIndex(Hash voteHash, boolean vote);
 
     void castVoteForClusterStampHash(Hash voteHash, boolean vote);
+
+    long calculateQuorumOfValidators(long numberOfValidators);
+
 }

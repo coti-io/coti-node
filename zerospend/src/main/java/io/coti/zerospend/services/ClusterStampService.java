@@ -2,10 +2,8 @@ package io.coti.zerospend.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.data.*;
-import io.coti.basenode.data.messages.GeneralVoteMessage;
-import io.coti.basenode.data.messages.StateMessage;
-import io.coti.basenode.data.messages.StateMessageClusterStampInitiatedPayload;
-import io.coti.basenode.data.messages.StateMessageLastClusterStampIndexPayload;
+import io.coti.basenode.data.interfaces.IPropagatable;
+import io.coti.basenode.data.messages.*;
 import io.coti.basenode.exceptions.ClusterStampException;
 import io.coti.basenode.http.GetNetworkVotersResponse;
 import io.coti.basenode.http.interfaces.IResponse;
@@ -22,9 +20,7 @@ import org.springframework.util.SerializationUtils;
 
 import java.nio.ByteBuffer;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
+import java.util.*;
 
 
 @Slf4j
@@ -45,9 +41,13 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private TransactionIndexService transactionIndexService;
     @Autowired
     private IGeneralVoteService generalVoteService;
-    private static final long CLUSTER_STAMP_INITIATED_DELAY = 100;
+    @Autowired
+    private DspVoteService dspVoteService;
+
+    private static final long CLUSTER_STAMP_TIMEOUT = 100;
+    private static final long CLUSTER_STAMP_INITIATED_DELAY = 20;
+    private static final long CLUSTER_STAMP_WAIT_TCC = 50;
     private static final int NUMBER_OF_RESENDS = 3;
-    private Thread clusterStampCreationThread;
 
     @Value("${aws.s3.bucket.name.clusterstamp}")
     private void setClusterStampBucketName(String clusterStampBucketName) {
@@ -164,26 +164,41 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     }
 
     public ResponseEntity<IResponse> initiateClusterStamp() {
-        StateMessageClusterStampInitiatedPayload stateMessageClusterstampInitiatedPayload = new StateMessageClusterStampInitiatedPayload(CLUSTER_STAMP_INITIATED_DELAY);
+        StateMessageClusterStampInitiatedPayload stateMessageClusterstampInitiatedPayload = new StateMessageClusterStampInitiatedPayload(CLUSTER_STAMP_INITIATED_DELAY, CLUSTER_STAMP_TIMEOUT);
         StateMessage stateMessage = new StateMessage(stateMessageClusterstampInitiatedPayload);
         stateMessage.setHash(new Hash(generalMessageCrypto.getSignatureMessage(stateMessage)));
         generalMessageCrypto.signMessage(stateMessage);
         propagationPublisher.propagate(stateMessage, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
         log.info("Manually initiated clusterstamp" + stateMessage.getHash().toString());
-        clusterStampCreationThread = new Thread(this::clusterStampCreation);
+
+        Thread clusterStampCreationThread = new Thread(() -> {
+            try {
+                clusterStampCreation();
+            } catch (InterruptedException e) {
+                log.info(String.format("Clusterstump creation interrupted %s", e));
+                Thread.currentThread().interrupt();
+            }
+        });
         clusterStampCreationThread.start();
+
+        dspVoteService.setSumAndSaveVotesPause(); // todo check it is started again
         return ResponseEntity.ok().body(null);
     }
 
-    private void clusterStampCreation() {
-        try {
-//            Thread.sleep(CLUSTER_STAMP_INITIATED_DELAY*900); // todo temporary shortened delay
-            Thread.sleep(5000);
-        } catch (Exception ignored) {
-            // ignored exception
-        }
+    private void clusterStampCreation() throws InterruptedException {
 
-        long lastConfirmedIndex = clusterService.getMaxIndexOfNotConfirmed();
+        Thread.sleep(CLUSTER_STAMP_INITIATED_DELAY * 1000);
+
+        Instant waitForTCCTill = Instant.now().plusSeconds(CLUSTER_STAMP_WAIT_TCC);
+
+        long lastConfirmedIndex = 0;
+        while (Instant.now().isBefore(waitForTCCTill)) {
+            lastConfirmedIndex = clusterService.getMaxIndexOfNotConfirmed();
+            if (lastConfirmedIndex == 0) {
+                break;
+            }
+            Thread.sleep(1000);
+        }
         if (lastConfirmedIndex <= 0) {
             lastConfirmedIndex = transactionIndexService.getLastTransactionIndexData().getIndex();
         }
@@ -194,15 +209,67 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         generalMessageCrypto.signMessage(stateMessage);
         generalVoteService.startCollectingVotes(stateMessage);
         log.info(String.format("Initiate voting for the last clusterstamp index %d %s", lastConfirmedIndex, stateMessage.getHash().toString()));
-        propagationPublisher.propagate(stateMessage, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
+        propagateRetries(Collections.singletonList(stateMessage));
+    }
 
-        for (int i = 0; i < NUMBER_OF_RESENDS; i++) {
+    @Override
+    public void calculateClusterStampDataAndHashes() {
+        //todo calculate clusterstampdata and hashes  - Tomer
+        prepareCandidateClusterStampHash();
+        Hash clusterStampHash = getCandidateClusterStampHash();
+
+        StateMessageClusterStampHashPayload stateMessageClusterStampBalanceHashPayload = new StateMessageClusterStampHashPayload(clusterStampHash);
+        StateMessage stateBalanceHashMessage = new StateMessage(stateMessageClusterStampBalanceHashPayload);
+        stateBalanceHashMessage.setHash(new Hash(generalMessageCrypto.getSignatureMessage(stateBalanceHashMessage)));
+        generalMessageCrypto.signMessage(stateBalanceHashMessage);
+        generalVoteService.startCollectingVotes(stateBalanceHashMessage);
+//                //TODO 6/11/2020 tomer: Need to align exact messages
+//                clusterStampService.updateGeneralVoteMessageClusterStampSegment(true, stateBalanceHashMessage);
+
+        log.info(String.format("Initiate voting for the balance clusterstamp hash %s %s", clusterStampHash.toHexString(), stateBalanceHashMessage.getHash().toString()));
+
+//                StateMessageClusterStampHashPayload stateMessageClusterStampCurrencyHashPayload = new StateMessageClusterStampHashPayload(clusterStampCurrencyHash);
+//                StateMessage stateCurrencyHashMessage = new StateMessage(stateMessageClusterStampCurrencyHashPayload);
+//                stateCurrencyHashMessage.setHash(new Hash(generalMessageCrypto.getSignatureMessage(stateCurrencyHashMessage)));
+//                generalMessageCrypto.signMessage(stateCurrencyHashMessage);
+//                startCollectingVotes(stateCurrencyHashMessage);
+//                log.info(String.format("Initiate voting for the currency clusterstamp hash %s %s", clusterStampCurrencyHash.toHexString(), stateCurrencyHashMessage.getHash().toString()));
+//                propagationPublisher.propagate(stateCurrencyHashMessage, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
+
+        propagateRetries(Collections.singletonList(stateBalanceHashMessage));
+//        propagateRetries(Arrays.asList(stateBalanceHashMessage, stateCurrencyHashMessage));
+    }
+
+    @Override
+    public void doClusterStampAfterVoting(GeneralVoteMessage generalVoteMessage) {
+        //todo start clusterstamp
+
+        StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload = new StateMessageClusterStampExecutePayload(generalVoteMessage.getVoteHash());
+        StateMessage stateMessageExecute = new StateMessage(stateMessageClusterStampExecutePayload);
+        stateMessageExecute.setHash(new Hash(generalMessageCrypto.getSignatureMessage(stateMessageExecute)));
+        generalMessageCrypto.signMessage(stateMessageExecute);
+        log.info("Initiate clusterstamp execution " + generalVoteMessage.getVoteHash().toString());
+        propagateRetries(Collections.singletonList(stateMessageExecute));
+
+        //todo clean clusterStampService.clusterstampdata
+        //todo start DB cleaning
+
+    }
+
+    private void propagateRetries(List<IPropagatable> messages) {
+        for (int i = 0; true; i++) {
+            for (IPropagatable message : messages) {
+                propagationPublisher.propagate(message, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
+            }
+            if (i == NUMBER_OF_RESENDS - 1) {
+                break;
+            }
             try {
                 Thread.sleep(5000);
-            } catch (Exception ignored) {
-                // ignored exception
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
             }
-            propagationPublisher.propagate(stateMessage, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
         }
     }
 

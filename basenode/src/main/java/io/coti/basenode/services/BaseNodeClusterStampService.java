@@ -5,7 +5,10 @@ import io.coti.basenode.crypto.ClusterStampCrypto;
 import io.coti.basenode.crypto.GeneralMessageCrypto;
 import io.coti.basenode.crypto.GetClusterStampFileNamesCrypto;
 import io.coti.basenode.data.*;
-import io.coti.basenode.data.messages.*;
+import io.coti.basenode.data.messages.GeneralVoteMessage;
+import io.coti.basenode.data.messages.StateMessage;
+import io.coti.basenode.data.messages.StateMessageClusterStampExecutePayload;
+import io.coti.basenode.data.messages.StateMessageClusterStampHashPayload;
 import io.coti.basenode.exceptions.ClusterStampException;
 import io.coti.basenode.exceptions.ClusterStampValidationException;
 import io.coti.basenode.exceptions.FileSystemException;
@@ -733,17 +736,6 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
             throw new ClusterStampValidationException(String.format("Total amount of currency %s in clusterstamp file exceeds currency supply.", currencyHash));
         }
         clusterStampCurrencyData.setAmount(subtractedCurrencyAmount);
-    }
-
-    @Override
-    public void clusterStampInitiate(StateMessage stateMessage, StateMessageClusterStampInitiatedPayload stateMessageClusterstampInitiatedPayload) {
-        // implemented in subclasses
-    }
-
-    @Override
-    public boolean checkLastConfirmedIndex(StateMessageLastClusterStampIndexPayload stateMessageLastClusterStampIndexPayload) {
-        // implemented in subclasses
-        return false;
     }
 
     @Override

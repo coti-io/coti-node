@@ -75,8 +75,13 @@ public class BaseNodeGeneralVoteService implements IGeneralVoteService {
         // implemented in subclasses
     }
 
+    @Override
+    public long calculateQuorumOfValidators(long numberOfValidators) {
+        return numberOfValidators * CONSENSUS_A / CONSENSUS_B + CONSENSUS_C;
+    }
+
     private boolean checkConsensusAndSetResult(GeneralVoteResult generalVoteResult) {
-        long quorumOfValidators = networkService.countDSPNodes() * CONSENSUS_A / CONSENSUS_B + CONSENSUS_C;
+        long quorumOfValidators = calculateQuorumOfValidators(networkService.countDSPNodes());
         if (quorumOfValidators <= generalVoteResult.getHashToVoteMapping().values().stream().filter(v -> v.isVote()).count()) {
             generalVoteResult.setConsensusReached(true);
             generalVoteResult.setConsensusPositive(true);

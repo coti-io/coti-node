@@ -24,7 +24,6 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
     private static final int NUMBER_OF_RETRIES_FULL_NODE = 3;
     @Autowired
     protected NetworkService networkService;
-    private boolean pauseResending = false;
 
     @Override
     public void init() {
@@ -78,21 +77,22 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
 
     @Scheduled(initialDelay = 60000, fixedDelay = 60000)
     private void sendUnconfirmedReceivedTransactionsFullNode() {
-        if (!pauseResending) {
-            unconfirmedReceivedTransactionHashesMap
-                    .entrySet()
-                    .stream()
-                    .filter(entry -> entry.getValue().getCreatedTime().plusSeconds(PERIOD_IN_SECONDS_BEFORE_PROPAGATE_AGAIN_FULL_NODE).isBefore(Instant.now()))
-                    .forEach(this::sendUnconfirmedReceivedTransactionsFullNode);
-            List<Hash> unconfirmedTransactionsToRemove = unconfirmedReceivedTransactionHashesMap
-                    .entrySet()
-                    .stream()
-                    .filter(entry -> ((UnconfirmedReceivedTransactionHashFullNodeData) entry.getValue()).getRetries() <= 0)
-                    .map(Map.Entry::getKey)
-                    .collect(Collectors.toList());
-
-            unconfirmedTransactionsToRemove.forEach(this::removeConfirmedReceiptTransaction);
+        if (resendingPause) {
+            return;
         }
+        unconfirmedReceivedTransactionHashesMap
+                .entrySet()
+                .stream()
+                .filter(entry -> entry.getValue().getCreatedTime().plusSeconds(PERIOD_IN_SECONDS_BEFORE_PROPAGATE_AGAIN_FULL_NODE).isBefore(Instant.now()))
+                .forEach(this::sendUnconfirmedReceivedTransactionsFullNode);
+        List<Hash> unconfirmedTransactionsToRemove = unconfirmedReceivedTransactionHashesMap
+                .entrySet()
+                .stream()
+                .filter(entry -> ((UnconfirmedReceivedTransactionHashFullNodeData) entry.getValue()).getRetries() <= 0)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+
+        unconfirmedTransactionsToRemove.forEach(this::removeConfirmedReceiptTransaction);
     }
 
     private void sendUnconfirmedReceivedTransactionsFullNode(Map.Entry<Hash, UnconfirmedReceivedTransactionHashData> entry) {
@@ -117,7 +117,4 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         networkService.sendDataToConnectedDspNodes(transactionData);
     }
 
-    public void setPauseResending(boolean pauseResending) {
-        this.pauseResending = pauseResending;
-    }
 }
