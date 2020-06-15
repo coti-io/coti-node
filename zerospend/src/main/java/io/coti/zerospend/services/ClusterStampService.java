@@ -85,7 +85,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private void handleMissingClusterStamp(Instant createTime) {
         boolean prepareClusterStampLines = true;
         ClusterStampData clusterStampData = new ClusterStampData();
-
+        clearCandidateClusterStampRelatedFields();
         prepareCandidateClusterStampHash(createTime, prepareClusterStampLines, clusterStampData, true);
         Hash clusterStampDataMessageHash = getCandidateClusterStampHash();
 
@@ -106,6 +106,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         // Create cluster stamp hash
         boolean prepareClusterStampLines = true;
         ClusterStampData clusterStampData = new ClusterStampData();
+        clearCandidateClusterStampRelatedFields();
 
         prepareCandidateClusterStampHash(createTime, prepareClusterStampLines, clusterStampData, false);
         Hash clusterStampDataMessageHash = getCandidateClusterStampHash();

@@ -99,6 +99,7 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
     public static final int CLUSTERSTAMP_VOTES_SEGMENT_VOTE_INDEX = 4;
     public static final int CLUSTERSTAMP_VOTES_SEGMENT_CLUSTER_STAMP_HASH_INDEX = 5;
     public static final int CLUSTERSTAMP_VOTES_SEGMENT_CREATE_TIME_INDEX = 0;
+    public static final int NETWORK_VALIDATORS_SNAPSHOT_VALID_SECONDS = 900;
     protected ClusterStampNameData clusterStampName;
     @Value("${clusterstamp.folder}")
     protected String clusterStampFolder;
@@ -511,10 +512,10 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
         }
         List<Hash> allCurrentValidators = getNetworkVotersResponse.getAllCurrentValidators();
         long positiveVotesAmount = generalVoteMessages.stream().filter(generalVoteMessage ->
-                        generalVoteMessage.isVote() &&
-                                allCurrentValidators.contains(generalVoteMessage.getSignerHash()) &&
-                                ((StateMessageClusterStampHashPayload) generalVoteMessage.getMessagePayload()).getClusterStampHash().equals(clusterStampDataMessageHash)
-                //TODO 6/9/2020 tomer: Check about vote hash?
+                generalVoteMessage.isVote() &&
+                        allCurrentValidators.contains(generalVoteMessage.getSignerHash()) &&
+                        ((StateMessageClusterStampHashPayload) generalVoteMessage.getMessagePayload()).getClusterStampHash().equals(clusterStampDataMessageHash) &&
+                        getNetworkVotersResponse.getCreateTime().plusSeconds(NETWORK_VALIDATORS_SNAPSHOT_VALID_SECONDS).isAfter(generalVoteMessage.getCreateTime())
         ).count();
         if (positiveVotesAmount < getExpectedMajority(allCurrentValidators.size())) {
             throw new ClusterStampValidationException("Failed to reach majority for cluster stamp votes segment.");
@@ -864,6 +865,7 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
     }
 
     public void prepareCandidateClusterStampHash() {
+        clearCandidateClusterStampRelatedFields();
         prepareCandidateClusterStampHash(Instant.now(), false, new ClusterStampData(), false);
     }
 
@@ -934,6 +936,15 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
 
     private void uploadCandidateClusterStamp(String candidateClusterStampFileName) {
         awsService.uploadFileToS3(candidateClusterStampBucketName, clusterStampFolder + candidateClusterStampFileName);
+    }
+
+    protected void clearCandidateClusterStampRelatedFields() {
+        clusterStampCreateTime = null;
+        maxIndexOfNotConfirmed = 0;
+        currencyClusterStampSegmentLines = new ArrayList<>();
+        balanceClusterStampSegmentLines = new ArrayList<>();
+        voterNodesDetails = null;
+        validatorsVoteClusterStampSegmentLines = new ArrayList<>();
     }
 
 }
