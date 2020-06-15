@@ -38,10 +38,10 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     private final Map<Long, TransactionData> waitingMissingTransactionIndexes = new ConcurrentHashMap<>();
     private Map<Hash, LinkedHashSet<Long>> resourceWaitingAddressToIndexesMap = new ConcurrentHashMap<>();
     private Map<Long, DspConsensusResult> resourceWaitingDspConsensusResultMap = new ConcurrentHashMap<>();
-    private AtomicLong totalConsensus = new AtomicLong(0);
+    private final AtomicLong totalConsensus = new AtomicLong(0);
     private final AtomicLong trustChainConfirmed = new AtomicLong(0);
     private final AtomicLong dspConfirmed = new AtomicLong(0);
-    private AtomicLong dspRejected = new AtomicLong(0);
+    private final AtomicLong dspRejected = new AtomicLong(0);
     private Thread confirmedTransactionsThread;
 
     public void init() {
