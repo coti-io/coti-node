@@ -124,16 +124,6 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
         return Arrays.hashCode(hash.getBytes());
     }
 
-    @Override
-    public Hash getHash() {
-        return this.hash;
-    }
-
-    @Override
-    public void setHash(Hash hash) {
-        this.hash = hash;
-    }
-
     public boolean hasSources() {
         return getLeftParentHash() != null || getRightParentHash() != null;
     }

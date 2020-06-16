@@ -6,11 +6,10 @@ import io.coti.nodemanager.data.NodeActivityData;
 import io.coti.nodemanager.data.NodeDailyActivityData;
 import io.coti.nodemanager.data.NodeHistoryData;
 import io.coti.nodemanager.data.NodeNetworkDataRecord;
-import io.coti.nodemanager.http.GetNodeActivationTimeRequest;
+import io.coti.nodemanager.http.GetNodeDetailsRequest;
 import io.coti.nodemanager.http.GetNodeStatisticsRequest;
 import io.coti.nodemanager.http.GetNodesActivityPercentageRequest;
 import io.coti.nodemanager.http.data.NodeDailyStatisticsData;
-import io.coti.nodemanager.http.data.NodeNetworkRecordResponseData;
 import io.coti.nodemanager.http.data.NodeStatisticsData;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +23,7 @@ public interface INetworkHistoryService {
 
     List<NodeHistoryData> getNodesHistory();
 
-    LinkedList<NodeNetworkRecordResponseData> getNodeEventsResponse(GetNodeStatisticsRequest getNodeStatisticsRequest);
+    ResponseEntity<IResponse> getNodeEventsResponse(GetNodeStatisticsRequest getNodeStatisticsRequest);
 
     LinkedList<NodeNetworkDataRecord> getNodeEvents(GetNodeStatisticsRequest getNodeStatisticsRequest);
 
@@ -42,9 +41,15 @@ public interface INetworkHistoryService {
 
     ResponseEntity<IResponse> getNodeActivityInSecondsByDay(GetNodeStatisticsRequest getNodeStatisticsRequest);
 
-    ResponseEntity<IResponse> getNodeActivationTime(GetNodeActivationTimeRequest getNodeActivationTimeRequest);
+    ResponseEntity<IResponse> getNodeActivationTime(GetNodeDetailsRequest getNodeDetailsRequest);
+
+    NodeNetworkDataRecord getNodeNetworkDataRecordByChainRef(NodeNetworkDataRecord nodeNetworkDataRecord);
+
+    Hash calculateNodeHistoryDataHash(Hash nodeHash, LocalDate localDate);
 
     Pair<LocalDate, Hash> getReferenceToRecord(NodeNetworkDataRecord nodeNetworkDataRecord);
+
+    ResponseEntity<IResponse> getNodeLastEvent(GetNodeDetailsRequest getNodeDetailsRequest);
 
     NodeNetworkDataRecord getLastNodeNetworkDataRecord(Hash nodeHash);
 

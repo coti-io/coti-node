@@ -20,6 +20,7 @@ import io.coti.nodemanager.model.NodeDailyActivities;
 import io.coti.nodemanager.model.NodeHistory;
 import io.coti.nodemanager.model.ReservedHosts;
 import io.coti.nodemanager.services.interfaces.IHealthCheckService;
+import io.coti.nodemanager.services.interfaces.INetworkHistoryService;
 import io.coti.nodemanager.services.interfaces.INodeManagementService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.map.HashedMap;
@@ -70,7 +71,7 @@ public class NodeManagementService implements INodeManagementService {
     @Autowired
     private NodeDailyActivities nodeDailyActivities;
     @Autowired
-    private NetworkHistoryService networkHistoryService;
+    private INetworkHistoryService networkHistoryService;
     @Autowired
     private IHealthCheckService healthCheckService;
     @Value("${server.ip}")
@@ -135,6 +136,7 @@ public class NodeManagementService implements INodeManagementService {
         return new Hash(host.getBytes(StandardCharsets.UTF_8));
     }
 
+    @Override
     public void addNodeHistory(NetworkNodeData networkNodeData, NetworkNodeStatus nodeStatus, Instant currentEventDateTime) {
         if (networkNodeData == null) {
             return;

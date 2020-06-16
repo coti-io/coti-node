@@ -41,7 +41,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
 
     public void init() {
         confirmationQueue = new LinkedBlockingQueue<>();
-        confirmedTransactionsThread = new Thread(this::updateConfirmedTransactions);
+        confirmedTransactionsThread = new Thread(this::updateConfirmedTransactions, "Confirmation");
         confirmedTransactionsThread.start();
         log.info("{} is up", this.getClass().getSimpleName());
     }

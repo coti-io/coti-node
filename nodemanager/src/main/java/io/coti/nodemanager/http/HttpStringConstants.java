@@ -24,5 +24,8 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String ADDING_PAIR_EVENTS_WITH_EXISTING_EVENTS_INSIDE = "Expected network node pair events time can not have existing event in pair time range for node %s";
     public static final String ADDING_PAIR_EVENTS_ADDED_MANUALLY = "Network node pair events were added manually for node %s";
 
+    public static final String NODE_EVENTS_SERVER_ERROR = "Node events server error";
+    public static final String NODE_INVALID_HASH = "Invalid node hash %s";
+
 
 }

@@ -23,9 +23,8 @@ public class NodeStatisticsController {
     private INetworkHistoryService networkHistoryService;
 
     @PostMapping(path = "/events")
-    public ResponseEntity<GetNodeEventStatisticsResponse> getNodeEvents(@Valid @RequestBody GetNodeStatisticsRequest getNodeStatisticsRequest) {
-        GetNodeEventStatisticsResponse getNodeEventStatisticsResponse = new GetNodeEventStatisticsResponse(networkHistoryService.getNodeEventsResponse(getNodeStatisticsRequest));
-        return ResponseEntity.ok(getNodeEventStatisticsResponse);
+    public ResponseEntity<IResponse> getNodeEvents(@Valid @RequestBody GetNodeStatisticsRequest getNodeStatisticsRequest) {
+        return networkHistoryService.getNodeEventsResponse(getNodeStatisticsRequest);
     }
 
     @PostMapping(path = "/days")
@@ -61,8 +60,13 @@ public class NodeStatisticsController {
     }
 
     @PostMapping(path = "/nodeActivationTime")
-    public ResponseEntity<IResponse> getNodeActivationTime(@Valid @RequestBody GetNodeActivationTimeRequest getNodeActivationTimeRequest) {
-        return networkHistoryService.getNodeActivationTime(getNodeActivationTimeRequest);
+    public ResponseEntity<IResponse> getNodeActivationTime(@Valid @RequestBody GetNodeDetailsRequest getNodeDetailsRequest) {
+        return networkHistoryService.getNodeActivationTime(getNodeDetailsRequest);
+    }
+
+    @PostMapping(path = "/nodeLastEvent")
+    public ResponseEntity<IResponse> getNodeLastEvent(@Valid @RequestBody GetNodeDetailsRequest getNodeDetailsRequest) {
+        return networkHistoryService.getNodeLastEvent(getNodeDetailsRequest);
     }
 
 }
