@@ -9,14 +9,11 @@ import io.coti.nodemanager.data.NodeNetworkDataRecord;
 import io.coti.nodemanager.http.GetNodeDetailsRequest;
 import io.coti.nodemanager.http.GetNodeStatisticsRequest;
 import io.coti.nodemanager.http.GetNodesActivityPercentageRequest;
-import io.coti.nodemanager.http.data.NodeDailyStatisticsData;
-import io.coti.nodemanager.http.data.NodeStatisticsData;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.http.ResponseEntity;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.LinkedList;
 import java.util.List;
 
 public interface INetworkHistoryService {
@@ -25,11 +22,9 @@ public interface INetworkHistoryService {
 
     ResponseEntity<IResponse> getNodeEventsResponse(GetNodeStatisticsRequest getNodeStatisticsRequest);
 
-    LinkedList<NodeNetworkDataRecord> getNodeEvents(GetNodeStatisticsRequest getNodeStatisticsRequest);
+    ResponseEntity<IResponse> getNodeDailyStats(GetNodeStatisticsRequest getNodeStatisticsRequest);
 
-    List<NodeDailyStatisticsData> getNodeDailyStats(GetNodeStatisticsRequest getNodeStatisticsRequest);
-
-    NodeStatisticsData getNodeStatsTotal(GetNodeStatisticsRequest getNodeStatisticsRequest);
+    ResponseEntity<IResponse> getNodeStatsTotal(GetNodeStatisticsRequest getNodeStatisticsRequest);
 
     ResponseEntity<IResponse> getNodesActivityPercentage(GetNodesActivityPercentageRequest getNodesActivityPercentageRequest);
 

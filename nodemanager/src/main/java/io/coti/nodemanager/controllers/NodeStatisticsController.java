@@ -2,7 +2,9 @@ package io.coti.nodemanager.controllers;
 
 
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.nodemanager.http.*;
+import io.coti.nodemanager.http.GetNodeDetailsRequest;
+import io.coti.nodemanager.http.GetNodeStatisticsRequest;
+import io.coti.nodemanager.http.GetNodesActivityPercentageRequest;
 import io.coti.nodemanager.services.interfaces.INetworkHistoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,15 +30,13 @@ public class NodeStatisticsController {
     }
 
     @PostMapping(path = "/days")
-    public ResponseEntity<GetNodeDailyStatisticsResponse> getNodeDailyStats(@Valid @RequestBody GetNodeStatisticsRequest getNodeStatisticsRequest) {
-        GetNodeDailyStatisticsResponse getNodeDailyStatisticsResponse = new GetNodeDailyStatisticsResponse(networkHistoryService.getNodeDailyStats(getNodeStatisticsRequest));
-        return ResponseEntity.ok(getNodeDailyStatisticsResponse);
+    public ResponseEntity<IResponse> getNodeDailyStats(@Valid @RequestBody GetNodeStatisticsRequest getNodeStatisticsRequest) {
+        return networkHistoryService.getNodeDailyStats(getNodeStatisticsRequest);
     }
 
     @PostMapping(path = "/totals")
-    public ResponseEntity<GetNodeStatisticsResponse> getNodeStatsTotal(@Valid @RequestBody GetNodeStatisticsRequest getNodeStatisticsRequest) {
-        GetNodeStatisticsResponse getNodeStatisticsResponse = new GetNodeStatisticsResponse(networkHistoryService.getNodeStatsTotal(getNodeStatisticsRequest));
-        return ResponseEntity.ok(getNodeStatisticsResponse);
+    public ResponseEntity<IResponse> getNodeStatsTotal(@Valid @RequestBody GetNodeStatisticsRequest getNodeStatisticsRequest) {
+        return networkHistoryService.getNodeStatsTotal(getNodeStatisticsRequest);
     }
 
     @PostMapping(path = "/totalsByPercentage")

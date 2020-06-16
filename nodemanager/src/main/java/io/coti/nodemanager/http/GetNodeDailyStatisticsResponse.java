@@ -8,6 +8,7 @@ import java.util.List;
 
 @Data
 public class GetNodeDailyStatisticsResponse extends BaseResponse {
+
     private List<NodeDailyStatisticsData> nodeStatisticsList;
 
     public GetNodeDailyStatisticsResponse(List<NodeDailyStatisticsData> nodeStatisticsList) {
