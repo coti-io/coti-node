@@ -4,10 +4,12 @@ import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.PaymentInputBaseTransactionData;
 import io.coti.basenode.data.PaymentItemData;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class PaymentInputBaseTransactionResponseData extends InputBaseTransactionResponseData {
     private List<PaymentItemData> items;
     private String encryptedMerchantName;

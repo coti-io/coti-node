@@ -3,8 +3,10 @@ package io.coti.basenode.data;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class ExpandedTransactionTrustScoreData extends TransactionTrustScoreData implements ISignable, ISignValidatable {
 
     private Hash userHash;

@@ -4,9 +4,11 @@ import io.coti.basenode.data.Hash;
 import io.coti.trustscore.data.Enums.EventType;
 import io.coti.trustscore.http.InsertEventRequest;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class KycEventData extends EventData {
 
     private static final long serialVersionUID = -7912516118739590690L;

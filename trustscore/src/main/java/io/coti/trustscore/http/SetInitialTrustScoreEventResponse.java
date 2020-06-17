@@ -6,9 +6,12 @@ import io.coti.basenode.http.BaseResponse;
 import io.coti.trustscore.data.Enums.EventType;
 import io.coti.trustscore.data.Enums.InitialTrustScoreType;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class SetInitialTrustScoreEventResponse extends BaseResponse {
+
     private String userHash;
     private int eventType;
     private String initialTrustScoreType;

@@ -1,10 +1,12 @@
 package io.coti.basenode.data;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.Instant;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class TccInfo extends ConfirmationData {
 
     private static final long serialVersionUID = -7959572670527143220L;

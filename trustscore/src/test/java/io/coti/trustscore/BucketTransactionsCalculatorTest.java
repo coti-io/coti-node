@@ -49,7 +49,7 @@ public class BucketTransactionsCalculatorTest {
         BucketTransactionsCalculator bucketTransactionsCalculator = new BucketTransactionsCalculator(bucketTransactionEventsData);
 
         TransactionEventsScore transactionEventsScore = bucketTransactionsCalculator.getTransactionEventsScore();
-        Assert.assertTrue(transactionEventsScore.getTransactionEventScoreList().size() == 3);
+        Assert.assertEquals(3, transactionEventsScore.getTransactionEventScoreList().size());
     }
 
     @Test

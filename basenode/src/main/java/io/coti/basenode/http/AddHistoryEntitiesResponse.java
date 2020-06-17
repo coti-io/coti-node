@@ -5,11 +5,13 @@ import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotEmpty;
 import java.util.Map;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class AddHistoryEntitiesResponse extends BaseResponse implements ISignValidatable, ISignable {
 
     @NotEmpty

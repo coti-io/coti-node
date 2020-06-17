@@ -7,6 +7,7 @@ import io.coti.basenode.crypto.NodeRegistrationCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.exceptions.NetworkException;
+import io.coti.basenode.exceptions.NodeRegistrationValidationException;
 import io.coti.basenode.exceptions.TransactionSyncException;
 import io.coti.basenode.http.CustomHttpComponentsClientHttpRequestFactory;
 import io.coti.basenode.http.GetNodeRegistrationRequest;
@@ -17,10 +18,8 @@ import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.ApplicationContext;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -233,18 +232,21 @@ public abstract class BaseNodeInitializationService {
             GetNodeRegistrationRequest getNodeRegistrationRequest = new GetNodeRegistrationRequest(networkNodeData.getNodeType(), networkType);
             getNodeRegistrationRequestCrypto.signMessage(getNodeRegistrationRequest);
 
-            ResponseEntity<GetNodeRegistrationResponse> getNodeRegistrationResponseEntity =
-                    restTemplate.postForEntity(
+            GetNodeRegistrationResponse getNodeRegistrationResponse =
+                    restTemplate.postForObject(
                             kycServerAddress + NODE_REGISTRATION,
                             getNodeRegistrationRequest,
                             GetNodeRegistrationResponse.class);
             log.info("Node registration received");
-
-            NodeRegistrationData nodeRegistrationData = getNodeRegistrationResponseEntity.getBody().getNodeRegistrationData();
-            if (nodeRegistrationData != null && validateNodeRegistrationResponse(nodeRegistrationData, networkNodeData)) {
-                networkNodeData.setNodeRegistrationData(nodeRegistrationData);
-                nodeRegistrations.put(nodeRegistrationData);
+            if (getNodeRegistrationResponse == null) {
+                throw new NodeRegistrationValidationException("Null node registration response.");
             }
+            NodeRegistrationData nodeRegistrationData = getNodeRegistrationResponse.getNodeRegistrationData();
+            validateNodeRegistrationResponse(nodeRegistrationData, networkNodeData);
+
+            networkNodeData.setNodeRegistrationData(nodeRegistrationData);
+            nodeRegistrations.put(nodeRegistrationData);
+
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             throw new NetworkException(String.format("Error at registration of node. Registrar response: %n %s", e.getResponseBodyAsString()), e);
         } catch (Exception e) {
@@ -252,23 +254,19 @@ public abstract class BaseNodeInitializationService {
         }
     }
 
-    protected boolean validateNodeRegistrationResponse(NodeRegistrationData nodeRegistrationData, NetworkNodeData networkNodeData) {
+    protected void validateNodeRegistrationResponse(NodeRegistrationData nodeRegistrationData, NetworkNodeData networkNodeData) {
+        if (nodeRegistrationData == null) {
+            throw new NodeRegistrationValidationException("Null node registration data.");
+        }
         if (!nodeRegistrationData.getSignerHash().toString().equals(kycServerPublicKey)) {
-            log.error("Invalid kyc server public key.");
-            System.exit(SpringApplication.exit(applicationContext));
+            throw new NodeRegistrationValidationException("Invalid kyc server public key.");
         }
         if (!networkNodeData.getNodeHash().equals(nodeRegistrationData.getNodeHash()) || !networkNodeData.getNodeType().equals(nodeRegistrationData.getNodeType())) {
-            log.error("Node registration response has invalid fields! Shutting down server.");
-            System.exit(SpringApplication.exit(applicationContext));
-
+            throw new NodeRegistrationValidationException("Node registration response has invalid fields.");
         }
-
         if (!nodeRegistrationCrypto.verifySignature(nodeRegistrationData)) {
-            log.error("Node registration failed signature validation! Shutting down server");
-            System.exit(SpringApplication.exit(applicationContext));
+            throw new NodeRegistrationValidationException("Node registration failed signature validation! Shutting down server");
         }
-
-        return true;
     }
 
     protected abstract NetworkNodeData createNodeProperties();

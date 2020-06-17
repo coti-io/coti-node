@@ -2,8 +2,10 @@ package io.coti.basenode.http;
 
 import io.coti.basenode.http.interfaces.ISerializable;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class SerializableResponse extends Response implements ISerializable {
 
     private SerializableResponse() {

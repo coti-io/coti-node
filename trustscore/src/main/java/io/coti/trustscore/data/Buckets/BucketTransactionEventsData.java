@@ -5,13 +5,14 @@ import io.coti.trustscore.data.Enums.EventType;
 import io.coti.trustscore.data.Events.BalanceCountAndContribution;
 import io.coti.trustscore.data.Events.TransactionEventData;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class BucketTransactionEventsData extends BucketEventData<TransactionEventData> implements IEntity {
 
     private static final long serialVersionUID = -8196175492567413372L;

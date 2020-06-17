@@ -97,7 +97,7 @@ public class AddressServiceTest {
         getHistoryAddressesRequestFromFullNode = new GetHistoryAddressesRequest(addressHashesFromFullNodeRequest);
         setRequestDummySignerHashAndSignature(getHistoryAddressesRequestFromFullNode);
 
-        addressHashesToStorageHashList = new ArrayList<>(Arrays.asList(hashInStorage));
+        addressHashesToStorageHashList = new ArrayList<>(Collections.singletonList(hashInStorage));
         getHistoryAddressesRequestToStorageNode = new GetHistoryAddressesRequest(addressHashesToStorageHashList);
     }
 

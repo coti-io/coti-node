@@ -4,12 +4,14 @@ import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.NetworkFeeData;
 import io.coti.basenode.data.TrustScoreNodeResultData;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class NetworkFeeResponseData extends OutputBaseTransactionResponseData {
     private BigDecimal reducedAmount;
     private List<TrustScoreNodeResultResponseData> networkFeeTrustScoreNodeResult;

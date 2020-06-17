@@ -3,12 +3,14 @@ package io.coti.basenode.http;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.data.AddressBalance;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class GetBalancesResponse extends BaseResponse {
 
     private Map<String, AddressBalance> addressesBalance;

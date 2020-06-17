@@ -5,11 +5,13 @@ import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.Instant;
 import java.util.List;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class DspConsensusResult extends ConfirmationData implements IPropagatable, ISignable, ISignValidatable {
 
     private static final long serialVersionUID = -5825375825689935068L;

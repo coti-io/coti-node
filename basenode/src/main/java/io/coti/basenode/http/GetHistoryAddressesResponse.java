@@ -6,6 +6,7 @@ import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -13,6 +14,7 @@ import java.time.Instant;
 import java.util.Map;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class GetHistoryAddressesResponse extends BaseResponse implements ISignValidatable, ISignable {
 
     @NotEmpty

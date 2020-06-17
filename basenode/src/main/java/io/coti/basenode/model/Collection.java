@@ -3,6 +3,8 @@ package io.coti.basenode.model;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
+import io.coti.basenode.exceptions.DataBaseDeleteException;
+import io.coti.basenode.exceptions.DataBaseWriteException;
 import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.RocksIterator;
 import org.rocksdb.WriteBatch;
@@ -29,10 +31,16 @@ public abstract class Collection<T extends IEntity> {
     }
 
     public void put(IEntity entity) {
+        if (entity == null) {
+            throw new DataBaseWriteException("Null entity to write to database");
+        }
         databaseConnector.put(columnFamilyName, entity.getHash().getBytes(), SerializationUtils.serialize(entity));
     }
 
     public void put(WriteOptions writeOptions, IEntity entity) {
+        if (entity == null) {
+            throw new DataBaseWriteException("Null entity to write to database");
+        }
         databaseConnector.put(columnFamilyName, writeOptions, entity.getHash().getBytes(), SerializationUtils.serialize(entity));
     }
 
@@ -45,6 +53,9 @@ public abstract class Collection<T extends IEntity> {
     }
 
     public void delete(IEntity entity) {
+        if (entity == null) {
+            throw new DataBaseDeleteException("Null entity to delete from database");
+        }
         databaseConnector.delete(columnFamilyName, entity.getHash().getBytes());
     }
 

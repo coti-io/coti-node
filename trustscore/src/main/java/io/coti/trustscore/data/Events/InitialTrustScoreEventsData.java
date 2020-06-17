@@ -3,8 +3,10 @@ package io.coti.trustscore.data.Events;
 import io.coti.trustscore.data.Enums.InitialTrustScoreType;
 import io.coti.trustscore.http.InsertEventRequest;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class InitialTrustScoreEventsData extends EventData {
 
     private static final long serialVersionUID = 3646340117367057313L;
