@@ -14,7 +14,6 @@ import io.coti.nodemanager.services.interfaces.ITrustScoreService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -48,28 +47,23 @@ public class TrustScoreService implements ITrustScoreService {
     public Double getTrustScore(NetworkNodeData networkNodeData, List<NetworkNodeData> trustScoreNodeList) {
         GetTrustScoreRequest getTrustScoreRequest = new GetTrustScoreRequest();
         getTrustScoreRequest.setUserHash(networkNodeData.getNodeHash());
-        ResponseEntity<Object> trustScoreResponse = null;
+        GetUserTrustScoreResponse trustScoreResponse = null;
         for (NetworkNodeData trustScoreNode : trustScoreNodeList) {
             try {
-                trustScoreResponse = httpRequest.postForEntity
-                        (trustScoreNode.getHttpFullAddress() + GET_TRUSTSCORE_ENDPOINT, getTrustScoreRequest, Object.class);
+                trustScoreResponse = httpRequest.postForObject
+                        (trustScoreNode.getHttpFullAddress() + GET_TRUSTSCORE_ENDPOINT, getTrustScoreRequest, GetUserTrustScoreResponse.class);
 
-                if (!HttpStatus.OK.equals(trustScoreResponse.getStatusCode())) {
-                    log.error("Trust score node {} returned : {}", trustScoreNode.getHttpFullAddress(), trustScoreResponse);
-                    trustScoreResponse = null;
-                }
-                if (trustScoreResponse == null || trustScoreResponse.getBody() == null) {
-                    log.error("Trust score node {} returned null", trustScoreNode.getHttpFullAddress());
-                    trustScoreResponse = null;
+                if (trustScoreResponse == null) {
+                    log.error("Trust score node {} returned null for node {}", trustScoreNode.getHttpFullAddress(), networkNodeData.getNodeHash());
                 } else {
                     log.info("Response from node: {} . TrustScoreNode: {}", trustScoreResponse, trustScoreNode.getHttpFullAddress());
                     break;
                 }
-            } catch (HttpStatusCodeException ex) {
-                log.error("RestClientException in trustScore check to ts node: {} response: {} err: {}", trustScoreNode.getHttpFullAddress(), ex.getResponseBodyAsString(), ex.getMessage());
+            } catch (HttpStatusCodeException e) {
+                log.error("RestClientException in trustScore check to ts node: {} response: {} err: {}", trustScoreNode.getHttpFullAddress(), e.getResponseBodyAsString(), e.getMessage());
                 trustScoreResponse = null;
-            } catch (Exception ex) {
-                log.error("Exception in trustScore check to ts node: {} err: {}", trustScoreNode.getHttpFullAddress(), ex.getMessage());
+            } catch (Exception e) {
+                log.error("Exception in trustScore check to ts node: {} err: {}", trustScoreNode.getHttpFullAddress(), e.getMessage());
             }
         }
 
@@ -77,7 +71,7 @@ public class TrustScoreService implements ITrustScoreService {
             log.error("No trustScore node could response to trustScore request for node {}", networkNodeData.getHttpFullAddress());
             return 0.0;
         }
-        return ((GetUserTrustScoreResponse) trustScoreResponse.getBody()).getTrustScore();
+        return trustScoreResponse.getTrustScore();
 
     }
 
@@ -110,10 +104,6 @@ public class TrustScoreService implements ITrustScoreService {
         try {
             ResponseEntity<NodeTrustScoreResponse> trustScoreResponseEntity = httpRequest.postForEntity(
                     firstTrustScoreNode.getHttpFullAddress() + TRUSTSCORE_DATA_ENDPOINT, nodeTrustScoreRequest, NodeTrustScoreResponse.class);
-            if (!HttpStatus.OK.equals(trustScoreResponseEntity.getStatusCode())) {
-                log.error("Trust score node {} returned bad status code: {}", firstTrustScoreNode.getHttpFullAddress(), trustScoreResponseEntity);
-                return new NodeTrustScoreResponse();
-            }
             if (trustScoreResponseEntity.getBody() == null) {
                 log.error("Trust score node {} returned null body: {}", firstTrustScoreNode.getHttpFullAddress(), trustScoreResponseEntity);
                 return new NodeTrustScoreResponse();
@@ -134,10 +124,6 @@ public class TrustScoreService implements ITrustScoreService {
         try {
             ResponseEntity<NodeTrustScoreResponse> trustScoreResponseEntity = httpRequest.postForEntity(
                     networkNodeData.getHttpFullAddress() + TRUSTSCORE_AGGREGATION_DATA_ENDPOINT, trustScoreResponseToAggregate, NodeTrustScoreResponse.class);
-            if (!HttpStatus.OK.equals(trustScoreResponseEntity.getStatusCode())) {
-                log.error("Trust score node {} returned bad status code: {}", networkNodeData.getHttpFullAddress(), trustScoreResponseEntity);
-                return;
-            }
             if (trustScoreResponseEntity.getBody() == null) {
                 log.error("Trust score node {} returned null body: {}", networkNodeData.getHttpFullAddress(), trustScoreResponseEntity);
             }

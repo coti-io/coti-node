@@ -16,8 +16,7 @@ import io.coti.fullnode.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
@@ -92,12 +91,12 @@ public class AddressService extends BaseNodeAddressService {
         RestTemplate restTemplate = new RestTemplate();
         Map<Hash, AddressData> historyHashToAddressMap = new HashMap<>();
         try {
-            GetHistoryAddressesResponse getHistoryAddressesResponse = restTemplate.postForEntity(historyNodeHttpAddress + "/addresses", getHistoryAddressesRequest, GetHistoryAddressesResponse.class).getBody();
-            if (validateHistoryResponse(getHistoryAddressesResponse)) {
+            GetHistoryAddressesResponse getHistoryAddressesResponse = restTemplate.postForObject(historyNodeHttpAddress + "/addresses", getHistoryAddressesRequest, GetHistoryAddressesResponse.class);
+            if (getHistoryAddressesResponse != null && validateHistoryResponse(getHistoryAddressesResponse) && getHistoryAddressesResponse.getAddressHashesToAddresses() != null) {
                 historyHashToAddressMap.putAll(getHistoryAddressesResponse.getAddressHashesToAddresses());
             }
 
-        } catch (HttpClientErrorException | HttpServerErrorException e) {
+        } catch (HttpStatusCodeException e) {
             log.error("{}: {}", e.getClass().getName(), ((SerializableResponse) jacksonSerializer.deserialize(e.getResponseBodyAsByteArray())).getMessage());
         } catch (Exception e) {
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
@@ -132,9 +131,6 @@ public class AddressService extends BaseNodeAddressService {
     private String getHistoryNodeHttpAddress() {
         Map<Hash, NetworkNodeData> historyNodeMap = networkService.getMapFromFactory(NodeType.HistoryNode);
         Optional<NetworkNodeData> historyNode = historyNodeMap.values().stream().findFirst();
-        if (!historyNode.isPresent()) {
-            return null;
-        }
-        return historyNode.get().getHttpFullAddress();
+        return historyNode.map(NetworkNodeData::getHttpFullAddress).orElse(null);
     }
 }

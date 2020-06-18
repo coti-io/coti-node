@@ -26,7 +26,7 @@ public class NetworkService extends BaseNodeNetworkService {
     private ICommunicationService communicationService;
     @Autowired
     private ISender sender;
-    private List<NetworkNodeData> connectedDspNodes = new ArrayList<>(2);
+    private final List<NetworkNodeData> connectedDspNodes = new ArrayList<>(2);
 
     @Override
     public void handleNetworkChanges(NetworkData newNetworkData) {
