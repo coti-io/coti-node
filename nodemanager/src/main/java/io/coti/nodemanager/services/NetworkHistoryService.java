@@ -48,9 +48,23 @@ public class NetworkHistoryService implements INetworkHistoryService {
         return nodeHistoryDataList;
     }
 
+    private void validateNodeStatisticsRequestDates(GetNodeStatisticsRequest getNodeStatisticsRequest) {
+        LocalDate startDate = getNodeStatisticsRequest.getStartDate();
+        LocalDate endDate = getNodeStatisticsRequest.getEndDate();
+        LocalDate today = LocalDate.now(ZoneId.of("UTC"));
+
+        if (startDate.isAfter(endDate) || (startDate.isAfter(today))) {
+            throw new NetworkHistoryValidationException(String.format(INVALID_DATE_RANGE, startDate, endDate));
+        }
+        if (endDate.isAfter(today)) {
+            getNodeStatisticsRequest.setEndDate(today);
+        }
+    }
+
     @Override
     public ResponseEntity<IResponse> getNodeEventsResponse(GetNodeStatisticsRequest getNodeStatisticsRequest) {
         try {
+            validateNodeStatisticsRequestDates(getNodeStatisticsRequest);
             List<NodeNetworkDataRecord> nodeEvents = getNodeEvents(getNodeStatisticsRequest).getEvents();
             List<NodeNetworkRecordResponseData> nodeNetworkRecordResponseDataList = new LinkedList<>();
             nodeEvents.forEach(nodeNetworkDataRecord -> nodeNetworkRecordResponseDataList.add(new NodeNetworkRecordResponseData(nodeNetworkDataRecord)));
@@ -66,14 +80,6 @@ public class NetworkHistoryService implements INetworkHistoryService {
         Hash nodeHash = getNodeStatisticsRequest.getNodeHash();
         LocalDate startDate = getNodeStatisticsRequest.getStartDate();
         LocalDate endDate = getNodeStatisticsRequest.getEndDate();
-
-        LocalDate today = LocalDate.now(ZoneId.of("UTC"));
-
-        if (startDate.isAfter(endDate) || (startDate.isAfter(today))) {
-            throw new NetworkHistoryValidationException(String.format(INVALID_DATE_RANGE, startDate, endDate));
-        }
-
-        endDate = endDate.isAfter(today) ? today : endDate;
 
         NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
         if (nodeDailyActivityData == null) {
@@ -108,6 +114,8 @@ public class NetworkHistoryService implements INetworkHistoryService {
     @Override
     public ResponseEntity<IResponse> getNodeDailyStats(GetNodeStatisticsRequest getNodeStatisticsRequest) {
         try {
+            validateNodeStatisticsRequestDates(getNodeStatisticsRequest);
+
             LocalDate startDate = getNodeStatisticsRequest.getStartDate();
             LocalDate endDate = getNodeStatisticsRequest.getEndDate();
 
@@ -170,6 +178,8 @@ public class NetworkHistoryService implements INetworkHistoryService {
     @Override
     public ResponseEntity<IResponse> getNodeStatsTotal(GetNodeStatisticsRequest getNodeStatisticsRequest) {
         try {
+            validateNodeStatisticsRequestDates(getNodeStatisticsRequest);
+
             LocalDate startDate = getNodeStatisticsRequest.getStartDate();
             LocalDate endDate = getNodeStatisticsRequest.getEndDate();
 
