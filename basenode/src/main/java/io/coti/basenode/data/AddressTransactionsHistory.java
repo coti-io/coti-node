@@ -13,7 +13,7 @@ import java.util.Set;
 public class AddressTransactionsHistory implements IEntity {
 
     private static final long serialVersionUID = 6148574209385536578L;
-    private transient Hash hash;
+    private Hash hash;
     private Instant creationTime;
     private Set<Hash> transactionsHistory;
 
@@ -26,16 +26,6 @@ public class AddressTransactionsHistory implements IEntity {
 
     public boolean addTransactionHashToHistory(Hash transactionHash) {
         return transactionsHistory.add(transactionHash);
-    }
-
-    @Override
-    public Hash getHash() {
-        return hash;
-    }
-
-    @Override
-    public void setHash(Hash hash) {
-        this.hash = hash;
     }
 
     @Override

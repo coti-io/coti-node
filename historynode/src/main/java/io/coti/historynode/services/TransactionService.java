@@ -148,7 +148,7 @@ public class TransactionService extends BaseNodeTransactionService {
         if (addressTransactionsByDate == null || addressTransactionsByDate.getTransactionHashes() == null || addressTransactionsByDate.getTransactionHashes().isEmpty()) {
             return new ArrayList<>();
         }
-        return addressTransactionsByDate.getTransactionHashes().stream().collect(Collectors.toList());
+        return new ArrayList<>(addressTransactionsByDate.getTransactionHashes());
     }
 
     private List<Hash> getTransactionHashesByAddressAndDates(Hash address, LocalDate startDate, LocalDate endDate) {
@@ -165,7 +165,7 @@ public class TransactionService extends BaseNodeTransactionService {
         while (!startDate.isAfter(endDate)) {
             HashSet<Hash> hashesOfDate = transactionHashesByDates.get(startDate);
             if (hashesOfDate != null) {
-                hashesOfDate.forEach(transactionHashes::add);
+                transactionHashes.addAll(hashesOfDate);
             }
             startDate = startDate.plusDays(1);
         }

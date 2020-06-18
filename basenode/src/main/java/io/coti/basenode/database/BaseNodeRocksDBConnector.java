@@ -23,6 +23,9 @@ import java.util.stream.Collectors;
 @Service
 public class BaseNodeRocksDBConnector implements IDatabaseConnector {
 
+    private static final boolean CREATE_IF_MISSING = true;
+    private static final boolean CREATE_MISSING_COLUMN_FAMILIES = true;
+    private static final int MAX_TOTAL_WAL_SIZE_IN_BYTES = 536870912;
     @Value("${database.folder.name}")
     private String databaseFolderName;
     @Value("${application.name}")
@@ -176,9 +179,9 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             List<ColumnFamilyDescriptor> columnFamilyDescriptors = new ArrayList<>();
             List<ColumnFamilyHandle> columnFamilyHandles = new ArrayList<>();
             initiateColumnFamilyDescriptors(dbColumnFamilies, columnFamilyDescriptors);
-            dbOptions.setCreateIfMissing(true);
-            dbOptions.setCreateMissingColumnFamilies(true);
-            dbOptions.setMaxTotalWalSize(268435456);
+            dbOptions.setCreateIfMissing(CREATE_IF_MISSING);
+            dbOptions.setCreateMissingColumnFamilies(CREATE_MISSING_COLUMN_FAMILIES);
+            dbOptions.setMaxTotalWalSize(MAX_TOTAL_WAL_SIZE_IN_BYTES);
             db = RocksDB.open(dbOptions, dbPath, columnFamilyDescriptors, columnFamilyHandles);
             populateColumnFamilies(dbColumnFamilies, columnFamilyHandles);
         } catch (Exception e) {

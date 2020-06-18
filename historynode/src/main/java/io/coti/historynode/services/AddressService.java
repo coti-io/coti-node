@@ -57,8 +57,7 @@ public class AddressService extends BaseNodeAddressService {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new SerializableResponse(INVALID_SIGNATURE, STATUS_ERROR));
             }
 
-            List<Hash> addressesHashesToGetFromStorage = new ArrayList<>();
-            addressesHashesToGetFromStorage.addAll(getHistoryAddressesRequest.getAddressHashes());
+            List<Hash> addressesHashesToGetFromStorage = new ArrayList<>(getHistoryAddressesRequest.getAddressHashes());
 
             HashMap<Hash, AddressData> addressToAddressDataFromDB = populateAndRemoveFoundAddresses(addressesHashesToGetFromStorage);
             Map<Hash, AddressData> getHistoryAddressesResponseMap;

@@ -23,8 +23,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 public class PotService extends BaseNodePotService {
 
-    private static HashMap<Integer, ExecutorService> queuesPot = new HashMap<>();
-    protected static HashMap<Integer, MonitorBucketStatistics> monitorStatistics = new LinkedHashMap<>();
+    private static final HashMap<Integer, ExecutorService> queuesPot = new HashMap<>();
+    protected static final HashMap<Integer, MonitorBucketStatistics> monitorStatistics = new LinkedHashMap<>();
     private final LockData transactionLockData = new LockData();
 
     @Override

@@ -27,7 +27,7 @@ public class NetworkService extends BaseNodeNetworkService {
     private void createSummaryStringFromNodeList(Map<Hash, NetworkNodeData> networkNodeDataMap, Map<String, List<String>> summaryMap) {
         if (!networkNodeDataMap.isEmpty()) {
             String nodeTypeAsString = networkNodeDataMap.entrySet().iterator().next().getValue().getNodeType().name();
-            summaryMap.put(nodeTypeAsString, new LinkedList<String>());
+            summaryMap.put(nodeTypeAsString, new LinkedList<>());
             for (NetworkNodeData nodeData : networkNodeDataMap.values()) {
                 summaryMap.get(nodeTypeAsString).add(nodeData.getHttpFullAddress());
             }

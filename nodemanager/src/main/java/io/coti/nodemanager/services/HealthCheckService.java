@@ -175,7 +175,7 @@ public class HealthCheckService implements IHealthCheckService {
                 try {
                     thread.join();
                 } catch (InterruptedException e) {
-                    thread.interrupt();
+                    Thread.currentThread().interrupt();
                 }
             });
         } catch (Exception e) {

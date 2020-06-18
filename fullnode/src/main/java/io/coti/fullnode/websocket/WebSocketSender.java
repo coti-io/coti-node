@@ -18,7 +18,7 @@ import java.math.BigDecimal;
 @Component
 public class WebSocketSender {
 
-    private SimpMessagingTemplate messagingSender;
+    private final SimpMessagingTemplate messagingSender;
 
     @Autowired
     public WebSocketSender(SimpMessagingTemplate simpMessagingTemplate) {
