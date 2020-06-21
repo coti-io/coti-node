@@ -219,11 +219,17 @@ public abstract class BaseNodeInitializationService {
     }
 
     private NetworkData getNetworkDetailsFromNodeManager() {
+        NetworkData newNetworkData;
         try {
-            return restTemplate.getForEntity(nodeManagerHttpAddress + NODE_MANAGER_NODES_ENDPOINT, NetworkData.class).getBody();
+            newNetworkData = restTemplate.getForEntity(nodeManagerHttpAddress + NODE_MANAGER_NODES_ENDPOINT, NetworkData.class).getBody();
         } catch (Exception e) {
-            throw new NetworkException("Error at getting network details.", e);
+            throw new NetworkException("Error at getting network details", e);
         }
+
+        if (!networkService.verifyNodeManager(newNetworkData)) {
+            throw new NetworkException("Error at getting network details");
+        }
+        return newNetworkData;
     }
 
     private void getNodeRegistration(NetworkNodeData networkNodeData) {

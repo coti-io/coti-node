@@ -12,6 +12,8 @@ public interface INetworkService {
 
     void handleNetworkChanges(NetworkData networkData);
 
+    boolean verifyNodeManager(NetworkData newNetworkData);
+
     String getRecoveryServerAddress();
 
     void setRecoveryServerAddress(String recoveryServerAddress);
@@ -47,6 +49,8 @@ public interface INetworkService {
     void setConnectToNetworkUrl(String connectToNetworkUrl);
 
     NetworkData getNetworkData();
+
+    NetworkData getNetworkDataSigned();
 
     void setNetworkData(NetworkData networkData);
 
