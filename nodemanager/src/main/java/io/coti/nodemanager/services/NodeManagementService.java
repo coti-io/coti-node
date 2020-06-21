@@ -1,10 +1,7 @@
 package io.coti.nodemanager.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.LockData;
-import io.coti.basenode.data.NetworkNodeData;
-import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.exceptions.NetworkNodeValidationException;
 import io.coti.basenode.http.Response;
@@ -87,7 +84,8 @@ public class NodeManagementService implements INodeManagementService {
 
     public void propagateNetworkChanges() {
         log.info("Propagating network change");
-        propagationPublisher.propagate(networkService.getNetworkData(), Arrays.asList(NodeType.FullNode, NodeType.ZeroSpendServer,
+        NetworkData networkData = networkService.getNetworkDataSigned();
+        propagationPublisher.propagate(networkData, Arrays.asList(NodeType.FullNode, NodeType.ZeroSpendServer,
                 NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer));
     }
 
