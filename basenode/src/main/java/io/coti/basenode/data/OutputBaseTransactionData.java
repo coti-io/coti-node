@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public abstract class OutputBaseTransactionData extends BaseTransactionData {
 
     private static final long serialVersionUID = 5660628603489226186L;

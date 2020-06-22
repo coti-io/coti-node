@@ -8,7 +8,7 @@ import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class PaymentInputBaseTransactionData extends InputBaseTransactionData {
 
     private static final long serialVersionUID = 5056919546430085702L;

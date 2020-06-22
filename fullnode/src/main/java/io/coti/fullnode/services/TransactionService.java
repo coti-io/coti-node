@@ -7,6 +7,7 @@ import io.coti.basenode.data.AddressTransactionsHistory;
 import io.coti.basenode.data.ExplorerTransactionData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.exceptions.PotException;
 import io.coti.basenode.exceptions.TransactionException;
 import io.coti.basenode.exceptions.TransactionValidationException;
 import io.coti.basenode.http.CustomGson;
@@ -72,12 +73,10 @@ public class TransactionService extends BaseNodeTransactionService {
     private PotService potService;
     @Autowired
     protected ITransactionPropagationCheckService transactionPropagationCheckService;
-
     private BlockingQueue<ExplorerTransactionData> explorerIndexQueue;
     private IndexedNavigableSet<ExplorerTransactionData> explorerIndexedTransactionSet;
     @Autowired
     private ResendTransactionRequestCrypto resendTransactionRequestCrypto;
-
 
     @Override
     public void init() {
@@ -106,9 +105,8 @@ public class TransactionService extends BaseNodeTransactionService {
                 log.debug("Received existing transaction: {}", transactionData.getHash());
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
-                        .body(new AddTransactionResponse(
-                                STATUS_ERROR,
-                                TRANSACTION_ALREADY_EXIST_MESSAGE));
+                        .body(new Response(
+                                TRANSACTION_ALREADY_EXIST_MESSAGE, STATUS_ERROR));
             }
             transactionHelper.startHandleTransaction(transactionData);
 
@@ -127,9 +125,8 @@ public class TransactionService extends BaseNodeTransactionService {
                     log.info("No source found for transaction {} with trust score {}", transactionData.getHash(), transactionData.getSenderTrustScore());
                     return ResponseEntity
                             .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body(new AddTransactionResponse(
-                                    STATUS_ERROR,
-                                    TRANSACTION_SOURCE_NOT_FOUND));
+                            .body(new Response(
+                                    TRANSACTION_SOURCE_NOT_FOUND, STATUS_ERROR));
                 }
             }
             if (!validationService.validateSource(transactionData.getLeftParentHash()) ||
@@ -138,16 +135,7 @@ public class TransactionService extends BaseNodeTransactionService {
             }
 
             // ############   POT   ###########
-            try {
-                potService.potAction(transactionData);
-            } catch (IllegalArgumentException e) {
-                log.error("Error at POT: {} , Transaction: {}", e.getMessage(), transactionData.getHash());
-                return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
-                        .body(new AddTransactionResponse(
-                                STATUS_ERROR,
-                                e.getMessage()));
-            }
+            potAction(transactionData);
             // ################################
 
             transactionData.setAttachmentTime(Instant.now());
@@ -162,21 +150,31 @@ public class TransactionService extends BaseNodeTransactionService {
             return ResponseEntity
                     .status(HttpStatus.CREATED)
                     .body(new AddTransactionResponse(
-                            STATUS_SUCCESS,
-                            TRANSACTION_CREATED_MESSAGE));
+                            TRANSACTION_CREATED_MESSAGE, transactionData.getAttachmentTime()));
 
         } catch (TransactionValidationException e) {
             log.error("Transaction validation failed: {}", e.getMessage());
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
-                    .body(new AddTransactionResponse(
-                            STATUS_ERROR,
-                            e.getMessage()));
+                    .body(new Response(e.getMessage(), STATUS_ERROR));
+        } catch (PotException e) {
+            e.logMessage();
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new Response(e.getMessage() + " Cause: " + e.getCause().getMessage(), STATUS_ERROR));
         } catch (Exception e) {
             log.error("Exception while adding transaction: {}", transactionData.getHash());
             throw new TransactionException(e);
         } finally {
             transactionHelper.endHandleTransaction(transactionData);
+        }
+    }
+
+    private void potAction(TransactionData transactionData) {
+        try {
+            potService.potAction(transactionData);
+        } catch (Exception e) {
+            throw new PotException("Error at POT for transaction: " + transactionData.getHash(), e);
         }
     }
 
@@ -201,7 +199,7 @@ public class TransactionService extends BaseNodeTransactionService {
         if (transactionHelper.isTransactionHashProcessing(request.getTransactionHash())) {
             log.error("Transaction {} requested to resend is still being processed", request.getTransactionHash());
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new AddTransactionResponse(TRANSACTION_RESENT_PROCESSING_MESSAGE, STATUS_ERROR));
+                    .body(new Response(TRANSACTION_RESENT_PROCESSING_MESSAGE, STATUS_ERROR));
         }
 
         ((NetworkService) networkService).sendDataToConnectedDspNodes(transactionData);

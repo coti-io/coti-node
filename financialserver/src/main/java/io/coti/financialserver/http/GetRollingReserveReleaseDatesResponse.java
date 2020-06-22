@@ -20,7 +20,6 @@ public class GetRollingReserveReleaseDatesResponse extends BaseResponse {
     private RecourseClaimData recourseClaimData;
 
     public GetRollingReserveReleaseDatesResponse(MerchantRollingReserveData merchantRollingReserveData, Map<String, RollingReserveReleaseStatus> rollingReserveReleases, RecourseClaimData recourseClaimData) {
-        super();
 
         this.rollingReserveReleases = rollingReserveReleases;
         Hash merchantHash = merchantRollingReserveData.getMerchantHash();

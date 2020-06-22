@@ -10,7 +10,7 @@ import java.time.Instant;
 import java.util.List;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class RollingReserveData extends OutputBaseTransactionData implements ITrustScoreNodeValidatable {
 
     private static final long serialVersionUID = -8006331684448356440L;

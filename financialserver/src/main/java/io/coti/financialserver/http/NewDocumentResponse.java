@@ -13,7 +13,6 @@ public class NewDocumentResponse extends BaseResponse {
     private DocumentNameResponseData document;
 
     public NewDocumentResponse(DisputeDocumentData disputeDocumentData) {
-        super();
         this.document = new DocumentNameResponseData(disputeDocumentData);
     }
 }

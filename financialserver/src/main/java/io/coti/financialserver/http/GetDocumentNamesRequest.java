@@ -9,6 +9,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 public class GetDocumentNamesRequest implements IRequest {
+
     @NotNull
     private @Valid GetDisputeItemDetailData disputeDocumentNamesData;
 }

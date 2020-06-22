@@ -7,6 +7,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 public class GetUnreadEventsRequest {
+
     @NotNull
     private GetUnreadEventsData unreadEventsData;
 }

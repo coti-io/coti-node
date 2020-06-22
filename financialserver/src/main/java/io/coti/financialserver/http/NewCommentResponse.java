@@ -12,7 +12,6 @@ public class NewCommentResponse extends BaseResponse {
     private String commentHash;
 
     public NewCommentResponse(Hash commentHash) {
-        super();
         this.commentHash = commentHash.toString();
     }
 }

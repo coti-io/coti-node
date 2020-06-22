@@ -27,16 +27,6 @@ public class AddressData implements IPropagatable {
     }
 
     @Override
-    public Hash getHash() {
-        return hash;
-    }
-
-    @Override
-    public void setHash(Hash hash) {
-        this.hash = hash;
-    }
-
-    @Override
     public boolean equals(Object other) {
         if (other == this) {
             return true;

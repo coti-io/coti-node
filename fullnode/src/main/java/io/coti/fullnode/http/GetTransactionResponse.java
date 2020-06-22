@@ -12,7 +12,6 @@ public class GetTransactionResponse extends BaseResponse {
     private TransactionResponseData transactionData;
 
     public GetTransactionResponse(TransactionResponseData transactionResponseData) {
-        super();
         this.transactionData = transactionResponseData;
     }
 }

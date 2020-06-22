@@ -5,6 +5,7 @@ import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeRegistrationCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.exceptions.NetworkChangeException;
 import io.coti.basenode.exceptions.NetworkException;
 import io.coti.basenode.exceptions.NetworkNodeValidationException;
 import io.coti.basenode.http.CustomHttpComponentsClientHttpRequestFactory;
@@ -87,8 +88,7 @@ public class BaseNodeNetworkService implements INetworkService {
     public void handleNetworkChanges(NetworkData newNetworkData) {
         log.info("New network structure received");
         if (propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.NETWORK) != 0) {
-            log.info("Skipped handling network data due to pending newer network changes");
-            return;
+            throw new NetworkChangeException("Skipped handling network data due to pending newer network changes");
         }
 
         if (!isNodeConnectedToNetwork(newNetworkData)) {
@@ -283,9 +283,7 @@ public class BaseNodeNetworkService implements INetworkService {
 
     @Override
     public void addListToSubscription(Collection<NetworkNodeData> nodeDataList) {
-        Iterator<NetworkNodeData> nodeDataIterator = nodeDataList.iterator();
-        while (nodeDataIterator.hasNext()) {
-            NetworkNodeData node = nodeDataIterator.next();
+        for (NetworkNodeData node : nodeDataList) {
             log.info("{} {} is about to be added to subscription and network", node.getNodeType(), node.getHttpFullAddress());
             communicationService.addSubscription(node.getPropagationFullAddress(), node.getNodeType());
         }
@@ -296,7 +294,7 @@ public class BaseNodeNetworkService implements INetworkService {
         connectedDspNodes.removeIf(dspNode -> {
             boolean remove = !(newDspNodeMap.containsKey(dspNode.getNodeHash()) && newDspNodeMap.get(dspNode.getNodeHash()).getAddress().equals(dspNode.getAddress()));
             if (remove) {
-                handleConnectedDspNodeRemove(dspNode);
+                handleConnectedDspNodeRemove(dspNode, nodeType);
             } else {
                 NetworkNodeData newDspNode = newDspNodeMap.get(dspNode.getNodeHash());
                 if (!newDspNode.getPropagationPort().equals(dspNode.getPropagationPort())) {
@@ -317,10 +315,11 @@ public class BaseNodeNetworkService implements INetworkService {
 
     }
 
-    private void handleConnectedDspNodeRemove(NetworkNodeData dspNode) {
-        log.info("Disconnecting from dsp {} from subscribing and receiving", dspNode.getAddress());
+    private void handleConnectedDspNodeRemove(NetworkNodeData dspNode, NodeType nodeType) {
         communicationService.removeSubscription(dspNode.getPropagationFullAddress(), NodeType.DspNode);
-        communicationService.removeSender(dspNode.getReceivingFullAddress(), NodeType.DspNode);
+        if (nodeType.equals(NodeType.FullNode)) {
+            communicationService.removeSender(dspNode.getReceivingFullAddress(), NodeType.DspNode);
+        }
         if (recoveryServerAddress != null && recoveryServerAddress.equals(dspNode.getHttpFullAddress())) {
             recoveryServerAddress = null;
         }

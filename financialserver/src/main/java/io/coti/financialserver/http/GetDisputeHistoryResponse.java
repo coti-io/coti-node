@@ -10,11 +10,10 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class GetDisputeHistoryResponse extends BaseResponse {
+
     private List<DisputeEventResponseData> disputeHistory;
 
     public GetDisputeHistoryResponse(List<DisputeEventResponseData> disputeHistory) {
-        super();
-
         this.disputeHistory = disputeHistory;
     }
 }

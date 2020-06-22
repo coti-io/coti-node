@@ -42,16 +42,6 @@ public class DisputeDocumentData implements IDisputeEvent, IEntity, ISignable, I
     }
 
     @Override
-    public Hash getHash() {
-        return hash;
-    }
-
-    @Override
-    public void setHash(Hash hash) {
-        this.hash = hash;
-    }
-
-    @Override
     public SignatureData getSignature() {
         return userSignature;
     }

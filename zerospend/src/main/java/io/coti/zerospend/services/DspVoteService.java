@@ -105,9 +105,8 @@ public class DspVoteService extends BaseNodeDspVoteService {
             synchronized (transactionHashLockData.addLockToLockMap(transactionHash)) {
                 TransactionVoteData transactionVoteData = transactionVotes.getByHash(transactionHash);
                 if (transactionVoteData == null) {
-                    missingTransactionsAwaitingHandling.putIfAbsent(transactionHash, new HashSet<>());
-                    missingTransactionsAwaitingHandling.get(transactionHash).add(transactionDspVote);
-                    log.info("Transaction {} does not exist for dsp vote. Vote processing is delayed.", transactionHash);
+                    missingTransactionsAwaitingHandling.computeIfAbsent(transactionHash, key -> new HashSet<>()).add(transactionDspVote);
+                    log.debug("Transaction {} does not exist for dsp vote. Vote processing is delayed.", transactionHash);
                     return;
                 }
 

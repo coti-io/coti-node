@@ -273,6 +273,7 @@ public abstract class BaseNodeInitializationService {
 
     @PreDestroy
     public void shutdown() {
+        Thread.currentThread().setName("PreDestroy");
         shutDownService.shutdown();
     }
 

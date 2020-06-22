@@ -14,7 +14,6 @@ public class GetUnreadEventsResponse extends BaseResponse {
     private List<DisputeEventResponseData> unreadUserDisputeEvents;
 
     public GetUnreadEventsResponse(List<DisputeEventResponseData> unreadUserDisputeEvents) {
-        super();
 
         this.unreadUserDisputeEvents = unreadUserDisputeEvents;
     }

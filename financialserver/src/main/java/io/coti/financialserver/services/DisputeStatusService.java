@@ -23,10 +23,10 @@ public enum DisputeStatusService {
     CLAIM(DisputeStatus.CLAIM, EnumSet.of(DisputeStatus.RECALL), ActionSide.FINANCIAL_SERVER, false),
     CLOSED(DisputeStatus.CLOSED, EnumSet.of(DisputeStatus.RECALL, DisputeStatus.CLAIM), ActionSide.FINANCIAL_SERVER, true);
 
-    private DisputeStatus newDisputeStatus;
-    private Set<DisputeStatus> previousDisputeStatuses;
-    private ActionSide actionSide;
-    private boolean finalStatus;
+    private final DisputeStatus newDisputeStatus;
+    private final Set<DisputeStatus> previousDisputeStatuses;
+    private final ActionSide actionSide;
+    private final boolean finalStatus;
     protected WebSocketService webSocketService;
 
     private static class DisputeStatusServices {

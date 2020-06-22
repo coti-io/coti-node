@@ -29,7 +29,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
@@ -195,11 +194,7 @@ public class TransactionService extends BaseNodeTransactionService {
                 transactionsByAddress.setStartDate(attachmentLocalDate);
             }
 
-            HashSet<Hash> transactionsHashesByDate = transactionsByAddress.getTransactionHashesByDates().get(attachmentLocalDate);
-            if (transactionsHashesByDate == null) {
-                transactionsHashesByDate = new HashSet<>();
-                transactionsByAddress.getTransactionHashesByDates().put(attachmentLocalDate, transactionsHashesByDate);
-            }
+            HashSet<Hash> transactionsHashesByDate = transactionsByAddress.getTransactionHashesByDates().computeIfAbsent(attachmentLocalDate, k -> new HashSet<>());
             transactionsHashesByDate.add(transactionData.getHash());
             addressTransactionsByAddresses.put(transactionsByAddress);
         });
