@@ -84,7 +84,7 @@ public class NodeManagementService implements INodeManagementService {
 
     public void propagateNetworkChanges() {
         log.info("Propagating network change");
-        NetworkData networkData = networkService.getNetworkDataSigned();
+        NetworkData networkData = networkService.getSignedNetworkData();
         propagationPublisher.propagate(networkData, Arrays.asList(NodeType.FullNode, NodeType.ZeroSpendServer,
                 NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer));
     }

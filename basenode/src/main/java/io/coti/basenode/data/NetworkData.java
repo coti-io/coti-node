@@ -45,24 +45,4 @@ public class NetworkData implements IPropagatable, ISignable, ISignValidatable {
     public Map<NodeType, NetworkNodeData> getSingleNodeNetworkDataMap() {
         return singleNodeNetworkDataMap;
     }
-
-    @Override
-    public SignatureData getSignature() {
-        return signature;
-    }
-
-    @Override
-    public Hash getSignerHash() {
-        return signerHash;
-    }
-
-    @Override
-    public void setSignerHash(Hash signerHash) {
-        this.signerHash = signerHash;
-    }
-
-    @Override
-    public void setSignature(SignatureData signature) {
-        this.signature = signature;
-    }
 }

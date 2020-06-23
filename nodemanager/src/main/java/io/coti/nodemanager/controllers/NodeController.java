@@ -36,7 +36,7 @@ public class NodeController {
 
     @GetMapping
     public ResponseEntity<NetworkData> getAllNodes() {
-        return ResponseEntity.ok(networkService.getNetworkDataSigned());
+        return ResponseEntity.ok(networkService.getSignedNetworkData());
     }
 
     @PutMapping(path = "/stake")

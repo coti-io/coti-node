@@ -1,5 +1,6 @@
 package io.coti.basenode.services;
 
+import com.google.gson.Gson;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.crypto.GetNodeRegistrationRequestCrypto;
 import io.coti.basenode.crypto.NetworkNodeCrypto;
@@ -7,11 +8,13 @@ import io.coti.basenode.crypto.NodeRegistrationCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.exceptions.NetworkException;
+import io.coti.basenode.exceptions.NetworkNodeValidationException;
 import io.coti.basenode.exceptions.NodeRegistrationValidationException;
 import io.coti.basenode.exceptions.TransactionSyncException;
 import io.coti.basenode.http.CustomHttpComponentsClientHttpRequestFactory;
 import io.coti.basenode.http.GetNodeRegistrationRequest;
 import io.coti.basenode.http.GetNodeRegistrationResponse;
+import io.coti.basenode.http.Response;
 import io.coti.basenode.model.NodeRegistrations;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
@@ -23,6 +26,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PreDestroy;
@@ -219,17 +223,24 @@ public abstract class BaseNodeInitializationService {
     }
 
     private NetworkData getNetworkDetailsFromNodeManager() {
-        NetworkData newNetworkData;
+        NetworkData networkData;
         try {
-            newNetworkData = restTemplate.getForEntity(nodeManagerHttpAddress + NODE_MANAGER_NODES_ENDPOINT, NetworkData.class).getBody();
+            networkData = restTemplate.getForObject(nodeManagerHttpAddress + NODE_MANAGER_NODES_ENDPOINT, NetworkData.class);
+        } catch (HttpStatusCodeException e) {
+            throw new NetworkException("Error at getting network details. Node manager error: " + new Gson().fromJson(e.getResponseBodyAsString(), Response.class));
         } catch (Exception e) {
             throw new NetworkException("Error at getting network details", e);
         }
-
-        if (!networkService.verifyNodeManager(newNetworkData)) {
-            throw new NetworkException("Error at getting network details");
+        if (networkData == null) {
+            throw new NetworkException("Null network from node manager");
         }
-        return newNetworkData;
+
+        try {
+            networkService.verifyNodeManager(networkData);
+        } catch (NetworkNodeValidationException e) {
+            throw new NetworkException("Error at getting network details", e);
+        }
+        return networkData;
     }
 
     private void getNodeRegistration(NetworkNodeData networkNodeData) {

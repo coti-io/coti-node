@@ -12,7 +12,7 @@ public interface INetworkService {
 
     void handleNetworkChanges(NetworkData networkData);
 
-    boolean verifyNodeManager(NetworkData newNetworkData);
+    void verifyNodeManager(NetworkData newNetworkData);
 
     String getRecoveryServerAddress();
 
@@ -50,7 +50,7 @@ public interface INetworkService {
 
     NetworkData getNetworkData();
 
-    NetworkData getNetworkDataSigned();
+    NetworkData getSignedNetworkData();
 
     void setNetworkData(NetworkData networkData);
 
