@@ -13,7 +13,7 @@ import java.util.Arrays;
 
 @Slf4j
 @Data
-public class Hash implements Serializable {
+public class Hash implements Serializable, Comparable<Hash> {
 
     private static final long serialVersionUID = 473304212781844813L;
     @NotEmpty
@@ -72,5 +72,10 @@ public class Hash implements Serializable {
     @Override
     public String toString() {
         return toHexString();
+    }
+
+    @Override
+    public int compareTo(Hash other) {
+        return toHexString().compareTo(other.toHexString());
     }
 }
