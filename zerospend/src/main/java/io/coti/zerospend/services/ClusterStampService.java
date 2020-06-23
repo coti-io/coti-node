@@ -117,18 +117,14 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         uploadClusterStamp = true;
     }
 
-    private void createClusterStampFile_example(Instant createTime) {
+    private void createClusterStampFile_example() {
         // Create cluster stamp hash
         boolean prepareClusterStampLines = true;
-        ClusterStampData clusterStampData = new ClusterStampData();
-        clearCandidateClusterStampRelatedFields();
-
-        prepareCandidateClusterStampHash(createTime, prepareClusterStampLines, clusterStampData, false);
         Hash clusterStampDataMessageHash = getCandidateClusterStampHash();
 
         // Update with voters snapshot
         GetNetworkVotersResponse getNetworkVotersResponse = getNetworkVoters();
-        if (getNetworkVotersCrypto.verifySignature(getNetworkVotersResponse)) {
+        if (!getNetworkVotersCrypto.verifySignature(getNetworkVotersResponse)) {
             throw new ClusterStampValidationException(String.format("Network validators Clusterstamp file %s failed signature", getClusterStampFileName(clusterStampName)));
         }
         String voterNodesDetails = Base64.getEncoder().encodeToString(SerializationUtils.serialize(getNetworkVotersResponse));
@@ -136,12 +132,13 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
         validatorsVoteClusterStampSegmentLines = new ArrayList<>();
         // For each vote
-        GeneralVoteMessage generalVoteMessage = createGeneralVoteMessage(createTime, clusterStampDataMessageHash);
+        GeneralVoteMessage generalVoteMessage = createGeneralVoteMessage(clusterStampCreateTime, clusterStampDataMessageHash);
         updateGeneralVoteMessageClusterStampSegment(prepareClusterStampLines, generalVoteMessage);
 
-        writeClusterStamp(createTime);
+        writeClusterStamp(clusterStampCreateTime);
 
         uploadClusterStamp = true;
+        clusterStampData = null;
     }
 
     @Override
@@ -232,9 +229,8 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     }
 
     @Override
-    public void calculateClusterStampDataAndHashes() {
-        //todo calculate clusterstampdata and hashes  - Tomer
-        prepareCandidateClusterStampHash();
+    public void calculateClusterStampDataAndHashesAndSendMessage() {
+        calculateClusterStampDataAndHashes();
         Hash clusterStampHash = getCandidateClusterStampHash();
 
         StateMessageClusterStampHashPayload stateMessageClusterStampBalanceHashPayload = new StateMessageClusterStampHashPayload(clusterStampHash);
@@ -261,7 +257,8 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     @Override
     public void doClusterStampAfterVoting(GeneralVoteMessage generalVoteMessage) {
-        //todo start clusterstamp
+
+        createClusterStampFile_example();
 
         StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload = new StateMessageClusterStampExecutePayload(generalVoteMessage.getVoteHash());
         StateMessage stateMessageExecute = new StateMessage(stateMessageClusterStampExecutePayload);

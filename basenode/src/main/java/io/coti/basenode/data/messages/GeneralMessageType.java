@@ -3,9 +3,9 @@ package io.coti.basenode.data.messages;
 public enum GeneralMessageType {
     CLUSTER_STAMP_INITIATED(StateMessageClusterStampInitiatedPayload.class),
     CLUSTER_STAMP_PREPARE_INDEX(StateMessageLastClusterStampIndexPayload.class),
-    CLUSTER_STAMP_INDEX_VOTE(null),
+    CLUSTER_STAMP_INDEX_VOTE(GeneralVoteClusterStampIndexPayload.class),
     CLUSTER_STAMP_PREPARE_HASH(StateMessageClusterStampHashPayload.class),
-    CLUSTER_STAMP_HASH_VOTE(null),
+    CLUSTER_STAMP_HASH_VOTE(GeneralVoteClusterStampHashPayload.class),
     CLUSTER_STAMP_EXECUTE(StateMessageClusterStampExecutePayload.class);
 
     private Class<? extends MessagePayload> messagePayload;

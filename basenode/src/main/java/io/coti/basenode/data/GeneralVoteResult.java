@@ -4,6 +4,7 @@ import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.messages.MessagePayload;
 import lombok.Data;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Data
@@ -22,6 +23,7 @@ public class GeneralVoteResult implements IEntity {
     public GeneralVoteResult(Hash hash, MessagePayload theMatter) {
         this.hash = hash;
         this.theMatter = theMatter;
+        hashToVoteMapping = new HashMap<>();
     }
 
 }

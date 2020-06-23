@@ -205,8 +205,11 @@ public class BaseNodeBalanceService implements IBalanceService {
     @Override
     public TreeMap<Hash, BigDecimal> getSortedBalance(Hash currencyHash) {
         TreeMap<Hash, BigDecimal> currencySortedMap = new TreeMap();
-        balanceMap.get(currencyHash).forEach((address, balance)-> {
-            currencySortedMap.put(address, balance);
+        balanceMap.forEach((address, currencyMap)-> {
+            BigDecimal balance = currencyMap.get(currencyHash);
+            if (balance != null ) {
+                currencySortedMap.put(address, balance);
+            }
         });
         return currencySortedMap;
     }

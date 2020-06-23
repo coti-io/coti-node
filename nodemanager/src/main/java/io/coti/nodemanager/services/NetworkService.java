@@ -38,12 +38,12 @@ public class NetworkService extends BaseNodeNetworkService {
 
     @Override
     public List<Hash> getCurrentValidators() {
-        Map<Hash, NetworkNodeData> nodeDataMap = getMapFromFactory(NodeType.DspNode);
         NetworkNodeData zeroSpendNodeData = getSingleNodeData(NodeType.ZeroSpendServer);
+        ArrayList<Hash> nodeDataHashes = new ArrayList<>(getMapFromFactory(NodeType.DspNode).keySet());
         if (zeroSpendNodeData != null) {
-            nodeDataMap.put(zeroSpendNodeData.getNodeHash(), zeroSpendNodeData);
+            nodeDataHashes.add(zeroSpendNodeData.getHash());
         }
-        return new ArrayList<>(nodeDataMap.keySet());
+        return nodeDataHashes;
     }
 
     public List<Hash> getCurrentValidatorsZeroSpend(GetNetworkVotersRequest getNetworkVotersRequest) {

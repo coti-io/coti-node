@@ -26,10 +26,6 @@ public interface IClusterStampService {
 
     default void clusterStampContinueWithHash(StateMessage stateMessage) {}
 
-    default boolean checkLastConfirmedIndex(StateMessageLastClusterStampIndexPayload stateMessageLastClusterStampIndexPayload){
-        return false;
-    }
-
     void clusterStampExecute(StateMessage stateMessage, StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload);
 
     Hash getCandidateClusterStampHash();
@@ -38,7 +34,13 @@ public interface IClusterStampService {
 
     void updateGeneralVoteMessageClusterStampSegment(boolean prepareClusterStampLines, GeneralVoteMessage generalVoteMessage);
 
-    default void calculateClusterStampDataAndHashes() {}
+    default void calculateClusterStampDataAndHashesAndSendMessage() {}
 
     default void doClusterStampAfterVoting(GeneralVoteMessage generalVoteMessage) {}
+
+    void calculateClusterStampDataAndHashes();
+
+    boolean checkLastConfirmedIndex(StateMessageLastClusterStampIndexPayload stateMessageLastClusterStampIndexPayload);
+
+    boolean checkClusterStampHash(StateMessageClusterStampHashPayload stateMessageClusterStampHashPayload);
 }

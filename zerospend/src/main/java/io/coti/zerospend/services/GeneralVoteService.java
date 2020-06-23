@@ -21,7 +21,7 @@ public class GeneralVoteService extends BaseNodeGeneralVoteService {
         }
         switch (generalVoteMessage.getMessagePayload().getGeneralMessageType()) {
             case CLUSTER_STAMP_INDEX_VOTE:
-                clusterStampService.calculateClusterStampDataAndHashes();
+                clusterStampService.calculateClusterStampDataAndHashesAndSendMessage(); // todo separate it to a thread
                 break;
             case CLUSTER_STAMP_HASH_VOTE:
                 clusterStampService.doClusterStampAfterVoting(generalVoteMessage);

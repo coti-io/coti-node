@@ -3,10 +3,7 @@ package io.coti.basenode.services;
 import com.google.gson.Gson;
 import io.coti.basenode.crypto.*;
 import io.coti.basenode.data.*;
-import io.coti.basenode.data.messages.GeneralVoteMessage;
-import io.coti.basenode.data.messages.StateMessage;
-import io.coti.basenode.data.messages.StateMessageClusterStampExecutePayload;
-import io.coti.basenode.data.messages.StateMessageClusterStampHashPayload;
+import io.coti.basenode.data.messages.*;
 import io.coti.basenode.exceptions.ClusterStampException;
 import io.coti.basenode.exceptions.ClusterStampValidationException;
 import io.coti.basenode.exceptions.FileSystemException;
@@ -45,7 +42,7 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 
 @Slf4j
 @Service
-public abstract class BaseNodeClusterStampService implements IClusterStampService {
+public class BaseNodeClusterStampService implements IClusterStampService {
 
     protected static final String NODE_MANAGER_VALIDATORS_ENDPOINT = "/management/validators";
     protected static final String NODE_MANAGER_NEW_CLUSTER_STAMP = "/newClusterStamp";
@@ -100,21 +97,21 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
     protected ClusterStampNameData clusterStampName;
     @Value("${clusterstamp.folder}")
     protected String clusterStampFolder;
-    @Value("${candidate.clusterstamp.folder}")
+    @Value("${candidate.clusterstamp.folder:}")
     protected String candidateClusterStampFolder;
-    @Value("${aws.s3.bucket.name.clusterstamp}")
+    @Value("${aws.s3.bucket.name.clusterstamp:}")
     protected String clusterStampBucketName;
-    @Value("${aws.s3.bucket.name.candidate.clusterstamp}")
+    @Value("${aws.s3.bucket.name.candidate.clusterstamp:}")
     protected String candidateClusterStampBucketName;
     @Value("${application.name}")
     private String applicationName;
     @Value("${get.cluster.stamp.from.recovery.server:true}")
     private boolean getClusterStampFromRecoveryServer;
-    @Value("${node.manager.ip}")
+    @Value("${node.manager.ip:}")
     private String nodeManagerIp;
-    @Value("${node.manager.port}")
+    @Value("${node.manager.port:}")
     private String nodeManagerPort;
-    private SortedMap<Hash, CurrencyData> currencySortedMap;
+    private SortedMap<String, CurrencyData> currencySortedMap;
 
     private Hash candidateClusterStampHash;
     protected Instant clusterStampCreateTime;
@@ -124,6 +121,7 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
     protected String voterNodesDetails;
     protected List<String> validatorsVoteClusterStampSegmentLines;
     protected boolean filledMissingSegments;
+    protected ClusterStampData clusterStampData;
 
     protected String nodeManagerHttpAddress;
 
@@ -159,6 +157,8 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
     protected RestTemplate restTemplate;
     @Autowired
     private ClusterService clusterService;
+    @Autowired
+    private TransactionIndexService transactionIndexService;
     @Autowired
     protected GeneralMessageCrypto generalMessageCrypto;
     @Autowired
@@ -865,9 +865,9 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
     }
 
     private void generateCurrencyLines(ClusterStampData clusterStampData, boolean prepareClusterStampLines) {
-        for (Map.Entry<Hash, CurrencyData> additionalCurrencyData : currencySortedMap.entrySet()) {
-            if (additionalCurrencyData.getValue().isConfirmed() && !additionalCurrencyData.getValue().getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
-                updateClusterStampDataByCurrencyData(clusterStampData, additionalCurrencyData.getValue(), prepareClusterStampLines);
+        for (CurrencyData currencyData : currencySortedMap.values()) {
+            if (currencyData.isConfirmed() && !currencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
+                updateClusterStampDataByCurrencyData(clusterStampData, currencyData, prepareClusterStampLines);
             }
         }
     }
@@ -875,7 +875,7 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
     private void sortCurrencies() {
         currencySortedMap = new TreeMap();
         if (!currencies.isEmpty()) {
-            currencies.forEach(currencyData -> currencySortedMap.put(currencyData.getHash(), currencyData));
+            currencies.forEach(currencyData -> currencySortedMap.put(currencyData.getSymbol(), currencyData));
         } else {
             throw new ClusterStampException("Unable to start cluster stamp. Currencies not found.");
         }
@@ -906,11 +906,9 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
     private void prepareForBalanceClusterStampSegment(ClusterStampData clusterStampData, boolean prepareClusterStampLines, Hash nativeCurrencyHash) {
         TreeMap<Hash, BigDecimal> sortedBalance = balanceService.getSortedBalance(nativeCurrencyHash);
         generateCurrencyBalanceLines(clusterStampData, nativeCurrencyHash, sortedBalance, prepareClusterStampLines);
-        currencySortedMap.forEach((currencyHash, currencyData) ->
-                currencySortedMap.keySet().stream().map(hash -> currencySortedMap.get(hash))
-                        .filter(additionalCurrencyData -> additionalCurrencyData.isConfirmed() && !additionalCurrencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN))
-                        .forEach(additionalCurrencyData -> generateCurrencyBalanceLines(clusterStampData, additionalCurrencyData.getHash(), sortedBalance, prepareClusterStampLines))
-        );
+        currencySortedMap.keySet().stream().map(symbol -> currencySortedMap.get(symbol))
+            .filter(additionalCurrencyData -> additionalCurrencyData.isConfirmed() && !additionalCurrencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN))
+            .forEach(additionalCurrencyData -> generateCurrencyBalanceLines(clusterStampData, additionalCurrencyData.getHash(), sortedBalance, prepareClusterStampLines));
     }
 
     private void generateCurrencyBalanceLines(ClusterStampData clusterStampData, Hash currencyHash, TreeMap<Hash, BigDecimal> sortedBalance, boolean prepareClusterStampLines) {
@@ -1032,6 +1030,34 @@ public abstract class BaseNodeClusterStampService implements IClusterStampServic
         voterNodesDetails = null;
         validatorsVoteClusterStampSegmentLines = new ArrayList<>();
         filledMissingSegments = false;
+    }
+
+
+    @Override
+    public void calculateClusterStampDataAndHashes() {
+        boolean prepareClusterStampLines = true;
+        clearCandidateClusterStampRelatedFields();
+        clusterStampCreateTime = Instant.now();
+        clusterStampData = new ClusterStampData();
+        prepareCandidateClusterStampHash(clusterStampCreateTime, prepareClusterStampLines, clusterStampData, false);
+
+    }
+
+    @Override
+    public boolean checkLastConfirmedIndex(StateMessageLastClusterStampIndexPayload stateMessageLastClusterStampIndexPayload) {
+        long lastConfirmedIndex = clusterService.getMaxIndexOfNotConfirmed();
+        if (lastConfirmedIndex <= 0) {
+            lastConfirmedIndex = transactionIndexService.getLastTransactionIndexData().getIndex();
+        }
+        return lastConfirmedIndex == stateMessageLastClusterStampIndexPayload.getLastIndex();
+    }
+
+    @Override
+    public boolean checkClusterStampHash(StateMessageClusterStampHashPayload stateMessageClusterStampHashPayload){
+        Hash clusterStampHash = getCandidateClusterStampHash();
+        return clusterStampHash != null && clusterStampHash.equals(stateMessageClusterStampHashPayload.getClusterStampHash());
+
+
     }
 
 }

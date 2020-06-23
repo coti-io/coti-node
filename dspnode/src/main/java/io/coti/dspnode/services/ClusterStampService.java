@@ -6,10 +6,7 @@ import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.messages.StateMessage;
 import io.coti.basenode.data.messages.StateMessageClusterStampExecutePayload;
 import io.coti.basenode.data.messages.StateMessageClusterStampInitiatedPayload;
-import io.coti.basenode.data.messages.StateMessageLastClusterStampIndexPayload;
 import io.coti.basenode.services.BaseNodeClusterStampService;
-import io.coti.basenode.services.ClusterService;
-import io.coti.basenode.services.TransactionIndexService;
 import io.coti.basenode.services.VotingTimeoutService;
 import io.coti.basenode.services.interfaces.ITransactionPropagationCheckService;
 import lombok.extern.slf4j.Slf4j;
@@ -27,10 +24,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private IPropagationPublisher propagationPublisher;
     @Autowired
     private IReceiver receiver;
-    @Autowired
-    private ClusterService clusterService;
-    @Autowired
-    private TransactionIndexService transactionIndexService;
     @Autowired
     private VotingTimeoutService votingTimeoutService;
     @Autowired
@@ -71,15 +64,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     private void setResendingPause(String s) {
         transactionPropagationCheckService.setResendingPause();
-    }
-
-    @Override
-    public boolean checkLastConfirmedIndex(StateMessageLastClusterStampIndexPayload stateMessageLastClusterStampIndexPayload) {
-        long lastConfirmedIndex = clusterService.getMaxIndexOfNotConfirmed();
-        if (lastConfirmedIndex <= 0) {
-            lastConfirmedIndex = transactionIndexService.getLastTransactionIndexData().getIndex();
-        }
-        return lastConfirmedIndex == stateMessageLastClusterStampIndexPayload.getLastIndex();
     }
 
     @Override

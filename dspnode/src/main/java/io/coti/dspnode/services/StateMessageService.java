@@ -1,9 +1,6 @@
 package io.coti.dspnode.services;
 
-import io.coti.basenode.data.messages.StateMessage;
-import io.coti.basenode.data.messages.StateMessageClusterStampExecutePayload;
-import io.coti.basenode.data.messages.StateMessageClusterStampInitiatedPayload;
-import io.coti.basenode.data.messages.StateMessageLastClusterStampIndexPayload;
+import io.coti.basenode.data.messages.*;
 import io.coti.basenode.services.BaseNodeStateMessageService;
 import io.coti.basenode.services.interfaces.IClusterStampService;
 import lombok.extern.slf4j.Slf4j;
@@ -27,12 +24,16 @@ public class StateMessageService extends BaseNodeStateMessageService {
             case CLUSTER_STAMP_PREPARE_INDEX:
                 clusterStampService.clusterStampContinueWithIndex(stateMessage);
                 generalVoteService.startCollectingVotes(stateMessage);
-                generalVoteService.castVoteForClusterStampIndex(stateMessage.getHash(), clusterStampService.checkLastConfirmedIndex((StateMessageLastClusterStampIndexPayload) stateMessage.getMessagePayload()));
+                boolean vote = clusterStampService.checkLastConfirmedIndex((StateMessageLastClusterStampIndexPayload) stateMessage.getMessagePayload());
+                generalVoteService.castVoteForClusterStampIndex(stateMessage.getHash(), vote);
+                if (vote) {
+                    clusterStampService.calculateClusterStampDataAndHashes();  // todo separate it to a thread
+                }
                 break;
             case CLUSTER_STAMP_PREPARE_HASH:
                 clusterStampService.clusterStampContinueWithHash(stateMessage);
                 generalVoteService.startCollectingVotes(stateMessage);
-                generalVoteService.castVoteForClusterStampHash(stateMessage.getHash(), clusterStampService.checkLastConfirmedIndex((StateMessageLastClusterStampIndexPayload) stateMessage.getMessagePayload()));
+                generalVoteService.castVoteForClusterStampHash(stateMessage.getHash(), clusterStampService.checkClusterStampHash((StateMessageClusterStampHashPayload) stateMessage.getMessagePayload()));
                 break;
             case CLUSTER_STAMP_EXECUTE:
                 clusterStampService.clusterStampExecute(stateMessage, (StateMessageClusterStampExecutePayload) stateMessage.getMessagePayload());

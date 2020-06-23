@@ -7,9 +7,6 @@ import java.nio.ByteBuffer;
 @Data
 public class GeneralVoteClusterStampHashPayload extends MessagePayload {
 
-//    public GeneralVoteClusterStampIndexPayload() {
-//    }
-
     public GeneralVoteClusterStampHashPayload() {
         super(GeneralMessageType.CLUSTER_STAMP_HASH_VOTE);
     }
