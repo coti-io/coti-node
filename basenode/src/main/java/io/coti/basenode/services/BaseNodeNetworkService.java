@@ -2,7 +2,7 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.communication.ZeroMQSubscriberQueue;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
-import io.coti.basenode.crypto.NetworkDataCrypto;
+import io.coti.basenode.crypto.NetworkCrypto;
 import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeRegistrationCrypto;
 import io.coti.basenode.data.*;
@@ -59,7 +59,7 @@ public class BaseNodeNetworkService implements INetworkService {
     @Autowired
     private NodeRegistrationCrypto nodeRegistrationCrypto;
     @Autowired
-    private NetworkDataCrypto networkDataCrypto;
+    private NetworkCrypto networkCrypto;
     @Autowired
     private ApplicationContext applicationContext;
     @Autowired
@@ -93,9 +93,7 @@ public class BaseNodeNetworkService implements INetworkService {
     public void handleNetworkChanges(NetworkData newNetworkData) {
         log.info("New network structure received");
 
-        if (!verifyNodeManager(newNetworkData)) {
-            return;
-        }
+        verifyNodeManager(newNetworkData);
 
         if (propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.NETWORK) != 0) {
             throw new NetworkChangeException("Skipped handling network data due to pending newer network changes");
@@ -112,29 +110,18 @@ public class BaseNodeNetworkService implements INetworkService {
     }
 
     @Override
-    public boolean verifyNodeManager(NetworkData newNetworkData) {
+    public void verifyNodeManager(NetworkData newNetworkData) {
         if (!verifyNodeManagerKey(newNetworkData)) {
-            log.error("Incorrectly signed network structure received");
-            return false;
+            throw new NetworkNodeValidationException("Invalid node manager hash");
         }
 
-        if (!networkDataCrypto.verifySignature(newNetworkData)) {
-            log.error("Incorrectly signed network structure received");
-            return false;
+        if (!networkCrypto.verifySignature(newNetworkData)) {
+            throw new NetworkNodeValidationException("Invalid signature by node manager");
         }
-        return true;
     }
 
     private boolean verifyNodeManagerKey(NetworkData newNetworkData) {
         return nodeManagerPublicKey.equals(newNetworkData.getSignerHash().toString());
-//        NetworkNodeData nodeManager = newNetworkData.getSingleNodeNetworkDataMap().get(NodeType.NodeManager);
-//        try {
-//            validateNetworkNodeData(nodeManager);
-//        } catch (Exception e) {
-//            log.error("Incorrect Node Manager data received {}", e.getMessage());
-//            return false;
-//        }
-//        return nodeManager.getHash().equals(newNetworkData.getSignerHash());
     }
 
     public boolean isNodeConnectedToNetwork(NetworkData networkData) {
@@ -417,9 +404,9 @@ public class BaseNodeNetworkService implements INetworkService {
     }
 
     @Override
-    public NetworkData getNetworkDataSigned() {
+    public NetworkData getSignedNetworkData() {
         NetworkData networkData = getNetworkData();
-        networkDataCrypto.signMessage(networkData);
+        networkCrypto.signMessage(networkData);
         return networkData;
     }
 
